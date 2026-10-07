@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Actions\Content;
 
 use LogicException;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ScanSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Repositories\Content\ScanAuthorityRepository;
 use Vaulter\Repositories\Content\ScanEvidenceRepository;
 
 /**
@@ -18,7 +18,7 @@ use Vaulter\Repositories\Content\ScanEvidenceRepository;
  */
 final readonly class RevokeScanEvidenceAction
 {
-    public function __construct(private VaulterConfig $config, private VaulterDatabase $database, private ScanSnapshot $snapshots, private ScanEvidenceRepository $evidence) {}
+    public function __construct(private ScanAuthorityRepository $authority, private VaulterDatabase $database, private ScanSnapshot $snapshots, private ScanEvidenceRepository $evidence) {}
 
     public function execute(int|string $evidenceId, string $reason, OperationContext $context): void
     {
@@ -27,8 +27,7 @@ final readonly class RevokeScanEvidenceAction
         }
         $this->database->transaction(function () use ($evidenceId, $reason, $context): void {
             $record = $this->evidence->findOrFail($evidenceId);
-            $revisionClass = $this->config->model('file_revision');
-            $snapshot = $this->snapshots->load($revisionClass::query()->whereKey($record->revision_id)->firstOrFail(), true);
+            $snapshot = $this->snapshots->load($this->authority->revisionOrFail($record->revision_id), true);
             if ((string) $snapshot['drive']->id !== (string) $context->driveId()) {
                 throw new LogicException('Evidence revocation scope differs.');
             }

@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Actions\Content;
 
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ScanPolicySpec;
 use Vaulter\Content\ScanWorkTransitions;
 use Vaulter\Contracts\Content\ScanPolicyResolver;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Models\Content\ScanObligation;
+use Vaulter\Repositories\Content\ScanAuthorityRepository;
 use Vaulter\Repositories\Content\ScanObligationRepository;
 
 /**
@@ -19,7 +19,7 @@ use Vaulter\Repositories\Content\ScanObligationRepository;
  */
 final readonly class SupersedeScanWorkAction
 {
-    public function __construct(private VaulterConfig $config, private VaulterDatabase $database, private ScanPolicyResolver $policies, private ScanObligationRepository $work, private ScanWorkTransitions $transitions) {}
+    public function __construct(private ScanAuthorityRepository $authority, private VaulterDatabase $database, private ScanPolicyResolver $policies, private ScanObligationRepository $work, private ScanWorkTransitions $transitions) {}
 
     public function execute(ScanObligation $obligation): bool
     {
@@ -28,8 +28,7 @@ final readonly class SupersedeScanWorkAction
             if ($work === null || $work->generation !== $obligation->generation || $work->state === 'settled') {
                 return false;
             }
-            $driveClass = $this->config->model('drive');
-            $drive = $driveClass::query()->whereKey($work->drive_id)->firstOrFail();
+            $drive = $this->authority->driveOrFail($work->drive_id);
             $specs = $this->policies->forDrive($drive);
             if (array_any($specs, static fn (ScanPolicySpec $spec): bool => $spec->specKey() === $work->spec_key)) {
                 return false;

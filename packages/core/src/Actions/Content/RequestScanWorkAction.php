@@ -7,7 +7,6 @@ namespace Vaulter\Actions\Content;
 use Illuminate\Support\Str;
 use LogicException;
 use Vaulter\Configuration\TenancyConfig;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ScanPolicySpec;
 use Vaulter\Content\ScanResult;
 use Vaulter\Content\ScanSnapshot;
@@ -17,6 +16,7 @@ use Vaulter\Enums\Cas\ScanVerdict;
 use Vaulter\Models\Content\ScanObligation;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Repositories\Content\ScanAuthorityRepository;
 use Vaulter\Repositories\Content\ScanEvidenceRepository;
 use Vaulter\Repositories\Content\ScanObligationRepository;
 use Vaulter\Tenancy\TenancyBoundary;
@@ -28,7 +28,7 @@ use Vaulter\Tenancy\TenancyBoundary;
  */
 final readonly class RequestScanWorkAction
 {
-    public function __construct(private VaulterConfig $config, private VaulterDatabase $database, private ScanSnapshot $snapshots, private ScanEvidenceRepository $evidence, private ReuseScanEvidenceAction $reuse, private TenancyConfig $tenancy, private TenancyBoundary $boundary, private ScanObligationRepository $work, private ScanWorkTransitions $transitions) {}
+    public function __construct(private ScanAuthorityRepository $authority, private VaulterDatabase $database, private ScanSnapshot $snapshots, private ScanEvidenceRepository $evidence, private ReuseScanEvidenceAction $reuse, private TenancyConfig $tenancy, private TenancyBoundary $boundary, private ScanObligationRepository $work, private ScanWorkTransitions $transitions) {}
 
     public function ensure(FileRevision $revision, ScanPolicySpec $spec, string $requestKey, OperationContext $context): ScanObligation
     {
@@ -65,8 +65,7 @@ final readonly class RequestScanWorkAction
         $r = $snapshot['revision'];
         $blob = $snapshot['blob'];
         if ($identity === null && $r->manifest_blob_id !== null) {
-            $blobClass = $this->config->model('blob');
-            $blob = $blobClass::query()->whereKey($r->manifest_blob_id)->first();
+            $blob = $this->authority->blob($r->manifest_blob_id);
         }
         $unsupported = $identity === null;
         $identityHash = $identity?->fingerprint() ?? hash('sha256', json_encode(['manifest_blob_id' => $r->manifest_blob_id, 'payload_kind' => $r->manifest_blob_id !== null ? 'manifest' : 'missing', 'revision_id' => (string) $r->id, 'sha256' => $r->sha256, 'size' => $r->size_bytes], JSON_THROW_ON_ERROR));

@@ -6,11 +6,11 @@ namespace Vaulter\Actions\Content;
 
 use DateTimeImmutable;
 use Illuminate\Support\Str;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ScanAttempt;
 use Vaulter\Content\ScanWorkTransitions;
 use Vaulter\Contracts\Content\ScanWorkSettings;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Repositories\Content\ScanAuthorityRepository;
 use Vaulter\Repositories\Content\ScanObligationRepository;
 
 /**
@@ -20,7 +20,7 @@ use Vaulter\Repositories\Content\ScanObligationRepository;
  */
 final readonly class ClaimScanWorkAction
 {
-    public function __construct(private VaulterConfig $config, private VaulterDatabase $database, private ScanObligationRepository $work, private ScanWorkSettings $settings, private ScanWorkTransitions $transitions) {}
+    public function __construct(private ScanAuthorityRepository $authority, private VaulterDatabase $database, private ScanObligationRepository $work, private ScanWorkSettings $settings, private ScanWorkTransitions $transitions) {}
 
     public function execute(int|string $id, int $generation, DateTimeImmutable $now): ?ScanAttempt
     {
@@ -28,8 +28,7 @@ final readonly class ClaimScanWorkAction
         if ($preview === null || $preview->generation !== $generation) {
             return null;
         }
-        $driveClass = $this->config->model('drive');
-        $drive = $driveClass::query()->whereKey($preview->drive_id)->first();
+        $drive = $this->authority->drive($preview->drive_id);
         if ($drive === null) {
             return null;
         }

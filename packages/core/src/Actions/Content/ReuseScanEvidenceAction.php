@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Actions\Content;
 
 use LogicException;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ScanEvidence;
 use Vaulter\Content\ScanPolicySpec;
 use Vaulter\Content\ScanSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Models\Content\ScanObligation;
 use Vaulter\Models\Drive\FileRevision;
+use Vaulter\Repositories\Content\ScanAuthorityRepository;
 use Vaulter\Repositories\Content\ScanEvidenceRepository;
 use Vaulter\Repositories\Content\ScanObligationRepository;
 
@@ -22,7 +22,7 @@ use Vaulter\Repositories\Content\ScanObligationRepository;
  */
 final readonly class ReuseScanEvidenceAction
 {
-    public function __construct(private VaulterConfig $config, private VaulterDatabase $database, private ScanSnapshot $snapshots, private ScanEvidenceRepository $evidence, private ScanObligationRepository $work) {}
+    public function __construct(private ScanAuthorityRepository $authority, private VaulterDatabase $database, private ScanSnapshot $snapshots, private ScanEvidenceRepository $evidence, private ScanObligationRepository $work) {}
 
     public function execute(FileRevision $target, ScanEvidence $source, ScanPolicySpec $spec, ScanObligation $obligation): ScanEvidence
     {
@@ -31,8 +31,7 @@ final readonly class ReuseScanEvidenceAction
         }
         $snapshot = $this->snapshots->load($target);
         $record = $this->evidence->findOrFail($source->id);
-        $revisionClass = $this->config->model('file_revision');
-        $sourceRevision = $revisionClass::query()->whereKey($record->revision_id)->firstOrFail();
+        $sourceRevision = $this->authority->revisionOrFail($record->revision_id);
         $validated = $this->evidence->compatible($sourceRevision, $spec);
         $identity = $snapshot['identity'];
         if ($validated === null || (string) $validated->id !== (string) $record->id || $identity === null

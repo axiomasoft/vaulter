@@ -6,13 +6,13 @@ namespace Vaulter\Actions\Content;
 
 use LogicException;
 use Vaulter\Configuration\TenancyConfig;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ScanAttempt;
 use Vaulter\Content\ScanResult;
 use Vaulter\Content\ScanSnapshot;
 use Vaulter\Content\ScanWorkTransitions;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Cas\ScanVerdict;
+use Vaulter\Repositories\Content\ScanAuthorityRepository;
 use Vaulter\Repositories\Content\ScanEvidenceRepository;
 use Vaulter\Repositories\Content\ScanObligationRepository;
 use Vaulter\Tenancy\TenancyBoundary;
@@ -24,7 +24,7 @@ use Vaulter\Tenancy\TenancyBoundary;
  */
 final readonly class SettleScanWorkAction
 {
-    public function __construct(private VaulterConfig $config, private VaulterDatabase $database, private TenancyConfig $tenancy, private TenancyBoundary $boundary, private ScanSnapshot $snapshots, private ScanEvidenceRepository $evidence, private ScanObligationRepository $work, private ScanWorkTransitions $transitions) {}
+    public function __construct(private ScanAuthorityRepository $authority, private VaulterDatabase $database, private TenancyConfig $tenancy, private TenancyBoundary $boundary, private ScanSnapshot $snapshots, private ScanEvidenceRepository $evidence, private ScanObligationRepository $work, private ScanWorkTransitions $transitions) {}
 
     public function execute(ScanAttempt $attempt, ScanResult $result): bool
     {
@@ -36,8 +36,7 @@ final readonly class SettleScanWorkAction
             // Freeze the owning tree before any preliminary scope reads. A purge
             // that wins first leaves no revision; settlement then safely no-ops.
             $this->database->lockTreeShared($attempt->driveId);
-            $revisionClass = $this->config->model('file_revision');
-            $revision = $revisionClass::query()->whereKey($attempt->revisionId)->first();
+            $revision = $this->authority->revision($attempt->revisionId);
             if ($revision === null) {
                 return false;
             }

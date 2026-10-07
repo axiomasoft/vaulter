@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Actions\Content;
 
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ScanAttempt;
 use Vaulter\Content\ScanSnapshot;
 use Vaulter\Content\ScanWorkTransitions;
 use Vaulter\Models\Drive\FileRevision;
+use Vaulter\Repositories\Content\ScanAuthorityRepository;
 use Vaulter\Repositories\Content\ScanObligationRepository;
 
 /**
@@ -18,7 +18,7 @@ use Vaulter\Repositories\Content\ScanObligationRepository;
  */
 final readonly class FenceScanAttemptAction
 {
-    public function __construct(private VaulterConfig $config, private ScanSnapshot $snapshots, private ScanObligationRepository $work, private ScanWorkTransitions $transitions) {}
+    public function __construct(private ScanAuthorityRepository $authority, private ScanSnapshot $snapshots, private ScanObligationRepository $work, private ScanWorkTransitions $transitions) {}
 
     public function execute(ScanAttempt $attempt): ?FileRevision
     {
@@ -26,8 +26,7 @@ final readonly class FenceScanAttemptAction
         if ($work === null || !$this->transitions->fence($work, $attempt, $this->work->now())) {
             return null;
         }
-        $revisionClass = $this->config->model('file_revision');
-        $revision = $revisionClass::query()->whereKey($work->revision_id)->first();
+        $revision = $this->authority->revision($work->revision_id);
         if ($revision === null) {
             return null;
         }
