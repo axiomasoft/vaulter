@@ -366,7 +366,14 @@ final readonly class ScanObligationRepository
 
     private function clock(): DateTimeImmutable
     {
-        $row = $this->database->connection()->selectOne($this->database->driver() === 'mysql' ? 'SELECT UTC_TIMESTAMP() AS scan_now' : 'SELECT CURRENT_TIMESTAMP AS scan_now');
+        // Scan timestamps are stored as naive UTC, so each driver must answer in naive UTC.
+        // PostgreSQL CURRENT_TIMESTAMP is neither: it carries the session offset and stays frozen at
+        // transaction start, which would age every lease and backoff by the time spent waiting on locks.
+        $row = $this->database->connection()->selectOne(match ($this->database->driver()) {
+            'mysql' => 'SELECT UTC_TIMESTAMP() AS scan_now',
+            'pgsql' => "SELECT clock_timestamp() AT TIME ZONE 'UTC' AS scan_now",
+            default => 'SELECT CURRENT_TIMESTAMP AS scan_now',
+        });
         if (!$row instanceof \stdClass || !isset($row->scan_now) || !is_string($row->scan_now)) {
             throw new LogicException('Database clock is unavailable.');
         }

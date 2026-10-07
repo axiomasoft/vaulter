@@ -339,3 +339,34 @@ it('SEC-C03-db-clock decides which scan work is due regardless of application cl
         $this->travelBack();
     }
 });
+
+it('SEC-C03-db-clock-utc reports naive UTC whatever timezone the database session runs in', function (): void {
+    $connection = app(VaulterDatabase::class)->connection();
+    $pgsql = $connection->getDriverName() === 'pgsql';
+    if ($pgsql) {
+        $connection->statement("SET TIME ZONE 'Asia/Tokyo'");
+    }
+    try {
+        $now = app(ScanObligationRepository::class)->now();
+
+        // The wall clock is what Laravel binds into the naive-UTC scan columns.
+        expect($now->getOffset())->toBe(0)
+            ->and(abs(strtotime($now->format('Y-m-d H:i:s').' UTC') - time()))->toBeLessThan(30);
+    } finally {
+        if ($pgsql) {
+            $connection->statement('RESET TIME ZONE');
+        }
+    }
+});
+
+it('SEC-C03-db-clock-live keeps advancing inside an open transaction', function (): void {
+    $work = app(ScanObligationRepository::class);
+
+    app(VaulterDatabase::class)->transaction(function () use ($work): void {
+        $first = $work->now();
+        usleep(1_100_000);
+
+        // A transaction-frozen clock would age every lease taken after a lock wait.
+        expect($work->now()->getTimestamp())->toBeGreaterThan($first->getTimestamp());
+    });
+});
