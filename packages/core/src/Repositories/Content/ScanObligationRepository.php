@@ -10,21 +10,18 @@ use Illuminate\Support\Str;
 use LogicException;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Content\ImmutableContentIdentity;
 use Vaulter\Content\ScanAttempt;
 use Vaulter\Content\ScanPolicySpec;
 use Vaulter\Content\ScanResult;
 use Vaulter\Content\ScanSnapshot;
+use Vaulter\Content\ScanWorkTransitions;
 use Vaulter\Contracts\Content\ScanPolicyResolver;
 use Vaulter\Contracts\Content\ScanWorkSettings;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Cas\ScanVerdict;
-use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Content\ScanObligation;
 use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Tenancy\TenancyBoundary;
 
@@ -35,7 +32,7 @@ use Vaulter\Tenancy\TenancyBoundary;
  */
 final readonly class ScanObligationRepository
 {
-    public function __construct(private VaulterConfig $config, private VaulterDatabase $database, private ScanSnapshot $snapshots, private ScanEvidenceRepository $evidence, private ScanWorkSettings $settings, private TenancyConfig $tenancy, private TenancyBoundary $boundary, private ScanPolicyResolver $policies) {}
+    public function __construct(private VaulterConfig $config, private VaulterDatabase $database, private ScanSnapshot $snapshots, private ScanEvidenceRepository $evidence, private ScanWorkSettings $settings, private TenancyConfig $tenancy, private TenancyBoundary $boundary, private ScanPolicyResolver $policies, private ScanWorkTransitions $transitions) {}
 
     public function find(int|string $id): ?ScanObligation
     {
@@ -69,14 +66,14 @@ final readonly class ScanObligationRepository
         if ((string) $snapshot['drive']->id !== (string) $context->driveId()) {
             throw new LogicException('Scan request scope differs.');
         }
-        $this->currentSpec($snapshot['drive'], $spec->specKey());
+        $this->transitions->currentSpec($snapshot['drive'], $spec->specKey());
         $class = $this->config->model('scan_obligation');
         $requestClass = $this->config->model('scan_request');
         $work = $class::query()->where('revision_id', $snapshot['revision']->id)->where('spec_key', $spec->specKey())->lockForUpdate()->first();
         if ($work !== null && (!$rescan || $requestClass::query()->where('obligation_id', $work->id)->where('request_key', $requestKey)->exists())) {
             return $work;
         }
-        $generation = $work === null ? 1 : $this->increment($work->generation);
+        $generation = $work === null ? 1 : $this->transitions->increment($work->generation);
         $identity = $snapshot['identity'];
         $r = $snapshot['revision'];
         $blob = $snapshot['blob'];
@@ -102,7 +99,7 @@ final readonly class ScanObligationRepository
             'requested_at' => $now, 'reason' => $rescan ? 'explicit_rescan' : 'admission', 'correlation_id' => $context->correlationId])->save();
         if ($unsupported) {
             $work->forceFill(['attempt' => 1])->save();
-            $this->append($work, new ScanResult(ScanVerdict::Failed, $r->manifest_blob_id !== null || $blob?->chunked ? 'unsupported' : 'unknown'), $now);
+            $this->transitions->append($work, new ScanResult(ScanVerdict::Failed, $r->manifest_blob_id !== null || $blob?->chunked ? 'unsupported' : 'unknown'), $now);
             $work->forceFill(['state' => 'settled', 'outcome' => 'failed', 'reason' => $r->manifest_blob_id !== null || $blob?->chunked ? 'unsupported' : 'unknown'])->save();
         } elseif (!$rescan) {
             // A same-drive reupload may reuse existing exact-byte proof, but always
@@ -131,7 +128,7 @@ final readonly class ScanObligationRepository
         if ($drive === null) {
             return null;
         }
-        $spec = $this->currentSpec($drive, $preview->spec_key);
+        $spec = $this->transitions->currentSpec($drive, $preview->spec_key);
 
         return $this->database->transaction(function () use ($id, $generation, $now, $spec): ?ScanAttempt {
             $class = $this->config->model('scan_obligation');
@@ -140,12 +137,12 @@ final readonly class ScanObligationRepository
                 || $work->available_at > $now || ($work->state === 'leased' && $work->lease_expires_at > $now)) {
                 return null;
             }
-            if ($work->attempt >= $this->maxAttempts()) {
-                $this->terminal($work, 'attempts_exhausted', $now, true);
+            if ($work->attempt >= $this->transitions->maxAttempts()) {
+                $this->transitions->terminal($work, 'attempts_exhausted', $now);
 
                 return null;
             }
-            $attempt = $this->increment($work->attempt);
+            $attempt = $this->transitions->increment($work->attempt);
             $token = (string) Str::uuid();
             $lease = $now->modify('+'.$this->settings->leaseSeconds().' seconds');
             $deadline = $now->modify('+'.$this->settings->scannerTimeoutSeconds().' seconds');
@@ -160,7 +157,7 @@ final readonly class ScanObligationRepository
     public function fencedAttempt(ScanAttempt $attempt): ?FileRevision
     {
         $work = $this->find($attempt->obligationId);
-        if ($work === null || !$this->fence($work, $attempt, $this->clock())) {
+        if ($work === null || !$this->transitions->fence($work, $attempt, $this->clock())) {
             return null;
         }
         $revisionClass = $this->config->model('file_revision');
@@ -169,9 +166,9 @@ final readonly class ScanObligationRepository
             return null;
         }
         $snapshot = $this->snapshots->load($revision);
-        $this->currentSpec($snapshot['drive'], $work->spec_key);
+        $this->transitions->currentSpec($snapshot['drive'], $work->spec_key);
 
-        return $this->snapshotMatches($snapshot, $work) ? $snapshot['revision'] : null;
+        return $this->transitions->snapshotMatches($snapshot, $work) ? $snapshot['revision'] : null;
     }
 
     public function settle(ScanAttempt $attempt, ScanResult $result): bool
@@ -193,15 +190,15 @@ final readonly class ScanObligationRepository
             $class = $this->config->model('scan_obligation');
             $work = $class::query()->whereKey($attempt->obligationId)->lockForUpdate()->first();
             $now = $this->clock();
-            if ($work === null || !$this->fence($work, $attempt, $now) || !$this->snapshotMatches($snapshot, $work)) {
+            if ($work === null || !$this->transitions->fence($work, $attempt, $now) || !$this->transitions->snapshotMatches($snapshot, $work)) {
                 return false;
             }
-            $this->currentSpec($snapshot['drive'], $work->spec_key);
-            if ($result->retryable && $work->attempt >= $this->maxAttempts()) {
+            $this->transitions->currentSpec($snapshot['drive'], $work->spec_key);
+            if ($result->retryable && $work->attempt >= $this->transitions->maxAttempts()) {
                 $result = new ScanResult(ScanVerdict::Failed, 'attempts_exhausted');
             }
-            $this->append($work, $result, $now);
-            $retry = $result->retryable && $work->attempt < $this->maxAttempts();
+            $this->transitions->append($work, $result, $now);
+            $retry = $result->retryable && $work->attempt < $this->transitions->maxAttempts();
             $delay = [1 => 30, 2 => 120, 3 => 600, 4 => 1800][$work->attempt] ?? 1800;
             $work->forceFill(['state' => $retry ? 'retry_wait' : 'settled', 'outcome' => $result->verdict->value,
                 'reason' => $result->reason, 'retryable' => $result->retryable, 'available_at' => $retry ? $now->modify('+'.$delay.' seconds') : $now,
@@ -238,10 +235,10 @@ final readonly class ScanObligationRepository
             $class = $this->config->model('scan_obligation');
             $work = $class::query()->whereKey($attempt->obligationId)->lockForUpdate()->first();
             $now = $this->clock();
-            if ($work === null || !$this->fence($work, $attempt, $now)) {
+            if ($work === null || !$this->transitions->fence($work, $attempt, $now)) {
                 return false;
             }
-            $this->terminal($work, $reason, $now, true);
+            $this->transitions->terminal($work, $reason, $now);
 
             return true;
         });
@@ -257,12 +254,12 @@ final readonly class ScanObligationRepository
                 || $work->lease_expires_at > $now) {
                 return false;
             }
-            if ($work->attempt < $this->maxAttempts()) {
+            if ($work->attempt < $this->transitions->maxAttempts()) {
                 $work->forceFill(['state' => 'retry_wait', 'available_at' => $now, 'lease_token' => null, 'lease_expires_at' => null, 'updated_at' => $now])->save();
 
                 return true;
             }
-            $this->terminal($work, 'attempts_exhausted', $now, true);
+            $this->transitions->terminal($work, 'attempts_exhausted', $now);
 
             return true;
         });
@@ -282,80 +279,10 @@ final readonly class ScanObligationRepository
             if (array_any($specs, static fn (ScanPolicySpec $spec): bool => $spec->specKey() === $work->spec_key)) {
                 return false;
             }
-            $this->terminal($work, 'superseded_policy', $this->clock(), true);
+            $this->transitions->terminal($work, 'superseded_policy', $this->clock());
 
             return true;
         });
-    }
-
-    private function terminal(ScanObligation $work, string $reason, DateTimeImmutable $now, bool $append): void
-    {
-        if ($append) {
-            if ($work->attempt === 0) {
-                $work->forceFill(['attempt' => 1])->save();
-            }
-            $evidenceClass = $this->config->model('scan_evidence');
-            $requestClass = $this->config->model('scan_request');
-            $request = $requestClass::query()->where('obligation_id', $work->id)->where('generation', $work->generation)->firstOrFail();
-            if (!$evidenceClass::query()->where('request_id', $request->id)->where('attempt', $work->attempt)->exists()) {
-                $this->append($work, new ScanResult(ScanVerdict::Failed, $reason), $now);
-            }
-        }
-        $work->forceFill(['state' => 'settled', 'outcome' => 'failed', 'reason' => $reason, 'retryable' => false,
-            'lease_token' => null, 'lease_expires_at' => null, 'updated_at' => $now])->save();
-    }
-
-    private function append(ScanObligation $work, ScanResult $result, DateTimeImmutable $now): void
-    {
-        $requestClass = $this->config->model('scan_request');
-        $class = $this->config->model('scan_evidence');
-        $request = $requestClass::query()->where('obligation_id', $work->id)->where('generation', $work->generation)->firstOrFail();
-        $record = new $class;
-        $record->forceFill($work->only(['revision_id', 'drive_id', 'tenant_id', 'blob_id', 'scope_key', 'content_identity', 'sha256', 'size_bytes', 'spec_key', 'scanner_key', 'scanner_version', 'policy_version', 'generation', 'attempt']));
-        $record->forceFill(['obligation_id' => $work->id, 'request_id' => $request->id, 'outcome' => $result->verdict->value,
-            'reason' => $result->reason, 'retryable' => $result->retryable, 'observed_at' => $now])->save();
-    }
-
-    private function fence(ScanObligation $work, ScanAttempt $attempt, DateTimeImmutable $now): bool
-    {
-        return $work->state === 'leased' && $work->generation === $attempt->generation && $work->attempt === $attempt->attempt
-            && $work->lease_token === $attempt->leaseToken && $work->lease_expires_at > $now
-            && (string) $work->revision_id === (string) $attempt->revisionId && (string) $work->blob_id === (string) $attempt->blobId
-            && (string) $work->drive_id === (string) $attempt->driveId && (string) $work->tenant_id === (string) $attempt->tenantId
-            && $work->content_identity === $attempt->contentIdentity && $work->spec_key === $attempt->spec->specKey();
-    }
-
-    /** @param array{revision:FileRevision,file:File,node:Node,drive:Drive,blob:?Blob,identity:?ImmutableContentIdentity} $snapshot */
-    private function snapshotMatches(array $snapshot, ScanObligation $work): bool
-    {
-        return (string) $snapshot['drive']->id === (string) $work->drive_id
-            && (string) $snapshot['drive']->tenant_id === (string) $work->tenant_id
-            && $snapshot['identity'] !== null && $snapshot['identity']->fingerprint() === $work->content_identity
-            && $snapshot['identity']->sha256 === $work->sha256 && $snapshot['identity']->size === $work->size_bytes;
-    }
-
-    private function currentSpec(Drive $drive, string $specKey): ScanPolicySpec
-    {
-        foreach ($this->policies->forDrive($drive) as $spec) {
-            if ($spec->specKey() === $specKey) {
-                return $spec;
-            }
-        }
-        throw new LogicException('Scan engine policy is no longer current.');
-    }
-
-    private function increment(int $value): int
-    {
-        if ($value < 0 || $value === PHP_INT_MAX) {
-            throw new LogicException('Scan counter is exhausted.');
-        }
-
-        return $value + 1;
-    }
-
-    private function maxAttempts(): int
-    {
-        return $this->settings->maxAttempts();
     }
 
     /** @internal The database clock is the only time source for leases, fences and backoff. */
