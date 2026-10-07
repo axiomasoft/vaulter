@@ -4,22 +4,22 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Content;
 
+use Vaulter\Actions\Content\FenceScanAttemptAction;
 use Vaulter\Content\ScanAttempt;
 use Vaulter\Content\ScanSnapshot;
 use Vaulter\Contracts\Cas\BlobStore;
-use Vaulter\Repositories\Content\ScanObligationRepository;
 use Vaulter\Tenancy\TenancyBoundary;
 
 final readonly class PrivateScanReader
 {
-    public function __construct(private ScanObligationRepository $work, private ScanSnapshot $snapshots,
+    public function __construct(private FenceScanAttemptAction $fence, private ScanSnapshot $snapshots,
         private BlobStore $blobs) {}
 
     /** @return resource|null */
     public function open(ScanAttempt $attempt): mixed
     {
         app(TenancyBoundary::class)->assertJobDrive($attempt->driveId, $attempt->tenantId);
-        $revision = $this->work->fencedAttempt($attempt);
+        $revision = $this->fence->execute($attempt);
         if ($revision === null || $attempt->blobId === null) {
             return null;
         }

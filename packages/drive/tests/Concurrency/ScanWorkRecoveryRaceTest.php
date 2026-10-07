@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Actions\Content\ClaimScanWorkAction;
+use Vaulter\Actions\Content\FenceScanAttemptAction;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ScanAttempt;
 use Vaulter\Content\ScanResult;
@@ -60,7 +61,7 @@ it('SEC-R11 concurrent claims acquire one live lease and late old token cannot s
         $fresh->contentIdentity, $fresh->spec, $fresh->generation, $fresh->attempt,
         $otherToken, $fresh->leaseExpiresAt, $fresh->deadline,
     );
-    expect(app(ScanObligationRepository::class)->fencedAttempt($forged))->toBeNull()
+    expect(app(FenceScanAttemptAction::class)->execute($forged))->toBeNull()
         ->and(app(ScanObligationRepository::class)->settle($forged, new ScanResult(ScanVerdict::Clean)))->toBeFalse();
     expect($fresh->leaseToken)->not->toBe($old->leaseToken)
         ->and(app(ScanObligationRepository::class)->settle($old, new ScanResult(ScanVerdict::Clean)))->toBeFalse()

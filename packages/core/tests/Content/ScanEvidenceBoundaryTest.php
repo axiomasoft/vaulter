@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Support\Str;
 use Vaulter\Actions\Content\ClaimScanWorkAction;
+use Vaulter\Actions\Content\FailScanAttemptAction;
+use Vaulter\Actions\Content\FenceScanAttemptAction;
 use Vaulter\Actions\Content\RequestScanWorkAction;
 use Vaulter\Configuration\ScanConfig;
 use Vaulter\Content\ScanInput;
@@ -130,7 +132,7 @@ it('SEC-R11 rejects altered identity and keeps sticky infection through later cl
     $work = $db->transaction(fn () => app(RequestScanWorkAction::class)->ensure($revision, $spec, (string) Str::uuid(), $context));
     $attempt = app(ClaimScanWorkAction::class)->execute($work->id, 1, new DateTimeImmutable);
     $blob->forceFill(['storage_version' => 'changed'])->save();
-    expect($repository->fencedAttempt($attempt))->toBeNull()->and($repository->settle($attempt, new ScanResult(ScanVerdict::Clean)))->toBeFalse();
+    expect(app(FenceScanAttemptAction::class)->execute($attempt))->toBeNull()->and($repository->settle($attempt, new ScanResult(ScanVerdict::Clean)))->toBeFalse();
     $blob->forceFill(['storage_version' => null])->save();
     expect($repository->settle($attempt, new ScanResult(ScanVerdict::Infected)))->toBeTrue();
     $revision->refresh();
@@ -238,9 +240,9 @@ it('SEC-R12 deterministic identity failure settles the current fenced snapshot w
     $work = app(VaulterDatabase::class)->transaction(fn () => app(RequestScanWorkAction::class)->ensure($revision, $spec, (string) Str::uuid(), $context));
     $attempt = app(ClaimScanWorkAction::class)->execute($work->id, 1, new DateTimeImmutable);
     $blob->forceFill(['storage_version' => 'invalid changed object'])->save();
-    expect($repository->fencedAttempt($attempt))->toBeNull()
-        ->and($repository->failAttempt($attempt, 'content_identity_mismatch'))->toBeTrue()
-        ->and($repository->failAttempt($attempt, 'content_identity_mismatch'))->toBeFalse()
+    expect(app(FenceScanAttemptAction::class)->execute($attempt))->toBeNull()
+        ->and(app(FailScanAttemptAction::class)->execute($attempt, 'content_identity_mismatch'))->toBeTrue()
+        ->and(app(FailScanAttemptAction::class)->execute($attempt, 'content_identity_mismatch'))->toBeFalse()
         ->and($work->fresh()->state)->toBe('settled')->and($work->fresh()->reason)->toBe('content_identity_mismatch')
         ->and($work->fresh()->retryable)->toBeFalse()->and($blob->fresh()->quarantined_at)->toBeNull()
         ->and(ScanEvidenceRecord::query()->first()->outcome)->toBe('failed');

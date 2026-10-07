@@ -8,6 +8,8 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Vaulter\Actions\Content\ClaimScanWorkAction;
+use Vaulter\Actions\Content\FailScanAttemptAction;
+use Vaulter\Actions\Content\FenceScanAttemptAction;
 use Vaulter\Configuration\ScanConfig;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Content\ScanInput;
@@ -40,16 +42,16 @@ final class ScanFileRevision implements ShouldQueue
         return [new RestoreTenantContext($this->driveId, $this->tenantId)];
     }
 
-    public function handle(ScanObligationRepository $work, ClaimScanWorkAction $claim, PrivateScanReader $reader, ScanSnapshot $snapshots,
+    public function handle(ScanObligationRepository $work, ClaimScanWorkAction $claim, FenceScanAttemptAction $fence, FailScanAttemptAction $fail, PrivateScanReader $reader, ScanSnapshot $snapshots,
         ScanConfig $config): void
     {
         if (app(TenancyConfig::class)->enabled()) {
             app(TenancyBoundary::class)->assertJobDrive($this->driveId, $this->tenantId);
         }
-        app(TenancyBypass::class)->suspend(fn () => $this->execute($work, $claim, $reader, $snapshots, $config));
+        app(TenancyBypass::class)->suspend(fn () => $this->execute($work, $claim, $fence, $fail, $reader, $snapshots, $config));
     }
 
-    private function execute(ScanObligationRepository $work, ClaimScanWorkAction $claim, PrivateScanReader $reader, ScanSnapshot $snapshots, ScanConfig $config): void
+    private function execute(ScanObligationRepository $work, ClaimScanWorkAction $claim, FenceScanAttemptAction $fence, FailScanAttemptAction $fail, PrivateScanReader $reader, ScanSnapshot $snapshots, ScanConfig $config): void
     {
         // The queued scope is a fence, never a permission to derive a different tenant.
         $row = $work->find($this->obligationId);
@@ -70,21 +72,21 @@ final class ScanFileRevision implements ShouldQueue
         // Inspect the authoritative chain before opening bytes. A broken edge is
         // deterministic failure; it must not turn into an endless IO retry.
         try {
-            $revision = $work->fencedAttempt($attempt);
+            $revision = $fence->execute($attempt);
             if ($revision === null) {
-                $work->failAttempt($attempt, 'content_identity_mismatch');
+                $fail->execute($attempt, 'content_identity_mismatch');
 
                 return;
             }
             $snapshot = $snapshots->load($revision);
             $identity = $snapshot['identity'];
             if ($identity === null || $identity->fingerprint() !== $attempt->contentIdentity) {
-                $work->failAttempt($attempt, 'content_identity_mismatch');
+                $fail->execute($attempt, 'content_identity_mismatch');
 
                 return;
             }
         } catch (\LogicException) {
-            $work->failAttempt($attempt, 'content_identity_mismatch');
+            $fail->execute($attempt, 'content_identity_mismatch');
 
             return;
         }
@@ -93,13 +95,13 @@ final class ScanFileRevision implements ShouldQueue
             try {
                 $stream = $reader->open($attempt);
             } catch (\LogicException) {
-                $work->failAttempt($attempt, 'content_identity_mismatch');
+                $fail->execute($attempt, 'content_identity_mismatch');
 
                 return;
             }
             if (!is_resource($stream)) {
-                if ($work->fencedAttempt($attempt) === null) {
-                    $work->failAttempt($attempt, 'content_identity_mismatch');
+                if ($fence->execute($attempt) === null) {
+                    $fail->execute($attempt, 'content_identity_mismatch');
 
                     return;
                 }

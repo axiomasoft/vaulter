@@ -19,7 +19,6 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Cas\ScanVerdict;
 use Vaulter\Models\Content\ScanObligation;
 use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Tenancy\TenancyBoundary;
 
 /**
@@ -36,23 +35,6 @@ final readonly class ScanObligationRepository
         $class = $this->config->model('scan_obligation');
 
         return $class::query()->whereKey($id)->first();
-    }
-
-    public function fencedAttempt(ScanAttempt $attempt): ?FileRevision
-    {
-        $work = $this->find($attempt->obligationId);
-        if ($work === null || !$this->transitions->fence($work, $attempt, $this->clock())) {
-            return null;
-        }
-        $revisionClass = $this->config->model('file_revision');
-        $revision = $revisionClass::query()->whereKey($work->revision_id)->first();
-        if ($revision === null) {
-            return null;
-        }
-        $snapshot = $this->snapshots->load($revision);
-        $this->transitions->currentSpec($snapshot['drive'], $work->spec_key);
-
-        return $this->transitions->snapshotMatches($snapshot, $work) ? $snapshot['revision'] : null;
     }
 
     public function settle(ScanAttempt $attempt, ScanResult $result): bool
@@ -100,29 +82,6 @@ final readonly class ScanObligationRepository
                 $clean = $this->evidence->compatible($revision, $attempt->spec) !== null;
                 $revision->forceFill(['scan_status' => $clean ? 'clean' : ($retry ? 'pending' : 'failed')])->save();
             }
-
-            return true;
-        });
-    }
-
-    /** @internal A live trusted attempt may record a deterministic failure without trusting altered content. */
-    public function failAttempt(ScanAttempt $attempt, string $reason): bool
-    {
-        if ($this->tenancy->enabled()) {
-            $this->boundary->assertJobDrive($attempt->driveId, $attempt->tenantId);
-        }
-        if (!in_array($reason, ['content_identity_mismatch', 'access_denied', 'unsupported', 'unknown'], true)) {
-            throw new LogicException('Invalid deterministic attempt failure.');
-        }
-
-        return $this->database->transaction(function () use ($attempt, $reason): bool {
-            $class = $this->config->model('scan_obligation');
-            $work = $class::query()->whereKey($attempt->obligationId)->lockForUpdate()->first();
-            $now = $this->clock();
-            if ($work === null || !$this->transitions->fence($work, $attempt, $now)) {
-                return false;
-            }
-            $this->transitions->terminal($work, $reason, $now);
 
             return true;
         });
