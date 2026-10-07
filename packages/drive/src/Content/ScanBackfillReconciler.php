@@ -12,6 +12,7 @@ use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Content\ScanObligationRepository;
+use Vaulter\Tenancy\TenancyBoundary;
 
 final readonly class ScanBackfillReconciler
 {
@@ -27,14 +28,14 @@ final readonly class ScanBackfillReconciler
         $started = microtime(true);
         $counts = ['backfill_materialized' => 0, 'backfill_remaining' => 0, 'stalled_configuration' => 0];
         $class = $this->config->model('scan_backfill_run');
-        $runs = $class::query()->where('state', 'pending')->orderBy('id');
+        $runs = app(TenancyBoundary::class)->constrain($class::query())->where('state', 'pending')->orderBy('id');
         if ($driveIds !== null) {
             $runs->whereIn('drive_id', $driveIds);
         }
         $processed = 0;
         foreach ($runs->limit($limit)->get() as $run) {
             $driveClass = $this->config->model('drive');
-            $drive = $driveClass::query()->whereKey($run->drive_id)->first();
+            $drive = app(TenancyBoundary::class)->constrain($driveClass::query())->whereKey($run->drive_id)->first();
             if ($drive === null || $drive->tenant_id !== $run->tenant_id) {
                 continue;
             }

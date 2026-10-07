@@ -1,0 +1,417 @@
+[
+  {
+    "id": "V903",
+    "skipped": 45,
+    "cases": [
+      {
+        "name": "Packages.core.tests.Concurrency.ForkRaceTest::it сериализует read-modify-write под FOR UPDATE: оба ok, итог 2",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Concurrency.ForkRaceTest::it негативный контроль: без FOR UPDATE обновление теряется, итог 1",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Concurrency.ForkRaceTest::it каждая задача имеет своё соединение и ждёт готовности всех участников",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Concurrency.ForkRaceTest::it исключение задачи возвращается как исход, соседняя задача ok",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Database.VaulterDatabaseTest::it rolls back uploads and document model inserts on the dedicated connection with data set \"('Vaulter\\Drive\\Models\\Uploads\\…ession')\"",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Database.VaulterDatabaseTest::it rolls back uploads and document model inserts on the dedicated connection with data set \"('Vaulter\\Drive\\Models\\Uploads\\…adPart')\"",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Database.VaulterDatabaseTest::it rolls back uploads and document model inserts on the dedicated connection with data set \"('Vaulter\\Documents\\Models\\Comm…omment')\"",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Database.VaulterDatabaseTest::it rolls back uploads and document model inserts on the dedicated connection with data set \"('Vaulter\\Documents\\Models\\Revi…vision')\"",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Database.VaulterDatabaseTest::it takes the tree lock in shared mode for single-parent writes on PostgreSQL",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.HostKeyMysql.HostKeyColumnsMysqlTest::it preserves values, nullability and indexes when upgrading and restoring MySQL host keys with data set \"('bigint')\"",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.HostKeyMysql.HostKeyColumnsMysqlTest::it preserves values, nullability and indexes when upgrading and restoring MySQL host keys with data set \"('ulid')\"",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.HostKeyMysql.HostKeyColumnsMysqlTest::it creates each configured MySQL host type and leaves it unchanged on upgrade with data set \"('string')\"",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.HostKeyMysql.HostKeyColumnsMysqlTest::it creates each configured MySQL host type and leaves it unchanged on upgrade with data set \"('bigint')\"",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.HostKeyMysql.HostKeyColumnsMysqlTest::it creates each configured MySQL host type and leaves it unchanged on upgrade with data set \"('uuid')\"",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.HostKeyMysql.HostKeyColumnsMysqlTest::it creates each configured MySQL host type and leaves it unchanged on upgrade with data set \"('ulid')\"",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Schema.KeyColumnTypesTest::it uses the configured types for every key column on a fresh schema with data set \"('bigint', 'string')\"",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Schema.KeyColumnTypesTest::it uses the configured types for every key column on a fresh schema with data set \"('bigint', 'bigint')\"",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Schema.KeyColumnTypesTest::it uses the configured types for every key column on a fresh schema with data set \"('ulid', 'string')\"",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Schema.KeyColumnTypesTest::it uses the configured types for every key column on a fresh schema with data set \"('ulid', 'bigint')\"",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Schema.KeyColumnTypesTest::it uses the configured types for every key column on a fresh schema with data set \"('uuid7', 'string')\"",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Schema.KeyColumnTypesTest::it uses the configured types for every key column on a fresh schema with data set \"('uuid7', 'bigint')\"",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Tenancy.TenantProvisioningRaceTest::it V31 a real PG owner profile race has one tenant winner and a hidden loser",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Upgrade.BlobScopeKeyMigrationTest::it backfills historical blob scopes without moving their objects with data set \"('bigint')\"",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Upgrade.BlobScopeKeyMigrationTest::it backfills historical blob scopes without moving their objects with data set \"('ulid')\"",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Upgrade.Canon03UpgradeTest::it preserves historical rows and event subscriptions through upgrade rollback and retry with data set \"('bigint')\"",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Upgrade.Canon03UpgradeTest::it preserves historical rows and event subscriptions through upgrade rollback and retry with data set \"('ulid')\"",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Upgrade.HostKeyColumnsMigrationTest::it widens all 27 fixture host columns without losing values and rolls back with data set \"('bigint')\"",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Upgrade.HostKeyColumnsMigrationTest::it widens all 27 fixture host columns without losing values and rolls back with data set \"('ulid')\"",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Upgrade.HostKeyColumnsMigrationTest::it refuses a nonnumeric host-key conversion without changing fixture rows",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Upgrade.LegacyTableNamesUpgradeTest::it normalizes legacy overrides and their constraint names without losing rows",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Upgrade.LegacyTableNamesUpgradeTest::it creates historical feature-disabled tables on upgrade",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Upgrade.NodesCleanupMigrationTest::it moves every second root under its drive root, logs each move and adds the root index",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Upgrade.NodesCleanupMigrationTest::it drops the root index on rollback and keeps the repaired tree",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Upgrade.NodesCleanupMigrationTest::it refuses to guess the root of a drive without root_node_id",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Upgrade.NodesCleanupMigrationTest::it keeps a renamed long name within the name column",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Upgrade.NodesCleanupMigrationTest::it shortens an extension that cannot fit beside the legacy marker",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Upgrade.SchemaParityTest::it matches the fresh schema after upgrading each historical strategy with data set \"('bigint')\"",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Upgrade.SchemaParityTest::it matches the fresh schema after upgrading each historical strategy with data set \"('ulid')\"",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Upgrade.UpgradePreflightTest::it refuses all red fixture conditions before renaming tables",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Upgrade.UpgradePreflightTest::it refuses soft-deleted drive and file rows with data set \"('v_storages')\"",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Upgrade.UpgradePreflightTest::it refuses soft-deleted drive and file rows with data set \"('v_files')\"",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Upgrade.UpgradePreflightTest::it refuses document nodes when the revisions table is missing",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Webhooks.ConcurrentDeliveryTest::it excludes a duplicate worker while another process is posting the same delivery with data set \"('200')\"",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Webhooks.ConcurrentDeliveryTest::it excludes a duplicate worker while another process is posting the same delivery with data set \"('500')\"",
+        "reason": ""
+      },
+      {
+        "name": "Packages.core.tests.Webhooks.ConcurrentDeliveryTest::it excludes a duplicate worker while another process is posting the same delivery with data set \"('transport')\"",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "id": "V906",
+    "skipped": 30,
+    "cases": [
+      {
+        "name": "Tests.Concurrency.CompleteUploadRaceTest::it V19 two complete calls commit one node revision edge quota update and event",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Concurrency.CompleteUploadRaceTest::it SEC-CLEANUP-commit-kill surviving independent worker discovers durable cleanup after commit",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Concurrency.CompleteUploadRaceTest::it SEC-CLEANUP-mutex holds the session lock through the outer commit against abort and sweep",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Concurrency.DedicatedConnectionTest::it rolls back an Action insertion on the dedicated Vaulter connection",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Concurrency.DedicatedConnectionTest::it takes the CAS advisory lock on the dedicated connection only",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Concurrency.LockOrderRaceTest::it V21 completes ten overlapping move/upload races with an acyclic tree and exact head bytes",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Concurrency.LockOrderRaceTest::it copy and dedup upload finish with overlapping quota operations and no outer retry",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Concurrency.MoveCycleRaceTest::it lets exactly one of move(A→B) and move(B→A) win and leaves no cycle",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Concurrency.MoveCycleRaceTest::it lets exactly one of move(A→B/B1) and move(B→A/A1) win and leaves no cycle",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Concurrency.NodeSequenceBoundaryTest::it SEC-R18 forks expected 7 rename against content with one sequence 8 winner and a side-effect-free 412 loser",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Concurrency.NodeSequenceBoundaryTest::it SEC-R19-retry preserves the original expectation after serialization retry",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Concurrency.NodeSequenceBoundaryTest::it SEC-REV-RECEIPT returns its own committed revision when a later writer changes the head before return",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Concurrency.NodeSequenceBoundaryTest::it SEC-CONFLICT-RACE turns two locked same-name uploads into one node and two revisions from nonseekable sources",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Concurrency.QuotaRaceTest::it V02 admits exactly one 8 MiB upload into 10 MiB of free quota",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Concurrency.RevisionNumberRaceTest::it V03 serializes revisions and accounts for their actual preceding heads",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Concurrency.RevisionNumberRaceTest::it V03 aggregate lock protects counter allocation even without a caller node lock",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Concurrency.RevisionNumberRaceTest::it reuses prepared bytes on a serialization retry and discards the temp file",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Concurrency.SameNameUploadRaceTest::it V20 creates one x.pdf and returns a domain conflict to the second writer",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Concurrency.ScanWorkRecoveryRaceTest::it SEC-R11 concurrent claims acquire one live lease and late old token cannot settle",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Concurrency.ScanWorkRecoveryRaceTest::it SEC-R09 killed committed publisher leaves intent recoverable by an independent process",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Concurrency.ScanWorkRecoveryRaceTest::it SEC-R11 killed lease owner is fenced while a surviving process recovers",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Concurrency.ScanWorkRecoveryRaceTest::it SEC-POLICY-activation-race captures an admitted writer before exclusive activation",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Concurrency.ScanWorkRecoveryRaceTest::it SEC-R12 purge and settlement serialize without resurrecting a head or work",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Concurrency.TreeLockRaceTest::it never leaves a live node under a folder trashed concurrently",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Concurrency.TusConcurrentPatchTest::it два конкурентных PATCH с одинаковым offset — ровно один применяется, финальный sha256 эталонный, F-P1.4-01",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Concurrency.TusPatchVsSweepRaceTest::it PATCH и sweep одной сессии: победитель ровно один, файл не усечён, терминальная сессия не воскресает, R-02",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Concurrency.TusPatchVsSweepRaceTest::it commitAssembled() берёт ту же критическую секцию: пока лок сессии держит другой сеанс, коммит отбивается, R-11",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Concurrency.TusPatchVsSweepRaceTest::it лок двух РАЗНЫХ upload_id, коллизирующих по 32-битному hashtext, выдаётся обоим, R-09",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Feature.PurgeTrashTest::it cascades the physical purge to file/version rows on PostgreSQL, F-P1.12-02",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Uploads.R07bSessionContractsTest::it R07b: acquireForPatch pgsql advisory lock key includes upload: prefix (L90 ConcatRemoveLeft/SwitchSides)",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "id": "V909",
+    "skipped": 3,
+    "cases": [
+      {
+        "name": "Tests.Document.LegacyNodeSequenceRaceTest::it SEC-LEGACY-RACE makes Document and rename expected-seven writers compete for one commit",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Document.LegacyNodeSequenceRaceTest::it SEC-LEGACY-RACE counts the unconditional installed Yjs writer against rename CAS",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Document.PurgeTrashCascadeTest::it physically deletes a trashed document node's inline version content on purge, F-P1.12-02",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "id": "V912",
+    "skipped": 16,
+    "cases": [
+      {
+        "name": "Tests.Cas.BlobGcBatchTest::it uses the same PostgreSQL lock namespace for every batched mark candidate before liveness reads",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Cas.BlobOrphanPruneTest::it prune на pgsql реально удаляет байты осиротевшего объекта",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Cas.BlobOrphanPruneTest::it vaulter:blobs:reconcile --orphans --prune на pgsql очищает orphan и выходит SUCCESS",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Cas.BlobOrphanPruneTest::it lock-then-recheck на pgsql: строка, появившаяся до перепроверки под локом, спасает байты",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Cas.BlobOrphanPruneTest::it prune на pgsql идемпотентен: исчезнувший до удаления объект не бросает (phantom listing)",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Cas.ColdMutationSurvivorTest::it locks the parsed orphan scope and digest while pruning on PostgreSQL",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Cas.ColdMutationSurvivorTest::it takes the tenant advisory lock when committing on PostgreSQL",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Cas.ColdMutationSurvivorTest::it takes the row scope advisory lock while collecting on PostgreSQL",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Cas.RepairBlobScopesCommandTest::it requires exactly one repair mode",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Cas.RepairBlobScopesCommandTest::it splits mixed storage edges without losing bytes and resumes a partial failure with data set \"(false)\"",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Cas.RepairBlobScopesCommandTest::it splits mixed storage edges without losing bytes and resumes a partial failure with data set \"(true)\"",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Cas.RepairBlobScopesCommandTest::it uses global for a host without tenants and reports unreferenced and corrupt bytes",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Cas.ScopeKeyReconcileTest::it collects a post-promote SQL rollback only after grace under the lossless lock",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Cas.ScopeKeyReconcileTest::it serializes GC against a writer of the same scope and keeps reachable bytes",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Cas.ScopeKeyReconcileTest::it repairs while batch GC holds the first advisory lock without a lock-order cycle",
+        "reason": ""
+      },
+      {
+        "name": "Tests.Cas.SweepPendingSerializableTest::it sweepPending ретраит транзиентный serialization-failure 40001 вместо проброса, F-P1.5-02",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "id": "V915",
+    "skipped": 1,
+    "cases": [
+      {
+        "name": "Tests.Feature.DiagTest::it renders the node list page",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "id": "V918",
+    "skipped": 0,
+    "cases": []
+  }
+]

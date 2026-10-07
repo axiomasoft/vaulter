@@ -27,11 +27,13 @@ use Vaulter\Contracts\Handlers\NodePresenter;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Contracts\Observability\TraceRecorder;
 use Vaulter\Contracts\Sharing\ShareTokenGenerator;
+use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Contracts\Webhooks\HostResolver;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Cas\ScanMode;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
 use Vaulter\Handlers\Builtin\DownloadOnlyHandler;
 use Vaulter\Handlers\Builtin\PreviewHandler;
 use Vaulter\Handlers\FileHandlerRegistry;
@@ -43,6 +45,9 @@ use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Repositories\Drive\DriveReadRepository;
 use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Support\EnumCaseAttributeResolver;
+use Vaulter\Tenancy\ShareTenantContext;
+use Vaulter\Tenancy\TenancyBoundary;
+use Vaulter\Tenancy\TenancyBypass;
 use Vaulter\VaulterManager;
 use Vaulter\Webhooks\SystemHostResolver;
 
@@ -57,6 +62,17 @@ final class BindingsRegistrar
         $app->singleton(DatabaseConfig::class);
         $app->singleton(IdsConfig::class);
         $app->singleton(TenancyConfig::class);
+        $app->scoped(TenancyBypass::class);
+        $app->scoped(ShareTenantContext::class);
+        $app->bind(TenancyBoundary::class);
+        $app->scoped(TenantResolver::class, static function (Application $app): TenantResolver {
+            $resolver = $app->make($app->make(TenancyConfig::class)->resolver());
+            if (!$resolver instanceof TenantResolver) {
+                throw new TenancyMisconfiguredException('TenantResolver binding returned an invalid object.');
+            }
+
+            return $resolver;
+        });
         $app->singleton(AccessConfig::class);
         $app->singleton(RoutesConfig::class);
         $app->singleton(ListingConfig::class);

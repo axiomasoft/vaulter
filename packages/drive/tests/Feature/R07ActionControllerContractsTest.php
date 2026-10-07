@@ -81,7 +81,7 @@ it('accepts an upload that fills the quota exactly and rejects one byte over', f
     expect($storage->refresh()->used_bytes)->toBe(5);
 });
 
-it('stores null mime when the upload source provides no declared type', function (): void {
+it('stores detected MIME separately when the upload source provides no declared type', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $node = $drive->upload(
@@ -91,11 +91,11 @@ it('stores null mime when the upload source provides no declared type', function
         actorId: 17,
     );
 
-    expect($node->mime_type)->toBeNull();
+    expect($node->mime_type)->toBe('text/plain')->and($node->currentVersion()->firstOrFail()->declared_mime_type)->toBeNull();
 
     $activity = Activity::query()->where('verb', EventType::FileUploaded->value)->sole();
 
-    expect($activity->context['mime_type'])->toBeNull()
+    expect($activity->context['mime_type'])->toBe('text/plain')
         ->and($activity->context['size_bytes'])->toBe(5);
 });
 

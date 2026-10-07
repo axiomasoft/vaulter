@@ -1,0 +1,13 @@
+{
+  "current_model_id": "grok-4.7",
+  "reasoning_effort": "high",
+  "session_kind": "headless",
+  "agent_id": "ag1.d48a8ea9dbcf4bcca3cab5b7db2b7cd5",
+  "attempt_id": "at1.ef194c962e494eb89cfca48f1a2b3dd1",
+  "sandbox_profile": "off",
+  "created_at": "2026-10-07T09:14:30.716407750Z",
+  "head_commit": "0d836aa6aee229af80615ccdc23665619c3d9899",
+  "session_id": "c5372a62-b910-43cc-b13f-551b1929fb26",
+  "source": "native-grok-session-summary",
+  "context_argument_supplied": false
+}

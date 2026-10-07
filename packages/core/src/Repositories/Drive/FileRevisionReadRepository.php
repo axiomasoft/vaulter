@@ -9,6 +9,7 @@ use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Tenancy\TenancyBoundary;
 
 /**
  * Read-side lookups over the immutable v_file_revisions (§2.4) for the HTTP layer:
@@ -31,6 +32,11 @@ final class FileRevisionReadRepository
      */
     public function head(Node $node): ?FileRevision
     {
+        if (app(TenancyBoundary::class)->enforced()) {
+            app(TenancyBoundary::class)->assertNode($node);
+            $node = $node->newQuery()->whereKey($node->getRawOriginal($node->getKeyName()))->firstOrFail();
+        }
+
         return $node->currentVersion()->first();
     }
 
@@ -41,6 +47,10 @@ final class FileRevisionReadRepository
      */
     public function forNode(Node $node, int|string $versionId): ?FileRevision
     {
+        if (app(TenancyBoundary::class)->enforced()) {
+            app(TenancyBoundary::class)->assertNode($node);
+            $node = $node->newQuery()->whereKey($node->getRawOriginal($node->getKeyName()))->firstOrFail();
+        }
         $fileId = $node->file_id;
 
         if ($fileId === null) {
@@ -61,7 +71,7 @@ final class FileRevisionReadRepository
     public function forFile(File $file): Builder
     {
         return $this->query()
-            ->where('file_id', $file->getKey())
+            ->where('file_id', $file->getRawOriginal($file->getKeyName()))
             ->orderByDesc('number');
     }
 
@@ -72,6 +82,6 @@ final class FileRevisionReadRepository
     {
         $model = $this->vaulterConfig->model('file_revision');
 
-        return $model::query();
+        return app(TenancyBoundary::class)->constrain($model::query(), 'file.node.storage');
     }
 }

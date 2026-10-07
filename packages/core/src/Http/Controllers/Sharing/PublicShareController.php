@@ -23,13 +23,13 @@ use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Repositories\Drive\DriveReadRepository;
 use Vaulter\Repositories\Drive\FileRevisionReadRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Sharing\NodeShareStoreRepository;
 use Vaulter\Sharing\ShareContext;
 use Vaulter\Sharing\ShareResolver;
 use Vaulter\Support\LoadTier;
+use Vaulter\Tenancy\ShareTenantContext;
 
 /**
  * The PUBLIC, token-resolved surface for bearer share-links (§2.7 / M2c) — the
@@ -53,7 +53,6 @@ final class PublicShareController extends Controller
     public function __construct(
         private readonly NodeReadRepository $nodes,
         private readonly FileRevisionReadRepository $versions,
-        private readonly DriveReadRepository $storages,
         private readonly NodeShareStoreRepository $shares,
         private readonly MetricsRecorder $metrics,
         private readonly ShareResolver $resolver,
@@ -117,7 +116,7 @@ final class PublicShareController extends Controller
             throw new NotFoundHttpException('This share link does not point at a downloadable file.');
         }
 
-        $storage = $this->storages->find($node->drive_id);
+        $storage = $node->storage()->first();
 
         if (!$storage instanceof Drive) {
             throw new NotFoundHttpException('Share link not found or no longer available.');
@@ -129,7 +128,7 @@ final class PublicShareController extends Controller
             throw new NotFoundHttpException('Share link not found or no longer available.');
         }
 
-        return $this->stream($context, $node, $this->versions->head($node), $storage, startedAt: $startedAt);
+        return $this->stream($context, $node, app(ShareTenantContext::class)->evaluate($storage, fn () => $this->versions->head($node)), $storage, startedAt: $startedAt);
     }
 
     /**
@@ -154,7 +153,7 @@ final class PublicShareController extends Controller
      */
     private function inScopeChildren(ShareContext $context, Node $parent): Collection
     {
-        $storage = $this->storages->find($parent->drive_id);
+        $storage = $parent->storage()->first();
 
         if (!$storage instanceof Drive) {
             /** @var Collection<int, Node> $empty */
@@ -164,7 +163,7 @@ final class PublicShareController extends Controller
         }
 
         /** @var Collection<int, Node> $children */
-        $children = $this->nodes->children($storage, $parent)->get();
+        $children = app(ShareTenantContext::class)->evaluate($storage, fn () => $this->nodes->children($storage, $parent)->get());
 
         // Defence-in-depth: keep only nodes the share's node-set actually contains
         // (it always does for direct children of an in-scope folder, but this
@@ -188,7 +187,7 @@ final class PublicShareController extends Controller
             throw new NotFoundHttpException('Share link not found or no longer available.');
         }
 
-        $this->resolver->assertContentAvailable(node: $node, revision: $version);
+        $this->resolver->assertContentAvailable(node: $node, revision: $version, context: $context);
 
         $filename = $version->original_name !== '' ? $version->original_name : $node->name;
         $contentType = $version->mime_type ?? $node->mime_type ?? 'application/octet-stream';

@@ -2,12 +2,18 @@
 
 declare(strict_types=1);
 
+use Vaulter\Contracts\Tenancy\TenantResolver;
+use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Facades\Vaulter;
 use Vaulter\Filament\Resources\ActivityResource;
 use Vaulter\Filament\Resources\DriveResource;
 use Vaulter\Filament\Resources\NodeGrantResource;
+use Vaulter\Filament\Resources\NodeResource;
 use Vaulter\Filament\Resources\NodeShareResource;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
+use Vaulter\Filament\Tests\Fixtures\MutableTenantResolver;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;
@@ -71,6 +77,7 @@ it('NodeGrantResource lists a grant on a reachable node and hides one on an unre
 });
 
 it('NodeShareResource lists a share on a reachable node and hides one on an unreachable node (F-P1.10-01)', function (): void {
+    config()->set('vaulter.features.share_links', true);
     $owner = DriveBuilder::user(1);
     $this->actingAs($owner);
 
@@ -108,6 +115,8 @@ it('ActivityResource lists activity targeting a reachable node and hides a forei
 
     $this->actingAs($owner);
     DriveBuilder::grant($reachable, $owner, level: GrantLevel::Owner);
+
+    DriveBuilder::grant($storage->rootNode()->firstOrFail(), $owner, level: GrantLevel::Reader, scope: GrantScope::Item);
 
     $targetIds = ActivityResource::getEloquentQuery()->pluck('target_id')->all();
 
@@ -151,3 +160,28 @@ it('isolates database resources from a sibling profile with an open candidate la
     $query = $nodes->constrainToAccessible(Node::query(), $owner);
     expect($query->pluck('id')->all())->toContain($openNode->id)->not->toContain($hiddenNode->id);
 })->with(['gate', 'disabled']);
+
+it('V31 Filament node grant share and activity listings stay in the current tenant', function (): void {
+    config()->set('vaulter.features.share_links', true);
+    config()->set('vaulter.tenancy.enabled', true);
+    config()->set('vaulter.tenancy.resolver', MutableTenantResolver::class);
+    $resolver = new MutableTenantResolver;
+    app()->instance(TenantResolver::class, $resolver);
+    $actor = DriveBuilder::user(1);
+    $this->actingAs($actor);
+    $a = Vaulter::drive(DriveBuilder::storage())->asSystem('fixture');
+    $nodeA = DriveBuilder::folder($a->model(), 'Tenant A');
+    $grantA = DriveBuilder::grant($nodeA, $actor, level: GrantLevel::Owner);
+    $shareA = $a->shares()->create($nodeA, new ShareLinkInput(permissions: 1));
+    $driveAId = $a->model()->id;
+    $resolver->tenant = 'B';
+    $b = Vaulter::drive(DriveBuilder::storage())->asSystem('fixture');
+    $nodeB = DriveBuilder::folder($b->model(), 'Tenant B');
+    DriveBuilder::grant($nodeB, $actor, level: GrantLevel::Owner);
+    DriveBuilder::grant($b->root(), $actor, level: GrantLevel::Reader, scope: GrantScope::Item);
+    $shareB = $b->shares()->create($nodeB, new ShareLinkInput(permissions: 1));
+    expect(NodeResource::getEloquentQuery()->pluck('id')->all())->toContain($nodeB->id)->not->toContain($nodeA->id)
+        ->and(NodeGrantResource::getEloquentQuery()->pluck('id')->all())->not->toContain($grantA->id)
+        ->and(NodeShareResource::getEloquentQuery()->pluck('id')->all())->toContain($shareB->share->id)->not->toContain($shareA->share->id)
+        ->and(ActivityResource::getEloquentQuery()->pluck('drive_id')->all())->toContain($b->model()->id)->not->toContain($driveAId);
+});

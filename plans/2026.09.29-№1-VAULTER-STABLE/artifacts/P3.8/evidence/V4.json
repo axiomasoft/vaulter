@@ -1,0 +1,28 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:check-evidence:v1",
+  "evidence_id": "p38-final-V4",
+  "check_id": "V4",
+  "subject": "PLAN2.P3.8",
+  "procedure": {
+    "procedure": "Qualified reuse of matching named subset from V906 full suite, with current input closure and listed focused supplemental receipts."
+  },
+  "candidate": {
+    "head": "0d836aa6aee229af80615ccdc23665619c3d9899"
+  },
+  "started_at": "2026-10-07T08:54:49.544192+00:00",
+  "finished_at": "2026-10-07T08:56:33.262918+00:00",
+  "producer": {
+    "kind": "executor",
+    "actor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high"
+    }
+  },
+  "log": {
+    "path": "@plan/artifacts/P3.8/item-focused-evidence.json",
+    "sha256": "162f02e2ed6c0b7d374ec0e6e54ebdf690b59148776aee2ccf9ac578a7272d2a"
+  },
+  "verdict": "pass",
+  "observation": "3 executed, 3 passed, 0 failures, 0 declared SQLite skips; exact case names, original command/cwd/timestamps/exit and supplements recorded. PG owner race is actual GREEN in V919; full required environment proofs are phase-validation.json."
+}

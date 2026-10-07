@@ -1,0 +1,219 @@
+[
+  {
+    "command": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Tenancy packages/core/tests/Access/TenantDelegationContractTest.php packages/core/tests/Support/TenantFootgunGuardTest.php --log-junit '/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.8/review-fix-sqlite-20261007T094433165636Z.xml'",
+    "acceptance_command": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Tenancy packages/core/tests/Access/TenantDelegationContractTest.php packages/core/tests/Support/TenantFootgunGuardTest.php",
+    "cwd": ".",
+    "started_at": "2026-10-07T09:44:33.207089+00:00",
+    "finished_at": "2026-10-07T09:44:36.464845+00:00",
+    "duration_seconds": 3.258,
+    "exit": 0,
+    "output": "artifacts/P3.8/review-fix-sqlite-20261007T094433165636Z.log",
+    "junit": "artifacts/P3.8/review-fix-sqlite-20261007T094433165636Z.xml",
+    "discovered": 27,
+    "matched": 27,
+    "executed_tests": 26,
+    "passed": 26,
+    "failed": 0,
+    "skipped": 1,
+    "names": [
+      "Packages.core.tests.Tenancy.StrictTenancyTest::it V31 stamps authoritative drive and children and retained system handles recheck A B A",
+      "Packages.core.tests.Tenancy.StrictTenancyTest::it V31 denies mutated supplied drive and node models and cached repository authority",
+      "Packages.core.tests.Tenancy.StrictTenancyTest::it V31 constrains HTTP lookup search shared and trash reads to the owning drive tenant",
+      "Packages.core.tests.Tenancy.StrictTenancyTest::it V31 refuses a foreign existing owner profile winner without creating another drive",
+      "Packages.core.tests.Tenancy.StrictTenancyTest::it V31 null refuses current authority while normalized tenant ids retain leading zeroes",
+      "Packages.core.tests.Tenancy.StrictTenancyTest::it I15 restores nested maintenance exceptions without carrying bypass into a Fiber",
+      "Packages.core.tests.Tenancy.StrictTenancyTest::it I15 maintenance keeps ACL checks and authoritative child consistency",
+      "Packages.core.tests.Tenancy.StrictTenancyTest::it V31 optional owner tenant resolver rereads owner on both provision and existing lookup",
+      "Packages.core.tests.Tenancy.StrictTenancyTest::it V31 anonymous bearer shares derive only their target tenant and do not open a foreign system handle",
+      "Packages.core.tests.Tenancy.StrictTenancyTest::it V31 F1 binds optional owner validation lookup and insert to one persisted identity",
+      "Packages.core.tests.Tenancy.StrictTenancyTest::it V31 F2 rejects mismatched descendant ancestor breadcrumb and ACL tree stamps",
+      "Packages.core.tests.Tenancy.TenantIdentifierPredicateTest::it SEC-TENANT-IDENTITY keeps numeric and case-sensitive tenant identity on the actual database",
+      "Packages.core.tests.Tenancy.TenantJobBoundaryTest::it V08 validates host A B A restores on next exception and fails absent or foreign tenant without work",
+      "Packages.core.tests.Tenancy.TenantJobBoundaryTest::it V08 a deleted queued actor fails without promotion to system or invoking next",
+      "Packages.core.tests.Tenancy.TenantJobBoundaryTest::it V08 rehydrates a user through Auth and evaluates changed permissions at execution",
+      "Packages.core.tests.Tenancy.TenantProvisioningRaceTest::it V31 a real PG owner profile race has one tenant winner and a hidden loser",
+      "Packages.core.tests.Access.TenantDelegationContractTest::it never lets an actor granted in one storage reach a node in another via can() or sharedWith, F-P1.9-02",
+      "Packages.core.tests.Access.TenantDelegationContractTest::it carries no TENANT global scope on the default Node model (the barrier is per-action, not query-level, F-P1.9-02)",
+      "Packages.core.tests.Access.TenantDelegationContractTest::it resolves a node by bare key with zero tenant/owner predicate applied (delegated tenancy, F-P1.9-02)",
+      "Packages.core.tests.Support.TenantFootgunGuardTest::it V31 strict tenancy rejects missing invalid and wrong-interface resolver in every environment with data set \"('testing') / (null)\"",
+      "Packages.core.tests.Support.TenantFootgunGuardTest::it V31 strict tenancy rejects missing invalid and wrong-interface resolver in every environment with data set \"('testing') / ('MissingTenantClass')\"",
+      "Packages.core.tests.Support.TenantFootgunGuardTest::it V31 strict tenancy rejects missing invalid and wrong-interface resolver in every environment with data set \"('testing') / ('stdClass')\"",
+      "Packages.core.tests.Support.TenantFootgunGuardTest::it V31 strict tenancy rejects missing invalid and wrong-interface resolver in every environment with data set \"('production') / (null)\"",
+      "Packages.core.tests.Support.TenantFootgunGuardTest::it V31 strict tenancy rejects missing invalid and wrong-interface resolver in every environment with data set \"('production') / ('MissingTenantClass')\"",
+      "Packages.core.tests.Support.TenantFootgunGuardTest::it V31 strict tenancy rejects missing invalid and wrong-interface resolver in every environment with data set \"('production') / ('stdClass')\"",
+      "Packages.core.tests.Support.TenantFootgunGuardTest::it V31 boot permits a valid read-only resolver with null current for maintenance CLI",
+      "Packages.core.tests.Support.TenantFootgunGuardTest::it keeps tenancy disabled by default with no resolver or model swap requirement"
+    ],
+    "input_digest": "93c7b0bdb0e739c0a0599e7c3c4528f789d96da9c2d4f60ad1e92cdeb50822df",
+    "id": "V1",
+    "receipt": "artifacts/P3.8/review-fix-sqlite-20261007T094433165636Z.json",
+    "candidate": {
+      "head": "0d836aa6aee229af80615ccdc23665619c3d9899",
+      "product_manifest": "artifacts/P3.8/product-manifest.json",
+      "current_input_digest": "93c7b0bdb0e739c0a0599e7c3c4528f789d96da9c2d4f60ad1e92cdeb50822df"
+    },
+    "input_proof": {
+      "changes_since_original": [],
+      "reason": "Exact final input closure"
+    },
+    "reused": false,
+    "covered_by": "exact focused final correction run",
+    "focused_command": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Tenancy packages/core/tests/Access/TenantDelegationContractTest.php packages/core/tests/Support/TenantFootgunGuardTest.php",
+    "supplemental": [
+      "final-fixture-sqlite-core",
+      "review-fix-sqlite",
+      "review-fix-pg"
+    ]
+  },
+  {
+    "command": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Tenancy tests/Feature/UploadSessionOwnershipTest.php --log-junit '/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.8/review-fix-drive-20261007T094653324492Z.xml'",
+    "acceptance_command": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Tenancy tests/Feature/UploadSessionOwnershipTest.php",
+    "cwd": "packages/drive",
+    "started_at": "2026-10-07T09:46:53.366247+00:00",
+    "finished_at": "2026-10-07T09:46:54.988791+00:00",
+    "duration_seconds": 1.623,
+    "exit": 0,
+    "output": "artifacts/P3.8/review-fix-drive-20261007T094653324492Z.log",
+    "junit": "artifacts/P3.8/review-fix-drive-20261007T094653324492Z.xml",
+    "discovered": 9,
+    "matched": 9,
+    "executed_tests": 9,
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "names": [
+      "Tests.Tenancy.HttpTenantResolutionTest::it V31 actual HTTP node revision and upload session routes cannot cross tenant",
+      "Tests.Tenancy.PrivateScannerTenantBoundaryTest::it SEC-R12 V08 private scanner A B A refuses mismatch null and maintenance inheritance before any reads",
+      "Tests.Tenancy.PrivateScannerTenantBoundaryTest::it SEC-R12 private capability validates lease scope immutable blob revision and generation before byte open",
+      "Tests.Tenancy.PrivateScannerTenantBoundaryTest::it SEC-R12 recovery only publishes current tenant work and all-tenant publication gives no job bypass",
+      "Tests.Feature.UploadSessionOwnershipTest::it владелец сессии продвигает её PATCH-чанком (F-P1.4-12, контроль)",
+      "Tests.Feature.UploadSessionOwnershipTest::it чужой актор с правом Create в той же папке НЕ может PATCH чужую сессию (F-P1.4-12, red-before: проходит)",
+      "Tests.Feature.UploadSessionOwnershipTest::it чужой актор НЕ может DELETE (abort) чужую сессию (F-P1.4-12)",
+      "Tests.Feature.UploadSessionOwnershipTest::it чужой актор НЕ может HEAD чужую сессию (F-P1.4-12)",
+      "Tests.Feature.UploadSessionOwnershipTest::it S3-multipart: чужой актор НЕ может POST parts на чужую сессию (F-P1.4-12)"
+    ],
+    "input_digest": "93c7b0bdb0e739c0a0599e7c3c4528f789d96da9c2d4f60ad1e92cdeb50822df",
+    "id": "V2",
+    "receipt": "artifacts/P3.8/review-fix-drive-20261007T094653324492Z.json",
+    "candidate": {
+      "head": "0d836aa6aee229af80615ccdc23665619c3d9899",
+      "product_manifest": "artifacts/P3.8/product-manifest.json",
+      "current_input_digest": "93c7b0bdb0e739c0a0599e7c3c4528f789d96da9c2d4f60ad1e92cdeb50822df"
+    },
+    "input_proof": {
+      "changes_since_original": [],
+      "reason": "Exact final input closure"
+    },
+    "reused": false,
+    "covered_by": "exact focused final correction run",
+    "focused_command": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Tenancy tests/Feature/UploadSessionOwnershipTest.php",
+    "supplemental": [
+      "final-fixture-sqlite-drive",
+      "review-fix-drive"
+    ]
+  },
+  {
+    "command": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Feature/ResourceListingScopeTest.php tests/Feature/PanelActorGuardTest.php --log-junit '/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.8/review-fix-filament-20261007T094655016230Z.xml'",
+    "acceptance_command": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Feature/ResourceListingScopeTest.php tests/Feature/PanelActorGuardTest.php",
+    "cwd": "packages/filament",
+    "started_at": "2026-10-07T09:46:55.057381+00:00",
+    "finished_at": "2026-10-07T09:46:57.471984+00:00",
+    "duration_seconds": 2.415,
+    "exit": 0,
+    "output": "artifacts/P3.8/review-fix-filament-20261007T094655016230Z.log",
+    "junit": "artifacts/P3.8/review-fix-filament-20261007T094655016230Z.xml",
+    "discovered": 10,
+    "matched": 10,
+    "executed_tests": 10,
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "names": [
+      "Tests.Feature.ResourceListingScopeTest::it DriveResource lists a storage the acting admin can reach and hides one it cannot (F-P1.10-01)",
+      "Tests.Feature.ResourceListingScopeTest::it NodeGrantResource lists a grant on a reachable node and hides one on an unreachable node (F-P1.10-01)",
+      "Tests.Feature.ResourceListingScopeTest::it NodeShareResource lists a share on a reachable node and hides one on an unreachable node (F-P1.10-01)",
+      "Tests.Feature.ResourceListingScopeTest::it ActivityResource lists activity targeting a reachable node and hides a foreign owner's activity (F-P1.10-01)",
+      "Tests.Feature.ResourceListingScopeTest::it isolates database resources from a sibling profile with an open candidate lane with data set \"('gate')\"",
+      "Tests.Feature.ResourceListingScopeTest::it isolates database resources from a sibling profile with an open candidate lane with data set \"('disabled')\"",
+      "Tests.Feature.ResourceListingScopeTest::it V31 Filament node grant share and activity listings stay in the current tenant",
+      "Tests.Feature.PanelActorGuardTest::it resolves the acting admin through the panel guard, not the global default guard, F-P1.10-02",
+      "Tests.Feature.PanelActorGuardTest::it resolves the same identity as the default guard when the panel uses no explicit guard (control, F-P1.10-02)",
+      "Tests.Feature.PanelActorGuardTest::it rejects an authenticated identity that cannot be authorized"
+    ],
+    "input_digest": "93c7b0bdb0e739c0a0599e7c3c4528f789d96da9c2d4f60ad1e92cdeb50822df",
+    "id": "V3",
+    "receipt": "artifacts/P3.8/review-fix-filament-20261007T094655016230Z.json",
+    "candidate": {
+      "head": "0d836aa6aee229af80615ccdc23665619c3d9899",
+      "product_manifest": "artifacts/P3.8/product-manifest.json",
+      "current_input_digest": "93c7b0bdb0e739c0a0599e7c3c4528f789d96da9c2d4f60ad1e92cdeb50822df"
+    },
+    "input_proof": {
+      "changes_since_original": [],
+      "reason": "Exact final input closure"
+    },
+    "reused": false,
+    "covered_by": "exact focused final correction run",
+    "focused_command": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Feature/ResourceListingScopeTest.php tests/Feature/PanelActorGuardTest.php",
+    "supplemental": [
+      "review-fix-filament"
+    ]
+  },
+  {
+    "command": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests --log-junit '/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.8/V906-20261007T085449344836Z.xml'",
+    "acceptance_command": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests",
+    "cwd": "packages/drive",
+    "started_at": "2026-10-07T08:54:49.544192+00:00",
+    "finished_at": "2026-10-07T08:56:33.262918+00:00",
+    "duration_seconds": 103.719,
+    "exit": 0,
+    "output": "artifacts/P3.8/V906-20261007T085449344836Z.log",
+    "junit": "artifacts/P3.8/V906-20261007T085449344836Z.xml",
+    "discovered": 3,
+    "matched": 3,
+    "executed_tests": 3,
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "names": [
+      "Tests.Tenancy.PrivateScannerTenantBoundaryTest::it SEC-R12 V08 private scanner A B A refuses mismatch null and maintenance inheritance before any reads",
+      "Tests.Tenancy.PrivateScannerTenantBoundaryTest::it SEC-R12 private capability validates lease scope immutable blob revision and generation before byte open",
+      "Tests.Tenancy.PrivateScannerTenantBoundaryTest::it SEC-R12 recovery only publishes current tenant work and all-tenant publication gives no job bypass"
+    ],
+    "input_digest": "1df8a3aa9fb0a29cecf8072bc0ffd16da45b22c794812802b45842e9d252fdce",
+    "id": "V4",
+    "receipt": "artifacts/P3.8/V906-20261007T085449344836Z.json",
+    "candidate": {
+      "head": "0d836aa6aee229af80615ccdc23665619c3d9899",
+      "product_manifest": "artifacts/P3.8/product-manifest.json",
+      "current_input_digest": "93c7b0bdb0e739c0a0599e7c3c4528f789d96da9c2d4f60ad1e92cdeb50822df"
+    },
+    "input_proof": {
+      "changes_since_original": [
+        "packages/core/src/Access/AccessResolver.php",
+        "packages/core/src/Repositories/Drive/DriveReadRepository.php",
+        "packages/core/src/Repositories/Drive/NodeReadRepository.php",
+        "packages/core/src/Tenancy/TenancyBoundary.php",
+        "packages/core/tests/Concurrency/ForkRace.php",
+        "packages/core/tests/Schema/NodeSequenceSchemaTest.php",
+        "packages/core/tests/Schema/ScanEvidenceSchemaTest.php",
+        "packages/core/tests/Tenancy/MutableTenantResolver.php",
+        "packages/core/tests/Tenancy/StrictTenancyTest.php",
+        "packages/core/tests/Tenancy/TenantJobBoundaryTest.php",
+        "packages/core/tests/Tenancy/TenantProvisioningRaceTest.php",
+        "packages/drive/src/DriveHandleFactory.php",
+        "packages/drive/src/DriveProvisioner.php",
+        "packages/drive/tests/Tenancy/HttpTenantResolutionTest.php",
+        "packages/drive/tests/Tenancy/PrivateScannerTenantBoundaryTest.php"
+      ],
+      "reason": "One seven-file correction after full review binds optional owner lookup/provision to checked fresh identity and rejects all mismatched tree/ACL stamps. Current core/drive PHPStan plus focused core/drive/Filament SQLite and actual core tenancy PG qualify the changed execution closure. Default-disabled branches and schema/scan/job/byte/lease algorithms unchanged; remaining full-suite receipts retained with these explicit supplements. Unrelated test paths are not sibling execution/analysis inputs."
+    },
+    "reused": true,
+    "covered_by": "V906",
+    "focused_command": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Tenancy/PrivateScannerTenantBoundaryTest.php",
+    "supplemental": [
+      "final-fixture-sqlite-drive",
+      "review-fix-drive"
+    ]
+  }
+]

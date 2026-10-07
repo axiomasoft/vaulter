@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter;
 
+use Closure;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Eloquent\Model;
@@ -15,6 +16,7 @@ use Vaulter\Exceptions\Documents\UnknownExportFormatException;
 use Vaulter\Exceptions\Support\MissingPackageException;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Profiles\ProfileRegistry;
+use Vaulter\Tenancy\TenancyBypass;
 
 /**
  * Public entry point for host-app integration: open Drive handles, register drive
@@ -181,6 +183,15 @@ final class VaulterManager
             ...array_keys($this->configuredExporters()),
             ...array_keys($this->exporters),
         ]));
+    }
+
+    /** @template T
+     * @param  Closure(): T $callback
+     * @return T
+     */
+    public function withoutTenancy(Closure $callback): mixed
+    {
+        return $this->container->make(TenancyBypass::class)->run($callback);
     }
 
     /** @return array<string, class-string<DocumentExporter>> */

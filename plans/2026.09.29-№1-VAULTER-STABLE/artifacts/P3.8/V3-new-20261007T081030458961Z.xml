@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Feature\ResourceListingScopeTest" file="tests/Feature/ResourceListingScopeTest.php" tests="1" assertions="0" errors="1" failures="0" skipped="0" time="0.352907">
+    <testcase name="it V31 Filament node grant share and activity listings stay in the current tenant" file="tests/Feature/ResourceListingScopeTest.php::it V31 Filament node grant share and activity listings stay in the current tenant" class="Tests\Feature\ResourceListingScopeTest" classname="Tests.Feature.ResourceListingScopeTest" assertions="0" time="0.352907">
+      <error type="Error">it V31 Filament node grant share and activity listings stay in the current tenantError: Class "NodeResource" not found
+at tests/Feature/ResourceListingScopeTest.php:176</error>
+    </testcase>
+  </testsuite>
+</testsuites>

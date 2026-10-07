@@ -1,0 +1,28 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:check-evidence:v1",
+  "evidence_id": "p38-final-V82",
+  "check_id": "V82",
+  "subject": "PLAN2.P3.8",
+  "procedure": {
+    "cmd": "python3 plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-coverage.py check --phase P3",
+    "cwd": "."
+  },
+  "candidate": {
+    "head": "0d836aa6aee229af80615ccdc23665619c3d9899"
+  },
+  "started_at": "2026-10-07T09:03:13.112795+00:00",
+  "finished_at": "2026-10-07T09:03:13.164710+00:00",
+  "producer": {
+    "kind": "executor",
+    "actor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high"
+    }
+  },
+  "log": {
+    "path": "@plan/artifacts/P3.8/V82-20261007T090313071236Z.log",
+    "sha256": "85e077c6fa524f545a3aad40716cd539a14b900d3c49b9abfd3cf0f9f02e9ee8"
+  },
+  "exit": 0
+}

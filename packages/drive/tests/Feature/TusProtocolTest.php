@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -165,7 +166,7 @@ it('метаданные с неизвестным ключом → отброш
         ->where('upload_id', $uploadId)
         ->firstOrFail();
 
-    expect($session->metadata)->toBe(['filename' => 'meta.bin']);
+    expect(UploadTestHelpers::clientMetadata($session))->toBe(['filename' => 'meta.bin']);
 });
 
 it('значение метаданных сверх лимита длины — усекается, не отвергается (F-P1.4-08)', function (): void {

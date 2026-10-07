@@ -154,10 +154,10 @@ it('excludes a deny-revoked row and an expired allow from the shared view (exact
         ->and($ids)->not->toContain($expired->getKey());
 });
 
-// ── 5. GET shared unauthenticated ⇒ empty (not 500); the envelope is a bounded page.
-it('returns an empty bounded page for an unauthenticated shared request', function (): void {
+// ── 5. GET shared requires an actor and never returns granted data to a guest.
+it('requires an actor for an unauthenticated shared request without leaking a granted node', function (): void {
     // A grant exists for user 1, but THIS request has no actor — so the shared view
-    // must see nothing (the no-actor path), never error, never leak the granted node.
+    // receives actor_required401 and cannot see the granted node.
     $storage = AccessTestHelpers::storage();
     AccessTestHelpers::grant(
         AccessTestHelpers::folder($storage, null, 'secret'),
@@ -167,12 +167,7 @@ it('returns an empty bounded page for an unauthenticated shared request', functi
 
     actAsGuest();
 
-    $this->getJson('api/vaulter/shared')
-        ->assertOk()
-        ->assertJsonCount(0, 'data')
-        // No actor means no continuation cursor or hidden-node total.
-        ->assertJsonPath('meta.next_cursor', null)
-        ->assertJsonMissingPath('meta.total');
+    $this->getJson('api/vaulter/shared')->assertUnauthorized()->assertJsonMissingPath('data');
 });
 
 it('wraps the shared view in an exact cursor envelope', function (): void {
@@ -281,7 +276,7 @@ it('refuses the action on a deny-vetoed node that still appears in the candidate
     expect($listed)->toContain($child->getKey());
 
     // …but the per-ACTION gate is EXACT: show on the deny-vetoed child is refused (403).
-    $this->getJson('api/vaulter/nodes/'.$child->getKey())->assertStatus(403);
+    $this->getJson('api/vaulter/nodes/'.$child->getKey())->assertNotFound();
 
     // The non-vetoed parent still shows (sanity — only the vetoed node is gated).
     $this->getJson('api/vaulter/nodes/'.$parent->getKey())->assertOk();

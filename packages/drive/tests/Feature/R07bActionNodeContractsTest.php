@@ -127,11 +127,13 @@ it('UploadFile L196/L203: new version with a changed mime type updates node and 
     $node = $drive->upload(DriveTestHelpers::streamFor('v1 bytes'), originalName: 'f.bin', mimeType: 'text/plain');
 
     // Upload a version with a different declared mime.
-    $updated = $drive->uploadVersion($node, DriveTestHelpers::streamFor('v2 longer bytes'), originalName: 'f.bin', mimeType: 'application/pdf');
+    $image = UploadedFile::fake()->image('revision.png', 1, 1);
+    $drive->uploadVersion($node, DriveTestHelpers::streamFor(file_get_contents($image->getRealPath())), originalName: 'f.bin', mimeType: 'image/png');
+    $updated = $node->refresh();
 
     // CoalesceRemoveLeft mutant: $file->mime_type ('text/plain') is used instead.
-    expect($updated->refresh()->mime_type)->toBe('application/pdf');
-    expect($updated->file()->first()->mime_type)->toBe('application/pdf');
+    expect($updated->refresh()->mime_type)->toBe('image/png');
+    expect($updated->file()->first()->mime_type)->toBe('image/png');
 });
 
 // L234-236 RemoveArrayItem: the version row created by makeVersion must carry
@@ -410,7 +412,7 @@ it('DownloadController L115 first CoalesceRemoveLeft: version mime_type wins ove
 
     // Upload with image/png (whitelisted, served as-is).
     $nodeId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/uploads', [
-        'file' => UploadedFile::fake()->create('photo.png', 1, 'image/png'),
+        'file' => UploadedFile::fake()->image('photo.png', 1, 1),
     ])->assertCreated()->json('data.id');
 
     // Force node.mime_type to something different so version.mime_type wins.
@@ -430,7 +432,7 @@ it('DownloadController L115 second CoalesceRemoveLeft: node mime_type is used wh
     $storage = r07bActStorage();
 
     $nodeId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/uploads', [
-        'file' => UploadedFile::fake()->create('photo.png', 1, 'image/png'),
+        'file' => UploadedFile::fake()->image('photo.png', 1, 1),
     ])->assertCreated()->json('data.id');
 
     // Set version.mime_type to null so node.mime_type must be the fallback.

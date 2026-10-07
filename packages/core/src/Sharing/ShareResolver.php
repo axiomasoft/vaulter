@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Vaulter\Access\AccessResolver;
+use Vaulter\Configuration\TenancyConfig;
+use Vaulter\Content\ContentAvailabilityGuard;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\FileRevision;
@@ -20,9 +22,10 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileRegistry;
-use Vaulter\Repositories\Drive\DriveReadRepository;
 use Vaulter\Repositories\Sharing\NodeShareReadRepository;
 use Vaulter\Support\ShareToken;
+use Vaulter\Tenancy\ShareTenantContext;
+use Vaulter\Tenancy\TenancyBoundary;
 
 /**
  * Resolves a bearer share-token into a {@see ShareContext} (§2.7 / M2c) — the
@@ -53,7 +56,6 @@ final class ShareResolver
     public function __construct(
         private readonly Repository $configuration,
         private readonly NodeShareReadRepository $shares,
-        private readonly DriveReadRepository $storages,
         private readonly AccessResolver $access,
         private readonly ProfilePolicy $profiles,
         private readonly ProfileRegistry $registry,
@@ -141,8 +143,13 @@ final class ShareResolver
         return $fresh;
     }
 
-    public function assertContentAvailable(Node $node, FileRevision $revision): void
+    public function assertContentAvailable(Node $node, FileRevision $revision, ?ShareContext $context = null): void
     {
+        if ($context !== null) {
+            app(ContentAvailabilityGuard::class)->assertAvailableForShare($context, $node, $revision);
+
+            return;
+        }
         $this->content->assertAvailable(node: $node, revision: $revision);
     }
 
@@ -164,8 +171,8 @@ final class ShareResolver
 
         // The storage must exist (tenant/storage boundary) — a detached node is a
         // corrupt state, never a public surface.
-        $drive = $this->storages->find($node->drive_id);
-        if (!$drive instanceof Drive || !$this->profiles->featureEnabled($this->registry->get($drive->profile), 'share_links') || (string) $share->tenant_id !== (string) $drive->tenant_id) {
+        $drive = $node->storage()->first();
+        if (!$drive instanceof Drive || (app(TenancyConfig::class)->enabled() && ($drive->tenant_id === null || TenancyBoundary::normalize($node->tenant_id) !== TenancyBoundary::normalize($drive->tenant_id))) || !$this->profiles->featureEnabled($this->registry->get($drive->profile), 'share_links') || (string) $share->tenant_id !== (string) $drive->tenant_id) {
             return null;
         }
 
@@ -206,7 +213,13 @@ final class ShareResolver
             return false;
         }
 
-        return $this->access->can($issuer, Ability::View, $node) && $this->access->can($issuer, Ability::Share, $node);
+        $drive = $node->storage()->first();
+        if (!$drive instanceof Drive || (app(TenancyConfig::class)->enabled() && $drive->tenant_id === null)) {
+            return false;
+        }
+
+        return app(ShareTenantContext::class)->evaluate($drive,
+            fn (): bool => $this->access->can($issuer, Ability::View, $node) && $this->access->can($issuer, Ability::Share, $node));
     }
 
     /**

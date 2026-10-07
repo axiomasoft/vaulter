@@ -7,6 +7,7 @@ namespace Vaulter\Tests;
 use Illuminate\Foundation\Application;
 use Vaulter\Tests\Concerns\RefreshesDatabaseForSchemaVariant;
 use Vaulter\Tests\Fixtures\TenantAwareNode;
+use Vaulter\Tests\Tenancy\MutableTenantResolver;
 
 /**
  * Boots the package in ULID + tenant mode so the migrations and key handling are
@@ -26,11 +27,9 @@ class UlidTestCase extends TestCase
 
         $app['config']->set('vaulter.ids.strategy', 'ulid');
         $app['config']->set('vaulter.tenancy.enabled', true);
+        $app['config']->set('vaulter.tenancy.resolver', MutableTenantResolver::class);
 
-        // This suite exercises ULID key handling + tenant_id COLUMN emission, not
-        // query-level tenant isolation — swap in the non-enforcing test double so
-        // boot doesn't trip the F-P1.9-01 footgun guard (which exists to catch
-        // exactly "tenant.enabled=true + still the default node model").
+        // Strict tenancy uses the host resolver; model swaps remain an optional layer.
         $app['config']->set('vaulter.models.node', TenantAwareNode::class);
     }
 }

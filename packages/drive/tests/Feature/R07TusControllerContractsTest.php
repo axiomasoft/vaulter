@@ -162,7 +162,7 @@ it('metadata whitelisting continues after an unknown key and trims header pairs'
     ], ['Upload-Metadata' => ' dropped '.base64_encode('x').', filename '.$encoded])
         ->assertCreated()->json('data.upload_id');
 
-    expect(UploadSession::query()->where('upload_id', $uploadId)->sole()->metadata)
+    expect(UploadTestHelpers::clientMetadata(UploadSession::query()->where('upload_id', $uploadId)->sole()))
         ->toBe(['filename' => ' kept.bin ']);
 });
 
@@ -176,7 +176,7 @@ it('metadata skips empty keys and round-trips base64 values from Upload-Metadata
         'total_size_bytes' => 4,
     ], ['Upload-Metadata' => $header])->assertCreated()->json('data.upload_id');
 
-    expect(UploadSession::query()->where('upload_id', $uploadId)->sole()->metadata)
+    expect(UploadTestHelpers::clientMetadata(UploadSession::query()->where('upload_id', $uploadId)->sole()))
         ->toBe(['filename' => $value, 'filetype' => 'text/plain']);
 });
 
@@ -274,7 +274,7 @@ it('404s when parent_id belongs to another storage on create', function (): void
     ])->assertNotFound();
 });
 
-it('403s PATCH when no authenticated actor is present', function (): void {
+it('401s PATCH when no authenticated actor is present', function (): void {
     $uploadId = r07SessionId(r07Storage());
     Auth::logout();
 
@@ -282,7 +282,7 @@ it('403s PATCH when no authenticated actor is present', function (): void {
         'HTTP_TUS_RESUMABLE' => '1.0.0',
         'CONTENT_TYPE' => 'application/offset+octet-stream',
         'HTTP_UPLOAD_OFFSET' => '0',
-    ], content: 'abcd')->assertForbidden();
+    ], content: 'abcd')->assertUnauthorized();
 });
 
 it('Location header normalizes a trailing slash on the route prefix', function (): void {

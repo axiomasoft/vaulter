@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Tenancy\PrivateScannerTenantBoundaryTest" file="tests/Tenancy/PrivateScannerTenantBoundaryTest.php" tests="3" assertions="11" errors="0" failures="2" skipped="0" time="0.655243">
+    <testcase name="it SEC-R12 V08 private scanner A B A refuses mismatch null and maintenance inheritance before any reads" file="tests/Tenancy/PrivateScannerTenantBoundaryTest.php::it SEC-R12 V08 private scanner A B A refuses mismatch null and maintenance inheritance before any reads" class="Tests\Tenancy\PrivateScannerTenantBoundaryTest" classname="Tests.Tenancy.PrivateScannerTenantBoundaryTest" assertions="2" time="0.308952">
+      <failure type="PHPUnit\Framework\ExpectationFailedException">it SEC-R12 V08 private scanner A B A refuses mismatch null and maintenance inheritance before any readsException "Vaulter\Exceptions\Nodes\NodeNotFoundException" not thrown.
+at tests/Tenancy/PrivateScannerTenantBoundaryTest.php:82</failure>
+    </testcase>
+    <testcase name="it SEC-R12 private capability validates lease scope immutable blob revision and generation before byte open" file="tests/Tenancy/PrivateScannerTenantBoundaryTest.php::it SEC-R12 private capability validates lease scope immutable blob revision and generation before byte open" class="Tests\Tenancy\PrivateScannerTenantBoundaryTest" classname="Tests.Tenancy.PrivateScannerTenantBoundaryTest" assertions="2" time="0.179251">
+      <failure type="PHPUnit\Framework\ExpectationFailedException">it SEC-R12 private capability validates lease scope immutable blob revision and generation before byte openException "Vaulter\Exceptions\Nodes\NodeNotFoundException" not thrown.
+at tests/Tenancy/PrivateScannerTenantBoundaryTest.php:111</failure>
+    </testcase>
+    <testcase name="it SEC-R12 recovery only publishes current tenant work and all-tenant publication gives no job bypass" file="tests/Tenancy/PrivateScannerTenantBoundaryTest.php::it SEC-R12 recovery only publishes current tenant work and all-tenant publication gives no job bypass" class="Tests\Tenancy\PrivateScannerTenantBoundaryTest" classname="Tests.Tenancy.PrivateScannerTenantBoundaryTest" assertions="7" time="0.167041"/>
+  </testsuite>
+</testsuites>

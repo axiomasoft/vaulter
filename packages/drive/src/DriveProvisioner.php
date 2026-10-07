@@ -7,11 +7,13 @@ namespace Vaulter\Drive;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Str;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Events\Drives\DriveCreated;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
@@ -21,6 +23,7 @@ use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Repositories\Drive\DriveReadRepository;
 use Vaulter\Repositories\Drive\DriveStoreRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
+use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\ValueObjects\Access\Actor;
 
 /**
@@ -54,6 +57,7 @@ final readonly class DriveProvisioner
      */
     public function forOwner(Model $owner, string $panel = 'default'): Drive
     {
+        $owner = app(TenancyBoundary::class)->assertOwner($owner);
         $profile = $this->profiles->get($panel);
         $this->policy->assertOwner(profile: $profile, owner: $owner);
         $existing = $this->read->forOwner(owner: $owner, panel: $panel);
@@ -73,9 +77,7 @@ final readonly class DriveProvisioner
                 return $winner;
             }
 
-            throw new \RuntimeException(
-                'Lost the storage provisioning race but the winning row is not visible.',
-            );
+            throw NodeNotFoundException::forId('drive');
         }
     }
 
@@ -86,7 +88,7 @@ final readonly class DriveProvisioner
     private function provision(Model $owner, string $panel): Drive
     {
         return $this->database->transaction(function () use ($owner, $panel): Drive {
-            $storage = $this->store->create([
+            $attributes = [
                 'profile' => $panel,
                 'owner_type' => $owner->getMorphClass(),
                 'owner_id' => $owner->getKey(),
@@ -94,7 +96,11 @@ final readonly class DriveProvisioner
                 'disk' => $this->profiles->get($panel)->getDisk() ?? $this->mediaConfig->disk(),
                 'quota_bytes' => $this->profiles->get($panel)->getDefaultQuota() ?? $this->config->defaultQuota(),
                 'used_bytes' => 0,
-            ]);
+            ];
+            if (app(TenancyBoundary::class)->enforced()) {
+                $attributes['tenant_id'] = app(TenancyBoundary::class)->current();
+            }
+            $storage = $this->store->create($attributes);
 
             app(ScanPolicyResolver::class)->initialize($storage, OperationContext::system($storage, 'drive provisioning'));
 
@@ -120,6 +126,7 @@ final readonly class DriveProvisioner
      */
     public function root(Drive $storage): Node
     {
+        $storage = app(TenancyBoundary::class)->assertDrive($storage);
         $root = $storage->rootNode()->first();
 
         if ($root instanceof Node) {
@@ -127,6 +134,14 @@ final readonly class DriveProvisioner
         }
 
         return $this->database->transaction(function () use ($storage): Node {
+            $this->database->lockTree($storage->id);
+            $class = app(VaulterConfig::class)->model('drive');
+            $storage = $class::query()->whereKey($storage->getRawOriginal($storage->getKeyName()))->lockForUpdate()->firstOrFail();
+            $storage = app(TenancyBoundary::class)->assertDrive($storage);
+            $existing = $storage->rootNode()->first();
+            if ($existing instanceof Node) {
+                return $existing;
+            }
             $root = $this->nodes->create([
                 'drive_id' => $storage->id,
                 'parent_id' => null,

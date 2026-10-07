@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
+use Vaulter\VaulterManager;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Trash\PurgeNodeAction;
@@ -59,6 +60,11 @@ final class PurgeTrashCommand extends Command
         PurgeNodeAction $forceDelete,
         MetricsRecorder $metrics,
     ): int {
+        return app(VaulterManager::class)->withoutTenancy(fn (): int => $this->runMaintenance($nodes, $store, $forceDelete, $metrics));
+    }
+
+    private function runMaintenance(NodeReadRepository $nodes, NodeStoreRepository $store, PurgeNodeAction $forceDelete, MetricsRecorder $metrics): int
+    {
         $retentionDays = $this->retentionDays();
         $threshold = Carbon::now()->subDays($retentionDays);
 

@@ -14,6 +14,7 @@ use Vaulter\Access\ValueObjects\AclMask;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\GrantSet;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Enums\Access\Ability;
@@ -26,6 +27,7 @@ use Vaulter\Repositories\Access\GrantReadRepository;
 use Vaulter\Repositories\Drive\DriveReadRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Support\Identity;
+use Vaulter\Tenancy\TenancyBoundary;
 
 /**
  * The Vaulter-OWNED, NON-swappable effective-permission engine (master plan H.2).
@@ -82,6 +84,10 @@ final class AccessResolver
      */
     public function effectiveGrants(Authorizable $actor, Node $node): GrantSet
     {
+        if (app(TenancyBoundary::class)->enforced()) {
+            app(TenancyBoundary::class)->assertNode($node);
+            $node = $node->newQuery()->whereKey($node->getRawOriginal($node->getKeyName()))->firstOrFail();
+        }
         $storage = $this->storageOf($node);
         $driver = $this->drivers->forProfile($storage->profile);
         $scope = $this->scopeFor($storage, $node);
@@ -291,6 +297,10 @@ final class AccessResolver
      */
     public function explain(Authorizable $actor, Ability $ability, Node $node): AccessExplanation
     {
+        if (app(TenancyBoundary::class)->enforced()) {
+            app(TenancyBoundary::class)->assertNode($node);
+            $node = $node->newQuery()->whereKey($node->getRawOriginal($node->getKeyName()))->firstOrFail();
+        }
         $storage = $this->storageOf($node);
         $driver = $this->drivers->forProfile($storage->profile);
         $scope = $this->scopeFor($storage, $node);
@@ -362,6 +372,10 @@ final class AccessResolver
      */
     public function canCreateIn(Authorizable $actor, Drive $drive): bool
     {
+        if (app(TenancyConfig::class)->enabled()) {
+            $drive = app(TenancyBoundary::class)->assertDrive($drive);
+        }
+
         return $this->drivers->forProfile($drive->profile)->canCreateIn(
             actor: $actor,
             scope: AccessScope::forDrive($drive),
@@ -404,7 +418,7 @@ final class AccessResolver
         $ids = [];
         $driveModel = $this->vaulterConfig->model('drive');
         $nodeModel = $this->vaulterConfig->model('node');
-        foreach ($driveModel::query()->cursor() as $drive) {
+        foreach (app(TenancyBoundary::class)->constrain($driveModel::query())->cursor() as $drive) {
             if (!$this->vaulterConfig->featureEnabled('grants', $drive->profile)) {
                 continue;
             }
@@ -715,6 +729,9 @@ final class AccessResolver
             NodeReadRepository::DEFAULT_MAX_DEPTH,
             static fn (): Collection => $node->ancestors()->get(),
         );
+        if (app(TenancyConfig::class)->enabled()) {
+            app(TenancyBoundary::class)->assertTree($ancestors, $this->storageOf($node));
+        }
 
         // ancestors() returns nearest-first already; bound it to the same storage so
         // a misconfigured tree can never escape the workspace (defence-in-depth on
@@ -754,6 +771,9 @@ final class AccessResolver
 
     private function storageOf(Node $node): Drive
     {
+        if (app(TenancyBoundary::class)->enforced()) {
+            return app(TenancyBoundary::class)->assertNode($node);
+        }
         // Prefer an already-loaded storage relation (e.g. sharedWith eager-loads it)
         // so a bulk re-resolution does NOT fire one storage query per node; fall back
         // to the read repository for a node loaded without it.

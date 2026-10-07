@@ -17,6 +17,7 @@ use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
+use Vaulter\Models\Concerns\StampsDriveTenant;
 use Vaulter\Models\Drive\Node;
 
 /**
@@ -52,6 +53,7 @@ class NodeGrant extends Model
     use HasExtraData;
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
+    use StampsDriveTenant;
 
     /**
      * Fully guarded (F-P1.8-02): an ACL row — every column (subject, level,

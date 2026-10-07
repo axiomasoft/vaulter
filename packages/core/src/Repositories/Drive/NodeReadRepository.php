@@ -13,6 +13,7 @@ use Illuminate\Support\Carbon;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Access\ValueObjects\AccessScope;
+use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Access\GrantAuthoritativeDriver;
 use Vaulter\Contracts\Observability\MetricsRecorder;
@@ -24,6 +25,7 @@ use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Repositories\Access\GrantReadRepository;
 use Vaulter\Support\Identity;
 use Vaulter\Support\LoadTier;
+use Vaulter\Tenancy\TenancyBoundary;
 
 /**
  * Read-side queries over the v_nodes adjacency tree (§2.2 / H.4). Tree reads use
@@ -72,6 +74,10 @@ final class NodeReadRepository
      */
     public function forStorage(Drive $storage): Builder
     {
+        if (app(TenancyConfig::class)->enabled()) {
+            $storage = app(TenancyBoundary::class)->assertDrive($storage);
+        }
+
         return $this->query()
             ->treeOf($storage->id)
             ->whereNull('trashed_at');
@@ -107,6 +113,7 @@ final class NodeReadRepository
      */
     public function isRoot(Node $node): bool
     {
+        $node = $this->scopedNode($node);
         $rootId = $node->storage->root_node_id;
 
         return $rootId !== null && Identity::stringify($node->getKey()) === Identity::stringify($rootId);
@@ -121,6 +128,7 @@ final class NodeReadRepository
      */
     public function descendants(Node $node, ?int $maxDepth = null): Collection
     {
+        $node = $this->scopedNode($node);
         $model = $this->vaulterConfig->model('node');
 
         /** @var Collection<int, Node> $result */
@@ -129,7 +137,7 @@ final class NodeReadRepository
             static fn (): Collection => $node->descendants()->get(),
         );
 
-        return $result;
+        return $this->checkedTree($result, $node);
     }
 
     /**
@@ -140,6 +148,8 @@ final class NodeReadRepository
      */
     public function subtree(Node $node, ?int $maxDepth = null): Collection
     {
+        $node = $this->scopedNode($node);
+
         return $this->metrics->timing(
             name: 'vaulter_tree_query_duration_seconds',
             operation: function () use ($node, $maxDepth): Collection {
@@ -151,7 +161,7 @@ final class NodeReadRepository
                     static fn (): Collection => $node->descendantsAndSelf()->get(),
                 );
 
-                return $result;
+                return $this->checkedTree($result, $node);
             },
             labels: [
                 'query_kind' => 'subtree',
@@ -178,12 +188,16 @@ final class NodeReadRepository
         $initialPath = $grammar->compileInitialPath('id', '__acl_path');
         $seed = $this->whereKeyInBounded($query, $parentIds)
             ->select(['id', 'parent_id', 'drive_id', 'inherit_grants'])->selectRaw('id as origin, 0 as depth');
+        $strict = app(TenancyConfig::class)->enabled();
+        if ($strict) {
+            $seed->addSelect('tenant_id');
+        }
         // Match ancestors()'s ascend semantics, including its database-specific
         // cycle guard. withMaxDepth(+64) does not limit negative ancestor depths.
         $path = $grammar->compileRecursivePath('n.id', 'c.__acl_path');
         $cycle = $grammar->compileCycleDetection('n.id', 'c.__acl_path');
         $sql = 'WITH RECURSIVE chain AS (SELECT seed.*, '.$initialPath.' FROM ('.$seed->toSql().') seed
-            UNION ALL SELECT n.id, n.parent_id, n.drive_id, n.inherit_grants, c.origin, c.depth + 1, '.$path.'
+            UNION ALL SELECT n.id, n.parent_id, n.drive_id, n.inherit_grants, c.origin, c.depth + 1'.($strict ? ', n.tenant_id' : '').', '.$path.'
             FROM '.$table.' n JOIN chain c ON n.id = c.parent_id AND n.drive_id = c.drive_id
             WHERE c.inherit_grants = ? AND NOT ('.$cycle.') AND n.deleted_at IS NULL)
             SELECT * FROM chain ORDER BY origin, depth';
@@ -194,11 +208,25 @@ final class NodeReadRepository
             ...$grammar->getCycleDetectionBindings($separator),
         ]);
         $chains = [];
+        $byDrive = [];
         foreach ($rows as $row) {
             if (!$row instanceof \stdClass || (!is_string($row->origin) && !is_int($row->origin))) {
                 throw new \LogicException('Invalid ancestor chain row.');
             }
             $chains[Identity::stringify($row->origin)][] = $row;
+            if ($strict) {
+                if (!is_int($row->drive_id) && !is_string($row->drive_id)) {
+                    throw new \LogicException('Invalid ancestor drive key.');
+                }
+                $byDrive[Identity::stringify($row->drive_id)][] = $row;
+            }
+        }
+        if ($strict) {
+            $driveClass = $this->vaulterConfig->model('drive');
+            foreach ($byDrive as $driveId => $nodes) {
+                $drive = $driveClass::query()->findOrFail($driveId);
+                app(TenancyBoundary::class)->assertTree($nodes, $drive);
+            }
         }
 
         return $chains;
@@ -214,6 +242,7 @@ final class NodeReadRepository
      */
     public function ancestors(Node $node): Collection
     {
+        $node = $this->scopedNode($node);
         $model = $this->vaulterConfig->model('node');
 
         /** @var Collection<int, Node> $result */
@@ -222,7 +251,7 @@ final class NodeReadRepository
             static fn (): Collection => $node->ancestors()->get(),
         );
 
-        return $result;
+        return $this->checkedTree($result, $node);
     }
 
     /**
@@ -234,6 +263,8 @@ final class NodeReadRepository
      */
     public function breadcrumb(Node $node): Collection
     {
+        $node = $this->scopedNode($node);
+
         return $this->metrics->timing(
             name: 'vaulter_tree_query_duration_seconds',
             operation: function () use ($node): Collection {
@@ -244,6 +275,7 @@ final class NodeReadRepository
                     self::DEFAULT_MAX_DEPTH,
                     static fn (): Collection => $node->ancestorsAndSelf()->get(),
                 );
+                $this->checkedTree($crumbs, $node);
 
                 /** @var Collection<int, Node> $ordered */
                 $ordered = $crumbs->reverse()->values();
@@ -418,6 +450,7 @@ final class NodeReadRepository
      */
     public function constrainToAccessible(Builder $query, Authorizable $actor): Builder
     {
+        app(TenancyBoundary::class)->constrain($query);
         if (!$this->grantFilteringApplies()) {
             return $query;
         }
@@ -522,7 +555,7 @@ final class NodeReadRepository
         $driveModel = $this->vaulterConfig->model('drive');
         $anchors = [];
         $openIds = [];
-        foreach ($driveModel::query()->cursor() as $drive) {
+        foreach (app(TenancyBoundary::class)->constrain($driveModel::query())->cursor() as $drive) {
             $driver = $this->drivers->forProfile($drive->profile);
             if (!$this->vaulterConfig->featureEnabled('grants', $drive->profile)
                 || !$driver instanceof GrantAuthoritativeDriver
@@ -605,7 +638,7 @@ final class NodeReadRepository
         $keyName = (new $model)->getKeyName();
 
         /** @var Collection<int, Node> $anchors */
-        $anchors = $this->whereKeyInBounded($model::query(), $anchorIds)->get();
+        $anchors = $this->whereKeyInBounded(app(TenancyBoundary::class)->constrain($model::query()), $anchorIds)->get();
 
         /** @var list<int|string> $ids */
         $ids = [];
@@ -656,13 +689,34 @@ final class NodeReadRepository
         return $query->whereRaw(new EscapedKeySet($keyName, $ids));
     }
 
-    /**
-     * @return Builder<Node>
+    private function scopedNode(Node $node): Node
+    {
+        if (!app(TenancyConfig::class)->enabled()) {
+            return $node;
+        }
+        app(TenancyBoundary::class)->assertNode($node);
+
+        return $node->newQuery()->withTrashed()->whereKey($node->getRawOriginal($node->getKeyName()))->firstOrFail();
+    }
+
+    /** @param Collection<int, Node> $nodes
+     * @return Collection<int, Node>
      */
+    private function checkedTree(Collection $nodes, Node $root): Collection
+    {
+        if (app(TenancyConfig::class)->enabled()) {
+            $boundary = app(TenancyBoundary::class);
+            $boundary->assertTree($nodes, $boundary->assertNode($root));
+        }
+
+        return $nodes;
+    }
+
+    /** @return Builder<Node> */
     private function query(): Builder
     {
         $model = $this->vaulterConfig->model('node');
 
-        return $model::query();
+        return app(TenancyBoundary::class)->constrain($model::query());
     }
 }

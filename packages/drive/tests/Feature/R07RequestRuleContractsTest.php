@@ -117,7 +117,7 @@ it('R07Request treats an empty resumable name as absent while a string name is s
         'total_size_bytes' => 4,
     ])->assertCreated()->json('data.upload_id');
 
-    expect(UploadSession::query()->where('upload_id', $emptyNameId)->sole()->target_name)->toBeNull();
+    expect(UploadSession::query()->where('upload_id', $emptyNameId)->sole()->target_name)->toBe('upload.bin');
 
     $namedId = $this->postJson(r07ResumableUrl($storageId), [
         'name' => 'stored.bin',
@@ -290,6 +290,6 @@ it('R07Request adds mimetypes to the file rule only when an allowlist is configu
     expect(array_keys($response->json('errors')))->toBe(['file']);
 
     $this->postJson($base, [
-        'file' => UploadedFile::fake()->create('doc.pdf', 1, 'application/pdf'),
+        'file' => UploadedFile::fake()->createWithContent('doc.pdf', "%PDF-1.4\n1 0 obj << /Type /Catalog >> endobj\n%%EOF\n"),
     ])->assertCreated();
 });

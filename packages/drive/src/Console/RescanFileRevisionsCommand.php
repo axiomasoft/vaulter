@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Console;
 
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
@@ -24,6 +25,7 @@ use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Repositories\Content\ScanEvidenceRepository;
 use Vaulter\Repositories\Content\ScanObligationRepository;
 use Vaulter\Repositories\Content\ScanPolicyStateRepository;
+use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\VaulterManager;
 
 final class RescanFileRevisionsCommand extends Command
@@ -65,8 +67,11 @@ final class RescanFileRevisionsCommand extends Command
     public static function drives(array $scope): Builder
     {
         $class = app(VaulterConfig::class)->model('drive');
-        $query = $class::query();
+        $query = app(TenancyBoundary::class)->constrain($class::query());
         if ($scope['tenant'] !== null) {
+            if (app(TenancyBoundary::class)->enforced() && $scope['tenant'] !== app(TenancyBoundary::class)->current()) {
+                throw new InvalidArgumentException('Selected tenant differs from current context.');
+            }
             $query->where('tenant_id', $scope['tenant']);
         }
         if ($scope['drive'] !== null) {
@@ -99,9 +104,6 @@ final class RescanFileRevisionsCommand extends Command
                 $this->withinMaintenanceScope = true;
                 try {
                     $result = app(VaulterManager::class)->withoutTenancy(fn (): int => $this->handle($database, $policies, $states, $work, $evidence, $snapshots, $publisher));
-                    if (!is_int($result)) {
-                        throw new InvalidArgumentException('Maintenance context returned an invalid result.');
-                    }
 
                     return $result;
                 } finally {
@@ -274,7 +276,7 @@ final class RescanFileRevisionsCommand extends Command
     /** @param array<string,mixed> $payload */
     private function encodeCursor(array $payload): string
     {
-        $key = config('app.key');
+        $key = app(Repository::class)->get('app.key');
         if (!is_string($key) || $key === '') {
             throw new InvalidArgumentException('Maintenance cursor signing key is unavailable.');
         }
@@ -286,7 +288,7 @@ final class RescanFileRevisionsCommand extends Command
     /** @return array<string,mixed> */
     private function decodeCursor(string $cursor): array
     {
-        $key = config('app.key');
+        $key = app(Repository::class)->get('app.key');
         if (!is_string($key) || $key === '') {
             throw new InvalidArgumentException('Maintenance cursor signing key is unavailable.');
         }

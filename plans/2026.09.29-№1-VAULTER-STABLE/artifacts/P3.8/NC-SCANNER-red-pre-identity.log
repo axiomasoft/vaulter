@@ -1,0 +1,43 @@
+
+  [39;41;1m FAIL [39;49;22m[39m Tests\Tenancy\PrivateScannerTenantBoundaryTest[39m
+  [31;1m⨯[39;22m[90m [39m[90mit SEC-R12 V08 private scanner A B A refuses mismatch null and main[39m[90m…[39m [90m0.36s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit SEC-R12 private capability validates lease scope immutable blob[39m[90m… [39m [90m0.18s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-R12 recovery only publishes current tenant work and all-tena[39m[90m…[39m [90m0.19s[39m  
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Tenancy\PrivateScannerTenantBoundaryTest[22m [90m>[39m it SEC-R12 V08 p…   
+[39;1m  Exception "Vaulter\Exceptions\Nodes\NodeNotFoundException" not thrown.[39;22m
+
+  at [32mtests/Tenancy/PrivateScannerTenantBoundaryTest.php[39m:[32m82[39m
+     78▕ it('SEC-R12 V08 private scanner A B A refuses mismatch null and maintenance inheritance before any reads', function (): void {
+     79▕     $job = new ScanFileRevision($this->work->id, $this->work->generation, $this->drive->id, 'A');
+     80▕     $resolver = app(TenantResolver::class);
+     81▕     $resolver->tenant = 'B';
+  ➜  82▕     expect(fn () => app()->call([$job, 'handle']))->toThrow(NodeNotFoundException::class);
+     83▕     expect(fn () => Vaulter::withoutTenancy(fn () => app()->call([$job, 'handle'])))->toThrow(NodeNotFoundException::class);
+     84▕     $resolver->tenant = null;
+     85▕     expect(fn () => app()->call([$job, 'handle']))->toThrow(TenancyMisconfiguredException::class);
+     86▕     $resolver->tenant = 'A';
+
+  [33m1   [39m[39;1mtests/Tenancy/PrivateScannerTenantBoundaryTest.php[39;22m:[39;1m82[39;22m
+
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Tenancy\PrivateScannerTenantBoundaryTest[22m [90m>[39m it SEC-R12 priva…   
+[39;1m  Exception "Vaulter\Exceptions\Nodes\NodeNotFoundException" not thrown.[39;22m
+
+  at [32mtests/Tenancy/PrivateScannerTenantBoundaryTest.php[39m:[32m111[39m
+    107▕     $this->revision->forceFill(['quarantined_at' => now(), 'scan_status' => 'infected'])->save();
+    108▕     $this->revision->blob()->firstOrFail()->forceFill(['quarantined_at' => now()])->save();
+    109▕     $reader = app(PrivateScanReader::class);
+    110▕     app(TenantResolver::class)->tenant = 'B';
+  ➜ 111▕     expect(fn () => $reader->open($attempt))->toThrow(NodeNotFoundException::class);
+    112▕     app(TenantResolver::class)->tenant = 'A';
+    113▕     $args = (array) $attempt;
+    114▕     foreach (['revisionId' => 'foreign', 'blobId' => 'foreign', 'generation' => $attempt->generation + 1, 'leaseToken' => 'forged', 'contentIdentity' => 'forged'] as $key => $value) {
+    115▕         $forged = new ScanAttempt(...array_replace($args, [$key => $value]));
+
+  [33m1   [39m[39;1mtests/Tenancy/PrivateScannerTenantBoundaryTest.php[39;22m:[39;1m111[39;22m
+
+
+  [90mTests:[39m    [31;1m2 failed[39;22m[90m,[39m[39m [39m[32;1m1 passed[39;22m[90m (11 assertions)[39m
+  [90mDuration:[39m [39m0.77s[39m
+

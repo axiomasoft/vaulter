@@ -1,0 +1,19 @@
+{
+  "current_model_id": "grok-4.7",
+  "reasoning_effort": null,
+  "session_kind": "headless",
+  "agent_id": "ag1.f67c60cd19f5484eba28e0c137450715",
+  "attempt_id": "at1.1bf5c1e5566d42bcb05fe94b9b480dad",
+  "sandbox_profile": "off",
+  "created_at": "2026-10-07T09:18:19.923671869Z",
+  "head_commit": "0d836aa6aee229af80615ccdc23665619c3d9899",
+  "session_id": "955330b9-973b-44be-a3d7-c06508c512d0",
+  "source": "native-grok-session-summary",
+  "context_argument_supplied": false,
+  "capability": "Only read_file/grep/list_dir/glob; no shell/edit/write/MCP/subagents/web",
+  "completed_round": 2,
+  "scope": "FULL whole final owning workset, owner-requested",
+  "attested_initial_reasoning_effort": "high",
+  "resume_requested_reasoning_effort": "high",
+  "effort_evidence": "Same provider session initially attested high; explicit high on resume. Current native summary omits effort on resume, retained as null rather than invented."
+}

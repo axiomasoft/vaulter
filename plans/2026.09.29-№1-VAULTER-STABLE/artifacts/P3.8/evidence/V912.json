@@ -1,0 +1,28 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:check-evidence:v1",
+  "evidence_id": "p38-final-V912",
+  "check_id": "V912",
+  "subject": "PLAN2.P3.8",
+  "procedure": {
+    "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests",
+    "cwd": "packages/media"
+  },
+  "candidate": {
+    "head": "0d836aa6aee229af80615ccdc23665619c3d9899"
+  },
+  "started_at": "2026-10-07T08:38:39.515552+00:00",
+  "finished_at": "2026-10-07T08:39:13.113627+00:00",
+  "producer": {
+    "kind": "executor",
+    "actor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high"
+    }
+  },
+  "log": {
+    "path": "@plan/artifacts/P3.8/V912-20261007T083839060763Z.log",
+    "sha256": "a2a17c97b91e9a989dffeaff49980ac9fe13f16bea3d3e7411f0df544944d73b"
+  },
+  "exit": 0
+}

@@ -80,7 +80,7 @@ trait ExercisesWideNodeListing
         $denied = Node::findOrFail($this->wideNodeKey(1));
         AccessTestHelpers::grant($denied, GrantLevel::Reader, effect: Effect::Deny, scope: GrantScope::Item);
         expect($repository->queryForUser($actor)->whereKey($denied->getKey())->exists())->toBeTrue();
-        $this->getJson('api/vaulter/nodes/'.$denied->getKey())->assertForbidden();
+        $this->getJson('api/vaulter/nodes/'.$denied->getKey())->assertNotFound();
         expect($repository->queryForUser(AccessTestHelpers::user(2))->count())->toBe(0);
     }
 

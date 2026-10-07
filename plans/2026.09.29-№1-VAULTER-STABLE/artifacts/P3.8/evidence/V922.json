@@ -1,0 +1,28 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:check-evidence:v1",
+  "evidence_id": "p38-final-V922",
+  "check_id": "V922",
+  "subject": "PLAN2.P3.8",
+  "procedure": {
+    "cmd": "python3 /home/vostrikov/projects/packages/swissknifeman/packages/task/scripts/plan.py check plans/2026.09.29-№1-VAULTER-STABLE",
+    "cwd": "."
+  },
+  "candidate": {
+    "head": "0d836aa6aee229af80615ccdc23665619c3d9899"
+  },
+  "started_at": "2026-10-07T09:03:13.356962+00:00",
+  "finished_at": "2026-10-07T09:03:13.570476+00:00",
+  "producer": {
+    "kind": "executor",
+    "actor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high"
+    }
+  },
+  "log": {
+    "path": "@plan/artifacts/P3.8/V922-20261007T090313315061Z.log",
+    "sha256": "92a58280840a677151ea5220444c3a1b3cfae6fddcaffadd9a4a0cae9c029650"
+  },
+  "exit": 0
+}

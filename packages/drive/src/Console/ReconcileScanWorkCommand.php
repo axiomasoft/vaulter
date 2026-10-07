@@ -33,9 +33,6 @@ final class ReconcileScanWorkCommand extends Command
                 $this->withinMaintenanceScope = true;
                 try {
                     $result = app(VaulterManager::class)->withoutTenancy(fn (): int => $this->handle($work, $backfill, $cleanup, $config));
-                    if (!is_int($result)) {
-                        throw new InvalidArgumentException('Maintenance context returned an invalid result.');
-                    }
 
                     return $result;
                 } finally {

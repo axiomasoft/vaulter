@@ -1,0 +1,1 @@
+{"tool":"pint","result":"fixed","files":[{"path":"packages\/core\/src\/Jobs\/Middleware\/RestoreTenantContext.php","fixers":["braces_position","statement_indentation","no_unused_imports","single_line_empty_body"]}]}

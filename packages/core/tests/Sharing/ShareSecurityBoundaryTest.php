@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Data\Sharing\ShareLinkInput;
+use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\Permission;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
@@ -102,6 +103,10 @@ it('checks the public download availability hook before opening bytes and keeps 
     $node = $drive->upload(DriveTestHelpers::streamFor('quarantined'), originalName: 'sample.txt');
     $revision = $node->currentVersion()->firstOrFail();
     $revision->forceFill(['scan_status' => 'pending'])->save();
+    config()->set('vaulter.scan.mode', 'all_content');
+    config()->set('vaulter.scan.scanner_key', 'fixture');
+    config()->set('vaulter.scan.scanner_version', '1');
+    app(ScanPolicyResolver::class)->initialize($drive->model(), OperationContext::system($drive->model(), 'share availability fixture'));
     ShareTestHelpers::share($node, token: 'pending-hook');
     $storage = Mockery::mock(StorageDriver::class);
     $storage->shouldNotReceive('get');

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Strict tenant isolation (AD10; PLAN2.P3.8)
+
+- Add read-only `TenantResolver` and optional `ResolvesOwnerTenant`, with fail-closed boot validation in every environment. Strict mode stamps authoritative tenant IDs and checks current scope on PHP, HTTP, listings, Filament, queues and private scanner access.
+- Replace delegated-only tenant warnings with central boundaries; retained handles and mutable supplied models cannot carry authority between tenants. Bearer shares retain only their token scope.
+- Implement nested, fiber-local `withoutTenancy` for explicit maintenance; queued work never inherits it. See UPGRADE.md for resolver binding, existing data and middleware ordering.
+
 ### Unified uploads and durable content availability (AD13; PLAN2.P3.7, D26–D29)
 
 - PHP, single HTTP, tus and S3 completion use counted, hashed, bounded streaming preparation and the same inspector chain. Persist detected MIME separately from the declared MIME; inspectors reject before SQL/CAS writes.

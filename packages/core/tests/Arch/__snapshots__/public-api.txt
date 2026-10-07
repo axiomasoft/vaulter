@@ -172,6 +172,12 @@ Vaulter\Contracts\Sharing\ShareOperations
 Vaulter\Contracts\Sharing\ShareTokenGenerator
   generate(): string
 
+Vaulter\Contracts\Tenancy\ResolvesOwnerTenant
+  tenantOf(\Illuminate\Database\Eloquent\Model $owner): int|null|string
+
+Vaulter\Contracts\Tenancy\TenantResolver
+  current(): int|null|string
+
 Vaulter\Contracts\Webhooks\HostResolver
   resolve(string $host): array
 
@@ -263,6 +269,7 @@ Vaulter\Configuration\SharingConfig
 Vaulter\Configuration\TenancyConfig
   __construct(\Illuminate\Contracts\Config\Repository $config)
   enabled(): bool
+  resolver(): string
 
 Vaulter\Configuration\VaulterConfig
   __construct(\Illuminate\Contracts\Config\Repository $config)

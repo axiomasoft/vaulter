@@ -13,6 +13,7 @@ use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Observability\TracingAttributes;
 use Vaulter\Observability\TracingSpanNames;
+use Vaulter\VaulterManager;
 
 /**
  * Sweep stale resumable-upload sessions (§2.8 / D16 / M3a). It scans the OPEN
@@ -34,6 +35,15 @@ final class SweepUploadsCommand extends Command
     protected $description = 'Abort and clean up stale resumable-upload sessions past their TTL (§2.8).';
 
     public function handle(
+        UploadSessionReadRepository $sessions,
+        UploadSessionManager $manager,
+        MetricsRecorder $metrics,
+        TraceRecorder $tracer,
+    ): int {
+        return app(VaulterManager::class)->withoutTenancy(fn (): int => $this->runMaintenance($sessions, $manager, $metrics, $tracer));
+    }
+
+    private function runMaintenance(
         UploadSessionReadRepository $sessions,
         UploadSessionManager $manager,
         MetricsRecorder $metrics,

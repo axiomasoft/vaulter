@@ -1,5 +1,72 @@
 # Upgrade Guide
 
+## Strict tenant boundaries (AD10; PLAN2.P3.8)
+
+`vaulter.tenancy.enabled` remains `false` by default. When enabled, set
+`vaulter.tenancy.resolver` to a container-resolvable class implementing
+`Vaulter\Contracts\Tenancy\TenantResolver::current(): int|string|null`.
+Boot rejects missing, invalid or wrong-interface resolvers in every environment,
+including production; boot permits `current() === null` for maintenance CLI.
+Tenant operations refuse null context. Integer IDs normalize to decimal strings;
+string IDs keep leading zeroes. Resolver instances are scoped to the request/job;
+`current()` must read the host's current context each time.
+
+Host adapter examples (use the tenant model configured by your host):
+
+```php
+final class SpatieTenantResolver implements \Vaulter\Contracts\Tenancy\TenantResolver
+{
+    public function current(): int|string|null
+    {
+        return \App\Models\Tenant::current()?->getKey();
+    }
+}
+
+final class StanclTenantResolver implements \Vaulter\Contracts\Tenancy\TenantResolver
+{
+    public function current(): int|string|null
+    {
+        return tenant()?->getTenantKey();
+    }
+}
+```
+
+Set `vaulter.tenancy.resolver` to your adapter's FQCN. These adapters read existing
+host state; host HTTP/queue middleware owns restoration. See
+[Spatie current tenant](https://spatie.be/docs/laravel-multitenancy/v4/basic-usage/working-with-the-current-tenant)
+and [Stancl current tenant](https://tenancyforlaravel.com/docs/v3/tenants/#accessing-the-current-tenant).
+
+Strict mode supersedes ADR-0003's delegated-only tenancy and the warning-only
+`TenantFootgunGuard`. Custom model scopes remain additional protection. Enable
+strict mode only after assigning authoritative tenant IDs to existing drives and
+children. Provisioning stamps the drive and node/file/revision/grant/share/activity/
+upload rows; `ResolvesOwnerTenant::tenantOf(Model $owner)` optionally checks the
+fresh owner at both provisioning and existing-drive lookup. An owner/profile
+already attached to another tenant is denied and never duplicated.
+
+System actors bypass ACL only. PHP handles, HTTP resolution, listings and private
+scanner reads retain tenant restrictions. An anonymous bearer share derives only
+its target drive scope after token, TTL, password/login and issuer checks; it does
+not open ordinary user/system handles or all-tenant access.
+
+Host queue middleware must restore host tenancy **before**
+`Vaulter\Jobs\Middleware\RestoreTenantContext`. Vaulter validates the payload's
+`driveId`/`tenantId` against the current host resolver and fresh drive; it does not
+switch a database or call a fictional resolver setter. Missing/mismatched tenants
+or deleted actors fail without calling the job body. Pass an `ActorRef` for user
+jobs, obtain the rehydrated actor from that middleware instance, and use normal
+Operations so execution uses current permissions. Scanner jobs carry their own
+scope, validate immutable revision/blob/attempt identity, and have one attempt;
+maintenance bypass is never propagated to a job.
+
+`Vaulter::withoutTenancy(fn () => ...)` is an explicit trusted maintenance closure.
+It is nested, fiber-local and restored in `finally`; ACL, profile, scan and data
+invariants remain enforced. GC, reconcile, repair, purge-trash and sweep commands
+use explicit maintenance closures. Scan recovery requires `--tenant` matching the
+current context or explicit `--all-tenants --reason=...`; queued jobs still require
+the host to restore each payload's tenant. No HTTP parameter controls this bypass.
+
+
 This file documents breaking changes and how to migrate through them. Entries are ordered
 newest-first. See `CHANGELOG.md` for the full list of changes per release; this file only covers
 changes that require action from consumers of the package.

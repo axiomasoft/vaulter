@@ -9,6 +9,8 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
+use Vaulter\Configuration\TenancyConfig;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler;
@@ -22,8 +24,11 @@ use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
+use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Tenancy\TenancyBoundary;
 
 /**
  * The resumable-upload lifecycle coordinator (§2.8 / D16 / M3a). It owns:
@@ -136,6 +141,8 @@ final readonly class UploadSessionManager
      */
     public function withSession(UploadSession $session, callable $operation): mixed
     {
+        $this->assertTenant($session);
+
         return $this->database->transaction(function () use ($session, $operation): mixed {
             return $operation($this->sessions->acquireForPatch($session));
         }, attempts: 1);
@@ -165,6 +172,8 @@ final readonly class UploadSessionManager
      */
     public function commitAssembled(UploadSession $session, callable $commit): mixed
     {
+        $this->assertTenant($session);
+
         return $this->database->transaction(function () use ($session, $commit): mixed {
             $locked = $this->sessions->acquireForPatch($session);
 
@@ -250,6 +259,8 @@ final readonly class UploadSessionManager
      */
     private function reclaim(UploadSession $session, UploadStatus $terminal, callable $audit): UploadSession
     {
+        $this->assertTenant($session);
+
         return $this->database->transaction(function () use ($session, $terminal, $audit): UploadSession {
             $locked = $this->sessions->acquireForPatch($session);
 
@@ -276,6 +287,27 @@ final readonly class UploadSessionManager
      * reject. A null total (size unknown up front) is allowed; the tus PATCH path
      * still re-checks the ceiling as the offset grows.
      */
+    private function assertTenant(UploadSession $session): void
+    {
+        if (!app(TenancyConfig::class)->enabled()) {
+            return;
+        }
+        $class = app(DriveConfig::class)->model('upload_session');
+        $fresh = $class::query()->whereKey($session->getRawOriginal($session->getKeyName()))->first();
+        if (!$fresh instanceof UploadSession) {
+            throw NodeNotFoundException::forId('upload');
+        }
+        $driveClass = app(VaulterConfig::class)->model('drive');
+        $drive = $driveClass::query()->whereKey($fresh->drive_id)->first();
+        if (!$drive instanceof Drive) {
+            throw NodeNotFoundException::forId('drive');
+        }
+        app(TenancyBoundary::class)->assertDrive($drive);
+        if (TenancyBoundary::normalize($fresh->tenant_id) !== TenancyBoundary::normalize($drive->tenant_id)) {
+            throw NodeNotFoundException::forId('upload');
+        }
+    }
+
     private function assertWithinMaxBytes(?int $totalSizeBytes): void
     {
         $max = $this->driveConfig->maxFileSize();

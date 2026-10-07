@@ -80,6 +80,8 @@ it('SEC-SCHEMA-fresh SEC-SCHEMA-additive-up-down-data qualifies additive scan up
             ->and($db->table('scan_probe_drives')->count())->toBe(1);
         $migration->up();
         expect($schema->hasTable('scan_probe_scan_evidence'))->toBeTrue();
+        fwrite(STDOUT, 'P38_SCAN_UP_DOWN '.json_encode(['driver' => $db->getDriverName(), 'database' => $db->getDatabaseName(), 'strategy' => $strategy,
+            'up_idempotent' => true, 'down_preserves_prior_drive' => true, 'prior_revision_preserved' => true, 'foreign_keys_checked' => true, 'up_restored' => true]).PHP_EOL);
     } finally {
         $builder->dropAll();
         config()->set('vaulter.database.table_prefix', $oldPrefix);

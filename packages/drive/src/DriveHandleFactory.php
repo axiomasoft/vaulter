@@ -19,6 +19,7 @@ use Vaulter\Drive\Actions\Trash\TrashNodeAction;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Repositories\Drive\NodeReadRepository;
+use Vaulter\Tenancy\TenancyBoundary;
 
 /**
  * The vaulter-drive implementation of the core {@see DriveHandleFactory} seam
@@ -35,6 +36,7 @@ final readonly class DriveHandleFactory implements DriveHandleFactoryContract
 
     public function forOwner(Model $entity, string $panel): DriveHandleContract
     {
+        $entity = $this->container->make(TenancyBoundary::class)->assertOwner($entity);
         $storage = $this->container->make(DriveProvisioner::class)->forOwner(owner: $entity, panel: $panel);
 
         return $this->forStorage($storage);
@@ -42,6 +44,8 @@ final readonly class DriveHandleFactory implements DriveHandleFactoryContract
 
     public function forStorage(Drive $storage): DriveHandleContract
     {
+        $storage = $this->container->make(TenancyBoundary::class)->assertDrive($storage);
+
         return new DriveHandle(
             storage: $storage,
             profiles: $this->container->make(ProfileRegistry::class),

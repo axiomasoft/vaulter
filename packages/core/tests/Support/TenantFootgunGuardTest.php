@@ -2,61 +2,34 @@
 
 declare(strict_types=1);
 
-use Illuminate\Support\Facades\Log;
+use Vaulter\Configuration\ConfigValidator;
+use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Support\TenantFootgunGuard;
-use Vaulter\Tests\Fixtures\TenantAwareNode;
+use Vaulter\Tests\Tenancy\MutableTenantResolver;
 
-/*
- * F-P1.9-01 (Minor) — the boot-time fail-loud guard against the
- * `vaulter.tenancy.enabled=true` + default (non-scoping) node model
- * misconfiguration. Red-before-fix (D19/D7): before this item TenantFootgunGuard
- * did not exist and packageBooted() never checked this combination — the guard
- * tests below are red against that prior code (no class, no warning, no throw).
- */
-
-it('warns and throws outside production when tenancy is on with the default node model, F-P1.9-01', function (): void {
+it('V31 strict tenancy rejects missing invalid and wrong-interface resolver in every environment', function (string $env, mixed $resolver): void {
+    app()->detectEnvironment(fn (): string => $env);
+    config()->set('vaulter.access.permission_driver', 'database');
     config()->set('vaulter.tenancy.enabled', true);
-    config()->set('vaulter.models.node', Node::class);
-
-    Log::shouldReceive('warning')->once()->withArgs(
-        fn (string $message): bool => str_contains($message, 'vaulter.tenancy.enabled'),
-    );
-
-    expect(fn () => (app(TenantFootgunGuard::class))->check(isProduction: false))
+    config()->set('vaulter.tenancy.resolver', $resolver);
+    expect(fn () => app(ConfigValidator::class)->validate(app(VaulterConfig::class), app()))
         ->toThrow(TenancyMisconfiguredException::class);
-});
+})->with(['testing', 'production'])->with([null, 'MissingTenantClass', stdClass::class]);
 
-it('only warns (does not throw) in production for the same misconfiguration, F-P1.9-01', function (): void {
+it('V31 boot permits a valid read-only resolver with null current for maintenance CLI', function (): void {
     config()->set('vaulter.tenancy.enabled', true);
-    config()->set('vaulter.models.node', Node::class);
-
-    Log::shouldReceive('warning')->once();
-
-    (app(TenantFootgunGuard::class))->check(isProduction: true);
-
-    expect(true)->toBeTrue(); // reached without throwing
+    config()->set('vaulter.tenancy.resolver', MutableTenantResolver::class);
+    $resolver = new MutableTenantResolver;
+    $resolver->tenant = null;
+    app()->instance(TenantResolver::class, $resolver);
+    app(ConfigValidator::class)->validate(app(VaulterConfig::class), app());
+    expect(app(TenantResolver::class)->current())->toBeNull();
 });
 
-it('does not warn or throw when a non-default node model is configured (the ADR-0003 escape hatch, F-P1.9-01)', function (): void {
-    config()->set('vaulter.tenancy.enabled', true);
-    config()->set('vaulter.models.node', TenantAwareNode::class);
-
-    Log::shouldReceive('warning')->never();
-
-    (app(TenantFootgunGuard::class))->check(isProduction: false);
-
-    expect(true)->toBeTrue();
-});
-
-it('does not warn or throw when tenancy is disabled, regardless of the node model (F-P1.9-01)', function (): void {
+it('keeps tenancy disabled by default with no resolver or model swap requirement', function (): void {
     config()->set('vaulter.tenancy.enabled', false);
-    config()->set('vaulter.models.node', Node::class);
-
-    Log::shouldReceive('warning')->never();
-
-    (app(TenantFootgunGuard::class))->check(isProduction: false);
-
-    expect(true)->toBeTrue();
+    config()->set('vaulter.tenancy.resolver', null);
+    app(ConfigValidator::class)->validate(app(VaulterConfig::class), app());
+    expect(config('vaulter.tenancy.enabled'))->toBeFalse();
 });

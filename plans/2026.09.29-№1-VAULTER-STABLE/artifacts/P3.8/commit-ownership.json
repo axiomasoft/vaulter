@@ -1,0 +1,12 @@
+{
+  "method": "Own baseline-to-candidate delta applied to HEAD in an isolated index; five conflicts reapply owning semantic changes to HEAD API without staging owner API migration. Actual workspace untouched; integrated workspace is validation candidate, preexisting baseline migration remains uncommitted.",
+  "resolved_paths": [
+    "packages/core/src/VaulterManager.php",
+    "packages/drive/src/DriveHandleFactory.php",
+    "packages/drive/src/Console/PurgeTrashCommand.php",
+    "packages/drive/tests/Feature/R07bActionNodeContractsTest.php",
+    "packages/drive/tests/Profiles/ProfileRuntimeTest.php"
+  ],
+  "index": "/tmp/p38-own-index",
+  "included_existing_untracked_prerequisite": "NodeSequenceSchemaTest.php was an initially-untracked related P3.3 schema fixture; its exact initial SHA is retained. Own final barrier adds passive actual up/down output."
+}

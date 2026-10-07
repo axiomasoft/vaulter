@@ -322,7 +322,7 @@ it('[r07bS3] controller resolves the storage root when session target_parent_id 
         protocol: UploadProtocol::S3Multipart,
         totalSizeBytes: 3,
         parentId: null,   // target_parent_id = null
-        createdBy: null,  // guardOwnership skips when null
+        createdBy: 1,  // the current actor owns this legacy-shaped session
     );
 
     expect($session->target_parent_id)->toBeNull();

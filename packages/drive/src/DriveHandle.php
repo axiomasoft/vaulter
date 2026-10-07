@@ -28,6 +28,7 @@ use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;
+use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\ValueObjects\Access\Actor;
 
 final readonly class DriveHandle implements Contract
@@ -38,7 +39,7 @@ final readonly class DriveHandle implements Contract
     {
         $class = $this->container->make(VaulterConfig::class)->model('drive');
 
-        return $class::query()->whereKey($this->drive->getRawOriginal($this->drive->getKeyName()))->first() ?? throw NodeNotFoundException::forId('drive');
+        return $this->container->make(TenancyBoundary::class)->assertDrive($this->drive);
     }
 
     public function profile(): Profile

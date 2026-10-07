@@ -12,6 +12,7 @@ use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
+use Vaulter\Models\Concerns\StampsDriveTenant;
 
 /**
  * An APPEND-ONLY audit/activity row (master plan §2.9 / M2c-activity). ONE row per
@@ -48,6 +49,7 @@ class Activity extends Model
     use HasExtraData;
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
+    use StampsDriveTenant;
 
     /**
      * Append-only: there is no updated_at column, so Eloquent must not maintain

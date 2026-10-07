@@ -1,0 +1,91 @@
+[
+  {
+    "id": "V919",
+    "actual_stdout": [
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":318584,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":318586}]},{\"process_pid\":318585,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":318587}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":318685,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":318687}]},{\"process_pid\":318686,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":318688}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":318744,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":318746}]},{\"process_pid\":318745,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":318747}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":318749,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":318750}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":318856,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":318858}]},{\"process_pid\":318857,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":318859}]}],\"timed_out\":[]}",
+      "P38_SEQUENCE_UP_DOWN {\"driver\":\"pgsql\",\"database\":\"vaulter_test\",\"strategy\":\"bigint\",\"up_idempotent\":true,\"down_preserves_rows\":true,\"signed_int64\":true,\"foreign_keys_checked\":true,\"up_restored\":true}",
+      "P38_SEQUENCE_UP_DOWN {\"driver\":\"pgsql\",\"database\":\"vaulter_test\",\"strategy\":\"ulid\",\"up_idempotent\":true,\"down_preserves_rows\":true,\"signed_int64\":true,\"foreign_keys_checked\":true,\"up_restored\":true}",
+      "P38_SEQUENCE_UP_DOWN {\"driver\":\"pgsql\",\"database\":\"vaulter_test\",\"strategy\":\"uuid7\",\"up_idempotent\":true,\"down_preserves_rows\":true,\"signed_int64\":true,\"foreign_keys_checked\":true,\"up_restored\":true}",
+      "P38_SCAN_UP_DOWN {\"driver\":\"pgsql\",\"database\":\"vaulter_test\",\"strategy\":\"bigint\",\"up_idempotent\":true,\"down_preserves_prior_drive\":true,\"prior_revision_preserved\":true,\"foreign_keys_checked\":true,\"up_restored\":true}",
+      "P38_SCAN_UP_DOWN {\"driver\":\"pgsql\",\"database\":\"vaulter_test\",\"strategy\":\"ulid\",\"up_idempotent\":true,\"down_preserves_prior_drive\":true,\"prior_revision_preserved\":true,\"foreign_keys_checked\":true,\"up_restored\":true}",
+      "P38_SCAN_UP_DOWN {\"driver\":\"pgsql\",\"database\":\"vaulter_test\",\"strategy\":\"uuid7\",\"up_idempotent\":true,\"down_preserves_prior_drive\":true,\"prior_revision_preserved\":true,\"foreign_keys_checked\":true,\"up_restored\":true}",
+      "P38_TENANT_IDENTITY {\"driver\":\"pgsql\",\"database\":\"vaulter_test\",\"numeric_leading_zero_denied\":true,\"text_case_denied\":true,\"canonical_allowed\":true}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":325814,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":325816}]},{\"process_pid\":325815,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":325817}]}],\"timed_out\":[]}",
+      "P38_OWNER_RACE {\"barrier\":\"ForkRace ready\\/release\",\"connection\":\"testing\",\"database\":\"vaulter_test\",\"outcomes\":[{\"pid\":325816,\"tenant\":\"A\",\"winner\":true,\"drive\":1},{\"pid\":325817,\"tenant\":\"B\",\"winner\":false}]}"
+    ],
+    "output": "artifacts/P3.8/V919-20261007T090253021550Z.log"
+  },
+  {
+    "id": "V920",
+    "actual_stdout": [
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":325903,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":325905}]},{\"process_pid\":325904,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":325906}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":325986,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":325988}]},{\"process_pid\":325987,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":325989}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":326019,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":326021}]},{\"process_pid\":326020,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":326022}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":326385,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":326387}]},{\"process_pid\":326386,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":326388}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":326390,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":326392}]},{\"process_pid\":326391,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":326393}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":326395,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":326397}]},{\"process_pid\":326396,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":326398}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":326400,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":326402}]},{\"process_pid\":326401,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":326403}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":326405,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":326407}]},{\"process_pid\":326406,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":326408}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":326410,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":326412}]},{\"process_pid\":326411,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":326413}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":326415,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":326417}]},{\"process_pid\":326416,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":326418}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":326420,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":326422}]},{\"process_pid\":326421,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":326423}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":326425,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":326427}]},{\"process_pid\":326426,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":326428}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":326430,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":326432}]},{\"process_pid\":326431,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":326433}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":326538,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":326540}]},{\"process_pid\":326539,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":326541}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":326626,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":326628}]},{\"process_pid\":326627,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":326629}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":326661,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":326663}]},{\"process_pid\":326662,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":326664}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":326730,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":326732}]},{\"process_pid\":326731,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":326733}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":327089,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":327091}]},{\"process_pid\":327090,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":327092}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":327098,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":327100}]},{\"process_pid\":327099,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":327101}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":327200,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":327202}]},{\"process_pid\":327201,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":327203}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":327260,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":327262}]},{\"process_pid\":327261,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":327263}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":327441,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":327443}]},{\"process_pid\":327442,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":327444}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":327541,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":327543}]},{\"process_pid\":327542,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":327544}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":328143,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":328144}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":328218,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":328219}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":328305,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":328306}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":328308,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":328309}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":328407,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":328409}]},{\"process_pid\":328408,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":328410}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":328414,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":328416}]},{\"process_pid\":328415,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":328417}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":328520,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":328522}]},{\"process_pid\":328521,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":328523}]}],\"timed_out\":[]}"
+    ],
+    "output": "artifacts/P3.8/V920-20261007T090434382009Z.log"
+  },
+  {
+    "id": "V924",
+    "actual_stdout": [
+      "P38_SEQUENCE_UP_DOWN {\"driver\":\"mysql\",\"database\":\"vaulter_test\",\"strategy\":\"bigint\",\"up_idempotent\":true,\"down_preserves_rows\":true,\"signed_int64\":true,\"foreign_keys_checked\":true,\"up_restored\":true}",
+      "P38_SEQUENCE_UP_DOWN {\"driver\":\"mysql\",\"database\":\"vaulter_test\",\"strategy\":\"ulid\",\"up_idempotent\":true,\"down_preserves_rows\":true,\"signed_int64\":true,\"foreign_keys_checked\":true,\"up_restored\":true}",
+      "P38_SEQUENCE_UP_DOWN {\"driver\":\"mysql\",\"database\":\"vaulter_test\",\"strategy\":\"uuid7\",\"up_idempotent\":true,\"down_preserves_rows\":true,\"signed_int64\":true,\"foreign_keys_checked\":true,\"up_restored\":true}"
+    ],
+    "output": "artifacts/P3.8/V924-20261007T091255953556Z.log"
+  },
+  {
+    "id": "V926",
+    "actual_stdout": [
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":347361,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":347363}]},{\"process_pid\":347362,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":347364}]}],\"timed_out\":[]}"
+    ],
+    "output": "artifacts/P3.8/V926-20261007T090928754767Z.log"
+  },
+  {
+    "id": "V929",
+    "actual_stdout": [
+      "P38_SCAN_UP_DOWN {\"driver\":\"mysql\",\"database\":\"vaulter_test\",\"strategy\":\"bigint\",\"up_idempotent\":true,\"down_preserves_prior_drive\":true,\"prior_revision_preserved\":true,\"foreign_keys_checked\":true,\"up_restored\":true}",
+      "P38_SCAN_UP_DOWN {\"driver\":\"mysql\",\"database\":\"vaulter_test\",\"strategy\":\"ulid\",\"up_idempotent\":true,\"down_preserves_prior_drive\":true,\"prior_revision_preserved\":true,\"foreign_keys_checked\":true,\"up_restored\":true}",
+      "P38_SCAN_UP_DOWN {\"driver\":\"mysql\",\"database\":\"vaulter_test\",\"strategy\":\"uuid7\",\"up_idempotent\":true,\"down_preserves_prior_drive\":true,\"prior_revision_preserved\":true,\"foreign_keys_checked\":true,\"up_restored\":true}"
+    ],
+    "output": "artifacts/P3.8/V929-20261007T090930393916Z.log"
+  },
+  {
+    "id": "V930",
+    "actual_stdout": [
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":364071,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":364073}]},{\"process_pid\":364072,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":364074}]}],\"timed_out\":[]}",
+      "P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":364214,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":364216}]},{\"process_pid\":364215,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":364217}]}],\"timed_out\":[]}"
+    ],
+    "output": "artifacts/P3.8/V930-20261007T091235928325Z.log"
+  }
+]

@@ -1,0 +1,28 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:check-evidence:v1",
+  "evidence_id": "p38-final-V90",
+  "check_id": "V90",
+  "subject": "PLAN2.P3.8",
+  "procedure": {
+    "procedure": "После интеграции P3.8 выполнить каждый local acceptance phase.validation P3 V901… ровно на итоговом объединённом product tree. Создать @plan/artifacts/P3.8/phase-validation.json: каждый V# command/cwd/env/timestamps/exit/output/candidate+input closure, pending external owner gate отдельно. Не запускать повторно focused dir, покрытый тем же full run, кроме отдельно обязательной среды/negative control. Native plan.py finish checks этого последнего item должны включить V90 как acceptance carrier phase barrier. Для всех Pest lanes записать числовые discovered/matched/executed/passed/failed/skipped counts и names требуемых сценариев. Для required PG/MySQL V919/V920/V924/V925/V926 и filtered P3.3/V7/P3.4/V3: executed_tests>=1, skipped=0; миграция требует явного actual up/down output, гонки — barrier+distinct connection/pid proof. V90 проверяет counts/named scenario/output вместе с exit code; empty или skipped receipt reject. Documents PG cascade V925 и share revoke PG filter V926 обязательны на final tree; NodeSequenceBoundaryTest обязателен внутри V920. Сквозной receipt сохраняет reused vs executed с input closure. Supplemental phase V930–V932 cover actual legacy Document sequence and inline egress/strict scanner scope. C-row receipt maps current P3 contribution; validate required SEC names and every no-skip schema/race count, not merely exit. Broad run may cover focused files once; different required DB/negative control lanes remain distinct."
+  },
+  "candidate": {
+    "head": "0d836aa6aee229af80615ccdc23665619c3d9899"
+  },
+  "started_at": "2026-10-07T10:04:23.980876+00:00",
+  "finished_at": "2026-10-07T10:04:23.980876+00:00",
+  "producer": {
+    "kind": "executor",
+    "actor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high"
+    }
+  },
+  "log": {
+    "path": "@plan/artifacts/P3.8/phase-validation.json",
+    "sha256": "5ba1c55f31ca6c779cbbd34f5a1deee810d163c3ae8151f3812ee51450cfba2d"
+  },
+  "verdict": "pass",
+  "observation": "All 32 local phase checks qualified; actual schema up/down and independent PG backend/barrier stdout receipts in phase-actual-proofs.json. Required named PG/MySQL lanes executed>=1, failed0, skipped0. Reused input closures and focused supplements explicit; 95 SQLite opt-in/PG skips inventoried, not counted as passing. Hosted O-3 and independent P3 phase audit/future correction owners remain pending."
+}

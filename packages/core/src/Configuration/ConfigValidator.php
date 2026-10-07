@@ -10,8 +10,10 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Log;
 use Vaulter\Contracts\Access\NonProductionPermissionDriver;
 use Vaulter\Contracts\Access\PermissionDriver;
+use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Exceptions\Profiles\InvalidProfileException;
+use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileRegistry;
 
@@ -27,6 +29,10 @@ final readonly class ConfigValidator
             }
         }
 
+        if ($config->tenancy()->enabled()) {
+            $config->tenancy()->resolver();
+            $this->validateTenantResolver($app->make(TenantResolver::class));
+        }
         $access = $config->access();
         $key = $access->permissionDriver();
         $drivers = $access->permissionDrivers();
@@ -120,6 +126,13 @@ final readonly class ConfigValidator
             throw new InvalidConfigurationException($message);
         }
         Log::warning($message);
+    }
+
+    private function validateTenantResolver(object $resolver): void
+    {
+        if (!$resolver instanceof TenantResolver) {
+            throw new TenancyMisconfiguredException('TenantResolver binding returned an invalid object.');
+        }
     }
 
     private function assertNoClosures(mixed $value, string $key): void

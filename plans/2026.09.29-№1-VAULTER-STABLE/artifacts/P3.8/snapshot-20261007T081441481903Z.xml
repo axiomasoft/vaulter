@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Packages\core\tests\Arch\PublicApiSnapshotTest" file="packages/core/tests/Arch/PublicApiSnapshotTest.php" tests="1" assertions="2" errors="0" failures="0" skipped="0" time="0.022606">
+    <testcase name="vaulter-core public API surface matches the frozen golden (VLT-REL P2.2)" file="packages/core/tests/Arch/PublicApiSnapshotTest.php::vaulter-core public API surface matches the frozen golden (VLT-REL P2.2)" class="Packages\core\tests\Arch\PublicApiSnapshotTest" classname="Packages.core.tests.Arch.PublicApiSnapshotTest" assertions="2" time="0.022606"/>
+  </testsuite>
+</testsuites>

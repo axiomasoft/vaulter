@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Http\Support;
 
+use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Nodes\StorageNotFoundException;
 use Vaulter\Models\Drive\Drive;
@@ -20,7 +21,15 @@ final readonly class HttpResourceResolver
 
     public function storage(int|string $id): Drive
     {
-        return $this->storages->find($id) ?? throw StorageNotFoundException::forId($id);
+        $drive = $this->storages->find($id);
+        if ($drive === null) {
+            if (app(TenancyConfig::class)->enabled()) {
+                throw NodeNotFoundException::forId('drive');
+            }
+            throw StorageNotFoundException::forId($id);
+        }
+
+        return $drive;
     }
 
     public function node(int|string $id): Node

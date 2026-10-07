@@ -1,0 +1,28 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:check-evidence:v1",
+  "evidence_id": "p38-final-V931",
+  "check_id": "V931",
+  "subject": "PLAN2.P3.8",
+  "procedure": {
+    "procedure": "Qualified matching named subset of V909 actual required environment full run."
+  },
+  "candidate": {
+    "head": "0d836aa6aee229af80615ccdc23665619c3d9899"
+  },
+  "started_at": "2026-10-07T08:54:49.550424+00:00",
+  "finished_at": "2026-10-07T08:55:26.399567+00:00",
+  "producer": {
+    "kind": "executor",
+    "actor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high"
+    }
+  },
+  "log": {
+    "path": "@plan/artifacts/P3.8/phase-validation.json",
+    "sha256": "5ba1c55f31ca6c779cbbd34f5a1deee810d163c3ae8151f3812ee51450cfba2d"
+  },
+  "verdict": "pass",
+  "observation": "3 executed, 3 passed, 0 failed, 0 skipped; numeric/named receipt and closure retained."
+}

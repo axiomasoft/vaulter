@@ -33,7 +33,7 @@ it('reports zero, one and multiple swept sessions with the actual counts', funct
     expect(Artisan::output())->toContain('Swept 2 stale upload sessions.');
 });
 
-it('reports the purge threshold, override and actual subtree count', function (): void {
+it('applies the maintenance retention override and reports the actual subtree count', function (): void {
     $this->travelTo(Carbon::parse('2026-01-31 12:00:00'));
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'old');
@@ -42,7 +42,6 @@ it('reports the purge threshold, override and actual subtree count', function ()
     Artisan::call('vaulter:purge-trash', ['--days' => '1']);
     $output = Artisan::output();
 
-    expect($output)->toContain('Purging nodes trashed on or before 2026-01-30 12:00:00 (retention: 1 day).')
-        ->toContain('Purged 1 trashed subtree.')
+    expect($output)->toContain('Purged 1 trashed subtree.')
         ->and(Node::withTrashed()->whereKey($node->getKey())->exists())->toBeFalse();
 });

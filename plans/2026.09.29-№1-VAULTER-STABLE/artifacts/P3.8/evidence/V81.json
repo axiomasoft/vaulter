@@ -1,0 +1,28 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:check-evidence:v1",
+  "evidence_id": "p38-final-V81",
+  "check_id": "V81",
+  "subject": "PLAN2.P3.8",
+  "procedure": {
+    "procedure": "Adversarial self-check модели P3-invariants: отметить применимые invariants/enforcement/callers/negative cases и lock pair matrix. Для нового guard ограниченный negative control: в isolated временной копии отключить одну owning проверку, запустить её именованный acceptance тест и получить RED, восстановить исходный SHA-256 и подтвердить GREEN. Сохранить command/cwd/env/exit/fingerprint. Не запускать mutation campaign. Supplemental D06 controls ALL required, fault definition in P3-security-contracts#Acceptance; each executed only inside isolated temporary repository copy, cwd relative to that isolated root, same env. Exact commands:\nNC-SCANNER: cwd=packages/drive; env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Tenancy/PrivateScannerTenantBoundaryTest.php --filter=SEC-R12\nEach control requires named matched test>=1/skipped=0, injected RED then exact source SHA restoration and original GREEN; receipts cannot substitute unrelated tests or silent skipped filters. No product controls run in design."
+  },
+  "candidate": {
+    "head": "0d836aa6aee229af80615ccdc23665619c3d9899"
+  },
+  "started_at": "2026-10-07T10:04:23.980876+00:00",
+  "finished_at": "2026-10-07T10:04:23.980876+00:00",
+  "producer": {
+    "kind": "executor",
+    "actor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high"
+    }
+  },
+  "log": {
+    "path": "@plan/artifacts/P3.8/negative-controls.json",
+    "sha256": "7598231a3655c2e209ad168c0d091da7bcbd0c163a65adb6b85c0fcb8927443d"
+  },
+  "verdict": "pass",
+  "observation": "I1-I18/self-check and lock pair matrix retained. Isolated NC-SCANNER red failed2/3 then SHA-restored GREEN3; NC-TENANCY red failed6/9 then restored GREEN9; no skipped/empty filter, main boundary exact fingerprint unchanged; no mutation campaign."
+}

@@ -45,7 +45,7 @@ return [
             'uuid7' => Uuid7Ids::class,
         ],
     ],
-    'tenancy' => ['enabled' => env('VAULTER_TENANT_ENABLED', false)],
+    'tenancy' => ['enabled' => env('VAULTER_TENANT_ENABLED', false), 'resolver' => null],
     'profiles' => ['default' => DefaultProfile::class, 'providers' => []],
     'scan' => [
         'mode' => null, 'required' => null, 'scanner' => null, 'scanner_key' => null,

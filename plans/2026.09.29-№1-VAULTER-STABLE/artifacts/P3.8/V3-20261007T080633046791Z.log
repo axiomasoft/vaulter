@@ -1,0 +1,69 @@
+
+  [39;41;1m FAIL [39;49;22m[39m Tests\Feature\ResourceListingScopeTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit DriveResource lists a storage the acting admin can reach and hid[39m[90m…[39m [90m0.49s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit NodeGrantResource lists a grant on a reachable node and hides on[39m[90m…[39m [90m0.22s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit NodeShareResource lists a share on a reachable node and hides on[39m[90m…[39m [90m0.22s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit ActivityResource lists activity targeting a reachable node and h[39m[90m…[39m [90m0.21s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit isolates database resources from a sibling profile with an open[39m[90m… [39m [90m0.31s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit isolates database resources from a sibling profile with an open[39m[90m… [39m [90m0.31s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit V31 Filament node grant share and activity listings stay in the[39m[90m… [39m [90m0.15s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\PanelActorGuardTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit resolves the acting admin through the panel guard, not the globa[39m[90m…[39m [90m0.16s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit resolves the same identity as the default guard when the panel u[39m[90m…[39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects an authenticated identity that cannot be authorized[39m[90m      [39m [90m0.15s[39m  
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Feature\ResourceListingScopeTest[22m [90m>[39m it NodeShareResource lis…   
+[39;1m  Expecting Illuminate\Database\Eloquent\Collection not to be empty .[39;22m
+
+  at [32mtests/Feature/ResourceListingScopeTest.php[39m:[32m102[39m
+     98▕     $this->actingAs($owner);
+     99▕ 
+    100▕     $rows = NodeShareResource::getEloquentQuery()->get();
+    101▕ 
+  ➜ 102▕     expect($rows)->not->toBeEmpty()
+    103▕         ->and($rows->first()->node_id)->toBe($reachable->getKey());
+    104▕ });
+    105▕ 
+    106▕ it('ActivityResource lists activity targeting a reachable node and hides a foreign owner\'s activity (F-P1.10-01)', function (): void {
+
+  [33m1   [39m[39;1mtests/Feature/ResourceListingScopeTest.php[39;22m:[39;1m102[39;22m
+
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Feature\ResourceListingScopeTest[22m [90m>[39m it ActivityResource list…   
+[39;1m  Failed asserting that an array contains 2.[39;22m
+
+  at [32mtests/Feature/ResourceListingScopeTest.php[39m:[32m119[39m
+    115▕     DriveBuilder::grant($reachable, $owner, level: GrantLevel::Owner);
+    116▕ 
+    117▕     $targetIds = ActivityResource::getEloquentQuery()->pluck('target_id')->all();
+    118▕ 
+  ➜ 119▕     expect($targetIds)->toContain($reachable->getKey());
+    120▕ 
+    121▕     // A zero-grant stranger sees NO activity at all.
+    122▕     $this->actingAs(DriveBuilder::user(99));
+    123▕
+
+  [33m1   [39m[39;1mtests/Feature/ResourceListingScopeTest.php[39;22m:[39;1m119[39;22m
+
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Feature\ResourceListingScopeTest[22m [90m>[39m it V31 Filament n… [41;1m Error [49;22m  
+[39;1m  Class "Vaulter\Tests\Tenancy\MutableTenantResolver" not found[39;22m
+
+  at [32mtests/Feature/ResourceListingScopeTest.php[39m:[32m163[39m
+    159▕ 
+    160▕ it('V31 Filament node grant share and activity listings stay in the current tenant', function (): void {
+    161▕     config()->set('vaulter.tenancy.enabled', true);
+    162▕     config()->set('vaulter.tenancy.resolver', MutableTenantResolver::class);
+  ➜ 163▕     $resolver = new MutableTenantResolver;
+    164▕     app()->instance(TenantResolver::class, $resolver);
+    165▕     $actor = DriveBuilder::user(1);
+    166▕     $this->actingAs($actor);
+    167▕     $a = Vaulter::drive(DriveTestHelpers::host())->asSystem('fixture');
+
+  [33m1   [39m[39;1mtests/Feature/ResourceListingScopeTest.php[39;22m:[39;1m163[39;22m
+
+
+  [90mTests:[39m    [31;1m3 failed[39;22m[90m,[39m[39m [39m[32;1m7 passed[39;22m[90m (37 assertions)[39m
+  [90mDuration:[39m [39m2.48s[39m
+

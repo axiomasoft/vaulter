@@ -9,14 +9,12 @@ use Illuminate\Support\Facades\Gate;
 use Vaulter\Access\OperationGuard;
 use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Configuration\AccessConfig;
-use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Policies\NodePolicy;
 use Vaulter\Policies\WebhookEndpointPolicy;
-use Vaulter\Support\TenantFootgunGuard;
 
 final class AccessRegistrar
 {
@@ -49,7 +47,6 @@ final class AccessRegistrar
     public function boot(Application $app): void
     {
         $this->registerPolicies();
-        (new TenantFootgunGuard($app->make(TenancyConfig::class), $app->make(VaulterConfig::class)))->check(isProduction: $app->environment('production'));
     }
 
     private function registerPolicies(): void

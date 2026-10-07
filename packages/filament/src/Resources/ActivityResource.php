@@ -29,6 +29,7 @@ use Vaulter\Filament\Support\PanelActor;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Operations\ActivityOperations;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\ValueObjects\Access\Actor;
 
 /**
@@ -66,7 +67,7 @@ final class ActivityResource extends Resource
     #[Override]
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
+        $query = app(TenancyBoundary::class)->constrain(parent::getEloquentQuery());
 
         $actor = PanelActor::current();
         if ($actor === null) {
@@ -74,7 +75,7 @@ final class ActivityResource extends Resource
         }
         $ids = [];
         $driveClass = app(VaulterConfig::class)->model('drive');
-        foreach ($driveClass::query()->lazyById(100) as $drive) {
+        foreach (app(TenancyBoundary::class)->constrain($driveClass::query())->lazyById(100) as $drive) {
             $operations = app()->makeWith(ActivityOperations::class, ['context' => new OperationContext(drive: $drive, actor: Actor::user($actor), correlationId: (string) Str::ulid())]);
             try {
                 $cursor = null;

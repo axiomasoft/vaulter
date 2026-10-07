@@ -18,6 +18,7 @@ use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
+use Vaulter\Models\Concerns\StampsDriveTenant;
 use Vaulter\Models\Drive\Drive;
 
 /**
@@ -66,6 +67,7 @@ class UploadSession extends Model
     use HasExtraData;
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
+    use StampsDriveTenant;
 
     /**
      * Closed allow-list (F-P1.8-02): upload metadata a caller may legitimately

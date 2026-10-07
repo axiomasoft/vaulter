@@ -39,6 +39,7 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Operations\ShareOperations;
+use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\ValueObjects\Access\Actor;
 
 /**
@@ -78,11 +79,11 @@ final class NodeShareResource extends Resource
     #[Override]
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
+        $query = app(TenancyBoundary::class)->constrain(parent::getEloquentQuery(), 'node.storage');
 
         $ids = [];
         $nodeClass = app(VaulterConfig::class)->model('node');
-        foreach ($nodeClass::query()->whereNull('trashed_at')->lazyById(100) as $node) {
+        foreach (app(TenancyBoundary::class)->constrain($nodeClass::query())->whereNull('trashed_at')->lazyById(100) as $node) {
             try {
                 foreach (self::operations($node)->list($node) as $row) {
                     $ids[] = $row->getKey();
@@ -376,7 +377,7 @@ final class NodeShareResource extends Resource
 
         $model = app(VaulterConfig::class)->model('node');
 
-        return $model::query()->find($id);
+        return app(TenancyBoundary::class)->constrain($model::query())->find($id);
     }
 
     /**
@@ -387,7 +388,7 @@ final class NodeShareResource extends Resource
         $model = app(VaulterConfig::class)->model('node');
 
         /** @var array<int|string, string> $options */
-        $options = $model::query()
+        $options = app(TenancyBoundary::class)->constrain($model::query())
             ->whereNull('trashed_at')
             ->orderBy('drive_id')
             ->orderBy('name')

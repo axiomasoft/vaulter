@@ -13,6 +13,7 @@ use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
+use Vaulter\Models\Concerns\StampsDriveTenant;
 
 /**
  * The mutable 1:1 handle for a kind=file node (master plan §2.4): it owns the
@@ -36,6 +37,7 @@ class File extends Model
     use HasExtraData;
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
+    use StampsDriveTenant;
 
     /**
      * Closed guard-list (F-P1.8-02): id/tenant_id/node_id/current_revision_id/

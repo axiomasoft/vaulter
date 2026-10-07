@@ -1,0 +1,21 @@
+{
+  "item": "PLAN2.P3.8",
+  "status": "done",
+  "qualified_candidate": "Integrated workspace including preexisting owner API migration; product fingerprints unchanged through read-only review and delivery",
+  "owning_product_files": 98,
+  "sqlite_executed": 2446,
+  "sqlite_declared_skips": 95,
+  "pg_executed": 417,
+  "required_mysql_executed": 7,
+  "required_pg_mysql_skips": 0,
+  "phase_checks": 32,
+  "review": "Final native Grok4.7/high GREEN; context parameter absent; native session in review-verdict.json; whole owning workset, incomplete transport attempts not counted as completed review rounds",
+  "external_pending": [
+    "Hosted O-3 remains owner-controlled; no hosted dispatch/mutation",
+    "Separate P3 phase audit pending, item review is not phase audit",
+    "Future correction owners C05/C06/C09/C10 and remaining C07/C08 are pending"
+  ],
+  "ownership": "Own initial-to-final product delta; same-file baseline overlaps selectively reapplied to HEAD in scratch index. Existing owner migration remains in workspace/uncommitted. One related initially-untracked additive schema fixture included. No push/publication/hosted dispatch.",
+  "commit": "Single scoped local executor commit after this artifact; identified by Plan/Plan-Ref/Plan-Role trailers",
+  "completed_at": "2026-10-07T10:06:11.783314+00:00"
+}

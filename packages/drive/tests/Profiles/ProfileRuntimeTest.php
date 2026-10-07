@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Contracts\Content\ScanPolicyResolver;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\DriveProvisioner;
 use Vaulter\Drive\Files\FileRevisionRetention;
@@ -76,13 +77,15 @@ it('intersects MIME predicates and size limits while combining blocked extension
 });
 
 it('uses the profile retention cutoff per drive and preserves an explicit maintenance override', function (): void {
-    $first = Vaulter::for(DriveTestHelpers::host())->model();
     $short = new ProfileRegistry;
     $short->register((new Profile)->key('default')->trashRetentionDays(30));
     $short->register((new Profile)->key('short')->trashRetentionDays(0));
     $short->freeze();
     app()->instance(ProfileRegistry::class, $short);
     app()->forgetInstance(DriveProvisioner::class);
+    app()->forgetInstance(ScanPolicyResolver::class);
+    app()->forgetInstance(\Vaulter\Drive\Content\ScanPolicyResolver::class);
+    $first = Vaulter::for(DriveTestHelpers::host())->model();
     $second = Vaulter::for(DriveTestHelpers::host(), 'short')->model();
     $a = (new Node)->forceFill(['drive_id' => $first->id, 'parent_id' => $first->root_node_id, 'kind' => 'folder', 'name' => 'keep', 'trashed_at' => Carbon::now()->subDays(2)]);
     $a->save();

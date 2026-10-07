@@ -9,6 +9,7 @@ use Illuminate\Support\Carbon;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Sharing\NodeShare;
+use Vaulter\Tenancy\TenancyBoundary;
 
 /**
  * Read-side queries over v_node_shares (§2.7 / M2c). It resolves a LIVE share by
@@ -49,7 +50,7 @@ final class NodeShareReadRepository
     {
         $model = $this->vaulterConfig->model('node_share');
 
-        return $model::query()->find($id);
+        return app(TenancyBoundary::class)->constrain($model::query(), 'node.storage')->find($id);
     }
 
     /**
@@ -63,7 +64,7 @@ final class NodeShareReadRepository
     {
         $model = $this->vaulterConfig->model('node_share');
 
-        return $model::query()
+        return app(TenancyBoundary::class)->constrain($model::query(), 'node.storage')
             ->where('node_id', $node->getKey())
             ->orderByDesc('created_at');
     }

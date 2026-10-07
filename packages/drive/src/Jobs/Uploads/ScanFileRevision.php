@@ -7,7 +7,9 @@ namespace Vaulter\Drive\Jobs\Uploads;
 use DateTimeImmutable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Queue\InteractsWithQueue;
 use Vaulter\Configuration\ScanConfig;
+use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Content\ScanInput;
 use Vaulter\Content\ScanResult;
 use Vaulter\Content\ScanSnapshot;
@@ -15,10 +17,14 @@ use Vaulter\Contracts\Cas\ContentScanner;
 use Vaulter\Drive\Content\PrivateScanReader;
 use Vaulter\Enums\Cas\ScanVerdict;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Vaulter\Jobs\Middleware\RestoreTenantContext;
 use Vaulter\Repositories\Content\ScanObligationRepository;
+use Vaulter\Tenancy\TenancyBoundary;
+use Vaulter\Tenancy\TenancyBypass;
 
 final class ScanFileRevision implements ShouldQueue
 {
+    use InteractsWithQueue;
     use Queueable;
 
     public int $tries = 1;
@@ -28,13 +34,27 @@ final class ScanFileRevision implements ShouldQueue
     public function __construct(public int|string $obligationId, public int $generation,
         public int|string $driveId, public int|string|null $tenantId) {}
 
+    /** @return list<RestoreTenantContext> */
+    public function middleware(): array
+    {
+        return [new RestoreTenantContext($this->driveId, $this->tenantId)];
+    }
+
     public function handle(ScanObligationRepository $work, PrivateScanReader $reader, ScanSnapshot $snapshots,
         ScanConfig $config): void
+    {
+        if (app(TenancyConfig::class)->enabled()) {
+            app(TenancyBoundary::class)->assertJobDrive($this->driveId, $this->tenantId);
+        }
+        app(TenancyBypass::class)->suspend(fn () => $this->execute($work, $reader, $snapshots, $config));
+    }
+
+    private function execute(ScanObligationRepository $work, PrivateScanReader $reader, ScanSnapshot $snapshots, ScanConfig $config): void
     {
         // The queued scope is a fence, never a permission to derive a different tenant.
         $row = $work->find($this->obligationId);
         if ($row === null || (string) $row->drive_id !== (string) $this->driveId
-            || $row->tenant_id !== $this->tenantId) {
+            || TenancyBoundary::normalize($row->tenant_id) !== TenancyBoundary::normalize($this->tenantId)) {
             return;
         }
         $scanner = app(ContentScanner::class);

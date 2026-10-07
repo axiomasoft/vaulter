@@ -91,6 +91,12 @@ final class UploadTestHelpers
         return $session;
     }
 
+    /** @return array<string,mixed> */
+    public static function clientMetadata(UploadSession $session): array
+    {
+        return array_diff_key($session->metadata ?? [], array_flip(['actor_type', 'expected_sequence']));
+    }
+
     /**
      * An in-memory read stream over the given bytes.
      *

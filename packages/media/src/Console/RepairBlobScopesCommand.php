@@ -17,6 +17,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Repositories\Cas\BlobStoreRepository;
 use Vaulter\ValueObjects\Cas\BlobScope;
+use Vaulter\VaulterManager;
 
 final class RepairBlobScopesCommand extends Command
 {
@@ -32,6 +33,11 @@ final class RepairBlobScopesCommand extends Command
     protected $description = 'Copy legacy mixed-scope blobs to their lossless scopes and atomically redirect revision edges';
 
     public function handle(VaulterDatabase $database, ContentStore $content, BlobStoreRepository $blobs, BlobLock $lock): int
+    {
+        return app(VaulterManager::class)->withoutTenancy(fn (): int => $this->runMaintenance($database, $content, $blobs, $lock));
+    }
+
+    private function runMaintenance(VaulterDatabase $database, ContentStore $content, BlobStoreRepository $blobs, BlobLock $lock): int
     {
         if ((bool) $this->option('dry-run') === (bool) $this->option('execute')) {
             $this->error('Select exactly one of --dry-run or --execute.');

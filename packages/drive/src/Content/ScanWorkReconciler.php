@@ -16,6 +16,7 @@ use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Models\Content\ScanObligation;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Repositories\Content\ScanObligationRepository;
+use Vaulter\Tenancy\TenancyBoundary;
 
 final readonly class ScanWorkReconciler
 {
@@ -51,7 +52,7 @@ final readonly class ScanWorkReconciler
         $started = microtime(true);
         $counts = ['scanned' => 0, 'published' => 0, 'failed' => 0, 'stalled_configuration' => 0, 'remaining_due' => 0];
         $class = $this->config->model('scan_obligation');
-        $query = $class::query()->whereIn('state', ['pending', 'retry_wait', 'leased'])
+        $query = app(TenancyBoundary::class)->constrain($class::query())->whereIn('state', ['pending', 'retry_wait', 'leased'])
             ->where(function ($query): void {
                 $query->where(function ($query): void {
                     $query->whereIn('state', ['pending', 'retry_wait'])->where('available_at', '<=', now('UTC'))
@@ -68,7 +69,7 @@ final readonly class ScanWorkReconciler
             $counts['scanned']++;
             try {
                 $driveClass = $this->config->model('drive');
-                $drive = $driveClass::query()->whereKey($row->drive_id)->first();
+                $drive = app(TenancyBoundary::class)->constrain($driveClass::query())->whereKey($row->drive_id)->first();
                 if ($drive === null || $drive->tenant_id !== $row->tenant_id) {
                     $counts['failed']++;
 

@@ -7,6 +7,7 @@ namespace Vaulter\Media\Console;
 use Illuminate\Console\Command;
 use Vaulter\Media\Cas\BlobGarbageCollector;
 use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\VaulterManager;
 
 /**
  * Two-phase, race-safe blob garbage collection (H.3). ACL-blind, system context:
@@ -30,6 +31,11 @@ final class GcBlobsCommand extends Command
     protected $description = 'Garbage-collect unreferenced Vaulter blobs (two-phase, race-safe — H.3)';
 
     public function handle(BlobGarbageCollector $collector): int
+    {
+        return app(VaulterManager::class)->withoutTenancy(fn (): int => $this->runMaintenance($collector));
+    }
+
+    private function runMaintenance(BlobGarbageCollector $collector): int
     {
         $grace = $this->graceOption();
 

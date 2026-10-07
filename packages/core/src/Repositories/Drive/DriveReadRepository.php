@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Support\Identity;
+use Vaulter\Tenancy\TenancyBoundary;
 
 /**
  * Read-side lookups over v_drives (§2.1). The get-or-create entry point is the
@@ -33,6 +34,11 @@ final class DriveReadRepository
 
     public function find(int|string $id): ?Drive
     {
+        if (app(TenancyBoundary::class)->enforced()) {
+            $model = $this->vaulterConfig->model('drive');
+
+            return app(TenancyBoundary::class)->constrain($model::query())->find($id);
+        }
         $key = Identity::stringify($id);
 
         if (array_key_exists($key, $this->cache)) {
@@ -53,10 +59,13 @@ final class DriveReadRepository
     {
         $model = $this->vaulterConfig->model('drive');
 
-        return $model::query()
+        $owner = app(TenancyBoundary::class)->assertOwner($owner);
+        $drive = $model::query()
             ->where('owner_type', $owner->getMorphClass())
             ->where('owner_id', $owner->getKey())
             ->where('profile', $panel)
             ->first();
+
+        return $drive === null ? null : app(TenancyBoundary::class)->assertDrive($drive);
     }
 }

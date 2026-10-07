@@ -9,6 +9,7 @@ use Illuminate\Support\Carbon;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Tenancy\TenancyBoundary;
 
 /**
  * Read-side lookups over v_upload_sessions (§2.8 / M3a). The resumable endpoints
@@ -77,6 +78,6 @@ final class UploadSessionReadRepository
     {
         $model = $this->driveConfig->model('upload_session');
 
-        return $model::query();
+        return app(TenancyBoundary::class)->constrain($model::query());
     }
 }

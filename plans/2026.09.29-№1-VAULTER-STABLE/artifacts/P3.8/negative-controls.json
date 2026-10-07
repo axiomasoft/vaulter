@@ -1,0 +1,106 @@
+[
+  {
+    "id": "NC-SCANNER",
+    "injected_file": "/tmp/vaulter-p38-isolated2/packages/core/src/Tenancy/TenancyBoundary.php",
+    "fault": "if ($this->config->enabled()) { -> if (false) { in     public function assertJobDrive",
+    "original_sha256": "7a99ba217de9bb61cd5b69b972d4c721194107424d6b1d31e6b700b153324d69",
+    "restored_sha256": "7a99ba217de9bb61cd5b69b972d4c721194107424d6b1d31e6b700b153324d69",
+    "main_source_sha256": "7a99ba217de9bb61cd5b69b972d4c721194107424d6b1d31e6b700b153324d69",
+    "steps": [
+      {
+        "state": "red",
+        "command": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Tenancy/PrivateScannerTenantBoundaryTest.php --filter=SEC-R12 --log-junit /home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.8/NC-SCANNER-red.xml",
+        "cwd": "/tmp/vaulter-p38-isolated2/packages/drive",
+        "started_at": "2026-10-07T09:52:43.103188+00:00",
+        "exit": 1,
+        "matched": 3,
+        "executed_tests": 3,
+        "skipped": 0,
+        "failed": 2,
+        "names": [
+          "it SEC-R12 V08 private scanner A B A refuses mismatch null and maintenance inheritance before any reads",
+          "it SEC-R12 private capability validates lease scope immutable blob revision and generation before byte open",
+          "it SEC-R12 recovery only publishes current tenant work and all-tenant publication gives no job bypass"
+        ],
+        "output": "artifacts/P3.8/NC-SCANNER-red.log",
+        "source_sha256": "5a19357ef1558cd56bae6d6ee73fbad1306ae5d08d838c0ff87451b44bc272f2"
+      },
+      {
+        "state": "green",
+        "command": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Tenancy/PrivateScannerTenantBoundaryTest.php --filter=SEC-R12 --log-junit /home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.8/NC-SCANNER-green.xml",
+        "cwd": "/tmp/vaulter-p38-isolated2/packages/drive",
+        "started_at": "2026-10-07T09:52:43.851576+00:00",
+        "exit": 0,
+        "matched": 3,
+        "executed_tests": 3,
+        "skipped": 0,
+        "failed": 0,
+        "names": [
+          "it SEC-R12 V08 private scanner A B A refuses mismatch null and maintenance inheritance before any reads",
+          "it SEC-R12 private capability validates lease scope immutable blob revision and generation before byte open",
+          "it SEC-R12 recovery only publishes current tenant work and all-tenant publication gives no job bypass"
+        ],
+        "output": "artifacts/P3.8/NC-SCANNER-green.log",
+        "source_sha256": "7a99ba217de9bb61cd5b69b972d4c721194107424d6b1d31e6b700b153324d69"
+      }
+    ]
+  },
+  {
+    "id": "NC-TENANCY",
+    "injected_file": "/tmp/vaulter-p38-isolated2/packages/core/src/Tenancy/TenancyBoundary.php",
+    "fault": "if (!$this->enforced()) { -> if (true) { in     public function constrain",
+    "original_sha256": "7a99ba217de9bb61cd5b69b972d4c721194107424d6b1d31e6b700b153324d69",
+    "restored_sha256": "7a99ba217de9bb61cd5b69b972d4c721194107424d6b1d31e6b700b153324d69",
+    "main_source_sha256": "7a99ba217de9bb61cd5b69b972d4c721194107424d6b1d31e6b700b153324d69",
+    "steps": [
+      {
+        "state": "red",
+        "command": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Tenancy/StrictTenancyTest.php --filter=V31 --log-junit /home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.8/NC-TENANCY-red.xml",
+        "cwd": "/tmp/vaulter-p38-isolated2",
+        "started_at": "2026-10-07T09:52:44.582036+00:00",
+        "exit": 1,
+        "matched": 9,
+        "executed_tests": 9,
+        "skipped": 0,
+        "failed": 6,
+        "names": [
+          "it V31 stamps authoritative drive and children and retained system handles recheck A B A",
+          "it V31 denies mutated supplied drive and node models and cached repository authority",
+          "it V31 constrains HTTP lookup search shared and trash reads to the owning drive tenant",
+          "it V31 refuses a foreign existing owner profile winner without creating another drive",
+          "it V31 null refuses current authority while normalized tenant ids retain leading zeroes",
+          "it V31 optional owner tenant resolver rereads owner on both provision and existing lookup",
+          "it V31 anonymous bearer shares derive only their target tenant and do not open a foreign system handle",
+          "it V31 F1 binds optional owner validation lookup and insert to one persisted identity",
+          "it V31 F2 rejects mismatched descendant ancestor breadcrumb and ACL tree stamps"
+        ],
+        "output": "artifacts/P3.8/NC-TENANCY-red.log",
+        "source_sha256": "def170d27b9578e2a34500ac6be208abe1118fdcec250ca685de2de81d2088a7"
+      },
+      {
+        "state": "green",
+        "command": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Tenancy/StrictTenancyTest.php --filter=V31 --log-junit /home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.8/NC-TENANCY-green.xml",
+        "cwd": "/tmp/vaulter-p38-isolated2",
+        "started_at": "2026-10-07T09:52:45.866014+00:00",
+        "exit": 0,
+        "matched": 9,
+        "executed_tests": 9,
+        "skipped": 0,
+        "failed": 0,
+        "names": [
+          "it V31 stamps authoritative drive and children and retained system handles recheck A B A",
+          "it V31 denies mutated supplied drive and node models and cached repository authority",
+          "it V31 constrains HTTP lookup search shared and trash reads to the owning drive tenant",
+          "it V31 refuses a foreign existing owner profile winner without creating another drive",
+          "it V31 null refuses current authority while normalized tenant ids retain leading zeroes",
+          "it V31 optional owner tenant resolver rereads owner on both provision and existing lookup",
+          "it V31 anonymous bearer shares derive only their target tenant and do not open a foreign system handle",
+          "it V31 F1 binds optional owner validation lookup and insert to one persisted identity",
+          "it V31 F2 rejects mismatched descendant ancestor breadcrumb and ACL tree stamps"
+        ],
+        "output": "artifacts/P3.8/NC-TENANCY-green.log",
+        "source_sha256": "7a99ba217de9bb61cd5b69b972d4c721194107424d6b1d31e6b700b153324d69"
+      }
+    ]
+  }
+]

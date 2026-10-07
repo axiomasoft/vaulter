@@ -11,6 +11,7 @@ use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Tenancy\TenancyBoundary;
 
 /**
  * Read-side queries over v_activity (§2.9 / M2c-activity). The feed is scoped to a
@@ -97,7 +98,7 @@ final class ActivityReadRepository
     {
         $model = $this->vaulterConfig->model('activity');
 
-        $query = $model::query()->newestFirst();
+        $query = app(TenancyBoundary::class)->constrain($model::query())->newestFirst();
 
         if ($verb !== null) {
             $query->where('verb', $verb->value);

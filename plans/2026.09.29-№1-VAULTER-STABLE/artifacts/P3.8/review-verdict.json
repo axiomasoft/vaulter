@@ -1,0 +1,51 @@
+{
+  "verdict": "GREEN",
+  "reviewer": "grok/grok-4.7",
+  "effort": "high",
+  "scope": "PLAN2.P3.8 whole owning workset",
+  "findings": [],
+  "checks_considered": [
+    "Re-read current TenancyBoundary, DriveReadRepository::forOwner, DriveProvisioner, DriveHandleFactory, NodeReadRepository tree walks, AccessResolver::ancestorChain and storageOf after the seven-file correction",
+    "Prior-round owner identity split is closed: enabled plus ResolvesOwnerTenant requires raw key, current key and fresh key/morph to agree, including under withoutTenancy, and lookup plus insert use only the returned fresh owner",
+    "Prior-round adjacency gap is closed for descendants, subtree, ancestors, breadcrumb, ancestorChains and the AccessResolver ancestor walk; enabled mode checks every fetched row against a freshly asserted owning drive even when maintenance bypass is active",
+    "Direct children, search, trash, shared and repository constrain paths still apply the tenant predicate; StampsDriveTenant still stamps creates from the owning drive",
+    "Share token checks still precede ShareTenantContext, which stays limited to issuer visibility, share children and head; public byte open still revalidates the share and availability",
+    "RestoreTenantContext still suspends maintenance, fails missing tenant or user before next, and rehydrates the user through the configured auth provider",
+    "PrivateScanReader still calls assertJobDrive before BlobStore::read; ScanFileRevision remains tries=1 with the immutable lease/revision/blob/generation fence and does not inherit withoutTenancy",
+    "TenantIdentityPredicate still binds the tenant value and wraps only the grammar column for SQLite, PostgreSQL and MySQL",
+    "Root repair still takes the exclusive tree lock and then the drive row lock before creating a missing root",
+    "Negative controls now hash the corrected TenancyBoundary and include the named F1 and F2 cases; phase-validation supplements the seven-file closure without claiming hosted O-3 or future C05/C06/C09/C10"
+  ],
+  "limitations": [
+    "Static review only; the correction suites were not re-executed.",
+    "Unchanged sections were reassessed from this same session plus the current integrated files, not by rereading every unchanged source file.",
+    "Workspace bytes were not independently rehashed; manifest and negative-control SHA-256 values were compared as recorded.",
+    "Pending hosted O-3, the separate phase audit, and future correction-row owners were not scored."
+  ],
+  "session_id": "955330b9-973b-44be-a3d7-c06508c512d0",
+  "actual_route": {
+    "current_model_id": "grok-4.7",
+    "reasoning_effort": null,
+    "session_kind": "headless",
+    "agent_id": "ag1.f67c60cd19f5484eba28e0c137450715",
+    "attempt_id": "at1.1bf5c1e5566d42bcb05fe94b9b480dad",
+    "sandbox_profile": "off",
+    "created_at": "2026-10-07T09:18:19.923671869Z",
+    "head_commit": "0d836aa6aee229af80615ccdc23665619c3d9899",
+    "session_id": "955330b9-973b-44be-a3d7-c06508c512d0",
+    "source": "native-grok-session-summary",
+    "context_argument_supplied": false,
+    "capability": "Only read_file/grep/list_dir/glob; no shell/edit/write/MCP/subagents/web",
+    "completed_round": 2,
+    "scope": "FULL whole final owning workset, owner-requested",
+    "attested_initial_reasoning_effort": "high",
+    "resume_requested_reasoning_effort": "high",
+    "effort_evidence": "Same provider session initially attested high; explicit high on resume. Current native summary omits effort on resume, retained as null rather than invented."
+  },
+  "whole_workset": true,
+  "stable_product_fingerprints": true,
+  "completed_round": 2,
+  "context_argument_supplied": false,
+  "transport_recovery": "Earlier shell permission cancellation and unavailable bwrap sandbox were incomplete attempts; final session exposes only read_file/grep/list_dir/glob.",
+  "output_sha256": "c96e73bbee9b90066b7eefa63ef278c923e51e6cda62db87d0f34ef720094cf7"
+}

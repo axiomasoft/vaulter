@@ -8,6 +8,8 @@ use DateTimeImmutable;
 use DateTimeZone;
 use Illuminate\Support\Str;
 use LogicException;
+use Vaulter\Configuration\ScanConfig;
+use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ImmutableContentIdentity;
 use Vaulter\Content\ScanAttempt;
@@ -24,6 +26,7 @@ use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Tenancy\TenancyBoundary;
 
 /** SQL owns retries and generation fencing; no scanner IO runs in these transactions. */
 final readonly class ScanObligationRepository
@@ -56,6 +59,9 @@ final readonly class ScanObligationRepository
             throw new LogicException('Scan work requires a configured scanner identity.');
         }
         $snapshot = $this->snapshots->load($revision, true);
+        if (app(TenancyConfig::class)->enabled()) {
+            app(TenancyBoundary::class)->assertDrive($snapshot['drive']);
+        }
         if ((string) $snapshot['drive']->id !== (string) $context->driveId()) {
             throw new LogicException('Scan request scope differs.');
         }
@@ -166,6 +172,10 @@ final readonly class ScanObligationRepository
 
     public function settle(ScanAttempt $attempt, ScanResult $result): bool
     {
+        if (app(TenancyConfig::class)->enabled()) {
+            app(TenancyBoundary::class)->assertJobDrive($attempt->driveId, $attempt->tenantId);
+        }
+
         return $this->database->transaction(function () use ($attempt, $result): bool {
             // Freeze the owning tree before any preliminary scope reads. A purge
             // that wins first leaves no revision; settlement then safely no-ops.
@@ -213,6 +223,9 @@ final readonly class ScanObligationRepository
     /** @internal A live trusted attempt may record a deterministic failure without trusting altered content. */
     public function failAttempt(ScanAttempt $attempt, string $reason): bool
     {
+        if (app(TenancyConfig::class)->enabled()) {
+            app(TenancyBoundary::class)->assertJobDrive($attempt->driveId, $attempt->tenantId);
+        }
         if (!in_array($reason, ['content_identity_mismatch', 'access_denied', 'unsupported', 'unknown'], true)) {
             throw new LogicException('Invalid deterministic attempt failure.');
         }
@@ -343,12 +356,7 @@ final readonly class ScanObligationRepository
 
     private function setting(string $key, int $fallback): int
     {
-        $value = config('vaulter-drive.uploads.scan.'.$key, $fallback);
-        if (!is_int($value) || $value < 1) {
-            throw new LogicException('Invalid positive scan work setting.');
-        }
-
-        return $value;
+        return app(ScanConfig::class)->workSetting($key, $fallback);
     }
 
     private function clock(): DateTimeImmutable

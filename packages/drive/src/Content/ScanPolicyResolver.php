@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Content;
 
+use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Content\ScanPolicySpec;
 use Vaulter\Content\ScanSnapshot;
 use Vaulter\Contracts\Content\ScanPolicyResolver as Resolver;
@@ -15,6 +16,7 @@ use Vaulter\Operations\OperationContext;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Repositories\Content\ScanPolicyStateRepository;
+use Vaulter\Tenancy\TenancyBoundary;
 
 final readonly class ScanPolicyResolver implements Resolver
 {
@@ -65,6 +67,9 @@ final readonly class ScanPolicyResolver implements Resolver
 
     public function initialize(Drive $drive, OperationContext $context): void
     {
+        if (app(TenancyConfig::class)->enabled()) {
+            $drive = app(TenancyBoundary::class)->assertDrive($drive);
+        }
         foreach ($this->desired($drive) as $spec) {
             $this->states->activate($drive, $spec, $spec->rolloutKey, $context);
         }

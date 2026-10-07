@@ -397,5 +397,10 @@
       "title": "Concrete mandatory corrections supplied",
       "text": "D26C/D27A/D28A/D29 remain accepted. C01–C04/C07/C08 concrete P3 contracts now in required P3-security-contracts with owning files/names/exact commands, not note-only future decisions. C05/C06/C09/C10 and future C07/C08 owners unchanged. No product qualification inferred; current-input fresh P3 design audit is next owner task."
     }
-  ]
+  ],
+  "closed": {
+    "at": "2026-10-07T10:05:54Z",
+    "result": "done",
+    "summary": "8 item(s): 8 done"
+  }
 }

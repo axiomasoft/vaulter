@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Tenancy\PrivateScannerTenantBoundaryTest" file="tests/Tenancy/PrivateScannerTenantBoundaryTest.php" tests="3" assertions="29" errors="0" failures="0" skipped="0" time="0.730120">
+    <testcase name="it SEC-R12 V08 private scanner A B A refuses mismatch null and maintenance inheritance before any reads" file="tests/Tenancy/PrivateScannerTenantBoundaryTest.php::it SEC-R12 V08 private scanner A B A refuses mismatch null and maintenance inheritance before any reads" class="Tests\Tenancy\PrivateScannerTenantBoundaryTest" classname="Tests.Tenancy.PrivateScannerTenantBoundaryTest" assertions="10" time="0.317342"/>
+    <testcase name="it SEC-R12 private capability validates lease scope immutable blob revision and generation before byte open" file="tests/Tenancy/PrivateScannerTenantBoundaryTest.php::it SEC-R12 private capability validates lease scope immutable blob revision and generation before byte open" class="Tests\Tenancy\PrivateScannerTenantBoundaryTest" classname="Tests.Tenancy.PrivateScannerTenantBoundaryTest" assertions="12" time="0.188946"/>
+    <testcase name="it SEC-R12 recovery only publishes current tenant work and all-tenant publication gives no job bypass" file="tests/Tenancy/PrivateScannerTenantBoundaryTest.php::it SEC-R12 recovery only publishes current tenant work and all-tenant publication gives no job bypass" class="Tests\Tenancy\PrivateScannerTenantBoundaryTest" classname="Tests.Tenancy.PrivateScannerTenantBoundaryTest" assertions="7" time="0.223832"/>
+  </testsuite>
+</testsuites>

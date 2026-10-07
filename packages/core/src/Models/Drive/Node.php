@@ -17,6 +17,7 @@ use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
+use Vaulter\Models\Concerns\StampsDriveTenant;
 
 /**
  * A node in the unified folder|file|document adjacency tree (master plan §2.2,
@@ -63,6 +64,7 @@ class Node extends Model
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
     use SoftDeletes;
+    use StampsDriveTenant;
 
     /**
      * Closed allow-list (F-P1.8-02): only the handful of columns a caller

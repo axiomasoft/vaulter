@@ -16,6 +16,7 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Content\ScanEvidenceRepository;
 use Vaulter\Sharing\ShareContext;
+use Vaulter\Tenancy\TenancyBoundary;
 
 /** @internal Availability never grants ACL or a private scanner capability. */
 final readonly class ContentAvailabilityGuard
@@ -28,6 +29,7 @@ final readonly class ContentAvailabilityGuard
         if ((string) $drive->id !== (string) $context->driveId()) {
             throw NodeNotFoundException::forId($node->id);
         }
+        app(TenancyBoundary::class)->assertDrive($drive);
         $this->check($actualRevision, $drive, $blob);
     }
 

@@ -11,6 +11,7 @@ use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Drive\Http\Requests\Files\UploadFileRequest;
 use Vaulter\Drive\Http\Requests\Uploads\CreateUploadSessionRequest;
 use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Testing\FakeMetricsRecorder;
@@ -374,7 +375,7 @@ it('R07b: sanitizeMetadata continues after unknown key and still includes known 
         'Upload-Metadata' => 'unknown_first '.base64_encode('x').', filename '.base64_encode('break-test.bin'),
     ])->assertCreated()->json('data.upload_id');
 
-    expect(UploadSession::query()->where('upload_id', $uploadId)->sole()->metadata)
+    expect(UploadTestHelpers::clientMetadata(UploadSession::query()->where('upload_id', $uploadId)->sole()))
         ->toBe(['filename' => 'break-test.bin']);
 });
 

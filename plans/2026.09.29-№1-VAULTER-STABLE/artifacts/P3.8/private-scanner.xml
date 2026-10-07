@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Tenancy\PrivateScannerTenantBoundaryTest" file="tests/Tenancy/PrivateScannerTenantBoundaryTest.php" tests="3" assertions="22" errors="0" failures="1" skipped="0" time="1.127626">
+    <testcase name="it SEC-R12 V08 private scanner A B A refuses mismatch null and maintenance inheritance before any reads" file="tests/Tenancy/PrivateScannerTenantBoundaryTest.php::it SEC-R12 V08 private scanner A B A refuses mismatch null and maintenance inheritance before any reads" class="Tests\Tenancy\PrivateScannerTenantBoundaryTest" classname="Tests.Tenancy.PrivateScannerTenantBoundaryTest" assertions="10" time="0.469914"/>
+    <testcase name="it SEC-R12 private capability validates lease scope immutable blob revision and generation before byte open" file="tests/Tenancy/PrivateScannerTenantBoundaryTest.php::it SEC-R12 private capability validates lease scope immutable blob revision and generation before byte open" class="Tests\Tenancy\PrivateScannerTenantBoundaryTest" classname="Tests.Tenancy.PrivateScannerTenantBoundaryTest" assertions="10" time="0.343874"/>
+    <testcase name="it SEC-R12 recovery only publishes current tenant work and all-tenant publication gives no job bypass" file="tests/Tenancy/PrivateScannerTenantBoundaryTest.php::it SEC-R12 recovery only publishes current tenant work and all-tenant publication gives no job bypass" class="Tests\Tenancy\PrivateScannerTenantBoundaryTest" classname="Tests.Tenancy.PrivateScannerTenantBoundaryTest" assertions="2" time="0.313838">
+      <failure type="PHPUnit\Framework\ExpectationFailedException">it SEC-R12 recovery only publishes current tenant work and all-tenant publication gives no job bypassThe following jobs were dispatched unexpectedly:
+
+- Vaulter\Drive\Jobs\Uploads\ScanFileRevision
+
+Failed asserting that an array is empty.
+at vendor/laravel/framework/src/Illuminate/Support/Testing/Fakes/BusFake.php:208
+at vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:363
+at tests/Tenancy/PrivateScannerTenantBoundaryTest.php:107</failure>
+    </testcase>
+  </testsuite>
+</testsuites>

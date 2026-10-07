@@ -226,3 +226,17 @@ Register the endpoint with a public http(s) URL.
 
 `InvalidCursorException`: 422 `validation_failed`, with `errors.cursor`. Restart the
 listing without a cursor; the signature, listing scope or ordering did not match.
+
+
+## actor-required
+
+`actor_required` (401) means the current operation has neither an authenticated
+user nor an explicit trusted system actor. Authenticate, use `actingAs($user)`,
+or use `asSystem($reason)` in trusted maintenance or a tenant-validated job.
+System actors still enforce tenant scope, profile policy and content availability.
+
+## profile-restriction
+
+`profile_restriction` (403) means the effective drive profile disables the
+requested operation. Global and profile policies both apply. An actor without
+View receives `node_not_found` (404) before profile restrictions are disclosed.

@@ -140,5 +140,5 @@ it('refuses a tus abort when the host role driver denies the actor', function ()
     r07cDeny();
 
     $this->delete('api/vaulter/resumable-uploads/'.$uploadId, [], ['Tus-Resumable' => '1.0.0'])
-        ->assertForbidden();
+        ->assertNotFound();
 });

@@ -1,0 +1,9 @@
+[
+  "packages/core/src/Access/AccessResolver.php",
+  "packages/core/src/Repositories/Drive/DriveReadRepository.php",
+  "packages/core/src/Repositories/Drive/NodeReadRepository.php",
+  "packages/core/src/Tenancy/TenancyBoundary.php",
+  "packages/core/tests/Tenancy/StrictTenancyTest.php",
+  "packages/drive/src/DriveHandleFactory.php",
+  "packages/drive/src/DriveProvisioner.php"
+]

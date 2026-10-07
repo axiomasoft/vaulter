@@ -1,0 +1,16 @@
+warning unit_files_uncovered: phases/P3/P3.7/U1.json/files/0: packages/core/src/Content/Scan{Attempt,Evidence,Input,Result}.php is not covered by the task_files of P3.7
+warning unit_files_uncovered: phases/P3/P3.7/U1.json/files/4: packages/core/src/Models/Content/*.php is not covered by the task_files of P3.7
+warning unit_files_uncovered: phases/P3/P3.7/U1.json/files/5: packages/core/src/Repositories/Content/*.php is not covered by the task_files of P3.7
+warning unit_files_uncovered: phases/P3/P3.7/U1.json/files/8: packages/core/src/Models/{Drive/{Drive,FileRevision},Cas/Blob}.php is not covered by the task_files of P3.7
+warning unit_files_uncovered: phases/P3/P3.7/U1.json/files/9: packages/core/src/Configuration/VaulterConfig.php is not covered by the task_files of P3.7
+warning unit_files_uncovered: phases/P3/P3.7/U2.json/files/0: packages/drive/src/Content/{ScanPolicyResolver,PrivateScanReader,ScanAdmission,ScanWorkReconciler,ScanBackfillReconciler}.php is not covered by the task_files of P3.7
+warning unit_files_uncovered: phases/P3/P3.7/U2.json/files/1: packages/drive/src/Content/{CopyDestinationAdmission,FileContentLifecycle}.php is not covered by the task_files of P3.7
+warning unit_files_uncovered: phases/P3/P3.7/U2.json/files/3: packages/drive/src/Console/{RescanFileRevisions,ReconcileScanWork}Command.php is not covered by the task_files of P3.7
+warning unit_files_uncovered: phases/P3/P3.7/U2.json/files/4: packages/drive/src/Providers/{Bindings,Console}Registrar.php is not covered by the task_files of P3.7
+warning unit_files_uncovered: phases/P3/P3.7/U3.json/files/0: packages/drive/src/Actions/Uploads/*.php is not covered by the task_files of P3.7
+warning unit_files_uncovered: phases/P3/P3.7/U3.json/files/2: packages/drive/src/Data/Uploads/*.php is not covered by the task_files of P3.7
+warning unit_files_uncovered: phases/P3/P3.7/U3.json/files/3: packages/drive/src/Uploads/UploadSessionManager.php is not covered by the task_files of P3.7
+warning unit_files_uncovered: phases/P3/P3.7/U3.json/files/6: packages/drive/src/Http/Controllers/Uploads/*.php is not covered by the task_files of P3.7
+warning unit_files_uncovered: phases/P3/P3.7/U3.json/files/7: packages/drive/src/Http/Controllers/NodeController.php is not covered by the task_files of P3.7
+warning read_missing: phases/P3/P3.8.json/reads/5/path: required read packages/core/src/Support/TenantFootgunGuard.php does not exist and no dependency produces it
+0 error(s), 15 warning(s)

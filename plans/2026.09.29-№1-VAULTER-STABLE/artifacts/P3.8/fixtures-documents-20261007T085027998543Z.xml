@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Feature\MiddlewareStacksTest" file="tests/Feature/MiddlewareStacksTest.php" tests="4" assertions="10" errors="0" failures="0" skipped="0" time="0.581106">
+    <testcase name="it requires Sanctum on protected routes and accepts an authenticated actor" file="tests/Feature/MiddlewareStacksTest.php::it requires Sanctum on protected routes and accepts an authenticated actor" class="Tests\Feature\MiddlewareStacksTest" classname="Tests.Feature.MiddlewareStacksTest" assertions="2" time="0.268942"/>
+    <testcase name="it serves a valid public share without a Sanctum token" file="tests/Feature/MiddlewareStacksTest.php::it serves a valid public share without a Sanctum token" class="Tests\Feature\MiddlewareStacksTest" classname="Tests.Feature.MiddlewareStacksTest" assertions="1" time="0.108572"/>
+    <testcase name="it accepts a signed hub JWT without a Sanctum token" file="tests/Feature/MiddlewareStacksTest.php::it accepts a signed hub JWT without a Sanctum token" class="Tests\Feature\MiddlewareStacksTest" classname="Tests.Feature.MiddlewareStacksTest" assertions="3" time="0.118943"/>
+    <testcase name="it retains legacy authenticated middleware and appends metrics once in every stack" file="tests/Feature/MiddlewareStacksTest.php::it retains legacy authenticated middleware and appends metrics once in every stack" class="Tests\Feature\MiddlewareStacksTest" classname="Tests.Feature.MiddlewareStacksTest" assertions="4" time="0.084649"/>
+  </testsuite>
+</testsuites>

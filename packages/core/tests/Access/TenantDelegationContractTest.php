@@ -12,22 +12,10 @@ use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Tests\Access\AccessTestHelpers;
 
 /*
- * F-P1.9-02 (Minor) — a contract test pinning the load-bearing invariant of
- * ADR-0003 ("Vaulter does not scope by tenant — the host's swapped model applies
- * its own TenantScope"): the DEFAULT models carry NO query-level tenant/owner
- * filtering, and the sole barrier is per-action AccessResolver authorization
- * (H.2). Before this test the contract lived only in ADR-0003 + docblocks
- * (P1.9 §F-P1.9-02 "no test proves it") — a future refactor could silently add a
- * global scope (breaking GC/reconcile/sweeper, which must see every tenant) or
- * silently drop the per-action gate (opening cross-owner access) and nothing
- * would catch it. Green/coverage-gap form (D19 — no behaviour delta, the
- * behaviour under test is already correct; the gap was the missing assertion).
- *
- * Two separately-owned storages stand in for two tenants: the default models
- * only populate tenant_id through a host-supplied tenant-aware model swap
- * (P1.9 §"Не проверено"), so "two owners, cross-owner access" is the honest
- * in-package proxy for "two tenants, cross-tenant access" — the SAME proxy the
- * P1.9 repro (`TenantIsolationReproTest`) uses.
+ * Standalone baseline: tenancy is disabled by default, so low-level model queries
+ * and the default Node model retain their original behavior. Tenant isolation
+ * when enabled is enforced by TenancyBoundary at product entry points and owning
+ * drive query predicates; host model scopes are additional protection.
  */
 
 it('never lets an actor granted in one storage reach a node in another via can() or sharedWith, F-P1.9-02', function (): void {
@@ -59,7 +47,7 @@ it('never lets an actor granted in one storage reach a node in another via can()
 });
 
 it('carries no TENANT global scope on the default Node model (the barrier is per-action, not query-level, F-P1.9-02)', function (): void {
-    // ADR-0003 is explicit: the package does not add a TENANT global scope on its
+    // The standalone baseline does not add a TENANT global scope on its
     // default models (one would break GC/reconcile/sweeper, which must see EVERY
     // tenant). Node DOES carry Laravel's own SoftDeletingScope (framework
     // infrastructure, unrelated to tenancy) — this asserts no ADDITIONAL scope

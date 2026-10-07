@@ -1,0 +1,28 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:check-evidence:v1",
+  "evidence_id": "p38-final-V80",
+  "check_id": "V80",
+  "subject": "PLAN2.P3.8",
+  "procedure": {
+    "procedure": "На own candidate по уже записанному D25 check-profile выполнить Pint --test для перечисленных там фактически изменённых/новых owning PHP файлов (root binary scripts/php84 vendor/bin/pint; sibling binary ../../scripts/php84 vendor/bin/pint, cwd своего пакета). Пустой PHP impact отмечается non-applicable с основанием. PHPStan core: scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress, cwd root. Для каждого фактически затронутого sibling: ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress, cwd packages/name из check-profile. Чужие dirty файлы не включать. Каждый исполненный command/cwd/list/env/exit сохранить; это exact impact-derived procedure по D25, не file filter для PHPStan."
+  },
+  "candidate": {
+    "head": "0d836aa6aee229af80615ccdc23665619c3d9899"
+  },
+  "started_at": "2026-10-07T10:04:23.980876+00:00",
+  "finished_at": "2026-10-07T10:04:23.980876+00:00",
+  "producer": {
+    "kind": "executor",
+    "actor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high"
+    }
+  },
+  "log": {
+    "path": "@plan/artifacts/P3.8/check-profile.json",
+    "sha256": "f5a5984215d8f5f583281bb80a3bc7f25287865d712c45113b4b43585a310076"
+  },
+  "verdict": "pass",
+  "observation": "Actual owning PHP file lists have Pint --test receipts V80-pint-{core,drive,media,filament,documents}, all0; package/root PHPStan qualified by V902/V905/V908/V911/V914 receipts and unchanged effective analysis type/source closure. Preexisting outside dirty files remain outside owning file-filter check."
+}

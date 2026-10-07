@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
@@ -85,6 +86,6 @@ it('continues metadata whitelisting after an unknown key and lets headers overri
     ], ['Upload-Metadata' => 'unknown '.base64_encode('ignored').',filename '.base64_encode('header.bin')])
         ->assertCreated()->json('data.upload_id');
 
-    expect(UploadSession::query()->where('upload_id', $uploadId)->sole()->metadata)
+    expect(UploadTestHelpers::clientMetadata(UploadSession::query()->where('upload_id', $uploadId)->sole()))
         ->toBe(['filename' => 'header.bin']);
 });

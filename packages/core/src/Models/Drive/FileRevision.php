@@ -16,6 +16,7 @@ use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
+use Vaulter\Models\Concerns\StampsDriveTenant;
 use Vaulter\Models\Content\ScanEvidenceRecord;
 use Vaulter\Models\Content\ScanObligation;
 use Vaulter\Models\Content\ScanUtcDateTime;
@@ -51,6 +52,7 @@ class FileRevision extends Model
     use HasExtraData;
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
+    use StampsDriveTenant;
 
     public const UPDATED_AT = null;
 

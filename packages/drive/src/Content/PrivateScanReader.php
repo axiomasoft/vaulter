@@ -8,6 +8,7 @@ use Vaulter\Content\ScanAttempt;
 use Vaulter\Content\ScanSnapshot;
 use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Repositories\Content\ScanObligationRepository;
+use Vaulter\Tenancy\TenancyBoundary;
 
 final readonly class PrivateScanReader
 {
@@ -17,6 +18,7 @@ final readonly class PrivateScanReader
     /** @return resource|null */
     public function open(ScanAttempt $attempt): mixed
     {
+        app(TenancyBoundary::class)->assertJobDrive($attempt->driveId, $attempt->tenantId);
         $revision = $this->work->fencedAttempt($attempt);
         if ($revision === null || $attempt->blobId === null) {
             return null;

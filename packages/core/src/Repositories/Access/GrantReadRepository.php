@@ -11,6 +11,7 @@ use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Tenancy\TenancyBoundary;
 
 /**
  * Read-side queries over v_node_grants (§2.6). It fetches the live, non-expired
@@ -45,7 +46,7 @@ final class GrantReadRepository
         $model = $this->vaulterConfig->model('grant');
 
         /** @var Collection<int, NodeGrant> $grants */
-        $grants = $model::query()
+        $grants = app(TenancyBoundary::class)->constrain($model::query(), 'node.storage')
             ->whereIn('node_id', $nodeIds)
             ->forSubjects($subjects)
             ->notExpired($now)
@@ -69,7 +70,7 @@ final class GrantReadRepository
     {
         $model = $this->vaulterConfig->model('grant');
 
-        return $model::query()
+        return app(TenancyBoundary::class)->constrain($model::query(), 'node.storage')
             ->where('node_id', $node->getKey())
             ->orderByDesc('created_at')
             ->orderByDesc('id');
@@ -99,7 +100,7 @@ final class GrantReadRepository
         $model = $this->vaulterConfig->model('grant');
 
         /** @var Collection<int, NodeGrant> $grants */
-        $grants = $model::query()
+        $grants = app(TenancyBoundary::class)->constrain($model::query(), 'node.storage')
             ->forSubjects($subjects)
             ->notExpired($now)
             ->where('effect', 'allow')
@@ -125,7 +126,7 @@ final class GrantReadRepository
         $model = $this->vaulterConfig->model('grant');
 
         /** @var list<int|string> $ids */
-        $ids = $model::query()
+        $ids = app(TenancyBoundary::class)->constrain($model::query(), 'node.storage')
             ->forSubjects($subjects)
             ->notExpired($now)
             ->where('effect', 'allow')

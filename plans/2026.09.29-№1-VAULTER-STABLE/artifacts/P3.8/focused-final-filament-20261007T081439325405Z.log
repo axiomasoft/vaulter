@@ -1,0 +1,13 @@
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\ResourceListingScopeTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit DriveResource lists a storage the acting admin can reach and hid[39m[90m…[39m [90m0.31s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit NodeGrantResource lists a grant on a reachable node and hides on[39m[90m…[39m [90m0.21s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit NodeShareResource lists a share on a reachable node and hides on[39m[90m…[39m [90m0.21s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit ActivityResource lists activity targeting a reachable node and h[39m[90m…[39m [90m0.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit isolates database resources from a sibling profile with an open[39m[90m… [39m [90m0.32s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit isolates database resources from a sibling profile with an open[39m[90m… [39m [90m0.29s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit V31 Filament node grant share and activity listings stay in the[39m[90m… [39m [90m0.40s[39m  
+
+  [90mTests:[39m    [32;1m7 passed[39;22m[90m (40 assertions)[39m
+  [90mDuration:[39m [39m2.03s[39m
+

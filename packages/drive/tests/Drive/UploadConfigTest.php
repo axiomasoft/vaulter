@@ -83,7 +83,7 @@ it('rejects a mime outside a configured allowlist', function (): void {
     $base = 'api/vaulter/storages/'.uploadConfigStorage();
 
     $this->postJson($base.'/uploads', [
-        'file' => UploadedFile::fake()->create('note.txt', 1, 'text/plain'),
+        'file' => UploadedFile::fake()->createWithContent('note.txt', 'actual plain text'),
     ])
         ->assertStatus(422)
         ->assertJsonValidationErrors('file');
@@ -97,7 +97,7 @@ it('accepts a mime inside a configured allowlist', function (): void {
     $base = 'api/vaulter/storages/'.uploadConfigStorage();
 
     $this->postJson($base.'/uploads', [
-        'file' => UploadedFile::fake()->create('note.txt', 1, 'text/plain'),
+        'file' => UploadedFile::fake()->createWithContent('note.txt', 'actual plain text'),
     ])
         ->assertCreated()
         ->assertJsonPath('data.kind', 'file');
@@ -109,7 +109,7 @@ it('stays permissive when no allowlist is configured', function (): void {
     $base = 'api/vaulter/storages/'.uploadConfigStorage();
 
     $this->postJson($base.'/uploads', [
-        'file' => UploadedFile::fake()->create('anything.xyz', 1, 'application/octet-stream'),
+        'file' => UploadedFile::fake()->createWithContent('anything.xyz', 'unrestricted content'),
     ])
         ->assertCreated()
         ->assertJsonPath('data.kind', 'file');

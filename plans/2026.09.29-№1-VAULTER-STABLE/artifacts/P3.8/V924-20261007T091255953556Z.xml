@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Packages\core\tests\Schema\NodeSequenceSchemaTest" file="packages/core/tests/Schema/NodeSequenceSchemaTest.php" tests="3" assertions="51" errors="0" failures="0" skipped="0" time="49.005975">
+    <testsuite name="it P3 additive migration preserves prior rows and foreign keys with a signed 64-bit sequence" tests="3" assertions="51" errors="0" failures="0" skipped="0" time="49.005975">
+      <testcase name="it P3 additive migration preserves prior rows and foreign keys with a signed 64-bit sequence with data set &quot;('bigint')&quot;" file="packages/core/tests/Schema/NodeSequenceSchemaTest.php::it P3 additive migration preserves prior rows and foreign keys with a signed 64-bit sequence with data set &quot;('bigint')&quot;" class="Packages\core\tests\Schema\NodeSequenceSchemaTest" classname="Packages.core.tests.Schema.NodeSequenceSchemaTest" assertions="17" time="17.186767"/>
+      <testcase name="it P3 additive migration preserves prior rows and foreign keys with a signed 64-bit sequence with data set &quot;('ulid')&quot;" file="packages/core/tests/Schema/NodeSequenceSchemaTest.php::it P3 additive migration preserves prior rows and foreign keys with a signed 64-bit sequence with data set &quot;('ulid')&quot;" class="Packages\core\tests\Schema\NodeSequenceSchemaTest" classname="Packages.core.tests.Schema.NodeSequenceSchemaTest" assertions="17" time="15.846651"/>
+      <testcase name="it P3 additive migration preserves prior rows and foreign keys with a signed 64-bit sequence with data set &quot;('uuid7')&quot;" file="packages/core/tests/Schema/NodeSequenceSchemaTest.php::it P3 additive migration preserves prior rows and foreign keys with a signed 64-bit sequence with data set &quot;('uuid7')&quot;" class="Packages\core\tests\Schema\NodeSequenceSchemaTest" classname="Packages.core.tests.Schema.NodeSequenceSchemaTest" assertions="17" time="15.972557"/>
+    </testsuite>
+  </testsuite>
+</testsuites>

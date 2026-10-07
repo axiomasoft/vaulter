@@ -7,6 +7,7 @@ namespace Vaulter\Media\Console;
 use Illuminate\Console\Command;
 use Vaulter\Media\Cas\BlobReconciler;
 use Vaulter\Media\Configuration\MediaConfig;
+use Vaulter\VaulterManager;
 
 /**
  * Rebuild the ref_count cache from the v_file_revision_blobs edge counts — the real
@@ -45,6 +46,11 @@ final class ReconcileBlobsCommand extends Command
     protected $description = 'Rebuild blob ref_count from edge counts and report dangling rows; optionally disk-walk for orphan objects (H.3)';
 
     public function handle(BlobReconciler $reconciler): int
+    {
+        return app(VaulterManager::class)->withoutTenancy(fn (): int => $this->runMaintenance($reconciler));
+    }
+
+    private function runMaintenance(BlobReconciler $reconciler): int
     {
         $report = $reconciler->reconcile();
 

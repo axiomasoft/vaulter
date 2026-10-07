@@ -249,7 +249,7 @@ it('serves a whitelisted image/png declared mime as-is, with nosniff still set (
     $storage = driveStorage();
 
     $node = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/uploads', [
-        'file' => UploadedFile::fake()->create('photo.png', 1, 'image/png'),
+        'file' => UploadedFile::fake()->image('photo.png', 1, 1),
     ])->json('data.id');
 
     $response = $this->get('api/vaulter/nodes/'.$node.'/download');

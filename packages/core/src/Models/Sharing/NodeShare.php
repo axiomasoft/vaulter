@@ -15,6 +15,7 @@ use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
+use Vaulter\Models\Concerns\StampsDriveTenant;
 use Vaulter\Models\Drive\Node;
 
 /**
@@ -57,6 +58,7 @@ class NodeShare extends Model
     use HasExtraData;
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
+    use StampsDriveTenant;
 
     /**
      * Closed allow-list (F-P1.8-02): the share's own permission/lifecycle

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Packages\core\tests\Sharing\ShareSecurityBoundaryTest" file="packages/core/tests/Sharing/ShareSecurityBoundaryTest.php" tests="1" assertions="7" errors="0" failures="0" skipped="0" time="1.509454">
+    <testcase name="it denies every new resolution after revoke commit on independent connections" file="packages/core/tests/Sharing/ShareSecurityBoundaryTest.php::it denies every new resolution after revoke commit on independent connections" class="Packages\core\tests\Sharing\ShareSecurityBoundaryTest" classname="Packages.core.tests.Sharing.ShareSecurityBoundaryTest" assertions="7" time="1.509454"/>
+  </testsuite>
+</testsuites>

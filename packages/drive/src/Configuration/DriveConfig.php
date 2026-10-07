@@ -14,6 +14,12 @@ final readonly class DriveConfig
 {
     public function __construct(private Repository $config) {}
 
+    /** @internal */
+    public function rejectMimeMismatch(): bool
+    {
+        return (bool) $this->config->get('vaulter-drive.uploads.reject_mime_mismatch', true);
+    }
+
     public function scanQueue(): string
     {
         $queue = $this->config->get('vaulter-drive.uploads.scan.queue', 'default');

@@ -6,6 +6,7 @@ namespace Vaulter\Access;
 
 use Vaulter\Access\ValueObjects\GrantSet;
 use Vaulter\Access\ValueObjects\NodeAbilities;
+use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Operations\OperationKind;
 use Vaulter\Exceptions\Access\MissingActorException;
@@ -16,6 +17,7 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Profiles\ProfilePolicy;
+use Vaulter\Tenancy\TenancyBoundary;
 
 final readonly class OperationGuard
 {
@@ -139,7 +141,12 @@ final readonly class OperationGuard
     }
 
     /** Tenant enforcement is connected by the strict tenancy integration. */
-    private function tenantBoundary(OperationContext $context, Node $node): void {}
+    private function tenantBoundary(OperationContext $context, Node $node): void
+    {
+        if (app(TenancyConfig::class)->enabled()) {
+            app(TenancyBoundary::class)->assertNode($node);
+        }
+    }
 
     private function profileAllows(OperationContext $context, Node $node, Ability $ability, OperationKind $operation): bool
     {

@@ -1,0 +1,28 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:check-evidence:v1",
+  "evidence_id": "p38-final-V907",
+  "check_id": "V907",
+  "subject": "PLAN2.P3.8",
+  "procedure": {
+    "cmd": "../../scripts/php84 vendor/bin/pint --test",
+    "cwd": "packages/documents"
+  },
+  "candidate": {
+    "head": "0d836aa6aee229af80615ccdc23665619c3d9899"
+  },
+  "started_at": "2026-10-07T08:54:49.025004+00:00",
+  "finished_at": "2026-10-07T08:54:49.342098+00:00",
+  "producer": {
+    "kind": "executor",
+    "actor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high"
+    }
+  },
+  "log": {
+    "path": "@plan/artifacts/P3.8/V907-20261007T085448984780Z.log",
+    "sha256": "cd1a94fc2cf6a965b86e1a4809d6c7fb9148b1ee374e1010ed2ac96ff4876ec2"
+  },
+  "exit": 0
+}

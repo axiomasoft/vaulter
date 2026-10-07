@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Vaulter\Operations;
 
 use Illuminate\Database\Eloquent\Builder;
+use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Tenancy\TenancyBoundary;
 
 final readonly class NodeLocator
 {
@@ -69,7 +71,11 @@ final readonly class NodeLocator
         $model = new $class;
         $model->setConnection($this->database->connection()->getName());
 
-        return $model->newQuery()->where(column: 'drive_id', operator: '=', value: $context->driveId());
+        if (app(TenancyConfig::class)->enabled()) {
+            app(TenancyBoundary::class)->assertDrive($context->drive);
+        }
+
+        return app(TenancyBoundary::class)->constrain($model->newQuery())->where(column: 'drive_id', operator: '=', value: $context->driveId());
     }
 
     private function key(Node|int|string $key): int|string|null

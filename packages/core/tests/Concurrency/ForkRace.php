@@ -102,6 +102,9 @@ final class ForkRace
                     : self::readResult("{$dir}/result.{$i}");
             }
 
+            $ready = array_map(static fn (string $path): mixed => json_decode(file_get_contents($path), true), glob("{$dir}/ready.*") ?: []);
+            fwrite(STDOUT, 'P38_FORK_PROOF '.json_encode(['barrier' => 'all ready files before task execution', 'participants' => $ready, 'timed_out' => array_keys($timedOut)]).PHP_EOL);
+
             return $outcomes;
         } finally {
             array_map('unlink', glob("{$dir}/*") ?: []);
@@ -123,7 +126,13 @@ final class ForkRace
                 DB::reconnect($name);
             }
 
-            file_put_contents("{$dir}/ready.{$index}", '1');
+            $backends = [];
+            foreach ($names as $name) {
+                $connection = DB::connection($name);
+                $backends[] = ['connection' => $name, 'database' => $connection->getDatabaseName(),
+                    'backend_pid' => $connection->selectOne('select pg_backend_pid() as pid')->pid];
+            }
+            file_put_contents("{$dir}/ready.{$index}", json_encode(['process_pid' => getmypid(), 'backends' => $backends]));
 
             $deadline = hrtime(true) + $timeoutMs * 1_000_000;
 
