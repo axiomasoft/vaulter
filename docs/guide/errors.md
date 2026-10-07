@@ -186,6 +186,13 @@ subtree.
 `NodeNameConflictException` — a node with that name already exists under the same parent
 (or storage root). Pick a different name, or move/trash the existing sibling first.
 
+Name occupancy is visible to anyone who may create under the parent: a user with `Create` on
+the parent can learn that a name is taken even when the sibling holding it is hidden from them
+(no `View`). This is accepted for 1.0 (Drive and Nextcloud behave the same) and is bounded:
+under the `Fail` policy the 409 carries only the requested name and the parent, never the
+id, kind or stored name of the hidden sibling. With the `AddRevision` policy a hidden sibling
+must answer as `node_not_found` (404), exactly like any other node without `View`.
+
 ## node-not-trashed
 
 `NodeNotTrashedException` — restore and permanent delete only apply to a node in the

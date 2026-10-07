@@ -75,6 +75,11 @@ Jobs/Console ──(OperationContext::system)───────────�
 `NodeNotFoundException` (404). `View` present but the required ability missing →
 `PermissionDeniedException` (403). Listing and search never reveal nodes without `View`.
 
+*Name-conflict exception (Q4, D33).* A user with `Create` on the parent can learn that a name is
+occupied by a sibling they cannot `View`; this disclosure is inherent to sibling-unique names and
+accepted for 1.0. It is limited to the occupancy bit: under `Fail` the 409 carries no id and no
+details of the hidden sibling, and `AddRevision` onto a hidden node answers 404.
+
 ## Consequences
 
 - "Who may" (Operations + `OperationGuard`) and "what is allowed" (Actions) are separated; no public
