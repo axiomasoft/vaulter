@@ -5,25 +5,22 @@ declare(strict_types=1);
 namespace Vaulter\Repositories\Content;
 
 use DateTimeImmutable;
-use LogicException;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ImmutableContentIdentity;
 use Vaulter\Content\ScanEvidence;
 use Vaulter\Content\ScanPolicySpec;
 use Vaulter\Content\ScanResult;
 use Vaulter\Content\ScanSnapshot;
-use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Cas\ScanVerdict;
 use Vaulter\Models\Content\ScanEvidenceRecord;
 use Vaulter\Models\Content\ScanObligation;
 use Vaulter\Models\Content\ScanRequest;
 use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Operations\OperationContext;
 
 /** @internal Immutable scan evidence persistence; availability decisions go through ContentAvailabilityGuard. */
 final readonly class ScanEvidenceRepository
 {
-    public function __construct(private VaulterConfig $config, private VaulterDatabase $database, private ScanSnapshot $snapshots) {}
+    public function __construct(private VaulterConfig $config, private ScanSnapshot $snapshots) {}
 
     public function identity(FileRevision $revision): ?ImmutableContentIdentity
     {
@@ -94,6 +91,13 @@ final readonly class ScanEvidenceRepository
         return $class::query()->whereKey($id)->firstOrFail();
     }
 
+    public function lockOrFail(int|string $id): ScanEvidenceRecord
+    {
+        $class = $this->config->model('scan_evidence');
+
+        return $class::query()->whereKey($id)->lockForUpdate()->firstOrFail();
+    }
+
     public function recordReuse(ScanObligation $work, ScanRequest $request, ScanEvidenceRecord $source, DateTimeImmutable $observedAt): ScanEvidenceRecord
     {
         $class = $this->config->model('scan_evidence');
@@ -119,24 +123,6 @@ final readonly class ScanEvidenceRepository
         $record->forceFill($work->only(['revision_id', 'drive_id', 'tenant_id', 'blob_id', 'scope_key', 'content_identity', 'sha256', 'size_bytes', 'spec_key', 'scanner_key', 'scanner_version', 'policy_version', 'generation', 'attempt']));
         $record->forceFill(['obligation_id' => $work->id, 'request_id' => $request->id, 'outcome' => $result->verdict->value,
             'reason' => $result->reason, 'retryable' => $result->retryable, 'observed_at' => $observedAt])->save();
-    }
-
-    public function revoke(int|string $evidenceId, string $reason, OperationContext $context): void
-    {
-        if (!$context->actor->isSystem() || trim($reason) === '' || strlen($reason) > 191) {
-            throw new LogicException('Evidence revocation requires trusted scoped maintenance and an audit reason.');
-        }
-        $this->database->transaction(function () use ($evidenceId, $reason, $context): void {
-            $class = $this->config->model('scan_evidence');
-            $record = $class::query()->whereKey($evidenceId)->firstOrFail();
-            $revisionClass = $this->config->model('file_revision');
-            $snapshot = $this->snapshots->load($revisionClass::query()->whereKey($record->revision_id)->firstOrFail(), true);
-            if ((string) $snapshot['drive']->id !== (string) $context->driveId()) {
-                throw new LogicException('Evidence revocation scope differs.');
-            }
-            $record = $class::query()->whereKey($evidenceId)->lockForUpdate()->firstOrFail();
-            $record->forceFill(['revoked_at' => now('UTC'), 'revocation_reason' => $reason])->save();
-        });
     }
 
     public function value(ScanEvidenceRecord $record): ScanEvidence

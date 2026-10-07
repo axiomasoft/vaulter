@@ -9,6 +9,7 @@ use Vaulter\Actions\Content\FenceScanAttemptAction;
 use Vaulter\Actions\Content\RecoverScanWorkAction;
 use Vaulter\Actions\Content\RequestScanWorkAction;
 use Vaulter\Actions\Content\ReuseScanEvidenceAction;
+use Vaulter\Actions\Content\RevokeScanEvidenceAction;
 use Vaulter\Actions\Content\SettleScanWorkAction;
 use Vaulter\Configuration\ScanConfig;
 use Vaulter\Content\ScanInput;
@@ -174,7 +175,7 @@ it('SEC-R06 reuses only exact same-drive clean evidence and revocation immediate
     $sourceRecord->forceFill(['spec_key' => str_repeat('e', 64)])->save();
     expect(app(ScanEvidenceRepository::class)->compatible($revision, $spec))->toBeNull();
     $sourceRecord->forceFill(['spec_key' => $spec->specKey()])->save();
-    app(ScanEvidenceRepository::class)->revoke($sourceEvidence->id, 'fixture revocation', $context);
+    app(RevokeScanEvidenceAction::class)->execute($sourceEvidence->id, 'fixture revocation', $context);
     expect(app(ScanEvidenceRepository::class)->compatible($revision, $spec))->toBeNull()
         ->and(app(ScanEvidenceRepository::class)->compatible($copy, $spec))->not->toBeNull();
     $legacy = $revision->forceFill(['scan_status' => 'infected']);
