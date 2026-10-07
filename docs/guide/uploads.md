@@ -20,8 +20,9 @@ The server never trusts a client-supplied hash. A declared `expected_sha256` is 
 
 ## Atomic quota and revisions
 
-Uploads prepare their bytes once before the commit transaction. The transaction
-locks drive → nodes by ascending id → file → quota → CAS. It reserves a positive
+A one-shot upload prepares its bytes once before the commit transaction (a resumable
+`complete()` is the exception, see [Transaction length of `complete()`](#transaction-length-of-complete)).
+The transaction locks drive → nodes by ascending id → file → quota → CAS. It reserves a positive
 head-size delta with a conditional UPDATE, so simultaneous writers cannot exceed
 `quota_bytes`. An unlimited quota is `null`; an exact-boundary reservation succeeds.
 The preliminary check is only a fast rejection for new files.
@@ -242,6 +243,30 @@ The whole thing runs in one outer transaction so a session is never half-committ
 3. On success the session is marked `Committed`, and the staged temp is **discarded** (commit-
    or-abort cleanup) — done *outside* the transaction so a disk-delete hiccup never rolls back
    a committed file.
+
+### Transaction length of `complete()`
+
+A one-shot `files()->upload()` reads and hashes its bytes *before* any transaction opens. A
+resumable `complete()` cannot: it holds the session row lock for the whole outermost transaction,
+because that lock is what stops the sweeper and `abort()` from discarding the staged bytes
+mid-read. The single pass over those bytes (read, `sha256`, inspection) therefore runs inside
+the transaction, with no query in flight — the connection sits `idle in transaction`.
+
+Measured on PostgreSQL 16 with a local staging disk, a 100 MiB file keeps the transaction open
+for about 1.1–1.2 s, roughly 0.8 s of it hashing. The time grows linearly with the file (about
+12 s per GiB, so the default 5 GiB cap is close to a minute) and with slower staging storage.
+
+Plan for it:
+
+- Keep `idle_in_transaction_session_timeout` (and any proxy idle limit) above
+  `max_file_size ÷ staging throughput`; a shorter timeout rolls the completion back (the session
+  stays assembled with its bytes intact), but every retry then fails the same way.
+- Every concurrent `complete()` holds one database connection for that long; size the pool for
+  your expected number of simultaneous large completions, or lower `max_file_size`.
+- The session lock is intentional: two completions of one session commit once, and sweep or
+  abort lose to a running completion. Shortening the transaction means replacing that lock with a
+  persisted claim on the session, which changes the lease contract and is tracked as a separate
+  amendment.
 
 A premature `complete()` cannot skip ahead: `markAssembled` is a no-op unless the handler
 reports every byte received.
