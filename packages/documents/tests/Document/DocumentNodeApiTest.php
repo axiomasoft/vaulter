@@ -20,7 +20,7 @@ beforeEach(function (): void {
 
 function documentStorage(): Drive
 {
-    return Vaulter::for(DriveTestHelpers::host())->model();
+    return Vaulter::drive(DriveTestHelpers::host())->model();
 }
 
 it('runs the document node cycle: create → content → autosave → version → restore → handler → export', function (): void {

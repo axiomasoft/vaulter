@@ -1,0 +1,49 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D28",
+  "title": "P3/F08: amend D03/P4.7 — sequence foundation переносится в P3.3",
+  "date": "2026-10-06",
+  "status": "accepted",
+  "question": "Принять уточнение PLAN2.D03/P4.7: колонка v_nodes.sequence, NodeSequence и StaleNodeException поставляются P3.3, P4.7 потребляет их для Document writers/REST ETag?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Рекомендуется: P3.3 — одна additive migration/fresh definition sequence, helper и StaleNodeException412. P4.7 — новые Document writers, V36 и REST ETag contract/integration с P6, без второй миграции/дублирования exception.",
+      "pros": "Реализует expectedSequence обещанного PHP API P3 и исключает duplicate column.",
+      "cons": "Переносит prerequisite раньше принятого D03; требует owner acceptance."
+    },
+    {
+      "id": "B",
+      "text": "Оставить создание колонки за P4.7; до исполнения пересмотреть обещание expectedSequence P3 без фиктивного игнорирования параметра.",
+      "pros": "Сохраняет исходное распределение D03.",
+      "cons": "Потребует изменения P3 публичного контракта и отдельного дизайна."
+    }
+  ],
+  "context": "Владелец поручил выбрать решения по исследованию и скорректировать текущий план, включая forward corrections уже выполненного кода. Выбор выполняет agent по этой делегации; отдельного ответа владельца с буквой варианта не было. Исторические P0/P1/P2 и OPUS не переписываются. P3.3 — foundation; P4.7 — новые Document writers; P6 — REST representation validators. Accepted D03 сохраняется исторически; это явный amendment allocation, P4 skeleton.",
+  "decision": "A — Рекомендуется: P3.3 — одна additive migration/fresh definition sequence, helper и StaleNodeException412. P4.7 — новые Document writers, V36 и REST ETag contract/integration с P6, без второй миграции/дублирования exception.",
+  "rationale": "Владелец поручил выбрать решения по исследованию и скорректировать текущий план, включая forward corrections уже выполненного кода. Выбор выполняет agent по этой делегации; отдельного ответа владельца с буквой варианта не было. Исторические P0/P1/P2 и OPUS не переписываются. Основание: @plan/knowledge/P3-security-research-results-2026-10-06.json; первичные cloud/OSS sources проверены, repository conflicts назначены будущим owners.",
+  "applies_to": [
+    "P3.3",
+    "P4"
+  ],
+  "evidence": [
+    {
+      "kind": "repo",
+      "ref": "@plan/knowledge/audit-design-2026-10-06.json#F08-Minor-sequence-ownership"
+    },
+    {
+      "kind": "repo",
+      "ref": "@plan/decisions/D03.json"
+    },
+    {
+      "kind": "repo",
+      "ref": "audits/2026-09-29-stable-audit/opus/08-data-model-and-migration.md#3"
+    }
+  ],
+  "actor": {
+    "provider": "codex",
+    "model": "gpt-6.1-sol",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

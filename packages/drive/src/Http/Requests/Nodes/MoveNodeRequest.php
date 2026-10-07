@@ -30,12 +30,11 @@ final class MoveNodeRequest extends VaulterFormRequest
         return $this->nullableScalarId('parent_id');
     }
 
-    public function toData(Node $node, ?Node $into, int|string|null $actorId): MoveNodeInput
+    public function toData(Node $node, ?Node $into): MoveNodeInput
     {
         return new MoveNodeInput(
             node: $node,
             into: $into,
-            actorId: $actorId,
         );
     }
 }

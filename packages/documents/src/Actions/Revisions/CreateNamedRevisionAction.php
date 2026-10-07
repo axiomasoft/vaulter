@@ -13,7 +13,10 @@ use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionStoreRepository;
+use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Operations\NodeSequence;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
+use Vaulter\Support\TreeGuard;
 
 /**
  * Snapshot a document node's current head content as a NAMED (non-autosave) version
@@ -33,17 +36,31 @@ final readonly class CreateNamedRevisionAction
         private NodeStoreRepository $nodes,
         private VaulterDatabase $database,
         private DocumentsConfig $documentsConfig,
+        private TreeGuard $tree,
+        private NodeSequence $sequence,
     ) {}
 
     public function execute(CreateNamedRevisionInput $data): DocumentRevision
     {
         $node = $data->node;
 
-        if (!$node->kind->isDocument()) {
-            throw NotADocumentException::forNode($node->getKey());
-        }
-
         return $this->database->transaction(function () use ($node, $data): DocumentRevision {
+            $driveId = $node->getRawOriginal('drive_id');
+            $nodeId = $node->getRawOriginal($node->getKeyName());
+            if (!$node->exists || (!is_int($nodeId) && !is_string($nodeId)) || $nodeId === ''
+                || (!is_int($driveId) && !is_string($driveId)) || $driveId === '') {
+                throw NodeNotFoundException::forId('unpersisted');
+            }
+            $this->database->lockTreeShared($driveId);
+            $current = $this->tree->locked($this->tree->lock([$nodeId]), $nodeId);
+            if (!$this->tree->sameStorage($current, $driveId)) {
+                throw NodeNotFoundException::forId($nodeId);
+            }
+            if (!$current->kind->isDocument()) {
+                throw NotADocumentException::forNode($nodeId);
+            }
+            $node = $this->tree->sync($node, $current);
+            $this->sequence->assertExpected(locked: $node, expected: $data->expectedSequence);
             $head = $this->read->head($node) ?? $this->read->latest($node);
 
             $version = $this->store->create([
@@ -69,6 +86,7 @@ final readonly class CreateNamedRevisionAction
                 max: $this->documentsConfig->revisionLimit(),
                 headId: $version->getKey(),
             );
+            $this->sequence->bump(locked: $node);
 
             event(new DocumentRevisionCreated(
                 node: $node,

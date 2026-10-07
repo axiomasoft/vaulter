@@ -3,7 +3,11 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Data\Drive\CopyOptions;
+use Vaulter\Data\Drive\UploadOptions;
+use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Enums\Drive\OnNameConflict;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\File;
@@ -18,9 +22,9 @@ beforeEach(function (): void {
 it('копия файла переиспользует ОДИН блоб через новое ребро', function (): void {
     $drive = DriveTestHelpers::drive();
 
-    $original = $drive->upload(DriveTestHelpers::streamFor('shared content'), originalName: 'a.txt');
+    $original = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('shared content'), 'a.txt'));
 
-    $copy = $drive->copy($original, name: 'a-copy.txt');
+    $copy = $drive->nodes()->copy($original, destination: null, options: new CopyOptions(name: 'a-copy.txt'));
 
     expect($copy->kind)->toBe(NodeKind::File)
         ->and($copy->name)->toBe('a-copy.txt')
@@ -36,12 +40,12 @@ it('копия файла переиспользует ОДИН блоб чер�
 it('глубокая копия папки клонирует всё поддерево', function (): void {
     $drive = DriveTestHelpers::drive();
 
-    $root = $drive->createFolder('Project');
-    $sub = $drive->createFolder('Sub', $root);
-    $drive->createFolder('Leaf', $sub);
-    $drive->upload(DriveTestHelpers::streamFor('file bytes'), into: $sub, originalName: 'data.bin');
+    $root = $drive->folders()->create('Project');
+    $sub = $drive->folders()->create('Sub', $root);
+    $drive->folders()->create('Leaf', $sub);
+    $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('file bytes'), 'data.bin'), new UploadOptions(parent: $sub));
 
-    $copy = $drive->copy($root, name: 'Project Copy');
+    $copy = $drive->nodes()->copy($root, destination: null, options: new CopyOptions(name: 'Project Copy'));
 
     // 4 source nodes + 4 copied = 8 (Project, Sub, Leaf, data.bin) ×2.
     expect(Node::query()->where('kind', '!=', NodeKind::Folder->value)->count())->toBe(2) // two file nodes
@@ -58,9 +62,9 @@ it('глубокая копия папки клонирует всё подде�
 it('copy отклоняет конфликт имён в месте назначения', function (): void {
     $drive = DriveTestHelpers::drive();
 
-    $a = $drive->createFolder('A');
-    $drive->createFolder('B');
+    $a = $drive->folders()->create('A');
+    $drive->folders()->create('B');
 
-    expect(fn () => $drive->copy($a, name: 'B'))
+    expect(fn () => $drive->nodes()->copy($a, destination: null, options: new CopyOptions(name: 'B', onConflict: OnNameConflict::Fail)))
         ->toThrow(NodeNameConflictException::class);
 });

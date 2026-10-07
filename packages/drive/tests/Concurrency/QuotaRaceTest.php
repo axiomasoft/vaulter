@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Data\Drive\UploadOptions;
+use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Exceptions\Quota\QuotaExceededException;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\File;
@@ -17,12 +19,9 @@ it('V02 admits exactly one 8 MiB upload into 10 MiB of free quota', function ():
     $drive = DriveTestHelpers::drive();
     $drive->model()->forceFill(['quota_bytes' => 10 * 1024 * 1024])->save();
     // Different parents prevent the destination lock from hiding a broken quota UPDATE.
-    $parents = [$drive->createFolder('A'), $drive->createFolder('B')];
+    $parents = [$drive->folders()->create('A'), $drive->folders()->create('B')];
     $outcomes = ForkRace::run(array_map(
-        static fn (int $i): Closure => static fn (): string => (string) $drive->upload(
-            DriveTestHelpers::streamFor(str_repeat((string) $i, 8 * 1024 * 1024)),
-            into: $parents[$i], originalName: $i.'.bin',
-        )->getKey(),
+        static fn (int $i): Closure => static fn (): string => (string) $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor(str_repeat((string) $i, 8 * 1024 * 1024)), $i.'.bin'), new UploadOptions(parent: $parents[$i]))->getKey(),
         [0, 1],
     ));
     $won = array_values(array_filter($outcomes, static fn (RaceOutcome $o): bool => $o->ok));

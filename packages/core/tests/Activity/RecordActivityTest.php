@@ -7,6 +7,9 @@ use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Activity\ActivityRecorder;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Data\Activity\RecordActivityCommand;
+use Vaulter\Data\Drive\CopyOptions;
+use Vaulter\Data\Drive\UploadOptions;
+use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Events\EventType;
@@ -51,7 +54,7 @@ it('writes one folder.created row carrying the actor and the kind/name context',
     $drive = DriveTestHelpers::drive();
     // The storage root already fired a folder.created; isolate this folder's row.
     Activity::query()->delete();
-    $folder = $drive->createFolder('reports', actorId: 7);
+    $folder = $drive->actingAs(DriveTestHelpers::actor($drive, 7))->folders()->create('reports');
 
     $row = ActivityTestHelpers::only(EventType::FolderCreated->value);
 
@@ -65,7 +68,7 @@ it('writes one folder.created row carrying the actor and the kind/name context',
 
 it('writes one file.uploaded row with size + version context', function (): void {
     $drive = DriveTestHelpers::drive();
-    $node = $drive->upload(DriveTestHelpers::streamFor('payload'), originalName: 'doc.txt', mimeType: 'text/plain');
+    $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('payload'), 'doc.txt'), new UploadOptions(declaredMimeType: 'text/plain'));
 
     $row = ActivityTestHelpers::only(EventType::FileUploaded->value);
 
@@ -76,9 +79,9 @@ it('writes one file.uploaded row with size + version context', function (): void
 
 it('writes one file.revision_added row when a new version is committed', function (): void {
     $drive = DriveTestHelpers::drive();
-    $node = $drive->upload(DriveTestHelpers::streamFor('v1'), originalName: 'doc.txt');
+    $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('v1'), 'doc.txt'));
 
-    $drive->uploadVersion($node->refresh(), DriveTestHelpers::streamFor('v2-bytes'));
+    $drive->files()->addRevision($node->refresh(), UploadSource::fromStream(DriveTestHelpers::streamFor('v2-bytes'), $node->refresh()->name));
 
     $row = ActivityTestHelpers::only(EventType::FileRevisionAdded->value);
 
@@ -88,11 +91,11 @@ it('writes one file.revision_added row when a new version is committed', functio
 
 it('writes one node.moved row with from/to parent context', function (): void {
     $drive = DriveTestHelpers::drive();
-    $a = $drive->createFolder('A');
-    $b = $drive->createFolder('B');
-    $child = $drive->createFolder('child', $a);
+    $a = $drive->folders()->create('A');
+    $b = $drive->folders()->create('B');
+    $child = $drive->folders()->create('child', $a);
 
-    $drive->move($child, $b, actorId: 7);
+    $drive->actingAs(DriveTestHelpers::actor($drive, 7))->nodes()->move($child, $b);
 
     $row = ActivityTestHelpers::only(EventType::NodeMoved->value);
 
@@ -103,9 +106,9 @@ it('writes one node.moved row with from/to parent context', function (): void {
 
 it('writes one node.renamed row with the old + new name', function (): void {
     $drive = DriveTestHelpers::drive();
-    $folder = $drive->createFolder('old-name');
+    $folder = $drive->folders()->create('old-name');
 
-    $drive->rename($folder, 'new-name', actorId: 7);
+    $drive->actingAs(DriveTestHelpers::actor($drive, 7))->nodes()->rename($folder, 'new-name');
 
     $row = ActivityTestHelpers::only(EventType::NodeRenamed->value);
 
@@ -115,10 +118,10 @@ it('writes one node.renamed row with the old + new name', function (): void {
 
 it('writes one node.copied row targeting the copy and naming the source', function (): void {
     $drive = DriveTestHelpers::drive();
-    $source = $drive->createFolder('source');
-    $dest = $drive->createFolder('dest');
+    $source = $drive->folders()->create('source');
+    $dest = $drive->folders()->create('dest');
 
-    $copy = $drive->copy($source, $dest, name: 'copied');
+    $copy = $drive->nodes()->copy($source, $dest, options: new CopyOptions(name: 'copied'));
 
     $row = ActivityTestHelpers::only(EventType::NodeCopied->value);
 
@@ -128,10 +131,10 @@ it('writes one node.copied row targeting the copy and naming the source', functi
 
 it('writes one node.trashed and one node.restored row across the lifecycle', function (): void {
     $drive = DriveTestHelpers::drive();
-    $folder = $drive->createFolder('temp');
+    $folder = $drive->folders()->create('temp');
 
-    $drive->trash($folder, actorId: 7);
-    $drive->restore($folder->refresh(), actorId: 7);
+    $drive->actingAs(DriveTestHelpers::actor($drive, 7))->nodes()->trash($folder);
+    $drive->actingAs(DriveTestHelpers::actor($drive, 7))->trash()->restore($folder->refresh());
 
     expect(ActivityTestHelpers::only(EventType::NodeTrashed->value)->target_id)->toEqual($folder->getKey())
         ->and(ActivityTestHelpers::only(EventType::NodeRestored->value)->target_id)->toEqual($folder->getKey());
@@ -139,10 +142,10 @@ it('writes one node.trashed and one node.restored row across the lifecycle', fun
 
 it('writes one node.purged row with the freed bytes and ids (no target)', function (): void {
     $drive = DriveTestHelpers::drive();
-    $node = $drive->upload(DriveTestHelpers::streamFor('to-delete'), originalName: 'gone.txt');
-    $drive->trash($node, actorId: 7);
+    $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('to-delete'), 'gone.txt'));
+    $drive->actingAs(DriveTestHelpers::actor($drive, 7))->nodes()->trash($node);
 
-    $drive->forceDelete($node->refresh(), actorId: 7);
+    $drive->actingAs(DriveTestHelpers::actor($drive, 7))->trash()->purge($node->refresh());
 
     $row = ActivityTestHelpers::only(EventType::NodePurged->value);
 
@@ -197,14 +200,14 @@ it('writes one share.created and one share.revoked row from the share events', f
 
 it('writes exactly ONE row even when a folder has a deep subtree (no per-node fan-out)', function (): void {
     $drive = DriveTestHelpers::drive();
-    $root = $drive->createFolder('root');
-    $a = $drive->createFolder('a', $root);
-    $drive->createFolder('b', $a);
+    $root = $drive->folders()->create('root');
+    $a = $drive->folders()->create('a', $root);
+    $drive->folders()->create('b', $a);
 
     Activity::query()->delete();
 
     // Trashing the whole subtree is ONE event ⇒ ONE row, not one per descendant.
-    $drive->trash($root->refresh(), actorId: 7);
+    $drive->actingAs(DriveTestHelpers::actor($drive, 7))->nodes()->trash($root->refresh());
 
     expect(Activity::query()->where('verb', EventType::NodeTrashed->value)->count())->toBe(1);
 });
@@ -227,7 +230,7 @@ it('does NOT break the originating action when the recorder throws', function ()
     $drive = DriveTestHelpers::drive();
 
     // The folder is created and returned even though recording failed.
-    $folder = $drive->createFolder('survives', actorId: 7);
+    $folder = $drive->actingAs(DriveTestHelpers::actor($drive, 7))->folders()->create('survives');
 
     expect($folder->exists)->toBeTrue()
         ->and(Activity::query()->count())->toBe(0);

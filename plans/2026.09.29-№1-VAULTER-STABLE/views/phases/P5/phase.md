@@ -11,7 +11,7 @@ skeleton
 
 > SKELETON — not detailed, разворачивается `design-phase: task:plan-design 2026.09.29-№1-VAULTER-STABLE P5`
 
-Базовый DomainEvent и EventRecorder: activity + outbox в той же транзакции на соединении Vaulter, слушатели хоста после commit, occurrence id, ActorRef, correlation_id, sequence (из P4.7); удаление четырёх подписчиков и ShouldDispatchAfterCommit; полный каталог событий documents/comments/uploads/drive lifecycle и конверт webhooks; генерируемый reference/events.md.
+Базовый DomainEvent и EventRecorder: activity + outbox в той же транзакции на соединении Vaulter, слушатели хоста после commit, occurrence id, ActorRef, correlation_id, sequence (foundation P3.3/D28, Document writers P4.7); удаление четырёх подписчиков и ShouldDispatchAfterCommit; полный каталог событий documents/comments/uploads/drive lifecycle и конверт webhooks; генерируемый reference/events.md.
 
 > **Контракт фазы (предварительный).** Потребляет: AD22, AD23; OPUS 08 §6; E7, E8, N18; V06, V07. Детализация, маршруты и Validation — при дизайне фазы.
 
@@ -21,13 +21,15 @@ skeleton
 
 > SKELETON — not detailed, разворачивается `design-phase: task:plan-design 2026.09.29-№1-VAULTER-STABLE P5`
 
-Базовый DomainEvent и EventRecorder: activity + outbox в той же транзакции на соединении Vaulter, слушатели хоста после commit, occurrence id, ActorRef, correlation_id, sequence (из P4.7); удаление четырёх подписчиков и ShouldDispatchAfterCommit; полный каталог событий documents/comments/uploads/drive lifecycle и конверт webhooks; генерируемый reference/events.md.
+Базовый DomainEvent и EventRecorder: activity + outbox в той же транзакции на соединении Vaulter, слушатели хоста после commit, occurrence id, ActorRef, correlation_id, sequence (foundation P3.3/D28, Document writers P4.7); удаление четырёх подписчиков и ShouldDispatchAfterCommit; полный каталог событий documents/comments/uploads/drive lifecycle и конверт webhooks; генерируемый reference/events.md.
 
 > **Контракт фазы (предварительный).** Потребляет: AD22, AD23; OPUS 08 §6; E7, E8, N18; V06, V07. Детализация, маршруты и Validation — при дизайне фазы.
 
 > Phase Assurance: data-integrity (outbox atomicity); фазовый аудит (D03).
 
 **D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.
+
+D29 — обязательные corrections при следующей детализации. Read @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json до разработки contracts; применимые C-rows разворачиваются в concrete owning item files/reads/named tests/exact validation, не остаются note-only. P5.1 C05: mandatory EventRecorder staging атомарно вместе с mutation/activity, failure rollback; optional host observers after commit отдельно. P5.2 stable occurrence+endpoint envelope, at-least-once HTTP и consumer dedup. NEW P5.3 C06: recoverable fan-out materialization с completion marker, уникальной delivery identity, bounded checkpoint/lease/fencing, crash/partial recovery и incomplete-prune protection; retained pending/failed retry recovery. Legacy dispatched ambiguity имеет upgrade plan, не фиктивную exactly-once гарантию.
 
 ## Depends on
 
@@ -57,7 +59,7 @@ skeleton
 
 > SKELETON — not detailed, разворачивается `design-phase: task:plan-design 2026.09.29-№1-VAULTER-STABLE P5`
 
-Базовый DomainEvent и EventRecorder: activity + outbox в той же транзакции на соединении Vaulter, слушатели хоста после commit, occurrence id, ActorRef, correlation_id, sequence (из P4.7); удаление четырёх подписчиков и ShouldDispatchAfterCommit; полный каталог событий documents/comments/uploads/drive lifecycle и конверт webhooks; генерируемый reference/events.md.
+Базовый DomainEvent и EventRecorder: activity + outbox в той же транзакции на соединении Vaulter, слушатели хоста после commit, occurrence id, ActorRef, correlation_id, sequence (foundation P3.3/D28, Document writers P4.7); удаление четырёх подписчиков и ShouldDispatchAfterCommit; полный каталог событий documents/comments/uploads/drive lifecycle и конверт webhooks; генерируемый reference/events.md.
 
 > **Контракт фазы (предварительный).** Потребляет: AD22, AD23; OPUS 08 §6; E7, E8, N18; V06, V07. Детализация, маршруты и Validation — при дизайне фазы.
 
@@ -65,9 +67,13 @@ skeleton
 
 **D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.
 
+D29 — обязательные corrections при следующей детализации. Read @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json до разработки contracts; применимые C-rows разворачиваются в concrete owning item files/reads/named tests/exact validation, не остаются note-only. P5.1 C05: mandatory EventRecorder staging атомарно вместе с mutation/activity, failure rollback; optional host observers after commit отдельно. P5.2 stable occurrence+endpoint envelope, at-least-once HTTP и consumer dedup. NEW P5.3 C06: recoverable fan-out materialization с completion marker, уникальной delivery identity, bounded checkpoint/lease/fencing, crash/partial recovery и incomplete-prune protection; retained pending/failed retry recovery. Legacy dispatched ambiguity имеет upgrade plan, не фиктивную exactly-once гарантию.
+
 ## Scope Included (planned)
 
 DomainEvent, EventRecorder, EventType; конверт id,type,source,time,drive_id,subject,sequence,actor,data; X-Vaulter-Event-Id; генератор reference/events.md.
+
+P5.1 C05: mandatory EventRecorder staging атомарно вместе с mutation/activity, failure rollback; optional host observers after commit отдельно. P5.2 stable occurrence+endpoint envelope, at-least-once HTTP и consumer dedup. NEW P5.3 C06: recoverable fan-out materialization с completion marker, уникальной delivery identity, bounded checkpoint/lease/fencing, crash/partial recovery и incomplete-prune protection; retained pending/failed retry recovery. Legacy dispatched ambiguity имеет upgrade plan, не фиктивную exactly-once гарантию.
 
 ## Scope Excluded
 
@@ -75,12 +81,15 @@ REST v1 (P6).
 
 ## Dependencies
 
-P4 закрыта (sequence узла — P4.7, D03 п.1).
+P4 закрыта (sequence foundation — P3.3/D28, Document writer integration — P4.7).
 
 ## Planned Items (из OPUS 13, нумерация сохраняется — D01 п.3)
 
 - P5.1 — DomainEvent и EventRecorder (frontier/high)
 - P5.2 — Полный каталог и конверт webhooks (implementation/medium)
+- P5.3 — Восстанавливаемый webhook fan-out, settlement и prune (frontier/high; новый corrective item C06, D29)
+
+Обязательное расширение scope этих planned items: P5.1 C05: mandatory EventRecorder staging атомарно вместе с mutation/activity, failure rollback; optional host observers after commit отдельно. P5.2 stable occurrence+endpoint envelope, at-least-once HTTP и consumer dedup. NEW P5.3 C06: recoverable fan-out materialization с completion marker, уникальной delivery identity, bounded checkpoint/lease/fencing, crash/partial recovery и incomplete-prune protection; retained pending/failed retry recovery. Legacy dispatched ambiguity имеет upgrade plan, не фиктивную exactly-once гарантию.
 
 ## Items
 
@@ -94,3 +103,7 @@ P4 закрыта (sequence узла — P4.7, D03 п.1).
 ## Mandatory validation/execution policy (D25)
 
 **D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.
+
+## Обязательные forward corrections (D29)
+
+D29 — обязательные corrections при следующей детализации. Read @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json до разработки contracts; применимые C-rows разворачиваются в concrete owning item files/reads/named tests/exact validation, не остаются note-only. P5.1 C05: mandatory EventRecorder staging атомарно вместе с mutation/activity, failure rollback; optional host observers after commit отдельно. P5.2 stable occurrence+endpoint envelope, at-least-once HTTP и consumer dedup. NEW P5.3 C06: recoverable fan-out materialization с completion marker, уникальной delivery identity, bounded checkpoint/lease/fencing, crash/partial recovery и incomplete-prune protection; retained pending/failed retry recovery. Legacy dispatched ambiguity имеет upgrade plan, не фиктивную exactly-once гарантию.

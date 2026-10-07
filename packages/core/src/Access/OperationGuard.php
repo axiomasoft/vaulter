@@ -86,12 +86,15 @@ final readonly class OperationGuard
         }
         $actor = $context->actor->authorizable();
         $sets = $actor === null ? [] : $this->resolver->evaluateMany(actor: $actor, nodes: $nodes);
+        // Refresh the shared drive once for this batch, rather than once per node.
+        $drive = $context->drive->newQuery()->whereKey($context->driveId())->first()
+            ?? throw NodeNotFoundException::forId('drive');
         $visible = [];
         foreach ($nodes as $node) {
             if (!$context->actor->isSystem() && !($sets[(string) $node->id] ?? GrantSet::superDenied())->allows(Ability::View)) {
                 continue;
             }
-            if ($this->profileAllows(context: $context, node: $node, ability: Ability::View, operation: OperationKind::Metadata)) {
+            if ($this->profiles->allows(drive: $drive, node: $node, ability: Ability::View, operation: OperationKind::Metadata)) {
                 $visible[] = $node;
             }
         }

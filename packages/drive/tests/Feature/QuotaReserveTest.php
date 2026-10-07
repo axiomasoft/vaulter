@@ -3,6 +3,9 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Data\Drive\CopyOptions;
+use Vaulter\Data\Drive\UploadOptions;
+use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Exceptions\Quota\QuotaExceededException;
 use Vaulter\Exceptions\Drive\QuotaExceededException as CoreQuotaExceededException;
@@ -52,13 +55,13 @@ it('releases bytes down to zero and accepts a zero reservation', function (): vo
 
 it('rolls back an entire subtree copy when its summed heads exceed quota', function (): void {
     $drive = DriveTestHelpers::drive();
-    $folder = $drive->createFolder('source');
-    $drive->upload(DriveTestHelpers::streamFor('aaaa'), into: $folder, originalName: 'a.txt');
-    $drive->upload(DriveTestHelpers::streamFor('bbbbbb'), into: $folder, originalName: 'b.txt');
+    $folder = $drive->folders()->create('source');
+    $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('aaaa'), 'a.txt'), new UploadOptions(parent: $folder));
+    $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('bbbbbb'), 'b.txt'), new UploadOptions(parent: $folder));
     $drive->model()->forceFill(['quota_bytes' => 19])->save();
     $counts = [Node::query()->count(), File::query()->count(), FileRevision::query()->count(), FileRevisionBlob::query()->count()];
 
-    expect(fn (): Node => $drive->copy($folder, name: 'copy'))->toThrow(QuotaExceededException::class);
+    expect(fn (): Node => $drive->nodes()->copy($folder, destination: null, options: new CopyOptions(name: 'copy')))->toThrow(QuotaExceededException::class);
 
     expect([Node::query()->count(), File::query()->count(), FileRevision::query()->count(), FileRevisionBlob::query()->count()])->toBe($counts)
         ->and(Node::query()->where('name', 'copy')->exists())->toBeFalse()
@@ -68,23 +71,23 @@ it('rolls back an entire subtree copy when its summed heads exceed quota', funct
 
 it('uses the locked file head despite stale node size and stale quota snapshots', function (): void {
     $drive = DriveTestHelpers::drive();
-    $node = $drive->upload(DriveTestHelpers::streamFor('aaaa'), originalName: 'a.txt');
+    $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('aaaa'), 'a.txt'));
     $stale = $node->fresh();
-    $drive->uploadVersion($node, DriveTestHelpers::streamFor('abcdefghij'), originalName: 'a.txt');
+    $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('abcdefghij'), 'a.txt'));
     $drive->model()->forceFill(['quota_bytes' => 10])->save();
     // The stale node says 4 bytes; the locked file head says 10. Replacing it
     // with 8 bytes releases 2, rather than reserving 4 and rejecting the upload.
-    $drive->uploadVersion($stale, DriveTestHelpers::streamFor('abcdefgh'), originalName: 'a.txt');
+    $drive->files()->addRevision($stale, UploadSource::fromStream(DriveTestHelpers::streamFor('abcdefgh'), 'a.txt'));
     expect($drive->model()->refresh()->used_bytes)->toBe(8)
         ->and($stale->fresh()->file->revision_count)->toBe(3);
 });
 
 it('copies a stale file from its current head and reserves that exact size', function (): void {
     $drive = DriveTestHelpers::drive();
-    $node = $drive->upload(DriveTestHelpers::streamFor('aaaa'), originalName: 'a.txt');
+    $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('aaaa'), 'a.txt'));
     $stale = $node->fresh();
-    $drive->uploadVersion($node, DriveTestHelpers::streamFor('abcdefghij'), originalName: 'a.txt');
-    $copy = $drive->copy($stale, name: 'copy.txt');
+    $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('abcdefghij'), 'a.txt'));
+    $copy = $drive->nodes()->copy($stale, destination: null, options: new CopyOptions(name: 'copy.txt'));
     expect($copy->size_bytes)->toBe(10)
         ->and($copy->file->currentVersion->size_bytes)->toBe(10)
         ->and($drive->model()->refresh()->used_bytes)->toBe(20);

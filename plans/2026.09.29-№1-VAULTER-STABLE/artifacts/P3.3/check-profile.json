@@ -1,0 +1,623 @@
+{
+  "item": "PLAN2.P3.3",
+  "prepared_at": "2026-10-07T04:06:18.661915+00:00",
+  "runtime": {
+    "provider": "codex",
+    "model": "gpt-6.1-sol",
+    "effort": "high",
+    "session": "01a11488-30f7-79d0-a255-549e322d79e0",
+    "source": "observed turn_context"
+  },
+  "base_head": "3fd82526c0baa2d975ed6eda50487b75c6e68d51",
+  "scope": [
+    "packages/core/src/{VaulterManager,Facades/Vaulter}.php",
+    "packages/core/src/Contracts/Drive/{DriveHandle,DriveHandleFactory,NodeContentLifecycle}.php",
+    "packages/core/src/Operations/{NodeSequence,NodeLocator}.php",
+    "packages/core/src/Data/Drive/CopyResult.php",
+    "packages/core/src/Content/NodeContentLifecycleRegistry.php",
+    "packages/core/src/Exceptions/Nodes/StaleNodeException.php",
+    "packages/core/src/Schema/SchemaBuilder.php",
+    "packages/core/database/migrations/2026_10_06_000001_add_node_operation_sequence.php",
+    "packages/core/src/Models/Drive/Node.php",
+    "packages/core/src/Access/ExactListing.php",
+    "packages/core/src/Providers/BindingsRegistrar.php",
+    "packages/drive/src/{DriveHandle,DriveHandleFactory,DriveProvisioner}.php",
+    "packages/drive/src/Operations/{Node,Folder,File,Trash}Operations.php",
+    "packages/drive/src/Queries/*.php",
+    "packages/drive/src/Actions/{Nodes,Trash,Files}/*.php",
+    "packages/drive/src/Data/{Nodes,Trash,Files}/*.php",
+    "packages/drive/src/Content/FileContentLifecycle.php",
+    "packages/drive/src/Providers/BindingsRegistrar.php",
+    "packages/drive/src/Http/Controllers/{NodeController,DownloadController}.php",
+    "packages/drive/src/Console/PurgeTrashCommand.php",
+    "packages/drive/src/{Events,Activity}/**/*.php",
+    "packages/core/src/{Events,Activity}/**/*.php",
+    "packages/filament/src/Resources/NodeResource*.php",
+    "packages/filament/src/Resources/NodeResource/**/*.php",
+    "packages/documents/src/{DocumentsManager,Facades/Documents,Registries/DocumentTypeRegistry,Registries/DocumentExporterRegistry}.php",
+    "packages/documents/src/{Providers,Actions,Export}/**/*.php",
+    "packages/{core,drive,documents,media,filament,azgard}/tests/**/*.php",
+    "packages/core/tests/Schema/NodeSequenceSchemaTest.php",
+    "packages/drive/tests/PublicApi/*.php",
+    "packages/drive/tests/Concurrency/RestoreRevisionConcurrencyTest.php",
+    "packages/drive/tests/Arch/OperationsBoundaryTest.php",
+    "packages/filament/tests/Feature/PublicApiParityTest.php",
+    "@plan/artifacts/P3.3/check-profile.json",
+    "@plan/artifacts/P3.3/completion.json",
+    "UPGRADE.md",
+    "CHANGELOG.md",
+    "packages/drive/src/Content/{DocumentPurgeLifecycle,ShortcutPurgeLifecycle}.php",
+    "packages/documents/tests/Document/PurgeTrashCascadeTest.php",
+    "packages/drive/tests/Concurrency/NodeSequenceBoundaryTest.php",
+    "packages/core/src/Exceptions/Nodes/SequenceOverflowException.php",
+    "packages/core/src/Repositories/Drive/NodeStoreRepository.php",
+    "packages/core/src/Repositories/Drive/FileStoreRepository.php",
+    "packages/drive/src/Actions/Files/RestoreFileRevisionAction.php",
+    "packages/documents/src/Actions/Documents/CreateDocumentAction.php",
+    "packages/documents/src/Actions/Documents/UpdateDocumentContentAction.php",
+    "packages/documents/src/Actions/Revisions/CreateNamedRevisionAction.php",
+    "packages/documents/src/Actions/Revisions/RestoreDocumentRevisionAction.php",
+    "packages/documents/src/Actions/Collaboration/PersistCollaborationStateAction.php",
+    "packages/documents/src/Data/Documents/UpdateDocumentContentInput.php",
+    "packages/drive/tests/PublicApi/NodeSequenceContractTest.php",
+    "packages/documents/tests/Document/LegacyNodeSequenceTest.php",
+    "packages/documents/tests/Document/LegacyNodeSequenceRaceTest.php"
+  ],
+  "packages": [
+    "core",
+    "drive",
+    "documents",
+    "filament"
+  ],
+  "potential_mechanical_consumers": [
+    "media",
+    "azgard"
+  ],
+  "boundary": "P3.8 phase-wide suite; P3.3 uses own acceptance paths only",
+  "checks": [
+    {
+      "id": "V1",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/PublicApi tests/Drive tests/Feature/DriveAuthorizationTest.php tests/Feature/ExactListingTest.php tests/Feature/PurgeTrashTest.php tests/Arch",
+      "expect": "exit 0; 0 failures, no unexpected skips",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V2",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/PublicApi packages/core/tests/Operations packages/core/tests/Arch packages/core/tests/Schema/NodeSequenceSchemaTest.php",
+      "expect": "exit 0; 0 failures, no unexpected skips",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Concurrency",
+      "expect": "exit 0; no required PG skips; P1 lock/quota/head controls retained",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V4",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Feature/PublicApiParityTest.php tests/Feature/NodeResourceMoveAuthorizationTest.php tests/Feature/NodeResourceTest.php tests/Arch",
+      "expect": "exit 0; 0 failures, no unexpected skips",
+      "kind": "acceptance",
+      "cwd": "packages/filament"
+    },
+    {
+      "id": "V5",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Document/DocumentExportTest.php tests/Document/ExporterContentGuardTest.php tests/Document/NodeExportServiceFilenameSeamTest.php tests/Arch",
+      "expect": "exit 0; 0 failures, no unexpected skips",
+      "kind": "acceptance",
+      "cwd": "packages/documents"
+    },
+    {
+      "id": "V6",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Schema/NodeSequenceSchemaTest.php",
+      "expect": "exit 0; fresh+P2-upgrade sequence type/default/data fixtures; real PG no skips; signed BIGINT default0/check nonnegative; boundary >2^31 and max overflow rollback; actual rows/FK retained",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V80",
+      "procedure": "На own candidate по уже записанному D25 check-profile выполнить Pint --test для перечисленных там фактически изменённых/новых owning PHP файлов (root binary scripts/php84 vendor/bin/pint; sibling binary ../../scripts/php84 vendor/bin/pint, cwd своего пакета). Пустой PHP impact отмечается non-applicable с основанием. PHPStan core: scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress, cwd root. Для каждого фактически затронутого sibling: ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress, cwd packages/name из check-profile. Чужие dirty файлы не включать. Каждый исполненный command/cwd/list/env/exit сохранить; это exact impact-derived procedure по D25, не file filter для PHPStan.",
+      "expect": "Все соответствующие exact commands имеют exit 0, skipped/deferred не GREEN",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V81",
+      "procedure": "Adversarial self-check модели P3-invariants: отметить применимые invariants/enforcement/callers/negative cases и lock pair matrix. Для нового guard ограниченный negative control: в isolated временной копии отключить одну owning проверку, запустить её именованный acceptance тест и получить RED, восстановить исходный SHA-256 и подтвердить GREEN. Сохранить command/cwd/env/exit/fingerprint. Не запускать mutation campaign. Supplemental D06 controls ALL required, fault definition in P3-security-contracts#Acceptance; each executed only inside isolated temporary repository copy, cwd relative to that isolated root, same env. Exact commands:\nNC-SEQ: cwd=packages/drive; env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Concurrency/NodeSequenceBoundaryTest.php --filter=SEC-R18\nNC-SEQ-BOUND: cwd=packages/drive; env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/PublicApi/NodeSequenceContractTest.php --filter=SEC-R20-overflow\nEach control requires named matched test>=1/skipped=0, injected RED then exact source SHA restoration and original GREEN; receipts cannot substitute unrelated tests or silent skipped filters. No product controls run in design.",
+      "expect": "All applicable declared limited controls have RED→exact restored GREEN, candidate source hashes unchanged, named counts/output recorded; no mutation engine.",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V82",
+      "cmd": "python3 plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-coverage.py check --phase P3",
+      "expect": "exit 0; immutable OPUS/literals and owned units consistent",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V7",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=mysql DB_HOST=127.0.0.1 DB_PORT=3306 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Schema/NodeSequenceSchemaTest.php --filter=\"P3 additive migration\"",
+      "expect": "exit0; focused MySQL actual additive migration up/down, no skip; no claim fixed full baseline Обязательный receipt: числовые executed_tests>=1 и skipped=0, discovered/matched test names и output; exit0 без тестов/с skip НЕ pass. Filter обязан выполнить named scenario, no silent unmatched filter.; signed BIGINT default0/check nonnegative; boundary >2^31 and max overflow rollback; actual rows/FK retained",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V8",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Document/PurgeTrashCascadeTest.php",
+      "expect": "exit 0; executed_tests>=1, skipped=0 в receipt; physical document inline content/yjs_state FK cascade действительно выполнен, no SQLite reuse",
+      "kind": "acceptance",
+      "cwd": "packages/documents"
+    },
+    {
+      "id": "V9",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Concurrency/NodeSequenceBoundaryTest.php",
+      "expect": "exit 0; executed_tests>=1, skipped=0; actual PG ForkRace distinct connections/pids, two expected7 writers→one seq8 commit/one StaleNodeException412, loser zero side effects",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V10",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Document/LegacyNodeSequenceTest.php",
+      "expect": "exit0; actual Document creation0, update debounce/append, named revision/restore and actual Yjs overwrite/append, effective no-op once. Receipt: executed_tests>=1, skipped=0; all prescribed named SEC scenarios executed with discovered/matched/passed/failed counts and output; empty/unmatched/skip is not pass.",
+      "kind": "acceptance",
+      "cwd": "packages/documents"
+    },
+    {
+      "id": "V11",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Document/LegacyNodeSequenceRaceTest.php",
+      "expect": "exit0; SEC-LEGACY-RACE actual two expected7 Document update vs rename ForkRace→one seq8/one412 zero loser side effects. Separately unconditional installed Yjs vs rename serializes and bumps each changed commit; no false stale rejection for Yjs without expectedSequence. Distinct connections/backend pids/barriers; executed_tests>=1/skipped=0/all names and output required.",
+      "kind": "acceptance",
+      "cwd": "packages/documents"
+    }
+  ],
+  "review": {
+    "selector": "grok/grok-4.7",
+    "context_parameter": null,
+    "when": "end of whole item after affected checks",
+    "max_completed_rounds": 2
+  },
+  "impact": {
+    "core": "manager/factory/handle contracts, sequence schema/helper/locator, exact listing, identity, API snapshot and Arch",
+    "drive": "all public Operations and existing Actions/callers, permission parity, lifecycle, sequence races, retention command",
+    "documents": "legacy editorial/Yjs counters, minimal exporter/type relocation, syntactic drive callers, purge cascades",
+    "filament": "NodeResource handle calls, destination authorization parity and Arch"
+  },
+  "unchanged_suites": "full package suites deferred to P3.8; no unrelated package regression runs",
+  "integration_paths": [
+    "packages/core/src/{VaulterManager,Facades/Vaulter}.php",
+    "packages/core/src/Contracts/Drive/{DriveHandle,DriveHandleFactory,NodeContentLifecycle}.php",
+    "packages/core/src/Operations/{NodeSequence,NodeLocator}.php",
+    "packages/core/src/Data/Drive/CopyResult.php",
+    "packages/core/src/Content/NodeContentLifecycleRegistry.php",
+    "packages/core/src/Exceptions/Nodes/StaleNodeException.php",
+    "packages/core/src/Schema/SchemaBuilder.php",
+    "packages/core/database/migrations/2026_10_06_000001_add_node_operation_sequence.php",
+    "packages/core/src/Models/Drive/Node.php",
+    "packages/core/src/Access/ExactListing.php",
+    "packages/core/src/Providers/BindingsRegistrar.php",
+    "packages/drive/src/{DriveHandle,DriveHandleFactory,DriveProvisioner}.php",
+    "packages/drive/src/Operations/{Node,Folder,File,Trash}Operations.php",
+    "packages/drive/src/Queries/*.php",
+    "packages/drive/src/Actions/{Nodes,Trash,Files}/*.php",
+    "packages/drive/src/Data/{Nodes,Trash,Files}/*.php",
+    "packages/drive/src/Content/FileContentLifecycle.php",
+    "packages/drive/src/Providers/BindingsRegistrar.php",
+    "packages/drive/src/Http/Controllers/{NodeController,DownloadController}.php",
+    "packages/drive/src/Console/PurgeTrashCommand.php",
+    "packages/drive/src/{Events,Activity}/**/*.php",
+    "packages/core/src/{Events,Activity}/**/*.php",
+    "packages/filament/src/Resources/NodeResource*.php",
+    "packages/filament/src/Resources/NodeResource/**/*.php",
+    "packages/documents/src/{DocumentsManager,Facades/Documents,Registries/DocumentTypeRegistry,Registries/DocumentExporterRegistry}.php",
+    "packages/documents/src/{Providers,Actions,Export}/**/*.php",
+    "packages/{core,drive,documents,media,filament,azgard}/tests/**/*.php",
+    "packages/core/tests/Schema/NodeSequenceSchemaTest.php",
+    "packages/drive/tests/PublicApi/*.php",
+    "packages/drive/tests/Concurrency/RestoreRevisionConcurrencyTest.php",
+    "packages/drive/tests/Arch/OperationsBoundaryTest.php",
+    "packages/filament/tests/Feature/PublicApiParityTest.php",
+    "@plan/artifacts/P3.3/check-profile.json",
+    "@plan/artifacts/P3.3/completion.json",
+    "UPGRADE.md",
+    "CHANGELOG.md",
+    "packages/drive/src/Content/{DocumentPurgeLifecycle,ShortcutPurgeLifecycle}.php",
+    "packages/documents/tests/Document/PurgeTrashCascadeTest.php",
+    "packages/drive/tests/Concurrency/NodeSequenceBoundaryTest.php",
+    "packages/core/src/Exceptions/Nodes/SequenceOverflowException.php",
+    "packages/core/src/Repositories/Drive/NodeStoreRepository.php",
+    "packages/core/src/Repositories/Drive/FileStoreRepository.php",
+    "packages/drive/src/Actions/Files/RestoreFileRevisionAction.php",
+    "packages/documents/src/Actions/Documents/CreateDocumentAction.php",
+    "packages/documents/src/Actions/Documents/UpdateDocumentContentAction.php",
+    "packages/documents/src/Actions/Revisions/CreateNamedRevisionAction.php",
+    "packages/documents/src/Actions/Revisions/RestoreDocumentRevisionAction.php",
+    "packages/documents/src/Actions/Collaboration/PersistCollaborationStateAction.php",
+    "packages/documents/src/Data/Documents/UpdateDocumentContentInput.php",
+    "packages/drive/tests/PublicApi/NodeSequenceContractTest.php",
+    "packages/documents/tests/Document/LegacyNodeSequenceTest.php",
+    "packages/documents/tests/Document/LegacyNodeSequenceRaceTest.php",
+    "packages/core/src/Exceptions/Nodes/NotAFileException.php",
+    "packages/core/src/Exceptions/Nodes/RestoreDestinationChangedException.php",
+    "packages/core/src/Exceptions/Nodes/UnsupportedNodeKindException.php",
+    "packages/core/src/Exceptions/Content/ContentQuarantinedException.php",
+    "packages/documents/src/Data/Revisions/CreateNamedRevisionInput.php",
+    "packages/documents/src/Exceptions/UnknownDocumentTypeException.php",
+    "packages/drive/src/Actions/Uploads/CompleteUploadAction.php",
+    "packages/drive/src/Uploads/UploadSessionManager.php",
+    "packages/drive/src/Http/Requests/Nodes/*.php",
+    "packages/drive/src/Http/Requests/Folders/*.php",
+    "tests/Pest.php",
+    "packages/core/tests/Arch/__snapshots__/public-api.txt",
+    "packages/drive/tests/Arch/__snapshots__/public-api.txt",
+    "packages/drive/src/Http/Controllers/Uploads/{TusProtocolController,S3MultipartProtocolController}.php"
+  ],
+  "supplemental_checks": {
+    "changed_callers": {
+      "core": [
+        "packages/core/tests/Activity/RecordActivityTest.php",
+        "packages/core/tests/ActivityGate/FeatureGateTest.php",
+        "packages/core/tests/Configuration/PublishedConfigV02Test.php",
+        "packages/core/tests/Feature/NodeShareApiTest.php",
+        "packages/core/tests/Feature/ServiceProviderTest.php",
+        "packages/core/tests/Feature/VaulterManagerExporterHandlerSeamTest.php",
+        "packages/core/tests/IdStrategy/Bigint/HostKeysBigintTest.php",
+        "packages/core/tests/IdStrategy/Ulid/HostKeysTest.php",
+        "packages/core/tests/Observability/P83/P83Section51MetricsTest.php",
+        "packages/core/tests/Observability/P84/P84Section52HostMetricsTest.php",
+        "packages/core/tests/Sharing/PublicShareDownloadHeadersTest.php",
+        "packages/core/tests/Sharing/ShareScopeTest.php",
+        "packages/core/tests/Sharing/ShareSecurityBoundaryTest.php",
+        "packages/core/tests/Support/FacadeMethodDocblockTest.php",
+        "packages/core/tests/Ulid/UlidModeTest.php"
+      ],
+      "drive": [
+        "packages/drive/tests/Feature/DriveApiTest.php",
+        "packages/drive/tests/Feature/MutationContractsTest.php",
+        "packages/drive/tests/Feature/OutboxEventIdentityTest.php",
+        "packages/drive/tests/Feature/QuotaReserveTest.php",
+        "packages/drive/tests/Feature/R07ActionControllerContractsTest.php",
+        "packages/drive/tests/Feature/R07ExceptionContractsTest.php",
+        "packages/drive/tests/Feature/R07RequestRuleContractsTest.php",
+        "packages/drive/tests/Feature/R07TusControllerContractsTest.php",
+        "packages/drive/tests/Feature/R07bActionNodeContractsTest.php",
+        "packages/drive/tests/Feature/R07bRequestCommandContractsTest.php",
+        "packages/drive/tests/Feature/R07cDenyGuardContractsTest.php",
+        "packages/drive/tests/Feature/R07dObservableMutantTest.php",
+        "packages/drive/tests/Feature/ResumableUploadApiTest.php",
+        "packages/drive/tests/Feature/TrashRemanenceTest.php",
+        "packages/drive/tests/Feature/TreeInvariantsTest.php",
+        "packages/drive/tests/Feature/TusProtocolTest.php",
+        "packages/drive/tests/Feature/TusResponseContractsTest.php",
+        "packages/drive/tests/Feature/UploadChunkLimitTest.php",
+        "packages/drive/tests/Feature/UploadSessionOwnershipTest.php",
+        "packages/drive/tests/Observability/P84Section52MetricsTest.php",
+        "packages/drive/tests/Panels/StoragePanelSeparationTest.php",
+        "packages/drive/tests/Profiles/ProfileRuntimeTest.php",
+        "packages/drive/tests/Uploads/R07ModelEnumContractsTest.php",
+        "packages/drive/tests/Uploads/R07S3MultipartContractsTest.php",
+        "packages/drive/tests/Uploads/R07SessionManagerContractsTest.php",
+        "packages/drive/tests/Uploads/R07bS3StagingContractsTest.php",
+        "packages/drive/tests/Uploads/S3MultipartTest.php",
+        "packages/drive/tests/Uploads/TusFlowTest.php",
+        "packages/drive/tests/Uploads/UploadIntegrityTest.php",
+        "packages/drive/tests/Uploads/UploadSessionActivityTest.php",
+        "packages/drive/tests/Uploads/UploadSessionCriticalSectionTest.php"
+      ],
+      "documents": [
+        "packages/documents/tests/Document/DocumentContentReadPathTest.php",
+        "packages/documents/tests/Document/DocumentNodeApiTest.php",
+        "packages/documents/tests/Document/DocumentTreeInvariantsTest.php",
+        "packages/documents/tests/Document/NodeExportKindNeutralTest.php",
+        "packages/documents/tests/Document/NodeHandlerDescriptorTest.php",
+        "packages/documents/tests/Document/SpreadsheetContentTest.php",
+        "packages/documents/tests/Document/TrashDocumentTest.php",
+        "packages/documents/tests/Profiles/ProfileBoundaryTest.php"
+      ],
+      "filament": [
+        "packages/filament/tests/Feature/NodeResourceCreateGateTest.php",
+        "packages/filament/tests/Feature/NodeResourceQueryTest.php"
+      ]
+    },
+    "PG_drive_cascade": "tests/Feature/PurgeTrashTest.php included targeted final PG corrections",
+    "V9_covered_by": "Initial V3 included the two scenarios; final rename lock correction triggers targeted V9 run recorded separately (2 tests,zero skips)."
+  },
+  "final_scope": [
+    {
+      "path": "packages/core/src/{VaulterManager,Facades/Vaulter}.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Contracts/Drive/{DriveHandle,DriveHandleFactory,NodeContentLifecycle}.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Operations/{NodeSequence,NodeLocator}.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Data/Drive/CopyResult.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Content/NodeContentLifecycleRegistry.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Exceptions/Nodes/StaleNodeException.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Schema/SchemaBuilder.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/database/migrations/2026_10_06_000001_add_node_operation_sequence.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Models/Drive/Node.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Access/ExactListing.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Providers/BindingsRegistrar.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/{DriveHandle,DriveHandleFactory,DriveProvisioner}.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Operations/{Node,Folder,File,Trash}Operations.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/src/Queries/*.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/src/Actions/{Nodes,Trash,Files}/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Data/{Nodes,Trash,Files}/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Content/FileContentLifecycle.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/src/Providers/BindingsRegistrar.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Http/Controllers/{NodeController,DownloadController}.php",
+      "change": "any",
+      "note": "Только handle/identity activation; canCreateIn migration поставляет P3.5"
+    },
+    {
+      "path": "packages/drive/src/Console/PurgeTrashCommand.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/{Events,Activity}/**/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/{Events,Activity}/**/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/filament/src/Resources/NodeResource*.php",
+      "change": "any",
+      "note": "Только handle/identity activation; canCreateIn migration поставляет P3.5"
+    },
+    {
+      "path": "packages/filament/src/Resources/NodeResource/**/*.php",
+      "change": "any",
+      "note": "Только handle/identity activation; canCreateIn migration поставляет P3.5"
+    },
+    {
+      "path": "packages/documents/src/{DocumentsManager,Facades/Documents,Registries/DocumentTypeRegistry,Registries/DocumentExporterRegistry}.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/documents/src/{Providers,Actions,Export}/**/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/{core,drive,documents,media,filament,azgard}/tests/**/*.php",
+      "change": "any",
+      "note": "Только живые deprecated API callers и affected fixtures/arch golden; не все tests rewrite"
+    },
+    {
+      "path": "packages/core/tests/Schema/NodeSequenceSchemaTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/tests/PublicApi/*.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/tests/Concurrency/RestoreRevisionConcurrencyTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/tests/Arch/OperationsBoundaryTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/filament/tests/Feature/PublicApiParityTest.php",
+      "change": "create"
+    },
+    {
+      "path": "@plan/artifacts/P3.3/check-profile.json",
+      "change": "create"
+    },
+    {
+      "path": "@plan/artifacts/P3.3/completion.json",
+      "change": "create"
+    },
+    {
+      "path": "UPGRADE.md",
+      "change": "modify",
+      "note": "Только изменение публичного API/policy данного item"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify",
+      "note": "Только Unreleased данного item"
+    },
+    {
+      "path": "packages/drive/src/Content/{DocumentPurgeLifecycle,ShortcutPurgeLifecycle}.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/documents/tests/Document/PurgeTrashCascadeTest.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/tests/Concurrency/NodeSequenceBoundaryTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Exceptions/Nodes/SequenceOverflowException.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Repositories/Drive/NodeStoreRepository.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Repositories/Drive/FileStoreRepository.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/drive/src/Actions/Files/RestoreFileRevisionAction.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/documents/src/Actions/Documents/CreateDocumentAction.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/documents/src/Actions/Documents/UpdateDocumentContentAction.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/documents/src/Actions/Revisions/CreateNamedRevisionAction.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/documents/src/Actions/Revisions/RestoreDocumentRevisionAction.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/documents/src/Actions/Collaboration/PersistCollaborationStateAction.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/documents/src/Data/Documents/UpdateDocumentContentInput.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/drive/tests/PublicApi/NodeSequenceContractTest.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/documents/tests/Document/LegacyNodeSequenceTest.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/documents/tests/Document/LegacyNodeSequenceRaceTest.php",
+      "change": "any",
+      "note": "Actual PG legacy Document/Yjs vs rename, SQLite broad lane declared PG-only skip."
+    },
+    {
+      "path": "packages/core/src/Exceptions/Nodes/NotAFileException.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Exceptions/Nodes/RestoreDestinationChangedException.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Exceptions/Nodes/UnsupportedNodeKindException.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Exceptions/Content/ContentQuarantinedException.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/documents/src/Data/Revisions/CreateNamedRevisionInput.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/documents/src/Exceptions/UnknownDocumentTypeException.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Actions/Uploads/CompleteUploadAction.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Uploads/UploadSessionManager.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Http/Requests/Nodes/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Http/Requests/Folders/*.php",
+      "change": "any"
+    },
+    {
+      "path": "tests/Pest.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/tests/Arch/__snapshots__/public-api.txt",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/tests/Arch/__snapshots__/public-api.txt",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Http/Controllers/Uploads/{TusProtocolController,S3MultipartProtocolController}.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Access/OperationGuard.php",
+      "change": "any"
+    }
+  ],
+  "final_predicate_invariant": {
+    "paths": [
+      "packages/core/src/Repositories/Drive/NodeReadRepository.php",
+      "packages/drive/src/Actions/Nodes/NameConflictResolver.php",
+      "packages/drive/tests/PublicApi/OperationMatrixTest.php"
+    ],
+    "reason": "Grok round2 demonstrated mismatch; central existence/retrieval now share one query. Narrow core/drive checks; no unchanged package reruns."
+  }
+}

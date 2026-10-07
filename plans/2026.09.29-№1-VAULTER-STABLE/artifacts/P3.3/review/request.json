@@ -1,0 +1,11 @@
+{
+  "session_id": "88590d64-6750-46ab-9cfb-4f690527ea95",
+  "selector": "grok/grok-4.7",
+  "candidate": {
+    "head": "3fd82526c0baa2d975ed6eda50487b75c6e68d51",
+    "dirty_digest": "f6ab29bfb6688e46a95876f361415c0708a8da085ef70734a8a28e36ed8b8e53"
+  },
+  "context_parameter": "omitted",
+  "mode": "fresh read-only full owning item review",
+  "prepared_at": "2026-10-07T04:44:54.989688+00:00"
+}

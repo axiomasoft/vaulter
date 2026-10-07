@@ -58,7 +58,7 @@ it('a subtree share never escapes to another storage', function (): void {
     $sharedA = AccessTestHelpers::folder($storageA, null, 'A');
 
     // A node in a DIFFERENT storage with the same shape must never be reachable.
-    $storageB = Vaulter::for(DriveTestHelpers::host())->model();
+    $storageB = Vaulter::drive(DriveTestHelpers::host())->model();
     $nodeB = AccessTestHelpers::folder($storageB, null, 'B');
 
     $share = ShareTestHelpers::share($sharedA, permissions: Permission::Read->value, scope: GrantScope::Subtree);

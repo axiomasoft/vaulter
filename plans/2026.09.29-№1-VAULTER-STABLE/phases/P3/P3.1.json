@@ -1,0 +1,287 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P3.1",
+  "title": "Actor, OperationContext, NodeLocator и OperationGuard",
+  "status": "done",
+  "summary": "Единая security boundary core отделяет identity от caller-supplied actorId, перечитывает Node в пределах drive и реализует actor/scope/ACL ветви 09 §1 с 401/404/403; profile seam подключает P3.6. Handle пока сохраняет старую поверхность до atomic switch P3.3.",
+  "why": "Публичный PHP API сейчас обходится без ACL; переданная Eloquent-модель не authority. Ошибка порядка system/scope или View/ability раскрывает чужие данные.",
+  "scope": {
+    "include": [
+      "ValueObjects/Access/{Actor,ActorRef}: signatures 05 §7, SYSTEM_TYPE, reason trim/nonempty/max191 bytes; Eloquent identity=getMorphClass/getKey, Auth Authenticatable identity=getAuthIdentifier; Authorizable-only без стабильного id отказывает явно InvalidArgumentException, не анонимный system. Никакой serialization живого user в jobs.",
+      "Operations/OperationContext(drive, actor, correlationId, idempotencyKey=null); system constructor явно задаёт reason, ULID fallback; correlationId валидная nonempty ограниченная строка <=191 bytes без control chars; identity immutable. System refs никогда не создаются из HTTP inputs.",
+      "Operations/NodeLocator::find(OperationContext, Node|int|string): Node; optional internal includeTrashed mode отдельным аргументом для trash Operations. Только persisted key модели, configured node model/Vaulter connection, WHERE drive_id; relations/kind/name переданной модели игнорируются.",
+      "Access/OperationGuard authorize/authorizeCreate/visible/abilities: scope before system; View-first; permission/profile after ACL; visible keeps order via evaluateMany, scope failures fail closed. Create требует View parent, canCreateIn (пока актуальный resolver bridge), Create parent. Profile policy hook — пустой internal seam без ProfilePolicy/deny реализации до P3.6, tenant boundary hook disabled no-op до P3.8. P3.6 владеет подключением реального ProfilePolicy; P3.1 не обещает будущую policy готовой.",
+      "Exceptions/Access/MissingActorException implements existing ProblemException 401 code actor_required; существующий NodeNotFoundException reuse; ProfileRestrictionException 403 code profile_restriction. Problem rendering baseline сохраняется. Actor/context tests без нового handle.",
+      "C04 OperationKind/authorize signatures and exact public-vs-private taxonomy; Operations/OperationTaxonomyTest SEC-R14; seam only, no fabricated P3.7 private scanner dependency."
+    ],
+    "exclude": [
+      "Переключение handle/фасада/callers (P3.3); inclusion tenant filters (P3.8); новый event pipeline (P5)."
+    ]
+  },
+  "depends_on": [
+    "P2.6"
+  ],
+  "decisions": [
+    "D01",
+    "D03",
+    "D06",
+    "D07",
+    "D20",
+    "D25",
+    "D27",
+    "D26",
+    "D28",
+    "D29"
+  ],
+  "skills": [],
+  "reads": [
+    {
+      "path": "@plan/knowledge/artifacts-P3-design-P3.1-opus.json",
+      "why": "Первый read: дословные owned OPUS units, mixed sections разграничены notes",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/validation-and-execution-policy.json",
+      "why": "D25: check-profile до product edit, affected checks, broad barrier P3.8, no mutation",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/P3-design.json",
+      "why": "Self-contained algorithms, public API map и explicit P4/P5/P6 seam allocation",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/P3-invariants.json",
+      "why": "security/data invariants, bypass paths, lock pairs",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/P3-examples.json",
+      "why": "Concrete allowed/denied worked cases",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Access/AccessResolver.php",
+      "why": "Текущий fold, create bridge и evaluateMany",
+      "required": true
+    },
+    {
+      "path": "packages/core/tests/Access/AccessResolverTest.php",
+      "why": "Существующие ветви ACL и fixtures",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Exceptions/Nodes/NodeNotFoundException.php",
+      "why": "ProblemException и concealment code",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/security-correction-contract.json",
+      "why": "D29 mandatory C01–C10 constraints and accepted amendments; consume relevant section before product work",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/implementation-security-assessment-2026-10-06.json",
+      "why": "Existing-code forward corrections, compatible baselines and current SHA inputs",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/P3-security-contracts.json",
+      "section": "Authority, Operations, Acceptance, FailurePlaybook",
+      "why": "D26–D29 concrete normative schema/algorithm/acceptance and corrected owner boundaries, completed supplemental design",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/core/src/ValueObjects/Access/{Actor,ActorRef}.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Operations/{OperationContext,NodeLocator}.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Access/OperationGuard.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Exceptions/Access/MissingActorException.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Exceptions/Profiles/ProfileRestrictionException.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Providers/{Bindings,Access}Registrar.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/Operations/*.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Arch/__snapshots__/public-api.txt",
+      "change": "modify"
+    },
+    {
+      "path": "@plan/artifacts/P3.1/check-profile.json",
+      "change": "create"
+    },
+    {
+      "path": "@plan/artifacts/P3.1/completion.json",
+      "change": "create"
+    },
+    {
+      "path": "UPGRADE.md",
+      "change": "modify",
+      "note": "Только изменение публичного API/policy данного item"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify",
+      "note": "Только Unreleased данного item"
+    },
+    {
+      "path": "packages/core/tests/Operations/{ActorContextTest,NodeLocatorTest,OperationGuardTest,ProblemMappingTest}.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Enums/Operations/OperationKind.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/tests/Operations/OperationTaxonomyTest.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/tests/Arch/PublicApiSnapshotTest.php",
+      "change": "modify",
+      "note": "Include new actor/context/guard signatures in the existing declared public API golden."
+    }
+  ],
+  "rules": [
+    "Risk-class: auth/data-integrity/public-contract; invariant-model: @plan/knowledge/P3-invariants.json. Self-check всех применимых I1–I18 и interfering pairs перед finish.",
+    "До первого product edit создать @plan/artifacts/P3.1/check-profile.json с actual runtime, affected paths/callers/fixtures, exact cwd/env/commands, negative controls и deferred broad barrier P3.8 (D25).",
+    "Только declared affected packages; shared consumer edits исключительно под API/policy/tenancy migration этого item. Чужие edits и historical fixtures/OPUS не перезаписывать. Несвязанный failure фиксировать отдельно, current acceptance не обходить.",
+    "Public API delta: обновить affected golden и root UPGRADE.md/CHANGELOG.md [Unreleased] с квалифицированными PLAN2 refs и AD reference. Review none означает self-check+tests, не отсутствие acceptance.",
+    "Product validation исполняется только при будущем plan-run; текущий owner scope — design only. Нет push/publication/hosted dispatch и mutation tools.",
+    "D29: текущая запись scope не является product qualification; supplemental P3 design contracts завершены; design audit repaired closure GREEN: F12 admit больше не берёт W до C, F13 blob_id nullable только для terminal unsupported; @plan/knowledge/audit-design-2026-10-06-p3-green.json. Это не product qualification и не phase audit. Применимые C-rows must have concrete schema/algorithm/files/acceptance, ссылки на correction contract обязательны; historical OPUS delta разрешена только accepted D26–D29."
+  ],
+  "guidance": "Implement actor/context values first, then locator and guard. Guard branch fixtures: missing actor resolution (operation boundary), foreign drive and forged model; system own scope vs foreign; no View vs no ability; profile seam остаётся пустым, profile-deny/system-profile fixtures принадлежат P3.6; create denied workspace/parent; batch visibility/abilities equals scalar algorithm. Do not add ACL cache to context/handle. Each guard method must cover system with scope checks; authorizeCreate must not accept bare positive create gate without parent permission. Outputs NodeAbilities use existing type and policy-narrow effective grants.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Operations packages/core/tests/Access/AccessResolverTest.php packages/core/tests/Access/EvaluateManyEquivalenceTest.php",
+      "expect": "exit 0; 0 failures, no unexpected skips; actor/scope/ACL и пустой profile seam only, profile-deny не требуется до P3.6",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V80",
+      "procedure": "На own candidate по уже записанному D25 check-profile выполнить Pint --test для перечисленных там фактически изменённых/новых owning PHP файлов (root binary scripts/php84 vendor/bin/pint; sibling binary ../../scripts/php84 vendor/bin/pint, cwd своего пакета). Пустой PHP impact отмечается non-applicable с основанием. PHPStan core: scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress, cwd root. Для каждого фактически затронутого sibling: ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress, cwd packages/name из check-profile. Чужие dirty файлы не включать. Каждый исполненный command/cwd/list/env/exit сохранить; это exact impact-derived procedure по D25, не file filter для PHPStan.",
+      "expect": "Все соответствующие exact commands имеют exit 0, skipped/deferred не GREEN",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V81",
+      "procedure": "Adversarial self-check модели P3-invariants: отметить применимые invariants/enforcement/callers/negative cases и lock pair matrix. Для нового guard ограниченный negative control: в isolated временной копии отключить одну owning проверку, запустить её именованный acceptance тест и получить RED, восстановить исходный SHA-256 и подтвердить GREEN. Сохранить command/cwd/env/exit/fingerprint. Не запускать mutation campaign. Supplemental D06 controls ALL required, fault definition in P3-security-contracts#Acceptance; each executed only inside isolated temporary repository copy, cwd relative to that isolated root, same env. Exact commands:\nNC-SCOPE: cwd=.; env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Operations/OperationTaxonomyTest.php --filter=SEC-R14\nEach control requires named matched test>=1/skipped=0, injected RED then exact source SHA restoration and original GREEN; receipts cannot substitute unrelated tests or silent skipped filters. No product controls run in design.",
+      "expect": "All applicable declared limited controls have RED→exact restored GREEN, candidate source hashes unchanged, named counts/output recorded; no mutation engine.",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V82",
+      "cmd": "python3 plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-coverage.py check --phase P3",
+      "expect": "exit 0; immutable OPUS/literals and owned units consistent",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Operations/OperationTaxonomyTest.php",
+      "expect": "exit0; SEC-R14 actor/scope/system ACL-only taxonomy, metadata/mutation/egress/purge; private scanner runtime not loaded yet. Receipt: executed_tests>=1, skipped=0; all prescribed named SEC scenarios executed with discovered/matched/passed/failed counts and output; empty/unmatched/skip is not pass.",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "Actor/ActorRef/Context/Locator/Guard и error mapping",
+    "Все branch/cross-drive/system/visible fixtures",
+    "Golden + UPGRADE/CHANGELOG и check-profile/negative proof",
+    "Concrete supplemental contract implemented and own named scenario/negative-control receipts; applicable C-rows mapped with current input closure, no future owner qualification inferred."
+  ],
+  "route": {
+    "class": "frontier",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed",
+    "notes": "Verified repository evidence and immutable OPUS; supporting capture in P3-design-evidence"
+  },
+  "result": {
+    "started_at": "2026-10-06T17:24:00Z",
+    "finished_at": "2026-10-06T17:54:46Z",
+    "executor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "session": "01a1123d-225e-7161-90c1-f3af530202bb"
+    },
+    "notes": "Actor/context/locator/guard/taxonomy implemented; 75 Operations+ACL, 6 taxonomy and 75 Arch tests GREEN; core PHPStan/Pint, OPUS coverage, isolated NC-SCOPE/NC-VIEW RED→restored GREEN. Whole-work Grok review GREEN without context parameter. OPUS actor_required/401 preserved after owner-directed research. Evidence: artifacts/P3.1/completion.json. Profile/content/tenancy and broad barrier remain future owning items.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-06T17:54:46Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-06T17:54:46Z"
+      },
+      {
+        "id": "V80",
+        "exit": 0,
+        "at": "2026-10-06T17:54:46Z"
+      },
+      {
+        "id": "V81",
+        "exit": 0,
+        "at": "2026-10-06T17:54:46Z"
+      },
+      {
+        "id": "V82",
+        "exit": 0,
+        "at": "2026-10-06T17:54:46Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-06T17:54:46Z",
+  "sections": [
+    {
+      "id": "Boundary",
+      "title": "Поставка и проверяемый scope",
+      "text": "ValueObjects/Access/{Actor,ActorRef}: signatures 05 §7, SYSTEM_TYPE, reason trim/nonempty/max191 bytes; Eloquent identity=getMorphClass/getKey, Auth Authenticatable identity=getAuthIdentifier; Authorizable-only без стабильного id отказывает явно InvalidArgumentException, не анонимный system. Никакой serialization живого user в jobs.\n\nOperations/OperationContext(drive, actor, correlationId, idempotencyKey=null); system constructor явно задаёт reason, ULID fallback; correlationId валидная nonempty ограниченная строка <=191 bytes без control chars; identity immutable. System refs никогда не создаются из HTTP inputs.\n\nOperations/NodeLocator::find(OperationContext, Node|int|string): Node; optional internal includeTrashed mode отдельным аргументом для trash Operations. Только persisted key модели, configured node model/Vaulter connection, WHERE drive_id; relations/kind/name переданной модели игнорируются.\n\nAccess/OperationGuard authorize/authorizeCreate/visible/abilities: scope before system; View-first; permission/profile after ACL; visible keeps order via evaluateMany, scope failures fail closed. Create требует View parent, canCreateIn (пока актуальный resolver bridge), Create parent. Profile policy hook — пустой internal seam без ProfilePolicy/deny реализации до P3.6, tenant boundary hook disabled no-op до P3.8. P3.6 владеет подключением реального ProfilePolicy; P3.1 не обещает будущую policy готовой.\n\nExceptions/Access/MissingActorException implements existing ProblemException 401 code actor_required; существующий NodeNotFoundException reuse; ProfileRestrictionException 403 code profile_restriction. Problem rendering baseline сохраняется. Actor/context tests без нового handle.\n\nC04 OperationKind/authorize signatures and exact public-vs-private taxonomy; Operations/OperationTaxonomyTest SEC-R14; seam only, no fabricated P3.7 private scanner dependency."
+    },
+    {
+      "id": "Research-Corrections",
+      "title": "Принятые research-derived corrections",
+      "text": "Mandatory accepted D26C/D27A/D28A/D29, security-correction-contract and implementation assessment consumed. Concrete supplemental contract @plan/knowledge/P3-security-contracts.json supplied; C-owners unchanged, no product qualification and no independent audit verdict."
+    },
+    {
+      "id": "Supplemental-Contract",
+      "title": "Concrete supplemental scope",
+      "text": "C04 OperationKind/authorize signatures and exact public-vs-private taxonomy; Operations/OperationTaxonomyTest SEC-R14; seam only, no fabricated P3.7 private scanner dependency.\nRequired sections: Authority, Operations, Acceptance, FailurePlaybook. Named scenarios and D06 controls: @plan/knowledge/P3-security-contracts.json#Acceptance."
+    }
+  ]
+}

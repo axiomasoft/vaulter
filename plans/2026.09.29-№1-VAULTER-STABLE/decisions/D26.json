@@ -1,0 +1,50 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D26",
+  "title": "P3/F05: legacy not_required — трактовка OPUS 09 §6 и OPUS D18",
+  "date": "2026-10-06",
+  "status": "accepted",
+  "question": "Как совместить доказательство сканирования, обязательность текущей политики и безопасное включение сканирования для legacy content?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Рекомендуется: not_required разрешён безусловно; pending/failed блокируют только при required, infected всегда. Новые ingest при required остаются pending и обязательно сканируются.",
+      "pros": "Сохраняет legacy-доступ и буквальную таблицу OPUS 09 §6.",
+      "cons": "Legacy контент не получает обязательного ретроактивного scan."
+    },
+    {
+      "id": "B",
+      "text": "not_required блокируется при required; P3.7 получает отдельную rescan-команду/job, backfill и тест перехода legacy not_required→pending→clean.",
+      "pros": "Ретроактивная политика scan.",
+      "cons": "Требует отдельного дизайна миграции и rescan; без него доступ блокируется."
+    },
+    {
+      "id": "C",
+      "text": "Принять раздельные scan evidence, enforcement off/new_content_only/all_content и durable scan work. required=true означает all_content; legacy exemption только в explicit new_content_only rollout по server-persisted eligibility. COPY/restoreRevision не наследуют exemption. P3.7 поставляет rescan/backfill/recovery; strict required без совместимого clean evidence блокирует legacy до scan.",
+      "pros": "Проверяемый fail-closed контракт и управляемый rollout без притворного clean; профиль не ослабляет global policy.",
+      "cons": "Дополнительная scan work/evidence модель, команда backfill и операционная квалификация."
+    }
+  ],
+  "context": "Владелец поручил выбрать решения по исследованию и скорректировать текущий план, включая forward corrections уже выполненного кода. Выбор выполняет agent по этой делегации; отдельного ответа владельца с буквой варианта не было. Исторические P0/P1/P2 и OPUS не переписываются. Принятый C изменяет таблицу OPUS 09 §6 в части безусловного not_required; исходный OPUS остаётся дословным. Детальный контракт: @plan/knowledge/security-correction-contract.json#Scan.",
+  "decision": "C — Принять раздельные scan evidence, enforcement off/new_content_only/all_content и durable scan work. required=true означает all_content; legacy exemption только в explicit new_content_only rollout по server-persisted eligibility. COPY/restoreRevision не наследуют exemption. P3.7 поставляет rescan/backfill/recovery; strict required без совместимого clean evidence блокирует legacy до scan.",
+  "rationale": "Владелец поручил выбрать решения по исследованию и скорректировать текущий план, включая forward corrections уже выполненного кода. Выбор выполняет agent по этой делегации; отдельного ответа владельца с буквой варианта не было. Исторические P0/P1/P2 и OPUS не переписываются. Основание: @plan/knowledge/P3-security-research-results-2026-10-06.json; первичные cloud/OSS sources проверены, repository conflicts назначены будущим owners.",
+  "applies_to": [
+    "P3.7"
+  ],
+  "evidence": [
+    {
+      "kind": "repo",
+      "ref": "@plan/knowledge/audit-design-2026-10-06.json#F05-Minor-notrequired-legacy"
+    },
+    {
+      "kind": "repo",
+      "ref": "audits/2026-09-29-stable-audit/opus/09-integrity-and-security.md#6"
+    }
+  ],
+  "actor": {
+    "provider": "codex",
+    "model": "gpt-6.1-sol",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

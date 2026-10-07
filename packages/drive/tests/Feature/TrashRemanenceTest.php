@@ -23,7 +23,7 @@ beforeEach(function (): void {
 
 function trashStorage(): Drive
 {
-    return Vaulter::for(DriveTestHelpers::host())->model();
+    return Vaulter::drive(DriveTestHelpers::host())->model();
 }
 
 it('404s on downloading the current head of a trashed node, F-P1.12-01', function (): void {

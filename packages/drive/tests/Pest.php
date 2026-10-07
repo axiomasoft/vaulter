@@ -7,7 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vaulter\Drive\Tests\PanelTestCase;
 use Vaulter\Drive\Tests\TestCase;
 
-uses(TestCase::class, RefreshDatabase::class)->in('Drive', 'Uploads', 'Feature', 'Observability');
+uses(TestCase::class, RefreshDatabase::class)->in('Drive', 'Uploads', 'Feature', 'Observability', 'PublicApi');
 
 uses(TestCase::class)->in('Providers');
 
@@ -22,3 +22,5 @@ uses(PanelTestCase::class, RefreshDatabase::class)->in('Panels');
 uses(TestCase::class, DatabaseMigrations::class)->in('Concurrency');
 
 uses(TestCase::class)->in('Configuration');
+
+uses(TestCase::class)->in('Arch');

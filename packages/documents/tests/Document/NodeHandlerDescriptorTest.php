@@ -54,7 +54,7 @@ it('embeds the handler descriptor in the NodeResource payload', function (): voi
 
 it('omits the handler descriptor for a folder node', function (): void {
     $drive = DocumentTestHelpers::drive();
-    $folder = $drive->createFolder('Plain');
+    $folder = $drive->folders()->create('Plain');
 
     $payload = NodeResource::make($folder)->toArray(request());
 

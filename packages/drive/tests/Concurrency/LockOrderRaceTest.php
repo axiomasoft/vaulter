@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 use Illuminate\Database\Events\TransactionBeginning;
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Data\Drive\CopyOptions;
+use Vaulter\Data\Drive\UploadOptions;
+use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Nodes\MoveNodeAction;
 use Vaulter\Drive\Data\Nodes\MoveNodeInput;
 use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Tests\Concurrency\ForkRace;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
@@ -16,18 +20,18 @@ it('V21 completes ten overlapping move/upload races with an acyclic tree and exa
     ForkRace::skipUnlessSupported($this);
     Storage::fake('local');
     $drive = DriveTestHelpers::drive();
-    $folder = $drive->createFolder('F');
+    $folder = $drive->folders()->create('F');
     for ($i = 0; $i < 10; $i++) {
-        $moving = $drive->createFolder('A'.$i);
+        $moving = $drive->folders()->create('A'.$i);
         $outcomes = ForkRace::run([
-            static function () use ($moving, $folder): array {
+            static function () use ($drive, $moving, $folder): array {
                 $attempts = 0;
                 app('events')->listen(TransactionBeginning::class, static function (TransactionBeginning $event) use (&$attempts): void {
                     if ($event->connection->transactionLevel() === 1) {
                         $attempts++;
                     }
                 });
-                $node = app(MoveNodeAction::class)->execute(new MoveNodeInput(node: $moving, into: $folder));
+                $node = app(MoveNodeAction::class)->execute(OperationContext::system($drive->model(), 'test fixture'), new MoveNodeInput(node: $moving, into: $folder));
 
                 return ['id' => $node->id, 'attempts' => $attempts];
             },
@@ -38,7 +42,7 @@ it('V21 completes ten overlapping move/upload races with an acyclic tree and exa
                         $attempts++;
                     }
                 });
-                $node = $drive->upload(DriveTestHelpers::streamFor('upload '.$i), into: $folder, originalName: $i.'.txt');
+                $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('upload '.$i), $i.'.txt'), new UploadOptions(parent: $folder));
 
                 return ['id' => $node->id, 'attempts' => $attempts];
             },
@@ -64,9 +68,9 @@ it('copy and dedup upload finish with overlapping quota operations and no outer 
     ForkRace::skipUnlessSupported($this);
     Storage::fake('local');
     $drive = DriveTestHelpers::drive();
-    $source = $drive->upload(DriveTestHelpers::streamFor('shared bytes'), originalName: 'source.txt');
-    $copyParent = $drive->createFolder('copies');
-    $uploadParent = $drive->createFolder('uploads');
+    $source = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('shared bytes'), 'source.txt'));
+    $copyParent = $drive->folders()->create('copies');
+    $uploadParent = $drive->folders()->create('uploads');
     $barrier = sys_get_temp_dir().'/vlt_copy_quota_'.bin2hex(random_bytes(8));
     mkdir($barrier);
     $wait = static function (Closure $condition): void {
@@ -98,16 +102,14 @@ it('copy and dedup upload finish with overlapping quota operations and no outer 
                 });
 
                 // No outer retry: expose a lock-order cycle rather than hide it.
-                return $db->transaction(static fn (): string => (string) $drive->upload(
-                    DriveTestHelpers::streamFor('shared bytes'), into: $uploadParent, originalName: 'dedup.txt',
-                )->id, 1);
+                return $db->transaction(static fn (): string => (string) $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('shared bytes'), 'dedup.txt'), new UploadOptions(parent: $uploadParent))->id, 1);
             },
             static function () use ($drive, $source, $copyParent, $barrier, $wait): string {
                 $db = app(VaulterDatabase::class)->connection();
                 file_put_contents($barrier.'/copy-pid', (string) $db->selectOne('SELECT pg_backend_pid() AS pid')->pid);
                 $wait(static fn (): bool => is_file($barrier.'/quota-held'));
 
-                return $db->transaction(static fn (): string => (string) $drive->copy($source, into: $copyParent, name: 'copy.txt')->id, 1);
+                return $db->transaction(static fn (): string => (string) $drive->nodes()->copy($source, destination: $copyParent, options: new CopyOptions(name: 'copy.txt'))->id, 1);
             },
         ], timeoutMs: 12_000);
         foreach ($outcomes as $outcome) {

@@ -67,6 +67,8 @@ final readonly class RecordsDriveActivity
             storageId: Identity::key($event->storage->getKey()),
             tenantId: $event->storage->tenant_id,
             actorId: $event->actorId,
+            actor: $event->actor ?? null,
+            correlationId: $event->correlationId ?? null,
             target: $event->root,
             context: [
                 'drive_id' => Identity::stringify($event->storage->getKey()),
@@ -83,6 +85,8 @@ final readonly class RecordsDriveActivity
             verb: EventType::FolderCreated,
             node: $event->node,
             actorId: $event->actorId,
+            actor: $event->actor ?? null,
+            correlationId: $event->correlationId ?? null,
             context: [
                 'kind' => $event->node->kind->value,
                 'name' => $event->node->name,
@@ -97,6 +101,8 @@ final readonly class RecordsDriveActivity
             verb: EventType::FileUploaded,
             node: $event->node,
             actorId: $event->actorId,
+            actor: $event->actor ?? null,
+            correlationId: $event->correlationId ?? null,
             context: [
                 'name' => $event->node->name,
                 'size_bytes' => $event->version->size_bytes,
@@ -112,6 +118,8 @@ final readonly class RecordsDriveActivity
             verb: EventType::FileRevisionAdded,
             node: $event->node,
             actorId: $event->actorId,
+            actor: $event->actor ?? null,
+            correlationId: $event->correlationId ?? null,
             context: [
                 'number' => $event->versionNo,
                 'version_id' => Identity::stringify($event->version->getKey()),
@@ -126,6 +134,8 @@ final readonly class RecordsDriveActivity
             verb: EventType::NodeMoved,
             node: $event->node,
             actorId: $event->actorId,
+            actor: $event->actor ?? null,
+            correlationId: $event->correlationId ?? null,
             context: [
                 'from_parent_id' => Identity::stringify($event->fromParentId),
                 'to_parent_id' => Identity::stringify($event->toParentId),
@@ -139,6 +149,8 @@ final readonly class RecordsDriveActivity
             verb: EventType::NodeRenamed,
             node: $event->node,
             actorId: $event->actorId,
+            actor: $event->actor ?? null,
+            correlationId: $event->correlationId ?? null,
             context: [
                 'from' => $event->fromName,
                 'to' => $event->toName,
@@ -153,6 +165,8 @@ final readonly class RecordsDriveActivity
             verb: EventType::NodeCopied,
             node: $event->copy,
             actorId: $event->actorId,
+            actor: $event->actor ?? null,
+            correlationId: $event->correlationId ?? null,
             context: [
                 'source_id' => Identity::stringify($event->source->getKey()),
                 'name' => $event->copy->name,
@@ -166,6 +180,8 @@ final readonly class RecordsDriveActivity
             verb: EventType::NodeTrashed,
             node: $event->node,
             actorId: $event->actorId,
+            actor: $event->actor ?? null,
+            correlationId: $event->correlationId ?? null,
             context: [
                 'name' => $event->node->name,
             ],
@@ -178,6 +194,8 @@ final readonly class RecordsDriveActivity
             verb: EventType::NodeRestored,
             node: $event->node,
             actorId: $event->actorId,
+            actor: $event->actor ?? null,
+            correlationId: $event->correlationId ?? null,
             context: [
                 'name' => $event->node->name,
                 'parent_id' => Identity::stringify($event->node->parent_id),
@@ -196,6 +214,8 @@ final readonly class RecordsDriveActivity
             verb: EventType::NodePurged,
             storageId: $event->storageId,
             actorId: $event->actorId,
+            actor: $event->actor ?? null,
+            correlationId: $event->correlationId ?? null,
             context: [
                 'node_ids' => array_map(Identity::stringify(...), $event->nodeIds),
                 'freed_bytes' => $event->freedBytes,

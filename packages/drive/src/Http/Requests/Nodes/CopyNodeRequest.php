@@ -49,13 +49,12 @@ final class CopyNodeRequest extends VaulterFormRequest
         return is_string($name) && $name !== '' ? $name : null;
     }
 
-    public function toData(Node $node, ?Node $into, int|string|null $actorId): CopyNodeInput
+    public function toData(Node $node, ?Node $into): CopyNodeInput
     {
         return new CopyNodeInput(
             node: $node,
             into: $into,
             name: $this->name(),
-            actorId: $actorId,
         );
     }
 }

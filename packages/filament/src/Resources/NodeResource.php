@@ -20,24 +20,26 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Validation\ValidationException;
 use Override;
 use UnitEnum;
-use Vaulter\Access\AccessResolver;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Contracts\Drive\DriveHandle;
+use Vaulter\Drive\Queries\NodeBrowserQuery;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Filament\Resources\NodeResource\Pages\ListNodes;
 use Vaulter\Filament\Support\PanelActor;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Repositories\Drive\NodeReadRepository;
 
 /**
  * The Drive-node admin surface (master plan §2.2 / §3) — the heart of the panel. It
  * lists the unified folder|file|document nodes with kind/name/size/parent columns,
- * filters by kind / storage / trashed state, and wires the row actions to the CORE
- * Drive Actions (rename/move/trash/restore/forceDelete) through the DriveContext —
+ * filters by kind / storage / trashed state, and wires the row actions to the canonical
+ * Drive Operations (rename/move/trash/restore/purge) through the authorized handle —
  * NEVER a direct Eloquent write.
  *
  * Table candidates use the grant-authoritative SQL prefilter, then ListNodes applies
@@ -70,7 +72,7 @@ final class NodeResource extends Resource
     public static function form(Schema $schema): Schema
     {
         // Nodes are never created/edited as a flat form: every mutation flows through
-        // a core Drive Action (rename/move/trash/…), exposed as row actions. The form
+        // a Drive operation (rename/move/trash/…), exposed as row actions. The form
         // exists only so a record title can render; it is non-creatable.
         return $schema->components([
             TextInput::make('name')->disabled(),
@@ -178,7 +180,7 @@ final class NodeResource extends Resource
     #[Override]
     public static function canCreate(): bool
     {
-        // Folders/files are created through the Drive Actions (DriveContext), not a
+        // Folders/files are created through the Drive Operations, not a
         // flat resource form. The browser-style create lives on the table actions.
         return false;
     }
@@ -198,11 +200,11 @@ final class NodeResource extends Resource
             return $query->whereRaw('1 = 0');
         }
 
-        return app(NodeReadRepository::class)->constrainToAccessible($query, $actor);
+        return app(NodeBrowserQuery::class)->constrainToAccessible($query, $actor);
     }
 
     /**
-     * Rename → core RenameNodeAction via DriveContext::rename. Gated by Ability::Edit.
+     * Rename through the authorized node operations. Gated by Ability::Edit.
      */
     private static function renameAction(): Action
     {
@@ -220,10 +222,9 @@ final class NodeResource extends Resource
                 /** @var string $name */
                 $name = $data['name'];
 
-                Vaulter::forStorage($record->storage)->rename(
+                self::driveFor($record)->nodes()->rename(
                     node: $record,
                     name: $name,
-                    actorId: PanelActor::id(),
                 );
 
                 self::notifyDone('Node renamed');
@@ -231,7 +232,7 @@ final class NodeResource extends Resource
     }
 
     /**
-     * Move → core MoveNodeAction via DriveContext::move. Gated by Ability::Move. The
+     * Move through the authorized node operations. Gated by Ability::Move. The
      * destination is picked from the storage's folder nodes; null = the storage root.
      */
     private static function moveAction(): Action
@@ -248,27 +249,29 @@ final class NodeResource extends Resource
                     ->searchable(),
             ])
             ->action(function (Node $record, array $data, Action $action): void {
-                $into = self::resolveFolder($record, $data['parent_id'] ?? null);
-
+                $destination = $data['parent_id'] ?? null;
+                if ($destination === '') {
+                    $destination = null;
+                }
+                if ($destination !== null && !is_int($destination) && !is_string($destination)) {
+                    throw ValidationException::withMessages(['parent_id' => 'The destination must be a node ID.']);
+                }
                 try {
-                    self::assertCanCreateIn($record, $into);
+                    self::driveFor($record)->nodes()->move(
+                        node: $record,
+                        destination: $destination,
+                    );
                 } catch (PermissionDeniedException) {
                     Notification::make()->title('Move not allowed')->danger()->send();
                     $action->halt();
                 }
-
-                Vaulter::forStorage($record->storage)->move(
-                    node: $record,
-                    into: $into,
-                    actorId: PanelActor::id(),
-                );
 
                 self::notifyDone('Node moved');
             });
     }
 
     /**
-     * Trash → core TrashNodeAction via DriveContext::trash. Gated by Ability::Trash.
+     * Trash through the authorized node operations. Gated by Ability::Trash.
      */
     private static function trashAction(): Action
     {
@@ -279,9 +282,8 @@ final class NodeResource extends Resource
             ->requiresConfirmation()
             ->visible(fn (Node $record): bool => $record->trashed_at === null && self::actorCan(Ability::Trash, $record))
             ->action(function (Node $record): void {
-                Vaulter::forStorage($record->storage)->trash(
+                self::driveFor($record)->nodes()->trash(
                     node: $record,
-                    actorId: PanelActor::id(),
                 );
 
                 self::notifyDone('Node trashed');
@@ -289,7 +291,7 @@ final class NodeResource extends Resource
     }
 
     /**
-     * Restore → core RestoreNodeAction via DriveContext::restore. Gated by
+     * Restore through the authorized trash operations. Gated by
      * Ability::Restore; only visible on an already-trashed node.
      */
     private static function restoreAction(): Action
@@ -299,9 +301,8 @@ final class NodeResource extends Resource
             ->icon('heroicon-o-arrow-uturn-left')
             ->visible(fn (Node $record): bool => $record->trashed_at !== null && self::actorCan(Ability::Restore, $record))
             ->action(function (Node $record): void {
-                Vaulter::forStorage($record->storage)->restore(
+                self::driveFor($record)->trash()->restore(
                     node: $record,
-                    actorId: PanelActor::id(),
                 );
 
                 self::notifyDone('Node restored');
@@ -309,7 +310,7 @@ final class NodeResource extends Resource
     }
 
     /**
-     * Force-delete → core ForceDeleteNodeAction via DriveContext::forceDelete. Gated
+     * Permanent deletion through the authorized trash operations. Gated
      * by Ability::Delete; only visible on a trashed node (purge from trash).
      */
     private static function forceDeleteAction(): Action
@@ -321,9 +322,8 @@ final class NodeResource extends Resource
             ->requiresConfirmation()
             ->visible(fn (Node $record): bool => $record->trashed_at !== null && self::actorCan(Ability::Delete, $record))
             ->action(function (Node $record): void {
-                Vaulter::forStorage($record->storage)->forceDelete(
+                self::driveFor($record)->trash()->purge(
                     node: $record,
-                    actorId: PanelActor::id(),
                 );
 
                 self::notifyDone('Node permanently deleted');
@@ -342,7 +342,7 @@ final class NodeResource extends Resource
             return false;
         }
 
-        return app(AccessResolver::class)->can($actor, $ability, $node);
+        return app(NodeBrowserQuery::class)->can(self::driveFor($node), $ability, $node);
     }
 
     private static function notifyDone(string $title): void
@@ -359,73 +359,24 @@ final class NodeResource extends Resource
      */
     private static function folderOptions(Node $record): array
     {
-        $actor = PanelActor::current();
-        if ($actor === null || !app(AccessResolver::class)->canCreateIn($actor, $record->storage)) {
+        if (PanelActor::current() === null) {
             return [];
         }
 
-        $model = app(VaulterConfig::class)->model('node');
-
-        return $model::query()
-            ->where('drive_id', $record->drive_id)
-            ->where('kind', NodeKind::Folder->value)
-            ->whereNull('trashed_at')
-            ->whereKeyNot($record->getKey())
-            ->orderBy('name')
-            ->get()
-            ->filter(static fn (Node $folder): bool => self::actorCan(Ability::Create, $folder))
-            ->mapWithKeys(static fn (Node $folder): array => [$folder->getKey() => $folder->name === '' ? '(root)' : $folder->name])
-            ->all();
+        return app(NodeBrowserQuery::class)->folderOptions(handle: self::driveFor($record), source: $record);
     }
 
-    private static function assertCanCreateIn(Node $record, ?Node $into): void
+    private static function driveFor(Node $node): DriveHandle
     {
-        $actor = PanelActor::current();
-        $destination = $into ?? $record->storage->rootNode;
-        $access = app(AccessResolver::class);
+        $actor = PanelActor::current() ?? throw MissingActorException::required();
 
-        if ($actor === null || $destination === null
-            || !$access->canCreateIn($actor, $record->storage)
-            || !$access->can($actor, Ability::Create, $destination)
-        ) {
-            throw PermissionDeniedException::forAbility(Ability::Create->value);
-        }
+        return Vaulter::drive(app(NodeBrowserQuery::class)->driveForNode($node))->actingAs($actor);
     }
 
-    /**
-     * Resolve the chosen destination folder model (null = storage root).
-     */
-    private static function resolveFolder(Node $record, int|string|null $parentId): ?Node
-    {
-        if ($parentId === null || $parentId === '') {
-            return null;
-        }
-
-        $model = app(VaulterConfig::class)->model('node');
-
-        /** @var Node|null $folder */
-        $folder = $model::query()
-            ->where('drive_id', $record->drive_id)
-            ->whereKey($parentId)
-            ->first();
-
-        return $folder;
-    }
-
-    /**
-     * @return array<int|string, string>
-     */
+    /** @return array<int|string, string> */
     private static function storageOptions(): array
     {
-        $model = app(VaulterConfig::class)->model('drive');
-
-        /** @var array<int|string, string> $options */
-        $options = $model::query()
-            ->orderBy('name')
-            ->pluck('name', $model::query()->getModel()->getKeyName())
-            ->all();
-
-        return $options;
+        return app(NodeBrowserQuery::class)->driveOptions();
     }
 
     /**

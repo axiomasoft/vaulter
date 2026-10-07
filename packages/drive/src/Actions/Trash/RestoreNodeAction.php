@@ -6,30 +6,22 @@ namespace Vaulter\Drive\Actions\Trash;
 
 use Illuminate\Support\Collection;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Actions\Nodes\NameConflictResolver;
+use Vaulter\Drive\Data\Trash\RestoreNodeInput;
 use Vaulter\Drive\Events\Nodes\NodeRestored;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
-use Vaulter\Exceptions\Nodes\NodeNameConflictException;
+use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Nodes\NodeNotTrashedException;
+use Vaulter\Exceptions\Nodes\RestoreDestinationChangedException;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\NodeLocator;
+use Vaulter\Operations\NodeSequence;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\Identity;
 use Vaulter\Support\TreeGuard;
 
-/**
- * Restore a trashed node and its subtree (§2.10). Clears the trashed triplet
- * across the bounded subtree in one bulk UPDATE. Runs under the storage tree lock
- * (it re-parents) with the node, its original parent and the root locked, and only
- * accepts a node that is actually in the trash. Two deterministic destination
- * rules (§2.10 restore-collision):
- *   - if the original parent is gone (deleted / itself trashed / no longer a
- *     folder), re-home the node to the storage root rather than dangling it;
- *   - if a LIVE sibling now owns the node's name at the resolved destination,
- *     throw NodeNameConflictException — the caller renames then retries.
- *
- * Authorization (M2a / H.2) is enforced upstream at the HTTP controller
- * boundary (NodeController + AccessResolver); this Action stays pure.
- */
 final readonly class RestoreNodeAction
 {
     public function __construct(
@@ -37,87 +29,105 @@ final readonly class RestoreNodeAction
         private NodeStoreRepository $store,
         private VaulterDatabase $database,
         private TreeGuard $tree,
+        private NodeLocator $locator,
+        private NodeSequence $sequence,
+        private NameConflictResolver $names,
     ) {}
 
-    public function execute(Node $node, int|string|null $actorId = null): Node
+    /** Public authorization must use the destination this resolution actually chooses. */
+    public function resolveDestination(OperationContext $context, Node $node, Node|int|string|null $explicit = null): Node
     {
-        $rootId = $this->tree->destinationId(storage: $node->storage, into: null);
+        $node = $this->locator->find(context: $context, key: $node, includeTrashed: true);
+        $originalId = $node->trashed_from_parent_id ?? $node->parent_id;
+        if ($originalId !== null) {
+            try {
+                $original = $this->locator->find(context: $context, key: $originalId);
+                $this->tree->assertActiveFolder($original);
 
-        return $this->database->transaction(function () use ($node, $rootId, $actorId): Node {
-            $this->database->lockTree($node->drive_id);
+                return $original;
+            } catch (NodeNotFoundException|InvalidDestinationException) {
+                // A missing/inactive original parent falls through to the requested destination.
+            }
+        }
+        $destination = $this->locator->find(context: $context,
+            key: $explicit ?? $this->tree->destinationId(storage: $context->drive, into: null));
+        $this->tree->assertActiveFolder($destination);
 
-            $current = $this->tree->sync($node, $this->tree->locked($this->tree->lock([$node->id, $rootId]), $node->id));
+        return $destination;
+    }
 
+    public function execute(OperationContext $context, RestoreNodeInput $data): Node
+    {
+        $node = $this->locator->find(context: $context, key: $data->node, includeTrashed: true);
+        $rootId = $this->tree->destinationId(storage: $context->drive, into: null);
+
+        return $this->database->transaction(function () use ($node, $rootId, $data, $context): Node {
+            $this->database->lockTree($context->driveId());
+            $fresh = $this->locator->find(context: $context, key: $node, includeTrashed: true);
+            $ids = $this->nodes->subtree($fresh)->modelKeys();
+            $originalId = $fresh->trashed_from_parent_id ?? $fresh->parent_id;
+            $locked = $this->tree->lock([...$ids, $originalId, $rootId, $data->destination->id]);
+            $current = $this->tree->locked($locked, $node->id);
+            $this->tree->assertNotRoot(node: $current, operation: 'restore');
             if ($current->trashed_at === null) {
                 throw NodeNotTrashedException::forNode($current);
             }
-
-            // The original parent is read from the locked row, not the caller's model.
-            // Locking it after the node is safe: the tree lock excludes every other
-            // operation that holds more than one node row.
-            $originalParentId = $current->trashed_from_parent_id ?? $current->parent_id;
-            $locked = $this->tree->lock([$originalParentId]);
-            $destinationParentId = $this->resolveDestinationParent(node: $current, locked: $locked, rootId: $rootId);
-
-            if ($this->liveSiblingOwnsName(node: $current, parentId: $destinationParentId)) {
-                throw NodeNameConflictException::forName(name: $current->name, parentId: $destinationParentId);
+            $destination = $this->chosenLockedDestination(current: $current, locked: $locked,
+                precheckedId: $data->destination->id, rootId: $rootId);
+            if (Identity::stringify($destination->id) !== Identity::stringify($data->destination->id)) {
+                throw new RestoreDestinationChangedException;
             }
-
-            $ids = $this->nodes->subtree($current)->modelKeys();
-
-            // Re-home the subtree root first (so the cleared triplet lands on a
-            // node already hung at its restored destination), then clear trash.
-            if (Identity::stringify($current->parent_id) !== Identity::stringify($destinationParentId)) {
-                $this->store->move(node: $current, parentId: $destinationParentId);
+            $this->tree->assertActiveFolder($destination);
+            // A fallback must not attach a root inside the subtree being restored.
+            if (in_array($destination->id, $ids, true)) {
+                throw InvalidDestinationException::trashed($destination);
             }
-
-            $this->store->restoreSubtree(collect($ids));
-
+            $changed = $locked->filter(fn (Node $member): bool => in_array($member->id, $ids, true) && $member->trashed_at !== null);
+            foreach ($changed as $member) {
+                if (!$this->tree->sameStorage($member, $context->driveId())) {
+                    throw InvalidDestinationException::otherDrive($member, $context->driveId());
+                }
+            }
+            $name = $this->names->resolve(drive: $context->drive, parentId: $destination->id,
+                name: $current->name, onConflict: $data->onConflict, ignoreId: $current->id);
+            $this->store->update(node: $current, attributes: ['parent_id' => $destination->id, 'name' => $name]);
+            $this->store->restoreSubtree($changed->map(fn (Node $member) => $member->id)->values());
+            foreach ($changed as $member) {
+                $this->sequence->bump($member);
+            }
             $fresh = $current->refresh();
-
-            event(new NodeRestored(node: $fresh, actorId: $actorId));
+            event(new NodeRestored(node: $fresh, actorId: $context->actor->ref()->id,
+                actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return $fresh;
         });
     }
 
-    /**
-     * The destination parent for the restored node: its recorded original parent
-     * when that row is still a live folder of the same storage, else the root. The
-     * row was locked with the node, so it cannot be trashed or moved meanwhile.
-     *
-     * @param Collection<string, Node> $locked
-     */
-    private function resolveDestinationParent(Node $node, Collection $locked, int|string $rootId): int|string
+    /** @param Collection<string, Node> $locked */
+    private function chosenLockedDestination(Node $current, Collection $locked, int|string $precheckedId, int|string $rootId): Node
     {
-        $originalParentId = $node->trashed_from_parent_id ?? $node->parent_id;
+        $originalId = $current->trashed_from_parent_id ?? $current->parent_id;
+        if ($originalId !== null) {
+            $original = $locked->get(Identity::stringify($originalId));
+            if ($original instanceof Node && $this->tree->sameStorage($original, $current->drive_id)) {
+                try {
+                    $this->tree->assertActiveFolder($original);
 
-        if ($originalParentId === null) {
-            return $rootId;
+                    return $original;
+                } catch (InvalidDestinationException) {
+                }
+            }
+        }
+        $prechecked = $locked->get(Identity::stringify($precheckedId));
+        if ($prechecked instanceof Node && $this->tree->sameStorage($prechecked, $current->drive_id)) {
+            try {
+                $this->tree->assertActiveFolder($prechecked);
+
+                return $prechecked;
+            } catch (InvalidDestinationException) {
+            }
         }
 
-        $parent = $locked->get(Identity::stringify($originalParentId));
-
-        if (!$parent instanceof Node || !$this->tree->sameStorage($parent, $node->drive_id)) {
-            return $rootId;
-        }
-
-        try {
-            $this->tree->assertActiveFolder($parent);
-        } catch (InvalidDestinationException) {
-            return $rootId;
-        }
-
-        return $parent->id;
-    }
-
-    private function liveSiblingOwnsName(Node $node, int|string $parentId): bool
-    {
-        return $this->nodes->siblingNameExists(
-            storage: $node->storage,
-            parentId: $parentId,
-            name: $node->name,
-            ignoreId: $node->id,
-        );
+        return $this->tree->locked($locked, $rootId);
     }
 }

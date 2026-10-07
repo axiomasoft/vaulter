@@ -6,9 +6,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Vaulter\Access\ExactListing;
+use Vaulter\Data\Drive\ListOptions;
+use Vaulter\Drive\Queries\SharedWithActorQuery;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Exceptions\Nodes\InvalidCursorException;
 use Vaulter\Http\Resources\Drive\NodeResource;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -112,7 +115,7 @@ it('keeps the last inspected key when a full page ends inside an overfetch batch
     expect($names)->toBe(['row-0', 'row-1', 'row-2', 'row-3', 'row-4']);
 });
 
-it('does not skip equal sort values during descending trash pagination', function (): void {
+it('paginates trash in canonical default position name and id order without skipping ties', function (): void {
     $ids = [];
     for ($i = 0; $i < 5; $i++) {
         $ids[] = AccessTestHelpers::folder($this->storage, $this->folder, 'trash-'.$i)->id;
@@ -125,7 +128,7 @@ it('does not skip equal sort values during descending trash pagination', functio
         $found = array_merge($found, array_column($response->json('data'), 'id'));
         $cursor = $response->json('meta.next_cursor');
     } while ($cursor !== null);
-    expect($found)->toBe(array_reverse($ids));
+    expect($found)->toBe($ids);
 });
 
 it('scans shared candidates across storages without totals or denied rows', function (): void {
@@ -144,4 +147,20 @@ it('scans shared candidates across storages without totals or denied rows', func
         $cursor = $response->json('meta.next_cursor');
     } while ($cursor !== null);
     expect($ids)->toContain($visible->id)->not->toContain($hidden->id);
+});
+
+it('SEC-CURSOR binds shared-list cursors to the current actor identity', function (): void {
+    $a = AccessTestHelpers::folder($this->storage, $this->folder, 'z-shared-a');
+    AccessTestHelpers::grant($a, GrantLevel::Reader);
+    $other = AccessTestHelpers::storage();
+    $b = AccessTestHelpers::folder($other, null, 'a-shared-b');
+    AccessTestHelpers::grant($b, GrantLevel::Reader, subjectId: 2);
+    $query = app(SharedWithActorQuery::class);
+    $options = new ListOptions(perPage: 1);
+    $cursor = $query->execute($this->actor, $options)->nextCursor;
+    expect($cursor)->not->toBeNull();
+    $actorB = AccessTestHelpers::user(2);
+    expect(array_column($query->execute($actorB, $options)->items, 'id'))->toContain($b->id);
+    expect(fn () => $query->execute($actorB, $options->cursor($cursor)))
+        ->toThrow(InvalidCursorException::class);
 });

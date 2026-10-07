@@ -56,7 +56,7 @@ beforeEach(function (): void {
 
 function r07cStorage(): Drive
 {
-    return Vaulter::for(DriveTestHelpers::host())->model();
+    return Vaulter::drive(DriveTestHelpers::host())->model();
 }
 
 function r07cDeny(): void
@@ -83,17 +83,17 @@ it('refuses every node guard when the host role driver denies the actor', functi
 
     r07cDeny();
 
-    $this->getJson($base.'/nodes')->assertForbidden();
-    $this->getJson('api/vaulter/nodes/'.$nodeId)->assertForbidden();
-    $this->postJson($base.'/folders', ['name' => 'Nope'])->assertForbidden();
+    $this->getJson($base.'/nodes')->assertNotFound();
+    $this->getJson('api/vaulter/nodes/'.$nodeId)->assertNotFound();
+    $this->postJson($base.'/folders', ['name' => 'Nope'])->assertNotFound();
     $this->postJson($base.'/uploads', [
         'file' => UploadedFile::fake()->createWithContent('nope.txt', 'nope'),
-    ])->assertForbidden();
-    $this->patchJson('api/vaulter/nodes/'.$nodeId, ['name' => 'renamed.txt'])->assertForbidden();
-    $this->postJson('api/vaulter/nodes/'.$nodeId.'/move', ['parent_id' => $folderId])->assertForbidden();
-    $this->postJson('api/vaulter/nodes/'.$nodeId.'/copy', ['name' => 'copy.txt'])->assertForbidden();
-    $this->deleteJson('api/vaulter/nodes/'.$nodeId)->assertForbidden();
-    $this->deleteJson('api/vaulter/nodes/'.$nodeId.'/force')->assertForbidden();
+    ])->assertNotFound();
+    $this->patchJson('api/vaulter/nodes/'.$nodeId, ['name' => 'renamed.txt'])->assertNotFound();
+    $this->postJson('api/vaulter/nodes/'.$nodeId.'/move', ['parent_id' => $folderId])->assertNotFound();
+    $this->postJson('api/vaulter/nodes/'.$nodeId.'/copy', ['name' => 'copy.txt'])->assertNotFound();
+    $this->deleteJson('api/vaulter/nodes/'.$nodeId)->assertNotFound();
+    $this->deleteJson('api/vaulter/nodes/'.$nodeId.'/force')->assertNotFound();
 });
 
 it('refuses restore of a trashed node when the host role driver denies the actor', function (): void {
@@ -104,7 +104,7 @@ it('refuses restore of a trashed node when the host role driver denies the actor
 
     r07cDeny();
 
-    $this->postJson('api/vaulter/nodes/'.$nodeId.'/restore')->assertForbidden();
+    $this->postJson('api/vaulter/nodes/'.$nodeId.'/restore')->assertNotFound();
 });
 
 it('places a folder under the requested parent, not the storage root', function (): void {

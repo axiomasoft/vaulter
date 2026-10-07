@@ -42,6 +42,7 @@ use Vaulter\Models\Concerns\StampsDriveTenant;
  * @property int             $size_bytes
  * @property int|string|null $current_version_id
  * @property int|string|null $file_id
+ * @property int             $sequence
  * @property int             $position
  * @property bool            $is_pinned
  * @property bool            $inherit_grants
@@ -189,6 +190,7 @@ class Node extends Model
             'kind' => NodeKind::class,
             'size_bytes' => 'integer',
             'position' => 'integer',
+            'sequence' => 'integer',
             'is_pinned' => 'boolean',
             'inherit_grants' => 'boolean',
             'trashed_at' => 'datetime',

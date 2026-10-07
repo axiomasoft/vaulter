@@ -40,12 +40,11 @@ final class RenameNodeRequest extends VaulterFormRequest
         return $this->string('name')->toString();
     }
 
-    public function toData(Node $node, int|string|null $actorId): RenameNodeInput
+    public function toData(Node $node): RenameNodeInput
     {
         return new RenameNodeInput(
             node: $node,
             name: $this->name(),
-            actorId: $actorId,
         );
     }
 }

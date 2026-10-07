@@ -28,7 +28,7 @@ final class AccessTestHelpers
      */
     public static function storage(): Drive
     {
-        return Vaulter::for(DriveTestHelpers::host())->model();
+        return Vaulter::drive(DriveTestHelpers::host())->model();
     }
 
     /**

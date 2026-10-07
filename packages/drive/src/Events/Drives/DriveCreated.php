@@ -8,6 +8,7 @@ use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Support\Str;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
+use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
  * A storage container was provisioned for a host entity, together with its
@@ -22,6 +23,8 @@ final readonly class DriveCreated implements ShouldDispatchAfterCommit
         public Node $root,
         public int|string|null $actorId = null,
         ?string $eventId = null,
+        public ?ActorRef $actor = null,
+        public ?string $correlationId = null,
     ) {
         $this->eventId = $eventId ?? (string) Str::ulid();
     }

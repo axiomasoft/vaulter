@@ -14,7 +14,7 @@ it('reads the canonical ulid strategy', function (): void {
 });
 
 it('uses ULID keys when configured', function (): void {
-    $storage = Vaulter::for(DriveTestHelpers::host())->model();
+    $storage = Vaulter::drive(DriveTestHelpers::host())->model();
 
     expect($storage->getKey())->toBeString()
         ->and(strlen((string) $storage->getKey()))->toBe(26);

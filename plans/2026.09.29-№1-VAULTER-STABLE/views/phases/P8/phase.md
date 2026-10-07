@@ -29,6 +29,8 @@ skeleton
 
 **D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.
 
+D29 — обязательные corrections при следующей детализации. Read @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json до разработки contracts; применимые C-rows разворачиваются в concrete owning item files/reads/named tests/exact validation, не остаются note-only. C10: P8.1 final matrix C01–C10 → actual current-candidate receipts/accepted explicit exceptions, cross-package crash/auth/cache/schema regressions. Исторический P2.6 MySQL canonical gate признаётся только своим scope, новые migrations и historical upgrade chain qualified отдельно. P8.2 controlled real-data upgrade/backfill/cutover, preserving revisions/CAS/tenant refs, проверка legacy dispatched ambiguity и rollback/recovery. P8.3 freeze только после essential corrections, owner release gates сохраняются.
+
 ## Depends on
 
 - P7
@@ -65,9 +67,13 @@ skeleton
 
 **D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.
 
+D29 — обязательные corrections при следующей детализации. Read @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json до разработки contracts; применимые C-rows разворачиваются в concrete owning item files/reads/named tests/exact validation, не остаются note-only. C10: P8.1 final matrix C01–C10 → actual current-candidate receipts/accepted explicit exceptions, cross-package crash/auth/cache/schema regressions. Исторический P2.6 MySQL canonical gate признаётся только своим scope, новые migrations и historical upgrade chain qualified отдельно. P8.2 controlled real-data upgrade/backfill/cutover, preserving revisions/CAS/tenant refs, проверка legacy dispatched ambiguity и rollback/recovery. P8.3 freeze только после essential corrections, owner release gates сохраняются.
+
 ## Scope Included (planned)
 
 findings/release-gates.md с логами; upgrade-прогон; release notes, CHANGELOG, теги.
+
+C10: P8.1 final matrix C01–C10 → actual current-candidate receipts/accepted explicit exceptions, cross-package crash/auth/cache/schema regressions. Исторический P2.6 MySQL canonical gate признаётся только своим scope, новые migrations и historical upgrade chain qualified отдельно. P8.2 controlled real-data upgrade/backfill/cutover, preserving revisions/CAS/tenant refs, проверка legacy dispatched ambiguity и rollback/recovery. P8.3 freeze только после essential corrections, owner release gates сохраняются.
 
 ## Scope Excluded
 
@@ -83,6 +89,8 @@ P7 закрыта. Owner gates: публикация (Packagist, npm, split-ре
 - P8.2 — Upgrade на реальных данных (implementation/high)
 - P8.3 — Заморозка: 1.0.0-rc.1 → 1.0.0 (vaulter-release-conductor + решение владельца)
 
+Обязательное расширение scope этих planned items: C10: P8.1 final matrix C01–C10 → actual current-candidate receipts/accepted explicit exceptions, cross-package crash/auth/cache/schema regressions. Исторический P2.6 MySQL canonical gate признаётся только своим scope, новые migrations и historical upgrade chain qualified отдельно. P8.2 controlled real-data upgrade/backfill/cutover, preserving revisions/CAS/tenant refs, проверка legacy dispatched ambiguity и rollback/recovery. P8.3 freeze только после essential corrections, owner release gates сохраняются.
+
 ## Items
 
 | ID | Title | Status | Updated |
@@ -95,3 +103,7 @@ P7 закрыта. Owner gates: публикация (Packagist, npm, split-ре
 ## Mandatory validation/execution policy (D25)
 
 **D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.
+
+## Обязательные forward corrections (D29)
+
+D29 — обязательные corrections при следующей детализации. Read @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json до разработки contracts; применимые C-rows разворачиваются в concrete owning item files/reads/named tests/exact validation, не остаются note-only. C10: P8.1 final matrix C01–C10 → actual current-candidate receipts/accepted explicit exceptions, cross-package crash/auth/cache/schema regressions. Исторический P2.6 MySQL canonical gate признаётся только своим scope, новые migrations и historical upgrade chain qualified отдельно. P8.2 controlled real-data upgrade/backfill/cutover, preserving revisions/CAS/tenant refs, проверка legacy dispatched ambiguity и rollback/recovery. P8.3 freeze только после essential corrections, owner release gates сохраняются.

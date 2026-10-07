@@ -6,10 +6,16 @@ use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Contracts\Cas\StorageDriver;
+use Vaulter\Data\Drive\CopyOptions;
+use Vaulter\Data\Drive\UploadOptions;
+use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Enums\Drive\OnNameConflict;
 use Vaulter\Enums\Events\EventType;
+use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Drive\Drive;
+use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
@@ -60,7 +66,7 @@ beforeEach(function (): void {
 
 function r07ActionStorage(): Drive
 {
-    return Vaulter::for(DriveTestHelpers::host())->model();
+    return Vaulter::drive(DriveTestHelpers::host())->model();
 }
 
 it('accepts an upload that fills the quota exactly and rejects one byte over', function (): void {
@@ -84,12 +90,7 @@ it('accepts an upload that fills the quota exactly and rejects one byte over', f
 it('stores detected MIME separately when the upload source provides no declared type', function (): void {
     $drive = DriveTestHelpers::drive();
 
-    $node = $drive->upload(
-        DriveTestHelpers::streamFor('bytes'),
-        originalName: 'raw.bin',
-        mimeType: null,
-        actorId: 17,
-    );
+    $node = $drive->actingAs(DriveTestHelpers::actor($drive, 17))->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('bytes'), 'raw.bin'), new UploadOptions(declaredMimeType: null));
 
     expect($node->mime_type)->toBe('text/plain')->and($node->currentVersion()->firstOrFail()->declared_mime_type)->toBeNull();
 
@@ -99,13 +100,13 @@ it('stores detected MIME separately when the upload source provides no declared 
         ->and($activity->context['size_bytes'])->toBe(5);
 });
 
-it('404s download for a folder node before streaming', function (): void {
+it('returns not_a_file 422 for a visible folder before streaming', function (): void {
     $storage = r07ActionStorage();
     $folderId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/folders', ['name' => 'NoDownload'])
         ->assertCreated()
         ->json('data.id');
 
-    $this->get('api/vaulter/nodes/'.$folderId.'/download')->assertNotFound();
+    $this->getJson('api/vaulter/nodes/'.$folderId.'/download')->assertStatus(422)->assertJsonPath('code', 'not_a_file');
 });
 
 it('sets Content-Length to the blob size and streams the exact bytes', function (): void {
@@ -125,7 +126,7 @@ it('sets Content-Length to the blob size and streams the exact bytes', function 
         ->and($response->streamedContent())->toBe($payload);
 });
 
-it('409s copy when the destination already owns the requested name', function (): void {
+it('rejects explicit Fail copy conflicts atomically and renames default HTTP conflicts', function (): void {
     $storage = r07ActionStorage();
     $base = 'api/vaulter/storages/'.$storage->getKey();
 
@@ -138,20 +139,28 @@ it('409s copy when the destination already owns the requested name', function ()
         'name' => 'source.txt',
     ])->assertCreated()->json('data.id');
 
+    $drive = Vaulter::drive($storage)->asSystem('explicit conflict acceptance');
+    $beforeCount = Node::query()->count();
+    $beforeBytes = $storage->refresh()->used_bytes;
+    expect(fn () => $drive->nodes()->copy($source, $folder, new CopyOptions(name: 'Twin', onConflict: OnNameConflict::Fail)))
+        ->toThrow(NodeNameConflictException::class)
+        ->and(Node::query()->count())->toBe($beforeCount)
+        ->and($storage->refresh()->used_bytes)->toBe($beforeBytes);
+
     $this->postJson('api/vaulter/nodes/'.$source.'/copy', [
         'parent_id' => $folder,
         'name' => 'Twin',
-    ])->assertStatus(409)->assertJsonPath('code', 'node_name_conflict')->assertJsonValidationErrors('name');
+    ])->assertCreated()->assertJsonPath('data.name', 'Twin (2)');
 });
 
 it('deep-copies every live descendant and charges the summed logical bytes', function (): void {
     $drive = DriveTestHelpers::drive();
-    $root = $drive->createFolder('Root');
-    $child = $drive->createFolder('Child', $root);
-    $drive->upload(DriveTestHelpers::streamFor('abc'), into: $child, originalName: 'leaf.bin');
+    $root = $drive->folders()->create('Root');
+    $child = $drive->folders()->create('Child', $root);
+    $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('abc'), 'leaf.bin'), new UploadOptions(parent: $child));
     $used = $drive->model()->refresh()->used_bytes;
 
-    $copy = $drive->copy($root, name: 'Root copy');
+    $copy = $drive->nodes()->copy($root, destination: null, options: new CopyOptions(name: 'Root copy'));
 
     expect($copy->children()->sole()->name)->toBe('Child')
         ->and($copy->children()->sole()->children()->sole()->name)->toBe('leaf.bin')
@@ -160,17 +169,17 @@ it('deep-copies every live descendant and charges the summed logical bytes', fun
 
 it('rename to the same name emits no rename activity or outbox row', function (): void {
     $drive = DriveTestHelpers::drive();
-    $folder = $drive->createFolder('Stable');
+    $folder = $drive->folders()->create('Stable');
 
     Activity::query()->delete();
     Outbox::query()->delete();
 
-    $drive->rename($folder, 'Stable', actorId: 17);
+    $drive->actingAs(DriveTestHelpers::actor($drive, 17))->nodes()->rename($folder, 'Stable');
 
     expect(Activity::query()->where('verb', EventType::NodeRenamed->value)->count())->toBe(0)
         ->and(Outbox::query()->where('event', EventType::NodeRenamed->value)->count())->toBe(0);
 
-    $drive->rename($folder, 'Renamed', actorId: 17);
+    $drive->actingAs(DriveTestHelpers::actor($drive, 17))->nodes()->rename($folder, 'Renamed');
 
     expect(Activity::query()->where('verb', EventType::NodeRenamed->value)->count())->toBe(1)
         ->and(Outbox::query()->where('event', EventType::NodeRenamed->value)->count())->toBe(1);

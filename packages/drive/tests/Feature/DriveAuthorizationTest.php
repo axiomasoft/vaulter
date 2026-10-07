@@ -15,7 +15,7 @@ use Vaulter\Tests\Fixtures\Access\ProfileCreateGate;
 use Vaulter\Tests\Fixtures\TestUser;
 
 /**
- * The Drive REST surface UNDER the ACL (M2a / H.2): an unauthorised actor is 403'd,
+ * The Drive REST surface UNDER the ACL (M2a / H.2): hidden nodes return 404,
  * an authorised one passes, the per-node grant API grants/revokes, and the node
  * "abilities" object mirrors the resolver. Runs on the standalone database driver so
  * a grant is the only thing that opens a door.
@@ -28,15 +28,15 @@ beforeEach(function (): void {
 
 function authStorage(): Drive
 {
-    return Vaulter::for(DriveTestHelpers::host())->model();
+    return Vaulter::drive(DriveTestHelpers::host())->model();
 }
 
-it('blocks an unauthorised show with 403', function (): void {
+it('hides an unauthorised show with 404', function (): void {
     $storage = authStorage();
     $folder = AccessTestHelpers::folder($storage, null, 'secret');
 
     $this->getJson('api/vaulter/nodes/'.$folder->getKey())
-        ->assertStatus(403);
+        ->assertStatus(404);
 });
 
 it('allows an authorised show when the actor holds a grant', function (): void {
@@ -51,12 +51,12 @@ it('allows an authorised show when the actor holds a grant', function (): void {
         ->assertJsonPath('data.id', $folder->getKey());
 });
 
-it('blocks an unauthorised folder create with 403', function (): void {
+it('hides an unauthorised folder-create destination with 404', function (): void {
     $storage = authStorage();
 
-    // No CREATE grant on the root ⇒ the create is denied.
+    // The root is hidden without a View grant.
     $this->postJson('api/vaulter/storages/'.$storage->getKey().'/folders', ['name' => 'Nope'])
-        ->assertStatus(403);
+        ->assertStatus(404);
 });
 
 it('allows a folder create when the actor may create at the destination', function (): void {
@@ -179,7 +179,7 @@ it('denies a download without a grant and allows it with one', function (): void
 
     // A second actor (id 99) with no grant cannot download.
     $this->actingAs((new TestUser)->forceFill(['id' => 99]));
-    $this->get('api/vaulter/nodes/'.$nodeId.'/download')->assertStatus(403);
+    $this->get('api/vaulter/nodes/'.$nodeId.'/download')->assertStatus(404);
 
     // The uploader (Writer ⇒ READ bit) can — streamed through PHP (P1.2 /
     // F-P1.3-01 removed the presign-redirect branch: even a disk that can mint a

@@ -1,0 +1,51 @@
+{
+  "ready": true,
+  "review_state": "resolved-direct-session",
+  "completed_rounds": 2,
+  "requested_next_review": {
+    "provider": "grok",
+    "model": "grok-4.7",
+    "effort": "high",
+    "context_parameter": "omit",
+    "max_rounds": 1,
+    "scope": [
+      "packages/core/src/Repositories/Drive/NodeReadRepository.php",
+      "packages/drive/src/Actions/Nodes/NameConflictResolver.php",
+      "packages/drive/tests/PublicApi/OperationMatrixTest.php"
+    ],
+    "reuse": "round2 coherent whole-item coverage except the three-file predicate correction; 194 other current file hashes unchanged",
+    "state": "superseded-by-owner-direct-session-instruction"
+  },
+  "fix": "sibling existence and retrieval share the exact same private canonical query with mb_strtolower bound value; no parallel spelling of predicate",
+  "tests": {
+    "drive_affected_regression": "93 passed, 420 assertions, SQLite, zero skips",
+    "core_name_and_search_regression": "27 passed, 47 assertions, SQLite",
+    "supported_core_phpstan": "exit 0, zero errors",
+    "supported_drive_phpstan": "exit 0, zero errors",
+    "pint_three_scope_files": "exit 0",
+    "postgresql_locked_AddRevision": "1 passed, 15 assertions, zero skips; distinct processes/backend PIDs asserted"
+  },
+  "candidate": {
+    "head": "3fd82526c0baa2d975ed6eda50487b75c6e68d51",
+    "dirty_digest": "2a2f0e5f9f7eb6f632e9be641dc363bec9ea5cf813f7b56360ed7f233c4f7fdb"
+  },
+  "resolved": true,
+  "resolved_at": "2026-10-07T06:04:05.009854+00:00",
+  "direct_session_review": {
+    "verdict": "GREEN",
+    "independent": false,
+    "delegation": false,
+    "evidence": "direct-session-verdict.json",
+    "checks": "direct-session-checks.json",
+    "owner_instruction": "но делай не через субагент, а прямо в этой сессии"
+  },
+  "previous_tests": {
+    "unicode_original": "exact lowercase stored/uppercase input pair RED, ASCII/NFC preceding datasets GREEN",
+    "owning_regression": "81GREEN213assertions SQLite",
+    "supported_core_phpstan": "0",
+    "supported_drive_phpstan": "0",
+    "pint_core_changed1": "0",
+    "pint_drive_changed2": "0",
+    "postgresql_locked_AddRevision": "1GREEN15assertions,zero skips, distinctprocesses/backendpids; current shared predicate"
+  }
+}

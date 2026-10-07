@@ -28,6 +28,8 @@ final readonly class NodeLocator
         $query = $this->query($context);
         if ($includeTrashed) {
             $query->withTrashed();
+        } else {
+            $query->whereNull('trashed_at');
         }
         $node = $query->whereKey($id)->first();
 

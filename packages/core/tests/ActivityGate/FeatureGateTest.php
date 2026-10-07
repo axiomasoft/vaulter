@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
@@ -19,8 +20,8 @@ it('records NOTHING when the activity feature is disabled', function (): void {
     // Provisioning a storage + creating a folder + uploading all fire audited
     // events; with the gate off none of them is recorded.
     $drive = DriveTestHelpers::drive();
-    $drive->createFolder('quiet');
-    $drive->upload(DriveTestHelpers::streamFor('bytes'), originalName: 'x.txt');
+    $drive->folders()->create('quiet');
+    $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('bytes'), 'x.txt'));
 
     expect(Activity::query()->count())->toBe(0);
 });

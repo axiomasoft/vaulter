@@ -15,10 +15,10 @@ beforeEach(function (): void {
 
 it('stages three distinct occurrences for rename A to B to A to B', function (): void {
     $drive = DriveTestHelpers::drive();
-    $node = $drive->createFolder('A');
+    $node = $drive->folders()->create('A');
 
     foreach (['B', 'A', 'B'] as $name) {
-        $drive->rename($node->refresh(), $name);
+        $drive->nodes()->rename($node->refresh(), $name);
     }
 
     $rows = Outbox::query()->where('topic', (string) $node->getKey())
@@ -37,11 +37,11 @@ it('stages three distinct occurrences for rename A to B to A to B', function ():
 
 it('stages three distinct occurrences for trash restore trash', function (): void {
     $drive = DriveTestHelpers::drive();
-    $node = $drive->createFolder('Lifecycle');
+    $node = $drive->folders()->create('Lifecycle');
 
-    $drive->trash($node);
-    $drive->restore($node->refresh());
-    $drive->trash($node->refresh());
+    $drive->nodes()->trash($node);
+    $drive->trash()->restore($node->refresh());
+    $drive->nodes()->trash($node->refresh());
 
     $rows = Outbox::query()->where('topic', (string) $node->getKey())
         ->whereIn('event', [EventType::NodeTrashed->value, EventType::NodeRestored->value])
@@ -62,7 +62,7 @@ it('stages three distinct occurrences for trash restore trash', function (): voi
 });
 
 it('stages one row when the same event occurrence is dispatched twice', function (): void {
-    $node = DriveTestHelpers::drive()->createFolder('A');
+    $node = DriveTestHelpers::drive()->folders()->create('A');
     $event = new NodeRenamed(node: $node, fromName: 'A', toName: 'B');
 
     event($event);

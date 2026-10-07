@@ -19,12 +19,14 @@ use Vaulter\Enums\Events\EventType;
 use Vaulter\Http\Middleware\RecordVaulterRequestMetrics;
 use Vaulter\Load\Listeners\RecordBroadcastQueueWait;
 use Vaulter\Load\Observability\CollaborationRoomMetrics;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Support\LoadTier;
 use Vaulter\Testing\FakeMetricsRecorder;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\ValueObjects\Access\Actor;
 
 beforeEach(function (): void {
     config()->set('vaulter.observability.enabled', true);
@@ -129,13 +131,17 @@ it('records vaulter_broadcast_queue_wait_seconds for queued broadcast jobs', fun
 
 it('records vaulter_subtree_nodes_touched during move cycle guard', function (): void {
     $drive = DriveTestHelpers::drive();
-    $parent = $drive->createFolder('parent');
-    $child = $drive->createFolder('child', $parent);
+    $parent = $drive->folders()->create('parent');
+    $child = $drive->folders()->create('child', $parent);
 
-    expect(fn () => app(MoveNodeAction::class)->execute(new MoveNodeInput(
+    $context = new OperationContext(
+        drive: $drive->model(),
+        actor: Actor::user(DriveTestHelpers::actor($drive, 1)),
+        correlationId: 'subtree-metrics',
+    );
+    expect(fn () => app(MoveNodeAction::class)->execute($context, new MoveNodeInput(
         node: $parent,
         into: $child,
-        actorId: 1,
     )))->toThrow(NodeCycleException::class);
 
     app(MetricsRecorder::class)->assertHistogram(

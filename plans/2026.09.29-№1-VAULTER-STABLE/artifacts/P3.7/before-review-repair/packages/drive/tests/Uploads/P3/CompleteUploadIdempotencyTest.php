@@ -1,0 +1,146 @@
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Support\Facades\Storage;
+use Vaulter\Contracts\Drive\DriveHandleFactory;
+use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
+use Vaulter\Drive\Content\UploadCleanupReconciler;
+use Vaulter\Drive\Enums\Uploads\UploadStatus;
+use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
+use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
+use Vaulter\Drive\Uploads\Inspection\MimeSniffer;
+use Vaulter\Drive\Uploads\StagedUpload;
+use Vaulter\Drive\Uploads\TusUploadHandler;
+use Vaulter\Drive\Uploads\UploadSessionManager;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Models\Drive\FileRevision;
+use Vaulter\Operations\OperationContext;
+use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\ValueObjects\Access\Actor;
+
+beforeEach(fn () => Storage::set('local', Storage::fake('uploads-p37-'.getmypid())));
+
+function assembledIdempotencyUpload(): UploadSession
+{
+    $drive = UploadTestHelpers::storage();
+    $session = UploadTestHelpers::session($drive, totalSizeBytes: 4, targetName: 'once.txt', parentId: $drive->root_node_id);
+    app(TusUploadHandler::class)->patch(session: $session, chunk: UploadTestHelpers::streamFor('once'), offset: 0);
+
+    return app(UploadSessionManager::class)->markAssembled($session->refresh());
+}
+
+it('SEC-R19-replay replays persisted exact revision after a newer head and without staging', function (): void {
+    $session = assembledIdempotencyUpload();
+    $context = OperationContext::system($session->storage, 'upload test');
+    $node = app(CompleteUploadAction::class)->execute(context: $context, session: $session);
+    $revisionId = $session->refresh()->result_revision_id;
+    app(DriveHandleFactory::class)->forDrive($context->drive)->asSystem('upload test')->files()->addRevision(file: $node, source: UploadSource::fromStream(UploadTestHelpers::streamFor('new head'), 'new.txt'));
+    $session->forceFill(['metadata' => [...($session->metadata ?? []), 'correlation_id' => 'ignored']])->save();
+    $replayed = app(CompleteUploadAction::class)->execute(context: $context, session: $session);
+    expect($replayed->id)->toBe($node->id)->and(FileRevision::query()->count())->toBe(2)
+        ->and($session->refresh()->result_blob_id)->toBe($session->assembled_blob_id)
+        ->and($session->result_revision_id)->toBe($revisionId)
+        ->and(app(StagedUpload::class)->size($session))->toBe(0);
+});
+
+it('SEC-CLEANUP-input-fingerprint rejects changed completion intent and corrupt authoritative pointers without ingest', function (): void {
+    $session = assembledIdempotencyUpload();
+    $context = OperationContext::system($session->storage, 'upload test');
+    app(CompleteUploadAction::class)->execute(context: $context, session: $session);
+    $session->refresh()->forceFill(['target_name' => 'different.txt']);
+    expect(fn () => app(CompleteUploadAction::class)->execute(context: $context, session: $session))->toThrow(UploadConflictException::class);
+    $session->refresh()->forceFill(['result_blob_id' => null])->save();
+    expect(fn () => app(CompleteUploadAction::class)->execute(context: $context, session: $session))->toThrow(UploadConflictException::class);
+    expect(FileRevision::query()->count())->toBe(1);
+});
+
+it('SEC-R13 keeps protocol bytes until outer commit and retains them after outer rollback', function (): void {
+    $session = assembledIdempotencyUpload();
+    $context = OperationContext::system($session->storage, 'upload test');
+    expect(fn () => app(VaulterDatabase::class)->transaction(function () use ($context, $session): void {
+        app(CompleteUploadAction::class)->execute(context: $context, session: $session);
+        expect($session->refresh()->cleanup_pending)->toBeTrue()->and(app(StagedUpload::class)->size($session))->toBe(4);
+        throw new RuntimeException('outer rollback');
+    }, attempts: 1))->toThrow(RuntimeException::class, 'outer rollback');
+    expect($session->refresh()->status)->toBe(UploadStatus::Assembled)
+        ->and($session->result_revision_id)->toBeNull()->and(FileRevision::query()->count())->toBe(0)
+        ->and(app(StagedUpload::class)->size($session))->toBe(4);
+    app(CompleteUploadAction::class)->execute(context: $context, session: $session);
+    expect(FileRevision::query()->count())->toBe(1);
+});
+
+it('SEC-CLEANUP-success-before-flag-clear treats missing committed staging as idempotent recovery and never creates another revision', function (): void {
+    $session = assembledIdempotencyUpload();
+    app(CompleteUploadAction::class)->execute(context: OperationContext::system($session->storage, 'upload test'), session: $session);
+    $session->refresh()->forceFill(['cleanup_pending' => true, 'cleanup_available_at' => now()])->save();
+    $result = app(UploadCleanupReconciler::class)->reconcile(limit: 1, driveIds: [$session->drive_id]);
+    expect($result['cleanup_completed'])->toBe(1)->and($session->refresh()->cleanup_pending)->toBeFalse()
+        ->and(FileRevision::query()->count())->toBe(1);
+});
+
+it('SEC-CLEANUP-delete-failure keeps failed postcommit deletion recoverable while completion remains successful', function (): void {
+    $session = assembledIdempotencyUpload();
+    $disk = Storage::disk('local');
+    $proxy = Mockery::mock($disk);
+    $proxy->shouldReceive('delete')->with(app(StagedUpload::class)->keyFor($session))->andReturnFalse();
+    Storage::set('local', $proxy);
+    $node = app(CompleteUploadAction::class)->execute(context: OperationContext::system($session->storage, 'upload test'), session: $session);
+    expect($node->exists)->toBeTrue()->and($session->refresh()->status)->toBe(UploadStatus::Committed)
+        ->and($session->cleanup_pending)->toBeTrue()->and($session->cleanup_attempts)->toBe(1);
+    Storage::set('local', $disk);
+    $session->forceFill(['cleanup_available_at' => now()])->save();
+    expect(app(UploadCleanupReconciler::class)->reconcile(limit: 1, driveIds: [$session->drive_id])['cleanup_completed'])->toBe(1)
+        ->and(FileRevision::query()->count())->toBe(1);
+});
+
+it('SEC-CLEANUP-sniff-throw closes the acquired protocol reader and its own preparation', function (): void {
+    $session = assembledIdempotencyUpload();
+    $disk = Storage::disk('local');
+    $reader = $disk->readStream(app(StagedUpload::class)->keyFor($session));
+    $proxy = Mockery::mock($disk);
+    $proxy->shouldReceive('readStream')->with(app(StagedUpload::class)->keyFor($session))->andReturn($reader);
+    Storage::set('local', $proxy);
+    $sniffer = Mockery::mock(new MimeSniffer);
+    $sniffer->shouldReceive('detect')->andThrow(new RuntimeException('sniff failed'));
+    app()->instance(MimeSniffer::class, $sniffer);
+    $before = glob(sys_get_temp_dir().'/vaulter-upload-*');
+    expect(fn () => app(CompleteUploadAction::class)->execute(context: OperationContext::system($session->storage, 'upload test'), session: $session))
+        ->toThrow(RuntimeException::class, 'sniff failed');
+    expect(is_resource($reader))->toBeFalse()->and(glob(sys_get_temp_dir().'/vaulter-upload-*'))->toBe($before)
+        ->and($session->refresh()->status)->toBe(UploadStatus::Assembled)->and(FileRevision::query()->count())->toBe(0);
+    Storage::set('local', $disk);
+    expect(app(StagedUpload::class)->size($session))->toBe(4);
+});
+
+it('backfills only provable legacy revision pointers and never guesses the newer head', function (): void {
+    $session = assembledIdempotencyUpload();
+    $context = OperationContext::system($session->storage, 'upload test');
+    $node = app(CompleteUploadAction::class)->execute(context: $context, session: $session);
+    $session->refresh()->forceFill(['result_blob_id' => null, 'input_fingerprint' => null])->save();
+    $replayed = app(CompleteUploadAction::class)->execute(context: $context, session: $session);
+    expect($replayed->id)->toBe($node->id)->and($session->refresh()->input_fingerprint)->not->toBeNull()
+        ->and($session->result_blob_id)->toBe($session->assembled_blob_id)->and(FileRevision::query()->count())->toBe(1);
+});
+
+it('SEC-CLEANUP-revoked-result requires fresh View and rejects another actor and foreign drive', function (): void {
+    $session = assembledIdempotencyUpload();
+    $user = AccessTestHelpers::user(991);
+    $session->forceFill(['created_by' => $user->getKey(), 'metadata' => ['actor_type' => $user->getMorphClass()]])->save();
+    $context = new OperationContext(drive: $session->storage, actor: Actor::user($user), correlationId: 'upload-current-auth');
+    $node = app(CompleteUploadAction::class)->execute(context: $context, session: $session);
+    $other = new OperationContext(drive: $context->drive, actor: Actor::user(AccessTestHelpers::user(992)), correlationId: 'other-owner');
+    expect(fn () => app(CompleteUploadAction::class)->execute(context: $other, session: $session->refresh()))->toThrow(PermissionDeniedException::class);
+    $foreign = OperationContext::system(UploadTestHelpers::storage(), 'foreign upload');
+    expect(fn () => app(CompleteUploadAction::class)->execute(context: $foreign, session: $session->refresh()))->toThrow(NodeNotFoundException::class);
+    config()->set('vaulter.access.permission_driver', 'database');
+    expect(fn () => app(CompleteUploadAction::class)->execute(context: $context, session: $session->refresh()))->toThrow(NodeNotFoundException::class);
+    config()->set('vaulter.access.permission_driver', 'null');
+    $node->forceFill(['trashed_at' => now()])->save();
+    expect(fn () => app(CompleteUploadAction::class)->execute(context: $context, session: $session->refresh()))->toThrow(NodeNotFoundException::class);
+    expect(FileRevision::query()->count())->toBe(1);
+});

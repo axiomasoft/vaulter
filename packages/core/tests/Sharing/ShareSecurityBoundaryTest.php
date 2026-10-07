@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Contracts\Cas\StorageDriver;
+use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Enums\Access\GrantLevel;
@@ -99,8 +100,8 @@ it('denies every new resolution after revoke commit on independent connections',
 
 it('checks the public download availability hook before opening bytes and keeps metadata visible', function (): void {
     Storage::fake('local');
-    $drive = Vaulter::for(DriveTestHelpers::host());
-    $node = $drive->upload(DriveTestHelpers::streamFor('quarantined'), originalName: 'sample.txt');
+    $drive = Vaulter::drive(DriveTestHelpers::host())->asSystem('test fixture');
+    $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('quarantined'), 'sample.txt'));
     $revision = $node->currentVersion()->firstOrFail();
     $revision->forceFill(['scan_status' => 'pending'])->save();
     config()->set('vaulter.scan.mode', 'all_content');

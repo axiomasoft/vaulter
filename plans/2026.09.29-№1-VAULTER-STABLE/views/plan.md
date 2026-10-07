@@ -57,6 +57,8 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 `Vaulter::drive($owner)->actingAs($user)->…` (P3), модель данных и документы (P4), конвейер событий (P5), REST v1 и
 клиенты (P6), эксплуатация и DX (P7), release-гейты и заморозка (P8). Карта фаз — `@plan/plan.json`.
 
+**Research corrections (D26=C, D27=A, D28=A, D29).** Обязательный нормативный вход всех remaining designs P3–P8: @plan/knowledge/security-correction-contract.json; repository assessment: @plan/knowledge/implementation-security-assessment-2026-10-06.json. Каждая применимая C01–C10 строка получает owning item scope/files/Required Read/acceptance при детализации; отчёт исследования сам по себе не закрывает correction. P3 supplemental design reconciliation — следующий шаг до product run, сохраняющий lifecycle state detailed и historical RED. P5 добавляет P5.3 recoverable fan-out. P8.1 собирает actual qualification matrix, P8.3 не freeze с essential unresolved correction. Closed P0/P1/P2 не переписываются; исправления прежнего кода выполняются будущими owning items. Explicit accepted amendments имеют приоритет над literal OPUS только в описанной delta; OPUS bytes/owners неизменны.
+
 ## Rules
 
 - **Норматив — OPUS** (D01). Код расходится с досье → стоп и описание расхождения в Completion Notes/эскалации, не
@@ -103,6 +105,7 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 - **Review (D25).** Нет blanket per-item независимого review: только применимый explicit request или принятый фазовый audit. Fresh read-only exact native route, изменённый продукт/нормы/dependencies/validation без executor history; первая проверка по scope, re-review только findings+новая delta/closure. Не больше 2 completed rounds и одной owning correction. Применимые прежние owner waivers и честные historical verdicts сохраняются.
 - **Mutation tools исключены (D25).** Infection/Pest --mutate/Composer mutation aliases/wrappers/mutation workflow dispatch/score remediation не входят в PLAN2. Общие full-CI gates трактуются без mutation lanes; регрессии с Mutation в имени и ограниченные negative controls сохранены. Не dispatch workflows с активирующимися mutation jobs.
 - **Экономика и контекст (D25).** Canonical context хранить в файле; в основном контексте — текущие нормы/decisions/короткие итоги. Свежие агенты — independent research/detailed QA. Единый evidence writer; generation заканчивается до lint. Повтор проверки — по изменившимся inputs, не по одному global SHA; reuse явно с original receipt и dependency proof. Phase/block boundary заранее объявлена, future issues отдельно.
+- **Research corrections (D26=C, D27=A, D28=A, D29).** Обязательный нормативный вход всех remaining designs P3–P8: @plan/knowledge/security-correction-contract.json; repository assessment: @plan/knowledge/implementation-security-assessment-2026-10-06.json. Каждая применимая C01–C10 строка получает owning item scope/files/Required Read/acceptance при детализации; отчёт исследования сам по себе не закрывает correction. P3 supplemental contracts завершены в @plan/knowledge/P3-security-contracts.json; design audit repaired closure GREEN (F12/F13) в @plan/knowledge/audit-design-2026-10-06-p3-green.json. Historical RED сохранён. Это не phase audit и не product qualification; runtime run-items не запускает исполнение. P5 добавляет P5.3 recoverable fan-out. P8.1 собирает actual qualification matrix, P8.3 не freeze с essential unresolved correction. Closed P0/P1/P2 не переписываются; исправления прежнего кода выполняются будущими owning items. Explicit accepted amendments имеют приоритет над literal OPUS только в описанной delta; OPUS bytes/owners неизменны.
 
 ## Phases
 
@@ -111,7 +114,7 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 | P0 | Основа: окружение, базовая линия, харнесс конкурентности, фикстура 0.2, ADR | detailed | 4/4 | 🟠 Done with deviations |
 | P1 | Исправления T0 на текущих именах | detailed | 11/11 | 🟠 Done with deviations |
 | P2 | Канон имён и конфигурации | detailed | 7/7 | 🟠 Done with deviations |
-| P3 | Прикладной слой: авторизованный публичный API | skeleton | 0/0 | ⬜ Skeleton |
+| P3 | Прикладной слой: авторизованный публичный API | detailed | 8/8 | 🟢 Done |
 | P4 | Модель данных и документы | skeleton | 0/0 | ⬜ Skeleton |
 | P5 | Конвейер событий | skeleton | 0/0 | ⬜ Skeleton |
 | P6 | HTTP v1 и клиенты | skeleton | 0/0 | ⬜ Skeleton |
@@ -147,3 +150,7 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 | D23 | P2.4: exact temporary Hocuspocus runtime key allowance until P2.5 | accepted | 2026-10-06 |
 | D24 | P2.5 executable configuration boundaries and immutable v0.2 fixture | accepted | 2026-10-06 |
 | D25 | Impact-based checks, phase barriers and no mutation testing | accepted | 2026-10-06 |
+| D26 | P3/F05: legacy not_required — трактовка OPUS 09 §6 и OPUS D18 | accepted | 2026-10-06 |
+| D27 | P3/F06: system обходит только ACL, ProfileRestriction остаётся | accepted | 2026-10-06 |
+| D28 | P3/F08: amend D03/P4.7 — sequence foundation переносится в P3.3 | accepted | 2026-10-06 |
+| D29 | Research adoption: обязательные forward corrections P3–P8 и durable delivery | accepted | 2026-10-06 |

@@ -15,7 +15,10 @@ use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionStoreRepository;
 use Vaulter\Documents\ValueObjects\TipTapContent;
+use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Operations\NodeSequence;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
+use Vaulter\Support\TreeGuard;
 
 /**
  * Write a document node's content — the AUTOSAVE path (§2.5 / M4a). Within the
@@ -35,15 +38,13 @@ final readonly class UpdateDocumentContentAction
         private NodeStoreRepository $nodes,
         private VaulterDatabase $database,
         private DocumentsConfig $documentsConfig,
+        private TreeGuard $tree,
+        private NodeSequence $sequence,
     ) {}
 
     public function execute(UpdateDocumentContentInput $data): DocumentRevision
     {
         $node = $data->node;
-
-        if (!$node->kind->isDocument()) {
-            throw NotADocumentException::forNode($node->getKey());
-        }
 
         // F-P1.11-05: the ADR-0004 size limit was defined but never enforced at save
         // time — check it before the transaction, not just at the UI layer. Content
@@ -54,10 +55,32 @@ final readonly class UpdateDocumentContentAction
         }
 
         return $this->database->transaction(function () use ($node, $data): DocumentRevision {
+            $driveId = $node->getRawOriginal('drive_id');
+            $nodeId = $node->getRawOriginal($node->getKeyName());
+            if (!$node->exists || (!is_int($nodeId) && !is_string($nodeId)) || $nodeId === ''
+                || (!is_int($driveId) && !is_string($driveId)) || $driveId === '') {
+                throw NodeNotFoundException::forId('unpersisted');
+            }
+            $this->database->lockTreeShared($driveId);
+            $current = $this->tree->locked($this->tree->lock([$nodeId]), $nodeId);
+            if (!$this->tree->sameStorage($current, $driveId)) {
+                throw NodeNotFoundException::forId($nodeId);
+            }
+            if (!$current->kind->isDocument()) {
+                throw NotADocumentException::forNode($nodeId);
+            }
+            $node = $this->tree->sync($node, $current);
+            $this->sequence->assertExpected(locked: $node, expected: $data->expectedSequence);
             $head = $this->read->head($node);
 
             if ($head !== null && $this->shouldOverwrite($head)) {
-                $version = $this->store->update($head, $this->payload($data));
+                $payload = $this->payload($data);
+                if ($head->content == $payload['content'] && $head->content_hash === $payload['content_hash']
+                    && $head->yjs_state === $payload['yjs_state'] && $head->yjs_state_size === $payload['yjs_state_size']) {
+                    return $head;
+                }
+                $version = $this->store->update($head, $payload);
+                $this->sequence->bump(locked: $node);
 
                 event(new DocumentContentUpdated(
                     node: $node,
@@ -90,6 +113,7 @@ final readonly class UpdateDocumentContentAction
                 max: $this->documentsConfig->revisionLimit(),
                 headId: $version->getKey(),
             );
+            $this->sequence->bump(locked: $node);
 
             event(new DocumentContentUpdated(
                 node: $node,

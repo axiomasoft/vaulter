@@ -20,7 +20,7 @@ PLAN2 · layout v4 · 🟡 Active. JSON files are the source of truth; the Markd
 - [P0](phases/P0/phase.md) — Основа: окружение, базовая линия, харнесс конкурентности, фикстура 0.2, ADR · 🟠 Done with deviations
 - [P1](phases/P1/phase.md) — Исправления T0 на текущих именах · 🟠 Done with deviations
 - [P2](phases/P2/phase.md) — Канон имён и конфигурации · 🟠 Done with deviations
-- [P3](phases/P3/phase.md) — Прикладной слой: авторизованный публичный API · ⬜ Skeleton
+- [P3](phases/P3/phase.md) — Прикладной слой: авторизованный публичный API · 🟢 Done
 - [P4](phases/P4/phase.md) — Модель данных и документы · ⬜ Skeleton
 - [P5](phases/P5/phase.md) — Конвейер событий · ⬜ Skeleton
 - [P6](phases/P6/phase.md) — HTTP v1 и клиенты · ⬜ Skeleton

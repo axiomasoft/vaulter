@@ -29,7 +29,7 @@ beforeEach(function (): void {
 
 function readPathStorage(): Drive
 {
-    return Vaulter::for(DriveTestHelpers::host())->model();
+    return Vaulter::drive(DriveTestHelpers::host())->model();
 }
 
 /**

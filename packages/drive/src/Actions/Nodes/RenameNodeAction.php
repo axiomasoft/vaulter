@@ -8,8 +8,12 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Nodes\RenameNodeInput;
 use Vaulter\Drive\Events\Nodes\NodeRenamed;
+use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\NodeLocator;
+use Vaulter\Operations\NodeSequence;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\NodeName;
@@ -20,8 +24,7 @@ use Vaulter\Support\TreeGuard;
  * its current parent (the node itself is excluded from the check). The root is
  * never renamed; the check runs against the locked row.
  *
- * Authorization (M2a / H.2) is enforced upstream at the HTTP controller
- * boundary (NodeController + AccessResolver); this Action stays pure.
+ * Operations authorize before this command; locked invariants remain in the Action.
  */
 final readonly class RenameNodeAction
 {
@@ -33,19 +36,23 @@ final readonly class RenameNodeAction
         private DriveConfig $driveConfig,
     ) {}
 
-    public function execute(RenameNodeInput $data): Node
+    public function execute(OperationContext $context, RenameNodeInput $data): Node
     {
-        $node = $data->node;
+        $node = app(NodeLocator::class)->find(context: $context, key: $data->node);
         $name = NodeName::normalize(name: $data->name, maxLength: $this->driveConfig->nameMaxLength());
 
-        return $this->database->transaction(function () use ($node, $name, $data): Node {
+        return $this->database->transaction(function () use ($node, $name, $data, $context): Node {
             $this->database->lockTreeShared($node->drive_id);
-            $current = $this->tree->sync($node, $this->tree->locked($this->tree->lock([$node->id]), $node->id));
+            // A move may have completed before the tree lock was acquired. Locate
+            // its current parent now and lock the full set in primary-key order.
+            $fresh = app(NodeLocator::class)->find(context: $context, key: $node->id);
+            $locked = $this->tree->lock([$fresh->id, $fresh->parent_id]);
+            $current = $this->tree->sync($node, $this->tree->locked($locked, $fresh->id));
+            app(NodeSequence::class)->assertExpected(locked: $current, expected: $data->expectedSequence);
+            if ($current->trashed_at !== null) {
+                throw InvalidDestinationException::trashed($current);
+            }
 
-            // The parent row is locked too, so a create into the same folder cannot claim
-            // the new name between the sibling check and the UPDATE. Locking upward from
-            // the node cannot cycle: the tree is acyclic and moves are excluded.
-            $this->tree->lock([$current->parent_id]);
             $this->tree->assertNotRoot(node: $current, operation: 'rename');
 
             $fromName = $current->name;
@@ -67,11 +74,13 @@ final readonly class RenameNodeAction
 
             $renamed = $this->store->rename(node: $current, name: $name);
 
+            app(NodeSequence::class)->bump($renamed);
+
             event(new NodeRenamed(
                 node: $renamed,
                 fromName: $fromName,
                 toName: $name,
-                actorId: $data->actorId,
+                actorId: $context->actor->ref()->id, actor: $context->actor->ref(), correlationId: $context->correlationId,
             ));
 
             return $renamed;

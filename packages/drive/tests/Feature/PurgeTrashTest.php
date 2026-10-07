@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage as StorageFacade;
+use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\Node;
@@ -52,8 +53,8 @@ it('leaves a node still inside the retention window untouched', function (): voi
 });
 
 it('frees the blob edges of a purged file subtree (GC-eligible)', function (): void {
-    $drive = Vaulter::for(DriveTestHelpers::host());
-    $fileNode = $drive->upload(DriveTestHelpers::streamFor('purge me'), originalName: 'p.txt');
+    $drive = Vaulter::drive(DriveTestHelpers::host())->asSystem('test fixture');
+    $fileNode = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('purge me'), 'p.txt'));
 
     // The blob is referenced (one live edge) while the file lives.
     $blob = Blob::query()->firstOrFail();
@@ -72,8 +73,8 @@ it('cascades the physical purge to file/version rows on PostgreSQL, F-P1.12-02',
         $this->markTestSkipped('FK cascadeOnDelete is not enforced on the default SQLite test connection.');
     }
 
-    $drive = Vaulter::for(DriveTestHelpers::host());
-    $fileNode = $drive->upload(DriveTestHelpers::streamFor('purge me too'), originalName: 'p2.txt');
+    $drive = Vaulter::drive(DriveTestHelpers::host())->asSystem('test fixture');
+    $fileNode = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('purge me too'), 'p2.txt'));
     $fileId = $fileNode->file()->first()->getKey();
 
     $fileNode->refresh()->forceFill(['trashed_at' => Carbon::now()->subDays(40)])->save();
@@ -90,9 +91,9 @@ it('cascades the physical purge to file/version rows on PostgreSQL, F-P1.12-02',
 
 it('does not physically purge a node restored between candidate materialisation and the purge transaction, TOCTOU guard (P2.2 review fix)', function (): void {
     $drive = DriveTestHelpers::drive();
-    $node = $drive->createFolder('raced');
+    $node = $drive->folders()->create('raced');
 
-    $drive->trash($node);
+    $drive->nodes()->trash($node);
     // Backdate past the retention window so it becomes a purge candidate.
     $node->refresh()->forceFill(['trashed_at' => Carbon::now()->subDays(40)])->save();
 
@@ -110,7 +111,7 @@ it('does not physically purge a node restored between candidate materialisation 
         }
 
         $restoredOnce = true;
-        $drive->restore(Node::query()->whereKey($targetId)->firstOrFail());
+        $drive->trash()->restore(Node::query()->whereKey($targetId)->firstOrFail());
     });
 
     $this->artisan('vaulter:purge-trash')->assertSuccessful();

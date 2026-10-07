@@ -20,7 +20,7 @@ beforeEach(function (): void {
 
 function trashDocumentStorage(): Drive
 {
-    return Vaulter::for(DriveTestHelpers::host())->model();
+    return Vaulter::drive(DriveTestHelpers::host())->model();
 }
 
 it('404s on reading the content of a trashed document node, F-P1.12-01', function (): void {

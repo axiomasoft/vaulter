@@ -22,7 +22,7 @@ beforeEach(function (): void {
 
 function r07Storage(): Drive
 {
-    return Vaulter::for(DriveTestHelpers::host())->model();
+    return Vaulter::drive(DriveTestHelpers::host())->model();
 }
 
 function r07SessionId(Drive $storage, array $overrides = []): string
@@ -256,7 +256,7 @@ it('404s when the session storage row is missing on HEAD', function (): void {
 
 it('404s when parent_id belongs to another storage on create', function (): void {
     $storage = r07Storage();
-    $other = Vaulter::for(DriveTestHelpers::host())->model();
+    $other = Vaulter::drive(DriveTestHelpers::host())->model();
     $foreignFolder = new Node;
     $foreignFolder->forceFill([
         'drive_id' => $other->getKey(),

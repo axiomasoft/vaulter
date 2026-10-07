@@ -12,7 +12,7 @@ use Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Repositories\Drive\NodeReadRepository;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\NodeName;
 use Vaulter\Support\TreeGuard;
@@ -24,26 +24,23 @@ use Vaulter\Support\TreeGuard;
  * rather than silently auto-renamed: Drive never invents a name behind the
  * caller's back.
  *
- * Authorization (M2a / H.2) is enforced UPSTREAM at the HTTP controller boundary
- * (NodeController::guardCreate → AccessResolver), so the Action stays pure: it
- * receives an already-authorized parent/storage and only does the row work.
+ * Operations authorize before this command; the destination is checked again under lock.
  */
 final readonly class CreateFolderAction
 {
     public function __construct(
-        private NodeReadRepository $nodes,
         private NodeStoreRepository $store,
         private VaulterDatabase $database,
         private TreeGuard $tree,
         private DriveConfig $driveConfig,
     ) {}
 
-    public function execute(CreateFolderInput $data): Node
+    public function execute(OperationContext $context, CreateFolderInput $data): Node
     {
         $name = NodeName::normalize(name: $data->name, maxLength: $this->driveConfig->nameMaxLength());
         $parentId = $this->tree->destinationId(storage: $data->storage, into: $data->parent);
 
-        return $this->database->transaction(function () use ($data, $name, $parentId): Node {
+        return $this->database->transaction(function () use ($context, $data, $name, $parentId): Node {
             $this->database->lockTreeShared($data->storage->id);
 
             $parent = $this->tree->locked($this->tree->lock([$parentId]), $parentId);
@@ -53,9 +50,7 @@ final readonly class CreateFolderAction
 
             $this->tree->assertActiveFolder($parent);
 
-            if ($this->nodes->siblingNameExists(storage: $data->storage, parentId: $parentId, name: $name)) {
-                throw NodeNameConflictException::forName(name: $name, parentId: $parentId);
-            }
+            $name = app(NameConflictResolver::class)->resolve($context->drive, $parentId, $name, $data->onConflict);
 
             $node = $this->store->create([
                 'drive_id' => $data->storage->id,
@@ -63,11 +58,11 @@ final readonly class CreateFolderAction
                 'kind' => NodeKind::Folder,
                 'name' => $name,
                 'size_bytes' => 0,
-                'owner_id' => $data->actorId,
-                'created_by' => $data->actorId,
+                'owner_id' => $context->actor->ref()->id,
+                'created_by' => $context->actor->ref()->id,
             ]);
 
-            event(new FolderCreated(node: $node, actorId: $data->actorId));
+            event(new FolderCreated(node: $node, actorId: $context->actor->ref()->id, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return $node;
         });

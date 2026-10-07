@@ -386,6 +386,18 @@ final class NodeReadRepository
         string $name,
         int|string|null $ignoreId = null,
     ): bool {
+        return $this->siblingQuery($storage, $parentId, $name, $ignoreId)->exists();
+    }
+
+    /** Resolve the same canonical predicate as siblingNameExists(). */
+    public function findSibling(Drive $storage, int|string|null $parentId, string $name): ?Node
+    {
+        return $this->siblingQuery($storage, $parentId, $name)->first();
+    }
+
+    /** @return Builder<Node> */
+    private function siblingQuery(Drive $storage, int|string|null $parentId, string $name, int|string|null $ignoreId = null): Builder
+    {
         $query = $this->query()
             ->treeOf($storage->id)
             ->where('parent_id', $parentId)
@@ -396,7 +408,7 @@ final class NodeReadRepository
             $query->whereKeyNot($ignoreId);
         }
 
-        return $query->exists();
+        return $query;
     }
 
     /**

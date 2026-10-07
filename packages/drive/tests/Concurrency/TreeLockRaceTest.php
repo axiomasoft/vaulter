@@ -5,9 +5,11 @@ declare(strict_types=1);
 use Vaulter\Drive\Actions\Nodes\CreateFolderAction;
 use Vaulter\Drive\Actions\Trash\TrashNodeAction;
 use Vaulter\Drive\Data\Nodes\CreateFolderInput;
+use Vaulter\Drive\Data\Trash\TrashNodeInput;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Tests\Concurrency\ForkRace;
 use Vaulter\Tests\Concurrency\RaceOutcome;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -25,14 +27,14 @@ beforeEach(function (): void {
 it('never leaves a live node under a folder trashed concurrently', function (): void {
     $drive = DriveTestHelpers::drive();
     $storageId = $drive->model()->getKey();
-    $top = $drive->createFolder('Top');
-    $inner = $drive->createFolder('Inner', $top);
+    $top = $drive->folders()->create('Top');
+    $inner = $drive->folders()->create('Inner', $top);
     $topId = $top->getKey();
     $innerId = $inner->getKey();
 
     $outcomes = ForkRace::run([
-        static fn (): string => (string) app(TrashNodeAction::class)->execute(Node::query()->findOrFail($topId))->getKey(),
-        static fn (): string => (string) app(CreateFolderAction::class)->execute(new CreateFolderInput(
+        static fn (): string => (string) app(TrashNodeAction::class)->execute(OperationContext::system(Drive::query()->findOrFail($storageId), 'test fixture'), new TrashNodeInput(Node::query()->findOrFail($topId)))->getKey(),
+        static fn (): string => (string) app(CreateFolderAction::class)->execute(OperationContext::system(Drive::query()->findOrFail($storageId), 'test fixture'), new CreateFolderInput(
             storage: Drive::query()->findOrFail($storageId),
             name: 'Late',
             parent: Node::query()->findOrFail($innerId),

@@ -5,6 +5,8 @@ declare(strict_types=1);
 use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage as StorageFacade;
+use Vaulter\Data\Drive\UploadOptions;
+use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Http\Requests\Uploads\CreateUploadSessionRequest;
 use Vaulter\Drive\Models\Uploads\UploadSession;
@@ -36,7 +38,7 @@ function r07ResumableUrl(string|int $storageId): string
 
 function r07StorageId(): string|int
 {
-    return Vaulter::for(DriveTestHelpers::host())->model()->getKey();
+    return Vaulter::drive(DriveTestHelpers::host())->model()->getKey();
 }
 
 function r07NameSeparatorMessage(): string
@@ -194,8 +196,8 @@ it('R07Request requires the multipart upload file field alone when missing', fun
 
 it('R07Request validates copy name boundaries and separator message in isolation', function (): void {
     $drive = DriveTestHelpers::drive();
-    $dest = $drive->createFolder('CopyDest');
-    $file = $drive->upload(DriveTestHelpers::streamFor('copy'), into: $dest, originalName: 'source.bin');
+    $dest = $drive->folders()->create('CopyDest');
+    $file = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('copy'), 'source.bin'), new UploadOptions(parent: $dest));
     $uri = 'api/vaulter/nodes/'.$file->getKey().'/copy';
 
     $response = $this->postJson($uri, ['parent_id' => $dest->getKey(), 'name' => str_repeat('c', 256)])->assertUnprocessable();
@@ -209,8 +211,8 @@ it('R07Request validates copy name boundaries and separator message in isolation
 
 it('R07Request accepts nullable copy parent_id and empty name override as null', function (): void {
     $drive = DriveTestHelpers::drive();
-    $folder = $drive->createFolder('Holder');
-    $file = $drive->upload(DriveTestHelpers::streamFor('x'), into: $folder, originalName: 'keep-name.bin');
+    $folder = $drive->folders()->create('Holder');
+    $file = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('x'), 'keep-name.bin'), new UploadOptions(parent: $folder));
     $uri = 'api/vaulter/nodes/'.$file->getKey().'/copy';
 
     $copy = $this->postJson($uri, ['parent_id' => null, 'name' => ''])->assertCreated()->json('data');
@@ -220,8 +222,8 @@ it('R07Request accepts nullable copy parent_id and empty name override as null',
 
 it('R07Request accepts nullable move parent_id only', function (): void {
     $drive = DriveTestHelpers::drive();
-    $folder = $drive->createFolder('Hold');
-    $node = $drive->createFolder('Movable', $folder);
+    $folder = $drive->folders()->create('Hold');
+    $node = $drive->folders()->create('Movable', $folder);
 
     $this->postJson('api/vaulter/nodes/'.$node->getKey().'/move', ['parent_id' => null])
         ->assertOk()
@@ -230,7 +232,7 @@ it('R07Request accepts nullable move parent_id only', function (): void {
 
 it('R07Request validates rename name rules and custom separator message', function (): void {
     $drive = DriveTestHelpers::drive();
-    $node = $drive->createFolder('Before');
+    $node = $drive->folders()->create('Before');
     $uri = 'api/vaulter/nodes/'.$node->getKey();
 
     $response = $this->patchJson($uri, ['name' => ''])->assertUnprocessable();
@@ -250,7 +252,7 @@ it('R07Request validates create-folder name and nullable parent_id', function ()
     $drive = DriveTestHelpers::drive();
     $storage = $drive->model();
     $base = 'api/vaulter/storages/'.$storage->getKey().'/folders';
-    $child = $drive->createFolder('Parent');
+    $child = $drive->folders()->create('Parent');
 
     $response = $this->postJson($base, ['name' => 'a/b'])->assertUnprocessable();
     expect($response->json('errors.name.0'))->toBe(r07NameSeparatorMessage());

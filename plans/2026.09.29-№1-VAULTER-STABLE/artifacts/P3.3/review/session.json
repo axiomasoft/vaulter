@@ -1,0 +1,38 @@
+{
+  "command": [
+    "grok",
+    "--cwd",
+    "/home/vostrikov/projects/packages/vaulter",
+    "--model",
+    "grok-4.7",
+    "--reasoning-effort",
+    "high",
+    "--session-id",
+    "88590d64-6750-46ab-9cfb-4f690527ea95",
+    "--permission-mode",
+    "dontAsk",
+    "--tools",
+    "read_file,grep,list_dir",
+    "--allow",
+    "read_file",
+    "--allow",
+    "grep",
+    "--allow",
+    "list_dir",
+    "--disable-web-search",
+    "--no-subagents",
+    "--prompt-file",
+    "/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-\u21161-VAULTER-STABLE/artifacts/P3.3/review/prompt.txt",
+    "--output-format",
+    "json"
+  ],
+  "session_id": "88590d64-6750-46ab-9cfb-4f690527ea95",
+  "candidate": {
+    "head": "3fd82526c0baa2d975ed6eda50487b75c6e68d51",
+    "dirty_digest": "f6ab29bfb6688e46a95876f361415c0708a8da085ef70734a8a28e36ed8b8e53"
+  },
+  "started_at": "2026-10-07T04:44:55.043515+00:00",
+  "state": "finished",
+  "exit": 0,
+  "duration_seconds": 792.369
+}

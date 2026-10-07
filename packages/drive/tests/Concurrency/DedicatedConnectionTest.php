@@ -10,6 +10,7 @@ use Vaulter\Drive\Actions\Nodes\CreateFolderAction;
 use Vaulter\Drive\Data\Nodes\CreateFolderInput;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Tests\Concurrency\ForkRace;
 
 beforeEach(function (): void {
@@ -32,7 +33,7 @@ it('rolls back an Action insertion on the dedicated Vaulter connection', functio
         throw new RuntimeException('failure after insertion');
     });
 
-    expect(fn () => app(CreateFolderAction::class)->execute(new CreateFolderInput(
+    expect(fn () => app(CreateFolderAction::class)->execute(OperationContext::system($storage, 'test fixture'), new CreateFolderInput(
         storage: $storage,
         name: 'must roll back',
         parent: $storage->rootNode,

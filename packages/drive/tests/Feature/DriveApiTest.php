@@ -33,7 +33,7 @@ beforeEach(function (): void {
  */
 function driveStorage(): Drive
 {
-    return Vaulter::for(DriveTestHelpers::host())->model();
+    return Vaulter::drive(DriveTestHelpers::host())->model();
 }
 
 it('runs the full CRUD cycle: folder → upload → list → show → rename → move → copy → trash → restore → force', function (): void {
@@ -98,7 +98,7 @@ it('runs the full CRUD cycle: folder → upload → list → show → rename →
     expect(Node::query()->find($copy)->trashed_at)->toBeNull();
 
     // forceDelete only purges from the trash: a live node is refused, a trashed one
-    // is soft-deleted (deleted_at) and frees the bytes; the physical blob is
+    // is physically deleted and frees the bytes; the physical blob is
     // reclaimed later by GC (§2.10).
     $this->deleteJson('api/vaulter/nodes/'.$copy.'/force')
         ->assertStatus(409)
@@ -106,7 +106,7 @@ it('runs the full CRUD cycle: folder → upload → list → show → rename →
     $this->deleteJson('api/vaulter/nodes/'.$copy)->assertOk();
     $this->deleteJson('api/vaulter/nodes/'.$copy.'/force')->assertNoContent();
     expect(Node::query()->find($copy))->toBeNull()
-        ->and(Node::withTrashed()->find($copy)?->deleted_at)->not->toBeNull();
+        ->and(Node::withTrashed()->find($copy))->toBeNull();
 });
 
 it('dedups two identical uploads onto a shared blob', function (): void {
@@ -233,7 +233,7 @@ it('serves a text/html declared mime as octet-stream with nosniff, never the raw
     $storage = driveStorage();
 
     $node = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/uploads', [
-        'file' => UploadedFile::fake()->create('evil.txt', 1, 'text/html'),
+        'file' => UploadedFile::fake()->createWithContent('evil.html', '<html><body>dangerous HTML</body></html>'),
     ])->json('data.id');
 
     $response = $this->get('api/vaulter/nodes/'.$node.'/download');
@@ -332,16 +332,19 @@ it('resolves a listing page of sibling nodes with O(1) storage queries, not O(N)
         ->assertOk()
         ->assertJsonCount($siblingCount, 'data');
 
-    // Every one of the N sibling nodes on the page belongs to the SAME storage —
-    // `AccessResolver::storageOf()` is called once per node (via
-    // `NodeResource::abilities()`), but the scoped-singleton `DriveReadRepository`
-    // memoizes by id, so the whole page issues AT MOST 2 storage-table hits (the
-    // Route::bind model resolution for {storage} in the URL, which queries the
-    // model directly and is NOT the repository under test, plus one repository
-    // cache-miss) — never one per node. Before the P1.3 fix this counted
-    // (1 + $siblingCount).
-    expect($storageQueries)->toBeLessThanOrEqual(2)
-        ->and($storageQueries)->toBeLessThan($siblingCount);
+    $firstPageQueries = $storageQueries;
+    for ($i = $siblingCount; $i < $siblingCount * 3; $i++) {
+        $this->postJson($base.'/folders', ['name' => 'Sib'.$i])->assertCreated();
+    }
+    $storageQueries = 0;
+    $this->getJson($base.'/nodes?per_page='.($siblingCount * 3))
+        ->assertOk()
+        ->assertJsonCount($siblingCount * 3, 'data');
+
+    // Fresh handle/guard boundaries add a fixed cost. Profile lookup and ACL
+    // preparation remain shared by the whole batch as the page grows.
+    expect($storageQueries)->toBe($firstPageQueries)
+        ->and($storageQueries)->toBeLessThan($siblingCount * 3);
 });
 
 /**

@@ -1,0 +1,25 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:check-evidence:v1",
+  "evidence_id": "PLAN2.P3.3-V9-2026-10-07T05:09:02.917845+00:00",
+  "check_id": "V9",
+  "subject": "PLAN2.P3.3",
+  "procedure": {
+    "procedure": "Actual final PostgreSQL NodeSequenceBoundaryTest.php executed2 named SEC-R18/SEC-R19 tests, zero skipped, 29assertions. Trigger: final rename combined-lock correction."
+  },
+  "candidate": {
+    "head": "3fd82526c0baa2d975ed6eda50487b75c6e68d51",
+    "dirty_digest": "2a2f0e5f9f7eb6f632e9be641dc363bec9ea5cf813f7b56360ed7f233c4f7fdb"
+  },
+  "verdict": "pass",
+  "observation": "Observed successful affected acceptance scenarios; raw commands, counts and failures/corrections retained. Logs: V9-final.log Final review corrections additionally qualified by V84: affected regression92pass, actual PG receipt/fork/retry3pass and forced locked AddRevision race1pass, drive Pint/PHPStan0; unchanged passes reused per D25. Final Unicode invariant closure: shared canonical query; exact case RED then81pass213assertions; current PG locked race1pass15assertions; narrow owning Pint core1/drive2 and supported core/drive PHPStan0 (unicode-*.log). Requested independent review remains pending, not GREEN.",
+  "started_at": "2026-10-07T04:06:18Z",
+  "finished_at": "2026-10-07T05:30:53.438041+00:00",
+  "producer": {
+    "kind": "executor",
+    "actor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high"
+    }
+  }
+}

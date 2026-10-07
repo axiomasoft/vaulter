@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Data\Drive\UploadOptions;
+use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\FileRevisionBlob;
 use Vaulter\Models\Drive\Node;
@@ -16,13 +18,13 @@ beforeEach(function (): void {
 it('forceDelete отцепляет рёбра блоба → блоб становится GC-кандидатом', function (): void {
     $drive = DriveTestHelpers::drive();
 
-    $node = $drive->upload(DriveTestHelpers::streamFor('payload bytes'), originalName: 'f.bin');
+    $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('payload bytes'), 'f.bin'));
 
     expect(FileRevisionBlob::query()->count())->toBe(1);
 
-    $drive->trash($node);
+    $drive->nodes()->trash($node);
 
-    $drive->forceDelete($node);
+    $drive->trash()->purge($node);
 
     // The edge is detached — the blob now has zero live edges (GC-eligible via M1b),
     // but its bytes are NOT deleted here.
@@ -36,41 +38,41 @@ it('forceDelete отцепляет рёбра блоба → блоб стано
 it('forceDelete уменьшает used_bytes на освобождённый размер', function (): void {
     $drive = DriveTestHelpers::drive();
 
-    $node = $drive->upload(DriveTestHelpers::streamFor('1234567890'), originalName: 'f.bin'); // 10
+    $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('1234567890'), 'f.bin')); // 10
     expect($drive->model()->refresh()->used_bytes)->toBe(10);
 
-    $drive->trash($node);
+    $drive->nodes()->trash($node);
 
-    $drive->forceDelete($node);
+    $drive->trash()->purge($node);
 
     expect($drive->model()->refresh()->used_bytes)->toBe(0);
 });
 
-it('forceDelete тумбстонит всё поддерево (deleted_at)', function (): void {
+it('purge физически удаляет всё поддерево', function (): void {
     $drive = DriveTestHelpers::drive();
 
-    $folder = $drive->createFolder('Project');
-    $sub = $drive->createFolder('Sub', $folder);
-    $drive->upload(DriveTestHelpers::streamFor('aa'), into: $sub, originalName: 'a.bin');
+    $folder = $drive->folders()->create('Project');
+    $sub = $drive->folders()->create('Sub', $folder);
+    $file = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('aa'), 'a.bin'), new UploadOptions(parent: $sub));
 
-    $drive->trash($folder);
+    $drive->nodes()->trash($folder);
 
-    $drive->forceDelete($folder);
+    $drive->trash()->purge($folder);
 
-    // Whole subtree soft-deleted; only the storage root remains live.
-    expect(Node::query()->whereNull('deleted_at')->count())->toBe(1)
-        ->and(Node::withTrashed()->count())->toBeGreaterThanOrEqual(4);
+    // Purge physically removes the entire subtree; only the drive root survives.
+    expect(Node::withTrashed()->pluck('id')->all())->toBe([$drive->root()->getKey()])
+        ->and(Node::withTrashed()->whereIn('id', [$folder->getKey(), $sub->getKey(), $file->getKey()])->exists())->toBeFalse();
 });
 
 it('forceDelete не трогает байты на диске (GC отдельно)', function (): void {
     $drive = DriveTestHelpers::drive();
 
-    $node = $drive->upload(DriveTestHelpers::streamFor('keep these bytes'), originalName: 'f.bin');
+    $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('keep these bytes'), 'f.bin'));
     $blob = Blob::query()->first();
 
-    $drive->trash($node);
+    $drive->nodes()->trash($node);
 
-    $drive->forceDelete($node);
+    $drive->trash()->purge($node);
 
     // The physical object survives — only the reference dropped (M1b GC reclaims it).
     Storage::disk('local')->assertExists($blob->storage_key);

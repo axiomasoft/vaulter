@@ -2,7 +2,12 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage as StorageFacade;
+use Vaulter\Data\Drive\CopyOptions;
+use Vaulter\Data\Drive\UploadOptions;
+use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Events\Drives\DriveCreated;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Activity\Activity;
@@ -16,7 +21,11 @@ beforeEach(function (): void {
 });
 
 it('keeps the complete storage and folder event contracts', function (): void {
-    $drive = DriveTestHelpers::drive();
+    $provisioned = null;
+    Event::listen(DriveCreated::class, static function (DriveCreated $event) use (&$provisioned): void {
+        $provisioned = $event;
+    });
+    $drive = DriveTestHelpers::drive()->withCorrelationId('mutation-contract');
     $storage = $drive->model();
     $root = $storage->rootNode()->firstOrFail();
 
@@ -36,14 +45,18 @@ it('keeps the complete storage and folder event contracts', function (): void {
     ]);
 
     $storageActivity = Activity::query()->where('verb', EventType::DriveCreated->value)->sole();
+    expect($provisioned)->toBeInstanceOf(DriveCreated::class)
+        ->and($provisioned->correlationId)->toBeString()->not->toBe('');
     expect($storageActivity->context)->toEqual([
+        'correlation_id' => $provisioned->correlationId,
+        'system_reason' => 'drive provisioning',
         'drive_id' => (string) $storage->getKey(),
         'owner_type' => $storage->owner_type,
         'owner_id' => (string) $storage->owner_id,
         'name' => $storage->name,
     ]);
 
-    $folder = $drive->createFolder('Contract folder', actorId: 17);
+    $folder = $drive->actingAs(DriveTestHelpers::actor($drive, 17))->folders()->create('Contract folder');
     $created = Outbox::query()->where('event', EventType::FolderCreated->value)->orderByDesc('id')->firstOrFail();
     $createdPayload = $created->payload;
     unset($createdPayload['event_id'], $createdPayload['actor_id']);
@@ -60,6 +73,7 @@ it('keeps the complete storage and folder event contracts', function (): void {
     $createdActivity = Activity::query()->where('verb', EventType::FolderCreated->value)->orderByDesc('id')->firstOrFail();
     expect($createdActivity->target_id)->toEqual($folder->getKey())
         ->and($createdActivity->context)->toEqual([
+            'correlation_id' => 'mutation-contract',
             'kind' => 'folder',
             'name' => 'Contract folder',
             'parent_id' => (string) $root->getKey(),
@@ -67,7 +81,7 @@ it('keeps the complete storage and folder event contracts', function (): void {
 });
 
 it('returns the complete storage API shape including toolbar abilities', function (): void {
-    $storage = Vaulter::for(DriveTestHelpers::host())->model();
+    $storage = Vaulter::drive(DriveTestHelpers::host())->model();
 
     $data = $this->getJson('api/vaulter/storages/'.$storage->getKey())->assertOk()->json('data');
     $keys = array_keys($data);
@@ -93,7 +107,7 @@ it('returns the complete storage API shape including toolbar abilities', functio
 });
 
 it('rejects each malformed resumable upload field', function (array $overrides, string $field): void {
-    $storage = Vaulter::for(DriveTestHelpers::host())->model();
+    $storage = Vaulter::drive(DriveTestHelpers::host())->model();
 
     $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', array_merge([
         'protocol' => 'tus',
@@ -115,12 +129,12 @@ it('rejects each malformed resumable upload field', function (array $overrides, 
 ]);
 
 it('preserves move, rename and copy payloads and activity context', function (): void {
-    $drive = DriveTestHelpers::drive();
-    $from = $drive->createFolder('From');
-    $to = $drive->createFolder('To');
-    $node = $drive->createFolder('Old', $from);
+    $drive = DriveTestHelpers::drive()->withCorrelationId('mutation-contract');
+    $from = $drive->folders()->create('From');
+    $to = $drive->folders()->create('To');
+    $node = $drive->folders()->create('Old', $from);
 
-    $drive->move($node, $to, actorId: 17);
+    $drive->actingAs(DriveTestHelpers::actor($drive, 17))->nodes()->move($node, $to);
     $moved = Outbox::query()->where('event', EventType::NodeMoved->value)->sole();
     $movePayload = $moved->payload;
     unset($movePayload['event_id'], $movePayload['actor_id']);
@@ -131,11 +145,12 @@ it('preserves move, rename and copy payloads and activity context', function ():
         'to_parent_id' => (string) $to->getKey(),
     ]);
     expect(Activity::query()->where('verb', EventType::NodeMoved->value)->sole()->context)->toEqual([
+        'correlation_id' => 'mutation-contract',
         'from_parent_id' => (string) $from->getKey(),
         'to_parent_id' => (string) $to->getKey(),
     ]);
 
-    $drive->rename($node->refresh(), 'New', actorId: 17);
+    $drive->actingAs(DriveTestHelpers::actor($drive, 17))->nodes()->rename($node->refresh(), 'New');
     $renamed = Outbox::query()->where('event', EventType::NodeRenamed->value)->sole();
     $renamePayload = $renamed->payload;
     unset($renamePayload['event_id'], $renamePayload['actor_id']);
@@ -146,11 +161,12 @@ it('preserves move, rename and copy payloads and activity context', function ():
         'to' => 'New',
     ]);
     expect(Activity::query()->where('verb', EventType::NodeRenamed->value)->sole()->context)->toEqual([
+        'correlation_id' => 'mutation-contract',
         'from' => 'Old',
         'to' => 'New',
     ]);
 
-    $copy = $drive->copy($node->refresh(), $from, name: 'Copied', actorId: 17);
+    $copy = $drive->actingAs(DriveTestHelpers::actor($drive, 17))->nodes()->copy($node->refresh(), $from, options: new CopyOptions(name: 'Copied'));
     $copied = Outbox::query()->where('event', EventType::NodeCopied->value)->sole();
     $copyPayload = $copied->payload;
     unset($copyPayload['event_id'], $copyPayload['actor_id']);
@@ -162,19 +178,15 @@ it('preserves move, rename and copy payloads and activity context', function ():
             'name' => 'Copied',
         ]);
     expect(Activity::query()->where('verb', EventType::NodeCopied->value)->sole()->context)->toEqual([
+        'correlation_id' => 'mutation-contract',
         'source_id' => (string) $node->getKey(),
         'name' => 'Copied',
     ]);
 });
 
 it('preserves file upload and version payloads with their actual byte counts', function (): void {
-    $drive = DriveTestHelpers::drive();
-    $node = $drive->upload(
-        DriveTestHelpers::streamFor('first bytes'),
-        originalName: 'report.txt',
-        mimeType: 'text/plain',
-        actorId: 17,
-    );
+    $drive = DriveTestHelpers::drive()->withCorrelationId('mutation-contract');
+    $node = $drive->actingAs(DriveTestHelpers::actor($drive, 17))->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('first bytes'), 'report.txt'), new UploadOptions(declaredMimeType: 'text/plain'));
     $firstVersion = $node->currentVersion()->firstOrFail();
 
     $uploaded = Outbox::query()->where('event', EventType::FileUploaded->value)->sole();
@@ -189,13 +201,14 @@ it('preserves file upload and version payloads with their actual byte counts', f
         'mime_type' => 'text/plain',
     ]);
     expect(Activity::query()->where('verb', EventType::FileUploaded->value)->sole()->context)->toEqual([
+        'correlation_id' => 'mutation-contract',
         'name' => 'report.txt',
         'size_bytes' => 11,
         'mime_type' => 'text/plain',
         'version_id' => (string) $firstVersion->getKey(),
     ]);
 
-    $drive->uploadVersion($node->refresh(), DriveTestHelpers::streamFor('second version'), actorId: 17);
+    $drive->actingAs(DriveTestHelpers::actor($drive, 17))->files()->addRevision($node->refresh(), UploadSource::fromStream(DriveTestHelpers::streamFor('second version'), $node->refresh()->name));
     $secondVersion = $node->refresh()->currentVersion()->firstOrFail();
     $versioned = Outbox::query()->where('event', EventType::FileRevisionAdded->value)->sole();
     $versionPayload = $versioned->payload;
@@ -209,6 +222,7 @@ it('preserves file upload and version payloads with their actual byte counts', f
         'size_bytes' => 14,
     ]);
     expect(Activity::query()->where('verb', EventType::FileRevisionAdded->value)->sole()->context)->toEqual([
+        'correlation_id' => 'mutation-contract',
         'number' => 2,
         'version_id' => (string) $secondVersion->getKey(),
         'size_bytes' => 14,
@@ -216,11 +230,11 @@ it('preserves file upload and version payloads with their actual byte counts', f
 });
 
 it('preserves trash and restore payloads including actor and destination', function (): void {
-    $drive = DriveTestHelpers::drive();
-    $parent = $drive->createFolder('Parent');
-    $node = $drive->createFolder('Child', $parent);
+    $drive = DriveTestHelpers::drive()->withCorrelationId('mutation-contract');
+    $parent = $drive->folders()->create('Parent');
+    $node = $drive->folders()->create('Child', $parent);
 
-    $drive->trash($node, actorId: 17);
+    $drive->actingAs(DriveTestHelpers::actor($drive, 17))->nodes()->trash($node);
     $trashed = Outbox::query()->where('event', EventType::NodeTrashed->value)->sole();
     expect($trashed->profile)->toBe($node->profile)
         ->and($trashed->topic)->toBe((string) $node->getKey())
@@ -234,9 +248,12 @@ it('preserves trash and restore payloads including actor and destination', funct
     $activity = Activity::query()->where('verb', EventType::NodeTrashed->value)->sole();
     expect($activity->actor_id)->toEqual(17)
         ->and($activity->target_id)->toEqual($node->getKey())
-        ->and($activity->context)->toEqual(['name' => 'Child']);
+        ->and($activity->context)->toEqual([
+            'correlation_id' => 'mutation-contract',
+            'name' => 'Child',
+        ]);
 
-    $drive->restore($node->refresh(), actorId: 17);
+    $drive->actingAs(DriveTestHelpers::actor($drive, 17))->trash()->restore($node->refresh());
     $restored = Outbox::query()->where('event', EventType::NodeRestored->value)->sole();
     expect($restored->profile)->toBe($node->profile)
         ->and($restored->topic)->toBe((string) $node->getKey())
@@ -252,20 +269,21 @@ it('preserves trash and restore payloads including actor and destination', funct
     expect($activity->actor_id)->toEqual(17)
         ->and($activity->target_id)->toEqual($node->getKey())
         ->and($activity->context)->toEqual([
+            'correlation_id' => 'mutation-contract',
             'name' => 'Child',
             'parent_id' => (string) $parent->getKey(),
         ]);
 });
 
 it('records every force-deleted subtree id and the exact freed bytes', function (): void {
-    $drive = DriveTestHelpers::drive();
-    $folder = $drive->createFolder('Deleted');
-    $file = $drive->upload(DriveTestHelpers::streamFor('bytes'), into: $folder, originalName: 'f.bin');
+    $drive = DriveTestHelpers::drive()->withCorrelationId('mutation-contract');
+    $folder = $drive->folders()->create('Deleted');
+    $file = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('bytes'), 'f.bin'), new UploadOptions(parent: $folder));
     $ids = [(string) $folder->getKey(), (string) $file->getKey()];
 
-    $drive->trash($folder);
+    $drive->nodes()->trash($folder);
 
-    $drive->forceDelete($folder, actorId: 17);
+    $drive->actingAs(DriveTestHelpers::actor($drive, 17))->trash()->purge($folder);
 
     $outbox = Outbox::query()->where('event', EventType::NodePurged->value)->sole();
     $payload = $outbox->payload;
@@ -283,6 +301,7 @@ it('records every force-deleted subtree id and the exact freed bytes', function 
     expect($activity->actor_id)->toEqual(17)
         ->and($activity->drive_id)->toEqual($drive->model()->getKey())
         ->and($activity->context['node_ids'])->toEqualCanonicalizing($ids)
-        ->and(array_keys($activity->context))->toEqualCanonicalizing(['node_ids', 'freed_bytes'])
-        ->and($activity->context['freed_bytes'])->toBe(5);
+        ->and(array_keys($activity->context))->toEqualCanonicalizing(['node_ids', 'freed_bytes', 'correlation_id'])
+        ->and($activity->context['freed_bytes'])->toBe(5)
+        ->and($activity->context['correlation_id'])->toBe('mutation-contract');
 });

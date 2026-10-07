@@ -6,6 +6,7 @@ use Vaulter\Drive\Actions\Nodes\MoveNodeAction;
 use Vaulter\Drive\Data\Nodes\MoveNodeInput;
 use Vaulter\Drive\Exceptions\Nodes\NodeCycleException;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Tests\Concurrency\ForkRace;
 use Vaulter\Tests\Concurrency\RaceOutcome;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -22,7 +23,7 @@ beforeEach(function (): void {
 
 function raceMove(int|string $nodeId, int|string $intoId): Closure
 {
-    return static fn (): string => (string) app(MoveNodeAction::class)->execute(new MoveNodeInput(
+    return static fn (): string => (string) app(MoveNodeAction::class)->execute(OperationContext::system(Node::query()->findOrFail($nodeId)->storage, 'test fixture'), new MoveNodeInput(
         node: Node::query()->findOrFail($nodeId),
         into: Node::query()->findOrFail($intoId),
     ))->getKey();
@@ -66,8 +67,8 @@ function assertOneMoveWins(array $outcomes): void
 it('lets exactly one of move(A→B) and move(B→A) win and leaves no cycle', function (): void {
     $drive = DriveTestHelpers::drive();
     $rootId = $drive->root()->getKey();
-    $a = $drive->createFolder('A')->getKey();
-    $b = $drive->createFolder('B')->getKey();
+    $a = $drive->folders()->create('A')->getKey();
+    $b = $drive->folders()->create('B')->getKey();
 
     assertOneMoveWins(ForkRace::run([raceMove($a, $b), raceMove($b, $a)]));
 
@@ -81,10 +82,10 @@ it('lets exactly one of move(A→B) and move(B→A) win and leaves no cycle', fu
 it('lets exactly one of move(A→B/B1) and move(B→A/A1) win and leaves no cycle', function (): void {
     $drive = DriveTestHelpers::drive();
     $rootId = $drive->root()->getKey();
-    $a = $drive->createFolder('A');
-    $b = $drive->createFolder('B');
-    $a1 = $drive->createFolder('A1', $a)->getKey();
-    $b1 = $drive->createFolder('B1', $b)->getKey();
+    $a = $drive->folders()->create('A');
+    $b = $drive->folders()->create('B');
+    $a1 = $drive->folders()->create('A1', $a)->getKey();
+    $b1 = $drive->folders()->create('B1', $b)->getKey();
 
     assertOneMoveWins(ForkRace::run([raceMove($a->getKey(), $b1), raceMove($b->getKey(), $a1)]));
 

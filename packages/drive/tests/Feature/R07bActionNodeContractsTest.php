@@ -7,9 +7,16 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Contracts\Cas\StorageDriver;
+use Vaulter\Data\Drive\CopyOptions;
+use Vaulter\Data\Drive\RevisionOptions;
+use Vaulter\Data\Drive\UploadOptions;
+use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\Nodes\NodePurged;
 use Vaulter\Drive\Exceptions\Quota\QuotaExceededException;
+use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
+use Vaulter\Exceptions\Nodes\UnsupportedNodeKindException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
@@ -64,7 +71,7 @@ beforeEach(function (): void {
 
 function r07bActStorage(): Drive
 {
-    return Vaulter::for(DriveTestHelpers::host())->model();
+    return Vaulter::drive(DriveTestHelpers::host())->model();
 }
 
 // ---------------------------------------------------------------------------
@@ -78,7 +85,7 @@ it('UploadFile L78: shrinking version passes when quota is at capacity (delta is
     $drive = DriveTestHelpers::drive();
 
     // Upload an 8-byte file to fill storage to exactly 8 bytes.
-    $node = $drive->upload(DriveTestHelpers::streamFor('12345678'), originalName: 'f.bin');
+    $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('12345678'), 'f.bin'));
     expect($drive->model()->refresh()->used_bytes)->toBe(8);
 
     // Clamp quota to current usage — any positive delta would now fail.
@@ -86,7 +93,7 @@ it('UploadFile L78: shrinking version passes when quota is at capacity (delta is
 
     // Upload a 6-byte version (delta = 6 − 8 = −2 ≤ 0) — must NOT throw.
     // MinusToPlus mutant: delta = 6 + 8 = 14 → quota check fires → exception.
-    $drive->uploadVersion($node, DriveTestHelpers::streamFor('abcdef'), originalName: 'f.bin');
+    $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('abcdef'), 'f.bin'));
 
     // used_bytes drops to 6 (delta = −2).
     expect($drive->model()->refresh()->used_bytes)->toBe(6);
@@ -96,11 +103,11 @@ it('UploadFile L78: shrinking version passes when quota is at capacity (delta is
 // files (not new versions), so a sibling-name conflict must be detected.
 it('UploadFile L80/L81: sibling-name conflict is rejected for a new-file upload', function (): void {
     $drive = DriveTestHelpers::drive();
-    $drive->upload(DriveTestHelpers::streamFor('a'), originalName: 'dup.bin');
+    $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('a'), 'dup.bin'));
 
     // Second upload with the same resolved name must throw.
     // IfNegated mutant: skips assertNameAvailable for non-version uploads → no throw.
-    expect(fn () => $drive->upload(DriveTestHelpers::streamFor('b'), originalName: 'dup.bin'))
+    expect(fn () => $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('b'), 'dup.bin')))
         ->toThrow(NodeNameConflictException::class);
 });
 
@@ -110,10 +117,10 @@ it('UploadFile L80/L81: sibling-name conflict is rejected for a new-file upload'
 it('UploadFile L106: used_bytes is decremented when the new version is exactly 1 byte smaller', function (): void {
     $drive = DriveTestHelpers::drive();
 
-    $node = $drive->upload(DriveTestHelpers::streamFor('12345'), originalName: 'f.bin'); // 5 bytes
+    $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('12345'), 'f.bin')); // 5 bytes
     expect($drive->model()->refresh()->used_bytes)->toBe(5);
 
-    $drive->uploadVersion($node, DriveTestHelpers::streamFor('1234'), originalName: 'f.bin'); // 4 bytes, delta = −1
+    $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('1234'), 'f.bin')); // 4 bytes, delta = −1
     // DecrementInteger mutant: condition becomes $delta !== -1, which is FALSE for delta=−1
     // → adjustUsedBytes is skipped → used_bytes stays at 5. Test fails on the expect below.
     expect($drive->model()->refresh()->used_bytes)->toBe(4);
@@ -124,11 +131,11 @@ it('UploadFile L106: used_bytes is decremented when the new version is exactly 1
 // stale value ($file->mime_type / $node->mime_type).
 it('UploadFile L196/L203: new version with a changed mime type updates node and file mime', function (): void {
     $drive = DriveTestHelpers::drive();
-    $node = $drive->upload(DriveTestHelpers::streamFor('v1 bytes'), originalName: 'f.bin', mimeType: 'text/plain');
+    $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('v1 bytes'), 'f.bin'), new UploadOptions(declaredMimeType: 'text/plain'));
 
     // Upload a version with a different declared mime.
     $image = UploadedFile::fake()->image('revision.png', 1, 1);
-    $drive->uploadVersion($node, DriveTestHelpers::streamFor(file_get_contents($image->getRealPath())), originalName: 'f.bin', mimeType: 'image/png');
+    $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor(file_get_contents($image->getRealPath())), 'f.bin'), new RevisionOptions(declaredMimeType: 'image/png'));
     $updated = $node->refresh();
 
     // CoalesceRemoveLeft mutant: $file->mime_type ('text/plain') is used instead.
@@ -142,7 +149,7 @@ it('UploadFile L234-236: committed version has status=committed, correct created
     $this->travelTo(now()->startOfSecond());
     $drive = DriveTestHelpers::drive();
 
-    $node = $drive->upload(DriveTestHelpers::streamFor('data'), originalName: 'doc.txt', actorId: 42);
+    $node = $drive->actingAs(DriveTestHelpers::actor($drive, 42))->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('data'), 'doc.txt'));
 
     $version = $node->currentVersion()->first();
     expect($version->status)->toBe('committed')        // L234
@@ -157,7 +164,7 @@ it('UploadFile L234-236: committed version has status=committed, correct created
 // incorrectly fires the exception.
 it('UploadFile L249 SmallerOrEqualToSmaller/Decrement: same-size version passes even when storage is over quota', function (): void {
     $drive = DriveTestHelpers::drive();
-    $node = $drive->upload(DriveTestHelpers::streamFor('hello'), originalName: 'f.bin'); // 5 bytes; used=5
+    $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('hello'), 'f.bin')); // 5 bytes; used=5
 
     // Force storage into over-quota state (used > quota).
     $drive->model()->forceFill(['quota_bytes' => 4, 'used_bytes' => 5])->save();
@@ -165,7 +172,7 @@ it('UploadFile L249 SmallerOrEqualToSmaller/Decrement: same-size version passes 
     // New version of same 5-byte size → delta = 5 − 5 = 0. Must NOT throw.
     // SmallerOrEqualToSmaller mutant: $delta <= 0 → $delta < 0; delta=0 is not <0
     //   → quota check fires → 5+0 > 4 = true → QuotaExceededException. Test fails.
-    $drive->uploadVersion($node, DriveTestHelpers::streamFor('world'), originalName: 'f.bin');
+    $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('world'), 'f.bin'));
 
     // used_bytes stays at 5 (delta=0, adjustUsedBytes not called for 0 delta).
     expect($drive->model()->refresh()->used_bytes)->toBe(5);
@@ -180,7 +187,7 @@ it('UploadFile L249 Increment: a 1-byte over-quota upload is rejected', function
 
     // delta = 1 − 0 = 1 (new file). Must exceed quota: 5+1 > 5 → throw.
     // Increment mutant: $delta <= 1 → skips check → upload silently succeeds.
-    expect(fn () => $drive->upload(DriveTestHelpers::streamFor('x'), originalName: 'f.bin'))
+    expect(fn () => $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('x'), 'f.bin')))
         ->toThrow(QuotaExceededException::class);
 });
 
@@ -194,7 +201,7 @@ it('UploadFile L312 Increment: probeSize probe does not add a phantom byte at th
 
     // Stream of 9 bytes. delta = 9 − 0 = 9. Check: 91+9 = 100, not > 100 → passes.
     // Increment mutant: probedSize=10 → delta=10 → 91+10=101 > 100 → throws. Test fails.
-    $node = $drive->upload(DriveTestHelpers::streamFor('123456789'), originalName: 'f.bin');
+    $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('123456789'), 'f.bin'));
 
     expect($node)->toBeInstanceOf(Node::class);
     expect($drive->model()->refresh()->used_bytes)->toBe(100);
@@ -206,7 +213,7 @@ it('UploadFile L312 Increment: probeSize probe does not add a phantom byte at th
 it('UploadFile L319: a file with no extension stores a null extension, not an empty string', function (): void {
     $drive = DriveTestHelpers::drive();
 
-    $node = $drive->upload(DriveTestHelpers::streamFor('bytes'), originalName: 'noextension');
+    $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('bytes'), 'noextension'));
 
     expect($node->extension)->toBeNull();
 });
@@ -215,7 +222,7 @@ it('UploadFile L319: a file with no extension stores a null extension, not an em
 it('UploadFile L129-130: owner_id and created_by are set to actorId on new-file commit', function (): void {
     $drive = DriveTestHelpers::drive();
 
-    $node = $drive->upload(DriveTestHelpers::streamFor('data'), originalName: 'f.txt', actorId: 77);
+    $node = $drive->actingAs(DriveTestHelpers::actor($drive, 77))->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('data'), 'f.txt'));
 
     expect($node->owner_id)->toEqual(77)
         ->and($node->created_by)->toEqual(77);
@@ -306,10 +313,10 @@ it('NodeController L383/L385: per_page is clamped to exactly 1 at the lower boun
 // copy must still increment used_bytes (Increment mutant: > 1 skips the call).
 it('CopyNode L70: copying a 1-byte file increments used_bytes by exactly 1', function (): void {
     $drive = DriveTestHelpers::drive();
-    $source = $drive->upload(DriveTestHelpers::streamFor('x'), originalName: 'tiny.bin');
+    $source = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('x'), 'tiny.bin'));
     $usedBefore = $drive->model()->refresh()->used_bytes;
 
-    $drive->copy($source, name: 'tiny-copy.bin');
+    $drive->nodes()->copy($source, destination: null, options: new CopyOptions(name: 'tiny-copy.bin'));
 
     // Increment mutant: addedBytes > 1 → 1 is not > 1 → skip → used_bytes unchanged.
     expect($drive->model()->refresh()->used_bytes)->toBe($usedBefore + 1);
@@ -325,34 +332,42 @@ it('CopyNode L70: copying a 1-byte file increments used_bytes by exactly 1', fun
 // What we CAN assert: the boolean values copy correctly for the common false/true cases.
 it('CopyNode L94/L95: is_pinned and inherit_grants propagate correctly from source to copy', function (): void {
     $drive = DriveTestHelpers::drive();
-    $source = $drive->upload(DriveTestHelpers::streamFor('data'), originalName: 'f.bin');
+    $source = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('data'), 'f.bin'));
 
     // Source defaults: is_pinned=false, inherit_grants=true (schema defaults).
-    $copy = $drive->copy($source, name: 'copy.bin');
+    $copy = $drive->nodes()->copy($source, destination: null, options: new CopyOptions(name: 'copy.bin'));
 
     expect((bool) $copy->is_pinned)->toBeFalse()
         ->and((bool) $copy->inherit_grants)->toBeTrue();
 });
 
-// L96 RemoveArrayItem: shortcut_target_id must survive the copy.
-it('CopyNode L96: shortcut_target_id is preserved on the copied node', function (): void {
+// Shortcut payload copy is deliberately unavailable until its full lifecycle exists.
+it('CopyNode rejects a real shortcut before inserting a copy or charging quota', function (): void {
     $drive = DriveTestHelpers::drive();
-    $target = $drive->createFolder('Target');
-    $source = $drive->createFolder('Shortcut');
-    $source->forceFill(['shortcut_target_id' => $target->getKey()])->save();
+    $target = $drive->folders()->create('Target');
+    $source = $drive->folders()->create('Shortcut');
+    $source->forceFill(['kind' => NodeKind::Shortcut, 'shortcut_target_id' => $target->getKey()])->save();
+    $db = app(VaulterDatabase::class)->connection();
+    $state = static fn (): array => [
+        $db->table('v_nodes')->count(),
+        $db->table('v_file_revisions')->count(),
+        $db->table('v_file_revision_blobs')->count(),
+        $drive->model()->refresh()->used_bytes,
+    ];
+    $before = $state();
 
-    $copy = $drive->copy($source, name: 'Shortcut Copy');
-
-    // RemoveArrayItem mutant: shortcut_target_id is not inserted → null on copy.
-    expect($copy->shortcut_target_id)->toEqual($target->getKey());
+    expect(fn () => $drive->nodes()->copy($source, options: new CopyOptions(name: 'Shortcut Copy')))
+        ->toThrow(UnsupportedNodeKindException::class)
+        ->and($state())->toBe($before)
+        ->and($source->refresh()->shortcut_target_id)->toEqual($target->getKey());
 });
 
 // L151 RemoveArrayItem in copyFilePayload's version create: status must be 'committed'.
 it('CopyNode L151: copied file version has status=committed', function (): void {
     $drive = DriveTestHelpers::drive();
-    $source = $drive->upload(DriveTestHelpers::streamFor('bytes'), originalName: 'src.bin');
+    $source = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('bytes'), 'src.bin'));
 
-    $copy = $drive->copy($source, name: 'src-copy.bin');
+    $copy = $drive->nodes()->copy($source, destination: null, options: new CopyOptions(name: 'src-copy.bin'));
 
     $version = $copy->currentVersion()->first();
     // RemoveArrayItem mutant: 'status' key missing → DB default (likely null or empty).
@@ -427,27 +442,20 @@ it('DownloadController L115 first CoalesceRemoveLeft: version mime_type wins ove
     expect($response->headers->get('content-type'))->toBe('image/png');
 });
 
-// L115 second CoalesceRemoveLeft: node.mime_type is the fallback when version.mime_type is null.
-it('DownloadController L115 second CoalesceRemoveLeft: node mime_type is used when version mime_type is null', function (): void {
+// Delivery takes MIME from the committed immutable revision, with a safe null fallback.
+it('DownloadController uses octet-stream when revision MIME is null despite node MIME', function (): void {
     $storage = r07bActStorage();
-
     $nodeId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/uploads', [
         'file' => UploadedFile::fake()->image('photo.png', 1, 1),
     ])->assertCreated()->json('data.id');
-
-    // Set version.mime_type to null so node.mime_type must be the fallback.
     $version = Node::find($nodeId)->currentVersion()->first();
     $version->forceFill(['mime_type' => null])->save();
-    // Ensure node.mime_type is set to the whitelisted value we want to observe.
     Node::find($nodeId)->forceFill(['mime_type' => 'image/png'])->save();
-
     app()->instance(StorageDriver::class, new R07bStreamingDriver(app(StorageDriver::class)));
 
     $response = $this->get('api/vaulter/nodes/'.$nodeId.'/download');
     $response->assertOk();
-
-    // Second CoalesceRemoveLeft mutant: removes node.mime_type → 'application/octet-stream' fallback.
-    expect($response->headers->get('content-type'))->toBe('image/png');
+    expect($response->headers->get('content-type'))->toBe('application/octet-stream');
 });
 
 // ---------------------------------------------------------------------------
@@ -458,12 +466,12 @@ it('DownloadController L115 second CoalesceRemoveLeft: node mime_type is used wh
 // must still reduce used_bytes. Increment mutant (> 1) skips for freedBytes=1.
 it('ForceDelete L61: force-deleting a 1-byte file fully reclaims the single byte from used_bytes', function (): void {
     $drive = DriveTestHelpers::drive();
-    $node = $drive->upload(DriveTestHelpers::streamFor('x'), originalName: 'tiny.bin'); // 1 byte
+    $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('x'), 'tiny.bin')); // 1 byte
     expect($drive->model()->refresh()->used_bytes)->toBe(1);
 
-    $drive->trash($node);
+    $drive->nodes()->trash($node);
 
-    $drive->forceDelete($node);
+    $drive->trash()->purge($node);
 
     // Increment mutant: freedBytes > 1 → skip adjustUsedBytes → used_bytes stays at 1.
     expect($drive->model()->refresh()->used_bytes)->toBe(0);
@@ -476,12 +484,12 @@ it('ForceDelete L61: force-deleting a 1-byte file fully reclaims the single byte
 it('ForceDelete L67: NodeForceDeleted event carries numerically indexed nodeIds list', function (): void {
     Event::fake([NodePurged::class]);
     $drive = DriveTestHelpers::drive();
-    $node = $drive->upload(DriveTestHelpers::streamFor('data'), originalName: 'f.bin');
+    $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('data'), 'f.bin'));
     $nodeId = $node->getKey();
 
-    $drive->trash($node);
+    $drive->nodes()->trash($node);
 
-    $drive->forceDelete($node);
+    $drive->trash()->purge($node);
 
     Event::assertDispatched(NodePurged::class, function (NodePurged $e) use ($nodeId): bool {
         // Must be a list: keys are 0, 1, 2, … (array_values guarantee).

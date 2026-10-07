@@ -25,7 +25,7 @@ beforeEach(function (): void {
 
 function uploadStorage(): Drive
 {
-    return Vaulter::for(DriveTestHelpers::host())->model();
+    return Vaulter::drive(DriveTestHelpers::host())->model();
 }
 
 it('tus: POST create → Location + upload_id, HEAD offset, PATCH chunks → committed node', function (): void {

@@ -12,7 +12,7 @@ use Vaulter\Tests\Drive\DriveTestHelpers;
 it('создаёт папку в корне хранилища (под root-узлом)', function (): void {
     $drive = DriveTestHelpers::drive();
 
-    $folder = $drive->createFolder('Docs');
+    $folder = $drive->folders()->create('Docs');
 
     // "At root" means a child of the storage's root folder node, not a parentless
     // sibling of it — the root node is the top of the tree.
@@ -25,8 +25,8 @@ it('создаёт папку в корне хранилища (под root-уз
 it('создаёт вложенную папку под родителем', function (): void {
     $drive = DriveTestHelpers::drive();
 
-    $parent = $drive->createFolder('Docs');
-    $child = $drive->createFolder('2026', $parent);
+    $parent = $drive->folders()->create('Docs');
+    $child = $drive->folders()->create('2026', $parent);
 
     expect($child->parent_id)->toEqual($parent->getKey());
 });
@@ -34,29 +34,29 @@ it('создаёт вложенную папку под родителем', fun
 it('детерминированно отклоняет конфликт имён сиблингов', function (): void {
     $drive = DriveTestHelpers::drive();
 
-    $drive->createFolder('Docs');
+    $drive->folders()->create('Docs');
 
-    expect(fn (): Node => $drive->createFolder('Docs'))
+    expect(fn (): Node => $drive->folders()->create('Docs'))
         ->toThrow(NodeNameConflictException::class);
 });
 
 it('игнорирует регистр при проверке сиблингов', function (): void {
     $drive = DriveTestHelpers::drive();
 
-    $drive->createFolder('Docs');
+    $drive->folders()->create('Docs');
 
-    expect(fn (): Node => $drive->createFolder('DOCS'))
+    expect(fn (): Node => $drive->folders()->create('DOCS'))
         ->toThrow(NodeNameConflictException::class);
 });
 
 it('разрешает одинаковые имена в разных родителях', function (): void {
     $drive = DriveTestHelpers::drive();
 
-    $a = $drive->createFolder('A');
-    $b = $drive->createFolder('B');
+    $a = $drive->folders()->create('A');
+    $b = $drive->folders()->create('B');
 
-    $drive->createFolder('Shared', $a);
-    $shared = $drive->createFolder('Shared', $b);
+    $drive->folders()->create('Shared', $a);
+    $shared = $drive->folders()->create('Shared', $b);
 
     expect($shared->parent_id)->toEqual($b->getKey());
 });
@@ -64,7 +64,7 @@ it('разрешает одинаковые имена в разных роди�
 it('диспатчит NodeCreated при создании папки', function (): void {
     Event::fake([FolderCreated::class]);
 
-    $folder = DriveTestHelpers::drive()->createFolder('Docs');
+    $folder = DriveTestHelpers::drive()->folders()->create('Docs');
 
     Event::assertDispatched(
         FolderCreated::class,
@@ -75,8 +75,8 @@ it('диспатчит NodeCreated при создании папки', function
 it('list возвращает прямых детей папки', function (): void {
     $drive = DriveTestHelpers::drive();
 
-    $drive->createFolder('A');
-    $drive->createFolder('B');
+    $drive->folders()->create('A');
+    $drive->folders()->create('B');
 
-    expect($drive->list()->pluck('name')->all())->toBe(['A', 'B']);
+    expect(collect($drive->nodes()->children()->items)->pluck('name')->all())->toBe(['A', 'B']);
 });

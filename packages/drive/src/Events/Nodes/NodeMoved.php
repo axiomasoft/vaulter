@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Events\Nodes;
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Support\Str;
 use Vaulter\Models\Drive\Node;
+use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
  * A node was re-parented within its storage tree — a single parent_id UPDATE
@@ -22,6 +23,8 @@ final readonly class NodeMoved implements ShouldDispatchAfterCommit
         public int|string|null $toParentId,
         public int|string|null $actorId = null,
         ?string $eventId = null,
+        public ?ActorRef $actor = null,
+        public ?string $correlationId = null,
     ) {
         $this->eventId = $eventId ?? (string) Str::ulid();
     }

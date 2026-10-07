@@ -67,7 +67,7 @@ it('flips between live and trashed WITHIN the accessible set via the Trashed fil
     DriveBuilder::grant($live, $admin);
     DriveBuilder::grant($trashed, $admin);
 
-    Vaulter::forStorage($storage)->trash(node: $trashed, actorId: $admin->getKey());
+    Vaulter::drive($storage)->actingAs($admin)->nodes()->trash(node: $trashed);
 
     $base = NodeResource::getEloquentQuery();
 
@@ -94,8 +94,8 @@ it('keeps force-deleted tombstones out of the resource table', function (): void
     DriveBuilder::grant($live, $admin);
     DriveBuilder::grant($deleted, $admin);
 
-    Vaulter::forStorage($storage)->trash(node: $deleted, actorId: $admin->getKey());
-    Vaulter::forStorage($storage)->forceDelete(node: $deleted, actorId: $admin->getKey());
+    Vaulter::drive($storage)->actingAs($admin)->nodes()->trash(node: $deleted);
+    Vaulter::drive($storage)->actingAs($admin)->trash()->purge(node: $deleted);
 
     $ids = NodeResource::getEloquentQuery()->pluck('id')->all();
 
@@ -109,7 +109,7 @@ it('constrains a raw builder to the item anchor only via the repository seam', f
 
     $storage = DriveBuilder::storage();
     $folder = DriveBuilder::folder($storage, 'ItemOnly');
-    $child = Vaulter::forStorage($storage)->createFolder(name: 'Inside', parent: $folder);
+    $child = Vaulter::drive($storage)->asSystem('test fixture')->folders()->create(name: 'Inside', parent: $folder);
 
     // ITEM scope = that node only; the child is not a candidate.
     DriveBuilder::grant($folder, $admin, level: GrantLevel::Reader, scope: GrantScope::Item);
@@ -129,7 +129,7 @@ it('lists a deny-vetoed candidate in the table query (superset), per the listing
 
     $storage = DriveBuilder::storage();
     $parent = DriveBuilder::folder($storage, 'Parent');
-    $child = Vaulter::forStorage($storage)->createFolder(name: 'Vetoed', parent: $parent);
+    $child = Vaulter::drive($storage)->asSystem('test fixture')->folders()->create(name: 'Vetoed', parent: $parent);
 
     // A subtree allow on the parent makes the child a candidate; a nearer deny revokes
     // the child's EXACT access. The candidate SUPERSET still LISTS the child (the deny

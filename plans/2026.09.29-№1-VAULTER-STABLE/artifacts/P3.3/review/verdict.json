@@ -1,0 +1,53 @@
+{
+  "verdict": "FINDINGS",
+  "native_session": "88590d64-6750-46ab-9cfb-4f690527ea95",
+  "actual_backend_models": [
+    "grok-4.7-build"
+  ],
+  "native_model": "grok-4.7",
+  "effort": "high",
+  "tool_calls": 94,
+  "completed_round": 1,
+  "findings": [
+    {
+      "id": "G1",
+      "severity": "Major",
+      "status": "confirmed",
+      "owning_paths": [
+        "packages/drive/src/Operations/FileOperations.php",
+        "packages/drive/src/Actions/Nodes/NameConflictResolver.php",
+        "packages/drive/src/Actions/Files/IngestFileAction.php"
+      ]
+    },
+    {
+      "id": "G2",
+      "severity": "Major",
+      "status": "rejected-factual-premise",
+      "reason": "Actual PHP8.4 json_encode backed enums yields [\"file\"] and [\"folder\"] (enum-json-proof.log), not [{}]. Additional behavioral cursor rejection test checks original code before any NodePageQuery edit."
+    },
+    {
+      "id": "G3",
+      "severity": "Major",
+      "status": "confirmed",
+      "owning_paths": [
+        "packages/drive/src/Queries/SharedWithActorQuery.php"
+      ]
+    },
+    {
+      "id": "G4",
+      "severity": "Minor",
+      "status": "confirmed",
+      "owning_paths": [
+        "UPGRADE.md"
+      ]
+    }
+  ],
+  "integrator_additional_findings": [
+    {
+      "id": "I1",
+      "severity": "Major",
+      "status": "confirmed-by-RED",
+      "scenario": "addRevision reloads current head after transaction, can return another committed revision; deterministic real afterCommit later writer test fails expected2 got3."
+    }
+  ]
+}

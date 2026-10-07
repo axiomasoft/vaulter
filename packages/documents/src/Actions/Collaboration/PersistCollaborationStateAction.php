@@ -16,8 +16,11 @@ use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionStoreRepository;
 use Vaulter\Documents\Support\DocumentContentHasher;
+use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Operations\NodeSequence;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\LoadTier;
+use Vaulter\Support\TreeGuard;
 
 /**
  * Persist a Yjs snapshot (master plan §7 / ADR-0001 / M4b) — the write the Node
@@ -43,15 +46,13 @@ final readonly class PersistCollaborationStateAction
         private MetricsRecorder $metrics,
         private VaulterDatabase $database,
         private DocumentsConfig $documentsConfig,
+        private TreeGuard $tree,
+        private NodeSequence $sequence,
     ) {}
 
     public function execute(PersistCollaborationStateInput $data): DocumentRevision
     {
         $node = $data->node;
-
-        if (!$node->kind->isDocument()) {
-            throw NotADocumentException::forNode($node->getKey());
-        }
 
         // F-P1.11-05: the ADR-0004 size limit was defined but never enforced at save
         // time. The Yjs binary state is the source of truth and is unbounded here by
@@ -61,10 +62,32 @@ final readonly class PersistCollaborationStateAction
         return $this->metrics->timing(
             name: 'vaulter_collab_snapshot_duration_seconds',
             operation: fn (): DocumentRevision => $this->database->transaction(function () use ($node, $data): DocumentRevision {
+                $driveId = $node->getRawOriginal('drive_id');
+                $nodeId = $node->getRawOriginal($node->getKeyName());
+                if (!$node->exists || (!is_int($nodeId) && !is_string($nodeId)) || $nodeId === ''
+                    || (!is_int($driveId) && !is_string($driveId)) || $driveId === '') {
+                    throw NodeNotFoundException::forId('unpersisted');
+                }
+                $this->database->lockTreeShared($driveId);
+                $current = $this->tree->locked($this->tree->lock([$nodeId]), $nodeId);
+                if (!$this->tree->sameStorage($current, $driveId)) {
+                    throw NodeNotFoundException::forId($nodeId);
+                }
+                if (!$current->kind->isDocument()) {
+                    throw NotADocumentException::forNode($nodeId);
+                }
+                $node = $this->tree->sync($node, $current);
+                $this->sequence->assertExpected(locked: $node, expected: null);
                 $head = $this->read->head($node);
 
                 if ($head !== null && $this->shouldOverwrite($head)) {
-                    $version = $this->store->update($head, $this->payload($data, $head));
+                    $payload = $this->payload($data, $head);
+                    if ($head->content == $payload['content'] && $head->content_hash === $payload['content_hash']
+                        && $head->yjs_state === $payload['yjs_state'] && $head->yjs_state_size === $payload['yjs_state_size']) {
+                        return $head;
+                    }
+                    $version = $this->store->update($head, $payload);
+                    $this->sequence->bump(locked: $node);
 
                     event(new DocumentContentUpdated(
                         node: $node,
@@ -97,6 +120,7 @@ final readonly class PersistCollaborationStateAction
                     max: $this->documentsConfig->revisionLimit(),
                     headId: $version->getKey(),
                 );
+                $this->sequence->bump(locked: $node);
 
                 event(new DocumentContentUpdated(
                     node: $node,

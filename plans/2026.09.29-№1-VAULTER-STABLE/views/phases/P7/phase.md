@@ -29,6 +29,8 @@ vaulter:doctor с проверками всех пакетов; vaulter:install,
 
 **D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.
 
+D29 — обязательные corrections при следующей детализации. Read @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json до разработки contracts; применимые C-rows разворачиваются в concrete owning item files/reads/named tests/exact validation, не остаются note-only. C09: P7.1 doctor проверяет configured scanner, effective policy/cutover, stalled/failed durable obligations, leases и invalid scope. P7.2 регистрирует bounded scan backfill/reconcile и fan-out/retry recovery schedules с безопасным maintenance scope; P7.4 reusable host contract tests scanner/scoping/policy/fault recovery; P7.6 эксплуатационные runbooks перехода legacy, failures/unsupported/password files, повторных доставок и direct URL limits. Disabled webhooks не отключают mandatory scan work.
+
 ## Depends on
 
 - P6
@@ -65,9 +67,13 @@ vaulter:doctor с проверками всех пакетов; vaulter:install,
 
 **D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.
 
+D29 — обязательные corrections при следующей детализации. Read @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json до разработки contracts; применимые C-rows разворачиваются в concrete owning item files/reads/named tests/exact validation, не остаются note-only. C09: P7.1 doctor проверяет configured scanner, effective policy/cutover, stalled/failed durable obligations, leases и invalid scope. P7.2 регистрирует bounded scan backfill/reconcile и fan-out/retry recovery schedules с безопасным maintenance scope; P7.4 reusable host contract tests scanner/scoping/policy/fault recovery; P7.6 эксплуатационные runbooks перехода legacy, failures/unsupported/password files, повторных доставок и direct URL limits. Disabled webhooks не отключают mandatory scan work.
+
 ## Scope Included (planned)
 
 Команды и планировщик; стабы генераторов; InteractsWithVaulter и фабрики; packages/vaulter metapackage; consumer-гейт; docs/ дерево и генерация reference.
+
+C09: P7.1 doctor проверяет configured scanner, effective policy/cutover, stalled/failed durable obligations, leases и invalid scope. P7.2 регистрирует bounded scan backfill/reconcile и fan-out/retry recovery schedules с безопасным maintenance scope; P7.4 reusable host contract tests scanner/scoping/policy/fault recovery; P7.6 эксплуатационные runbooks перехода legacy, failures/unsupported/password files, повторных доставок и direct URL limits. Disabled webhooks не отключают mandatory scan work.
 
 ## Scope Excluded
 
@@ -86,6 +92,8 @@ P6 закрыта. Owner gate O-4: тег AzGuard для vaulter-azgard (D02, Q9
 - P7.5 — Metapackage, split-проверки, consumer-установка, AzGuard-тег (implementation/high)
 - P7.6 — Документация (economy/medium + implementation-ревью)
 
+Обязательное расширение scope этих planned items: C09: P7.1 doctor проверяет configured scanner, effective policy/cutover, stalled/failed durable obligations, leases и invalid scope. P7.2 регистрирует bounded scan backfill/reconcile и fan-out/retry recovery schedules с безопасным maintenance scope; P7.4 reusable host contract tests scanner/scoping/policy/fault recovery; P7.6 эксплуатационные runbooks перехода legacy, failures/unsupported/password files, повторных доставок и direct URL limits. Disabled webhooks не отключают mandatory scan work.
+
 ## Items
 
 | ID | Title | Status | Updated |
@@ -98,3 +106,7 @@ P6 закрыта. Owner gate O-4: тег AzGuard для vaulter-azgard (D02, Q9
 ## Mandatory validation/execution policy (D25)
 
 **D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.
+
+## Обязательные forward corrections (D29)
+
+D29 — обязательные corrections при следующей детализации. Read @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json до разработки contracts; применимые C-rows разворачиваются в concrete owning item files/reads/named tests/exact validation, не остаются note-only. C09: P7.1 doctor проверяет configured scanner, effective policy/cutover, stalled/failed durable obligations, leases и invalid scope. P7.2 регистрирует bounded scan backfill/reconcile и fan-out/retry recovery schedules с безопасным maintenance scope; P7.4 reusable host contract tests scanner/scoping/policy/fault recovery; P7.6 эксплуатационные runbooks перехода legacy, failures/unsupported/password files, повторных доставок и direct URL limits. Disabled webhooks не отключают mandatory scan work.

@@ -29,6 +29,8 @@ REST /api/vaulter/v1 поверх Operations: invokable-контроллеры, 
 
 **D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.
 
+D29 — обязательные corrections при следующей детализации. Read @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json до разработки contracts; применимые C-rows разворачиваются в concrete owning item files/reads/named tests/exact validation, не остаются note-only. P6.1/C07/C08: strict application-mediated egress default; opt-in direct URL exact version/TTL/bounded revoke. Strong representation ETag учитывает actual returned fields including permission/scan dependencies, а не bare sequence; authorization/quarantine до304. Critical existing-resource mutations require If-Match missing428/stale412. P6.2 problem codes stable; P6.3 OpenAPI/contract tests описывают режимы, preconditions и caches; P6.4/.5/.6 clients/Filament используют guards и opaque validators, не придумывают свой sequence ETag.
+
 ## Depends on
 
 - P5
@@ -66,9 +68,13 @@ REST /api/vaulter/v1 поверх Operations: invokable-контроллеры, 
 
 **D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.
 
+D29 — обязательные corrections при следующей детализации. Read @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json до разработки contracts; применимые C-rows разворачиваются в concrete owning item files/reads/named tests/exact validation, не остаются note-only. P6.1/C07/C08: strict application-mediated egress default; opt-in direct URL exact version/TTL/bounded revoke. Strong representation ETag учитывает actual returned fields including permission/scan dependencies, а не bare sequence; authorization/quarantine до304. Critical existing-resource mutations require If-Match missing428/stale412. P6.2 problem codes stable; P6.3 OpenAPI/contract tests описывают режимы, preconditions и caches; P6.4/.5/.6 clients/Filament используют guards и opaque validators, не придумывают свой sequence ETag.
+
 ## Scope Included (planned)
 
 Маршруты vaulter.v1.*; ProblemException/ProblemRenderer/коды/lang; openapi/vaulter-v1.yaml; vue клиент и composables; хаб; Filament без Actions/Repositories.
+
+P6.1/C07/C08: strict application-mediated egress default; opt-in direct URL exact version/TTL/bounded revoke. Strong representation ETag учитывает actual returned fields including permission/scan dependencies, а не bare sequence; authorization/quarantine до304. Critical existing-resource mutations require If-Match missing428/stale412. P6.2 problem codes stable; P6.3 OpenAPI/contract tests описывают режимы, preconditions и caches; P6.4/.5/.6 clients/Filament используют guards и opaque validators, не придумывают свой sequence ETag.
 
 ## Scope Excluded
 
@@ -87,6 +93,8 @@ P5 закрыта (контракты P3–P5 заморожены).
 - P6.5 — Хаб на v1 (implementation/medium)
 - P6.6 — Filament через handle (implementation/medium)
 
+Обязательное расширение scope этих planned items: P6.1/C07/C08: strict application-mediated egress default; opt-in direct URL exact version/TTL/bounded revoke. Strong representation ETag учитывает actual returned fields including permission/scan dependencies, а не bare sequence; authorization/quarantine до304. Critical existing-resource mutations require If-Match missing428/stale412. P6.2 problem codes stable; P6.3 OpenAPI/contract tests описывают режимы, preconditions и caches; P6.4/.5/.6 clients/Filament используют guards и opaque validators, не придумывают свой sequence ETag.
+
 ## Items
 
 | ID | Title | Status | Updated |
@@ -99,3 +107,7 @@ P5 закрыта (контракты P3–P5 заморожены).
 ## Mandatory validation/execution policy (D25)
 
 **D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.
+
+## Обязательные forward corrections (D29)
+
+D29 — обязательные corrections при следующей детализации. Read @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json до разработки contracts; применимые C-rows разворачиваются в concrete owning item files/reads/named tests/exact validation, не остаются note-only. P6.1/C07/C08: strict application-mediated egress default; opt-in direct URL exact version/TTL/bounded revoke. Strong representation ETag учитывает actual returned fields including permission/scan dependencies, а не bare sequence; authorization/quarantine до304. Critical existing-resource mutations require If-Match missing428/stale412. P6.2 problem codes stable; P6.3 OpenAPI/contract tests описывают режимы, preconditions и caches; P6.4/.5/.6 clients/Filament используют guards и opaque validators, не придумывают свой sequence ETag.

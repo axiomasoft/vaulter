@@ -1,0 +1,448 @@
+--- review1/UPGRADE.md
++++ current/UPGRADE.md
+@@ -504,7 +504,8 @@
+ 
+ Drive classes use domain namespaces. Replace the following FQNs; the old names
+ and removed classes have no aliases. Routes, middleware and JSON fields retain
+-their current behavior. Entry points `Vaulter::for()` and `forStorage()` remain.
++their current behavior. The P3.3 canonical API section above supersedes the old
++entry points: replace `Vaulter::for()` / `forStorage()` with `Vaulter::drive()`.
+ 
+ | Before | After |
+ |---|---|
+--- review1/packages/drive/src/Actions/Files/IngestFileAction.php
++++ current/packages/drive/src/Actions/Files/IngestFileAction.php
+@@ -17,6 +17,7 @@
+ use Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException;
+ use Vaulter\Drive\Exceptions\Quota\QuotaExceededException;
+ use Vaulter\Enums\Drive\NodeKind;
++use Vaulter\Enums\Drive\OnNameConflict;
+ use Vaulter\Exceptions\Drive\QuotaExceededException as CoreQuotaExceededException;
+ use Vaulter\Exceptions\Nodes\InvalidDestinationException;
+ use Vaulter\Media\Configuration\MediaConfig;
+@@ -89,7 +90,7 @@
+ 
+         try {
+             // Revision deltas must use the locked head; a stale caller cannot reject them.
+-            if (!$data->isNewVersion()) {
++            if (!$data->isNewVersion() && $data->onConflict !== OnNameConflict::AddRevision) {
+                 $this->assertWithinQuota(data: $data, delta: $staged->sizeBytes());
+             }
+ 
+--- review1/packages/drive/src/Actions/Nodes/NameConflictResolver.php
++++ current/packages/drive/src/Actions/Nodes/NameConflictResolver.php
+@@ -8,12 +8,21 @@
+ use Vaulter\Enums\Drive\OnNameConflict;
+ use Vaulter\Exceptions\Nodes\NodeNameConflictException;
+ use Vaulter\Models\Drive\Drive;
++use Vaulter\Models\Drive\Node;
+ use Vaulter\Repositories\Drive\NodeReadRepository;
+ use Vaulter\Support\NodeName;
+ 
+ final readonly class NameConflictResolver
+ {
+     public function __construct(private NodeReadRepository $nodes, private DriveConfig $config) {}
++
++    /** Caller holds the drive tree and parent locks. */
++    public function sibling(Drive $drive, Node $parent, string $name): ?Node
++    {
++        $name = NodeName::normalize($name, $this->config->nameMaxLength());
++
++        return $this->nodes->children($drive, $parent)->whereRaw('lower(name) = lower(?)', [$name])->first();
++    }
+ 
+     public function resolve(Drive $drive, int|string $parentId, string $name, OnNameConflict $onConflict, int|string|null $ignoreId = null): string
+     {
+--- review1/packages/drive/src/Operations/FileOperations.php
++++ current/packages/drive/src/Operations/FileOperations.php
+@@ -16,8 +16,10 @@
+ use Vaulter\Data\Drive\RevisionOptions;
+ use Vaulter\Data\Drive\UploadOptions;
+ use Vaulter\Data\Drive\UploadSource;
++use Vaulter\Database\VaulterDatabase;
+ use Vaulter\Drive\Actions\Files\IngestFileAction;
+ use Vaulter\Drive\Actions\Files\RestoreFileRevisionAction;
++use Vaulter\Drive\Actions\Nodes\NameConflictResolver;
+ use Vaulter\Drive\Content\CopyDestinationAdmission;
+ use Vaulter\Drive\Data\Files\IngestFileInput;
+ use Vaulter\Drive\Data\Files\RestoreFileRevisionInput;
+@@ -27,12 +29,14 @@
+ use Vaulter\Enums\Drive\OnNameConflict;
+ use Vaulter\Enums\Operations\OperationKind;
+ use Vaulter\Exceptions\Content\ContentQuarantinedException;
++use Vaulter\Exceptions\Nodes\NodeNameConflictException;
+ use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+ use Vaulter\Exceptions\Nodes\NotAFileException;
+ use Vaulter\Models\Drive\FileRevision;
+ use Vaulter\Models\Drive\Node;
+ use Vaulter\Operations\NodeLocator;
+ use Vaulter\Operations\OperationContext;
++use Vaulter\Support\TreeGuard;
+ 
+ final readonly class FileOperations implements Contract
+ {
+@@ -44,11 +48,14 @@
+         $parent = $this->locator->find($this->context, $options->parent ?? $this->context->drive->root_node_id ?? throw NodeNotFoundException::forId('root'));
+         $this->guard->authorizeCreate($this->context, $parent);
+         if ($options->onConflict === OnNameConflict::AddRevision) {
+-            $target = $parent->children()->whereNull('trashed_at')->where('name', $options->name ?? $source->name())->first();
++            $target = $this->uploadSibling($parent, $options->name ?? $source->name());
+             if ($target !== null) {
+-                $this->addRevision($target, $source, new RevisionOptions(declaredMimeType: $options->declaredMimeType));
+-
+-                return $this->file($target, Ability::View);
++                if ($target->kind !== NodeKind::File) {
++                    throw NodeNameConflictException::forName($target->name, $parent->id);
++                }
++                $target = $this->file($target, Ability::Edit);
++
++                return $this->ingestSource($source, null, $target, null, $options->declaredMimeType, null, OnNameConflict::Fail);
+             }
+         }
+ 
+@@ -61,7 +68,7 @@
+         $options ??= new RevisionOptions;
+         $node = $this->ingestSource($source, null, $node, null, $options->declaredMimeType, $options->expectedSequence, OnNameConflict::Fail);
+ 
+-        return $this->revision($node, null);
++        return $this->revision($node, $node->current_version_id ?? throw NodeNotFoundException::forId($node->id));
+     }
+ 
+     /** @return CursorPaginator<int, FileRevision> */
+@@ -119,27 +126,47 @@
+         return $file->versions()->whereKey($id)->whereIn('status', ['committed', 'superseded'])->first() ?? throw NodeNotFoundException::forId($node->id);
+     }
+ 
++    private function uploadSibling(Node $parent, string $name): ?Node
++    {
++        return app(VaulterDatabase::class)->transaction(function () use ($parent, $name): ?Node {
++            $database = app(VaulterDatabase::class);
++            $database->lockTreeShared($this->context->driveId());
++            $tree = app(TreeGuard::class);
++            $locked = $tree->locked($tree->lock([$parent->id]), $parent->id);
++            $tree->assertActiveFolder($locked);
++
++            return app(NameConflictResolver::class)->sibling($this->context->drive, $locked, $name);
++        });
++    }
++
+     private function ingestSource(UploadSource $source, ?Node $parent, ?Node $target, ?string $name, ?string $mime, ?int $expected, OnNameConflict $conflict): Node
+     {
+         $reader = $source->openForReading();
+         $stream = $reader;
+         $owned = null;
+         try {
+-            if ($reader instanceof StreamInterface) {
++            // An AddRevision contender may discover its sibling only after the
++            // first locked new-file attempt. Keep seekable bytes for that retry,
++            // including caller-owned nonseekable sources, without rereading them.
++            if ($reader instanceof StreamInterface || $conflict === OnNameConflict::AddRevision) {
+                 $owned = fopen('php://temp', 'w+b');
+                 if ($owned === false) {
+                     throw new RuntimeException('Unable to prepare upload.');
+                 }
+-                do {
+-                    $chunk = $reader->read(65536);
+-                    $finished = $reader->eof();
+-                    if ($chunk === '' && !$finished) {
+-                        throw new RuntimeException('Upload stream made no progress.');
+-                    }
+-                    if (fwrite($owned, $chunk) !== strlen($chunk)) {
+-                        throw new RuntimeException('Unable to prepare upload.');
+-                    }
+-                } while (!$finished);
++                if ($reader instanceof StreamInterface) {
++                    do {
++                        $chunk = $reader->read(65536);
++                        $finished = $reader->eof();
++                        if ($chunk === '' && !$finished) {
++                            throw new RuntimeException('Upload stream made no progress.');
++                        }
++                        if (fwrite($owned, $chunk) !== strlen($chunk)) {
++                            throw new RuntimeException('Unable to prepare upload.');
++                        }
++                    } while (!$finished);
++                } elseif (!is_resource($reader) || stream_copy_to_stream($reader, $owned) === false) {
++                    throw new RuntimeException('Unable to prepare upload.');
++                }
+                 rewind($owned);
+                 $stream = $owned;
+             }
+@@ -148,7 +175,25 @@
+                 throw new RuntimeException('Upload source is not a byte stream.');
+             }
+ 
+-            return $this->ingest->execute($this->context, new IngestFileInput(storage: $this->context->drive, stream: $stream, originalName: $source->name(), mimeType: $mime ?? $source->declaredMimeType(), into: $parent, name: $name, targetNode: $target, expectedSequence: $expected, onConflict: $conflict));
++            try {
++                return $this->ingest->execute($this->context, new IngestFileInput(storage: $this->context->drive, stream: $stream, originalName: $source->name(), mimeType: $mime ?? $source->declaredMimeType(), into: $parent, name: $name, targetNode: $target, expectedSequence: $expected, onConflict: $conflict));
++            } catch (NodeNameConflictException $exception) {
++                if ($conflict !== OnNameConflict::AddRevision || $parent === null) {
++                    throw $exception;
++                }
++                // The failed transaction made no writes. Resolve under the parent
++                // lock, then authorize Edit outside it before the revision command.
++                $sibling = $this->uploadSibling($parent, $name ?? $source->name());
++                if ($sibling === null || $sibling->kind !== NodeKind::File) {
++                    throw $exception;
++                }
++                $target = $this->file($sibling, Ability::Edit);
++                if (!rewind($stream)) {
++                    throw new RuntimeException('Unable to retry upload.');
++                }
++
++                return $this->ingest->execute($this->context, new IngestFileInput(storage: $this->context->drive, stream: $stream, originalName: $source->name(), mimeType: $mime ?? $source->declaredMimeType(), targetNode: $target));
++            }
+         } finally {
+             if (is_resource($owned)) {
+                 fclose($owned);
+--- review1/packages/drive/src/Queries/SharedWithActorQuery.php
++++ current/packages/drive/src/Queries/SharedWithActorQuery.php
+@@ -10,6 +10,7 @@
+ use Vaulter\Configuration\VaulterConfig;
+ use Vaulter\Data\Drive\ListOptions;
+ use Vaulter\Data\Drive\NodePage;
++use Vaulter\ValueObjects\Access\Actor;
+ 
+ /** @internal The current global shared listing; each page evaluates exact View. */
+ final readonly class SharedWithActorQuery
+@@ -24,7 +25,7 @@
+         return $this->listing->page(
+             actor: $actor, candidates: $query,
+             order: [['column' => 'name', 'direction' => 'asc'], ['column' => 'id', 'direction' => 'asc']],
+-            perPage: $options->perPage, cursor: $options->cursor, context: 'shared:*:',
++            perPage: $options->perPage, cursor: $options->cursor, context: json_encode(['list' => 'shared', 'actor' => Actor::user($actor)->ref()], JSON_THROW_ON_ERROR),
+         );
+     }
+ }
+--- review1/packages/drive/tests/Concurrency/NodeSequenceBoundaryTest.php
++++ current/packages/drive/tests/Concurrency/NodeSequenceBoundaryTest.php
+@@ -2,11 +2,17 @@
+ 
+ declare(strict_types=1);
+ 
++use GuzzleHttp\Psr7\StreamDecoratorTrait;
++use GuzzleHttp\Psr7\Utils;
+ use Illuminate\Support\Facades\Event;
+ use Illuminate\Support\Facades\Storage;
++use Psr\Http\Message\StreamInterface;
+ use Vaulter\Data\Drive\RevisionOptions;
++use Vaulter\Data\Drive\UploadOptions;
+ use Vaulter\Data\Drive\UploadSource;
+ use Vaulter\Database\VaulterDatabase;
++use Vaulter\Drive\Events\Files\FileRevisionAdded;
++use Vaulter\Enums\Drive\OnNameConflict;
+ use Vaulter\Exceptions\Nodes\StaleNodeException;
+ use Vaulter\Facades\Vaulter;
+ use Vaulter\Models\Drive\FileRevision;
+@@ -110,3 +116,106 @@
+         ->and($failed)->toBeTrue()->and($advanced)->toBeTrue()
+         ->and($node->refresh()->name)->toBe('original');
+ });
++
++it('SEC-REV-RECEIPT returns its own committed revision when a later writer changes the head before return', function (): void {
++    $handle = Vaulter::drive(DriveTestHelpers::host())->asSystem('revision receipt fixture');
++    $node = $handle->files()->upload(UploadSource::fromString('initial', 'receipt.txt'));
++    $fileId = $node->id;
++    $later = null;
++    Event::listen(FileRevisionAdded::class, function ($event) use ($handle, $fileId, &$later): void {
++        if ($event->version->number !== 2) {
++            return;
++        }
++        app(VaulterDatabase::class)->afterCommit(function () use ($handle, $fileId, &$later): void {
++            $later = $handle->files()->addRevision($fileId, UploadSource::fromString('later bytes', 'receipt.txt'), new RevisionOptions(expectedSequence: 1));
++        });
++    });
++
++    $receipt = $handle->files()->addRevision($fileId, UploadSource::fromString('my bytes', 'receipt.txt'), new RevisionOptions(expectedSequence: 0));
++
++    expect($later)->toBeInstanceOf(FileRevision::class)
++        ->and($receipt->number)->toBe(2)
++        ->and($receipt->sha256)->toBe(hash('sha256', 'my bytes'))
++        ->and($later->number)->toBe(3)
++        ->and($later->sha256)->toBe(hash('sha256', 'later bytes'))
++        ->and($receipt->id)->not->toBe($later->id)
++        ->and($node->refresh()->current_version_id)->toBe($later->id)
++        ->and($node->sequence)->toBe(2)
++        ->and(FileRevision::query()->count())->toBe(3);
++});
++
++it('SEC-CONFLICT-RACE turns two locked same-name uploads into one node and two revisions from nonseekable sources', function (): void {
++    $owner = DriveTestHelpers::host();
++    $handle = Vaulter::drive($owner)->asSystem('AddRevision race fixture');
++    $handle->model()->forceFill(['quota_bytes' => 3])->save();
++    $barrier = sys_get_temp_dir().'/vaulter_addrevision_'.bin2hex(random_bytes(8));
++    mkdir($barrier);
++    try {
++        $outcomes = ForkRace::run(array_map(static fn (string $bytes): Closure => static function () use ($owner, $barrier, $bytes): array {
++            $pair = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);
++            if ($pair === false) {
++                throw new RuntimeException('Unable to open the race source.');
++            }
++            [$reader, $writer] = $pair;
++            fwrite($writer, $bytes);
++            fclose($writer);
++            $stream = new class(Utils::streamFor($reader), $barrier) implements StreamInterface
++            {
++                use StreamDecoratorTrait;
++
++                private bool $arrived = false;
++
++                public function __construct(StreamInterface $stream, private string $barrier)
++                {
++                    $this->stream = $stream;
++                }
++
++                public function read($length): string
++                {
++                    if (!$this->arrived) {
++                        $this->arrived = true;
++                        file_put_contents($this->barrier.'/'.getmypid(), 'ready');
++                        $deadline = hrtime(true) + 5_000_000_000;
++                        while (count(glob($this->barrier.'/*') ?: []) !== 2) {
++                            if (hrtime(true) > $deadline) {
++                                throw new RuntimeException('Source barrier timed out.');
++                            }
++                            usleep(1000);
++                        }
++                    }
++
++                    return $this->stream->read($length);
++                }
++            };
++            try {
++                $node = Vaulter::drive($owner)->asSystem('AddRevision contender')->files()->upload(
++                    UploadSource::fromPsrStream($stream, 'same.txt'),
++                    new UploadOptions(onConflict: OnNameConflict::AddRevision),
++                );
++
++                return ['id' => $node->id, 'sha' => $node->currentVersion->sha256, 'expected_sha' => hash('sha256', $bytes), 'source_open' => $stream->isReadable(), 'nonseekable' => !$stream->isSeekable(), 'pid' => getmypid(), 'backend' => app(VaulterDatabase::class)->connection()->selectOne('select pg_backend_pid() as pid')->pid];
++            } finally {
++                $stream->close();
++            }
++        }, ['aaa', 'bbb']));
++        foreach ($outcomes as $outcome) {
++            expect($outcome->ok)->toBeTrue($outcome->message ?? '');
++            expect($outcome->value['sha'])->toBe($outcome->value['expected_sha'])
++                ->and($outcome->value['source_open'])->toBeTrue()
++                ->and($outcome->value['nonseekable'])->toBeTrue();
++        }
++        $values = array_map(static fn ($outcome): array => $outcome->value, $outcomes);
++        expect(array_unique(array_column($values, 'pid')))->toHaveCount(2)
++            ->and(array_unique(array_column($values, 'backend')))->toHaveCount(2)
++            ->and(array_unique(array_column($values, 'id')))->toHaveCount(1)
++            ->and(Node::query()->count())->toBe(2)
++            ->and(FileRevision::query()->orderBy('number')->pluck('number')->all())->toBe([1, 2])
++            ->and($handle->nodes()->find($values[0]['id'])->sequence)->toBe(1)
++            ->and($handle->model()->used_bytes)->toBe(3);
++    } finally {
++        foreach (glob($barrier.'/*') ?: [] as $path) {
++            unlink($path);
++        }
++        rmdir($barrier);
++    }
++});
+--- review1/packages/drive/tests/Feature/ExactListingTest.php
++++ current/packages/drive/tests/Feature/ExactListingTest.php
+@@ -6,9 +6,12 @@
+ use Illuminate\Support\Facades\DB;
+ use Illuminate\Support\Facades\Gate;
+ use Vaulter\Access\ExactListing;
++use Vaulter\Data\Drive\ListOptions;
++use Vaulter\Drive\Queries\SharedWithActorQuery;
+ use Vaulter\Enums\Access\Effect;
+ use Vaulter\Enums\Access\GrantLevel;
+ use Vaulter\Enums\Access\GrantScope;
++use Vaulter\Exceptions\Nodes\InvalidCursorException;
+ use Vaulter\Http\Resources\Drive\NodeResource;
+ use Vaulter\Models\Drive\Node;
+ use Vaulter\Tests\Access\AccessTestHelpers;
+@@ -145,3 +148,19 @@
+     } while ($cursor !== null);
+     expect($ids)->toContain($visible->id)->not->toContain($hidden->id);
+ });
++
++it('SEC-CURSOR binds shared-list cursors to the current actor identity', function (): void {
++    $a = AccessTestHelpers::folder($this->storage, $this->folder, 'z-shared-a');
++    AccessTestHelpers::grant($a, GrantLevel::Reader);
++    $other = AccessTestHelpers::storage();
++    $b = AccessTestHelpers::folder($other, null, 'a-shared-b');
++    AccessTestHelpers::grant($b, GrantLevel::Reader, subjectId: 2);
++    $query = app(SharedWithActorQuery::class);
++    $options = new ListOptions(perPage: 1);
++    $cursor = $query->execute($this->actor, $options)->nextCursor;
++    expect($cursor)->not->toBeNull();
++    $actorB = AccessTestHelpers::user(2);
++    expect(array_column($query->execute($actorB, $options)->items, 'id'))->toContain($b->id);
++    expect(fn () => $query->execute($actorB, $options->cursor($cursor)))
++        ->toThrow(InvalidCursorException::class);
++});
+--- review1/packages/drive/tests/PublicApi/OperationMatrixTest.php
++++ current/packages/drive/tests/PublicApi/OperationMatrixTest.php
+@@ -10,6 +10,7 @@
+ use Vaulter\Access\ValueObjects\Subject;
+ use Vaulter\Contracts\Drive\DriveHandle;
+ use Vaulter\Data\Access\GrantInput;
++use Vaulter\Data\Drive\ListOptions;
+ use Vaulter\Data\Drive\RestoreOptions;
+ use Vaulter\Data\Drive\UpdateNodeOptions;
+ use Vaulter\Data\Drive\UploadOptions;
+@@ -17,11 +18,16 @@
+ use Vaulter\Database\VaulterDatabase;
+ use Vaulter\Enums\Access\GrantLevel;
+ use Vaulter\Enums\Access\GrantScope;
++use Vaulter\Enums\Drive\NodeKind;
++use Vaulter\Enums\Drive\OnNameConflict;
+ use Vaulter\Exceptions\Access\MissingActorException;
+ use Vaulter\Exceptions\Access\PermissionDeniedException;
+ use Vaulter\Exceptions\Content\ContentQuarantinedException;
++use Vaulter\Exceptions\Nodes\InvalidCursorException;
++use Vaulter\Exceptions\Nodes\NodeNameConflictException;
+ use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+ use Vaulter\Facades\Vaulter;
++use Vaulter\Models\Drive\FileRevision;
+ use Vaulter\Models\Drive\Node;
+ use Vaulter\Tests\Access\AccessTestHelpers;
+ use Vaulter\Tests\Drive\DriveTestHelpers;
+@@ -307,3 +313,42 @@
+     $revision->forceFill(['status' => 'rejected'])->save();
+     expect(fn () => $this->actor->files()->read($file, $revision))->toThrow(NodeNotFoundException::class);
+ })->with(['pending', 'infected', 'error']);
++
++it('SEC-CONFLICT appends to the normalized case-insensitive sibling with no extra node or quota charge', function (string $stored, string $incoming): void {
++    $node = $this->system->files()->upload(UploadSource::fromString('old', $stored));
++    $this->system->model()->forceFill(['quota_bytes' => 3])->save();
++    $result = $this->system->files()->upload(UploadSource::fromString('new', $incoming), new UploadOptions(onConflict: OnNameConflict::AddRevision));
++    expect($result->id)->toBe($node->id)
++        ->and($result->sequence)->toBe(1)
++        ->and($result->currentVersion->sha256)->toBe(hash('sha256', 'new'))
++        ->and(Node::query()->count())->toBe(2)
++        ->and(FileRevision::query()->count())->toBe(2)
++        ->and($this->system->model()->used_bytes)->toBe(3);
++})->with([['Report.txt', 'report.TXT'], ['Résumé.txt', "Re\u{0301}sume\u{0301}.txt"]]);
++
++it('SEC-CONFLICT requires Edit on the actual case-insensitive revision target outside the transaction', function (): void {
++    $node = $this->system->files()->upload(UploadSource::fromString('old', 'Report.txt'));
++    operationMatrixGrant($this->system, $this->system->root(), $this->user, 5);
++    operationMatrixGrant($this->system, $node, $this->user, 1);
++    $before = operationMatrixState();
++    expect(fn () => $this->actor->files()->upload(UploadSource::fromString('new', 'report.TXT'), new UploadOptions(onConflict: OnNameConflict::AddRevision)))
++        ->toThrow(PermissionDeniedException::class);
++    expect(operationMatrixState())->toBe($before);
++});
++
++it('SEC-CONFLICT keeps a folder sibling as an upload conflict without side effects', function (): void {
++    $this->system->folders()->create('Report.txt');
++    $before = operationMatrixState();
++    expect(fn () => $this->system->files()->upload(UploadSource::fromString('new', 'report.TXT'), new UploadOptions(onConflict: OnNameConflict::AddRevision)))
++        ->toThrow(NodeNameConflictException::class);
++    expect(operationMatrixState())->toBe($before);
++});
++
++it('SEC-CURSOR rejects a file list cursor for a different kind filter', function (): void {
++    $this->system->folders()->create('a-folder');
++    $this->system->files()->upload(UploadSource::fromString('x', 'z-file.txt'));
++    $page = $this->system->nodes()->children($this->system->root(), new ListOptions(perPage: 1, kinds: [NodeKind::File]));
++    expect($page->nextCursor)->not->toBeNull();
++    expect(fn () => $this->system->nodes()->children($this->system->root(), new ListOptions(perPage: 1, cursor: $page->nextCursor, kinds: [NodeKind::Folder])))
++        ->toThrow(InvalidCursorException::class);
++});

@@ -111,7 +111,7 @@ it('R07Model resolves UploadFileData name from override not original', function 
 });
 
 it('R07Model returns the full UploadSessionResource JSON shape with nullables and ISO expires_at', function (): void {
-    $storage = Vaulter::for(DriveTestHelpers::host())->model();
+    $storage = Vaulter::drive(DriveTestHelpers::host())->model();
     $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
         'name' => 'resource-shape.bin',
         'total_size_bytes' => 16,
@@ -143,7 +143,7 @@ it('R07Model returns the full UploadSessionResource JSON shape with nullables an
 });
 
 it('R07Model returns all-false storage abilities without an actor or root node', function (): void {
-    $storage = Vaulter::for(DriveTestHelpers::host())->model();
+    $storage = Vaulter::drive(DriveTestHelpers::host())->model();
     $storage->forceFill(['root_node_id' => null])->save();
 
     $guestRequest = Request::create('/api/vaulter/storages/'.$storage->getKey());
@@ -162,7 +162,7 @@ it('R07Model returns all-false storage abilities without an actor or root node',
 
 it('R07Model requires both root create ability and workspace gate for storage create flags', function (): void {
     config()->set('vaulter.access.permission_driver', 'gate');
-    $storage = Vaulter::for(DriveTestHelpers::host())->model();
+    $storage = Vaulter::drive(DriveTestHelpers::host())->model();
     $root = $storage->rootNode()->firstOrFail();
     $actor = (new TestUser)->forceFill(['id' => 17]);
 
@@ -180,7 +180,7 @@ it('R07Model requires both root create ability and workspace gate for storage cr
     ]);
 
     Gate::define('vaulter.create', static fn (): bool => true);
-    $storageReaderOnly = Vaulter::for(DriveTestHelpers::host())->model();
+    $storageReaderOnly = Vaulter::drive(DriveTestHelpers::host())->model();
     AccessTestHelpers::grant($storageReaderOnly->rootNode()->firstOrFail(), GrantLevel::Reader, scope: GrantScope::Item, subjectId: 17);
 
     expect((new DriveResource($storageReaderOnly))->toArray($request)['abilities'])->toEqual([
@@ -190,7 +190,7 @@ it('R07Model requires both root create ability and workspace gate for storage cr
         'manage' => false,
     ]);
 
-    $storageBoth = Vaulter::for(DriveTestHelpers::host())->model();
+    $storageBoth = Vaulter::drive(DriveTestHelpers::host())->model();
     AccessTestHelpers::grant($storageBoth->rootNode()->firstOrFail(), GrantLevel::Writer, scope: GrantScope::Subtree, subjectId: 17);
 
     expect((new DriveResource($storageBoth))->toArray($request)['abilities'])->toEqual([
@@ -202,7 +202,7 @@ it('R07Model requires both root create ability and workspace gate for storage cr
 });
 
 it('R07Model treats a non-Authorizable request user as having no actor for storage abilities', function (): void {
-    $storage = Vaulter::for(DriveTestHelpers::host())->model();
+    $storage = Vaulter::drive(DriveTestHelpers::host())->model();
 
     $request = Request::create('/api/vaulter/storages/'.$storage->getKey());
     $request->setUserResolver(static fn (): object => new stdClass);
@@ -216,7 +216,7 @@ it('R07Model treats a non-Authorizable request user as having no actor for stora
 });
 
 it('R07Model exposes real storage ability flags when actor and root are present', function (): void {
-    $storage = Vaulter::for(DriveTestHelpers::host())->model();
+    $storage = Vaulter::drive(DriveTestHelpers::host())->model();
 
     $this->getJson('api/vaulter/storages/'.$storage->getKey())
         ->assertOk()

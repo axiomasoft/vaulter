@@ -28,7 +28,7 @@ it('rejects profile document type restrictions after ACL and leaves unrestricted
     config()->set('vaulter.access.permission_driver', 'null');
     $this->actingAs(AccessTestHelpers::user());
     documentProfile((new Profile)->key('default')->documentTypes('markdown'));
-    $drive = Vaulter::for(DriveTestHelpers::host())->model();
+    $drive = Vaulter::drive(DriveTestHelpers::host())->model();
     $url = 'api/vaulter/storages/'.$drive->id.'/documents';
     $this->postJson($url, ['name' => 'blocked', 'format' => 'richtext'])->assertForbidden();
     $this->postJson($url, ['name' => 'allowed', 'format' => 'markdown'])->assertCreated();

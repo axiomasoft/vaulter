@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Gate;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Facades\Vaulter;
 use Vaulter\Filament\Resources\NodeResource;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
+use Vaulter\Models\Drive\Node;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;
 
-it('applies the selected create gate to folder options and destination assertion', function (bool $allow): void {
+it('applies the selected profile create gate to folder options and canonical folder creation', function (bool $allow): void {
     $this->actingAs(DriveBuilder::user());
     $drive = DriveBuilder::storage();
     $node = DriveBuilder::folder($drive, 'source');
@@ -21,12 +23,15 @@ it('applies the selected create gate to folder options and destination assertion
     Gate::define('vaulter.manage', static fn (): bool => true);
     Gate::define('vaulter.create', static fn ($actor, array $context): bool => $allow && $context['profile'] === 'default');
     $options = new ReflectionMethod(NodeResource::class, 'folderOptions');
-    $assert = new ReflectionMethod(NodeResource::class, 'assertCanCreateIn');
+    $create = static fn (): Node => Vaulter::drive($drive)->folders()->create('child');
     if ($allow) {
         expect($options->invoke(null, $node))->not->toBe([]);
-        $assert->invoke(null, $node, null);
+        expect($create()->parent_id)->toEqual($drive->root_node_id);
     } else {
-        expect($options->invoke(null, $node))->toBe([])
-            ->and(fn () => $assert->invoke(null, $node, null))->toThrow(PermissionDeniedException::class);
+        expect($options->invoke(null, $node))->toBe([]);
+        $exception = rescue($create, static fn (Throwable $exception): Throwable => $exception, report: false);
+        expect($exception)->toBeInstanceOf(PermissionDeniedException::class)
+            ->and($exception->httpStatus())->toBe(403);
+        expect(Node::query()->where('name', 'child')->exists())->toBeFalse();
     }
 })->with([true, false]);

@@ -1,0 +1,50 @@
+{
+  "discovered-drive": {
+    "discovered_tests": 12,
+    "full_test_names": [
+      "P\\Tests\\Concurrency\\NodeSequenceBoundaryTest::__pest_evaluable_it_SEC_R18_forks_expected_7_rename_against_content_with_one_sequence_8_winner_and_a_side_effect_free_412_loser",
+      "P\\Tests\\Concurrency\\NodeSequenceBoundaryTest::__pest_evaluable_it_SEC_R19_retry_preserves_the_original_expectation_after_serialization_retry",
+      "P\\Tests\\Concurrency\\NodeSequenceBoundaryTest::__pest_evaluable_it_SEC_REV_RECEIPT_returns_its_own_committed_revision_when_a_later_writer_changes_the_head_before_return",
+      "P\\Tests\\Concurrency\\NodeSequenceBoundaryTest::__pest_evaluable_it_SEC_CONFLICT_RACE_turns_two_locked_same_name_uploads_into_one_node_and_two_revisions_from_nonseekable_sources",
+      "P\\Tests\\PublicApi\\NodeSequenceContractTest::__pest_evaluable_it_SEC_R19_noop_checks_a_current_or_stale_expectation_before_every_effective_no_op\"('rename')\"",
+      "P\\Tests\\PublicApi\\NodeSequenceContractTest::__pest_evaluable_it_SEC_R19_noop_checks_a_current_or_stale_expectation_before_every_effective_no_op\"('move')\"",
+      "P\\Tests\\PublicApi\\NodeSequenceContractTest::__pest_evaluable_it_SEC_R19_noop_checks_a_current_or_stale_expectation_before_every_effective_no_op\"('update')\"",
+      "P\\Tests\\PublicApi\\NodeSequenceContractTest::__pest_evaluable_it_increments_sequence_once_for_each_metadata_or_content_transition_and_leaves_new_nodes_at_zero",
+      "P\\Tests\\PublicApi\\NodeSequenceContractTest::__pest_evaluable_it_SEC_R20_subtree_increments_every_descendant_once_on_trash_and_restore",
+      "P\\Tests\\PublicApi\\NodeSequenceContractTest::__pest_evaluable_it_SEC_R20_overflow_admits_max_minus_one_and_rolls_back_max_mutations_including_subtree_peers",
+      "P\\Tests\\PublicApi\\NodeSequenceContractTest::__pest_evaluable_it_SEC_R20_overflow_rejects_negative_expectations_and_corrupted_negative_helper_input",
+      "P\\Tests\\PublicApi\\NodeSequenceContractTest::__pest_evaluable_it_SEC_R19_replay_returns_the_committed_result_without_ingesting_or_comparing_the_old_expectation_again."
+    ],
+    "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.3/discovered-drive.log",
+    "kind": "discovery only; not counted as execution"
+  },
+  "discovered-documents": {
+    "discovered_tests": 12,
+    "full_test_names": [
+      "P\\Tests\\Document\\LegacyNodeSequenceTest::__pest_evaluable_it_starts_a_document_at_zero_and_counts_changed_append_and_debounce_writes_once",
+      "P\\Tests\\Document\\LegacyNodeSequenceTest::__pest_evaluable_it_checks_stale_expectation_before_an_identical_overwrite_and_leaves_no_side_effects",
+      "P\\Tests\\Document\\LegacyNodeSequenceTest::__pest_evaluable_it_counts_a_new_head_identity_even_when_an_appended_autosave_has_identical_content",
+      "P\\Tests\\Document\\LegacyNodeSequenceTest::__pest_evaluable_it_reloads_the_protected_head_instead_of_trusting_a_stale_caller_model",
+      "P\\Tests\\Document\\LegacyNodeSequenceTest::__pest_evaluable_it_counts_named_and_restored_heads_even_when_their_content_is_unchanged",
+      "P\\Tests\\Document\\LegacyNodeSequenceTest::__pest_evaluable_it_counts_Yjs_append_overwrite_and_projection_changes_while_identical_state_is_a_noop",
+      "P\\Tests\\Document\\LegacyNodeSequenceTest::__pest_evaluable_it_rolls_back_content_and_head_writes_when_the_sequence_is_exhausted",
+      "P\\Tests\\Document\\LegacyNodeSequenceTest::__pest_evaluable_it_keeps_history_only_retention_changes_outside_the_editorial_sequence",
+      "P\\Tests\\Document\\LegacyNodeSequenceTest::__pest_evaluable_it_owns_runtime_document_types_and_exporter_registrations_in_the_documents_manager",
+      "P\\Tests\\Document\\LegacyNodeSequenceRaceTest::__pest_evaluable_it_SEC_LEGACY_RACE_makes_Document_and_rename_expected_seven_writers_compete_for_one_commit",
+      "P\\Tests\\Document\\LegacyNodeSequenceRaceTest::__pest_evaluable_it_SEC_LEGACY_RACE_counts_the_unconditional_installed_Yjs_writer_against_rename_CAS",
+      "P\\Tests\\Document\\PurgeTrashCascadeTest::__pest_evaluable_it_physically_deletes_a_trashed_document_node_s_inline_version_content_on_purge__F_P1_12_02."
+    ],
+    "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.3/discovered-documents.log",
+    "kind": "discovery only; not counted as execution"
+  },
+  "discovered-schema": {
+    "discovered_tests": 3,
+    "full_test_names": [
+      "P\\Packages\\core\\tests\\Schema\\NodeSequenceSchemaTest::__pest_evaluable_it_P3_additive_migration_preserves_prior_rows_and_foreign_keys_with_a_signed_64_bit_sequence\"('bigint')\"",
+      "P\\Packages\\core\\tests\\Schema\\NodeSequenceSchemaTest::__pest_evaluable_it_P3_additive_migration_preserves_prior_rows_and_foreign_keys_with_a_signed_64_bit_sequence\"('ulid')\"",
+      "P\\Packages\\core\\tests\\Schema\\NodeSequenceSchemaTest::__pest_evaluable_it_P3_additive_migration_preserves_prior_rows_and_foreign_keys_with_a_signed_64_bit_sequence\"('uuid7')\""
+    ],
+    "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.3/discovered-schema.log",
+    "kind": "discovery only; not counted as execution"
+  }
+}

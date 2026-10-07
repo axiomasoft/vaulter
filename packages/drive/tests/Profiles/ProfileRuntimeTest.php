@@ -6,6 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Contracts\Content\ScanPolicyResolver;
+use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\DriveProvisioner;
 use Vaulter\Drive\Files\FileRevisionRetention;
@@ -38,28 +39,28 @@ beforeEach(fn () => Storage::fake('local'));
 it('applies disk and quota defaults only on a new drive', function (): void {
     driveProfile((new Profile)->key('default')->disk('local')->defaultQuota(100));
     $host = DriveTestHelpers::host();
-    $drive = Vaulter::for($host)->model();
+    $drive = Vaulter::drive($host)->model();
     expect($drive->disk)->toBe('local')->and($drive->quota_bytes)->toBe(100);
     driveProfile((new Profile)->key('default')->disk('other')->defaultQuota(200));
-    $same = Vaulter::for($host)->model();
+    $same = Vaulter::drive($host)->model();
     expect($same->id)->toBe($drive->id)->and($same->disk)->toBe('local')->and($same->quota_bytes)->toBe(100);
-    $fresh = Vaulter::for(DriveTestHelpers::host())->model();
+    $fresh = Vaulter::drive(DriveTestHelpers::host())->model();
     expect($fresh->disk)->toBe('other')->and($fresh->quota_bytes)->toBe(200);
 });
 
 it('inherits nullable quota defaults and accepts zero', function (): void {
     config()->set('vaulter-drive.quota.default_bytes', 50);
-    expect(Vaulter::for(DriveTestHelpers::host())->model()->quota_bytes)->toBe(50);
+    expect(Vaulter::drive(DriveTestHelpers::host())->model()->quota_bytes)->toBe(50);
     driveProfile((new Profile)->key('default')->defaultQuota(0));
-    expect(Vaulter::for(DriveTestHelpers::host())->model()->quota_bytes)->toBe(0);
+    expect(Vaulter::drive(DriveTestHelpers::host())->model()->quota_bytes)->toBe(0);
 });
 
 it('checks owner restrictions before either provisioning or returning an existing drive', function (): void {
     $host = DriveTestHelpers::host();
-    Vaulter::for($host);
+    Vaulter::drive($host);
     driveProfile((new Profile)->key('default')->owners(TestUser::class));
-    expect(fn () => Vaulter::for($host))->toThrow(ProfileRestrictionException::class)
-        ->and(fn () => Vaulter::for(DriveTestHelpers::host()))->toThrow(ProfileRestrictionException::class)
+    expect(fn () => Vaulter::drive($host))->toThrow(ProfileRestrictionException::class)
+        ->and(fn () => Vaulter::drive(DriveTestHelpers::host()))->toThrow(ProfileRestrictionException::class)
         ->and(Drive::query()->count())->toBe(1);
 });
 
@@ -85,8 +86,8 @@ it('uses the profile retention cutoff per drive and preserves an explicit mainte
     app()->forgetInstance(DriveProvisioner::class);
     app()->forgetInstance(ScanPolicyResolver::class);
     app()->forgetInstance(\Vaulter\Drive\Content\ScanPolicyResolver::class);
-    $first = Vaulter::for(DriveTestHelpers::host())->model();
-    $second = Vaulter::for(DriveTestHelpers::host(), 'short')->model();
+    $first = Vaulter::drive(DriveTestHelpers::host())->model();
+    $second = Vaulter::drive(DriveTestHelpers::host(), 'short')->model();
     $a = (new Node)->forceFill(['drive_id' => $first->id, 'parent_id' => $first->root_node_id, 'kind' => 'folder', 'name' => 'keep', 'trashed_at' => Carbon::now()->subDays(2)]);
     $a->save();
     $b = (new Node)->forceFill(['drive_id' => $second->id, 'parent_id' => $second->root_node_id, 'kind' => 'folder', 'name' => 'purge', 'trashed_at' => Carbon::now()->subDays(2)]);
@@ -99,10 +100,10 @@ it('uses the profile retention cutoff per drive and preserves an explicit mainte
 
 it('prunes edges while preserving head permanent revisions quota and allocation high-watermark', function (): void {
     $handle = DriveTestHelpers::drive();
-    $node = $handle->upload(DriveTestHelpers::streamFor('one'), originalName: 'a.txt');
-    $handle->uploadVersion($node, DriveTestHelpers::streamFor('two'), originalName: 'a.txt');
-    $handle->uploadVersion($node, DriveTestHelpers::streamFor('three'), originalName: 'a.txt');
-    $handle->uploadVersion($node, DriveTestHelpers::streamFor('four'), originalName: 'a.txt');
+    $node = $handle->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('one'), 'a.txt'));
+    $handle->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('two'), 'a.txt'));
+    $handle->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('three'), 'a.txt'));
+    $handle->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('four'), 'a.txt'));
     $file = $node->file()->firstOrFail()->refresh();
     $file->versions()->where('number', 1)->update(['keep_forever' => true]);
     $used = $handle->model()->refresh()->used_bytes;
@@ -114,6 +115,6 @@ it('prunes edges while preserving head permanent revisions quota and allocation 
     });
     expect($pruned)->toBe(1)->and($file->versions()->orderBy('number')->pluck('number')->all())->toBe([1, 3, 4])
         ->and($file->refresh()->revision_count)->toBe(4)->and($handle->model()->refresh()->used_bytes)->toBe($used);
-    $handle->uploadVersion($node, DriveTestHelpers::streamFor('five'), originalName: 'a.txt');
+    $handle->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('five'), 'a.txt'));
     expect(FileRevision::query()->max('number'))->toBe(5);
 });

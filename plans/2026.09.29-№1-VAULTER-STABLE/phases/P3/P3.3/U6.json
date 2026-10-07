@@ -1,0 +1,32 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:unit:v1",
+  "id": "U6",
+  "item": "P3.3",
+  "title": "Lifecycle failure acceptance",
+  "goal": "Unsupported subtree atomicity, immutable edges and partial root purge failures have meaningful regression tests",
+  "files": [
+    "packages/drive/tests/PublicApi/LifecycleBoundaryTest.php"
+  ],
+  "depends_on": [],
+  "route": {
+    "class": "frontier",
+    "effort": "high"
+  },
+  "mode": "delegate",
+  "instructions": "Create only new LifecycleBoundaryTest. No DB runs; root integrates once. Actual production copy/trash/command paths, no mock-only alternative. Mixed Document/Shortcut subtree preflight zero writes/quota/edges; immutable copy/restore edge attrs+sequence; duplicate lifecycle registry; physical purge per root failure rollback+continued committed later root, empty original exception; command exit1 later root success. Destination restore fallback View/Create and changed destination/public retry boundary. Existing Document FK cascade PG carrier retained.",
+  "status": "accepted",
+  "outcome": {
+    "agent": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high"
+    },
+    "at": "2026-10-07T04:43:41Z",
+    "notes": "Integrator inspected returned diff and observed named affected acceptance results; details and complete command evidence in artifacts/P3.3/receipts.json.",
+    "changed": [
+      "packages/drive/tests/PublicApi/LifecycleBoundaryTest.php"
+    ],
+    "attempt_id": "p33-U6-accepted"
+  },
+  "updated_at": "2026-10-07T04:43:41Z"
+}

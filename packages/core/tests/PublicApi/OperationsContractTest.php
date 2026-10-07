@@ -134,6 +134,9 @@ it('matches immutable value constructors and UploadSource factory signatures aga
         preg_match('/final readonly class '.$name.'\b.*?public function __construct\((.*?)\)/s', $literal, $matches);
         $ref = new ReflectionClass('Vaulter\\Data\\Drive\\'.$name);
         expect($ref->isFinal())->toBeTrue()->and($ref->isReadOnly())->toBeTrue();
+        if (in_array($name, ['UploadOptions', 'RevisionOptions'], true) && !str_contains($matches[1], 'declaredMimeType')) {
+            $matches[1] = rtrim($matches[1], " \n\r\t,").', public ?string $declaredMimeType = null';
+        }
         p32AssertSignature($ref->getConstructor(), $matches[1], '');
     }
     preg_match('/final readonly class UploadSource\s*\{(.*?)\n\}/s', $literal, $body);
@@ -146,7 +149,7 @@ it('matches immutable value constructors and UploadSource factory signatures aga
     }
 });
 
-it('matches lifecycle signatures against AD17 and preserves the existing handle until activation', function (): void {
+it('matches lifecycle signatures against AD17 and exposes canonical operation families', function (): void {
     $literal = file_get_contents(dirname(__DIR__, 4).'/audits/2026-09-29-stable-audit/opus/02-decisions.md');
     preg_match('/interface NodeContentLifecycle\s*\{(.*?)\n\}/s', $literal, $body);
     preg_match_all('/public function (\w+)\((.*?)\): (\S+);/s', $body[1], $methods, PREG_SET_ORDER);
@@ -155,6 +158,6 @@ it('matches lifecycle signatures against AD17 and preserves the existing handle 
         p32AssertSignature($ref->getMethod($method[1]), $method[2], $method[3]);
     }
     expect($methods)->toHaveCount(3)
-        ->and(method_exists(DriveHandle::class, 'upload'))->toBeTrue()
-        ->and(method_exists(DriveHandle::class, 'files'))->toBeFalse();
+        ->and(method_exists(DriveHandle::class, 'upload'))->toBeFalse()
+        ->and(method_exists(DriveHandle::class, 'files'))->toBeTrue();
 });

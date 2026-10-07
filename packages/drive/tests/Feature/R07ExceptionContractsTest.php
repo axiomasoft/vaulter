@@ -151,7 +151,7 @@ it('R07Exception keeps OffsetMismatchException message render headers and JSON a
 });
 
 it('R07Exception surfaces offset mismatch over HTTP with the full message and tus headers', function (): void {
-    $storage = Vaulter::for(DriveTestHelpers::host())->model();
+    $storage = Vaulter::drive(DriveTestHelpers::host())->model();
     $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
         'name' => 'r07-offset.bin',
         'total_size_bytes' => 20,

@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use GuzzleHttp\Psr7\Utils;
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\File;
@@ -20,12 +22,10 @@ beforeEach(function (): void {
 
 it('V03 serializes revisions and accounts for their actual preceding heads', function (): void {
     $drive = DriveTestHelpers::drive();
-    $node = $drive->upload(DriveTestHelpers::streamFor('old'), originalName: 'a.txt');
+    $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('old'), 'a.txt'));
     // Both children inherit revision 1, even after the winner commits revision 2.
     $outcomes = ForkRace::run(array_map(
-        static fn (string $bytes): Closure => static fn (): string => (string) $drive->uploadVersion(
-            $node, DriveTestHelpers::streamFor($bytes), originalName: 'a.txt',
-        )->current_version_id,
+        static fn (string $bytes): Closure => static fn (): string => (string) $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor($bytes), 'a.txt'))->getKey(),
         ['short', 'a much longer head'],
     ));
     foreach ($outcomes as $outcome) {
@@ -46,7 +46,7 @@ it('V03 serializes revisions and accounts for their actual preceding heads', fun
 // independently so removing its FOR UPDATE is a meaningful negative control.
 it('V03 aggregate lock protects counter allocation even without a caller node lock', function (): void {
     $drive = DriveTestHelpers::drive();
-    $node = $drive->upload(DriveTestHelpers::streamFor('head'), originalName: 'a.txt');
+    $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('head'), 'a.txt'));
     $file = $node->file;
     $outcomes = ForkRace::run(array_map(
         static fn (int $i): Closure => static fn (): int => app(VaulterDatabase::class)->transaction(function () use ($file): int {
@@ -92,10 +92,12 @@ it('reuses prepared bytes on a serialization retry and discards the temp file', 
     [$reader, $writer] = $pair;
     fwrite($writer, 'retry the same bytes');
     fclose($writer);
+    $stream = Utils::streamFor($reader);
+    expect($stream->isSeekable())->toBeFalse();
     try {
-        $drive->upload($reader, originalName: 'a.txt');
+        $drive->files()->upload(UploadSource::fromPsrStream($stream, 'a.txt'));
     } finally {
-        fclose($reader);
+        $stream->close();
     }
 
     expect($injected)->toBeTrue()

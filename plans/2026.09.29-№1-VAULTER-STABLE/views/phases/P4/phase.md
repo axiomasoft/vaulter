@@ -11,7 +11,7 @@ skeleton
 
 > SKELETON — not detailed, разворачивается `design-phase: task:plan-design 2026.09.29-№1-VAULTER-STABLE P4`
 
-Агрегат Document симметричен File (v_documents, DocumentRevision), удаление полиморфного nodes.current_version_id (N03); содержимое по kind (NodeContentLifecycle); реестр типов документов с версиями схемы и безопасным fallback; экспорт в documents; коллаборация с collab_epoch и read-only; одна модель удаления и жизненный цикл drive; v_nodes.sequence и оптимистичная блокировка.
+Агрегат Document симметричен File (v_documents, DocumentRevision), удаление полиморфного nodes.current_version_id (N03); содержимое по kind (NodeContentLifecycle); реестр типов документов с версиями схемы и безопасным fallback; экспорт в documents; коллаборация с collab_epoch и read-only; одна модель удаления и жизненный цикл drive; Использование уже существующей после P3.3 v_nodes.sequence: Document writer sequence/validator integration (REST strong validators P6), без повторного создания колонки или StaleNodeException (D28=A accepted; D29 validators refined).
 
 > **Контракт фазы (предварительный).** Потребляет: AD14–AD17, AD23, AD24, AD27, AD28; OPUS 06 §3, 08 §2–§3 (миграции 5–6); V10–V12, V15, V32–V36. Детализация, маршруты и Validation — при дизайне фазы.
 
@@ -21,13 +21,15 @@ skeleton
 
 > SKELETON — not detailed, разворачивается `design-phase: task:plan-design 2026.09.29-№1-VAULTER-STABLE P4`
 
-Агрегат Document симметричен File (v_documents, DocumentRevision), удаление полиморфного nodes.current_version_id (N03); содержимое по kind (NodeContentLifecycle); реестр типов документов с версиями схемы и безопасным fallback; экспорт в documents; коллаборация с collab_epoch и read-only; одна модель удаления и жизненный цикл drive; v_nodes.sequence и оптимистичная блокировка.
+Агрегат Document симметричен File (v_documents, DocumentRevision), удаление полиморфного nodes.current_version_id (N03); содержимое по kind (NodeContentLifecycle); реестр типов документов с версиями схемы и безопасным fallback; экспорт в documents; коллаборация с collab_epoch и read-only; одна модель удаления и жизненный цикл drive; Использование уже существующей после P3.3 v_nodes.sequence: Document writer sequence/validator integration (REST strong validators P6), без повторного создания колонки или StaleNodeException (D28=A accepted; D29 validators refined).
 
 > **Контракт фазы (предварительный).** Потребляет: AD14–AD17, AD23, AD24, AD27, AD28; OPUS 06 §3, 08 §2–§3 (миграции 5–6); V10–V12, V15, V32–V36. Детализация, маршруты и Validation — при дизайне фазы.
 
 > Phase Assurance: data-migration + public-contract; интеграционный хаб; фазовый аудит (D03).
 
 **D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.
+
+D29 — обязательные corrections при следующей детализации. Read @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json до разработки contracts; применимые C-rows разворачиваются в concrete owning item files/reads/named tests/exact validation, не остаются note-only. P4.1/P4.2 сохраняют immutable revision identity и inherited infected block; новая file revision соблюдает destination policy, legacy exemption не копируется. P4.4 future export использует private scoped service read только внутри exporter и public egress guard. P4.5/P4.7 классифицируют Document/Yjs participating writers, epoch/content generation отдельно от editorial sequence. P4.6 infected purge/GC разрешены под tenant/tree/CAS safety. P4.7 потребляет P3.3 BIGINT foundation, не создаёт колонку повторно; representation ETag integration завершается в P6.
 
 ## Depends on
 
@@ -57,7 +59,7 @@ skeleton
 
 > SKELETON — not detailed, разворачивается `design-phase: task:plan-design 2026.09.29-№1-VAULTER-STABLE P4`
 
-Агрегат Document симметричен File (v_documents, DocumentRevision), удаление полиморфного nodes.current_version_id (N03); содержимое по kind (NodeContentLifecycle); реестр типов документов с версиями схемы и безопасным fallback; экспорт в documents; коллаборация с collab_epoch и read-only; одна модель удаления и жизненный цикл drive; v_nodes.sequence и оптимистичная блокировка.
+Агрегат Document симметричен File (v_documents, DocumentRevision), удаление полиморфного nodes.current_version_id (N03); содержимое по kind (NodeContentLifecycle); реестр типов документов с версиями схемы и безопасным fallback; экспорт в documents; коллаборация с collab_epoch и read-only; одна модель удаления и жизненный цикл drive; Использование уже существующей после P3.3 v_nodes.sequence: Document writer sequence/validator integration (REST strong validators P6), без повторного создания колонки или StaleNodeException (D28=A accepted; D29 validators refined).
 
 > **Контракт фазы (предварительный).** Потребляет: AD14–AD17, AD23, AD24, AD27, AD28; OPUS 06 §3, 08 §2–§3 (миграции 5–6); V10–V12, V15, V32–V36. Детализация, маршруты и Validation — при дизайне фазы.
 
@@ -65,9 +67,13 @@ skeleton
 
 **D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.
 
+D29 — обязательные corrections при следующей детализации. Read @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json до разработки contracts; применимые C-rows разворачиваются в concrete owning item files/reads/named tests/exact validation, не остаются note-only. P4.1/P4.2 сохраняют immutable revision identity и inherited infected block; новая file revision соблюдает destination policy, legacy exemption не копируется. P4.4 future export использует private scoped service read только внутри exporter и public egress guard. P4.5/P4.7 классифицируют Document/Yjs participating writers, epoch/content generation отдельно от editorial sequence. P4.6 infected purge/GC разрешены под tenant/tree/CAS safety. P4.7 потребляет P3.3 BIGINT foundation, не создаёт колонку повторно; representation ETag integration завершается в P6.
+
 ## Scope Included (planned)
 
-Миграции documents aggregate и nodes cleanup на фикстуре; DocumentTypeRegistry, codecs, UnknownDocumentType, ViewerDescriptor; export registry; collab_epoch в токене/колбэках и хабе; DriveStatus/Archive/Delete/purge; sequence/expectedSequence/StaleNodeException.
+Миграции documents aggregate и nodes cleanup на фикстуре; DocumentTypeRegistry, codecs, UnknownDocumentType, ViewerDescriptor; export registry; collab_epoch в токене/колбэках и хабе; DriveStatus/Archive/Delete/purge; существующая после P3.3 sequence/StaleNodeException, новые Document writers/expectedSequence и REST ETag (D28=A accepted), без второй миграции.
+
+P4.1/P4.2 сохраняют immutable revision identity и inherited infected block; новая file revision соблюдает destination policy, legacy exemption не копируется. P4.4 future export использует private scoped service read только внутри exporter и public egress guard. P4.5/P4.7 классифицируют Document/Yjs participating writers, epoch/content generation отдельно от editorial sequence. P4.6 infected purge/GC разрешены под tenant/tree/CAS safety. P4.7 потребляет P3.3 BIGINT foundation, не создаёт колонку повторно; representation ETag integration завершается в P6.
 
 ## Scope Excluded
 
@@ -85,7 +91,9 @@ P3 закрыта. Owner gate: Docker для интеграционного те
 - P4.4 — Экспорт в documents (implementation/low)
 - P4.5 — Коллаборация: epoch и read-only (frontier/high)
 - P4.6 — Одна модель удаления и жизненный цикл drive (implementation/high)
-- P4.7 — Sequence и оптимистичная блокировка (implementation/medium)
+- P4.7 — Document writers и Document mutation sequence/validator integration на существующей sequence из P3.3, без повторного создания колонки/exception (implementation/medium; D28=A accepted)
+
+Обязательное расширение scope этих planned items: P4.1/P4.2 сохраняют immutable revision identity и inherited infected block; новая file revision соблюдает destination policy, legacy exemption не копируется. P4.4 future export использует private scoped service read только внутри exporter и public egress guard. P4.5/P4.7 классифицируют Document/Yjs participating writers, epoch/content generation отдельно от editorial sequence. P4.6 infected purge/GC разрешены под tenant/tree/CAS safety. P4.7 потребляет P3.3 BIGINT foundation, не создаёт колонку повторно; representation ETag integration завершается в P6.
 
 ## Items
 
@@ -99,3 +107,7 @@ P3 закрыта. Owner gate: Docker для интеграционного те
 ## Mandatory validation/execution policy (D25)
 
 **D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.
+
+## Обязательные forward corrections (D29)
+
+D29 — обязательные corrections при следующей детализации. Read @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json до разработки contracts; применимые C-rows разворачиваются в concrete owning item files/reads/named tests/exact validation, не остаются note-only. P4.1/P4.2 сохраняют immutable revision identity и inherited infected block; новая file revision соблюдает destination policy, legacy exemption не копируется. P4.4 future export использует private scoped service read только внутри exporter и public egress guard. P4.5/P4.7 классифицируют Document/Yjs participating writers, epoch/content generation отдельно от editorial sequence. P4.6 infected purge/GC разрешены под tenant/tree/CAS safety. P4.7 потребляет P3.3 BIGINT foundation, не создаёт колонку повторно; representation ETag integration завершается в P6.

@@ -22,5 +22,6 @@ final readonly class UpdateDocumentContentInput
         public DocumentContent $content,
         public ?string $yjsState = null,
         public int|string|null $actorId = null,
+        public ?int $expectedSequence = null,
     ) {}
 }

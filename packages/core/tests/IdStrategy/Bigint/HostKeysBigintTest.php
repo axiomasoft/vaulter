@@ -17,7 +17,8 @@ it('round-trips a ULID grant subject and actor with bigint Vaulter IDs', functio
     $user->exists = true;
     $this->actingAs($user);
     $drive = DriveTestHelpers::drive(42);
-    $node = $drive->createFolder('ULID actor', actorId: $ulid)->refresh();
+    AccessTestHelpers::grant($drive->root(), GrantLevel::Owner, subjectId: $user->getKey(), subjectType: $user->getMorphClass());
+    $node = $drive->actingAs($user)->folders()->create('ULID actor')->refresh();
     $grant = AccessTestHelpers::grant($node, GrantLevel::Reader, subjectId: $ulid, subjectType: $user->getMorphClass());
     $activity = app(ActivityStoreRepository::class)->record(new RecordActivityCommand(
         verb: EventType::FolderCreated,

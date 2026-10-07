@@ -39,7 +39,7 @@ function r07bS3RawSession(int $totalSizeBytes): UploadSession
  */
 function r07bS3CtlStorage(): Drive
 {
-    return Vaulter::for(DriveTestHelpers::host())->model();
+    return Vaulter::drive(DriveTestHelpers::host())->model();
 }
 
 /**

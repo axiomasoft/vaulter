@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\Node;
@@ -15,8 +16,8 @@ it('V20 creates one x.pdf and returns a domain conflict to the second writer', f
     Storage::fake('local');
     $drive = DriveTestHelpers::drive();
     $outcomes = ForkRace::run([
-        static fn (): string => (string) $drive->upload(DriveTestHelpers::streamFor('first'), originalName: 'x.pdf')->id,
-        static fn (): string => (string) $drive->upload(DriveTestHelpers::streamFor('second'), originalName: 'x.pdf')->id,
+        static fn (): string => (string) $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('first'), 'x.pdf'))->id,
+        static fn (): string => (string) $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('second'), 'x.pdf'))->id,
     ]);
     $won = array_values(array_filter($outcomes, static fn (RaceOutcome $o): bool => $o->ok));
     $lost = array_values(array_filter($outcomes, static fn (RaceOutcome $o): bool => !$o->ok));

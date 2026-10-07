@@ -25,7 +25,7 @@ beforeEach(function (): void {
 
 function uploadConfigStorage(): string
 {
-    return (string) Vaulter::for(DriveTestHelpers::host())->model()->getKey();
+    return (string) Vaulter::drive(DriveTestHelpers::host())->model()->getKey();
 }
 
 it('maxFileSize falls back to the drive default independently of document limits', function (): void {

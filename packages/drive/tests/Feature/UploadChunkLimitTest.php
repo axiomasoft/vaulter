@@ -28,7 +28,7 @@ beforeEach(function (): void {
 
 function chunkLimitStorage(): Drive
 {
-    return Vaulter::for(DriveTestHelpers::host())->model();
+    return Vaulter::drive(DriveTestHelpers::host())->model();
 }
 
 it('ключ max_chunk_bytes имеет непустой дефолт — из коробки чанк ограничен, RV-03', function (): void {

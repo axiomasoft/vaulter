@@ -8,6 +8,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Http\Requests\Files\UploadFileRequest;
 use Vaulter\Drive\Http\Requests\Uploads\CreateUploadSessionRequest;
 use Vaulter\Drive\Models\Uploads\UploadSession;
@@ -49,7 +50,7 @@ function r07bReqBuildFile(array $data): UploadFileRequest
 
 function r07bReqStorageBase(): string
 {
-    return 'api/vaulter/storages/'.Vaulter::for(DriveTestHelpers::host())->model()->getKey();
+    return 'api/vaulter/storages/'.Vaulter::drive(DriveTestHelpers::host())->model()->getKey();
 }
 
 function r07bReqUploadId(string $storageId, array $extra = []): string
@@ -204,53 +205,65 @@ it('R07b: UploadFileRequest rules() has file required, name max and name regex (
         ->assertJsonPath('errors.name', fn ($e) => is_array($e) && count($e) > 0);
 });
 
-// ── PurgeTrashCommand: exact singular/plural output (L64 ±1) ─────────────────
+// ── PurgeTrashCommand: retention eligibility and reported root counts ──────────
 
-it('R07b: purge-trash outputs exact singular "day" for retention=1 — not "days" (L64 ±1)', function (): void {
+it('R07b: one-day retention purges an old root and preserves one inside the window', function (): void {
     $this->travelTo(Carbon::parse('2026-09-20 12:00:00'));
     $storage = AccessTestHelpers::storage();
-    $n = AccessTestHelpers::folder($storage, null, 'r07b-singular');
-    $n->forceFill(['trashed_at' => Carbon::now()->subDays(2)])->save();
+    $old = AccessTestHelpers::folder($storage, null, 'one-day-old');
+    $recent = AccessTestHelpers::folder($storage, null, 'one-day-recent');
+    $old->forceFill(['trashed_at' => Carbon::now()->subDays(2)])->save();
+    $recent->forceFill(['trashed_at' => Carbon::now()->subDay()->addSecond()])->save();
 
-    Artisan::call('vaulter:purge-trash', ['--days' => '1']);
-    $out = Artisan::output();
-
-    expect($out)->toContain('(retention: 1 day).')
-        ->and($out)->not->toContain('(retention: 1 days).');
+    expect(Artisan::call('vaulter:purge-trash', ['--days' => '1']))->toBe(0)
+        ->and(Artisan::output())->toContain('Purged 1 trashed subtree.')
+        ->and(Node::withTrashed()->whereKey($old->id)->exists())->toBeFalse()
+        ->and(Node::withTrashed()->whereKey($recent->id)->exists())->toBeTrue();
 });
 
-it('R07b: purge-trash outputs exact plural "days" for retention=2 (L64 ±1 adjacent)', function (): void {
+it('R07b: two-day retention includes the exact cutoff and reports two purged roots', function (): void {
     $this->travelTo(Carbon::parse('2026-09-21 12:00:00'));
+    $storage = AccessTestHelpers::storage();
+    $old = AccessTestHelpers::folder($storage, null, 'two-day-old');
+    $boundary = AccessTestHelpers::folder($storage, null, 'two-day-boundary');
+    $recent = AccessTestHelpers::folder($storage, null, 'two-day-recent');
+    $old->forceFill(['trashed_at' => Carbon::now()->subDays(3)])->save();
+    $boundary->forceFill(['trashed_at' => Carbon::now()->subDays(2)])->save();
+    $recent->forceFill(['trashed_at' => Carbon::now()->subDays(2)->addSecond()])->save();
 
-    Artisan::call('vaulter:purge-trash', ['--days' => '2']);
-    $out = Artisan::output();
-
-    expect($out)->toContain('(retention: 2 days).')
-        ->and($out)->not->toContain('(retention: 2 day).');
+    expect(Artisan::call('vaulter:purge-trash', ['--days' => '2']))->toBe(0)
+        ->and(Artisan::output())->toContain('Purged 2 trashed subtrees.')
+        ->and(Node::withTrashed()->whereKey($old->id)->exists())->toBeFalse()
+        ->and(Node::withTrashed()->whereKey($boundary->id)->exists())->toBeFalse()
+        ->and(Node::withTrashed()->whereKey($recent->id)->exists())->toBeTrue();
 });
 
-// ── PurgeTrashCommand: retentionDays() method (L130/L131) ────────────────────
-
-it('R07b: purge-trash --days 0 uses zero retention (L131 max floor)', function (): void {
+it('R07b: zero retention purges a root trashed now while leaving live nodes', function (): void {
     $this->travelTo(Carbon::parse('2026-09-22 10:00:00'));
+    $storage = AccessTestHelpers::storage();
+    $trashed = AccessTestHelpers::folder($storage, null, 'just-trashed');
+    $live = AccessTestHelpers::folder($storage, null, 'live');
+    $trashed->forceFill(['trashed_at' => Carbon::now()])->save();
 
-    Artisan::call('vaulter:purge-trash', ['--days' => '0']);
-    $out = Artisan::output();
-
-    expect($out)->toContain('(retention: 0 days).');
+    expect(Artisan::call('vaulter:purge-trash', ['--days' => '0']))->toBe(0)
+        ->and(Artisan::output())->toContain('Purged 1 trashed subtree.')
+        ->and(Node::withTrashed()->whereKey($trashed->id)->exists())->toBeFalse()
+        ->and(Node::withTrashed()->whereKey($live->id)->exists())->toBeTrue();
 });
 
-it('R07b: purge-trash non-numeric --days falls back to the configured default (L130 BooleanAndToBooleanOr)', function (): void {
+it('R07b: non-numeric days uses configured retention rather than zero', function (): void {
     config()->set('vaulter-drive.trash.retention_days', 14);
     $this->travelTo(Carbon::parse('2026-09-22 11:00:00'));
+    $storage = AccessTestHelpers::storage();
+    $old = AccessTestHelpers::folder($storage, null, 'default-old');
+    $recent = AccessTestHelpers::folder($storage, null, 'default-recent');
+    $old->forceFill(['trashed_at' => Carbon::now()->subDays(15)])->save();
+    $recent->forceFill(['trashed_at' => Carbon::now()->subDays(7)])->save();
 
-    Artisan::call('vaulter:purge-trash', ['--days' => 'not-a-number']);
-    $out = Artisan::output();
-
-    // BooleanAndToBooleanOr mutation: is_string || is_numeric = true → uses (int)'not-a-number' = 0
-    // Original: is_string && is_numeric = false → falls through to config default = 14
-    expect($out)->toContain('(retention: 14 days).')
-        ->and($out)->not->toContain('(retention: 0 days).');
+    expect(Artisan::call('vaulter:purge-trash', ['--days' => 'not-a-number']))->toBe(0)
+        ->and(Artisan::output())->toContain('Purged 1 trashed subtree.')
+        ->and(Node::withTrashed()->whereKey($old->id)->exists())->toBeFalse()
+        ->and(Node::withTrashed()->whereKey($recent->id)->exists())->toBeTrue();
 });
 
 // ── PurgeTrashCommand: ForceDeleteNodeAction (L94 RemoveMethodCall) ───────────
@@ -259,7 +272,7 @@ it('R07b: purge-trash decrements storage used_bytes — ForceDeleteNodeAction mu
     $drive = DriveTestHelpers::drive();
     $storage = $drive->model();
 
-    $file = $drive->upload('bytes for quota test', originalName: 'quota-r07b.txt');
+    $file = $drive->files()->upload(UploadSource::fromString('bytes for quota test', 'quota-r07b.txt'));
     $usedAfterUpload = $storage->refresh()->used_bytes;
     expect($usedAfterUpload)->toBeGreaterThan(0);
 

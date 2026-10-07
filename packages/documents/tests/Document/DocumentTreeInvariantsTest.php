@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\Event;
+use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
@@ -47,9 +48,9 @@ it('rejects a document under a file, a document or a trashed folder', function (
     $drive = DocumentTestHelpers::drive();
 
     $parent = match ($kind) {
-        'file' => $drive->upload(DriveTestHelpers::streamFor('x'), originalName: 'f.bin'),
+        'file' => $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('x'), 'f.bin')),
         'document' => createDocumentUnder($drive, 'Doc', null),
-        'trashed folder' => $drive->trash($drive->createFolder('Gone')),
+        'trashed folder' => $drive->nodes()->trash($drive->folders()->create('Gone')),
     };
 
     expect(fn (): Node => createDocumentUnder($drive, 'Child', $parent))
@@ -58,7 +59,7 @@ it('rejects a document under a file, a document or a trashed folder', function (
 
 it('rejects a parent folder of another drive', function (): void {
     $drive = DocumentTestHelpers::drive();
-    $foreign = DocumentTestHelpers::drive()->createFolder('Elsewhere');
+    $foreign = DocumentTestHelpers::drive()->folders()->create('Elsewhere');
 
     expect(fn (): Node => createDocumentUnder($drive, 'Child', $foreign))
         ->toThrow(InvalidDestinationException::class, 'belongs to drive');
@@ -73,7 +74,7 @@ it('normalizes the document name and rejects an invalid one', function (): void 
 
 it('takes the storage row before the parent row, as every node insert does', function (): void {
     $drive = DocumentTestHelpers::drive();
-    $folder = $drive->createFolder('Target');
+    $folder = $drive->folders()->create('Target');
     $queries = [];
 
     Event::listen(QueryExecuted::class, function (QueryExecuted $query) use (&$queries): void {

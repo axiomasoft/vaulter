@@ -25,7 +25,7 @@ abstract class TestCase extends OrchestraTestCase
             // Activity and Configuration\VaulterConfig.
             VaulterServiceProvider::class,
             // The document-node tests build their Storage fixtures through
-            // Vaulter::for() (a Drive handle) — documents requires only core in
+            // Vaulter::drive() (a Drive handle) — documents requires only core in
             // production (T6), but its OWN test suite needs drive installed to
             // create those fixtures. Document content itself is never CAS-committed,
             // but DriveContext eagerly constructs ALL Drive Actions (incl.

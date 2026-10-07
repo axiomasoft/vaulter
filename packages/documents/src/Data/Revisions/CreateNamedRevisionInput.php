@@ -18,5 +18,6 @@ final readonly class CreateNamedRevisionInput
         public string $label,
         public bool $keepForever = false,
         public int|string|null $actorId = null,
+        public ?int $expectedSequence = null,
     ) {}
 }

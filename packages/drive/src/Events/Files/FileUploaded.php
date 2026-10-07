@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
+use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
  * A brand-new file node was uploaded — first version committed against a
@@ -25,6 +26,8 @@ final readonly class FileUploaded implements ShouldDispatchAfterCommit
         public FileRevision $version,
         public int|string|null $actorId = null,
         ?string $eventId = null,
+        public ?ActorRef $actor = null,
+        public ?string $correlationId = null,
     ) {
         $this->eventId = $eventId ?? (string) Str::ulid();
     }

@@ -12,9 +12,12 @@ use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
 use Vaulter\Configuration\ConfigNormalizer;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Contracts\ExportFilenameResolver;
+use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Engines\Handlers\TipTapHandler;
 use Vaulter\Documents\Engines\Handlers\UniverHandler;
 use Vaulter\Documents\Export\DefaultExportFilenameResolver;
+use Vaulter\Documents\Registries\DocumentExporterRegistry;
+use Vaulter\Documents\Registries\DocumentTypeRegistry;
 
 final class BindingsRegistrar extends ServiceProvider
 {
@@ -26,7 +29,10 @@ final class BindingsRegistrar extends ServiceProvider
         $this->app->singletonIf(ConfigNormalizer::class);
         $this->app->make(ConfigNormalizer::class)->registerDefaults(root: 'vaulter-documents', path: $path);
 
-        $this->app->bind('vaulter.document_exporters', fn (Container $app): array => $app->make(DocumentsConfig::class)->exporters());
+        $this->app->singleton(DocumentTypeRegistry::class);
+        $this->app->singleton(DocumentExporterRegistry::class);
+        $this->app->singleton(DocumentsManager::class);
+        $this->app->alias(DocumentsManager::class, 'vaulter.documents');
         $this->app->tag([TipTapHandler::class], 'vaulter.file_handlers');
 
         if ($this->app->make(DocumentsConfig::class)->spreadsheetsEnabled()) {

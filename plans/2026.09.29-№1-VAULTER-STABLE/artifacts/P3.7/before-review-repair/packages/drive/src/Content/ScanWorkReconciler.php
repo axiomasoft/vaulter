@@ -1,0 +1,127 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Vaulter\Drive\Content;
+
+use DateTimeImmutable;
+use Illuminate\Contracts\Bus\Dispatcher;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Log;
+use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Jobs\Uploads\ScanFileRevision;
+use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Vaulter\Models\Content\ScanObligation;
+use Vaulter\Models\Drive\Drive;
+use Vaulter\Repositories\Content\ScanObligationRepository;
+
+final readonly class ScanWorkReconciler
+{
+    public function __construct(private VaulterDatabase $database, private VaulterConfig $config,
+        private DriveConfig $driveConfig, private ScanObligationRepository $work,
+        private ScanPolicyResolver $policies, private Dispatcher $bus) {}
+
+    public function afterCommit(ScanObligation $work): void
+    {
+        $this->database->afterCommit(fn () => $this->publish($work));
+    }
+
+    public function publish(ScanObligation $work): bool
+    {
+        try {
+            $job = new ScanFileRevision($work->id, $work->generation, $work->drive_id, $work->tenant_id);
+            $job->onQueue($this->driveConfig->scanQueue());
+            $this->bus->dispatch($job);
+
+            return true;
+        } catch (\Throwable) {
+            Log::warning('Vaulter scanner publication failed; durable work remains due.');
+
+            return false;
+        }
+    }
+
+    /** @param list<int|string>|Builder<Drive>|null $driveIds
+     * @return array<string,int>
+     */
+    public function reconcile(int $limit = 100, int $maxSeconds = 30, bool $dryRun = false, array|Builder|null $driveIds = null): array
+    {
+        $started = microtime(true);
+        $counts = ['scanned' => 0, 'published' => 0, 'failed' => 0, 'stalled_configuration' => 0, 'remaining_due' => 0];
+        $class = $this->config->model('scan_obligation');
+        $query = $class::query()->whereIn('state', ['pending', 'retry_wait', 'leased'])
+            ->where(function ($query): void {
+                $query->where(function ($query): void {
+                    $query->whereIn('state', ['pending', 'retry_wait'])->where('available_at', '<=', now())
+                        ->where(fn ($q) => $q->whereNull('last_published_at')->orWhere('last_published_at', '<=', now()->subSeconds($this->driveConfig->scanWork('publish_cooldown_seconds'))));
+                })->orWhere(fn ($q) => $q->where('state', 'leased')->where('lease_expires_at', '<=', now()));
+            });
+        if ($driveIds !== null) {
+            $query->whereIn('drive_id', $driveIds);
+        }
+        foreach ($query->orderBy('available_at')->orderBy('id')->limit($limit)->get() as $row) {
+            if (microtime(true) - $started >= $maxSeconds) {
+                break;
+            }
+            $counts['scanned']++;
+            try {
+                $driveClass = $this->config->model('drive');
+                $drive = $driveClass::query()->whereKey($row->drive_id)->first();
+                if ($drive === null || $drive->tenant_id !== $row->tenant_id) {
+                    $counts['failed']++;
+
+                    continue;
+                }
+                $specs = $this->policies->forDrive($drive);
+                if (!array_any($specs, fn ($spec): bool => $spec->specKey() === $row->spec_key)) {
+                    if (!$dryRun) {
+                        $this->work->supersede($row);
+                    }
+                    $counts['failed']++;
+
+                    continue;
+                }
+            } catch (InvalidConfigurationException) {
+                $counts['stalled_configuration']++;
+
+                continue;
+            }
+            if ($dryRun) {
+                $counts['published'] += $row->state === 'leased' ? 0 : 1;
+
+                continue;
+            }
+            if ($row->state === 'leased') {
+                $this->work->recover($row, new DateTimeImmutable('now'));
+                $row = $this->work->find($row->id);
+            }
+            if ($row === null || $row->state === 'settled' || $row->state === 'leased') {
+                continue;
+            }
+            $claimed = $this->database->transaction(function () use ($class, $row): ?ScanObligation {
+                $fresh = $class::query()->whereKey($row->id)->lockForUpdate()->first();
+                if ($fresh === null || !in_array($fresh->state, ['pending', 'retry_wait'], true)
+                    || $fresh->available_at->isFuture()
+                    || ($fresh->last_published_at !== null && $fresh->last_published_at->addSeconds($this->driveConfig->scanWork('publish_cooldown_seconds'))->isFuture())) {
+                    return null;
+                }
+                $fresh->forceFill(['last_published_at' => now()])->save();
+
+                return $fresh;
+            });
+            if ($claimed !== null) {
+                if ($this->publish($claimed)) {
+                    $counts['published']++;
+                } else {
+                    $class::query()->whereKey($claimed->id)->where('generation', $claimed->generation)
+                        ->whereIn('state', ['pending', 'retry_wait'])->update(['available_at' => now()->addSeconds($this->driveConfig->scanWork('publish_cooldown_seconds'))]);
+                }
+            }
+        }
+        $counts['remaining_due'] = (clone $query)->count();
+
+        return $counts;
+    }
+}

@@ -16,8 +16,8 @@ use Vaulter\Tests\Drive\DriveTestHelpers;
 it('разводит storage по разным панелям одного владельца', function (): void {
     $host = DriveTestHelpers::host();
 
-    $default = Vaulter::for($host, 'default')->model();
-    $team = Vaulter::for($host, 'team')->model();
+    $default = Vaulter::drive($host, 'default')->model();
+    $team = Vaulter::drive($host, 'team')->model();
 
     expect($team->getKey())->not->toEqual($default->getKey())
         ->and($team->profile)->toBe('team')

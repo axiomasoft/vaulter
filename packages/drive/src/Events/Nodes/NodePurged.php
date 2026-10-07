@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Events\Nodes;
 
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Support\Str;
+use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
  * A node and its subtree were permanently soft-deleted (deleted_at set), their
@@ -34,6 +35,8 @@ final readonly class NodePurged implements ShouldDispatchAfterCommit
         public int $freedBytes,
         public int|string|null $actorId = null,
         ?string $eventId = null,
+        public ?ActorRef $actor = null,
+        public ?string $correlationId = null,
     ) {
         $this->eventId = $eventId ?? (string) Str::ulid();
     }

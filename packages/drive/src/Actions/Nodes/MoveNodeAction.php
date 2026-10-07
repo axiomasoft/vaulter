@@ -10,8 +10,11 @@ use Vaulter\Drive\Data\Nodes\MoveNodeInput;
 use Vaulter\Drive\Events\Nodes\NodeMoved;
 use Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException;
 use Vaulter\Drive\Exceptions\Nodes\NodeCycleException;
-use Vaulter\Exceptions\Nodes\NodeNameConflictException;
+use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\NodeLocator;
+use Vaulter\Operations\NodeSequence;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\Identity;
@@ -31,8 +34,7 @@ use Vaulter\Support\TreeGuard;
  * destination alone do not cover the ancestor chain, so two moves over disjoint rows
  * (A into B's child, B into A's child) could both pass and close a loop.
  *
- * Authorization (M2a / H.2) is enforced upstream at the HTTP controller
- * boundary (NodeController + AccessResolver); this Action stays pure.
+ * Operations authorize before this command; locked invariants remain in the Action.
  */
 final readonly class MoveNodeAction
 {
@@ -44,17 +46,22 @@ final readonly class MoveNodeAction
         private TreeGuard $tree,
     ) {}
 
-    public function execute(MoveNodeInput $data): Node
+    public function execute(OperationContext $context, MoveNodeInput $data): Node
     {
-        $node = $data->node;
+        $node = app(NodeLocator::class)->find(context: $context, key: $data->node);
         $intoId = $this->tree->destinationId(storage: $node->storage, into: $data->into);
 
-        return $this->database->transaction(function () use ($node, $intoId, $data): Node {
+        return $this->database->transaction(function () use ($node, $intoId, $data, $context): Node {
             $this->database->lockTree($node->drive_id);
 
             $locked = $this->tree->lock([$node->id, $intoId]);
             $current = $this->tree->sync($node, $this->tree->locked($locked, $node->id));
             $into = $this->tree->locked($locked, $intoId);
+
+            app(NodeSequence::class)->assertExpected(locked: $current, expected: $data->expectedSequence);
+            if ($current->trashed_at !== null) {
+                throw InvalidDestinationException::trashed($current);
+            }
 
             $this->tree->assertNotRoot(node: $current, operation: 'move');
             if (!$this->tree->sameStorage($into, $current->drive_id)) {
@@ -71,15 +78,20 @@ final readonly class MoveNodeAction
                 return $current;
             }
 
-            $this->assertNameAvailable(node: $current, into: $into);
+            $name = app(NameConflictResolver::class)->resolve($context->drive, $into->id, $current->name, $data->onConflict, $current->id);
+            if ($name !== $current->name) {
+                $this->store->rename($current, $name);
+            }
 
             $moved = $this->store->move(node: $current, parentId: $toParentId);
+
+            app(NodeSequence::class)->bump($moved);
 
             event(new NodeMoved(
                 node: $moved,
                 fromParentId: $fromParentId,
                 toParentId: $toParentId,
-                actorId: $data->actorId,
+                actorId: $context->actor->ref()->id, actor: $context->actor->ref(), correlationId: $context->correlationId,
             ));
 
             return $moved;
@@ -110,20 +122,6 @@ final readonly class MoveNodeAction
 
         if (in_array(Identity::stringify($into->id), $descendantIds, strict: true)) {
             throw NodeCycleException::forMove(nodeId: $node->id, intoId: $into->id);
-        }
-    }
-
-    private function assertNameAvailable(Node $node, Node $into): void
-    {
-        $exists = $this->nodes->siblingNameExists(
-            storage: $node->storage,
-            parentId: $into->id,
-            name: $node->name,
-            ignoreId: $node->id,
-        );
-
-        if ($exists) {
-            throw NodeNameConflictException::forName(name: $node->name, parentId: $into->id);
         }
     }
 }

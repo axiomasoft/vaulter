@@ -13,13 +13,13 @@ use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /**
- * Vaulter::for($entity) get-or-creates the storage idempotently and provisions a
+ * Vaulter::drive($entity) get-or-creates the storage idempotently and provisions a
  * root folder node (§2.1). The polymorphic owner triple is the idempotency key.
  */
 it('создаёт storage и корневую папку при первом обращении', function (): void {
     $host = DriveTestHelpers::host();
 
-    $drive = Vaulter::for($host);
+    $drive = Vaulter::drive($host)->asSystem('test fixture');
 
     expect(Drive::query()->count())->toBe(1)
         ->and($drive->model()->owner_type)->toBe($host->getMorphClass())
@@ -37,8 +37,8 @@ it('создаёт storage и корневую папку при первом о
 it('идемпотентен: второе обращение возвращает тот же storage', function (): void {
     $host = DriveTestHelpers::host();
 
-    $first = Vaulter::for($host)->model();
-    $second = Vaulter::for($host)->model();
+    $first = Vaulter::drive($host)->model();
+    $second = Vaulter::drive($host)->model();
 
     expect($second->getKey())->toEqual($first->getKey())
         ->and(Drive::query()->count())->toBe(1)
@@ -74,15 +74,12 @@ it('returns the registered profile object through the core handle contract', fun
 });
 
 it('rejects an unknown profile before owner provisioning', function (): void {
-    expect(fn () => Vaulter::for(DriveTestHelpers::host(), 'missing-profile'))->toThrow(UnknownProfileException::class)
+    expect(fn () => Vaulter::drive(DriveTestHelpers::host(), 'missing-profile'))->toThrow(UnknownProfileException::class)
         ->and(Drive::query()->count())->toBe(0);
 });
 
-it('opens an existing drive before an unknown profile is requested', function (): void {
+it('rejects an unsaved drive before opening a handle', function (): void {
     $storage = (new Drive)->forceFill(['profile' => 'missing-profile']);
-    $drive = Vaulter::forStorage($storage);
 
-    expect($drive->model())->toBe($storage);
-
-    expect(fn () => $drive->profile())->toThrow(UnknownProfileException::class);
+    expect(fn () => Vaulter::drive($storage))->toThrow(InvalidArgumentException::class, 'persisted drive');
 });

@@ -1,0 +1,38 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:unit:v1",
+  "id": "U4",
+  "item": "P3.3",
+  "title": "Sequence schema and concurrency acceptance",
+  "goal": "Named sequence bounds/schema/CAS acceptance on SQLite and real PG forks",
+  "files": [
+    "packages/core/tests/Schema/NodeSequenceSchemaTest.php",
+    "packages/drive/tests/Concurrency/NodeSequenceBoundaryTest.php",
+    "packages/drive/tests/PublicApi/NodeSequenceContractTest.php",
+    "packages/drive/tests/PublicApi/OperationMatrixTest.php"
+  ],
+  "depends_on": [],
+  "route": {
+    "class": "frontier",
+    "effort": "high"
+  },
+  "mode": "delegate",
+  "instructions": "Only listed NEW tests. No DB test runs concurrent; root integration runs once. SchemaBuilder addNodeSequence/removeNodeSequence and NodeSequence helper ready. Follow D29 all named scenarios, raw negative/overflow/up/down/FK and actual PG fork with losing expected7 no side effects. No fake concurrency/isolated helper substitution.",
+  "status": "accepted",
+  "outcome": {
+    "agent": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high"
+    },
+    "at": "2026-10-07T04:43:39Z",
+    "notes": "Integrator inspected returned diff and observed named affected acceptance results; details and complete command evidence in artifacts/P3.3/receipts.json.",
+    "changed": [
+      "packages/core/tests/Schema/NodeSequenceSchemaTest.php",
+      "packages/drive/tests/Concurrency/NodeSequenceBoundaryTest.php",
+      "packages/drive/tests/PublicApi/NodeSequenceContractTest.php",
+      "packages/drive/tests/PublicApi/OperationMatrixTest.php"
+    ],
+    "attempt_id": "p33-U4-accepted"
+  },
+  "updated_at": "2026-10-07T04:43:39Z"
+}

@@ -114,7 +114,7 @@ final class E2eServiceProvider extends ServiceProvider
         // Создаёт сцену для одного прогона e2e и возвращает её координаты.
         Route::get('/e2e/setup', static function () {
             $host = DriveTestHelpers::host(random_int(1, 2_000_000_000));
-            $drive = Vaulter::for($host);
+            $drive = Vaulter::drive($host)->asSystem('test fixture');
             $storage = $drive->model();
 
             $content = TipTapContent::fromArray([

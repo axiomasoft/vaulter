@@ -12,8 +12,11 @@ use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionStoreRepository;
+use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\NodeSequence;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
+use Vaulter\Support\TreeGuard;
 
 /**
  * Restore a document node's head to a prior version (§2.5 / M4a). Append-only: a
@@ -34,21 +37,33 @@ final readonly class RestoreDocumentRevisionAction
         private NodeStoreRepository $nodes,
         private VaulterDatabase $database,
         private DocumentsConfig $documentsConfig,
+        private TreeGuard $tree,
+        private NodeSequence $sequence,
     ) {}
 
-    public function execute(Node $node, int|string $versionId, int|string|null $actorId = null): DocumentRevision
+    public function execute(Node $node, int|string $versionId, int|string|null $actorId = null, ?int $expectedSequence = null): DocumentRevision
     {
-        if (!$node->kind->isDocument()) {
-            throw NotADocumentException::forNode($node->getKey());
-        }
-
-        $source = $this->read->forNode($node, $versionId);
-
-        if (!$source instanceof DocumentRevision) {
-            throw DocumentRevisionNotFoundException::forNode($node->getKey(), $versionId);
-        }
-
-        return $this->database->transaction(function () use ($node, $source, $actorId): DocumentRevision {
+        return $this->database->transaction(function () use ($node, $versionId, $actorId, $expectedSequence): DocumentRevision {
+            $driveId = $node->getRawOriginal('drive_id');
+            $nodeId = $node->getRawOriginal($node->getKeyName());
+            if (!$node->exists || (!is_int($nodeId) && !is_string($nodeId)) || $nodeId === ''
+                || (!is_int($driveId) && !is_string($driveId)) || $driveId === '') {
+                throw NodeNotFoundException::forId('unpersisted');
+            }
+            $this->database->lockTreeShared($driveId);
+            $current = $this->tree->locked($this->tree->lock([$nodeId]), $nodeId);
+            if (!$this->tree->sameStorage($current, $driveId)) {
+                throw NodeNotFoundException::forId($nodeId);
+            }
+            if (!$current->kind->isDocument()) {
+                throw NotADocumentException::forNode($nodeId);
+            }
+            $node = $this->tree->sync($node, $current);
+            $this->sequence->assertExpected(locked: $node, expected: $expectedSequence);
+            $source = $this->read->forNode($node, $versionId);
+            if (!$source instanceof DocumentRevision) {
+                throw DocumentRevisionNotFoundException::forNode($nodeId, $versionId);
+            }
             $version = $this->store->create([
                 'node_id' => $node->getKey(),
                 'version_no' => $this->store->nextVersionNo($node),
@@ -71,6 +86,7 @@ final readonly class RestoreDocumentRevisionAction
                 max: $this->documentsConfig->revisionLimit(),
                 headId: $version->getKey(),
             );
+            $this->sequence->bump(locked: $node);
 
             event(new DocumentRevisionCreated(
                 node: $node,

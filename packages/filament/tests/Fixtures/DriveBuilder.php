@@ -34,7 +34,7 @@ final class DriveBuilder
         $host->forceFill(['id' => $next]);
         $host->exists = true;
 
-        return Vaulter::for($host)->model();
+        return Vaulter::drive($host)->model();
     }
 
     /**
@@ -42,7 +42,7 @@ final class DriveBuilder
      */
     public static function folder(Drive $storage, string $name = 'Docs'): Node
     {
-        return Vaulter::forStorage($storage)->createFolder(name: $name);
+        return Vaulter::drive($storage)->asSystem('test fixture')->asSystem('test fixture')->folders()->create(name: $name);
     }
 
     /**

@@ -5,6 +5,10 @@ declare(strict_types=1);
 use Illuminate\Container\Container;
 use Vaulter\Contracts\Handlers\FileHandler;
 use Vaulter\Contracts\Handlers\FileHandlerRegistry;
+use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Documents\DocumentsManager;
+use Vaulter\Documents\Registries\DocumentExporterRegistry;
+use Vaulter\Documents\Registries\DocumentTypeRegistry;
 use Vaulter\Exceptions\Support\MissingPackageException;
 use Vaulter\Handlers\Builtin\DownloadOnlyHandler;
 use Vaulter\Models\Drive\Node;
@@ -21,21 +25,21 @@ use Vaulter\VaulterManager;
  * strict_types=1 TypeError, not a resolved instance.
  */
 it('registerExporter accepts a class-string exporter and resolves it through the container, F-P3.3-01', function (): void {
-    $manager = app(VaulterManager::class);
+    $manager = new DocumentsManager(new DocumentTypeRegistry, new DocumentExporterRegistry(app(), app(DocumentsConfig::class)));
 
-    $manager->registerExporter(FakeExporter::class);
+    $manager->exporters()->register(FakeExporter::class);
 
-    expect($manager->exporterFormats())->toContain('fake')
-        ->and($manager->exporter('fake'))->toBeInstanceOf(FakeExporter::class);
+    expect($manager->exporters()->formats())->toContain('fake')
+        ->and($manager->exporters()->get('fake'))->toBeInstanceOf(FakeExporter::class);
 });
 
 it('registerExporter still accepts a ready instance (unchanged path), F-P3.3-01', function (): void {
-    $manager = app(VaulterManager::class);
+    $manager = new DocumentsManager(new DocumentTypeRegistry, new DocumentExporterRegistry(app(), app(DocumentsConfig::class)));
     $exporter = new FakeExporter;
 
-    $manager->registerExporter($exporter);
+    $manager->exporters()->register($exporter);
 
-    expect($manager->exporter('fake'))->toBe($exporter);
+    expect($manager->exporters()->get('fake'))->toBe($exporter);
 });
 
 /*
@@ -50,10 +54,10 @@ it('registerExporter still accepts a ready instance (unchanged path), F-P3.3-01'
  * "fails loud when absent" — see the tests below, which pin the OPPOSITE: it
  * always resolves.
  */
-it('for() fails loud with an install hint when vaulter-drive is absent from a bare container, F-P3.5-01', function (): void {
+it('drive() fails loud with an install hint when vaulter-drive is absent from a bare container, F-P3.5-01', function (): void {
     $manager = new VaulterManager(new Container);
 
-    expect(fn () => $manager->for(new Node))
+    expect(fn () => $manager->drive(new Node, 'default'))
         ->toThrow(MissingPackageException::class, 'axioma-studio/vaulter-drive');
 });
 

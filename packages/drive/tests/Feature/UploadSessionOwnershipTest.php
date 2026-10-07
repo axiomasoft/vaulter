@@ -23,7 +23,7 @@ beforeEach(function (): void {
 
 function ownershipStorage(): Drive
 {
-    return Vaulter::for(DriveTestHelpers::host())->model();
+    return Vaulter::drive(DriveTestHelpers::host())->model();
 }
 
 function actingAsActor(int $id): void

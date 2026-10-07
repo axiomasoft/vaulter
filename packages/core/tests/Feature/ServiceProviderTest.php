@@ -27,9 +27,7 @@ it('registers the API routes', function (): void {
 });
 
 it('exposes the Vaulter facade', function (): void {
-    Vaulter::registerDocumentType('spreadsheet', ['label' => 'Spreadsheet']);
-
-    expect(Vaulter::documentTypes())->toHaveKey('spreadsheet');
+    expect(Vaulter::profiles())->toBe(app(ProfileRegistry::class));
 });
 
 /*

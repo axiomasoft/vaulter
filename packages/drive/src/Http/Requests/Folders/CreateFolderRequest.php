@@ -53,13 +53,12 @@ final class CreateFolderRequest extends VaulterFormRequest
      * Assemble the command once the controller has resolved the storage and the
      * destination parent node (null = storage root).
      */
-    public function toData(Drive $storage, ?Node $parent, int|string|null $actorId): CreateFolderInput
+    public function toData(Drive $storage, ?Node $parent): CreateFolderInput
     {
         return new CreateFolderInput(
             storage: $storage,
             name: $this->name(),
             parent: $parent,
-            actorId: $actorId,
         );
     }
 }

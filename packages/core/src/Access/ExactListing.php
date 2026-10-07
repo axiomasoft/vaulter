@@ -14,6 +14,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Nodes\InvalidCursorException;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Support\Identity;
 use WeakMap;
 
@@ -38,9 +39,14 @@ final readonly class ExactListing
      * @param Builder<Node>                                      $candidates
      * @param list<array{column:string, direction:'asc'|'desc'}> $order
      */
-    public function page(?Authorizable $actor, Builder $candidates, array $order, int $perPage, ?string $cursor, string $context): NodePage
+    public function page(Authorizable|OperationContext|null $actor, Builder $candidates, array $order, int $perPage, ?string $cursor, string $context): NodePage
     {
-        if ($actor === null) {
+        $operation = $actor instanceof OperationContext ? $actor : null;
+        if ($operation !== null) {
+            $candidates = (clone $candidates)->where('drive_id', $operation->driveId());
+            $actor = $operation->actor->authorizable();
+        }
+        if ($actor === null && !($operation?->actor->isSystem() ?? false)) {
             return new NodePage(items: [], nextCursor: null, scanned: 0);
         }
         if ($candidates->getConnection() !== $this->database->connection()) {
@@ -72,12 +78,13 @@ final readonly class ExactListing
                 $last = null;
                 break;
             }
-            $sets = $this->access->evaluateMany($actor, $batch);
+            $sets = $actor === null ? [] : $this->access->evaluateMany($actor, $batch);
+            $allowed = $operation === null ? null : array_fill_keys(array_map(static fn (Node $node): string => (string) $node->id, app(OperationGuard::class)->visible($operation, $batch)), true);
             foreach ($batch as $node) {
                 $scanned++;
                 $last = array_map(static fn (array $sort) => $node->getRawOriginal($sort['column']), $order);
-                $set = $sets[Identity::stringify($node->id)];
-                if ($set->allows(Ability::View)) {
+                $set = $operation?->actor->isSystem() ? GrantSet::superAllowed() : $sets[Identity::stringify($node->id)];
+                if ($allowed === null ? $set->allows(Ability::View) : isset($allowed[(string) $node->id])) {
                     $visible[] = $node;
                     $this->grants[$node] = $set;
                     if (count($visible) === $perPage) {

@@ -8,6 +8,8 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Sharing\ShareTokenGenerator;
+use Vaulter\Data\Drive\UploadOptions;
+use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Profiles\DefaultProfile;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\Panels\TeamProfile;
@@ -92,8 +94,9 @@ final class PublishedConfigV02Test extends TestCase
 
         Storage::fake('local');
         $handle = DriveTestHelpers::drive();
-        $folder = $handle->createFolder('published-config');
-        $file = $handle->upload(UploadedFile::fake()->createWithContent('fixture.txt', 'published v0.2 works'), into: $folder);
+        $folder = $handle->folders()->create('published-config');
+        $uploadedFile = UploadedFile::fake()->createWithContent('fixture.txt', 'published v0.2 works');
+        $file = $handle->files()->upload(UploadSource::fromUploadedFile($uploadedFile), new UploadOptions(parent: $folder));
         self::assertSame($folder->getKey(), $file->parent_id);
         self::assertSame('fixture.txt', $file->name);
     }

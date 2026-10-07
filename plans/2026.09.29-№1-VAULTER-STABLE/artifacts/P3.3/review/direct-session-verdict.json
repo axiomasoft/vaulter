@@ -1,0 +1,39 @@
+{
+  "item": "PLAN2.P3.3",
+  "verdict": "GREEN",
+  "review_kind": "bounded-direct-session-verification",
+  "executor": "Codex in the current owner session",
+  "independent_review": false,
+  "delegation": false,
+  "grok_launched": false,
+  "checked_at": "2026-10-07T06:04:05.009854+00:00",
+  "owner_instruction": "но делай не через субагент, а прямо в этой сессии",
+  "candidate": {
+    "head": "3fd82526c0baa2d975ed6eda50487b75c6e68d51",
+    "dirty_digest": "2a2f0e5f9f7eb6f632e9be641dc363bec9ea5cf813f7b56360ed7f233c4f7fdb"
+  },
+  "scope": [
+    "packages/core/src/Repositories/Drive/NodeReadRepository.php",
+    "packages/drive/src/Actions/Nodes/NameConflictResolver.php",
+    "packages/drive/tests/PublicApi/OperationMatrixTest.php"
+  ],
+  "unchanged_files_since_round2": 195,
+  "findings": [],
+  "resolved": [
+    "G1 Unicode sibling predicate mismatch"
+  ],
+  "verification": [
+    "siblingNameExists() and findSibling() both use private siblingQuery(): drive scope, parent, live-node and soft-delete filters; lower(name) = ? with mb_strtolower($name); ignoreId remains confined to existence callers.",
+    "NameConflictResolver::sibling() applies NodeName NFC normalization and delegates retrieval to the repository; no parallel spelling of the predicate.",
+    "FileOperations uses the sibling probe under tree/parent locks and authorizes Edit after the probe transaction commits. The locked ingest resolves through the same predicate before quota/CAS/node writes; retry rechecks the actual file and preserves source ownership.",
+    "OperationMatrix regression covers ASCII case, NFC composition and stored résumé.txt/incoming RÉSUMÉ.txt; a revision reuses the node, increments sequence once, replaces content, and does not add quota. Edit-denial and folder-conflict checks also pass.",
+    "All 197 current candidate file hashes match the saved manifest; exactly three differ from round2, leaving 194 unchanged."
+  ],
+  "checks": "direct-session-checks.json",
+  "limitations": [
+    "This is verification of the three-file correction and its affected callers, not a new sweep of all 197 item files.",
+    "Historical Grok rounds and FINDINGS verdicts remain unchanged. No third native Grok verdict or independent GREEN is claimed.",
+    "Whole-item/phase status and future P3.8 qualification are outside this scoped handoff closure.",
+    "One optional core command used an incorrect test path and exited 2 before executing tests; the corrected path passed 27 tests/47 assertions. Both commands are retained."
+  ]
+}

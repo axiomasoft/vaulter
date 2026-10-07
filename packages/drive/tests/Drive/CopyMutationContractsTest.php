@@ -3,7 +3,12 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Data\Drive\CopyOptions;
+use Vaulter\Data\Drive\UploadOptions;
+use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Models\Cas\Blob;
+use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
 beforeEach(function (): void {
@@ -13,14 +18,15 @@ beforeEach(function (): void {
 it('copies node and current version attributes and charges the exact logical size', function (): void {
     $this->travelTo(now()->startOfSecond());
     $drive = DriveTestHelpers::drive();
-    $dest = $drive->createFolder('Destination');
-    $source = $drive->upload(DriveTestHelpers::streamFor('first'), originalName: 'source.txt', mimeType: 'text/plain');
-    $drive->uploadVersion($source, DriveTestHelpers::streamFor('second bytes'), actorId: 7);
+    $dest = $drive->folders()->create('Destination');
+    $source = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('first'), 'source.txt'), new UploadOptions(declaredMimeType: 'text/plain'));
+    $drive->actingAs(DriveTestHelpers::actor($drive, 7))->files()->addRevision($source, UploadSource::fromStream(DriveTestHelpers::streamFor('second bytes'), $source->name));
     $source->refresh()->forceFill(['is_pinned' => true, 'inherit_grants' => false])->save();
     $head = $source->currentVersion()->firstOrFail();
     $used = $drive->model()->refresh()->used_bytes;
 
-    $copy = $drive->copy($source, $dest, actorId: 17)->refresh();
+    AccessTestHelpers::grant($source, GrantLevel::Owner, subjectId: 17);
+    $copy = $drive->actingAs(DriveTestHelpers::actor($drive, 17))->nodes()->copy($source, $dest)->refresh();
     $file = $copy->file()->firstOrFail();
     $version = $copy->currentVersion()->firstOrFail();
 
@@ -58,13 +64,13 @@ it('copies node and current version attributes and charges the exact logical siz
 
 it('charges only live copied descendants and excludes trashed children', function (): void {
     $drive = DriveTestHelpers::drive();
-    $folder = $drive->createFolder('Folder');
-    $drive->upload(DriveTestHelpers::streamFor('abc'), into: $folder, originalName: 'live.bin');
-    $trashed = $drive->upload(DriveTestHelpers::streamFor('old bytes'), into: $folder, originalName: 'trashed.bin');
-    $drive->trash($trashed);
+    $folder = $drive->folders()->create('Folder');
+    $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('abc'), 'live.bin'), new UploadOptions(parent: $folder));
+    $trashed = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('old bytes'), 'trashed.bin'), new UploadOptions(parent: $folder));
+    $drive->nodes()->trash($trashed);
     $used = $drive->model()->refresh()->used_bytes;
 
-    $copy = $drive->copy($folder, name: 'Copy');
+    $copy = $drive->nodes()->copy($folder, destination: null, options: new CopyOptions(name: 'Copy'));
 
     expect($copy->children()->pluck('name')->all())->toBe(['live.bin'])
         ->and($drive->model()->refresh()->used_bytes)->toBe($used + 3);

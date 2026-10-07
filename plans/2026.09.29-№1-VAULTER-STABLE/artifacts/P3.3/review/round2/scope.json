@@ -1,0 +1,16 @@
+{
+  "unchanged_reviewed_files": 189,
+  "changed": [
+    "UPGRADE.md",
+    "packages/drive/src/Actions/Files/IngestFileAction.php",
+    "packages/drive/src/Actions/Nodes/NameConflictResolver.php",
+    "packages/drive/src/Operations/FileOperations.php",
+    "packages/drive/src/Queries/SharedWithActorQuery.php",
+    "packages/drive/tests/Concurrency/NodeSequenceBoundaryTest.php",
+    "packages/drive/tests/Feature/ExactListingTest.php",
+    "packages/drive/tests/PublicApi/OperationMatrixTest.php"
+  ],
+  "first_candidate": "f6ab29bfb6688e46a95876f361415c0708a8da085ef70734a8a28e36ed8b8e53",
+  "current_candidate": "8995226cece20b4f71f65b8a79a44f28cbf3fff873049379a61c7b782447d39e",
+  "exact_prior_reconstruction_verified": true
+}

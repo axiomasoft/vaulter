@@ -23,3 +23,11 @@ Execution sheet: run the batches in order. Route is the maximum class/effort of 
 | 16 | P2 | BP2-5 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P2.5` | implementation/high | done |
 | 17 | P2 | BP2-6 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P2.6` | implementation/low | done |
 | 18 | P2 | BP2-7 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P2.7` | frontier/high | done |
+| 19 | P3 | B31 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P3.1` | frontier/high | done |
+| 20 | P3 | B32 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P3.6` | implementation/high | done |
+| 21 | P3 | B33 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P3.5` | implementation/high | done |
+| 22 | P3 | B34 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P3.2` | frontier/high | done |
+| 23 | P3 | B35 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P3.4` | implementation/high | done |
+| 24 | P3 | B36 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P3.3` | frontier/high | done |
+| 25 | P3 | B37 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P3.7` | frontier/high | done |
+| 26 | P3 | B38 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P3.8` | frontier/high | done |

@@ -6,7 +6,6 @@ namespace Vaulter\Documents\Tests\Document;
 
 use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Drive\DriveHandle;
-use Vaulter\Facades\Vaulter;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /**
@@ -16,7 +15,7 @@ final class DocumentTestHelpers
 {
     public static function drive(): DriveHandle
     {
-        return Vaulter::for(DriveTestHelpers::host());
+        return DriveTestHelpers::drive();
     }
 
     /**

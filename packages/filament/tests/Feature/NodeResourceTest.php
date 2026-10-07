@@ -39,7 +39,7 @@ it('trashes a node through the core Trash Action (the row action path)', functio
     expect($folder->fresh()->trashed_at)->toBeNull();
 
     // The row action calls exactly this DriveContext path (TrashNodeAction).
-    Vaulter::forStorage($folder->storage)->trash(node: $folder, actorId: $user->getKey());
+    Vaulter::drive($folder->storage)->actingAs($user)->nodes()->trash(node: $folder);
 
     expect($folder->fresh()->trashed_at)->not->toBeNull();
 });
@@ -49,13 +49,14 @@ it('restores a trashed node through the core Restore Action', function (): void 
     $this->actingAs($user);
 
     $storage = DriveBuilder::storage();
+    DriveBuilder::grant($storage->rootNode, $user);
     $folder = DriveBuilder::folder($storage, 'Restorable');
     DriveBuilder::grant($folder, $user);
 
-    Vaulter::forStorage($storage)->trash(node: $folder);
+    Vaulter::drive($storage)->asSystem('test fixture')->nodes()->trash(node: $folder);
     expect($folder->fresh()->trashed_at)->not->toBeNull();
 
-    Vaulter::forStorage($folder->storage)->restore(node: $folder, actorId: $user->getKey());
+    Vaulter::drive($folder->storage)->actingAs($user)->trash()->restore(node: $folder);
 
     expect($folder->fresh()->trashed_at)->toBeNull();
 });
@@ -68,7 +69,7 @@ it('renames a node through the core Rename Action', function (): void {
     $folder = DriveBuilder::folder($storage, 'Before');
     DriveBuilder::grant($folder, $user);
 
-    Vaulter::forStorage($folder->storage)->rename(node: $folder, name: 'After', actorId: $user->getKey());
+    Vaulter::drive($folder->storage)->actingAs($user)->nodes()->rename(node: $folder, name: 'After');
 
     expect($folder->fresh()->name)->toBe('After');
 });
@@ -81,11 +82,12 @@ it('force-deletes a trashed node through the core ForceDelete Action', function 
     $folder = DriveBuilder::folder($storage, 'Purgeable');
     DriveBuilder::grant($folder, $user);
 
-    Vaulter::forStorage($storage)->trash(node: $folder);
+    Vaulter::drive($storage)->asSystem('test fixture')->nodes()->trash(node: $folder);
 
-    Vaulter::forStorage($folder->storage)->forceDelete(node: $folder, actorId: $user->getKey());
+    Vaulter::drive($folder->storage)->actingAs($user)->trash()->purge(node: $folder);
 
-    expect($folder->fresh()->deleted_at)->not->toBeNull();
+    expect($folder->fresh())->toBeNull()
+        ->and($folder->newQuery()->withTrashed()->whereKey($folder->getKey())->exists())->toBeFalse();
 });
 
 it('denies the trash ability to an admin who lacks a grant (row action hidden)', function (): void {

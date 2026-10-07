@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage as StorageFacade;
+use Vaulter\Data\Drive\UploadOptions;
+use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Access\Permission;
@@ -191,9 +193,9 @@ it('401s a password-gated public resolve until the password is supplied', functi
 });
 
 it('serves a public download within the READ bits, bounds it by max_uses, and never redirects even on a disk that provides a temporary url (F-P1.3-01)', function (): void {
-    $drive = Vaulter::for(DriveTestHelpers::host());
+    $drive = Vaulter::drive(DriveTestHelpers::host())->asSystem('test fixture');
 
-    $fileNode = $drive->upload(DriveTestHelpers::streamFor('public bytes'), originalName: 'pub.txt', mimeType: 'text/plain');
+    $fileNode = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('public bytes'), 'pub.txt'), new UploadOptions(declaredMimeType: 'text/plain'));
 
     $share = ShareTestHelpers::share(
         $fileNode->refresh(),
@@ -218,8 +220,8 @@ it('serves a public download within the READ bits, bounds it by max_uses, and ne
 });
 
 it('denies a public download when the share lacks the READ bit', function (): void {
-    $drive = Vaulter::for(DriveTestHelpers::host());
-    $fileNode = $drive->upload(DriveTestHelpers::streamFor('secret bytes'), originalName: 'no.txt');
+    $drive = Vaulter::drive(DriveTestHelpers::host())->asSystem('test fixture');
+    $fileNode = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('secret bytes'), 'no.txt'));
 
     // permissions=0 → no READ/DOWNLOAD bit; the download is denied.
     ShareTestHelpers::share($fileNode->refresh(), token: 'norights-token', permissions: 0);
