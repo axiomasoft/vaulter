@@ -973,6 +973,7 @@ final class SchemaBuilder
      */
     public function addNodeSequence(): void
     {
+        $this->assertEnforcedMysqlChecks();
         $name = app(DatabaseConfig::class)->table('nodes');
         if ($this->schemaConnection()->hasColumn($name, 'sequence')) {
             return;
@@ -1529,20 +1530,29 @@ final class SchemaBuilder
         $table->index(['status', 'cleanup_pending', 'cleanup_available_at', 'id'], $table->getTable().'_cleanup_idx');
     }
 
-    public function addScanEvidenceAndWork(): void
+    /**
+     * The mysql driver only ever installs CHECKs it can rely on: a server that parses but ignores
+     * them (MariaDB behind the mysql driver, MySQL before 8.0.16) or clamps numeric overflow
+     * (no STRICT sql_mode) fails closed instead of installing a constraint that never fires.
+     */
+    private function assertEnforcedMysqlChecks(): void
     {
         $db = $this->dbConnection();
-        if ($db->getDriverName() === 'mysql') {
-            $engine = $db->selectOne('SELECT VERSION() AS v, @@SESSION.sql_mode AS m');
-            if (!$engine instanceof \stdClass || !is_string($engine->v ?? null) || !is_string($engine->m ?? null)) {
-                throw new \RuntimeException('Cannot prove enforced MySQL constraints.');
-            }
-            $version = $engine->v;
-            $mode = $engine->m;
-            if (str_contains($version, 'MariaDB') || version_compare($version, '8.0.16', '<') || !str_contains($mode, 'STRICT_')) {
-                throw new \RuntimeException('Scan schema requires enforced MySQL CHECKs and strict numeric overflow.');
-            }
+        if ($db->getDriverName() !== 'mysql') {
+            return;
         }
+        $engine = $db->selectOne('SELECT VERSION() AS v, @@SESSION.sql_mode AS m');
+        if (!$engine instanceof \stdClass || !is_string($engine->v ?? null) || !is_string($engine->m ?? null)) {
+            throw new \RuntimeException('Cannot prove enforced MySQL constraints.');
+        }
+        if (str_contains($engine->v, 'MariaDB') || version_compare($engine->v, '8.0.16', '<') || !str_contains($engine->m, 'STRICT_')) {
+            throw new \RuntimeException('Schema requires enforced MySQL CHECKs and strict numeric overflow.');
+        }
+    }
+
+    public function addScanEvidenceAndWork(): void
+    {
+        $this->assertEnforcedMysqlChecks();
         foreach (['drives', 'file_revisions'] as $entity) {
             $name = app(DatabaseConfig::class)->table($entity);
             if (!$this->schemaConnection()->hasColumn($name, 'scan_admission_sequence')) {

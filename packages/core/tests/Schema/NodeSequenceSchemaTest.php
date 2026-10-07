@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Connection;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Schema\SchemaBuilder;
@@ -88,3 +90,22 @@ it('P3 additive migration preserves prior rows and foreign keys with a signed 64
         config()->set('vaulter.ids.strategy', $oldStrategy);
     }
 })->with(['bigint', 'ulid', 'uuid7']);
+
+it('D33 refuses to add the node sequence on a mysql-driver server that cannot enforce CHECK', function (string $version, string $mode): void {
+    $database = DB::getFacadeRoot();
+    $connection = Mockery::mock(Connection::class);
+    $connection->shouldReceive('getDriverName')->andReturn('mysql');
+    $connection->shouldReceive('selectOne')->andReturn((object) ['v' => $version, 'm' => $mode]);
+    $connection->shouldNotReceive('statement');
+    DB::shouldReceive('connection')->andReturn($connection);
+
+    try {
+        expect(fn () => app(SchemaBuilder::class)->addNodeSequence())->toThrow(RuntimeException::class, 'enforced MySQL CHECKs');
+    } finally {
+        DB::swap($database);
+    }
+})->with([
+    'MariaDB server behind the mysql driver' => ['10.11.6-MariaDB-0ubuntu0.22.04.1', 'STRICT_TRANS_TABLES'],
+    'MySQL older than 8.0.16' => ['8.0.15', 'STRICT_TRANS_TABLES'],
+    'MySQL without strict mode' => ['8.0.46', 'NO_ENGINE_SUBSTITUTION'],
+]);
