@@ -8,26 +8,76 @@ use DateTimeImmutable;
 use DateTimeZone;
 use LogicException;
 use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Content\ScanWorkTransitions;
-use Vaulter\Contracts\Content\ScanPolicyResolver;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Models\Content\ScanObligation;
-use Vaulter\Models\Drive\Drive;
+use Vaulter\Models\Content\ScanRequest;
 
 /**
- * SQL owns retries and generation fencing; no scanner IO runs in these transactions.
+ * Persistence of scan work rows and their request ledger; transitions live in Vaulter\Actions\Content.
  *
- * @internal The scan work state machine; hosts reach it through the drive scan commands and jobs.
+ * @internal Hosts reach scan work through the drive scan commands and jobs.
  */
 final readonly class ScanObligationRepository
 {
-    public function __construct(private VaulterConfig $config, private VaulterDatabase $database, private ScanPolicyResolver $policies, private ScanWorkTransitions $transitions) {}
+    public function __construct(private VaulterConfig $config, private VaulterDatabase $database) {}
 
     public function find(int|string $id): ?ScanObligation
     {
         $class = $this->config->model('scan_obligation');
 
         return $class::query()->whereKey($id)->first();
+    }
+
+    public function make(): ScanObligation
+    {
+        $class = $this->config->model('scan_obligation');
+
+        return new $class;
+    }
+
+    /** Takes the work row lock; callers hold every revision-family lock they need before this one. */
+    public function lock(int|string $id): ?ScanObligation
+    {
+        $class = $this->config->model('scan_obligation');
+
+        return $class::query()->whereKey($id)->lockForUpdate()->first();
+    }
+
+    /** Re-reads by the persisted key, so attributes changed on the passed model are never trusted. */
+    public function lockPersisted(ScanObligation $obligation): ?ScanObligation
+    {
+        $class = $this->config->model('scan_obligation');
+
+        return $class::query()->whereKey($obligation->getRawOriginal($obligation->getKeyName()))->lockForUpdate()->first();
+    }
+
+    public function lockForRevisionSpec(int|string $revisionId, string $specKey): ?ScanObligation
+    {
+        $class = $this->config->model('scan_obligation');
+
+        return $class::query()->where('revision_id', $revisionId)->where('spec_key', $specKey)->lockForUpdate()->first();
+    }
+
+    public function requestFor(ScanObligation $work): ScanRequest
+    {
+        $requestClass = $this->config->model('scan_request');
+
+        return $requestClass::query()->where('obligation_id', $work->id)->where('generation', $work->generation)->firstOrFail();
+    }
+
+    public function hasRequest(ScanObligation $work, string $requestKey): bool
+    {
+        $requestClass = $this->config->model('scan_request');
+
+        return $requestClass::query()->where('obligation_id', $work->id)->where('request_key', $requestKey)->exists();
+    }
+
+    public function recordRequest(ScanObligation $work, string $requestKey, DateTimeImmutable $requestedAt, string $reason, string $correlationId): void
+    {
+        $requestClass = $this->config->model('scan_request');
+        $request = new $requestClass;
+        $request->forceFill(['obligation_id' => $work->id, 'request_key' => $requestKey, 'generation' => $work->generation,
+            'requested_at' => $requestedAt, 'reason' => $reason, 'correlation_id' => $correlationId])->save();
     }
 
     /** @internal The database clock is the only time source for leases, fences and backoff. */

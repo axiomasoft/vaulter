@@ -6,7 +6,6 @@ namespace Vaulter\Actions\Content;
 
 use LogicException;
 use Vaulter\Configuration\TenancyConfig;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ScanAttempt;
 use Vaulter\Content\ScanWorkTransitions;
 use Vaulter\Database\VaulterDatabase;
@@ -20,7 +19,7 @@ use Vaulter\Tenancy\TenancyBoundary;
  */
 final readonly class FailScanAttemptAction
 {
-    public function __construct(private VaulterConfig $config, private VaulterDatabase $database, private TenancyConfig $tenancy, private TenancyBoundary $boundary, private ScanObligationRepository $work, private ScanWorkTransitions $transitions) {}
+    public function __construct(private VaulterDatabase $database, private TenancyConfig $tenancy, private TenancyBoundary $boundary, private ScanObligationRepository $work, private ScanWorkTransitions $transitions) {}
 
     public function execute(ScanAttempt $attempt, string $reason): bool
     {
@@ -32,8 +31,7 @@ final readonly class FailScanAttemptAction
         }
 
         return $this->database->transaction(function () use ($attempt, $reason): bool {
-            $class = $this->config->model('scan_obligation');
-            $work = $class::query()->whereKey($attempt->obligationId)->lockForUpdate()->first();
+            $work = $this->work->lock($attempt->obligationId);
             $now = $this->work->now();
             if ($work === null || !$this->transitions->fence($work, $attempt, $now)) {
                 return false;

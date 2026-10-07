@@ -56,10 +56,8 @@ final readonly class RequestScanWorkAction
             throw new LogicException('Scan request scope differs.');
         }
         $this->transitions->currentSpec($snapshot['drive'], $spec->specKey());
-        $class = $this->config->model('scan_obligation');
-        $requestClass = $this->config->model('scan_request');
-        $work = $class::query()->where('revision_id', $snapshot['revision']->id)->where('spec_key', $spec->specKey())->lockForUpdate()->first();
-        if ($work !== null && (!$rescan || $requestClass::query()->where('obligation_id', $work->id)->where('request_key', $requestKey)->exists())) {
+        $work = $this->work->lockForRevisionSpec($snapshot['revision']->id, $spec->specKey());
+        if ($work !== null && (!$rescan || $this->work->hasRequest($work, $requestKey))) {
             return $work;
         }
         $generation = $work === null ? 1 : $this->transitions->increment($work->generation);
@@ -73,7 +71,7 @@ final readonly class RequestScanWorkAction
         $unsupported = $identity === null;
         $identityHash = $identity?->fingerprint() ?? hash('sha256', json_encode(['manifest_blob_id' => $r->manifest_blob_id, 'payload_kind' => $r->manifest_blob_id !== null ? 'manifest' : 'missing', 'revision_id' => (string) $r->id, 'sha256' => $r->sha256, 'size' => $r->size_bytes], JSON_THROW_ON_ERROR));
         $now = $this->work->now();
-        $work ??= new $class;
+        $work ??= $this->work->make();
         $createdAt = $work->getAttribute('created_at') ?? $now;
         $work->forceFill(['revision_id' => $r->id, 'drive_id' => $snapshot['drive']->id,
             'tenant_id' => $snapshot['drive']->tenant_id, 'blob_id' => $blob?->id, 'scope_key' => $blob === null ? 'unavailable' : $blob->scope_key,
@@ -83,9 +81,7 @@ final readonly class RequestScanWorkAction
             'request_key' => $requestKey, 'state' => 'pending', 'outcome' => null, 'reason' => null, 'retryable' => false,
             'available_at' => $now, 'lease_token' => null, 'lease_expires_at' => null, 'last_published_at' => null,
             'created_at' => $createdAt, 'updated_at' => $now])->save();
-        $request = new $requestClass;
-        $request->forceFill(['obligation_id' => $work->id, 'request_key' => $requestKey, 'generation' => $generation,
-            'requested_at' => $now, 'reason' => $rescan ? 'explicit_rescan' : 'admission', 'correlation_id' => $context->correlationId])->save();
+        $this->work->recordRequest($work, $requestKey, $now, $rescan ? 'explicit_rescan' : 'admission', $context->correlationId);
         if ($unsupported) {
             $work->forceFill(['attempt' => 1])->save();
             $this->transitions->append($work, new ScanResult(ScanVerdict::Failed, $r->manifest_blob_id !== null || $blob?->chunked ? 'unsupported' : 'unknown'), $now);
@@ -93,12 +89,9 @@ final readonly class RequestScanWorkAction
         } elseif (!$rescan) {
             // A same-drive reupload may reuse existing exact-byte proof, but always
             // materializes its own request and evidence row before commit.
-            $evidenceClass = $this->config->model('scan_evidence');
-            $candidate = $evidenceClass::query()->where('drive_id', $work->drive_id)->where('tenant_id', $work->tenant_id)
-                ->where('blob_id', $work->blob_id)->where('content_identity', $work->content_identity)
-                ->where('spec_key', $spec->specKey())->where('outcome', 'clean')->whereNull('revoked_at')->orderByDesc('id')->first();
+            $candidate = $this->evidence->cleanCandidate($work, $spec);
             if ($candidate !== null && !$this->evidence->infected($r)) {
-                $this->evidence->reuse($r, $this->evidence->value($candidate), $spec, $work);
+                $this->evidence->reuse($r, $candidate, $spec, $work);
                 $work->refresh();
             }
         }

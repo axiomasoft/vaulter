@@ -36,8 +36,7 @@ final readonly class ClaimScanWorkAction
         $spec = $this->transitions->currentSpec($drive, $preview->spec_key);
 
         return $this->database->transaction(function () use ($id, $generation, $now, $spec): ?ScanAttempt {
-            $class = $this->config->model('scan_obligation');
-            $work = $class::query()->whereKey($id)->lockForUpdate()->first();
+            $work = $this->work->lock($id);
             if ($work === null || $work->generation !== $generation || $work->state === 'settled'
                 || $work->available_at > $now || ($work->state === 'leased' && $work->lease_expires_at > $now)) {
                 return null;

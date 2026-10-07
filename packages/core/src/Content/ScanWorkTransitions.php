@@ -6,7 +6,6 @@ namespace Vaulter\Content;
 
 use DateTimeImmutable;
 use LogicException;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Content\ScanPolicyResolver;
 use Vaulter\Contracts\Content\ScanWorkSettings;
 use Vaulter\Enums\Cas\ScanVerdict;
@@ -16,6 +15,8 @@ use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Repositories\Content\ScanEvidenceRepository;
+use Vaulter\Repositories\Content\ScanObligationRepository;
 
 /**
  * Fence, counter and terminal-state rules shared by the scan work Actions.
@@ -24,17 +25,15 @@ use Vaulter\Models\Drive\Node;
  */
 final readonly class ScanWorkTransitions
 {
-    public function __construct(private VaulterConfig $config, private ScanPolicyResolver $policies, private ScanWorkSettings $settings) {}
+    public function __construct(private ScanObligationRepository $work, private ScanEvidenceRepository $evidence, private ScanPolicyResolver $policies, private ScanWorkSettings $settings) {}
 
     public function terminal(ScanObligation $work, string $reason, DateTimeImmutable $now): void
     {
         if ($work->attempt === 0) {
             $work->forceFill(['attempt' => 1])->save();
         }
-        $evidenceClass = $this->config->model('scan_evidence');
-        $requestClass = $this->config->model('scan_request');
-        $request = $requestClass::query()->where('obligation_id', $work->id)->where('generation', $work->generation)->firstOrFail();
-        if (!$evidenceClass::query()->where('request_id', $request->id)->where('attempt', $work->attempt)->exists()) {
+        $request = $this->work->requestFor($work);
+        if (!$this->evidence->hasAttempt($request, $work->attempt)) {
             $this->append($work, new ScanResult(ScanVerdict::Failed, $reason), $now);
         }
         $work->forceFill(['state' => 'settled', 'outcome' => 'failed', 'reason' => $reason, 'retryable' => false,
@@ -43,13 +42,7 @@ final readonly class ScanWorkTransitions
 
     public function append(ScanObligation $work, ScanResult $result, DateTimeImmutable $now): void
     {
-        $requestClass = $this->config->model('scan_request');
-        $class = $this->config->model('scan_evidence');
-        $request = $requestClass::query()->where('obligation_id', $work->id)->where('generation', $work->generation)->firstOrFail();
-        $record = new $class;
-        $record->forceFill($work->only(['revision_id', 'drive_id', 'tenant_id', 'blob_id', 'scope_key', 'content_identity', 'sha256', 'size_bytes', 'spec_key', 'scanner_key', 'scanner_version', 'policy_version', 'generation', 'attempt']));
-        $record->forceFill(['obligation_id' => $work->id, 'request_id' => $request->id, 'outcome' => $result->verdict->value,
-            'reason' => $result->reason, 'retryable' => $result->retryable, 'observed_at' => $now])->save();
+        $this->evidence->append($work, $this->work->requestFor($work), $result, $now);
     }
 
     public function fence(ScanObligation $work, ScanAttempt $attempt, DateTimeImmutable $now): bool

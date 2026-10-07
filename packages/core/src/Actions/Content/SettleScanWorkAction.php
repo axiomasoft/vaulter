@@ -42,8 +42,7 @@ final readonly class SettleScanWorkAction
                 return false;
             }
             $snapshot = $this->snapshots->load($revision, true);
-            $class = $this->config->model('scan_obligation');
-            $work = $class::query()->whereKey($attempt->obligationId)->lockForUpdate()->first();
+            $work = $this->work->lock($attempt->obligationId);
             $now = $this->work->now();
             if ($work === null || !$this->transitions->fence($work, $attempt, $now) || !$this->transitions->snapshotMatches($snapshot, $work)) {
                 return false;

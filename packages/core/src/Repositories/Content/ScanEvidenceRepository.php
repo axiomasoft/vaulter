@@ -4,16 +4,19 @@ declare(strict_types=1);
 
 namespace Vaulter\Repositories\Content;
 
+use DateTimeImmutable;
 use LogicException;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ImmutableContentIdentity;
 use Vaulter\Content\ScanEvidence;
 use Vaulter\Content\ScanPolicySpec;
+use Vaulter\Content\ScanResult;
 use Vaulter\Content\ScanSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Cas\ScanVerdict;
 use Vaulter\Models\Content\ScanEvidenceRecord;
 use Vaulter\Models\Content\ScanObligation;
+use Vaulter\Models\Content\ScanRequest;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Operations\OperationContext;
 
@@ -71,6 +74,33 @@ final readonly class ScanEvidenceRepository
             ->where('policy_version', $spec->policyVersion)->where('outcome', 'clean')->whereNull('revoked_at')->orderByDesc('id')->first();
 
         return $record === null ? null : $this->value($record);
+    }
+
+    /** Exact-byte clean proof of this drive and tenant that a same-drive reupload may reuse. */
+    public function cleanCandidate(ScanObligation $work, ScanPolicySpec $spec): ?ScanEvidence
+    {
+        $class = $this->config->model('scan_evidence');
+        $record = $class::query()->where('drive_id', $work->drive_id)->where('tenant_id', $work->tenant_id)
+            ->where('blob_id', $work->blob_id)->where('content_identity', $work->content_identity)
+            ->where('spec_key', $spec->specKey())->where('outcome', 'clean')->whereNull('revoked_at')->orderByDesc('id')->first();
+
+        return $record === null ? null : $this->value($record);
+    }
+
+    public function hasAttempt(ScanRequest $request, int $attempt): bool
+    {
+        $class = $this->config->model('scan_evidence');
+
+        return $class::query()->where('request_id', $request->id)->where('attempt', $attempt)->exists();
+    }
+
+    public function append(ScanObligation $work, ScanRequest $request, ScanResult $result, DateTimeImmutable $observedAt): void
+    {
+        $class = $this->config->model('scan_evidence');
+        $record = new $class;
+        $record->forceFill($work->only(['revision_id', 'drive_id', 'tenant_id', 'blob_id', 'scope_key', 'content_identity', 'sha256', 'size_bytes', 'spec_key', 'scanner_key', 'scanner_version', 'policy_version', 'generation', 'attempt']));
+        $record->forceFill(['obligation_id' => $work->id, 'request_id' => $request->id, 'outcome' => $result->verdict->value,
+            'reason' => $result->reason, 'retryable' => $result->retryable, 'observed_at' => $observedAt])->save();
     }
 
     public function reuse(FileRevision $target, ScanEvidence $source, ScanPolicySpec $spec, ScanObligation $obligation): ScanEvidence

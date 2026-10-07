@@ -24,8 +24,7 @@ final readonly class SupersedeScanWorkAction
     public function execute(ScanObligation $obligation): bool
     {
         return $this->database->transaction(function () use ($obligation): bool {
-            $class = $this->config->model('scan_obligation');
-            $work = $class::query()->whereKey($obligation->getRawOriginal($obligation->getKeyName()))->lockForUpdate()->first();
+            $work = $this->work->lockPersisted($obligation);
             if ($work === null || $work->generation !== $obligation->generation || $work->state === 'settled') {
                 return false;
             }
