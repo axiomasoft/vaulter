@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Configuration\ScanConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ContentAvailabilityGuard;
@@ -81,7 +82,7 @@ it('SEC-R01 all content blocks legacy bytes until versioned rescan evidence is c
         ->toThrow(ContentUnavailableException::class);
     app(ScanBackfillReconciler::class)->expand();
     $row = $revision->scanObligations()->firstOrFail();
-    $attempt = app(ScanObligationRepository::class)->claim($row->id, $row->generation, new DateTimeImmutable('now'));
+    $attempt = app(ClaimScanWorkAction::class)->execute($row->id, $row->generation, new DateTimeImmutable('now'));
     app(ScanObligationRepository::class)->settle($attempt, new ScanResult(ScanVerdict::Clean));
     app(ContentAvailabilityGuard::class)->assertAvailable($context, $node, $revision);
     expect($revision->scanEvidence()->count())->toBe(1);
@@ -106,7 +107,7 @@ it('SEC-R02 forged timestamps cannot exempt a new admission and failures remain 
     expect(fn () => app(ContentAvailabilityGuard::class)->assertAvailable($context, $node, $revision))
         ->toThrow(ContentUnavailableException::class);
     $row = $revision->scanObligations()->firstOrFail();
-    $attempt = app(ScanObligationRepository::class)->claim($row->id, $row->generation, new DateTimeImmutable('now'));
+    $attempt = app(ClaimScanWorkAction::class)->execute($row->id, $row->generation, new DateTimeImmutable('now'));
     app(ScanObligationRepository::class)->settle($attempt, new ScanResult(ScanVerdict::Failed, 'unsupported'));
     expect($row->refresh()->outcome)->toBe('failed');
     expect(fn () => app(ContentAvailabilityGuard::class)->assertAvailable($context, $node, $revision))

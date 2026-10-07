@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ScanAttempt;
 use Vaulter\Content\ScanResult;
@@ -41,18 +42,18 @@ it('SEC-R11 concurrent claims acquire one live lease and late old token cannot s
     $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     $work = $revision->scanObligations()->firstOrFail();
     $outcomes = ForkRace::run([
-        fn (): bool => app(ScanObligationRepository::class)->claim($work->id, $work->generation, new DateTimeImmutable('now')) !== null,
-        fn (): bool => app(ScanObligationRepository::class)->claim($work->id, $work->generation, new DateTimeImmutable('now')) !== null,
+        fn (): bool => app(ClaimScanWorkAction::class)->execute($work->id, $work->generation, new DateTimeImmutable('now')) !== null,
+        fn (): bool => app(ClaimScanWorkAction::class)->execute($work->id, $work->generation, new DateTimeImmutable('now')) !== null,
     ]);
     expect($outcomes[0]->ok)->toBeTrue($outcomes[0]->message ?? '')
         ->and($outcomes[1]->ok)->toBeTrue($outcomes[1]->message ?? '')
         ->and(array_filter(array_map(fn ($o) => $o->value, $outcomes)))->toHaveCount(1);
     $work->refresh();
     $work->forceFill(['state' => 'retry_wait', 'lease_token' => null, 'lease_expires_at' => null, 'available_at' => now()])->save();
-    $old = app(ScanObligationRepository::class)->claim($work->id, $work->generation, new DateTimeImmutable('now'));
+    $old = app(ClaimScanWorkAction::class)->execute($work->id, $work->generation, new DateTimeImmutable('now'));
     $work->refresh()->forceFill(['lease_expires_at' => now()->subSecond()])->save();
     app(ScanObligationRepository::class)->recover($work, new DateTimeImmutable('now'));
-    $fresh = app(ScanObligationRepository::class)->claim($work->id, $work->generation, new DateTimeImmutable('now'));
+    $fresh = app(ClaimScanWorkAction::class)->execute($work->id, $work->generation, new DateTimeImmutable('now'));
     $otherToken = ($fresh->leaseToken[0] === '0' ? '1' : '0').substr($fresh->leaseToken, 1);
     $forged = new ScanAttempt(
         $fresh->obligationId, $fresh->revisionId, $fresh->blobId, $fresh->driveId, $fresh->tenantId,
@@ -92,7 +93,7 @@ it('SEC-R09 killed committed publisher leaves intent recoverable by an independe
     expect($row->state)->toBe('pending')->and($row->attempt)->toBe(0);
     $recovered = ForkRace::run([function () use ($row): bool {
         $result = app(ScanWorkReconciler::class)->reconcile();
-        $attempt = app(ScanObligationRepository::class)->claim($row->id, $row->generation, new DateTimeImmutable('now'));
+        $attempt = app(ClaimScanWorkAction::class)->execute($row->id, $row->generation, new DateTimeImmutable('now'));
 
         return $result['published'] === 1 && $attempt !== null
             && app(ScanObligationRepository::class)->settle($attempt, new ScanResult(ScanVerdict::Clean));
@@ -113,7 +114,7 @@ it('SEC-R11 killed lease owner is fenced while a surviving process recovers', fu
     fclose($stream);
     $row = $node->file()->firstOrFail()->currentRevision()->firstOrFail()->scanObligations()->firstOrFail();
     $killed = ForkRace::run([function () use ($row): void {
-        $attempt = app(ScanObligationRepository::class)->claim($row->id, $row->generation, new DateTimeImmutable('now'));
+        $attempt = app(ClaimScanWorkAction::class)->execute($row->id, $row->generation, new DateTimeImmutable('now'));
         if ($attempt === null) {
             throw new RuntimeException('Fixture failed to claim.');
         }
@@ -123,7 +124,7 @@ it('SEC-R11 killed lease owner is fenced while a surviving process recovers', fu
     $row->forceFill(['lease_expires_at' => now()->subSecond()])->save();
     $surviving = ForkRace::run([function () use ($row): bool {
         app(ScanObligationRepository::class)->recover($row, new DateTimeImmutable('now'));
-        $attempt = app(ScanObligationRepository::class)->claim($row->id, $row->generation, new DateTimeImmutable('now'));
+        $attempt = app(ClaimScanWorkAction::class)->execute($row->id, $row->generation, new DateTimeImmutable('now'));
 
         return $attempt !== null && app(ScanObligationRepository::class)->settle($attempt, new ScanResult(ScanVerdict::Clean));
     }]);
@@ -200,7 +201,7 @@ it('SEC-R12 purge and settlement serialize without resurrecting a head or work',
     fclose($stream);
     $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     $row = $revision->scanObligations()->firstOrFail();
-    $attempt = app(ScanObligationRepository::class)->claim($row->id, $row->generation, new DateTimeImmutable('now'));
+    $attempt = app(ClaimScanWorkAction::class)->execute($row->id, $row->generation, new DateTimeImmutable('now'));
     $node->newQuery()->whereKey($node->id)->update(['trashed_at' => now()]);
     $outcomes = ForkRace::run([
         function () use ($node, $context): bool {

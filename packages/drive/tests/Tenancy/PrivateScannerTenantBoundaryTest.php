@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Content\ScanAttempt;
 use Vaulter\Content\ScanInput;
 use Vaulter\Content\ScanResult;
@@ -95,7 +96,7 @@ it('SEC-R12 V08 private scanner A B A refuses mismatch null and maintenance inhe
 
 it('SEC-R12 private capability validates lease scope immutable blob revision and generation before byte open', function (): void {
     $repository = app(ScanObligationRepository::class);
-    $attempt = $repository->claim($this->work->id, $this->work->generation, new DateTimeImmutable('now'));
+    $attempt = app(ClaimScanWorkAction::class)->execute($this->work->id, $this->work->generation, new DateTimeImmutable('now'));
     expect($attempt)->not->toBeNull();
     $actualStore = app(BlobStore::class);
     $spy = Mockery::mock(BlobStore::class);

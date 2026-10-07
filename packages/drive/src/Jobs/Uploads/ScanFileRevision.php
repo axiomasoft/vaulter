@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Jobs\Uploads;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
+use Vaulter\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Configuration\ScanConfig;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Content\ScanInput;
@@ -39,16 +40,16 @@ final class ScanFileRevision implements ShouldQueue
         return [new RestoreTenantContext($this->driveId, $this->tenantId)];
     }
 
-    public function handle(ScanObligationRepository $work, PrivateScanReader $reader, ScanSnapshot $snapshots,
+    public function handle(ScanObligationRepository $work, ClaimScanWorkAction $claim, PrivateScanReader $reader, ScanSnapshot $snapshots,
         ScanConfig $config): void
     {
         if (app(TenancyConfig::class)->enabled()) {
             app(TenancyBoundary::class)->assertJobDrive($this->driveId, $this->tenantId);
         }
-        app(TenancyBypass::class)->suspend(fn () => $this->execute($work, $reader, $snapshots, $config));
+        app(TenancyBypass::class)->suspend(fn () => $this->execute($work, $claim, $reader, $snapshots, $config));
     }
 
-    private function execute(ScanObligationRepository $work, PrivateScanReader $reader, ScanSnapshot $snapshots, ScanConfig $config): void
+    private function execute(ScanObligationRepository $work, ClaimScanWorkAction $claim, PrivateScanReader $reader, ScanSnapshot $snapshots, ScanConfig $config): void
     {
         // The queued scope is a fence, never a permission to derive a different tenant.
         $row = $work->find($this->obligationId);
@@ -62,7 +63,7 @@ final class ScanFileRevision implements ShouldQueue
             || $scanner->version() !== $config->globalSpec()->scannerVersion) {
             throw new InvalidConfigurationException('Configured scanner identity differs from durable work.');
         }
-        $attempt = $work->claim($this->obligationId, $this->generation, $work->now());
+        $attempt = $claim->execute($this->obligationId, $this->generation, $work->now());
         if ($attempt === null || $attempt->blobId === null) {
             return;
         }

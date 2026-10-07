@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Content\ContentDelivery;
 use Vaulter\Content\ImmutableContentIdentity;
 use Vaulter\Content\ScanResult;
@@ -42,7 +43,7 @@ function p37DeliverySettle($node, ScanVerdict $verdict): void
     $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     $work = ScanObligation::query()->where('revision_id', $revision->id)->firstOrFail();
     $repo = app(ScanObligationRepository::class);
-    $attempt = $repo->claim($work->id, $work->generation, new DateTimeImmutable);
+    $attempt = app(ClaimScanWorkAction::class)->execute($work->id, $work->generation, new DateTimeImmutable);
     if ($attempt === null || !$repo->settle($attempt, new ScanResult($verdict))) {
         throw new RuntimeException('Fixture did not settle a real scan attempt.');
     }

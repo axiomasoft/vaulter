@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Content\ScanResult;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Content\ScanPolicyResolver;
@@ -46,7 +47,7 @@ it('SEC-R07 required structured failure never grants PHP or share bytes', functi
     $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     $work = ScanObligation::query()->where('revision_id', $revision->id)->firstOrFail();
     $repo = app(ScanObligationRepository::class);
-    $attempt = $repo->claim($work->id, $work->generation, new DateTimeImmutable);
+    $attempt = app(ClaimScanWorkAction::class)->execute($work->id, $work->generation, new DateTimeImmutable);
     expect($attempt)->not->toBeNull();
     expect($repo->settle($attempt, new ScanResult(ScanVerdict::Failed, $reason, $retryable)))->toBeTrue();
     expect(fn () => $this->system->files()->read($node))->toThrow(ContentUnavailableException::class);

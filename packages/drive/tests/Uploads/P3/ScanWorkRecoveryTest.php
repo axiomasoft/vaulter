@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Vaulter\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Actions\Content\RequestScanWorkAction;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ContentAvailabilityGuard;
@@ -82,8 +83,8 @@ it('SEC-R09 committed work survives missing delivery and reconciles publication 
     expect($result['published'])->toBe(1);
     Bus::assertDispatched(ScanFileRevision::class, 1);
     $repository = app(ScanObligationRepository::class);
-    $attempt = $repository->claim($work->id, $work->generation, new DateTimeImmutable('now'));
-    expect($attempt)->not->toBeNull()->and($repository->claim($work->id, $work->generation, new DateTimeImmutable('now')))->toBeNull();
+    $attempt = app(ClaimScanWorkAction::class)->execute($work->id, $work->generation, new DateTimeImmutable('now'));
+    expect($attempt)->not->toBeNull()->and(app(ClaimScanWorkAction::class)->execute($work->id, $work->generation, new DateTimeImmutable('now')))->toBeNull();
     expect($repository->settle($attempt, new ScanResult(ScanVerdict::Clean)))->toBeTrue()
         ->and($repository->settle($attempt, new ScanResult(ScanVerdict::Clean)))->toBeFalse()
         ->and($revision->scanEvidence()->count())->toBe(1);
@@ -136,7 +137,7 @@ it('SEC-RECOVERY ledger deduplicates old requests and terminal exhaustion requir
     $replayed = $request($oldKey);
     expect($second->generation)->toBe($first->generation + 1)->and($replayed->generation)->toBe($second->generation);
     $second->forceFill(['attempt' => 4])->save();
-    $attempt = $repo->claim($second->id, $second->generation, new DateTimeImmutable('now'));
+    $attempt = app(ClaimScanWorkAction::class)->execute($second->id, $second->generation, new DateTimeImmutable('now'));
     $second->refresh()->forceFill(['lease_expires_at' => now()->subSecond()])->save();
     expect($repo->recover($second, new DateTimeImmutable('now')))->toBeTrue()
         ->and($second->refresh()->state)->toBe('settled')->and($second->reason)->toBe('attempts_exhausted')
@@ -296,7 +297,7 @@ it('SEC-RECOVERY-UTC selects due work and expired leases by UTC in either app ti
         $work->forceFill(['last_published_at' => null, 'available_at' => now('UTC')->subSecond()])->save();
         expect(app(ScanWorkReconciler::class)->reconcile()['published'])->toBe(1)
             ->and(app(ScanWorkReconciler::class)->reconcile()['scanned'])->toBe(0);
-        $attempt = app(ScanObligationRepository::class)->claim($work->id, $work->generation, new DateTimeImmutable('now'));
+        $attempt = app(ClaimScanWorkAction::class)->execute($work->id, $work->generation, new DateTimeImmutable('now'));
         expect($attempt)->not->toBeNull()->and(app(ScanWorkReconciler::class)->reconcile()['scanned'])->toBe(0);
         $work->refresh()->forceFill(['lease_expires_at' => now('UTC')->subSecond(), 'last_published_at' => null])->save();
         expect(app(ScanWorkReconciler::class)->reconcile()['published'])->toBe(1)
@@ -335,7 +336,7 @@ it('SEC-C03-db-clock decides which scan work is due regardless of application cl
     $this->travel(10)->minutes();
     try {
         expect(app(ScanWorkReconciler::class)->reconcile()['scanned'])->toBe(0)
-            ->and(app(ScanObligationRepository::class)->claim($work->id, $work->generation, app(ScanObligationRepository::class)->now()))->toBeNull();
+            ->and(app(ClaimScanWorkAction::class)->execute($work->id, $work->generation, app(ScanObligationRepository::class)->now()))->toBeNull();
     } finally {
         $this->travelBack();
     }
