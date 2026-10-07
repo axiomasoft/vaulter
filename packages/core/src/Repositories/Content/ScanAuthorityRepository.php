@@ -36,6 +36,21 @@ final readonly class ScanAuthorityRepository
         return $class::query()->whereKey($id)->firstOrFail();
     }
 
+    /** Re-reads by the persisted key, so attributes changed on the passed model are never trusted. */
+    public function persistedDriveOrFail(Drive $drive): Drive
+    {
+        $class = $this->config->model('drive');
+
+        return $class::query()->whereKey($drive->getRawOriginal($drive->getKeyName()))->firstOrFail();
+    }
+
+    public function lockDriveOrFail(int|string $id): Drive
+    {
+        $class = $this->config->model('drive');
+
+        return $class::query()->whereKey($id)->lockForUpdate()->firstOrFail();
+    }
+
     public function revision(int|string $id): ?FileRevision
     {
         $class = $this->config->model('file_revision');

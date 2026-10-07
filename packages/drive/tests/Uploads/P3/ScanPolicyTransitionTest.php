@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Actions\Content\ActivateScanPolicyAction;
 use Vaulter\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Actions\Content\SettleScanWorkAction;
 use Vaulter\Configuration\ScanConfig;
@@ -125,7 +126,7 @@ it('SEC-POLICY-two-boundaries evaluates global and profile eligibility independe
         $registry = new ProfileRegistry;
         $registry->register((new Profile)->key('default')->uploads(new UploadPolicy(scanMode: $mode, scanPolicyVersion: 'profile-v1')));
         $policy = new ProfilePolicy(app(VaulterConfig::class), app('config'), $registry, app(ScanConfig::class), app(CommentsFeature::class));
-        $resolver = new ScanPolicyResolver($policy, $registry, app(ScanPolicyStateRepository::class), app(ScanSnapshot::class));
+        $resolver = new ScanPolicyResolver($policy, $registry, app(ScanPolicyStateRepository::class), app(ScanSnapshot::class), app(ActivateScanPolicyAction::class));
         app()->instance(ScanPolicyResolver::class, $resolver);
         app()->instance(Vaulter\Contracts\Content\ScanPolicyResolver::class, $resolver);
     };

@@ -9,6 +9,7 @@ use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use Vaulter\Actions\Content\ActivateScanPolicyAction;
 use Vaulter\Actions\Content\RequestScanWorkAction;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Configuration\VaulterConfig;
@@ -24,7 +25,6 @@ use Vaulter\Operations\OperationContext;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Repositories\Content\ScanEvidenceRepository;
-use Vaulter\Repositories\Content\ScanPolicyStateRepository;
 use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\VaulterManager;
 
@@ -93,7 +93,7 @@ final class RescanFileRevisionsCommand extends Command
             'dry_run' => $dryRun];
     }
 
-    public function handle(VaulterDatabase $database, ScanPolicyResolver $policies, ScanPolicyStateRepository $states,
+    public function handle(VaulterDatabase $database, ScanPolicyResolver $policies, ActivateScanPolicyAction $activate,
         RequestScanWorkAction $requestWork, ScanEvidenceRepository $evidence, ScanSnapshot $snapshots,
         ScanWorkReconciler $publisher): int
     {
@@ -103,7 +103,7 @@ final class RescanFileRevisionsCommand extends Command
             if ($scope['all'] && !$this->withinMaintenanceScope) {
                 $this->withinMaintenanceScope = true;
                 try {
-                    $result = app(VaulterManager::class)->withoutTenancy(fn (): int => $this->handle($database, $policies, $states, $requestWork, $evidence, $snapshots, $publisher));
+                    $result = app(VaulterManager::class)->withoutTenancy(fn (): int => $this->handle($database, $policies, $activate, $requestWork, $evidence, $snapshots, $publisher));
 
                     return $result;
                 } finally {
@@ -163,12 +163,12 @@ final class RescanFileRevisionsCommand extends Command
                 if ($activate) {
                     $out['scanned']++;
                     if (!$out['dry_run']) {
-                        $database->transaction(function () use ($database, $drive, $policies, $states, $scope): void {
+                        $database->transaction(function () use ($database, $drive, $policies, $activate, $scope): void {
                             $database->lockTree($drive->id);
                             $fresh = $drive->newQuery()->whereKey($drive->id)->lockForUpdate()->firstOrFail();
                             $context = OperationContext::system($fresh, $scope['reason']);
                             foreach ($policies->desired($fresh) as $spec) {
-                                $states->activate($fresh, $spec, $spec->rolloutKey, $context);
+                                $activate->execute($fresh, $spec, $spec->rolloutKey, $context);
                             }
                         });
                     }
