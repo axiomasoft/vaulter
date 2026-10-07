@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Vaulter\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Actions\Content\RequestScanWorkAction;
+use Vaulter\Actions\Content\SettleScanWorkAction;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ContentAvailabilityGuard;
 use Vaulter\Content\ScanInput;
@@ -85,8 +86,8 @@ it('SEC-R09 committed work survives missing delivery and reconciles publication 
     $repository = app(ScanObligationRepository::class);
     $attempt = app(ClaimScanWorkAction::class)->execute($work->id, $work->generation, new DateTimeImmutable('now'));
     expect($attempt)->not->toBeNull()->and(app(ClaimScanWorkAction::class)->execute($work->id, $work->generation, new DateTimeImmutable('now')))->toBeNull();
-    expect($repository->settle($attempt, new ScanResult(ScanVerdict::Clean)))->toBeTrue()
-        ->and($repository->settle($attempt, new ScanResult(ScanVerdict::Clean)))->toBeFalse()
+    expect(app(SettleScanWorkAction::class)->execute($attempt, new ScanResult(ScanVerdict::Clean)))->toBeTrue()
+        ->and(app(SettleScanWorkAction::class)->execute($attempt, new ScanResult(ScanVerdict::Clean)))->toBeFalse()
         ->and($revision->scanEvidence()->count())->toBe(1);
 });
 
@@ -141,7 +142,7 @@ it('SEC-RECOVERY ledger deduplicates old requests and terminal exhaustion requir
     $second->refresh()->forceFill(['lease_expires_at' => now()->subSecond()])->save();
     expect($repo->recover($second, new DateTimeImmutable('now')))->toBeTrue()
         ->and($second->refresh()->state)->toBe('settled')->and($second->reason)->toBe('attempts_exhausted')
-        ->and($repo->settle($attempt, new ScanResult(ScanVerdict::Clean)))->toBeFalse();
+        ->and(app(SettleScanWorkAction::class)->execute($attempt, new ScanResult(ScanVerdict::Clean)))->toBeFalse();
     $next = $request((string) Str::uuid());
     expect($next->state)->toBe('pending')->and($next->attempt)->toBe(0);
 });

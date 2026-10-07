@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Actions\Content\ClaimScanWorkAction;
+use Vaulter\Actions\Content\SettleScanWorkAction;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ScanResult;
 use Vaulter\Database\VaulterDatabase;
@@ -22,7 +23,6 @@ use Vaulter\Exceptions\Content\ContentQuarantinedException;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\OperationContext;
-use Vaulter\Repositories\Content\ScanObligationRepository;
 
 it('SEC-R03 COPY owns fresh admission and clean evidence without copying a source lease', function (): void {
     Storage::fake('local');
@@ -38,7 +38,7 @@ it('SEC-R03 COPY owns fresh admission and clean evidence without copying a sourc
     $source = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     $work = $source->scanObligations()->firstOrFail();
     $attempt = app(ClaimScanWorkAction::class)->execute($work->id, $work->generation, new DateTimeImmutable('now'));
-    expect(app(ScanObligationRepository::class)->settle($attempt, new ScanResult(ScanVerdict::Clean)))->toBeTrue();
+    expect(app(SettleScanWorkAction::class)->execute($attempt, new ScanResult(ScanVerdict::Clean)))->toBeTrue();
     $copy = app(CopyNodeAction::class)->execute($context, new CopyNodeInput($node, $drive->rootNode()->firstOrFail(), 'copy.txt'));
     $target = $copy->file()->firstOrFail()->currentRevision()->firstOrFail();
     expect($target->scan_admission_sequence)->toBeGreaterThan($source->scan_admission_sequence)

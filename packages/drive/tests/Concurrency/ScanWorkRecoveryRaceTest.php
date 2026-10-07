@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Actions\Content\FenceScanAttemptAction;
+use Vaulter\Actions\Content\SettleScanWorkAction;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ScanAttempt;
 use Vaulter\Content\ScanResult;
@@ -62,10 +63,10 @@ it('SEC-R11 concurrent claims acquire one live lease and late old token cannot s
         $otherToken, $fresh->leaseExpiresAt, $fresh->deadline,
     );
     expect(app(FenceScanAttemptAction::class)->execute($forged))->toBeNull()
-        ->and(app(ScanObligationRepository::class)->settle($forged, new ScanResult(ScanVerdict::Clean)))->toBeFalse();
+        ->and(app(SettleScanWorkAction::class)->execute($forged, new ScanResult(ScanVerdict::Clean)))->toBeFalse();
     expect($fresh->leaseToken)->not->toBe($old->leaseToken)
-        ->and(app(ScanObligationRepository::class)->settle($old, new ScanResult(ScanVerdict::Clean)))->toBeFalse()
-        ->and(app(ScanObligationRepository::class)->settle($fresh, new ScanResult(ScanVerdict::Clean)))->toBeTrue()
+        ->and(app(SettleScanWorkAction::class)->execute($old, new ScanResult(ScanVerdict::Clean)))->toBeFalse()
+        ->and(app(SettleScanWorkAction::class)->execute($fresh, new ScanResult(ScanVerdict::Clean)))->toBeTrue()
         ->and($revision->scanEvidence()->count())->toBe(1)
         ->and($node->refresh()->file()->value('current_revision_id'))->toBe($revision->id);
 });
@@ -97,7 +98,7 @@ it('SEC-R09 killed committed publisher leaves intent recoverable by an independe
         $attempt = app(ClaimScanWorkAction::class)->execute($row->id, $row->generation, new DateTimeImmutable('now'));
 
         return $result['published'] === 1 && $attempt !== null
-            && app(ScanObligationRepository::class)->settle($attempt, new ScanResult(ScanVerdict::Clean));
+            && app(SettleScanWorkAction::class)->execute($attempt, new ScanResult(ScanVerdict::Clean));
     }]);
     expect($recovered[0]->ok)->toBeTrue($recovered[0]->message ?? '')->and($recovered[0]->value)->toBeTrue()
         ->and($row->refresh()->outcome)->toBe('clean');
@@ -127,7 +128,7 @@ it('SEC-R11 killed lease owner is fenced while a surviving process recovers', fu
         app(ScanObligationRepository::class)->recover($row, new DateTimeImmutable('now'));
         $attempt = app(ClaimScanWorkAction::class)->execute($row->id, $row->generation, new DateTimeImmutable('now'));
 
-        return $attempt !== null && app(ScanObligationRepository::class)->settle($attempt, new ScanResult(ScanVerdict::Clean));
+        return $attempt !== null && app(SettleScanWorkAction::class)->execute($attempt, new ScanResult(ScanVerdict::Clean));
     }]);
     expect($surviving[0]->ok)->toBeTrue($surviving[0]->message ?? '')->and($surviving[0]->value)->toBeTrue()
         ->and($row->refresh()->attempt)->toBe(2)->and($row->outcome)->toBe('clean');
@@ -210,7 +211,7 @@ it('SEC-R12 purge and settlement serialize without resurrecting a head or work',
 
             return true;
         },
-        fn (): bool => app(ScanObligationRepository::class)->settle($attempt, new ScanResult(ScanVerdict::Clean)),
+        fn (): bool => app(SettleScanWorkAction::class)->execute($attempt, new ScanResult(ScanVerdict::Clean)),
     ]);
     expect($outcomes[0]->ok)->toBeTrue($outcomes[0]->message ?? '')->and($outcomes[1]->ok)->toBeTrue($outcomes[1]->message ?? '')
         ->and(FileRevision::query()->whereKey($revision->id)->exists())->toBeFalse()

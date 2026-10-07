@@ -10,6 +10,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Vaulter\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Actions\Content\FailScanAttemptAction;
 use Vaulter\Actions\Content\FenceScanAttemptAction;
+use Vaulter\Actions\Content\SettleScanWorkAction;
 use Vaulter\Configuration\ScanConfig;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Content\ScanInput;
@@ -42,16 +43,16 @@ final class ScanFileRevision implements ShouldQueue
         return [new RestoreTenantContext($this->driveId, $this->tenantId)];
     }
 
-    public function handle(ScanObligationRepository $work, ClaimScanWorkAction $claim, FenceScanAttemptAction $fence, FailScanAttemptAction $fail, PrivateScanReader $reader, ScanSnapshot $snapshots,
+    public function handle(ScanObligationRepository $work, ClaimScanWorkAction $claim, FenceScanAttemptAction $fence, FailScanAttemptAction $fail, SettleScanWorkAction $settle, PrivateScanReader $reader, ScanSnapshot $snapshots,
         ScanConfig $config): void
     {
         if (app(TenancyConfig::class)->enabled()) {
             app(TenancyBoundary::class)->assertJobDrive($this->driveId, $this->tenantId);
         }
-        app(TenancyBypass::class)->suspend(fn () => $this->execute($work, $claim, $fence, $fail, $reader, $snapshots, $config));
+        app(TenancyBypass::class)->suspend(fn () => $this->execute($work, $claim, $fence, $fail, $settle, $reader, $snapshots, $config));
     }
 
-    private function execute(ScanObligationRepository $work, ClaimScanWorkAction $claim, FenceScanAttemptAction $fence, FailScanAttemptAction $fail, PrivateScanReader $reader, ScanSnapshot $snapshots, ScanConfig $config): void
+    private function execute(ScanObligationRepository $work, ClaimScanWorkAction $claim, FenceScanAttemptAction $fence, FailScanAttemptAction $fail, SettleScanWorkAction $settle, PrivateScanReader $reader, ScanSnapshot $snapshots, ScanConfig $config): void
     {
         // The queued scope is a fence, never a permission to derive a different tenant.
         $row = $work->find($this->obligationId);
@@ -127,6 +128,6 @@ final class ScanFileRevision implements ShouldQueue
                 fclose($stream);
             }
         }
-        $work->settle($attempt, $result);
+        $settle->execute($attempt, $result);
     }
 }

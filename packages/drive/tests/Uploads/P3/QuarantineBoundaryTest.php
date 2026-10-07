@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Actions\Content\ClaimScanWorkAction;
+use Vaulter\Actions\Content\SettleScanWorkAction;
 use Vaulter\Content\ScanResult;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Content\ScanPolicyResolver;
@@ -49,7 +50,7 @@ it('SEC-R07 required structured failure never grants PHP or share bytes', functi
     $repo = app(ScanObligationRepository::class);
     $attempt = app(ClaimScanWorkAction::class)->execute($work->id, $work->generation, new DateTimeImmutable);
     expect($attempt)->not->toBeNull();
-    expect($repo->settle($attempt, new ScanResult(ScanVerdict::Failed, $reason, $retryable)))->toBeTrue();
+    expect(app(SettleScanWorkAction::class)->execute($attempt, new ScanResult(ScanVerdict::Failed, $reason, $retryable)))->toBeTrue();
     expect(fn () => $this->system->files()->read($node))->toThrow(ContentUnavailableException::class);
     ShareTestHelpers::share($node, token: 'quarantine-failed');
     $this->get('api/vaulter/share/quarantine-failed/download')->assertStatus(423);

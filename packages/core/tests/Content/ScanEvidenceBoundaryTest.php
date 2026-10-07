@@ -7,6 +7,7 @@ use Vaulter\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Actions\Content\FailScanAttemptAction;
 use Vaulter\Actions\Content\FenceScanAttemptAction;
 use Vaulter\Actions\Content\RequestScanWorkAction;
+use Vaulter\Actions\Content\SettleScanWorkAction;
 use Vaulter\Configuration\ScanConfig;
 use Vaulter\Content\ScanInput;
 use Vaulter\Content\ScanResult;
@@ -74,7 +75,7 @@ it('persists work and request atomically and preserves explicit rescan request d
     $third = $db->transaction(fn () => app(RequestScanWorkAction::class)->requestRescan($revision, $spec, (string) Str::uuid(), $context));
     $repeatedOld = $db->transaction(fn () => app(RequestScanWorkAction::class)->requestRescan($revision, $spec, $secondKey, $context));
     expect($second->generation)->toBe(2)->and($third->generation)->toBe(3)->and($repeatedOld->generation)->toBe(3)
-        ->and(ScanRequest::count())->toBe(3)->and($repository->settle($attempt, new ScanResult(ScanVerdict::Clean)))->toBeFalse()
+        ->and(ScanRequest::count())->toBe(3)->and(app(SettleScanWorkAction::class)->execute($attempt, new ScanResult(ScanVerdict::Clean)))->toBeFalse()
         ->and(ScanEvidenceRecord::count())->toBe(0);
     expect(fn () => $db->transaction(function () use ($revision, $spec, $context): void {
         app(RequestScanWorkAction::class)->requestRescan($revision, $spec, (string) Str::uuid(), $context);
@@ -120,7 +121,7 @@ it('SEC-R20-scan-validator reads actual immutable input and settles only the exa
     } finally {
         fclose($stream);
     }
-    expect($repository->settle($attempt, $result))->toBeTrue()->and($repository->settle($attempt, $result))->toBeFalse()
+    expect(app(SettleScanWorkAction::class)->execute($attempt, $result))->toBeTrue()->and(app(SettleScanWorkAction::class)->execute($attempt, $result))->toBeFalse()
         ->and(ScanEvidenceRecord::count())->toBe(1)->and(app(ScanEvidenceRepository::class)->compatible($revision, $spec))->not->toBeNull()
         ->and([$revision->file->fresh()->current_revision_id, $revision->file->node->fresh()->sequence, $revision->file->fresh()->revision_count])->toBe($before);
 });
@@ -132,15 +133,15 @@ it('SEC-R11 rejects altered identity and keeps sticky infection through later cl
     $work = $db->transaction(fn () => app(RequestScanWorkAction::class)->ensure($revision, $spec, (string) Str::uuid(), $context));
     $attempt = app(ClaimScanWorkAction::class)->execute($work->id, 1, new DateTimeImmutable);
     $blob->forceFill(['storage_version' => 'changed'])->save();
-    expect(app(FenceScanAttemptAction::class)->execute($attempt))->toBeNull()->and($repository->settle($attempt, new ScanResult(ScanVerdict::Clean)))->toBeFalse();
+    expect(app(FenceScanAttemptAction::class)->execute($attempt))->toBeNull()->and(app(SettleScanWorkAction::class)->execute($attempt, new ScanResult(ScanVerdict::Clean)))->toBeFalse();
     $blob->forceFill(['storage_version' => null])->save();
-    expect($repository->settle($attempt, new ScanResult(ScanVerdict::Infected)))->toBeTrue();
+    expect(app(SettleScanWorkAction::class)->execute($attempt, new ScanResult(ScanVerdict::Infected)))->toBeTrue();
     $revision->refresh();
     $blob->refresh();
     expect($revision->quarantined_at)->not->toBeNull()->and($blob->quarantined_at)->not->toBeNull();
     $next = $db->transaction(fn () => app(RequestScanWorkAction::class)->requestRescan($revision, $spec, (string) Str::uuid(), $context));
     $cleanAttempt = app(ClaimScanWorkAction::class)->execute($next->id, 2, new DateTimeImmutable);
-    expect($repository->settle($cleanAttempt, new ScanResult(ScanVerdict::Clean)))->toBeTrue()
+    expect(app(SettleScanWorkAction::class)->execute($cleanAttempt, new ScanResult(ScanVerdict::Clean)))->toBeTrue()
         ->and(app(ScanEvidenceRepository::class)->compatible($revision, $spec))->toBeNull()
         ->and(app(ScanEvidenceRepository::class)->infected($revision))->toBeTrue()
         ->and($revision->fresh()->scan_status)->toBe('infected');
@@ -151,7 +152,7 @@ it('SEC-R06 reuses only exact same-drive clean evidence and revocation immediate
     $repository = app(ScanObligationRepository::class);
     $db = app(VaulterDatabase::class);
     $work = $db->transaction(fn () => app(RequestScanWorkAction::class)->ensure($revision, $spec, (string) Str::uuid(), $context));
-    $repository->settle(app(ClaimScanWorkAction::class)->execute($work->id, 1, new DateTimeImmutable), new ScanResult(ScanVerdict::Clean));
+    app(SettleScanWorkAction::class)->execute(app(ClaimScanWorkAction::class)->execute($work->id, 1, new DateTimeImmutable), new ScanResult(ScanVerdict::Clean));
     $sourceEvidence = app(ScanEvidenceRepository::class)->compatible($revision, $spec);
     [, $copy] = scanBoundaryFixture($blob, $drive);
     $own = $db->transaction(fn () => app(RequestScanWorkAction::class)->ensure($copy, $spec, (string) Str::uuid(), $context));
@@ -185,7 +186,7 @@ it('records retry evidence, recovers lost leases and terminates exhausted attemp
     $repository = app(ScanObligationRepository::class);
     $work = app(VaulterDatabase::class)->transaction(fn () => app(RequestScanWorkAction::class)->ensure($revision, $spec, (string) Str::uuid(), $context));
     $attempt = app(ClaimScanWorkAction::class)->execute($work->id, 1, new DateTimeImmutable);
-    expect($repository->settle($attempt, new ScanResult(ScanVerdict::Failed, 'scanner_timeout', true)))->toBeTrue();
+    expect(app(SettleScanWorkAction::class)->execute($attempt, new ScanResult(ScanVerdict::Failed, 'scanner_timeout', true)))->toBeTrue();
     $work->refresh();
     expect($work->state)->toBe('retry_wait')->and($work->lease_token)->toBeNull()->and(ScanEvidenceRecord::count())->toBe(1)
         ->and(app(ClaimScanWorkAction::class)->execute($work->id, 1, new DateTimeImmutable))->toBeNull();
@@ -193,7 +194,7 @@ it('records retry evidence, recovers lost leases and terminates exhausted attemp
     $second = app(ClaimScanWorkAction::class)->execute($work->id, 1, new DateTimeImmutable);
     $work->refresh()->forceFill(['lease_expires_at' => now()->subSecond()])->save();
     expect($repository->recover($work, new DateTimeImmutable))->toBeTrue()->and($work->fresh()->state)->toBe('retry_wait')
-        ->and($repository->settle($second, new ScanResult(ScanVerdict::Clean)))->toBeFalse();
+        ->and(app(SettleScanWorkAction::class)->execute($second, new ScanResult(ScanVerdict::Clean)))->toBeFalse();
     $third = app(ClaimScanWorkAction::class)->execute($work->id, 1, new DateTimeImmutable);
     $work->refresh()->forceFill(['attempt' => 5, 'lease_expires_at' => now()->subSecond()])->save();
     expect($repository->recover($work, new DateTimeImmutable))->toBeTrue()->and($work->fresh()->state)->toBe('settled')
@@ -222,9 +223,9 @@ it('SEC-R08 optional failed rescan retains exact clean proof and a new scanner e
     $db = app(VaulterDatabase::class);
     $repository = app(ScanObligationRepository::class);
     $work = $db->transaction(fn () => app(RequestScanWorkAction::class)->ensure($revision, $spec, (string) Str::uuid(), $context));
-    $repository->settle(app(ClaimScanWorkAction::class)->execute($work->id, 1, new DateTimeImmutable), new ScanResult(ScanVerdict::Clean));
+    app(SettleScanWorkAction::class)->execute(app(ClaimScanWorkAction::class)->execute($work->id, 1, new DateTimeImmutable), new ScanResult(ScanVerdict::Clean));
     $rescan = $db->transaction(fn () => app(RequestScanWorkAction::class)->requestRescan($revision, $spec, (string) Str::uuid(), $context));
-    expect($repository->settle(app(ClaimScanWorkAction::class)->execute($rescan->id, 2, new DateTimeImmutable), new ScanResult(ScanVerdict::Failed, 'unknown')))->toBeTrue()
+    expect(app(SettleScanWorkAction::class)->execute(app(ClaimScanWorkAction::class)->execute($rescan->id, 2, new DateTimeImmutable), new ScanResult(ScanVerdict::Failed, 'unknown')))->toBeTrue()
         ->and($revision->fresh()->scan_status)->toBe('clean')->and($rescan->fresh()->outcome)->toBe('failed')
         ->and(app(ScanEvidenceRepository::class)->compatible($revision, $spec))->not->toBeNull();
     config()->set('vaulter.scan.scanner_version', '2');

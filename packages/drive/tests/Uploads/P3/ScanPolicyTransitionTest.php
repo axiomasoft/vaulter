@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Actions\Content\ClaimScanWorkAction;
+use Vaulter\Actions\Content\SettleScanWorkAction;
 use Vaulter\Configuration\ScanConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ContentAvailabilityGuard;
@@ -30,7 +31,6 @@ use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Profiles\UploadPolicy;
-use Vaulter\Repositories\Content\ScanObligationRepository;
 use Vaulter\Repositories\Content\ScanPolicyStateRepository;
 
 it('SEC-POLICY rejects enabled unactivated drives without allocating admission', function (): void {
@@ -83,7 +83,7 @@ it('SEC-R01 all content blocks legacy bytes until versioned rescan evidence is c
     app(ScanBackfillReconciler::class)->expand();
     $row = $revision->scanObligations()->firstOrFail();
     $attempt = app(ClaimScanWorkAction::class)->execute($row->id, $row->generation, new DateTimeImmutable('now'));
-    app(ScanObligationRepository::class)->settle($attempt, new ScanResult(ScanVerdict::Clean));
+    app(SettleScanWorkAction::class)->execute($attempt, new ScanResult(ScanVerdict::Clean));
     app(ContentAvailabilityGuard::class)->assertAvailable($context, $node, $revision);
     expect($revision->scanEvidence()->count())->toBe(1);
 });
@@ -108,7 +108,7 @@ it('SEC-R02 forged timestamps cannot exempt a new admission and failures remain 
         ->toThrow(ContentUnavailableException::class);
     $row = $revision->scanObligations()->firstOrFail();
     $attempt = app(ClaimScanWorkAction::class)->execute($row->id, $row->generation, new DateTimeImmutable('now'));
-    app(ScanObligationRepository::class)->settle($attempt, new ScanResult(ScanVerdict::Failed, 'unsupported'));
+    app(SettleScanWorkAction::class)->execute($attempt, new ScanResult(ScanVerdict::Failed, 'unsupported'));
     expect($row->refresh()->outcome)->toBe('failed');
     expect(fn () => app(ContentAvailabilityGuard::class)->assertAvailable($context, $node, $revision))
         ->toThrow(ContentUnavailableException::class);
