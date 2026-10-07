@@ -28,7 +28,7 @@ use Vaulter\Tenancy\TenancyBoundary;
  */
 final readonly class RequestScanWorkAction
 {
-    public function __construct(private VaulterConfig $config, private VaulterDatabase $database, private ScanSnapshot $snapshots, private ScanEvidenceRepository $evidence, private TenancyConfig $tenancy, private TenancyBoundary $boundary, private ScanObligationRepository $work, private ScanWorkTransitions $transitions) {}
+    public function __construct(private VaulterConfig $config, private VaulterDatabase $database, private ScanSnapshot $snapshots, private ScanEvidenceRepository $evidence, private ReuseScanEvidenceAction $reuse, private TenancyConfig $tenancy, private TenancyBoundary $boundary, private ScanObligationRepository $work, private ScanWorkTransitions $transitions) {}
 
     public function ensure(FileRevision $revision, ScanPolicySpec $spec, string $requestKey, OperationContext $context): ScanObligation
     {
@@ -91,7 +91,7 @@ final readonly class RequestScanWorkAction
             // materializes its own request and evidence row before commit.
             $candidate = $this->evidence->cleanCandidate($work, $spec);
             if ($candidate !== null && !$this->evidence->infected($r)) {
-                $this->evidence->reuse($r, $candidate, $spec, $work);
+                $this->reuse->execute($r, $candidate, $spec, $work);
                 $work->refresh();
             }
         }

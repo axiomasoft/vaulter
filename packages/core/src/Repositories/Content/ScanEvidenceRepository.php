@@ -87,6 +87,24 @@ final readonly class ScanEvidenceRepository
         return $record === null ? null : $this->value($record);
     }
 
+    public function findOrFail(int|string $id): ScanEvidenceRecord
+    {
+        $class = $this->config->model('scan_evidence');
+
+        return $class::query()->whereKey($id)->firstOrFail();
+    }
+
+    public function recordReuse(ScanObligation $work, ScanRequest $request, ScanEvidenceRecord $source, DateTimeImmutable $observedAt): ScanEvidenceRecord
+    {
+        $class = $this->config->model('scan_evidence');
+        $row = new $class;
+        $row->forceFill($work->only(['revision_id', 'drive_id', 'tenant_id', 'blob_id', 'scope_key', 'content_identity', 'sha256', 'size_bytes', 'spec_key', 'scanner_key', 'scanner_version', 'policy_version', 'generation']));
+        $row->forceFill(['obligation_id' => $work->id, 'request_id' => $request->id, 'attempt' => 1,
+            'outcome' => 'clean', 'reason' => null, 'retryable' => false, 'observed_at' => $observedAt, 'reused_from_id' => $source->id])->save();
+
+        return $row;
+    }
+
     public function hasAttempt(ScanRequest $request, int $attempt): bool
     {
         $class = $this->config->model('scan_evidence');
@@ -101,50 +119,6 @@ final readonly class ScanEvidenceRepository
         $record->forceFill($work->only(['revision_id', 'drive_id', 'tenant_id', 'blob_id', 'scope_key', 'content_identity', 'sha256', 'size_bytes', 'spec_key', 'scanner_key', 'scanner_version', 'policy_version', 'generation', 'attempt']));
         $record->forceFill(['obligation_id' => $work->id, 'request_id' => $request->id, 'outcome' => $result->verdict->value,
             'reason' => $result->reason, 'retryable' => $result->retryable, 'observed_at' => $observedAt])->save();
-    }
-
-    public function reuse(FileRevision $target, ScanEvidence $source, ScanPolicySpec $spec, ScanObligation $obligation): ScanEvidence
-    {
-        if ($this->database->connection()->transactionLevel() === 0) {
-            throw new LogicException('Evidence reuse requires the owning transaction.');
-        }
-        $snapshot = $this->snapshots->load($target);
-        $class = $this->config->model('scan_evidence');
-        $record = $class::query()->whereKey($source->id)->firstOrFail();
-        $revisionClass = $this->config->model('file_revision');
-        $sourceRevision = $revisionClass::query()->whereKey($record->revision_id)->firstOrFail();
-        $validated = $this->compatible($sourceRevision, $spec);
-        $identity = $snapshot['identity'];
-        if ($validated === null || (string) $validated->id !== (string) $record->id || $identity === null
-            || $validated->contentIdentity !== $identity->fingerprint() || (string) $validated->driveId !== (string) $snapshot['drive']->id
-            || (string) $validated->tenantId !== (string) $snapshot['drive']->tenant_id || $this->infected($target)) {
-            throw new LogicException('Evidence cannot be reused for this exact scoped content.');
-        }
-        $workClass = $this->config->model('scan_obligation');
-        $work = $workClass::query()->whereKey($obligation->getRawOriginal($obligation->getKeyName()))->lockForUpdate()->firstOrFail();
-        if ((string) $work->drive_id !== (string) $snapshot['drive']->id || (string) $work->tenant_id !== (string) $snapshot['drive']->tenant_id || (string) $work->revision_id !== (string) $snapshot['revision']->id || $work->spec_key !== $spec->specKey() || $work->content_identity !== $identity->fingerprint()) {
-            throw new LogicException('Evidence reuse obligation differs.');
-        }
-        if ($work->state === 'settled' && $work->outcome === 'clean') {
-            $existing = $this->compatible($target, $spec);
-            if ($existing !== null) {
-                return $existing;
-            }
-        }
-        if ($work->attempt !== 0 || $work->state !== 'pending') {
-            throw new LogicException('Evidence reuse requires a fresh request.');
-        }
-        $requestClass = $this->config->model('scan_request');
-        $request = $requestClass::query()->where('obligation_id', $work->id)->where('generation', $work->generation)->firstOrFail();
-        $row = new $class;
-        $row->forceFill($work->only(['revision_id', 'drive_id', 'tenant_id', 'blob_id', 'scope_key', 'content_identity', 'sha256', 'size_bytes', 'spec_key', 'scanner_key', 'scanner_version', 'policy_version', 'generation']));
-        $row->forceFill(['obligation_id' => $work->id, 'request_id' => $request->id, 'attempt' => 1,
-            'outcome' => 'clean', 'reason' => null, 'retryable' => false, 'observed_at' => now('UTC'), 'reused_from_id' => $record->id])->save();
-        $work->forceFill(['state' => 'settled', 'outcome' => 'clean', 'reason' => null, 'retryable' => false,
-            'attempt' => 1, 'lease_token' => null, 'lease_expires_at' => null, 'updated_at' => now('UTC')])->save();
-        $target->forceFill(['scan_status' => 'clean'])->save();
-
-        return $this->value($row);
     }
 
     public function revoke(int|string $evidenceId, string $reason, OperationContext $context): void
@@ -169,6 +143,6 @@ final readonly class ScanEvidenceRepository
     {
         return new ScanEvidence($record->id, $record->revision_id, $record->blob_id, $record->drive_id, $record->tenant_id,
             $record->scope_key, $record->content_identity, $record->spec_key, ScanVerdict::from($record->outcome),
-            $record->revoked_at?->toDateTimeImmutable(), $record->observed_at->toDateTimeImmutable());
+            $record->revoked_at === null ? null : DateTimeImmutable::createFromInterface($record->revoked_at), DateTimeImmutable::createFromInterface($record->observed_at));
     }
 }

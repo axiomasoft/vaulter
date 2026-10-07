@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Content;
 use Illuminate\Support\Str;
 use LogicException;
 use Vaulter\Actions\Content\RequestScanWorkAction;
+use Vaulter\Actions\Content\ReuseScanEvidenceAction;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Content\ContentQuarantinedException;
 use Vaulter\Models\Drive\FileRevision;
@@ -16,7 +17,7 @@ use Vaulter\Repositories\Content\ScanEvidenceRepository;
 final readonly class ScanAdmission
 {
     public function __construct(private VaulterDatabase $database, private ScanPolicyResolver $policies,
-        private ScanEvidenceRepository $evidence, private RequestScanWorkAction $request,
+        private ScanEvidenceRepository $evidence, private RequestScanWorkAction $request, private ReuseScanEvidenceAction $reuse,
         private ScanWorkReconciler $publisher) {}
 
     public function next(OperationContext $context): int
@@ -51,7 +52,7 @@ final readonly class ScanAdmission
             $candidate = $source === null ? $this->evidence->compatible($revision, $spec)
                 : $this->evidence->compatible($source, $spec);
             if ($candidate !== null && (string) $candidate->driveId === (string) $context->driveId()) {
-                $this->evidence->reuse($revision, $candidate, $spec, $obligation);
+                $this->reuse->execute($revision, $candidate, $spec, $obligation);
                 $clean = true;
             } elseif ($obligation->state === 'settled' && $obligation->outcome === 'failed') {
                 $failed = true;

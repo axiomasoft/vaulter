@@ -51,6 +51,13 @@ final readonly class ScanObligationRepository
         return $class::query()->whereKey($obligation->getRawOriginal($obligation->getKeyName()))->lockForUpdate()->first();
     }
 
+    public function lockPersistedOrFail(ScanObligation $obligation): ScanObligation
+    {
+        $class = $this->config->model('scan_obligation');
+
+        return $class::query()->whereKey($obligation->getRawOriginal($obligation->getKeyName()))->lockForUpdate()->firstOrFail();
+    }
+
     public function lockForRevisionSpec(int|string $revisionId, string $specKey): ?ScanObligation
     {
         $class = $this->config->model('scan_obligation');

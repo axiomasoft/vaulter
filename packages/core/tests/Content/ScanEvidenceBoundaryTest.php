@@ -8,6 +8,7 @@ use Vaulter\Actions\Content\FailScanAttemptAction;
 use Vaulter\Actions\Content\FenceScanAttemptAction;
 use Vaulter\Actions\Content\RecoverScanWorkAction;
 use Vaulter\Actions\Content\RequestScanWorkAction;
+use Vaulter\Actions\Content\ReuseScanEvidenceAction;
 use Vaulter\Actions\Content\SettleScanWorkAction;
 use Vaulter\Configuration\ScanConfig;
 use Vaulter\Content\ScanInput;
@@ -165,7 +166,7 @@ it('SEC-R06 reuses only exact same-drive clean evidence and revocation immediate
     [$foreignDrive, $foreignRevision, , $foreignContext] = scanBoundaryFixture($blob);
     $foreignWork = $db->transaction(fn () => app(RequestScanWorkAction::class)->ensure($foreignRevision, $spec, (string) Str::uuid(), $foreignContext));
     expect($foreignWork->state)->toBe('pending');
-    expect(fn () => $db->transaction(fn () => app(ScanEvidenceRepository::class)->reuse($foreignRevision, $sourceEvidence, $spec, $foreignWork)))
+    expect(fn () => $db->transaction(fn () => app(ReuseScanEvidenceAction::class)->execute($foreignRevision, $sourceEvidence, $spec, $foreignWork)))
         ->toThrow(LogicException::class);
     // Equality on spec_key is independently significant; a persisted corrupt
     // key with unchanged scanner identifiers cannot be inferred as compatible.

@@ -1,0 +1,64 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Vaulter\Actions\Content;
+
+use LogicException;
+use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Content\ScanEvidence;
+use Vaulter\Content\ScanPolicySpec;
+use Vaulter\Content\ScanSnapshot;
+use Vaulter\Database\VaulterDatabase;
+use Vaulter\Models\Content\ScanObligation;
+use Vaulter\Models\Drive\FileRevision;
+use Vaulter\Repositories\Content\ScanEvidenceRepository;
+use Vaulter\Repositories\Content\ScanObligationRepository;
+
+/**
+ * Settles a fresh request clean from exact-byte proof of the same scope, with its own evidence row.
+ *
+ * @internal Runs inside the request transaction, which already holds the revision-family locks; the work row is locked last.
+ */
+final readonly class ReuseScanEvidenceAction
+{
+    public function __construct(private VaulterConfig $config, private VaulterDatabase $database, private ScanSnapshot $snapshots, private ScanEvidenceRepository $evidence, private ScanObligationRepository $work) {}
+
+    public function execute(FileRevision $target, ScanEvidence $source, ScanPolicySpec $spec, ScanObligation $obligation): ScanEvidence
+    {
+        if ($this->database->connection()->transactionLevel() === 0) {
+            throw new LogicException('Evidence reuse requires the owning transaction.');
+        }
+        $snapshot = $this->snapshots->load($target);
+        $record = $this->evidence->findOrFail($source->id);
+        $revisionClass = $this->config->model('file_revision');
+        $sourceRevision = $revisionClass::query()->whereKey($record->revision_id)->firstOrFail();
+        $validated = $this->evidence->compatible($sourceRevision, $spec);
+        $identity = $snapshot['identity'];
+        if ($validated === null || (string) $validated->id !== (string) $record->id || $identity === null
+            || $validated->contentIdentity !== $identity->fingerprint() || (string) $validated->driveId !== (string) $snapshot['drive']->id
+            || (string) $validated->tenantId !== (string) $snapshot['drive']->tenant_id || $this->evidence->infected($target)) {
+            throw new LogicException('Evidence cannot be reused for this exact scoped content.');
+        }
+        $work = $this->work->lockPersistedOrFail($obligation);
+        if ((string) $work->drive_id !== (string) $snapshot['drive']->id || (string) $work->tenant_id !== (string) $snapshot['drive']->tenant_id || (string) $work->revision_id !== (string) $snapshot['revision']->id || $work->spec_key !== $spec->specKey() || $work->content_identity !== $identity->fingerprint()) {
+            throw new LogicException('Evidence reuse obligation differs.');
+        }
+        if ($work->state === 'settled' && $work->outcome === 'clean') {
+            $existing = $this->evidence->compatible($target, $spec);
+            if ($existing !== null) {
+                return $existing;
+            }
+        }
+        if ($work->attempt !== 0 || $work->state !== 'pending') {
+            throw new LogicException('Evidence reuse requires a fresh request.');
+        }
+        $now = $this->work->now();
+        $row = $this->evidence->recordReuse($work, $this->work->requestFor($work), $record, $now);
+        $work->forceFill(['state' => 'settled', 'outcome' => 'clean', 'reason' => null, 'retryable' => false,
+            'attempt' => 1, 'lease_token' => null, 'lease_expires_at' => null, 'updated_at' => $now])->save();
+        $target->forceFill(['scan_status' => 'clean'])->save();
+
+        return $this->evidence->value($row);
+    }
+}
