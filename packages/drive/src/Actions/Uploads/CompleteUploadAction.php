@@ -92,12 +92,11 @@ final readonly class CompleteUploadAction
                     throw UploadConflictException::forClosedSession($locked->upload_id);
                 }
                 $fingerprint = $this->fingerprint(session: $locked, sha256: $facts->sha256, size: $facts->size, mime: $facts->detectedMimeType, name: $facts->name);
-                $committed = $this->ingest->execute(context: $context, data: $this->input(context: $context, session: $locked, stream: $stream, prepared: $prepared));
-                $revision = $committed->file()->first()?->currentRevision()->first() ?? throw UploadConflictException::forClosedSession($locked->upload_id);
-                $this->sessions->markCommitted(session: $locked, assembledBlobId: $revision->blob_id ?? throw UploadConflictException::forClosedSession($locked->upload_id), resultNodeId: $committed->id, resultRevisionId: $revision->id, inputFingerprint: $fingerprint);
+                $receipt = $this->ingest->receipt(context: $context, data: $this->input(context: $context, session: $locked, stream: $stream, prepared: $prepared));
+                $this->sessions->markCommitted(session: $locked, assembledBlobId: $receipt->revision->blob_id ?? throw UploadConflictException::forClosedSession($locked->upload_id), resultNodeId: $receipt->node->id, resultRevisionId: $receipt->revision->id, inputFingerprint: $fingerprint);
                 $this->scheduleCleanup($locked);
 
-                return $committed;
+                return $receipt->node;
             } finally {
                 try {
                     $prepared?->discard();

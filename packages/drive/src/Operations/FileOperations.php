@@ -20,6 +20,7 @@ use Vaulter\Drive\Actions\Files\IngestFileAction;
 use Vaulter\Drive\Actions\Files\RestoreFileRevisionAction;
 use Vaulter\Drive\Actions\Nodes\NameConflictResolver;
 use Vaulter\Drive\Data\Files\IngestFileInput;
+use Vaulter\Drive\Data\Files\IngestReceipt;
 use Vaulter\Drive\Data\Files\RestoreFileRevisionInput;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Drive\NodeKind;
@@ -52,20 +53,20 @@ final readonly class FileOperations implements Contract
                 }
                 $target = $this->file($target, Ability::Edit);
 
-                return $this->ingestSource($source, null, $target, null, $options->declaredMimeType, null, OnNameConflict::Fail, $options->clientModifiedAt);
+                return $this->ingestSource($source, null, $target, null, $options->declaredMimeType, null, OnNameConflict::Fail, $options->clientModifiedAt)->node;
             }
         }
 
-        return $this->ingestSource($source, $parent, null, $options->name, $options->declaredMimeType, null, $options->onConflict, $options->clientModifiedAt);
+        return $this->ingestSource($source, $parent, null, $options->name, $options->declaredMimeType, null, $options->onConflict, $options->clientModifiedAt)->node;
     }
 
     public function addRevision(Node|int|string $file, UploadSource $source, ?RevisionOptions $options = null): FileRevision
     {
         $node = $this->file($file, Ability::Edit);
         $options ??= new RevisionOptions;
-        $node = $this->ingestSource($source, null, $node, null, $options->declaredMimeType, $options->expectedSequence, OnNameConflict::Fail);
+        $receipt = $this->ingestSource($source, null, $node, null, $options->declaredMimeType, $options->expectedSequence, OnNameConflict::Fail);
 
-        return $this->revision($node, $node->file()->firstOrFail()->current_revision_id ?? throw NodeNotFoundException::forId($node->id));
+        return $this->revision($receipt->node, $receipt->revision);
     }
 
     /** @return CursorPaginator<int, FileRevision> */
@@ -125,7 +126,7 @@ final readonly class FileOperations implements Contract
         });
     }
 
-    private function ingestSource(UploadSource $source, ?Node $parent, ?Node $target, ?string $name, ?string $mime, ?int $expected, OnNameConflict $conflict, ?\DateTimeInterface $clientModifiedAt = null): Node
+    private function ingestSource(UploadSource $source, ?Node $parent, ?Node $target, ?string $name, ?string $mime, ?int $expected, OnNameConflict $conflict, ?\DateTimeInterface $clientModifiedAt = null): IngestReceipt
     {
         $reader = $source->openForReading();
         $prepared = null;
@@ -137,7 +138,7 @@ final readonly class FileOperations implements Contract
             $prepared = $this->ingest->prepare($this->context, $input);
             $input = new IngestFileInput(storage: $this->context->drive, stream: $reader, originalName: $source->name(), mimeType: $mime ?? $source->declaredMimeType(), into: $parent, name: $name, targetNode: $target, expectedSequence: $expected, onConflict: $conflict, prepared: $prepared, clientModifiedAt: $clientModifiedAt);
             try {
-                return $this->ingest->execute($this->context, $input);
+                return $this->ingest->receipt($this->context, $input);
             } catch (NodeNameConflictException $exception) {
                 if ($conflict !== OnNameConflict::AddRevision || $parent === null) {
                     throw $exception;
@@ -148,7 +149,7 @@ final readonly class FileOperations implements Contract
                 }
                 $target = $this->file($sibling, Ability::Edit);
 
-                return $this->ingest->execute($this->context, new IngestFileInput(storage: $this->context->drive, stream: $reader, originalName: $source->name(), mimeType: $mime ?? $source->declaredMimeType(), targetNode: $target, prepared: $prepared, clientModifiedAt: $clientModifiedAt));
+                return $this->ingest->receipt($this->context, new IngestFileInput(storage: $this->context->drive, stream: $reader, originalName: $source->name(), mimeType: $mime ?? $source->declaredMimeType(), targetNode: $target, prepared: $prepared, clientModifiedAt: $clientModifiedAt));
             }
         } finally {
             $prepared?->discard();

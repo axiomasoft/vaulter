@@ -13,6 +13,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Nodes\NameConflictResolver;
 use Vaulter\Drive\Content\ScanAdmission;
 use Vaulter\Drive\Data\Files\IngestFileInput;
+use Vaulter\Drive\Data\Files\IngestReceipt;
 use Vaulter\Drive\Events\Files\FileRevisionAdded;
 use Vaulter\Drive\Events\Files\FileUploaded;
 use Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException;
@@ -81,9 +82,15 @@ final readonly class IngestFileAction
 
     public function execute(OperationContext $context, IngestFileInput $data): Node
     {
+        return $this->receipt($context, $data)->node;
+    }
+
+    /** Like {@see execute()}, plus the revision this call created (the shared head may already have moved on). */
+    public function receipt(OperationContext $context, IngestFileInput $data): IngestReceipt
+    {
         return $this->metrics->timing(
             name: 'vaulter_upload_chunk_duration_seconds',
-            operation: fn (): Node => $this->executeUpload($context, $data),
+            operation: fn (): IngestReceipt => $this->executeUpload($context, $data),
             labels: [
                 'protocol' => 'single',
                 'tier' => LoadTier::label(),
@@ -107,7 +114,7 @@ final readonly class IngestFileAction
         }
     }
 
-    private function executeUpload(OperationContext $context, IngestFileInput $data): Node
+    private function executeUpload(OperationContext $context, IngestFileInput $data): IngestReceipt
     {
         $name = $data->isNewVersion() ? null : $this->policy->name(drive: $context->drive, name: $data->resolvedName());
         $parentId = $data->isNewVersion() ? null : $this->tree->destinationId(storage: $data->storage, into: $data->into);
@@ -125,7 +132,7 @@ final readonly class IngestFileAction
                 $this->assertWithinQuota(data: $data, delta: $staged->sizeBytes());
             }
 
-            $node = $this->database->transaction(function () use ($context, $data, $staged, $name, $parentId): Node {
+            $receipt = $this->database->transaction(function () use ($context, $data, $staged, $name, $parentId): IngestReceipt {
                 // Lock order: drive → nodes → file → quota → CAS, so concurrent writers never deadlock.
                 $this->database->lockTreeShared($data->storage->id);
 
@@ -188,7 +195,7 @@ final readonly class IngestFileAction
                 labels: ['protocol' => 'single'],
             );
 
-            return $node;
+            return $receipt;
         } catch (CoreQuotaExceededException $e) {
             throw $e instanceof QuotaExceededException ? $e : new QuotaExceededException($e->getMessage(), $e->getCode(), $e);
         } finally {
@@ -201,7 +208,7 @@ final readonly class IngestFileAction
     /**
      * New-file path (§2.4): node(kind=file) → file → number=1 → edge → repoint.
      */
-    private function commitNewFile(OperationContext $context, IngestFileInput $data, Blob $blob, int $size, string $name, int|string $parentId, int $admissionSequence): Node
+    private function commitNewFile(OperationContext $context, IngestFileInput $data, Blob $blob, int $size, string $name, int|string $parentId, int $admissionSequence): IngestReceipt
     {
         $node = $this->nodeStore->create([
             'drive_id' => $data->storage->id,
@@ -240,14 +247,14 @@ final readonly class IngestFileAction
 
         event(new FileUploaded(node: $node->refresh(), file: $file, version: $version, actorId: $context->actor->ref()->id, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
-        return $node;
+        return new IngestReceipt($node, $version);
     }
 
     /**
      * New-version path (§2.4): bump number, new version + edge against the
      * (deduped) blob, mark the prior head superseded, repoint file + node heads.
      */
-    private function commitNewVersion(OperationContext $context, IngestFileInput $data, File $file, ?FileRevision $previousHead, Blob $blob, int $size, int $admissionSequence): Node
+    private function commitNewVersion(OperationContext $context, IngestFileInput $data, File $file, ?FileRevision $previousHead, Blob $blob, int $size, int $admissionSequence): IngestReceipt
     {
         $node = $data->targetNode;
 
@@ -299,7 +306,7 @@ final readonly class IngestFileAction
             actorId: $context->actor->ref()->id, actor: $context->actor->ref(), correlationId: $context->correlationId,
         ));
 
-        return $node;
+        return new IngestReceipt($node, $version);
     }
 
     private function makeVersion(

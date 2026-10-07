@@ -3,11 +3,15 @@
 declare(strict_types=1);
 
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Data\Drive\RevisionOptions;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Files\IngestFileAction;
 use Vaulter\Drive\Data\Files\IngestFileInput;
+use Vaulter\Drive\Events\Files\FileRevisionAdded;
 use Vaulter\Drive\Exceptions\Files\UploadRejectedException;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\StagedUpload;
@@ -37,6 +41,26 @@ it('I9 persists detected MIME separately from the declared generic MIME', functi
     $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     expect($revision->mime_type)->toBe('text/plain')->and($revision->declared_mime_type)->toBe('application/octet-stream')->and($revision->sha256)->toBe(hash('sha256', 'plain text'));
     fclose($stream);
+});
+
+it('I9 ingest receipt names the revision this call created, not the head a post-commit writer moved', function (): void {
+    $handle = Vaulter::drive(UploadTestHelpers::storage())->asSystem('test fixture');
+    $fileId = $handle->files()->upload(UploadSource::fromString('initial', 'receipt.txt'))->id;
+    $later = null;
+    Event::listen(FileRevisionAdded::class, function (FileRevisionAdded $event) use ($handle, $fileId, &$later): void {
+        if ($event->version->number === 2) {
+            app(VaulterDatabase::class)->afterCommit(function () use ($handle, $fileId, &$later): void {
+                $later = $handle->files()->addRevision($fileId, UploadSource::fromString('later bytes', 'receipt.txt'), new RevisionOptions(expectedSequence: 1));
+            });
+        }
+    });
+
+    $own = $handle->files()->addRevision($fileId, UploadSource::fromString('own bytes', 'receipt.txt'), new RevisionOptions(expectedSequence: 0));
+
+    expect($later)->toBeInstanceOf(FileRevision::class)
+        ->and([$own->number, $own->sha256])->toBe([2, hash('sha256', 'own bytes')])
+        ->and([$later->number, $later->sha256])->toBe([3, hash('sha256', 'later bytes')])
+        ->and($own->id)->not->toBe($later->id);
 });
 
 it('V30 counts from the current position and enforces the actual byte limit', function (): void {
