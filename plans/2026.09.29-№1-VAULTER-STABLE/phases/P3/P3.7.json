@@ -116,11 +116,19 @@
   ],
   "task_files": [
     {
-      "path": "packages/drive/src/Actions/{Files,Uploads}/*.php",
+      "path": "packages/drive/src/Actions/Files/*.php",
       "change": "any"
     },
     {
-      "path": "packages/drive/src/Data/{Files,Uploads}/*.php",
+      "path": "packages/drive/src/Actions/Uploads/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Data/Files/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Data/Uploads/*.php",
       "change": "any"
     },
     {
@@ -132,7 +140,15 @@
       "change": "create"
     },
     {
-      "path": "packages/drive/src/Uploads/{StagedUpload,PreparedUpload,UploadSessionManager}.php",
+      "path": "packages/drive/src/Uploads/StagedUpload.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Uploads/PreparedUpload.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Uploads/UploadSessionManager.php",
       "change": "any"
     },
     {
@@ -160,12 +176,26 @@
       "change": "any"
     },
     {
-      "path": "packages/drive/src/Http/Controllers/{NodeController,DownloadController,Uploads/*.php}",
+      "path": "packages/drive/src/Http/Controllers/NodeController.php",
       "change": "any",
       "note": "Только UploadOperations/ingest/content-egress switch; canCreateIn migration поставляет P3.5"
     },
     {
-      "path": "packages/drive/src/Providers/{Bindings,Http}Registrar.php",
+      "path": "packages/drive/src/Http/Controllers/DownloadController.php",
+      "change": "any",
+      "note": "Только UploadOperations/ingest/content-egress switch; canCreateIn migration поставляет P3.5"
+    },
+    {
+      "path": "packages/drive/src/Http/Controllers/Uploads/*.php",
+      "change": "any",
+      "note": "Только UploadOperations/ingest/content-egress switch; canCreateIn migration поставляет P3.5"
+    },
+    {
+      "path": "packages/drive/src/Providers/BindingsRegistrar.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Providers/HttpRegistrar.php",
       "change": "any"
     },
     {
@@ -197,7 +227,11 @@
       "change": "any"
     },
     {
-      "path": "packages/core/src/{Sharing,Handlers}/**/*.php",
+      "path": "packages/core/src/Sharing/**/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Handlers/**/*.php",
       "change": "any"
     },
     {
@@ -233,7 +267,15 @@
       "change": "any"
     },
     {
-      "path": "packages/{core,drive,documents}/tests/Arch/__snapshots__/public-api.txt",
+      "path": "packages/core/tests/Arch/__snapshots__/public-api.txt",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/tests/Arch/__snapshots__/public-api.txt",
+      "change": "any"
+    },
+    {
+      "path": "packages/documents/tests/Arch/__snapshots__/public-api.txt",
       "change": "any"
     },
     {
@@ -259,7 +301,11 @@
       "change": "create"
     },
     {
-      "path": "packages/drive/src/Exceptions/Files/{UploadRejected,NotAFile}Exception.php",
+      "path": "packages/drive/src/Exceptions/Files/UploadRejectedException.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/src/Exceptions/Files/NotAFileException.php",
       "change": "create"
     },
     {
@@ -406,7 +452,7 @@
       "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
     },
     {
-      "path": "packages/core/src/Repositories/Content/PolicyStateRepository.php",
+      "path": "packages/core/src/Repositories/Content/ScanPolicyStateRepository.php",
       "change": "any",
       "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
     },
@@ -529,6 +575,42 @@
       "path": "packages/documents/tests/Document/ContentEgressBoundaryTest.php",
       "change": "any",
       "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/drive/src/Content/ScanAdmission.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Content/CopyDestinationAdmission.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Configuration/VaulterConfig.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Models/Content/ScanUtcDateTime.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Content/ScanSnapshot.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Content/OffScanPolicyResolver.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Content/ScanPolicySpec.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Contracts/Content/ScanPolicyResolver.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/DriveHandle.php",
+      "change": "any"
     }
   ],
   "rules": [
@@ -749,7 +831,7 @@
       }
     ]
   },
-  "updated_at": "2026-10-07T07:27:07Z",
+  "updated_at": "2026-10-07T10:45:56Z",
   "orchestration": {
     "strategy": "dag"
   },

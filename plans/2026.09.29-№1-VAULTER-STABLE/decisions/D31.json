@@ -1,0 +1,31 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D31",
+  "title": "Activity: проекция полей для читателей без Share (аудит F05)",
+  "date": "2026-10-07",
+  "status": "open",
+  "question": "Какие поля ленты activity видит читатель с View, но без Share на узле?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Скрывать ip, user_agent, request_id, actor_id и в context subject_type/subject_id/permissions/token_prefix; Share-capable и system видят всё.",
+      "pros": "закрывает утечку метаданных запроса и состава доступов; согласуется с I7/I16",
+      "cons": "аудит-вид для обычных читателей беднее"
+    },
+    {
+      "id": "B",
+      "text": "Оставить полный payload и убрать фразу 'scrub payload on write' из P3-invariants I7.",
+      "pros": "без изменений кода",
+      "cons": "ip/UA редакторов и субъекты грантов видны любому читателю узла"
+    }
+  ],
+  "context": "ActivityResource отдавал все поля любому актору с View. Аудит F05. Вариант A реализован (OperationGuard::visibleWith, VisibleActivityQuery::project, тест SEC-I7-projection); владелец решение не подтверждал. P6 заморозит форму в REST v1.",
+  "applies_to": [
+    "P3"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-sonnet-5-5",
+    "effort": "xhigh"
+  }
+}

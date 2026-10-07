@@ -5,14 +5,24 @@
   "title": "Drive scan lifecycle and recovery",
   "goal": "Drive scan lifecycle and recovery",
   "files": [
-    "packages/drive/src/Content/{ScanPolicyResolver,PrivateScanReader,ScanAdmission,ScanWorkReconciler,ScanBackfillReconciler}.php",
-    "packages/drive/src/Content/{CopyDestinationAdmission,FileContentLifecycle}.php",
+    "packages/drive/src/Content/ScanPolicyResolver.php",
+    "packages/drive/src/Content/PrivateScanReader.php",
+    "packages/drive/src/Content/ScanAdmission.php",
+    "packages/drive/src/Content/ScanWorkReconciler.php",
+    "packages/drive/src/Content/ScanBackfillReconciler.php",
+    "packages/drive/src/Content/CopyDestinationAdmission.php",
+    "packages/drive/src/Content/FileContentLifecycle.php",
     "packages/drive/src/Jobs/Uploads/ScanFileRevision.php",
-    "packages/drive/src/Console/{RescanFileRevisions,ReconcileScanWork}Command.php",
-    "packages/drive/src/Providers/{Bindings,Console}Registrar.php",
+    "packages/drive/src/Console/RescanFileRevisionsCommand.php",
+    "packages/drive/src/Console/ReconcileScanWorkCommand.php",
+    "packages/drive/src/Providers/BindingsRegistrar.php",
+    "packages/drive/src/Providers/ConsoleRegistrar.php",
     "packages/drive/src/Configuration/DriveConfig.php",
     "packages/drive/config/vaulter-drive.php",
-    "packages/drive/tests/Uploads/P3/{ScanPolicyTransition,DestinationScanPolicy,ScanWorkRecovery,ScanJobBoundary}Test.php",
+    "packages/drive/tests/Uploads/P3/ScanPolicyTransitionTest.php",
+    "packages/drive/tests/Uploads/P3/DestinationScanPolicyTest.php",
+    "packages/drive/tests/Uploads/P3/ScanWorkRecoveryTest.php",
+    "packages/drive/tests/Uploads/P3/ScanJobBoundaryTest.php",
     "packages/drive/tests/Concurrency/ScanWorkRecoveryRaceTest.php"
   ],
   "depends_on": [],
@@ -54,5 +64,5 @@
       "packages/drive/tests/Concurrency/ScanWorkRecoveryRaceTest.php"
     ]
   },
-  "updated_at": "2026-10-07T06:58:03Z"
+  "updated_at": "2026-10-07T10:45:59Z"
 }

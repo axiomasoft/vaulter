@@ -20,4 +20,4 @@ No open friction.
 
 ## Open questions
 
-0 open. See `open-questions.md`.
+4 open. See `open-questions.md`.

@@ -154,3 +154,7 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 | D27 | P3/F06: system обходит только ACL, ProfileRestriction остаётся | accepted | 2026-10-06 |
 | D28 | P3/F08: amend D03/P4.7 — sequence foundation переносится в P3.3 | accepted | 2026-10-06 |
 | D29 | Research adoption: обязательные forward corrections P3–P8 и durable delivery | accepted | 2026-10-06 |
+| D30 | COPY папки: права на потомков (аудит F02) | open | 2026-10-07 |
+| D31 | Activity: проекция полей для читателей без Share (аудит F05) | open | 2026-10-07 |
+| D32 | Снять MySQL-часть с P8.1 после квитанции полной установки (аудит F06) | open | 2026-10-07 |
+| D33 | Вопросы владельцу из аудита P1–P3: Q2, Q4, Q5, Q6 | open | 2026-10-07 |

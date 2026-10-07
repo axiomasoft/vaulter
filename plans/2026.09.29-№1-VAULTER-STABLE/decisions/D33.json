@@ -1,0 +1,24 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D33",
+  "title": "Вопросы владельцу из аудита P1–P3: Q2, Q4, Q5, Q6",
+  "date": "2026-10-07",
+  "status": "open",
+  "question": "Q2: допустим ли prepare (чтение и хэш всех байт) внутри внешней транзакции с session-lock в CompleteUploadAction (I9 'before tx' против C03 'через outer tx')? Q4: допустимо ли раскрытие существования скрытого соседа через политику конфликта имён (409/суффикс/404)? Q5: какой статус MariaDB реален для 1.0 (docs обещали 'Schema supported', ветка mariadb использует STORED columns, проба CHECK пропускается для драйвера mariadb, а драйвер mysql на сервере MariaDB падает в addScanEvidenceAndWork)? Q6: подтвердить ли добавленный в ADR-0020 раздел 'Compatibility before 1.0' (клаузы про BC до 1.0 в исходном тексте не было; опора D02 и ADR-0017 D3).",
+  "options": [
+    {
+      "id": "A",
+      "text": "Ответить по каждому пункту отдельно; до ответа поведение не менять."
+    }
+  ],
+  "context": "Источник: @plan/knowledge/audit-p1-p3-2026-10-07.json, раздел 'Вопросы владельцу'. Q1 → решение о COPY (отдельная запись), Q3 — задача проверки на PostgreSQL, не вопрос.",
+  "applies_to": [
+    "P3",
+    "P8"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-sonnet-5-5",
+    "effort": "xhigh"
+  }
+}

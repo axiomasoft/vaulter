@@ -56,7 +56,7 @@ Closed 2026-10-06T12:28:08Z (🟠 Done with deviations): 7 item(s): 6 done, 1 do
 | P3.2 | Типизированные sub-API контракты и значения PHP API | 🟢 Done | frontier/high | 2026-10-06T20:17:47Z |
 | P3.4 | Core Operations: grants, shares и видимый activity feed | 🟢 Done | implementation/high | 2026-10-06T21:16:26Z |
 | P3.3 | Drive Operations и атомарный canonical PHP API switch | 🟢 Done | frontier/high | 2026-10-07T06:11:56Z |
-| P3.7 | Единый ingest, resumable idempotency и карантин | 🟢 Done | frontier/high | 2026-10-07T07:27:07Z |
+| P3.7 | Единый ingest, resumable idempotency и карантин | 🟢 Done | frontier/high | 2026-10-07T10:45:56Z |
 | P3.8 | Strict tenancy всех boundaries и единый фазовый barrier | 🟢 Done | frontier/high | 2026-10-07T10:05:54Z |
 
 Closed 2026-10-07T10:05:54Z (🟢 Done): 8 item(s): 8 done
