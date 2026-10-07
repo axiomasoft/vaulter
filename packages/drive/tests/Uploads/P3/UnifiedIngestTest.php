@@ -1,0 +1,86 @@
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Vaulter\Data\Drive\UploadOptions;
+use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Drive\Actions\Files\IngestFileAction;
+use Vaulter\Drive\Data\Files\IngestFileInput;
+use Vaulter\Drive\Exceptions\Files\UploadRejectedException;
+use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
+use Vaulter\Drive\Uploads\StagedUpload;
+use Vaulter\Facades\Vaulter;
+use Vaulter\Models\Cas\Blob;
+use Vaulter\Models\Drive\FileRevision;
+use Vaulter\Operations\OperationContext;
+use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Tests\Fixtures\TestUser;
+
+beforeEach(fn () => Storage::fake('local'));
+
+it('V05 rejects an executable disguised as PDF before SQL and CAS', function (): void {
+    $drive = UploadTestHelpers::storage();
+    $stream = UploadTestHelpers::streamFor('MZ'.str_repeat("\0", 1024));
+    expect(fn () => Vaulter::drive($drive)->asSystem('test fixture')->files()->upload(UploadSource::fromStream($stream, 'report.pdf'), new UploadOptions(declaredMimeType: 'application/pdf')))
+        ->toThrow(UploadRejectedException::class);
+    expect(Blob::query()->count())->toBe(0)->and(FileRevision::query()->count())->toBe(0)->and(is_resource($stream))->toBeTrue();
+    fclose($stream);
+});
+
+it('I9 persists detected MIME separately from the declared generic MIME', function (): void {
+    $drive = UploadTestHelpers::storage();
+    $stream = UploadTestHelpers::streamFor('plain text');
+    $node = app(IngestFileAction::class)->execute(OperationContext::system($drive, 'test fixture'), new IngestFileInput($drive, $stream, 'note.txt', 'application/octet-stream'));
+    $revision = $node->currentVersion()->firstOrFail();
+    expect($revision->mime_type)->toBe('text/plain')->and($revision->declared_mime_type)->toBe('application/octet-stream')->and($revision->sha256)->toBe(hash('sha256', 'plain text'));
+    fclose($stream);
+});
+
+it('V30 counts from the current position and enforces the actual byte limit', function (): void {
+    $stream = UploadTestHelpers::streamFor('prefixactual');
+    fread($stream, 6);
+    $source = UploadSource::fromStream($stream, 'x.txt', 999);
+    $prepared = app(StagedUpload::class)->stageSource($source, 6);
+    try {
+        expect($prepared->facts->size)->toBe(6)->and($prepared->facts->sha256)->toBe(hash('sha256', 'actual'));
+    } finally {
+        $prepared->discard();
+    }
+    expect(is_resource($stream))->toBeTrue();
+    rewind($stream);
+    expect(fn () => app(StagedUpload::class)->stageSource($source, 2))->toThrow(UploadRejectedException::class);
+    expect(is_resource($stream))->toBeTrue();
+    fclose($stream);
+});
+
+it('V05 HTTP single tus and S3 reject the same executable PDF bytes before CAS', function (string $protocol): void {
+    $this->actingAs((new TestUser)->forceFill(['id' => 12]));
+    $drive = Vaulter::drive(DriveTestHelpers::host())->model();
+    $bytes = 'MZ'.str_repeat("\0", 1024);
+    if ($protocol === 'single') {
+        $path = tempnam(sys_get_temp_dir(), 'p37-http-');
+        file_put_contents($path, $bytes);
+        try {
+            $file = new UploadedFile($path, 'report.pdf', 'application/pdf', test: true);
+            $this->postJson('api/vaulter/storages/'.$drive->id.'/uploads', ['file' => $file])->assertStatus(422);
+        } finally {
+            unlink($path);
+        }
+    } else {
+        $create = $this->postJson('api/vaulter/storages/'.$drive->id.'/resumable-uploads', [
+            'protocol' => $protocol, 'name' => 'report.pdf', 'mime_type' => 'application/pdf', 'total_size_bytes' => strlen($bytes),
+        ])->assertCreated();
+        $id = $create->json('data.upload_id');
+        if ($protocol === 'tus') {
+            $this->call('PATCH', 'api/vaulter/resumable-uploads/'.$id, [], [], [], [
+                'HTTP_UPLOAD_OFFSET' => '0', 'CONTENT_TYPE' => 'application/offset+octet-stream', 'HTTP_TUS_RESUMABLE' => '1.0.0',
+            ], $bytes)->assertStatus(422);
+        } else {
+            $this->call('POST', 'api/vaulter/resumable-uploads/'.$id.'/parts?part_no=1&byte_offset=0', [], [], [], ['CONTENT_TYPE' => 'application/octet-stream'], $bytes)->assertCreated();
+            $this->postJson('api/vaulter/resumable-uploads/'.$id.'/complete')->assertStatus(422);
+        }
+    }
+    expect(Blob::query()->count())->toBe(0)->and(FileRevision::query()->count())->toBe(0);
+})->with(['single', 'tus', 's3-multipart']);

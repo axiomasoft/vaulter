@@ -5,28 +5,37 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Actions\Files;
 
 use LogicException;
+use Psr\Http\Message\StreamInterface;
 use Vaulter\Contracts\Cas\BlobStore;
-use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Actions\Nodes\NameConflictResolver;
 use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Content\ScanAdmission;
 use Vaulter\Drive\Data\Files\IngestFileInput;
 use Vaulter\Drive\Events\Files\FileRevisionAdded;
 use Vaulter\Drive\Events\Files\FileUploaded;
 use Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException;
 use Vaulter\Drive\Exceptions\Quota\QuotaExceededException;
+use Vaulter\Drive\Uploads\Inspection\UploadInspection;
+use Vaulter\Drive\Uploads\PreparedUpload;
+use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Enums\Drive\OnNameConflict;
 use Vaulter\Exceptions\Drive\QuotaExceededException as CoreQuotaExceededException;
-use Vaulter\Exceptions\Nodes\NodeNameConflictException;
+use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\NodeLocator;
+use Vaulter\Operations\NodeSequence;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Drive\DriveStoreRepository;
 use Vaulter\Repositories\Drive\FileRevisionStoreRepository;
 use Vaulter\Repositories\Drive\FileStoreRepository;
-use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\LoadTier;
 use Vaulter\Support\NodeName;
@@ -48,18 +57,15 @@ use Vaulter\ValueObjects\Cas\BlobScope;
  *     current_revision_id, mark the prior head superseded, and adjust used_bytes by
  *     the SIZE DELTA (new size − previous head size), not the full size.
  *
- * Authorization (M2a / H.2) is enforced upstream at the HTTP controller
- * boundary (NodeController + AccessResolver); this Action stays pure.
+ * Operations authorize before this command; locked invariants remain in the Action.
  */
 final readonly class IngestFileAction
 {
     public function __construct(
         private BlobStore $blobs,
-        private ContentStore $content,
         private FileStoreRepository $files,
         private FileRevisionStoreRepository $versions,
         private NodeStoreRepository $nodeStore,
-        private NodeReadRepository $nodeRead,
         private DriveStoreRepository $storageStore,
         private MetricsRecorder $metrics,
         private VaulterDatabase $database,
@@ -68,11 +74,11 @@ final readonly class IngestFileAction
         private DriveConfig $driveConfig,
     ) {}
 
-    public function execute(IngestFileInput $data): Node
+    public function execute(OperationContext $context, IngestFileInput $data): Node
     {
         return $this->metrics->timing(
             name: 'vaulter_upload_chunk_duration_seconds',
-            operation: fn (): Node => $this->executeUpload($data),
+            operation: fn (): Node => $this->executeUpload($context, $data),
             labels: [
                 'protocol' => 'single',
                 'tier' => LoadTier::label(),
@@ -80,37 +86,68 @@ final readonly class IngestFileAction
         );
     }
 
-    private function executeUpload(IngestFileInput $data): Node
+    public function prepare(OperationContext $context, IngestFileInput $data): PreparedUpload
+    {
+        $source = $data->stream instanceof StreamInterface
+            ? UploadSource::fromPsrStream($data->stream, $data->originalName)
+            : UploadSource::fromStream($data->stream, $data->originalName);
+        $inspection = app(UploadInspection::class);
+        $prepared = app(StagedUpload::class)->stageSource($source, $inspection->maximum($context), $data->mimeType, $data->resolvedName());
+        try {
+            $inspection->inspect($prepared->facts, $context);
+
+            return $prepared;
+        } catch (\Throwable $exception) {
+            $prepared->discard();
+            throw $exception;
+        }
+    }
+
+    private function executeUpload(OperationContext $context, IngestFileInput $data): Node
     {
         $name = $data->isNewVersion() ? null : NodeName::normalize(name: $data->resolvedName(), maxLength: $this->driveConfig->nameMaxLength());
         $parentId = $data->isNewVersion() ? null : $this->tree->destinationId(storage: $data->storage, into: $data->into);
-        $staged = $this->content->stage($data->stream);
+        $ownsPreparation = $data->prepared === null;
+        $prepared = $data->prepared ?? $this->prepare($context, $data);
+        $facts = $prepared->facts;
+        $data = new IngestFileInput(storage: $context->drive, stream: $data->stream, originalName: $data->originalName,
+            mimeType: $facts->detectedMimeType, into: $data->into, name: $data->name, targetNode: $data->targetNode,
+            expectedSequence: $data->expectedSequence, onConflict: $data->onConflict, prepared: $prepared, declaredMimeType: $facts->declaredMimeType);
+        $staged = $prepared->staged;
 
         try {
             // Revision deltas must use the locked head; a stale caller cannot reject them.
-            if (!$data->isNewVersion()) {
+            if (!$data->isNewVersion() && $data->onConflict !== OnNameConflict::AddRevision) {
                 $this->assertWithinQuota(data: $data, delta: $staged->sizeBytes());
             }
 
-            $node = $this->database->transaction(function () use ($data, $staged, $name, $parentId): Node {
+            $node = $this->database->transaction(function () use ($context, $data, $staged, $name, $parentId): Node {
                 // Lock order: drive → nodes → file → quota → CAS, so concurrent writers never deadlock.
                 $this->database->lockTreeShared($data->storage->id);
 
                 if ($name !== null && $parentId !== null) {
                     $this->assertDestination(data: $data, parentId: $parentId, name: $name);
+                    $name = app(NameConflictResolver::class)->resolve($context->drive, $parentId, $name, $data->onConflict);
                 }
 
-                $target = $data->targetNode;
+                $target = $data->targetNode === null ? null : app(NodeLocator::class)->find(context: $context, key: $data->targetNode);
                 $file = null;
                 $previousHead = null;
 
                 if ($target instanceof Node) {
-                    $this->tree->sync($target, $this->tree->locked($this->tree->lock([$target->id]), $target->id));
+                    $this->tree->sync($data->targetNode, $target);
+                    $target = $this->tree->sync($data->targetNode, $this->tree->locked($this->tree->lock([$target->id]), $target->id));
+                    if ($target->trashed_at !== null) {
+                        throw InvalidDestinationException::trashed($target);
+                    }
                     /** @var File $currentFile */
                     $currentFile = $target->file()->firstOrFail();
+                    app(NodeSequence::class)->assertExpected(locked: $target, expected: $data->expectedSequence);
                     $file = $this->files->lockForUpdate($currentFile);
                     $previousHead = $file->currentVersion()->first();
                 }
+
+                $admissionSequence = app(ScanAdmission::class)->next($context);
 
                 $size = $staged->sizeBytes();
                 $delta = $size - ($previousHead->size_bytes ?? 0);
@@ -137,8 +174,8 @@ final readonly class IngestFileAction
                 );
 
                 return $file instanceof File
-                    ? $this->commitNewVersion(data: $data, file: $file, previousHead: $previousHead, blob: $blob, size: $size)
-                    : $this->commitNewFile(data: $data, blob: $blob, size: $size, name: $name ?? '', parentId: $parentId ?? throw new LogicException('An upload requires a destination.'));
+                    ? $this->commitNewVersion(context: $context, data: $data, file: $file, previousHead: $previousHead, blob: $blob, size: $size, admissionSequence: $admissionSequence)
+                    : $this->commitNewFile(context: $context, data: $data, blob: $blob, size: $size, name: $name ?? '', parentId: $parentId ?? throw new LogicException('An upload requires a destination.'), admissionSequence: $admissionSequence);
             }, 3);
 
             $this->metrics->counter(
@@ -151,14 +188,16 @@ final readonly class IngestFileAction
         } catch (CoreQuotaExceededException $e) {
             throw $e instanceof QuotaExceededException ? $e : new QuotaExceededException($e->getMessage(), $e->getCode(), $e);
         } finally {
-            $staged->discard();
+            if ($ownsPreparation) {
+                $prepared->discard();
+            }
         }
     }
 
     /**
      * New-file path (§2.4): node(kind=file) → file → number=1 → edge → repoint.
      */
-    private function commitNewFile(IngestFileInput $data, Blob $blob, int $size, string $name, int|string $parentId): Node
+    private function commitNewFile(OperationContext $context, IngestFileInput $data, Blob $blob, int $size, string $name, int|string $parentId, int $admissionSequence): Node
     {
         $node = $this->nodeStore->create([
             'drive_id' => $data->storage->id,
@@ -168,8 +207,8 @@ final readonly class IngestFileAction
             'mime_type' => $data->mimeType,
             'extension' => $this->extension($data->originalName),
             'size_bytes' => $size,
-            'owner_id' => $data->actorId,
-            'created_by' => $data->actorId,
+            'owner_id' => $context->actor->ref()->id,
+            'created_by' => $context->actor->ref()->id,
         ]);
 
         $file = $this->files->create([
@@ -179,7 +218,7 @@ final readonly class IngestFileAction
             'revision_count' => 0,
         ]);
 
-        $version = $this->makeVersion(data: $data, file: $file, blob: $blob, size: $size, versionNo: 1);
+        $version = $this->makeVersion(context: $context, data: $data, file: $file, blob: $blob, size: $size, versionNo: 1, admissionSequence: $admissionSequence);
 
         $this->blobs->attach($version, $blob);
 
@@ -196,7 +235,9 @@ final readonly class IngestFileAction
             'current_version_id' => $version->id,
         ]);
 
-        event(new FileUploaded(node: $node->refresh(), file: $file, version: $version, actorId: $data->actorId));
+        app(ScanAdmission::class)->admit($context, $version);
+
+        event(new FileUploaded(node: $node->refresh(), file: $file, version: $version, actorId: $context->actor->ref()->id, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
         return $node;
     }
@@ -205,7 +246,7 @@ final readonly class IngestFileAction
      * New-version path (§2.4): bump number, new version + edge against the
      * (deduped) blob, mark the prior head superseded, repoint file + node heads.
      */
-    private function commitNewVersion(IngestFileInput $data, File $file, ?FileRevision $previousHead, Blob $blob, int $size): Node
+    private function commitNewVersion(OperationContext $context, IngestFileInput $data, File $file, ?FileRevision $previousHead, Blob $blob, int $size, int $admissionSequence): Node
     {
         $node = $data->targetNode;
 
@@ -215,11 +256,12 @@ final readonly class IngestFileAction
         }
 
         $version = $this->makeVersion(
-            data: $data,
+            context: $context, data: $data,
             file: $file,
             blob: $blob,
             size: $size,
             versionNo: $file->revision_count + 1,
+            admissionSequence: $admissionSequence,
         );
 
         $this->blobs->attach($version, $blob);
@@ -244,23 +286,29 @@ final readonly class IngestFileAction
             sizeBytes: $size,
         );
 
+        app(NodeSequence::class)->bump($node);
+
+        app(ScanAdmission::class)->admit($context, $version);
+
         event(new FileRevisionAdded(
             node: $node->refresh(),
             file: $file,
             version: $version,
             versionNo: $version->number,
-            actorId: $data->actorId,
+            actorId: $context->actor->ref()->id, actor: $context->actor->ref(), correlationId: $context->correlationId,
         ));
 
         return $node;
     }
 
     private function makeVersion(
+        OperationContext $context,
         IngestFileInput $data,
         File $file,
         Blob $blob,
         int $size,
         int $versionNo,
+        int $admissionSequence,
     ): FileRevision {
         return $this->versions->create([
             'file_id' => $file->getKey(),
@@ -270,8 +318,10 @@ final readonly class IngestFileAction
             'size_bytes' => $size,
             'mime_type' => $data->mimeType,
             'original_name' => $data->originalName,
+            'declared_mime_type' => $data->declaredMimeType,
+            'scan_admission_sequence' => $admissionSequence,
             'status' => 'committed',
-            'created_by' => $data->actorId,
+            'created_by' => $context->actor->ref()->id,
             'committed_at' => now(),
         ]);
     }
@@ -312,9 +362,6 @@ final readonly class IngestFileAction
 
         $this->tree->assertActiveFolder($parent);
 
-        if ($this->nodeRead->siblingNameExists(storage: $data->storage, parentId: $parentId, name: $name)) {
-            throw NodeNameConflictException::forName(name: $name, parentId: $parentId);
-        }
     }
 
     private function extension(string $name): ?string

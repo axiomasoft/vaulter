@@ -26,13 +26,14 @@ final class DownloadHeaders
      * Build the download response headers for a declared mime-type. Does not
      * touch `Content-Length` — the caller merges these in alongside it.
      *
-     * @return array{'Content-Type': string, 'X-Content-Type-Options': string}
+     * @return array{'Content-Type': string, 'X-Content-Type-Options': string, 'Cache-Control': string}
      */
     public static function forDeclaredMime(?string $declaredMime): array
     {
         return [
             'Content-Type' => self::safeContentType($declaredMime),
             'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, no-store',
         ];
     }
 

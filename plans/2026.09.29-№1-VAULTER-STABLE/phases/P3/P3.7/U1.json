@@ -1,0 +1,72 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:unit:v1",
+  "id": "U1",
+  "item": "P3.7",
+  "title": "Core scan schema and evidence",
+  "goal": "Core scan schema and evidence",
+  "files": [
+    "packages/core/src/Content/Scan{Attempt,Evidence,Input,Result}.php",
+    "packages/core/src/Content/ImmutableContentIdentity.php",
+    "packages/core/src/Enums/Cas/ScanVerdict.php",
+    "packages/core/src/Contracts/Cas/ContentScanner.php",
+    "packages/core/src/Models/Content/*.php",
+    "packages/core/src/Repositories/Content/*.php",
+    "packages/core/database/migrations/2026_10_06_000002_add_scan_evidence_and_work.php",
+    "packages/core/src/Schema/SchemaBuilder.php",
+    "packages/core/src/Models/{Drive/{Drive,FileRevision},Cas/Blob}.php",
+    "packages/core/src/Configuration/VaulterConfig.php",
+    "packages/core/tests/Content/ScanEvidenceBoundaryTest.php",
+    "packages/core/tests/Schema/ScanEvidenceSchemaTest.php"
+  ],
+  "checks": [],
+  "route": {
+    "class": "frontier",
+    "effort": "high"
+  },
+  "mode": "delegate",
+  "instructions": "Implement exact supplemental Schema/Evidence/StateMachine core repositories, aliases, migration and meaningful tests. Coordinate interfaces with drive unit. No edits to plan.",
+  "status": "accepted",
+  "outcome": {
+    "agent": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high"
+    },
+    "at": "2026-10-07T06:58:02Z",
+    "notes": "Accepted after integration inspection and exact owning checks: V1–V11, targeted caller closure, PHPStan/Pint; all10 NC RED/restoredGREEN. Native Grok final scope review recorded at item level.",
+    "changed": [
+      "packages/core/src/Content/ScanAttempt.php",
+      "packages/core/src/Content/ScanEvidence.php",
+      "packages/core/src/Content/ScanInput.php",
+      "packages/core/src/Content/ScanPolicySpec.php",
+      "packages/core/src/Content/ScanResult.php",
+      "packages/core/src/Content/ScanSnapshot.php",
+      "packages/core/src/Content/ImmutableContentIdentity.php",
+      "packages/core/src/Content/OffScanPolicyResolver.php",
+      "packages/core/src/Enums/Cas/ScanVerdict.php",
+      "packages/core/src/Contracts/Cas/ContentScanner.php",
+      "packages/core/src/Contracts/Content/ScanPolicyResolver.php",
+      "packages/core/src/Models/Content/ScanBackfillRun.php",
+      "packages/core/src/Models/Content/ScanEvidenceRecord.php",
+      "packages/core/src/Models/Content/ScanObligation.php",
+      "packages/core/src/Models/Content/ScanPolicyState.php",
+      "packages/core/src/Models/Content/ScanRequest.php",
+      "packages/core/src/Models/Content/ScanUtcDateTime.php",
+      "packages/core/src/Repositories/Content/ScanEvidenceRepository.php",
+      "packages/core/src/Repositories/Content/ScanObligationRepository.php",
+      "packages/core/src/Repositories/Content/ScanPolicyStateRepository.php",
+      "packages/core/src/Models/Drive/Drive.php",
+      "packages/core/src/Models/Drive/FileRevision.php",
+      "packages/core/src/Models/Cas/Blob.php",
+      "packages/core/src/Configuration/VaulterConfig.php",
+      "packages/core/src/Configuration/ConfigValidator.php",
+      "packages/core/config/vaulter.php",
+      "packages/core/src/Schema/SchemaBuilder.php",
+      "packages/core/database/migrations/2026_10_06_000002_add_scan_evidence_and_work.php",
+      "packages/core/tests/Content/ScanEvidenceBoundaryTest.php",
+      "packages/core/tests/Schema/ScanEvidenceSchemaTest.php",
+      "tests/Pest.php"
+    ]
+  },
+  "updated_at": "2026-10-07T06:58:02Z"
+}

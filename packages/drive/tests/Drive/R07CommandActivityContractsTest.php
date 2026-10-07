@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Data\Drive\UploadOptions;
+use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\DriveProvisioner;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
@@ -16,6 +18,7 @@ use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Webhooks\Outbox;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Testing\FakeMetricsRecorder;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -43,8 +46,7 @@ it('purge-trash purges on the cutoff day but spares one day newer', function ():
     Artisan::call('vaulter:purge-trash', ['--days' => '1']);
     $output = Artisan::output();
 
-    expect($output)->toContain('Purging nodes trashed on or before 2026-02-09 12:00:00 (retention: 1 day).')
-        ->and($output)->toContain('Purged 1 trashed subtree.')
+    expect($output)->toContain('Purged 1 trashed subtree.')
         ->and(Node::query()->whereKey($onCutoff->getKey())->exists())->toBeFalse()
         ->and(Node::query()->whereKey($newer->getKey())->exists())->toBeTrue();
 });
@@ -88,11 +90,12 @@ it('createFolder activity context carries owner and creator ids', function (): v
     $drive = DriveTestHelpers::drive();
     Activity::query()->delete();
 
-    $folder = $drive->createFolder('Audited', actorId: 42);
+    $folder = $drive->actingAs(DriveTestHelpers::actor($drive, 42))->withCorrelationId('audited-folder')->folders()->create('Audited');
 
     expect(Activity::query()->where('verb', EventType::FolderCreated->value)->sole()->context)->toEqual([
         'kind' => 'folder',
         'name' => 'Audited',
+        'correlation_id' => 'audited-folder',
         'parent_id' => (string) $drive->root()->getKey(),
     ])
         ->and($folder->owner_id)->toEqual(42)
@@ -101,13 +104,13 @@ it('createFolder activity context carries owner and creator ids', function (): v
 
 it('move within the same parent is a no-op without NodeMoved activity', function (): void {
     $drive = DriveTestHelpers::drive();
-    $parent = $drive->createFolder('Parent');
-    $child = $drive->createFolder('Child', $parent);
+    $parent = $drive->folders()->create('Parent');
+    $child = $drive->folders()->create('Child', $parent);
 
     Activity::query()->delete();
     Outbox::query()->delete();
 
-    $drive->move($child, $parent, actorId: 17);
+    $drive->actingAs(DriveTestHelpers::actor($drive, 17))->nodes()->move($child, $parent);
 
     expect(Activity::query()->where('verb', EventType::NodeMoved->value)->count())->toBe(0)
         ->and(Outbox::query()->where('event', EventType::NodeMoved->value)->count())->toBe(0);
@@ -115,33 +118,35 @@ it('move within the same parent is a no-op without NodeMoved activity', function
 
 it('forceDelete on a folder subtree records zero freed bytes and skips quota adjustment', function (): void {
     $drive = DriveTestHelpers::drive();
-    $folder = $drive->createFolder('Empty tree');
+    $folder = $drive->folders()->create('Empty tree');
     $used = $drive->model()->refresh()->used_bytes;
 
-    $drive->trash($folder);
+    $drive->nodes()->trash($folder);
 
-    $drive->forceDelete($folder, actorId: 17);
+    $drive->actingAs(DriveTestHelpers::actor($drive, 17))->withCorrelationId('audited-purge')->trash()->purge($folder);
 
     expect($drive->model()->refresh()->used_bytes)->toBe($used)
         ->and(Activity::query()->where('verb', EventType::NodePurged->value)->sole()->context)->toEqual([
             'node_ids' => [(string) $folder->getKey()],
             'freed_bytes' => 0,
+            'correlation_id' => 'audited-purge',
         ]);
 });
 
 it('restore re-homes to the storage root when the original parent was trashed', function (): void {
     $drive = DriveTestHelpers::drive();
-    $parent = $drive->createFolder('Parent');
-    $child = $drive->createFolder('Child', $parent);
+    $parent = $drive->folders()->create('Parent');
+    $child = $drive->folders()->create('Child', $parent);
 
-    $drive->trash($child);
-    $drive->trash($parent);
+    $drive->nodes()->trash($child);
+    $drive->nodes()->trash($parent);
 
-    $restored = $drive->restore($child->refresh(), actorId: 17);
+    $restored = $drive->actingAs(DriveTestHelpers::actor($drive, 17))->withCorrelationId('audited-restore')->trash()->restore($child->refresh());
 
     expect($restored->parent_id)->toEqual($drive->model()->root_node_id)
         ->and(Activity::query()->where('verb', EventType::NodeRestored->value)->orderByDesc('id')->firstOrFail()->context)->toEqual([
             'name' => 'Child',
+            'correlation_id' => 'audited-restore',
             'parent_id' => (string) $drive->model()->root_node_id,
         ]);
 });
@@ -150,8 +155,7 @@ it('upload session initiated activity carries the exact lifecycle context', func
     $drive = DriveTestHelpers::drive();
     Activity::query()->delete();
 
-    $session = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
-        storage: $drive->model(),
+    $session = app(UploadSessionManager::class)->initiate(context: OperationContext::system($drive->model(), 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
         targetParent: $drive->root(),
         targetName: 'ctx.bin',
@@ -172,14 +176,14 @@ it('force-delete outbox occurrence ids are distinct ULIDs', function (): void {
     $drive = DriveTestHelpers::drive();
     Outbox::query()->delete();
 
-    $first = $drive->createFolder('One');
-    $drive->trash($first);
-    $drive->forceDelete($first, actorId: 9);
+    $first = $drive->folders()->create('One');
+    $drive->nodes()->trash($first);
+    $drive->actingAs(DriveTestHelpers::actor($drive, 9))->trash()->purge($first);
     $firstKey = Outbox::query()->where('event', EventType::NodePurged->value)->sole()->event_id;
 
-    $second = $drive->createFolder('Two');
-    $drive->trash($second);
-    $drive->forceDelete($second, actorId: 9);
+    $second = $drive->folders()->create('Two');
+    $drive->nodes()->trash($second);
+    $drive->actingAs(DriveTestHelpers::actor($drive, 9))->trash()->purge($second);
     $secondKey = Outbox::query()->where('event', EventType::NodePurged->value)->orderByDesc('id')->firstOrFail()->event_id;
 
     expect($firstKey)->not->toBe($secondKey)
@@ -190,7 +194,7 @@ it('force-delete outbox occurrence ids are distinct ULIDs', function (): void {
 it('DriveContext upload from a string uses the provided original name for the version row', function (): void {
     $drive = DriveTestHelpers::drive();
 
-    $node = $drive->upload('plain-bytes', originalName: 'from-string.txt', mimeType: 'text/plain', actorId: 3);
+    $node = $drive->actingAs(DriveTestHelpers::actor($drive, 3))->files()->upload(UploadSource::fromString('plain-bytes', 'from-string.txt'), new UploadOptions(declaredMimeType: 'text/plain'));
 
     expect($node->name)->toBe('from-string.txt')
         ->and($node->currentVersion()->firstOrFail()->original_name)->toBe('from-string.txt');

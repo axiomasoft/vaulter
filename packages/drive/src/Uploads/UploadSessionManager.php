@@ -22,6 +22,8 @@ use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\OperationContext;
 
 /**
  * The resumable-upload lifecycle coordinator (§2.8 / D16 / M3a). It owns:
@@ -56,17 +58,17 @@ final readonly class UploadSessionManager
      * a UNIQUE upload_id, stamps the TTL, and lets the protocol handler initialise
      * its side (S3 CreateMultipartUpload; a no-op for tus).
      */
-    public function initiate(InitiateUploadInput $data): UploadSession
+    public function initiate(OperationContext $context, InitiateUploadInput $data): UploadSession
     {
         $this->assertWithinMaxBytes($data->totalSizeBytes);
-        $this->assertWithinActiveSessionCap($data->actorId);
+        $this->assertWithinActiveSessionCap($context->actor->ref()->id);
 
         $session = $this->sessions->create([
-            'tenant_id' => $this->tenantId($data),
-            'drive_id' => $data->storage->getKey(),
+            'tenant_id' => $context->drive->tenant_id,
+            'drive_id' => $context->driveId(),
             'upload_id' => (string) Str::uuid(),
-            'target_node_id' => $data->targetNode?->getKey(),
-            'target_parent_id' => $data->targetParent?->getKey(),
+            'target_node_id' => $data->targetNode instanceof Node ? $data->targetNode->getKey() : $data->targetNode,
+            'target_parent_id' => $data->targetParent instanceof Node ? $data->targetParent->getKey() : $data->targetParent,
             'target_name' => $data->targetName,
             'protocol' => $data->protocol,
             'status' => UploadStatus::Initiated,
@@ -75,9 +77,9 @@ final readonly class UploadSessionManager
             'received_bytes' => 0,
             'chunk_size' => $this->driveConfig->chunkSize(),
             'mime_type' => $data->mimeType,
-            'metadata' => $data->metadata === [] ? null : $data->metadata,
+            'metadata' => [...$data->metadata, 'actor_type' => $context->actor->ref()->type, 'expected_sequence' => $data->expectedSequence],
             'expires_at' => Carbon::now()->addHours($this->driveConfig->sessionTtlHours()),
-            'created_by' => $data->actorId,
+            'created_by' => $context->actor->ref()->id,
         ]);
 
         $this->handlerFor($session)->initialise($session);
@@ -85,7 +87,7 @@ final readonly class UploadSessionManager
         $session = $session->refresh();
 
         // F-P1.4-13: the lifecycle audit gap — create had no activity trace at all.
-        event(new UploadInitiated($session, $data->actorId));
+        event(new UploadInitiated($session, $context->actor->ref()->id));
 
         return $session;
     }
@@ -127,6 +129,19 @@ final readonly class UploadSessionManager
     }
 
     /**
+     * @template TResult
+     *
+     * @param  callable(UploadSession): TResult $operation
+     * @return TResult
+     */
+    public function withSession(UploadSession $session, callable $operation): mixed
+    {
+        return $this->database->transaction(function () use ($session, $operation): mixed {
+            return $operation($this->sessions->acquireForPatch($session));
+        }, attempts: 1);
+    }
+
+    /**
      * Drive assemble→commit INSIDE the same critical section as a tus PATCH (VLT-REMED
      * P5.2 / R-11). The controller used to do it in the open: `markAssembled()` then
      * `CommitUploadAction::execute()`, each on its own connection-level transaction, with
@@ -153,6 +168,10 @@ final readonly class UploadSessionManager
         return $this->database->transaction(function () use ($session, $commit): mixed {
             $locked = $this->sessions->acquireForPatch($session);
 
+            if ($locked->status === UploadStatus::Committed) {
+                return $commit($locked);
+            }
+
             if ($locked->status !== UploadStatus::Assembled) {
                 if (!$locked->status->canTransitionTo(UploadStatus::Assembled)) {
                     throw UploadConflictException::forClosedSession($locked->upload_id);
@@ -162,7 +181,7 @@ final readonly class UploadSessionManager
             }
 
             return $commit($locked);
-        });
+        }, attempts: 1);
     }
 
     /**
@@ -301,10 +320,5 @@ final readonly class UploadSessionManager
                 'status' => "Cannot transition upload session from {$session->status->value} to {$target->value}.",
             ]);
         }
-    }
-
-    private function tenantId(InitiateUploadInput $data): int|string|null
-    {
-        return $data->storage->tenant_id;
     }
 }

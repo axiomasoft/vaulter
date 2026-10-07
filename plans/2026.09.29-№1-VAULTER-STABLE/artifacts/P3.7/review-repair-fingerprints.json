@@ -1,0 +1,6 @@
+{
+  "packages/drive/src/Content/ScanWorkReconciler.php": "98412e1b63ef88bb38f460498b8ffa1d3a7a4975e465e84b950de0c006543800",
+  "packages/drive/src/Content/UploadCleanupReconciler.php": "39f60e8b1b782fd7bc30245449ae3f874471fcf311261171a84e6deb8c9c68b7",
+  "packages/drive/tests/Uploads/P3/ScanWorkRecoveryTest.php": "b10e11493abc03ba5e47fe938aab8e54a37f8a05f1c8b8ed1ec55b293a5ecd74",
+  "packages/drive/tests/Uploads/P3/CompleteUploadIdempotencyTest.php": "f23d2dffa66eb17d7cf1850b06b03dffc5a987e2dc6c09c528ccb0884f4b09a7"
+}

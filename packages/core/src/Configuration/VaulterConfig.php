@@ -11,6 +11,11 @@ use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Cas\Blob;
+use Vaulter\Models\Content\ScanBackfillRun;
+use Vaulter\Models\Content\ScanEvidenceRecord;
+use Vaulter\Models\Content\ScanObligation;
+use Vaulter\Models\Content\ScanPolicyState;
+use Vaulter\Models\Content\ScanRequest;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\FileRevision;
@@ -59,10 +64,15 @@ final readonly class VaulterConfig
         return (bool) $this->config->get('vaulter.extra_data.enabled', true);
     }
 
-    /** @return ($key is 'drive' ? class-string<Drive> : ($key is 'node' ? class-string<Node> : ($key is 'file' ? class-string<File> : ($key is 'file_revision' ? class-string<FileRevision> : ($key is 'file_revision_blob' ? class-string<FileRevisionBlob> : ($key is 'blob' ? class-string<Blob> : ($key is 'grant' ? class-string<NodeGrant> : ($key is 'node_share' ? class-string<NodeShare> : ($key is 'activity' ? class-string<Activity> : ($key is 'outbox' ? class-string<Outbox> : ($key is 'webhook_endpoint' ? class-string<WebhookEndpoint> : ($key is 'webhook_delivery' ? class-string<WebhookDelivery> : class-string<Model>)))))))))))) */
+    /** @return ($key is 'scan_backfill_run' ? class-string<ScanBackfillRun> : ($key is 'scan_policy_state' ? class-string<ScanPolicyState> : ($key is 'scan_evidence' ? class-string<ScanEvidenceRecord> : ($key is 'scan_request' ? class-string<ScanRequest> : ($key is 'scan_obligation' ? class-string<ScanObligation> : ($key is 'drive' ? class-string<Drive> : ($key is 'node' ? class-string<Node> : ($key is 'file' ? class-string<File> : ($key is 'file_revision' ? class-string<FileRevision> : ($key is 'file_revision_blob' ? class-string<FileRevisionBlob> : ($key is 'blob' ? class-string<Blob> : ($key is 'grant' ? class-string<NodeGrant> : ($key is 'node_share' ? class-string<NodeShare> : ($key is 'activity' ? class-string<Activity> : ($key is 'outbox' ? class-string<Outbox> : ($key is 'webhook_endpoint' ? class-string<WebhookEndpoint> : ($key is 'webhook_delivery' ? class-string<WebhookDelivery> : class-string<Model>))))))))))))))))) */
     public function model(string $key): string
     {
         $defaults = [
+            'scan_obligation' => ScanObligation::class,
+            'scan_request' => ScanRequest::class,
+            'scan_evidence' => ScanEvidenceRecord::class,
+            'scan_policy_state' => ScanPolicyState::class,
+            'scan_backfill_run' => ScanBackfillRun::class,
             'drive' => Drive::class,
             'node' => Node::class,
             'file' => File::class,

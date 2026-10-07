@@ -1,0 +1,53 @@
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Uploads\P3\ScanPolicyTransitionTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit SEC-POLICY rejects enabled unactivated drives without allocating[39m[90m…[39m [90m0.35s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-POLICY preserves first new content boundary across reactivat[39m[90m…[39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-R01 all content blocks legacy bytes until versioned rescan e[39m[90m…[39m [90m0.48s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-R02 forged timestamps cannot exempt a new admission and fail[39m[90m…[39m [90m0.50s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-POLICY-two-boundaries evaluates global and profile eligibili[39m[90m…[39m [90m0.37s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-R05 trash restoration preserves admission while current scan[39m[90m…[39m [90m0.29s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-POLICY missing scanner and conflicting required aliases fail[39m[90m…[39m [90m0.17s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-POLICY rejects sync null or missing broker retry time with a[39m[90m…[39m [90m0.16s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-POLICY rejects sync null or missing broker retry time with a[39m[90m…[39m [90m0.16s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-POLICY rejects sync null or missing broker retry time with a[39m[90m…[39m [90m0.16s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-POLICY rejects sync null or missing broker retry time with a[39m[90m…[39m [90m0.16s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-POLICY permits asynchronous scanner work only with actual or[39m[90m…[39m [90m0.16s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-POLICY off without a scanner leaves unrelated broker timing[39m[90m… [39m [90m0.16s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Uploads\P3\DestinationScanPolicyTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit SEC-R03 COPY owns fresh admission and clean evidence without cop[39m[90m…[39m [90m0.63s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-R03 exempt legacy COPY receives required destination work an[39m[90m…[39m [90m0.38s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-R04 revision restore creates fresh admission and its own des[39m[90m…[39m [90m0.35s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-R06 legacy infected source refuses COPY and same blob reuplo[39m[90m…[39m [90m0.18s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-R03 folder COPY creates every child obligation and later fai[39m[90m…[39m [90m0.68s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Uploads\P3\ScanWorkRecoveryTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit SEC-BACKFILL materializes bounded durable activation work and ch[39m[90m…[39m [90m0.45s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-RECOVERY-bounds rejects contradictory command scope and dry[39m[90m… [39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-R09 committed work survives missing delivery and reconciles[39m[90m… [39m [90m0.44s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-R13 outer rollback removes admission work revision and queue[39m[90m…[39m [90m0.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-RECOVERY ledger deduplicates old requests and terminal exhau[39m[90m…[39m [90m0.35s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-RECOVERY-bounds signed cursors resume one revision and rejec[39m[90m…[39m [90m0.52s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-BACKFILL new content preparation retains legacy work at same[39m[90m…[39m [90m0.35s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-POLICY-superseded replacement activation terminates old work[39m[90m…[39m [90m0.36s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-RECOVERY-bounds optional off rescan rejects sync before SQL[39m[90m… [39m [90m0.16s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Uploads\P3\CompleteUploadIdempotencyTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit SEC-R19-replay replays persisted exact revision after a newer he[39m[90m…[39m [90m0.33s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-CLEANUP-input-fingerprint rejects changed completion intent[39m[90m… [39m [90m0.26s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-R13 keeps protocol bytes until outer commit and retains them[39m[90m…[39m [90m0.31s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-CLEANUP-success-before-flag-clear treats missing committed s[39m[90m…[39m [90m0.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-CLEANUP-delete-failure keeps failed postcommit deletion reco[39m[90m…[39m [90m0.27s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-CLEANUP-sniff-throw closes the acquired protocol reader and[39m[90m… [39m [90m0.19s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit backfills only provable legacy revision pointers and never guess[39m[90m…[39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-CLEANUP-revoked-result requires fresh View and rejects anoth[39m[90m…[39m [90m0.17s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Uploads\P3\ContentDeliveryBoundaryTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit SEC-R17 checks pending head, explicit older clean, metadata and[39m[90m… [39m [90m0.82s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-R17 PHP authorization is fresh with a retained model and des[39m[90m…[39m [90m0.26s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-R16 strict refuses bearer URLs before touching a signer[39m[90m      [39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-R16 explicit direct delivery binds exact immutable bytes and[39m[90m…[39m [90m0.18s[39m  
+
+  [90mTests:[39m    [32;1m39 passed[39;22m[90m (169 assertions)[39m
+  [90mDuration:[39m [39m12.21s[39m
+

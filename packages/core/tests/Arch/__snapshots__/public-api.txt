@@ -27,6 +27,11 @@ Vaulter\Contracts\Cas\BlobStore
   detach(\Vaulter\Models\Drive\FileRevision $version, \Vaulter\Models\Cas\Blob $blob, string $role = 'data', int $ordinal = 0): void
   read(\Vaulter\Models\Cas\Blob $blob): mixed
 
+Vaulter\Contracts\Cas\ContentScanner
+  key(): string
+  scan(\Vaulter\Content\ScanInput $input): \Vaulter\Content\ScanResult
+  version(): string
+
 Vaulter\Contracts\Cas\ContentStore
   delete(string $key, ?string $disk = null): void
   exists(string $key, ?string $disk = null): bool
@@ -34,6 +39,9 @@ Vaulter\Contracts\Cas\ContentStore
   keyFor(\Vaulter\ValueObjects\Cas\BlobScope $scope, string $sha256): string
   promote(\Vaulter\Contracts\Cas\StagedObject $staged, string $key, ?string $disk = null): void
   stage(mixed $stream): \Vaulter\Contracts\Cas\StagedObject
+
+Vaulter\Contracts\Cas\DirectContentUrlSigner
+  sign(\Vaulter\Content\ImmutableContentIdentity $content, \DateTimeImmutable $expiresAt): \Vaulter\Content\SignedContentUrl
 
 Vaulter\Contracts\Cas\ListableContentStore
   lastModified(string $key, ?string $disk = null): ?int
@@ -59,23 +67,26 @@ Vaulter\Contracts\Cas\StorageDriver
   temporaryUrl(string $key, \DateTimeInterface $expiresAt, ?string $disk = null): ?string
 
 Vaulter\Contracts\Drive\DriveHandle
-  copy(\Vaulter\Models\Drive\Node $node, ?\Vaulter\Models\Drive\Node $into = null, ?string $name = null, int|null|string $actorId = null): \Vaulter\Models\Drive\Node
-  createFolder(string $name, ?\Vaulter\Models\Drive\Node $parent = null, int|null|string $actorId = null): \Vaulter\Models\Drive\Node
-  forceDelete(\Vaulter\Models\Drive\Node $node, int|null|string $actorId = null): void
-  list(?\Vaulter\Models\Drive\Node $folder = null): \Illuminate\Database\Eloquent\Collection
+  access(): \Vaulter\Contracts\Access\AccessOperations
+  actingAs(\Illuminate\Contracts\Auth\Access\Authorizable $user): \static
+  activity(): \Vaulter\Contracts\Activity\ActivityOperations
+  actor(): \Vaulter\ValueObjects\Access\Actor
+  asSystem(string $reason): \static
+  extension(string $operations): object
+  files(): \Vaulter\Contracts\Drive\FileOperations
+  folders(): \Vaulter\Contracts\Drive\FolderOperations
   model(): \Vaulter\Models\Drive\Drive
-  move(\Vaulter\Models\Drive\Node $node, ?\Vaulter\Models\Drive\Node $into = null, int|null|string $actorId = null): \Vaulter\Models\Drive\Node
+  nodes(): \Vaulter\Contracts\Drive\NodeOperations
   profile(): \Vaulter\Profiles\Profile
-  rename(\Vaulter\Models\Drive\Node $node, string $name, int|null|string $actorId = null): \Vaulter\Models\Drive\Node
-  restore(\Vaulter\Models\Drive\Node $node, int|null|string $actorId = null): \Vaulter\Models\Drive\Node
   root(): \Vaulter\Models\Drive\Node
-  trash(\Vaulter\Models\Drive\Node $node, int|null|string $actorId = null): \Vaulter\Models\Drive\Node
-  upload(mixed $source, ?\Vaulter\Models\Drive\Node $into = null, ?string $name = null, ?string $mimeType = null, ?string $originalName = null, int|null|string $actorId = null): \Vaulter\Models\Drive\Node
-  uploadVersion(\Vaulter\Models\Drive\Node $target, mixed $source, ?string $mimeType = null, ?string $originalName = null, int|null|string $actorId = null): \Vaulter\Models\Drive\Node
+  shares(): \Vaulter\Contracts\Sharing\ShareOperations
+  trash(): \Vaulter\Contracts\Drive\TrashOperations
+  withCorrelationId(string $correlationId): \static
 
 Vaulter\Contracts\Drive\DriveHandleFactory
-  forOwner(\Illuminate\Database\Eloquent\Model $entity, string $panel): \Vaulter\Contracts\Drive\DriveHandle
-  forStorage(\Vaulter\Models\Drive\Drive $storage): \Vaulter\Contracts\Drive\DriveHandle
+  findForOwner(\Illuminate\Database\Eloquent\Model $owner, string $profile): ?\Vaulter\Contracts\Drive\DriveHandle
+  forDrive(\Vaulter\Models\Drive\Drive $drive): \Vaulter\Contracts\Drive\DriveHandle
+  forOwner(\Illuminate\Database\Eloquent\Model $owner, string $profile): \Vaulter\Contracts\Drive\DriveHandle
 
 Vaulter\Contracts\Drive\FileOperations
   addRevision(\Vaulter\Models\Drive\Node|int|string $file, \Vaulter\Data\Drive\UploadSource $source, ?\Vaulter\Data\Drive\RevisionOptions $options = null): \Vaulter\Models\Drive\FileRevision
@@ -204,6 +215,8 @@ Vaulter\Configuration\DatabaseConfig
 
 Vaulter\Configuration\DownloadsConfig
   __construct(\Illuminate\Contracts\Config\Repository $config)
+  deliveryMode(): string
+  directTtlSeconds(): int
   inlineMimeTypes(): array
 
 Vaulter\Configuration\IdsConfig
@@ -308,7 +321,7 @@ Vaulter\Access\AclFolder
 Vaulter\Access\ExactListing
   __construct(\Vaulter\Configuration\ListingConfig $listingConfig, \Vaulter\Access\AccessResolver $access, \Vaulter\Database\VaulterDatabase $database, \Illuminate\Contracts\Encryption\Encrypter $encrypter)
   grantSetFor(\Vaulter\Models\Drive\Node $node): \Vaulter\Access\ValueObjects\GrantSet
-  page(?\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Illuminate\Database\Eloquent\Builder $candidates, array $order, int $perPage, ?string $cursor, string $context): \Vaulter\Data\Drive\NodePage
+  page(\Illuminate\Contracts\Auth\Access\Authorizable|\Vaulter\Operations\OperationContext|null $actor, \Illuminate\Database\Eloquent\Builder $candidates, array $order, int $perPage, ?string $cursor, string $context): \Vaulter\Data\Drive\NodePage
 
 Vaulter\Data\Drive\NodePage
   __construct(array $items, ?string $nextCursor, int $scanned)
@@ -599,6 +612,7 @@ Vaulter\Profiles\UploadPolicy
 
 Vaulter\Content\ScanPolicySpec
   __construct(string $predicateKey, \Vaulter\Enums\Cas\ScanMode $mode, string $scannerKey, string $scannerVersion, string $policyVersion, ?string $rolloutKey = null)
+  configFingerprint(): string
   requiresScan(int $admissionSequence, ?int $boundarySequence): bool
   specKey(): string
   readonly ?string $rolloutKey
@@ -752,15 +766,12 @@ Vaulter\Enums\Events\EventType
   ShareRevoked = share.revoked
 
 FACADE Vaulter\Facades\Vaulter
-  static DocumentExporter exporter(string $format)
-  static DriveHandle for(Model $entity, ?string $panel = null)
-  static DriveHandle forStorage(Drive $storage)
+  static DriveHandle drive(Model $ownerOrDrive, ?string $profile = null)
+  static DriveHandle|null findDrive(Model $owner, ?string $profile = null)
   static FileHandlerRegistry handlers()
+  static PermissionDriverManager permissions()
   static ProfileRegistry profiles()
-  static array<string, array<string, mixed>> documentTypes()
-  static list<string> exporterFormats()
-  static void registerDocumentType(string $type, array<string, mixed> $definition)
-  static void registerExporter(DocumentExporter|class-string<DocumentExporter> $exporter)
+  static mixed withoutTenancy(Closure $callback)
 
 Vaulter\Events\Access\NodeGrantCreated
   __construct(\Vaulter\Models\Access\NodeGrant $grant, int|null|string $actorId = null, ?string $eventId = null, ?\Vaulter\ValueObjects\Access\ActorRef $actor = null, ?string $correlationId = null)

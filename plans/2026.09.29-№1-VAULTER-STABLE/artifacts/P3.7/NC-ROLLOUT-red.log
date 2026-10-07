@@ -1,0 +1,24 @@
+
+  [39;41;1m FAIL [39;49;22m[39m Tests\Uploads\P3\ScanPolicyTransitionTest[39m
+  [31;1m⨯[39;22m[90m [39m[90mit SEC-POLICY-two-boundaries evaluates global and profile eligibili[39m[90m…[39m [90m0.54s[39m  
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Uploads\P3\ScanPolicyTransitionTest[22m [90m>[39m it SEC-POLICY-two-bou…   
+[39;1m  Exception "Vaulter\Exceptions\Files\ContentUnavailableException" not thrown.[39;22m
+
+  at [32mtests/Uploads/P3/ScanPolicyTransitionTest.php[39m:[32m144[39m
+    140▕     [$global, $profile] = app(ScanPolicyResolver::class)->forDrive($drive);
+    141▕     expect(app(ScanPolicyResolver::class)->required($revision, $global))->toBeTrue()
+    142▕         ->and(app(ScanPolicyResolver::class)->required($revision, $profile))->toBeFalse();
+    143▕     expect(fn () => app(ContentAvailabilityGuard::class)->assertAvailable($context, $node, $revision))
+  ➜ 144▕         ->toThrow(ContentUnavailableException::class);
+    145▕ });
+    146▕ 
+    147▕ it('SEC-R05 trash restoration preserves admission while current scan policy blocks bytes', function (): void {
+    148▕     Storage::fake('local');
+
+  [33m1   [39m[39;1mtests/Uploads/P3/ScanPolicyTransitionTest.php[39;22m:[39;1m144[39;22m
+
+
+  [90mTests:[39m    [31;1m1 failed[39;22m[90m (3 assertions)[39m
+  [90mDuration:[39m [39m0.59s[39m
+

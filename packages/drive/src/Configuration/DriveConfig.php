@@ -14,6 +14,52 @@ final readonly class DriveConfig
 {
     public function __construct(private Repository $config) {}
 
+    public function scanQueue(): string
+    {
+        $queue = $this->config->get('vaulter-drive.uploads.scan.queue', 'default');
+        if (!is_string($queue) || trim($queue) === '') {
+            throw new InvalidConfigurationException('Scan queue must be nonempty.');
+        }
+
+        return $queue;
+    }
+
+    public function scanWork(string $key): int
+    {
+        $defaults = ['lease_seconds' => 120, 'scanner_timeout_seconds' => 60, 'max_attempts' => 5,
+            'publish_cooldown_seconds' => 30, 'recovery_batch' => 100, 'cleanup_batch' => 100];
+        if (!isset($defaults[$key])) {
+            throw new InvalidConfigurationException('Unknown scan work setting.');
+        }
+        $value = $this->config->get('vaulter-drive.uploads.scan.'.$key, $defaults[$key]);
+        if (!is_int($value) || $value < 1 || (str_ends_with($key, '_batch') && $value > 1000)) {
+            throw new InvalidConfigurationException('Invalid scan work '.$key.'.');
+        }
+
+        return $value;
+    }
+
+    public function validateScanWork(bool $requireBroker = false): void
+    {
+        $this->scanQueue();
+        foreach (['lease_seconds', 'scanner_timeout_seconds', 'max_attempts', 'publish_cooldown_seconds', 'recovery_batch', 'cleanup_batch'] as $key) {
+            $this->scanWork($key);
+        }
+        $connection = $this->config->get('queue.default');
+        if (!is_string($connection) || $connection === '') {
+            throw new InvalidConfigurationException('Queue connection must be configured.');
+        }
+        $driver = $this->config->get('queue.connections.'.$connection.'.driver');
+        $retry = $this->config->get('queue.connections.'.$connection.'.retry_after', $requireBroker ? null : 180);
+        if ($requireBroker && (!is_string($driver) || in_array($driver, ['sync', 'null'], true))) {
+            throw new InvalidConfigurationException('Scanning requires an asynchronous queue connection.');
+        }
+        if ($this->scanWork('scanner_timeout_seconds') >= 90 || $this->scanWork('lease_seconds') <= 90
+            || ($requireBroker && (!is_int($retry) || $retry < 180 || $retry <= $this->scanWork('lease_seconds')))) {
+            throw new InvalidConfigurationException('Scanner deadline, job timeout, lease and broker retry_after must be ordered.');
+        }
+    }
+
     public function defaultQuota(): ?int
     {
         $value = $this->config->get('vaulter-drive.quota.default_bytes');

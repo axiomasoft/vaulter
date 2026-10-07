@@ -1,0 +1,38 @@
+{
+  "findings": [
+    "UTC scheduling and bulk-write timestamps",
+    "Cleanup bounded retry schedule"
+  ],
+  "owning_correction_paths": [
+    "packages/drive/src/Content/ScanWorkReconciler.php",
+    "packages/drive/src/Content/UploadCleanupReconciler.php",
+    "packages/drive/tests/Uploads/P3/ScanWorkRecoveryTest.php",
+    "packages/drive/tests/Uploads/P3/CompleteUploadIdempotencyTest.php"
+  ],
+  "proof": {
+    "original_isolated_regressions": {
+      "exit": 1,
+      "failed": 3,
+      "skipped": 0,
+      "log": "review-repair-regression-red.log"
+    },
+    "corrected_regressions": {
+      "exit": 0,
+      "passed": 3,
+      "assertions": 59,
+      "log": "review-repair-new-tests.log"
+    },
+    "affected_closure": {
+      "exit": 0,
+      "passed": 8,
+      "assertions": 91,
+      "log": "review-repair-closure.log"
+    },
+    "pgsql_non_utc": {
+      "exit": 0,
+      "passed": 2,
+      "log": "review-repair-pg-utc.log"
+    }
+  },
+  "re_review": "round2 bounded; exact grok-4.7/high; no context parameter"
+}

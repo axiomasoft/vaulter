@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Http\Resources;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
@@ -29,6 +30,13 @@ final class DocumentRevisionResource extends JsonResource
         $this->withContent = $with;
 
         return $this;
+    }
+
+    public function withResponse(Request $request, JsonResponse $response): void
+    {
+        if ($this->withContent) {
+            $response->headers->set('Cache-Control', 'private, no-store');
+        }
     }
 
     /**

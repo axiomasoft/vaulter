@@ -9,6 +9,7 @@ use Vaulter\Documents\Export\DefaultExportFilenameResolver;
 use Vaulter\Documents\Export\NodeExportService;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\OperationContext;
 
 /*
  * P4.5 / F-P3.1-04: the export filename scheme becomes a container-bound
@@ -33,7 +34,7 @@ beforeEach(function (): void {
 it('binds ExportFilenameResolver to the default scheme unchanged, characterisation guard', function (): void {
     expect(app(ExportFilenameResolver::class))->toBeInstanceOf(DefaultExportFilenameResolver::class);
 
-    $export = app(NodeExportService::class)->export($this->node, 'html');
+    $export = app(NodeExportService::class)->export(OperationContext::system($this->node->storage()->firstOrFail(), 'export fixture'), $this->node, 'html');
 
     expect($export->filename)->toBe('Report.html');
 });
@@ -53,7 +54,7 @@ it('lets a host rebind ExportFilenameResolver to override the export filename sc
     // memoised/hardcoded inside the service.
     app()->forgetInstance(NodeExportService::class);
 
-    $export = app(NodeExportService::class)->export($this->node, 'html');
+    $export = app(NodeExportService::class)->export(OperationContext::system($this->node->storage()->firstOrFail(), 'export fixture'), $this->node, 'html');
 
     expect($export->filename)->toBe('custom-Report.html');
 });

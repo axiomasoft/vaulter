@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Models\Drive;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
@@ -14,6 +16,9 @@ use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
+use Vaulter\Models\Content\ScanEvidenceRecord;
+use Vaulter\Models\Content\ScanObligation;
+use Vaulter\Models\Content\ScanUtcDateTime;
 
 /**
  * An immutable file version (master plan §2.4): a monotonic number per file
@@ -21,23 +26,25 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  * edges in v_file_revision_blobs are the GC truth. Swappable via
  * configuration key vaulter.models.file_revision.
  *
- * @property int|string      $id
- * @property int|string|null $tenant_id
- * @property int|string      $file_id
- * @property int             $number
- * @property int|string|null $blob_id
- * @property int|string|null $manifest_blob_id
- * @property string          $sha256
- * @property int             $size_bytes
- * @property string|null     $mime_type
- * @property string|null     $declared_mime_type
- * @property string          $scan_status
- * @property string          $original_name
- * @property string          $status
- * @property bool            $keep_forever
- * @property int|string|null $created_by
- * @property Carbon|null     $created_at
- * @property Carbon|null     $committed_at
+ * @property int                  $scan_admission_sequence
+ * @property CarbonImmutable|null $quarantined_at
+ * @property int|string           $id
+ * @property int|string|null      $tenant_id
+ * @property int|string           $file_id
+ * @property int                  $number
+ * @property int|string|null      $blob_id
+ * @property int|string|null      $manifest_blob_id
+ * @property string               $sha256
+ * @property int                  $size_bytes
+ * @property string|null          $mime_type
+ * @property string|null          $declared_mime_type
+ * @property string               $scan_status
+ * @property string               $original_name
+ * @property string               $status
+ * @property bool                 $keep_forever
+ * @property int|string|null      $created_by
+ * @property Carbon|null          $created_at
+ * @property Carbon|null          $committed_at
  */
 class FileRevision extends Model
 {
@@ -103,6 +110,18 @@ class FileRevision extends Model
             ->withPivot(['role', 'ordinal', 'offset_bytes', 'length_bytes']);
     }
 
+    /** @return HasMany<ScanEvidenceRecord, $this> */
+    public function scanEvidence(): HasMany
+    {
+        return $this->hasMany(app(VaulterConfig::class)->model('scan_evidence'), 'revision_id');
+    }
+
+    /** @return HasMany<ScanObligation, $this> */
+    public function scanObligations(): HasMany
+    {
+        return $this->hasMany(app(VaulterConfig::class)->model('scan_obligation'), 'revision_id');
+    }
+
     /**
      * @return array<string, string>
      */
@@ -110,6 +129,8 @@ class FileRevision extends Model
     protected function casts(): array
     {
         return [
+            'scan_admission_sequence' => PHP_INT_SIZE === 8 ? 'integer' : 'string',
+            'quarantined_at' => ScanUtcDateTime::class,
             'number' => 'integer',
             'size_bytes' => 'integer',
             'keep_forever' => 'boolean',

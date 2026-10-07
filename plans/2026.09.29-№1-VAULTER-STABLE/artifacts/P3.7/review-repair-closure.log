@@ -1,0 +1,16 @@
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Uploads\P3\ScanWorkRecoveryTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit SEC-R09 committed work survives missing delivery and reconciles[39m[90m… [39m [90m0.54s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-R13 outer rollback removes admission work revision and queue[39m[90m…[39m [90m0.29s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-RECOVERY-UTC selects due work and expired leases by UTC in e[39m[90m…[39m [90m0.43s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-RECOVERY-UTC selects due work and expired leases by UTC in e[39m[90m…[39m [90m0.42s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Uploads\P3\CompleteUploadIdempotencyTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit SEC-R13 keeps protocol bytes until outer commit and retains them[39m[90m…[39m [90m0.34s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-CLEANUP-success-before-flag-clear treats missing committed s[39m[90m…[39m [90m0.26s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-CLEANUP-delete-failure keeps failed postcommit deletion reco[39m[90m…[39m [90m0.27s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-CLEANUP-backoff follows the bounded retry schedule without r[39m[90m…[39m [90m0.33s[39m  
+
+  [90mTests:[39m    [32;1m8 passed[39;22m[90m (91 assertions)[39m
+  [90mDuration:[39m [39m2.96s[39m
+

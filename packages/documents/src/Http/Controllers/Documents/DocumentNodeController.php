@@ -8,6 +8,7 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Str;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Contracts\Handlers\NodePresenter;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
@@ -27,14 +28,18 @@ use Vaulter\Documents\Http\Resources\DocumentRevisionResource;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Http\Resources\Drive\NodeResource;
 use Vaulter\Http\Support\TrashGuard;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Repositories\Drive\NodeReadRepository;
+use Vaulter\ValueObjects\Access\Actor;
 
 /**
  * The Documents REST surface over the M4a document-node domain (§5 / §7): create a
@@ -92,9 +97,8 @@ final class DocumentNodeController extends Controller
      */
     public function content(Request $request, Node $node): DocumentRevisionResource
     {
-        $this->guardDocument($request, Ability::View, $node);
-
-        $head = $this->versions->head($node) ?? $this->versions->latest($node);
+        $node = $this->exports->assertContentAvailable($this->contentContext($request, $node), $node);
+        $head = $this->versions->head($node);
 
         if ($head === null) {
             abort(404);
@@ -206,7 +210,7 @@ final class DocumentNodeController extends Controller
         $format = $request->string('format')->toString();
         $format = $format !== '' ? $format : 'html';
 
-        return new JsonResponse(['data' => $this->exports->export($node, $format)->toArray()]);
+        return new JsonResponse(['data' => $this->exports->export($this->contentContext($request, $node), $node, $format)->toArray()], headers: ['Cache-Control' => 'private, no-store']);
     }
 
     /**
@@ -225,6 +229,14 @@ final class DocumentNodeController extends Controller
         }
 
         return $node;
+    }
+
+    private function contentContext(Request $request, Node $node): OperationContext
+    {
+        $actor = $this->authorizable($request) ?? throw MissingActorException::required();
+        $drive = $node->storage()->first() ?? throw NodeNotFoundException::forId($node->id);
+
+        return new OperationContext($drive, Actor::user($actor), (string) Str::ulid());
     }
 
     private function perPage(Request $request): int

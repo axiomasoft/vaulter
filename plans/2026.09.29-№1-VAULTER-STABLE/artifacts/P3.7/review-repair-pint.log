@@ -1,0 +1,1 @@
+{"tool":"pint","result":"fixed","files":[{"path":"tests\/Uploads\/P3\/ScanWorkRecoveryTest.php","fixers":["class_definition","fully_qualified_strict_types","braces_position","no_extra_blank_lines","ordered_imports"]},{"path":"tests\/Uploads\/P3\/CompleteUploadIdempotencyTest.php","fixers":["no_extra_blank_lines"]}]}{"tool":"pint","result":"passed"}

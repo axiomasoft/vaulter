@@ -1,0 +1,24 @@
+
+  [39;41;1m FAIL [39;49;22m[39m Packages\core\tests\Content\ScanEvidenceBoundaryTest[39m
+  [31;1m⨯[39;22m[90m [39m[90mit SEC-R06 reuses only exact same-drive clean evidence and revocati[39m[90m…[39m [90m0.52s[39m  
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mPackages\core\tests\Content\ScanEvidenceBoundaryTest[22m [90m>[39m it SEC-R06…   
+[39;1m  Exception "LogicException" not thrown.[39;22m
+
+  at [32mpackages/core/tests/Content/ScanEvidenceBoundaryTest.php[39m:[32m164[39m
+    160▕     [$foreignDrive, $foreignRevision, , $foreignContext] = scanBoundaryFixture($blob);
+    161▕     $foreignWork = $db->transaction(fn () => $repository->ensure($foreignRevision, $spec, (string) Str::uuid(), $foreignContext));
+    162▕     expect($foreignWork->state)->toBe('pending');
+    163▕     expect(fn () => $db->transaction(fn () => app(ScanEvidenceRepository::class)->reuse($foreignRevision, $sourceEvidence, $spec, $foreignWork)))
+  ➜ 164▕         ->toThrow(LogicException::class);
+    165▕     // Equality on spec_key is independently significant; a persisted corrupt
+    166▕     // key with unchanged scanner identifiers cannot be inferred as compatible.
+    167▕     $sourceRecord = ScanEvidenceRecord::query()->whereKey($sourceEvidence->id)->firstOrFail();
+    168▕     $sourceRecord->forceFill(['spec_key' => str_repeat('e', 64)])->save();
+
+  [33m1   [39m[39;1mpackages/core/tests/Content/ScanEvidenceBoundaryTest.php[39;22m:[39;1m164[39;22m
+
+
+  [90mTests:[39m    [31;1m1 failed[39;22m[90m (6 assertions)[39m
+  [90mDuration:[39m [39m0.59s[39m
+

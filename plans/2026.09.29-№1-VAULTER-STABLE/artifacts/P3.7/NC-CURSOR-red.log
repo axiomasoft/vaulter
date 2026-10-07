@@ -1,0 +1,26 @@
+
+  [39;41;1m FAIL [39;49;22m[39m Tests\Uploads\P3\ScanWorkRecoveryTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit SEC-RECOVERY-bounds rejects contradictory command scope and dry[39m[90m… [39m [90m0.21s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mit SEC-RECOVERY-bounds signed cursors resume one revision and rejec[39m[90m…[39m [90m0.46s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-RECOVERY-bounds optional off rescan rejects sync before SQL[39m[90m… [39m [90m0.16s[39m  
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Uploads\P3\ScanWorkRecoveryTest[22m [90m>[39m it SEC-RECOVERY-bounds si…   
+[39;1m  Failed asserting that 0 is identical to 2.[39;22m
+
+  at [32mtests/Uploads/P3/ScanWorkRecoveryTest.php[39m:[32m182[39m
+    178▕     $first = json_decode(Artisan::output(), true);
+    179▕     expect($first['created'])->toBe(1)->and($first['next_cursor'])->not->toBeNull();
+    180▕     $cursor = $first['next_cursor'];
+    181▕     $tampered = substr($cursor, 0, -1).(str_ends_with($cursor, '0') ? '1' : '0');
+  ➜ 182▕     expect(Artisan::call('vaulter:scan-rescan', [...$options, '--after' => $tampered]))->toBe(2);
+    183▕     $class = app(VaulterConfig::class)->model('scan_obligation');
+    184▕     expect($class::query()->count())->toBe(1);
+    185▕     expect(Artisan::call('vaulter:scan-rescan', [...$options, '--after' => $cursor]))->toBe(0);
+    186▕     expect($class::query()->count())->toBe(2);
+
+  [33m1   [39m[39;1mtests/Uploads/P3/ScanWorkRecoveryTest.php[39;22m:[39;1m182[39;22m
+
+
+  [90mTests:[39m    [31;1m1 failed[39;22m[90m,[39m[39m [39m[32;1m2 passed[39;22m[90m (13 assertions)[39m
+  [90mDuration:[39m [39m0.90s[39m
+

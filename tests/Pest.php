@@ -43,12 +43,16 @@ uses(TestCase::class, RefreshDatabase::class)->in(
     $core.'/Feature',
     $core.'/Providers',
     $core.'/Profiles',
-    $core.'/Schema',
+    $core.'/Content',
     $core.'/Sharing',
     $core.'/Support',
     $core.'/Configuration',
     $core.'/Webhooks',
 );
+
+// The additive sequence carrier owns only its shadow schema and real FK enforcement.
+$ordinarySchemaTests = array_values(array_filter(glob($core.'/Schema/*Test.php'), static fn (string $path): bool => !in_array(basename($path), ['NodeSequenceSchemaTest.php', 'ScanEvidenceSchemaTest.php'], true)));
+uses(TestCase::class, RefreshDatabase::class)->in(...$ordinarySchemaTests);
 
 // The spatie-driver tests boot the package alongside spatie/laravel-permission with
 // the v8 teams feature; kept in their own top-level folder so the Access binding

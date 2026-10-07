@@ -1,0 +1,155 @@
+{
+  "summary": "Context-first upload extension/actions remove trusted DTO storage/actor, authorize current owner/tenant/target and replay View. Immutable preparation once, atomic CAS pointers+fingerprint+cleanup flag, outer-commit-only recoverable cleanup. Legacy replay only provable stored revision/blob/edge. HTTP tus/S3 route extension. New durable cleanup and real ForkRace/SIGKILL tests.",
+  "changed_paths": [
+    "packages/drive/src/Actions/Uploads/CompleteUploadAction.php",
+    "packages/drive/src/Actions/Uploads/AbortUploadAction.php",
+    "packages/drive/src/Actions/Uploads/InitiateUploadAction.php",
+    "packages/drive/src/Content/UploadCleanupReconciler.php",
+    "packages/drive/src/Data/Uploads/InitiateUploadInput.php",
+    "packages/drive/src/Http/Controllers/Uploads/S3MultipartProtocolController.php",
+    "packages/drive/src/Http/Controllers/Uploads/TusProtocolController.php",
+    "packages/drive/src/Models/Uploads/UploadSession.php",
+    "packages/drive/src/Repositories/Uploads/UploadSessionStoreRepository.php",
+    "packages/drive/src/Uploads/UploadSessionManager.php",
+    "packages/drive/src/Operations/UploadOperations.php",
+    "packages/drive/tests/Concurrency/CompleteUploadRaceTest.php",
+    "packages/drive/tests/Uploads/P3/CompleteUploadIdempotencyTest.php",
+    "packages/drive/tests/Uploads/R07bSessionContractsTest.php",
+    "packages/drive/tests/Uploads/UploadSessionCriticalSectionTest.php",
+    "packages/drive/tests/Uploads/UploadIntegrityTest.php",
+    "packages/drive/tests/Uploads/R07S3MultipartContractsTest.php",
+    "packages/drive/tests/Uploads/S3MultipartTest.php",
+    "packages/drive/tests/Uploads/TusFlowTest.php",
+    "packages/drive/tests/Uploads/R07SessionManagerContractsTest.php",
+    "packages/drive/tests/Feature/R07dObservableMutantTest.php",
+    "packages/drive/tests/PublicApi/NodeSequenceContractTest.php",
+    "packages/drive/tests/Observability/P84Section52MetricsTest.php",
+    "packages/drive/tests/Drive/R07CommandActivityContractsTest.php"
+  ],
+  "checks_run": [
+    {
+      "cwd": "/home/vostrikov/projects/packages/vaulter",
+      "command": "scripts/php84 packages/drive/vendor/bin/pest --configuration=packages/drive/phpunit.xml packages/drive/tests/Uploads/P3/CompleteUploadIdempotencyTest.php > /tmp/vaulter-p37-u3/idempotency.log 2>&1",
+      "exit": 0,
+      "evidence": "/tmp/vaulter-p37-u3/idempotency.log"
+    },
+    {
+      "cwd": "/home/vostrikov/projects/packages/vaulter",
+      "command": "scripts/php84 packages/drive/vendor/bin/pest --configuration=packages/drive/phpunit.xml packages/drive/tests/Uploads/P3/CompleteUploadIdempotencyTest.php packages/drive/tests/Uploads/TusFlowTest.php packages/drive/tests/Uploads/S3MultipartTest.php packages/drive/tests/Uploads/R07SessionManagerContractsTest.php packages/drive/tests/Uploads/R07bSessionContractsTest.php packages/drive/tests/Feature/UploadSessionOwnershipTest.php > /tmp/vaulter-p37-u3/focused.log 2>&1",
+      "exit": 1,
+      "evidence": "/tmp/vaulter-p37-u3/focused.log"
+    },
+    {
+      "cwd": "/home/vostrikov/projects/packages/vaulter",
+      "command": "scripts/php84 packages/drive/vendor/bin/pest --configuration=packages/drive/phpunit.xml packages/drive/tests/Uploads/P3/CompleteUploadIdempotencyTest.php packages/drive/tests/Uploads/R07SessionManagerContractsTest.php packages/drive/tests/Uploads/S3MultipartTest.php > /tmp/vaulter-p37-u3/focused2.log 2>&1",
+      "exit": 2,
+      "evidence": "/tmp/vaulter-p37-u3/focused2.log"
+    },
+    {
+      "cwd": "/home/vostrikov/projects/packages/vaulter",
+      "command": "scripts/php84 packages/drive/vendor/bin/pest --configuration=packages/drive/phpunit.xml packages/drive/tests/Uploads/P3/CompleteUploadIdempotencyTest.php > /tmp/vaulter-p37-u3/idempotency-final.log 2>&1",
+      "exit": 0,
+      "evidence": "/tmp/vaulter-p37-u3/idempotency-final.log"
+    },
+    {
+      "cwd": "/home/vostrikov/projects/packages/vaulter",
+      "command": "scripts/php84 packages/drive/vendor/bin/pest --configuration=packages/drive/phpunit.xml packages/drive/tests/Uploads/P3/CompleteUploadIdempotencyTest.php packages/drive/tests/Uploads/TusFlowTest.php packages/drive/tests/Uploads/S3MultipartTest.php packages/drive/tests/Uploads/R07SessionManagerContractsTest.php packages/drive/tests/Uploads/R07bSessionContractsTest.php packages/drive/tests/Uploads/R07S3MultipartContractsTest.php packages/drive/tests/Uploads/UploadSessionCriticalSectionTest.php packages/drive/tests/Uploads/UploadIntegrityTest.php packages/drive/tests/Feature/UploadSessionOwnershipTest.php packages/drive/tests/Feature/R07dObservableMutantTest.php packages/drive/tests/PublicApi/NodeSequenceContractTest.php packages/drive/tests/Observability/P84Section52MetricsTest.php packages/drive/tests/Drive/R07CommandActivityContractsTest.php > /tmp/vaulter-p37-u3/migrated-fixtures.log 2>&1",
+      "exit": 1,
+      "evidence": "/tmp/vaulter-p37-u3/migrated-fixtures.log"
+    },
+    {
+      "cwd": "/home/vostrikov/projects/packages/vaulter",
+      "command": "scripts/php84 packages/drive/vendor/bin/pest --configuration=packages/drive/phpunit.xml packages/drive/tests/Uploads/P3/CompleteUploadIdempotencyTest.php > /tmp/vaulter-p37-u3/idempotency-final2.log 2>&1",
+      "exit": 0,
+      "evidence": "/tmp/vaulter-p37-u3/idempotency-final2.log"
+    },
+    {
+      "cwd": "/home/vostrikov/projects/packages/vaulter",
+      "command": "scripts/php84 packages/drive/vendor/bin/pest --configuration=packages/drive/phpunit.xml packages/drive/tests/Uploads/P3/CompleteUploadIdempotencyTest.php --filter=SEC-R13 > /tmp/vaulter-p37-u3/nc-cleanup-green.log 2>&1",
+      "exit": 0,
+      "evidence": "/tmp/vaulter-p37-u3/nc-cleanup-green.log"
+    },
+    {
+      "cwd": "/home/vostrikov/projects/packages/vaulter",
+      "command": "scripts/php84 packages/drive/vendor/bin/pest --configuration=packages/drive/phpunit.xml packages/drive/tests/Uploads/P3/CompleteUploadIdempotencyTest.php packages/drive/tests/Uploads/TusFlowTest.php packages/drive/tests/Uploads/S3MultipartTest.php packages/drive/tests/Uploads/R07SessionManagerContractsTest.php packages/drive/tests/Uploads/R07bSessionContractsTest.php packages/drive/tests/Uploads/R07S3MultipartContractsTest.php packages/drive/tests/Uploads/UploadSessionCriticalSectionTest.php packages/drive/tests/Uploads/UploadIntegrityTest.php packages/drive/tests/Feature/UploadSessionOwnershipTest.php packages/drive/tests/Feature/R07dObservableMutantTest.php packages/drive/tests/PublicApi/NodeSequenceContractTest.php packages/drive/tests/Observability/P84Section52MetricsTest.php packages/drive/tests/Drive/R07CommandActivityContractsTest.php > /tmp/vaulter-p37-u3/migrated-fixtures-final.log 2>&1",
+      "exit": 0,
+      "evidence": "/tmp/vaulter-p37-u3/migrated-fixtures-final.log"
+    },
+    {
+      "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+      "command": "../../scripts/php84 vendor/bin/phpstan analyse --no-progress --error-format=json src/Actions/Uploads src/Content/UploadCleanupReconciler.php src/Operations/UploadOperations.php src/Data/Uploads src/Http/Controllers/Uploads src/Uploads/UploadSessionManager.php src/Models/Uploads/UploadSession.php src/Repositories/Uploads > /tmp/vaulter-p37-u3/phpstan.json 2>&1",
+      "exit": 1,
+      "evidence": "/tmp/vaulter-p37-u3/phpstan.json"
+    },
+    {
+      "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+      "command": "../../scripts/php84 vendor/bin/phpstan analyse --no-progress --error-format=json src/Actions/Uploads src/Content/UploadCleanupReconciler.php src/Operations/UploadOperations.php src/Data/Uploads src/Http/Controllers/Uploads src/Uploads/UploadSessionManager.php src/Models/Uploads/UploadSession.php src/Repositories/Uploads > /tmp/vaulter-p37-u3/phpstan-final.json 2>&1",
+      "exit": 1,
+      "evidence": "/tmp/vaulter-p37-u3/phpstan-final.json"
+    },
+    {
+      "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+      "command": "../../scripts/php84 vendor/bin/phpstan analyse --no-progress --error-format=json src/Actions/Uploads src/Content/UploadCleanupReconciler.php src/Operations/UploadOperations.php src/Data/Uploads src/Http/Controllers/Uploads src/Uploads/UploadSessionManager.php src/Models/Uploads/UploadSession.php src/Repositories/Uploads > /tmp/vaulter-p37-u3/phpstan-final-green.json 2>&1",
+      "exit": 0,
+      "evidence": "/tmp/vaulter-p37-u3/phpstan-final-green.json"
+    },
+    {
+      "cwd": "/home/vostrikov/projects/packages/vaulter/packages/drive",
+      "command": "../../scripts/php84 vendor/bin/phpstan analyse --no-progress --error-format=json src/Actions/Uploads src/Content/UploadCleanupReconciler.php src/Operations/UploadOperations.php src/Data/Uploads src/Http/Controllers/Uploads src/Uploads/UploadSessionManager.php src/Models/Uploads/UploadSession.php src/Repositories/Uploads > /tmp/vaulter-p37-u3/phpstan-final-qualified.json 2>&1",
+      "exit": 0,
+      "evidence": "/tmp/vaulter-p37-u3/phpstan-final-qualified.json"
+    },
+    {
+      "cwd": "/home/vostrikov/projects/packages/vaulter",
+      "command": "scripts/php84 packages/drive/vendor/bin/pint packages/drive/src/Actions/Uploads/CompleteUploadAction.php packages/drive/src/Actions/Uploads/AbortUploadAction.php packages/drive/src/Actions/Uploads/InitiateUploadAction.php packages/drive/src/Content/UploadCleanupReconciler.php packages/drive/src/Data/Uploads/InitiateUploadInput.php packages/drive/src/Http/Controllers/Uploads/S3MultipartProtocolController.php packages/drive/src/Http/Controllers/Uploads/TusProtocolController.php packages/drive/src/Models/Uploads/UploadSession.php packages/drive/src/Repositories/Uploads/UploadSessionStoreRepository.php packages/drive/src/Uploads/UploadSessionManager.php packages/drive/src/Operations/UploadOperations.php packages/drive/tests/Concurrency/CompleteUploadRaceTest.php packages/drive/tests/Uploads/P3/CompleteUploadIdempotencyTest.php packages/drive/tests/Uploads/R07bSessionContractsTest.php packages/drive/tests/Uploads/UploadSessionCriticalSectionTest.php packages/drive/tests/Uploads/UploadIntegrityTest.php packages/drive/tests/Uploads/R07S3MultipartContractsTest.php packages/drive/tests/Uploads/S3MultipartTest.php packages/drive/tests/Uploads/TusFlowTest.php packages/drive/tests/Uploads/R07SessionManagerContractsTest.php packages/drive/tests/Feature/R07dObservableMutantTest.php packages/drive/tests/PublicApi/NodeSequenceContractTest.php packages/drive/tests/Observability/P84Section52MetricsTest.php packages/drive/tests/Drive/R07CommandActivityContractsTest.php > /tmp/vaulter-p37-u3/pint.log 2>&1",
+      "exit": 0,
+      "evidence": "/tmp/vaulter-p37-u3/pint.log"
+    },
+    {
+      "cwd": "/home/vostrikov/projects/packages/vaulter",
+      "command": "scripts/php84 packages/drive/vendor/bin/pint packages/drive/src/Actions/Uploads/InitiateUploadAction.php packages/drive/src/Actions/Uploads/CompleteUploadAction.php packages/drive/src/Operations/UploadOperations.php packages/drive/src/Uploads/UploadSessionManager.php packages/drive/src/Content/UploadCleanupReconciler.php packages/drive/src/Http/Controllers/Uploads/TusProtocolController.php packages/drive/tests/Concurrency/CompleteUploadRaceTest.php > /tmp/vaulter-p37-u3/pint-final.log 2>&1",
+      "exit": 0,
+      "evidence": "/tmp/vaulter-p37-u3/pint-final.log"
+    },
+    {
+      "cwd": "/home/vostrikov/projects/packages/vaulter",
+      "command": "scripts/php84 packages/drive/vendor/bin/pint packages/drive/src/Actions/Uploads/CompleteUploadAction.php packages/drive/src/Repositories/Uploads/UploadSessionStoreRepository.php --test > /tmp/vaulter-p37-u3/pint-final-check.log 2>&1",
+      "exit": 0,
+      "evidence": "/tmp/vaulter-p37-u3/pint-final-check.log"
+    }
+  ],
+  "source_sha256": {
+    "packages/drive/src/Actions/Uploads/CompleteUploadAction.php": "57e2ec002ece0fc62278664b05f8d2f60b7fbf0eba82ba9ee7886df59110116d",
+    "packages/drive/src/Actions/Uploads/AbortUploadAction.php": "cd7c2df4c1c18c4a5b9671ce49e29367673106eaf2c722b61a645cf0904470e1",
+    "packages/drive/src/Actions/Uploads/InitiateUploadAction.php": "20167a78c73541ac4d37e3d3783ee5e555b56ef9da04d3cced2360c49ccf0956",
+    "packages/drive/src/Content/UploadCleanupReconciler.php": "f1460807d3851f39ed4837b2b7ce284ffd532b74db04bb6ae2d2adb26c1d2534",
+    "packages/drive/src/Data/Uploads/InitiateUploadInput.php": "68b6dd1d78a58e6bd2f04b45bb4084685f92235aa4eb8df4802b88796bbad6bb",
+    "packages/drive/src/Http/Controllers/Uploads/S3MultipartProtocolController.php": "8c5ea532cf89eb0caf78ad093f7ac55e8c1174da1167b029e07cf8130035402a",
+    "packages/drive/src/Http/Controllers/Uploads/TusProtocolController.php": "0b23e55fd213241f3a24ed7ac8386e767fcd2de693f12c1de7e979d1f3c471f7",
+    "packages/drive/src/Models/Uploads/UploadSession.php": "0686a04ec15cffc28631b83d8c44bcc348dc3223b3b4e4a8a16124af82a6ff36",
+    "packages/drive/src/Repositories/Uploads/UploadSessionStoreRepository.php": "ff42a9cdc0b3cc9c2fa70a3c252d84042c279723d1eeff333bf55f86f60e0a0f",
+    "packages/drive/src/Uploads/UploadSessionManager.php": "e74a211fac76a0d8084ef8fd3719ea92438e50ed91f1949e2d38d71c1ae723a4",
+    "packages/drive/src/Operations/UploadOperations.php": "dc88f553f0f0bba46c505667f0c098223e67f1f87f0ea2aeef25bda411511e7a",
+    "packages/drive/tests/Concurrency/CompleteUploadRaceTest.php": "089a4068a870126db36cb264eee58af36c20f53e9fe764e9b86e28e53d19a396",
+    "packages/drive/tests/Uploads/P3/CompleteUploadIdempotencyTest.php": "dcceff0fa743a70e18749d71e956358b525ccee5848c1b888f4b08bb697e8413",
+    "packages/drive/tests/Uploads/R07bSessionContractsTest.php": "2887ea764ba721621ba7c7a82bc19f717a6c3cc77f7c0f1e8cdbb31c03c5ff0c",
+    "packages/drive/tests/Uploads/UploadSessionCriticalSectionTest.php": "2cbfa6f82b6b4b6467c674d44151e8d01d912567b40d489a0807415e9896e069",
+    "packages/drive/tests/Uploads/UploadIntegrityTest.php": "ea16ee6c3d1e9f9a918f844de0abb60547e3409ea9bdb82fffd2d904b2480e9e",
+    "packages/drive/tests/Uploads/R07S3MultipartContractsTest.php": "ea264aa192f7762d9a9a4873bedfb155c7b0fb95a204bc67f8efed7e43d23f34",
+    "packages/drive/tests/Uploads/S3MultipartTest.php": "b7ef312f88d28c1603698e5627b42345cbeb0fb38338fcf2c77f8531257ee054",
+    "packages/drive/tests/Uploads/TusFlowTest.php": "3176819d16b1194d77a90fd3557de01683469e46e8a04996ef41bcbfc7501133",
+    "packages/drive/tests/Uploads/R07SessionManagerContractsTest.php": "8d1ad567fd577b90abcfbcec4b8c62a166212081adf0442fca8ec50ced9abc82",
+    "packages/drive/tests/Feature/R07dObservableMutantTest.php": "6e703a113f6d01b3b8a4840a10ea35e6e9852019bfa35b16aab86176bb6e4402",
+    "packages/drive/tests/PublicApi/NodeSequenceContractTest.php": "16c8e53a63dde07bb36abf8b4bfc0a9edee5c14c42ad8811aeae9e76bd9b76db",
+    "packages/drive/tests/Observability/P84Section52MetricsTest.php": "a7889d62f1229c22d6a9864fd2d8613a7f07dbc9d518e4b8ff0aea14d8aee4b8",
+    "packages/drive/tests/Drive/R07CommandActivityContractsTest.php": "ad31288f0fed0328c865e05e1902ed4de8315f7c4842e14f4ecde82086272d6b"
+  },
+  "open_issues": [
+    "Parent must run serialized PostgreSQL CompleteUploadRaceTest: three cases implemented, not executed by U3.",
+    "NC-CLEANUP fault RED intentionally delegated parent isolated-copy execution; U3 exact SEC-R13 GREEN=1 test,9 assertions.",
+    "Final migrated SQLite closure 138 passed/408 assertions and 1 existing PG-only skip R07b acquireForPatch; skip not qualification.",
+    "Parent owns PublicApiSnapshot/UPGRADE/CHANGELOG and native task finish/review.",
+    "Intermediate shared Storage fake-root interference produced one SEC-R13 failure with standalone GREEN; new U3 test disks now isolated per PID, final closure GREEN.",
+    "Typed context authority changes old checksum test from ignoring a false declared hash to rejecting it before revision, as current Uploading contract requires."
+  ]
+}

@@ -43,8 +43,13 @@ final readonly class ScanPolicySpec
         };
     }
 
+    public function configFingerprint(): string
+    {
+        return hash('sha256', json_encode(['mode' => $this->mode->value, 'policy_version' => $this->policyVersion, 'predicate_key' => $this->predicateKey, 'rollout_key' => $this->rolloutKey, 'scanner_key' => $this->scannerKey, 'scanner_version' => $this->scannerVersion], JSON_THROW_ON_ERROR));
+    }
+
     public function specKey(): string
     {
-        return hash('sha256', json_encode([$this->scannerKey, $this->scannerVersion, $this->policyVersion], JSON_THROW_ON_ERROR));
+        return hash('sha256', json_encode(['policy_version' => $this->policyVersion, 'scanner_key' => $this->scannerKey, 'scanner_version' => $this->scannerVersion], JSON_THROW_ON_ERROR));
     }
 }

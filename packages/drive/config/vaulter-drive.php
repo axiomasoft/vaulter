@@ -7,6 +7,12 @@ use Vaulter\Drive\Models\Uploads\UploadSession;
 
 return [
     'uploads' => [
+        'scan' => [
+            'required' => null, 'mode' => null, 'scanner' => null, 'scanner_key' => null,
+            'scanner_version' => null, 'policy_version' => null, 'rollout_key' => null,
+            'queue' => 'default', 'lease_seconds' => 120, 'scanner_timeout_seconds' => 60,
+            'max_attempts' => 5, 'publish_cooldown_seconds' => 30, 'recovery_batch' => 100, 'cleanup_batch' => 100,
+        ],
         'max_file_size' => env('VAULTER_UPLOAD_MAX_BYTES', 5_368_709_120),
         'allowed_mime_types' => [],
         'resumable' => [

@@ -17,6 +17,7 @@ use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\FileRevision;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\Access\ProfileCreateGate;
 
@@ -36,8 +37,7 @@ function initiateS3(int $totalBytes, string $name = 'multi.bin'): UploadSession
 {
     $storage = UploadTestHelpers::storage();
 
-    return app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
-        storage: $storage,
+    return app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::S3Multipart,
         targetParent: $storage->rootNode()->first(),
         targetName: $name,
@@ -64,7 +64,7 @@ it('initiate → parts → complete → server-recompute → commit', function (
     $handler->complete($session->refresh());
 
     app(UploadSessionManager::class)->markAssembled($session->refresh());
-    $node = app(CompleteUploadAction::class)->execute($session->refresh());
+    $node = app(CompleteUploadAction::class)->execute(context: OperationContext::system($session->storage, 'test fixture'), session: $session->refresh());
 
     expect($node->kind)->toBe(NodeKind::File)
         ->and($node->size_bytes)->toBe(20)
@@ -89,7 +89,7 @@ it('re-upload части ЗАМЕНЯЕТ (PK part_no) — S3 семантика
 
     $handler->complete($session->refresh());
     app(UploadSessionManager::class)->markAssembled($session->refresh());
-    $node = app(CompleteUploadAction::class)->execute($session->refresh());
+    $node = app(CompleteUploadAction::class)->execute(context: OperationContext::system($session->storage, 'test fixture'), session: $session->refresh());
 
     // The committed bytes are the REPLACEMENT (bbbbb), not the original.
     $version = $node->currentVersion()->first();
@@ -107,7 +107,7 @@ it('лживый ETag не используется как адрес — сер
     // the server-recomputed content sha256 — they are unrelated.
     $handler->complete($session->refresh());
     app(UploadSessionManager::class)->markAssembled($session->refresh());
-    $node = app(CompleteUploadAction::class)->execute($session->refresh());
+    $node = app(CompleteUploadAction::class)->execute(context: OperationContext::system($session->storage, 'test fixture'), session: $session->refresh());
 
     $version = $node->currentVersion()->first();
     expect($version->sha256)->toBe(hash('sha256', $bytes))
@@ -172,7 +172,7 @@ it('дедуп: multipart-сборка против идентичной пре�
         $handler->putPart($session->refresh(), partNo: 1, byteOffset: 0, chunk: UploadTestHelpers::streamFor($bytes));
         $handler->complete($session->refresh());
         app(UploadSessionManager::class)->markAssembled($session->refresh());
-        app(CompleteUploadAction::class)->execute($session->refresh());
+        app(CompleteUploadAction::class)->execute(context: OperationContext::system($session->storage, 'test fixture'), session: $session->refresh());
     }
 
     // Two file nodes + two versions, but ONE physical blob (global dedup).
@@ -191,7 +191,9 @@ it('gates S3 initiation through the profile driver', function (bool $allow): voi
 
 it('gates the S3 parts controller through the profile driver', function (bool $allow): void {
     $session = initiateS3(totalBytes: 5, name: 'profile-parts.bin');
-    $this->actingAs(AccessTestHelpers::user());
+    $actor = AccessTestHelpers::user();
+    $session->forceFill(['created_by' => $actor->getKey(), 'metadata' => ['actor_type' => $actor->getMorphClass()]])->save();
+    $this->actingAs($actor);
     ProfileCreateGate::install($allow);
     $this->call('POST', 'api/vaulter/resumable-uploads/'.$session->upload_id.'/parts',
         ['part_no' => 1, 'byte_offset' => 0], [], [], ['CONTENT_TYPE' => 'application/octet-stream'], 'hello')

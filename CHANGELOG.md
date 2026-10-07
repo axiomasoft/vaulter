@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Unified uploads and durable content availability (AD13; PLAN2.P3.7, D26–D29)
+
+- PHP, single HTTP, tus and S3 completion use counted, hashed, bounded streaming preparation and the same inspector chain. Persist detected MIME separately from the declared MIME; inspectors reject before SQL/CAS writes.
+- Added scoped immutable scan evidence, independent global/profile rollout boundaries, atomic revision obligations, fenced scanner attempts and bounded recovery/backfill commands. Infection remains sticky across reupload, copy, restore and rescan; required bytes need compatible clean evidence.
+- Added `UploadOperations` and context-first upload actions. Completion stores exact result pointers/fingerprint and durable cleanup intent atomically; replay checks current ownership/scope/visibility and never re-ingests. Failed outer-commit cleanup is recoverable.
+- PHP/share downloads use fresh content authorization and exact immutable selection with `private, no-store`. Inline document export requires an explicit operation context. Direct signed delivery is an explicit opt-in with bounded TTL and revocation.
+
+### Canonical authorized Drive API (AD06–AD08, AD13, AD17, AD23; PLAN2.P3.3)
+
+- Removed `Vaulter::for/forStorage` and flat DriveHandle mutation/list methods.
+  Use `drive()/findDrive()` and `nodes()/folders()/files()/trash()/access()/shares()/activity()`.
+  Handle identity/correlation transformations are immutable; HTTP and Filament
+  use the same explicit-actor permission boundary: hidden nodes return 404,
+  visible capability denials 403, and missing actors 401.
+- Activated typed uploads, append-only revision restore and BlobStore-backed
+  `FileStream` reads. `files()->addRevision()` returns `FileRevision` instead of
+  the old `uploadVersion()` Node result. Node lists use signed forward cursors,
+  bounded NodePage results and no totals. Rename resolution tries suffixes
+  (2)–(6); upload-only AddRevision checks Edit on the target.
+- Moved document type/exporter registration out of core into
+  `Documents::types()->register()/all()` and
+  `Documents::exporters()->register()/get()/formats()`, preserving current
+  definitions, exporter FQCN/instance registration and configured formats.
+- Added an upgrade migration for nonnegative signed BIGINT `v_nodes.sequence`,
+  default 0, with a 64-bit PHP requirement. Changed existing aggregates increment
+  once under lock, including current Document/Yjs writers and revision restore;
+  new nodes stay at 0. Optional stale expectations fail with 412 before side effects,
+  exhaustion fails with 409, and effective no-ops check expectations without a bump/event.
+- Purge physically removes each subtree and dependent Document/Yjs rows atomically;
+  batch cleanup reports failed roots, continues and exposes failure. Folder/file
+  copy preflights the whole subtree and rejects unsupported Document/Shortcut
+  payloads before inserts. See UPGRADE.md for the migration map and current scope.
+
 ### Authorized access, sharing and activity (AD08, AD12, AD17; PLAN2.P3.4)
 
 Core `Operations\AccessOperations`, `ShareOperations` and `ActivityOperations`
@@ -34,8 +67,8 @@ level-derived masks; Writer/Organizer/Owner require an explicit mask without
 Comment. TTL, use budget and password bounds are enforced on direct PHP calls.
 The plaintext token is returned once; later reads expose metadata only.
 New requests after revoke commit return 404; already-started streams can continue.
-The legacy public-download scan hook accepts `not_required`/`clean`; versioned
-required-mode evidence and complete egress qualification remain PLAN2.P3.7.
+Public downloads now enforce versioned required-mode evidence through PLAN2.P3.7;
+metadata remains visible under current ACL.
 
 ### Typed Operations and immutable inputs (AD06, AD17, AD18; PLAN2.P3.2)
 

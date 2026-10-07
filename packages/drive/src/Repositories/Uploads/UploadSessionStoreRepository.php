@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Repositories\Uploads;
 
 use Illuminate\Database\QueryException;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
@@ -99,7 +100,7 @@ final class UploadSessionStoreRepository
                 throw UploadConflictException::forSession($session->upload_id);
             }
 
-            return $this->freshSession($session, lock: null);
+            return $this->freshSession($session, lock: 'for update');
         }
 
         if ($driver === 'mysql' || $driver === 'mariadb') {
@@ -209,8 +210,18 @@ final class UploadSessionStoreRepository
      * hash. Zero rows affected means someone else won → a conflict, never a silent
      * overwrite; the commit transaction rolls back with it.
      */
-    public function markCommitted(UploadSession $session, int|string $assembledBlobId): UploadSession
+    public function markCommitted(UploadSession $session, int|string $assembledBlobId, int|string|null $resultNodeId = null, int|string|null $resultRevisionId = null, ?string $inputFingerprint = null): UploadSession
     {
+        if ($session->status !== UploadStatus::Assembled || $resultNodeId === null || $resultRevisionId === null || $inputFingerprint === null || preg_match('/^[a-f0-9]{64}$/', $inputFingerprint) !== 1) {
+            throw UploadConflictException::forClosedSession($session->upload_id);
+        }
+        $nodeClass = app(VaulterConfig::class)->model('node');
+        $node = $nodeClass::query()->where('drive_id', $session->drive_id)->whereKey($resultNodeId)->first();
+        $file = $node?->file()->first();
+        $revision = $file?->versions()->whereKey($resultRevisionId)->first();
+        if ($revision === null || (string) $node->tenant_id !== (string) $session->tenant_id || (string) $revision->tenant_id !== (string) $session->tenant_id || (string) $revision->blob_id !== (string) $assembledBlobId || (string) $file->current_revision_id !== (string) $resultRevisionId) {
+            throw UploadConflictException::forClosedSession($session->upload_id);
+        }
         $model = $this->driveConfig->model('upload_session');
 
         $affected = $model::query()
@@ -218,6 +229,12 @@ final class UploadSessionStoreRepository
             ->where('status', UploadStatus::Assembled->value)
             ->update([
                 'assembled_blob_id' => $assembledBlobId,
+                'result_blob_id' => $assembledBlobId,
+                'result_node_id' => $resultNodeId,
+                'result_revision_id' => $resultRevisionId,
+                'input_fingerprint' => $inputFingerprint,
+                'cleanup_pending' => true,
+                'cleanup_available_at' => now(),
                 'status' => UploadStatus::Committed->value,
                 'updated_at' => now(),
             ]);

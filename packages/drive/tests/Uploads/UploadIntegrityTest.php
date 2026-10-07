@@ -13,6 +13,7 @@ use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Models\Cas\Blob;
+use Vaulter\Operations\OperationContext;
 
 /**
  * Integrity gates on the resumable-upload commit path (W0/B5): the assembled object
@@ -138,7 +139,7 @@ it('commit отклоняет объект с mime image/png и magic-bytes ZIP,
     app(TusUploadHandler::class)->patch($session->refresh(), UploadTestHelpers::streamFor($zipBytes), 0);
     app(UploadSessionManager::class)->markAssembled($session->refresh());
 
-    expect(fn () => app(CompleteUploadAction::class)->execute($session->refresh()))
+    expect(fn () => app(CompleteUploadAction::class)->execute(context: OperationContext::system($session->storage, 'test fixture'), session: $session->refresh()))
         ->toThrow(UploadContentMismatchException::class);
 
     // Nothing was committed — the type-confused object is refused before the blob.

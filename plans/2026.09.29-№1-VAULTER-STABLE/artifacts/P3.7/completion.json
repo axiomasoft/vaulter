@@ -1,0 +1,205 @@
+{
+  "item": "P3.7",
+  "summary": "Unified prepared byte ingest; contextual resumable completion/replay; UTC immutable evidence and durable fenced scan work; policy activation/backfill/rescan; bounded cleanup; fresh mediated egress and explicit bounded signer.",
+  "packages_changed": [
+    "core",
+    "drive",
+    "documents"
+  ],
+  "unchanged_cas_consumers": "media2tests",
+  "checks": {
+    "V1": {
+      "command": "env PAO_DISABLE=1 APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Uploads/P3/UnifiedIngestTest.php tests/Uploads/P3/UploadSourceStreamingTest.php tests/Uploads/P3/QuarantineBoundaryTest.php tests/Uploads/P3/ScanJobBoundaryTest.php tests/Uploads/UploadIntegrityTest.php tests/Uploads/TusFlowTest.php tests/Uploads/S3MultipartTest.php tests/Uploads/UploadSessionCriticalSectionTest.php tests/Feature/ResumableUploadApiTest.php tests/Feature/UploadSessionOwnershipTest.php",
+      "cwd": "packages/drive",
+      "exit": 0,
+      "passed": 75,
+      "skipped": 0,
+      "failed": 0,
+      "log": "V1.log"
+    },
+    "V2": {
+      "command": "env PAO_DISABLE=1 APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Content packages/core/tests/Sharing/PublicShareDownloadHeadersTest.php packages/core/tests/Sharing/ShareScopeTest.php",
+      "cwd": ".",
+      "exit": 0,
+      "passed": 15,
+      "skipped": 0,
+      "failed": 0,
+      "log": "V2.log"
+    },
+    "V3": {
+      "command": "env PAO_DISABLE=1 APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Document/ExporterContentGuardTest.php tests/Document/DocumentExportTest.php tests/Document/ContentEgressBoundaryTest.php",
+      "cwd": "packages/documents",
+      "exit": 0,
+      "passed": 9,
+      "skipped": 0,
+      "failed": 0,
+      "log": "V3.log"
+    },
+    "V4": {
+      "command": "env PAO_DISABLE=1 APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Concurrency/CompleteUploadRaceTest.php tests/Concurrency/QuotaRaceTest.php tests/Concurrency/RevisionNumberRaceTest.php",
+      "cwd": "packages/drive",
+      "exit": 0,
+      "passed": 7,
+      "skipped": 0,
+      "failed": 0,
+      "log": "V4.log"
+    },
+    "V5": {
+      "command": "env PAO_DISABLE=1 APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Cas/BlobCommitAtomicityTest.php tests/Cas/BlobCrossScopeGcTest.php",
+      "cwd": "packages/media",
+      "exit": 0,
+      "passed": 4,
+      "skipped": 0,
+      "failed": 0,
+      "log": "V5.log"
+    },
+    "V82": {
+      "command": "python3 plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-coverage.py check --phase P3",
+      "cwd": ".",
+      "exit": 0,
+      "passed": null,
+      "skipped": 0,
+      "failed": 0,
+      "log": "V82.log"
+    },
+    "V6": {
+      "command": "env PAO_DISABLE=1 APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 php -d memory_limit=64M tests/Uploads/P3/StreamingMemoryProbe.php",
+      "cwd": "packages/drive",
+      "exit": 0,
+      "passed": null,
+      "skipped": 0,
+      "failed": 0,
+      "log": "V6.log"
+    },
+    "V7": {
+      "command": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Concurrency/ScanWorkRecoveryRaceTest.php",
+      "cwd": "packages/drive",
+      "exit": 0,
+      "passed": 5,
+      "skipped": 0,
+      "evidence": [
+        "V7.log"
+      ],
+      "note": "Final full PG scan race suite after shared-T settlement correction:5passed,0skipped.",
+      "failed": 0
+    },
+    "V8": {
+      "command": "env APP_ENV=testing DB_CONNECTION=mysql DB_HOST=127.0.0.1 DB_PORT=3306 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Schema/ScanEvidenceSchemaTest.php",
+      "cwd": ".",
+      "exit": 0,
+      "passed": 4,
+      "skipped": 0,
+      "failed": 0,
+      "log": "V8-attempt3.log",
+      "assertions": 107
+    },
+    "V9": {
+      "command": "env PAO_DISABLE=1 APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Schema/ScanEvidenceSchemaTest.php",
+      "cwd": ".",
+      "exit": 0,
+      "passed": 4,
+      "skipped": 0,
+      "failed": 0,
+      "log": "V9.log"
+    },
+    "V10": {
+      "command": "env PAO_DISABLE=1 APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Schema/ScanEvidenceSchemaTest.php",
+      "cwd": ".",
+      "exit": 0,
+      "passed": 4,
+      "skipped": 0,
+      "failed": 0,
+      "log": "V10.log"
+    },
+    "V11": {
+      "command": "env PAO_DISABLE=1 APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Uploads/P3/ScanPolicyTransitionTest.php tests/Uploads/P3/DestinationScanPolicyTest.php tests/Uploads/P3/ScanWorkRecoveryTest.php tests/Uploads/P3/CompleteUploadIdempotencyTest.php tests/Uploads/P3/ContentDeliveryBoundaryTest.php",
+      "cwd": "packages/drive",
+      "exit": 0,
+      "passed": 39,
+      "skipped": 0,
+      "failed": 0,
+      "log": "V11.log",
+      "correction_closure": {
+        "changed_source": [
+          "ScanWorkReconciler.php",
+          "UploadCleanupReconciler.php"
+        ],
+        "new_regression_sqlite_passed": 3,
+        "new_regression_pg_passed": 2,
+        "affected_closure_passed": 8,
+        "skipped": 0,
+        "logs": [
+          "review-repair-new-tests.log",
+          "review-repair-closure.log",
+          "review-repair-pg-utc.log"
+        ],
+        "note": "Prior full V11 39 passed remains recorded. Only owning corrected paths and caller closure rechecked; unchanged policy/destination/egress tests not repeated."
+      }
+    },
+    "V80": {
+      "exit": 0,
+      "evidence": [
+        "pint-results.json",
+        "phpstan-core.log",
+        "phpstan-drive.log",
+        "phpstan-documents.log"
+      ],
+      "packages": [
+        "core",
+        "drive",
+        "documents"
+      ],
+      "correction_closure": {
+        "drive_phpstan_exit": 0,
+        "pint_four_owning_files_exit": 0,
+        "evidence": [
+          "phpstan-drive.log",
+          "review-repair-pint.log"
+        ]
+      }
+    },
+    "V81": {
+      "exit": 0,
+      "evidence": [
+        "negative-controls.json",
+        "invariant-self-check.json"
+      ],
+      "controls": 10
+    }
+  },
+  "declared_test_cases_passed": 166,
+  "supplemental_regression_cases_passed": 5,
+  "limited_negative_controls": {
+    "count": 10,
+    "artifact": "negative-controls.json",
+    "red_then_restored_green": true
+  },
+  "review": {
+    "verdict": "GREEN",
+    "coverage": "Round1 entire P3.7 baseline diff; round2 owning corrections and direct dependency closure",
+    "provider": "grok",
+    "model": "grok-4.7",
+    "effort": "high",
+    "context_parameter": null,
+    "rounds": [
+      {
+        "session": "29a2d11f-f1a8-44b0-8cbe-7593387e2519",
+        "verdict": "FINDINGS",
+        "artifact": "review-round1.json"
+      },
+      {
+        "session": "2a1f9ee0-484e-40e2-bccd-2fde7b51a318",
+        "verdict": "GREEN",
+        "artifact": "review-round2-output.json"
+      }
+    ],
+    "correction": "Explicit UTC scan scheduling/bulk writes; bounded cleanup attempt backoff",
+    "candidate_source_manifest": "candidate-fingerprints.json"
+  },
+  "limits": [
+    "P3.8 broad package barrier remains the next item.",
+    "Already-started streams and issued bounded-TTL direct URLs retain the documented revocation windows.",
+    "Host scanner deployment and live cloud object store excluded."
+  ],
+  "ownership": "Unchanged owner worktree paths excluded from commit; full starting-baseline diff and hashes retained."
+}

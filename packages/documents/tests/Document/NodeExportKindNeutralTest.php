@@ -8,6 +8,7 @@ use Vaulter\Documents\Export\NodeExportService;
 use Vaulter\Exceptions\Documents\UnsupportedDocumentContentException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Drive;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
@@ -26,7 +27,7 @@ beforeEach(function (): void {
 
 function univerStorage(): Drive
 {
-    return Vaulter::for(DriveTestHelpers::host())->model();
+    return Vaulter::drive(DriveTestHelpers::host())->model();
 }
 
 const RIVAL_XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -42,7 +43,7 @@ it('refuses to export a non-rich-text (Univer) node to HTML instead of rendering
 
     $node = app(VaulterConfig::class)->model('node')::query()->findOrFail($nodeId);
 
-    expect(fn () => app(NodeExportService::class)->export($node, 'html'))
+    expect(fn () => app(NodeExportService::class)->export(OperationContext::system($node->storage()->firstOrFail(), 'export fixture'), $node, 'html'))
         ->toThrow(UnsupportedDocumentContentException::class);
 });
 
@@ -57,6 +58,6 @@ it('refuses to export a non-rich-text (Univer) node to Markdown instead of rende
 
     $node = app(VaulterConfig::class)->model('node')::query()->findOrFail($nodeId);
 
-    expect(fn () => app(NodeExportService::class)->export($node, 'markdown'))
+    expect(fn () => app(NodeExportService::class)->export(OperationContext::system($node->storage()->firstOrFail(), 'export fixture'), $node, 'markdown'))
         ->toThrow(UnsupportedDocumentContentException::class);
 });

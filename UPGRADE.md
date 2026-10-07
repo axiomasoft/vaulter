@@ -6,6 +6,147 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Uploads, scan policy and content delivery (AD13; PLAN2.P3.7, D26–D29)
+
+Apply the additive `2026_10_06_000002_add_scan_evidence_and_work.php` migration before patched writers/workers start. It preserves existing revision MIME/status/data and adds independent scan admission, evidence/work/backfill and upload cleanup carriers. Do not roll it down while workers run. Run the migration against the configured Vaulter connection.
+
+Use `$handle->extension(\Vaulter\Drive\Operations\UploadOperations::class)` for `initiate($input)`, `complete($sessionOrKey)` and `abort($sessionOrKey)`. `InitiateUploadInput` no longer carries storage or actor authority; internal upload actions accept `OperationContext` first. Complete remains under the session mutex through the outer transaction. A committed replay returns its stored node/revision result after fresh ownership/scope/View checks. It does not repeat ingest, events or work. Cleanup failure after commit preserves success and a durable cleanup flag.
+
+Canonical `vaulter.scan` keys are `mode`, `required`, `scanner`, `scanner_key`, `scanner_version`, `policy_version`, `rollout_key`, with null defaults. The old `vaulter-drive.uploads.scan` policy keys are aliases when the canonical value is null; unequal explicit values fail configuration. `required=true` means `all_content`. Configured enforcement requires a host implementation of `ContentScanner` whose `key()` and `version()` exactly match the configuration, and whose `scan(ScanInput): ScanResult` borrows the supplied stream. Private scanner IO is separate from public Download authorization. Configure the broker retry window at least 180 seconds: scanner deadline < worker timeout 90 < lease 120 < broker retry window.
+
+`off` removes mandatory evidence eligibility; it never permits infected/quarantined bytes. `all_content` blocks legacy `not_required` and bare `clean` until compatible versioned evidence exists. `new_content_only` requires an explicit immutable rollout key and persisted server admission boundary; client timestamps cannot grandfather content. Global and profile predicates each apply with their own boundary. Configure scanner identity in off mode, explicitly activate policy and prepare legacy evidence before a strict cutover, or explicitly choose the new-content rollout. Activation intentionally prewarms bounded legacy work even when those revisions are exempt under new-content mode. New required revisions always record their own durable work in their creation transaction. Mode changes retain compatible evidence; scanner/policy version changes require new evidence.
+
+```bash
+# Disabled-tenancy example; use --tenant=... for an enabled tenant scope.
+php artisan vaulter:scan-rescan --drive=DRIVE --reason=prepare-scan-policy --activate-policy
+php artisan vaulter:scan-rescan --drive=DRIVE --reason=prepare-legacy --limit=100 --json
+php artisan vaulter:scan-reconcile --drive=DRIVE --reason=recover-scan-work --limit=100 --max-seconds=30 --json
+```
+
+Retain the returned UUID request id when resuming a signed `--after` cursor. Scope/spec/flag changes invalidate cursors. `--rescan` starts a new fenced generation; `--retry-failed` retries only failed work. `--dry-run` writes and publishes nothing. Enabled tenancy requires a selected tenant or explicit `--all-tenants` with a reason. Exit 0 reports scheduled/recovered intents; it does not claim that every revision is clean. Required legacy discovery survives activation/publication crashes through durable backfill checkpoints. Broker outage, lost jobs and expired leases are reclaimed; retry exhaustion stays failed until explicit operator action. Cleanup retries never re-ingest committed uploads.
+
+```php
+// Enabled-tenancy host example; schedules remain host-owned.
+Schedule::command('vaulter:scan-reconcile --all-tenants --reason=scheduled-scan-recovery --limit=100 --max-seconds=30')
+    ->everyMinute()->withoutOverlapping(2);
+```
+
+For disabled tenancy omit `--all-tenants` and retain an explicit reason. The database lease/CAS is authoritative across schedulers. No built-in antivirus adapter or cloud deployment is supplied. Deterministic `unsupported`, `too_large`, `password_protected`, `access_denied` and unknown failures never become clean. Manifests are unsupported by the single-blob scanner. Optional failed rescan retains still-valid earlier clean evidence; revocation/new epochs remove its eligibility. Infection quarantines the immutable blob and cannot be cleared by a late clean worker. No public quarantine-release workflow is introduced.
+
+Uploads read chunks of at most 64 KiB from the current source position, count actual bytes/hash, enforce the effective limit while reading and persist detected MIME. Borrowed resource/PSR streams remain open. Own path/string handles and prepared temps close/discard on every path. MIME refinement only uses bounded verified container metadata. Registered `UploadInspector` keys must be unique; execution order is descending priority then ascending key. Inspectors cannot publish jobs before commit.
+
+`ContentDelivery` mediates PHP and share reads using exact committed revision/blob/edge selection and fresh ACL/profile/availability. Metadata descriptors do not grant bytes or URLs; a pending head never substitutes an older clean revision. Protected HTTP content is `private, no-store`. `NodeExportService::export($context, $node, $format)` now requires explicit authority and selects only the actual inline document head; full immutable inline-document scanning remains P4-owned.
+
+`vaulter.downloads.delivery_mode` defaults to `strict`; `directUrl()` rejects before a signer. Explicit `direct_signed` requires a trusted `DirectContentUrlSigner` signing the selected immutable key/version, with `direct_ttl_seconds` 1–300 (default 60). Public shares remain mediated. Revoke/quarantine blocks new gateway/sign requests, but an already-issued bearer URL remains usable until expiry or an adapter storage policy denies it; an already-started stream may continue. No immediate revocation claim or derivative/304 cache endpoint is introduced.
+
+### Canonical authorized Drive API (AD06–AD08, AD13, AD17, AD23; PLAN2.P3.3)
+
+The old facade entry points and flat handle methods are removed without aliases.
+Replace `Vaulter::for($owner, $panel)` with `Vaulter::drive($owner, $profile)` and
+`Vaulter::forStorage($storage)` with `Vaulter::drive($drive)`. Owner inputs must
+have a persisted identity. Owner lookup provisions the drive/root when absent;
+`Vaulter::findDrive($owner, $profile)` returns a nullable handle without creating
+anything. An omitted profile selects the registry default. Existing Drive inputs
+are reloaded by persisted key; an explicitly mismatched profile is rejected.
+
+`actingAs($user)`, `asSystem($reason)` and `withCorrelationId($id)` return new
+immutable handles; retain the returned value. An unbound handle resolves the
+current guard user on every operation; no user produces `actor_required` (401).
+Jobs and commands explicitly select `actingAs()` or `asSystem()`. System execution
+records its reason and retains drive scope, profile restrictions and data
+invariants. `model()`/`profile()` expose metadata; `root()` and node reads require
+View. HTTP and Filament use the same guards: hidden/foreign nodes return 404;
+a visible node without the requested ability returns 403. Move/copy require the
+source capability and Create at the resolved destination.
+
+```php
+use Vaulter\Data\Drive\RevisionOptions;
+use Vaulter\Data\Drive\UploadOptions;
+use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Facades\Vaulter;
+
+$drive = Vaulter::drive($project)->actingAs($user);
+$folder = $drive->folders()->create('Reports');
+$file = $drive->files()->upload(
+    UploadSource::fromString('draft', 'report.txt'),
+    new UploadOptions(parent: $folder),
+);
+$revision = $drive->files()->addRevision(
+    $file,
+    UploadSource::fromString('updated', 'report.txt'),
+    new RevisionOptions(expectedSequence: $file->sequence),
+);
+$file = $drive->nodes()->find($file);
+```
+
+| Removed handle call | Replacement |
+|---|---|
+| `createFolder()` | `folders()->create()` |
+| `upload()` | `files()->upload(UploadSource, ?UploadOptions)` |
+| `uploadVersion()` | `files()->addRevision()`; returns `FileRevision`, not `Node` |
+| `rename()` | `nodes()->rename()` |
+| `move()` / `copy()` | `nodes()->move(destination: …)` / `copy(destination: …)`; use typed options |
+| `trash($node)` | `nodes()->trash($node)` |
+| `restore($node)` | `trash()->restore($node, ?RestoreOptions)` |
+| `forceDelete($node)` | `trash()->purge($node)` |
+| `list($folder)` | `nodes()->children($folder, ?ListOptions): NodePage` |
+
+Remove per-call `actorId` arguments; identity belongs to the handle. The sub-APIs
+also provide `nodes()->find/search/update/abilities`,
+`files()->revisions/restoreRevision/read`, `trash()->list/empty`, and
+`access()/shares()/activity()`. Revision restore appends immutable history and
+returns `FileRevision`. `files()->read()` returns a `FileStream`; callers close
+its stream in `finally`. HTTP downloads stream those same bytes and close them
+after consumption. NodePage exposes `items`, `nextCursor` and `scanned`; page
+sizes are 1–200, with signed forward cursors and no total. Discard old node-list
+cursors. Extensions resolve with a named `handle` argument and must use its
+authorized operations.
+
+Upload/folder-create/move default to `OnNameConflict::Fail`; copy/restore default
+to `Rename`. Rename considers the original name and five UTF-8-safe suffixes,
+`name (2).ext` through `name (6).ext`, then throws `NodeNameConflictException`.
+`AddRevision` is accepted only by uploads and requires Edit on the existing file.
+
+Move document registry calls to `Vaulter\Documents\Facades\Documents`:
+
+| Removed core facade call | Replacement |
+|---|---|
+| `Vaulter::registerDocumentType($key, $definition)` | `Documents::types()->register($key, $definition)` |
+| `Vaulter::documentTypes()` | `Documents::types()->all()` |
+| `Vaulter::registerExporter($exporter)` | `Documents::exporters()->register($exporter)` |
+| `Vaulter::exporter($format)` | `Documents::exporters()->get($format)` |
+| `Vaulter::exporterFormats()` | `Documents::exporters()->formats()` |
+
+Definitions remain arrays, exporters remain instances or container-resolved
+FQCNs, and configured formats remain under `vaulter-documents.exporters`.
+
+Run core migration `2026_10_06_000001_add_node_operation_sequence.php` when
+upgrading an existing database. It adds `v_nodes.sequence` as signed BIGINT with
+default 0 and a nonnegative constraint; existing nodes start at 0. The common
+range is 0–9223372036854775807; PHP sequence APIs require a 64-bit runtime.
+Changed existing nodes increment once per logical mutation under the same
+transaction and locks. New nodes remain at 0. Current document autosave/Yjs
+append and overwrite writers, named snapshots and restores participate too.
+Supported PHP `expectedSequence` arguments/options stay optional. A mismatch
+throws `StaleNodeException` (`node_sequence_mismatch`, 412) before side effects;
+exhaustion throws `SequenceOverflowException` (`node_sequence_exhausted`, 409)
+without wraparound. Effective no-ops compare supplied expectations but emit no
+mutation event or increment. A new revision/head identity counts as a change even
+with identical bytes. History-only retention, grants and shares do not increment
+this editorial counter. Sequence alone is insufficient as a strong validator
+for JSON containing other changing dependencies.
+
+Purge physically deletes the trashed subtree, including document revision/content/
+Yjs rows through foreign-key cascades in the same transaction. File lifecycle
+cleanup detaches CAS edges and releases quota. `trash()->empty()` counts deleted
+roots, skips unauthorized roots and processes each root independently; an
+unexpected failure rolls back that root, reports it, continues, then rethrows
+the first failure. The purge command returns a failing exit status after
+processing remaining roots. Copy supports folders/files; a document or shortcut
+anywhere in the requested subtree raises `UnsupportedNodeKindException` before
+inserts. Rich Document/Comment aggregate operations, full scan admission and
+strict tenant integration are outside this change.
+
 ### Authorized access, sharing and activity (AD08, AD12, AD17; PLAN2.P3.4)
 
 Core `Operations\AccessOperations`, `ShareOperations` and `ActivityOperations`
@@ -396,7 +537,8 @@ URL and JWT secret. Remove `collaboration.drivers.reverb` and
 
 Drive classes use domain namespaces. Replace the following FQNs; the old names
 and removed classes have no aliases. Routes, middleware and JSON fields retain
-their current behavior. Entry points `Vaulter::for()` and `forStorage()` remain.
+their current behavior. The P3.3 canonical API section above supersedes the old
+entry points: replace `Vaulter::for()` / `forStorage()` with `Vaulter::drive()`.
 
 | Before | After |
 |---|---|

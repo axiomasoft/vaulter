@@ -8,22 +8,16 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Vaulter\Access\AccessResolver;
-use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
+use Vaulter\Contracts\Drive\DriveHandleFactory;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Operations\UploadOperations;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
-use Vaulter\Drive\Uploads\S3MultipartHandler;
-use Vaulter\Drive\Uploads\UploadSessionManager;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Http\Resources\Drive\NodeResource;
 use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\DriveReadRepository;
-use Vaulter\Repositories\Drive\NodeReadRepository;
-use Vaulter\Support\Identity;
 
 /**
  * The S3-multipart resumable-upload surface (§2.8 / D16 / M3a). Thin HTTP: it
@@ -41,12 +35,9 @@ use Vaulter\Support\Identity;
 final class S3MultipartProtocolController extends Controller
 {
     public function __construct(
-        private readonly UploadSessionManager $manager,
         private readonly UploadSessionReadRepository $sessions,
         private readonly DriveReadRepository $storages,
-        private readonly NodeReadRepository $nodes,
-        private readonly AccessResolver $access,
-        private readonly CompleteUploadAction $commit,
+        private readonly DriveHandleFactory $handles,
         private readonly DriveConfig $driveConfig,
     ) {}
 
@@ -65,7 +56,7 @@ final class S3MultipartProtocolController extends Controller
             : (int) $request->header('X-Part-Number', '1');
         $byteOffset = $request->integer('byte_offset');
 
-        $result = $this->s3Handler()->putPart(
+        $result = $this->uploads(request: $request, storage: $this->storageOf($session))->putPart(
             session: $session,
             partNo: $partNo,
             byteOffset: $byteOffset,
@@ -88,14 +79,7 @@ final class S3MultipartProtocolController extends Controller
         $session = $this->findSession($uploadId);
         $this->authorizeSession($request, $session);
 
-        $this->s3Handler()->complete($session);
-
-        // Inside the session's critical section (R-11) — the sweeper reclaims an Assembled
-        // session too, and out here it was free to discard the staged bytes mid-commit.
-        $node = $this->manager->commitAssembled(
-            $session->refresh(),
-            fn (UploadSession $locked): Node => $this->commit->execute($locked),
-        );
+        $node = $this->uploads(request: $request, storage: $this->storageOf($session))->complete($session);
 
         return NodeResource::make($node)->response()->setStatusCode(201);
     }
@@ -120,38 +104,12 @@ final class S3MultipartProtocolController extends Controller
      */
     private function authorizeSession(Request $request, UploadSession $session): void
     {
-        $storage = $this->storageOf($session);
-
-        if ($session->isNewVersion()) {
-            $node = $this->findNodeInStorage($session->target_node_id ?? '', $storage);
-            $this->guard($request, Ability::Edit, $node);
-        } else {
-            $parent = $session->target_parent_id === null
-                ? $this->rootOf($storage)
-                : $this->findNodeInStorage($session->target_parent_id, $storage);
-
-            $this->guardCreate($request, $storage, $parent);
-        }
-
-        $this->guardOwnership($request, $session);
+        $this->uploads(request: $request, storage: $this->storageOf($session))->status($session);
     }
 
-    /**
-     * F-P1.4-12: see TusUploadController::guardOwnership — identical guard, shared
-     * rationale, no shared base class to hang it on (kept in sync manually, exactly
-     * like the rest of this authorizeSession/guard/guardCreate trio).
-     */
-    private function guardOwnership(Request $request, UploadSession $session): void
+    private function uploads(Request $request, Drive $storage): UploadOperations
     {
-        if ($session->created_by === null) {
-            return;
-        }
-
-        $actorId = $this->actorId($request);
-
-        if (Identity::stringify($session->created_by) !== Identity::stringify($actorId)) {
-            throw PermissionDeniedException::forAbility('upload-session-owner');
-        }
+        return $this->handles->forDrive($storage)->actingAs($this->authorizable($request) ?? throw MissingActorException::required())->extension(UploadOperations::class);
     }
 
     private function storageOf(UploadSession $session): Drive
@@ -163,33 +121,6 @@ final class S3MultipartProtocolController extends Controller
         }
 
         return $storage;
-    }
-
-    private function rootOf(Drive $storage): Node
-    {
-        $root = $storage->rootNode()->first();
-
-        if (!$root instanceof Node) {
-            abort(404);
-        }
-
-        return $root;
-    }
-
-    private function findNodeInStorage(int|string $nodeId, Drive $storage): Node
-    {
-        $node = $this->nodes->find($nodeId);
-
-        if (!$node instanceof Node || $node->drive_id !== $storage->getKey()) {
-            abort(404);
-        }
-
-        return $node;
-    }
-
-    private function s3Handler(): S3MultipartHandler
-    {
-        return app(S3MultipartHandler::class);
     }
 
     /**
@@ -227,27 +158,6 @@ final class S3MultipartProtocolController extends Controller
         }
 
         abort(Response::HTTP_REQUEST_ENTITY_TOO_LARGE, "The upload part exceeds the maximum chunk size of {$max} bytes.");
-    }
-
-    private function guard(Request $request, Ability $ability, Node $node): void
-    {
-        $actor = $this->authorizable($request);
-
-        if ($actor === null || !$this->access->can($actor, $ability, $node)) {
-            throw PermissionDeniedException::forAbility($ability->value);
-        }
-    }
-
-    private function guardCreate(Request $request, Drive $storage, Node $destination): void
-    {
-        $actor = $this->authorizable($request);
-
-        if ($actor === null
-            || !$this->access->canCreateIn($actor, $storage)
-            || !$this->access->can($actor, Ability::Create, $destination)
-        ) {
-            throw PermissionDeniedException::forAbility(Ability::Create->value);
-        }
     }
 
     private function authorizable(Request $request): ?Authorizable

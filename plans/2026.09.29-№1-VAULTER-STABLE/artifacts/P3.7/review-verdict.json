@@ -1,0 +1,22 @@
+{
+  "verdict": "GREEN",
+  "coverage": "Round1 entire P3.7 baseline diff; round2 owning corrections and direct dependency closure",
+  "provider": "grok",
+  "model": "grok-4.7",
+  "effort": "high",
+  "context_parameter": null,
+  "rounds": [
+    {
+      "session": "29a2d11f-f1a8-44b0-8cbe-7593387e2519",
+      "verdict": "FINDINGS",
+      "artifact": "review-round1.json"
+    },
+    {
+      "session": "2a1f9ee0-484e-40e2-bccd-2fde7b51a318",
+      "verdict": "GREEN",
+      "artifact": "review-round2-output.json"
+    }
+  ],
+  "correction": "Explicit UTC scan scheduling/bulk writes; bounded cleanup attempt backoff",
+  "candidate_source_manifest": "candidate-fingerprints.json"
+}

@@ -11,6 +11,7 @@ use Illuminate\Contracts\Config\Repository;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Models\Drive\Drive;
@@ -120,6 +121,26 @@ final class ShareResolver
      * trashed, not soft-deleted, and attached to a real storage (the tenant
      * boundary). Returns null otherwise so a share on an unsafe node is opaque.
      */
+    /** Re-check a resolved share at byte open; consumption has already reserved this use. */
+    public function refresh(ShareContext $context): ShareContext
+    {
+        $share = $context->share->newQuery()->whereKey($context->share->getRawOriginal($context->share->getKeyName()))->first();
+        $originalHash = $context->share->getRawOriginal('token_hash');
+        if (!is_string($originalHash) || !$share instanceof NodeShare || $share->isRevoked() || $share->isExpired()
+            || !hash_equals($share->token_hash, $originalHash)
+            || $share->password_hash !== $context->share->getRawOriginal('password_hash')
+            || $share->require_login !== $context->share->require_login) {
+            throw new NotFoundHttpException('Share link not found or no longer available.');
+        }
+        $node = $this->safeTargetNode($share);
+        $fresh = $node === null ? null : new ShareContext($share, $node, $share->permissions);
+        if ($node === null || $fresh === null || !$fresh->allows(Ability::View) || !$fresh->allows(Ability::Download) || !$this->issuerStillAuthorized($share, $node)) {
+            throw new NotFoundHttpException('Share link not found or no longer available.');
+        }
+
+        return $fresh;
+    }
+
     public function assertContentAvailable(Node $node, FileRevision $revision): void
     {
         $this->content->assertAvailable(node: $node, revision: $revision);

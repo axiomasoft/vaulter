@@ -21,6 +21,7 @@ use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Configuration\WebhooksConfig;
 use Vaulter\Content\OffScanPolicyResolver;
+use Vaulter\Contracts\Cas\DirectContentUrlSigner;
 use Vaulter\Contracts\Content\ScanPolicyResolver;
 use Vaulter\Contracts\Handlers\NodePresenter;
 use Vaulter\Contracts\Observability\MetricsRecorder;
@@ -29,6 +30,7 @@ use Vaulter\Contracts\Sharing\ShareTokenGenerator;
 use Vaulter\Contracts\Webhooks\HostResolver;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Enums\Cas\ScanMode;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Handlers\Builtin\DownloadOnlyHandler;
 use Vaulter\Handlers\Builtin\PreviewHandler;
@@ -249,8 +251,27 @@ final class BindingsRegistrar
         ]);
     }
 
+    private static function resolveContract(Application $app, string $contract): mixed
+    {
+        return $app->make($contract);
+    }
+
     public function boot(Application $app): void
     {
         $app->make(ProfileRegistry::class);
+        $downloads = $app->make(DownloadsConfig::class);
+        $downloads->directTtlSeconds();
+        if ($downloads->deliveryMode() === 'direct_signed' && (!$app->bound(DirectContentUrlSigner::class) || !self::resolveContract($app, DirectContentUrlSigner::class) instanceof DirectContentUrlSigner)) {
+            throw new InvalidConfigurationException('Direct content delivery requires an exact immutable content signer.');
+        }
+        if (self::resolveContract($app, ScanPolicyResolver::class) instanceof OffScanPolicyResolver) {
+            foreach ($app->make(ProfileRegistry::class)->all() as $profile) {
+                foreach ($app->make(ProfilePolicy::class)->scanSpecs($profile) as $spec) {
+                    if ($spec->mode !== ScanMode::Off) {
+                        throw new InvalidConfigurationException('Enabled scan policy requires the drive scan runtime.');
+                    }
+                }
+            }
+        }
     }
 }

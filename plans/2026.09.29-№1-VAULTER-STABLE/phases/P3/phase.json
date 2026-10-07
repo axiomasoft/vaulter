@@ -2,62 +2,400 @@
   "$schema": "urn:swissknifeman:task:plan:phase:v1",
   "id": "P3",
   "title": "Прикладной слой: авторизованный публичный API",
-  "design": "skeleton",
-  "goal": "> SKELETON — not detailed, разворачивается `design-phase: task:plan-design 2026.09.29-№1-VAULTER-STABLE P3`\n\nПубличный PHP API всегда авторизует: Actor/OperationContext/OperationGuard, handle Vaulter::drive($owner)->actingAs($user) с Operations (nodes, folders, files, trash, access, shares, activity), Actions с сигнатурой execute(OperationContext, *Input); доступ/шаринг/activity в core; бит Comment и драйвер прав по профилю; профили как runtime-политика; единый ingest загрузок на реальных байтах (все входы); strict tenancy.\n\n> **Контракт фазы (предварительный).** Потребляет: AD05–AD11, AD13, AD18, AD19, AD10; OPUS 05 §3–§8, 09 §1, §4–§6; V04, V05, V08, V16, V27, V29–V31. Детализация, маршруты и Validation — при дизайне фазы.\n\n> Phase Assurance: security-boundary + public-contract; frontier-items контрактов; full-ревью; фазовый аудит (D03).",
-  "context": "> SKELETON — not detailed, разворачивается `design-phase: task:plan-design 2026.09.29-№1-VAULTER-STABLE P3`\n\nПубличный PHP API всегда авторизует: Actor/OperationContext/OperationGuard, handle Vaulter::drive($owner)->actingAs($user) с Operations (nodes, folders, files, trash, access, shares, activity), Actions с сигнатурой execute(OperationContext, *Input); доступ/шаринг/activity в core; бит Comment и драйвер прав по профилю; профили как runtime-политика; единый ingest загрузок на реальных байтах (все входы); strict tenancy.\n\n> **Контракт фазы (предварительный).** Потребляет: AD05–AD11, AD13, AD18, AD19, AD10; OPUS 05 §3–§8, 09 §1, §4–§6; V04, V05, V08, V16, V27, V29–V31. Детализация, маршруты и Validation — при дизайне фазы.\n\n> Phase Assurance: security-boundary + public-contract; frontier-items контрактов; full-ревью; фазовый аудит (D03).\n\n**D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.",
+  "design": "detailed",
+  "goal": "Авторизованный canonical PHP API Vaulter::drive(owner)->actingAs(user) по OPUS05, immutable handle/sub-API, runtime profiles, профильные permissions, единый real-byte ingest/карантин, strict tenancy. Финальная поставка всех восьми outcomes проверяется на P3.8; current invocation design only, отдельный Claude design review запускает владелец.",
+  "context": "P2 закрыта, P3 спроектирована по actual code 2026-10-06. Норматив OPUS и D25 сохраняются; native JSON plan.py authoring, retired Markdown facade не применяется. Только product paths owning item и необходимых перечисленных consumers.\nПорядок P3.1 → P3.6 → P3.5 → P3.2 → P3.4 → P3.3 → P3.7 → P3.8. Staged contract в P3.2 и единый activation в P3.3 описаны в P3-design#Order; никакой временной wrapper/public stub. Досье разделяет prerequisites sequence/lifecycle/identity и final P4/P5 ownership.\nRequired reads каждого item: literal OPUS, D25, выбранные разделы P3-design, применимые invariants, examples, конкретные исходники. Исследование чужих future фаз не нужно. Review none на product items (D25); владелец отдельно запускает fresh Claude design review P3, этот запуск его не исполняет и не заявляет verdict.\nEnvironment: cwd root /home/vostrikov/projects/packages/vaulter; PHP8.4 scripts/php84, sibling cwd packages/<name> uses ../../scripts/php84; SQ=APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory:. PG=APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret. Перед PG-mutating tests mandatory native laravel-testing:test-isolation-guard + devops:db-test-preflight, scripts/db-preflight.sh; только test DB. Node/pnpm не нужны, Vue/hub paths вне P3.\nD25: early items affected checks+supported package analysis, full six-package non-mutation suites один раз final P3.8 на stable combined result, plus real PG critical lanes. Six-package closure обоснована shared public core contract/driver/providers, drive implementation/protocols, docs exporter/sequence/policy boundaries, Filament entries, Azgard scope, media maintenance/CAS consumers. Это phase-only barrier, не default каждый item. Coverage/type/PHPStan существующие пороги не ослаблять; Infection/Pest --mutate/composer mutate aliases/score/report/workflow dispatch с mutation jobs не исполнять.\nMySQL baseline P1.7/P2.7 остаётся P8.1, не объявлять green/отменённой: sequence additive migration fresh/upgrade support должна быть portable и проверена новым focused schema fixture; focused MySQL additive sequence migration имеет own P3.3/V7 actual up/down acceptance (после test DB preflight); unchanged receipt reuse at P3.8/V924. host MySQL full qualification отдельна по existing owner gate, не blanket запуск при design. Hosted safe CI O-3 только после отдельного explicit запроса; phase audit D03 сохраняется как owner-launched read-only шаг, не автоматически новый review.\nPhase validation local commands V901… actual result carrier P3.8/V90; product checks не выполняются при design. Локальная квалификация не означает hosted CI или reviewer GREEN.\nDesign-repair audit-design-2026-10-06 F01–F11: D26=C/D27=A/D28=A/D29 accepted по delegated agent authority; P3.1 profile seam→P3.6 wiring; legacy canCreateIn callers P3.5; purge-only Document/Shortcut P3.3; copy/restore scan jobs P3.7; final PG cascade/share/sequence proofs и nonempty/0-skipped receipts P3.8. Аудит не запускался, прежний RED fingerprint устарел, нового verdict нет.\n\nD29 — обязательные corrections при следующей детализации. Read @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json до разработки contracts; применимые C-rows разворачиваются в concrete owning item files/reads/named tests/exact validation, не остаются note-only. C01–C04/C07/C08: policy/enforcement + scan work/recovery + operation taxonomy + sequence/installed egress; supplemental contracts завершены в P3-security-contracts; current closure ждёт отдельно owner-launched fresh P3 design audit.",
+  "contract": {
+    "consumes": [
+      "Closed P2 canonical config/models/schema and preserved P1 tree/quota/CAS/connection/visibility",
+      "Immutable OPUS05/06/09/13/14 and D01/D03/D06/D07/D20/D25",
+      "Accepted D26=C, D27=A, D28=A, D29; @plan/knowledge/security-correction-contract.json"
+    ],
+    "produces": [
+      "Typed authorized handle and seven sub-APIs with same HTTP/Filament behavior",
+      "Frozen profiles/per-profile drivers/Comment permission",
+      "One real-byte ingest, idempotent complete, quarantine egress/scan job",
+      "Strict tenant isolation including system/queues and scoped maintenance",
+      "Eight executable contracts, P3 ledger/literal inputs, dossier/invariant model/examples/review packet",
+      "Durable scan obligations/recovery and explicit policy rollout; signed BIGINT aggregate sequence distinct from representation validators; strict egress mode"
+    ],
+    "boundaries": [
+      "No product execution in current design",
+      "P4 full Documents aggregate/lifecycle, P5 EventRecorder, P6 REST v1 remain separate",
+      "No mutation tools or unauthorized external operations"
+    ]
+  },
+  "scope": {
+    "include": [
+      "All eight original numbered P3 items; order from real dependencies",
+      "Minimum sequence/lifecycle/identity prerequisites with explicit P4/P5 completion ownership",
+      "Declared direct consumers and additive schema prerequisite",
+      "C01–C04/C07/C08: policy/enforcement + scan work/recovery + operation taxonomy + sequence/installed egress; concrete supplemental design completed in P3-security-contracts; design audit repaired closure GREEN (F12/F13), @plan/knowledge/audit-design-2026-10-06-p3-green.json."
+    ],
+    "exclude": [
+      "Future phases implementation/design expansion",
+      "Vue/hub redesign, external AV/cloud setup, publishing/push/hosted dispatch"
+    ]
+  },
   "depends_on": [
     "P2"
   ],
-  "items": [],
-  "batches": [],
+  "pitfalls": [
+    "Readonly immutable handle must not cache actor/ACL or drift tenant between operations",
+    "Profile boolean features AND versus mandatory scan OR; MIME wildcard predicate intersection",
+    "Nested complete transaction afterCommit/cleanup cannot dispatch/erase staging before outer commit",
+    "TenantResolver has no setter; middleware ordering and fail-without-retry must be explicit",
+    "expectedSequence cannot be accepted/ignored while schema waits for P4",
+    "Historical request_id UUID cannot receive arbitrary correlationId/ULID",
+    "Unsupported document COPY must fail before partial subtree operations; Document/Shortcut PURGE сохраняет physical FK cascade"
+  ],
+  "validation": [
+    {
+      "id": "V901",
+      "cmd": "scripts/php84 vendor/bin/pint --test packages/core",
+      "expect": "exit0; complete core formatting",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V902",
+      "cmd": "scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress",
+      "expect": "exit0; adopted root/core analysis",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V903",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests",
+      "expect": "exit0; full core non-mutation suite; only declared SQLite PG skips",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V904",
+      "cmd": "../../scripts/php84 vendor/bin/pint --test",
+      "expect": "exit0; affected package formatting",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V905",
+      "cmd": "../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress",
+      "expect": "exit0; supported package analysis",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V906",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests",
+      "expect": "exit0; full affected non-mutation package suite; declared SQLite PG skips only",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V907",
+      "cmd": "../../scripts/php84 vendor/bin/pint --test",
+      "expect": "exit0; affected package formatting",
+      "kind": "acceptance",
+      "cwd": "packages/documents"
+    },
+    {
+      "id": "V908",
+      "cmd": "../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress",
+      "expect": "exit0; supported package analysis",
+      "kind": "acceptance",
+      "cwd": "packages/documents"
+    },
+    {
+      "id": "V909",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests",
+      "expect": "exit0; full affected non-mutation package suite; declared SQLite PG skips only",
+      "kind": "acceptance",
+      "cwd": "packages/documents"
+    },
+    {
+      "id": "V910",
+      "cmd": "../../scripts/php84 vendor/bin/pint --test",
+      "expect": "exit0; affected package formatting",
+      "kind": "acceptance",
+      "cwd": "packages/media"
+    },
+    {
+      "id": "V911",
+      "cmd": "../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress",
+      "expect": "exit0; supported package analysis",
+      "kind": "acceptance",
+      "cwd": "packages/media"
+    },
+    {
+      "id": "V912",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests",
+      "expect": "exit0; full affected non-mutation package suite; declared SQLite PG skips only",
+      "kind": "acceptance",
+      "cwd": "packages/media"
+    },
+    {
+      "id": "V913",
+      "cmd": "../../scripts/php84 vendor/bin/pint --test",
+      "expect": "exit0; affected package formatting",
+      "kind": "acceptance",
+      "cwd": "packages/filament"
+    },
+    {
+      "id": "V914",
+      "cmd": "../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress",
+      "expect": "exit0; supported package analysis",
+      "kind": "acceptance",
+      "cwd": "packages/filament"
+    },
+    {
+      "id": "V915",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests",
+      "expect": "exit0; full affected non-mutation package suite; declared SQLite PG skips only",
+      "kind": "acceptance",
+      "cwd": "packages/filament"
+    },
+    {
+      "id": "V916",
+      "cmd": "../../scripts/php84 vendor/bin/pint --test",
+      "expect": "exit0; affected package formatting",
+      "kind": "acceptance",
+      "cwd": "packages/azgard"
+    },
+    {
+      "id": "V917",
+      "cmd": "../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress",
+      "expect": "exit0; supported package analysis",
+      "kind": "acceptance",
+      "cwd": "packages/azgard"
+    },
+    {
+      "id": "V918",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests",
+      "expect": "exit0; full affected non-mutation package suite; declared SQLite PG skips only",
+      "kind": "acceptance",
+      "cwd": "packages/azgard"
+    },
+    {
+      "id": "V919",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Concurrency packages/core/tests/Database packages/core/tests/Upgrade packages/core/tests/Schema packages/core/tests/Tenancy",
+      "expect": "exit0; required PG matrix no skips, P1/P2 upgrade/connection/type/sequence regressions Обязательный receipt: числовые executed_tests>=1 и skipped=0, discovered/matched test names и output; exit0 без тестов/с skip НЕ pass. Filter обязан выполнить named scenario, no silent unmatched filter.",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V920",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Concurrency tests/Uploads tests/Tenancy",
+      "expect": "exit0; all required PG interleavings, protocol/ingest/tenancy scenarios, no skips Обязательный receipt: числовые executed_tests>=1 и skipped=0, discovered/matched test names и output; exit0 без тестов/с skip НЕ pass. Filter обязан выполнить named scenario, no silent unmatched filter.",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V921",
+      "cmd": "python3 plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-coverage.py check",
+      "expect": "exit0; 1438 source units/source manifest unchanged; all detailed ledgers and literal carriers match",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V922",
+      "cmd": "python3 /home/vostrikov/projects/packages/swissknifeman/packages/task/scripts/plan.py check plans/2026.09.29-№1-VAULTER-STABLE",
+      "expect": "0 errors; no unhandled warnings",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V923",
+      "cmd": "python3 /home/vostrikov/projects/packages/swissknifeman/packages/task/scripts/plan.py render plans/2026.09.29-№1-VAULTER-STABLE --check",
+      "expect": "exit0; generated views fresh",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V924",
+      "procedure": "Проверить P3.3/V7 focused MySQL additive NodeSequenceSchemaTest receipt на final P3 candidate: если schema/new migration/fixtures/bootstrap/dependency inputs неизменны, reuse с полным proof closure; если менялись, исполнить тот же exact P3.3/V7 command/cwd/env. Известный полный MySQL baseline не объявлять passed.",
+      "expect": "P3 additive migration actual MySQL proof GREEN на current input closure; reused явно marked; full baseline still P8.1 Обязательный receipt: числовые executed_tests>=1 и skipped=0, discovered/matched test names и output; exit0 без тестов/с skip НЕ pass. Filter обязан выполнить named scenario, no silent unmatched filter. Reuse включает исходное executed_tests/skipped и named actual up/down proof.",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V925",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Document/PurgeTrashCascadeTest.php",
+      "expect": "exit 0; executed_tests>=1, skipped=0 с числом/names в V90 receipt; actual PG physical node+inline revision FK-cascade, обязательная documents PG lane",
+      "kind": "acceptance",
+      "cwd": "packages/documents"
+    },
+    {
+      "id": "V926",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Sharing/ShareSecurityBoundaryTest.php --filter=\"revoke commit\"",
+      "expect": "exit 0; executed_tests>=1, skipped=0 в receipt; named revoke commit PG fork proof на final P3 tree, новый public read после revoke commit→404",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V927",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Concurrency/ScanWorkRecoveryRaceTest.php",
+      "expect": "exit0; executed_tests>=1 skipped=0; recover/fencing process matrix",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V928",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Schema/ScanEvidenceSchemaTest.php",
+      "expect": "exit0; executed_tests>=1 skipped=0; new PG additive schema qualified",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V929",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=mysql DB_HOST=127.0.0.1 DB_PORT=3306 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Schema/ScanEvidenceSchemaTest.php",
+      "expect": "exit0; executed_tests>=1 skipped=0; new MySQL additive schema qualified",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V930",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Document/LegacyNodeSequenceTest.php tests/Document/LegacyNodeSequenceRaceTest.php",
+      "expect": "exit0; actual Document/Yjs current writer branches and conditional Document-vs-rename race under helper; unconditional Yjs only serializes/bump, not falsely requires an absent client expectation. Final-tree named receipts executed_tests>=1/skipped=0, backend pids/connections/barrier.",
+      "kind": "acceptance",
+      "cwd": "packages/documents"
+    },
+    {
+      "id": "V931",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Document/ContentEgressBoundaryTest.php",
+      "expect": "exit0; actual inline content/export and attached FileRevision availability, direct service and HTTP scope, no fabricated scan evidence. May reuse exact V909 full lane only with required matched names/counts. Receipt: executed_tests>=1, skipped=0; all prescribed named SEC scenarios executed with discovered/matched/passed/failed counts and output; empty/unmatched/skip is not pass.",
+      "kind": "acceptance",
+      "cwd": "packages/documents"
+    },
+    {
+      "id": "V932",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Tenancy/PrivateScannerTenantBoundaryTest.php",
+      "expect": "exit0; true scoped private scanner job+recovery, authoritative lease/immutable blob scope before reads; final tenant connection/context proof. May reuse V920 if required names/counts/input closure proven. Receipt: executed_tests>=1, skipped=0; all prescribed named SEC scenarios executed with discovered/matched/passed/failed counts and output; empty/unmatched/skip is not pass.",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    }
+  ],
+  "deliverables": [
+    "P3-design, P3-invariants, P3-examples, P3-design-evidence, P3-review-packet",
+    "Eight detailed canonical item contracts and eight literal OPUS inputs",
+    "ledger-P3.tsv with immutable source provenance",
+    "P3.8 phase validation carrier on future execution",
+    "Concrete P3-security-contracts with exact schemas/rollout/attempt/recovery/cleanup/callers/writers and named SEC/D06 acceptance mappings"
+  ],
+  "assurance": {
+    "impact": "security-boundary + public-contract + data-integrity",
+    "seams": [
+      "guard and all public callers",
+      "profile/driver boot cache",
+      "sequence and content lifecycle prerequisites",
+      "stream ownership/CAS/quota/session locks",
+      "scan egress/async jobs",
+      "tenant/owner/queue/maintenance authority"
+    ],
+    "live": false,
+    "note": "Independent design review owner-launches Claude. Current pass only authoring and structural/provenance checks; no audit verdict. D03 phase audit kept, D25 excludes blanket per-item review."
+  },
+  "supporting": [
+    "@plan/knowledge/P3-design.json",
+    "@plan/knowledge/P3-invariants.json",
+    "@plan/knowledge/P3-examples.json",
+    "@plan/knowledge/P3-design-evidence.json",
+    "@plan/knowledge/P3-review-packet.json",
+    "@plan/knowledge/security-correction-contract.json",
+    "@plan/knowledge/implementation-security-assessment-2026-10-06.json",
+    "@plan/knowledge/P3-security-research-results-2026-10-06.json",
+    "@plan/knowledge/P3-security-contracts.json"
+  ],
+  "items": [
+    "P3.1",
+    "P3.6",
+    "P3.5",
+    "P3.2",
+    "P3.4",
+    "P3.3",
+    "P3.7",
+    "P3.8"
+  ],
+  "batches": [
+    {
+      "id": "B31",
+      "items": [
+        "P3.1"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B32",
+      "items": [
+        "P3.6"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B33",
+      "items": [
+        "P3.5"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B34",
+      "items": [
+        "P3.2"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B35",
+      "items": [
+        "P3.4"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B36",
+      "items": [
+        "P3.3"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B37",
+      "items": [
+        "P3.7"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B38",
+      "items": [
+        "P3.8"
+      ],
+      "mode": "recommended"
+    }
+  ],
   "orchestration": {
     "strategy": "sequential"
   },
   "sections": [
     {
-      "id": "P3-API",
-      "title": "P3 — Прикладной слой: авторизованный публичный API",
-      "text": "> **Статус дизайна:** skeleton (D03); items детализируются `task:plan-design 2026.09.29-№1-VAULTER-STABLE P3` после закрытия предыдущей фазы, по фактическому коду."
+      "id": "Execution",
+      "title": "Implementation order and route",
+      "text": "P3.1 — Actor, OperationContext, NodeLocator и OperationGuard; frontier/high; Review none\nP3.6 — Профили как frozen runtime policy; implementation/high; Review none\nP3.5 — Comment bit и профильный PermissionDriver/AccessScope; implementation/high; Review none\nP3.2 — Типизированные sub-API контракты и значения PHP API; frontier/high; Review none\nP3.4 — Core Operations: grants, shares и видимый activity feed; implementation/high; Review none\nP3.3 — Drive Operations и атомарный canonical PHP API switch; frontier/high; Review none\nP3.7 — Единый ingest, resumable idempotency и карантин; frontier/high; Review none\nP3.8 — Strict tenancy всех boundaries и единый фазовый barrier; frontier/high; Review none"
     },
     {
-      "id": "Phase-Context",
-      "title": "Phase Context",
-      "text": "> SKELETON — not detailed, разворачивается `design-phase: task:plan-design 2026.09.29-№1-VAULTER-STABLE P3`\n\nПубличный PHP API всегда авторизует: Actor/OperationContext/OperationGuard, handle Vaulter::drive($owner)->actingAs($user) с Operations (nodes, folders, files, trash, access, shares, activity), Actions с сигнатурой execute(OperationContext, *Input); доступ/шаринг/activity в core; бит Comment и драйвер прав по профилю; профили как runtime-политика; единый ingest загрузок на реальных байтах (все входы); strict tenancy.\n\n> **Контракт фазы (предварительный).** Потребляет: AD05–AD11, AD13, AD18, AD19, AD10; OPUS 05 §3–§8, 09 §1, §4–§6; V04, V05, V08, V16, V27, V29–V31. Детализация, маршруты и Validation — при дизайне фазы.\n\n> Phase Assurance: security-boundary + public-contract; frontier-items контрактов; full-ревью; фазовый аудит (D03).\n\n**D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit."
+      "id": "D06-Self-Check",
+      "title": "D06 self-check supplemental designer",
+      "text": "P3.1: actor/locator/OperationKind exact signatures + OperationTaxonomy SEC-R14/NC-SCOPE; profile/scanner implementation owned later, no unresolved executor decision.\nP3.6: exact core ScanMode/spec/ScanConfig + UploadPolicy appended args, independent global/profile predicates and operation feature matrix; actual persisted rollout/scanner binding P3.7, pure fixtures executable before it.\nP3.5: existing seven create callsites and profile driver equivalence unchanged; system/profile rules consume Operations. P3.2: optional int64 sequence options/FileStream bytes-only/reflection, no product scanner dependency.\nP3.4: grants/share/activity guards preserved, share-derived tenant and live egress hook before actual P3.7 wiring; no raw URL metadata promise.\nP3.3: signed BIGINT/check/overflow/up/down all three DBs; NodeSequence changed-once/no-op/stale/retry/replay; EVERY current drive and Document/Yjs writer including PersistCollaborationStateAction covered exact paths+named fixtures/PG race. COPY never inherits grandfathering, new destination admission hook implemented P3.7. No universal ETag promise.\nP3.7: exact additive fields/models/aliases/FKs/indexes; immutable evidence vs work/request ledger; server admission/rollout activation; required legacy durable backfill cursor; claim/settle fencing and bounded attempts/reconcile/rescan flags/cursors/schedule; private scanner identity ownership; installed egress inventory strict/direct contract; complete outer commit pointers/cleanup-pending/stream finally. Acceptance SEC-R01–R20 split by actual owning files, schemas SQLite/PG/MySQL, real PG crash/race, D06 controls exact cmd/cwd/env in V81.\nP3.8: strict tenant job/maintenance/public boundaries and private capability receipt; phase V90 owns full local non-mutation once including V927–V932 and current C-row evidence. Future C05/P5.1, C06/P5.3, C07/P4.7/P6, C08/P4.4/P6, C09/P7, C10/P8 remain assigned and pending; P4–P8 skeleton bytes preserved.\nExecutor search/choice: no missing schema/state/recovery/config/egress/writer decision remains in current P3 design scope; routine coding details may not alter contracts. Any unforeseen incompatible code fact triggers FailurePlaybook/new D#; product check-profile still records actual changed files and proof dependencies under D25. Ledger unit→item maps and original 23 source hashes preserved, no lost OPUS coverage asserted by prose alone—structural/coverage/byte checks recorded in validation.\nDesign only. No product PHP/Pest/DB/CI, negative-control execution, independent audit or GREEN. Native old plan-work Markdown design protocol not used; canonical plan.py authoring/check/render and authored hash closure recorded, no Task-signed independent fingerprint claim."
     },
     {
-      "id": "Scope-Included-planned",
-      "title": "Scope Included (planned)",
-      "text": "Контракты handle и типы данных; реализации Operations; PermissionDriver по профилю; ProfileRegistry/UploadPolicy; StagedUpload/UploadFacts/MimeSniffer/IngestFileAction/ContentScanner; TenantResolver и RestoreTenantContext; golden API = OPUS 05."
+      "id": "Next",
+      "title": "Owner-launched fresh design audit",
+      "text": "Supplemental P3 design завершён: @plan/knowledge/P3-security-contracts.json и updated inputs/fingerprint/evidence. Единственный следующий шаг владельца: task:plan-audit 2026.09.29-№1-VAULTER-STABLE design, explicit scope P3, fresh independent session/current authored fingerprint. Audit не исполнен здесь, GREEN отсутствует. Product run только после required design audit и отдельного owner request. Native runtime next может вычислять run-items из сохранённого detailed state; это не отменяет данный контракт и не даёт execution authority. Historical RED/старые input sets сохраняются."
     },
     {
-      "id": "Scope-Excluded",
-      "title": "Scope Excluded",
-      "text": "REST v1 (P6); агрегат Document (P4)."
-    },
-    {
-      "id": "Dependencies",
-      "title": "Dependencies",
-      "text": "P2 закрыта."
-    },
-    {
-      "id": "Planned-Items-OPUS-13-D01-.3",
-      "title": "Planned Items (из OPUS 13, нумерация сохраняется — D01 п.3)",
-      "text": "- P3.1 — Actor, контекст, guard (frontier/high)\n- P3.2 — Контракты handle и типы данных (frontier/high)\n- P3.3 — Реализации drive Operations и новые сигнатуры Actions (implementation/high; ревью frontier)\n- P3.4 — Core Operations: доступ, шаринг, activity (implementation/medium)\n- P3.5 — Модель прав: бит Comment, драйвер по профилю (implementation/medium)\n- P3.6 — Профили как runtime-политика (implementation/high)\n- P3.7 — Единый ingest загрузок (frontier/high → implementation)\n- P3.8 — Strict tenancy (implementation/high; security-ревью)"
-    },
-    {
-      "id": "Items",
-      "title": "Items",
-      "text": "| ID | Title | Status | Updated |\n|:--|:--|:--|:--|"
-    },
-    {
-      "id": "Phase-Handoff",
-      "title": "Phase Handoff",
-      "text": "—"
-    },
-    {
-      "id": "Validation-Execution-Policy",
-      "title": "Mandatory validation/execution policy (D25)",
-      "text": "**D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit."
+      "id": "Security-Corrections",
+      "title": "Concrete mandatory corrections supplied",
+      "text": "D26C/D27A/D28A/D29 remain accepted. C01–C04/C07/C08 concrete P3 contracts now in required P3-security-contracts with owning files/names/exact commands, not note-only future decisions. C05/C06/C09/C10 and future C07/C08 owners unchanged. No product qualification inferred; current-input fresh P3 design audit is next owner task."
     }
   ]
 }

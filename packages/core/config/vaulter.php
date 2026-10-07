@@ -8,6 +8,11 @@ use Vaulter\Access\Drivers\SpatiePermissionDriver;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Cas\Blob;
+use Vaulter\Models\Content\ScanBackfillRun;
+use Vaulter\Models\Content\ScanEvidenceRecord;
+use Vaulter\Models\Content\ScanObligation;
+use Vaulter\Models\Content\ScanPolicyState;
+use Vaulter\Models\Content\ScanRequest;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\FileRevision;
@@ -109,6 +114,8 @@ return [
         'max_ttl_hours' => env('VAULTER_SHARE_MAX_TTL_HOURS', 720),
     ],
     'downloads' => [
+        'delivery_mode' => 'strict',
+        'direct_ttl_seconds' => 60,
         'inline_mime_types' => [
             'image/png',
             'image/jpeg',
@@ -151,6 +158,11 @@ return [
         'drive' => Drive::class,
         'node' => Node::class,
         'file' => File::class,
+        'scan_obligation' => ScanObligation::class,
+        'scan_request' => ScanRequest::class,
+        'scan_evidence' => ScanEvidenceRecord::class,
+        'scan_policy_state' => ScanPolicyState::class,
+        'scan_backfill_run' => ScanBackfillRun::class,
         'file_revision' => FileRevision::class,
         'blob' => Blob::class,
         'file_revision_blob' => FileRevisionBlob::class,

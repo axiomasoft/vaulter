@@ -5,6 +5,8 @@ declare(strict_types=1);
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Contracts\Cas\StorageDriver;
+use Vaulter\Data\Drive\UploadOptions;
+use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Enums\Access\Permission;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -29,13 +31,9 @@ beforeEach(function (): void {
 });
 
 it('serves a public download of a text/html declared mime as octet-stream with nosniff (F-P1.11-03)', function (): void {
-    $drive = Vaulter::for(DriveTestHelpers::host());
+    $drive = Vaulter::drive(DriveTestHelpers::host())->asSystem('test fixture');
 
-    $fileNode = $drive->upload(
-        DriveTestHelpers::streamFor('<script>alert(1)</script>'),
-        originalName: 'evil.txt',
-        mimeType: 'text/html',
-    );
+    $fileNode = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('<script>alert(1)</script>'), 'evil.txt'), new UploadOptions(declaredMimeType: 'text/html'));
 
     ShareTestHelpers::share($fileNode->refresh(), token: 'html-dl-token', permissions: Permission::Read->value);
 
@@ -47,13 +45,9 @@ it('serves a public download of a text/html declared mime as octet-stream with n
 });
 
 it('serves a public download of a whitelisted image/png declared mime as-is, nosniff still set unconditionally (F-P1.11-03)', function (): void {
-    $drive = Vaulter::for(DriveTestHelpers::host());
+    $drive = Vaulter::drive(DriveTestHelpers::host())->asSystem('test fixture');
 
-    $fileNode = $drive->upload(
-        DriveTestHelpers::streamFor('not really a png, headers only'),
-        originalName: 'photo.png',
-        mimeType: 'image/png',
-    );
+    $fileNode = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor(base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jE1cAAAAASUVORK5CYII=')), 'photo.png'), new UploadOptions(declaredMimeType: 'image/png'));
 
     ShareTestHelpers::share($fileNode->refresh(), token: 'png-dl-token', permissions: Permission::Read->value);
 

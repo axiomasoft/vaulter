@@ -1,0 +1,773 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P3.7",
+  "title": "Единый ingest, resumable idempotency и карантин",
+  "status": "done",
+  "summary": "PHP/HTTP single/tus/S3 используют один потоковый ingest по фактическим bytes, effective policy и inspector chain; complete ровно один раз сохраняет результат, scan обязателен на всех content egress boundaries.",
+  "why": "Самый сложный integrity seam: staging ownership, nested retry/commit, session/sweeper locks, quota/CAS и asynchronous scan. Partial retrofit MIME только в complete оставляет PHP/single обход.",
+  "scope": {
+    "include": [
+      "UploadFacts и PreparedUpload, existing session StagedUpload::stageSource и CAS prepared ownership; 64KiB chunking, counted size/hash, hard max during read, own resources finally, borrowed streams open. Existing tus/s3 staging methods и BlobStore commitStaged retained, no second CAS implementation.",
+      "MimeSniffer finfo8192 + bounded generic container refinement; inspectors interfaces 06 §7 and deterministic priority; effective policy Profile ∧ global, rejected exception reason stable. Declared MIME separate, detected persisted node/file/revision; existing schema scan/MIME/pointers reused, fill model casts/fillable/repositories as required.",
+      "IngestFileAction единственный byte mutation, stage once outside retry and policy before writes; transaction lock matrix+quota from actual head+BlobScope from persisted drive. Name AddRevision path reauthorizes actual conflict file before SQL attempt. Context identity and node sequence подключены P3.3, no duplicated increments/events.",
+      "UploadOperations(handle) extension + internal Initiate/Complete/Abort Actions execute(context,input). All HTTP tus/s3/single handlers route through it; initiation declared facts early rejects, completion actual bytes/full current permissions. Session credential/ownership unchanged; real session target re-fetch incl tenant even on replay.",
+      "Complete persistent result pointers same OUTER transaction as node/revision/edges/markCommitted; committed replay no staging/no duplicate event/job, returns stored node after current visibility. Session mutex retained through complete, cleanup after outer commit only; abort/expire/sweep interleavings and retry exception fully tested.",
+      "Core ContentScanner/ScanVerdict/ContentAvailabilityGuard и independent evidence/attempt projection; drive durable ScanObligation/ScanFileRevision/reconciler записываются с revision одной outer transaction; queue afterCommit — wakeup, lost publication reclaim; fencing, bounded retry, structured failure reasons. @plan/knowledge/security-correction-contract.json#Scan.",
+      "Installed PHP/HTTP/share/handler/preview/thumbnail/export egress inventory использует fresh availability/auth check до bytes/URL/304. Strict mediated delivery default, direct signed URL explicit opt-in TTL/exact version/bounded revocation. @plan/knowledge/security-correction-contract.json#Egress.",
+      "Typed vaulter-drive.uploads scan config retains required compatibility required=true→all_content, explicit mode/legacy rollout/scanner/queue, immutable evidence compatibility. Core interface without optional-package dependency; configured required scanner absence boot error. Exact config/state schema supplied in P3-security-contracts#Schema/Policy/StateMachine.",
+      "canCreateInWorkspace→canCreateIn уже полностью поставляет P3.5; controller/resource paths здесь только UploadOperations/ingest/content-egress switch, без повторного владения rename.",
+      "Принято D26=C. Scan evidence, enforcement и work attempt — разные сущности. Existing scan_status сохраняется как совместимая проекция; absence/not_required не являются clean. Режимы off, new_content_only, all_content; старый required=true однозначно all_content. Off допускается только при отсутствии обязательной global/profile политики; infected всегда запрещает public egress. В required-eligible revision только действующее совместимое clean evidence разрешает egress; pending/failed/unsupported/too_large/password_protected/access_denied/unknown не разрешают. Nonrequired failure не превращается в clean.\nnew_content_only — явный opt-in rollout: сервер сохраняет границу перехода и eligibility существующих revision, без доверия client timestamps. Global/profile predicates выполняются оба; профиль не может выводить revision из global eligibility. Простое max(mode) допустимо только с общей eligibility boundary. all_content блокирует legacy not_required до успешного scan; команда rescan/backfill позволяет подготовить clean evidence перед cutover. Ужесточение проверяется на каждом egress, не только при ingest. No scanner для включённого required/new-content enforcement — configuration error.\nCOPY и restoreRevision создают новую revision под текущей destination policy: legacy exemption никогда не переносится, новая pending/failed/unknown revision получает собственную durable scan obligation. Источник infected сохраняет блокировку, а не отмывается новым identity. Clean evidence переиспользуется только для проверенных идентичных immutable bytes, совместимой scanner/policy version и разрешённого scope; cross-tenant digest сам по себе не authority. Trash restore сохраняет identity, но проверяет текущую policy. Старый clean explicit revision может читаться, если его evidence всё ещё удовлетворяет текущей policy; pending head автоматически не подменяется.\nRevision creation и required scan obligation записываются атомарно в одной Vaulter outer transaction; rollback отменяет обе. Уникальная obligation содержит scope, revision/blob identity, policy/scanner version и generation/attempt fencing. afterCommit — ускорение queue publication после OUTERMOST commit; очередь не является единственным durable work store. Bounded reconciler восстанавливает commit→publish crash, lost jobs/expired leases; retry и settle fencing исключают stale attempt. Scanner IO за SQL transaction; settle короткий, повторно проверяет scope/content identity/attempt. Deleted revision no-op; нельзя обновлять current head через file_id.\nclean/infected terminal только в пределах attempt; управляемый rescan — новый attempt. Optional failed rescan не стирает still-valid clean evidence; новый обязательный scanner/policy epoch требует нового совместимого evidence. Infected остаётся блокирующим, late clean/старый attempt не снимает infected. Снятие quarantine требует отдельного явно авторизованного, аудитируемого workflow; success более старого job не является таким workflow. Core содержит evidence/availability interfaces, drive — lifecycle/work/recovery, optional scanner реализация хоста. Нельзя переиспользовать нынешний webhook OutboxRelay как scan carrier без исправления P5.3.",
+      "Default sensitive egress — application-mediated gateway: fresh ACL/tenant/profile/scan check на каждый новый request, exact immutable content selection, private/no-store cache для защищённых ответов. Проверить PHP/HTTP/share/preview/thumbnail/export/handler и cached descriptor/304, не только download controller. Metadata видимо по ACL, но metadata lookup не выдаёт bytes/bearer URL. Already-started stream нельзя обещать отозвать.\nDirect object-store signed URL — explicit opt-in режим с ограниченным TTL, exact object version и честным bounded-revocation контрактом. Application revoke после выдачи URL сам по себе не отзывает object-store capability; не обещать immediate revocation. Public API не может выдать такой URL в strict режиме. Trusted storage tags/IAM TBAC — optional дополнительный слой с отдельным protocol обновления, не автоматическая гарантия. Сырой storage driver может поддерживать temporaryUrl, но product egress обязан применять режим. P3.7 владеет installed callers, P4.4 future exporters, P6.1/6.3 routes/caches/contract.",
+      "C03 actual CompleteUploadAction correction: MIME inspection внутри owner finally; staged source deletion only after OUTERMOST commit, recoverable cleanup failure. Add operational rescan/backfill and bounded scan-work recovery command; bootstrap scheduler recipe core package compatible, P7.2 production orchestration.",
+      "C01–C03/C08 exact core schema/models/repositories + immutable evidence + durable obligations/requests/backfill + policy activation/cursors + generation/lease/fenced settle + private scanner + strict/direct signer + installed egress + outer commit/cleanup-pending contract; every required new admission own durable intent, legacy activation durable bounded discovery. All mechanisms complete here before P5/P7 future enhancements."
+    ],
+    "exclude": [
+      "Third-party AV deployment/real S3 cloud calls; scanner infected event pipeline expansion (P5/T2); redesign session lease protocol; mutation tools/campaigns."
+    ]
+  },
+  "depends_on": [
+    "P3.3"
+  ],
+  "decisions": [
+    "D01",
+    "D03",
+    "D06",
+    "D07",
+    "D20",
+    "D25",
+    "D26",
+    "D27",
+    "D28",
+    "D29"
+  ],
+  "skills": [],
+  "reads": [
+    {
+      "path": "@plan/knowledge/artifacts-P3-design-P3.7-opus.json",
+      "why": "Первый read: дословные owned OPUS units, mixed sections разграничены notes",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/validation-and-execution-policy.json",
+      "why": "D25: check-profile до product edit, affected checks, broad barrier P3.8, no mutation",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/P3-design.json",
+      "why": "Self-contained algorithms, public API map и explicit P4/P5/P6 seam allocation",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/P3-invariants.json",
+      "why": "security/data invariants, bypass paths, lock pairs",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/P3-examples.json",
+      "why": "Concrete allowed/denied worked cases",
+      "required": true
+    },
+    {
+      "path": "packages/drive/src/Actions/Files/IngestFileAction.php",
+      "why": "Current quota/CAS stage transaction",
+      "required": true
+    },
+    {
+      "path": "packages/drive/src/Actions/Uploads/CompleteUploadAction.php",
+      "why": "Nested transaction and finally baseline",
+      "required": true
+    },
+    {
+      "path": "packages/drive/src/Uploads/UploadSessionManager.php",
+      "why": "Existing session critical section",
+      "required": true
+    },
+    {
+      "path": "packages/drive/src/Uploads/StagedUpload.php",
+      "why": "Do not break protocol staging",
+      "required": true
+    },
+    {
+      "path": "packages/drive/tests/Uploads/UploadSessionCriticalSectionTest.php",
+      "why": "Existing adversarial sweep protection",
+      "required": true
+    },
+    {
+      "path": "packages/media/src/Cas/StagedTempObject.php",
+      "why": "Actual prepared CAS ownership",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/security-correction-contract.json",
+      "why": "D29 mandatory C01–C10 constraints and accepted amendments; consume relevant section before product work",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/implementation-security-assessment-2026-10-06.json",
+      "why": "Existing-code forward corrections, compatible baselines and current SHA inputs",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/P3-security-contracts.json",
+      "section": "Schema, Policy, StateMachine, Evidence, Recovery, EgressInventory, UploadCleanup, Acceptance, FailurePlaybook",
+      "why": "D26–D29 concrete normative schema/algorithm/acceptance and corrected owner boundaries, completed supplemental design",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/drive/src/Actions/{Files,Uploads}/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Data/{Files,Uploads}/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Operations/UploadOperations.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/src/Contracts/Uploads/UploadInspector.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/src/Uploads/{StagedUpload,PreparedUpload,UploadSessionManager}.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Uploads/Inspection/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Jobs/Uploads/ScanFileRevision.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/src/Configuration/DriveConfig.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/config/vaulter-drive.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Repositories/Uploads/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Models/Uploads/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Http/Controllers/{NodeController,DownloadController,Uploads/*.php}",
+      "change": "any",
+      "note": "Только UploadOperations/ingest/content-egress switch; canCreateIn migration поставляет P3.5"
+    },
+    {
+      "path": "packages/drive/src/Providers/{Bindings,Http}Registrar.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Contracts/Cas/ContentScanner.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Enums/Cas/ScanVerdict.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Content/ContentAvailabilityGuard.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Exceptions/Files/ContentUnavailableException.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Models/Drive/FileRevision.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Repositories/Drive/FileRevisionStoreRepository.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Http/Support/DownloadHeaders.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/{Sharing,Handlers}/**/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Http/Controllers/Sharing/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/documents/src/Export/NodeExportService.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/documents/src/Engines/Handlers/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Content/FileContentLifecycle.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/tests/Content/*.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/tests/Uploads/P3/*.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/tests/Concurrency/CompleteUploadRaceTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/documents/tests/Document/ExporterContentGuardTest.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/{core,drive,documents}/tests/Arch/__snapshots__/public-api.txt",
+      "change": "any"
+    },
+    {
+      "path": "@plan/artifacts/P3.7/check-profile.json",
+      "change": "create"
+    },
+    {
+      "path": "@plan/artifacts/P3.7/completion.json",
+      "change": "create"
+    },
+    {
+      "path": "UPGRADE.md",
+      "change": "modify",
+      "note": "Только изменение публичного API/policy данного item"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify",
+      "note": "Только Unreleased данного item"
+    },
+    {
+      "path": "packages/drive/tests/Uploads/P3/StreamingMemoryProbe.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/src/Exceptions/Files/{UploadRejected,NotAFile}Exception.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/tests/Uploads/P3/QuarantineBoundaryTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/tests/Uploads/P3/ScanJobBoundaryTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Models/Content/ScanObligation.php",
+      "change": "create",
+      "note": "D29 declared owning path; concrete contract supplied in P3-security-contracts"
+    },
+    {
+      "path": "packages/drive/src/Content/ScanWorkReconciler.php",
+      "change": "create",
+      "note": "D29 declared owning path; concrete contract supplied in P3-security-contracts"
+    },
+    {
+      "path": "packages/core/src/Repositories/Content/ScanObligationRepository.php",
+      "change": "create",
+      "note": "D29 declared owning path; concrete contract supplied in P3-security-contracts"
+    },
+    {
+      "path": "packages/drive/src/Console/RescanFileRevisionsCommand.php",
+      "change": "create",
+      "note": "D29 declared owning path; concrete contract supplied in P3-security-contracts"
+    },
+    {
+      "path": "packages/drive/src/Console/ReconcileScanWorkCommand.php",
+      "change": "create",
+      "note": "D29 declared owning path; concrete contract supplied in P3-security-contracts"
+    },
+    {
+      "path": "packages/core/database/migrations/2026_10_06_000002_add_scan_evidence_and_work.php",
+      "change": "create",
+      "note": "D29 declared owning path; concrete contract supplied in P3-security-contracts"
+    },
+    {
+      "path": "packages/core/src/Content/ScanEvidence.php",
+      "change": "create",
+      "note": "D29 declared owning path; concrete contract supplied in P3-security-contracts"
+    },
+    {
+      "path": "packages/core/tests/Content/ScanEvidenceBoundaryTest.php",
+      "change": "create",
+      "note": "D29 declared owning path; concrete contract supplied in P3-security-contracts"
+    },
+    {
+      "path": "packages/core/tests/Schema/ScanEvidenceSchemaTest.php",
+      "change": "create",
+      "note": "D29 declared owning path; concrete contract supplied in P3-security-contracts"
+    },
+    {
+      "path": "packages/drive/tests/Concurrency/ScanWorkRecoveryRaceTest.php",
+      "change": "create",
+      "note": "D29 declared owning path; concrete contract supplied in P3-security-contracts"
+    },
+    {
+      "path": "packages/drive/tests/Uploads/P3/ScanPolicyTransitionTest.php",
+      "change": "create",
+      "note": "D29 declared owning path; concrete contract supplied in P3-security-contracts"
+    },
+    {
+      "path": "packages/drive/tests/Uploads/P3/DestinationScanPolicyTest.php",
+      "change": "create",
+      "note": "D29 declared owning path; concrete contract supplied in P3-security-contracts"
+    },
+    {
+      "path": "packages/drive/tests/Uploads/P3/ScanWorkRecoveryTest.php",
+      "change": "create",
+      "note": "D29 declared owning path; concrete contract supplied in P3-security-contracts"
+    },
+    {
+      "path": "packages/drive/tests/Uploads/P3/ContentDeliveryBoundaryTest.php",
+      "change": "create",
+      "note": "D29 declared owning path; concrete contract supplied in P3-security-contracts"
+    },
+    {
+      "path": "packages/core/src/Schema/SchemaBuilder.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Configuration/ScanConfig.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Configuration/DownloadsConfig.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Configuration/ConfigValidator.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/config/vaulter.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Providers/BindingsRegistrar.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Models/Cas/Blob.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Models/Drive/Drive.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Models/Content/ScanRequest.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Models/Content/ScanEvidenceRecord.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Models/Content/ScanPolicyState.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Models/Content/ScanBackfillRun.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Repositories/Content/ScanEvidenceRepository.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Repositories/Content/PolicyStateRepository.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Content/ScanAttempt.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Content/ScanInput.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Content/ScanResult.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Content/ContentDelivery.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Content/ImmutableContentIdentity.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Content/SignedContentUrl.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Contracts/Cas/DirectContentUrlSigner.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Http/Resources/Drive/NodeResource.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Http/Resources/Sharing/SharedNodeResource.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/drive/src/Content/PrivateScanReader.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/drive/src/Content/ScanPolicyResolver.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/drive/src/Content/ScanBackfillReconciler.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/drive/src/Content/UploadCleanupReconciler.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/drive/src/Providers/ConsoleRegistrar.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/drive/src/VaulterDriveServiceProvider.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/drive/src/DriveProvisioner.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/drive/src/Actions/Nodes/CopyNodeAction.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/drive/src/Actions/Files/RestoreFileRevisionAction.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/drive/src/Operations/FileOperations.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/tests/Content/EgressInventoryTest.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/drive/tests/Uploads/P3/CompleteUploadIdempotencyTest.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/documents/src/Http/Controllers/Documents/DocumentNodeController.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/documents/src/Http/Resources/DocumentRevisionResource.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/documents/tests/Document/ContentEgressBoundaryTest.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    }
+  ],
+  "rules": [
+    "Risk-class: auth/data-integrity/public-contract; invariant-model: @plan/knowledge/P3-invariants.json. Self-check всех применимых I1–I18 и interfering pairs перед finish.",
+    "До первого product edit создать @plan/artifacts/P3.7/check-profile.json с actual runtime, affected paths/callers/fixtures, exact cwd/env/commands, negative controls и deferred broad barrier P3.8 (D25).",
+    "Только declared affected packages; shared consumer edits исключительно под API/policy/tenancy migration этого item. Чужие edits и historical fixtures/OPUS не перезаписывать. Несвязанный failure фиксировать отдельно, current acceptance не обходить.",
+    "Public API delta: обновить affected golden и root UPGRADE.md/CHANGELOG.md [Unreleased] с квалифицированными PLAN2 refs и AD reference. Review none означает self-check+tests, не отсутствие acceptance.",
+    "Product validation исполняется только при будущем plan-run; текущий owner scope — design only. Нет push/publication/hosted dispatch и mutation tools.",
+    "D29: текущая запись scope не является product qualification; supplemental P3 design contracts завершены; design audit repaired closure GREEN: F12 admit больше не берёт W до C, F13 blob_id nullable только для terminal unsupported; @plan/knowledge/audit-design-2026-10-06-p3-green.json. Это не product qualification и не phase audit. Применимые C-rows must have concrete schema/algorithm/files/acceptance, ссылки на correction contract обязательны; historical OPUS delta разрешена только accepted D26–D29."
+  ],
+  "guidance": "See correction contract Scan/Egress; dossier Uploading/Scanning and I9–I18. Tests/Uploads/P3: UnifiedIngestTest/UploadSourceStreamingTest retained including counted bytes/64KiB/nonseekable/borrowed resources; CompleteUploadIdempotencyTest includes nested outer rollback retains staged bytes, MIME throw closes owned readStream, cleanup failure does not duplicate commit/event/work. QuarantineBoundaryTest and ScanJobBoundaryTest retained with updated destination evidence/attempt rules; infected cannot be laundered. Additional acceptance:\nScanPolicyTransitionTest: all_content legacy not_required blocked until clean; explicit new_content_only grandfathering only stored eligible revisions; global/profile policy predicates cannot weaken; rescan/backfill successful preparation→strict cutover; unsupported/too_large/password/accessdenied remain unavailable when required.\nDestinationScanPolicyTest: COPY/restoreRevision new identities never inherit exemption; compatible same-scope clean reusable, cross-tenant digest insufficient; infected persists; trash restore reevaluates current policy.\nScanWorkRecoveryTest: outer rollback no obligation/job; durable commit before publish process loss recovered; queue outage/lost job/expired lease recover; late attempt cannot overwrite infected; optional failed rescan preserves valid clean; new policy epoch requires fresh evidence; each folder-copy revision own obligation; committed replay no duplicate obligation.\nContentDeliveryBoundaryTest: inventory all installed egress, cached descriptor/preview/export/share and direct PHP; fresh auth/quarantine before bytes; no installed304 path is asserted by inventory, future actual304 proof owned P6; strict rejects storage direct URL; opt-in exact version/TTL documented bounded revoke; metadata remains scoped-visible.\nScanWorkRecoveryRaceTest PG fork distinct connections tests claim/settle fencing, delete/scope mismatch and policy generation; core ScanEvidenceBoundaryTest checks evidence compatibility and public guard. No external AV/cloud side effects; scanner fake returns real structured verdict per isolated immutable bytes. Failed ingest leaves zero SQL/CAS/quota/event/work writes except declared CAS orphan saga. Exact evidence/work columns/transitions, commands/task paths fixed in P3-security-contracts; executor has no pending design choices.\nAll design choices now fixed by supplemental Schema/Policy/StateMachine/Evidence/Recovery/EgressInventory/UploadCleanup. Add durable scan_backfill_runs for required legacy activation, no endless missing-work state. Scanner interface key/version/ScanInput/ScanResult exact, private read owns stream; raw temporaryUrl is not public default. Core/drive/repository model aliases and custom prefixes qualified by actual own additive migration.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Uploads/P3/UnifiedIngestTest.php tests/Uploads/P3/UploadSourceStreamingTest.php tests/Uploads/P3/QuarantineBoundaryTest.php tests/Uploads/P3/ScanJobBoundaryTest.php tests/Uploads/UploadIntegrityTest.php tests/Uploads/TusFlowTest.php tests/Uploads/S3MultipartTest.php tests/Uploads/UploadSessionCriticalSectionTest.php tests/Feature/ResumableUploadApiTest.php tests/Feature/UploadSessionOwnershipTest.php",
+      "expect": "exit 0; 0 failures, no unexpected skips",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V2",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Content packages/core/tests/Sharing/PublicShareDownloadHeadersTest.php packages/core/tests/Sharing/ShareScopeTest.php",
+      "expect": "exit 0; 0 failures, no unexpected skips",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Document/ExporterContentGuardTest.php tests/Document/DocumentExportTest.php tests/Document/ContentEgressBoundaryTest.php",
+      "expect": "exit 0; 0 failures, no unexpected skips",
+      "kind": "acceptance",
+      "cwd": "packages/documents"
+    },
+    {
+      "id": "V4",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Concurrency/CompleteUploadRaceTest.php tests/Concurrency/QuotaRaceTest.php tests/Concurrency/RevisionNumberRaceTest.php",
+      "expect": "exit 0; real PG fork pid/connection matrix, no skips",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V5",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Cas/BlobCommitAtomicityTest.php tests/Cas/BlobCrossScopeGcTest.php",
+      "expect": "exit 0; unchanged CAS contract consumers safe",
+      "kind": "acceptance",
+      "cwd": "packages/media"
+    },
+    {
+      "id": "V80",
+      "procedure": "На own candidate по уже записанному D25 check-profile выполнить Pint --test для перечисленных там фактически изменённых/новых owning PHP файлов (root binary scripts/php84 vendor/bin/pint; sibling binary ../../scripts/php84 vendor/bin/pint, cwd своего пакета). Пустой PHP impact отмечается non-applicable с основанием. PHPStan core: scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress, cwd root. Для каждого фактически затронутого sibling: ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress, cwd packages/name из check-profile. Чужие dirty файлы не включать. Каждый исполненный command/cwd/list/env/exit сохранить; это exact impact-derived procedure по D25, не file filter для PHPStan.",
+      "expect": "Все соответствующие exact commands имеют exit 0, skipped/deferred не GREEN",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V81",
+      "procedure": "Adversarial self-check модели P3-invariants: отметить применимые invariants/enforcement/callers/negative cases и lock pair matrix. Для нового guard ограниченный negative control: в isolated временной копии отключить одну owning проверку, запустить её именованный acceptance тест и получить RED, восстановить исходный SHA-256 и подтвердить GREEN. Сохранить command/cwd/env/exit/fingerprint. Не запускать mutation campaign. Supplemental D06 controls ALL required, fault definition in P3-security-contracts#Acceptance; each executed only inside isolated temporary repository copy, cwd relative to that isolated root, same env. Exact commands:\nNC-ADMISSION: cwd=packages/drive; env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Uploads/P3/DestinationScanPolicyTest.php --filter=SEC-R03\nNC-EVIDENCE: cwd=.; env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Content/ScanEvidenceBoundaryTest.php --filter=SEC-R06\nNC-WORK: cwd=packages/drive; env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Uploads/P3/ScanWorkRecoveryTest.php --filter=SEC-R09\nNC-BACKFILL: cwd=packages/drive; env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Uploads/P3/ScanWorkRecoveryTest.php --filter=SEC-BACKFILL\nNC-FENCE: cwd=packages/drive; env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Concurrency/ScanWorkRecoveryRaceTest.php --filter=SEC-R11\nNC-QUARANTINE: cwd=packages/drive; env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Uploads/P3/ContentDeliveryBoundaryTest.php --filter=SEC-R17\nNC-DIRECT: cwd=packages/drive; env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Uploads/P3/ContentDeliveryBoundaryTest.php --filter=SEC-R16\nNC-CLEANUP: cwd=packages/drive; env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Uploads/P3/CompleteUploadIdempotencyTest.php --filter=SEC-R13\nEach control requires named matched test>=1/skipped=0, injected RED then exact source SHA restoration and original GREEN; receipts cannot substitute unrelated tests or silent skipped filters. No product controls run in design.\nNC-ROLLOUT: cwd=packages/drive; env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Uploads/P3/ScanPolicyTransitionTest.php --filter=SEC-POLICY-two-boundaries\nNC-CURSOR: cwd=packages/drive; env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Uploads/P3/ScanWorkRecoveryTest.php --filter=SEC-RECOVERY-bounds\nSame isolated-copy RED/restoration/GREEN/count requirements.",
+      "expect": "All applicable declared limited controls have RED→exact restored GREEN, candidate source hashes unchanged, named counts/output recorded; no mutation engine.",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V82",
+      "cmd": "python3 plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-coverage.py check --phase P3",
+      "expect": "exit 0; immutable OPUS/literals and owned units consistent",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V6",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 php -d memory_limit=64M tests/Uploads/P3/StreamingMemoryProbe.php",
+      "expect": "exit0; actual UploadSource+ingest 200MiB non-seekable and PSR, PHP peak<64MiB, borrowed handles open, isolated temp/CAS cleanup; helper exit ненулевой при любом нарушении size/hash/peak/ownership asserts; explicit failure нельзя отключить zend.assertions",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V7",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Concurrency/ScanWorkRecoveryRaceTest.php",
+      "expect": "exit0; executed_tests>=1 skipped=0; PG distinct connection/process lease/fence + commit-to-publish fault controls",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V8",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=mysql DB_HOST=127.0.0.1 DB_PORT=3306 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Schema/ScanEvidenceSchemaTest.php",
+      "expect": "exit0; executed_tests>=1 skipped=0; actual new additive up/down/fresh+data retention and work uniqueness; no historic full-chain claim Actual SEC-SCHEMA-fresh and SEC-SCHEMA-additive-up-down-data, all defined aliases/work/requests/backfill/cleanup fields; Receipt: executed_tests>=1, skipped=0; all prescribed named SEC scenarios executed with discovered/matched/passed/failed counts and output; empty/unmatched/skip is not pass.",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V9",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Schema/ScanEvidenceSchemaTest.php",
+      "expect": "exit0; executed_tests>=1 skipped=0; actual PG schema/data/work invariant, no SQLite reuse Actual SEC-SCHEMA-fresh and SEC-SCHEMA-additive-up-down-data, all defined aliases/work/requests/backfill/cleanup fields; Receipt: executed_tests>=1, skipped=0; all prescribed named SEC scenarios executed with discovered/matched/passed/failed counts and output; empty/unmatched/skip is not pass.",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V10",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Schema/ScanEvidenceSchemaTest.php",
+      "expect": "exit0; actual fresh/additive up/down current P2 data, all ID strategies/custom prefix, nonnegative/type/unique/FK checks and old statuses preserved. Receipt: executed_tests>=1, skipped=0; all prescribed named SEC scenarios executed with discovered/matched/passed/failed counts and output; empty/unmatched/skip is not pass.",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V11",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Uploads/P3/ScanPolicyTransitionTest.php tests/Uploads/P3/DestinationScanPolicyTest.php tests/Uploads/P3/ScanWorkRecoveryTest.php tests/Uploads/P3/CompleteUploadIdempotencyTest.php tests/Uploads/P3/ContentDeliveryBoundaryTest.php",
+      "expect": "exit0; SEC-R01–R17 applicable serial behavior + durable backfill/cursor/strict-direct/cleanup; every named owner scenario, no external scanner/cloud. Receipt: executed_tests>=1, skipped=0; all prescribed named SEC scenarios executed with discovered/matched/passed/failed counts and output; empty/unmatched/skip is not pass.",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    }
+  ],
+  "deliverables": [
+    "One actual-byte ingest and V05/V30 across all protocols",
+    "Idempotent complete pointers/permission freshness/critical section",
+    "ContentScanner job + fail-closed quarantine V16 and every egress consumer",
+    "Ownership/cleanup/SQL retry/quota/CAS regression proofs",
+    "Concrete supplemental contract implemented and own named scenario/negative-control receipts; applicable C-rows mapped with current input closure, no future owner qualification inferred."
+  ],
+  "route": {
+    "class": "frontier",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed",
+    "notes": "Verified repository evidence and immutable OPUS; supporting capture in P3-design-evidence"
+  },
+  "units": [
+    "U1",
+    "U2",
+    "U3"
+  ],
+  "result": {
+    "started_at": "2026-10-07T06:13:58Z",
+    "finished_at": "2026-10-07T07:27:07Z",
+    "executor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "session": "01a114fe-6d4c-7eb1-a3b3-9b4bcdd9594d"
+    },
+    "attempt_id": "p37-final-01a114fe-6d4c-7eb1-a3b3-9b4bcdd9594d",
+    "notes": "All declared owning checks pass,166 acceptance cases +5 supplemental regression cases;10 isolated named RED/restoredGREEN controls; real PG concurrency and SQLite/PG/MySQL schema;200MiB resource+PSR42.5MiBpeak; PHPStan/Pint3affectedpackages. Final Grok4.7/high GREEN without context argument, full round1 +bounded round2. P3.8 broad barrier deferred exactly as declared. Completion evidence artifacts/P3.7/completion.json.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-07T07:27:07Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-07T07:27:07Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-07T07:27:07Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-07T07:27:07Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-07T07:27:07Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-07T07:27:07Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-07T07:27:07Z"
+      },
+      {
+        "id": "V8",
+        "exit": 0,
+        "at": "2026-10-07T07:27:07Z"
+      },
+      {
+        "id": "V9",
+        "exit": 0,
+        "at": "2026-10-07T07:27:07Z"
+      },
+      {
+        "id": "V10",
+        "exit": 0,
+        "at": "2026-10-07T07:27:07Z"
+      },
+      {
+        "id": "V11",
+        "exit": 0,
+        "at": "2026-10-07T07:27:07Z"
+      },
+      {
+        "id": "V80",
+        "exit": 0,
+        "at": "2026-10-07T07:27:07Z"
+      },
+      {
+        "id": "V81",
+        "exit": 0,
+        "at": "2026-10-07T07:27:07Z"
+      },
+      {
+        "id": "V82",
+        "exit": 0,
+        "at": "2026-10-07T07:27:07Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-07T07:27:07Z",
+  "orchestration": {
+    "strategy": "dag"
+  },
+  "sections": [
+    {
+      "id": "Boundary",
+      "title": "Поставка и проверяемый scope",
+      "text": "UploadFacts и PreparedUpload, existing session StagedUpload::stageSource и CAS prepared ownership; 64KiB chunking, counted size/hash, hard max during read, own resources finally, borrowed streams open. Existing tus/s3 staging methods и BlobStore commitStaged retained, no second CAS implementation.\n\nMimeSniffer finfo8192 + bounded generic container refinement; inspectors interfaces 06 §7 and deterministic priority; effective policy Profile ∧ global, rejected exception reason stable. Declared MIME separate, detected persisted node/file/revision; existing schema scan/MIME/pointers reused, fill model casts/fillable/repositories as required.\n\nIngestFileAction единственный byte mutation, stage once outside retry and policy before writes; transaction lock matrix+quota from actual head+BlobScope from persisted drive. Name AddRevision path reauthorizes actual conflict file before SQL attempt. Context identity and node sequence подключены P3.3, no duplicated increments/events.\n\nUploadOperations(handle) extension + internal Initiate/Complete/Abort Actions execute(context,input). All HTTP tus/s3/single handlers route through it; initiation declared facts early rejects, completion actual bytes/full current permissions. Session credential/ownership unchanged; real session target re-fetch incl tenant even on replay.\n\nComplete persistent result pointers same OUTER transaction as node/revision/edges/markCommitted; committed replay no staging/no duplicate event/job, returns stored node after current visibility. Session mutex retained through complete, cleanup after outer commit only; abort/expire/sweep interleavings and retry exception fully tested.\n\nCore ContentScanner/ScanVerdict/ContentAvailabilityGuard и independent evidence/attempt projection; drive durable ScanObligation/ScanFileRevision/reconciler записываются с revision одной outer transaction; queue afterCommit — wakeup, lost publication reclaim; fencing, bounded retry, structured failure reasons. @plan/knowledge/security-correction-contract.json#Scan.\n\nInstalled PHP/HTTP/share/handler/preview/thumbnail/export egress inventory использует fresh availability/auth check до bytes/URL/304. Strict mediated delivery default, direct signed URL explicit opt-in TTL/exact version/bounded revocation. @plan/knowledge/security-correction-contract.json#Egress.\n\nTyped vaulter-drive.uploads scan config retains required compatibility required=true→all_content, explicit mode/legacy rollout/scanner/queue, immutable evidence compatibility. Core interface without optional-package dependency; configured required scanner absence boot error. Exact config/state schema supplied in P3-security-contracts#Schema/Policy/StateMachine.\n\ncanCreateInWorkspace→canCreateIn уже полностью поставляет P3.5; controller/resource paths здесь только UploadOperations/ingest/content-egress switch, без повторного владения rename.\n\nПринято D26=C. Scan evidence, enforcement и work attempt — разные сущности. Existing scan_status сохраняется как совместимая проекция; absence/not_required не являются clean. Режимы off, new_content_only, all_content; старый required=true однозначно all_content. Off допускается только при отсутствии обязательной global/profile политики; infected всегда запрещает public egress. В required-eligible revision только действующее совместимое clean evidence разрешает egress; pending/failed/unsupported/too_large/password_protected/access_denied/unknown не разрешают. Nonrequired failure не превращается в clean.\nnew_content_only — явный opt-in rollout: сервер сохраняет границу перехода и eligibility существующих revision, без доверия client timestamps. Global/profile predicates выполняются оба; профиль не может выводить revision из global eligibility. Простое max(mode) допустимо только с общей eligibility boundary. all_content блокирует legacy not_required до успешного scan; команда rescan/backfill позволяет подготовить clean evidence перед cutover. Ужесточение проверяется на каждом egress, не только при ingest. No scanner для включённого required/new-content enforcement — configuration error.\nCOPY и restoreRevision создают новую revision под текущей destination policy: legacy exemption никогда не переносится, новая pending/failed/unknown revision получает собственную durable scan obligation. Источник infected сохраняет блокировку, а не отмывается новым identity. Clean evidence переиспользуется только для проверенных идентичных immutable bytes, совместимой scanner/policy version и разрешённого scope; cross-tenant digest сам по себе не authority. Trash restore сохраняет identity, но проверяет текущую policy. Старый clean explicit revision может читаться, если его evidence всё ещё удовлетворяет текущей policy; pending head автоматически не подменяется.\nRevision creation и required scan obligation записываются атомарно в одной Vaulter outer transaction; rollback отменяет обе. Уникальная obligation содержит scope, revision/blob identity, policy/scanner version и generation/attempt fencing. afterCommit — ускорение queue publication после OUTERMOST commit; очередь не является единственным durable work store. Bounded reconciler восстанавливает commit→publish crash, lost jobs/expired leases; retry и settle fencing исключают stale attempt. Scanner IO за SQL transaction; settle короткий, повторно проверяет scope/content identity/attempt. Deleted revision no-op; нельзя обновлять current head через file_id.\nclean/infected terminal только в пределах attempt; управляемый rescan — новый attempt. Optional failed rescan не стирает still-valid clean evidence; новый обязательный scanner/policy epoch требует нового совместимого evidence. Infected остаётся блокирующим, late clean/старый attempt не снимает infected. Снятие quarantine требует отдельного явно авторизованного, аудитируемого workflow; success более старого job не является таким workflow. Core содержит evidence/availability interfaces, drive — lifecycle/work/recovery, optional scanner реализация хоста. Нельзя переиспользовать нынешний webhook OutboxRelay как scan carrier без исправления P5.3.\n\nDefault sensitive egress — application-mediated gateway: fresh ACL/tenant/profile/scan check на каждый новый request, exact immutable content selection, private/no-store cache для защищённых ответов. Проверить PHP/HTTP/share/preview/thumbnail/export/handler и cached descriptor/304, не только download controller. Metadata видимо по ACL, но metadata lookup не выдаёт bytes/bearer URL. Already-started stream нельзя обещать отозвать.\nDirect object-store signed URL — explicit opt-in режим с ограниченным TTL, exact object version и честным bounded-revocation контрактом. Application revoke после выдачи URL сам по себе не отзывает object-store capability; не обещать immediate revocation. Public API не может выдать такой URL в strict режиме. Trusted storage tags/IAM TBAC — optional дополнительный слой с отдельным protocol обновления, не автоматическая гарантия. Сырой storage driver может поддерживать temporaryUrl, но product egress обязан применять режим. P3.7 владеет installed callers, P4.4 future exporters, P6.1/6.3 routes/caches/contract.\n\nC03 actual CompleteUploadAction correction: MIME inspection внутри owner finally; staged source deletion only after OUTERMOST commit, recoverable cleanup failure. Add operational rescan/backfill and bounded scan-work recovery command; bootstrap scheduler recipe core package compatible, P7.2 production orchestration.\n\nC01–C03/C08 exact core schema/models/repositories + immutable evidence + durable obligations/requests/backfill + policy activation/cursors + generation/lease/fenced settle + private scanner + strict/direct signer + installed egress + outer commit/cleanup-pending contract; every required new admission own durable intent, legacy activation durable bounded discovery. All mechanisms complete here before P5/P7 future enhancements."
+    },
+    {
+      "id": "Research-Corrections",
+      "title": "Принятые research-derived corrections",
+      "text": "Mandatory accepted D26C/D27A/D28A/D29, security-correction-contract and implementation assessment consumed. Concrete supplemental contract @plan/knowledge/P3-security-contracts.json supplied; C-owners unchanged, no product qualification and no independent audit verdict."
+    },
+    {
+      "id": "Supplemental-Contract",
+      "title": "Concrete supplemental scope",
+      "text": "C01–C03/C08 exact core schema/models/repositories + immutable evidence + durable obligations/requests/backfill + policy activation/cursors + generation/lease/fenced settle + private scanner + strict/direct signer + installed egress + outer commit/cleanup-pending contract; every required new admission own durable intent, legacy activation durable bounded discovery. All mechanisms complete here before P5/P7 future enhancements.\nRequired sections: Schema, Policy, StateMachine, Evidence, Recovery, EgressInventory, UploadCleanup, Acceptance, FailurePlaybook. Named scenarios and D06 controls: @plan/knowledge/P3-security-contracts.json#Acceptance."
+    }
+  ]
+}

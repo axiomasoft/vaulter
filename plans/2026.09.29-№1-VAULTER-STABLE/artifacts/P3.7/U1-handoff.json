@@ -1,0 +1,110 @@
+{
+  "summary": "Additive/fresh scan schema and upload cleanup columns; guarded configured models and UTC immutable casts; readonly input/result/attempt/evidence/identity; scoped evidence compatibility, sticky legacy infection, revocation/reuse; policy activation durable bounded backfill; generation/request dedup, leased SQL work, fenced settle/retry/recovery/superseding; real SQLite schema and boundary fixtures. Owning correction installs MySQL cross-column constraints at table level, idempotently repairs interrupted additions, adds terminal deterministic failure API and named epoch/optional-rescan/evidence-scope fixtures. PG purge-race correction: settle acquires shared tree lock before preliminary revision/scope reads; winning purge returns false without resurrecting work.",
+  "changed_paths": [
+    "packages/core/src/Content/ScanAttempt.php",
+    "packages/core/src/Content/ScanEvidence.php",
+    "packages/core/src/Content/ScanInput.php",
+    "packages/core/src/Content/ScanPolicySpec.php",
+    "packages/core/src/Content/ScanResult.php",
+    "packages/core/src/Content/ScanSnapshot.php",
+    "packages/core/src/Content/ImmutableContentIdentity.php",
+    "packages/core/src/Content/OffScanPolicyResolver.php",
+    "packages/core/src/Enums/Cas/ScanVerdict.php",
+    "packages/core/src/Contracts/Cas/ContentScanner.php",
+    "packages/core/src/Contracts/Content/ScanPolicyResolver.php",
+    "packages/core/src/Models/Content/ScanBackfillRun.php",
+    "packages/core/src/Models/Content/ScanEvidenceRecord.php",
+    "packages/core/src/Models/Content/ScanObligation.php",
+    "packages/core/src/Models/Content/ScanPolicyState.php",
+    "packages/core/src/Models/Content/ScanRequest.php",
+    "packages/core/src/Models/Content/ScanUtcDateTime.php",
+    "packages/core/src/Repositories/Content/ScanEvidenceRepository.php",
+    "packages/core/src/Repositories/Content/ScanObligationRepository.php",
+    "packages/core/src/Repositories/Content/ScanPolicyStateRepository.php",
+    "packages/core/src/Models/Drive/Drive.php",
+    "packages/core/src/Models/Drive/FileRevision.php",
+    "packages/core/src/Models/Cas/Blob.php",
+    "packages/core/src/Configuration/VaulterConfig.php",
+    "packages/core/src/Configuration/ConfigValidator.php",
+    "packages/core/config/vaulter.php",
+    "packages/core/src/Schema/SchemaBuilder.php",
+    "packages/core/database/migrations/2026_10_06_000002_add_scan_evidence_and_work.php",
+    "packages/core/tests/Content/ScanEvidenceBoundaryTest.php",
+    "packages/core/tests/Schema/ScanEvidenceSchemaTest.php",
+    "tests/Pest.php"
+  ],
+  "checks_run": [
+    {
+      "command": "APP_ENV=testing DB_CONNECTION=sqlite vendor/bin/pest packages/core/tests/Schema/CanonicalSchemaTest.php --compact",
+      "exit": 0,
+      "result": "1 passed, 30 assertions",
+      "evidence": "/tmp/core-scan-initial.log"
+    },
+    {
+      "command": "APP_ENV=testing DB_CONNECTION=sqlite vendor/bin/pest packages/core/tests/Content/ScanEvidenceBoundaryTest.php --compact",
+      "exit": 0,
+      "result": "7 passed, 57 assertions",
+      "evidence": "/tmp/core-scan-content.log"
+    },
+    {
+      "command": "APP_ENV=testing DB_CONNECTION=sqlite vendor/bin/pest packages/core/tests/Schema/ScanEvidenceSchemaTest.php packages/core/tests/Content/ScanEvidenceBoundaryTest.php packages/core/tests/Schema/CanonicalSchemaTest.php packages/core/tests/Profiles/ScanPolicyAlgebraTest.php --compact",
+      "exit": 0,
+      "result": "27 passed, 232 assertions",
+      "evidence": "/tmp/core-scan-checks.log"
+    },
+    {
+      "command": "APP_ENV=testing DB_CONNECTION=sqlite vendor/bin/pest packages/core/tests/Schema/ScanEvidenceSchemaTest.php packages/core/tests/Content/ScanEvidenceBoundaryTest.php --compact",
+      "exit": 0,
+      "result": "Final 11 passed, 167 assertions",
+      "evidence": "/tmp/core-scan-final-test.log"
+    },
+    {
+      "command": "PAO_DISABLE=1 vendor/bin/phpstan analyse packages/core/src/Content/Scan*.php packages/core/src/Content/ImmutableContentIdentity.php packages/core/src/Content/OffScanPolicyResolver.php packages/core/src/Enums/Cas/ScanVerdict.php packages/core/src/Contracts/Cas/ContentScanner.php packages/core/src/Contracts/Content/ScanPolicyResolver.php packages/core/src/Models/Content packages/core/src/Models/Drive/Drive.php packages/core/src/Models/Drive/FileRevision.php packages/core/src/Models/Cas/Blob.php packages/core/src/Repositories/Content packages/core/src/Schema/SchemaBuilder.php packages/core/src/Configuration/VaulterConfig.php packages/core/src/Configuration/ConfigValidator.php packages/core/database/migrations/2026_10_06_000002_add_scan_evidence_and_work.php --memory-limit=512M --error-format=raw",
+      "exit": 0,
+      "result": "27 impacted PHP paths, no errors",
+      "evidence": "/tmp/core-scan-stan-final.log"
+    },
+    {
+      "command": "vendor/bin/pint packages/core/src/Models/Content packages/core/src/Models/Drive/Drive.php packages/core/src/Models/Drive/FileRevision.php packages/core/src/Models/Cas/Blob.php packages/core/src/Repositories/Content/ScanEvidenceRepository.php packages/core/src/Repositories/Content/ScanObligationRepository.php",
+      "exit": 0,
+      "result": "Final formatter completed",
+      "evidence": "/tmp/core-scan-final-format.log"
+    },
+    {
+      "command": "env APP_ENV=testing DB_CONNECTION=mysql DB_HOST=127.0.0.1 DB_PORT=3306 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Schema/ScanEvidenceSchemaTest.php",
+      "exit": 0,
+      "result": "4 passed / 107 assertions, MySQL8 actual bigint/ULID/UUID7 additive+fresh+up/down+data/FK/counter constraint fixture",
+      "evidence": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.7/V8-attempt3.log"
+    },
+    {
+      "command": "PAO_DISABLE=1 vendor/bin/phpstan analyse packages/core/src/Schema/SchemaBuilder.php packages/core/src/Repositories/Content/ScanObligationRepository.php --memory-limit=512M --error-format=raw",
+      "exit": 0,
+      "result": "Owning correction zero errors",
+      "evidence": "/tmp/core-scan-owning-stan.log"
+    }
+  ],
+  "resolved_check_failures": [
+    "First schema boot failed missing Console Kernel::starting(): drive agent fixed its registration.",
+    "Initial schema down failed indexed result_blob_id drop: migration now explicitly drops reference index first.",
+    "Initial FK negative fixture ran under RefreshDatabase outer tx with FK pragma off: dedicated DDL fixture now runs no outer refresh transaction and proves FK ON.",
+    "Initial targeted PHPStan found dynamic type declarations/malformed automated first replacements: fixed to typed configured aliases, precise model properties, whereKey()->first(), validation of numeric config/DB clock; final 0 errors.",
+    "Parent V8 failed MySQL3813 cross-column column CHECK: moved relational checks to table constraints.",
+    "V8-attempt2 failed MySQL3812 nonboolean COALESCE: table predicate now explicit = true; V8-attempt3 GREEN. Interrupted migration checks repaired idempotently."
+  ],
+  "open_issues": [
+    "Parent owns remaining serialized package regression/PHPStan/review and rerun named core boundary suite after latest added SEC-R08 + SEC-R12 scenarios.",
+    "Earlier backfill cutover concern cleared: drive reconciler already prewarms all bounded rows, including currently exempt legacy revisions.",
+    "Latest settle tree-order correction awaits parent PG SEC-R12 rerun; no checks run by U1 for this delta per active serialized lane."
+  ],
+  "evidence": [
+    "/tmp/core-scan-final-test.log",
+    "/tmp/core-scan-stan-final.log",
+    "/tmp/core-scan-final-format.log",
+    "/tmp/core-scan-schema.log",
+    "/tmp/core-scan-debug.log",
+    "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.7/V8-attempt2.log",
+    "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.7/V8-attempt3.log",
+    "/tmp/core-scan-owning-stan.log",
+    "/tmp/core-scan-owning-format.log"
+  ]
+}

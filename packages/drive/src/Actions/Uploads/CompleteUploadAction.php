@@ -4,205 +4,220 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Uploads;
 
+use InvalidArgumentException;
 use RuntimeException;
+use Vaulter\Access\OperationGuard;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Files\IngestFileAction;
+use Vaulter\Drive\Content\UploadCleanupReconciler;
 use Vaulter\Drive\Data\Files\IngestFileInput;
+use Vaulter\Drive\Enums\Uploads\UploadStatus;
+use Vaulter\Drive\Exceptions\Files\UploadRejectedException;
+use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Exceptions\Uploads\UploadContentMismatchException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
-use Vaulter\Drive\Uploads\Inspection\MimeSniffer;
+use Vaulter\Drive\Uploads\PreparedUpload;
 use Vaulter\Drive\Uploads\StagedUpload;
-use Vaulter\Models\Drive\Drive;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Repositories\Drive\DriveReadRepository;
-use Vaulter\Repositories\Drive\NodeReadRepository;
+use Vaulter\Operations\NodeLocator;
+use Vaulter\Operations\OperationContext;
+use Vaulter\Support\NodeName;
 
-/**
- * Assemble→commit for a resumable upload (§2.8 / D16 / M3a / H.3). This is the ONE
- * place the staged bytes of a tus / S3-multipart session cross into the Drive, and
- * it does so through the SAME race-free path a one-shot upload uses:
- *
- *   staged temp → UploadFileData → UploadFileAction → BlobStore.commitStaged
- *
- * so dedup + the race-free state machine + ref accounting + quota all apply, and the
- * sha256 is RECOMPUTED server-side from the assembled staged file inside
- * BlobStore.commitStaged (the client's expected_sha256 / the S3 multipart ETag is NEVER
- * the content address — H.3). The session's target shapes UploadFileData:
- *   - new file    → a Node(kind=file) under target_parent (null = root);
- *   - new version → a new version of node_id (number bumps, head repoints).
- *
- * On success the session is marked Committed with assembled_blob_id, and the staged
- * temp is discarded (commit-or-abort cleanup, H.3). The whole thing is one outer
- * transaction so a session is never half-committed.
- */
 final readonly class CompleteUploadAction
 {
     public function __construct(
-        private IngestFileAction $uploadFile,
-        private NodeReadRepository $nodes,
-        private DriveReadRepository $storages,
+        private IngestFileAction $ingest,
         private UploadSessionStoreRepository $sessions,
         private StagedUpload $staged,
-        private MimeSniffer $sniffer,
         private VaulterDatabase $database,
+        private NodeLocator $locator,
+        private OperationGuard $guard,
+        private UploadCleanupReconciler $cleanup,
     ) {}
 
-    /**
-     * Commit the assembled bytes of a session into the Drive and finalise the
-     * session. Returns the created/updated file node.
-     */
-    public function execute(UploadSession $session): Node
+    public function execute(OperationContext $context, UploadSession $session): Node
     {
-        $stream = $this->staged->readStream($session);
-
-        if (!is_resource($stream)) {
-            throw new RuntimeException(
-                "Cannot commit upload session [{$session->upload_id}]: no staged bytes are present.",
-            );
-        }
-
-        $this->assertContentMatchesDeclaredMime($session);
-
-        try {
-            $node = $this->database->transaction(function () use ($session, $stream): Node {
-                $committed = $this->uploadFile->execute($this->dataFor(session: $session, stream: $stream));
-
-                // current_revision_id is the head pointer; the version's blob_id is the
-                // assembled blob the bytes deduped into (H.3 — set from the committed
-                // version, never the client claim).
-                $blobId = $this->assembledBlobId($committed);
-
-                if ($blobId !== null) {
-                    $this->sessions->markCommitted(session: $session, assembledBlobId: $blobId);
+        // The SQL retry owned by ingest reuses one immutable preparation. Retrying
+        // this resource-owning transaction would otherwise reread protocol bytes.
+        return $this->database->transaction(function () use ($context, $session): Node {
+            $locked = $this->sessions->acquireForPatch($session);
+            $this->assertOwnership(context: $context, session: $locked);
+            if ($locked->status === UploadStatus::Committed && $locked->input_fingerprint === null) {
+                $this->backfillLegacy(context: $context, session: $locked);
+            }
+            $this->authorizeSession(context: $context, session: $locked);
+            if ($locked->status === UploadStatus::Committed) {
+                $result = $this->result(context: $context, session: $locked);
+                $revision = $result->file()->firstOrFail()->versions()->whereKey($locked->result_revision_id)->firstOrFail();
+                $hash = $this->fingerprint(session: $session, sha256: $revision->sha256, size: $revision->size_bytes, mime: $revision->mime_type, name: $revision->original_name);
+                if ($locked->input_fingerprint === null || !hash_equals($locked->input_fingerprint, $hash)) {
+                    throw UploadConflictException::forClosedSession($locked->upload_id);
                 }
+                $this->scheduleCleanup($locked);
+
+                return $result;
+            }
+            if ($locked->status !== UploadStatus::Assembled) {
+                throw UploadConflictException::forClosedSession($locked->upload_id);
+            }
+            $stream = $this->staged->readStream($locked);
+            $prepared = null;
+            try {
+                if (!is_resource($stream)) {
+                    throw new RuntimeException("Cannot commit upload session [{$locked->upload_id}]: no staged bytes are present.");
+                }
+                $input = $this->input(context: $context, session: $locked, stream: $stream);
+                try {
+                    $prepared = $this->ingest->prepare(context: $context, data: $input);
+                } catch (UploadRejectedException $exception) {
+                    if ($exception->reason !== 'mime_mismatch') {
+                        throw $exception;
+                    }
+                    throw UploadContentMismatchException::forSession(uploadId: $locked->upload_id, declaredMime: (string) $locked->mime_type);
+                }
+                $facts = $prepared->facts;
+                if (($locked->total_size_bytes !== null && $facts->size !== $locked->total_size_bytes)
+                    || ($locked->expected_sha256 !== null && !hash_equals(strtolower($locked->expected_sha256), $facts->sha256))
+                    || $facts->size !== $locked->received_bytes) {
+                    throw UploadConflictException::forClosedSession($locked->upload_id);
+                }
+                $fingerprint = $this->fingerprint(session: $locked, sha256: $facts->sha256, size: $facts->size, mime: $facts->detectedMimeType, name: $facts->name);
+                $committed = $this->ingest->execute(context: $context, data: $this->input(context: $context, session: $locked, stream: $stream, prepared: $prepared));
+                $revision = $committed->currentVersion()->first() ?? throw UploadConflictException::forClosedSession($locked->upload_id);
+                $this->sessions->markCommitted(session: $locked, assembledBlobId: $revision->blob_id ?? throw UploadConflictException::forClosedSession($locked->upload_id), resultNodeId: $committed->id, resultRevisionId: $revision->id, inputFingerprint: $fingerprint);
+                $this->scheduleCleanup($locked);
 
                 return $committed;
-            });
-        } finally {
-            // $stream is guaranteed a live resource here (guarded above, never closed
-            // inside the try) — close it once on both the success and throw paths.
-            fclose($stream);
-        }
+            } finally {
+                try {
+                    $prepared?->discard();
+                } finally {
+                    if (is_resource($stream)) {
+                        fclose($stream);
+                    }
+                }
+            }
+        }, attempts: 1);
+    }
 
-        // Commit-or-abort cleanup (H.3): the staged temp is reclaimed once the bytes
-        // are durable in the CAS. Done OUTSIDE the transaction so a disk-delete hiccup
-        // never rolls back a committed file.
-        $this->staged->discard($session);
+    /** Authorize freshly reloaded ownership, tenant and the current target. */
+    public function authorizeSession(OperationContext $context, UploadSession $session): void
+    {
+        $this->assertOwnership(context: $context, session: $session);
+        $drive = $context->drive->newQuery()->whereKey($context->driveId())->first() ?? throw NodeNotFoundException::forId('drive');
+        if ($session->status === UploadStatus::Committed) {
+            $this->result(context: $context, session: $session);
+
+            return;
+        }
+        if ($session->isNewVersion()) {
+            $this->guard->authorize(context: $context, ability: Ability::Edit, node: $this->locator->find(context: $context, key: $session->target_node_id ?? 'missing'));
+        } else {
+            $this->guard->authorizeCreate(context: $context, parent: $this->locator->find(context: $context, key: $session->target_parent_id ?? $drive->root_node_id ?? throw NodeNotFoundException::forId('root')));
+        }
+    }
+
+    private function assertOwnership(OperationContext $context, UploadSession $session): void
+    {
+        $drive = $context->drive->newQuery()->whereKey($context->driveId())->first() ?? throw NodeNotFoundException::forId('drive');
+        if ((string) $session->drive_id !== (string) $context->driveId() || (string) $session->tenant_id !== (string) $drive->tenant_id) {
+            throw NodeNotFoundException::forId('upload');
+        }
+        if (!$context->actor->isSystem()) {
+            $type = ($session->metadata ?? [])['actor_type'] ?? null;
+            if ($session->created_by === null || (string) $session->created_by !== (string) $context->actor->ref()->id || ($type !== null && $type !== $context->actor->ref()->type)) {
+                throw PermissionDeniedException::forAbility('upload-session-owner');
+            }
+        }
+    }
+
+    private function backfillLegacy(OperationContext $context, UploadSession $session): void
+    {
+        if ($session->result_node_id === null || $session->result_revision_id === null || $session->assembled_blob_id === null) {
+            throw UploadConflictException::forClosedSession($session->upload_id);
+        }
+        $node = $this->locator->find(context: $context, key: $session->result_node_id);
+        $this->guard->authorize(context: $context, ability: Ability::View, node: $node);
+        $revision = $node->file()->first()?->versions()->whereKey($session->result_revision_id)->first();
+        $blob = $revision?->blob()->first();
+        if ($revision === null || $blob === null || !in_array($revision->status, ['committed', 'superseded'], true)
+            || (string) $revision->blob_id !== (string) $session->assembled_blob_id || $revision->sha256 !== $blob->sha256
+            || $revision->size_bytes !== $blob->size_bytes || $revision->manifest_blob_id !== null || $blob->chunked
+            || $revision->blobs()->count() !== 1 || !$revision->blobs()->whereKey($blob->id)->exists()) {
+            throw UploadConflictException::forClosedSession($session->upload_id);
+        }
+        $hash = $this->fingerprint(session: $session, sha256: $revision->sha256, size: $revision->size_bytes, mime: $revision->mime_type, name: $revision->original_name);
+        $session->forceFill(['result_blob_id' => $blob->id, 'input_fingerprint' => $hash,
+            'cleanup_pending' => true, 'cleanup_available_at' => now()])->save();
+    }
+
+    private function result(OperationContext $context, UploadSession $session): Node
+    {
+        if ($session->result_node_id === null || $session->result_revision_id === null || $session->result_blob_id === null || (string) $session->result_blob_id !== (string) $session->assembled_blob_id) {
+            throw UploadConflictException::forClosedSession($session->upload_id);
+        }
+        $node = $this->locator->find(context: $context, key: $session->result_node_id);
+        $this->guard->authorize(context: $context, ability: Ability::View, node: $node);
+        $revision = $node->file()->first()?->versions()->whereKey($session->result_revision_id)->first();
+        if ($revision === null || !in_array($revision->status, ['committed', 'superseded'], true) || (string) $revision->blob_id !== (string) $session->result_blob_id) {
+            throw UploadConflictException::forClosedSession($session->upload_id);
+        }
 
         return $node;
     }
 
-    /**
-     * Reject a commit whose assembled bytes contradict the declared mime (§2.8 /
-     * F-P1.4-11). Sniffed on a SEPARATE staged stream so the commit stream stays at
-     * its start. A concrete contradiction (declared image/png, magic bytes ZIP)
-     * fails the commit before any blob is written.
-     */
-    private function assertContentMatchesDeclaredMime(UploadSession $session): void
+    private function scheduleCleanup(UploadSession $session): void
     {
-        $sniff = $this->staged->readStream($session);
-
-        if (!is_resource($sniff)) {
-            return;
-        }
-
-        try {
-            $matches = $this->sniffer->matches($sniff, $session->mime_type);
-        } finally {
-            fclose($sniff);
-        }
-
-        if (!$matches) {
-            throw UploadContentMismatchException::forSession(
-                $session->upload_id,
-                (string) $session->mime_type,
-            );
-        }
+        // Only the actual outer commit may release protocol bytes. The durable
+        // pending flag survives crashes and a failed callback cannot undo success.
+        $this->database->afterCommit(fn () => $this->cleanup->cleanup($session));
     }
 
-    /**
-     * Build the UploadFileData for the session's target shape (§2.8). The stream is
-     * the assembled staged temp; the Action stages + re-hashes it.
-     *
-     * @param resource $stream
-     */
-    private function dataFor(UploadSession $session, mixed $stream): IngestFileInput
+    private function expectation(UploadSession $session): ?int
     {
-        $storage = $this->storageOf($session);
-
-        if ($session->isNewVersion()) {
-            return new IngestFileInput(
-                storage: $storage,
-                stream: $stream,
-                originalName: $session->target_name ?? $this->targetNodeName($session) ?? 'upload.bin',
-                mimeType: $session->mime_type,
-                targetNode: $this->targetNode($session),
-                actorId: $session->created_by,
-            );
+        $value = ($session->metadata ?? [])['expected_sequence'] ?? null;
+        if ($value !== null && (!is_int($value) || $value < 0)) {
+            throw new InvalidArgumentException('Expected sequence must be a nonnegative integer.');
         }
 
-        return new IngestFileInput(
-            storage: $storage,
-            stream: $stream,
-            originalName: $session->target_name ?? 'upload.bin',
-            mimeType: $session->mime_type,
-            into: $this->targetParent($session),
-            name: $session->target_name,
-            actorId: $session->created_by,
-        );
+        return $value;
     }
 
-    /**
-     * The session's storage, loaded non-null (a session always belongs to a storage
-     * via FK cascade — a missing one is a corrupt state, fail loud rather than
-     * commit into the void).
-     */
-    private function storageOf(UploadSession $session): Drive
+    private function fingerprint(UploadSession $session, string $sha256, int $size, ?string $mime, string $name): string
     {
-        $storage = $this->storages->find($session->drive_id);
-
-        if (!$storage instanceof Drive) {
-            throw new RuntimeException(
-                "Cannot commit upload session [{$session->upload_id}]: its storage [{$session->drive_id}] is missing.",
-            );
-        }
-
-        return $storage;
+        return hash('sha256', json_encode([
+            $session->protocol->value, $session->upload_id,
+            (string) $session->created_by, ($session->metadata ?? [])['actor_type'] ?? null,
+            (string) $session->drive_id, (string) $session->tenant_id,
+            (string) $session->target_node_id, (string) $session->target_parent_id,
+            $session->target_name === null ? null : NodeName::normalize($session->target_name),
+            NodeName::normalize($name), $this->normalizeMime($session->mime_type),
+            strtolower((string) $session->expected_sha256), $session->total_size_bytes,
+            $this->expectation($session), $sha256, $size, $mime,
+        ], JSON_THROW_ON_ERROR));
     }
 
-    private function targetParent(UploadSession $session): ?Node
+    private function normalizeMime(?string $mime): string
     {
-        if ($session->target_parent_id === null) {
-            return null;
-        }
+        $mime = strtolower(trim(explode(';', $mime ?? '', 2)[0]));
 
-        return $this->nodes->find($session->target_parent_id);
+        return $mime === 'image/jpg' ? 'image/jpeg' : $mime;
     }
 
-    private function targetNode(UploadSession $session): ?Node
+    /** @param resource $stream */
+    private function input(OperationContext $context, UploadSession $session, mixed $stream, ?PreparedUpload $prepared = null): IngestFileInput
     {
-        if ($session->target_node_id === null) {
-            return null;
-        }
+        $target = $session->target_node_id === null ? null : $this->locator->find(context: $context, key: $session->target_node_id);
+        $parent = $target !== null ? null : $this->locator->find(context: $context, key: $session->target_parent_id ?? $context->drive->root_node_id ?? throw NodeNotFoundException::forId('root'));
 
-        return $this->nodes->find($session->target_node_id);
-    }
-
-    private function targetNodeName(UploadSession $session): ?string
-    {
-        return $this->targetNode($session)?->name;
-    }
-
-    /**
-     * The assembled blob id from the committed file node's head version (§2.8). Read
-     * from the persisted version row so it reflects the deduped blob the CAS chose,
-     * not anything the client supplied.
-     */
-    private function assembledBlobId(Node $node): int|string|null
-    {
-        $version = $node->currentVersion()->first();
-
-        return $version?->blob_id;
+        return new IngestFileInput(storage: $context->drive, stream: $stream,
+            originalName: $session->target_name ?? $target->name ?? 'upload.bin',
+            mimeType: $session->mime_type, declaredMimeType: $session->mime_type,
+            into: $parent, name: $session->target_name, targetNode: $target,
+            expectedSequence: $this->expectation($session), prepared: $prepared);
     }
 }

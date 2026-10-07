@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
+use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
 /**
  * Typed accessors over config('vaulter.*'). All package code reads configuration
@@ -22,6 +23,26 @@ final readonly class DownloadsConfig
     ];
 
     public function __construct(private Repository $config) {}
+
+    public function deliveryMode(): string
+    {
+        $value = $this->config->get('vaulter.downloads.delivery_mode', 'strict');
+        if (!in_array($value, ['strict', 'direct_signed'], true)) {
+            throw new InvalidConfigurationException('Invalid content delivery mode.');
+        }
+
+        return $value;
+    }
+
+    public function directTtlSeconds(): int
+    {
+        $value = $this->config->get('vaulter.downloads.direct_ttl_seconds', 60);
+        if (!is_int($value) || $value < 1 || $value > 300) {
+            throw new InvalidConfigurationException('Direct URL TTL must be an integer from 1 to 300.');
+        }
+
+        return $value;
+    }
 
     /** @return list<string> */
     public function inlineMimeTypes(): array

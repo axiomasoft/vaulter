@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Schema;
 
-use Illuminate\Database\ConnectionInterface;
+use Illuminate\Database\Connection;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\Builder;
+use Illuminate\Database\Schema\ColumnDefinition;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use InvalidArgumentException;
@@ -32,7 +33,7 @@ final class SchemaBuilder
      * the driver-aware `DB::statement(...)` calls (partial/gin indexes, MySQL
      * generated-column fallbacks) that Facade\Schema has no builder method for.
      */
-    private function dbConnection(): ConnectionInterface
+    private function dbConnection(): Connection
     {
         return DB::connection(app(DatabaseConfig::class)->connection());
     }
@@ -50,6 +51,12 @@ final class SchemaBuilder
         'files',
         'file_revisions',
         'file_revision_blobs',
+        'scan_policy_states',
+        'scan_obligations',
+        'scan_backfill_runs',
+        'scan_requests',
+        'scan_evidence',
+
         'node_grants',
         'node_shares',
         'node_comments',
@@ -102,6 +109,11 @@ final class SchemaBuilder
                 'files' => $this->defineFiles(table: $table, ids: $ids),
                 'file_revisions' => $this->defineFileRevisions(table: $table, ids: $ids),
                 'file_revision_blobs' => $this->defineFileRevisionBlobs(table: $table, ids: $ids),
+                'scan_policy_states' => $this->defineScanTable($table, $ids, 'scan_policy_states'),
+                'scan_obligations' => $this->defineScanTable($table, $ids, 'scan_obligations'),
+                'scan_backfill_runs' => $this->defineScanTable($table, $ids, 'scan_backfill_runs'),
+                'scan_requests' => $this->defineScanTable($table, $ids, 'scan_requests'),
+                'scan_evidence' => $this->defineScanTable($table, $ids, 'scan_evidence'),
                 'node_grants' => $this->defineNodeGrants(table: $table, ids: $ids),
                 'node_shares' => $this->defineNodeShares(table: $table, ids: $ids),
                 'node_comments' => $this->defineNodeComments(table: $table, ids: $ids),
@@ -147,6 +159,7 @@ final class SchemaBuilder
         $table->string('disk', 64)->default('default');
         $table->bigInteger('quota_bytes')->nullable();
         $table->bigInteger('used_bytes')->default(0);
+        $this->scanInteger($table, 'scan_admission_sequence')->default(0);
         $table->string('status', 16)->default('active')->index();
         $this->extraData(table: $table);
         HostKeyColumns::add(table: $table, column: 'created_by', nullable: true, index: false);
@@ -252,6 +265,8 @@ final class SchemaBuilder
         $table->string('status', 12)->default('pending');
         $table->bigInteger('ref_count')->default(0);
         $table->string('dedup_scope', 8)->default('tenant');
+        $table->timestamp('quarantined_at')->nullable();
+        $table->string('storage_version', 255)->nullable();
         $table->string('etag', 64)->nullable();
         $table->string('md5', 64)->nullable();
         $table->string('crc32c', 64)->nullable();
@@ -314,6 +329,8 @@ final class SchemaBuilder
         $table->string('mime_type', 191)->nullable();
         $table->string('declared_mime_type', 191)->nullable();
         $table->string('scan_status', 16)->default('not_required');
+        $this->scanInteger($table, 'scan_admission_sequence')->default(0);
+        $table->timestamp('quarantined_at')->nullable();
         $table->string('original_name');
         $table->string('status', 12)->default('pending')->index();
         $table->boolean('keep_forever')->default(false);
@@ -609,6 +626,7 @@ final class SchemaBuilder
         $table->string('target_name')->nullable();
         $ids->reference(table: $table, column: 'result_node_id', nullable: true);
         $ids->reference(table: $table, column: 'result_revision_id', nullable: true);
+        $this->defineUploadCleanup($table, $ids);
 
         $table->string('protocol', 16)->default('tus');
         $table->string('status', 16)->default('initiated');
@@ -852,13 +870,56 @@ final class SchemaBuilder
      * Post-create hooks that cannot be expressed inside the Blueprint, currently
      * the driver-aware sibling-unique guard on v_nodes.
      */
+    public function addNodeSequence(): void
+    {
+        $name = app(DatabaseConfig::class)->table('nodes');
+        if ($this->schemaConnection()->hasColumn($name, 'sequence')) {
+            return;
+        }
+        $wrapped = $this->dbConnection()->getQueryGrammar()->wrapTable($name);
+        $check = $this->dbConnection()->getDriverName() === 'sqlite'
+            ? "CHECK(typeof(sequence) = 'integer' AND sequence >= 0)"
+            : 'CONSTRAINT '.$this->dbConnection()->getQueryGrammar()->wrap($name.'_sequence_nonnegative').' CHECK(sequence >= 0)';
+        $this->dbConnection()->statement("ALTER TABLE {$wrapped} ADD COLUMN sequence BIGINT NOT NULL DEFAULT 0 {$check}");
+    }
+
+    public function removeNodeSequence(): void
+    {
+        $name = app(DatabaseConfig::class)->table('nodes');
+        if ($this->schemaConnection()->hasColumn($name, 'sequence')) {
+            if ($this->dbConnection()->getDriverName() === 'mysql') {
+                $grammar = $this->dbConnection()->getQueryGrammar();
+                $this->dbConnection()->statement('ALTER TABLE '.$grammar->wrapTable($name).' DROP CHECK '.$grammar->wrap($name.'_sequence_nonnegative'));
+            }
+            // Native DROP COLUMN preserves SQLite FKs without toggling PRAGMA inside an outer transaction.
+            $this->dbConnection()->statement('ALTER TABLE '.$this->dbConnection()->getQueryGrammar()->wrapTable($name).' DROP COLUMN sequence');
+        }
+    }
+
     private function afterCreate(string $entity): void
     {
+        if (in_array($entity, ['scan_obligations', 'scan_evidence'], true) && $this->dbConnection()->getDriverName() === 'mysql') {
+            $name = app(DatabaseConfig::class)->table($entity);
+            $grammar = $this->dbConnection()->getQueryGrammar();
+            $checks = ['outcome_fields' => "COALESCE((outcome IS NULL AND reason IS NULL AND retryable = false) OR (outcome IN ('clean','infected') AND reason IS NULL AND retryable = false AND blob_id IS NOT NULL) OR (outcome = 'failed' AND reason IS NOT NULL), false) = true"];
+            if ($entity === 'scan_obligations') {
+                $checks['lease_fields'] = "(state = 'leased' AND lease_token IS NOT NULL AND lease_expires_at IS NOT NULL) OR (state <> 'leased' AND lease_token IS NULL AND lease_expires_at IS NULL)";
+                $checks['settled_outcome'] = "state <> 'settled' OR outcome IS NOT NULL";
+            }
+            foreach ($checks as $suffix => $predicate) {
+                if ($this->dbConnection()->table('information_schema.TABLE_CONSTRAINTS')->whereRaw('TABLE_SCHEMA = DATABASE()')->where('TABLE_NAME', $name)->where('CONSTRAINT_NAME', $name.'_'.$suffix.'_check')->exists()) {
+                    continue;
+                }
+                $this->dbConnection()->statement('ALTER TABLE '.$grammar->wrapTable($name).' ADD CONSTRAINT '.$grammar->wrap($name.'_'.$suffix.'_check').' CHECK('.$predicate.')');
+            }
+        }
+
         if ($entity === 'drives') {
             $this->addOwnerUniqueIndex(table: app(DatabaseConfig::class)->table('drives'));
         }
 
         if ($entity === 'nodes') {
+            $this->addNodeSequence();
             $this->addSiblingUniqueIndex(table: app(DatabaseConfig::class)->table('nodes'));
             $this->addSingleRootIndex(table: app(DatabaseConfig::class)->table('nodes'));
             $this->addTrashedAtIndex(table: app(DatabaseConfig::class)->table('nodes'));
@@ -1186,6 +1247,190 @@ final class SchemaBuilder
         }
 
         $table->json(column: 'extra_data')->nullable();
+    }
+
+    /** A signed counter with SQLite type checks preventing REAL overflow promotion. */
+    private function scanInteger(Blueprint $table, string $column, int $minimum = 0): ColumnDefinition
+    {
+        $type = $this->dbConnection()->getDriverName() === 'sqlite' ? "typeof({$column}) = 'integer' AND " : '';
+
+        return $table->rawColumn($column, "BIGINT CHECK({$column} IS NULL OR ({$type}{$column} >= {$minimum}))");
+    }
+
+    /** @param list<string> $values */
+    private function scanEnum(Blueprint $table, string $column, array $values): ColumnDefinition
+    {
+        $allowed = implode(',', array_map(static fn (string $value): string => "'".$value."'", $values));
+
+        return $table->rawColumn($column, "VARCHAR(16) CHECK({$column} IN ({$allowed}))");
+    }
+
+    private function scanReference(Blueprint $table, IdStrategy $ids, string $column, string $entity, bool $nullable = false, string $delete = 'cascade'): void
+    {
+        $ids->reference($table, $column, $nullable);
+        $table->foreign($column)->references('id')->on(app(DatabaseConfig::class)->table($entity))->onDelete($delete);
+    }
+
+    private function defineScanTable(Blueprint $table, IdStrategy $ids, string $entity): void
+    {
+        $ids->key($table);
+        if ($entity === 'scan_requests') {
+            $this->scanReference($table, $ids, 'obligation_id', 'scan_obligations');
+            $table->char('request_key', 36);
+            $this->scanInteger($table, 'generation', 1);
+            $table->timestamp('requested_at');
+            $table->string('reason', 191);
+            $table->string('correlation_id', 191);
+            $table->unique(['obligation_id', 'request_key']);
+            $table->unique(['obligation_id', 'generation']);
+
+            return;
+        }
+        $this->scanReference($table, $ids, 'drive_id', 'drives');
+        $this->tenant($table);
+        $table->char('spec_key', 64);
+        if ($entity === 'scan_backfill_runs') {
+            $table->char('request_key', 36);
+            $this->scanInteger($table, 'target_sequence');
+            $this->scanInteger($table, 'last_admission_sequence')->default(0);
+            $ids->reference($table, 'last_revision_id', true);
+            $this->scanEnum($table, 'state', ['pending', 'completed'])->default('pending');
+            $table->timestamps();
+            $table->unique(['drive_id', 'spec_key']);
+            $table->index(['state', 'id']);
+
+            return;
+        }
+        $table->string('scanner_key', 64);
+        $table->string('scanner_version', 64);
+        $table->string('policy_version', 64);
+        if ($entity === 'scan_policy_states') {
+            $table->string('predicate_key', 80);
+            $this->scanEnum($table, 'mode', ['off', 'new_content_only', 'all_content']);
+            $table->char('config_fingerprint', 64);
+            $table->string('rollout_key', 64)->nullable();
+            $this->scanInteger($table, 'boundary_sequence')->nullable();
+            $table->timestamp('activated_at');
+            $table->timestamp('updated_at');
+            $table->unique(['drive_id', 'predicate_key']);
+
+            return;
+        }
+        $this->scanReference($table, $ids, 'revision_id', 'file_revisions');
+        $this->scanReference($table, $ids, 'blob_id', 'blobs', true, 'restrict');
+        $table->string('scope_key', 191);
+        $table->char('content_identity', 64);
+        $table->char('sha256', 64);
+        $this->scanInteger($table, 'size_bytes');
+        $this->scanInteger($table, 'generation', 1);
+        $this->scanInteger($table, 'attempt', $entity === 'scan_evidence' ? 1 : 0);
+        $table->string('reason', 32)->nullable();
+        $table->rawColumn('retryable', 'BOOLEAN CHECK(retryable IN (false, true))')->default(false);
+        $reasonCheck = "CHECK(COALESCE((outcome IS NULL AND reason IS NULL AND retryable = false) OR (outcome IN ('clean','infected') AND reason IS NULL AND retryable = false AND blob_id IS NOT NULL) OR (outcome = 'failed' AND reason IS NOT NULL), false))";
+        $reasonDefinition = $this->dbConnection()->getDriverName() === 'mysql' ? '' : $reasonCheck;
+        $table->rawColumn('outcome', "VARCHAR(16) CHECK(outcome IN ('clean','infected','failed')) {$reasonDefinition}")->nullable($entity === 'scan_obligations');
+        if ($entity === 'scan_evidence') {
+            $this->scanReference($table, $ids, 'obligation_id', 'scan_obligations');
+            $this->scanReference($table, $ids, 'request_id', 'scan_requests');
+            $table->timestamp('observed_at');
+            $this->scanReference($table, $ids, 'reused_from_id', 'scan_evidence', true, 'set null');
+            $table->timestamp('revoked_at')->nullable();
+            $table->string('revocation_reason', 191)->nullable();
+            $table->unique(['request_id', 'attempt']);
+            $table->index(['revision_id', 'spec_key', 'outcome']);
+            $table->index(['blob_id', 'outcome']);
+
+            return;
+        }
+        $table->char('request_key', 36);
+        $this->scanEnum($table, 'state', ['pending', 'leased', 'retry_wait', 'settled'])->default('pending');
+        $table->timestamp('available_at');
+        $table->char('lease_token', 36)->nullable();
+        $leaseDefinition = $this->dbConnection()->getDriverName() === 'mysql' ? 'TIMESTAMP' : "TIMESTAMP CHECK((state = 'leased' AND lease_token IS NOT NULL AND lease_expires_at IS NOT NULL) OR (state <> 'leased' AND lease_token IS NULL AND lease_expires_at IS NULL)) CHECK(state <> 'settled' OR outcome IS NOT NULL)";
+        $table->rawColumn('lease_expires_at', $leaseDefinition)->nullable();
+        $table->timestamp('last_published_at')->nullable();
+        $table->timestamps();
+        $table->unique(['revision_id', 'spec_key']);
+        $table->index(['state', 'available_at', 'id']);
+        $table->index(['state', 'lease_expires_at', 'id']);
+        $table->index(['drive_id', 'id']);
+    }
+
+    private function defineUploadCleanup(Blueprint $table, IdStrategy $ids): void
+    {
+        $this->scanReference($table, $ids, 'result_blob_id', 'blobs', true, 'restrict');
+        $table->char('input_fingerprint', 64)->nullable();
+        $table->rawColumn('cleanup_pending', 'BOOLEAN CHECK(cleanup_pending IN (false, true))')->default(false);
+        $this->scanInteger($table, 'cleanup_attempts')->default(0);
+        $table->timestamp('cleanup_available_at')->nullable();
+        $table->string('cleanup_last_reason', 32)->nullable();
+        $table->index(['status', 'cleanup_pending', 'cleanup_available_at', 'id'], $table->getTable().'_cleanup_idx');
+    }
+
+    public function addScanEvidenceAndWork(): void
+    {
+        $db = $this->dbConnection();
+        if ($db->getDriverName() === 'mysql') {
+            $engine = $db->selectOne('SELECT VERSION() AS v, @@SESSION.sql_mode AS m');
+            if (!$engine instanceof \stdClass || !is_string($engine->v ?? null) || !is_string($engine->m ?? null)) {
+                throw new \RuntimeException('Cannot prove enforced MySQL constraints.');
+            }
+            $version = $engine->v;
+            $mode = $engine->m;
+            if (str_contains($version, 'MariaDB') || version_compare($version, '8.0.16', '<') || !str_contains($mode, 'STRICT_')) {
+                throw new \RuntimeException('Scan schema requires enforced MySQL CHECKs and strict numeric overflow.');
+            }
+        }
+        foreach (['drives', 'file_revisions'] as $entity) {
+            $name = app(DatabaseConfig::class)->table($entity);
+            if (!$this->schemaConnection()->hasColumn($name, 'scan_admission_sequence')) {
+                $this->schemaConnection()->table($name, fn (Blueprint $table) => $this->scanInteger($table, 'scan_admission_sequence')->default(0));
+            }
+        }
+        foreach (['file_revisions', 'blobs'] as $entity) {
+            $name = app(DatabaseConfig::class)->table($entity);
+            if (!$this->schemaConnection()->hasColumn($name, 'quarantined_at')) {
+                $this->schemaConnection()->table($name, static fn (Blueprint $table) => $table->timestamp('quarantined_at')->nullable());
+            }
+        }
+        $blobs = app(DatabaseConfig::class)->table('blobs');
+        if (!$this->schemaConnection()->hasColumn($blobs, 'storage_version')) {
+            $this->schemaConnection()->table($blobs, static fn (Blueprint $table) => $table->string('storage_version', 255)->nullable());
+        }
+        $sessions = app(DatabaseConfig::class)->table('upload_sessions');
+        if (!$this->schemaConnection()->hasColumn($sessions, 'cleanup_pending')) {
+            $this->schemaConnection()->table($sessions, fn (Blueprint $table) => $this->defineUploadCleanup($table, $this->ids()));
+        }
+        foreach (['scan_policy_states', 'scan_obligations', 'scan_backfill_runs', 'scan_requests', 'scan_evidence'] as $entity) {
+            if (!$this->schemaConnection()->hasTable(app(DatabaseConfig::class)->table($entity))) {
+                $this->createTable($entity);
+            } elseif ($this->dbConnection()->getDriverName() === 'mysql') {
+                $this->afterCreate($entity);
+            }
+        }
+    }
+
+    public function removeScanEvidenceAndWork(): void
+    {
+        foreach (['scan_evidence', 'scan_requests', 'scan_backfill_runs', 'scan_obligations', 'scan_policy_states'] as $entity) {
+            $this->dropTable($entity);
+        }
+        $sessions = app(DatabaseConfig::class)->table('upload_sessions');
+        if ($this->schemaConnection()->hasColumn($sessions, 'cleanup_pending')) {
+            $this->schemaConnection()->table($sessions, function (Blueprint $table): void {
+                $table->dropForeign(['result_blob_id']);
+                $table->dropIndex($table->getTable().'_result_blob_id_index');
+                $table->dropIndex($table->getTable().'_cleanup_idx');
+                $table->dropColumn(['result_blob_id', 'input_fingerprint', 'cleanup_pending', 'cleanup_attempts', 'cleanup_available_at', 'cleanup_last_reason']);
+            });
+        }
+        foreach (['blobs' => ['quarantined_at', 'storage_version'], 'file_revisions' => ['scan_admission_sequence', 'quarantined_at'], 'drives' => ['scan_admission_sequence']] as $entity => $columns) {
+            $name = app(DatabaseConfig::class)->table($entity);
+            $present = array_values(array_filter($columns, fn (string $column): bool => $this->schemaConnection()->hasColumn($name, $column)));
+            if ($present !== []) {
+                $this->schemaConnection()->table($name, static fn (Blueprint $table) => $table->dropColumn($present));
+            }
+        }
     }
 
     private function ids(): IdStrategy

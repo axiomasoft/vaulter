@@ -6,6 +6,7 @@ use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Export\NodeExportService;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Operations\OperationContext;
 
 /**
  * The node-attached export path (§7 / M4a): a document node routes through the
@@ -23,7 +24,7 @@ beforeEach(function (): void {
 });
 
 it('exports a document node to HTML through the registered exporter', function (): void {
-    $export = app(NodeExportService::class)->export($this->node, 'html');
+    $export = app(NodeExportService::class)->export(OperationContext::system($this->node->storage()->firstOrFail(), 'export fixture'), $this->node, 'html');
 
     expect($export->format)->toBe('html')
         ->and($export->mimeType)->toBe('text/html')
@@ -32,7 +33,7 @@ it('exports a document node to HTML through the registered exporter', function (
 });
 
 it('exports a document node to Markdown through the registered exporter', function (): void {
-    $export = app(NodeExportService::class)->export($this->node, 'markdown');
+    $export = app(NodeExportService::class)->export(OperationContext::system($this->node->storage()->firstOrFail(), 'export fixture'), $this->node, 'markdown');
 
     expect($export->format)->toBe('markdown')
         ->and($export->content)->toContain('Exportable body')

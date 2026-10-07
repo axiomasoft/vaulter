@@ -9,7 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Vaulter\Contracts\Cas\StorageDriver;
+use Vaulter\Content\ContentDelivery;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantScope;
@@ -55,7 +55,6 @@ final class PublicShareController extends Controller
         private readonly FileRevisionReadRepository $versions,
         private readonly DriveReadRepository $storages,
         private readonly NodeShareStoreRepository $shares,
-        private readonly StorageDriver $driver,
         private readonly MetricsRecorder $metrics,
         private readonly ShareResolver $resolver,
     ) {}
@@ -130,7 +129,7 @@ final class PublicShareController extends Controller
             throw new NotFoundHttpException('Share link not found or no longer available.');
         }
 
-        return $this->stream($node, $this->versions->head($node), $storage, startedAt: $startedAt);
+        return $this->stream($context, $node, $this->versions->head($node), $storage, startedAt: $startedAt);
     }
 
     /**
@@ -175,7 +174,7 @@ final class PublicShareController extends Controller
         )->values();
     }
 
-    private function stream(Node $node, ?FileRevision $version, Drive $storage, int $startedAt): StreamedResponse
+    private function stream(ShareContext $context, Node $node, ?FileRevision $version, Drive $storage, int $startedAt): StreamedResponse
     {
         if (!$version instanceof FileRevision) {
             throw new NotFoundHttpException('Share link not found or no longer available.');
@@ -195,6 +194,9 @@ final class PublicShareController extends Controller
         $contentType = $version->mime_type ?? $node->mime_type ?? 'application/octet-stream';
 
         return $this->streamFromDisk(
+            context: $context,
+            node: $node,
+            revision: $version,
             blob: $blob,
             filename: $filename,
             contentType: $contentType,
@@ -202,11 +204,12 @@ final class PublicShareController extends Controller
         );
     }
 
-    private function streamFromDisk(Blob $blob, string $filename, string $contentType, int $startedAt): StreamedResponse
+    private function streamFromDisk(ShareContext $context, Node $node, FileRevision $revision, Blob $blob, string $filename, string $contentType, int $startedAt): StreamedResponse
     {
         return response()->streamDownload(
-            function () use ($blob, $startedAt): void {
-                $handle = $this->driver->get(key: $blob->storage_key, disk: $blob->disk);
+            function () use ($context, $node, $revision, $startedAt): void {
+                $file = app(ContentDelivery::class)->streamForShare($context, $node, $revision);
+                $handle = $file->stream;
 
                 if (!is_resource($handle)) {
                     abort(404);
@@ -215,32 +218,37 @@ final class PublicShareController extends Controller
                 $ttfbRecorded = false;
                 $tier = LoadTier::label();
 
-                while (!feof($handle)) {
-                    $chunk = fread($handle, 1024 * 256);
+                try {
+                    while (!feof($handle)) {
+                        $chunk = fread($handle, 1024 * 256);
 
-                    if ($chunk === false) {
-                        break;
+                        if ($chunk === false) {
+                            break;
+                        }
+
+                        $this->metrics->counter(
+                            name: 'vaulter_download_bytes_total',
+                            amount: strlen($chunk),
+                            labels: ['source' => 'share'],
+                        );
+
+                        echo $chunk;
+
+                        if (!$ttfbRecorded) {
+                            $this->metrics->histogram(
+                                name: 'vaulter_download_ttfb_seconds',
+                                value: (hrtime(true) - $startedAt) / 1_000_000_000,
+                                labels: ['tier' => $tier],
+                            );
+                            $ttfbRecorded = true;
+                        }
                     }
 
-                    $this->metrics->counter(
-                        name: 'vaulter_download_bytes_total',
-                        amount: strlen($chunk),
-                        labels: ['source' => 'share'],
-                    );
-
-                    echo $chunk;
-
-                    if (!$ttfbRecorded) {
-                        $this->metrics->histogram(
-                            name: 'vaulter_download_ttfb_seconds',
-                            value: (hrtime(true) - $startedAt) / 1_000_000_000,
-                            labels: ['tier' => $tier],
-                        );
-                        $ttfbRecorded = true;
+                } finally {
+                    if (is_resource($handle)) {
+                        fclose($handle);
                     }
                 }
-
-                fclose($handle);
             },
             name: $filename,
             headers: [

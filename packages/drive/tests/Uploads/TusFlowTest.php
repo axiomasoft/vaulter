@@ -10,6 +10,7 @@ use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Exceptions\Quota\QuotaExceededException;
 use Vaulter\Drive\Exceptions\Uploads\OffsetMismatchException;
+use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\StagedUpload;
@@ -19,6 +20,7 @@ use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\OperationContext;
 
 beforeEach(function (): void {
     Storage::fake('local');
@@ -32,8 +34,7 @@ function initiateTus(int $totalBytes, string $name = 'big.bin'): UploadSession
 {
     $storage = UploadTestHelpers::storage();
 
-    return app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
-        storage: $storage,
+    return app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
         targetName: $name,
@@ -74,7 +75,7 @@ it('PATCH-чанки → HEAD-offset растёт → assemble → commit соз
     // Assemble → commit through the SAME race-free CAS.
     $manager = app(UploadSessionManager::class);
     $manager->markAssembled($session->refresh());
-    $node = app(CompleteUploadAction::class)->execute($session->refresh());
+    $node = app(CompleteUploadAction::class)->execute(context: OperationContext::system($session->storage, 'test fixture'), session: $session->refresh());
 
     expect($node->kind)->toBe(NodeKind::File)
         ->and($node->name)->toBe('hello.txt')
@@ -105,7 +106,7 @@ it('resume после разрыва: второй клиент читает HEA
         ->and($result['offset'])->toBe(16);
 
     app(UploadSessionManager::class)->markAssembled($session->refresh());
-    $node = app(CompleteUploadAction::class)->execute($session->refresh());
+    $node = app(CompleteUploadAction::class)->execute(context: OperationContext::system($session->storage, 'test fixture'), session: $session->refresh());
 
     // The reassembled bytes are intact (server-stitched at the authoritative offset).
     $version = $node->currentVersion()->first();
@@ -147,13 +148,13 @@ it('дедуп: идентичная резюмируемая загрузка �
     $a = initiateTus(totalBytes: strlen($bytes), name: 'a.bin');
     app(TusUploadHandler::class)->patch($a->refresh(), UploadTestHelpers::streamFor($bytes), 0);
     app(UploadSessionManager::class)->markAssembled($a->refresh());
-    app(CompleteUploadAction::class)->execute($a->refresh());
+    app(CompleteUploadAction::class)->execute(context: OperationContext::system($a->storage, 'test fixture'), session: $a->refresh());
 
     // Second resumable upload of the SAME bytes (different storage/session).
     $b = initiateTus(totalBytes: strlen($bytes), name: 'b.bin');
     app(TusUploadHandler::class)->patch($b->refresh(), UploadTestHelpers::streamFor($bytes), 0);
     app(UploadSessionManager::class)->markAssembled($b->refresh());
-    app(CompleteUploadAction::class)->execute($b->refresh());
+    app(CompleteUploadAction::class)->execute(context: OperationContext::system($b->storage, 'test fixture'), session: $b->refresh());
 
     // global dedup so two storages share the blob; assert one physical blob.
     config()->set('vaulter-media.dedup.scope', 'global');
@@ -162,12 +163,11 @@ it('дедуп: идентичная резюмируемая загрузка �
         ->and(FileRevision::query()->count())->toBe(2);
 });
 
-it('лживый client sha256 игнорируется — адрес считается с собранных байт', function (): void {
+it('лживый client sha256 отклоняется до записи версии', function (): void {
     $bytes = 'the real bytes';
     $storage = UploadTestHelpers::storage();
 
-    $session = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
-        storage: $storage,
+    $session = app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
         targetName: 'x.bin',
@@ -177,20 +177,17 @@ it('лживый client sha256 игнорируется — адрес счит�
 
     app(TusUploadHandler::class)->patch($session->refresh(), UploadTestHelpers::streamFor($bytes), 0);
     app(UploadSessionManager::class)->markAssembled($session->refresh());
-    $node = app(CompleteUploadAction::class)->execute($session->refresh());
+    expect(fn () => app(CompleteUploadAction::class)->execute(context: OperationContext::system($session->storage, 'test fixture'), session: $session->refresh()))
+        ->toThrow(UploadConflictException::class);
+    expect(FileRevision::query()->count())->toBe(0);
 
-    // The committed version's hash is the REAL content hash, not the client's lie.
-    $version = $node->currentVersion()->first();
-    expect($version->sha256)->toBe(hash('sha256', $bytes))
-        ->and($version->sha256)->not->toBe(str_repeat('f', 64));
 });
 
 it('квота: сборка сверх квоты отклоняется на commit', function (): void {
     $bytes = 'this is definitely too many bytes for the quota';
     $storage = UploadTestHelpers::storage(quotaBytes: 5);
 
-    $session = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
-        storage: $storage,
+    $session = app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
         targetName: 'x.bin',
@@ -200,7 +197,7 @@ it('квота: сборка сверх квоты отклоняется на c
     app(TusUploadHandler::class)->patch($session->refresh(), UploadTestHelpers::streamFor($bytes), 0);
     app(UploadSessionManager::class)->markAssembled($session->refresh());
 
-    expect(fn () => app(CompleteUploadAction::class)->execute($session->refresh()))
+    expect(fn () => app(CompleteUploadAction::class)->execute(context: OperationContext::system($session->storage, 'test fixture'), session: $session->refresh()))
         ->toThrow(QuotaExceededException::class);
 
     // No blob committed, quota untouched.
@@ -212,8 +209,7 @@ it('over-size: initiate сверх max_bytes отклоняется ДО при�
     config()->set('vaulter-drive.uploads.max_file_size', 10);
     $storage = UploadTestHelpers::storage();
 
-    expect(fn () => app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
-        storage: $storage,
+    expect(fn () => app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
         targetName: 'x.bin',
@@ -240,8 +236,7 @@ it('abort чистит staged temp и помечает aborted', function (): vo
 it('новая версия: резюмируемая загрузка на существующий узел бампит number', function (): void {
     // Seed a v1 file via a first resumable upload.
     $storage = UploadTestHelpers::storage();
-    $v1 = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
-        storage: $storage,
+    $v1 = app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
         targetName: 'doc.txt',
@@ -249,20 +244,19 @@ it('новая версия: резюмируемая загрузка на су
     ));
     app(TusUploadHandler::class)->patch($v1->refresh(), UploadTestHelpers::streamFor('v1'), 0);
     app(UploadSessionManager::class)->markAssembled($v1->refresh());
-    $node = app(CompleteUploadAction::class)->execute($v1->refresh());
+    $node = app(CompleteUploadAction::class)->execute(context: OperationContext::system($v1->storage, 'test fixture'), session: $v1->refresh());
 
     $firstVersionId = $node->current_version_id;
 
     // A NEW-VERSION resumable upload onto that node.
-    $v2 = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
-        storage: $storage,
+    $v2 = app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
         targetNode: $node,
         totalSizeBytes: 12,
     ));
     app(TusUploadHandler::class)->patch($v2->refresh(), UploadTestHelpers::streamFor('version two!'), 0);
     app(UploadSessionManager::class)->markAssembled($v2->refresh());
-    $updated = app(CompleteUploadAction::class)->execute($v2->refresh());
+    $updated = app(CompleteUploadAction::class)->execute(context: OperationContext::system($v2->storage, 'test fixture'), session: $v2->refresh());
 
     $file = $updated->file;
 

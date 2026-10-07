@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Models\Cas;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -14,6 +15,7 @@ use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Models\Concerns\HasExtraData;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
+use Vaulter\Models\Content\ScanUtcDateTime;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\FileRevisionBlob;
 
@@ -26,26 +28,28 @@ use Vaulter\Models\Drive\FileRevisionBlob;
  *
  * Swappable via configuration key vaulter.models.blob.
  *
- * @property int|string      $id
- * @property int|string|null $tenant_id
- * @property int|string|null $drive_id
- * @property string          $hash_algo
- * @property string          $sha256
- * @property int             $size_bytes
- * @property string          $disk
- * @property string          $storage_key
- * @property BlobStatus      $status
- * @property int             $ref_count
- * @property string          $scope_key
- * @property string          $dedup_scope
- * @property string|null     $etag
- * @property string|null     $md5
- * @property string|null     $crc32c
- * @property bool            $chunked
- * @property int|string|null $encryption_key_id
- * @property Carbon|null     $first_seen_at
- * @property Carbon|null     $committed_at
- * @property Carbon|null     $delete_after_at
+ * @property CarbonImmutable|null $quarantined_at
+ * @property string|null          $storage_version
+ * @property int|string           $id
+ * @property int|string|null      $tenant_id
+ * @property int|string|null      $drive_id
+ * @property string               $hash_algo
+ * @property string               $sha256
+ * @property int                  $size_bytes
+ * @property string               $disk
+ * @property string               $storage_key
+ * @property BlobStatus           $status
+ * @property int                  $ref_count
+ * @property string               $scope_key
+ * @property string               $dedup_scope
+ * @property string|null          $etag
+ * @property string|null          $md5
+ * @property string|null          $crc32c
+ * @property bool                 $chunked
+ * @property int|string|null      $encryption_key_id
+ * @property Carbon|null          $first_seen_at
+ * @property Carbon|null          $committed_at
+ * @property Carbon|null          $delete_after_at
  */
 class Blob extends Model
 {
@@ -131,6 +135,7 @@ class Blob extends Model
     protected function casts(): array
     {
         return [
+            'quarantined_at' => ScanUtcDateTime::class,
             'size_bytes' => 'integer',
             'ref_count' => 'integer',
             'status' => BlobStatus::class,

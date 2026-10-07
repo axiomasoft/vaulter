@@ -24,7 +24,45 @@ final class MimeSniffer
     /**
      * Bytes read from the head of the object for magic-byte detection.
      */
-    private const int SNIFF_BYTES = 4096;
+    private const int SNIFF_BYTES = 8192;
+
+    public function detect(string $path): ?string
+    {
+        $stream = fopen($path, 'rb');
+        if ($stream === false) {
+            throw new \RuntimeException('Unable to inspect upload.');
+        }
+        try {
+            $head = fread($stream, self::SNIFF_BYTES);
+            if ($head === false) {
+                throw new \RuntimeException('Unable to inspect upload.');
+            }
+            $mime = (new finfo(FILEINFO_MIME_TYPE))->buffer($head);
+        } finally {
+            fclose($stream);
+        }
+        // OOXML refinement requires bounded ZIP metadata, never just the suffix.
+        if ($mime === 'application/zip') {
+            $zip = new \ZipArchive;
+            if ($zip->open($path, \ZipArchive::RDONLY) === true) {
+                try {
+                    $entry = $zip->statName('[Content_Types].xml');
+                    if (is_array($entry) && $entry['size'] <= 65536) {
+                        $types = $zip->getFromName('[Content_Types].xml', 65536);
+                        foreach (['word' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'xl' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'ppt' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation'] as $part => $type) {
+                            if (is_string($types) && str_contains($types, $type.'.main+xml') && $zip->locateName($part.'/'.($part === 'word' ? 'document' : ($part === 'xl' ? 'workbook' : 'presentation')).'.xml') !== false) {
+                                return $type;
+                            }
+                        }
+                    }
+                } finally {
+                    $zip->close();
+                }
+            }
+        }
+
+        return is_string($mime) && $mime !== 'inode/x-empty' ? $this->normalise($mime) : null;
+    }
 
     /**
      * Generic detections that carry no signal — neither a declared nor a detected

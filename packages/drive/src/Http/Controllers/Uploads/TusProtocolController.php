@@ -8,27 +8,21 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Vaulter\Access\AccessResolver;
 use Vaulter\Configuration\RoutesConfig;
-use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
+use Vaulter\Contracts\Drive\DriveHandleFactory;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
-use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Http\Requests\Uploads\CreateUploadSessionRequest;
 use Vaulter\Drive\Http\Resources\Uploads\UploadSessionResource;
 use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Operations\UploadOperations;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
 use Vaulter\Drive\Uploads\TusUploadHandler;
-use Vaulter\Drive\Uploads\UploadSessionManager;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Http\Resources\Drive\NodeResource;
 use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\DriveReadRepository;
-use Vaulter\Repositories\Drive\NodeReadRepository;
-use Vaulter\Support\Identity;
 
 /**
  * The tus.io CORE resumable-upload surface (§2.8 / D16 / M3a). Thin HTTP: it resolves
@@ -52,12 +46,9 @@ final class TusProtocolController extends Controller
     private const string TUS_VERSION = '1.0.0';
 
     public function __construct(
-        private readonly UploadSessionManager $manager,
         private readonly UploadSessionReadRepository $sessions,
         private readonly DriveReadRepository $storages,
-        private readonly NodeReadRepository $nodes,
-        private readonly AccessResolver $access,
-        private readonly CompleteUploadAction $commit,
+        private readonly DriveHandleFactory $handles,
         private readonly DriveConfig $driveConfig,
         private readonly RoutesConfig $routesConfig,
     ) {}
@@ -71,24 +62,10 @@ final class TusProtocolController extends Controller
     {
         $this->assertTusEnabled();
 
-        $target = $this->resolveAndAuthorizeTarget(
-            request: $request,
-            storage: $storage,
-            targetNodeId: $request->targetNodeId(),
-            parentId: $request->parentId(),
-        );
-
-        $session = $this->manager->initiate(new InitiateUploadInput(
-            storage: $storage,
-            protocol: UploadProtocol::Tus,
-            targetParent: $target['parent'],
-            targetName: $request->name(),
-            targetNode: $target['node'],
-            expectedSha256: $request->expectedSha256(),
-            totalSizeBytes: $request->totalSizeBytes(),
-            mimeType: $request->mimeType(),
-            metadata: $this->mergedMetadata($request),
-            actorId: $this->actorId($request),
+        $session = $this->uploads(request: $request, storage: $storage)->initiate(new InitiateUploadInput(
+            protocol: $request->protocol(), targetParent: $request->parentId(), targetName: $request->name(),
+            targetNode: $request->targetNodeId(), expectedSha256: $request->expectedSha256(),
+            totalSizeBytes: $request->totalSizeBytes(), mimeType: $request->mimeType(), metadata: $this->mergedMetadata($request),
         ));
 
         return UploadSessionResource::make($session)
@@ -146,7 +123,7 @@ final class TusProtocolController extends Controller
 
         $offset = (int) $request->header('Upload-Offset', '0');
 
-        $result = $this->tusHandler()->patch(
+        $result = $this->uploads(request: $request, storage: $this->storageOf($session))->patch(
             session: $session,
             chunk: $this->chunkStream($request),
             offset: $offset,
@@ -163,10 +140,7 @@ final class TusProtocolController extends Controller
         // the manager so it runs INSIDE the session's critical section (R-11): a sweeper
         // may legally reclaim an Assembled session, and out here it used to be free to
         // discard the staged bytes mid-commit.
-        $node = $this->manager->commitAssembled(
-            $session->refresh(),
-            fn (UploadSession $locked): Node => $this->commit->execute($locked),
-        );
+        $node = $this->uploads(request: $request, storage: $this->storageOf($session))->complete($session);
 
         return NodeResource::make($node)
             ->response()
@@ -188,7 +162,7 @@ final class TusProtocolController extends Controller
         $this->authorizeSession($request, $session);
         $this->assertTusResumableHeader($request);
 
-        $this->manager->abort($session, $this->actorId($request));
+        $this->uploads(request: $request, storage: $this->storageOf($session))->abort($session);
 
         return response()->noContent(headers: ['Tus-Resumable' => self::TUS_VERSION]);
     }
@@ -242,78 +216,14 @@ final class TusProtocolController extends Controller
         return $session;
     }
 
-    /**
-     * Resolve + authorize the create target (§2.8). A new-version upload (node_id)
-     * needs Edit on the node; a new-file upload needs Create under the destination
-     * folder (and the workspace-create gate). Returns the resolved parent/node pair.
-     *
-     * @return array{parent: ?Node, node: ?Node}
-     */
-    private function resolveAndAuthorizeTarget(
-        Request $request,
-        Drive $storage,
-        int|string|null $targetNodeId,
-        int|string|null $parentId,
-    ): array {
-        if ($targetNodeId !== null) {
-            $node = $this->findNodeInStorage($targetNodeId, $storage);
-            $this->guard($request, Ability::Edit, $node);
-
-            return ['parent' => null, 'node' => $node];
-        }
-
-        $parent = $parentId === null
-            ? $this->rootOf($storage)
-            : $this->findNodeInStorage($parentId, $storage);
-
-        $this->guardCreate($request, $storage, $parent);
-
-        return ['parent' => $parent, 'node' => null];
-    }
-
-    /**
-     * Authorize a request acting on an EXISTING session by its target shape: Edit on
-     * the node for a new version, else Create under the destination folder — THEN
-     * (F-P1.4-12) confirm the acting actor is the session's OWNER. The ability check
-     * alone lets any actor with Create/Edit in the same folder/node — having merely
-     * learned the (unguessable) upload_id — drive someone else's in-flight session;
-     * ownership closes that IDOR without loosening the existing ability gate.
-     */
     private function authorizeSession(Request $request, UploadSession $session): void
     {
-        $storage = $this->storageOf($session);
-
-        if ($session->isNewVersion()) {
-            $node = $this->findNodeInStorage($session->target_node_id ?? '', $storage);
-            $this->guard($request, Ability::Edit, $node);
-        } else {
-            $parent = $session->target_parent_id === null
-                ? $this->rootOf($storage)
-                : $this->findNodeInStorage($session->target_parent_id, $storage);
-
-            $this->guardCreate($request, $storage, $parent);
-        }
-
-        $this->guardOwnership($request, $session);
+        $this->uploads(request: $request, storage: $this->storageOf($session))->status($session);
     }
 
-    /**
-     * F-P1.4-12: the session row belongs to whoever's `created_by` it carries — a
-     * mismatched actor is refused even though they hold a legitimate ability on the
-     * target. A session with no recorded owner (system-minted, created_by null) has
-     * nothing to compare against and is left to the ability gate alone.
-     */
-    private function guardOwnership(Request $request, UploadSession $session): void
+    private function uploads(Request $request, Drive $storage): UploadOperations
     {
-        if ($session->created_by === null) {
-            return;
-        }
-
-        $actorId = $this->actorId($request);
-
-        if (Identity::stringify($session->created_by) !== Identity::stringify($actorId)) {
-            throw PermissionDeniedException::forAbility('upload-session-owner');
-        }
+        return $this->handles->forDrive($storage)->actingAs($this->authorizable($request) ?? throw MissingActorException::required())->extension(UploadOperations::class);
     }
 
     private function storageOf(UploadSession $session): Drive
@@ -325,28 +235,6 @@ final class TusProtocolController extends Controller
         }
 
         return $storage;
-    }
-
-    private function rootOf(Drive $storage): Node
-    {
-        $root = $storage->rootNode()->first();
-
-        if (!$root instanceof Node) {
-            abort(404);
-        }
-
-        return $root;
-    }
-
-    private function findNodeInStorage(int|string $nodeId, Drive $storage): Node
-    {
-        $node = $this->nodes->find($nodeId);
-
-        if (!$node instanceof Node || $node->drive_id !== $storage->getKey()) {
-            abort(404);
-        }
-
-        return $node;
     }
 
     private function tusHandler(): TusUploadHandler
@@ -523,27 +411,6 @@ final class TusProtocolController extends Controller
     /**
      * Authorize an ability on a node through the AccessResolver (H.2); 403 on denial.
      */
-    private function guard(Request $request, Ability $ability, Node $node): void
-    {
-        $actor = $this->authorizable($request);
-
-        if ($actor === null || !$this->access->can($actor, $ability, $node)) {
-            throw PermissionDeniedException::forAbility($ability->value);
-        }
-    }
-
-    private function guardCreate(Request $request, Drive $storage, Node $destination): void
-    {
-        $actor = $this->authorizable($request);
-
-        if ($actor === null
-            || !$this->access->canCreateIn($actor, $storage)
-            || !$this->access->can($actor, Ability::Create, $destination)
-        ) {
-            throw PermissionDeniedException::forAbility(Ability::Create->value);
-        }
-    }
-
     private function authorizable(Request $request): ?Authorizable
     {
         $user = $request->user();

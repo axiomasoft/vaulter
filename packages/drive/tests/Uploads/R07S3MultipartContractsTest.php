@@ -12,6 +12,7 @@ use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Facades\Vaulter;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
@@ -22,8 +23,7 @@ beforeEach(function (): void {
 
 function r07InitiateS3(int $totalBytes, string $name = 'contract.bin'): UploadSession
 {
-    return app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
-        storage: UploadTestHelpers::storage(),
+    return app(UploadSessionManager::class)->initiate(context: OperationContext::system(UploadTestHelpers::storage(), 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::S3Multipart,
         targetParent: UploadTestHelpers::storage()->rootNode()->first(),
         targetName: $name,
@@ -156,7 +156,7 @@ it('rejects a part body one byte over max_chunk_bytes at the handler barrier', f
 
 it('HTTP parts echo the handler etag map and default part_no from X-Part-Number', function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
-    $storage = Vaulter::for(DriveTestHelpers::host())->model();
+    $storage = Vaulter::drive(DriveTestHelpers::host())->model();
     $body = 'api-part';
 
     $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [

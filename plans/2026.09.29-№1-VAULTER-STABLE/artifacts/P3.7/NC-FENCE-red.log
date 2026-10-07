@@ -1,0 +1,115 @@
+
+  [39;41;1m FAIL [39;49;22m[39m Tests\Concurrency\ScanWorkRecoveryRaceTest[39m
+  [31;1m⨯[39;22m[90m [39m[90mit SEC-R11 concurrent claims acquire one live lease and late old to[39m[90m…[39m [90m2.29s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-R11 killed lease owner is fenced while a surviving process r[39m[90m…[39m [90m2.32s[39m  
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Concurrency\ScanWorkRecoveryRaceTest[22m [90m>[39m it SEC-R11 concurren…   
+[39;1m  Failed asserting that Vaulter\Models\Drive\FileRevision Object #2738 (
+    'connection' => 'testing',
+    'table' => 'v_file_revisions',
+    'primaryKey' => 'id',
+    'keyType' => 'int',
+    'incrementing' => true,
+    'with' => Array &0 [],
+    'withCount' => Array &1 [],
+    'preventsLazyLoading' => false,
+    'perPage' => 15,
+    'exists' => true,
+    'wasRecentlyCreated' => false,
+    'escapeWhenCastingToString' => false,
+    'attributes' => Array &2 [
+        'id' => 1,
+        'tenant_id' => null,
+        'file_id' => 1,
+        'number' => 1,
+        'blob_id' => 1,
+        'manifest_blob_id' => null,
+        'sha256' => '1288f38deef797c91312d93d9bbbe295e6f3409a6e9f8cf36405603d428f320b',
+        'size_bytes' => 10,
+        'mime_type' => 'text/plain',
+        'declared_mime_type' => 'text/plain',
+        'scan_status' => 'pending',
+        'scan_admission_sequence' => 1,
+        'quarantined_at' => null,
+        'original_name' => 'p.txt',
+        'status' => 'committed',
+        'keep_forever' => false,
+        'extra_data' => null,
+        'created_by' => null,
+        'created_at' => '2026-10-07 06:53:58',
+        'committed_at' => '2026-10-07 06:53:58',
+    ],
+    'original' => Array &3 [
+        'id' => 1,
+        'tenant_id' => null,
+        'file_id' => 1,
+        'number' => 1,
+        'blob_id' => 1,
+        'manifest_blob_id' => null,
+        'sha256' => '1288f38deef797c91312d93d9bbbe295e6f3409a6e9f8cf36405603d428f320b',
+        'size_bytes' => 10,
+        'mime_type' => 'text/plain',
+        'declared_mime_type' => 'text/plain',
+        'scan_status' => 'pending',
+        'scan_admission_sequence' => 1,
+        'quarantined_at' => null,
+        'original_name' => 'p.txt',
+        'status' => 'committed',
+        'keep_forever' => false,
+        'extra_data' => null,
+        'created_by' => null,
+        'created_at' => '2026-10-07 06:53:58',
+        'committed_at' => '2026-10-07 06:53:58',
+    ],
+    'changes' => Array &4 [],
+    'previous' => Array &5 [],
+    'casts' => Array &6 [
+        'scan_admission_sequence' => 'integer',
+        'quarantined_at' => 'Vaulter\Models\Content\ScanUtcDateTime',
+        'number' => 'integer',
+        'size_bytes' => 'integer',
+        'keep_forever' => 'boolean',
+        'committed_at' => 'datetime',
+        'extra_data' => 'Illuminate\Database\Eloquent\Casts\AsArrayObject',
+    ],
+    'classCastCache' => Array &7 [],
+    'attributeCastCache' => Array &8 [],
+    'dateFormat' => null,
+    'appends' => Array &9 [],
+    'dispatchesEvents' => Array &10 [],
+    'observables' => Array &11 [],
+    'relations' => Array &12 [],
+    'touches' => Array &13 [],
+    'relationAutoloadCallback' => null,
+    'relationAutoloadContext' => null,
+    'timestamps' => true,
+    'usesUniqueIds' => false,
+    'hidden' => Array &14 [],
+    'visible' => Array &15 [],
+    'fillable' => Array &16 [
+        0 => 'mime_type',
+        1 => 'original_name',
+        2 => 'keep_forever',
+    ],
+    'guarded' => Array &17 [
+        0 => '*',
+    ],
+) is null.[39;22m
+
+  at [32mtests/Concurrency/ScanWorkRecoveryRaceTest.php[39m:[32m62[39m
+     58▕         $fresh->obligationId, $fresh->revisionId, $fresh->blobId, $fresh->driveId, $fresh->tenantId,
+     59▕         $fresh->contentIdentity, $fresh->spec, $fresh->generation, $fresh->attempt,
+     60▕         $otherToken, $fresh->leaseExpiresAt, $fresh->deadline,
+     61▕     );
+  ➜  62▕     expect(app(ScanObligationRepository::class)->fencedAttempt($forged))->toBeNull()
+     63▕         ->and(app(ScanObligationRepository::class)->settle($forged, new ScanResult(ScanVerdict::Clean)))->toBeFalse();
+     64▕     expect($fresh->leaseToken)->not->toBe($old->leaseToken)
+     65▕         ->and(app(ScanObligationRepository::class)->settle($old, new ScanResult(ScanVerdict::Clean)))->toBeFalse()
+     66▕         ->and(app(ScanObligationRepository::class)->settle($fresh, new ScanResult(ScanVerdict::Clean)))->toBeTrue()
+
+  [33m1   [39m[39;1mtests/Concurrency/ScanWorkRecoveryRaceTest.php[39;22m:[39;1m62[39;22m
+
+
+  [90mTests:[39m    [31;1m1 failed[39;22m[90m,[39m[39m [39m[32;1m1 passed[39;22m[90m (10 assertions)[39m
+  [90mDuration:[39m [39m4.68s[39m
+

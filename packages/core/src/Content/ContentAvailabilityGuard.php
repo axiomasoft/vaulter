@@ -1,0 +1,80 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Vaulter\Content;
+
+use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Contracts\Content\ScanPolicyResolver;
+use Vaulter\Enums\Cas\BlobStatus;
+use Vaulter\Exceptions\Files\ContentUnavailableException;
+use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Models\Cas\Blob;
+use Vaulter\Models\Drive\Drive;
+use Vaulter\Models\Drive\FileRevision;
+use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\OperationContext;
+use Vaulter\Repositories\Content\ScanEvidenceRepository;
+use Vaulter\Sharing\ShareContext;
+
+/** @internal Availability never grants ACL or a private scanner capability. */
+final readonly class ContentAvailabilityGuard
+{
+    public function __construct(private VaulterConfig $config, private ScanPolicyResolver $policies, private ScanEvidenceRepository $evidence) {}
+
+    public function assertAvailable(OperationContext $context, Node $node, FileRevision $revision): void
+    {
+        [$actualNode, $actualRevision, $drive, $blob] = $this->selection($node, $revision);
+        if ((string) $drive->id !== (string) $context->driveId()) {
+            throw NodeNotFoundException::forId($node->id);
+        }
+        $this->check($actualRevision, $drive, $blob);
+    }
+
+    public function assertAvailableForShare(ShareContext $context, Node $node, FileRevision $revision): void
+    {
+        [$actualNode, $actualRevision, $drive, $blob] = $this->selection($node, $revision);
+        if (!$context->containsNode($actualNode) || (string) $context->share->tenant_id !== (string) $drive->tenant_id) {
+            throw NodeNotFoundException::forId($node->id);
+        }
+        $this->check($actualRevision, $drive, $blob);
+    }
+
+    /** @return array{Node,FileRevision,Drive,Blob} */
+    public function selection(Node $node, FileRevision $revision): array
+    {
+        $nodeClass = $this->config->model('node');
+        $actualNode = $nodeClass::query()->whereKey($node->getRawOriginal($node->getKeyName()))->whereNull('trashed_at')->first();
+        if (!$actualNode instanceof Node) {
+            throw NodeNotFoundException::forId($node->id);
+        }
+        $file = $actualNode->file()->first();
+        $actualRevision = $file?->versions()->whereKey($revision->getRawOriginal($revision->getKeyName()))->whereIn('status', ['committed', 'superseded'])->first();
+        $drive = $actualNode->storage()->first();
+        if (!$actualRevision instanceof FileRevision || !$drive instanceof Drive || (string) $actualRevision->tenant_id !== (string) $drive->tenant_id) {
+            throw NodeNotFoundException::forId($node->id);
+        }
+        $blob = $actualRevision->blob()->first();
+        if (!$blob instanceof Blob || $blob->status !== BlobStatus::Committed || $blob->chunked
+            || !$actualRevision->blobs()->whereKey($blob->id)->exists()
+            || $blob->size_bytes !== $actualRevision->size_bytes || !hash_equals($blob->sha256, $actualRevision->sha256)
+            || ($blob->tenant_id !== null && (string) $blob->tenant_id !== (string) $drive->tenant_id)
+            || ($blob->drive_id !== null && (string) $blob->drive_id !== (string) $drive->id)) {
+            throw new ContentUnavailableException;
+        }
+
+        return [$actualNode, $actualRevision, $drive, $blob];
+    }
+
+    private function check(FileRevision $revision, Drive $drive, Blob $blob): void
+    {
+        if ($this->evidence->infected($revision)) {
+            throw new ContentUnavailableException;
+        }
+        foreach ($this->policies->resolve($drive) as $spec) {
+            if ($this->policies->required($revision, $spec) && $this->evidence->compatible($revision, $spec) === null) {
+                throw new ContentUnavailableException;
+            }
+        }
+    }
+}

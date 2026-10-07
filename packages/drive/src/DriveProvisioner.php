@@ -6,18 +6,22 @@ namespace Vaulter\Drive;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Str;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Events\Drives\DriveCreated;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Repositories\Drive\DriveReadRepository;
 use Vaulter\Repositories\Drive\DriveStoreRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
+use Vaulter\ValueObjects\Access\Actor;
 
 /**
  * Get-or-create a storage container for a host entity within a panel (§2.1), with
@@ -92,6 +96,8 @@ final readonly class DriveProvisioner
                 'used_bytes' => 0,
             ]);
 
+            app(ScanPolicyResolver::class)->initialize($storage, OperationContext::system($storage, 'drive provisioning'));
+
             $root = $this->nodes->create([
                 'drive_id' => $storage->id,
                 'parent_id' => null,
@@ -102,7 +108,7 @@ final readonly class DriveProvisioner
 
             $this->store->setRootNode(storage: $storage, rootNodeId: $root->id);
 
-            event(new DriveCreated(storage: $storage->refresh(), root: $root));
+            event(new DriveCreated(storage: $storage->refresh(), root: $root, actor: Actor::system('drive provisioning')->ref(), correlationId: (string) Str::ulid()));
 
             return $storage;
         });

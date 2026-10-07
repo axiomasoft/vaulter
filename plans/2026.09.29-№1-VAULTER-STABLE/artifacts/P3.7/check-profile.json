@@ -1,0 +1,557 @@
+{
+  "item": "P3.7",
+  "runtime": {
+    "provider": "codex",
+    "model": "gpt-6.1-sol",
+    "effort": "high",
+    "php": "8.4.26",
+    "thread": "01a114fe-6d4c-7eb1-a3b3-9b4bcdd9594d"
+  },
+  "root": "/home/vostrikov/projects/packages/vaulter",
+  "baseline": "/tmp/vaulter-p37-01a114fe-6d4c-7eb1-a3b3-9b4bcdd9594d/baseline.json",
+  "affected_packages": [
+    "core",
+    "drive",
+    "documents"
+  ],
+  "cas_consumer_checks": [
+    "media:BlobCommitAtomicityTest",
+    "media:BlobCrossScopeGcTest"
+  ],
+  "affected_paths": [
+    {
+      "path": "packages/drive/src/Actions/{Files,Uploads}/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Data/{Files,Uploads}/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Operations/UploadOperations.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/src/Contracts/Uploads/UploadInspector.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/src/Uploads/{StagedUpload,PreparedUpload,UploadSessionManager}.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Uploads/Inspection/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Jobs/Uploads/ScanFileRevision.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/src/Configuration/DriveConfig.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/config/vaulter-drive.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Repositories/Uploads/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Models/Uploads/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Http/Controllers/{NodeController,DownloadController,Uploads/*.php}",
+      "change": "any",
+      "note": "Только UploadOperations/ingest/content-egress switch; canCreateIn migration поставляет P3.5"
+    },
+    {
+      "path": "packages/drive/src/Providers/{Bindings,Http}Registrar.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Contracts/Cas/ContentScanner.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Enums/Cas/ScanVerdict.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Content/ContentAvailabilityGuard.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Exceptions/Files/ContentUnavailableException.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Models/Drive/FileRevision.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Repositories/Drive/FileRevisionStoreRepository.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Http/Support/DownloadHeaders.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/{Sharing,Handlers}/**/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Http/Controllers/Sharing/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/documents/src/Export/NodeExportService.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/documents/src/Engines/Handlers/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Content/FileContentLifecycle.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/tests/Content/*.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/tests/Uploads/P3/*.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/tests/Concurrency/CompleteUploadRaceTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/documents/tests/Document/ExporterContentGuardTest.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/{core,drive,documents}/tests/Arch/__snapshots__/public-api.txt",
+      "change": "any"
+    },
+    {
+      "path": "@plan/artifacts/P3.7/check-profile.json",
+      "change": "create"
+    },
+    {
+      "path": "@plan/artifacts/P3.7/completion.json",
+      "change": "create"
+    },
+    {
+      "path": "UPGRADE.md",
+      "change": "modify",
+      "note": "Только изменение публичного API/policy данного item"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify",
+      "note": "Только Unreleased данного item"
+    },
+    {
+      "path": "packages/drive/tests/Uploads/P3/StreamingMemoryProbe.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/src/Exceptions/Files/{UploadRejected,NotAFile}Exception.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/tests/Uploads/P3/QuarantineBoundaryTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/tests/Uploads/P3/ScanJobBoundaryTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Models/Content/ScanObligation.php",
+      "change": "create",
+      "note": "D29 declared owning path; concrete contract supplied in P3-security-contracts"
+    },
+    {
+      "path": "packages/drive/src/Content/ScanWorkReconciler.php",
+      "change": "create",
+      "note": "D29 declared owning path; concrete contract supplied in P3-security-contracts"
+    },
+    {
+      "path": "packages/core/src/Repositories/Content/ScanObligationRepository.php",
+      "change": "create",
+      "note": "D29 declared owning path; concrete contract supplied in P3-security-contracts"
+    },
+    {
+      "path": "packages/drive/src/Console/RescanFileRevisionsCommand.php",
+      "change": "create",
+      "note": "D29 declared owning path; concrete contract supplied in P3-security-contracts"
+    },
+    {
+      "path": "packages/drive/src/Console/ReconcileScanWorkCommand.php",
+      "change": "create",
+      "note": "D29 declared owning path; concrete contract supplied in P3-security-contracts"
+    },
+    {
+      "path": "packages/core/database/migrations/2026_10_06_000002_add_scan_evidence_and_work.php",
+      "change": "create",
+      "note": "D29 declared owning path; concrete contract supplied in P3-security-contracts"
+    },
+    {
+      "path": "packages/core/src/Content/ScanEvidence.php",
+      "change": "create",
+      "note": "D29 declared owning path; concrete contract supplied in P3-security-contracts"
+    },
+    {
+      "path": "packages/core/tests/Content/ScanEvidenceBoundaryTest.php",
+      "change": "create",
+      "note": "D29 declared owning path; concrete contract supplied in P3-security-contracts"
+    },
+    {
+      "path": "packages/core/tests/Schema/ScanEvidenceSchemaTest.php",
+      "change": "create",
+      "note": "D29 declared owning path; concrete contract supplied in P3-security-contracts"
+    },
+    {
+      "path": "packages/drive/tests/Concurrency/ScanWorkRecoveryRaceTest.php",
+      "change": "create",
+      "note": "D29 declared owning path; concrete contract supplied in P3-security-contracts"
+    },
+    {
+      "path": "packages/drive/tests/Uploads/P3/ScanPolicyTransitionTest.php",
+      "change": "create",
+      "note": "D29 declared owning path; concrete contract supplied in P3-security-contracts"
+    },
+    {
+      "path": "packages/drive/tests/Uploads/P3/DestinationScanPolicyTest.php",
+      "change": "create",
+      "note": "D29 declared owning path; concrete contract supplied in P3-security-contracts"
+    },
+    {
+      "path": "packages/drive/tests/Uploads/P3/ScanWorkRecoveryTest.php",
+      "change": "create",
+      "note": "D29 declared owning path; concrete contract supplied in P3-security-contracts"
+    },
+    {
+      "path": "packages/drive/tests/Uploads/P3/ContentDeliveryBoundaryTest.php",
+      "change": "create",
+      "note": "D29 declared owning path; concrete contract supplied in P3-security-contracts"
+    },
+    {
+      "path": "packages/core/src/Schema/SchemaBuilder.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Configuration/ScanConfig.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Configuration/DownloadsConfig.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Configuration/ConfigValidator.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/config/vaulter.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Providers/BindingsRegistrar.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Models/Cas/Blob.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Models/Drive/Drive.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Models/Content/ScanRequest.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Models/Content/ScanEvidenceRecord.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Models/Content/ScanPolicyState.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Models/Content/ScanBackfillRun.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Repositories/Content/ScanEvidenceRepository.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Repositories/Content/PolicyStateRepository.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Content/ScanAttempt.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Content/ScanInput.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Content/ScanResult.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Content/ContentDelivery.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Content/ImmutableContentIdentity.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Content/SignedContentUrl.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Contracts/Cas/DirectContentUrlSigner.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Http/Resources/Drive/NodeResource.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/src/Http/Resources/Sharing/SharedNodeResource.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/drive/src/Content/PrivateScanReader.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/drive/src/Content/ScanPolicyResolver.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/drive/src/Content/ScanBackfillReconciler.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/drive/src/Content/UploadCleanupReconciler.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/drive/src/Providers/ConsoleRegistrar.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/drive/src/VaulterDriveServiceProvider.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/drive/src/DriveProvisioner.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/drive/src/Actions/Nodes/CopyNodeAction.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/drive/src/Actions/Files/RestoreFileRevisionAction.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/drive/src/Operations/FileOperations.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/core/tests/Content/EgressInventoryTest.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/drive/tests/Uploads/P3/CompleteUploadIdempotencyTest.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/documents/src/Http/Controllers/Documents/DocumentNodeController.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/documents/src/Http/Resources/DocumentRevisionResource.php",
+      "change": "modify",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    },
+    {
+      "path": "packages/documents/tests/Document/ContentEgressBoundaryTest.php",
+      "change": "any",
+      "note": "Owning supplemental contract; create future/prerequisite paths in declared item order only."
+    }
+  ],
+  "callers": [
+    "PHP FileOperations",
+    "HTTP single/tus/S3",
+    "share download",
+    "descriptor metadata",
+    "inline document export"
+  ],
+  "fixtures": [
+    "existing Testbench isolated sqlite :memory:",
+    "Storage::fake local",
+    "PG/MySQL vaulter_test after preflight"
+  ],
+  "commands": [
+    {
+      "id": "V1",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Uploads/P3/UnifiedIngestTest.php tests/Uploads/P3/UploadSourceStreamingTest.php tests/Uploads/P3/QuarantineBoundaryTest.php tests/Uploads/P3/ScanJobBoundaryTest.php tests/Uploads/UploadIntegrityTest.php tests/Uploads/TusFlowTest.php tests/Uploads/S3MultipartTest.php tests/Uploads/UploadSessionCriticalSectionTest.php tests/Feature/ResumableUploadApiTest.php tests/Feature/UploadSessionOwnershipTest.php",
+      "expect": "exit 0; 0 failures, no unexpected skips",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V2",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Content packages/core/tests/Sharing/PublicShareDownloadHeadersTest.php packages/core/tests/Sharing/ShareScopeTest.php",
+      "expect": "exit 0; 0 failures, no unexpected skips",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Document/ExporterContentGuardTest.php tests/Document/DocumentExportTest.php tests/Document/ContentEgressBoundaryTest.php",
+      "expect": "exit 0; 0 failures, no unexpected skips",
+      "kind": "acceptance",
+      "cwd": "packages/documents"
+    },
+    {
+      "id": "V4",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Concurrency/CompleteUploadRaceTest.php tests/Concurrency/QuotaRaceTest.php tests/Concurrency/RevisionNumberRaceTest.php",
+      "expect": "exit 0; real PG fork pid/connection matrix, no skips",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V5",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Cas/BlobCommitAtomicityTest.php tests/Cas/BlobCrossScopeGcTest.php",
+      "expect": "exit 0; unchanged CAS contract consumers safe",
+      "kind": "acceptance",
+      "cwd": "packages/media"
+    },
+    {
+      "id": "V80",
+      "procedure": "На own candidate по уже записанному D25 check-profile выполнить Pint --test для перечисленных там фактически изменённых/новых owning PHP файлов (root binary scripts/php84 vendor/bin/pint; sibling binary ../../scripts/php84 vendor/bin/pint, cwd своего пакета). Пустой PHP impact отмечается non-applicable с основанием. PHPStan core: scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress, cwd root. Для каждого фактически затронутого sibling: ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress, cwd packages/name из check-profile. Чужие dirty файлы не включать. Каждый исполненный command/cwd/list/env/exit сохранить; это exact impact-derived procedure по D25, не file filter для PHPStan.",
+      "expect": "Все соответствующие exact commands имеют exit 0, skipped/deferred не GREEN",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V81",
+      "procedure": "Adversarial self-check модели P3-invariants: отметить применимые invariants/enforcement/callers/negative cases и lock pair matrix. Для нового guard ограниченный negative control: в isolated временной копии отключить одну owning проверку, запустить её именованный acceptance тест и получить RED, восстановить исходный SHA-256 и подтвердить GREEN. Сохранить command/cwd/env/exit/fingerprint. Не запускать mutation campaign. Supplemental D06 controls ALL required, fault definition in P3-security-contracts#Acceptance; each executed only inside isolated temporary repository copy, cwd relative to that isolated root, same env. Exact commands:\nNC-ADMISSION: cwd=packages/drive; env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Uploads/P3/DestinationScanPolicyTest.php --filter=SEC-R03\nNC-EVIDENCE: cwd=.; env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Content/ScanEvidenceBoundaryTest.php --filter=SEC-R06\nNC-WORK: cwd=packages/drive; env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Uploads/P3/ScanWorkRecoveryTest.php --filter=SEC-R09\nNC-BACKFILL: cwd=packages/drive; env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Uploads/P3/ScanWorkRecoveryTest.php --filter=SEC-BACKFILL\nNC-FENCE: cwd=packages/drive; env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Concurrency/ScanWorkRecoveryRaceTest.php --filter=SEC-R11\nNC-QUARANTINE: cwd=packages/drive; env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Uploads/P3/ContentDeliveryBoundaryTest.php --filter=SEC-R17\nNC-DIRECT: cwd=packages/drive; env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Uploads/P3/ContentDeliveryBoundaryTest.php --filter=SEC-R16\nNC-CLEANUP: cwd=packages/drive; env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Uploads/P3/CompleteUploadIdempotencyTest.php --filter=SEC-R13\nEach control requires named matched test>=1/skipped=0, injected RED then exact source SHA restoration and original GREEN; receipts cannot substitute unrelated tests or silent skipped filters. No product controls run in design.\nNC-ROLLOUT: cwd=packages/drive; env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Uploads/P3/ScanPolicyTransitionTest.php --filter=SEC-POLICY-two-boundaries\nNC-CURSOR: cwd=packages/drive; env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Uploads/P3/ScanWorkRecoveryTest.php --filter=SEC-RECOVERY-bounds\nSame isolated-copy RED/restoration/GREEN/count requirements.",
+      "expect": "All applicable declared limited controls have RED→exact restored GREEN, candidate source hashes unchanged, named counts/output recorded; no mutation engine.",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V82",
+      "cmd": "python3 plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-coverage.py check --phase P3",
+      "expect": "exit 0; immutable OPUS/literals and owned units consistent",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V6",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 php -d memory_limit=64M tests/Uploads/P3/StreamingMemoryProbe.php",
+      "expect": "exit0; actual UploadSource+ingest 200MiB non-seekable and PSR, PHP peak<64MiB, borrowed handles open, isolated temp/CAS cleanup; helper exit ненулевой при любом нарушении size/hash/peak/ownership asserts; explicit failure нельзя отключить zend.assertions",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V7",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Concurrency/ScanWorkRecoveryRaceTest.php",
+      "expect": "exit0; executed_tests>=1 skipped=0; PG distinct connection/process lease/fence + commit-to-publish fault controls",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V8",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=mysql DB_HOST=127.0.0.1 DB_PORT=3306 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Schema/ScanEvidenceSchemaTest.php",
+      "expect": "exit0; executed_tests>=1 skipped=0; actual new additive up/down/fresh+data retention and work uniqueness; no historic full-chain claim Actual SEC-SCHEMA-fresh and SEC-SCHEMA-additive-up-down-data, all defined aliases/work/requests/backfill/cleanup fields; Receipt: executed_tests>=1, skipped=0; all prescribed named SEC scenarios executed with discovered/matched/passed/failed counts and output; empty/unmatched/skip is not pass.",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V9",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Schema/ScanEvidenceSchemaTest.php",
+      "expect": "exit0; executed_tests>=1 skipped=0; actual PG schema/data/work invariant, no SQLite reuse Actual SEC-SCHEMA-fresh and SEC-SCHEMA-additive-up-down-data, all defined aliases/work/requests/backfill/cleanup fields; Receipt: executed_tests>=1, skipped=0; all prescribed named SEC scenarios executed with discovered/matched/passed/failed counts and output; empty/unmatched/skip is not pass.",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V10",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Schema/ScanEvidenceSchemaTest.php",
+      "expect": "exit0; actual fresh/additive up/down current P2 data, all ID strategies/custom prefix, nonnegative/type/unique/FK checks and old statuses preserved. Receipt: executed_tests>=1, skipped=0; all prescribed named SEC scenarios executed with discovered/matched/passed/failed counts and output; empty/unmatched/skip is not pass.",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V11",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Uploads/P3/ScanPolicyTransitionTest.php tests/Uploads/P3/DestinationScanPolicyTest.php tests/Uploads/P3/ScanWorkRecoveryTest.php tests/Uploads/P3/CompleteUploadIdempotencyTest.php tests/Uploads/P3/ContentDeliveryBoundaryTest.php",
+      "expect": "exit0; SEC-R01–R17 applicable serial behavior + durable backfill/cursor/strict-direct/cleanup; every named owner scenario, no external scanner/cloud. Receipt: executed_tests>=1, skipped=0; all prescribed named SEC scenarios executed with discovered/matched/passed/failed counts and output; empty/unmatched/skip is not pass.",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    }
+  ],
+  "negative_controls": "V81 exact isolated copy controls; no mutation engine",
+  "deferred": "P3.8 broad package barrier; no unrelated package suites",
+  "reviewer": {
+    "provider": "grok",
+    "model": "grok-4.7",
+    "effort": "high",
+    "context_parameter": null,
+    "timing": "once after complete implementation and GREEN checks"
+  }
+}

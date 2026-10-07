@@ -1,0 +1,18 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Vaulter\Drive\Data\Files;
+
+final readonly class UploadFacts
+{
+    public function __construct(
+        public string $name,
+        public string $extension,
+        public int $size,
+        public string $sha256,
+        public ?string $detectedMimeType,
+        public ?string $declaredMimeType,
+        public string $stagedPath,
+    ) {}
+}

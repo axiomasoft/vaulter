@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Actions\Files\IngestFileAction;
 use Vaulter\Drive\Data\Files\IngestFileInput;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
@@ -13,10 +14,12 @@ use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Support\LoadTier;
 use Vaulter\Testing\FakeMetricsRecorder;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\ValueObjects\Access\Actor;
 
 beforeEach(function (): void {
     Storage::fake('local');
@@ -29,8 +32,7 @@ beforeEach(function (): void {
 
 it('records tus upload bytes and chunk duration on PATCH', function (): void {
     $storage = UploadTestHelpers::storage();
-    $session = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
-        storage: $storage,
+    $session = app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
         targetName: 'chunk.bin',
@@ -56,8 +58,7 @@ it('records tus upload bytes and chunk duration on PATCH', function (): void {
 
 it('records tus upload conflict on offset mismatch', function (): void {
     $storage = UploadTestHelpers::storage();
-    $session = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
-        storage: $storage,
+    $session = app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
         targetName: 'conflict.bin',
@@ -86,8 +87,7 @@ it('records s3 upload bytes, chunk duration, and assemble metrics on complete', 
     $whole = $part1.$part2;
 
     $storage = UploadTestHelpers::storage();
-    $session = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
-        storage: $storage,
+    $session = app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::S3Multipart,
         targetParent: $storage->rootNode()->first(),
         targetName: 'multi.bin',
@@ -123,13 +123,17 @@ it('records single-shot upload bytes and chunk duration', function (): void {
     $storage = $drive->model();
     $root = $drive->root();
 
-    app(IngestFileAction::class)->execute(new IngestFileInput(
+    $context = new OperationContext(
+        drive: $storage,
+        actor: Actor::user(DriveTestHelpers::actor($drive, 1)),
+        correlationId: 'single-shot-metrics',
+    );
+    app(IngestFileAction::class)->execute($context, new IngestFileInput(
         storage: $storage,
         into: $root,
         stream: DriveTestHelpers::streamFor('single-shot'),
         originalName: 'one.bin',
         mimeType: 'application/octet-stream',
-        actorId: 1,
     ));
 
     $recorder = app(MetricsRecorder::class);
@@ -145,7 +149,7 @@ it('records single-shot upload bytes and chunk duration', function (): void {
 it('records download ttfb and bytes for the current file stream', function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
     $drive = DriveTestHelpers::drive();
-    $file = $drive->upload(DriveTestHelpers::streamFor('file-bytes'), originalName: 'current.bin');
+    $file = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('file-bytes'), 'current.bin'));
 
     $response = $this->get('api/vaulter/nodes/'.$file->getKey().'/download');
     $response->assertOk();
@@ -167,14 +171,10 @@ it('records download ttfb and bytes for the current file stream', function (): v
 it('records download ttfb and bytes for a historical version stream', function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
     $drive = DriveTestHelpers::drive();
-    $file = $drive->upload(DriveTestHelpers::streamFor('first-ver'), originalName: 'ver.bin');
+    $file = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('first-ver'), 'ver.bin'));
     $firstVersionId = $file->refresh()->current_version_id;
 
-    $drive->uploadVersion(
-        $file->refresh(),
-        DriveTestHelpers::streamFor('second-ver'),
-        originalName: 'ver.bin',
-    );
+    $drive->files()->addRevision($file->refresh(), UploadSource::fromStream(DriveTestHelpers::streamFor('second-ver'), 'ver.bin'));
 
     $response = $this->get(sprintf(
         'api/vaulter/nodes/%s/versions/%s/download',

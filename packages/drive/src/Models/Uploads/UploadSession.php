@@ -39,6 +39,12 @@ use Vaulter\Models\Drive\Drive;
  * @property int|string|null           $target_parent_id
  * @property int|string|null           $result_node_id
  * @property int|string|null           $result_revision_id
+ * @property int|string|null           $result_blob_id
+ * @property string|null               $input_fingerprint
+ * @property bool                      $cleanup_pending
+ * @property int                       $cleanup_attempts
+ * @property Carbon|null               $cleanup_available_at
+ * @property string|null               $cleanup_last_reason
  * @property string|null               $target_name
  * @property UploadProtocol            $protocol
  * @property UploadStatus              $status
@@ -167,6 +173,9 @@ class UploadSession extends Model
             'parts' => 'array',
             'metadata' => 'array',
             'expires_at' => 'datetime',
+            'cleanup_pending' => 'boolean',
+            'cleanup_attempts' => 'integer',
+            'cleanup_available_at' => 'datetime',
         ];
     }
 }

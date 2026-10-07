@@ -21,6 +21,7 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  * (D11). Swappable — point configuration key vaulter.models.drive at a subclass to add
  * tenant scoping or extra behaviour.
  *
+ * @property int             $scan_admission_sequence
  * @property int|string      $id
  * @property string          $profile
  * @property int|string|null $tenant_id
@@ -95,6 +96,7 @@ class Drive extends Model
     protected function casts(): array
     {
         return [
+            'scan_admission_sequence' => PHP_INT_SIZE === 8 ? 'integer' : 'string',
             'quota_bytes' => 'integer',
             'used_bytes' => 'integer',
         ];

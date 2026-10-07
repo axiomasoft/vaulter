@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Data\Files;
 
+use Psr\Http\Message\StreamInterface;
+use Vaulter\Drive\Uploads\PreparedUpload;
+use Vaulter\Enums\Drive\OnNameConflict;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
 
 /**
- * Command for UploadFileAction (§2.4 commit flow). Carries an already-normalised,
- * seekable byte stream plus the upload metadata — the StreamInterface / SplFileInfo
- * / UploadedFile ergonomics are normalised to a plain resource at the facade
- * (DriveContext::upload) so this command stays free of HTTP/PSR types and the
- * Action receives only bytes + intent.
+ * Upload bytes and intent. The shared preparation reads the stream from its current
+ * position, once, and keeps the prepared content across SQL retries.
  *
  * Two target shapes share one command:
  *   - new file  → $into set (or null = storage root) + $name; $targetNode null;
@@ -22,7 +22,7 @@ use Vaulter\Models\Drive\Node;
 final readonly class IngestFileInput
 {
     /**
-     * @param resource $stream a seekable byte stream the BlobStore can stage
+     * @param resource|StreamInterface $stream a borrowed stream at its current position
      */
     public function __construct(
         public Drive $storage,
@@ -32,7 +32,10 @@ final readonly class IngestFileInput
         public ?Node $into = null,
         public ?string $name = null,
         public ?Node $targetNode = null,
-        public int|string|null $actorId = null,
+        public ?int $expectedSequence = null,
+        public OnNameConflict $onConflict = OnNameConflict::Fail,
+        public ?PreparedUpload $prepared = null,
+        public ?string $declaredMimeType = null,
     ) {}
 
     /**

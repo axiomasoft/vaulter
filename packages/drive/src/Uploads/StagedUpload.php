@@ -6,11 +6,18 @@ namespace Vaulter\Drive\Uploads;
 
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Validation\ValidationException;
+use Psr\Http\Message\StreamInterface;
 use RuntimeException;
+use Throwable;
 use Vaulter\Contracts\Cas\StorageDriver;
+use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Data\Files\UploadFacts;
+use Vaulter\Drive\Exceptions\Files\UploadRejectedException;
 use Vaulter\Drive\Exceptions\Uploads\StagedUploadMissingException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Uploads\Inspection\MimeSniffer;
+use Vaulter\Media\Cas\StagedTempObject;
 use Vaulter\Models\Drive\Drive;
 
 /**
@@ -42,6 +49,66 @@ final readonly class StagedUpload
         private StorageDriver $driver,
         private DriveConfig $driveConfig,
     ) {}
+
+    public function stageSource(UploadSource $source, ?int $maximum = null, ?string $declaredMime = null, ?string $name = null): PreparedUpload
+    {
+        $reader = $source->openForReading();
+        $path = null;
+        $target = null;
+        try {
+            if (!is_resource($reader) && !$reader instanceof StreamInterface) {
+                throw new RuntimeException('Upload source must provide a byte stream.');
+            }
+            $path = tempnam(sys_get_temp_dir(), 'vaulter-upload-');
+            if ($path === false) {
+                throw new RuntimeException('Unable to prepare upload.');
+            }
+            $target = fopen($path, 'wb');
+            if ($target === false) {
+                throw new RuntimeException('Unable to prepare upload.');
+            }
+            $size = 0;
+            $hash = hash_init('sha256');
+            while ($reader instanceof StreamInterface ? !$reader->eof() : !feof($reader)) {
+                $bytes = $reader instanceof StreamInterface ? $reader->read(65536) : fread($reader, 65536);
+                if ($bytes === false || ($bytes === '' && !($reader instanceof StreamInterface ? $reader->eof() : feof($reader)))) {
+                    throw new RuntimeException('Upload stream made no progress.');
+                }
+                $length = strlen($bytes);
+                if ($size > PHP_INT_MAX - $length || ($maximum !== null && $length > $maximum - $size)) {
+                    throw new UploadRejectedException('file_too_large');
+                }
+                $size += $length;
+                hash_update($hash, $bytes);
+                $offset = 0;
+                while ($offset < $length) {
+                    $written = fwrite($target, substr($bytes, $offset));
+                    if ($written === false || $written === 0) {
+                        throw new RuntimeException('Unable to prepare upload.');
+                    }
+                    $offset += $written;
+                }
+            }
+            fclose($target);
+            $target = null;
+            $digest = hash_final($hash);
+            $name ??= $source->name();
+            $facts = new UploadFacts($name, strtolower(pathinfo($name, PATHINFO_EXTENSION)), $size, $digest,
+                app(MimeSniffer::class)->detect($path), $declaredMime ?? $source->declaredMimeType(), $path);
+
+            return new PreparedUpload(new StagedTempObject($path, $digest, $size), $facts);
+        } catch (Throwable $exception) {
+            if (is_string($path) && is_file($path)) {
+                unlink($path);
+            }
+            throw $exception;
+        } finally {
+            if (is_resource($target)) {
+                fclose($target);
+            }
+            $source->releaseIfOwned($reader);
+        }
+    }
 
     /**
      * The tmp/ staging key for a session on its disk (§2.8). Keyed by upload_id so a

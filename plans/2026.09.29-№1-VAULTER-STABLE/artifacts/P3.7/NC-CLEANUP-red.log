@@ -1,0 +1,26 @@
+
+  [39;41;1m FAIL [39;49;22m[39m Tests\Uploads\P3\CompleteUploadIdempotencyTest[39m
+  [31;1m⨯[39;22m[90m [39m[90mit SEC-R13 keeps protocol bytes until outer commit and retains them[39m[90m…[39m [90m0.37s[39m  
+  [31m────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Uploads\P3\CompleteUploadIdempotencyTest[22m [90m>[39m it SEC-R13 keeps…   
+[39;1m  Expected: [39;22m[31mFailed asserting that 0 is identical to 4.[39m[39;1m
+
+  To contain: [39;22m[32mouter rollback[39m
+
+  at [32mtests/Uploads/P3/CompleteUploadIdempotencyTest.php[39m:[32m69[39m
+     65▕     expect(fn () => app(VaulterDatabase::class)->transaction(function () use ($context, $session): void {
+     66▕         app(CompleteUploadAction::class)->execute(context: $context, session: $session);
+     67▕         expect($session->refresh()->cleanup_pending)->toBeTrue()->and(app(StagedUpload::class)->size($session))->toBe(4);
+     68▕         throw new RuntimeException('outer rollback');
+  ➜  69▕     }, attempts: 1))->toThrow(RuntimeException::class, 'outer rollback');
+     70▕     expect($session->refresh()->status)->toBe(UploadStatus::Assembled)
+     71▕         ->and($session->result_revision_id)->toBeNull()->and(FileRevision::query()->count())->toBe(0)
+     72▕         ->and(app(StagedUpload::class)->size($session))->toBe(4);
+     73▕     app(CompleteUploadAction::class)->execute(context: $context, session: $session);
+
+  [33m1   [39m[39;1mtests/Uploads/P3/CompleteUploadIdempotencyTest.php[39;22m:[39;1m69[39;22m
+
+
+  [90mTests:[39m    [31;1m1 failed[39;22m[90m (3 assertions)[39m
+  [90mDuration:[39m [39m0.43s[39m
+

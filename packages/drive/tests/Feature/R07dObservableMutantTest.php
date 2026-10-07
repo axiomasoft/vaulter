@@ -16,6 +16,8 @@ use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Data\Drive\CopyOptions;
+use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Models\Uploads\UploadPart;
@@ -28,6 +30,7 @@ use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\Permission;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Support\LoadTier;
 use Vaulter\Testing\FakeMetricsRecorder;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -219,8 +222,7 @@ it('rejects an unstatable chunk when the ceiling is 1 byte and stages nothing', 
 it('rejects an s3 part of 2 bytes when the ceiling is 1 byte', function (): void {
     config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 1);
     $storage = UploadTestHelpers::storage();
-    $session = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
-        storage: $storage,
+    $session = app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::S3Multipart,
         targetParent: $storage->rootNode()->first(),
         targetName: 'one.bin',
@@ -241,8 +243,7 @@ it('rejects an s3 part of 2 bytes when the ceiling is 1 byte', function (): void
 it('records an assemble duration of a few seconds, not the nanosecond product', function (): void {
     r07dMetrics();
     $storage = UploadTestHelpers::storage();
-    $session = app(UploadSessionManager::class)->initiate(new InitiateUploadInput(
-        storage: $storage,
+    $session = app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::S3Multipart,
         targetParent: $storage->rootNode()->first(),
         targetName: 'asm.bin',
@@ -268,10 +269,7 @@ it('records an assemble duration of a few seconds, not the nanosecond product', 
 it('counts a 10-byte download as one 10-byte chunk', function (): void {
     r07dMetrics();
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
-    $file = DriveTestHelpers::drive()->upload(
-        source: DriveTestHelpers::streamFor('0123456789'),
-        originalName: 'ten.bin',
-    );
+    $file = DriveTestHelpers::drive()->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('0123456789'), 'ten.bin'));
 
     $response = $this->get('api/vaulter/nodes/'.$file->getKey().'/download');
     $response->assertOk();
@@ -287,10 +285,7 @@ it('records download ttfb once for a body larger than one read', function (): vo
     r07dMetrics();
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
     $bytes = str_repeat('x', (1024 * 256) + 1);
-    $file = DriveTestHelpers::drive()->upload(
-        source: DriveTestHelpers::streamFor($bytes),
-        originalName: 'wide.bin',
-    );
+    $file = DriveTestHelpers::drive()->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor($bytes), 'wide.bin'));
 
     $response = $this->get('api/vaulter/nodes/'.$file->getKey().'/download');
     $response->assertOk();
@@ -305,16 +300,13 @@ it('records download ttfb once for a body larger than one read', function (): vo
 
 it('keeps the source original name on a copied version', function (): void {
     $drive = DriveTestHelpers::drive();
-    $source = $drive->upload(
-        source: DriveTestHelpers::streamFor('abc'),
-        originalName: 'kept-name.txt',
-    );
-    $copy = $drive->copy(node: $source, name: 'other.txt');
+    $source = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('abc'), 'kept-name.txt'));
+    $copy = $drive->nodes()->copy(node: $source, options: new CopyOptions(name: 'other.txt'));
 
     expect($copy->refresh()->currentVersion->original_name)->toBe('kept-name.txt');
 });
 
-it('refuses move, copy, and a new version when the actor has only the create bit', function (): void {
+it('hides move copy and revision sources when Create is present but Read is absent', function (): void {
     $storage = r07dStorage();
     $base = 'api/vaulter/storages/'.$storage->getKey();
     $nodeId = (string) $this->postJson($base.'/uploads', [
@@ -324,12 +316,12 @@ it('refuses move, copy, and a new version when the actor has only the create bit
 
     r07dInstall(bits: Permission::Create->value, workspaceCreate: true);
 
-    $this->postJson('api/vaulter/nodes/'.$nodeId.'/move', ['parent_id' => $folderId])->assertForbidden();
-    $this->postJson('api/vaulter/nodes/'.$nodeId.'/copy', ['name' => 'copy.txt'])->assertForbidden();
+    $this->postJson('api/vaulter/nodes/'.$nodeId.'/move', ['parent_id' => $folderId])->assertNotFound()->assertJsonPath('code', 'node_not_found');
+    $this->postJson('api/vaulter/nodes/'.$nodeId.'/copy', ['name' => 'copy.txt'])->assertNotFound()->assertJsonPath('code', 'node_not_found');
     $this->postJson($base.'/uploads', [
         'node_id' => $nodeId,
         'file' => UploadedFile::fake()->createWithContent('next.txt', 'next'),
-    ])->assertForbidden();
+    ])->assertNotFound()->assertJsonPath('code', 'node_not_found');
 });
 
 it('refuses move and copy when workspace create is closed even if the node bits allow them', function (): void {
@@ -419,8 +411,15 @@ it('does not emit a purge counter when nothing was purged', function (): void {
     expect(array_column(r07dEmissions('vaulter_purge_nodes_total'), 'name'))->toBe([]);
 });
 
-it('floors a negative retention override at zero days', function (): void {
-    Artisan::call('vaulter:purge-trash', ['--days' => '-3']);
+it('floors negative retention at zero and purges a root trashed now', function (): void {
+    $this->travelTo(Carbon::parse('2026-09-20 12:00:00'));
+    $storage = r07dStorage();
+    $trashed = AccessTestHelpers::folder($storage, null, 'negative-days');
+    $live = AccessTestHelpers::folder($storage, null, 'still-live');
+    $trashed->forceFill(['trashed_at' => Carbon::now()])->save();
 
-    expect(Artisan::output())->toContain('(retention: 0 days).');
+    expect(Artisan::call('vaulter:purge-trash', ['--days' => '-3']))->toBe(0)
+        ->and(Artisan::output())->toContain('Purged 1 trashed subtree.')
+        ->and(Node::withTrashed()->whereKey($trashed->id)->exists())->toBeFalse()
+        ->and(Node::withTrashed()->whereKey($live->id)->exists())->toBeTrue();
 });
