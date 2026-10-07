@@ -111,6 +111,10 @@ npm run docs:dev     # VitePress docs dev server
 - **Branches:** `feat/**`, `fix/**`, `hotfix/**`.
 - **Namespaces:** core is `Vaulter\` (`packages/core/src`); new integration packages live
   under `packages/<name>` with `Vaulter\<Name>\` (AzGuard convention).
+- **Self-consistent commits:** one plan item per commit, and every commit builds on its own.
+  Before committing run `python3 scripts/check-commit-closure.py --all HEAD` (after the commit) or
+  `python3 scripts/check-commit-closure.py <rev>`: it fails when a changed source names a `Vaulter\`
+  class that is absent from that revision, which is what breaks `git bisect` and reverts.
 - **Docs:** plain Markdown only — no `[[wikilinks]]` (docs are synced to the Brain vault,
   which rejects wikilinks).
 

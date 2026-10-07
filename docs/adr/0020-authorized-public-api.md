@@ -1,6 +1,6 @@
 # ADR-0020 — Authorized public API
 
-**Status:** proposed
+**Status:** accepted
 
 > Transfers decisions D06–D09 of the 2026-09-29 stable audit
 > (`audits/2026-09-29-stable-audit/opus/02-decisions.md#d06` … `#d09`) into the project ADR set.
@@ -85,6 +85,20 @@ Jobs/Console ──(OperationContext::system)───────────�
 - Cross-drive node access through a handle is impossible: models passed in are re-read by key within
   the handle's drive.
 - Existence of unreadable nodes is not disclosed (404 instead of 403).
+
+## Compatibility before 1.0
+
+The package has no published release (0.2.0 was never published, plan decision D02) and ADR-0017
+records the same "no BC obligation" stance for the structure moves. Until 1.0, renames and removals
+that this ADR and ADR-0019/0021 require are made outright, without aliases or deprecation shims, and
+each one has an `UPGRADE.md` entry. From 1.0 on, the public-api rule applies: removing or renaming a
+contract method, or narrowing a parameter type, is a MAJOR change.
+
+## Layers
+
+`Operations/` (public entry points per sub-API, plus `NodeLocator`, `NodeSequence`, `OperationContext`)
+and `Queries/` (reads with ACL narrowing) are canonical layers under ADR-0017. They stay flat: each
+class is one entry point named after its sub-API, listed in the Law 2 allow-list.
 
 ## Alternatives rejected
 

@@ -1,6 +1,6 @@
 # ADR-0019 — Kernel ownership
 
-**Status:** proposed
+**Status:** accepted
 
 > Transfers decision D02 and the ownership table §2 of the 2026-09-29 stable audit
 > (`audits/2026-09-29-stable-audit/opus/02-decisions.md#d02`,

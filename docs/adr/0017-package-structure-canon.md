@@ -7,6 +7,10 @@
 > `Vaulter\Azgard\*`). This ADR's canon is unchanged — only the package's name is.
 > Both mentions below are written in the current name.
 
+> **Amendment (PLAN2 P3 / ADR-0020).** `Operations/` and `Queries/` join the canonical layers.
+> Their classes are entry points named after a sub-API (`NodeOperations`, `VisibleActivityQuery`), so
+> they stay flat; the flat classes are listed in the Law 2 allow-list of the core arch test.
+
 ## Context
 
 vaulter is a monorepo of six PHP packages (`core`, `drive`, `media`, `documents`,

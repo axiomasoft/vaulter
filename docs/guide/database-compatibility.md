@@ -29,7 +29,7 @@ Back up and stop writes before changing code/schema. See
 | **PostgreSQL 14+** | **Recommended.** The full test suite runs against Postgres in CI across every id strategy. | Production. Everything below works natively. |
 | **SQLite** | Fully supported. The default test lane runs on in-memory SQLite. | Local development, tests, small single-file installs. |
 | **MySQL 8+** | Supported. Functional unique indexes enforce live siblings and the single drive root while preserving cascading foreign keys. | Production where Postgres-only locking and index features are not required. |
-| **MariaDB** | Schema and host-key DDL are supported; the complete suite is not part of the required database matrix. | Evaluate against your target MariaDB version before production use. |
+| **MariaDB** | Host-key DDL is tested. A complete fresh installation is not guaranteed: the `mariadb` driver still guards live siblings and the single drive root with STORED generated columns over `parent_id`, the pattern that conflicts with cascading foreign keys on MySQL. The complete suite is not part of the required database matrix. | Evaluate against your target MariaDB version before production use. |
 
 ::: tip PHP extension
 Postgres needs the `pdo_pgsql` extension. It ships with most PHP distributions; on a stock

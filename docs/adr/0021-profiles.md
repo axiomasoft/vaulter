@@ -1,6 +1,6 @@
 # ADR-0021 — Profiles
 
-**Status:** proposed
+**Status:** accepted
 
 > Transfers decision D05 of the 2026-09-29 stable audit
 > (`audits/2026-09-29-stable-audit/opus/02-decisions.md#d05`) into the project ADR set.
