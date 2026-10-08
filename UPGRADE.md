@@ -6,6 +6,23 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Copying documents and content lifecycle registry (PLAN2.D17, D30, D40; PLAN2.P4.2)
+
+- **Document copy works.** `NodeOperations::copy()` (and `POST .../copy`) now copies a document, alone
+  or inside a folder: the copy is a new aggregate with one checkpoint, `state_version` 1 and
+  `collab_epoch` 0; history and comments are not copied. It needs the documents package. Without it,
+  copying a document still raises `UnsupportedNodeKindException` as before. A subtree with a document
+  the copier cannot View/Copy/Download is still refused whole (`permission_denied`).
+- **Registry.** `NodeContentLifecycleRegistry` gains `registerFallback()`; a second registration of a
+  kind now throws `Vaulter\Exceptions\Registry\DuplicateNodeContentLifecycleException`
+  (`duplicate_registration`, was `LogicException`). Lifecycles are also collected from the container
+  tag `vaulter.content_lifecycles`; the `vaulter.content_lifecycles` config list keeps working.
+- **Marker.** `Vaulter\Contracts\Drive\PurgeOnlyContentLifecycle` marks a lifecycle whose `copy()` is a
+  refusal; a kind resolving to one cannot be copied. Drive's `DocumentPurgeLifecycle` (now a fallback,
+  replaced by the documents package) and `ShortcutPurgeLifecycle` carry it. A custom lifecycle for
+  `document` or `shortcut` registered through config now replaces the fallback and, unless it
+  implements the marker, makes the kind copyable.
+
 ### Public API on snapshots; models are internal; write guard (PLAN2.D44, D38; PLAN2.P4.13; ADR-0026)
 
 No schema change. Code that holds `Node`, `FileRevision`, `NodeGrant`, `NodeShare` or `Activity`

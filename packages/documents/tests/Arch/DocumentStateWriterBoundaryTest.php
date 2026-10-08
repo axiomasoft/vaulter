@@ -50,10 +50,11 @@ it('writes Yjs state and JSON content of documents only in DocumentStateWriter',
     expect($offenders)->toBe([]);
 });
 
-it('lets only the writer, aggregate creation and retention use the document stores', function (): void {
+it('lets only the writer, aggregate creation, copy and retention use the document stores', function (): void {
     expect(documentsSourcesMatching('/\bDocumentStoreRepository\b/', [
         'Content/DocumentStateWriter.php',
         'Actions/Documents/CreateDocumentAction.php',
+        'Content/DocumentContentLifecycle.php',
         'Repositories/Documents/DocumentStoreRepository.php',
     ]))->toBe([])
         ->and(documentsSourcesMatching('/\bDocumentRevisionStoreRepository\b/', [

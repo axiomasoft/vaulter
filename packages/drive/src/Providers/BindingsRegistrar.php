@@ -57,16 +57,23 @@ final class BindingsRegistrar extends ServiceProvider
                 throw new \LogicException('Content lifecycles configuration must be a list of lifecycle classes.');
             }
             $registry = new NodeContentLifecycleRegistry;
-            foreach ([FileContentLifecycle::class, DocumentPurgeLifecycle::class, ShortcutPurgeLifecycle::class,
-                ...$configured] as $class) {
-                if (!is_string($class) || !class_exists($class) || !is_a($class, NodeContentLifecycle::class, true)) {
+            $resolve = function (mixed $class) use ($app): NodeContentLifecycle {
+                if (is_string($class) && (!class_exists($class) || !is_a($class, NodeContentLifecycle::class, true))) {
                     throw new \LogicException('Content lifecycle class must implement NodeContentLifecycle.');
                 }
-                $handler = $app->make($class);
+                $handler = is_string($class) ? $app->make($class) : $class;
                 if (!$handler instanceof NodeContentLifecycle) {
                     throw new \LogicException('Content lifecycle must implement NodeContentLifecycle.');
                 }
-                $registry->register($handler);
+
+                return $handler;
+            };
+            // Drive owns the stand-in document purge: with the documents package installed
+            // its lifecycle, collected from the tag, takes the kind over.
+            $registry->registerFallback($resolve(DocumentPurgeLifecycle::class));
+            foreach ([FileContentLifecycle::class, ShortcutPurgeLifecycle::class,
+                ...$configured, ...$app->tagged('vaulter.content_lifecycles')] as $class) {
+                $registry->register($resolve($class));
             }
 
             return $registry;

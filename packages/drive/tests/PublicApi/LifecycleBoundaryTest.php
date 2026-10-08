@@ -26,6 +26,7 @@ use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Content\ContentQuarantinedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Nodes\UnsupportedNodeKindException;
+use Vaulter\Exceptions\Registry\DuplicateNodeContentLifecycleException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
@@ -112,13 +113,13 @@ it('rejects duplicate lifecycle registrations without replacing the first handle
     $handler = app(FileContentLifecycle::class);
     $registry->register($handler);
 
-    expect(fn () => $registry->register($handler))->toThrow(LogicException::class)
+    expect(fn () => $registry->register($handler))->toThrow(DuplicateNodeContentLifecycleException::class)
         ->and($registry->forKind(NodeKind::File))->toBe($handler);
 
     config()->set('vaulter.content_lifecycles', [FileContentLifecycle::class]);
     app()->forgetInstance(NodeContentLifecycleRegistry::class);
     try {
-        expect(fn () => (new BindingsRegistrar(app()))->boot())->toThrow(LogicException::class);
+        expect(fn () => (new BindingsRegistrar(app()))->boot())->toThrow(DuplicateNodeContentLifecycleException::class);
     } finally {
         config()->set('vaulter.content_lifecycles', []);
         app()->forgetInstance(NodeContentLifecycleRegistry::class);

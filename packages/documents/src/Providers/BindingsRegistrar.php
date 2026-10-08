@@ -13,6 +13,7 @@ use Vaulter\Configuration\ConfigNormalizer;
 use Vaulter\Contracts\Drive\NodeDocumentHeads;
 use Vaulter\Contracts\Profiles\CommentsFeature;
 use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Documents\Content\DocumentContentLifecycle;
 use Vaulter\Documents\Contracts\ExportFilenameResolver;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Engines\Handlers\TipTapHandler;
@@ -39,6 +40,8 @@ final class BindingsRegistrar extends ServiceProvider
         $this->app->bind(NodeDocumentHeads::class, DocumentHeads::class);
         $this->app->alias(DocumentsManager::class, 'vaulter.documents');
         $this->app->tag([TipTapHandler::class], 'vaulter.file_handlers');
+        // Drive's registry collects this tag and prefers it to its own purge-only stand-in.
+        $this->app->tag([DocumentContentLifecycle::class], 'vaulter.content_lifecycles');
 
         if ($this->app->make(DocumentsConfig::class)->spreadsheetsEnabled()) {
             $this->app->tag([UniverHandler::class], 'vaulter.file_handlers');

@@ -401,6 +401,21 @@ A pruned checkpoint is hard-deleted. Pin anything you must keep with a named,
 `keep_forever` checkpoint **before** it falls out of the `max` window.
 :::
 
+## Copying and deleting
+
+Copying a document node — alone or inside a copied folder — creates a **new document** holding the
+source's working state as its only checkpoint: same type and schema version, the JSON content and
+Yjs state of the source, `state_version` 1, `collab_epoch` 0, a non-autosave first checkpoint. The
+history, the open collaboration rooms and the **comments are not copied**; the source is not
+changed. A document whose type is no longer registered is copied as opaque content with its type
+kept. The copy does not change `used_bytes` (inline content is outside the drive quota). Like for
+files, the whole copy is refused with `permission_denied` before any row is created when the
+copier lacks `View`, `Copy` or `Download` on any document in the subtree.
+
+Purging a trashed document deletes its checkpoints in batches of 500, then the document row, before
+the node itself goes. Without the documents package, drive purges documents by the foreign-key
+cascade and refuses to copy them (`unsupported_node_kind`); shortcuts still cannot be copied.
+
 ## Events
 
 Every document-node write fires an after-commit event (`ShouldDispatchAfterCommit`) — wire

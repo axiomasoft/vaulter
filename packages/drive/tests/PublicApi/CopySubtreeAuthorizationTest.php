@@ -24,6 +24,7 @@ use Vaulter\Drive\Data\Nodes\CopyNodeInput;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Enums\Drive\OnNameConflict;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Facades\Vaulter;
@@ -78,6 +79,20 @@ it('SEC-D30-copy-subtree refuses the whole copy when a descendant is hidden and 
     $copy = $this->actor->nodes()->copy($folder, $destination);
 
     expect(Node::query()->where('parent_id', $copy->id)->count())->toBe(2);
+});
+
+it('SEC-D30-copy-subtree refuses a hidden document descendant before any document or revision row exists', function (): void {
+    [$folder, , , $destination] = copySubtreeFixture($this);
+    // A document the copier cannot see: the copy would otherwise reveal its content.
+    $hidden = AccessTestHelpers::folder($this->system->model(), $folder, 'hidden document', inheritGrants: false);
+    app(VaulterDatabase::class)->write(fn () => $hidden->forceFill(['kind' => NodeKind::Document])->save());
+    $db = app(VaulterDatabase::class)->connection();
+    $rows = static fn (): array => [Node::query()->count(), $db->table('v_documents')->count(), $db->table('v_document_revisions')->count()];
+    $before = $rows();
+
+    expect(fn () => $this->actor->nodes()->copy($folder, $destination))
+        ->toThrow(PermissionDeniedException::class, 'copy')
+        ->and($rows())->toBe($before);
 });
 
 it('SEC-D30-copy-subtree refuses the whole copy when a visible descendant lacks download or copy', function (string $role): void {

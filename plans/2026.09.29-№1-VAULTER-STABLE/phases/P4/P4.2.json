@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.2",
   "title": "Содержимое по kind: copy и purge документа",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "DocumentContentLifecycle (documents) копирует рабочее состояние документа в новый агрегат с одной ревизией и удаляет ревизии при purge; реестр lifecycle получает fallback и marker PurgeOnlyContentLifecycle, временный отказ P3.3 на copy документа снят; копия поддерева остаётся fail-closed (D30).",
   "why": "N06: копия документа — пустой документ; P3.3 временно запретил copy Document. D17 требует диспетчеризации по kind. Риск: копия раскрывает скрытый документ (D30) или копирует историю/epoch.",
   "scope": {
@@ -266,6 +266,49 @@
     "status": "not_needed",
     "notes": "Внешние факты проверены при дизайне: @plan/knowledge/P4-industry-research-2026-10-07.json; исполнителю повторный поиск не нужен"
   },
-  "result": null,
-  "updated_at": "2026-10-07T15:50:18Z"
+  "result": {
+    "started_at": "2026-10-08T14:18:53Z",
+    "finished_at": "2026-10-08T14:38:38Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "2ed5d32f-f802-47a0-8721-f08c748fb997"
+    },
+    "notes": "Document copy/purge lifecycle, registry fallback + PurgeOnly marker, tag collection; docs, UPGRADE, changelog-entry, negative controls in artifacts/P4.2",
+    "deviations": [
+      "PublicApiSnapshotTest (core, documents) unchanged: goldens do not list the new @internal classes/exception; LifecycleBoundaryTest (drive) and DocumentStateWriterBoundaryTest (documents) edited outside task_files because behaviour changed (duplicate exception type; copy lifecycle uses DocumentStoreRepository); D30 regression uses a hidden kind=document node since drive tests run without the documents package"
+    ],
+    "pending": [
+      "V4 (PG DocumentCopyLifecycleTest) deferred to P4.7 barrier V90 per D51"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T14:38:38Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T14:38:38Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T14:38:38Z"
+      },
+      {
+        "id": "V80",
+        "exit": 0,
+        "at": "2026-10-08T14:38:38Z"
+      },
+      {
+        "id": "V81",
+        "exit": 0,
+        "at": "2026-10-08T14:38:38Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T14:38:38Z"
 }
