@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\ValueObjects\Handlers;
 
 /**
- * What a document handler declares it can do with a given file (master plan §4.5).
+ * What a client may do with a node's content: a file handler declares it per file, a
+ * document type for its documents. The content's shape is never a capability — a
+ * document's type decides it.
  * Immutable; a handler computes one of these per FileDescriptor, and the
  * FileHandlerRegistry filters resolutions by the requested {@see
  * \Vaulter\Enums\Handlers\Capability}. downloadable defaults to true (anything can be
@@ -19,24 +21,12 @@ namespace Vaulter\ValueObjects\Handlers;
  */
 final readonly class ContentCapabilities
 {
-    /**
-     * @param bool $richText Whether this handler's editable content is a TipTap rich-text
-     *                       doc ({"type":"doc"}). Defaults FALSE (VLT-CANON P0.5; was
-     *                       TRUE before) — a kind-neutral handler makes no claim about
-     *                       content shape unless it opts in. A
-     *                       rich-text editor (e.g. a TipTap-backed handler) sets it TRUE; any
-     *                       other editable handler (e.g. the spreadsheet handler) leaves it
-     *                       at the default, and the content write path then stores its JSON
-     *                       snapshot verbatim (OpaqueDocumentContent) instead of validating
-     *                       and projecting it as TipTap.
-     */
     public function __construct(
         public bool $editable = false,
         public bool $previewable = false,
         public bool $downloadable = true,
         public bool $thumbnailable = false,
         public bool $collaborative = false,
-        public bool $richText = false,
     ) {}
 
     /**
@@ -59,7 +49,6 @@ final readonly class ContentCapabilities
             'downloadable' => $this->downloadable,
             'thumbnailable' => $this->thumbnailable,
             'collaborative' => $this->collaborative,
-            'rich_text' => $this->richText,
         ];
     }
 }

@@ -7,19 +7,17 @@ namespace Vaulter\Documents\Export;
 use Vaulter\Access\OperationGuard;
 use Vaulter\Contracts\Handlers\DocumentContent;
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Contracts\ExportFilenameResolver;
 use Vaulter\Documents\Exceptions\NotADocumentException;
+use Vaulter\Documents\Exceptions\UnsupportedDocumentContentException;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Registries\DocumentExporterRegistry;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Documents\ValueObjects\DocumentExport;
-use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Handlers\Capability;
 use Vaulter\Enums\Operations\OperationKind;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Handlers\FileDescriptorFactory;
-use Vaulter\Handlers\FileHandlerRegistry;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\OperationContext;
@@ -27,9 +25,8 @@ use Vaulter\Support\LoadTier;
 
 /**
  * A READ-ONLY evaluator (no persistence, no Request) that exports a DOCUMENT NODE
- * (§7 / M4a) through the format registry → exporter seam. It resolves the node's head
- * content, routes it through the handler (the handler must advertise editable OR
- * previewable to be exportable) and renders it with the registered
+ * (§7 / M4a) through the exporter registry. It reads the node's content through its
+ * document type and renders it with the registered
  * {@see DocumentExporter} for the requested format (config(
  * 'vaulter-documents.exporters') map / Documents::exporters()->register()).
  *
@@ -49,9 +46,8 @@ final class NodeExportService
 {
     public function __construct(
         private readonly DocumentReadRepository $documents,
-        private readonly FileHandlerRegistry $handlers,
         private readonly DocumentExporterRegistry $exporters,
-        private readonly FileDescriptorFactory $descriptors,
+        private readonly ContentDecoder $decoder,
         private readonly ExportFilenameResolver $filenames,
         private readonly MetricsRecorder $metrics,
     ) {}
@@ -102,18 +98,19 @@ final class NodeExportService
     }
 
     /**
-     * The export formats available for a node — the registered exporter formats,
-     * but only when the node's resolved handler can export (editable or previewable).
-     * A download-only node exposes no export formats.
+     * The export formats available for a node: the registered exporter formats, or
+     * none when the node's document type is not installed or cannot be previewed.
      *
      * @return list<string>
      */
     public function availableFormats(Node $node): array
     {
-        $descriptor = $this->descriptors->forNode($node);
-        $handler = $this->handlers->resolve($descriptor, Capability::Preview);
-        $capabilities = $handler->capabilities($descriptor);
+        $document = $this->documents->forNode($node);
+        if ($document === null || !$this->decoder->available($document->type)) {
+            return [];
+        }
 
+        $capabilities = $this->decoder->type($document->type)->capabilities();
         if (!$capabilities->editable && !$capabilities->previewable) {
             return [];
         }
@@ -122,30 +119,19 @@ final class NodeExportService
     }
 
     /**
-     * The working-state content shaped for the node's resolved handler (P0.5,
-     * kind-neutral): rich text decays to {@see TipTapContent} (never throws — see
-     * {@see DocumentRevision::tipTapContent()}); any other editable handler's content
-     * is an opaque snapshot, returned verbatim as {@see OpaqueDocumentContent}. A
-     * non-rich-text node used to decay to an EMPTY TipTap doc here and export as
-     * blank content instead of being refused by the exporter's narrowing guard
-     * ({@see UnsupportedDocumentContentException}) — it now reaches the guard as
-     * its own shape.
+     * The content as its document type reads it: rich text decays (never throws),
+     * any other type's content arrives in its own shape and reaches the exporter's
+     * narrowing guard ({@see UnsupportedDocumentContentException}) instead of
+     * exporting as blank content.
      */
     private function contentOf(Node $node, ?DocumentRevision $revision): DocumentContent
     {
-        $head = $revision ?? $this->documents->forNode($node);
+        $document = $this->documents->forNode($node) ?? throw NodeNotFoundException::forId($node->id);
 
-        if ($head === null) {
-            throw NodeNotFoundException::forId($node->id);
-        }
-
-        $descriptor = $this->descriptors->forNode($node);
-        $handler = $this->handlers->resolve($descriptor, Capability::Preview);
-
-        if (!$handler->capabilities($descriptor)->richText) {
-            return $head->opaqueContent();
-        }
-
-        return $head->tipTapContent();
+        return $this->decoder->read(
+            $document->type,
+            $revision === null ? $document->content : $revision->content,
+            $revision === null ? $document->schema_version : $revision->schema_version,
+        )->content;
     }
 }

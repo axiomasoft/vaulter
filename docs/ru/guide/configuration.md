@@ -59,7 +59,6 @@ Laravel по умолчанию. Имя таблицы состоит из пр�
     'webhooks' => true,
     'share_links' => false,
     'public_listing' => false,
-    'spreadsheets' => false,
 ],
 'access' => [
     'permission_driver' => env('VAULTER_PERMISSION_DRIVER', 'database'),
@@ -226,9 +225,11 @@ CAS-бакет должен быть без версионирования: уд
 и различаться: иначе production boot завершается исключением, а другие окружения пишут warning.
 
 `exporters` остаётся **картой формат → FQCN**. Расширения allow-list TipTap переезжают в
-`vaulter-documents.tiptap.*`. В этой итерации `vaulter.enabled_document_types` и
-`vaulter.features.spreadsheets` остаются в core; их читают
-`DocumentsConfig::enabledDocumentTypes()` и `spreadsheetsEnabled()`.
+`vaulter-documents.tiptap.*`. `vaulter.enabled_document_types` и
+`vaulter.features.spreadsheets` превращаются в список классов
+[типов документов](/ru/guide/document-types) `vaulter-documents.types`
+(`richtext`/`table`/`template` → `RichTextDocumentType`, `markdown` → `MarkdownDocumentType`,
+`spreadsheets = true` → `SpreadsheetDocumentType`) с предупреждением об устаревании.
 См. [Совместное редактирование](/ru/guide/collaboration) и [Экспорт](/ru/guide/export).
 
 ## Типизированный доступ

@@ -2,134 +2,38 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Documents\ValueObjects;
+namespace Vaulter\Documents\Content\TipTap;
 
-use Vaulter\Contracts\Handlers\DocumentContent;
-use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Documents\Content\ContentHasher;
+use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
 
 /**
  * Immutable wrapper around a validated TipTap JSON document
- * ({"type":"doc","content":[...]}). The rich-text {@see DocumentContent}.
+ * ({"type":"doc","content":[...]}), checked against a {@see TipTapSchema}
+ * (rich text by default).
  *
- * WRITE and READ are deliberately DIFFERENT contracts (VLT-REMED D29):
+ * WRITE and READ are deliberately DIFFERENT contracts:
  *
  *  - {@see fromArray()} — STORE time. Strict, fail-closed: an unknown node/mark, an
  *    attribute outside the allow-list, or a disallowed `href`/`src` scheme REJECTS the
- *    whole document (F-P1.11-01/-02). Garbage never enters the store.
- *  - {@see decayFrom()} — READ time. Lenient: unknown nodes/marks/attribute KEYS are
- *    STRIPPED and a valid doc always comes back (never throws — the documents package's
- *    DocumentRevision::tipTapContent() promises exactly this; core has no dependency on
- *    that package, one-way T6/D2, so it is named as plain text, never imported). One legacy
- *    snapshot must not take down preview, export and the whole listing UI.
+ *    whole document. Garbage never enters the store.
+ *  - {@see decayFrom()} / {@see decayReporting()} — READ time. Lenient: unknown
+ *    nodes/marks/attribute KEYS are STRIPPED and a valid doc always comes back (never
+ *    throws). One legacy snapshot must not take down preview, export and the whole
+ *    listing UI. {@see decayReporting()} also says whether anything was stripped: such
+ *    content is shown but must not be saved back, or the save would delete the nodes of
+ *    an editor extension that is merely switched off.
  *
- * The allow-list is the set of nodes/marks the PACKAGE ITSELF offers the editor through
- * `#[TiptapExtensions]` on DocumentType (StarterKit + Image + Table + Link + CodeBlock) —
- * anything less is a denial of service on the package's own feature set (VLT-REMED R-01 /
- * D27). It is EXTENSIBLE by the host, but ADDITIVELY only (D28): the canon below is the
- * floor and config can never remove from it — a host that accidentally dropped `doc`/`text`
- * would silently break every save.
- *
- * The URL-scheme guard RIDES that seam instead of ignoring it (VLT-REMED P5.2 / R-11).
- * Every URL-bearing attribute goes through {@see LinkSchemeValidator} (http/https/mailto) at
- * store time AND on the JSON read path — and "every" includes the ones the HOST added, not
- * just `link.href` and `image.src`. It used to include only those two, which made the seam a
- * way to switch the XSS barrier OFF: `extra_attributes = ['iframe' => ['src']]` bought a node
- * whose `src` was checked nowhere, so `javascript:` was accepted at write and handed back to
- * the editor at read, while the canonical `image.src` next to it was rejected. Widening the
- * allow-list is a matter of host taste; sanitising a URL is not. See
- * {@see urlAttributes()} for how a host attribute is recognised — by name, or by declaring it
- * in `vaulter.tiptap.url_attributes`.
+ * The URL-scheme guard RIDES the schema's extension seam instead of ignoring it. Every
+ * URL-bearing attribute goes through {@see LinkSchemeValidator} (http/https/mailto) at
+ * store time AND on the JSON read path — and "every" includes the ones the HOST added,
+ * not just `link.href` and `image.src`. Widening the allow-list is a matter of host
+ * taste; sanitising a URL is not. See {@see TipTapSchema::urlAttributes()} for how a
+ * host attribute is recognised.
  */
 final readonly class TipTapContent implements DocumentContent
 {
-    /**
-     * Canonical node types — the baseline every install has, matching what the package
-     * declares to the editor via `#[TiptapExtensions]` (VLT-REMED D27). A host adding an
-     * extension of its own extends this through `vaulter.tiptap.extra_nodes` (D28).
-     *
-     * @var list<string>
-     */
-    private const array CANONICAL_NODE_TYPES = [
-        // StarterKit
-        'doc', 'paragraph', 'heading', 'text', 'hardBreak', 'horizontalRule',
-        'bulletList', 'orderedList', 'listItem', 'blockquote', 'codeBlock',
-        // Image
-        'image',
-        // Table
-        'table', 'tableRow', 'tableCell', 'tableHeader',
-    ];
-
-    /**
-     * Canonical mark types (StarterKit — which since Tiptap 3 ships Underline and Link —
-     * plus the explicitly declared Link extension).
-     *
-     * @var list<string>
-     */
-    private const array CANONICAL_MARK_TYPES = ['bold', 'italic', 'strike', 'code', 'link', 'underline'];
-
-    /**
-     * Attribute allow-list per node/mark type. A type absent from this map may carry no
-     * attributes at all. Attribute VALUES are only interpreted where this package needs
-     * them (`heading.level`) or where they are a security primitive (`link.href`,
-     * `image.src` — URL schemes).
-     *
-     * The unit here is the attribute set an extension SERIALIZES, not its name (VLT-REMED
-     * P5.2). Syncing the canon to extension names alone left the list one attribute short and
-     * reopened R-01 on the write path: ProseMirror's `toJSON()` dumps a node's WHOLE attrs bag
-     * — every key the extension's `addAttributes()` declares, defaults and `null`s included —
-     * so anything the extension declares but this list omits rejects the document outright.
-     * Two real cases from the shipped extensions (`@tiptap/extension-link ^3`,
-     * `@tiptap/starter-kit ^3`): Link declares `class` alongside href/target/rel, so ANY
-     * document containing a link could not be saved; OrderedList declares `start` and `type`.
-     *
-     * So: when a node/mark is added here, take its attribute set from the extension's
-     * `addAttributes()`, not from the subset this package's renderer happens to read.
-     *
-     * @var array<string, list<string>>
-     */
-    private const array CANONICAL_ATTRIBUTES = [
-        'heading' => ['level'],
-        'link' => ['href', 'target', 'rel', 'class'],
-        'image' => ['src', 'alt', 'title'],
-        'codeBlock' => ['language'],
-        'orderedList' => ['start', 'type'],
-        'tableCell' => ['colspan', 'rowspan', 'colwidth'],
-        'tableHeader' => ['colspan', 'rowspan', 'colwidth'],
-    ];
-
-    /**
-     * The package's own URL-bearing attributes. They are always scheme-checked AND always
-     * REQUIRED: a link with no href, an image with no src is not a degraded node, it is a
-     * malformed one, and the store rejects it.
-     *
-     * @var array<string, list<string>>
-     */
-    private const array CANONICAL_URL_ATTRIBUTES = ['link' => ['href'], 'image' => ['src']];
-
-    /**
-     * Attribute names that are URL-bearing by NAME, whoever declared them (VLT-REMED P5.2 /
-     * R-11). This is what makes the config seam fail CLOSED.
-     *
-     * The seam (`extra_nodes` + `extra_attributes`) lets a host declare nodes this package
-     * has never heard of — and until now the URL guard was a hardcoded map of the two
-     * canonical attributes, so `extra_attributes = ['iframe' => ['src']]` bought the host a
-     * node whose `src` was scheme-checked NOWHERE: not at store time, not by
-     * {@see withSanitizedUrls()} on the JSON read path that feeds the editor. A
-     * `javascript:` src went in and came back out. Extending the allow-list is the host's
-     * business; switching off the XSS barrier is not — so an attribute a browser will
-     * resolve as a URL is treated as one no matter who put it on the list, and a host that
-     * never heard of `vaulter.tiptap.url_attributes` is still covered.
-     *
-     * The list is names, not guesses: anything a host invents outside it (`location`,
-     * `endpoint`, …) it declares itself through the config seam below.
-     *
-     * @var list<string>
-     */
-    private const array INFERRED_URL_ATTRIBUTE_NAMES = [
-        'href', 'src', 'url', 'poster', 'action', 'formaction', 'cite', 'background', 'longdesc', 'xlink:href',
-    ];
-
     /**
      * @param array<string, mixed> $doc
      */
@@ -142,13 +46,13 @@ final readonly class TipTapContent implements DocumentContent
      *
      * @param array<string, mixed> $doc
      */
-    public static function fromArray(array $doc): self
+    public static function fromArray(array $doc, ?TipTapSchema $schema = null): self
     {
         if (($doc['type'] ?? null) !== 'doc') {
             throw InvalidDocumentContentException::missingDocNode();
         }
 
-        self::validateChildren($doc['content'] ?? null);
+        self::validateChildren($schema ?? TipTapSchema::richText(), $doc['content'] ?? null);
 
         return new self($doc);
     }
@@ -172,16 +76,33 @@ final readonly class TipTapContent implements DocumentContent
      *
      * @param array<string, mixed> $doc
      */
-    public static function decayFrom(array $doc): self
+    public static function decayFrom(array $doc, ?TipTapSchema $schema = null): self
+    {
+        return self::decayReporting($doc, $schema)[0];
+    }
+
+    /**
+     * {@see decayFrom()}, plus whether the result kept everything the stored document
+     * meant: false as soon as a node, a mark, an attribute key or a malformed entry was
+     * dropped (or the root was not a doc at all). Normalisations that lose nothing —
+     * an empty attrs bag, a text node without text — do not count.
+     *
+     * @param  array<string, mixed>    $doc
+     * @return array{0: self, 1: bool}
+     */
+    public static function decayReporting(array $doc, ?TipTapSchema $schema = null): array
     {
         if (($doc['type'] ?? null) !== 'doc') {
-            return self::empty();
+            return [self::empty(), false];
         }
 
-        return new self([
+        $lossless = true;
+        $decayed = new self([
             'type' => 'doc',
-            'content' => self::decayChildren($doc['content'] ?? null),
+            'content' => self::decayChildren($schema ?? TipTapSchema::richText(), $doc['content'] ?? null, $lossless),
         ]);
+
+        return [$decayed, $lossless];
     }
 
     public static function empty(): self
@@ -213,18 +134,17 @@ final readonly class TipTapContent implements DocumentContent
      */
     public function withSanitizedUrls(): self
     {
-        return new self(self::scrubNode($this->doc) ?? ['type' => 'doc', 'content' => []]);
+        return new self(self::scrubNode(TipTapSchema::richText(), $this->doc) ?? ['type' => 'doc', 'content' => []]);
     }
 
     /**
-     * The node types accepted at store time: the canon plus whatever the host's own
-     * extensions add (`vaulter.tiptap.extra_nodes`). Additive only (D28).
+     * The node types the rich-text schema accepts at store time.
      *
      * @return list<string>
      */
     public static function allowedNodeTypes(): array
     {
-        return array_values(array_unique([...self::CANONICAL_NODE_TYPES, ...app(DocumentsConfig::class)->tiptapExtraNodes()]));
+        return TipTapSchema::richText()->nodeTypes();
     }
 
     /**
@@ -232,46 +152,23 @@ final readonly class TipTapContent implements DocumentContent
      */
     public static function allowedMarkTypes(): array
     {
-        return array_values(array_unique([...self::CANONICAL_MARK_TYPES, ...app(DocumentsConfig::class)->tiptapExtraMarks()]));
+        return TipTapSchema::richText()->markTypes();
     }
 
     /**
-     * The attributes accepted for a node/mark type: the canon MERGED with the host's
-     * additions for that type (never replaced — D28).
-     *
      * @return list<string>
      */
     public static function allowedAttributes(string $type): array
     {
-        return array_values(array_unique([
-            ...(self::CANONICAL_ATTRIBUTES[$type] ?? []),
-            ...(app(DocumentsConfig::class)->tiptapExtraAttributes()[$type] ?? []),
-        ]));
+        return TipTapSchema::richText()->attributes($type);
     }
 
     /**
-     * Every attribute of this type that carries a URL, and therefore goes through
-     * {@see LinkSchemeValidator} both at store time and on the JSON read path (R-11):
-     *
-     *  - the package's own (`link.href`, `image.src`);
-     *  - anything on the type's allow-list whose NAME is URL-bearing — including attributes
-     *    the HOST added through the seam (see {@see INFERRED_URL_ATTRIBUTE_NAMES});
-     *  - anything the host explicitly declares URL-bearing under a name the package cannot
-     *    recognise (`vaulter.tiptap.url_attributes`).
-     *
      * @return list<string>
      */
     public static function urlAttributes(string $type): array
     {
-        $declared = app(DocumentsConfig::class)->tiptapUrlAttributes()[$type] ?? [];
-
-        $inferred = array_intersect(self::allowedAttributes($type), self::INFERRED_URL_ATTRIBUTE_NAMES);
-
-        return array_values(array_unique([
-            ...(self::CANONICAL_URL_ATTRIBUTES[$type] ?? []),
-            ...$inferred,
-            ...$declared,
-        ]));
+        return TipTapSchema::richText()->urlAttributes($type);
     }
 
     /**
@@ -284,12 +181,12 @@ final readonly class TipTapContent implements DocumentContent
 
     public function contentHash(): string
     {
-        return hash('sha256', (string) json_encode($this->doc));
+        return ContentHasher::hash($this->doc);
     }
 
     public function sizeInBytes(): int
     {
-        return mb_strlen((string) json_encode($this->doc), '8bit');
+        return ContentHasher::size($this->doc);
     }
 
     public function sizeInKb(): float
@@ -315,7 +212,7 @@ final readonly class TipTapContent implements DocumentContent
      * is rejected the same as an unknown node type — a malformed entry never renders
      * as "no children".
      */
-    private static function validateChildren(mixed $content): void
+    private static function validateChildren(TipTapSchema $schema, mixed $content): void
     {
         if ($content === null) {
             return;
@@ -331,33 +228,33 @@ final readonly class TipTapContent implements DocumentContent
             }
 
             /** @var array<string, mixed> $node */
-            self::validateNode($node);
+            self::validateNode($schema, $node);
         }
     }
 
     /**
      * @param array<string, mixed> $node
      */
-    private static function validateNode(array $node): void
+    private static function validateNode(TipTapSchema $schema, array $node): void
     {
         $type = $node['type'] ?? null;
 
-        if (!is_string($type) || !in_array($type, self::allowedNodeTypes(), true)) {
+        if (!is_string($type) || !$schema->allowsNode($type)) {
             throw InvalidDocumentContentException::unknownNodeType(is_string($type) ? $type : '(missing)');
         }
 
-        self::validateAttributes($type, $node['attrs'] ?? null);
+        self::validateAttributes($schema, $type, $node['attrs'] ?? null);
 
         if ($type === 'text') {
-            self::validateMarks($node['marks'] ?? null);
+            self::validateMarks($schema, $node['marks'] ?? null);
 
             return;
         }
 
-        self::validateChildren($node['content'] ?? null);
+        self::validateChildren($schema, $node['content'] ?? null);
     }
 
-    private static function validateMarks(mixed $marks): void
+    private static function validateMarks(TipTapSchema $schema, mixed $marks): void
     {
         if ($marks === null) {
             return;
@@ -374,12 +271,12 @@ final readonly class TipTapContent implements DocumentContent
 
             $type = $mark['type'] ?? null;
 
-            if (!is_string($type) || !in_array($type, self::allowedMarkTypes(), true)) {
+            if (!is_string($type) || !$schema->allowsMark($type)) {
                 throw InvalidDocumentContentException::unknownMarkType(is_string($type) ? $type : '(missing)');
             }
 
             /** @var array<string, mixed> $mark */
-            self::validateAttributes($type, $mark['attrs'] ?? null);
+            self::validateAttributes($schema, $type, $mark['attrs'] ?? null);
         }
     }
 
@@ -401,10 +298,10 @@ final readonly class TipTapContent implements DocumentContent
      * to the editor — the very hole R-11 was supposed to close, one attribute name to the
      * left. The name is host taste; `javascript:`/`data:`/`vbscript:` in a VALUE never is.
      */
-    private static function validateAttributes(string $type, mixed $attrs): void
+    private static function validateAttributes(TipTapSchema $schema, string $type, mixed $attrs): void
     {
         $attributes = is_array($attrs) ? $attrs : [];
-        $allowed = self::allowedAttributes($type);
+        $allowed = $schema->attributes($type);
 
         foreach (array_keys($attributes) as $key) {
             if (!is_string($key) || !in_array($key, $allowed, true)) {
@@ -412,9 +309,9 @@ final readonly class TipTapContent implements DocumentContent
             }
         }
 
-        $required = self::CANONICAL_URL_ATTRIBUTES[$type] ?? [];
+        $required = TipTapSchema::REQUIRED_URL_ATTRIBUTES[$type] ?? [];
 
-        foreach (self::urlAttributes($type) as $urlAttribute) {
+        foreach ($schema->urlAttributes($type) as $urlAttribute) {
             if (in_array($urlAttribute, $required, true) || array_key_exists($urlAttribute, $attributes)) {
                 self::validateUrl($attributes[$urlAttribute] ?? null);
             }
@@ -468,9 +365,13 @@ final readonly class TipTapContent implements DocumentContent
     /**
      * @return list<array<string, mixed>>
      */
-    private static function decayChildren(mixed $content): array
+    private static function decayChildren(TipTapSchema $schema, mixed $content, bool &$lossless): array
     {
         if (!is_array($content)) {
+            if ($content !== null) {
+                $lossless = false;
+            }
+
             return [];
         }
 
@@ -478,11 +379,13 @@ final readonly class TipTapContent implements DocumentContent
 
         foreach ($content as $node) {
             if (!is_array($node)) {
+                $lossless = false;
+
                 continue;
             }
 
             /** @var array<string, mixed> $node */
-            $decayed = self::decayNode($node);
+            $decayed = self::decayNode($schema, $node, $lossless);
 
             if ($decayed !== null) {
                 $kept[] = $decayed;
@@ -496,17 +399,19 @@ final readonly class TipTapContent implements DocumentContent
      * @param  array<string, mixed>      $node
      * @return array<string, mixed>|null null → the node is unknown and is dropped
      */
-    private static function decayNode(array $node): ?array
+    private static function decayNode(TipTapSchema $schema, array $node, bool &$lossless): ?array
     {
         $type = $node['type'] ?? null;
 
-        if (!is_string($type) || !in_array($type, self::allowedNodeTypes(), true)) {
+        if (!is_string($type) || !$schema->allowsNode($type)) {
+            $lossless = false;
+
             return null;
         }
 
         $decayed = ['type' => $type];
 
-        $attrs = self::decayAttributes($type, $node['attrs'] ?? null);
+        $attrs = self::decayAttributes($schema, $type, $node['attrs'] ?? null, $lossless);
 
         if ($attrs !== []) {
             $decayed['attrs'] = $attrs;
@@ -515,7 +420,7 @@ final readonly class TipTapContent implements DocumentContent
         if ($type === 'text') {
             $decayed['text'] = is_string($node['text'] ?? null) ? $node['text'] : '';
 
-            $marks = self::decayMarks($node['marks'] ?? null);
+            $marks = self::decayMarks($schema, $node['marks'] ?? null, $lossless);
 
             if ($marks !== []) {
                 $decayed['marks'] = $marks;
@@ -525,7 +430,7 @@ final readonly class TipTapContent implements DocumentContent
         }
 
         if (array_key_exists('content', $node)) {
-            $decayed['content'] = self::decayChildren($node['content']);
+            $decayed['content'] = self::decayChildren($schema, $node['content'], $lossless);
         }
 
         return $decayed;
@@ -534,9 +439,13 @@ final readonly class TipTapContent implements DocumentContent
     /**
      * @return list<array<string, mixed>>
      */
-    private static function decayMarks(mixed $marks): array
+    private static function decayMarks(TipTapSchema $schema, mixed $marks, bool &$lossless): array
     {
         if (!is_array($marks)) {
+            if ($marks !== null) {
+                $lossless = false;
+            }
+
             return [];
         }
 
@@ -544,19 +453,23 @@ final readonly class TipTapContent implements DocumentContent
 
         foreach ($marks as $mark) {
             if (!is_array($mark)) {
+                $lossless = false;
+
                 continue;
             }
 
             $type = $mark['type'] ?? null;
 
-            if (!is_string($type) || !in_array($type, self::allowedMarkTypes(), true)) {
+            if (!is_string($type) || !$schema->allowsMark($type)) {
+                $lossless = false;
+
                 continue;
             }
 
             $decayed = ['type' => $type];
 
             /** @var array<string, mixed> $mark */
-            $attrs = self::decayAttributes($type, $mark['attrs'] ?? null);
+            $attrs = self::decayAttributes($schema, $type, $mark['attrs'] ?? null, $lossless);
 
             if ($attrs !== []) {
                 $decayed['attrs'] = $attrs;
@@ -577,14 +490,14 @@ final readonly class TipTapContent implements DocumentContent
      * @param  array<string, mixed>      $node a node OR a mark (both carry type/attrs)
      * @return array<string, mixed>|null null → the node/mark itself must be dropped
      */
-    private static function scrubNode(array $node): ?array
+    private static function scrubNode(TipTapSchema $schema, array $node): ?array
     {
         $type = $node['type'] ?? null;
 
         if (is_string($type)) {
             /** @var array<string, mixed> $attrs */
             $attrs = isset($node['attrs']) && is_array($node['attrs']) ? $node['attrs'] : [];
-            $scrubbed = self::scrubAttributes($type, $attrs);
+            $scrubbed = self::scrubAttributes($schema, $type, $attrs);
 
             if ($scrubbed === null) {
                 return null;
@@ -610,7 +523,7 @@ final readonly class TipTapContent implements DocumentContent
                 }
 
                 /** @var array<string, mixed> $child */
-                $kept = self::scrubNode($child);
+                $kept = self::scrubNode($schema, $child);
 
                 if ($kept !== null) {
                     $scrubbed[] = $kept;
@@ -652,11 +565,11 @@ final readonly class TipTapContent implements DocumentContent
      * @param  array<string, mixed>      $attrs
      * @return array<string, mixed>|null null → the node/mark must be dropped
      */
-    private static function scrubAttributes(string $type, array $attrs): ?array
+    private static function scrubAttributes(TipTapSchema $schema, string $type, array $attrs): ?array
     {
-        $required = self::CANONICAL_URL_ATTRIBUTES[$type] ?? [];
+        $required = TipTapSchema::REQUIRED_URL_ATTRIBUTES[$type] ?? [];
 
-        foreach (self::urlAttributes($type) as $urlAttribute) {
+        foreach ($schema->urlAttributes($type) as $urlAttribute) {
             $isRequired = in_array($urlAttribute, $required, true);
             $url = $attrs[$urlAttribute] ?? null;
             $safe = is_string($url) ? LinkSchemeValidator::sanitize($url) : null;
@@ -693,18 +606,20 @@ final readonly class TipTapContent implements DocumentContent
      *
      * @return array<string, mixed>
      */
-    private static function decayAttributes(string $type, mixed $attrs): array
+    private static function decayAttributes(TipTapSchema $schema, string $type, mixed $attrs, bool &$lossless): array
     {
         if (!is_array($attrs)) {
             return [];
         }
 
-        $allowed = self::allowedAttributes($type);
+        $allowed = $schema->attributes($type);
         $kept = [];
 
         foreach ($attrs as $key => $value) {
             if (is_string($key) && in_array($key, $allowed, true)) {
                 $kept[$key] = $value;
+            } else {
+                $lossless = false;
             }
         }
 

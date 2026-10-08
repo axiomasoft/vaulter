@@ -6,6 +6,63 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Document type registry, codecs and a safe fallback (PLAN2.D14, D15, D34, D44; PLAN2.P4.3)
+
+No schema change: documents already store their type key (`vaulter/rich-text`, …) and schema
+version. What a type is moved from an enum and file handlers to registered classes.
+
+- **Registering types.** Was: `vaulter.enabled_document_types` (`richtext`, `table`, `markdown`,
+  `template`) and `vaulter.features.spreadsheets`. Now: `vaulter-documents.types`, a list of
+  `DocumentType` classes (default `[RichTextDocumentType::class, MarkdownDocumentType::class]`), plus
+  the container tag `vaulter.document_types` and `Documents::types()->register()` before the
+  application has booted. A published 0.2 config is normalized with a deprecation (`richtext`,
+  `table`, `template` → `RichTextDocumentType`; `markdown` → `MarkdownDocumentType`;
+  `spreadsheets = true` → `SpreadsheetDocumentType`). New `vaulter-documents.default_type`
+  (`vaulter/rich-text`) must be a registered key. The registry freezes once the application has
+  booted (`RegistryFrozenException`), a duplicate key throws `DuplicateDocumentTypeException`
+  (override with `replace()`), and the `vaulter/` prefix is reserved.
+- **Removed** `Vaulter\Documents\Enums\Documents\DocumentType`, `Engines\Handlers\TipTapHandler`,
+  `Engines\Handlers\UniverHandler`, `Attributes\TiptapExtensions`,
+  `Support\TipTap\Concerns\HasTiptapExtensions`, `Registries\DocumentTypeRegistry` (now
+  `Types\DocumentTypeRegistry`), `DocumentsConfig::enabledDocumentTypes()` and
+  `spreadsheetsEnabled()`, and `ContentCapabilities::$richText` (and the `rich_text` capability
+  key): a document's type decides its content shape.
+- **Moved** `ValueObjects\TipTapContent` → `Content\TipTap\TipTapContent`,
+  `ValueObjects\LinkSchemeValidator` → `Content\TipTap\LinkSchemeValidator`,
+  `Support\TipTap\TipTapRenderer` → `Content\TipTap\TipTapRenderer`,
+  `ValueObjects\OpaqueDocumentContent` → `Content\OpaqueContent`,
+  `Support\DocumentContentHasher` → `Content\ContentHasher` (now hashes any array), and core
+  `Vaulter\Exceptions\Documents\{UnknownExportFormatException,UnsupportedDocumentContentException}`
+  → `Vaulter\Documents\Exceptions\*`. Implement `Vaulter\Documents\Contracts\DocumentContent`
+  instead of core `Vaulter\Contracts\Handlers\DocumentContent` (kept only as its parent while core's
+  exporter contract names it).
+- **Files are not documents.** `.docx`, `.doc`, `.md` and `.xlsx` files are no longer declared
+  editable or collaborative: they are previewed or downloaded like any file. If you listed
+  `TipTapHandler` in `vaulter.handlers`, remove it.
+- **Presentation.** A document node is presented by its type: `handler.id` is `null`, and the
+  presentation gains `document_type` and `type_available`; `ui` is the type's viewer
+  (`vaulter/tiptap` with `preset: rich-text|markdown`, `vaulter/univer`, or `vaulter/unsupported`).
+  Capabilities lost `rich_text`; documents report `downloadable: false`. Core
+  `NodePresentation::$id` is nullable and core defers a node kind to a tagged
+  `Vaulter\Contracts\Presentation\KindPresenter` (`vaulter.kind_presenters`).
+- **PHP API.** `DocumentOperations::create($name, ?string $type = null, …)` — `null` uses
+  `default_type`; the content is decoded by the type's codec. `CreateDocumentInput` takes
+  `type` and `schemaVersion` instead of `format` and `mimeType` (every document node gets
+  `CreateDocumentInput::NODE_MIME`). `DocumentOperations::updateContent()` (internal, HTTP) takes
+  the raw array. Profiles name type keys: `documentTypes('vaulter/markdown')` (was `'markdown'`).
+- **Unknown types and degraded content.** A document whose type is not installed reads as opaque
+  JSON (`typeAvailable = false`, `editable = false`); `update`, `snapshot`, `restore`, `export` and
+  `collaborationSession` answer `409 document_type_unavailable`; copy, trash and purge work.
+  Content that reads only partly (nodes of an editor extension you switched off, or a newer
+  schema) is read-only: `update` answers `409 document_content_degraded` instead of saving the
+  stripped view.
+- **HTTP.** `POST …/documents` accepts `type` (`vendor/name`); `format` and `mime` keep working. A
+  spreadsheet create needs `SpreadsheetDocumentType` in `vaulter-documents.types` (was the
+  `spreadsheets` flag).
+- **New** `vaulter:make:document-type` and the contract test trait
+  `Vaulter\Documents\Testing\Contracts\DocumentTypeContractTests`.
+- **Docs.** [Document Types](docs/guide/document-types.md).
+
 ### Documents API through operations (PLAN2.D34, D35, D38, D44, D45; PLAN2.P4.8)
 
 No schema change. Code that called the documents Actions must move to the operations.

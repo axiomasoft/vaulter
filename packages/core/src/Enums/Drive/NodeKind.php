@@ -17,7 +17,7 @@ use Vaulter\Support\Concerns\HasLabel;
  *
  *  - folder   — a virtual directory, no payload, holds children.
  *  - file     — a binary leaf, payload lives in v_files/v_file_revisions/v_blobs.
- *  - document — a Documents leaf (TipTap/Yjs), payload in v_document_versions.
+ *  - document — a structured document of a registered document type, payload in v_documents.
  *  - shortcut — a pointer to another node (shortcut_target_id).
  */
 enum NodeKind: string

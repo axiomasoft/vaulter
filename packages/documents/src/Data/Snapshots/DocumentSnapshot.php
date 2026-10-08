@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Data\Snapshots;
 
 use DateTimeImmutable;
-use Vaulter\Contracts\Handlers\DocumentContent;
+use Vaulter\Documents\Contracts\DocumentContent;
 
 /**
  * Read-only view of a document: either its working state (what every editor sees now)
@@ -15,8 +15,11 @@ use Vaulter\Contracts\Handlers\DocumentContent;
  * expected state version of update()/restore(). It is independent of the node's
  * sequence, so a rename never invalidates it.
  *
- * $editable is false when the type is not available or the content comes from a
- * historical checkpoint; such content must not be saved back.
+ * $editable is false when the type is not installed ($typeAvailable = false; the
+ * content is then opaque JSON), when the content comes from a historical checkpoint,
+ * when reading it had to drop parts its type no longer accepts, or when it was written
+ * in a newer schema version than the installed type's. Such content must not be saved
+ * back: update() refuses it.
  */
 final readonly class DocumentSnapshot
 {

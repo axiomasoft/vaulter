@@ -128,15 +128,15 @@ final class NodeResource extends JsonResource
     }
 
     /**
-     * The handler descriptor for a leaf node (file/document/shortcut) — resolved
-     * through the registry by the node's server-trusted mime/extension (H.5). Null
-     * for a folder.
+     * The presentation of a leaf node (file/document/shortcut): a document by its
+     * document type, any other leaf through the file handler registry by its
+     * server-trusted mime/extension (H.5). Null for a folder.
      *
      * The {@see NodePresenter} contract and its engine are core-owned since
      * P0.4/D10: a host running Drive WITHOUT vaulter-documents still gets a real
      * preview/download descriptor (never a degrade-to-null) — the built-in
      * PreviewHandler/DownloadOnlyHandler are the guaranteed baseline; vaulter-documents
-     * only adds richer formats (TipTap, Univer, …) on top.
+     * adds the presentation of documents on top.
      *
      * @return array<string, mixed>|null
      */

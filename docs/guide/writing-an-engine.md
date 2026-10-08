@@ -97,7 +97,7 @@ they stay `final` (H.5).
    `false` — a kind-neutral handler makes no claim about content shape unless it opts in. If
    your handler's editable content IS a TipTap `{"type":"doc"}` document, set `richText: true`
    explicitly; otherwise leave it at the default and your content round-trips as an opaque
-   snapshot (`OpaqueDocumentContent`) — never validated, never coerced into TipTap's shape.
+   snapshot (`OpaqueContent`) — never validated, never coerced into TipTap's shape.
 2. **A future new capability flag must not break your handler.** You are not required to know
    about every flag `ContentCapabilities` carries — the constructor gives every flag a safe
    default. The client mirrors this: `ContentCapabilities` on the TypeScript side carries an

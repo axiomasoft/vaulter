@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
+use Vaulter\Documents\Content\TipTap\TipTapContent;
+use Vaulter\Documents\Content\TipTap\TipTapRenderer;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
-use Vaulter\Documents\Support\TipTap\TipTapRenderer;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
-use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /**

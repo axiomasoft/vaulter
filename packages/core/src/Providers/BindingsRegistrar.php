@@ -163,8 +163,8 @@ final class BindingsRegistrar
         // descriptor, so the ENGINE (not just its contract) is core-owned. Singleton —
         // it memoises the merged handler set + resolutions. `Vaulter::handlers()->register()`
         // / `handlers()` resolve this binding unconditionally now (no MissingPackage
-        // fail-loud — the engine always exists; only extra formats like TipTap need a
-        // package installed).
+        // fail-loud — the engine always exists; only extra formats need a package
+        // installed).
         $app->singleton(FileHandlerRegistry::class);
         $app->bind(\Vaulter\Contracts\Handlers\FileHandlerRegistry::class, FileHandlerRegistry::class);
 

@@ -2,18 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Documents\ValueObjects;
+namespace Vaulter\Documents\Content;
 
-use Vaulter\Contracts\Handlers\DocumentContent;
+use Vaulter\Documents\Contracts\DocumentContent;
 
 /**
- * A document version payload the core stores VERBATIM, without imposing the TipTap
- * shape (§7 level 2). Used by non-rich-text handlers — e.g. the vaulter-documents
- * spreadsheet handler, whose content is a Univer workbook snapshot, not a
- * `{"type":"doc"}` document. The core never interprets it; it round-trips the JSON
- * and hashes it for autosave dedup.
+ * JSON content stored and returned verbatim, without imposing a shape: the content of
+ * a spreadsheet workbook, of any type decoded by {@see OpaqueJsonCodec}, and of a
+ * document whose type is not installed (read-only then). Nothing interprets it.
  */
-final readonly class OpaqueDocumentContent implements DocumentContent
+final readonly class OpaqueContent implements DocumentContent
 {
     /**
      * @param array<string, mixed> $data
@@ -40,11 +38,11 @@ final readonly class OpaqueDocumentContent implements DocumentContent
 
     public function contentHash(): string
     {
-        return hash('sha256', (string) json_encode($this->data));
+        return ContentHasher::hash($this->data);
     }
 
     public function sizeInBytes(): int
     {
-        return mb_strlen((string) json_encode($this->data), '8bit');
+        return ContentHasher::size($this->data);
     }
 }

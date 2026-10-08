@@ -7,6 +7,7 @@ use Vaulter\Data\Drive\CreateFolderOptions;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Page;
 use Vaulter\Data\Snapshots\NodeSnapshot;
+use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot;
 use Vaulter\Documents\Data\Snapshots\DocumentSnapshot;
 use Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException;
@@ -17,7 +18,6 @@ use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Operations\DocumentOperations;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\ValueObjects\DocumentExport;
-use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Drive\DriveHandle;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Enums\Drive\OnNameConflict;
@@ -169,19 +169,20 @@ it('exports the working state or a chosen revision', function (): void {
         ->and($then->content)->toContain('exported original');
 });
 
-it('refuses an unknown or disabled type on create', function (): void {
+it('refuses a type that is not registered on create, and uses the configured default type', function (): void {
     $documents = Documents::in(DocumentTestHelpers::drive());
 
-    expect(fn () => $documents->create('X', 'acme/unknown'))->toThrow(UnknownDocumentTypeException::class);
+    expect(fn () => $documents->create('X', 'acme/unknown'))->toThrow(UnknownDocumentTypeException::class)
+        ->and(fn () => $documents->create('S', 'vaulter/spreadsheet'))->toThrow(UnknownDocumentTypeException::class)
+        ->and($documents->create('Y')->document?->type)->toBe('vaulter/rich-text');
 
-    config()->set('vaulter.enabled_document_types', ['markdown']);
-    expect(fn () => $documents->create('Y'))->toThrow(UnknownDocumentTypeException::class)
-        ->and($documents->create('Z', 'vaulter/markdown')->document?->type)->toBe('vaulter/markdown');
+    config()->set('vaulter-documents.default_type', 'vaulter/markdown');
+    expect($documents->create('Z')->document?->type)->toBe('vaulter/markdown');
 });
 
 it('applies the drive profile document types on create', function (): void {
     $registry = new ProfileRegistry;
-    $registry->register((new Profile)->key('default')->documentTypes('markdown'));
+    $registry->register((new Profile)->key('default')->documentTypes('vaulter/markdown'));
     $registry->freeze();
     app()->instance(ProfileRegistry::class, $registry);
     $documents = Documents::in(DocumentTestHelpers::drive());

@@ -5,16 +5,12 @@ declare(strict_types=1);
 namespace Vaulter\Contracts\Handlers;
 
 /**
- * The content payload a document version stores (§2.5 / M4a). A document node's
- * handler decides the SHAPE: a rich-text handler produces a validated TipTap doc
- * (e.g. the tiptap driver's `TipTapContent`); a non-rich-text handler
- * (e.g. the vaulter-documents spreadsheet handler) produces an
- * OPAQUE JSON snapshot the core stores verbatim (e.g. `OpaqueDocumentContent`). Core
- * knows only this interface, never the concrete shape — see VLT-CANON P0.3.
+ * The content payload of a document, as the exporter seam sees it. Core knows only
+ * this interface, never a concrete shape: the document type that wrote the content
+ * decides it.
  *
- * The write path (request → action) speaks to this interface, so it never assumes
- * TipTap: it stores `toArray()` in the version's jsonb `content` and dedups identical
- * consecutive autosaves by `contentHash()`.
+ * Document types implement `Vaulter\Documents\Contracts\DocumentContent`, which
+ * extends this one; it stays in core only while core's DocumentExporter names it.
  */
 interface DocumentContent
 {
@@ -34,7 +30,7 @@ interface DocumentContent
     /**
      * The byte size of the canonical JSON payload — the write path stamps it on the
      * node's size_bytes so a document node participates in quota the same as a file,
-     * regardless of whether the payload is a TipTap doc or an opaque snapshot.
+     * whatever the shape of the payload.
      */
     public function sizeInBytes(): int;
 }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Documents\ValueObjects;
+namespace Vaulter\Documents\Content\TipTap;
 
 /**
  * Strict allow-list guard for `href` URL schemes in TipTap content (F-P1.11-01,

@@ -288,7 +288,7 @@ test('split technical roots keep classes in domain subfolders', function (): voi
         // NodePresentation) are kernel-shared — core's own Contracts\Handlers\*
         // interfaces type against them — so they live at Vaulter\ValueObjects\Handlers\*,
         // not in the extracted documents package. TipTapContent/LinkSchemeValidator/
-        // OpaqueDocumentContent moved to Vaulter\Documents\ValueObjects\* (VLT-CANON
+        // OpaqueContent moved to Vaulter\Documents\ValueObjects\* (VLT-CANON
         // P0.3) — core no longer knows TipTap's shape.
         'ValueObjects' => [],
     ];
@@ -411,7 +411,7 @@ test('split classes resolve under their canonical domain namespace', function ()
         'Vaulter\Repositories\Drive\NodeReadRepository',
         'Vaulter\Contracts\Cas\BlobStore',
         'Vaulter\Contracts\Access\PermissionDriver',
-        'Vaulter\Documents\ValueObjects\TipTapContent',
+        'Vaulter\Documents\Content\TipTap\TipTapContent',
         'Vaulter\Access\ValueObjects\NodeAbilities',
     ];
 
@@ -545,7 +545,7 @@ test('core source never references the extracted vaulter-drive package (P2 #5 / 
  * lives in packages/documents, namespace Vaulter\Documents\*). The transitional seams
  * are cut: the 7 Contracts\Handlers extensibility VOs + UnknownExportFormatException/
  * UnsupportedDocumentContentException moved to core (kernel-shared, T6/D2 finding);
- * TipTapContent/LinkSchemeValidator/OpaqueDocumentContent/TiptapExtensions/
+ * TipTapContent/LinkSchemeValidator/OpaqueContent/TiptapExtensions/
  * InvalidDocumentContentException moved BACK to documents (VLT-CANON P0.3 — TipTap
  * isolation, core never knew their shape beyond the DocumentContent contract); the
  * FileHandlerRegistry/NodePresenter contracts + `Vaulter::handlers()->register()` resolve
@@ -606,6 +606,43 @@ test('core source never references a concrete TipTap class (VLT-CANON P0.3)', fu
         }
 
         if (preg_match('/\bTipTap[A-Za-z]+\b/', $code) === 1) {
+            $offenders[] = $file->getPathname();
+        }
+    }
+
+    expect($offenders)->toBe([]);
+});
+
+/**
+ * PLAN2.P4.3 (OPUS 04 §1 p.2) — core names no document editor at all: not in code, not
+ * in comments. Editors belong to the document types of vaulter-documents; core only
+ * presents a kind through a tagged KindPresenter. The one allow-listed place is the
+ * config normalizer, whose string literals carry the documented legacy config keys
+ * (`vaulter.tiptap.*`, the 0.2 `univer` format label).
+ */
+test('core source never names a document editor (TipTap, Univer)', function (): void {
+    $src = __DIR__.'/../../src';
+    $offenders = [];
+
+    /** @var Iterator<SplFileInfo> $files */
+    $files = new RegexIterator(
+        new RecursiveIteratorIterator(new RecursiveDirectoryIterator($src)),
+        '/\.php$/',
+    );
+
+    foreach ($files as $file) {
+        $contents = file_get_contents($file->getPathname());
+        expect($contents)->not->toBeFalse();
+
+        $text = '';
+        foreach (token_get_all((string) $contents) as $token) {
+            if (is_array($token) && $token[0] === T_CONSTANT_ENCAPSED_STRING && $file->getPathname() === $src.'/Configuration/ConfigNormalizer.php') {
+                continue;
+            }
+            $text .= is_array($token) ? $token[1] : $token;
+        }
+
+        if (preg_match('/tiptap|univer/i', $text) === 1) {
             $offenders[] = $file->getPathname();
         }
     }

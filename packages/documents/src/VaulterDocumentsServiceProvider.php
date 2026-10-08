@@ -11,10 +11,13 @@ use Vaulter\Configuration\ConfigValidator;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Documents\Console\MakeDocumentTypeCommand;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Providers\BindingsRegistrar;
 use Vaulter\Documents\Providers\CollaborationRegistrar;
 use Vaulter\Documents\Providers\HttpRegistrar;
+use Vaulter\Documents\Types\DocumentTypeRegistry;
+use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Models\Drive\Node;
 
 /**
@@ -26,7 +29,7 @@ final class VaulterDocumentsServiceProvider extends PackageServiceProvider
 {
     public function configurePackage(Package $package): void
     {
-        $package->name('vaulter-documents')->hasConfigFile();
+        $package->name('vaulter-documents')->hasConfigFile()->hasCommand(MakeDocumentTypeCommand::class);
 
         (new HttpRegistrar)->configure($package);
     }
@@ -54,5 +57,28 @@ final class VaulterDocumentsServiceProvider extends PackageServiceProvider
         );
 
         (new CollaborationRegistrar($this->app))->boot();
+        $this->bootDocumentTypes($config);
+    }
+
+    /**
+     * Config and tagged types join the ones providers registered; the set freezes once
+     * every provider has booted, and only then can the default type be checked.
+     */
+    private function bootDocumentTypes(DocumentsConfig $config): void
+    {
+        $types = $this->app->make(DocumentTypeRegistry::class);
+        foreach ($config->types() as $class) {
+            $types->register($class);
+        }
+        foreach ($this->app->tagged('vaulter.document_types') as $type) {
+            $types->register($type);
+        }
+
+        $this->app->booted(static function () use ($types, $config): void {
+            $types->freeze();
+            if (!$types->has($config->defaultType())) {
+                throw new InvalidConfigurationException(sprintf('[Vaulter] vaulter-documents.default_type "%s" is not a registered document type.', $config->defaultType()));
+            }
+        });
     }
 }

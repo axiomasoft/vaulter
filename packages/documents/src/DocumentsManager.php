@@ -8,7 +8,7 @@ use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
 use Vaulter\Documents\Registries\DocumentExporterRegistry;
-use Vaulter\Documents\Registries\DocumentTypeRegistry;
+use Vaulter\Documents\Types\DocumentTypeRegistry;
 
 final readonly class DocumentsManager
 {

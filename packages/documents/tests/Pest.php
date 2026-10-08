@@ -9,6 +9,7 @@ use Vaulter\Documents\Tests\Comment\CommentsTestCase;
 use Vaulter\Documents\Tests\Document\DocumentTestCase;
 use Vaulter\Documents\Tests\Operations\OperationsTestCase;
 use Vaulter\Documents\Tests\TestCase;
+use Vaulter\Documents\Tests\Types\TypesTestCase;
 
 // The v_node_comments/v_documents/v_document_revisions schema is always migrated (core owns
 // it unconditionally); only the ROUTES are feature-gated. Schema + Unit run on the
@@ -36,6 +37,10 @@ uses(CommentsTestCase::class, RefreshDatabase::class)->in('Comment');
 // The Documents API (DocumentOperations/CommentOperations) with every guard live:
 // database grants, comments and collaboration ON.
 uses(OperationsTestCase::class, RefreshDatabase::class)->in('Operations');
+
+// Document types: the registry, the built-in types, a third-party type that is
+// installed, removed and installed again, and content that reads only partly.
+uses(TypesTestCase::class, RefreshDatabase::class)->in('Types');
 
 // Registrar checks use a booted application without mutating the database.
 uses(TestCase::class)->in('Providers');

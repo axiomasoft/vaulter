@@ -6,10 +6,10 @@ namespace Vaulter\Documents\Collaboration;
 
 use Vaulter\Documents\Actions\Collaboration\PersistCollaborationStateAction;
 use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Data\Collaboration\PersistCollaborationStateInput;
 use Vaulter\Documents\Data\Documents\DocumentStateResult;
 use Vaulter\Documents\Exceptions\NotADocumentException;
-use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;

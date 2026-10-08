@@ -272,3 +272,41 @@ it('retains default exporter formats alongside host overrides in legacy and cano
     ['vaulter-documents.exporters', ['html' => 'Host\\HtmlExporter']],
     ['vaulter-documents.exporters', []],
 ]);
+
+it('turns the 0.2 enabled document formats and the spreadsheets flag into document type classes (PLAN2.P4.3)', function (): void {
+    $config = new Repository(['vaulter' => [
+        'enabled_document_types' => ['richtext', 'table', 'markdown', 'template'],
+        'features' => ['spreadsheets' => true],
+    ]]);
+    $defaults = ['vaulter-documents' => ['types' => ['Vaulter\\Documents\\Types\\RichTextDocumentType', 'Vaulter\\Documents\\Types\\MarkdownDocumentType']]];
+
+    $messages = collectConfigurationDeprecations(static fn () => (new ConfigNormalizer)->normalize($config, $defaults));
+
+    expect($config->get('vaulter-documents.types'))->toBe([
+        'Vaulter\\Documents\\Types\\RichTextDocumentType',
+        'Vaulter\\Documents\\Types\\MarkdownDocumentType',
+        'Vaulter\\Documents\\Types\\SpreadsheetDocumentType',
+    ])->and($messages)->toContain(
+        '[Vaulter] Config key "vaulter.enabled_document_types" is deprecated; use "vaulter-documents.types".',
+        '[Vaulter] Config key "vaulter.features.spreadsheets" is deprecated; use "vaulter-documents.types".',
+    );
+});
+
+it('keeps an explicit vaulter-documents.types list from growing default entries back (PLAN2.P4.3)', function (): void {
+    $config = new Repository(['vaulter-documents' => ['types' => ['Host\\KanbanDocumentType']]]);
+    $defaults = ['vaulter-documents' => ['types' => ['Vaulter\\Documents\\Types\\RichTextDocumentType', 'Vaulter\\Documents\\Types\\MarkdownDocumentType']]];
+
+    (new ConfigNormalizer)->normalize($config, $defaults);
+
+    expect($config->get('vaulter-documents.types'))->toBe(['Host\\KanbanDocumentType']);
+});
+
+it('refuses a legacy format list that contradicts an explicit types list (PLAN2.P4.3)', function (): void {
+    $config = new Repository([
+        'vaulter' => ['enabled_document_types' => ['markdown']],
+        'vaulter-documents' => ['types' => ['Vaulter\\Documents\\Types\\RichTextDocumentType']],
+    ]);
+    $defaults = ['vaulter-documents' => ['types' => ['Vaulter\\Documents\\Types\\RichTextDocumentType', 'Vaulter\\Documents\\Types\\MarkdownDocumentType']]];
+
+    collectConfigurationDeprecations(static fn () => (new ConfigNormalizer)->normalize($config, $defaults));
+})->throws(InvalidConfigurationException::class);

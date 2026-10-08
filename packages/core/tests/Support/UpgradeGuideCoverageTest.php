@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Vaulter\Configuration\WebhooksConfig;
-use Vaulter\Documents\ValueObjects\TipTapContent;
+use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Drive\Configuration\DriveConfig;
 
 /*
@@ -53,7 +53,7 @@ it('UPGRADE.md имеет секцию для КАЖДОГО item\'а, чей BC
 
     return [
         // P0.1 — контракт TipTap (самый host-видимый BC плана; секции не было вовсе).
-        'P0.1 TipTap allow-list' => ['(P5.2 / P0.1 / F-P1.11-01, F-P1.11-02, R-01)', (string) file_get_contents($root.'/packages/documents/src/ValueObjects/TipTapContent.php')],
+        'P0.1 TipTap allow-list' => ['(P5.2 / P0.1 / F-P1.11-01, F-P1.11-02, R-01)', (string) file_get_contents($root.'/packages/documents/src/Content/TipTap/TipTapContent.php')],
         // P1.1 — безусловный nosniff + whitelist Content-Type на раздаче.
         'P1.1 nosniff' => ['(P1.1, P1.3 / F-P1.3-04, F-P1.11-03, F-P1.8-01, F-P1.4-09)', (string) file_get_contents($root.'/packages/core/src/Http/Support/DownloadHeaders.php')],
         // P1.3 — именованные лимитеры + кап активных сессий.
@@ -61,7 +61,7 @@ it('UPGRADE.md имеет секцию для КАЖДОГО item\'а, чей BC
         // P5.2 — критическая секция upload-сессии.
         'P5.2 upload lock' => ['(P5.2 / R-02, R-03, R-08)', (string) file_get_contents($root.'/packages/drive/src/Uploads/UploadSessionManager.php')],
         // P5.2 — markdown-экранирование.
-        'P5.2 markdown' => ['(P5.2 / R-04, R-10)', (string) file_get_contents($root.'/packages/documents/src/Support/TipTap/TipTapRenderer.php')],
+        'P5.2 markdown' => ['(P5.2 / R-04, R-10)', (string) file_get_contents($root.'/packages/documents/src/Content/TipTap/TipTapRenderer.php')],
         // P5.2 — commit внутри критической секции + CAS на markCommitted.
         'P5.2 commit lock' => ['(P5.2 / R-11)', (string) file_get_contents($root.'/packages/drive/src/Repositories/Uploads/UploadSessionStoreRepository.php')],
         // P5.2 — обеззараживание TipTap-контента на JSON-чтении.
@@ -71,8 +71,8 @@ it('UPGRADE.md имеет секцию для КАЖДОГО item\'а, чей BC
         // P0.4 — движок реестра переехал в core (D10); факт кода — реальная привязка в
         // VaulterServiceProvider, не просто наличие файла.
         'P0.4 registry engine in core' => ['(VLT-CANON P0.4 / D10', (string) file_get_contents($root.'/packages/core/src/VaulterServiceProvider.php')],
-        // P0.5 — richText дефолт flip; факт кода — сам VO несёт дефолт false.
-        'P0.5 richText default' => ['(VLT-CANON P0.5)', (string) file_get_contents($root.'/packages/core/src/ValueObjects/Handlers/ContentCapabilities.php')],
+        // P4.3 — форма контента задаётся типом документа; факт кода — реестр типов.
+        'P4.3 document types' => ['; PLAN2.P4.3)', (string) file_get_contents($root.'/packages/documents/src/Types/DocumentTypeRegistry.php')],
     ];
 });
 

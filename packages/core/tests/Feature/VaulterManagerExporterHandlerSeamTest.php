@@ -8,7 +8,7 @@ use Vaulter\Contracts\Handlers\FileHandlerRegistry;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Registries\DocumentExporterRegistry;
-use Vaulter\Documents\Registries\DocumentTypeRegistry;
+use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Exceptions\Support\MissingPackageException;
 use Vaulter\Handlers\Builtin\DownloadOnlyHandler;
 use Vaulter\Models\Drive\Node;
@@ -25,7 +25,7 @@ use Vaulter\VaulterManager;
  * strict_types=1 TypeError, not a resolved instance.
  */
 it('registerExporter accepts a class-string exporter and resolves it through the container, F-P3.3-01', function (): void {
-    $manager = new DocumentsManager(new DocumentTypeRegistry, new DocumentExporterRegistry(app(), app(DocumentsConfig::class)));
+    $manager = new DocumentsManager(new DocumentTypeRegistry(app()), new DocumentExporterRegistry(app(), app(DocumentsConfig::class)));
 
     $manager->exporters()->register(FakeExporter::class);
 
@@ -34,7 +34,7 @@ it('registerExporter accepts a class-string exporter and resolves it through the
 });
 
 it('registerExporter still accepts a ready instance (unchanged path), F-P3.3-01', function (): void {
-    $manager = new DocumentsManager(new DocumentTypeRegistry, new DocumentExporterRegistry(app(), app(DocumentsConfig::class)));
+    $manager = new DocumentsManager(new DocumentTypeRegistry(app()), new DocumentExporterRegistry(app(), app(DocumentsConfig::class)));
     $exporter = new FakeExporter;
 
     $manager->exporters()->register($exporter);

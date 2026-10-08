@@ -13,11 +13,12 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /**
- * The handler descriptor embedded in the node payload (§4.5 / §5 / M4a): the client
- * routes a node to the right editor/preview/download surface from id + capabilities
- * + ui — with no mime logic on the client.
+ * The presentation embedded in the node payload (§4.5 / §5 / M4a): the client routes a
+ * node to the right editor/preview/download surface from it — with no mime logic on
+ * the client. A document is presented by its document type (PLAN2.P4.3), a file by
+ * its file handler.
  */
-it('resolves a document node to the TipTap handler descriptor', function (): void {
+it('presents a document node by its document type, not by a file handler', function (): void {
     $drive = DocumentTestHelpers::drive();
 
     $node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive->model()), new CreateDocumentInput(
@@ -29,10 +30,13 @@ it('resolves a document node to the TipTap handler descriptor', function (): voi
 
     $descriptor = app(NodePresenter::class)->present($node);
 
-    expect($descriptor->id)->toBe('vaulter/tiptap')
+    expect($descriptor->id)->toBeNull()
+        ->and($descriptor->documentType)->toBe('vaulter/rich-text')
+        ->and($descriptor->typeAvailable)->toBeTrue()
         ->and($descriptor->capabilities->editable)->toBeTrue()
         ->and($descriptor->capabilities->collaborative)->toBeTrue()
-        ->and($descriptor->ui->key)->toBe('vaulter/tiptap');
+        ->and($descriptor->capabilities->downloadable)->toBeFalse()
+        ->and($descriptor->ui->toArray())->toBe(['key' => 'vaulter/tiptap', 'props' => ['preset' => 'rich-text']]);
 });
 
 it('embeds the handler descriptor in the NodeResource payload', function (): void {
@@ -49,8 +53,11 @@ it('embeds the handler descriptor in the NodeResource payload', function (): voi
 
     expect($payload)->toHaveKey('handler')
         ->and($payload['handler'])->toBeArray()
-        ->and($payload['handler']['id'])->toBe('vaulter/tiptap')
+        ->and($payload['handler']['id'])->toBeNull()
+        ->and($payload['handler']['document_type'])->toBe('vaulter/rich-text')
+        ->and($payload['handler']['type_available'])->toBeTrue()
         ->and($payload['handler']['capabilities'])->toHaveKey('editable')
+        ->and($payload['handler']['capabilities'])->not->toHaveKey('rich_text')
         ->and($payload['handler']['ui'])->toHaveKey('key');
 });
 
@@ -84,5 +91,34 @@ it('describes a file node by its server-trusted mime (never a claimed one)', fun
     $descriptor = app(NodePresenter::class)->present($node);
 
     expect($descriptor->id)->toBe('vaulter/preview')
+        ->and($descriptor->documentType)->toBeNull()
         ->and($descriptor->capabilities->previewable)->toBeTrue();
 });
+
+it('presents docx, md and xlsx FILES as preview/download, never editable (V34)', function (string $name, string $mime): void {
+    $drive = DocumentTestHelpers::drive();
+
+    $model = config('vaulter.models.node');
+    /** @var Node $node */
+    $node = new $model;
+    $node->forceFill([
+        'drive_id' => $drive->model()->id,
+        'parent_id' => $drive->root()->id,
+        'kind' => NodeKind::File,
+        'name' => $name,
+        'extension' => pathinfo($name, PATHINFO_EXTENSION),
+        'mime_type' => $mime,
+        'size_bytes' => 10,
+    ])->save();
+
+    $presentation = app(NodePresenter::class)->present($node);
+
+    expect($presentation->id)->toBeIn(['vaulter/preview', 'vaulter/download'])
+        ->and($presentation->documentType)->toBeNull()
+        ->and($presentation->capabilities->editable)->toBeFalse()
+        ->and($presentation->capabilities->collaborative)->toBeFalse();
+})->with([
+    'docx' => ['report.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+    'md' => ['notes.md', 'text/markdown'],
+    'xlsx' => ['budget.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+]);

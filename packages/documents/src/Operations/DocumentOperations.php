@@ -6,7 +6,6 @@ namespace Vaulter\Documents\Operations;
 
 use Illuminate\Pagination\CursorPaginator;
 use Vaulter\Access\OperationGuard;
-use Vaulter\Contracts\Handlers\DocumentContent;
 use Vaulter\Data\Drive\CreateFolderOptions;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Page;
@@ -19,6 +18,8 @@ use Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction;
 use Vaulter\Documents\Actions\Revisions\UpdateRevisionRetentionAction;
 use Vaulter\Documents\Collaboration\CollaborationSessionService;
 use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Documents\Content\ContentDecoder;
+use Vaulter\Documents\Contracts\DocumentType;
 use Vaulter\Documents\Data\Collaboration\CollaborationSession;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
@@ -28,23 +29,21 @@ use Vaulter\Documents\Data\Revisions\UpdateRevisionRetentionInput;
 use Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot;
 use Vaulter\Documents\Data\Snapshots\DocumentSnapshot;
 use Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper;
-use Vaulter\Documents\Engines\Handlers\TipTapHandler;
+use Vaulter\Documents\Exceptions\DocumentContentDegradedException;
+use Vaulter\Documents\Exceptions\DocumentTypeUnavailableException;
+use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Exceptions\UnknownDocumentTypeException;
 use Vaulter\Documents\Export\NodeExportService;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Queries\DocumentQuery;
 use Vaulter\Documents\Queries\MappedCursorPaginator;
+use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Documents\ValueObjects\DocumentExport;
-use Vaulter\Documents\ValueObjects\OpaqueDocumentContent;
-use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Handlers\Capability;
 use Vaulter\Enums\Operations\OperationKind;
 use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Handlers\FileDescriptorFactory;
-use Vaulter\Handlers\FileHandlerRegistry;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\OperationContext;
@@ -62,17 +61,24 @@ use Vaulter\Profiles\ProfilePolicy;
  * Content writes use the document's own validator: pass DocumentSnapshot::$stateVersion
  * back as $expectedStateVersion to refuse a lost update (412 document_state_mismatch).
  * The node's sequence is not involved, so renaming a document never invalidates it.
+ *
+ * Content is shaped by the document's type (Documents::types()). A document whose type
+ * is not installed can still be read (as opaque JSON), listed, copied, trashed and
+ * purged; editing, checkpointing, restoring, exporting and collaborating answer 409
+ * document_type_unavailable until the type is registered again. Content that reads only
+ * partly under its type (DocumentSnapshot::$editable = false) is not overwritten: 409
+ * document_content_degraded.
  */
 final readonly class DocumentOperations
 {
-    private const string SPREADSHEET_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-
     public function __construct(
         private OperationContext $context,
         private NodeLocator $locator,
         private OperationGuard $guard,
         private ProfilePolicy $profiles,
         private DocumentsConfig $config,
+        private DocumentTypeRegistry $types,
+        private ContentDecoder $decoder,
         private CreateDocumentAction $create,
         private UpdateDocumentContentAction $update,
         private CreateNamedRevisionAction $snapshot,
@@ -83,44 +89,31 @@ final readonly class DocumentOperations
         private DocumentQuery $query,
         private DocumentSnapshotMapper $mapper,
         private NodeSnapshotMapper $nodes,
-        private FileDescriptorFactory $descriptors,
-        private FileHandlerRegistry $handlers,
     ) {}
 
     /**
-     * Create a document under $parent (the drive root when null).
+     * Create a document of $type (vaulter-documents.default_type when null) under
+     * $parent (the drive root when null).
      *
-     * @param array<string, mixed>|null $content the initial content; null starts empty
+     * @param array<string, mixed>|null $content the initial content; null starts with the type's default
      *
-     * @throws UnknownDocumentTypeException when the type is unknown or not enabled
+     * @throws UnknownDocumentTypeException    when no registered type has the key
+     * @throws InvalidDocumentContentException when the type's codec rejects the content
      */
-    public function create(string $name, string $type = 'vaulter/rich-text', ?array $content = null, NodeSnapshot|string|int|null $parent = null, ?CreateFolderOptions $options = null): NodeSnapshot
-    {
-        [$format, $mimeType, $richText] = $this->typeShape($type);
-        $payload = $richText
-            ? ($content === null ? TipTapContent::empty() : TipTapContent::fromArray($content))
-            : OpaqueDocumentContent::fromArray($content ?? []);
-
-        return $this->createDocument($name, $format, $mimeType, $payload, $parent, $options);
-    }
-
-    /**
-     * @internal The HTTP create, whose request already resolved the format label and the
-     * handler mime from its own fields.
-     */
-    public function createDocument(string $name, string $format, string $mimeType, DocumentContent $content, NodeSnapshot|string|int|null $parent = null, ?CreateFolderOptions $options = null): NodeSnapshot
+    public function create(string $name, ?string $type = null, ?array $content = null, NodeSnapshot|string|int|null $parent = null, ?CreateFolderOptions $options = null): NodeSnapshot
     {
         $parent = $this->locator->find($this->context, $parent ?? $this->context->drive->root_node_id ?? throw NodeNotFoundException::forId('root'));
         $this->guard->authorizeCreate($this->context, $parent);
-        $this->profiles->assertDocumentType(drive: $this->context->drive, type: $format);
+        $documentType = $this->types->get($type ?? $this->config->defaultType());
+        $this->profiles->assertDocumentType(drive: $this->context->drive, type: $documentType->key());
 
         $node = $this->create->execute($this->context, new CreateDocumentInput(
             storage: $this->context->drive,
             name: $name,
-            content: $content,
+            content: $this->decoder->decode($documentType, $content),
             parent: $parent,
-            format: $format,
-            mimeType: $mimeType,
+            type: $documentType->key(),
+            schemaVersion: $documentType->schemaVersion(),
             onConflict: ($options ?? new CreateFolderOptions)->onConflict,
         ));
 
@@ -144,29 +137,41 @@ final readonly class DocumentOperations
      * on every write.
      *
      * @param array<string, mixed> $content
+     *
+     * @throws DocumentTypeUnavailableException when the document's type is not installed
+     * @throws DocumentContentDegradedException when the stored content reads only partly under its type
      */
     public function update(NodeSnapshot|string|int $document, array $content, ?int $expectedStateVersion = null): DocumentSnapshot
     {
-        $node = $this->document($document, Ability::Edit, OperationKind::Mutation);
-
-        return $this->write($node, $this->contentFor($node, $content), null, $expectedStateVersion);
+        return $this->updateContent($document, $content, null, $expectedStateVersion);
     }
 
     /**
-     * @internal The HTTP autosave, whose request already shaped the content for the
-     * node's handler and may carry the binary Yjs state.
+     * @internal The HTTP autosave, which may also carry the binary Yjs state.
+     *
+     * @param array<string, mixed> $content
      */
-    public function updateContent(NodeSnapshot|string|int $document, DocumentContent $content, ?string $yjsState = null, ?int $expectedStateVersion = null): DocumentSnapshot
+    public function updateContent(NodeSnapshot|string|int $document, array $content, ?string $yjsState = null, ?int $expectedStateVersion = null): DocumentSnapshot
     {
         $node = $this->document($document, Ability::Edit, OperationKind::Mutation);
+        $type = $this->editableType($node);
 
-        return $this->write($node, $content, $yjsState, $expectedStateVersion);
+        $this->update->execute($this->context, new UpdateDocumentContentInput(
+            node: $node,
+            content: $this->decoder->decode($type, $content),
+            yjsState: $yjsState,
+            expectedStateVersion: $expectedStateVersion,
+            schemaVersion: $type->schemaVersion(),
+        ));
+
+        return $this->current($node);
     }
 
     /** Checkpoint the working state as a named revision; it becomes the head. */
     public function snapshot(NodeSnapshot|string|int $document, ?string $label = null, bool $keepForever = false): DocumentRevisionSnapshot
     {
         $node = $this->document($document, Ability::Edit, OperationKind::Mutation);
+        $this->installedType($node);
         $revision = $this->snapshot->execute($this->context, new CreateNamedRevisionInput(node: $node, label: $label, keepForever: $keepForever));
 
         return $this->mapper->revision($revision, $this->query->document($node));
@@ -211,6 +216,7 @@ final readonly class DocumentOperations
     public function restore(NodeSnapshot|string|int $document, DocumentRevisionSnapshot|string|int $revision, ?int $expectedStateVersion = null): DocumentSnapshot
     {
         $node = $this->document($document, Ability::Edit, OperationKind::Mutation);
+        $this->installedType($node);
         $this->restore->execute($this->context, new RestoreDocumentRevisionInput(
             node: $node,
             revision: $revision instanceof DocumentRevisionSnapshot ? $revision->id : $revision,
@@ -241,6 +247,7 @@ final readonly class DocumentOperations
     public function export(NodeSnapshot|string|int $document, string $format, DocumentRevisionSnapshot|string|int|null $revision = null): DocumentExport
     {
         $node = $this->document($document, Ability::Download, OperationKind::ContentEgress);
+        $this->installedType($node);
         $selected = $revision === null ? null : $this->query->revision($node, $this->query->document($node), $revision);
 
         return $this->exports->export($this->context, $node, $format, $selected);
@@ -257,9 +264,11 @@ final readonly class DocumentOperations
         if ($this->context->actor->isSystem() || $actor === null) {
             throw MissingActorException::required();
         }
+        $this->installedType($node);
         $flags = $this->guard->abilities($this->context, $node)->flags;
         $ability = match (true) {
-            $flags[Ability::Edit->value] ?? false => Ability::Edit,
+            // Content that cannot be saved back is shared read-only.
+            ($flags[Ability::Edit->value] ?? false) && $this->contentWritable($node) => Ability::Edit,
             $flags[Ability::Comment->value] ?? false => Ability::Comment,
             default => Ability::View,
         };
@@ -280,18 +289,6 @@ final readonly class DocumentOperations
         return $node;
     }
 
-    private function write(Node $node, DocumentContent $content, ?string $yjsState, ?int $expectedStateVersion): DocumentSnapshot
-    {
-        $this->update->execute($this->context, new UpdateDocumentContentInput(
-            node: $node,
-            content: $content,
-            yjsState: $yjsState,
-            expectedStateVersion: $expectedStateVersion,
-        ));
-
-        return $this->current($node);
-    }
-
     private function current(Node $node): DocumentSnapshot
     {
         $aggregate = $this->query->document($node);
@@ -299,45 +296,35 @@ final readonly class DocumentOperations
         return $this->mapper->document($aggregate, $aggregate->currentRevision);
     }
 
-    /**
-     * The content shape follows the node's editor, as on the HTTP path: a rich-text
-     * editor gets a validated TipTap document, any other an opaque snapshot.
-     *
-     * @param array<string, mixed> $content
-     */
-    private function contentFor(Node $node, array $content): DocumentContent
+    /** @throws DocumentTypeUnavailableException */
+    private function installedType(Node $node): DocumentType
     {
-        $descriptor = $this->descriptors->forNode($node);
-        $handler = $this->handlers->resolve($descriptor, Capability::Edit);
-
-        return $handler->capabilities($descriptor)->richText
-            ? TipTapContent::fromArray($content)
-            : OpaqueDocumentContent::fromArray($content);
+        return $this->decoder->writable($this->query->document($node)->type);
     }
 
     /**
-     * The format label, node mime and content shape of a type key. Until the type
-     * registry replaces it, only the built-in types can be created.
+     * The type of a document whose content may be replaced: installed, and the stored
+     * content reads without loss in a schema this installation writes.
      *
-     * @return array{string, string, bool}
+     * @throws DocumentTypeUnavailableException
+     * @throws DocumentContentDegradedException
      */
-    private function typeShape(string $type): array
+    private function editableType(Node $node): DocumentType
     {
-        $known = [
-            'vaulter/rich-text' => ['richtext', TipTapHandler::DOCUMENT_MIME, true],
-            'vaulter/markdown' => ['markdown', TipTapHandler::DOCUMENT_MIME, true],
-        ];
-        if ($this->config->spreadsheetsEnabled()) {
-            $known['vaulter/spreadsheet'] = ['vaulter/univer', self::SPREADSHEET_MIME, false];
+        $type = $this->installedType($node);
+        if (!$this->contentWritable($node)) {
+            throw new DocumentContentDegradedException($type->key());
         }
-        // The enabled list may name the type key or its format label.
-        $enabled = $this->config->enabledDocumentTypes();
-        $allowed = array_filter(
-            $known,
-            static fn (array $shape, string $key): bool => $enabled === [] || in_array($key, $enabled, true) || in_array($shape[0], $enabled, true),
-            ARRAY_FILTER_USE_BOTH,
-        );
 
-        return $allowed[$type] ?? throw UnknownDocumentTypeException::forType($type, array_keys($allowed));
+        return $type;
+    }
+
+    private function contentWritable(Node $node): bool
+    {
+        $aggregate = $this->query->document($node);
+        $type = $this->decoder->type($aggregate->type);
+
+        return $this->decoder->schemaWritable($type, $aggregate->schema_version)
+            && $this->decoder->read($aggregate->type, $aggregate->content, $aggregate->schema_version)->lossless;
     }
 }

@@ -7,6 +7,7 @@ namespace Vaulter\Documents\Actions\Revisions;
 use LogicException;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Content\DocumentStateWriter;
+use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
 use Vaulter\Documents\Data\Revisions\RestoreDocumentRevisionInput;
 use Vaulter\Documents\Enums\Documents\StateWriteCause;
@@ -16,7 +17,6 @@ use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
-use Vaulter\Documents\ValueObjects\OpaqueDocumentContent;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Support\TreeGuard;
@@ -73,7 +73,7 @@ final readonly class RestoreDocumentRevisionAction
 
             $result = $this->writer->write($document, new DocumentStateChange(
                 cause: StateWriteCause::Restore,
-                content: OpaqueDocumentContent::fromArray($source->content ?? []),
+                content: OpaqueContent::fromArray($source->content ?? []),
                 yjsState: $source->yjs_state,
                 schemaVersion: $source->schema_version,
                 actorId: $actorId,

@@ -36,7 +36,8 @@ it('runs the document node cycle: create → content → autosave → version �
     ])
         ->assertCreated()
         ->assertJsonPath('data.kind', 'document')
-        ->assertJsonPath('data.handler.id', 'vaulter/tiptap')
+        ->assertJsonPath('data.handler.id', null)
+        ->assertJsonPath('data.handler.document_type', 'vaulter/rich-text')
         ->json('data.id');
 
     $nodeBase = 'api/vaulter/nodes/'.$nodeId;
@@ -71,10 +72,13 @@ it('runs the document node cycle: create → content → autosave → version �
         ->assertCreated()
         ->assertJsonPath('data.is_autosave', false);
 
-    // the handler descriptor
+    // the presentation: by document type, not by a file handler
     $this->getJson($nodeBase.'/handler')
         ->assertOk()
-        ->assertJsonPath('data.id', 'vaulter/tiptap')
+        ->assertJsonPath('data.id', null)
+        ->assertJsonPath('data.document_type', 'vaulter/rich-text')
+        ->assertJsonPath('data.type_available', true)
+        ->assertJsonPath('data.ui.key', 'vaulter/tiptap')
         ->assertJsonPath('data.capabilities.editable', true);
 
     // export to html + markdown

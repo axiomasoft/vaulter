@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Vaulter\Documents\Enums\Documents\DocumentType;
+use Vaulter\Documents\Content\TipTap\TipTapContent;
+use Vaulter\Documents\Content\TipTap\TipTapSchema;
 use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
-use Vaulter\Documents\ValueObjects\TipTapContent;
 
 it('accepts a valid TipTap document', function (): void {
     $content = TipTapContent::fromArray(['type' => 'doc', 'content' => []]);
@@ -84,17 +84,16 @@ it('accepts the full allowed node/mark set', function (): void {
     expect($content)->toBeInstanceOf(TipTapContent::class);
 });
 
-// ─── R-01 (Blocker) — allow-list ⇄ #[TiptapExtensions]: контракт, не список ──
+// ─── R-01 (Blocker) — allow-list ⇄ пресет редактора: контракт, не список ──
 
 /*
- * Норма — не литеральный перечень узлов, а КЛАСС: пакет сам объявляет редактору набор
- * extensions через #[TiptapExtensions] на DocumentType. До фикса P0.1 отвергал image,
- * table и underline — узлы, которые пакет САМ отдаёт тулбару, — и документ было НЕВОЗМОЖНО
- * СОХРАНИТЬ. Тест обходит DocumentType::cases() и требует, чтобы характерный узел/марка
- * КАЖДОГО объявленного extension принимались store-time. Добавят extension в enum, забыв
- * про allow-list, — тест покраснеет здесь, а не в проде.
+ * Норма — не литеральный перечень узлов, а КЛАСС: каждый TipTap-тип документа отдаёт
+ * редактору пресет (viewer vaulter/tiptap, props.preset), и схема типа обязана принимать
+ * характерный узел/марку КАЖДОГО extension этого пресета. До фикса P0.1 allow-list отвергал
+ * image, table и underline — узлы, которые пакет САМ отдаёт тулбару, — и документ было
+ * НЕВОЗМОЖНО СОХРАНИТЬ. Добавят extension в пресет, забыв про схему, — тест покраснеет здесь.
  */
-it('store-time allow-list принимает характерный узел КАЖДОГО extension из #[TiptapExtensions], R-01', function (): void {
+it('схема каждого пресета принимает характерный узел КАЖДОГО его extension, R-01', function (TipTapSchema $schema, array $extensions): void {
     // Характерный узел/марка на extension: то, ради чего его подключают.
     $probes = [
         'StarterKit' => ['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'x']]],
@@ -106,33 +105,39 @@ it('store-time allow-list принимает характерный узел К�
             ['type' => 'text', 'text' => 'x', 'marks' => [['type' => 'link', 'attrs' => ['href' => 'https://x.test']]]],
         ]],
         'CodeBlock' => ['type' => 'codeBlock', 'attrs' => ['language' => 'php'], 'content' => [['type' => 'text', 'text' => 'x']]],
-        // Не производит собственных узлов (плейсхолдер пустого документа) — проверять нечего.
-        'Placeholder' => null,
     ];
 
-    $checked = 0;
-
-    foreach (DocumentType::cases() as $type) {
-        foreach ($type->tiptapExtensions() as $extension) {
-            expect(array_key_exists($extension, $probes))->toBeTrue(
-                "DocumentType::{$type->name} объявляет extension [{$extension}], но тест не знает его характерный узел — ".
-                'допишите пробу И убедитесь, что allow-list TipTapContent его принимает (D27).',
-            );
-
-            $probe = $probes[$extension];
-
-            if ($probe === null) {
-                continue;
-            }
-
-            expect(fn () => TipTapContent::fromArray(['type' => 'doc', 'content' => [$probe]]))
-                ->not->toThrow(InvalidDocumentContentException::class);
-
-            $checked++;
-        }
+    foreach ($extensions as $extension) {
+        expect(fn () => TipTapContent::fromArray(['type' => 'doc', 'content' => [$probes[$extension]]], $schema))
+            ->not->toThrow(InvalidDocumentContentException::class);
     }
+})->with([
+    'rich-text' => [fn (): TipTapSchema => TipTapSchema::richText(), ['StarterKit', 'Image', 'Table', 'Link', 'CodeBlock']],
+    'markdown' => [fn (): TipTapSchema => TipTapSchema::markdown(), ['StarterKit', 'Link', 'CodeBlock']],
+]);
 
-    expect($checked)->toBeGreaterThan(0);
+it('сообщает о потере при чтении: lossless только когда ничего не выброшено', function (): void {
+    [, $kept] = TipTapContent::decayReporting(['type' => 'doc', 'content' => [
+        ['type' => 'paragraph', 'attrs' => [], 'content' => [['type' => 'text']]],
+    ]]);
+    [$decayed, $lost] = TipTapContent::decayReporting(['type' => 'doc', 'content' => [
+        ['type' => 'paragraph'],
+        ['type' => 'acmeWidget'],
+    ]]);
+    [, $lostMark] = TipTapContent::decayReporting(['type' => 'doc', 'content' => [
+        ['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'x', 'marks' => [['type' => 'acmeMark']]]]],
+    ]]);
+    [, $lostAttribute] = TipTapContent::decayReporting(['type' => 'doc', 'content' => [
+        ['type' => 'heading', 'attrs' => ['level' => 1, 'acme' => true]],
+    ]]);
+    [, $notADoc] = TipTapContent::decayReporting(['type' => 'paragraph']);
+
+    expect($kept)->toBeTrue()
+        ->and($lost)->toBeFalse()
+        ->and(array_column($decayed->toArray()['content'], 'type'))->toBe(['paragraph'])
+        ->and($lostMark)->toBeFalse()
+        ->and($lostAttribute)->toBeFalse()
+        ->and($notADoc)->toBeFalse();
 });
 
 /*

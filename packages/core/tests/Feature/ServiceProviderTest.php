@@ -8,7 +8,7 @@ use Vaulter\VaulterManager;
 
 it('merges the vaulter config', function (): void {
     expect(config('vaulter.routes.prefix'))->toBe('api/vaulter')
-        ->and(config('vaulter.enabled_document_types'))->toContain('richtext');
+        ->and(config()->has('vaulter.enabled_document_types'))->toBeFalse();
 });
 
 it('binds the manager as a singleton', function (): void {

@@ -4,26 +4,22 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Http\Requests;
 
-use Vaulter\Contracts\Handlers\DocumentContent;
-use Vaulter\Documents\ValueObjects\OpaqueDocumentContent;
-use Vaulter\Documents\ValueObjects\TipTapContent;
-use Vaulter\Enums\Handlers\Capability;
-use Vaulter\Handlers\FileDescriptorFactory;
-use Vaulter\Handlers\FileHandlerRegistry;
+use Vaulter\Documents\Content\TipTap\TipTapCodec;
+use Vaulter\Documents\Models\Documents\Document;
+use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Http\Requests\VaulterFormRequest;
 use Vaulter\Models\Drive\Node;
 
 /**
- * Validates a document-content autosave PATCH (§2.5 / M4a). The content SHAPE follows
- * the node's resolved document handler: a RICH-TEXT handler (the default) requires a
- * TipTap doc ({"type":"doc"}); a non-rich-text handler (e.g. the spreadsheet
- * {@see UniverHandler}) accepts an opaque JSON snapshot
- * the core stores verbatim. yjs_state is the optional base64-encoded binary Yjs CRDT
- * update (the M4b realtime source of truth) — decoded back to raw bytes here.
+ * Validates a document-content autosave PATCH. The content is decoded by the
+ * document's type in DocumentOperations; this request only pins the TipTap
+ * {"type":"doc"} root for a TipTap-based type, so the 0.x validation error keeps its
+ * field. yjs_state is the optional base64-encoded binary Yjs update — decoded back to
+ * raw bytes here.
  */
 final class UpdateDocumentContentRequest extends VaulterFormRequest
 {
-    private ?bool $richText = null;
+    private ?bool $tipTap = null;
 
     /**
      * @return array<string, mixed>
@@ -35,9 +31,7 @@ final class UpdateDocumentContentRequest extends VaulterFormRequest
             'yjs_state' => ['nullable', 'string'],
         ];
 
-        // Only a rich-text handler pins the TipTap {"type":"doc"} shape; a non-rich-text
-        // handler's content is opaque and validated only as a JSON object.
-        if ($this->isRichText()) {
+        if ($this->isTipTap()) {
             $rules['content.type'] = ['required', 'string', 'in:doc'];
         }
 
@@ -45,16 +39,13 @@ final class UpdateDocumentContentRequest extends VaulterFormRequest
     }
 
     /**
-     * The typed content payload for the resolved handler — a validated TipTap doc for a
-     * rich-text handler, or an opaque snapshot stored verbatim otherwise.
+     * The raw content; the document's type decodes it.
+     *
+     * @return array<string, mixed>
      */
-    public function content(): DocumentContent
+    public function content(): array
     {
-        $raw = $this->arrayInput('content');
-
-        return $this->isRichText()
-            ? TipTapContent::fromArray($raw)
-            : OpaqueDocumentContent::fromArray($raw);
+        return $this->arrayInput('content');
     }
 
     /**
@@ -73,27 +64,16 @@ final class UpdateDocumentContentRequest extends VaulterFormRequest
         return $decoded === false ? null : $decoded;
     }
 
-    /**
-     * Whether the route node's editable content is rich text (TipTap). Resolves the
-     * node's handler and reads its capability; defaults to false (kind-neutral — no
-     * claim without a handler) when no node is bound. Memoised — the registry itself
-     * also caches the resolution.
-     */
-    private function isRichText(): bool
+    private function isTipTap(): bool
     {
-        if ($this->richText !== null) {
-            return $this->richText;
+        if ($this->tipTap !== null) {
+            return $this->tipTap;
         }
 
         $node = $this->route('node');
+        $type = $node instanceof Node ? Document::query()->where('node_id', $node->getKey())->value('type') : null;
 
-        if (!$node instanceof Node) {
-            return $this->richText = false;
-        }
-
-        $descriptor = app(FileDescriptorFactory::class)->forNode($node);
-        $handler = app(FileHandlerRegistry::class)->resolve($descriptor, Capability::Edit);
-
-        return $this->richText = $handler->capabilities($descriptor)->richText;
+        return $this->tipTap = is_string($type)
+            && app(DocumentTypeRegistry::class)->find($type)?->codec() instanceof TipTapCodec;
     }
 }

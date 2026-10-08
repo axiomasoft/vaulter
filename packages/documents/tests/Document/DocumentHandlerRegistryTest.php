@@ -3,8 +3,6 @@
 declare(strict_types=1);
 
 use Vaulter\Contracts\Handlers\FileHandler;
-use Vaulter\Documents\Engines\Handlers\TipTapHandler;
-use Vaulter\Documents\Engines\Handlers\UniverHandler;
 use Vaulter\Enums\Handlers\Capability;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Handlers\Builtin\DownloadOnlyHandler;
@@ -23,18 +21,24 @@ beforeEach(function (): void {
     $this->registry = app(FileHandlerRegistry::class);
 });
 
-it('routes a docx-like file to the editable TipTapHandler', function (): void {
-    $file = FileDescriptor::make(
-        nodeId: 1,
-        filename: 'report.docx',
-        detectedMime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    );
+it('never declares an office or markdown FILE editable or collaborative (V34)', function (string $filename, string $mime): void {
+    // A file is not a document: until a file → document import exists, .docx/.md/.xlsx
+    // are previewed or downloaded like any other file.
+    $file = FileDescriptor::make(nodeId: 1, filename: $filename, detectedMime: $mime);
 
-    $handler = $this->registry->resolve($file, Capability::Edit);
+    $handler = $this->registry->resolve($file, Capability::Download);
+    $capabilities = $handler->capabilities($file);
 
-    expect($handler->key())->toBe('vaulter/tiptap')
-        ->and($handler->capabilities($file)->editable)->toBeTrue();
-});
+    expect($handler->key())->toBeIn(['vaulter/preview', 'vaulter/download'])
+        ->and($capabilities->editable)->toBeFalse()
+        ->and($capabilities->collaborative)->toBeFalse()
+        ->and($capabilities->toArray())->not->toHaveKey('rich_text');
+})->with([
+    'docx' => ['report.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+    'doc' => ['old.doc', 'application/msword'],
+    'md' => ['notes.md', 'text/markdown'],
+    'xlsx' => ['budget.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+]);
 
 it('routes a pdf to the previewable PreviewHandler', function (): void {
     $file = FileDescriptor::make(nodeId: 1, filename: 'scan.pdf', detectedMime: 'application/pdf');
@@ -112,27 +116,17 @@ it('resolves the custom CAD handler by EXTENSION when the mime is unknown', func
 });
 
 it('sorts matching handlers by priority (the more specific handler beats DownloadOnly)', function (): void {
-    config()->set('vaulter.features.spreadsheets', true);
-    app()->forgetInstance(FileHandlerRegistry::class);
+    $file = FileDescriptor::make(nodeId: 1, filename: 'assembly.dxf', detectedMime: 'application/acad');
 
-    // With spreadsheets ON, xlsx resolves to Univer (priority 90) over DownloadOnly.
-    $file = FileDescriptor::make(
-        nodeId: 1,
-        filename: 'budget.xlsx',
-        detectedMime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    );
+    expect($this->registry->resolve($file, Capability::Download)->key())->toBe('vaulter/download');
 
-    // UniverHandler is only tagged when the feature is on; register it the same way
-    // the provider would so the resolution exercises the priority sort.
-    app(FileHandlerRegistry::class)->register(UniverHandler::class);
+    app(FileHandlerRegistry::class)->register(CadHandler::class);
 
-    expect(app(FileHandlerRegistry::class)->resolve($file, Capability::Edit)->key())->toBe('vaulter/univer');
+    expect(app(FileHandlerRegistry::class)->resolve($file, Capability::Download)->key())->toBe('test/cad');
 });
 
 it('keeps the built-in handlers final and config-driven (cache-safe)', function (): void {
-    expect(TipTapHandler::class)->toBeString()
-        ->and(new TipTapHandler)->toBeInstanceOf(FileHandler::class)
-        ->and(new PreviewHandler)->toBeInstanceOf(FileHandler::class)
+    expect(new PreviewHandler)->toBeInstanceOf(FileHandler::class)
         ->and(new DownloadOnlyHandler)->toBeInstanceOf(FileHandler::class);
 });
 
@@ -175,6 +169,6 @@ final class CadHandler implements FileHandler
 
     public function viewer(FileDescriptor $file): ViewerDescriptor
     {
-        return new ViewerDescriptor(key: 'CadViewer', route: 'cad.show');
+        return new ViewerDescriptor(key: 'test/cad-viewer');
     }
 }

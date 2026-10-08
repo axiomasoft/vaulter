@@ -127,9 +127,11 @@ Documents::comments($drive)->add($node->id, new AddCommentInput('Looks good', an
 ```
 
 `DocumentSnapshot` несёт `nodeId`, `documentId`, `type`, `schemaVersion`, `typeAvailable`,
-`editable` (false для исторической ревизии или недоступного типа), `epoch`, `stateVersion`,
+`editable` (false для исторической ревизии, неустановленного типа или содержимого, прочитанного
+типом лишь частично — см. [Типы документов](./document-types.md)), `epoch`, `stateVersion`,
 `dirty` (рабочее состояние опережает чекпоинт-голову), `headRevisionId`, `content`
-(`DocumentContent`: `TipTapContent` для rich text, иначе `OpaqueDocumentContent`), `revision`
+(`DocumentContent` типа: `TipTapContent` для rich text и markdown, `OpaqueContent` для
+spreadsheet или неустановленного типа), `revision`
 (голова или запрошенная ревизия), `contentHash`, `yjsStateSize`, `updatedAt` и `updatedBy`. Id —
 строки. Actions за этими методами — внутренние.
 
@@ -192,19 +194,19 @@ const node = await client.documentNodes.createNode(storageId, {
 Что происходит:
 
 - Первым отрабатывает страж уникальности среди соседей — коллизия имён бросает
-  `NodeNameConflictException` или, с `OnNameConflict::Rename`, выбирает `Name (2)`. Неизвестный
-  или выключенный тип бросает `UnknownDocumentTypeException`.
+  `NodeNameConflictException` или, с `OnNameConflict::Rename`, выбирает `Name (2)`.
+  Незарегистрированный тип бросает `UnknownDocumentTypeException`; содержимое декодирует кодек типа.
 - Одна транзакция создаёт узел и агрегат, пишет рабочее состояние (`state_version = 1`) и
   снимает чекпоинт **#1** (`is_autosave = false`), затем после коммита выбрасывает
   `DocumentCreated`.
 - Узел штампуется документным mime Vaulter
-  (`application/vnd.vaulter.document+json`), поэтому он всегда маршрутизируется к обработчику
-  редактора TipTap независимо от любого расширения в его имени. См.
-  [Document Handlers](./document-handlers.md).
+  (`application/vnd.vaulter.document+json`); он представляется своим
+  [типом документа](./document-types.md), а не обработчиком файла.
 
-Запрос валидирует `name`, опциональный `parent_id`, опциональный `format` (должен быть
-значением [`DocumentType`](./document-handlers.md#documenttype): `richtext`, `table`, `markdown`,
-`template`) и опциональный `content`, у которого `content.type` должен быть `doc`. Актору нужно
+Запрос валидирует `name`, опциональный `parent_id`, тип документа — `type` (`vendor/name`) или
+поля 0.x `format` (`richtext`, `table`, `template` → `vaulter/rich-text`, `markdown` →
+`vaulter/markdown`) и `mime` (mime xlsx → `vaulter/spreadsheet`) — и опциональный `content`, у
+которого `content.type` должен быть `doc` для типа на TipTap. Актору нужно
 право `Create` на целевой точке (и гейт создания в воркспейсе драйвера прав), а профиль диска
 должен разрешать тип документа.
 

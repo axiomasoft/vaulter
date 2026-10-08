@@ -3,9 +3,12 @@
 declare(strict_types=1);
 
 use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Documents\Engines\Handlers\UniverHandler;
+use Vaulter\Documents\Exceptions\UnsupportedDocumentContentException;
 use Vaulter\Documents\Export\NodeExportService;
-use Vaulter\Exceptions\Documents\UnsupportedDocumentContentException;
+use Vaulter\Documents\Types\DocumentTypeRegistry;
+use Vaulter\Documents\Types\MarkdownDocumentType;
+use Vaulter\Documents\Types\RichTextDocumentType;
+use Vaulter\Documents\Types\SpreadsheetDocumentType;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Operations\OperationContext;
@@ -15,14 +18,21 @@ use Vaulter\Tests\Fixtures\TestUser;
 /*
  * VLT-CANON P0.5 — the export read path (`NodeExportService::contentOf()`) is now
  * kind-neutral (closing the P0.2/P0.3/P0.4 Pending Work item): a non-rich-text
- * node's head resolves as its own OpaqueDocumentContent shape instead of decaying
+ * node's head resolves as its own OpaqueContent shape instead of decaying
  * to an EMPTY TipTap doc. The Html/Markdown exporters' existing narrowing guard
  * ({@see UnsupportedDocumentContentException}) now actually reaches a non-rich-text
  * node, refusing the export instead of silently rendering a blank document.
  */
 beforeEach(function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
-    Vaulter::handlers()->register(UniverHandler::class);
+
+    // The host lists the spreadsheet type in vaulter-documents.types.
+    $types = new DocumentTypeRegistry(app());
+    foreach ([RichTextDocumentType::class, MarkdownDocumentType::class, SpreadsheetDocumentType::class] as $type) {
+        $types->register($type);
+    }
+    $types->freeze();
+    app()->instance(DocumentTypeRegistry::class, $types);
 });
 
 function univerStorage(): Drive

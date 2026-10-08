@@ -2,16 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Documents\Support\TipTap;
+namespace Vaulter\Documents\Content\TipTap;
 
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
 use Vaulter\Documents\Enums\Export\ExportFormat;
-use Vaulter\Documents\ValueObjects\LinkSchemeValidator;
-use Vaulter\Documents\ValueObjects\TipTapContent;
 
 /**
  * Renders a TipTap JSON document to HTML or Markdown. Covers the node/mark set the package
- * offers the editor through `#[TiptapExtensions]` (headings, lists, blockquote, code blocks,
+ * offers the editor in its rich-text schema ({@see TipTapSchema}: headings, lists, blockquote, code blocks,
  * images, tables; bold/italic/strike/code/underline/link marks); unknown nodes fall back to
  * rendering their children.
  *

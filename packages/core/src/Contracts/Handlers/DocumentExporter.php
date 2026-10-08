@@ -10,8 +10,8 @@ namespace Vaulter\Contracts\Handlers;
  * exporters ship with the package; register your own (PDF, DOCX, …) via
  * configuration key vaulter-documents.exporters or Vaulter::registerExporter().
  *
- * The contract does not assume TipTap — an exporter narrows to the concrete
- * content shape it understands (e.g. TipTapContent) internally, the same way a
+ * The contract does not assume a content shape — an exporter narrows to the
+ * concrete content class it understands internally, the same way a
  * {@see FileHandler} narrows a descriptor.
  *
  * Binary formats should return an encoded string (e.g. base64) and advertise the

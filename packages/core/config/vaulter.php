@@ -59,7 +59,6 @@ return [
         'webhooks' => true,
         'share_links' => false,
         'public_listing' => false,
-        'spreadsheets' => false, // Transitional core key until P4.3.
     ],
     'access' => [
         'permission_driver' => env('VAULTER_PERMISSION_DRIVER', 'database'),
@@ -177,5 +176,4 @@ return [
         'webhook_endpoint' => WebhookEndpoint::class,
         'webhook_delivery' => WebhookDelivery::class,
     ],
-    'enabled_document_types' => ['richtext', 'table', 'markdown', 'template'],
 ];

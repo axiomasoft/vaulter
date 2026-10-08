@@ -1,6 +1,11 @@
 <?php
 
 declare(strict_types=1);
+use Vaulter\Documents\Content\OpaqueContent;
+use Vaulter\Documents\Content\OpaqueJsonCodec;
+use Vaulter\Documents\Content\TipTap\TipTapCodec;
+use Vaulter\Documents\Content\TipTap\TipTapContent;
+use Vaulter\Documents\Content\TipTap\TipTapSchema;
 use Vaulter\Documents\Data\Collaboration\CollaborationSession;
 use Vaulter\Documents\Data\Comments\AddCommentInput;
 use Vaulter\Documents\Data\Snapshots\CommentSnapshot;
@@ -10,6 +15,12 @@ use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
+use Vaulter\Documents\Presentation\DocumentPresenter;
+use Vaulter\Documents\Testing\Contracts\DocumentTypeContractTests;
+use Vaulter\Documents\Types\DocumentTypeRegistry;
+use Vaulter\Documents\Types\MarkdownDocumentType;
+use Vaulter\Documents\Types\RichTextDocumentType;
+use Vaulter\Documents\Types\SpreadsheetDocumentType;
 use Vaulter\Documents\ValueObjects\DocumentExport;
 
 /**
@@ -294,6 +305,24 @@ test('vaulter-documents public API surface matches the frozen golden (VLT-REL P2
         DocumentExport::class,
     ] as $class) {
         $blocks[] = $withProperties($class);
+    }
+
+    // PLAN2.P4.3: the document type registry, the built-in types and the content
+    // building blocks a host's own type is made of; the presenter and the contract test.
+    foreach ([
+        DocumentTypeRegistry::class,
+        RichTextDocumentType::class,
+        MarkdownDocumentType::class,
+        SpreadsheetDocumentType::class,
+        OpaqueContent::class,
+        OpaqueJsonCodec::class,
+        TipTapContent::class,
+        TipTapCodec::class,
+        TipTapSchema::class,
+        DocumentPresenter::class,
+        DocumentTypeContractTests::class,
+    ] as $class) {
+        $blocks[] = vaulterSnapshotInterface($class);
     }
 
     vaulterSnapshotAssert(implode("\n\n", $blocks)."\n", __DIR__.'/__snapshots__/public-api.txt');

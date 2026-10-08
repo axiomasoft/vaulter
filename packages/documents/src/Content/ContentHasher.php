@@ -2,20 +2,30 @@
 
 declare(strict_types=1);
 
-namespace Vaulter\Documents\Support;
-
-use Vaulter\Documents\ValueObjects\TipTapContent;
+namespace Vaulter\Documents\Content;
 
 /**
- * The content_hash a document version carries (§2.5) — a deterministic sha256 over
- * the canonical TipTap JSON, used to dedup identical consecutive snapshots (an
- * autosave that did not actually change the content can skip a new row). A pure,
- * stateless helper (technical axis — no domain knowledge).
+ * The content_hash and content_size every document content carries: sha256 and byte
+ * length of the JSON encoding of the payload. One definition for all codecs, so the
+ * dedup of an unchanged autosave compares like with like whatever the type.
  */
-final class DocumentContentHasher
+final class ContentHasher
 {
-    public static function hash(TipTapContent $content): string
+    /** @param array<array-key, mixed> $content */
+    public static function hash(array $content): string
     {
-        return hash('sha256', (string) json_encode($content->toArray()));
+        return hash('sha256', self::encode($content));
+    }
+
+    /** @param array<array-key, mixed> $content */
+    public static function size(array $content): int
+    {
+        return strlen(self::encode($content));
+    }
+
+    /** @param array<array-key, mixed> $content */
+    private static function encode(array $content): string
+    {
+        return (string) json_encode($content);
     }
 }

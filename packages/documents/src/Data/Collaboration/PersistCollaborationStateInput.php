@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Data\Collaboration;
 
-use Vaulter\Documents\ValueObjects\TipTapContent;
+use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Models\Drive\Node;
 
 /**

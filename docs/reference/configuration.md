@@ -84,7 +84,6 @@ of these per-panel.
 | `features.grants` | `true` | Per-node grants (the ACL) |
 | `features.activity` | `true` | The activity log |
 | `features.share_links` | `false` | Bearer node share links |
-| `features.spreadsheets` | `false` | The feature-flagged `UniverHandler` (xlsx editing) |
 | `features.public_listing` | `false` | Public listing |
 | `features.webhooks` | `true` | The outbox subscriber + endpoint routes |
 
@@ -93,17 +92,15 @@ of these per-panel.
 A list of `FileHandler` FQCNs, resolved by the core-owned `Vaulter\Handlers\FileHandlerRegistry`
 by mime → extension → capability → priority, falling back to the `DownloadOnlyHandler`
 null-object. The two baseline entries are core's OWN default (VLT-CANON P0.4/D10 — resolved even
-without `vaulter-documents` installed); `vaulter-documents` registers `TipTapHandler` through `vaulter.file_handlers`.
+without `vaulter-documents` installed). File handlers serve files only: document nodes are
+presented by their [document type](/guide/document-types).
 
 | Provider-tagged built-ins | Owner |
 |---|---|
 | `Vaulter\Handlers\Builtin\PreviewHandler` | core |
 | `Vaulter\Handlers\Builtin\DownloadOnlyHandler` | core |
-| `Vaulter\Documents\Engines\Handlers\TipTapHandler` | vaulter-documents |
 
-`UniverHandler` (xlsx) is appended by the service provider **only** when
-`features.spreadsheets` is on. Add a new format with one class + an entry here (or
-`Vaulter::handlers()->register()`).
+Add a new file format with one class + an entry here (or `Vaulter::handlers()->register()`).
 
 ## Tenancy — `tenancy.*`
 
@@ -323,12 +320,18 @@ The `features.webhooks` flag gates the outbox subscriber and endpoint routes; ta
 
 See [Usage → Versions](/guide/documents).
 
-## Documents — `enabled_document_types`, `vaulter-documents.content.max_size_kb`
+## Documents — `vaulter-documents.types`, `default_type`, `content.max_size_kb`
 
 | Key | Default |
 |---|---|
-| `enabled_document_types` | `['richtext', 'table', 'markdown', 'template']` |
-| `vaulter-documents.content.max_size_kb` | `5120` |
+| `vaulter-documents.types` | `[RichTextDocumentType::class, MarkdownDocumentType::class]` — the registered [document types](/guide/document-types); add `SpreadsheetDocumentType::class` or your own |
+| `vaulter-documents.default_type` | `'vaulter/rich-text'` — the type `create()` uses when none is named; must be registered |
+| `vaulter-documents.content.max_size_kb` | `5120` — the limit of a codec whose `maxSizeBytes()` is `null` |
+
+The 0.2 keys are normalized with a deprecation: `vaulter.enabled_document_types`
+(`richtext`/`table`/`template` → `RichTextDocumentType`, `markdown` → `MarkdownDocumentType`)
+and `vaulter.features.spreadsheets = true` (adds `SpreadsheetDocumentType`) become
+`vaulter-documents.types`.
 
 ## Export formats — `vaulter-documents.exporters`
 
@@ -402,4 +405,4 @@ See [Collaboration → Overview](/guide/collaboration) and
 Documents are enabled when their package is installed; blobs and file revisions are always enabled.
 Comments now default to true; a legacy `features.comments = false` is preserved by normalization.
 Exporters remain a format → FQCN map. `enabled_document_types` and `features.spreadsheets`
-remain in core for this transition. See the [migration map](/guide/configuration#migrating-published-0-2-configuration).
+became `vaulter-documents.types`. See the [migration map](/guide/configuration#migrating-published-0-2-configuration).

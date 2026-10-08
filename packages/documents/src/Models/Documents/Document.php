@@ -13,10 +13,10 @@ use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Documents\Casts\BinaryString;
 use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Documents\Content\OpaqueContent;
+use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Support\DocumentTypeKey;
-use Vaulter\Documents\ValueObjects\OpaqueDocumentContent;
-use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
@@ -137,11 +137,11 @@ class Document extends Model
     }
 
     /** The working state as an opaque snapshot (a non-rich-text type, e.g. a workbook). */
-    public function opaqueContent(): OpaqueDocumentContent
+    public function opaqueContent(): OpaqueContent
     {
         $content = $this->content;
 
-        return OpaqueDocumentContent::fromArray(is_array($content) ? $content : []);
+        return OpaqueContent::fromArray(is_array($content) ? $content : []);
     }
 
     /**

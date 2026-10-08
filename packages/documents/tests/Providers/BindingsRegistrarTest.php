@@ -9,11 +9,10 @@ use Illuminate\Foundation\Application;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
 use Vaulter\Configuration\ConfigNormalizer;
 use Vaulter\Documents\Contracts\ExportFilenameResolver;
-use Vaulter\Documents\Engines\Handlers\TipTapHandler;
-use Vaulter\Documents\Engines\Handlers\UniverHandler;
 use Vaulter\Documents\Export\DefaultExportFilenameResolver;
 use Vaulter\Documents\Export\MarkdownExporter;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
+use Vaulter\Documents\Presentation\DocumentPresenter;
 use Vaulter\Documents\Providers\BindingsRegistrar;
 
 it('normalizes module defaults in a fresh container while retaining host overrides', function (): void {
@@ -54,20 +53,16 @@ it('preserves cached configuration without adding defaults', function (): void {
     expect($config->all())->toBe($values);
 });
 
-it('tags the spreadsheet handler only for the enabled feature', function (mixed $enabled, bool $tagged): void {
+it('tags the document presenter and no file handler (PLAN2.P4.3)', function (): void {
     $app = new Application;
     Container::setInstance($this->app);
-    $app->instance('config', new Repository(['vaulter' => ['features' => ['spreadsheets' => $enabled]]]));
+    $app->instance('config', new Repository);
 
     (new BindingsRegistrar($app))->register();
 
-    $handlers = iterator_to_array($app->tagged('vaulter.file_handlers'));
-    expect($handlers)->toHaveCount($tagged ? 2 : 1);
-    expect($handlers[0])->toBeInstanceOf(TipTapHandler::class);
-    if ($tagged) {
-        expect($handlers[1])->toBeInstanceOf(UniverHandler::class);
-    }
-})->with([[true, true], [false, false], ['true', false]]);
+    expect(iterator_to_array($app->tagged('vaulter.file_handlers')))->toBe([])
+        ->and(iterator_to_array($app->tagged('vaulter.kind_presenters'))[0])->toBeInstanceOf(DocumentPresenter::class);
+});
 
 it('binds the filename seam and shares the sanitizer with the existing scheme allow-list', function (): void {
     $app = new Application;

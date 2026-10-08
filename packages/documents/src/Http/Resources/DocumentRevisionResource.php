@@ -7,12 +7,12 @@ namespace Vaulter\Documents\Http\Resources;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Vaulter\Contracts\Handlers\DocumentContent;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
+use Vaulter\Documents\Content\TipTap\TipTapContent;
+use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot;
 use Vaulter\Documents\Data\Snapshots\DocumentSnapshot;
 use Vaulter\Documents\Support\DocumentTypeKey;
-use Vaulter\Documents\ValueObjects\TipTapContent;
 
 /**
  * The read shape of a document checkpoint (§2.5 / M4a) — or of a document's working

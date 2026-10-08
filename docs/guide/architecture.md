@@ -137,7 +137,7 @@ Drive and Documents each ship as their own package:
 | Package | Namespace | Adds |
 |---|---|---|
 | `axioma-studio/vaulter-drive` | `Vaulter\Drive\` | `DriveHandle`, `DriveProvisioner`, the Drive Actions (`CreateFolderAction`, `IngestFileAction`, `MoveNodeAction`, …) and their Events. |
-| `axioma-studio/vaulter-documents` | `Vaulter\Documents\` | Document-node Actions/Events/Models, the TipTap/Univer format drivers (added to core's registry — the engine itself is core-owned since P0.4), node export, the node-collaboration session service, the TipTap content shapes (`ValueObjects\{TipTapContent,OpaqueDocumentContent,LinkSchemeValidator}`, `Exceptions\InvalidDocumentContentException`). |
+| `axioma-studio/vaulter-documents` | `Vaulter\Documents\` | Document-node Actions/Events/Models, the document type registry (`Types\*`: rich text, markdown, spreadsheet) and the document presenter (a core `KindPresenter`), node export, the node-collaboration session service, the content shapes (`Content\OpaqueContent`, `Content\TipTap\{TipTapContent,TipTapCodec,TipTapSchema,LinkSchemeValidator}`, `Exceptions\InvalidDocumentContentException`). |
 | `axioma-studio/vaulter-media` | `Vaulter\Media\` | The CAS engine: `Cas\{BlobStore,Sha256ContentStore,FlysystemStorageDriver,BlobGarbageCollector,BlobReconciler,StagedTempObject}`. |
 | `axioma-studio/vaulter-filament` | `Vaulter\Filament\` | The Filament 5 admin plugin. |
 | `axioma-studio/vaulter-azgard` | `Vaulter\Azgard\` | The AzGuard permission driver, guard contract, permission map, real adapter and test fake. |
@@ -173,7 +173,7 @@ only a pre-resolved storage and upload-source normalisation (a PSR stream, `SplF
 `UploadedFile`, an open resource, or a raw string all normalise to a seekable stream).
 
 ::: details VaulterManager
-`for()`, `forStorage()`, `profiles()`, `registerDocumentType()`, `documentTypes()`,
+`for()`, `forStorage()`, `profiles()`,
 `handlers()`, `registerExporter()`, `exporter()`, `exporterFormats()`.
 [Facade and manager](/reference/facade).
 :::

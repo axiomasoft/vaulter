@@ -139,7 +139,7 @@ Vaulter никогда не ссылается на конкретный кла�
 | Пакет | Namespace | Добавляет |
 |---|---|---|
 | `axioma-studio/vaulter-drive` | `Vaulter\Drive\` | `DriveHandle`, `DriveProvisioner`, Drive Actions (`CreateFolderAction`, `IngestFileAction`, `MoveNodeAction`, …) и их события. |
-| `axioma-studio/vaulter-documents` | `Vaulter\Documents\` | Actions/Events/модели документных узлов, драйверы форматов TipTap/Univer (добавляются в реестр core — сам движок принадлежит core с P0.4), экспорт узлов, сервис сессий совместного редактирования узлов, формы TipTap-контента (`ValueObjects\{TipTapContent,OpaqueDocumentContent,LinkSchemeValidator}`, `Exceptions\InvalidDocumentContentException`). |
+| `axioma-studio/vaulter-documents` | `Vaulter\Documents\` | Actions/Events/модели документных узлов, драйверы форматов TipTap/Univer (добавляются в реестр core — сам движок принадлежит core с P0.4), экспорт узлов, сервис сессий совместного редактирования узлов, формы TipTap-контента (`ValueObjects\{TipTapContent,OpaqueContent,LinkSchemeValidator}`, `Exceptions\InvalidDocumentContentException`). |
 | `axioma-studio/vaulter-media` | `Vaulter\Media\` | Движок CAS: `Cas\{BlobStore,Sha256ContentStore,FlysystemStorageDriver,BlobGarbageCollector,BlobReconciler,StagedTempObject}`. |
 | `axioma-studio/vaulter-filament` | `Vaulter\Filament\` | Админ-плагин для Filament 5. |
 | `axioma-studio/vaulter-azgard` | `Vaulter\Azgard\` | Драйвер прав, контракт guard, карта разрешений, реальный адаптер и тестовый фейк AzGuard. |

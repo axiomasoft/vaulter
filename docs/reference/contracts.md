@@ -443,7 +443,7 @@ See [Recipes → Custom export](/guide/recipes).
 The content payload a document version stores. A handler decides the shape: a
 rich-text handler produces a validated TipTap doc (`TipTapContent`); a non-rich-text
 handler produces an opaque JSON snapshot the core stores verbatim
-(`OpaqueDocumentContent`).
+(`OpaqueContent`).
 
 ```php
 interface DocumentContent

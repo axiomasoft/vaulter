@@ -34,11 +34,11 @@ abstract class TestCase extends OrchestraTestCase
             // seam bound — so media is a transitive test-only need too.
             VaulterDriveServiceProvider::class,
             VaulterMediaServiceProvider::class,
-            // This package binds the Documents behaviour: the TipTap/Univer format
-            // drivers (added to core's registry), the collaboration
+            // This package binds the Documents behaviour: the document type
+            // registry and the document presenter, the collaboration
             // manager/broadcast channel, the document routes and the
-            // Documents-event Activity/outbox subscribers. The registry engine
-            // itself and the NodePresenter seam are core-owned (P0.4/D10) —
+            // Documents-event Activity/outbox subscribers. The file handler
+            // registry and the NodePresenter seam are core-owned (P0.4/D10) —
             // VaulterServiceProvider (core) binds them, not this provider.
             VaulterDocumentsServiceProvider::class,
         ];

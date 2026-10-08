@@ -50,10 +50,9 @@ final class DocumentNodeController extends Controller
      */
     public function store(CreateDocumentNodeRequest $request, Drive $storage): JsonResponse
     {
-        $node = $this->operations($request, $storage)->createDocument(
+        $node = $this->operations($request, $storage)->create(
             name: $request->name(),
-            format: $request->versionFormat(),
-            mimeType: $request->nodeMimeType(),
+            type: $request->typeKey(),
             content: $request->content(),
             parent: $request->parentId(),
         );
@@ -136,8 +135,8 @@ final class DocumentNodeController extends Controller
     }
 
     /**
-     * The resolved handler descriptor (id + capabilities + ui) for a node so the
-     * client knows which editor/preview/download surface to mount (§4.5).
+     * The node's presentation (handler or document type, capabilities, viewer) so the
+     * client knows which editor/preview/download surface to mount.
      */
     public function handler(Request $request, Node $node): JsonResponse
     {
@@ -148,7 +147,7 @@ final class DocumentNodeController extends Controller
 
     /**
      * Export a document node's working state in the requested format (?format=html|
-     * markdown|…) through the handler → exporter seam.
+     * markdown|…) through the exporter registry.
      */
     public function export(Request $request, Node $node): JsonResponse
     {

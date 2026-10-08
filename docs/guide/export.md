@@ -55,7 +55,7 @@ Two ship with the package, registered in config:
 | `html` | `HtmlExporter` | `text/html` | `html` |
 | `markdown` | `MarkdownExporter` | `text/markdown` | `md` |
 
-Both delegate to `Vaulter\Documents\Support\TipTap\TipTapRenderer`, which handles the common node and mark set —
+Both delegate to `Vaulter\Documents\Content\TipTap\TipTapRenderer`, which handles the common node and mark set —
 headings, paragraphs, bullet/ordered lists, list items, blockquotes, code blocks, horizontal
 rules and hard breaks, plus the **bold / italic / strike / code / link** marks — with HTML
 output escaped (`htmlspecialchars`). Unknown nodes fall back to rendering their children, so an
@@ -135,9 +135,9 @@ namespace App\Vaulter\Exporters;
 
 use Vaulter\Contracts\Handlers\DocumentContent;
 use Vaulter\Contracts\Handlers\DocumentExporter;
-use Vaulter\Documents\Support\TipTap\TipTapRenderer;
-use Vaulter\Exceptions\Documents\UnsupportedDocumentContentException;
-use Vaulter\Documents\ValueObjects\TipTapContent;
+use Vaulter\Documents\Content\TipTap\TipTapRenderer;
+use Vaulter\Documents\Exceptions\UnsupportedDocumentContentException;
+use Vaulter\Documents\Content\TipTap\TipTapContent;
 
 final class PdfExporter implements DocumentExporter
 {
@@ -243,7 +243,7 @@ curl 'https://app.test/api/vaulter/nodes/77/export?format=pdf'
 
 - Contract — `Vaulter\Contracts\Handlers\DocumentExporter`
 - Built-ins — `Vaulter\Export\HtmlExporter`, `Vaulter\Export\MarkdownExporter`
-- Renderer — `Vaulter\Documents\Support\TipTap\TipTapRenderer` (`toHtml`, `toMarkdown`)
+- Renderer — `Vaulter\Documents\Content\TipTap\TipTapRenderer` (`toHtml`, `toMarkdown`)
 - Node export — `Vaulter\Documents\NodeExportService` (`export`, `availableFormats`)
 - Manager seam — `Vaulter\VaulterManager::registerExporter()` / `::exporter()` / `::exporterFormats()`
 - Enum — `Vaulter\Enums\Documents\ExportFormat`

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.3",
   "title": "Реестр типов документов, кодеки и безопасный fallback",
-  "status": "todo",
+  "status": "in_progress",
   "summary": "Типы документов — классы DocumentType в замороженном реестре с ключами vendor/name, кодеками и версиями схемы; неизвестный тип читается непрозрачно и только на чтение, деградированный при чтении контент не редактируется; TipTapHandler/UniverHandler/enum DocumentType удалены, .docx/.md-файлы не объявлены редактируемыми.",
   "why": "E5/N16: registerDocumentType не подключён, TipTapHandler объявляет файлы редактируемыми. D15: тип — расширяемая точка с политикой коллизий. Исследование: fallback не должен становиться lossy serializer — иначе следующий save удалит неизвестные узлы.",
   "scope": {
@@ -323,6 +323,14 @@
     "status": "not_needed",
     "notes": "Внешние факты проверены при дизайне: @plan/knowledge/P4-industry-research-2026-10-07.json; исполнителю повторный поиск не нужен"
   },
-  "result": null,
-  "updated_at": "2026-10-07T15:50:18Z"
+  "result": {
+    "started_at": "2026-10-08T16:06:41Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "session": "417b340b-409b-4255-bd7a-fc19ac290cc1"
+    }
+  },
+  "updated_at": "2026-10-08T16:06:41Z"
 }

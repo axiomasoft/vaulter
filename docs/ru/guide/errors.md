@@ -24,9 +24,36 @@
 
 ## unknown-document-type
 
-`UnknownDocumentTypeException` — переданный `type` отсутствует в
-`config('vaulter.enabled_document_types')`. Включите его или зарегистрируйте свой тип через
-`Vaulter::registerDocumentType()`.
+`UnknownDocumentTypeException` (422 `unknown_document_type`) — ни один зарегистрированный
+[тип документа](./document-types.md) не имеет переданного ключа. Добавьте его класс в
+`config('vaulter-documents.types')`, пометьте тегом `vaulter.document_types` или
+зарегистрируйте из сервис-провайдера через `Documents::types()->register()`.
+
+## document-type-unavailable
+
+`document_type_unavailable` (409) — тип документа не установлен (его расширение удалено).
+Документ по-прежнему читается как JSON, копируется, удаляется в корзину и навсегда;
+редактирование, контрольные точки, восстановление, экспорт и совместная работа требуют снова
+зарегистрировать тип. `context.type` называет отсутствующий ключ.
+
+## document-content-degraded
+
+`document_content_degraded` (409) — сохранённое содержимое содержит части, которые тип больше не
+принимает (узлы выключенного расширения редактора), или записано в более новой версии схемы, чем
+установленный тип. Оно прочитано без этих частей, и сохранение поверх удалило бы их; документ
+доступен только для чтения, пока расширение не включат снова.
+
+## registry-frozen
+
+`RegistryFrozenException` (`registry_frozen`) — тип документа зарегистрировали после загрузки
+приложения. Регистрируйте типы из сервис-провайдера (конфиг, тег контейнера или `register()` до
+окончания загрузки).
+
+## duplicate-registration
+
+`DuplicateDocumentTypeException` (`duplicate_registration`) — один ключ типа документа
+зарегистрирован дважды. Регистрируйте его один раз или подменяйте через
+`Documents::types()->replace()`.
 
 ## invalid-tiptap-content
 

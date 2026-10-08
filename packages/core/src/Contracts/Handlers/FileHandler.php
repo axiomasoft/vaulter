@@ -27,8 +27,8 @@ use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
 interface FileHandler
 {
     /**
-     * A stable, unique string id for this handler (e.g. 'vaulter/tiptap', 'vaulter/preview',
-     * 'vaulter/download', 'vaulter/univer', a host's 'cad'). Surfaced to the client so it can pick
+     * A stable, unique string id for this handler (e.g. 'vaulter/preview',
+     * 'vaulter/download', a host's 'acme/cad'). Surfaced to the client so it can pick
      * the editor/preview implementation; the registry never relies on an enum.
      */
     public function key(): string;

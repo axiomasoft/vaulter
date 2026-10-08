@@ -105,6 +105,9 @@ final class ConfigNormalizer
         if (array_key_exists('vaulter-drive', $packageDefaults)) {
             $this->normalizeUploadLimit($config, $original, $defaults);
         }
+        if (array_key_exists('vaulter-documents', $packageDefaults)) {
+            $this->normalizeDocumentTypes($config, $original, $packageDefaults);
+        }
         // The autosave debounce rewrote the head revision in place; checkpoints are
         // immutable now and taken on their own interval, so its value has no meaning
         // to carry over to checkpoint_interval_seconds. extra_data is gone (PLAN2.D41)
@@ -121,7 +124,7 @@ final class ConfigNormalizer
             }
         }
         // Preserve replacement maps/lists. Exporter formats retain their existing additive defaults.
-        $arrayKeys = ['vaulter.ids.strategies', 'vaulter.handlers', 'vaulter.enabled_document_types'];
+        $arrayKeys = ['vaulter.ids.strategies', 'vaulter.handlers', 'vaulter-documents.types'];
         foreach (self::keyMap() as $canonical) {
             if ($canonical !== 'vaulter-documents.exporters' && is_array($config->get($canonical))) {
                 $arrayKeys[] = $canonical;
@@ -222,6 +225,60 @@ final class ConfigNormalizer
             'vaulter.models.node_document_version' => 'vaulter-documents.models.document_revision',
             'vaulter-filament.resources.storage' => 'vaulter-filament.resources.drive',
         ];
+    }
+
+    /**
+     * The 0.2 list of enabled document formats and the spreadsheets flag become the
+     * registered type classes. Class names are strings here: core never loads the
+     * documents package.
+     *
+     * @param array<string, mixed>                $original
+     * @param array<string, array<string, mixed>> $packageDefaults
+     */
+    private function normalizeDocumentTypes(Repository $config, array $original, array $packageDefaults): void
+    {
+        $legacyList = Arr::has($original, 'vaulter.enabled_document_types') && !isset($this->warned['vaulter.enabled_document_types']);
+        $legacyFlag = Arr::has($original, 'vaulter.features.spreadsheets') && !isset($this->warned['vaulter.features.spreadsheets']);
+        if (!$legacyList && !$legacyFlag) {
+            return;
+        }
+
+        $canonical = 'vaulter-documents.types';
+        $default = Arr::get($packageDefaults, $canonical);
+        $current = Arr::get($original, $canonical);
+        $types = is_array($current) ? array_values($current) : (is_array($default) ? array_values($default) : []);
+
+        if ($legacyList) {
+            $map = [
+                'richtext' => 'Vaulter\\Documents\\Types\\RichTextDocumentType',
+                'table' => 'Vaulter\\Documents\\Types\\RichTextDocumentType',
+                'template' => 'Vaulter\\Documents\\Types\\RichTextDocumentType',
+                'markdown' => 'Vaulter\\Documents\\Types\\MarkdownDocumentType',
+                'univer' => 'Vaulter\\Documents\\Types\\SpreadsheetDocumentType',
+            ];
+            $legacy = Arr::get($original, 'vaulter.enabled_document_types');
+            $mapped = [];
+            foreach (is_array($legacy) ? $legacy : [] as $format) {
+                if (is_string($format) && isset($map[$format])) {
+                    $mapped[] = $map[$format];
+                }
+            }
+            $overridden = is_array($current) && $current !== $default;
+            if ($overridden && array_values(array_unique($mapped)) !== array_values(array_unique($types))) {
+                throw new InvalidConfigurationException('[Vaulter] Conflicting config keys "vaulter.enabled_document_types" and "'.$canonical.'".');
+            }
+            $types = $mapped;
+            $this->deprecate('vaulter.enabled_document_types', $canonical);
+        }
+
+        if ($legacyFlag) {
+            if (Arr::get($original, 'vaulter.features.spreadsheets') === true) {
+                $types[] = 'Vaulter\\Documents\\Types\\SpreadsheetDocumentType';
+            }
+            $this->deprecate('vaulter.features.spreadsheets', $canonical);
+        }
+
+        $config->set($canonical, array_values(array_unique($types)));
     }
 
     /** @return array<string, mixed> */

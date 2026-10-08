@@ -30,8 +30,6 @@ over the facade.
 |---|---|---|
 | `for(Model $entity, ?string $panel = null)` | `DriveHandle` | Open a Drive handle bound to a host entity's storage in a panel |
 | `forStorage(Drive $storage)` | `DriveHandle` | Open a Drive handle bound to an already-resolved storage row |
-| `registerDocumentType(string $type, array $definition)` | `void` | Register a custom document type |
-| `documentTypes()` | `array` | The registered custom document types |
 | `profiles()` | `ProfileRegistry` | Named drive profiles (`get`, `register`, `registerProvider`) |
 | `handlers()` | `FileHandlerRegistry` | The document-handler registry |
 | `registerExporter(DocumentExporter $exporter)` | `void` | Register a custom export format |
@@ -80,11 +78,11 @@ See [Drive profiles](/guide/storage-panels).
 
 ## Document types and handlers
 
-### `registerDocumentType(string $type, array $definition): void` / `documentTypes(): array`
+### Document types
 
-Register and read back custom document-type definitions (kept in-memory on the
-manager). The built-in document types are configured separately via
-`config('vaulter.enabled_document_types')`.
+Document types are not on this facade: they live in `vaulter-documents`, as
+`Documents::types()` (`Vaulter\Documents\Types\DocumentTypeRegistry`). See
+[Document Types](/guide/document-types).
 
 ### `handlers(): FileHandlerRegistry`
 

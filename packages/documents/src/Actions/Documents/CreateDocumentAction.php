@@ -8,13 +8,12 @@ use LogicException;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Content\DocumentStateWriter;
+use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
 use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Events\Documents\DocumentCreated;
 use Vaulter\Documents\Repositories\Documents\DocumentStoreRepository;
-use Vaulter\Documents\Support\DocumentTypeKey;
-use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Enums\Drive\OnNameConflict;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
@@ -40,9 +39,7 @@ use Vaulter\Support\TreeGuard;
  *
  * The node mirrors the file-node shape so the unified tree + Drive Actions (move/
  * rename/trash) apply unchanged — quota and the sibling-unique guard come for free.
- * The node carries the mime its resolved handler declares (the request resolves it):
- * the synthetic Vaulter document mime routes to the TipTap editor, while an xlsx mime
- * routes a spreadsheet node to the Univer handler — both via the same registry (§7).
+ * The aggregate stores the type key and the schema version the content was decoded in.
  *
  * Authorization is enforced upstream by DocumentOperations (create on the
  * destination, profile document types); the Action only does the row work. The actor
@@ -71,9 +68,8 @@ final readonly class CreateDocumentAction
         $parentId = $this->tree->destinationId(storage: $data->storage, into: $data->parent);
 
         // F-P1.11-05: the ADR-0004 size limit was defined but never enforced at save
-        // time — check it before the transaction, not just at the UI layer. Content
-        // is handler-agnostic (DocumentContent); the limit only applies to the
-        // TipTap shape, not an opaque non-rich-text snapshot (e.g. a spreadsheet).
+        // time — check it before the transaction, not just at the UI layer. Callers
+        // that decode through the type already applied its own limit.
         if ($data->content instanceof TipTapContent) {
             $data->content->ensureWithin($this->documentsConfig->maxContentSizeKb());
         }
@@ -97,15 +93,15 @@ final readonly class CreateDocumentAction
                 'parent_id' => $parentId,
                 'kind' => NodeKind::Document,
                 'name' => $name,
-                'mime_type' => $data->mimeType,
+                'mime_type' => CreateDocumentInput::NODE_MIME,
                 'size_bytes' => $data->content->sizeInBytes(),
                 'created_by' => $actorId,
             ]);
 
             $document = $this->documents->create([
                 'node_id' => $node->getKey(),
-                'type' => DocumentTypeKey::fromFormat($data->format),
-                'schema_version' => 1,
+                'type' => $data->type,
+                'schema_version' => $data->schemaVersion,
                 'created_by' => $actorId,
                 'updated_by' => $actorId,
             ]);
@@ -114,6 +110,7 @@ final readonly class CreateDocumentAction
             $result = $this->writer->write($document, new DocumentStateChange(
                 cause: StateWriteCause::Create,
                 content: $data->content,
+                schemaVersion: $data->schemaVersion,
                 actorId: $actorId,
                 forceCheckpoint: true,
             ));

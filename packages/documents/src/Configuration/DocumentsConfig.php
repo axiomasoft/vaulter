@@ -44,10 +44,35 @@ final readonly class DocumentsConfig implements CommentsFeature
         return is_numeric($value) ? (int) $value : 5120;
     }
 
-    /** @return list<string> */
-    public function enabledDocumentTypes(): array
+    /**
+     * The document type classes registered from config.
+     *
+     * @return list<string>
+     */
+    public function types(): array
     {
-        return $this->stringList($this->config->get(key: 'vaulter.enabled_document_types', default: []), []);
+        $value = $this->config->get(key: 'vaulter-documents.types', default: []);
+
+        if (!is_array($value)) {
+            throw new InvalidConfigurationException('[Vaulter] vaulter-documents.types must be a list of document type classes.');
+        }
+
+        foreach ($value as $class) {
+            if (!is_string($class)) {
+                throw new InvalidConfigurationException('[Vaulter] vaulter-documents.types must contain class names only (closures cannot be cached).');
+            }
+        }
+
+        /** @var list<string> */
+        return array_values($value);
+    }
+
+    /** The type DocumentOperations::create() uses when none is named. */
+    public function defaultType(): string
+    {
+        $value = $this->config->get(key: 'vaulter-documents.default_type', default: 'vaulter/rich-text');
+
+        return is_string($value) && $value !== '' ? $value : 'vaulter/rich-text';
     }
 
     public function collaborationDriver(): string
@@ -222,13 +247,6 @@ final readonly class DocumentsConfig implements CommentsFeature
     public function collaborationEnabled(): bool
     {
         $value = $this->config->get(key: 'vaulter-documents.collaboration.enabled', default: false);
-
-        return is_bool($value) ? $value : false;
-    }
-
-    public function spreadsheetsEnabled(): bool
-    {
-        $value = $this->config->get(key: 'vaulter.features.spreadsheets', default: false);
 
         return is_bool($value) ? $value : false;
     }

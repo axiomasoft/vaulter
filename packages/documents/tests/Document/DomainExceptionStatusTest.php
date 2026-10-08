@@ -7,10 +7,14 @@ use Illuminate\Support\Facades\Route;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Documents\Exceptions\CommentNotFoundException;
+use Vaulter\Documents\Exceptions\DocumentContentDegradedException;
 use Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException;
+use Vaulter\Documents\Exceptions\DocumentTypeUnavailableException;
 use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Exceptions\UnknownDocumentTypeException;
+use Vaulter\Documents\Exceptions\UnknownExportFormatException;
+use Vaulter\Documents\Exceptions\UnsupportedDocumentContentException;
 use Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException;
 use Vaulter\Drive\Exceptions\Nodes\NodeCycleException;
 use Vaulter\Drive\Exceptions\Quota\QuotaExceededException;
@@ -20,8 +24,6 @@ use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Exceptions\Uploads\UploadContentMismatchException;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Access\UnenumerableGrantSubjectException;
-use Vaulter\Exceptions\Documents\UnknownExportFormatException;
-use Vaulter\Exceptions\Documents\UnsupportedDocumentContentException;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Nodes\StorageNotFoundException;
@@ -78,6 +80,10 @@ it('renders each domain exception with its stable code and HTTP status', functio
     'not a document' => [NotADocumentException::forNode(1), 'not_a_document', 409],
     'unknown document type' => [UnknownDocumentTypeException::forType('unknown', ['tiptap']), 'unknown_document_type', 422],
     'invalid tiptap' => [InvalidDocumentContentException::missingDocNode(), 'invalid_document_content', 422, ['reason' => 'invalid_tiptap']],
+    'content not an object' => [InvalidDocumentContentException::notAnObject(), 'invalid_document_content', 422, ['reason' => 'invalid_json']],
+    'content too large' => [InvalidDocumentContentException::tooLargeBytes(10, 5), 'invalid_document_content', 422, ['reason' => 'too_large']],
+    'document type unavailable' => [new DocumentTypeUnavailableException('acme/kanban'), 'document_type_unavailable', 409, ['context' => ['type' => 'acme/kanban']]],
+    'document content degraded' => [new DocumentContentDegradedException('vaulter/rich-text'), 'document_content_degraded', 409, ['context' => ['type' => 'vaulter/rich-text']]],
     'document revision missing' => [DocumentRevisionNotFoundException::forNode(1, 2), 'document_revision_not_found', 404],
     'comment missing' => [CommentNotFoundException::forNode(1, 2), 'comment_not_found', 404],
     'unknown export format' => [UnknownExportFormatException::forFormat('unknown', ['html']), 'unknown_export_format', 422],

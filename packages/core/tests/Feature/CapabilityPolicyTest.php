@@ -11,28 +11,17 @@ use Vaulter\ValueObjects\Handlers\FileDescriptor;
 use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
 
 /*
- * VLT-CANON P0.5 (L4/L5): capabilities are an ADDITIVE, OPEN axis set — adding a
- * NEW capability flag must never break an existing handler, an existing resolution,
- * or the client-facing descriptor shape for a handler that doesn't know about it.
- * `richText` (P0.5) is itself proof: it was added to `ContentCapabilities` after
- * `editable`/`previewable`/… existed, and every pre-existing handler that never
- * mentions it still resolves and serialises correctly (defaulting to `false` —
- * kind-neutral, no claim without opt-in).
+ * VLT-CANON P0.5 (L4/L5): capabilities are an OPEN axis set — a handler that declares
+ * only the flags it knows still resolves and serialises with the full, stable key set.
+ * The content's SHAPE is not a capability (PLAN2.P4.3 removed `richText`): a document's
+ * type decides it, so the client-facing array carries no `rich_text` key.
  */
-it('defaults richText to false — a kind-neutral handler makes no rich-text claim', function (): void {
-    $capabilities = new ContentCapabilities(editable: true);
-
-    expect($capabilities->richText)->toBeFalse();
+it('serialises the stable capability keys and no content-shape flag', function (): void {
+    expect(array_keys((new ContentCapabilities)->toArray()))
+        ->toBe(['editable', 'previewable', 'downloadable', 'thumbnailable', 'collaborative']);
 });
 
-it('serialises richText into the client-facing capabilities array under a stable key', function (): void {
-    expect((new ContentCapabilities)->toArray())->toHaveKey('rich_text')
-        ->and((new ContentCapabilities)->toArray()['rich_text'])->toBeFalse();
-});
-
-it('resolves a handler that predates richText without declaring it — the axis is additive, not required', function (): void {
-    // AxisBlindHandler never mentions richText at all; it must still resolve, and
-    // its capabilities must still carry the (default) richText key downstream.
+it('resolves a handler that declares only some flags — the rest keep their defaults', function (): void {
     Vaulter::handlers()->register(AxisBlindHandler::class);
 
     $file = FileDescriptor::make(nodeId: 1, filename: 'blind.axb', detectedMime: 'application/x-axis-blind');
@@ -40,8 +29,9 @@ it('resolves a handler that predates richText without declaring it — the axis 
     $handler = app(FileHandlerRegistry::class)->resolve($file, Capability::Edit);
 
     expect($handler->key())->toBe('test/axis-blind')
-        ->and($handler->capabilities($file)->richText)->toBeFalse()
-        ->and($handler->capabilities($file)->toArray())->toHaveKey('rich_text');
+        ->and($handler->capabilities($file)->editable)->toBeTrue()
+        ->and($handler->capabilities($file)->collaborative)->toBeFalse()
+        ->and($handler->capabilities($file)->toArray())->not->toHaveKey('rich_text');
 });
 
 it('resolves the higher-priority handler when two EDITABLE handlers claim the same extension', function (): void {
@@ -58,7 +48,7 @@ it('resolves the higher-priority handler when two EDITABLE handlers claim the sa
     expect($handler->key())->toBe('test/rival-high');
 });
 
-/** Claims a brand-new extension and never mentions richText — the additive-axis proof. */
+/** Claims a brand-new extension and declares only `editable`. */
 final class AxisBlindHandler implements FileHandler
 {
     public function key(): string

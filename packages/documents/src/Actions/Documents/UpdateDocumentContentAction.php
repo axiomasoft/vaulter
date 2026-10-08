@@ -7,6 +7,7 @@ namespace Vaulter\Documents\Actions\Documents;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Content\DocumentStateWriter;
+use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
 use Vaulter\Documents\Data\Documents\DocumentStateResult;
 use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
@@ -14,7 +15,6 @@ use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
-use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Support\TreeGuard;
@@ -45,9 +45,8 @@ final readonly class UpdateDocumentContentAction
         $node = $data->node;
 
         // F-P1.11-05: the ADR-0004 size limit was defined but never enforced at save
-        // time — check it before the transaction, not just at the UI layer. Content
-        // is handler-agnostic (DocumentContent); the limit only applies to the
-        // TipTap shape, not an opaque non-rich-text snapshot (e.g. a spreadsheet).
+        // time — check it before the transaction, not just at the UI layer. Callers
+        // that decode through the type already applied its own limit.
         if ($data->content instanceof TipTapContent) {
             $data->content->ensureWithin($this->documentsConfig->maxContentSizeKb());
         }
@@ -75,6 +74,7 @@ final readonly class UpdateDocumentContentAction
                 cause: StateWriteCause::Update,
                 content: $data->content,
                 yjsState: $data->yjsState,
+                schemaVersion: $data->schemaVersion,
                 actorId: $context->actor->ref()->id,
                 expectedStateVersion: $data->expectedStateVersion,
             ));

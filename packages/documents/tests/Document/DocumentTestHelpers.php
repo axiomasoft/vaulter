@@ -6,9 +6,9 @@ namespace Vaulter\Documents\Tests\Document;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Str;
+use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
-use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Drive\DriveHandle;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;

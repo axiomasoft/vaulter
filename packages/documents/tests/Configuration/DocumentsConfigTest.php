@@ -32,13 +32,26 @@ it('enables installed documents and comments while leaving collaboration opt in'
         ->and($config->hubTokenTtl())->toBe(120);
 });
 
-it('keeps the temporary document types and spreadsheet settings in core', function (): void {
-    $repository = new Repository(['vaulter' => ['enabled_document_types' => ['markdown', false], 'features' => ['spreadsheets' => true]]]);
-    $config = new DocumentsConfig($repository);
+it('reads the registered type classes and the default type (PLAN2.P4.3)', function (): void {
+    $config = new DocumentsConfig(new Repository(['vaulter-documents' => [
+        'types' => ['Host\\KanbanDocumentType'],
+        'default_type' => 'host/kanban',
+    ]]));
 
-    expect($config->enabledDocumentTypes())->toBe(['markdown'])
-        ->and($config->spreadsheetsEnabled())->toBeTrue();
+    expect($config->types())->toBe(['Host\\KanbanDocumentType'])
+        ->and($config->defaultType())->toBe('host/kanban')
+        ->and((new DocumentsConfig(new Repository))->defaultType())->toBe('vaulter/rich-text')
+        ->and((new DocumentsConfig(new Repository))->types())->toBe([]);
 });
+
+it('refuses a types entry that is not a class name (PLAN2.P4.3)', function (mixed $types): void {
+    $config = new DocumentsConfig(new Repository(['vaulter-documents' => ['types' => $types]]));
+
+    expect(fn () => $config->types())->toThrow(InvalidConfigurationException::class);
+})->with([
+    'closure' => [[static fn (): null => null]],
+    'not a list' => ['Host\\KanbanDocumentType'],
+]);
 
 it('round trips room identities and filters unsafe extension metadata', function (): void {
     $config = new DocumentsConfig(new Repository(['vaulter-documents' => [

@@ -4,34 +4,33 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Data\Documents;
 
-use Vaulter\Contracts\Handlers\DocumentContent;
-use Vaulter\Documents\Engines\Handlers\TipTapHandler;
-use Vaulter\Documents\Enums\Documents\DocumentType;
+use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Enums\Drive\OnNameConflict;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
 
 /**
- * Command for CreateDocumentAction (§2.5 / M4a): create a kind=document node
- * under a folder (or the storage root) with an initial v1 document version from the
- * given content. The content is handler-agnostic ({@see DocumentContent}) — a
- * rich-text TipTap doc OR an opaque snapshot (e.g. a Univer workbook, §7 level 2).
- *
- * mimeType is the value STAMPED on the node so a read re-resolves the same handler:
- * the TipTap synthetic document mime by default, or the format's concrete mime
- * (e.g. the xlsx sheet mime) for a non-rich-text handler. The destination parent /
- * target storage are resolved and authorized by DocumentOperations; the actor comes
- * from the operation context, never from the input.
+ * Command for CreateDocumentAction: a kind=document node under a folder (or the
+ * storage root) with its first checkpoint. $content is already decoded by the type
+ * named in $type, written in $schemaVersion. The destination and the type are
+ * resolved and authorized by DocumentOperations; the actor comes from the operation
+ * context, never from the input.
  */
 final readonly class CreateDocumentInput
 {
+    /**
+     * Every document node carries this mime. A document is presented by its type, so
+     * the mime only tells file-oriented consumers that the node is not a file.
+     */
+    public const string NODE_MIME = 'application/vnd.vaulter.document+json';
+
     public function __construct(
         public Drive $storage,
         public string $name,
         public DocumentContent $content,
         public ?Node $parent = null,
-        public string $format = DocumentType::RichText->value,
-        public string $mimeType = TipTapHandler::DOCUMENT_MIME,
+        public string $type = 'vaulter/rich-text',
+        public int $schemaVersion = 1,
         public OnNameConflict $onConflict = OnNameConflict::Fail,
     ) {}
 }

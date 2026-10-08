@@ -8,18 +8,17 @@ use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
 use Vaulter\Documents\Actions\Revisions\CreateNamedRevisionAction;
 use Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction;
+use Vaulter\Documents\Content\TipTap\TipTapContent;
+use Vaulter\Documents\Content\TipTap\TipTapRenderer;
 use Vaulter\Documents\Data\Collaboration\PersistCollaborationStateInput;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
 use Vaulter\Documents\Data\Revisions\CreateNamedRevisionInput;
 use Vaulter\Documents\Data\Revisions\RestoreDocumentRevisionInput;
-use Vaulter\Documents\Engines\Handlers\TipTapHandler;
 use Vaulter\Documents\Events\Documents\DocumentCreated;
 use Vaulter\Documents\Events\Revisions\DocumentRevisionCreated;
 use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
-use Vaulter\Documents\Support\TipTap\TipTapRenderer;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
-use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -46,7 +45,7 @@ it('creates a kind=document node with its aggregate and checkpoint #1', function
     $first = DocumentTestHelpers::head($node);
 
     expect($node->kind)->toBe(NodeKind::Document)
-        ->and($node->mime_type)->toBe(TipTapHandler::DOCUMENT_MIME)
+        ->and($node->mime_type)->toBe(CreateDocumentInput::NODE_MIME)
         ->and($node->getAttributes())->not->toHaveKey('current_version_id')
         ->and($document->type)->toBe('vaulter/rich-text')
         ->and($document->state_version)->toBe(1)

@@ -59,7 +59,6 @@ upgrade input only, read by `DatabaseConfig::legacyTable()` to locate old physic
     'webhooks' => true,
     'share_links' => false,
     'public_listing' => false,
-    'spreadsheets' => false,
 ],
 'access' => [
     'permission_driver' => env('VAULTER_PERMISSION_DRIVER', 'database'),
@@ -225,8 +224,10 @@ production boot fails otherwise; development and testing log a warning.
 
 `exporters` remains a **format → FQCN map**. Custom TipTap allow-lists move to
 `vaulter-documents.tiptap.*`. `vaulter.enabled_document_types` and
-`vaulter.features.spreadsheets` remain in core for this transition; they are read through
-`DocumentsConfig::enabledDocumentTypes()` and `spreadsheetsEnabled()`.
+`vaulter.features.spreadsheets` become the list of [document type](/guide/document-types)
+classes `vaulter-documents.types` (`richtext`/`table`/`template` → `RichTextDocumentType`,
+`markdown` → `MarkdownDocumentType`, `spreadsheets = true` → `SpreadsheetDocumentType`), with a
+deprecation.
 See [Collaboration](/guide/collaboration) and [Export](/guide/export).
 
 ## Typed access

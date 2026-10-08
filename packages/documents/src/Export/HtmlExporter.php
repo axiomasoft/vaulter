@@ -6,10 +6,10 @@ namespace Vaulter\Documents\Export;
 
 use Vaulter\Contracts\Handlers\DocumentContent;
 use Vaulter\Contracts\Handlers\DocumentExporter;
+use Vaulter\Documents\Content\TipTap\TipTapContent;
+use Vaulter\Documents\Content\TipTap\TipTapRenderer;
 use Vaulter\Documents\Enums\Export\ExportFormat;
-use Vaulter\Documents\Support\TipTap\TipTapRenderer;
-use Vaulter\Documents\ValueObjects\TipTapContent;
-use Vaulter\Exceptions\Documents\UnsupportedDocumentContentException;
+use Vaulter\Documents\Exceptions\UnsupportedDocumentContentException;
 
 final class HtmlExporter implements DocumentExporter
 {

@@ -7,7 +7,7 @@ namespace Vaulter\Documents\Registries;
 use Illuminate\Contracts\Container\Container;
 use Vaulter\Contracts\Handlers\DocumentExporter;
 use Vaulter\Documents\Configuration\DocumentsConfig;
-use Vaulter\Exceptions\Documents\UnknownExportFormatException;
+use Vaulter\Documents\Exceptions\UnknownExportFormatException;
 
 final class DocumentExporterRegistry
 {

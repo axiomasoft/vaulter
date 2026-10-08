@@ -12,7 +12,6 @@ use Vaulter\Documents\Data\Documents\DocumentStateChange;
 use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Repositories\Documents\DocumentStoreRepository;
-use Vaulter\Documents\ValueObjects\OpaqueDocumentContent;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\OperationContext;
@@ -67,7 +66,7 @@ final readonly class DocumentContentLifecycle implements NodeContentLifecycle
         // type that is not registered (any more) instead of failing or decaying it.
         $this->writer->write($document, new DocumentStateChange(
             cause: StateWriteCause::Copy,
-            content: is_array($original->content) ? OpaqueDocumentContent::fromArray($original->content) : null,
+            content: is_array($original->content) ? OpaqueContent::fromArray($original->content) : null,
             yjsState: $original->yjs_state,
             schemaVersion: $original->schema_version,
             actorId: $actorId,

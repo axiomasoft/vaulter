@@ -5,17 +5,19 @@ declare(strict_types=1);
 namespace Vaulter\ValueObjects\Handlers;
 
 /**
- * The resolved-handler descriptor embedded in a node payload (§4.5 / §5 / M4a): the
- * handler id + its capabilities + its front-end mount descriptor, so the Vue client
- * knows which editor/preview/download surface to mount for the node WITHOUT
- * re-running mime logic on the client. Immutable.
+ * How the client should show a node: which file handler serves it (null for a
+ * document, whose presentation comes from its document type), the document type key
+ * and whether that type is installed, the capabilities, and the viewer to mount.
+ * Only keys and scalars, so it can be serialized as is.
  */
 final readonly class NodePresentation
 {
     public function __construct(
-        public string $id,
+        public ?string $id,
         public ContentCapabilities $capabilities,
         public ViewerDescriptor $ui,
+        public ?string $documentType = null,
+        public bool $typeAvailable = true,
     ) {}
 
     /**
@@ -25,6 +27,8 @@ final readonly class NodePresentation
     {
         return [
             'id' => $this->id,
+            'document_type' => $this->documentType,
+            'type_available' => $this->typeAvailable,
             'capabilities' => $this->capabilities->toArray(),
             'ui' => $this->ui->toArray(),
         ];

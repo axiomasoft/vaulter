@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
+use Vaulter\Documents\Content\TipTap\TipTapContent;
+use Vaulter\Documents\Content\TipTap\TipTapRenderer;
 use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
-use Vaulter\Documents\Support\TipTap\TipTapRenderer;
-use Vaulter\Documents\ValueObjects\TipTapContent;
 
 function sampleDocument(): TipTapContent
 {

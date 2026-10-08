@@ -125,9 +125,11 @@ Documents::comments($drive)->add($node->id, new AddCommentInput('Looks good', an
 ```
 
 `DocumentSnapshot` carries `nodeId`, `documentId`, `type`, `schemaVersion`, `typeAvailable`,
-`editable` (false for a historical revision or an unavailable type), `epoch`, `stateVersion`,
-`dirty` (the working state runs ahead of the head checkpoint), `headRevisionId`, `content` (a
-`DocumentContent`: `TipTapContent` for rich text, `OpaqueDocumentContent` otherwise), `revision`
+`editable` (false for a historical revision, a type that is not installed, or content that reads
+only partly under its type — see [Document Types](./document-types.md)), `epoch`, `stateVersion`,
+`dirty` (the working state runs ahead of the head checkpoint), `headRevisionId`, `content` (the
+type's `DocumentContent`: `TipTapContent` for rich text and markdown, `OpaqueContent` for a
+spreadsheet or a type that is not installed), `revision`
 (the head, or the revision asked for), `contentHash`, `yjsStateSize`, `updatedAt` and `updatedBy`.
 Ids are strings. The Actions behind these methods are internal.
 
@@ -191,18 +193,19 @@ const node = await client.documentNodes.createNode(storageId, {
 What happens:
 
 - The sibling-unique guard runs first — a name clash throws `NodeNameConflictException`, or picks
-  `Name (2)` with `OnNameConflict::Rename`. An unknown or disabled type throws
-  `UnknownDocumentTypeException`.
+  `Name (2)` with `OnNameConflict::Rename`. A type that is not registered throws
+  `UnknownDocumentTypeException`; the content is decoded by the type's codec.
 - One transaction creates the node and its aggregate, writes the working state
   (`state_version = 1`) and takes checkpoint **#1** (`is_autosave = false`), then fires
   `DocumentCreated` after commit.
 - The node is stamped with the Vaulter document mime
-  (`application/vnd.vaulter.document+json`) so it always routes to the TipTap editor handler
-  regardless of any extension in its name. See [Document Handlers](./document-handlers.md).
+  (`application/vnd.vaulter.document+json`); it is presented by its
+  [document type](./document-types.md), never by a file handler.
 
-The request validates `name`, an optional `parent_id`, an optional `format` (must be a
-[`DocumentType`](./document-handlers.md#documenttype) value: `richtext`, `table`, `markdown`,
-`template`), and an optional `content` whose `content.type` must be `doc`. The actor needs the
+The request validates `name`, an optional `parent_id`, the document type — `type`
+(`vendor/name`), or the 0.x fields `format` (`richtext`, `table`, `template` → `vaulter/rich-text`,
+`markdown` → `vaulter/markdown`) and `mime` (the xlsx mime → `vaulter/spreadsheet`) — and an
+optional `content`, whose `content.type` must be `doc` for a TipTap-based type. The actor needs the
 `Create` ability on the destination (and the workspace-create gate of the permission driver), and
 the drive profile must allow the document type.
 

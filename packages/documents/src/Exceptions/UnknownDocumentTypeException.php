@@ -22,9 +22,9 @@ final class UnknownDocumentTypeException extends VaulterException implements Pro
 
         return new self(
             sprintf('[Vaulter] Unknown document type [%s]. ', $type)
-            .sprintf('Why: it is not in the enabled types [%s]. ', $list)
-            .'Fix: enable it in config(vaulter.enabled_document_types) or register a custom type '
-            .'via Documents::types()->register(). '
+            .sprintf('Why: it is not a registered document type [%s]. ', $list)
+            .'Fix: add its class to config(vaulter-documents.types), tag it vaulter.document_types, '
+            .'or call Documents::types()->register() from a service provider. '
             .'Docs: '.self::docs('unknown-document-type'),
         );
     }

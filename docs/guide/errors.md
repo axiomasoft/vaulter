@@ -27,13 +27,17 @@ Codes are a stable public contract (AD29).
 | `upload_rejected` | 422 | `Vaulter\Drive\Exceptions\Uploads\UploadContentMismatchException` |
 | `not_a_document` | 409 | `Vaulter\Documents\Exceptions\NotADocumentException` |
 | `unknown_document_type` | 422 | `Vaulter\Documents\Exceptions\UnknownDocumentTypeException` |
+| `document_type_unavailable` | 409 | `Vaulter\Documents\Exceptions\DocumentTypeUnavailableException` |
+| `document_content_degraded` | 409 | `Vaulter\Documents\Exceptions\DocumentContentDegradedException` |
+| `duplicate_registration` | 500 (boot) | `Vaulter\Documents\Exceptions\DuplicateDocumentTypeException` |
+| `registry_frozen` | 500 (boot) | `Vaulter\Exceptions\Registry\RegistryFrozenException` |
 | `invalid_document_content` | 422 | `Vaulter\Documents\Exceptions\InvalidDocumentContentException` |
 | `document_revision_not_found` | 404 | `Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException` |
 | `comment_not_found` | 404 | `Vaulter\Documents\Exceptions\CommentNotFoundException` |
 | `document_state_mismatch` | 412 | `Vaulter\Documents\Exceptions\StaleDocumentStateException` |
 | `collaboration_epoch_mismatch` | 409 | `Vaulter\Documents\Exceptions\CollaborationEpochMismatchException` |
-| `unknown_export_format` | 422 | `Vaulter\Exceptions\Documents\UnknownExportFormatException` |
-| `invalid_document_content` | 422 | `Vaulter\Exceptions\Documents\UnsupportedDocumentContentException` |
+| `unknown_export_format` | 422 | `Vaulter\Documents\Exceptions\UnknownExportFormatException` |
+| `invalid_document_content` | 422 | `Vaulter\Documents\Exceptions\UnsupportedDocumentContentException` |
 | `invalid_node_name` | 422 | `Vaulter\Exceptions\Nodes\InvalidNodeNameException` |
 | `invalid_properties` | 422 | `Vaulter\Exceptions\Nodes\InvalidPropertiesException` |
 | `folder_children_limit_exceeded` | 409 | `Vaulter\Exceptions\Policy\FolderChildrenLimitExceededException` |
@@ -51,9 +55,10 @@ Codes are a stable public contract (AD29).
 
 The response also preserves `errors.name` for name conflicts and invalid names, `errors.url` for blocked
 outbound URLs and `errors.subject_type` for unenumerable grant subjects. Content errors
-include `reason`: `mime_mismatch`, `invalid_tiptap` or `unsupported_content`.
-`document_state_mismatch` and `collaboration_epoch_mismatch` include `context.expected` and
-`context.actual`.
+include `reason`: `mime_mismatch`, `invalid_tiptap`, `invalid_json`, `too_large` or
+`unsupported_content`. `document_state_mismatch` and `collaboration_epoch_mismatch` include
+`context.expected` and `context.actual`; `document_type_unavailable` and
+`document_content_degraded` include `context.type`.
 Offset mismatches include `Upload-Offset` and `Tus-Resumable: 1.0.0` headers.
 
 ## node-not-found
@@ -94,9 +99,35 @@ until their owner shortens them.
 
 ## unknown-document-type
 
-`UnknownDocumentTypeException` — the supplied `type` is not in
-`config('vaulter.enabled_document_types')`. Enable it, or register a custom type via
-`Vaulter::registerDocumentType()`.
+`UnknownDocumentTypeException` — no registered [document type](./document-types.md) has the
+supplied key. Add its class to `config('vaulter-documents.types')`, tag it
+`vaulter.document_types`, or register it from a service provider with
+`Documents::types()->register()`.
+
+## document-type-unavailable
+
+`document_type_unavailable` (409) — the document's type is not installed (its extension was
+removed). The document can still be read as JSON, copied, trashed and purged; editing,
+checkpointing, restoring, exporting and collaborating need the type registered again.
+`context.type` names the missing key.
+
+## document-content-degraded
+
+`document_content_degraded` (409) — the stored content contains parts its type does not accept
+any more (the nodes of an editor extension that was switched off), or it was written in a newer
+schema version than the installed type. It was read with those parts left out, so saving over it
+would delete them; the document is read-only until the extension is enabled again.
+
+## registry-frozen
+
+`RegistryFrozenException` (`registry_frozen`) — something registered a document type after the
+application booted. Register types from a service provider (config, a container tag, or
+`register()` before the application has booted).
+
+## duplicate-registration
+
+`DuplicateDocumentTypeException` (`duplicate_registration`) — one document type key was
+registered twice. Register it once, or override it with `Documents::types()->replace()`.
 
 ## invalid-destination
 

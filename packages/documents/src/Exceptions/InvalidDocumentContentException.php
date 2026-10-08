@@ -13,6 +13,8 @@ final class InvalidDocumentContentException extends VaulterException implements 
 
     private const int HTTP_STATUS = 422;
 
+    private string $reason = 'invalid_tiptap';
+
     public static function missingDocNode(): self
     {
         return new self(
@@ -33,6 +35,32 @@ final class InvalidDocumentContentException extends VaulterException implements 
             .'Fix: split the document or raise the limit. '
             .'Docs: '.self::docs('content-too-large'),
         );
+    }
+
+    public static function tooLargeBytes(int $sizeBytes, int $maxBytes): self
+    {
+        $exception = new self(
+            sprintf('[Vaulter] Document content is too large (%d bytes > %d bytes). ', $sizeBytes, $maxBytes)
+            .'Why: it exceeds the limit of its document type or config(vaulter-documents.content.max_size_kb). '
+            .'Fix: split the document or raise the limit. '
+            .'Docs: '.self::docs('content-too-large'),
+        );
+        $exception->reason = 'too_large';
+
+        return $exception;
+    }
+
+    public static function notAnObject(): self
+    {
+        $exception = new self(
+            '[Vaulter] Invalid document content. '
+            .'Why: the content of this document type must be a JSON object. '
+            .'Fix: send an object ({...}), not a list or a scalar. '
+            .'Docs: '.self::docs('invalid-document-content'),
+        );
+        $exception->reason = 'invalid_json';
+
+        return $exception;
     }
 
     public static function unknownNodeType(string $type): self
@@ -90,6 +118,6 @@ final class InvalidDocumentContentException extends VaulterException implements 
      */
     protected function renderExtras(): array
     {
-        return ['reason' => 'invalid_tiptap'];
+        return ['reason' => $this->reason];
     }
 }

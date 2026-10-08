@@ -85,6 +85,7 @@ final class PublishedConfigV02Test extends TestCase
         $config = app(VaulterConfig::class);
         self::assertSame([TeamProfile::class], $config->profileProviders());
         self::assertSame(PublishedV02TokenGenerator::class, $config->sharing()->tokenGenerator());
+        // Without vaulter-documents installed the legacy key is left for that package.
         self::assertSame(['markdown'], config('vaulter.enabled_document_types'));
         self::assertSame('ulid', $config->ids()->strategy());
         self::assertSame(60, $config->routes()->publicRateLimit());

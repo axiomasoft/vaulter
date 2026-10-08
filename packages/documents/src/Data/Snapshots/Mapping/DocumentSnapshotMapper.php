@@ -4,26 +4,19 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Data\Snapshots\Mapping;
 
-use Vaulter\Contracts\Handlers\DocumentContent;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
-use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Data\Snapshots\CommentSnapshot;
 use Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot;
 use Vaulter\Documents\Data\Snapshots\DocumentSnapshot;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
-use Vaulter\Documents\Support\DocumentTypeKey;
-use Vaulter\Documents\ValueObjects\OpaqueDocumentContent;
-use Vaulter\Documents\ValueObjects\TipTapContent;
 
 /** @internal Builds the documents snapshots from already-loaded rows; it never queries. */
 final readonly class DocumentSnapshotMapper
 {
-    /** Types whose stored JSON is a TipTap document even when it is still empty. */
-    private const array RICH_TEXT_TYPES = ['vaulter/rich-text', 'vaulter/markdown'];
-
-    public function __construct(private DocumentsConfig $config) {}
+    public function __construct(private ContentDecoder $decoder) {}
 
     /**
      * The working state, or the content of $revision when one is given. The head
@@ -31,23 +24,29 @@ final readonly class DocumentSnapshotMapper
      */
     public function document(Document $document, ?DocumentRevision $head, ?DocumentRevision $revision = null): DocumentSnapshot
     {
-        $typeAvailable = $this->typeAvailable($document->type);
+        $typeAvailable = $this->decoder->available($document->type);
         $source = $revision ?? $head;
+        $schemaVersion = $revision === null ? $document->schema_version : $revision->schema_version;
+        $read = $this->decoder->read($document->type, $revision === null ? $document->content : $revision->content, $schemaVersion);
 
         return new DocumentSnapshot(
             nodeId: SnapshotValue::id($document->node_id),
             documentId: SnapshotValue::id($document->getKey()),
             type: $document->type,
-            schemaVersion: $revision === null ? $document->schema_version : $revision->schema_version,
+            schemaVersion: $schemaVersion,
             typeAvailable: $typeAvailable,
-            // A historical checkpoint is read-only: saving it back would silently drop
-            // every change made since.
-            editable: $typeAvailable && $revision === null,
+            // Read-only when saving it back would lose something: every change made since
+            // a historical checkpoint, the parts a degraded read dropped, or the fields of
+            // a schema newer than this installation's type.
+            editable: $typeAvailable
+                && $revision === null
+                && $read->lossless
+                && $this->decoder->schemaWritable($this->decoder->type($document->type), $schemaVersion),
             epoch: $document->collab_epoch,
             stateVersion: $document->state_version,
             dirty: $document->hasUncheckpointedChanges(),
             headRevisionId: SnapshotValue::nullableId($document->current_revision_id),
-            content: $this->content($document->type, $revision === null ? $document->content : $revision->content),
+            content: $read->content,
             revision: $source === null ? null : $this->revision($source, $document),
             contentHash: $revision === null ? $document->content_hash : $revision->content_hash,
             yjsStateSize: $revision === null ? $document->yjs_state_size : $revision->yjs_state_size,
@@ -95,32 +94,5 @@ final readonly class DocumentSnapshotMapper
             resolvedBy: SnapshotValue::nullableId($comment->resolved_by),
             createdAt: SnapshotValue::requiredTime($comment->created_at),
         );
-    }
-
-    /**
-     * Rich text decays instead of failing (unknown nodes and marks are stripped), so a
-     * document written under an older allow-list still reads; any other type is an
-     * opaque snapshot returned as stored.
-     *
-     * @param array<string, mixed>|null $content
-     */
-    private function content(string $type, ?array $content): DocumentContent
-    {
-        if (is_array($content) && ($content['type'] ?? null) === 'doc') {
-            return TipTapContent::decayFrom($content);
-        }
-        if ($content === null && in_array($type, self::RICH_TEXT_TYPES, true)) {
-            return TipTapContent::empty();
-        }
-
-        return OpaqueDocumentContent::fromArray($content ?? []);
-    }
-
-    private function typeAvailable(string $type): bool
-    {
-        $enabled = $this->config->enabledDocumentTypes();
-
-        // The enabled list may name the type key or its format label.
-        return $enabled === [] || in_array($type, $enabled, true) || in_array(DocumentTypeKey::toFormat($type), $enabled, true);
     }
 }

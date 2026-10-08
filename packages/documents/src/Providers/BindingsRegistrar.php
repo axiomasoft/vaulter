@@ -16,14 +16,13 @@ use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Content\DocumentContentLifecycle;
 use Vaulter\Documents\Contracts\ExportFilenameResolver;
 use Vaulter\Documents\DocumentsManager;
-use Vaulter\Documents\Engines\Handlers\TipTapHandler;
-use Vaulter\Documents\Engines\Handlers\UniverHandler;
 use Vaulter\Documents\Export\DefaultExportFilenameResolver;
 use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
+use Vaulter\Documents\Presentation\DocumentPresenter;
 use Vaulter\Documents\Registries\DocumentExporterRegistry;
-use Vaulter\Documents\Registries\DocumentTypeRegistry;
 use Vaulter\Documents\Support\DocumentHeads;
+use Vaulter\Documents\Types\DocumentTypeRegistry;
 
 final class BindingsRegistrar extends ServiceProvider
 {
@@ -44,13 +43,10 @@ final class BindingsRegistrar extends ServiceProvider
         $this->app->bind(CommentOperations::class);
         $this->app->bind(NodeDocumentHeads::class, DocumentHeads::class);
         $this->app->alias(DocumentsManager::class, 'vaulter.documents');
-        $this->app->tag([TipTapHandler::class], 'vaulter.file_handlers');
         // Drive's registry collects this tag and prefers it to its own purge-only stand-in.
         $this->app->tag([DocumentContentLifecycle::class], 'vaulter.content_lifecycles');
-
-        if ($this->app->make(DocumentsConfig::class)->spreadsheetsEnabled()) {
-            $this->app->tag([UniverHandler::class], 'vaulter.file_handlers');
-        }
+        // Core presents document nodes through this tag; files keep the file handlers.
+        $this->app->tag([DocumentPresenter::class], 'vaulter.kind_presenters');
 
         // The export filename seam (P4.5 / F-P3.1-04): NodeExportService stays
         // `final` (H.5 arch gate), so a host wanting a different export filename

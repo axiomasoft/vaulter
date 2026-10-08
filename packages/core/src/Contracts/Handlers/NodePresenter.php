@@ -21,8 +21,8 @@ use Vaulter\ValueObjects\Handlers\NodePresentation;
  * through this seam, never null). {@see NodeResource::handler()} resolves it
  * unconditionally for every leaf node. A folder node is never passed here — only
  * called for leaf (file/document) nodes. vaulter-documents (or another package)
- * contributes richer formats (TipTap, Univer, …) by tagging handlers into the same
- * registry — it never rebinds this seam.
+ * contributes richer file formats by tagging handlers into the same registry, and
+ * presents a whole node kind through a tagged KindPresenter — it never rebinds this seam.
  */
 interface NodePresenter
 {
