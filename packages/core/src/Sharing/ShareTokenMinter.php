@@ -9,19 +9,21 @@ use Illuminate\Database\QueryException;
 use RuntimeException;
 use Vaulter\Configuration\SharingConfig;
 use Vaulter\Contracts\Sharing\ShareTokenGenerator;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Support\ShareToken;
 
 /**
  * Generates a share token and hands its hash and prefix to a writer, retrying on the
  * (astronomically unlikely) token_hash UNIQUE collision rather than ever returning
- * a link that does not match what was stored. The raw token leaves only through the
- * returned value.
+ * a link that does not match what was stored. Every attempt runs in its own savepoint,
+ * so the retry works inside the caller's transaction on PostgreSQL too. The raw token
+ * leaves only through the returned value.
  */
 final readonly class ShareTokenMinter
 {
     private const int MAX_ATTEMPTS = 5;
 
-    public function __construct(private SharingConfig $config, private ShareTokenGenerator $tokens) {}
+    public function __construct(private SharingConfig $config, private ShareTokenGenerator $tokens, private VaulterDatabase $database) {}
 
     /**
      * @template T
@@ -37,7 +39,9 @@ final readonly class ShareTokenMinter
             $token = $this->tokens->generate();
 
             try {
-                return [$persist(ShareToken::hash($token), ShareToken::prefix($token, $prefixLength)), $token];
+                // A savepoint: on PostgreSQL a unique violation aborts the enclosing transaction
+                // unless it is rolled back to a savepoint taken before the failed statement.
+                return [$this->database->transaction(static fn () => $persist(ShareToken::hash($token), ShareToken::prefix($token, $prefixLength))), $token];
             } catch (QueryException $exception) {
                 if ($this->isUniqueViolation($exception)) {
                     continue;

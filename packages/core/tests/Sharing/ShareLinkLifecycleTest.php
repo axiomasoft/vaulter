@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Vaulter\Access\Roles\RoleRegistry;
@@ -9,6 +10,7 @@ use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Data\Sharing\ShareLinkUpdate;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Sharing\ShareAudience;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Sharing\ShareLinkTtlExceededException;
@@ -24,6 +26,7 @@ use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Sharing\ShareResolution;
 use Vaulter\Sharing\ShareResolver;
 use Vaulter\Sharing\ShareSession;
+use Vaulter\Sharing\ShareTokenMinter;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
@@ -237,4 +240,29 @@ it('maps the share exceptions to their stable problem code and status', function
         ->and([$ttl->problemCode(), $ttl->httpStatus()])->toBe(['share_link_ttl_exceeded', 422])
         ->and($role->getMessage())->toContain('docs/guide/errors.md#share-role-not-allowed')
         ->and($ttl->getMessage())->toContain('docs/guide/errors.md#share-link-ttl-exceeded');
+});
+
+it('retries a token collision inside its own savepoint so the caller transaction survives', function (): void {
+    $database = app(VaulterDatabase::class);
+    $levels = [];
+    $attempts = 0;
+    $outer = 0;
+
+    [$result, $token] = $database->transaction(function () use ($database, &$levels, &$attempts, &$outer) {
+        $outer = $database->connection()->transactionLevel();
+
+        return app(ShareTokenMinter::class)->mint(function (string $hash) use ($database, &$levels, &$attempts): string {
+            $levels[] = $database->connection()->transactionLevel();
+            if (++$attempts === 1) {
+                throw new UniqueConstraintViolationException('sqlite', 'insert', [], new PDOException('UNIQUE', 23000));
+            }
+
+            return $hash;
+        });
+    });
+
+    expect($attempts)->toBe(2)
+        ->and($result)->toBe(hash('sha256', $token))
+        // Each attempt runs one level (a savepoint) below the caller's transaction.
+        ->and($levels)->toBe([$outer + 1, $outer + 1]);
 });
