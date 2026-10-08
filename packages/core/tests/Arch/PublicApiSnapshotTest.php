@@ -349,7 +349,11 @@ test('vaulter-core public API surface matches the frozen golden (VLT-REL P2.2)',
     }
     // Returning a snapshot type in an Operations signature does not freeze its
     // fields: include the values themselves, while their internal mappers stay out.
-    foreach (array_merge([Page::class], vaulterSnapshotContracts(__DIR__.'/../../src/Data/Snapshots', 'Vaulter\Data\Snapshots')) as $class) {
+    foreach (array_merge(
+        [Page::class],
+        vaulterSnapshotContracts(__DIR__.'/../../src/Data/Snapshots', 'Vaulter\Data\Snapshots'),
+        vaulterSnapshotContracts(__DIR__.'/../../src/ValueObjects/Handlers', 'Vaulter\ValueObjects\Handlers'),
+    ) as $class) {
         $reflection = new ReflectionClass($class);
         $properties = [];
         foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
