@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Content;
 
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Contracts\Drive\NodeContentLifecycle;
+use Vaulter\Contracts\Drive\PurgeOnlyContentLifecycle;
 use Vaulter\Data\Drive\CopyResult;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Drive\NodeKind;
@@ -13,7 +14,11 @@ use Vaulter\Exceptions\Nodes\UnsupportedNodeKindException;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\OperationContext;
 
-final readonly class DocumentPurgeLifecycle implements NodeContentLifecycle
+/**
+ * The purge a document gets when the documents package is not installed; that package
+ * registers the full lifecycle, which replaces this one.
+ */
+final readonly class DocumentPurgeLifecycle implements NodeContentLifecycle, PurgeOnlyContentLifecycle
 {
     public function __construct(
         private VaulterDatabase $database,
