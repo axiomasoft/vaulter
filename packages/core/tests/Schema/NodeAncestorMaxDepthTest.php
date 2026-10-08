@@ -67,7 +67,7 @@ it('AccessResolver::can() compiles the ancestor CTE with a withMaxDepth bound (F
     }
 
     expect($ancestorQuery)->not->toBeNull()
-        ->and($ancestorQuery)->toContain('"depth" <');
+        ->and($ancestorQuery)->toContain(DB::connection()->getQueryGrammar()->wrap('depth').' <');
 });
 
 it('NodeReadRepository::ancestors() compiles the ancestor CTE with a withMaxDepth bound (F-P4.2-01)', function (): void {
@@ -88,7 +88,7 @@ it('NodeReadRepository::ancestors() compiles the ancestor CTE with a withMaxDept
 
     $sql = collect($log)->pluck('query')->implode(' ');
 
-    expect($sql)->toContain('"depth" <');
+    expect($sql)->toContain(DB::connection()->getQueryGrammar()->wrap('depth').' <');
 });
 
 it('NodeReadRepository::breadcrumb() compiles the ancestor CTE with a withMaxDepth bound (F-P4.2-01)', function (): void {
@@ -109,5 +109,5 @@ it('NodeReadRepository::breadcrumb() compiles the ancestor CTE with a withMaxDep
 
     $sql = collect($log)->pluck('query')->implode(' ');
 
-    expect($sql)->toContain('"depth" <');
+    expect($sql)->toContain(DB::connection()->getQueryGrammar()->wrap('depth').' <');
 });
