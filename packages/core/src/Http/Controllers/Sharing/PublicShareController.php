@@ -36,7 +36,7 @@ use Vaulter\Tenancy\ShareTenantContext;
  * SEPARATE sharing pass. Every action sits behind {@see ResolveShareToken} (no auth
  * middleware of its own); the middleware has already produced the ShareContext, so
  * authorization here is ONLY the share's own role on its own node-set — the
- *    identity ACL / AccessResolver is never consulted.
+ * identity ACL / AccessResolver is never consulted.
  *
  *  - show     → the target node's metadata within scope (View).
  *  - download → stream the target file's current head when the role carries
@@ -59,7 +59,7 @@ final class PublicShareController extends Controller
     ) {}
 
     /**
-     * The shared node's metadata within scope. Requires the READ bit (View). For a
+     * The shared node's metadata within scope. Requires View. For a
      * scope=subtree folder share, the immediate children are embedded so a holder
      * can browse one level without a second call.
      */

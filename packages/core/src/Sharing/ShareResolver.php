@@ -69,6 +69,7 @@ final class ShareResolver
         private readonly ShareContentGuard $content,
         private readonly ShareLinkRules $rules,
         private readonly ShareSession $sessions,
+        private readonly TenancyConfig $tenancy,
         private readonly Container $container,
     ) {}
 
@@ -192,7 +193,7 @@ final class ShareResolver
         // The storage must exist (tenant/storage boundary) — a detached node is a
         // corrupt state, never a public surface.
         $drive = $node->storage()->first();
-        if (!$drive instanceof Drive || (app(TenancyConfig::class)->enabled() && ($drive->tenant_id === null || TenancyBoundary::normalize($node->tenant_id) !== TenancyBoundary::normalize($drive->tenant_id))) || !$this->profiles->featureEnabled($this->registry->get($drive->profile), 'share_links') || (string) $share->tenant_id !== (string) $drive->tenant_id
+        if (!$drive instanceof Drive || ($this->tenancy->enabled() && ($drive->tenant_id === null || TenancyBoundary::normalize($node->tenant_id) !== TenancyBoundary::normalize($drive->tenant_id))) || !$this->profiles->featureEnabled($this->registry->get($drive->profile), 'share_links') || (string) $share->tenant_id !== (string) $drive->tenant_id
             || !$this->rules->holds($drive, $share, Carbon::now())) {
             return null;
         }
@@ -210,7 +211,7 @@ final class ShareResolver
      * honours exactly the algorithm every other authorization decision does.
      *
      * D14 binds the re-check to Ability::Share (the ability that authorized the
-     * mint), NOT to the share's own bitmask: an issuer who has lost write but kept
+     * mint), NOT to the share's own role: an issuer who has lost write but kept
      * Share still keeps a read-only link alive; only losing Share itself revokes
      * every link they minted.
      *
@@ -235,7 +236,7 @@ final class ShareResolver
         }
 
         $drive = $node->storage()->first();
-        if (!$drive instanceof Drive || (app(TenancyConfig::class)->enabled() && $drive->tenant_id === null)) {
+        if (!$drive instanceof Drive || ($this->tenancy->enabled() && $drive->tenant_id === null)) {
             return false;
         }
 
@@ -277,7 +278,7 @@ final class ShareResolver
         }
         $drive = $node->storage()->first();
         // Without strict tenancy there is no host tenant to compare with.
-        if (!$drive instanceof Drive || $drive->tenant_id === null || !$this->container->make(TenancyConfig::class)->enabled()) {
+        if (!$drive instanceof Drive || $drive->tenant_id === null || !$this->tenancy->enabled()) {
             return false;
         }
         $current = TenancyBoundary::normalize($this->container->make(TenantResolver::class)->current());
