@@ -6,12 +6,13 @@ use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Documents\Actions\Collaboration\PersistCollaborationStateAction;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
-use Vaulter\Documents\Collaboration\CollaborationSessionService;
 use Vaulter\Documents\Data\Collaboration\PersistCollaborationStateInput;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Export\NodeExportService;
+use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Enums\Access\Ability;
+use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Support\LoadTier;
@@ -24,7 +25,7 @@ function p83DocumentNode(): Node
 {
     $drive = DocumentTestHelpers::drive();
 
-    return app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+    return app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive), new CreateDocumentInput(
         storage: $drive->model(),
         name: 'Metrics doc',
         content: DocumentTestHelpers::content('Body'),
@@ -60,7 +61,8 @@ it('records vaulter_collab_session_issued_total', function (): void {
     $actor->exists = true;
     AccessTestHelpers::grant($node, RoleRegistry::OWNER, subjectId: 1);
 
-    app(CollaborationSessionService::class)->issue($actor, $node);
+    $handle = Vaulter::drive($node->storage()->firstOrFail())->actingAs($actor);
+    Documents::in($handle)->collaborationSession($node->getKey());
 
     app(MetricsRecorder::class)->assertCounter(
         name: 'vaulter_collab_session_issued_total',

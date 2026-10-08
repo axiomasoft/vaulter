@@ -23,7 +23,7 @@ it('V32 keeps a file revision and a document revision with the same id apart', f
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
     $drive = DocumentTestHelpers::drive();
 
-    $document = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+    $document = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive->model()), new CreateDocumentInput(
         storage: $drive->model(),
         name: 'Spec',
         content: DocumentTestHelpers::content('document body'),
@@ -42,7 +42,7 @@ it('V32 keeps a file revision and a document revision with the same id apart', f
             $bytes = 'file bytes '.$round;
             $drive->files()->addRevision($file, UploadSource::fromStream(DriveTestHelpers::streamFor($bytes), 'report.txt'));
         } else {
-            app(CreateNamedRevisionAction::class)->execute(new CreateNamedRevisionInput(node: $document, label: 'advance'));
+            app(CreateNamedRevisionAction::class)->execute(DocumentTestHelpers::context($document), new CreateNamedRevisionInput(node: $document, label: 'advance'));
         }
     }
     $id = $fileHead();
@@ -57,7 +57,7 @@ it('V32 keeps a file revision and a document revision with the same id apart', f
 
     $this->getJson('api/vaulter/nodes/'.$document->id.'/content')
         ->assertOk()
-        ->assertJsonPath('data.id', $id)
+        ->assertJsonPath('data.id', (string) $id)
         ->assertJsonPath('data.content.content.0.content.0.text', 'document body');
 
     foreach ([$document->refresh(), DriveTestHelpers::model($file)] as $node) {

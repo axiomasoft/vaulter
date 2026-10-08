@@ -24,7 +24,7 @@ use Vaulter\Tests\Drive\DriveTestHelpers;
 beforeEach(function (): void {
     $this->drive = DocumentTestHelpers::drive();
 
-    $this->node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+    $this->node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($this->drive->model()), new CreateDocumentInput(
         storage: $this->drive->model(),
         name: 'Report',
         content: DocumentTestHelpers::content('Exportable body'),

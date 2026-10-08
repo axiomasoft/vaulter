@@ -69,7 +69,9 @@ link** — с экранированием HTML-вывода (`htmlspecialchars`
 ## Экспорт документного узла
 
 `GET {prefix}/nodes/{node}/export` рендерит head-содержимое [документного узла](./documents.md).
-Требует право (ability) `View` на узле (и узел должен быть `kind=document`). Этот маршрут —
+Требует право (ability) `Download` на узле — экспорт это копия контента, одного `View` для неё
+мало (previewer получает `403 permission_denied`), — и узел должен быть `kind=document`. В PHP:
+`Documents::in($drive)->export($node, 'html')`. Этот маршрут —
 часть поверхности, доступной при установленном `vaulter-documents`.
 
 ::: code-group

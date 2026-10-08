@@ -6,14 +6,15 @@ namespace Vaulter\Documents\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Vaulter\Documents\Models\Comments\NodeComment;
+use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
+use Vaulter\Documents\Data\Snapshots\CommentSnapshot;
 
 /**
  * The read shape of a node comment (ADR-0014 шаг 1): the thread pointer (parent_id),
  * the author morph, the body, the optional anchor and the resolution tombstone.
- * Read-only — transforms an already-loaded NodeComment, never queries.
+ * Read-only — transforms a {@see CommentSnapshot}, never queries.
  *
- * @mixin NodeComment
+ * @mixin CommentSnapshot
  */
 final class NodeCommentResource extends JsonResource
 {
@@ -23,22 +24,22 @@ final class NodeCommentResource extends JsonResource
     #[\Override]
     public function toArray(Request $request): array
     {
-        /** @var NodeComment $comment */
+        /** @var CommentSnapshot $comment */
         $comment = $this->resource;
 
         return [
-            'id' => $comment->getKey(),
-            'node_id' => $comment->node_id,
-            'parent_id' => $comment->parent_id,
+            'id' => $comment->id,
+            'node_id' => $comment->nodeId,
+            'parent_id' => $comment->parentId,
             'author' => [
-                'type' => $comment->author_type,
-                'id' => $comment->author_id,
+                'type' => $comment->authorType,
+                'id' => $comment->authorId,
             ],
             'body' => $comment->body,
             'anchor' => $comment->anchor,
-            'resolved_at' => $comment->resolved_at,
-            'resolved_by' => $comment->resolved_by,
-            'created_at' => $comment->created_at,
+            'resolved_at' => SnapshotValue::iso($comment->resolvedAt),
+            'resolved_by' => $comment->resolvedBy,
+            'created_at' => SnapshotValue::iso($comment->createdAt),
         ];
     }
 }

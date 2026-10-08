@@ -84,9 +84,10 @@ Vue client ──POST /api/vaulter/nodes/{node}/collab/token──▶ Laravel
 ```
 
 1. The client calls `POST nodes/{node}/collab/token`.
-2. `CollaborationSessionService` resolves the actor's **highest** ability on the node
-   through the Vaulter-owned `AccessResolver` (`Edit` > `Comment` > `View`). An actor with
-   **no** view access gets a `403` before a token is ever minted.
+2. `DocumentOperations::collaborationSession()` (also `Documents::in($drive)->collaborationSession($node)`
+   in PHP) locates the node and authorizes `View` through the `OperationGuard`, then takes the
+   actor's **highest** ability (`Edit` > `Comment` > `View`). A node the actor cannot see answers
+   `404 node_not_found` before a token is ever minted.
 3. `read_only` is **encoded from the ability** — `View`/`Comment` → `true`, `Edit` →
    `false`. The client cannot request write; it is granted or it is not.
 4. The configured driver mints the [session descriptor](#the-session-descriptor) and the

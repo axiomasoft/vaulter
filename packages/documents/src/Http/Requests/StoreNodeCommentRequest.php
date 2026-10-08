@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Http\Requests;
 
-use Illuminate\Database\Eloquent\Model;
 use Vaulter\Documents\Data\Comments\AddCommentInput;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /**
- * The store payload for a node comment (ADR-0014 шаг 1). The author morph is a
- * REGISTERED alias — $user->getMorphClass() (honours the host's enforceMorphMap) —
- * never a raw FQCN (the difference from the legacy StoreCommentRequest).
+ * The store payload for a node comment (ADR-0014 шаг 1). The author is not part of the
+ * payload: CommentOperations records the acting user (their registered morph alias,
+ * never a raw FQCN).
  */
 final class StoreNodeCommentRequest extends VaulterFormRequest
 {
@@ -29,12 +28,8 @@ final class StoreNodeCommentRequest extends VaulterFormRequest
 
     public function toData(): AddCommentInput
     {
-        $user = $this->user();
-
         return new AddCommentInput(
             body: $this->string('body')->toString(),
-            authorType: $user instanceof Model ? $user->getMorphClass() : 'guest',
-            authorId: $this->actorId() ?? 0,
             parentId: $this->nullableScalarId('parent_id'),
             anchor: $this->nullableArrayInput('anchor'),
         );

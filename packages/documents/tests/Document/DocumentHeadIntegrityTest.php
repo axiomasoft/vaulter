@@ -13,6 +13,7 @@ use Vaulter\Documents\Data\Collaboration\PersistCollaborationStateInput;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
 use Vaulter\Documents\Data\Revisions\CreateNamedRevisionInput;
+use Vaulter\Documents\Data\Revisions\RestoreDocumentRevisionInput;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
@@ -29,7 +30,7 @@ function headIntegrityDocument(string $name): Node
 {
     $drive = DocumentTestHelpers::drive();
 
-    return app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+    return app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive->model()), new CreateDocumentInput(
         storage: $drive->model(),
         name: $name,
         content: DocumentTestHelpers::content($name),
@@ -53,14 +54,14 @@ it('keeps the head inside its own document through every writer', function (): v
     headIntegrityDocument('Neighbour');
     assertOwnHead($node);
 
-    app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(node: $node, content: DocumentTestHelpers::content('update')));
+    app(UpdateDocumentContentAction::class)->execute(DocumentTestHelpers::context($node), new UpdateDocumentContentInput(node: $node, content: DocumentTestHelpers::content('update')));
     assertOwnHead($node);
     app(PersistCollaborationStateAction::class)->execute(new PersistCollaborationStateInput(node: $node, yjsState: "yjs\0state"));
     assertOwnHead($node);
-    $named = app(CreateNamedRevisionAction::class)->execute(new CreateNamedRevisionInput(node: $node, label: 'named', keepForever: true));
+    $named = app(CreateNamedRevisionAction::class)->execute(DocumentTestHelpers::context($node), new CreateNamedRevisionInput(node: $node, label: 'named', keepForever: true));
     assertOwnHead($node);
-    app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(node: $node, content: DocumentTestHelpers::content('moved on')));
-    app(RestoreDocumentRevisionAction::class)->execute(node: $node, versionId: $named->id);
+    app(UpdateDocumentContentAction::class)->execute(DocumentTestHelpers::context($node), new UpdateDocumentContentInput(node: $node, content: DocumentTestHelpers::content('moved on')));
+    app(RestoreDocumentRevisionAction::class)->execute(DocumentTestHelpers::context($node), new RestoreDocumentRevisionInput(node: $node, revision: $named->id));
     assertOwnHead($node);
 });
 

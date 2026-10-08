@@ -88,7 +88,7 @@ PHP_CODE))->toContain('Vaulter\Drive\Actions\Nodes\RenameNodeAction', 'Vaulter\R
 /**
  * ADR 0020 §3 as a ratchet (audit F13): no HTTP controller or Filament class imports Actions or
  * Repositories. The files below predate the migration to Operations; the list can only shrink,
- * and a file that is clean again must be removed from it. Documents controllers leave in P4.
+ * and a file that is clean again must be removed from it.
  */
 it('keeps every HTTP and Filament boundary on Operations except the shrinking exemption list', function (): void {
     $root = dirname(__DIR__, 3);
@@ -96,9 +96,6 @@ it('keeps every HTTP and Filament boundary on Operations except the shrinking ex
         'core/src/Http/Controllers/Sharing/PublicShareController.php',
         'core/src/Http/Controllers/Webhooks/WebhookEndpointsController.php',
         'core/src/Http/Support/HttpResourceResolver.php',
-        'documents/src/Http/Controllers/Collaboration/NodeCollaborationController.php',
-        'documents/src/Http/Controllers/Comments/NodeCommentController.php',
-        'documents/src/Http/Controllers/Documents/DocumentNodeController.php',
         'drive/src/Http/Controllers/Drives/ShowDriveController.php',
         'drive/src/Http/Controllers/Uploads/S3MultipartProtocolController.php',
         'drive/src/Http/Controllers/Uploads/TusProtocolController.php',

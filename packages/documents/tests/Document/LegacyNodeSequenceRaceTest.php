@@ -27,7 +27,7 @@ beforeEach(function (): void {
 function legacyRaceDocument(): Node
 {
     $drive = DocumentTestHelpers::drive();
-    $node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+    $node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive->model()), new CreateDocumentInput(
         storage: $drive->model(),
         name: 'Race document',
         content: DocumentTestHelpers::content('initial'),
@@ -61,7 +61,7 @@ it('SEC-LEGACY-RACE lets a content write and a rename with their own validators 
     $drive = $node->storage;
     $outcomes = ForkRace::run([
         static fn (): array => legacyRaceWrite(static fn () => app(UpdateDocumentContentAction::class)->execute(
-            new UpdateDocumentContentInput(node: $node, content: DocumentTestHelpers::content('race edit'), expectedStateVersion: 1),
+            DocumentTestHelpers::context($node), new UpdateDocumentContentInput(node: $node, content: DocumentTestHelpers::content('race edit'), expectedStateVersion: 1),
         )),
         static fn (): array => legacyRaceWrite(static fn () => Vaulter::drive($drive)->asSystem('legacy sequence race')
             ->nodes()->rename(node: $node, name: 'race rename', expectedSequence: 7)),

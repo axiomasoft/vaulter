@@ -12,6 +12,7 @@ use Vaulter\Documents\Data\Collaboration\PersistCollaborationStateInput;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
 use Vaulter\Documents\Data\Revisions\CreateNamedRevisionInput;
+use Vaulter\Documents\Data\Revisions\RestoreDocumentRevisionInput;
 use Vaulter\Documents\Engines\Handlers\TipTapHandler;
 use Vaulter\Documents\Events\Documents\DocumentCreated;
 use Vaulter\Documents\Events\Revisions\DocumentRevisionCreated;
@@ -35,7 +36,7 @@ it('creates a kind=document node with its aggregate and checkpoint #1', function
 
     $drive = DocumentTestHelpers::drive();
 
-    $node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+    $node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive->model()), new CreateDocumentInput(
         storage: $drive->model(),
         name: 'Spec',
         content: DocumentTestHelpers::content('First draft'),
@@ -63,7 +64,7 @@ it('creates a kind=document node with its aggregate and checkpoint #1', function
 it('round-trips the content through TipTapRenderer', function (): void {
     $drive = DocumentTestHelpers::drive();
 
-    $node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+    $node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive->model()), new CreateDocumentInput(
         storage: $drive->model(),
         name: 'Doc',
         content: DocumentTestHelpers::content('Round trip'),
@@ -82,11 +83,11 @@ it('writes autosaves to the working state and leaves stored checkpoints alone in
     $node = createDocument($drive, 'Live');
     $first = DocumentTestHelpers::head($node);
 
-    app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
+    app(UpdateDocumentContentAction::class)->execute(DocumentTestHelpers::context($node->refresh()), new UpdateDocumentContentInput(
         node: $node->refresh(),
         content: DocumentTestHelpers::content('edit one'),
     ));
-    $result = app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
+    $result = app(UpdateDocumentContentAction::class)->execute(DocumentTestHelpers::context($node->refresh()), new UpdateDocumentContentInput(
         node: $node->refresh(),
         content: DocumentTestHelpers::content('edit two'),
     ));
@@ -107,7 +108,7 @@ it('takes an autosave checkpoint once the interval has passed', function (): voi
     $node = createDocument($drive, 'Churny');
 
     $this->travel(301)->seconds();
-    $result = app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
+    $result = app(UpdateDocumentContentAction::class)->execute(DocumentTestHelpers::context($node->refresh()), new UpdateDocumentContentInput(
         node: $node->refresh(),
         content: DocumentTestHelpers::content('later'),
     ));
@@ -127,7 +128,7 @@ it('creates a NAMED checkpoint with a label and makes it the head', function ():
     $node = createDocument($drive, 'Named');
     $before = DocumentTestHelpers::document($node);
 
-    $version = app(CreateNamedRevisionAction::class)->execute(new CreateNamedRevisionInput(
+    $version = app(CreateNamedRevisionAction::class)->execute(DocumentTestHelpers::context($node->refresh()), new CreateNamedRevisionInput(
         node: $node->refresh(),
         label: 'Final review',
     ));
@@ -150,16 +151,16 @@ it('restore copies a prior checkpoint forward and records where it came from', f
     $node = createDocument($drive, 'Restorable');
     $first = DocumentTestHelpers::head($node);
 
-    app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
+    app(UpdateDocumentContentAction::class)->execute(DocumentTestHelpers::context($node->refresh()), new UpdateDocumentContentInput(
         node: $node->refresh(),
         content: DocumentTestHelpers::content('moved on'),
     ));
     $before = DocumentTestHelpers::document($node);
 
-    $restored = app(RestoreDocumentRevisionAction::class)->execute(
+    $restored = app(RestoreDocumentRevisionAction::class)->execute(DocumentTestHelpers::context($node), new RestoreDocumentRevisionInput(
         node: $node->refresh(),
-        versionId: $first->getKey(),
-    );
+        revision: $first->getKey(),
+    ));
     $after = DocumentTestHelpers::document($node);
 
     expect($restored->getKey())->not->toEqual($first->getKey())
@@ -181,14 +182,14 @@ it('prunes past the max but NEVER a keep_forever checkpoint nor the head', funct
     $drive = DocumentTestHelpers::drive();
     $node = createDocument($drive, 'Pruned');
 
-    app(CreateNamedRevisionAction::class)->execute(new CreateNamedRevisionInput(
+    app(CreateNamedRevisionAction::class)->execute(DocumentTestHelpers::context($node->refresh()), new CreateNamedRevisionInput(
         node: $node->refresh(),
         label: 'pinned',
         keepForever: true,
     ));
 
     foreach (range(1, 8) as $i) {
-        app(CreateNamedRevisionAction::class)->execute(new CreateNamedRevisionInput(
+        app(CreateNamedRevisionAction::class)->execute(DocumentTestHelpers::context($node->refresh()), new CreateNamedRevisionInput(
             node: $node->refresh(),
             label: "v{$i}",
         ));
@@ -210,7 +211,7 @@ it('prunes past the max but NEVER a keep_forever checkpoint nor the head', funct
  */
 function createDocument($drive, string $name): Node
 {
-    return app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+    return app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive->model()), new CreateDocumentInput(
         storage: $drive->model(),
         name: $name,
         content: DocumentTestHelpers::content('seed'),
@@ -230,7 +231,7 @@ it('CreateDocumentAction rejects content over max_document_size_kb, F-P1.11-05',
 
     $drive = DocumentTestHelpers::drive();
 
-    app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+    app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive->model()), new CreateDocumentInput(
         storage: $drive->model(),
         name: 'Too big',
         content: oversizedContent(),
@@ -244,7 +245,7 @@ it('UpdateDocumentContentAction rejects content over max_document_size_kb, F-P1.
 
     config()->set('vaulter-documents.content.max_size_kb', 1);
 
-    app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
+    app(UpdateDocumentContentAction::class)->execute(DocumentTestHelpers::context($node->refresh()), new UpdateDocumentContentInput(
         node: $node->refresh(),
         content: oversizedContent(),
     ));

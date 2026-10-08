@@ -73,34 +73,92 @@ v_document_revisions(id, document_id)` с `ON DELETE RESTRICT` гарантир�
 перемещении и корзине, `state_version` — при записи контента. Переименование документа не
 инвалидирует открытый редактор, а сохранение не инвалидирует переименование (PLAN2.D35).
 
+## PHP API
+
+Публичный PHP API — `Documents::in($drive)` и `Documents::comments($drive)`. Они принимают хэндл
+диска (`Vaulter::drive($owner)`, при необходимости `->actingAs($user)` или `->asSystem($reason)`) и
+возвращают `Vaulter\Documents\Operations\DocumentOperations` и `CommentOperations`. Каждый метод
+находит узел в этом диске и авторизует его тем же стражем, что и файлы: узел в корзине, узел
+другого диска или тенанта и узел, который актор не видит, бросают `NodeNotFoundException`
+(`404 node_not_found`); видимый узел без нужной способности — `PermissionDeniedException`
+(`403 permission_denied`); ограничение профиля — `ProfileRestrictionException`.
+
+| Метод | Требует | Возвращает |
+|---|---|---|
+| `create($name, $type = 'vaulter/rich-text', ?array $content, $parent, ?CreateFolderOptions)` | `Create` на родителе, типы документов профиля | `NodeSnapshot` |
+| `content($document, $revision = null)` | `View` | `DocumentSnapshot` |
+| `update($document, array $content, ?int $expectedStateVersion)` | `Edit` | `DocumentSnapshot` |
+| `snapshot($document, ?string $label, bool $keepForever)` | `Edit` | `DocumentRevisionSnapshot` |
+| `revisions($document, ?ListOptions)` | `View` | `Page<DocumentRevisionSnapshot>`, сначала новые |
+| `restore($document, $revision, ?int $expectedStateVersion)` | `Edit` | `DocumentSnapshot` |
+| `setRetention($document, $revision, bool $keepForever)` | `Edit` | `DocumentRevisionSnapshot` |
+| `export($document, string $format, $revision = null)` | `Download` | `DocumentExport` |
+| `collaborationSession($document)` | `View` (чтение-запись при `Edit`); пользователь, не система | `CollaborationSession` |
+
+Комментарии (узел любого вида; профиль диска должен разрешать комментарии):
+
+| Метод | Требует | Возвращает |
+|---|---|---|
+| `list($node, ?ListOptions)` | `View` | `Page<CommentSnapshot>`, сначала старые |
+| `add($node, AddCommentInput $input)` | `Comment`; автор — действующий пользователь | `CommentSnapshot` |
+| `resolve($node, $comment)` | `Comment`, и авторство или `Edit` | `CommentSnapshot` |
+| `delete($node, $comment)` | авторство или `Manage` | — |
+
+Узлы, ревизии и комментарии передаются id (строка или int) или своим снапшотом. Ревизия или
+комментарий другого узла — «не найдено» (`document_revision_not_found`, `comment_not_found`).
+Экспорту нужен `Download`, а не `View`: previewer читает документ в приложении, но не может вынести
+копию.
+
+```php
+use Vaulter\Documents\Data\Comments\AddCommentInput;
+use Vaulter\Documents\Facades\Documents;
+use Vaulter\Facades\Vaulter;
+
+$drive = Vaulter::drive($project)->actingAs($user);
+$documents = Documents::in($drive);
+
+$node = $documents->create('Design notes', content: ['type' => 'doc', 'content' => []]);
+$doc = $documents->content($node->id);            // DocumentSnapshot: content, stateVersion, epoch, …
+$doc = $documents->update($node->id, $tipTapDoc, expectedStateVersion: $doc->stateVersion);
+$named = $documents->snapshot($node->id, 'Before review', keepForever: true);
+$html = $documents->export($node->id, 'html')->content;
+
+Documents::comments($drive)->add($node->id, new AddCommentInput('Looks good', anchor: ['from' => 1, 'to' => 4]));
+```
+
+`DocumentSnapshot` несёт `nodeId`, `documentId`, `type`, `schemaVersion`, `typeAvailable`,
+`editable` (false для исторической ревизии или недоступного типа), `epoch`, `stateVersion`,
+`dirty` (рабочее состояние опережает чекпоинт-голову), `headRevisionId`, `content`
+(`DocumentContent`: `TipTapContent` для rich text, иначе `OpaqueDocumentContent`), `revision`
+(голова или запрошенная ревизия), `contentHash`, `yjsStateSize`, `updatedAt` и `updatedBy`. Id —
+строки. Actions за этими методами — внутренние.
+
 ## Создание узла-документа
 
-Узел-документ создаётся под папкой (или в корне хранилища) вместе со своей версией **v1**,
-атомарно. Контент — это документ TipTap, обёрнутый в
-`Vaulter\Documents\ValueObjects\TipTapContent`; корневой узел должен быть `{"type":"doc", ...}`.
+Узел-документ создаётся под папкой (или в корне хранилища) вместе со своим первым чекпоинтом,
+атомарно. Контент rich text — документ TipTap; корневой узел должен быть `{"type":"doc", ...}`.
 
 ::: code-group
 
-```php [PHP — Action]
-use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
-use Vaulter\Documents\Data\Documents\CreateDocumentInput;
-use Vaulter\Documents\ValueObjects\TipTapContent;
+```php [PHP]
+use Vaulter\Data\Drive\CreateFolderOptions;
+use Vaulter\Documents\Facades\Documents;
+use Vaulter\Enums\Drive\OnNameConflict;
 
-$node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
-    storage: $storage,                       // the resolved v_storages row
-    name:    'Design notes',
-    content: TipTapContent::fromArray([
+$node = Documents::in($drive)->create(
+    name: 'Design notes',
+    type: 'vaulter/rich-text',              // or 'vaulter/markdown', 'vaulter/spreadsheet'
+    content: [
         'type'    => 'doc',
         'content' => [
             ['type' => 'paragraph', 'content' => [
                 ['type' => 'text', 'text' => 'Hello.'],
             ]],
         ],
-    ]),
-    parent:  $folder,                        // null = storage root
-    format:  'richtext',                     // a DocumentType value (default 'tiptap')
-    actorId: $user->getKey(),
-));
+    ],
+    parent: $folder->id,                     // null = drive root
+    options: new CreateFolderOptions(OnNameConflict::Rename),
+);
 ```
 
 ```bash [HTTP]
@@ -131,10 +189,11 @@ const node = await client.documentNodes.createNode(storageId, {
 
 :::
 
-Что происходит (`CreateDocumentAction`):
+Что происходит:
 
 - Первым отрабатывает страж уникальности среди соседей — коллизия имён бросает
-  `NodeNameConflictException`.
+  `NodeNameConflictException` или, с `OnNameConflict::Rename`, выбирает `Name (2)`. Неизвестный
+  или выключенный тип бросает `UnknownDocumentTypeException`.
 - Одна транзакция создаёт узел и агрегат, пишет рабочее состояние (`state_version = 1`) и
   снимает чекпоинт **#1** (`is_autosave = false`), затем после коммита выбрасывает
   `DocumentCreated`.
@@ -145,9 +204,9 @@ const node = await client.documentNodes.createNode(storageId, {
 
 Запрос валидирует `name`, опциональный `parent_id`, опциональный `format` (должен быть
 значением [`DocumentType`](./document-handlers.md#documenttype): `richtext`, `table`, `markdown`,
-`template`) и опциональный `content`, у которого `content.type` должен быть `doc`. Авторизация
-проверяется выше по потоку в контроллере — актору нужны и `canCreateInWorkspace`, и право
-(ability) `Create` на целевой точке.
+`template`) и опциональный `content`, у которого `content.type` должен быть `doc`. Актору нужно
+право `Create` на целевой точке (и гейт создания в воркспейсе драйвера прав), а профиль диска
+должен разрешать тип документа.
 
 ## Чтение контента
 
@@ -189,8 +248,8 @@ curl https://app.test/api/vaulter/nodes/77/content
 
 ### Автосохранение контента
 
-`UpdateDocumentContentAction` пишет через `DocumentStateWriter` — единственного писателя
-рабочего состояния:
+Каждая запись контента идёт через `DocumentStateWriter` — единственного писателя рабочего
+состояния:
 
 - идентичное сохранение (тот же хеш контента и состояние Yjs) — **no-op**: ни роста версии, ни
   события;
@@ -228,27 +287,24 @@ curl -X PATCH https://app.test/api/vaulter/nodes/77/content \
       }'
 ```
 
-```php [PHP — Action]
-use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
-use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
-use Vaulter\Documents\ValueObjects\TipTapContent;
+```php [PHP]
+use Vaulter\Documents\Facades\Documents;
 
-app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
-    node:     $node,
-    content:  TipTapContent::fromArray($tipTapDoc),
-    yjsState: null,                  // optional raw Yjs binary update
-    actorId:  $user->getKey(),
+$doc = Documents::in($drive)->update(
+    $node->id,
+    $tipTapDoc,
     expectedStateVersion: 3,         // optional: 412 when another save landed first
-));
+);
 ```
 
 :::
 
-PATCH возвращает `200` с рабочим состоянием — автосохранение семантически это апдейт. `yjs_state` — это опциональный **закодированный в base64** Yjs CRDT-апдейт на проводе;
+PATCH возвращает `200` с рабочим состоянием — автосохранение семантически это апдейт; `update()`
+возвращает новый `DocumentSnapshot`. `yjs_state` — это опциональный **закодированный в base64** Yjs CRDT-апдейт на проводе;
 запрос декодирует его обратно в сырые байты (и он равен null для несовместного пути). TipTap
-`content` — его проекция. Если сохранение что-то изменило, Action после коммита выбрасывает
+`content` — его проекция. Если сохранение что-то изменило, после коммита выбрасывается
 `DocumentContentUpdated`: `version` — чекпоинт-голова после сохранения, `created` — снят ли он
-этим сохранением.
+этим сохранением. `actorId` события — действующий пользователь (null для системы).
 
 ::: tip Клиентский дебаунс и интервал чекпоинтов
 `useDocumentNode({ debounceMs })` — **клиентский** таймер перед отправкой PATCH (по умолчанию
@@ -277,21 +333,13 @@ curl -X POST https://app.test/api/vaulter/nodes/77/document-versions \
   -d '{ "label": "Before client review", "keep_forever": true }'
 ```
 
-```php [PHP — Action]
-use Vaulter\Documents\Actions\Revisions\CreateNamedRevisionAction;
-use Vaulter\Documents\Data\Revisions\CreateNamedRevisionInput;
-
-app(CreateNamedRevisionAction::class)->execute(new CreateNamedRevisionInput(
-    node:        $node,
-    label:       'Before client review',
-    keepForever: true,
-    actorId:     $user->getKey(),
-));
+```php [PHP]
+$revision = Documents::in($drive)->snapshot($node->id, 'Before client review', keepForever: true);
 ```
 
 :::
 
-`CreateNamedRevisionAction` снимает текущее **рабочее состояние** в свежую ревизию с
+Именованный снимок снимает текущее **рабочее состояние** в свежую ревизию с
 `is_autosave = false`, делает её головой, прунит и выбрасывает `DocumentRevisionCreated`
 (`restored = false`). Ни `state_version`, ни `collab_epoch` не меняются, поэтому предусловие не
 нужно.
@@ -312,10 +360,18 @@ await loadVersions()
 curl 'https://app.test/api/vaulter/nodes/77/document-versions?per_page=50'
 ```
 
+```php [PHP]
+use Vaulter\Data\Drive\ListOptions;
+
+$page = Documents::in($drive)->revisions($node->id, new ListOptions(perPage: 50));
+$next = Documents::in($drive)->revisions($node->id, new ListOptions(perPage: 50, cursor: $page->nextCursor));
+```
+
 :::
 
 Листинг пагинируется курсором (`per_page` зажат в диапазон 1–200, по умолчанию 50), сначала
-самый свежий `version_no`, и опускает `content`. Каждый элемент — `DocumentVersion`:
+самые свежие (по времени создания), и опускает `content`. Каждый элемент — `DocumentVersion`; id —
+строки:
 
 ```ts
 interface DocumentVersion {
@@ -355,19 +411,14 @@ const restored = await restoreVersion(versionId)
 curl -X POST https://app.test/api/vaulter/nodes/77/document-versions/12/restore
 ```
 
-```php [PHP — Action]
-use Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction;
-
-app(RestoreDocumentRevisionAction::class)->execute(
-    node:      $node,
-    versionId: 12,
-    actorId:   $user->getKey(),
-);
+```php [PHP]
+$doc = Documents::in($drive)->restore($node->id, '12', expectedStateVersion: $doc->stateVersion);
+// $doc->revision is the new head; $doc->revision->restoredFromRevisionId === '12'
 ```
 
 :::
 
-`RestoreDocumentRevisionAction` резолвит исходный чекпоинт **в документе этого узла** (id ревизии
+Восстановление резолвит исходный чекпоинт **в документе этого узла** (id ревизии
 другого документа или ревизии файла с тем же id здесь не восстановится), пишет его как рабочее
 состояние (`state_version` +1, `collab_epoch` +1; опционально `expectedStateVersion`), снимает
 чекпоинт с меткой `Restored from #N` и `restored_from_revision_id`, прунит и выбрасывает
@@ -432,9 +483,13 @@ Purge документа из корзины удаляет его чекпои�
 
 | Исключение | Когда |
 |---|---|
-| `Exceptions\NotADocumentException` | Операция с контентом/версией нацелена на узел, который не `kind=document`. |
+| `Documents\Exceptions\NotADocumentException` | Операция с контентом/версией нацелена на узел, который не `kind=document`. |
+| `Exceptions\Nodes\NodeNotFoundException` | Узла нет, он в корзине, в другом диске или тенанте, либо актор его не видит (`404 node_not_found`). |
+| `Exceptions\Access\PermissionDeniedException` | Актор видит узел, но нужной способности нет (`403 permission_denied`), например экспорт без `Download`. |
+| `Documents\Exceptions\UnknownDocumentTypeException` | `create()` называет неизвестный или выключенный тип (`422 unknown_document_type`). |
+| `Documents\Exceptions\CommentNotFoundException` | Id комментария не принадлежит адресованному узлу (`404 comment_not_found`). |
 | `Documents\Exceptions\InvalidDocumentContentException` | Корневой узел контента не `{"type":"doc"}`, либо превышает `max_document_size_kb`. |
-| `Exceptions\DocumentRevisionNotFoundException` | Восстановление нацелено на id версии, не принадлежащий узлу. |
+| `Documents\Exceptions\DocumentRevisionNotFoundException` | Id ревизии не принадлежит документу узла. |
 | `Documents\Exceptions\StaleDocumentStateException` | `expectedStateVersion` больше не совпадает (`412 document_state_mismatch`). |
 | `Documents\Exceptions\CollaborationEpochMismatchException` | Запись коллаборации из старого поколения комнаты (`409 collaboration_epoch_mismatch`). |
 | `Exceptions\Drive\NodeNameConflictException` | Создание сталкивается с именем соседа. |

@@ -53,6 +53,11 @@
 Драйверу Hocuspocus нужен `VAULTER_COLLAB_SECRET`. Задайте общий секрет в своём
 окружении.
 
+## comment-not-found
+
+`comment_not_found` (404) — комментария нет или он принадлежит другому узлу (в том числе
+`parent_id` ответа). Возьмите id из списка комментариев этого узла.
+
 ## document-state-mismatch
 
 `document_state_mismatch` (412) — сохранение несло `expectedStateVersion`, но раньше успело

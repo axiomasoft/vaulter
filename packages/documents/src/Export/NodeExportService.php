@@ -9,6 +9,7 @@ use Vaulter\Contracts\Handlers\DocumentContent;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Documents\Contracts\ExportFilenameResolver;
 use Vaulter\Documents\Exceptions\NotADocumentException;
+use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Registries\DocumentExporterRegistry;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Documents\ValueObjects\DocumentExport;
@@ -56,11 +57,12 @@ final class NodeExportService
     ) {}
 
     /**
-     * Export a document node's current head content in the given format. The handler
+     * Export a document node's working state — or $revision, a checkpoint the caller
+     * already resolved inside this node's document — in the given format. The handler
      * resolved for the node must be exportable (editable/previewable); otherwise the
      * format set is empty and the export is rejected by the exporter lookup.
      */
-    public function export(OperationContext $context, Node $node, string $format): DocumentExport
+    public function export(OperationContext $context, Node $node, string $format, ?DocumentRevision $revision = null): DocumentExport
     {
         $node = $this->assertContentAvailable($context, $node);
         if (!$node->kind->isDocument()) {
@@ -69,9 +71,9 @@ final class NodeExportService
 
         return $this->metrics->timing(
             name: 'vaulter_export_duration_seconds',
-            operation: function () use ($node, $format): DocumentExport {
+            operation: function () use ($node, $format, $revision): DocumentExport {
                 $exporter = $this->exporters->get($format);
-                $content = $this->contentOf($node);
+                $content = $this->contentOf($node, $revision);
 
                 return new DocumentExport(
                     format: $exporter->format(),
@@ -129,9 +131,9 @@ final class NodeExportService
      * ({@see UnsupportedDocumentContentException}) — it now reaches the guard as
      * its own shape.
      */
-    private function contentOf(Node $node): DocumentContent
+    private function contentOf(Node $node, ?DocumentRevision $revision): DocumentContent
     {
-        $head = $this->documents->forNode($node);
+        $head = $revision ?? $this->documents->forNode($node);
 
         if ($head === null) {
             throw NodeNotFoundException::forId($node->id);

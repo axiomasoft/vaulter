@@ -16,12 +16,18 @@ use Vaulter\Documents\Repositories\Documents\DocumentStoreRepository;
 use Vaulter\Documents\Support\DocumentTypeKey;
 use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Enums\Drive\OnNameConflict;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
+use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Profiles\DrivePolicyEnforcer;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
+use Vaulter\Support\Identity;
+use Vaulter\Support\NodeName;
 use Vaulter\Support\TreeGuard;
 
 /**
@@ -38,8 +44,9 @@ use Vaulter\Support\TreeGuard;
  * the synthetic Vaulter document mime routes to the TipTap editor, while an xlsx mime
  * routes a spreadsheet node to the Univer handler — both via the same registry (§7).
  *
- * Authorization is enforced UPSTREAM at the controller (canCreate on the
- * destination) — the Action stays pure and only does the row work.
+ * Authorization is enforced upstream by DocumentOperations (create on the
+ * destination, profile document types); the Action only does the row work. The actor
+ * is the operation's, and the storage must be the operation's drive.
  */
 final readonly class CreateDocumentAction
 {
@@ -54,8 +61,12 @@ final readonly class CreateDocumentAction
         private DrivePolicyEnforcer $policy,
     ) {}
 
-    public function execute(CreateDocumentInput $data): Node
+    public function execute(OperationContext $context, CreateDocumentInput $data): Node
     {
+        if (Identity::stringify($data->storage->getKey()) !== Identity::stringify($context->driveId())) {
+            throw NodeNotFoundException::forId('drive');
+        }
+        $actorId = $context->actor->ref()->id;
         $name = $this->policy->name(drive: $data->storage, name: $data->name);
         $parentId = $this->tree->destinationId(storage: $data->storage, into: $data->parent);
 
@@ -67,7 +78,7 @@ final readonly class CreateDocumentAction
             $data->content->ensureWithin($this->documentsConfig->maxContentSizeKb());
         }
 
-        return $this->database->transaction(function () use ($data, $name, $parentId): Node {
+        return $this->database->transaction(function () use ($data, $name, $parentId, $actorId): Node {
             $this->database->lockTreeShared($data->storage->id);
 
             $parent = $this->tree->locked($this->tree->lock([$parentId]), $parentId);
@@ -79,9 +90,7 @@ final readonly class CreateDocumentAction
             $this->policy->assertChildren(drive: $data->storage, parentId: $parentId);
             $this->policy->assertDepth(drive: $data->storage, parent: $parent);
 
-            if ($this->nodes->siblingNameExists(storage: $data->storage, parentId: $parentId, name: $name)) {
-                throw NodeNameConflictException::forName(name: $name, parentId: $parentId);
-            }
+            $name = $this->freeName($data->storage, $parentId, $name, $data->onConflict);
 
             $node = $this->store->create([
                 'drive_id' => $data->storage->id,
@@ -90,31 +99,55 @@ final readonly class CreateDocumentAction
                 'name' => $name,
                 'mime_type' => $data->mimeType,
                 'size_bytes' => $data->content->sizeInBytes(),
-                'created_by' => $data->actorId,
+                'created_by' => $actorId,
             ]);
 
             $document = $this->documents->create([
                 'node_id' => $node->getKey(),
                 'type' => DocumentTypeKey::fromFormat($data->format),
                 'schema_version' => 1,
-                'created_by' => $data->actorId,
-                'updated_by' => $data->actorId,
+                'created_by' => $actorId,
+                'updated_by' => $actorId,
             ]);
             $document->setRelation('node', $node);
 
             $result = $this->writer->write($document, new DocumentStateChange(
                 cause: StateWriteCause::Create,
                 content: $data->content,
-                actorId: $data->actorId,
+                actorId: $actorId,
                 forceCheckpoint: true,
             ));
             $checkpoint = $result->checkpoint ?? throw new LogicException('[Vaulter] A new document must get its first checkpoint.');
 
             $node = $node->refresh();
 
-            event(new DocumentCreated(node: $node, version: $checkpoint, actorId: $data->actorId));
+            event(new DocumentCreated(node: $node, version: $checkpoint, actorId: $actorId));
 
             return $node;
         });
+    }
+
+    /**
+     * The name itself, or on Rename the first free "<stem> (N)<.ext>". Caller holds the
+     * tree and parent locks. (Documents cannot depend on drive's NameConflictResolver.)
+     */
+    private function freeName(Drive $storage, int|string $parentId, string $name, OnNameConflict $onConflict): string
+    {
+        $name = NodeName::normalize($name);
+        $candidate = $name;
+        for ($i = 2; $i <= 7; $i++) {
+            if (!$this->nodes->siblingNameExists(storage: $storage, parentId: $parentId, name: $candidate)) {
+                return $candidate;
+            }
+            if ($onConflict !== OnNameConflict::Rename || $i === 7) {
+                break;
+            }
+            $extension = pathinfo($name, PATHINFO_EXTENSION);
+            $stem = $extension === '' ? $name : substr($name, 0, -strlen($extension) - 1);
+            $suffix = ' ('.$i.')'.($extension === '' ? '' : '.'.$extension);
+            $candidate = mb_strcut($stem, 0, NodeName::MAX_BYTES - strlen($suffix), 'UTF-8').$suffix;
+        }
+
+        throw NodeNameConflictException::forName($name, $parentId);
     }
 }

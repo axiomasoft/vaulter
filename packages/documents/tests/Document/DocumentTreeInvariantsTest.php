@@ -23,7 +23,7 @@ use Vaulter\Tests\Fixtures\TestUser;
  */
 function createDocumentUnder(DriveHandle $drive, string $name, Node|NodeSnapshot|null $parent): Node
 {
-    return app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+    return app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive->model()), new CreateDocumentInput(
         storage: $drive->model(),
         name: $name,
         content: DocumentTestHelpers::content(),

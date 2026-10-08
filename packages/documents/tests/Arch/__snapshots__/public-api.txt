@@ -82,3 +82,112 @@ Vaulter\Documents\Events\Revisions\DocumentRevisionCreated
   readonly bool $restored
   readonly int|null|string $actorId
   readonly string $eventId
+
+FACADE Vaulter\Documents\Facades\Documents
+  static CommentOperations comments(DriveHandle $drive)
+  static DocumentExporterRegistry exporters()
+  static DocumentOperations in(DriveHandle $drive)
+  static DocumentTypeRegistry types()
+
+Vaulter\Documents\DocumentsManager
+  __construct(\Vaulter\Documents\Registries\DocumentTypeRegistry $types, \Vaulter\Documents\Registries\DocumentExporterRegistry $exporters)
+  comments(\Vaulter\Contracts\Drive\DriveHandle $drive): \Vaulter\Documents\Operations\CommentOperations
+  exporters(): \Vaulter\Documents\Registries\DocumentExporterRegistry
+  in(\Vaulter\Contracts\Drive\DriveHandle $drive): \Vaulter\Documents\Operations\DocumentOperations
+  types(): \Vaulter\Documents\Registries\DocumentTypeRegistry
+
+Vaulter\Documents\Operations\DocumentOperations
+  __construct(\Vaulter\Operations\OperationContext $context, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Access\OperationGuard $guard, \Vaulter\Profiles\ProfilePolicy $profiles, \Vaulter\Documents\Configuration\DocumentsConfig $config, \Vaulter\Documents\Actions\Documents\CreateDocumentAction $create, \Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction $update, \Vaulter\Documents\Actions\Revisions\CreateNamedRevisionAction $snapshot, \Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction $restore, \Vaulter\Documents\Actions\Revisions\UpdateRevisionRetentionAction $retention, \Vaulter\Documents\Export\NodeExportService $exports, \Vaulter\Documents\Collaboration\CollaborationSessionService $sessions, \Vaulter\Documents\Queries\DocumentQuery $query, \Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper $mapper, \Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper $nodes, \Vaulter\Handlers\FileDescriptorFactory $descriptors, \Vaulter\Handlers\FileHandlerRegistry $handlers)
+  collaborationSession(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $document, ?int $clientSchemaVersion = null): \Vaulter\Documents\Data\Collaboration\CollaborationSession
+  content(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $document, \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|null|string $revision = null): \Vaulter\Documents\Data\Snapshots\DocumentSnapshot
+  create(string $name, string $type = 'vaulter/rich-text', ?array $content = null, \Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $parent = null, ?\Vaulter\Data\Drive\CreateFolderOptions $options = null): \Vaulter\Data\Snapshots\NodeSnapshot
+  export(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $document, string $format, \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|null|string $revision = null): \Vaulter\Documents\ValueObjects\DocumentExport
+  restore(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $document, \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|string $revision, ?int $expectedStateVersion = null): \Vaulter\Documents\Data\Snapshots\DocumentSnapshot
+  revisions(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $document, ?\Vaulter\Data\Drive\ListOptions $options = null): \Vaulter\Data\Page
+  setRetention(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $document, \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|string $revision, bool $keepForever): \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot
+  snapshot(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $document, ?string $label = null, bool $keepForever = false): \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot
+  update(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $document, array $content, ?int $expectedStateVersion = null): \Vaulter\Documents\Data\Snapshots\DocumentSnapshot
+
+Vaulter\Documents\Operations\CommentOperations
+  __construct(\Vaulter\Operations\OperationContext $context, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Access\OperationGuard $guard, \Vaulter\Profiles\ProfilePolicy $profiles, \Vaulter\Documents\Queries\DocumentQuery $query, \Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper $mapper, \Vaulter\Documents\Actions\Comments\AddCommentAction $add, \Vaulter\Documents\Actions\Comments\ResolveCommentAction $resolve, \Vaulter\Documents\Actions\Comments\DeleteCommentAction $delete)
+  add(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Documents\Data\Comments\AddCommentInput $input): \Vaulter\Documents\Data\Snapshots\CommentSnapshot
+  delete(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Documents\Data\Snapshots\CommentSnapshot|int|string $comment): void
+  list(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, ?\Vaulter\Data\Drive\ListOptions $options = null): \Vaulter\Data\Page
+  resolve(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Documents\Data\Snapshots\CommentSnapshot|int|string $comment): \Vaulter\Documents\Data\Snapshots\CommentSnapshot
+
+Vaulter\Documents\Data\Snapshots\DocumentSnapshot
+
+  readonly ?\Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot $revision
+  readonly ?int $yjsStateSize
+  readonly ?string $contentHash
+  readonly ?string $headRevisionId
+  readonly ?string $updatedBy
+  readonly \DateTimeImmutable $updatedAt
+  readonly \Vaulter\Contracts\Handlers\DocumentContent $content
+  readonly bool $dirty
+  readonly bool $editable
+  readonly bool $typeAvailable
+  readonly int $epoch
+  readonly int $schemaVersion
+  readonly int $stateVersion
+  readonly string $documentId
+  readonly string $nodeId
+  readonly string $type
+
+Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot
+
+  readonly ?int $contentSize
+  readonly ?int $yjsStateSize
+  readonly ?string $contentHash
+  readonly ?string $createdBy
+  readonly ?string $label
+  readonly ?string $restoredFromRevisionId
+  readonly \DateTimeImmutable $createdAt
+  readonly bool $isAutosave
+  readonly bool $isHead
+  readonly bool $keepForever
+  readonly int $number
+  readonly int $schemaVersion
+  readonly int $stateVersion
+  readonly string $documentId
+  readonly string $id
+  readonly string $nodeId
+  readonly string $type
+
+Vaulter\Documents\Data\Snapshots\CommentSnapshot
+
+  readonly ?\DateTimeImmutable $resolvedAt
+  readonly ?array $anchor
+  readonly ?string $parentId
+  readonly ?string $resolvedBy
+  readonly \DateTimeImmutable $createdAt
+  readonly string $authorId
+  readonly string $authorType
+  readonly string $body
+  readonly string $id
+  readonly string $nodeId
+
+Vaulter\Documents\Data\Comments\AddCommentInput
+  __construct(string $body, int|null|string $parentId = null, ?array $anchor = null)
+  readonly ?array $anchor
+  readonly int|null|string $parentId
+  readonly string $body
+
+Vaulter\Documents\Data\Collaboration\CollaborationSession
+  __construct(\Vaulter\Documents\Enums\Collaboration\CollaborationDriverType $driver, string $room, int|string $nodeId, bool $readOnly, string $token, ?string $url = null, ?string $connection = null)
+  toArray(): array
+  readonly ?string $connection
+  readonly ?string $url
+  readonly \Vaulter\Documents\Enums\Collaboration\CollaborationDriverType $driver
+  readonly bool $readOnly
+  readonly int|string $nodeId
+  readonly string $room
+  readonly string $token
+
+Vaulter\Documents\ValueObjects\DocumentExport
+  __construct(string $format, string $content, string $mimeType, string $filename)
+  toArray(): array
+  readonly string $content
+  readonly string $filename
+  readonly string $format
+  readonly string $mimeType

@@ -8,6 +8,7 @@ use LogicException;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Content\DocumentStateWriter;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
+use Vaulter\Documents\Data\Revisions\RestoreDocumentRevisionInput;
 use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Events\Revisions\DocumentRevisionCreated;
 use Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException;
@@ -17,7 +18,7 @@ use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
 use Vaulter\Documents\ValueObjects\OpaqueDocumentContent;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Support\TreeGuard;
 
 /**
@@ -41,13 +42,17 @@ final readonly class RestoreDocumentRevisionAction
         private TreeGuard $tree,
     ) {}
 
-    public function execute(Node $node, int|string $versionId, int|string|null $actorId = null, ?int $expectedStateVersion = null): DocumentRevision
+    public function execute(OperationContext $context, RestoreDocumentRevisionInput $data): DocumentRevision
     {
-        return $this->database->transaction(function () use ($node, $versionId, $actorId, $expectedStateVersion): DocumentRevision {
-            $driveId = $node->getRawOriginal('drive_id');
+        $node = $data->node;
+        $versionId = $data->revision instanceof DocumentRevision ? $data->revision->getKey() : $data->revision;
+        $actorId = $context->actor->ref()->id;
+
+        return $this->database->transaction(function () use ($context, $node, $versionId, $actorId, $data): DocumentRevision {
+            // The node must live in the operation's drive; the locked row is checked below.
+            $driveId = $context->driveId();
             $nodeId = $node->getRawOriginal($node->getKeyName());
-            if (!$node->exists || (!is_int($nodeId) && !is_string($nodeId)) || $nodeId === ''
-                || (!is_int($driveId) && !is_string($driveId)) || $driveId === '') {
+            if (!$node->exists || (!is_int($nodeId) && !is_string($nodeId)) || $nodeId === '' || $driveId === '') {
                 throw NodeNotFoundException::forId('unpersisted');
             }
             $this->database->lockTreeShared($driveId);
@@ -61,7 +66,7 @@ final readonly class RestoreDocumentRevisionAction
             $node = $this->tree->sync($node, $current);
             $document = $this->documents->lockForNode($node) ?? throw NotADocumentException::forNode($nodeId);
             $document->setRelation('node', $node);
-            $source = $this->revisions->forNode($node, $versionId);
+            $source = is_int($versionId) || (is_string($versionId) && $versionId !== '') ? $this->revisions->forNode($node, $versionId) : null;
             if (!$source instanceof DocumentRevision) {
                 throw DocumentRevisionNotFoundException::forNode($nodeId, $versionId);
             }
@@ -72,7 +77,7 @@ final readonly class RestoreDocumentRevisionAction
                 yjsState: $source->yjs_state,
                 schemaVersion: $source->schema_version,
                 actorId: $actorId,
-                expectedStateVersion: $expectedStateVersion,
+                expectedStateVersion: $data->expectedStateVersion,
                 forceCheckpoint: true,
                 label: sprintf('Restored from #%d', $source->number),
                 restoredFrom: $source,

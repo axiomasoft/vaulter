@@ -26,7 +26,7 @@ function documentNode(): Node
 {
     $drive = DocumentTestHelpers::drive();
 
-    return app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+    return app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive->model()), new CreateDocumentInput(
         storage: $drive->model(),
         name: 'Spec',
         content: DocumentTestHelpers::content('First draft'),

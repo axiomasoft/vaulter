@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\MassAssignmentException;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Actions\Revisions\UpdateRevisionRetentionAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
+use Vaulter\Documents\Data\Revisions\UpdateRevisionRetentionInput;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionStoreRepository;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
@@ -19,7 +20,7 @@ use Vaulter\Tests\Drive\DriveTestHelpers;
 function immutableCheckpoint(): DocumentRevision
 {
     $drive = DocumentTestHelpers::drive();
-    $node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+    $node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive->model()), new CreateDocumentInput(
         storage: $drive->model(),
         name: 'Immutable '.bin2hex(random_bytes(3)),
         content: DocumentTestHelpers::content('frozen'),
@@ -52,7 +53,7 @@ it('changes keep_forever through setRetention, the one allowed mutation', functi
     app(DocumentRevisionStoreRepository::class)->setRetention($revision, keepForever: true);
     expect($revision->refresh()->keep_forever)->toBeTrue();
 
-    app(UpdateRevisionRetentionAction::class)->execute($revision->document->node, $revision->id);
+    app(UpdateRevisionRetentionAction::class)->execute(DocumentTestHelpers::context($revision->document->node), new UpdateRevisionRetentionInput(node: $revision->document->node, revision: $revision->id, keepForever: false));
     expect($revision->refresh()->keep_forever)->toBeFalse();
 });
 

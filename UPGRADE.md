@@ -6,6 +6,37 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Documents API through operations (PLAN2.D34, D35, D38, D44, D45; PLAN2.P4.8)
+
+No schema change. Code that called the documents Actions must move to the operations.
+
+- **PHP API.** Was: `app(CreateDocumentAction::class)->execute(new CreateDocumentInput(…, actorId: …))`
+  and the other Actions, authorized by your own code. Now: `Documents::in($drive)->create()`,
+  `content()`, `update()`, `snapshot()`, `revisions()`, `restore()`, `setRetention()`, `export()`,
+  `collaborationSession()` and `Documents::comments($drive)->list()`, `add()`, `resolve()`, `delete()`,
+  with `$drive = Vaulter::drive($owner)->actingAs($user)`. They authorize every call and return
+  snapshots (`DocumentSnapshot`, `DocumentRevisionSnapshot`, `CommentSnapshot`, `NodeSnapshot`,
+  `Page<T>`). Pass `DocumentSnapshot::$stateVersion` back as `expectedStateVersion`.
+- **Actions** are internal and take `execute(OperationContext $context, …Input $input)`. Inputs lost
+  `actorId` (the actor is the context's); `AddCommentInput` is now `(body, parentId, anchor)` — the
+  author is the acting user, and a system context cannot comment (`MissingActorException`).
+  `RestoreDocumentRevisionAction` takes `RestoreDocumentRevisionInput`, `UpdateRevisionRetentionAction`
+  takes `UpdateRevisionRetentionInput` (it can pin as well as release), the comment Actions take
+  `ResolveCommentInput`/`DeleteCommentInput`.
+- **HTTP.** Same URLs and JSON keys. A node the user cannot see, a trashed node and a node of another
+  tenant answer `404 node_not_found` (was `403 permission_denied`, or a bare `404` for trash); a comment of
+  another node answers `404 comment_not_found`. Export needs `Download`; reading the content
+  (`GET .../content`) needs `View` (was `Download`), so a previewer reads documents in the app. Resolving a comment needs
+  `Comment` and authorship or `Edit` (was authorship or `Manage`; deleting keeps authorship or `Manage`).
+  Ids in the document, revision and comment JSON are strings (`"id": "42"`), as for nodes since P4.13;
+  `resolved_by` and `created_by` too. The history is ordered by creation time, newest first.
+- **Collaboration.** `CollaborationSessionService::issue($actor, $node)` becomes
+  `issue($node, $ability, $actorId)` and makes no access decision; call
+  `Documents::in($drive)->collaborationSession($node)` instead. The hub endpoints are unchanged.
+- **Removed** `Vaulter\Http\Support\TrashGuard` (core); its only user, the documents controller, now
+  relies on `NodeLocator`, which keeps trashed nodes out.
+- **Docs.** [Document Nodes — The PHP API](docs/guide/documents.md#the-php-api).
+
 ### Copying documents and content lifecycle registry (PLAN2.D17, D30, D40; PLAN2.P4.2)
 
 - **Document copy works.** `NodeOperations::copy()` (and `POST .../copy`) now copies a document, alone

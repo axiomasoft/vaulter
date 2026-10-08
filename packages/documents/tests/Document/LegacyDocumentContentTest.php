@@ -26,7 +26,7 @@ function legacyVersion(array $content): DocumentRevision
 {
     $drive = DocumentTestHelpers::drive();
 
-    $node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+    $node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive->model()), new CreateDocumentInput(
         storage: $drive->model(),
         name: 'Legacy '.bin2hex(random_bytes(4)),
         content: DocumentTestHelpers::content('placeholder'),

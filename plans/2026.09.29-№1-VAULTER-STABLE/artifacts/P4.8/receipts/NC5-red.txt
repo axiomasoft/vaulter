@@ -1,0 +1,51 @@
+
+   FAIL  Tests\Operations\CommentOperationsTest
+  ✓ it adds a comment authored by the acting user and returns a snapsho… 0.46s  
+  ✓ it records the registered morph alias as the author type             0.19s  
+  ✓ it refuses a comment from the system: nobody to attribute it to      0.18s  
+  ✓ it lists a thread oldest first in pages                              0.21s  
+  ⨯ it threads a reply only under a comment of the same node             0.22s  
+  ⨯ it resolves a comment of another node as comment_not_found           0.21s  
+  ✓ it lets the author resolve with Comment, refuses a commenter who is… 0.21s  
+  ✓ it lets an editor who is not the author resolve                      0.21s  
+  ✓ it refuses resolve to an author who no longer holds Comment          0.20s  
+  ✓ it deletes for the author or a manager only                          0.24s  
+  ✓ it applies the drive profile comments feature to every method        0.22s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Operations\CommentOperationsTest > it threads a reply only…    
+  Exception "Vaulter\Documents\Exceptions\CommentNotFoundException" not thrown.
+
+  at tests/Operations/CommentOperationsTest.php:106
+    102▕     $reply = Documents::comments($alice)->add($node->id, new AddCommentInput('reply', parentId: $root->id));
+    103▕ 
+    104▕     expect($reply->parentId)->toBe($root->id)
+    105▕         ->and(fn () => Documents::comments($alice)->add($other->id, new AddCommentInput('stolen', parentId: $root->id)))
+  ➜ 106▕         ->toThrow(CommentNotFoundException::class);
+    107▕ });
+    108▕ 
+    109▕ it('resolves a comment of another node as comment_not_found', function (): void {
+    110▕     [$handle, $node] = commentsFixture('a');
+
+  1   tests/Operations/CommentOperationsTest.php:106
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Operations\CommentOperationsTest > it resolves a comment of…   
+  Exception "Vaulter\Documents\Exceptions\CommentNotFoundException" not thrown.
+
+  at tests/Operations/CommentOperationsTest.php:116
+    112▕     $owner = commenter($handle, $node, RoleRegistry::OWNER, 1);
+    113▕     AccessTestHelpers::grant($other, RoleRegistry::OWNER, subjectId: 1);
+    114▕     $comment = Documents::comments($owner)->add($node->id, new AddCommentInput('mine'));
+    115▕ 
+  ➜ 116▕     expect(fn () => Documents::comments($owner)->resolve($other->id, $comment->id))->toThrow(CommentNotFoundException::class)
+    117▕         ->and(fn () => Documents::comments($owner)->delete($other->id, $comment))->toThrow(CommentNotFoundException::class)
+    118▕         ->and(NodeComment::query()->whereKey($comment->id)->firstOrFail()->isResolved())->toBeFalse();
+    119▕ });
+    120▕
+
+  1   tests/Operations/CommentOperationsTest.php:116
+
+
+  Tests:    2 failed, 9 passed (27 assertions)
+  Duration: 2.65s
+

@@ -66,12 +66,12 @@ it('refuses comment creation once an inheritance boundary cuts the inherited com
     expect(NodeComment::query()->where('node_id', $node->id)->exists())->toBeFalse();
 });
 
-it('403s the thread listing without any grant', function () use ($user): void {
+it('hides the thread of a node the user cannot see behind node_not_found', function () use ($user): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'locked');
     $this->actingAs($user(1));
 
-    $this->getJson('api/vaulter/nodes/'.$node->getKey().'/comments')->assertStatus(403);
+    $this->getJson('api/vaulter/nodes/'.$node->getKey().'/comments')->assertNotFound()->assertJsonPath('code', 'node_not_found');
 });
 
 it('creates a comment with the REGISTERED morph alias, not a raw FQCN', function () use ($user, $url): void {
@@ -93,12 +93,12 @@ it('creates a comment with the REGISTERED morph alias, not a raw FQCN', function
     expect(NodeComment::query()->firstOrFail()->author_type)->toBe('user');
 });
 
-it('403s creating a comment without a grant', function () use ($user, $url): void {
+it('refuses creating a comment on a node the user cannot see with node_not_found', function () use ($user, $url): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'nogrant');
     $this->actingAs($user(1));
 
-    $this->postJson($url($node), ['body' => 'nope'])->assertStatus(403);
+    $this->postJson($url($node), ['body' => 'nope'])->assertNotFound()->assertJsonPath('code', 'node_not_found');
 });
 
 it('threads a reply and rejects a cross-node parent', function () use ($user, $commentNode, $url): void {
@@ -114,7 +114,7 @@ it('threads a reply and rejects a cross-node parent', function () use ($user, $c
         ->assertJsonPath('data.parent_id', $root);
 
     // A reply on node B pointing at node A's comment is a 404 — no cross-node thread.
-    $this->postJson($url($nodeB), ['body' => 'stolen', 'parent_id' => $root])->assertNotFound();
+    $this->postJson($url($nodeB), ['body' => 'stolen', 'parent_id' => $root])->assertNotFound()->assertJsonPath('code', 'comment_not_found');
 });
 
 it('lets the AUTHOR resolve and delete their own comment', function () use ($user, $commentNode, $url): void {
@@ -125,7 +125,7 @@ it('lets the AUTHOR resolve and delete their own comment', function () use ($use
 
     $this->postJson($url($node).'/'.$id.'/resolve')
         ->assertOk()
-        ->assertJsonPath('data.resolved_by', 1);
+        ->assertJsonPath('data.resolved_by', '1');
 
     expect(NodeComment::query()->findOrFail($id)->isResolved())->toBeTrue();
 

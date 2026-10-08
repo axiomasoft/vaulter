@@ -5,169 +5,90 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Http\Controllers\Comments;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Vaulter\Access\AccessResolver;
-use Vaulter\Documents\Actions\Comments\AddCommentAction;
-use Vaulter\Documents\Actions\Comments\DeleteCommentAction;
-use Vaulter\Documents\Actions\Comments\ResolveCommentAction;
-use Vaulter\Documents\Data\Comments\AddCommentInput;
+use Vaulter\Data\Drive\ListOptions;
+use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Http\Requests\StoreNodeCommentRequest;
 use Vaulter\Documents\Http\Resources\NodeCommentResource;
-use Vaulter\Documents\Models\Comments\NodeComment;
-use Vaulter\Documents\Repositories\Comments\NodeCommentReadRepository;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Documents\Operations\CommentOperations;
+use Vaulter\Exceptions\Access\MissingActorException;
+use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Support\Identity;
+use Vaulter\VaulterManager;
 
 /**
- * The NODE-attached comment HTTP surface (ADR-0014 шаг 1), the additive twin of the
- * legacy {@see CommentController} (document_id-bound, left
- * untouched). Thin: authorization runs through the Vaulter-owned AccessResolver,
- * persistence through the Actions, reads through the repository — no static model
- * queries here (the M1c-http arch rule).
+ * The NODE-attached comment HTTP surface (ADR-0014 шаг 1). Thin: every endpoint calls
+ * {@see CommentOperations} as the request's user.
  *
- * Authorization (§2.6 / H.2):
- *   - index   → Ability::View    (anyone who can see the node reads its thread);
- *   - store   → Ability::Comment (the dedicated comment bit);
- *   - resolve → the AUTHOR of the comment OR Ability::Manage on the node;
- *   - destroy → the AUTHOR of the comment OR Ability::Manage on the node.
+ * Authorization (decided by the operations):
+ *   - index   → View (anyone who can see the node reads its thread);
+ *   - store   → Comment;
+ *   - resolve → Comment, and the author of the comment or Edit on the node;
+ *   - destroy → the author of the comment or Manage on the node.
+ * A node the user cannot see answers 404 node_not_found; a comment of another node
+ * answers 404 comment_not_found.
  */
 final class NodeCommentController extends Controller
 {
+    /** The thread is returned whole until REST v1 adds paging to this endpoint. */
+    private const int PAGE = 200;
+
     public function __construct(
-        private readonly AccessResolver $access,
-        private readonly ProfilePolicy $profiles,
-        private readonly NodeCommentReadRepository $comments,
+        private readonly VaulterManager $vaulter,
+        private readonly DocumentsManager $documents,
     ) {}
 
     public function index(Request $request, Node $node): AnonymousResourceCollection
     {
-        $this->guardAbility($request, Ability::View, $node);
+        $comments = $this->operations($request, $node);
+        $thread = [];
+        $cursor = null;
+        do {
+            $page = $comments->list($this->key($node), new ListOptions(perPage: self::PAGE, cursor: $cursor));
+            array_push($thread, ...$page->items);
+            $cursor = $page->nextCursor;
+        } while ($cursor !== null);
 
-        return NodeCommentResource::collection($this->comments->forNode($node)->get());
+        return NodeCommentResource::collection($thread);
     }
 
-    public function store(StoreNodeCommentRequest $request, Node $node, AddCommentAction $action): JsonResponse
+    public function store(StoreNodeCommentRequest $request, Node $node): JsonResponse
     {
-        $this->guardAbility($request, Ability::Comment, $node);
+        $comment = $this->operations($request, $node)->add($this->key($node), $request->toData());
 
-        $data = $this->withValidatedParent($request->toData(), $node);
-
-        return NodeCommentResource::make($action->execute($node, $data))
-            ->response()
-            ->setStatusCode(201);
+        return NodeCommentResource::make($comment)->response()->setStatusCode(201);
     }
 
-    public function resolve(
-        Request $request,
-        Node $node,
-        int|string $comment,
-        ResolveCommentAction $action,
-    ): NodeCommentResource {
-        $this->authorOrManageActor($request, $node, $comment);
-
-        $resolved = $action->execute($this->findComment($node, $comment), $this->actorId($request));
-
-        return NodeCommentResource::make($resolved);
+    public function resolve(Request $request, Node $node, int|string $comment): NodeCommentResource
+    {
+        return NodeCommentResource::make($this->operations($request, $node)->resolve($this->key($node), Identity::stringify($comment)));
     }
 
-    public function destroy(
-        Request $request,
-        Node $node,
-        int|string $comment,
-        DeleteCommentAction $action,
-    ): Response {
-        $this->authorOrManageActor($request, $node, $comment);
-
-        $action->execute($this->findComment($node, $comment), $this->actorId($request));
+    public function destroy(Request $request, Node $node, int|string $comment): Response
+    {
+        $this->operations($request, $node)->delete($this->key($node), Identity::stringify($comment));
 
         return response()->noContent();
     }
 
-    /**
-     * A reply must attach to a comment that lives on the SAME node — a cross-node
-     * parent_id would thread a reply onto a foreign thread. An unknown/foreign parent
-     * is a 404 (the parent is not addressable under this node).
-     */
-    private function withValidatedParent(AddCommentInput $data, Node $node): AddCommentInput
-    {
-        if ($data->parentId === null) {
-            return $data;
-        }
-
-        // findComment throws a 404 when the parent does not belong to this node.
-        $this->findComment($node, $data->parentId);
-
-        return $data;
-    }
-
-    /**
-     * Assert the actor may resolve/delete the comment: they are its author OR hold
-     * Manage on the node. An unauthenticated actor, or a non-author without Manage,
-     * 403s.
-     */
-    private function authorOrManageActor(Request $request, Node $node, int|string $commentId): void
-    {
-        $this->guardAbility($request, Ability::View, $node);
-        $actor = $this->authorizable($request);
-
-        if ($actor === null) {
-            throw PermissionDeniedException::forAbility(Ability::Manage->value);
-        }
-
-        $comment = $this->findComment($node, $commentId);
-
-        if ($this->isAuthor($actor, $comment) || $this->access->can($actor, Ability::Manage, $node)) {
-            return;
-        }
-
-        throw PermissionDeniedException::forAbility(Ability::Manage->value);
-    }
-
-    private function findComment(Node $node, int|string $commentId): NodeComment
-    {
-        $comment = $this->comments->find($commentId);
-
-        if ($comment === null || Identity::stringify($comment->node_id) !== Identity::stringify($node->getKey())) {
-            throw new NotFoundHttpException('Comment not found.');
-        }
-
-        return $comment;
-    }
-
-    private function isAuthor(Authorizable $actor, NodeComment $comment): bool
-    {
-        if (!$actor instanceof Model) {
-            return false;
-        }
-
-        return $actor->getMorphClass() === $comment->author_type
-            && Identity::stringify($actor->getKey()) === Identity::stringify($comment->author_id);
-    }
-
-    private function guardAbility(Request $request, Ability $ability, Node $node): void
-    {
-        $actor = $this->authorizable($request);
-
-        if ($actor === null || !$this->access->can($actor, $ability, $node)) {
-            throw PermissionDeniedException::forAbility($ability->value);
-        }
-        $drive = $node->storage()->first() ?? throw new NotFoundHttpException('Node drive not found.');
-        $this->profiles->assertComments($drive);
-    }
-
-    private function authorizable(Request $request): ?Authorizable
+    private function operations(Request $request, Node $node): CommentOperations
     {
         $user = $request->user();
+        if (!$user instanceof Authorizable) {
+            throw MissingActorException::required();
+        }
+        $drive = $node->storage()->first() ?? throw NodeNotFoundException::forId(Identity::stringify($node->getKey()));
 
-        return $user instanceof Authorizable ? $user : null;
+        return $this->documents->comments($this->vaulter->drive(ownerOrDrive: $drive)->actingAs($user));
+    }
+
+    private function key(Node $node): string
+    {
+        return Identity::stringify($node->getKey());
     }
 }

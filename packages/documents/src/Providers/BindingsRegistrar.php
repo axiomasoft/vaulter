@@ -19,6 +19,8 @@ use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Engines\Handlers\TipTapHandler;
 use Vaulter\Documents\Engines\Handlers\UniverHandler;
 use Vaulter\Documents\Export\DefaultExportFilenameResolver;
+use Vaulter\Documents\Operations\CommentOperations;
+use Vaulter\Documents\Operations\DocumentOperations;
 use Vaulter\Documents\Registries\DocumentExporterRegistry;
 use Vaulter\Documents\Registries\DocumentTypeRegistry;
 use Vaulter\Documents\Support\DocumentHeads;
@@ -37,6 +39,9 @@ final class BindingsRegistrar extends ServiceProvider
         $this->app->singleton(DocumentTypeRegistry::class);
         $this->app->singleton(DocumentExporterRegistry::class);
         $this->app->singleton(DocumentsManager::class);
+        // Operations carry the handle's context, so every resolution is a new instance.
+        $this->app->bind(DocumentOperations::class);
+        $this->app->bind(CommentOperations::class);
         $this->app->bind(NodeDocumentHeads::class, DocumentHeads::class);
         $this->app->alias(DocumentsManager::class, 'vaulter.documents');
         $this->app->tag([TipTapHandler::class], 'vaulter.file_handlers');

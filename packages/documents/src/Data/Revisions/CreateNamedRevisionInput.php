@@ -15,8 +15,7 @@ final readonly class CreateNamedRevisionInput
 {
     public function __construct(
         public Node $node,
-        public string $label,
+        public ?string $label = null,
         public bool $keepForever = false,
-        public int|string|null $actorId = null,
     ) {}
 }

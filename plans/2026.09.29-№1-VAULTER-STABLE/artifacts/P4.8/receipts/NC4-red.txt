@@ -1,0 +1,31 @@
+
+   FAIL  Tests\Arch\OperationsBoundaryTest
+  ✓ it keeps migrated HTTP and Filament boundaries on Operations includ… 0.60s  
+  ✓ it detects a repository alias and grouped Action import while ignor… 0.26s  
+  ✓ it detects both fully qualified class calls and a literal container… 0.25s  
+  ⨯ it keeps every HTTP and Filament boundary on Operations except the…  0.56s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Arch\OperationsBoundaryTest > it keeps every HTTP and Filam…   
+  These files no longer import Actions/Repositories: remove them from the exemption list.
+Failed asserting that two arrays are identical.
+  -Array &0 []
+  +Array &0 [
+  +    0 => 'documents/src/Http/Controllers/Documents/DocumentNodeController.php',
+  +]
+  
+
+  at tests/Arch/OperationsBoundaryTest.php:119
+    115▕     sort($offenders);
+    116▕ 
+    117▕     expect(array_values(array_diff($offenders, $exempt)))->toBe([], 'New controller/Filament code must call Operations, not Actions or Repositories.')
+    118▕         ->and(array_values(array_filter($exempt, static fn (string $path): bool => is_file($root.'/'.$path) && !in_array($path, $offenders, true))))
+  ➜ 119▕         ->toBe([], 'These files no longer import Actions/Repositories: remove them from the exemption list.');
+    120▕ });
+    121▕
+
+  1   tests/Arch/OperationsBoundaryTest.php:119
+
+
+  Tests:    1 failed, 3 passed (25 assertions)
+  Duration: 1.77s
+

@@ -1,0 +1,142 @@
+
+   FAIL  Tests\Operations\DocumentAbilityMatrixTest
+  ✓ it authorizes every documents method by role with dataset "none con… 0.49s  
+  ✓ it authorizes every documents method by role with dataset "none rev… 0.22s  
+  ✓ it authorizes every documents method by role with dataset "none upd… 0.21s  
+  ✓ it authorizes every documents method by role with dataset "none sna… 0.22s  
+  ✓ it authorizes every documents method by role with dataset "none res… 0.21s  
+  ✓ it authorizes every documents method by role with dataset "none set… 0.21s  
+  ✓ it authorizes every documents method by role with dataset "none exp… 0.21s  
+  ✓ it authorizes every documents method by role with dataset "none col… 0.22s  
+  ✓ it authorizes every documents method by role with dataset "none com… 0.21s  
+  ✓ it authorizes every documents method by role with dataset "none com… 0.22s  
+  ✓ it authorizes every documents method by role with dataset "previewe… 0.21s  
+  ✓ it authorizes every documents method by role with dataset "previewe… 0.22s  
+  ✓ it authorizes every documents method by role with dataset "previewe… 0.22s  
+  ✓ it authorizes every documents method by role with dataset "previewe… 0.22s  
+  ✓ it authorizes every documents method by role with dataset "previewe… 0.21s  
+  ✓ it authorizes every documents method by role with dataset "previewe… 0.22s  
+  ⨯ it authorizes every documents method by role with dataset "previewe… 0.24s  
+  ✓ it authorizes every documents method by role with dataset "previewe… 0.23s  
+  ✓ it authorizes every documents method by role with dataset "previewe… 0.22s  
+  ✓ it authorizes every documents method by role with dataset "previewe… 0.22s  
+  ✓ it authorizes every documents method by role with dataset "reader e… 0.22s  
+  ✓ it authorizes every documents method by role with dataset "reader c… 0.22s  
+  ✓ it authorizes every documents method by role with dataset "reader r… 0.22s  
+  ✓ it authorizes every documents method by role with dataset "reader u… 0.22s  
+  ✓ it authorizes every documents method by role with dataset "reader s… 0.21s  
+  ✓ it authorizes every documents method by role with dataset "reader r… 0.22s  
+  ✓ it authorizes every documents method by role with dataset "reader s… 0.23s  
+  ✓ it authorizes every documents method by role with dataset "reader c… 0.22s  
+  ✓ it authorizes every documents method by role with dataset "reader c… 0.21s  
+  ✓ it authorizes every documents method by role with dataset "reader c… 0.22s  
+  ✓ it authorizes every documents method by role with dataset "commente… 0.23s  
+  ✓ it authorizes every documents method by role with dataset "commente… 0.22s  
+  ✓ it authorizes every documents method by role with dataset "commente… 0.23s  
+  ✓ it authorizes every documents method by role with dataset "commente… 0.22s  
+  ✓ it authorizes every documents method by role with dataset "commente… 0.22s  
+  ✓ it authorizes every documents method by role with dataset "commente… 0.22s  
+  ✓ it authorizes every documents method by role with dataset "commente… 0.23s  
+  ✓ it authorizes every documents method by role with dataset "commente… 0.22s  
+  ✓ it authorizes every documents method by role with dataset "commente… 0.21s  
+  ✓ it authorizes every documents method by role with dataset "commente… 0.22s  
+  ✓ it authorizes every documents method by role with dataset "writer u… 0.23s  
+  ✓ it authorizes every documents method by role with dataset "writer s… 0.23s  
+  ✓ it authorizes every documents method by role with dataset "writer r… 0.24s  
+  ✓ it authorizes every documents method by role with dataset "writer s… 0.23s  
+  ✓ it authorizes every documents method by role with dataset "writer c… 0.24s  
+  ✓ it authorizes every documents method by role with dataset "writer c… 0.22s  
+  ✓ it authorizes every documents method by role with dataset "writer e… 0.23s  
+  ✓ it authorizes every documents method by role with dataset "writer c… 0.22s  
+  ✓ it authorizes every documents method by role with dataset "writer r… 0.22s  
+  ✓ it authorizes every documents method by role with dataset "writer c… 0.22s  
+  ✓ it authorizes every documents method by role with dataset "owner up… 0.23s  
+  ✓ it authorizes every documents method by role with dataset "owner sn… 0.23s  
+  ✓ it authorizes every documents method by role with dataset "owner re… 0.23s  
+  ✓ it authorizes every documents method by role with dataset "owner se… 0.23s  
+  ✓ it authorizes every documents method by role with dataset "owner co… 0.24s  
+  ✓ it authorizes every documents method by role with dataset "owner co… 0.21s  
+  ✓ it authorizes every documents method by role with dataset "owner ex… 0.23s  
+  ✓ it authorizes every documents method by role with dataset "owner co… 0.22s  
+  ✓ it authorizes every documents method by role with dataset "owner re… 0.22s  
+  ✓ it authorizes every documents method by role with dataset "owner co… 0.21s  
+  ✓ it answers node_not_found for a trashed document on every method wi… 0.26s  
+  ✓ it answers node_not_found for a trashed document on every method wi… 0.25s  
+  ✓ it answers node_not_found for a trashed document on every method wi… 0.24s  
+  ✓ it answers node_not_found for a trashed document on every method wi… 0.24s  
+  ✓ it answers node_not_found for a trashed document on every method wi… 0.24s  
+  ✓ it answers node_not_found for a trashed document on every method wi… 0.23s  
+  ✓ it answers node_not_found for a trashed document on every method wi… 0.24s  
+  ✓ it answers node_not_found for a trashed document on every method wi… 0.24s  
+  ✓ it answers node_not_found for a trashed document on every method wi… 0.24s  
+  ✓ it answers node_not_found for a trashed document on every method wi… 0.24s  
+  ✓ it answers node_not_found for a document of another drive on every…  0.23s  
+  ✓ it answers node_not_found for a document of another drive on every…  0.23s  
+  ✓ it answers node_not_found for a document of another drive on every…  0.22s  
+  ✓ it answers node_not_found for a document of another drive on every…  0.23s  
+  ✓ it answers node_not_found for a document of another drive on every…  0.23s  
+  ✓ it answers node_not_found for a document of another drive on every…  0.22s  
+  ✓ it answers node_not_found for a document of another drive on every…  0.23s  
+  ✓ it answers node_not_found for a document of another drive on every…  0.23s  
+  ✓ it answers node_not_found for a document of another drive on every…  0.23s  
+  ✓ it answers node_not_found for a document of another drive on every…  0.23s  
+  ✓ it answers node_not_found for a document of another tenant on every… 0.26s  
+  ✓ it answers node_not_found for a document of another tenant on every… 0.27s  
+  ✓ it answers node_not_found for a document of another tenant on every… 0.27s  
+  ✓ it answers node_not_found for a document of another tenant on every… 0.27s  
+  ✓ it answers node_not_found for a document of another tenant on every… 0.27s  
+  ✓ it answers node_not_found for a document of another tenant on every… 0.26s  
+  ✓ it answers node_not_found for a document of another tenant on every… 0.30s  
+  ✓ it answers node_not_found for a document of another tenant on every… 0.29s  
+  ✓ it answers node_not_found for a document of another tenant on every… 0.26s  
+  ✓ it answers node_not_found for a document of another tenant on every… 0.27s  
+  ✓ it returns the same codes through the HTTP routes with dataset "pre… 0.25s  
+  ⨯ it returns the same codes through the HTTP routes with dataset "pre… 0.24s  
+  ✓ it returns the same codes through the HTTP routes with dataset "pre… 0.23s  
+  ✓ it returns the same codes through the HTTP routes with dataset "rea… 0.24s  
+  ✓ it returns the same codes through the HTTP routes with dataset "rea… 0.24s  
+  ✓ it returns the same codes through the HTTP routes with dataset "com… 0.23s  
+  ✓ it returns the same codes through the HTTP routes with dataset "com… 0.24s  
+  ✓ it returns the same codes through the HTTP routes with dataset "wri… 0.23s  
+  ✓ it returns the same codes through the HTTP routes with dataset "no…  0.23s  
+  ✓ it returns the same codes through the HTTP routes with dataset "no…  0.23s  
+  ✓ it returns the same codes through the HTTP routes with dataset "no…  0.22s  
+  ✓ it returns the same codes through the HTTP routes with dataset "no…  0.23s  
+  ✓ it hides a trashed document from the HTTP routes with node_not_foun… 0.26s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Operations\DocumentAbilityMatrixTest > it authorizes every…    
+  Exception "Vaulter\Exceptions\Access\PermissionDeniedException" not thrown.
+
+  at tests/Operations/DocumentAbilityMatrixTest.php:106
+    102▕     $call = static fn (): mixed => matrixCall($acting, $method, $document, $first);
+    103▕ 
+    104▕     match ($expected) {
+    105▕         'hidden' => expect($call)->toThrow(NodeNotFoundException::class),
+  ➜ 106▕         'denied' => expect($call)->toThrow(PermissionDeniedException::class),
+    107▕         'ro', 'rw' => expect($call()->readOnly)->toBe($expected === 'ro'),
+    108▕         default => expect($call())->not->toBeNull(),
+    109▕     };
+    110▕ })->with(matrixCases());
+
+  1   tests/Operations/DocumentAbilityMatrixTest.php:106
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Operations\DocumentAbilityMatrixTest > it returns the same…    
+  Expected response status code [403] but received 200.
+Failed asserting that 200 is identical to 403.
+
+  at tests/Operations/DocumentAbilityMatrixTest.php:155
+    151▕         '/comments' => ['body' => 'via http'],
+    152▕         default => [],
+    153▕     };
+    154▕ 
+  ➜ 155▕     $response = $this->json($verb, $url, $body)->assertStatus($status);
+    156▕     if ($code !== null) {
+    157▕         $response->assertJsonPath('code', $code);
+    158▕     }
+    159▕ })->with([
+
+
+  Tests:    2 failed, 101 passed (124 assertions)
+  Duration: 24.19s
+

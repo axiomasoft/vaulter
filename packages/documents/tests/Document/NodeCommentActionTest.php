@@ -9,24 +9,25 @@ use Vaulter\Documents\Actions\Comments\DeleteCommentAction;
 use Vaulter\Documents\Actions\Comments\ResolveCommentAction;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Data\Comments\AddCommentInput;
+use Vaulter\Documents\Data\Comments\DeleteCommentInput;
+use Vaulter\Documents\Data\Comments\ResolveCommentInput;
 use Vaulter\Documents\Events\Comments\CommentAdded;
 use Vaulter\Documents\Events\Comments\CommentDeleted;
 use Vaulter\Documents\Events\Comments\CommentResolved;
 use Vaulter\Documents\Models\Comments\NodeComment;
+use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
 /**
  * The node-comment Actions (ADR-0014 шаг 1): add (threaded + anchored + morph-alias
- * author), resolve (tombstone + actor) and delete (permanent), each dispatching its
- * broadcast event on the node's collaboration channel.
+ * author taken from the operation's actor), resolve (tombstone + actor) and delete
+ * (permanent), each dispatching its broadcast event on the node's collaboration channel.
  */
 function nodeCommentData(?int $parentId = null): AddCommentInput
 {
     return new AddCommentInput(
         body: 'looks good',
-        authorType: (new TestUser)->getMorphClass(),
-        authorId: 1,
         parentId: $parentId,
         anchor: ['from' => 1, 'to' => 4],
     );
@@ -38,7 +39,7 @@ it('adds a comment and dispatches CommentAdded on the node channel', function ()
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'commentable');
 
-    $comment = app(AddCommentAction::class)->execute($node, nodeCommentData());
+    $comment = app(AddCommentAction::class)->execute(DocumentTestHelpers::context($node, 1), $node, nodeCommentData());
 
     expect($comment->node_id)->toBe($node->getKey())
         ->and($comment->author_type)->toBe((new TestUser)->getMorphClass())
@@ -60,8 +61,8 @@ it('threads a reply under its parent', function (): void {
     $node = AccessTestHelpers::folder($storage, null, 'threaded');
 
     $action = app(AddCommentAction::class);
-    $root = $action->execute($node, nodeCommentData());
-    $reply = $action->execute($node, nodeCommentData(parentId: (int) $root->getKey()));
+    $root = $action->execute(DocumentTestHelpers::context($node, 1), $node, nodeCommentData());
+    $reply = $action->execute(DocumentTestHelpers::context($node, 1), $node, nodeCommentData(parentId: (int) $root->getKey()));
 
     expect($reply->parent_id)->toBe($root->getKey())
         ->and($root->replies()->count())->toBe(1);
@@ -72,9 +73,9 @@ it('resolves a comment, stamping resolved_at + resolved_by and dispatching the e
 
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'resolvable');
-    $comment = app(AddCommentAction::class)->execute($node, nodeCommentData());
+    $comment = app(AddCommentAction::class)->execute(DocumentTestHelpers::context($node, 1), $node, nodeCommentData());
 
-    $resolved = app(ResolveCommentAction::class)->execute($comment, resolvedBy: 42);
+    $resolved = app(ResolveCommentAction::class)->execute(DocumentTestHelpers::context($node, 42), new ResolveCommentInput($comment));
 
     expect($resolved->isResolved())->toBeTrue()
         ->and($resolved->resolved_by)->toBe(42);
@@ -87,10 +88,10 @@ it('permanently deletes a comment and dispatches CommentDeleted', function (): v
 
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'deletable');
-    $comment = app(AddCommentAction::class)->execute($node, nodeCommentData());
+    $comment = app(AddCommentAction::class)->execute(DocumentTestHelpers::context($node, 1), $node, nodeCommentData());
     $id = $comment->getKey();
 
-    app(DeleteCommentAction::class)->execute($comment, actorId: 5);
+    app(DeleteCommentAction::class)->execute(DocumentTestHelpers::context($node, 5), new DeleteCommentInput($comment));
 
     expect(NodeComment::query()->whereKey($id)->exists())->toBeFalse();
 

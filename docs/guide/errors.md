@@ -29,6 +29,7 @@ Codes are a stable public contract (AD29).
 | `unknown_document_type` | 422 | `Vaulter\Documents\Exceptions\UnknownDocumentTypeException` |
 | `invalid_document_content` | 422 | `Vaulter\Documents\Exceptions\InvalidDocumentContentException` |
 | `document_revision_not_found` | 404 | `Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException` |
+| `comment_not_found` | 404 | `Vaulter\Documents\Exceptions\CommentNotFoundException` |
 | `document_state_mismatch` | 412 | `Vaulter\Documents\Exceptions\StaleDocumentStateException` |
 | `collaboration_epoch_mismatch` | 409 | `Vaulter\Documents\Exceptions\CollaborationEpochMismatchException` |
 | `unknown_export_format` | 422 | `Vaulter\Exceptions\Documents\UnknownExportFormatException` |
@@ -178,6 +179,11 @@ environment.
 
 `CrossDriveOperationException` — a move stays within one storage tree. Copy across storages,
 or re-home the node into the destination storage explicitly instead of moving it.
+
+## comment-not-found
+
+`CommentNotFoundException` — the comment does not exist or belongs to a different node (a reply's
+`parent_id` too). List the node's comments and use an id from that list.
 
 ## document-version-not-found
 

@@ -8,28 +8,29 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Vaulter\Access\AccessResolver;
-use Vaulter\Documents\Actions\Collaboration\PersistCollaborationStateAction;
 use Vaulter\Documents\Collaboration\CollaborationCall;
-use Vaulter\Documents\Collaboration\CollaborationSessionService;
+use Vaulter\Documents\Collaboration\CollaborationHub;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Contracts\HostUserResolver;
-use Vaulter\Documents\Data\Collaboration\PersistCollaborationStateInput;
-use Vaulter\Documents\Exceptions\NotADocumentException;
+use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Http\Middleware\ResolveCollaborationCall;
 use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Enums\Access\Ability;
+use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Repositories\Drive\NodeReadRepository;
+use Vaulter\Support\Identity;
+use Vaulter\VaulterManager;
 
 /**
  * The M4b realtime-collaboration HTTP surface for document nodes (master plan §7 /
  * ADR-0001). Three thin endpoints:
  *
- *   - token()        — the client-facing connect handshake. Authorizes via the
- *                      CollaborationSessionService (≥ View/Comment to connect,
- *                      read-only unless Edit) and returns the transport-agnostic
+ *   - token()        — the client-facing connect handshake through
+ *                      DocumentOperations::collaborationSession() (View to connect,
+ *                      read-only unless Edit), returning the transport-agnostic
  *                      CollaborationSession descriptor.
  *   - authenticate() — the server-to-server hook the Node hub's onAuthenticate calls.
  *                      The call is already authenticated by ResolveCollaborationCall;
@@ -40,33 +41,34 @@ use Vaulter\Repositories\Drive\NodeReadRepository;
  *                      store to its own room); the Yjs snapshot is persisted through
  *                      the PersistCollaborationStateAction.
  *
- * Thin: token authorization lives in the read-only service, persistence in the Action;
- * no model queries here (nodes resolved via the read repository / route binding).
+ * Thin: the token goes through the documents operations; the hub calls, which carry
+ * no user session, go through the internal CollaborationHub (node lookup, room
+ * binding, persistence). No model queries here.
  */
 final class NodeCollaborationController extends Controller
 {
     public function __construct(
-        private readonly NodeReadRepository $nodes,
-        private readonly CollaborationSessionService $sessions,
+        private readonly VaulterManager $vaulter,
+        private readonly DocumentsManager $documents,
+        private readonly CollaborationHub $hub,
         private readonly AccessResolver $access,
         private readonly HostUserResolver $users,
         private readonly DocumentsConfig $documentsConfig,
     ) {}
 
     /**
-     * Issue a realtime collaboration session for the route-bound document node. The
-     * service 403s an actor without at least View/Comment and encodes read-only from
-     * the actor's ability (Edit → writable).
+     * Issue a realtime collaboration session for the route-bound document node: a
+     * user without View gets 404, read-only is encoded from the user's ability (Edit →
+     * writable).
      */
     public function token(Request $request, Node $node): JsonResponse
     {
-        $actor = $this->authorizable($request);
+        $actor = $this->authorizable($request) ?? throw MissingActorException::required();
+        $drive = $node->storage()->first() ?? throw NodeNotFoundException::forId(Identity::stringify($node->getKey()));
 
-        if ($actor === null) {
-            throw PermissionDeniedException::forAbility(Ability::View->value);
-        }
-
-        $session = $this->sessions->issue($actor, $node);
+        $session = $this->documents
+            ->in($this->vaulter->drive(ownerOrDrive: $drive)->actingAs($actor))
+            ->collaborationSession(Identity::stringify($node->getKey()));
 
         return new JsonResponse(['data' => $session->toArray()]);
     }
@@ -80,7 +82,7 @@ final class NodeCollaborationController extends Controller
     public function authenticate(Request $request): JsonResponse
     {
         $call = ResolveCollaborationCall::call($request);
-        $node = $this->resolveNode($request, $call);
+        $node = $this->hub->node($this->nodeId($request), $call);
 
         $userId = $this->callUserId($request, $call);
         $actor = $userId === null ? null : $this->users->find($userId);
@@ -108,7 +110,7 @@ final class NodeCollaborationController extends Controller
      * node B), and not read-only. The Yjs binary is the source of truth; the TipTap
      * JSON, when present, updates the projection.
      */
-    public function store(Request $request, PersistCollaborationStateAction $action): JsonResponse
+    public function store(Request $request): JsonResponse
     {
         $call = ResolveCollaborationCall::call($request);
 
@@ -116,15 +118,10 @@ final class NodeCollaborationController extends Controller
             throw PermissionDeniedException::forAbility(Ability::Edit->value);
         }
 
-        $node = $this->resolveNode($request, $call);
+        $node = $this->hub->node($this->nodeId($request), $call);
         $yjsState = $this->yjsState($request);
 
-        $result = $action->execute(new PersistCollaborationStateInput(
-            node: $node,
-            yjsState: $yjsState,
-            content: $this->projection($request),
-            actorId: $this->callUserId($request, $call),
-        ));
+        $result = $this->hub->store($node, $yjsState, $this->projection($request), $this->callUserId($request, $call));
 
         return new JsonResponse([
             'data' => [
@@ -133,35 +130,6 @@ final class NodeCollaborationController extends Controller
                 'yjs_state_size' => $result->document->yjs_state_size,
             ],
         ]);
-    }
-
-    /**
-     * Resolve the document node a webhook call targets from the body (room or
-     * node_id), then ASSERT the call is allowed to address its room (a JWT call may
-     * only act on its own room — node binding). A non-document or unbound node 403/404s.
-     */
-    private function resolveNode(Request $request, CollaborationCall $call): Node
-    {
-        $nodeId = $this->nodeId($request);
-        $node = $this->nodes->find($nodeId);
-
-        if (!$node instanceof Node) {
-            abort(404);
-        }
-
-        if (!$node->kind->isDocument()) {
-            throw NotADocumentException::forNode($node->getKey());
-        }
-
-        $room = $this->documentsConfig->collaborationRoom($node->getKey());
-
-        if (!$call->mayAddressRoom($room)) {
-            // The presented JWT was minted for a DIFFERENT node's room — refuse,
-            // never let a token cross node boundaries.
-            throw PermissionDeniedException::forAbility(Ability::View->value);
-        }
-
-        return $node;
     }
 
     /**

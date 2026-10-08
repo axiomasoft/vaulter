@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Actions\Comments;
 
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Documents\Data\Comments\DeleteCommentInput;
 use Vaulter\Documents\Events\Comments\CommentDeleted;
-use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Repositories\Comments\NodeCommentStoreRepository;
+use Vaulter\Operations\OperationContext;
 
 /**
  * Permanently delete a node comment (ADR-0014 шаг 1 — no soft-delete). Deletes in a
@@ -21,10 +22,10 @@ final readonly class DeleteCommentAction
         private VaulterDatabase $database,
     ) {}
 
-    public function execute(NodeComment $comment, int|string|null $actorId = null): void
+    public function execute(OperationContext $context, DeleteCommentInput $data): void
     {
-        $this->database->transaction(fn () => $this->comments->delete($comment));
+        $this->database->transaction(fn () => $this->comments->delete($data->comment));
 
-        event(new CommentDeleted($comment, $actorId));
+        event(new CommentDeleted($data->comment, $context->actor->ref()->id));
     }
 }

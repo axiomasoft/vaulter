@@ -8,124 +8,79 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Str;
-use Vaulter\Access\AccessResolver;
+use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Contracts\Handlers\NodePresenter;
-use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
-use Vaulter\Data\Snapshots\NodeSnapshot;
-use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
-use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
-use Vaulter\Documents\Actions\Revisions\CreateNamedRevisionAction;
-use Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction;
-use Vaulter\Documents\Actions\Revisions\UpdateRevisionRetentionAction;
-use Vaulter\Documents\Data\Documents\CreateDocumentInput;
-use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
-use Vaulter\Documents\Data\Revisions\CreateNamedRevisionInput;
-use Vaulter\Documents\Exceptions\NotADocumentException;
-use Vaulter\Documents\Export\NodeExportService;
+use Vaulter\Data\Drive\ListOptions;
+use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Http\Requests\CreateDocumentNodeRequest;
 use Vaulter\Documents\Http\Requests\CreateNamedVersionRequest;
 use Vaulter\Documents\Http\Requests\UpdateDocumentContentRequest;
 use Vaulter\Documents\Http\Resources\DocumentRevisionResource;
-use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
-use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
-use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Documents\Operations\DocumentOperations;
 use Vaulter\Exceptions\Access\MissingActorException;
-use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Http\Resources\Drive\NodeResource;
-use Vaulter\Http\Support\TrashGuard;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
-use Vaulter\Profiles\ProfilePolicy;
-use Vaulter\Repositories\Drive\NodeReadRepository;
-use Vaulter\ValueObjects\Access\Actor;
+use Vaulter\Support\Identity;
+use Vaulter\VaulterManager;
 
 /**
- * The Documents REST surface over the M4a document-node domain (§5 / §7): create a
- * document node, read its content + version history, autosave its content, snapshot
- * a named version, restore a prior version, resolve its handler descriptor and export
- * it. Thin — every write delegates to a final readonly Action, every read to a
- * repository / read-only service; no model queries live here.
+ * The Documents REST surface (§5 / §7): create a document node, read its content and
+ * revision history, autosave its content, snapshot a named revision, restore one,
+ * release a pin, resolve its handler descriptor and export it.
  *
- * Authorization (H.2): every method guards the relevant Ability through the
- * AccessResolver before acting (Create on the destination, View to read, Edit to
- * autosave/version/restore); a denial 403s via PermissionDeniedException.
+ * Thin: every endpoint calls {@see DocumentOperations} as the request's user, which
+ * locates the node in its drive and authorizes it (View to read, Edit to write,
+ * Download to export, Create on the destination). A node the user cannot see, a
+ * trashed node and a node of another tenant all answer 404 node_not_found.
  */
 final class DocumentNodeController extends Controller
 {
     public function __construct(
-        private readonly NodeReadRepository $nodes,
-        private readonly DocumentRevisionReadRepository $versions,
-        private readonly DocumentReadRepository $documents,
-        private readonly AccessResolver $access,
-        private readonly ProfilePolicy $profiles,
-        private readonly CreateDocumentAction $createDocument,
-        private readonly UpdateDocumentContentAction $updateContent,
-        private readonly CreateNamedRevisionAction $createNamedVersion,
-        private readonly RestoreDocumentRevisionAction $restoreVersion,
-        private readonly UpdateRevisionRetentionAction $releaseKeptVersion,
+        private readonly VaulterManager $vaulter,
+        private readonly DocumentsManager $documents,
         private readonly NodePresenter $handlers,
-        private readonly NodeExportService $exports,
-        private readonly NodeSnapshotMapper $snapshots,
     ) {}
 
     /**
-     * Create a kind=document node under a folder (or storage root) with its v1
-     * version.
+     * Create a kind=document node under a folder (or storage root) with its first
+     * checkpoint.
      */
     public function store(CreateDocumentNodeRequest $request, Drive $storage): JsonResponse
     {
-        $parent = $this->resolveParentById($request->parentId(), $storage);
-
-        $this->guardCreate($request, $storage, $parent);
-        $this->profiles->assertDocumentType(drive: $storage, type: $request->versionFormat());
-
-        $node = $this->createDocument->execute(new CreateDocumentInput(
-            storage: $storage,
+        $node = $this->operations($request, $storage)->createDocument(
             name: $request->name(),
-            content: $request->content(),
-            parent: $parent,
             format: $request->versionFormat(),
             mimeType: $request->nodeMimeType(),
-            actorId: $this->actorId($request),
-        ));
+            content: $request->content(),
+            parent: $request->parentId(),
+        );
 
-        return NodeResource::make($this->snapshotOf($node, $request))->response()->setStatusCode(201);
+        return NodeResource::make($node)->response()->setStatusCode(201);
     }
 
     /**
-     * The document node plus its current head content.
+     * The document node plus its current working state.
      */
     public function content(Request $request, Node $node): DocumentRevisionResource
     {
-        $node = $this->exports->assertContentAvailable($this->contentContext($request, $node), $node);
-        $document = $this->documents->forNode($node);
-
-        if ($document === null) {
-            abort(404);
-        }
-
-        return DocumentRevisionResource::make($document)->withContent();
+        return DocumentRevisionResource::make($this->operationsFor($request, $node)->content($this->key($node)))->withContent();
     }
 
     /**
-     * The version history of a document node, newest first.
+     * The revision history of a document node, newest first.
      */
     public function versions(Request $request, Node $node): AnonymousResourceCollection
     {
-        $this->guardDocument($request, Ability::View, $node);
+        $cursor = $request->query('cursor');
+        $history = $this->operationsFor($request, $node)->revisionPage(
+            $this->key($node),
+            new ListOptions(perPage: $this->perPage($request), cursor: is_string($cursor) && $cursor !== '' ? $cursor : null),
+        );
 
-        $history = $this->versions
-            ->history($node)
-            ->with('document')
-            ->cursorPaginate(perPage: $this->perPage($request))
-            ->withQueryString();
-
-        return DocumentRevisionResource::collection($history);
+        return DocumentRevisionResource::collection($history->withQueryString());
     }
 
     /**
@@ -133,63 +88,49 @@ final class DocumentNodeController extends Controller
      */
     public function update(UpdateDocumentContentRequest $request, Node $node): JsonResponse
     {
-        $this->guardDocument($request, Ability::Edit, $node);
-
-        $result = $this->updateContent->execute(new UpdateDocumentContentInput(
-            node: $node,
-            content: $request->content(),
-            yjsState: $request->yjsState(),
-            actorId: $this->actorId($request),
-        ));
+        $document = $this->operationsFor($request, $node)->updateContent(
+            $this->key($node),
+            $request->content(),
+            $request->yjsState(),
+        );
 
         // Autosave is an UPDATE of the working state (200) even when it also took a
         // checkpoint.
-        return DocumentRevisionResource::make($result->document)->response()->setStatusCode(200);
+        return DocumentRevisionResource::make($document)->response()->setStatusCode(200);
     }
 
     /**
-     * Snapshot the current head as a NAMED version.
+     * Snapshot the current working state as a NAMED revision.
      */
     public function storeVersion(CreateNamedVersionRequest $request, Node $node): JsonResponse
     {
-        $this->guardDocument($request, Ability::Edit, $node);
-
-        $version = $this->createNamedVersion->execute(new CreateNamedRevisionInput(
-            node: $node,
+        $revision = $this->operationsFor($request, $node)->snapshot(
+            $this->key($node),
             label: $request->label(),
             keepForever: $request->keepForever(),
-            actorId: $this->actorId($request),
-        ));
+        );
 
-        return DocumentRevisionResource::make($version)->response()->setStatusCode(201);
+        return DocumentRevisionResource::make($revision)->response()->setStatusCode(201);
     }
 
     /**
-     * Restore a prior version: repoint the head to a copy of it.
+     * Restore a prior revision: copy it forward as the new head.
      */
     public function restore(Request $request, Node $node, int|string $version): JsonResponse
     {
-        $this->guardDocument($request, Ability::Edit, $node);
+        $document = $this->operationsFor($request, $node)->restore($this->key($node), Identity::stringify($version));
 
-        $restored = $this->restoreVersion->execute(
-            node: $node,
-            versionId: $version,
-            actorId: $this->actorId($request),
-        );
-
-        return DocumentRevisionResource::make($restored)->response()->setStatusCode(201);
+        return DocumentRevisionResource::make($document->revision)->response()->setStatusCode(201);
     }
 
     /**
-     * Release a version's keep_forever pin (§2.5 / M4a, F-P1.12-03) so it re-enters
-     * the prune window on the node's next snapshot/restore. Same guard as setting
-     * the pin (storeVersion) — Edit on the node.
+     * Release a revision's keep_forever pin (§2.5 / M4a, F-P1.12-03) so it re-enters
+     * the prune window on the node's next checkpoint. Same ability as setting the pin:
+     * Edit on the node.
      */
     public function releaseVersion(Request $request, Node $node, int|string $version): JsonResponse
     {
-        $this->guardDocument($request, Ability::Edit, $node);
-
-        $released = $this->releaseKeptVersion->execute($node, $version);
+        $released = $this->operationsFor($request, $node)->setRetention($this->key($node), Identity::stringify($version), keepForever: false);
 
         return DocumentRevisionResource::make($released)->response();
     }
@@ -200,49 +141,52 @@ final class DocumentNodeController extends Controller
      */
     public function handler(Request $request, Node $node): JsonResponse
     {
-        $this->guard($request, Ability::View, $node);
+        $snapshot = $this->handle($request, $this->driveOf($node))->nodes()->find($this->key($node));
 
-        return new JsonResponse(['data' => $this->handlers->present($node)->toArray()]);
+        return new JsonResponse(['data' => $this->handlers->present($snapshot)->toArray()]);
     }
 
     /**
-     * Export a document node's head content in the requested format (?format=html|
+     * Export a document node's working state in the requested format (?format=html|
      * markdown|…) through the handler → exporter seam.
      */
     public function export(Request $request, Node $node): JsonResponse
     {
-        $this->guardDocument($request, Ability::View, $node);
-
         $format = $request->string('format')->toString();
         $format = $format !== '' ? $format : 'html';
+        $export = $this->operationsFor($request, $node)->export($this->key($node), $format);
 
-        return new JsonResponse(['data' => $this->exports->export($this->contentContext($request, $node), $node, $format)->toArray()], headers: ['Cache-Control' => 'private, no-store']);
+        return new JsonResponse(['data' => $export->toArray()], headers: ['Cache-Control' => 'private, no-store']);
     }
 
-    /**
-     * Resolve the destination parent from an already-extracted id (null = root).
-     */
-    private function resolveParentById(int|string|null $parentId, Drive $storage): ?Node
+    private function operations(Request $request, Drive $drive): DocumentOperations
     {
-        if ($parentId === null) {
-            return null;
-        }
-
-        $node = $this->nodes->find($parentId);
-
-        if (!$node instanceof Node || $node->drive_id !== $storage->getKey()) {
-            abort(404);
-        }
-
-        return $node;
+        return $this->documents->in($this->handle($request, $drive));
     }
 
-    private function contentContext(Request $request, Node $node): OperationContext
+    private function operationsFor(Request $request, Node $node): DocumentOperations
     {
-        $actor = $this->authorizable($request) ?? throw MissingActorException::required();
-        $drive = $node->storage()->first() ?? throw NodeNotFoundException::forId($node->id);
+        return $this->operations($request, $this->driveOf($node));
+    }
 
-        return new OperationContext($drive, Actor::user($actor), (string) Str::ulid());
+    private function handle(Request $request, Drive $drive): DriveHandle
+    {
+        $user = $request->user();
+        if (!$user instanceof Authorizable) {
+            throw MissingActorException::required();
+        }
+
+        return $this->vaulter->drive(ownerOrDrive: $drive)->actingAs($user);
+    }
+
+    private function driveOf(Node $node): Drive
+    {
+        return $node->storage()->first() ?? throw NodeNotFoundException::forId(Identity::stringify($node->getKey()));
+    }
+
+    private function key(Node $node): string
+    {
+        return Identity::stringify($node->getKey());
     }
 
     private function perPage(Request $request): int
@@ -250,84 +194,5 @@ final class DocumentNodeController extends Controller
         $perPage = (int) $request->integer('per_page', 50);
 
         return max(1, min($perPage, 200));
-    }
-
-    /**
-     * Guard an ability on a node that MUST be a document node — a non-document node
-     * 404s before the ability check (a folder/file has no document payload here).
-     * Item-safety (P2.2 / F-P1.12-01): a trashed node ALSO 404s before the ability
-     * check — trash is orthogonal to the ACL, not encoded into it (mirrors
-     * DownloadController::guardDownload on the file-content surface).
-     */
-    private function guardDocument(Request $request, Ability $ability, Node $node): void
-    {
-        if ($node->kind !== NodeKind::Document) {
-            throw NotADocumentException::forNode($node->getKey());
-        }
-
-        TrashGuard::assertNotTrashed($node);
-
-        $this->guard($request, $ability, $node);
-    }
-
-    /**
-     * Authorize an ability on a node through the AccessResolver (H.2); a denial (or
-     * no actor) 403s.
-     */
-    private function guard(Request $request, Ability $ability, Node $node): void
-    {
-        $actor = $this->authorizable($request);
-
-        if ($actor === null || !$this->access->can($actor, $ability, $node)) {
-            throw PermissionDeniedException::forAbility($ability->value);
-        }
-    }
-
-    /**
-     * Authorize a document CREATE under a destination (§6): the workspace-create gate
-     * AND the CREATE bit on the destination node.
-     */
-    private function guardCreate(Request $request, Drive $storage, ?Node $destination): void
-    {
-        $actor = $this->authorizable($request);
-        $target = $destination ?? $this->driveRoot($storage);
-
-        if ($actor === null
-            || !$this->access->canCreateIn($actor, $storage)
-            || !$this->access->can($actor, Ability::Create, $target)
-        ) {
-            throw PermissionDeniedException::forAbility(Ability::Create->value);
-        }
-    }
-
-    /**
-     * The storage's root folder node (the create destination when no parent given),
-     * resolved through the read repository — never a controller model query.
-     */
-    private function driveRoot(Drive $storage): Node
-    {
-        $rootId = $storage->root_node_id;
-
-        $root = $rootId === null ? null : $this->nodes->find($rootId);
-
-        if (!$root instanceof Node) {
-            abort(404);
-        }
-
-        return $root;
-    }
-
-    private function snapshotOf(Node $node, Request $request): NodeSnapshot
-    {
-        $user = $this->authorizable($request);
-
-        return $this->snapshots->map($node, $user === null ? null : Actor::user($user)->ref());
-    }
-
-    private function authorizable(Request $request): ?Authorizable
-    {
-        $user = $request->user();
-
-        return $user instanceof Authorizable ? $user : null;
     }
 }

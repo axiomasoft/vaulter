@@ -14,6 +14,7 @@ use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Facades\Vaulter;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\FakeHostUserResolver;
@@ -129,7 +130,7 @@ final class E2eServiceProvider extends ServiceProvider
                 ],
             ]);
 
-            $node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+            $node = app(CreateDocumentAction::class)->execute(OperationContext::system($storage, 'e2e fixture'), new CreateDocumentInput(
                 storage: $storage,
                 name: 'E2E Spec',
                 content: $content,

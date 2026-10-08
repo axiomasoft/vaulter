@@ -68,7 +68,9 @@ When no `format` query is given, both export endpoints default to `html`.
 ## Exporting a document node
 
 `GET {prefix}/nodes/{node}/export` renders a [document node's](./documents.md) head content.
-It requires the `View` ability on the node (and the node must be `kind=document`). This route
+It requires the `Download` ability on the node — an export is a copy of the content, which `View`
+alone does not allow (a previewer gets `403 permission_denied`) — and the node must be
+`kind=document`. In PHP: `Documents::in($drive)->export($node, 'html')`. This route
 is part of the surface enabled by installing `vaulter-documents`.
 
 ::: code-group

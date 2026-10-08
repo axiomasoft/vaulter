@@ -1,6 +1,16 @@
 <?php
 
 declare(strict_types=1);
+use Vaulter\Documents\Data\Collaboration\CollaborationSession;
+use Vaulter\Documents\Data\Comments\AddCommentInput;
+use Vaulter\Documents\Data\Snapshots\CommentSnapshot;
+use Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot;
+use Vaulter\Documents\Data\Snapshots\DocumentSnapshot;
+use Vaulter\Documents\DocumentsManager;
+use Vaulter\Documents\Facades\Documents;
+use Vaulter\Documents\Operations\CommentOperations;
+use Vaulter\Documents\Operations\DocumentOperations;
+use Vaulter\Documents\ValueObjects\DocumentExport;
 
 /**
  * VLT-REL P2.2 — executable freeze of vaulter-documents's public composer surface for the `0.1.0`
@@ -249,15 +259,41 @@ test('vaulter-documents public API surface matches the frozen golden (VLT-REL P2
         }
     }
 
-    foreach (vaulterSnapshotContracts(__DIR__.'/../../src/Events', 'Vaulter\Documents\Events') as $eventClass) {
-        $reflection = new ReflectionClass($eventClass);
+    $withProperties = static function (string $class): string {
+        $reflection = new ReflectionClass($class);
         $properties = [];
         foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
             $properties[] = '  '.($property->isReadOnly() ? 'readonly ' : '')
                 .vaulterSnapshotType($property->getType()).' $'.$property->getName();
         }
         sort($properties);
-        $blocks[] = vaulterSnapshotInterface($eventClass)."\n".implode("\n", $properties);
+
+        return vaulterSnapshotInterface($class)."\n".implode("\n", $properties);
+    };
+
+    foreach (vaulterSnapshotContracts(__DIR__.'/../../src/Events', 'Vaulter\Documents\Events') as $eventClass) {
+        $blocks[] = $withProperties($eventClass);
+    }
+
+    // PLAN2.P4.8: the Documents API — facade, manager, operations, their snapshots
+    // (read-only properties; constructors are @internal) and public inputs.
+    $blocks[] = vaulterSnapshotFacade(Documents::class);
+    foreach ([
+        DocumentsManager::class,
+        DocumentOperations::class,
+        CommentOperations::class,
+    ] as $class) {
+        $blocks[] = vaulterSnapshotInterface($class);
+    }
+    foreach ([
+        DocumentSnapshot::class,
+        DocumentRevisionSnapshot::class,
+        CommentSnapshot::class,
+        AddCommentInput::class,
+        CollaborationSession::class,
+        DocumentExport::class,
+    ] as $class) {
+        $blocks[] = $withProperties($class);
     }
 
     vaulterSnapshotAssert(implode("\n\n", $blocks)."\n", __DIR__.'/__snapshots__/public-api.txt');

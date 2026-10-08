@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Data\Comments;
 
 /**
- * The input to {@see AddCommentAction} (ADR-0014 шаг 1).
- * authorType is a REGISTERED morph alias ($user->getMorphClass()), never a raw FQCN —
- * the HTTP request layer resolves it.
+ * What a new comment says: the body, the optional parent it replies to (a comment of
+ * the same node) and the optional anchor into the content. The author is the actor of
+ * the operation — it is never taken from the input.
  */
 final readonly class AddCommentInput
 {
@@ -16,8 +16,6 @@ final readonly class AddCommentInput
      */
     public function __construct(
         public string $body,
-        public string $authorType,
-        public int|string $authorId,
         public int|string|null $parentId = null,
         public ?array $anchor = null,
     ) {}

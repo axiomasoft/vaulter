@@ -1,0 +1,12 @@
+{"tool":"pint","result":"passed"}{"tool":"phpstan","result":"passed","errors":0}
+core=0
+{"tool":"pint","result":"passed"}Note: Using configuration file /home/vostrikov/projects/packages/vaulter/packages/documents/phpstan.neon.
+
+ [OK] No errors                                                                 
+
+docs=0
+{"tool":"pint","result":"passed"}Note: Using configuration file /home/vostrikov/projects/packages/vaulter/packages/drive/phpstan.neon.
+
+ [OK] No errors                                                                 
+
+drive=0

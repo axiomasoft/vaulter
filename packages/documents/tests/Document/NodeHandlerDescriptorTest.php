@@ -20,7 +20,7 @@ use Vaulter\Tests\Drive\DriveTestHelpers;
 it('resolves a document node to the TipTap handler descriptor', function (): void {
     $drive = DocumentTestHelpers::drive();
 
-    $node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+    $node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive->model()), new CreateDocumentInput(
         storage: $drive->model(),
         name: 'Doc',
         content: DocumentTestHelpers::content(),
@@ -38,7 +38,7 @@ it('resolves a document node to the TipTap handler descriptor', function (): voi
 it('embeds the handler descriptor in the NodeResource payload', function (): void {
     $drive = DocumentTestHelpers::drive();
 
-    $node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+    $node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive->model()), new CreateDocumentInput(
         storage: $drive->model(),
         name: 'Payload',
         content: DocumentTestHelpers::content(),

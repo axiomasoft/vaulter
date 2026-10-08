@@ -27,14 +27,14 @@ beforeEach(function (): void {
 /** A document with 3 revisions, state version 5 and collaboration epoch 2. */
 function copyLifecycleSource(DriveHandle $drive, string $name = 'Source'): Node
 {
-    $node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+    $node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive->model()), new CreateDocumentInput(
         storage: $drive->model(),
         name: $name,
         content: DocumentTestHelpers::content('one'),
         parent: DriveTestHelpers::model($drive->root()),
     ));
     foreach (['two', 'three'] as $text) {
-        app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(node: $node, content: DocumentTestHelpers::content($text)));
+        app(UpdateDocumentContentAction::class)->execute(DocumentTestHelpers::context($node), new UpdateDocumentContentInput(node: $node, content: DocumentTestHelpers::content($text)));
     }
     app(VaulterDatabase::class)->write(fn () => Document::query()->where('node_id', $node->getKey())->update([
         'state_version' => 5,

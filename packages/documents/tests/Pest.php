@@ -7,6 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vaulter\Documents\Tests\Collaboration\CollaborationEnabledTestCase;
 use Vaulter\Documents\Tests\Comment\CommentsTestCase;
 use Vaulter\Documents\Tests\Document\DocumentTestCase;
+use Vaulter\Documents\Tests\Operations\OperationsTestCase;
 use Vaulter\Documents\Tests\TestCase;
 
 // The v_node_comments/v_documents/v_document_revisions schema is always migrated (core owns
@@ -31,6 +32,10 @@ uses(CollaborationEnabledTestCase::class, RefreshDatabase::class)->in('Collabora
 // routes register and the real grant-based algorithm runs. Kept apart from Document
 // so the two feature-gated TestCases never both claim the same path.
 uses(CommentsTestCase::class, RefreshDatabase::class)->in('Comment');
+
+// The Documents API (DocumentOperations/CommentOperations) with every guard live:
+// database grants, comments and collaboration ON.
+uses(OperationsTestCase::class, RefreshDatabase::class)->in('Operations');
 
 // Registrar checks use a booted application without mutating the database.
 uses(TestCase::class)->in('Providers');

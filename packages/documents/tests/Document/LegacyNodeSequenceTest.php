@@ -12,6 +12,8 @@ use Vaulter\Documents\Data\Collaboration\PersistCollaborationStateInput;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
 use Vaulter\Documents\Data\Revisions\CreateNamedRevisionInput;
+use Vaulter\Documents\Data\Revisions\RestoreDocumentRevisionInput;
+use Vaulter\Documents\Data\Revisions\UpdateRevisionRetentionInput;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Facades\Vaulter;
@@ -23,7 +25,7 @@ function legacySequenceDocument(): Node
 {
     $drive = DocumentTestHelpers::drive();
 
-    return app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+    return app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive->model()), new CreateDocumentInput(
         storage: $drive->model(),
         name: 'Sequence document',
         content: DocumentTestHelpers::content('initial'),
@@ -38,15 +40,15 @@ it('leaves node.sequence alone on every document content write and counts them i
     expect($node->refresh()->sequence)->toBe(0)
         ->and(DocumentTestHelpers::document($node)->state_version)->toBe(1);
 
-    app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
+    app(UpdateDocumentContentAction::class)->execute(DocumentTestHelpers::context($node), new UpdateDocumentContentInput(
         node: $node,
         content: DocumentTestHelpers::content('first'),
         expectedStateVersion: 1,
     ));
     app(PersistCollaborationStateAction::class)->execute(new PersistCollaborationStateInput(node: $node, yjsState: "yjs\0state"));
-    app(CreateNamedRevisionAction::class)->execute(new CreateNamedRevisionInput(node: $node, label: 'checkpoint', keepForever: true));
-    $restored = app(RestoreDocumentRevisionAction::class)->execute(node: $node, versionId: $first->id, expectedStateVersion: 3);
-    app(UpdateRevisionRetentionAction::class)->execute(node: $node, versionId: $restored->id);
+    app(CreateNamedRevisionAction::class)->execute(DocumentTestHelpers::context($node), new CreateNamedRevisionInput(node: $node, label: 'checkpoint', keepForever: true));
+    $restored = app(RestoreDocumentRevisionAction::class)->execute(DocumentTestHelpers::context($node), new RestoreDocumentRevisionInput(node: $node, revision: $first->id, expectedStateVersion: 3));
+    app(UpdateRevisionRetentionAction::class)->execute(DocumentTestHelpers::context($node), new UpdateRevisionRetentionInput(node: $node, revision: $restored->id, keepForever: false));
 
     expect($node->refresh()->sequence)->toBe(0)
         ->and(DocumentTestHelpers::document($node)->state_version)->toBe(4);
@@ -57,7 +59,7 @@ it('keeps node and content validators independent: a rename bumps the node, not 
     $drive = $node->storage;
 
     Vaulter::drive($drive)->asSystem('validator independence')->nodes()->rename(node: $node->getKey(), name: 'Renamed', expectedSequence: 0);
-    app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
+    app(UpdateDocumentContentAction::class)->execute(DocumentTestHelpers::context($node->refresh()), new UpdateDocumentContentInput(
         node: $node->refresh(),
         content: DocumentTestHelpers::content('after rename'),
         expectedStateVersion: 1,
@@ -72,10 +74,9 @@ it('touches the node change stamp without the sequence on a content write', func
     $node = legacySequenceDocument();
     $this->travel(5)->minutes();
 
-    app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
+    app(UpdateDocumentContentAction::class)->execute(DocumentTestHelpers::context($node, 7), new UpdateDocumentContentInput(
         node: $node,
         content: DocumentTestHelpers::content('stamped'),
-        actorId: 7,
     ));
 
     $fresh = $node->refresh();

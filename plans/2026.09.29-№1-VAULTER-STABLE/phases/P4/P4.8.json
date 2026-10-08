@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.8",
   "title": "Documents Operations: авторизованный публичный API документов и комментариев",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "DocumentOperations/CommentOperations по OPUS 05 §10 с поправками D34/D35 доступны через Documents::in($drive)/comments($drive); каждый метод авторизуется OperationGuard, контроллеры documents вызывают только Operations, TrashGuard удалён, documents-контроллеры сняты с exempt-ратчета аудита F13.",
   "why": "Сейчас контроллеры documents вызывают Actions напрямую, экспорт охраняется View вместо Download, коллаборационная сессия использует AccessResolver в обход OperationGuard/профиля/tenancy (D07/D08 OPUS). Последующие items P4.3–P4.5 должны расширять уже авторизованный слой. Новый item: OPUS 05 §10/04 §5 требуют Operations, ни один OPUS-item P4 ими не владеет (D01 п.3 разрешает добавление).",
   "scope": {
@@ -315,6 +315,54 @@
     "status": "not_needed",
     "notes": "Внешние факты проверены при дизайне: @plan/knowledge/P4-industry-research-2026-10-07.json; исполнителю повторный поиск не нужен"
   },
-  "result": null,
-  "updated_at": "2026-10-07T15:50:18Z"
+  "result": {
+    "started_at": "2026-10-08T14:41:39Z",
+    "finished_at": "2026-10-08T15:57:33Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "session": "438155f0-8f98-40fd-8b4a-a509cced30b6"
+    },
+    "registered_by": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium"
+    },
+    "notes": "Documents::in/comments operations on snapshots; controllers via Operations; TrashGuard removed; matrix + HTTP parity; review: grok-4.7 no high/medium, 1 low deferred",
+    "deviations": [
+      "See P4.8 log: CollaborationHub seam, DocumentOperations collaborators, AddCommentAction node arg, snapshot fields, CommentNotFoundException, files beyond task_files"
+    ],
+    "pending": [
+      "V4 (PG tenant rows of DocumentAbilityMatrixTest) → P4.7 barrier V90 (D51)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T15:57:33Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T15:57:33Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T15:57:33Z"
+      },
+      {
+        "id": "V80",
+        "exit": 0,
+        "at": "2026-10-08T15:57:33Z"
+      },
+      {
+        "id": "V81",
+        "exit": 0,
+        "at": "2026-10-08T15:57:33Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T15:57:33Z"
 }

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Configuration\RoutesConfig;
+use Vaulter\Documents\Exceptions\CommentNotFoundException;
 use Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException;
 use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
 use Vaulter\Documents\Exceptions\NotADocumentException;
@@ -78,6 +79,7 @@ it('renders each domain exception with its stable code and HTTP status', functio
     'unknown document type' => [UnknownDocumentTypeException::forType('unknown', ['tiptap']), 'unknown_document_type', 422],
     'invalid tiptap' => [InvalidDocumentContentException::missingDocNode(), 'invalid_document_content', 422, ['reason' => 'invalid_tiptap']],
     'document revision missing' => [DocumentRevisionNotFoundException::forNode(1, 2), 'document_revision_not_found', 404],
+    'comment missing' => [CommentNotFoundException::forNode(1, 2), 'comment_not_found', 404],
     'unknown export format' => [UnknownExportFormatException::forFormat('unknown', ['html']), 'unknown_export_format', 422],
     'unsupported content' => [UnsupportedDocumentContentException::forExporter('html', 'tiptap', 'other'), 'invalid_document_content', 422, ['reason' => 'unsupported_content']],
     'blocked outbound URL' => [$blockedUrl = BlockedOutboundUrlException::scheme('file'), 'validation_failed', 422, ['errors' => ['url' => [$blockedUrl->getMessage()]]]],

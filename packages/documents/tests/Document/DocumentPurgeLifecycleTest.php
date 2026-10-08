@@ -27,14 +27,14 @@ beforeEach(function (): void {
 /** A document node with three revisions. */
 function purgeLifecycleDocument(DriveHandle $drive, string $name): Node
 {
-    $node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+    $node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive->model()), new CreateDocumentInput(
         storage: $drive->model(),
         name: $name,
         content: DocumentTestHelpers::content('one'),
         parent: DriveTestHelpers::model($drive->root()),
     ));
     foreach (['two', 'three'] as $text) {
-        app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(node: $node, content: DocumentTestHelpers::content($text)));
+        app(UpdateDocumentContentAction::class)->execute(DocumentTestHelpers::context($node), new UpdateDocumentContentInput(node: $node, content: DocumentTestHelpers::content($text)));
     }
 
     return $node;

@@ -30,7 +30,7 @@ function grantedDocumentNode(?string $level, int $actorId = 1): Node
 {
     $drive = DocumentTestHelpers::drive();
 
-    $node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+    $node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive->model()), new CreateDocumentInput(
         storage: $drive->model(),
         name: 'Spec',
         content: DocumentTestHelpers::content('Draft'),
@@ -52,12 +52,13 @@ function actAsCollaborator(int $id = 1): TestUser
     return $user;
 }
 
-it('403s an actor with no grant on the document node', function (): void {
+it('hides the document node from an actor with no grant (node_not_found)', function (): void {
     actAsCollaborator();
     $node = grantedDocumentNode(level: null);
 
     test()->postJson('api/vaulter/nodes/'.$node->getKey().'/collab/token')
-        ->assertForbidden();
+        ->assertNotFound()
+        ->assertJsonPath('code', 'node_not_found');
 });
 
 it('issues a read-only session for a commenter (no edit)', function (): void {

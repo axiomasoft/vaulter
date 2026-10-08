@@ -17,7 +17,7 @@ use Vaulter\ValueObjects\Access\Actor;
 beforeEach(function (): void {
     config()->set('vaulter.access.permission_driver', 'database');
     $this->handle = DocumentTestHelpers::drive()->asSystem('document egress fixture');
-    $this->node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(storage: $this->handle->model(), name: 'protected', content: DocumentTestHelpers::content('secret body'), parent: DriveTestHelpers::model($this->handle->root())));
+    $this->node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($this->handle->model()), new CreateDocumentInput(storage: $this->handle->model(), name: 'protected', content: DocumentTestHelpers::content('secret body'), parent: DriveTestHelpers::model($this->handle->root())));
 });
 
 it('SEC-R17-inline rechecks visibility on every PHP export with a retained node', function (): void {

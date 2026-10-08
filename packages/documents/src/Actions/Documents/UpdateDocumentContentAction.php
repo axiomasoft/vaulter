@@ -16,6 +16,7 @@ use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Support\TreeGuard;
 
 /**
@@ -39,7 +40,7 @@ final readonly class UpdateDocumentContentAction
         private TreeGuard $tree,
     ) {}
 
-    public function execute(UpdateDocumentContentInput $data): DocumentStateResult
+    public function execute(OperationContext $context, UpdateDocumentContentInput $data): DocumentStateResult
     {
         $node = $data->node;
 
@@ -51,11 +52,11 @@ final readonly class UpdateDocumentContentAction
             $data->content->ensureWithin($this->documentsConfig->maxContentSizeKb());
         }
 
-        return $this->database->transaction(function () use ($node, $data): DocumentStateResult {
-            $driveId = $node->getRawOriginal('drive_id');
+        return $this->database->transaction(function () use ($context, $node, $data): DocumentStateResult {
+            // The node must live in the operation's drive; the locked row is checked below.
+            $driveId = $context->driveId();
             $nodeId = $node->getRawOriginal($node->getKeyName());
-            if (!$node->exists || (!is_int($nodeId) && !is_string($nodeId)) || $nodeId === ''
-                || (!is_int($driveId) && !is_string($driveId)) || $driveId === '') {
+            if (!$node->exists || (!is_int($nodeId) && !is_string($nodeId)) || $nodeId === '' || $driveId === '') {
                 throw NodeNotFoundException::forId('unpersisted');
             }
             $this->database->lockTreeShared($driveId);
@@ -74,7 +75,7 @@ final readonly class UpdateDocumentContentAction
                 cause: StateWriteCause::Update,
                 content: $data->content,
                 yjsState: $data->yjsState,
-                actorId: $data->actorId,
+                actorId: $context->actor->ref()->id,
                 expectedStateVersion: $data->expectedStateVersion,
             ));
 
@@ -83,7 +84,7 @@ final readonly class UpdateDocumentContentAction
                     node: $node,
                     version: $result->checkpoint ?? $document->currentRevision()->firstOrFail(),
                     created: $result->checkpoint !== null,
-                    actorId: $data->actorId,
+                    actorId: $context->actor->ref()->id,
                 ));
             }
 

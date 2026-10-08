@@ -65,7 +65,7 @@ it('serves a valid public share without a Sanctum token', function (): void {
 it('accepts a signed hub JWT without a Sanctum token', function (): void {
     $drive = DocumentTestHelpers::drive();
     app()->bind(HostUserResolver::class, fn () => new FakeHostUserResolver);
-    $node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+    $node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive->model()), new CreateDocumentInput(
         storage: $drive->model(), name: 'Hub', content: DocumentTestHelpers::content(), parent: DriveTestHelpers::model($drive->root()),
     ));
     $body = ['node_id' => $node->getKey()];

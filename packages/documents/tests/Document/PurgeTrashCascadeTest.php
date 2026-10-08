@@ -31,7 +31,7 @@ beforeEach(function (): void {
 it('physically deletes a trashed document node\'s inline version content on purge, F-P1.12-02', function (): void {
     $drive = DocumentTestHelpers::drive();
 
-    $node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+    $node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive->model()), new CreateDocumentInput(
         storage: $drive->model(),
         name: 'Sensitive',
         content: DocumentTestHelpers::content('erase me'),

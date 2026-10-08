@@ -12,6 +12,7 @@ use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Support\TreeGuard;
 
 /**
@@ -31,15 +32,15 @@ final readonly class CreateNamedRevisionAction
         private TreeGuard $tree,
     ) {}
 
-    public function execute(CreateNamedRevisionInput $data): DocumentRevision
+    public function execute(OperationContext $context, CreateNamedRevisionInput $data): DocumentRevision
     {
         $node = $data->node;
 
-        return $this->database->transaction(function () use ($node, $data): DocumentRevision {
-            $driveId = $node->getRawOriginal('drive_id');
+        return $this->database->transaction(function () use ($context, $node, $data): DocumentRevision {
+            // The node must live in the operation's drive; the locked row is checked below.
+            $driveId = $context->driveId();
             $nodeId = $node->getRawOriginal($node->getKeyName());
-            if (!$node->exists || (!is_int($nodeId) && !is_string($nodeId)) || $nodeId === ''
-                || (!is_int($driveId) && !is_string($driveId)) || $driveId === '') {
+            if (!$node->exists || (!is_int($nodeId) && !is_string($nodeId)) || $nodeId === '' || $driveId === '') {
                 throw NodeNotFoundException::forId('unpersisted');
             }
             $this->database->lockTreeShared($driveId);
@@ -57,14 +58,14 @@ final readonly class CreateNamedRevisionAction
                 locked: $document,
                 label: $data->label,
                 keepForever: $data->keepForever,
-                actorId: $data->actorId,
+                actorId: $context->actor->ref()->id,
             );
 
             event(new DocumentRevisionCreated(
                 node: $node,
                 version: $revision,
                 restored: false,
-                actorId: $data->actorId,
+                actorId: $context->actor->ref()->id,
             ));
 
             return $revision;

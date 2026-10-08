@@ -1,8 +1,11 @@
 # Comments
 
 Document **nodes** support threaded, optionally anchored comments. Reading requires the
-**`view`** ability; posting requires **`comment`**; resolving or deleting requires being the
-comment's **author** or holding **`manage`** on the node. Comments default to enabled at `vaulter-documents.comments.enabled` and are
+**`view`** ability; posting requires **`comment`**; resolving requires **`comment`** and being the
+comment's **author** or holding **`edit`**; deleting requires being the **author** or holding
+**`manage`** on the node. A node the user cannot see answers `404 node_not_found`. In PHP use
+`Documents::comments($drive)` (`list`, `add`, `resolve`, `delete`) — see
+[Document Nodes](./documents.md#the-php-api). Comments default to enabled at `vaulter-documents.comments.enabled` and are
 broadcast so open editors can show them live.
 
 ## API

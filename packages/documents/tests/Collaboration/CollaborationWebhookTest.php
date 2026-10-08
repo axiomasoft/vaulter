@@ -68,7 +68,7 @@ function webhookDocumentNode(?string $level = RoleRegistry::WRITER, int $actorId
 {
     $drive = DocumentTestHelpers::drive();
 
-    $node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+    $node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive->model()), new CreateDocumentInput(
         storage: $drive->model(),
         name: 'Spec',
         content: DocumentTestHelpers::content('Draft'),

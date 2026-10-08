@@ -72,34 +72,92 @@ The content validator is **independent of the node**: `v_nodes.sequence` moves o
 and trash, `state_version` on content writes. Renaming a document never invalidates an open
 editor, and saving it never invalidates a rename (PLAN2.D35).
 
+## The PHP API
+
+`Documents::in($drive)` and `Documents::comments($drive)` are the public PHP API. They take a drive
+handle (`Vaulter::drive($owner)`, optionally `->actingAs($user)` or `->asSystem($reason)`) and return
+`Vaulter\Documents\Operations\DocumentOperations` and `CommentOperations`. Every method locates the
+node in that drive and authorizes it with the same guard as files: a trashed node, a node of another
+drive or tenant, and a node the actor cannot see all throw `NodeNotFoundException`
+(`404 node_not_found`); a visible node without the needed ability throws `PermissionDeniedException`
+(`403 permission_denied`); a profile restriction throws `ProfileRestrictionException`.
+
+| Method | Needs | Returns |
+|---|---|---|
+| `create($name, $type = 'vaulter/rich-text', ?array $content, $parent, ?CreateFolderOptions)` | `Create` on the parent, profile document types | `NodeSnapshot` |
+| `content($document, $revision = null)` | `View` | `DocumentSnapshot` |
+| `update($document, array $content, ?int $expectedStateVersion)` | `Edit` | `DocumentSnapshot` |
+| `snapshot($document, ?string $label, bool $keepForever)` | `Edit` | `DocumentRevisionSnapshot` |
+| `revisions($document, ?ListOptions)` | `View` | `Page<DocumentRevisionSnapshot>`, newest first |
+| `restore($document, $revision, ?int $expectedStateVersion)` | `Edit` | `DocumentSnapshot` |
+| `setRetention($document, $revision, bool $keepForever)` | `Edit` | `DocumentRevisionSnapshot` |
+| `export($document, string $format, $revision = null)` | `Download` | `DocumentExport` |
+| `collaborationSession($document)` | `View` (read-write with `Edit`); a user, not the system | `CollaborationSession` |
+
+Comments (any node kind, the drive profile must enable comments):
+
+| Method | Needs | Returns |
+|---|---|---|
+| `list($node, ?ListOptions)` | `View` | `Page<CommentSnapshot>`, oldest first |
+| `add($node, AddCommentInput $input)` | `Comment`; the author is the acting user | `CommentSnapshot` |
+| `resolve($node, $comment)` | `Comment`, and authorship or `Edit` | `CommentSnapshot` |
+| `delete($node, $comment)` | authorship or `Manage` | — |
+
+Nodes, revisions and comments are passed as their id (string or int) or their snapshot. A revision or
+comment of another node is "not found" (`document_revision_not_found`, `comment_not_found`). Export
+needs `Download`, not `View`: a previewer reads a document in the app but cannot take a copy out.
+
+```php
+use Vaulter\Documents\Data\Comments\AddCommentInput;
+use Vaulter\Documents\Facades\Documents;
+use Vaulter\Facades\Vaulter;
+
+$drive = Vaulter::drive($project)->actingAs($user);
+$documents = Documents::in($drive);
+
+$node = $documents->create('Design notes', content: ['type' => 'doc', 'content' => []]);
+$doc = $documents->content($node->id);            // DocumentSnapshot: content, stateVersion, epoch, …
+$doc = $documents->update($node->id, $tipTapDoc, expectedStateVersion: $doc->stateVersion);
+$named = $documents->snapshot($node->id, 'Before review', keepForever: true);
+$html = $documents->export($node->id, 'html')->content;
+
+Documents::comments($drive)->add($node->id, new AddCommentInput('Looks good', anchor: ['from' => 1, 'to' => 4]));
+```
+
+`DocumentSnapshot` carries `nodeId`, `documentId`, `type`, `schemaVersion`, `typeAvailable`,
+`editable` (false for a historical revision or an unavailable type), `epoch`, `stateVersion`,
+`dirty` (the working state runs ahead of the head checkpoint), `headRevisionId`, `content` (a
+`DocumentContent`: `TipTapContent` for rich text, `OpaqueDocumentContent` otherwise), `revision`
+(the head, or the revision asked for), `contentHash`, `yjsStateSize`, `updatedAt` and `updatedBy`.
+Ids are strings. The Actions behind these methods are internal.
+
 ## Creating a document node
 
-A document node is created under a folder (or the storage root) together with its **v1**
-version, atomically. Content is a TipTap document wrapped in
-`Vaulter\Documents\ValueObjects\TipTapContent` — the root node must be `{"type":"doc", ...}`.
+A document node is created under a folder (or the storage root) together with its first
+checkpoint, atomically. Rich-text content is a TipTap document — the root node must be
+`{"type":"doc", ...}`.
 
 ::: code-group
 
-```php [PHP — the Action]
-use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
-use Vaulter\Documents\Data\Documents\CreateDocumentInput;
-use Vaulter\Documents\ValueObjects\TipTapContent;
+```php [PHP]
+use Vaulter\Data\Drive\CreateFolderOptions;
+use Vaulter\Documents\Facades\Documents;
+use Vaulter\Enums\Drive\OnNameConflict;
 
-$node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
-    storage: $storage,                       // the resolved v_storages row
-    name:    'Design notes',
-    content: TipTapContent::fromArray([
+$node = Documents::in($drive)->create(
+    name: 'Design notes',
+    type: 'vaulter/rich-text',              // or 'vaulter/markdown', 'vaulter/spreadsheet'
+    content: [
         'type'    => 'doc',
         'content' => [
             ['type' => 'paragraph', 'content' => [
                 ['type' => 'text', 'text' => 'Hello.'],
             ]],
         ],
-    ]),
-    parent:  $folder,                        // null = storage root
-    format:  'richtext',                     // a DocumentType value (default 'tiptap')
-    actorId: $user->getKey(),
-));
+    ],
+    parent: $folder->id,                     // null = drive root
+    options: new CreateFolderOptions(OnNameConflict::Rename),
+);
 ```
 
 ```bash [HTTP]
@@ -130,9 +188,11 @@ const node = await client.documentNodes.createNode(storageId, {
 
 :::
 
-What happens (`CreateDocumentAction`):
+What happens:
 
-- The sibling-unique guard runs first — a name clash throws `NodeNameConflictException`.
+- The sibling-unique guard runs first — a name clash throws `NodeNameConflictException`, or picks
+  `Name (2)` with `OnNameConflict::Rename`. An unknown or disabled type throws
+  `UnknownDocumentTypeException`.
 - One transaction creates the node and its aggregate, writes the working state
   (`state_version = 1`) and takes checkpoint **#1** (`is_autosave = false`), then fires
   `DocumentCreated` after commit.
@@ -142,9 +202,9 @@ What happens (`CreateDocumentAction`):
 
 The request validates `name`, an optional `parent_id`, an optional `format` (must be a
 [`DocumentType`](./document-handlers.md#documenttype) value: `richtext`, `table`, `markdown`,
-`template`), and an optional `content` whose `content.type` must be `doc`. Authorization is
-enforced upstream in the controller — the actor needs both `canCreateInWorkspace` and the
-`Create` ability on the destination.
+`template`), and an optional `content` whose `content.type` must be `doc`. The actor needs the
+`Create` ability on the destination (and the workspace-create gate of the permission driver), and
+the drive profile must allow the document type.
 
 ## Reading content
 
@@ -187,8 +247,7 @@ while the working state runs ahead of the head checkpoint. The history listing (
 
 ### Autosaving content
 
-`UpdateDocumentContentAction` writes through `DocumentStateWriter`, the only writer of the
-working state:
+Every content write goes through `DocumentStateWriter`, the only writer of the working state:
 
 - an identical save (same content hash and Yjs state) is a **no-op**: no version bump, no event;
 - otherwise `state_version` grows by exactly one; pass `expectedStateVersion` to refuse a save
@@ -225,28 +284,25 @@ curl -X PATCH https://app.test/api/vaulter/nodes/77/content \
       }'
 ```
 
-```php [PHP — the Action]
-use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
-use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
-use Vaulter\Documents\ValueObjects\TipTapContent;
+```php [PHP]
+use Vaulter\Documents\Facades\Documents;
 
-app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
-    node:     $node,
-    content:  TipTapContent::fromArray($tipTapDoc),
-    yjsState: null,                  // optional raw Yjs binary update
-    actorId:  $user->getKey(),
+$doc = Documents::in($drive)->update(
+    $node->id,
+    $tipTapDoc,
     expectedStateVersion: 3,         // optional: 412 when another save landed first
-));
+);
 ```
 
 :::
 
-The PATCH returns `200` with the working state — an autosave is semantically an update.
+The PATCH returns `200` with the working state — an autosave is semantically an update; `update()`
+returns the new `DocumentSnapshot`.
 `yjs_state` is the optional **base64-encoded** Yjs CRDT update on the wire; the request decodes
 it back to raw bytes (and is null for the non-collaborative path). The TipTap `content` is its
 projection. When the save changed something the action fires `DocumentContentUpdated` after
 commit: `version` is the head checkpoint after the save and `created` tells whether this save
-took it.
+took it. The event's `actorId` is the acting user (null for the system).
 
 ::: tip Client debounce vs checkpoint interval
 `useDocumentNode({ debounceMs })` is the **client** timer before a PATCH is sent (default
@@ -276,21 +332,13 @@ curl -X POST https://app.test/api/vaulter/nodes/77/document-versions \
   -d '{ "label": "Before client review", "keep_forever": true }'
 ```
 
-```php [PHP — the Action]
-use Vaulter\Documents\Actions\Revisions\CreateNamedRevisionAction;
-use Vaulter\Documents\Data\Revisions\CreateNamedRevisionInput;
-
-app(CreateNamedRevisionAction::class)->execute(new CreateNamedRevisionInput(
-    node:        $node,
-    label:       'Before client review',
-    keepForever: true,
-    actorId:     $user->getKey(),
-));
+```php [PHP]
+$revision = Documents::in($drive)->snapshot($node->id, 'Before client review', keepForever: true);
 ```
 
 :::
 
-`CreateNamedRevisionAction` checkpoints the current **working state** into a fresh
+A named snapshot checkpoints the current **working state** into a fresh
 `is_autosave = false` revision, makes it the head, prunes, and fires `DocumentRevisionCreated`
 (`restored = false`). It changes neither `state_version` nor `collab_epoch`, so it needs no
 precondition.
@@ -311,10 +359,17 @@ await loadVersions()
 curl 'https://app.test/api/vaulter/nodes/77/document-versions?per_page=50'
 ```
 
+```php [PHP]
+use Vaulter\Data\Drive\ListOptions;
+
+$page = Documents::in($drive)->revisions($node->id, new ListOptions(perPage: 50));
+$next = Documents::in($drive)->revisions($node->id, new ListOptions(perPage: 50, cursor: $page->nextCursor));
+```
+
 :::
 
-The listing is cursor-paginated (`per_page` clamped to 1–200, default 50), newest
-`version_no` first, and omits `content`. Each item is a `DocumentVersion`:
+The listing is cursor-paginated (`per_page` clamped to 1–200, default 50), newest first (by
+creation time), and omits `content`. Each item is a `DocumentVersion`; ids are strings:
 
 ```ts
 interface DocumentVersion {
@@ -354,20 +409,14 @@ const restored = await restoreVersion(versionId)
 curl -X POST https://app.test/api/vaulter/nodes/77/document-versions/12/restore
 ```
 
-```php [PHP — the Action]
-use Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction;
-
-app(RestoreDocumentRevisionAction::class)->execute(
-    node:      $node,
-    versionId: 12,
-    actorId:   $user->getKey(),
-);
+```php [PHP]
+$doc = Documents::in($drive)->restore($node->id, '12', expectedStateVersion: $doc->stateVersion);
+// $doc->revision is the new head; $doc->revision->restoredFromRevisionId === '12'
 ```
 
 :::
 
-`RestoreDocumentRevisionAction` resolves the source checkpoint **within the node's own
-document** (a revision id of another document, or a file revision with the same id, never
+A restore resolves the source checkpoint **within the node's own document** (a revision id of another document, or a file revision with the same id, never
 restores here), writes its payload as the working state (`state_version` +1, `collab_epoch` +1;
 optional `expectedStateVersion`), takes a checkpoint labelled `Restored from #N` with
 `restored_from_revision_id`, prunes, and fires `DocumentRevisionCreated` with `restored = true`.
@@ -431,9 +480,13 @@ listeners, the activity feed or [webhooks](./recipes.md#webhooks) to them:
 
 | Exception | When |
 |---|---|
-| `Exceptions\NotADocumentException` | A content/version operation targets a node that is not `kind=document`. |
+| `Documents\Exceptions\NotADocumentException` | A content/version operation targets a node that is not `kind=document`. |
+| `Exceptions\Nodes\NodeNotFoundException` | The node is missing, trashed, in another drive or tenant, or the actor cannot see it (`404 node_not_found`). |
+| `Exceptions\Access\PermissionDeniedException` | The actor sees the node but lacks the ability (`403 permission_denied`), e.g. export without `Download`. |
+| `Documents\Exceptions\UnknownDocumentTypeException` | `create()` names a type that is unknown or not enabled (`422 unknown_document_type`). |
+| `Documents\Exceptions\CommentNotFoundException` | A comment id that does not belong to the addressed node (`404 comment_not_found`). |
 | `Documents\Exceptions\InvalidDocumentContentException` | The root content node is not `{"type":"doc"}`, or it exceeds `max_document_size_kb`. |
-| `Exceptions\DocumentRevisionNotFoundException` | A restore targets a version id that does not belong to the node. |
+| `Documents\Exceptions\DocumentRevisionNotFoundException` | A revision id that does not belong to the node's document. |
 | `Documents\Exceptions\StaleDocumentStateException` | `expectedStateVersion` no longer matches (`412 document_state_mismatch`). |
 | `Documents\Exceptions\CollaborationEpochMismatchException` | A collaboration write from an older room generation (`409 collaboration_epoch_mismatch`). |
 | `Exceptions\Drive\NodeNameConflictException` | A create collides with a sibling name. |

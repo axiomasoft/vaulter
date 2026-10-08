@@ -15,6 +15,7 @@ use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
 use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
 use Vaulter\Documents\Data\Revisions\CreateNamedRevisionInput;
+use Vaulter\Documents\Data\Revisions\RestoreDocumentRevisionInput;
 use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
 use Vaulter\Documents\Events\Revisions\DocumentRevisionCreated;
@@ -36,7 +37,7 @@ function stateVersionDocument(): Node
 {
     $drive = DocumentTestHelpers::drive();
 
-    return app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+    return app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive->model()), new CreateDocumentInput(
         storage: $drive->model(),
         name: 'State version '.bin2hex(random_bytes(3)),
         content: DocumentTestHelpers::content('initial'),
@@ -49,9 +50,9 @@ it('starts at one and counts each changed write once; an identical write is a no
     $action = app(UpdateDocumentContentAction::class);
     expect(DocumentTestHelpers::document($node)->state_version)->toBe(1);
 
-    $first = $action->execute(new UpdateDocumentContentInput(node: $node, content: DocumentTestHelpers::content('first'), expectedStateVersion: 1));
+    $first = $action->execute(DocumentTestHelpers::context($node), new UpdateDocumentContentInput(node: $node, content: DocumentTestHelpers::content('first'), expectedStateVersion: 1));
     Event::fake([DocumentContentUpdated::class]);
-    $same = $action->execute(new UpdateDocumentContentInput(node: $node, content: DocumentTestHelpers::content('first'), expectedStateVersion: 2));
+    $same = $action->execute(DocumentTestHelpers::context($node), new UpdateDocumentContentInput(node: $node, content: DocumentTestHelpers::content('first'), expectedStateVersion: 2));
 
     expect($first->changed)->toBeTrue()
         ->and($first->document->state_version)->toBe(2)
@@ -65,12 +66,12 @@ it('checks a stale expectation before an identical write and leaves no side effe
     $node = stateVersionDocument();
     $action = app(UpdateDocumentContentAction::class);
     $content = DocumentTestHelpers::content('saved');
-    $action->execute(new UpdateDocumentContentInput(node: $node, content: $content, expectedStateVersion: 1));
+    $action->execute(DocumentTestHelpers::context($node), new UpdateDocumentContentInput(node: $node, content: $content, expectedStateVersion: 1));
     $before = DocumentTestHelpers::document($node);
     Event::fake([DocumentContentUpdated::class]);
 
     try {
-        $action->execute(new UpdateDocumentContentInput(node: $node, content: $content, expectedStateVersion: 1));
+        $action->execute(DocumentTestHelpers::context($node), new UpdateDocumentContentInput(node: $node, content: $content, expectedStateVersion: 1));
         $this->fail('A stale expectation must be refused.');
     } catch (StaleDocumentStateException $exception) {
         expect($exception->httpStatus())->toBe(412)
@@ -91,9 +92,9 @@ it('compares the expectation with the locked row, not with a stale caller model'
     $stale->setRawAttributes($node->getAttributes(), sync: true);
     $stale->exists = true;
     $action = app(UpdateDocumentContentAction::class);
-    $action->execute(new UpdateDocumentContentInput(node: $node, content: DocumentTestHelpers::content('new state')));
+    $action->execute(DocumentTestHelpers::context($node), new UpdateDocumentContentInput(node: $node, content: DocumentTestHelpers::content('new state')));
 
-    $updated = $action->execute(new UpdateDocumentContentInput(
+    $updated = $action->execute(DocumentTestHelpers::context($stale), new UpdateDocumentContentInput(
         node: $stale,
         content: DocumentTestHelpers::content('latest edit'),
         expectedStateVersion: 2,
@@ -107,17 +108,17 @@ it('takes named checkpoints without moving the state; restore moves state and ep
     $node = stateVersionDocument();
     $first = DocumentTestHelpers::head($node);
 
-    $named = app(CreateNamedRevisionAction::class)->execute(new CreateNamedRevisionInput(node: $node, label: 'checkpoint'));
+    $named = app(CreateNamedRevisionAction::class)->execute(DocumentTestHelpers::context($node), new CreateNamedRevisionInput(node: $node, label: 'checkpoint'));
     expect(DocumentTestHelpers::document($node)->state_version)->toBe(1)
         ->and($named->state_version)->toBe(1);
 
     Event::fake([DocumentRevisionCreated::class]);
-    expect(fn () => app(RestoreDocumentRevisionAction::class)->execute(node: $node, versionId: $first->id, expectedStateVersion: 0))
+    expect(fn () => app(RestoreDocumentRevisionAction::class)->execute(DocumentTestHelpers::context($node), new RestoreDocumentRevisionInput(node: $node, revision: $first->id, expectedStateVersion: 0)))
         ->toThrow(StaleDocumentStateException::class);
     expect(DocumentTestHelpers::revisions($node))->toHaveCount(2);
     Event::assertNotDispatched(DocumentRevisionCreated::class);
 
-    $restored = app(RestoreDocumentRevisionAction::class)->execute(node: $node, versionId: $first->id, expectedStateVersion: 1);
+    $restored = app(RestoreDocumentRevisionAction::class)->execute(DocumentTestHelpers::context($node), new RestoreDocumentRevisionInput(node: $node, revision: $first->id, expectedStateVersion: 1));
     $document = DocumentTestHelpers::document($node);
     expect($document->state_version)->toBe(2)
         ->and($document->collab_epoch)->toBe(1)
@@ -155,7 +156,7 @@ it('replacing the JSON of a document with Yjs state drops that state and moves t
     $node = stateVersionDocument();
     app(PersistCollaborationStateAction::class)->execute(new PersistCollaborationStateInput(node: $node, yjsState: "room\0state"));
 
-    $result = app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
+    $result = app(UpdateDocumentContentAction::class)->execute(DocumentTestHelpers::context($node), new UpdateDocumentContentInput(
         node: $node,
         content: DocumentTestHelpers::content('replaced from REST'),
     ));
@@ -186,7 +187,7 @@ it('fences a write from an old collaboration epoch before anything is written', 
 it('refuses a negative expectation', function (): void {
     $node = stateVersionDocument();
 
-    expect(fn () => app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
+    expect(fn () => app(UpdateDocumentContentAction::class)->execute(DocumentTestHelpers::context($node), new UpdateDocumentContentInput(
         node: $node,
         content: DocumentTestHelpers::content('x'),
         expectedStateVersion: -1,
@@ -200,7 +201,7 @@ it('rolls back content and checkpoint writes when the state version is exhausted
     $before = DocumentTestHelpers::document($node);
     Event::fake([DocumentContentUpdated::class]);
 
-    expect(fn () => app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
+    expect(fn () => app(UpdateDocumentContentAction::class)->execute(DocumentTestHelpers::context($node), new UpdateDocumentContentInput(
         node: $node,
         content: DocumentTestHelpers::content('uncommitted'),
         expectedStateVersion: PHP_INT_MAX,

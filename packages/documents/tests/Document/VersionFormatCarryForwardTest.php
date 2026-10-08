@@ -9,9 +9,11 @@ use Vaulter\Documents\Actions\Revisions\CreateNamedRevisionAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
 use Vaulter\Documents\Data\Revisions\CreateNamedRevisionInput;
+use Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper;
 use Vaulter\Documents\Enums\Documents\DocumentType;
 use Vaulter\Documents\Http\Resources\DocumentRevisionResource;
 use Vaulter\Documents\Models\Documents\Document;
+use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -32,11 +34,19 @@ beforeEach(function (): void {
 
 function formatOf(mixed $revision): mixed
 {
-    return (new DocumentRevisionResource($revision))->toArray(Request::create('/'))['format'];
+    // The resource renders snapshots; map the stored row the way the operations do.
+    $mapper = app(DocumentSnapshotMapper::class);
+    $snapshot = match (true) {
+        $revision instanceof DocumentRevision => $mapper->revision($revision, $revision->document),
+        $revision instanceof Document => $mapper->document($revision, $revision->currentRevision),
+        default => $revision,
+    };
+
+    return (new DocumentRevisionResource($snapshot))->toArray(Request::create('/'))['format'];
 }
 
 it('keeps a markdown document markdown across an autosave checkpoint (P0.4/L3)', function (): void {
-    $node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+    $node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($this->drive->model()), new CreateDocumentInput(
         storage: $this->drive->model(),
         name: 'Notes',
         content: DocumentTestHelpers::content(),
@@ -46,7 +56,7 @@ it('keeps a markdown document markdown across an autosave checkpoint (P0.4/L3)',
     expect(DocumentTestHelpers::document($node)->type)->toBe('vaulter/markdown')
         ->and(formatOf(app(DocumentRevisionReadRepository::class)->head($node)))->toBe('markdown');
 
-    $result = app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
+    $result = app(UpdateDocumentContentAction::class)->execute(DocumentTestHelpers::context($node), new UpdateDocumentContentInput(
         node: $node,
         content: DocumentTestHelpers::content('Updated'),
     ));
@@ -57,14 +67,14 @@ it('keeps a markdown document markdown across an autosave checkpoint (P0.4/L3)',
 });
 
 it('maps every 0.2 rich-text flavour to the one rich-text type (P0.4/L3)', function (string $format): void {
-    $node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+    $node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($this->drive->model()), new CreateDocumentInput(
         storage: $this->drive->model(),
         name: 'Doc '.$format,
         content: DocumentTestHelpers::content(),
         parent: DriveTestHelpers::model($this->drive->root()),
         format: $format,
     ));
-    $result = app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
+    $result = app(UpdateDocumentContentAction::class)->execute(DocumentTestHelpers::context($node), new UpdateDocumentContentInput(
         node: $node,
         content: DocumentTestHelpers::content('Updated'),
     ));
@@ -75,7 +85,7 @@ it('maps every 0.2 rich-text flavour to the one rich-text type (P0.4/L3)', funct
 
 it('takes a checkpoint for a document whose head is missing, without dereferencing null', function (): void {
     config()->set('vaulter-documents.revisions.checkpoint_interval_seconds', 300);
-    $node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+    $node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($this->drive->model()), new CreateDocumentInput(
         storage: $this->drive->model(),
         name: 'Headless',
         content: DocumentTestHelpers::content(),
@@ -86,7 +96,7 @@ it('takes a checkpoint for a document whose head is missing, without dereferenci
     Document::query()->where('node_id', $node->getKey())->update(['current_revision_id' => null]);
     expect(app(DocumentRevisionReadRepository::class)->head($node))->toBeNull();
 
-    $result = app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
+    $result = app(UpdateDocumentContentAction::class)->execute(DocumentTestHelpers::context($node), new UpdateDocumentContentInput(
         node: $node,
         content: DocumentTestHelpers::content('Updated'),
     ));
@@ -97,7 +107,7 @@ it('takes a checkpoint for a document whose head is missing, without dereferenci
 });
 
 it('keeps the type on a NAMED checkpoint too (P0.4/L3)', function (): void {
-    $node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
+    $node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($this->drive->model()), new CreateDocumentInput(
         storage: $this->drive->model(),
         name: 'Notes',
         content: DocumentTestHelpers::content(),
@@ -105,7 +115,7 @@ it('keeps the type on a NAMED checkpoint too (P0.4/L3)', function (): void {
         format: DocumentType::Markdown->value,
     ));
 
-    $named = app(CreateNamedRevisionAction::class)->execute(new CreateNamedRevisionInput(
+    $named = app(CreateNamedRevisionAction::class)->execute(DocumentTestHelpers::context($node), new CreateNamedRevisionInput(
         node: $node,
         label: 'v1.0',
     ));
