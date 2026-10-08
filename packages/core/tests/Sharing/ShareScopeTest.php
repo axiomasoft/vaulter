@@ -24,7 +24,7 @@ it('an item-scope share contains only the shared node', function (): void {
     $parent = AccessTestHelpers::folder($storage, null, 'parent');
     $child = AccessTestHelpers::folder($storage, $parent, 'child');
 
-    $share = ShareTestHelpers::share($parent, permissions: Permission::Read->value, scope: GrantScope::Item);
+    $share = ShareTestHelpers::share($parent, permissions: (Permission::View->value | Permission::Download->value), scope: GrantScope::Item);
     $context = new ShareContext(share: $share, node: $parent, permissions: $share->permissions);
 
     expect($context->containsNode($parent))->toBeTrue()
@@ -42,7 +42,7 @@ it('a subtree share contains descendants but NOT siblings or ancestors', functio
 
     $sibling = AccessTestHelpers::folder($storage, null, 'sibling');
 
-    $share = ShareTestHelpers::share($shared, permissions: Permission::Read->value, scope: GrantScope::Subtree);
+    $share = ShareTestHelpers::share($shared, permissions: (Permission::View->value | Permission::Download->value), scope: GrantScope::Subtree);
     $context = new ShareContext(share: $share, node: $shared, permissions: $share->permissions);
 
     expect($context->containsNode($shared))->toBeTrue()
@@ -61,8 +61,29 @@ it('a subtree share never escapes to another storage', function (): void {
     $storageB = Vaulter::drive(DriveTestHelpers::host())->model();
     $nodeB = AccessTestHelpers::folder($storageB, null, 'B');
 
-    $share = ShareTestHelpers::share($sharedA, permissions: Permission::Read->value, scope: GrantScope::Subtree);
+    $share = ShareTestHelpers::share($sharedA, permissions: (Permission::View->value | Permission::Download->value), scope: GrantScope::Subtree);
     $context = new ShareContext(share: $share, node: $sharedA, permissions: $share->permissions);
 
     expect($context->containsNode($nodeB))->toBeFalse();
+});
+
+it('a subtree share on an ancestor stops at an inheritance boundary like a grant', function (): void {
+    $storage = AccessTestHelpers::storage();
+    $shared = AccessTestHelpers::folder($storage, null, 'shared');
+    $open = AccessTestHelpers::folder($storage, $shared, 'open');
+    $walled = AccessTestHelpers::folder($storage, $shared, 'walled', inheritGrants: false);
+    $belowWall = AccessTestHelpers::folder($storage, $walled, 'below');
+
+    $share = ShareTestHelpers::share($shared, permissions: (Permission::View->value | Permission::Download->value), scope: GrantScope::Subtree);
+    $context = new ShareContext(share: $share, node: $shared, permissions: $share->permissions);
+
+    expect($context->containsNode($open))->toBeTrue()
+        ->and($context->containsNode($walled))->toBeFalse()
+        ->and($context->containsNode($belowWall))->toBeFalse();
+
+    // A link ON the boundary node itself still reaches below it.
+    $onWall = ShareTestHelpers::share($walled, token: 'on-wall-token', permissions: Permission::View->value, scope: GrantScope::Subtree);
+    $wallContext = new ShareContext(share: $onWall, node: $walled, permissions: $onWall->permissions);
+    expect($wallContext->containsNode($walled))->toBeTrue()
+        ->and($wallContext->containsNode($belowWall))->toBeTrue();
 });

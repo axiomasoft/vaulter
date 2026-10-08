@@ -1,6 +1,6 @@
 ---
 title: Authorization
-description: How Vaulter decides who can do what — the host-delegated AccessResolver, the deny-veto algorithm, grant inheritance and the inherit_grants cut-off, the ability flags the UI binds against, and the fail-loud null driver.
+description: How Vaulter decides who can do what — the host-delegated AccessResolver, the role-union algorithm, inheritance boundaries, the ability flags the UI binds against, and the fail-loud null driver.
 outline: deep
 ---
 
@@ -10,7 +10,7 @@ Vaulter answers exactly one authorization question: **may this actor perform thi
 ability on this node?** The answer is computed by a single, Vaulter-owned engine —
 the `AccessResolver` — that folds together two lanes:
 
-1. the **per-node ACL** (`v_node_grants` rows), Vaulter's own grant store; and
+1. the **per-node ACL** (`v_node_grants` rows), Vaulter's own grant store (versioned roles); and
 2. a **swappable host-role lane** (`PermissionDriver`) that bridges your application's
    identity and role system in.
 
@@ -33,7 +33,7 @@ it through the `PermissionDriver` contract — never by replacing the resolver.
 | Method | Returns | Purpose |
 |---|---|---|
 | `can(Authorizable $actor, Ability $ability, Node $node)` | `bool` | The single yes/no entry point Policies and the `DriveHandle` call. |
-| `effectiveGrants(Authorizable $actor, Node $node)` | `GrantSet` | The folded result of the whole algorithm — allow-mask, deny-mask, level. |
+| `effectiveGrants(Authorizable $actor, Node $node)` | `GrantSet` | The folded result of the whole algorithm — allowed bits and the host override flags. |
 | `abilitiesFor(Authorizable $actor, Node $node)` | `array<string, bool>` | Every `Ability` mapped to allowed/denied — fills the UI `abilities` object. |
 | `canCreateInWorkspace(Authorizable $actor, Storage $storage)` | `bool` | The create gate for folders/uploads, where there is no existing node. |
 | `sharedNodeIds(Authorizable $actor)` | `list<int\|string>` | The candidate node ids the actor has any live allow-grant on. |
@@ -53,72 +53,54 @@ if ($resolver->can($user, Ability::Edit, $node)) {
 `can()` is sugar over `effectiveGrants($actor, $node)->allows($ability)` — there is one
 place the algorithm lives, and every other method reads its result.
 
-## Abilities, levels and the CRUDS bitmask
+## Abilities and roles
 
-Vaulter reasons over a single integer. Every grant is reduced to a **CRUDS bitmask**
-(`Vaulter\Enums\Access\Permission`), and every ability declares the bits it requires.
+Vaulter reasons over a single integer. Every ability owns **one bit**
+(`Vaulter\Enums\Access\Permission`), and `Ability::bits()` returns it:
 
-```
-READ = 1   UPDATE = 2   CREATE = 4   DELETE = 8   SHARE = 16   ALL = 31
-```
+| Ability | Bit | Ability | Bit |
+|---|---|---|---|
+| `View` | 1 | `Download` | 64 |
+| `Edit` | 2 | `Move` | 128 |
+| `Create` | 4 | `Copy` | 256 |
+| `Delete` | 8 | `Trash` | 512 |
+| `Share` | 16 | `Restore` | 1024 |
+| `Comment` | 32 | `Manage` | 2048 |
 
-### Abilities → required bits
+`Permission::all()` is 4095. View and Download are separate, so a user can preview a node
+without being able to download or copy it. `Ability::satisfiedBy($bits)` is
+`($bits & $ability->bits()) === $ability->bits()`.
 
-`Vaulter\Enums\Access\Ability` is the Drive action vocabulary. `requiredBits()` maps
-each ability to exactly the bit(s) that must be in the effective allow-mask:
+### Roles v1
 
-| Ability | Required bits |
+A grant stores a **role** (`Vaulter\Access\Roles\Role`) and its version, resolved through
+`RoleRegistry`. A role is a closed set of abilities; each built-in role contains the one
+before it:
+
+| Role | Abilities |
 |---|---|
-| `View`, `Download`, `Comment` | `READ` |
-| `Edit` | `UPDATE` |
-| `Create`, `Copy` | `CREATE` |
-| `Move` | `UPDATE \| CREATE` (re-parent = update here, create there) |
-| `Trash`, `Restore`, `Delete` | `DELETE` |
-| `Share` | `SHARE` |
-| `Manage` | `ALL` (31) |
+| `previewer` | View |
+| `reader` | previewer + Download |
+| `commenter` | reader + Comment |
+| `writer` | commenter + Edit, Create, Move, Copy, Trash, Restore |
+| `organizer` | writer + Share |
+| `owner` | organizer + Manage, Delete |
 
-An ability is satisfied only when **all** its required bits are present:
-`Ability::Edit->satisfiedBy($bits)` is `($bits & UPDATE) === UPDATE`.
-
-### Grant levels → bitmask
-
-A grant row may store a ranked **level** (`Vaulter\Enums\Access\GrantLevel`) instead of
-raw bits. `GrantLevel::bits()` normalises a level to its bitmask so the engine always
-reasons in bits:
-
-| Level | Rank | Bits |
-|---|---|---|
-| `Reader` | 1 | `READ` |
-| `Commenter` | 2 | `READ` (comment is a view-side capability) |
-| `Writer` | 3 | `READ \| UPDATE \| CREATE` |
-| `Organizer` | 4 | `READ \| UPDATE \| CREATE \| DELETE` |
-| `Owner` | 5 | `ALL` (adds `SHARE` / management) |
-
-A higher rank implies every lower one. A grant row may carry **both** a level and
-extra `permissions` bits — they are OR-ed, so an `Organizer` grant plus an extra
-`SHARE` bit confers both.
-
-::: tip No orphan delete action
-There is no standalone stringly-typed "delete" level or action. Permanent delete folds
-into the `DELETE` bit (held by `Organizer`/`Owner`), so `Trash`, `Restore` and `Delete`
-all require the same `DELETE` bit.
-:::
+A role never changes once released: a revised role ships as a new version, and a stored grant
+keeps resolving to what it was given. An unknown key or version throws
+`UnknownRoleException` (`unknown_role`, 422). There is no implicit owner: the creator of a node
+gets no rights from having created it (`v_nodes.owner_id` is gone) — grant a role explicitly.
 
 ## The algorithm
 
-`effectiveGrants()` runs the canonical algorithm in five steps. It is implemented
-exactly as described here — there is no hidden behaviour.
+`effectiveGrants()` runs the algorithm in three steps. There is no deny and no ranking.
 
 ```
-1. Host override (super-admin) — absolute, both directions.
-2. Walk ancestors nearest-first, BOUNDED to the storage root, collecting
-   direct + scope=subtree grants for the actor's subject-set;
-   STOP at the first ancestor with inherit_grants = false.
-3. aclAllow = max(allow bits/levels); deniedBits = OR of deny bits.
-   A NEARER explicit allow pierces a FARTHER inherited deny.
-4. granted = max(aclAllow, roleAllow), where roleAllow comes from the driver.
-5. FINAL VETO: if deniedBits covers the requested ability → DENY,
-   regardless of any role grant.
+1. Host override (PermissionDriver::override) — absolute, both directions.
+2. Collect the roles that apply: direct grants on the node, subtree grants on
+   ancestors up to and including the first node with inherit_grants = false,
+   and the roles the permission driver returns.
+3. allowed = union of the abilities of those roles.
 ```
 
 ### Step 1 — host override
@@ -126,18 +108,18 @@ exactly as described here — there is no hidden behaviour.
 The resolver first asks the active `PermissionDriver::override($actor, $scope)`. A
 super-admin / `Gate::before`-style override short-circuits the whole walk:
 
-- `Effect::Allow` → `GrantSet::superAllowed()` (full access, both directions);
-- `Effect::Deny` → `GrantSet::superDenied()` (no access, both directions);
-- `null` → no override; continue to the ACL walk.
+- `Effect::Allow` → `GrantSet::superAllowed()` (full access);
+- `Effect::Deny` → `GrantSet::superDenied()` (no access) — the only block in the model, and it
+  belongs to the host, not to a grant;
+- `null` → no override; continue.
 
 The override is **absolute** — it is not affected by any ACL row.
 
-### Step 2 — the bounded ancestor walk
+### Step 2 — roles up to an inheritance boundary
 
 The driver expands the actor into a **subject-set** via `subjectsFor($actor)` (the user
 itself plus any host roles/teams). The resolver then walks the node's ancestor chain
-**nearest-first** — the node, its parent, … up to the storage root — collecting the
-live grants addressed to that subject-set.
+**nearest-first** and collects the live grants addressed to that subject-set.
 
 Two rules decide whether a grant *applies* at a given node:
 
@@ -149,78 +131,57 @@ The walk is **bounded to the storage**: it never crosses `storage_id`, so a deci
 can never escape its workspace. Expiry is enforced read-time in the grant query — an
 expired row never reaches the resolver, and there is no expiry cron.
 
-#### The inherit_grants cut-off
+#### Inheritance boundaries
 
-Each node carries a boolean `inherit_grants`. When the walk consumes an ancestor whose
-`inherit_grants = false`, that ancestor's **own** grants still count, but **nothing
-above it does** — the walk stops there. This is the inheritance cut-off: a node can be
-sealed off so it ignores grants set higher in the tree.
+Each node carries a boolean `inherit_grants`. When the walk reaches a node with
+`inherit_grants = false`, that node's **own** grants still count, but **nothing above it
+does** — the walk stops there. A boundary hides the subtree from everyone who had access only
+through grants higher up; people who need it get a direct grant on the boundary node.
 
-::: warning A deny on a sealed node is an unbreakable wall
-Because the walk stops at an `inherit_grants = false` node, a `deny` placed on that
-node sits at the farthest reachable depth — no farther allow exists to pierce it. It is
-a permanent veto for the subtree below the cut-off.
-:::
-
-### Step 3 — the deny-veto fold (explicit beats inherited)
-
-The walk buckets allow-bits and deny-bits **per depth** (nearest = depth 0). The fold
-then applies one rule:
-
-> A `deny` at depth *d* is final **except** for the bits allowed at a *strictly nearer*
-> depth (`< d`). A same-depth allow does **not** pierce a same-depth deny.
-
-Consequences:
-
-- a **nearer explicit allow** pierces a **farther inherited deny** (you can re-open
-  access closer to the node);
-- an `allow` and a `deny` on the **same node** ⇒ the **deny wins** (a same-node deny is
-  an absolute veto — explicit-beats-inherited applies across depths, never within one).
-
-This is why the resolver cannot fold an unordered grant set in a single pass: a
-same-depth allow seen before a same-depth deny must not swallow it. Allow/deny bits are
-bucketed per depth, then folded nearest-to-farthest, masking a deny only with bits
-allowed strictly nearer.
-
-### Step 4 — fold in the role lane
-
-For each subject the driver's `resolve($subject, $actor, $scope)` may return a
-`Decision` (a level + allow + bits). An allow `Decision` is OR-ed into the allow-mask
-and its level folded with `max()`:
-
-```
-allowedBits = aclAllowBits | roleAllowBits
-level       = max(aclLevel, roleLevel)
-```
-
-The role lane is folded **before** the deny veto, so it can **raise** access but can
-**never resurrect a denied bit**. The `AccessScope` handed to the driver is node-blind: it
-carries the panel + workspace coordinates and the node owner, never a `Node`.
-
-### Step 5 — the final veto
-
-The veto lives in `GrantSet::allows(Ability $ability)`:
+Manage it with the access operations (both require `Manage` on the node):
 
 ```php
-// Vaulter\Access\ValueObjects\GrantSet
-public function allows(Ability $ability): bool
-{
-    if ($this->superDeny) return false;   // override deny wins over everything
-    if ($this->superAllow) return true;   // override allow wins over everything
+$access = $drive->actingAs($owner)->access();
 
-    $required = $ability->requiredBits();
-
-    // Any required bit landing in the deny-mask kills the ability.
-    if (($this->deniedBits & $required) !== 0) {
-        return false;
-    }
-
-    return ($this->allowedBits & $required) === $required;
-}
+$access->restrictInheritance($node);                                  // only direct grants remain
+$access->restrictInheritance($node, InheritanceRestriction::CopyCurrent);
+$access->restoreInheritance($node);                                   // direct grants are kept
 ```
 
-A required bit in the deny-mask kills the ability **regardless of the allow-mask** — so
-a host-role grant from step 4 can never override an ACL deny.
+`copy_current` first gives each subject that currently inherits access a direct subtree grant
+on the node — the role covering the inherited roles, never broader and never longer-lived than
+what it inherits — so nobody loses or gains access by the restriction itself.
+
+### Step 3 — the union
+
+Every applying grant adds its role's abilities; there is no `max(rank)` and nothing subtracts.
+A role from the driver's `resolve($subject, $actor, $scope)` (`Decision{Role}`) is unioned
+with the grants the same way, so the host role lane can raise access but never lowers it. The
+`AccessScope` handed to the driver is node-blind: it carries the profile, the drive owner and
+the tenant, never a `Node`.
+
+## Operations over several nodes
+
+| Operation | Required |
+|---|---|
+| copy | `View` + `Download` + `Copy` on **every** copied node, `Create` on the destination |
+| move | `Move` on the node, `Create` on the destination |
+| restore | `Restore` on the node, `Create` on the destination unless it returns to its original parent |
+| purge | `Delete` |
+
+A previewer can therefore see a folder but a copy that would reach a descendant it cannot
+download is refused.
+
+## Explaining a decision
+
+`access()->explain($node, $ability)` returns an `AccessExplanation`:
+
+| Field | Meaning |
+|---|---|
+| `allowed`, `ability`, `reason` | the answer and why |
+| `sources` | the `AccessSource` rows that granted it: grant id, subject, role and version, origin node, whether it was inherited, expiry |
+| `restrictions` | what limited the answer (an override, an inheritance boundary) |
+| `boundaryNodeId` | the node where inheritance stopped, if any |
 
 ## The GrantSet
 
@@ -229,13 +190,11 @@ value object carrying the folded decision:
 
 | Field | Meaning |
 |---|---|
-| `allowedBits` | the union of every applying allow (ACL + role) |
-| `deniedBits` | the OR of every applying deny |
-| `level` | the effective `GrantLevel` (max of ACL + role), or `null` |
+| `allowedBits` | the union of the bits of every applying role (grants + driver) |
 | `superAllow` / `superDeny` | a host override short-circuit |
 
-It answers `allows(Ability)` with the deny-veto baked in (above). Static constructors:
-`GrantSet::none()` (no access), `GrantSet::superAllowed()`, `GrantSet::superDenied()`.
+It answers `allows(Ability)`. Static constructors: `GrantSet::none()` (no access),
+`GrantSet::superAllowed()`, `GrantSet::superDenied()`.
 
 ## Ability flags for the UI
 
@@ -294,13 +253,13 @@ what each guarantees.
 
 Children, search, trash, shared nodes, folder `show` children and Filament table rows
 are filtered through `AccessResolver::evaluateMany()` for every permission driver.
-Only nodes with effective `View` are returned. Explicit deny and `inherit_grants`
-cut-offs apply before names, sizes or MIME types are exposed. The same batch result
+Only nodes with effective `View` are returned. Inheritance boundaries and host
+overrides apply before names, sizes or MIME types are exposed. The same batch result
 fills each listing item's `abilities`, avoiding a separate ancestor walk per resource.
 
-`evaluateMany()` preserves the rules of `effectiveGrants()`: a nearer allow can pierce
-a farther deny; a same-node deny vetoes its allow and the host role lane. Absolute
-host overrides retain their existing behavior. Parent `item` grants never inherit.
+`evaluateMany()` preserves the rules of `effectiveGrants()`: roles are unioned up to the
+first inheritance boundary, and host overrides stay absolute. Parent `item` grants never
+inherit.
 
 SQL grant narrowing in `constrainToAccessible()` remains a candidate prefilter for
 grant-authoritative drivers. Its result needs exact ACL evaluation before display.
@@ -340,7 +299,7 @@ GET {prefix}/shared        # e.g. GET /api/vaulter/shared
 |---|---|
 | **Gating** | Registered only when the **`grants`** feature is on. |
 | **Auth** | An unauthenticated request gets an **empty** page (never an error). |
-| **Exactness** | Each candidate is evaluated through the batch ACL algorithm; an effective deny excludes it. |
+| **Exactness** | Each candidate is evaluated through the batch ACL algorithm; an unreadable node is excluded. |
 | **Pagination** | A signed cursor envelope (`meta.next_cursor`, `per_page`, `scanned`) without `total`; follow the cursor even after an empty page. |
 | **Payload** | `NodeResource` items with the owning `storage` eager-loaded (the only cross-storage context the payload carries; the breadcrumb is attached only on `show`). |
 

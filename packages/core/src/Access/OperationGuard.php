@@ -131,8 +131,9 @@ final readonly class OperationGuard
     }
 
     /**
-     * COPY duplicates every active descendant, so one the actor cannot see and copy
-     * stops the whole copy (D30): a hidden child must not leak through its folder.
+     * COPY duplicates the content of every active descendant, so each copied node
+     * needs view, download and copy (PLAN2.D30/D45): one the actor cannot see or take
+     * stops the whole copy, so a hidden child never leaks through its folder.
      * Returns the authorised node keys so the Action can refuse a descendant that
      * appears between this check and its locks; null for a system actor, which
      * bypasses only ACL (tenancy is still checked for every node).
@@ -169,7 +170,7 @@ final readonly class OperationGuard
         $sets = $this->resolver->evaluateMany(actor: $actor, nodes: $nodes);
         foreach ($nodes as $node) {
             $set = $sets[(string) $node->id] ?? GrantSet::superDenied();
-            if (!$set->allows(Ability::View) || !$set->allows(Ability::Copy)) {
+            if (!$set->allows(Ability::View) || !$set->allows(Ability::Download) || !$set->allows(Ability::Copy)) {
                 throw PermissionDeniedException::forAbility(Ability::Copy->value);
             }
         }

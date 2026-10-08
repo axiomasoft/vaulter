@@ -90,7 +90,6 @@ final readonly class CreateDocumentAction
                 'name' => $name,
                 'mime_type' => $data->mimeType,
                 'size_bytes' => $data->content->sizeInBytes(),
-                'owner_id' => $data->actorId,
                 'created_by' => $data->actorId,
             ]);
 

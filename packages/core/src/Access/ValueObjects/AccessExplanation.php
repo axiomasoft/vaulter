@@ -4,44 +4,42 @@ declare(strict_types=1);
 
 namespace Vaulter\Access\ValueObjects;
 
-use Vaulter\Access\AccessResolver;
 use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Access\GrantLevel;
 
 /**
- * The diagnostic answer to "WHY does (actor, ability, node) resolve the way it
- * does?" (F-P1.1-02 / S1.7). It carries the final verdict, a machine-readable
- * reason, the folded allow/deny masks + effective level, and the provenance chain
- * of every grant the bounded ancestor walk visited (nearest-first).
+ * Why (subject, ability, node) resolves the way it does: the verdict, a stable
+ * reason code, every role that applies (with where it comes from), the
+ * administrative restrictions in force, and the inheritance boundary that stopped
+ * grants from further up, if any.
  *
- * Built ONLY by {@see AccessResolver::explain()} through a separate
- * provenance-collecting pass — it is NEVER produced on the hot can()/effectiveGrants()
- * path, so the diagnostic bookkeeping adds no cost to authorization decisions.
- *
- * @see AccessResolver::explain()
+ * Built only by AccessResolver::explain(), never on the can() path.
  */
 final readonly class AccessExplanation
 {
-    public const string REASON_SUPER_ALLOW = 'super_override_allow';
-
-    public const string REASON_SUPER_DENY = 'super_override_deny';
-
-    public const string REASON_DENY_VETO = 'deny_veto';
-
     public const string REASON_ALLOW = 'allow';
 
     public const string REASON_NO_GRANT = 'no_grant';
 
+    public const string REASON_OVERRIDE_ALLOW = 'override_allow';
+
+    public const string REASON_OVERRIDE_DENY = 'override_deny';
+
+    /** An explicit system actor: the ACL does not apply. */
+    public const string REASON_SYSTEM = 'system';
+
+    /** The restriction code of a PermissionDriver::override() Deny. */
+    public const string RESTRICTION_OVERRIDE_DENY = 'administrative_block';
+
     /**
-     * @param list<AccessAce> $aces the visited grants, nearest-first
+     * @param list<AccessSource> $sources      nearest first; the driver's roles last
+     * @param list<string>       $restrictions
      */
     public function __construct(
         public bool $allowed,
         public Ability $ability,
         public string $reason,
-        public int $allowedBits,
-        public int $deniedBits,
-        public ?GrantLevel $level,
-        public array $aces,
+        public array $sources,
+        public array $restrictions,
+        public int|string|null $boundaryNodeId,
     ) {}
 }

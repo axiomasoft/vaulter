@@ -6,9 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Access\PermissionDriverManager;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Http\Resources\DriveResource;
-use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeReadRepository;
@@ -71,8 +70,8 @@ it('index lists the subtree-anchor descendants and hides an un-granted sibling',
     $child = AccessTestHelpers::folder($storage, $anchor, 'child');
     $sibling = AccessTestHelpers::folder($storage, null, 'sibling');
 
-    AccessTestHelpers::grant($root, GrantLevel::Reader, scope: GrantScope::Item);
-    AccessTestHelpers::grant($anchor, GrantLevel::Reader, scope: GrantScope::Subtree);
+    AccessTestHelpers::grant($root, RoleRegistry::READER, scope: GrantScope::Item);
+    AccessTestHelpers::grant($anchor, RoleRegistry::READER, scope: GrantScope::Subtree);
 
     // Listing the anchor's children surfaces the descendant (reached via the ancestor
     // subtree anchor, no direct grant of its own).
@@ -96,7 +95,7 @@ it('lists zero children for an item-scoped folder grant while the folder itself 
     $child = AccessTestHelpers::folder($storage, $folder, 'inside');
 
     // ITEM scope = that node ONLY: the folder is a candidate, its child is not.
-    AccessTestHelpers::grant($folder, GrantLevel::Reader, scope: GrantScope::Item);
+    AccessTestHelpers::grant($folder, RoleRegistry::READER, scope: GrantScope::Item);
 
     // The folder's children listing is EMPTY (the child is no candidate)…
     $this->getJson('api/vaulter/storages/'.$storage->getKey().'/nodes?parent_id='.$folder->getKey())
@@ -115,11 +114,11 @@ it('lists zero children for an item-scoped folder grant while the folder itself 
 it('returns cross-storage allow-grants in the shared view', function (): void {
     $storageA = AccessTestHelpers::storage();
     $folderA = AccessTestHelpers::folder($storageA, null, 'in-a');
-    AccessTestHelpers::grant($folderA, GrantLevel::Reader, scope: GrantScope::Item);
+    AccessTestHelpers::grant($folderA, RoleRegistry::READER, scope: GrantScope::Item);
 
     $storageB = AccessTestHelpers::storage();
     $folderB = AccessTestHelpers::folder($storageB, null, 'in-b');
-    AccessTestHelpers::grant($folderB, GrantLevel::Reader, scope: GrantScope::Item);
+    AccessTestHelpers::grant($folderB, RoleRegistry::READER, scope: GrantScope::Item);
 
     $ids = collect($this->getJson('api/vaulter/shared')->assertOk()->json('data'))->pluck('id')->all();
 
@@ -127,22 +126,21 @@ it('returns cross-storage allow-grants in the shared view', function (): void {
         ->and($ids)->toContain($folderB->getKey());
 });
 
-// ── 4. GET shared is EXACT: a nearer deny removes a row; an expired allow is excluded.
-it('excludes a deny-revoked row and an expired allow from the shared view (exact)', function (): void {
+// ── 4. GET shared is EXACT: an expired grant is excluded; a direct grant behind an
+// inheritance boundary still counts (the boundary only cuts grants from above).
+it('excludes an expired grant and keeps a direct grant behind a boundary in the shared view (exact)', function (): void {
     $storage = AccessTestHelpers::storage();
 
-    // A subtree allow on the parent flows to the child… but a nearer deny on the child
-    // revokes it (the exact re-resolution drops the child, keeps the parent).
     $parent = AccessTestHelpers::folder($storage, null, 'parent');
-    $child = AccessTestHelpers::folder($storage, $parent, 'child');
-    AccessTestHelpers::grant($parent, GrantLevel::Reader, scope: GrantScope::Subtree);
-    AccessTestHelpers::grant($child, GrantLevel::Reader, effect: Effect::Deny, scope: GrantScope::Item);
+    $child = AccessTestHelpers::folder($storage, $parent, 'child', inheritGrants: false);
+    AccessTestHelpers::grant($parent, RoleRegistry::READER, scope: GrantScope::Subtree);
+    AccessTestHelpers::grant($child, RoleRegistry::PREVIEWER, scope: GrantScope::Item);
 
     // An EXPIRED allow never reaches the shared view (read-time expiry).
     $expired = AccessTestHelpers::folder($storage, null, 'expired');
     AccessTestHelpers::grant(
         $expired,
-        GrantLevel::Reader,
+        RoleRegistry::READER,
         scope: GrantScope::Item,
         expiresAt: Carbon::now()->subHour(),
     );
@@ -150,7 +148,7 @@ it('excludes a deny-revoked row and an expired allow from the shared view (exact
     $ids = collect($this->getJson('api/vaulter/shared')->assertOk()->json('data'))->pluck('id')->all();
 
     expect($ids)->toContain($parent->getKey())
-        ->and($ids)->not->toContain($child->getKey())
+        ->and($ids)->toContain($child->getKey())
         ->and($ids)->not->toContain($expired->getKey());
 });
 
@@ -161,7 +159,7 @@ it('requires an actor for an unauthenticated shared request without leaking a gr
     $storage = AccessTestHelpers::storage();
     AccessTestHelpers::grant(
         AccessTestHelpers::folder($storage, null, 'secret'),
-        GrantLevel::Reader,
+        RoleRegistry::READER,
         scope: GrantScope::Item,
     );
 
@@ -173,7 +171,7 @@ it('requires an actor for an unauthenticated shared request without leaking a gr
 it('wraps the shared view in an exact cursor envelope', function (): void {
     $storage = AccessTestHelpers::storage();
     $folder = AccessTestHelpers::folder($storage, null, 'shared-one');
-    AccessTestHelpers::grant($folder, GrantLevel::Reader, scope: GrantScope::Item);
+    AccessTestHelpers::grant($folder, RoleRegistry::READER, scope: GrantScope::Item);
 
     $this->getJson('api/vaulter/shared')
         ->assertOk()
@@ -185,7 +183,7 @@ it('wraps the shared view in an exact cursor envelope', function (): void {
 it('GET shared advertises a cursor envelope without offset totals', function (): void {
     $storage = AccessTestHelpers::storage();
     $folder = AccessTestHelpers::folder($storage, null, 'offset-contract');
-    AccessTestHelpers::grant($folder, GrantLevel::Reader, scope: GrantScope::Item);
+    AccessTestHelpers::grant($folder, RoleRegistry::READER, scope: GrantScope::Item);
 
     $response = $this->getJson('api/vaulter/shared')->assertOk();
 
@@ -200,7 +198,7 @@ it('constrains an item anchor to only its own node via the repository seam', fun
     $storage = AccessTestHelpers::storage();
     $folder = AccessTestHelpers::folder($storage, null, 'item');
     AccessTestHelpers::folder($storage, $folder, 'descendant'); // not a candidate (item scope)
-    AccessTestHelpers::grant($folder, GrantLevel::Reader, scope: GrantScope::Item);
+    AccessTestHelpers::grant($folder, RoleRegistry::READER, scope: GrantScope::Item);
 
     $ids = nodeRepo()->queryForUser(AccessTestHelpers::user())->pluck('id')->all();
 
@@ -214,7 +212,7 @@ it('constrains a subtree anchor to the anchor plus all its descendants', functio
     $grandchild = AccessTestHelpers::folder($storage, $childA, 'a-1');
     $outside = AccessTestHelpers::folder($storage, null, 'outside');
 
-    AccessTestHelpers::grant($anchor, GrantLevel::Reader, scope: GrantScope::Subtree);
+    AccessTestHelpers::grant($anchor, RoleRegistry::READER, scope: GrantScope::Subtree);
 
     $ids = nodeRepo()->queryForUser(AccessTestHelpers::user())->pluck('id')->all();
 
@@ -243,13 +241,13 @@ it('includes a grant addressed to the actor role subject in the candidate set', 
     // A grant addressed to the ROLE subject (type 'role', id 7) — NOT the user directly.
     AccessTestHelpers::grant(
         $roleFolder,
-        GrantLevel::Reader,
+        RoleRegistry::READER,
         scope: GrantScope::Item,
         subjectId: 7,
         subjectType: 'role',
     );
     // A control grant addressed to the user directly.
-    AccessTestHelpers::grant($userFolder, GrantLevel::Reader, scope: GrantScope::Item);
+    AccessTestHelpers::grant($userFolder, RoleRegistry::READER, scope: GrantScope::Item);
 
     // The driver expands the actor into [user, role:7] — both grants are candidates.
     useListingDriver(new RoleSubjectGrantDriver(roleType: 'role', roleId: 7));
@@ -261,24 +259,23 @@ it('includes a grant addressed to the actor role subject in the candidate set', 
 });
 
 // ── 9. Per-node ACTION gating stays EXACT even though the node lists (candidate superset).
-it('refuses the action on a deny-vetoed node that still appears in the candidate listing', function (): void {
+it('refuses the action on a node behind an inheritance boundary that still appears in the candidate listing', function (): void {
     $storage = AccessTestHelpers::storage();
     $parent = AccessTestHelpers::folder($storage, null, 'subtree');
-    $child = AccessTestHelpers::folder($storage, $parent, 'vetoed');
+    $child = AccessTestHelpers::folder($storage, $parent, 'walled', inheritGrants: false);
 
-    // A subtree allow on the parent makes BOTH parent and child candidates (the listing
-    // is a superset); a nearer deny on the child revokes its exact access.
-    AccessTestHelpers::grant($parent, GrantLevel::Reader, scope: GrantScope::Subtree);
-    AccessTestHelpers::grant($child, GrantLevel::Reader, effect: Effect::Deny, scope: GrantScope::Item);
+    // A subtree grant on the parent makes BOTH parent and child candidates (the listing
+    // is a superset); the boundary on the child cuts its exact access.
+    AccessTestHelpers::grant($parent, RoleRegistry::READER, scope: GrantScope::Subtree);
 
-    // The child IS in the candidate listing (superset — deny not applied in listing SQL).
+    // The child IS in the candidate listing (superset — the boundary is not applied in SQL).
     $listed = nodeRepo()->queryForUser(AccessTestHelpers::user())->pluck('id')->all();
     expect($listed)->toContain($child->getKey());
 
-    // …but the per-ACTION gate is EXACT: show on the deny-vetoed child is refused (403).
+    // …but the per-ACTION gate is EXACT: show on the walled child is a 404.
     $this->getJson('api/vaulter/nodes/'.$child->getKey())->assertNotFound();
 
-    // The non-vetoed parent still shows (sanity — only the vetoed node is gated).
+    // The parent still shows (sanity — only the walled node is gated).
     $this->getJson('api/vaulter/nodes/'.$parent->getKey())->assertOk();
 });
 
@@ -288,7 +285,7 @@ it('exposes view-only storage abilities for a reader on the root', function (): 
     $root = $storage->rootNode()->first();
 
     // Reader on the root: view true, create_folder/upload/manage false.
-    AccessTestHelpers::grant($root, GrantLevel::Reader, scope: GrantScope::Subtree);
+    AccessTestHelpers::grant($root, RoleRegistry::READER, scope: GrantScope::Subtree);
 
     $this->getJson('api/vaulter/storages/'.$storage->getKey())
         ->assertOk()
@@ -306,7 +303,7 @@ it('refuses the storage show for an unauthenticated request on a rooted storage'
     // is no `data` body to inspect — the all-false-abilities CONTRACT for a null actor
     // is pinned at the Resource layer below (it can no longer be reached through the
     // guarded controller on a rooted storage).
-    AccessTestHelpers::grant($storage->rootNode()->first(), GrantLevel::Owner, scope: GrantScope::Subtree);
+    AccessTestHelpers::grant($storage->rootNode()->first(), RoleRegistry::OWNER, scope: GrantScope::Subtree);
 
     actAsGuest();
 
@@ -323,7 +320,7 @@ it('renders all-false storage abilities for a null actor at the Resource layer',
     $storage = AccessTestHelpers::storage();
     // An Owner grant for user 1 WOULD flip every flag true for THAT actor — but a request
     // with no user must yield the read-only-shell default (all false), the SAFE default.
-    AccessTestHelpers::grant($storage->rootNode()->first(), GrantLevel::Owner, scope: GrantScope::Subtree);
+    AccessTestHelpers::grant($storage->rootNode()->first(), RoleRegistry::OWNER, scope: GrantScope::Subtree);
 
     // A bare request resolves $request->user() === null — the no-actor path.
     $abilities = DriveResource::make($storage->refresh())->toArray(Request::create('/'))['abilities'];
@@ -386,7 +383,7 @@ it('lists a whole modest subtree fan-out through the chunked whereIn path', func
         $expected[] = AccessTestHelpers::folder($storage, $anchor, 'leaf-'.$i)->getKey();
     }
 
-    AccessTestHelpers::grant($anchor, GrantLevel::Reader, scope: GrantScope::Subtree);
+    AccessTestHelpers::grant($anchor, RoleRegistry::READER, scope: GrantScope::Subtree);
 
     $ids = nodeRepo()->queryForUser(AccessTestHelpers::user())->pluck('id')->all();
 
@@ -401,7 +398,7 @@ it('returns the shared view as a paginated envelope from the controller', functi
     $storage = AccessTestHelpers::storage();
     AccessTestHelpers::grant(
         AccessTestHelpers::folder($storage, null, 'one'),
-        GrantLevel::Reader,
+        RoleRegistry::READER,
         scope: GrantScope::Item,
     );
 

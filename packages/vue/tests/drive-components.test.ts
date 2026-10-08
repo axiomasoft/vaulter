@@ -713,13 +713,13 @@ describe('VaulterUploader', () => {
 describe('VaulterNodeGrantsPanel', () => {
   function grant(partial: Partial<NodeGrant> & Pick<NodeGrant, 'id'>): NodeGrant {
     return {
-      node_id: 9, subject_type: 'App\\User', subject_id: 1, level: 'reader', permissions: 1,
-      effect: 'allow', scope: 'item', expires_at: null, created_at: null, ...partial,
+      node_id: 9, subject_type: 'App\\User', subject_id: 1, role: 'reader', role_version: 1,
+      scope: 'item', expires_at: null, created_at: null, ...partial,
     }
   }
 
   it('lists grants, adds one via the composable and revokes one', async () => {
-    const created = grant({ id: 2, subject_type: 'App\\User', subject_id: 42, level: 'editor' })
+    const created = grant({ id: 2, subject_type: 'App\\User', subject_id: 42, role: 'writer' })
     const listFn = vi.fn().mockResolvedValue(page([grant({ id: 1 })]))
     const grantFn = vi.fn().mockResolvedValue(created)
     const revokeFn = vi.fn().mockResolvedValue(undefined)
@@ -737,14 +737,14 @@ describe('VaulterNodeGrantsPanel', () => {
     // Fill the fallback subject inputs and submit.
     await wrapper.get('.vaulter-node-grants-panel__subject-type').setValue('App\\User')
     await wrapper.get('.vaulter-node-grants-panel__subject-id').setValue('42')
-    await wrapper.get('.vaulter-node-grants-panel__level-select').setValue('editor')
+    await wrapper.get('.vaulter-node-grants-panel__role-select').setValue('writer')
     await wrapper.get('.vaulter-node-grants-panel__add').trigger('submit')
     await nextTick()
     await Promise.resolve()
     await nextTick()
 
     expect(grantFn).toHaveBeenCalledWith(9, expect.objectContaining({
-      subjectType: 'App\\User', subjectId: '42', level: 'editor',
+      subjectType: 'App\\User', subjectId: '42', role: 'writer',
     }))
     expect(wrapper.emitted('granted')?.[0]?.[0]).toMatchObject({ id: 2 })
 

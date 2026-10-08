@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\DB;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Events\Access\NodeGrantCreated;
 use Vaulter\Models\Webhooks\Outbox;
@@ -24,7 +24,7 @@ use Vaulter\Webhooks\OutboxRecorder;
 beforeEach(function (): void {
     $storage = AccessTestHelpers::storage();
     $this->node = AccessTestHelpers::folder($storage, null, 'reports');
-    $this->grant = AccessTestHelpers::grant(node: $this->node, level: GrantLevel::Reader);
+    $this->grant = AccessTestHelpers::grant(node: $this->node, role: RoleRegistry::READER);
 
     // Drop the provisioning outbox rows so we assert only the grant.created row.
     Outbox::query()->delete();

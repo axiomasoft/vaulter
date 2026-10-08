@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\PermissionDriverManager;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Support\Identity;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\Access\RoleStubDriver;
 
@@ -19,7 +20,7 @@ it('matches individual ACL resolution on 500 seeded random trees', function (): 
     mt_srand($seed);
     $actor = AccessTestHelpers::user();
     $storage = AccessTestHelpers::storage();
-    $levels = GrantLevel::cases();
+    $roles = (new RoleRegistry)->keys();
 
     for ($tree = 0; $tree < 500; $tree++) {
         $subjects = array_map(static fn (int $id): Subject => Subject::ofModel(AccessTestHelpers::user($id)), range(1, mt_rand(1, 3)));
@@ -45,20 +46,17 @@ it('matches individual ACL resolution on 500 seeded random trees', function (): 
 
             $seen = [];
             for ($j = 0, $grants = mt_rand(0, 4); $j < $grants; $j++) {
-                $effect = mt_rand(0, 1) === 0 ? Effect::Allow : Effect::Deny;
                 $scope = mt_rand(0, 1) === 0 ? GrantScope::Item : GrantScope::Subtree;
                 $subjectId = mt_rand(1, 3);
-                $key = $effect->value.':'.$scope->value.':'.$subjectId;
+                $key = $scope->value.':'.$subjectId;
                 if (isset($seen[$key])) {
                     continue;
                 }
                 $seen[$key] = true;
                 AccessTestHelpers::grant(
                     $node,
-                    $levels[mt_rand(0, count($levels) - 1)],
-                    effect: $effect,
+                    $roles[mt_rand(0, count($roles) - 1)],
                     scope: $scope,
-                    permissions: mt_rand(0, 31),
                     subjectId: $subjectId,
                     expiresAt: mt_rand(0, 4) === 0 ? now()->subMinute() : null,
                 );
@@ -73,11 +71,11 @@ it('matches individual ACL resolution on 500 seeded random trees', function (): 
     }
 });
 
-it('preserves absolute overrides, empty subjects and role grants in batch', function (?Effect $override, ?GrantLevel $role, bool $subjects): void {
+it('preserves absolute overrides, empty subjects and role grants in batch', function (?Effect $override, ?string $role, bool $subjects): void {
     $storage = AccessTestHelpers::storage();
     $nodes = [AccessTestHelpers::folder($storage, null, 'one'), AccessTestHelpers::folder($storage, null, 'two')];
-    AccessTestHelpers::grant($nodes[0], GrantLevel::Owner, effect: Effect::Deny);
-    $driver = new RoleStubDriver(roleLevel: $role, overrideEffect: $override, includeActor: $subjects);
+    AccessTestHelpers::grant($nodes[0], RoleRegistry::PREVIEWER);
+    $driver = new RoleStubDriver(role: $role, overrideEffect: $override, includeActor: $subjects);
     app()->instance(PermissionDriver::class, $driver);
     config()->set('vaulter.access.permission_drivers.batch', PermissionDriver::class);
     config()->set('vaulter.access.permission_driver', 'batch');
@@ -91,23 +89,20 @@ it('preserves absolute overrides, empty subjects and role grants in batch', func
     }
 })->with([
     'super allow' => [Effect::Allow, null, true],
-    'super deny' => [Effect::Deny, GrantLevel::Owner, true],
-    'empty subjects' => [null, GrantLevel::Owner, false],
-    'role and deny' => [null, GrantLevel::Owner, true],
+    'super deny' => [Effect::Deny, RoleRegistry::OWNER, true],
+    'empty subjects' => [null, RoleRegistry::OWNER, false],
+    'role and grant' => [null, RoleRegistry::COMMENTER, true],
 ]);
 
-it('evaluates override and role once per storage and node owner and subjects once per scope in the batch', function (): void {
+it('evaluates override, role and subjects once per drive in the batch', function (): void {
     $storageA = AccessTestHelpers::storage();
     $storageB = AccessTestHelpers::storage();
     $nodes = [
-        AccessTestHelpers::folder($storageA, null, 'owner-a'),
-        AccessTestHelpers::folder($storageA, null, 'owner-b'),
-        AccessTestHelpers::folder($storageB, null, 'other-storage'),
-        AccessTestHelpers::folder($storageA, null, 'denied-owner'),
+        AccessTestHelpers::folder($storageA, null, 'a-one'),
+        AccessTestHelpers::folder($storageA, null, 'a-two'),
+        AccessTestHelpers::folder($storageB, null, 'blocked-storage'),
+        AccessTestHelpers::folder($storageA, null, 'a-three'),
     ];
-    foreach ($nodes as $i => $node) {
-        $node->forceFill(['owner_id' => $i === 3 ? '11' : '22'])->save();
-    }
     $overrides = 0;
     $roles = 0;
     $subjectCalls = 0;
@@ -118,15 +113,15 @@ it('evaluates override and role once per storage and node owner and subjects onc
 
         return [Subject::ofModel($actor)];
     });
-    $driver->shouldReceive('override')->andReturnUsing(function ($actor, $scope) use (&$overrides): ?Effect {
+    $driver->shouldReceive('override')->andReturnUsing(function ($actor, $scope) use (&$overrides, $storageB): ?Effect {
         $overrides++;
 
-        return (string) $scope->nodeOwner?->id === '11' ? Effect::Deny : null;
+        return Identity::stringify($scope->driveId) === Identity::stringify($storageB->id) ? Effect::Deny : null;
     });
     $driver->shouldReceive('resolve')->andReturnUsing(function () use (&$roles) {
         $roles++;
 
-        return Decision::allow(GrantLevel::Reader);
+        return new Decision(role: (new RoleRegistry)->latest(RoleRegistry::READER));
     });
     app()->instance(PermissionDriver::class, $driver);
     config()->set('vaulter.access.permission_drivers.batch', PermissionDriver::class);
@@ -135,23 +130,25 @@ it('evaluates override and role once per storage and node owner and subjects onc
     app()->forgetInstance(AccessResolver::class);
     $resolver = app(AccessResolver::class);
     $batch = $resolver->evaluateMany($actor, $nodes);
-    expect($overrides)->toBe(3)->and($roles)->toBe(2)->and($subjectCalls)->toBe(2);
+    expect($overrides)->toBe(2)->and($roles)->toBe(1)->and($subjectCalls)->toBe(1)
+        ->and($batch[(string) $nodes[2]->id]->allows(Ability::View))->toBeFalse()
+        ->and($batch[(string) $nodes[0]->id]->allows(Ability::Download))->toBeTrue();
     foreach ($nodes as $node) {
         expect((array) $batch[(string) $node->id])->toBe((array) $resolver->effectiveGrants($actor, $node));
     }
 });
 
-it('preserves deciding grants above the 64th ancestor', function (Effect $effect): void {
+it('preserves deciding grants and boundaries above the 64th ancestor', function (bool $boundary): void {
     $storage = AccessTestHelpers::storage();
     $root = AccessTestHelpers::folder($storage, null, 'deep-root');
     // Fixed-width bigint ids avoid the dependency's SQLite path suffix collisions.
     $root->forceFill(['id' => 10000])->save();
-    AccessTestHelpers::grant($root, GrantLevel::Reader, effect: $effect);
+    AccessTestHelpers::grant($root, RoleRegistry::READER);
     $parent = $root;
     for ($i = 0; $i < 66; $i++) {
-        $parent = AccessTestHelpers::folder($storage, $parent, 'deep-'.$i);
+        $parent = AccessTestHelpers::folder($storage, $parent, 'deep-'.$i, inheritGrants: !($boundary && $i === 0));
     }
-    $driver = new RoleStubDriver(roleLevel: $effect === Effect::Deny ? GrantLevel::Reader : null);
+    $driver = new RoleStubDriver;
     app()->instance(PermissionDriver::class, $driver);
     config()->set('vaulter.access.permission_drivers.deep', PermissionDriver::class);
     config()->set('vaulter.access.permission_driver', 'deep');
@@ -160,16 +157,16 @@ it('preserves deciding grants above the 64th ancestor', function (Effect $effect
     $resolver = app(AccessResolver::class);
     $actor = AccessTestHelpers::user();
     $single = $resolver->effectiveGrants($actor, $parent);
-    expect($single->allows(Ability::View))->toBe($effect === Effect::Allow);
+    expect($single->allows(Ability::View))->toBe(!$boundary);
     expect((array) $resolver->evaluateMany($actor, [$parent])[(string) $parent->id])->toBe((array) $single);
-})->with(['far deny' => Effect::Deny, 'far allow' => Effect::Allow]);
+})->with(['far boundary' => true, 'far grant' => false]);
 
 it('stops a batch ancestor walk at the same cycle as individual resolution', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'cycle-node');
     $parent = AccessTestHelpers::folder($storage, $node, 'cycle-parent');
     $node->forceFill(['parent_id' => $parent->id])->save();
-    AccessTestHelpers::grant($parent, GrantLevel::Reader);
+    AccessTestHelpers::grant($parent, RoleRegistry::READER);
     $resolver = app(AccessResolver::class);
     $actor = AccessTestHelpers::user();
     expect((array) $resolver->evaluateMany($actor, [$node])[(string) $node->id])

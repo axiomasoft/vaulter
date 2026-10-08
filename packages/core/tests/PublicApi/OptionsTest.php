@@ -69,7 +69,7 @@ it('adds GrantInput without caller supplied audit identity and leaves migration 
     $ref = new ReflectionClass(GrantInput::class);
     expect($ref->isFinal())->toBeTrue()->and($ref->isReadOnly())->toBeTrue()
         ->and(array_map(static fn (ReflectionParameter $p): string => $p->getName(), $ref->getConstructor()->getParameters()))
-        ->toBe(['subject', 'level', 'effect', 'scope', 'permissions', 'expiresAt'])
+        ->toBe(['subject', 'role', 'scope', 'expiresAt'])
         ->and($ref->hasProperty('grantedBy'))->toBeFalse();
 });
 

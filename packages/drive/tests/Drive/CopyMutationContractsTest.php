@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Data\Drive\CopyOptions;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -25,7 +25,7 @@ it('copies node and current version attributes and charges the exact logical siz
     $head = $source->file()->firstOrFail()->currentRevision()->firstOrFail();
     $used = $drive->model()->refresh()->used_bytes;
 
-    AccessTestHelpers::grant($source, GrantLevel::Owner, subjectId: 17);
+    AccessTestHelpers::grant($source, RoleRegistry::OWNER, subjectId: 17);
     $copy = $drive->actingAs(DriveTestHelpers::actor($drive, 17))->nodes()->copy($source, $dest)->refresh();
     $file = $copy->file()->firstOrFail();
     $version = $copy->file()->firstOrFail()->currentRevision()->firstOrFail();
@@ -37,7 +37,6 @@ it('copies node and current version attributes and charges the exact logical siz
         ->and($copy->size_bytes)->toBe(12)
         ->and($copy->properties)->toBe(['acme' => ['k' => 'v']])
         ->and($copy->inherit_grants)->toBeFalse()
-        ->and($copy->owner_id)->toEqual(17)
         ->and($copy->created_by)->toEqual(17)
         ->and($file->node_id)->toEqual($copy->getKey())
         ->and($file->size_bytes)->toBe(12)

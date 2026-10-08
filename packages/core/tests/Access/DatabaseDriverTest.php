@@ -5,10 +5,10 @@ declare(strict_types=1);
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Access\PermissionDriverManager;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Configuration\AccessConfig;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Exceptions\Access\MissingPermissionDriverException;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -25,7 +25,7 @@ it('authorises purely from grants with no host roles (standalone database lane)'
     // No grant ⇒ denied; a grant ⇒ allowed. Nothing but the ACL decides.
     expect(app(AccessResolver::class)->can($actor, Ability::View, $folder))->toBeFalse();
 
-    AccessTestHelpers::grant($folder, GrantLevel::Reader, scope: GrantScope::Item);
+    AccessTestHelpers::grant($folder, RoleRegistry::READER, scope: GrantScope::Item);
 
     expect(app(AccessResolver::class)->can($actor, Ability::View, $folder))->toBeTrue();
 });

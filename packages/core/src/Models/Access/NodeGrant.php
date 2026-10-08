@@ -8,27 +8,24 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Vaulter\Access\Roles\Role;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Exceptions\Access\UnknownRoleException;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Models\Concerns\StampsDriveTenant;
 use Vaulter\Models\Drive\Node;
 
 /**
- * A per-node ACL grant with inheritance (master plan §2.6). A grant addresses a
- * subject morph (user|role|team — a registered alias) on a node with a level +
- * CRUDS bitmask, an allow|deny effect, an item|subtree scope and an optional
- * expiry. The AccessResolver walks ancestors collecting these (direct + subtree)
- * for an actor's subject-set and folds them with the PermissionDriver.
- *
- * `inherited`/`inherited_from_node_id` are reserved for an OPTIONAL materialised
- * effective-grants read-model; the source of truth in M2a is the direct rows plus
- * the tree, so they stay false/null here.
+ * A positive per-node grant: a subject morph (user|role|team — a registered alias)
+ * holds a versioned role on a node, for the node only (item) or also below it
+ * (subtree, down to the next inheritance boundary), optionally until expires_at.
+ * The AccessResolver unions the roles of every grant that applies with the
+ * PermissionDriver's decisions.
  *
  * Swappable — point configuration key vaulter.models.grant at a subclass for tenant scope.
  *
@@ -37,9 +34,8 @@ use Vaulter\Models\Drive\Node;
  * @property int|string      $node_id
  * @property string          $subject_type
  * @property int|string      $subject_id
- * @property GrantLevel      $level
- * @property int             $permissions
- * @property Effect          $effect
+ * @property string          $role_key
+ * @property int             $role_version
  * @property GrantScope      $scope
  * @property Carbon|null     $expires_at
  * @property int|string|null $granted_by
@@ -54,8 +50,8 @@ class NodeGrant extends Model
     use StampsDriveTenant;
 
     /**
-     * Fully guarded (F-P1.8-02): an ACL row — every column (subject, level,
-     * permissions bitmask, effect, scope, expiry, granted_by) is security-
+     * Fully guarded (F-P1.8-02): an ACL row — every column (subject, role,
+     * scope, expiry, granted_by) is security-
      * critical. The sole writer, GrantStoreRepository, uses forceFill()
      * exclusively and is unaffected by this list.
      *
@@ -83,6 +79,16 @@ class NodeGrant extends Model
     public function subject(): Subject
     {
         return new Subject(type: $this->subject_type, id: $this->subject_id);
+    }
+
+    /**
+     * The role this grant stores, at its stored version.
+     *
+     * @throws UnknownRoleException
+     */
+    public function role(): Role
+    {
+        return (new RoleRegistry)->get($this->role_key, $this->role_version);
     }
 
     /**
@@ -132,10 +138,8 @@ class NodeGrant extends Model
     protected function casts(): array
     {
         return [
-            'level' => GrantLevel::class,
-            'effect' => Effect::class,
+            'role_version' => 'integer',
             'scope' => GrantScope::class,
-            'permissions' => 'integer',
             'expires_at' => 'datetime',
         ];
     }

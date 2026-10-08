@@ -69,6 +69,7 @@ return [
         ],
         'gate' => [
             'abilities' => [
+                'previewer' => 'vaulter.preview',
                 'reader' => 'vaulter.view',
                 'commenter' => 'vaulter.comment',
                 'writer' => 'vaulter.edit',
@@ -80,6 +81,7 @@ return [
         ],
         'spatie' => [
             'permissions' => [
+                'previewer' => 'vaulter.preview',
                 'reader' => 'vaulter.view',
                 'commenter' => 'vaulter.comment',
                 'writer' => 'vaulter.edit',

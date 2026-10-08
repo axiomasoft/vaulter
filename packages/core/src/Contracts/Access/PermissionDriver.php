@@ -14,9 +14,9 @@ use Vaulter\Enums\Access\Effect;
  * The host's pluggable, per-profile role lane (master plan H.2 / D6). It bridges the
  * host application's identity + role system into Vaulter WITHOUT leaking Vaulter's
  * own domain: it never receives a Node and never deals in magic-string actions —
- * only an Authorizable actor and an {@see AccessScope} (profile + drive owner/id + tenant coordinates
- * + node owner). The Vaulter-owned, NON-swappable {@see AccessResolver}
- * combines this driver's answers with the v_node_grants ACL.
+ * only an Authorizable actor and an {@see AccessScope} (profile + drive owner/id + tenant
+ * coordinates). The Vaulter-owned, NON-swappable {@see AccessResolver} unions this
+ * driver's roles with the roles of the v_node_grants rows.
  *
  * Swap it via configuration key vaulter.access.permission_driver + permission_drivers map); the
  * default is the standalone {@see DatabasePermissionDriver}.
@@ -28,23 +28,22 @@ use Vaulter\Enums\Access\Effect;
 interface PermissionDriver
 {
     /**
-     * The host's role decision for an actor within a scope, or null when the host
-     * role system has nothing to say (decisions then come purely from the ACL). A
-     * returned Decision is folded as roleAllow into `granted = max(aclAllow,
-     * roleAllow)` (H.2 step 4) — it can RAISE access but can never override a deny
-     * (the final veto, H.2 step 5, still applies).
+     * The host's role for a subject within a scope, or null when the host role
+     * system has nothing to say (access then comes purely from grants). The role is
+     * unioned with every grant that applies — a Decision only ever adds abilities.
      */
     public function resolve(Subject $subject, Authorizable $actor, AccessScope $scope): ?Decision;
 
     /**
-     * An absolute host override (super-admin / Gate::before), or null when none
-     * applies (H.2 step 1). Effect::Allow short-circuits to full access; Effect::Deny
-     * short-circuits to no access — both in BOTH directions, before any ACL walk.
+     * An absolute host override, or null when none applies. Effect::Allow is a
+     * super-user bypass (every ability); Effect::Deny is an administrative block
+     * (no ability, whatever the grants say). Both apply before any grant walk and
+     * are not stopped by inheritance boundaries.
      */
     public function override(Authorizable $actor, AccessScope $scope): ?Effect;
 
     /**
-     * Expand an actor into the set of Subjects whose grants apply to them (H.2): the
+     * Expand an actor into the set of Subjects whose grants apply to them: the
      * user itself plus any host roles/teams it belongs to. Vaulter builds
      * `WHERE (subject_type, subject_id) IN (...)` from this list, so the driver
      * controls the identity fan-out without Vaulter knowing the host's role schema.

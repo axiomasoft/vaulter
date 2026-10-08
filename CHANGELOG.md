@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Access model 1.0 (PLAN2.D45, D46, D53; PLAN2.P4.9; ADR-0025)
+
+- Added versioned roles (`Role`/`RoleRegistry`: previewer, reader, commenter, writer, organizer,
+  owner) stored as `role_key`/`role_version` on `v_node_grants`. Was: `level` + `permissions` +
+  `effect`. Each level converts to the role of the same name, v1; `writer` gains Trash/Restore and
+  `organizer` gains Share and loses Delete (D53).
+- Added one bit per ability and a separate Download (`Permission::all()` 4095). Was: CRUDS
+  bits where View, Download and Comment shared READ.
+- Changed effective access to the union of roles up to the first `inherit_grants = false` node
+  plus the driver's roles; removed deny grants, `max(rank)` and the final veto. The host
+  `override()` is the only block. `GrantSet`, `Decision`, `AccessExplanation` and `AccessScope`
+  changed shape; `GrantLevel`, `AclFolder`, `AclMask`, `AccessAce` and the Gate `node_owner`
+  context were removed. `GrantInput` is `{subject, role, scope, expiresAt}`.
+- Added `access()->restrictInheritance()` (`empty`, `copy_current`) and `restoreInheritance()`,
+  both requiring Manage; `explain()` now lists role sources and the boundary node. Copy requires
+  View + Download + Copy on every copied node (D30).
+- Removed `v_nodes.owner_id` without creating grants (D46, D53). The migration
+  `2026_10_07_000005_access_model_v1` refuses deny grants and permission bits beyond the level.
+- Changed the HTTP grant field to `role` (response adds `role_version`) and activity/webhook grant
+  payloads to `role`/`role_version`. Gate/Spatie maps are keyed by role key and gain
+  `previewer => vaulter.preview`; unknown keys throw `unknown_role` (422).
+- Share links keep working with the new bit layout and stop at inheritance boundaries; the
+  redesign is separate.
+
 ### Node data contract (PLAN2.D39–D43; PLAN2.P4.11)
 
 - Added `v_nodes.name_key` (NFC + full case folding, byte-compared: PG `COLLATE "C"`, SQLite

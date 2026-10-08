@@ -7,10 +7,9 @@ namespace Vaulter\Access;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
-use Vaulter\Access\ValueObjects\AccessAce;
 use Vaulter\Access\ValueObjects\AccessExplanation;
 use Vaulter\Access\ValueObjects\AccessScope;
-use Vaulter\Access\ValueObjects\AclMask;
+use Vaulter\Access\ValueObjects\AccessSource;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\GrantSet;
 use Vaulter\Access\ValueObjects\Subject;
@@ -19,7 +18,6 @@ use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
@@ -30,34 +28,24 @@ use Vaulter\Support\Identity;
 use Vaulter\Tenancy\TenancyBoundary;
 
 /**
- * The Vaulter-OWNED, NON-swappable effective-permission engine (master plan H.2).
- * It runs the canonical algorithm over v_node_grants combined with the pluggable
- * {@see PermissionDriver}, and is the single authority every Policy / DriveContext /
- * Resource asks. It is deliberately NOT a contract and NOT swappable — only the
- * host-role lane (the driver) is.
+ * The Vaulter-OWNED, NON-swappable effective-access engine. It combines the
+ * v_node_grants rows with the pluggable {@see PermissionDriver} and is the single
+ * authority every guard, listing and resource asks. Only the host-role lane (the
+ * driver) is swappable.
  *
- * THE ALGORITHM (H.2 — implemented EXACTLY):
- *   1. Host override (super-admin) — absolute, both directions.
- *   2. Walk ancestors nearest-first, BOUNDED to the workspace/storage root (never
- *      cross drive_id), collecting direct + scope=subtree grants for the
- *      subject-set (from PermissionDriver::subjectsFor); STOP at the first ancestor
- *      with inherit_grants=false.
- *   3. aclAllow = max(allow levels/bits); deniedBits = OR of deny bits (a deny
- *      denies that level and everything it implies); a NEARER explicit allow
- *      pierces a FARTHER inherited deny (ADR-0007). An inherit_grants=false node is
- *      a wall for grants ABOVE it (they are cut off), NOT an absolute barrier for a
- *      deny sitting ON it: a nearer explicit allow BELOW the wall still pierces that
- *      deny, exactly as it would any other inherited deny — ADR-0007 gives the wall
- *      no exception. (An absolute, un-pierceable wall-deny would be a separate
- *      product decision, not the current behaviour.)
- *   4. granted = max(aclAllow, roleAllow) where roleAllow comes from
- *      PermissionDriver::resolve.
- *   5. FINAL VETO pass: if deniedBits covers the requested ability → DENY
- *      regardless of role grant.
+ * THE ALGORITHM (PLAN2.D45):
+ *   1. Host override — Allow is a super-user bypass, Deny an administrative block;
+ *      both are absolute and skip the walk.
+ *   2. Walk the node and its ancestors nearest-first within the drive, collecting
+ *      the live grants of the subject-set: every grant on the node itself, and the
+ *      subtree grants of ancestors. The walk stops after the first node whose
+ *      inherit_grants is false: its own grants still apply, nothing above it does.
+ *   3. Effective abilities = the union of the roles of those grants and of the
+ *      PermissionDriver's decisions. Grants are positive only, so adding a grant or
+ *      a group membership never takes access away, and there is no rank.
  *
- * Expiry is read-time (filtered in the grant query). The ancestor walk uses the
- * staudenmeir ancestor relation bounded to the storage root — no whereHas /
- * withCount('descendants') (H.4 arch-ban).
+ * Expiry is read-time (filtered in the grant query). The ancestor walk is bounded
+ * to the drive and to NodeReadRepository::DEFAULT_MAX_DEPTH.
  */
 final class AccessResolver
 {
@@ -71,8 +59,7 @@ final class AccessResolver
     ) {}
 
     /**
-     * May the actor perform the ability on the node? The public authorization
-     * entry point Policies and the DriveContext call.
+     * May the actor perform the ability on the node?
      */
     public function can(Authorizable $actor, Ability $ability, Node $node): bool
     {
@@ -80,60 +67,39 @@ final class AccessResolver
     }
 
     /**
-     * Run the full effective-permission algorithm for (actor, node) and return the
-     * folded GrantSet (allow-mask, deny-mask, level + any super override). This is
-     * the one place the algorithm lives; can()/abilitiesFor() read its result.
+     * The effective abilities of (actor, node); can()/abilitiesFor() read it.
      */
     public function effectiveGrants(Authorizable $actor, Node $node): GrantSet
     {
-        if ($this->boundary->enforced()) {
-            $this->boundary->assertNode($node);
-            $node = $node->newQuery()->whereKey($node->getRawOriginal($node->getKeyName()))->firstOrFail();
-        }
+        $node = $this->fresh($node);
         $storage = $this->storageOf($node);
         $driver = $this->drivers->forProfile($storage->profile);
-        $scope = $this->scopeFor($storage, $node);
+        $scope = AccessScope::forDrive($storage);
 
-        // ── H.2 step 1: host override (super-admin) — absolute, both directions.
         $override = $driver->override($actor, $scope);
-
         if ($override === Effect::Allow) {
             return GrantSet::superAllowed();
         }
-
         if ($override === Effect::Deny) {
             return GrantSet::superDenied();
         }
 
         $subjects = $this->drivers->subjectsFor($driver, $actor, $scope);
+        $bits = 0;
+        foreach ($this->applicableGrants($node, $subjects)['grants'] as [$grant]) {
+            $bits |= $grant->role()->bits;
+        }
+        foreach ($this->decisions($driver, $actor, $scope, $subjects) as [, $decision]) {
+            $bits |= $decision->role->bits;
+        }
 
-        // ── H.2 steps 2 + 3: the ACL allow-mask + deny-mask from the bounded walk.
-        [$aclAllowBits, $deniedBits, $aclLevel] = $this->resolveAcl(node: $node, subjects: $subjects);
-
-        // ── H.2 step 4: granted = max(aclAllow, roleAllow). The role lane can RAISE
-        // the allow-mask but it is folded BEFORE the deny veto, so it cannot
-        // resurrect a denied bit.
-        [$roleAllowBits, $roleLevel, $roleDeniedBits] = $this->resolveRole(
-            driver: $driver,
-            actor: $actor,
-            scope: $scope,
-            subjects: $subjects,
-        );
-
-        $allowedBits = $aclAllowBits | $roleAllowBits;
-        $deniedBits |= $roleDeniedBits;
-        $level = $this->maxLevel($aclLevel, $roleLevel);
-
-        // ── H.2 step 5: the FINAL veto is baked into GrantSet::allows() — an ability
-        // whose required bits intersect deniedBits is denied regardless of allow.
-        return new GrantSet(
-            allowedBits: $allowedBits,
-            deniedBits: $deniedBits,
-            level: $level,
-        );
+        return new GrantSet(allowedBits: $bits);
     }
 
     /**
+     * The same answer as effectiveGrants() for many nodes, with one grant query and
+     * one ancestor query per drive group.
+     *
      * @param  iterable<Node>          $nodes
      * @return array<string, GrantSet>
      */
@@ -145,17 +111,12 @@ final class AccessResolver
         }
         $nodes->loadMissing('storage');
         $groups = [];
-        $drivers = [];
         foreach ($nodes as $node) {
-            $drive = $this->storageOf($node);
-            $driver = $this->drivers->forProfile($drive->profile);
-            $key = json_encode([$drive->id, $drive->profile, $driver::class, $node->owner_id], JSON_THROW_ON_ERROR);
-            $groups[$key][] = $node;
-            $drivers[$key] = $driver;
+            $groups[Identity::stringify($this->storageOf($node)->id)][] = $node;
         }
         $sets = [];
-        foreach ($groups as $key => $group) {
-            $sets += $this->evaluateGroup($actor, $group, $drivers[$key]);
+        foreach ($groups as $group) {
+            $sets += $this->evaluateGroup($actor, $group);
         }
 
         return $sets;
@@ -164,48 +125,35 @@ final class AccessResolver
     /** @param list<Node> $nodes
      * @return array<string, GrantSet>
      */
-    private function evaluateGroup(Authorizable $actor, array $nodes, PermissionDriver $driver): array
+    private function evaluateGroup(Authorizable $actor, array $nodes): array
     {
-        $groups = [];
-        foreach ($nodes as $node) {
-            $key = json_encode([Identity::stringify($node->drive_id), $node->owner_id === null ? null : Identity::stringify($node->owner_id)], JSON_THROW_ON_ERROR);
-            $groups[$key][] = $node;
-        }
-        $sets = [];
-        $pending = [];
-        $scopes = [];
-        foreach ($groups as $key => $group) {
-            $scope = $this->scopeFor($this->storageOf($group[0]), $group[0]);
-            $override = $driver->override($actor, $scope);
-            if ($override !== null) {
-                foreach ($group as $node) {
-                    $sets[Identity::stringify($node->id)] = $override === Effect::Allow ? GrantSet::superAllowed() : GrantSet::superDenied();
-                }
+        $drive = $this->storageOf($nodes[0]);
+        $driver = $this->drivers->forProfile($drive->profile);
+        $scope = AccessScope::forDrive($drive);
+        $override = $driver->override($actor, $scope);
+        if ($override !== null) {
+            $set = $override === Effect::Allow ? GrantSet::superAllowed() : GrantSet::superDenied();
 
-                continue;
-            }
-            $scopes[$key] = $scope;
-            foreach ($group as $node) {
-                $pending[] = [$node, $key];
-            }
+            return array_fill_keys(array_map(static fn (Node $node): string => Identity::stringify($node->id), $nodes), $set);
         }
-        if ($pending === []) {
-            return $sets;
+        $subjects = $this->drivers->subjectsFor($driver, $actor, $scope);
+        $roleBits = 0;
+        foreach ($this->decisions($driver, $actor, $scope, $subjects) as [, $decision]) {
+            $roleBits |= $decision->role->bits;
         }
-        $subjects = $this->drivers->subjectsFor($driver, $actor, $this->scopeFor($this->storageOf($nodes[0]), $nodes[0]));
-        $roles = [];
-        foreach ($scopes as $key => $scope) {
-            $roles[$key] = $this->resolveRole($driver, $actor, $scope, $subjects);
+        if ($subjects === [] || !$this->vaulterConfig->featureEnabled('grants', $drive->profile)) {
+            return array_fill_keys(array_map(static fn (Node $node): string => Identity::stringify($node->id), $nodes), new GrantSet(allowedBits: $roleBits));
         }
+
         $parentIds = [];
         $ids = [];
-        foreach ($pending as [$node]) {
+        foreach ($nodes as $node) {
             $ids[] = $node->id;
             if ($node->inherit_grants && $node->parent_id !== null) {
                 $parentIds[] = $node->parent_id;
             }
         }
-        $chains = $subjects === [] ? [] : app(NodeReadRepository::class)->ancestorChains(array_values(array_unique($parentIds)));
+        $chains = app(NodeReadRepository::class)->ancestorChains(array_values(array_unique($parentIds)));
         foreach ($chains as $chain) {
             foreach ($chain as $row) {
                 if (!is_int($row->id) && !is_string($row->id)) {
@@ -215,72 +163,55 @@ final class AccessResolver
             }
         }
         $byNode = [];
-        if ($subjects !== []) {
-            foreach ($this->grants->forSubjectsOnNodes(array_values(array_unique($ids)), $subjects, Carbon::now()) as $grant) {
-                $byNode[Identity::stringify($grant->node_id)][] = $grant;
-            }
+        foreach ($this->grants->forSubjectsOnNodes(array_values(array_unique($ids)), $subjects, Carbon::now()) as $grant) {
+            $byNode[Identity::stringify($grant->node_id)][] = $grant;
         }
-        $folder = new AclFolder;
+
+        // The inherited bits of a parent chain: subtree grants up to the boundary.
         $inherited = [];
         foreach ($chains as $origin => $chain) {
-            $depths = [];
+            $bits = 0;
             foreach ($chain as $row) {
-                $depths[] = $this->grantMask($byNode[Identity::stringify($row->id)] ?? [], true);
+                $bits |= $this->bitsOf($byNode[Identity::stringify($row->id)] ?? [], subtreeOnly: true);
             }
-            $inherited[$origin] = $folder->foldChain($depths);
+            $inherited[$origin] = $bits;
         }
-        foreach ($pending as [$node, $key]) {
+
+        $sets = [];
+        foreach ($nodes as $node) {
             $parentKey = Identity::stringify($node->parent_id);
             $chain = $chains[$parentKey] ?? [];
-            $sameStorage = $chain !== [] && Identity::stringify($chain[0]->drive_id) === Identity::stringify($node->drive_id);
-            $parent = $node->inherit_grants && $sameStorage ? $inherited[$parentKey] : AclMask::none();
-            $own = $this->grantMask($byNode[Identity::stringify($node->id)] ?? [], false);
-            $mask = $this->vaulterConfig->featureEnabled('grants', $this->storageOf($node)->profile)
-                ? $folder->applyOwn($parent, $own['allow'], $own['deny'], $own['level'])
-                : AclMask::none();
-            [$roleAllow, $roleLevel, $roleDenied] = $roles[$key];
-            $sets[Identity::stringify($node->id)] = new GrantSet(allowedBits: $mask->allowed | $roleAllow, deniedBits: $mask->denied | $roleDenied, level: $this->maxLevel($mask->level, $roleLevel));
+            $sameDrive = $chain !== [] && Identity::stringify($chain[0]->drive_id) === Identity::stringify($node->drive_id);
+            $bits = $this->bitsOf($byNode[Identity::stringify($node->id)] ?? [], subtreeOnly: false)
+                | ($node->inherit_grants && $sameDrive ? $inherited[$parentKey] : 0);
+            $sets[Identity::stringify($node->id)] = new GrantSet(allowedBits: $bits | $roleBits);
         }
 
         return $sets;
     }
 
-    /** @param list<NodeGrant> $grants
-     * @return array{allow:int, deny:int, level:?GrantLevel}
-     */
-    private function grantMask(array $grants, bool $inherited): array
+    /** @param list<NodeGrant> $grants */
+    private function bitsOf(array $grants, bool $subtreeOnly): int
     {
-        $allow = 0;
-        $deny = 0;
-        $level = null;
+        $bits = 0;
         foreach ($grants as $grant) {
-            if ($inherited && !$grant->scope->inheritsDownward()) {
-                continue;
-            }
-            if ($grant->effect === Effect::Allow) {
-                $allow |= $this->bitsFor($grant);
-                $level = $this->maxLevel($level, $grant->level);
-            } else {
-                $deny |= $this->bitsFor($grant);
+            if (!$subtreeOnly || $grant->scope->inheritsDownward()) {
+                $bits |= $grant->role()->bits;
             }
         }
 
-        return ['allow' => $allow, 'deny' => $deny, 'level' => $level];
+        return $bits;
     }
 
     /**
-     * The UI ability flags for (actor, node) — every Ability mapped to whether the
-     * actor may perform it (deny-veto applied). Fills the NodeResource "abilities"
-     * object so the client renders only allowed actions.
+     * The UI ability flags for (actor, node).
      *
      * @return array<string, bool>
      */
     public function abilitiesFor(Authorizable $actor, Node $node): array
     {
         $grants = $this->effectiveGrants($actor, $node);
-
         $flags = [];
-
         foreach (Ability::cases() as $ability) {
             $flags[$ability->value] = $grants->allows($ability);
         }
@@ -289,88 +220,57 @@ final class AccessResolver
     }
 
     /**
-     * DIAGNOSTIC "explain access" (F-P1.1-02 / S1.7): why does (actor, ability, node)
-     * resolve the way it does? Returns the verdict, a machine-readable reason, the
-     * folded allow/deny masks + level, and the provenance chain of every grant the
-     * bounded walk visited (nearest-first, each tagged with its depth and whether it
-     * counted). This runs a SEPARATE provenance-collecting pass and is NEVER called
-     * from can()/effectiveGrants(), so the hot authorization path stays allocation-free
-     * of this bookkeeping.
+     * Why does (actor, ability, node) resolve the way it does? Lists every role that
+     * applies with its origin, the administrative restriction in force and the
+     * inheritance boundary that stopped the walk. A separate pass from can(), built
+     * from the same applicable-grant selection, so the verdicts cannot diverge.
      */
     public function explain(Authorizable $actor, Ability $ability, Node $node): AccessExplanation
     {
-        if ($this->boundary->enforced()) {
-            $this->boundary->assertNode($node);
-            $node = $node->newQuery()->whereKey($node->getRawOriginal($node->getKeyName()))->firstOrFail();
-        }
+        $node = $this->fresh($node);
         $storage = $this->storageOf($node);
         $driver = $this->drivers->forProfile($storage->profile);
-        $scope = $this->scopeFor($storage, $node);
+        $scope = AccessScope::forDrive($storage);
 
         $override = $driver->override($actor, $scope);
-
         if ($override === Effect::Allow) {
-            return new AccessExplanation(
-                allowed: true,
-                ability: $ability,
-                reason: AccessExplanation::REASON_SUPER_ALLOW,
-                allowedBits: 0,
-                deniedBits: 0,
-                level: GrantLevel::Owner,
-                aces: [],
-            );
+            return new AccessExplanation(allowed: true, ability: $ability, reason: AccessExplanation::REASON_OVERRIDE_ALLOW, sources: [], restrictions: [], boundaryNodeId: null);
         }
-
         if ($override === Effect::Deny) {
-            return new AccessExplanation(
-                allowed: false,
-                ability: $ability,
-                reason: AccessExplanation::REASON_SUPER_DENY,
-                allowedBits: 0,
-                deniedBits: 0,
-                level: null,
-                aces: [],
-            );
+            return new AccessExplanation(allowed: false, ability: $ability, reason: AccessExplanation::REASON_OVERRIDE_DENY, sources: [],
+                restrictions: [AccessExplanation::RESTRICTION_OVERRIDE_DENY], boundaryNodeId: null);
         }
 
         $subjects = $this->drivers->subjectsFor($driver, $actor, $scope);
-
-        [$aclAllowBits, $deniedBits, $aclLevel, $aces] = $this->resolveAclWithProvenance(
-            node: $node,
-            subjects: $subjects,
-        );
-
-        [$roleAllowBits, $roleLevel, $roleDeniedBits] = $this->resolveRole(
-            driver: $driver,
-            actor: $actor,
-            scope: $scope,
-            subjects: $subjects,
-        );
-
-        $allowedBits = $aclAllowBits | $roleAllowBits;
-        $deniedBits |= $roleDeniedBits;
-        $level = $this->maxLevel($aclLevel, $roleLevel);
-
-        // Fold through the SAME GrantSet the hot path uses so the explained verdict
-        // can never diverge from can()'s.
-        $verdict = new GrantSet(allowedBits: $allowedBits, deniedBits: $deniedBits, level: $level);
-        $allowed = $verdict->allows($ability);
+        $applicable = $this->applicableGrants($node, $subjects);
+        $sources = [];
+        $bits = 0;
+        foreach ($applicable['grants'] as [$grant, $inherited]) {
+            $role = $grant->role();
+            $bits |= $role->bits;
+            $sources[] = new AccessSource(grantId: $grant->id, subject: $grant->subject(), role: $role->key, roleVersion: $role->version,
+                originNodeId: $grant->node_id, inherited: $inherited, expiresAt: $grant->expires_at);
+        }
+        foreach ($this->decisions($driver, $actor, $scope, $subjects) as [$subject, $decision]) {
+            $bits |= $decision->role->bits;
+            $sources[] = new AccessSource(grantId: null, subject: $subject, role: $decision->role->key, roleVersion: $decision->role->version,
+                originNodeId: null, inherited: false, expiresAt: null);
+        }
+        $allowed = (new GrantSet(allowedBits: $bits))->allows($ability);
 
         return new AccessExplanation(
             allowed: $allowed,
             ability: $ability,
-            reason: $this->explainReason($allowed, $ability, $deniedBits),
-            allowedBits: $allowedBits,
-            deniedBits: $deniedBits,
-            level: $level,
-            aces: $aces,
+            reason: $allowed ? AccessExplanation::REASON_ALLOW : AccessExplanation::REASON_NO_GRANT,
+            sources: $sources,
+            restrictions: [],
+            boundaryNodeId: $applicable['boundary'],
         );
     }
 
     /**
-     * May the actor create nodes in the storage's workspace? Delegates to the
-     * host-role driver's workspace gate (the folder/upload create path has no
-     * existing node to resolve against). canCreate for folders/uploads (§6).
+     * May the actor create nodes in the drive? Delegates to the host-role driver's
+     * workspace gate (the folder/upload create path also needs Create on the parent).
      */
     public function canCreateIn(Authorizable $actor, Drive $drive): bool
     {
@@ -385,11 +285,10 @@ final class AccessResolver
     }
 
     /**
-     * The "shared with me" view (§2.6 / H.2): the nodes an actor is granted any
-     * access to, RE-RESOLVED through the full algorithm so a nearer deny that
-     * revokes a row excludes it. The fast subject-index pass yields candidate node
-     * ids; each candidate is then re-checked with can(View), because a deny nearer
-     * the node may have revoked the visibility the raw grant implied.
+     * The "shared with me" view (§2.6): the nodes an actor holds a grant on,
+     * re-resolved through the full algorithm. The fast subject-index pass yields
+     * candidate node ids; each candidate is then re-checked with can(View), because
+     * a previewer-free role, a host override or a disabled feature may still hide it.
      *
      * @param  iterable<Node> $candidates already-loaded candidate nodes (e.g. the
      *                                    nodes whose ids nodeIdsSharedWith returned)
@@ -409,7 +308,7 @@ final class AccessResolver
     }
 
     /**
-     * The candidate node ids an actor has a live allow-grant on — the fast
+     * The candidate node ids an actor has a live grant on — the fast
      * subject-index pass behind filterSharedWith (§2.6). The caller loads the nodes
      * and re-resolves them; this never decides visibility on its own.
      *
@@ -441,282 +340,84 @@ final class AccessResolver
     }
 
     /**
-     * H.2 steps 2 + 3 — the ACL allow-mask, deny-mask and effective level from the
-     * bounded ancestor walk.
+     * The live grants of the subject-set that apply to the node, nearest first, each
+     * with whether it was inherited, and the boundary node that ended the walk.
      *
-     * Walk order is nearest-first (the node itself, then its parents up to the
-     * storage root). For each node visited we collect the live grants addressed to
-     * the subject-set; only grants that APPLY at this node count:
-     *   - a grant ON the node (any scope) applies to the node directly;
-     *   - a grant on an ANCESTOR applies only when its scope is subtree.
-     * The walk STOPS once it has consumed an ancestor whose inherit_grants=false:
-     * that node's own grants still count, but nothing above it does (cut-off).
-     *
-     * deny semantics (the FINAL veto is absolute per depth): a deny is pierced ONLY
-     * by an allow that sits STRICTLY NEARER (a smaller walk depth) — never by an
-     * allow on the SAME node. So allow + deny on the same node ⇒ the deny wins
-     * (same-node deny is an absolute veto, §2.6 / H.2 step 5). This is why we cannot
-     * fold in a single pass over an UNORDERED grant set: a same-depth allow seen
-     * before a same-depth deny must NOT swallow it. We instead bucket allow/deny
-     * bits PER DEPTH, then fold from nearest to farthest, masking a deny only with
-     * bits allowed at a strictly smaller depth. A deny on the cut-off (inherit_grants
-     * =false) node sits at the FARTHEST depth of the bounded walk, so no grant ABOVE
-     * it contributes — but a nearer explicit allow BELOW it still pierces that deny
-     * (ADR-0007: a nearer allow beats a farther inherited deny; the wall gets no
-     * exception).
-     *
-     * @param  list<Subject>                             $subjects
-     * @return array{0: int, 1: int, 2: GrantLevel|null}
+     * @param  list<Subject>                                                                $subjects
+     * @return array{grants: list<array{0: NodeGrant, 1: bool}>, boundary: int|string|null}
      */
-    private function resolveAcl(Node $node, array $subjects): array
+    private function applicableGrants(Node $node, array $subjects): array
     {
+        $chain = $this->ancestorChain($node);
+        $boundary = null;
+        foreach ($chain as $depth => $current) {
+            if (!$current->inherit_grants) {
+                $boundary = $current->id;
+                $chain = array_slice($chain, 0, $depth + 1);
+
+                break;
+            }
+        }
         if ($subjects === [] || !$this->vaulterConfig->featureEnabled('grants', $this->storageOf($node)->profile)) {
-            return [0, 0, null];
+            return ['grants' => [], 'boundary' => $boundary];
         }
 
-        // The bounded ancestor chain, nearest-first: node, parent, …, root. The
-        // staudenmeir ancestor relation is storage-scoped already (the tree lives
-        // in one drive_id), so the walk never crosses workspaces.
-        $chain = $this->ancestorChain($node);
-
-        $nodeIds = array_map(static fn (Node $n): int|string => $n->id, $chain);
-
-        $now = Carbon::now();
-        $grants = $this->grants->forSubjectsOnNodes(nodeIds: $nodeIds, subjects: $subjects, now: $now);
-
-        /** @var array<string, list<NodeGrant>> $byNode */
         $byNode = [];
-
-        foreach ($grants as $grant) {
+        $ids = array_map(static fn (Node $n): int|string => $n->id, $chain);
+        foreach ($this->grants->forSubjectsOnNodes(nodeIds: $ids, subjects: $subjects, now: Carbon::now()) as $grant) {
             $byNode[Identity::stringify($grant->node_id)][] = $grant;
         }
-
-        // Phase 1 — bucket the allow/deny bits PER DEPTH (nearest = 0). We never let
-        // a same-node allow and deny cancel here; they are kept apart so phase 2 can
-        // apply "a deny is pierced only by a strictly-nearer allow".
-        /** @var array<int, int> $allowByDepth */
-        $allowByDepth = [];
-        /** @var array<int, int> $denyByDepth */
-        $denyByDepth = [];
-        $level = null;
-
+        $applicable = [];
         foreach ($chain as $depth => $current) {
-            $isSelf = $depth === 0;
-            $rows = $byNode[Identity::stringify($current->id)] ?? [];
-
-            foreach ($rows as $grant) {
-                // An ancestor's grant only inherits down when scope=subtree; the
-                // node's own grants always apply.
-                if (!$isSelf && !$grant->scope->inheritsDownward()) {
-                    continue;
+            foreach ($byNode[Identity::stringify($current->id)] ?? [] as $grant) {
+                // An ancestor's grant reaches down only when its scope is subtree.
+                if ($depth === 0 || $grant->scope->inheritsDownward()) {
+                    $applicable[] = [$grant, $depth > 0];
                 }
-
-                $bits = $this->bitsFor($grant);
-
-                if ($grant->effect === Effect::Allow) {
-                    $allowByDepth[$depth] = ($allowByDepth[$depth] ?? 0) | $bits;
-                    $level = $this->maxLevel($level, $grant->level);
-
-                    continue;
-                }
-
-                $denyByDepth[$depth] = ($denyByDepth[$depth] ?? 0) | $bits;
-            }
-
-            // Cut-off: once we have consumed a node whose inheritance is severed,
-            // nothing above it may contribute. The node's OWN grants (bucketed above)
-            // already counted; a deny on this wall is only shielded from FARTHER
-            // (above-wall) allows — the walk stops here so none exist — while a
-            // nearer allow BELOW the wall still pierces it (ADR-0007, no wall exception).
-            if (!$current->inherit_grants) {
-                break;
             }
         }
 
-        $mask = $this->foldDepths($chain, $allowByDepth, $denyByDepth, $level);
-
-        return [$mask->allowed, $mask->denied, $mask->level];
+        return ['grants' => $applicable, 'boundary' => $boundary];
     }
 
     /**
-     * A provenance-collecting twin of resolveAcl() serving explain() (F-P1.1-02). It
-     * folds the SAME allow/deny masks by the SAME rules (per-depth bucket, then a deny
-     * pierced only by a strictly-nearer allow), but additionally records every visited
-     * grant as an {@see AccessAce} — tagged with its walk depth and whether it counted
-     * (an item-scoped ancestor grant is recorded with counted=false). It is kept apart
-     * from resolveAcl() ON PURPOSE so the hot path carries no diagnostic bookkeeping.
+     * The PermissionDriver's role per subject.
      *
-     * @param  list<Subject>                                                 $subjects
-     * @return array{0: int, 1: int, 2: GrantLevel|null, 3: list<AccessAce>}
+     * @param  list<Subject>                        $subjects
+     * @return list<array{0: Subject, 1: Decision}>
      */
-    private function resolveAclWithProvenance(Node $node, array $subjects): array
+    private function decisions(PermissionDriver $driver, Authorizable $actor, AccessScope $scope, array $subjects): array
     {
-        if ($subjects === [] || !$this->vaulterConfig->featureEnabled('grants', $this->storageOf($node)->profile)) {
-            return [0, 0, null, []];
-        }
-
-        $chain = $this->ancestorChain($node);
-
-        $nodeIds = array_map(static fn (Node $n): int|string => $n->id, $chain);
-
-        $now = Carbon::now();
-        $grants = $this->grants->forSubjectsOnNodes(nodeIds: $nodeIds, subjects: $subjects, now: $now);
-
-        /** @var array<string, list<NodeGrant>> $byNode */
-        $byNode = [];
-
-        foreach ($grants as $grant) {
-            $byNode[Identity::stringify($grant->node_id)][] = $grant;
-        }
-
-        /** @var array<int, int> $allowByDepth */
-        $allowByDepth = [];
-        /** @var array<int, int> $denyByDepth */
-        $denyByDepth = [];
-        /** @var list<AccessAce> $aces */
-        $aces = [];
-        $level = null;
-
-        foreach ($chain as $depth => $current) {
-            $isSelf = $depth === 0;
-            $rows = $byNode[Identity::stringify($current->id)] ?? [];
-
-            foreach ($rows as $grant) {
-                // A grant on an ancestor only inherits down when scope=subtree; the
-                // node's own grants always apply. A non-counting row is still recorded
-                // (counted=false) so the operator sees it was present but inert.
-                $counted = $isSelf || $grant->scope->inheritsDownward();
-                $bits = $this->bitsFor($grant);
-
-                $aces[] = new AccessAce(
-                    nodeId: $grant->node_id,
-                    depth: $depth,
-                    effect: $grant->effect,
-                    scope: $grant->scope,
-                    bits: $bits,
-                    counted: $counted,
-                );
-
-                if (!$counted) {
-                    continue;
-                }
-
-                if ($grant->effect === Effect::Allow) {
-                    $allowByDepth[$depth] = ($allowByDepth[$depth] ?? 0) | $bits;
-                    $level = $this->maxLevel($level, $grant->level);
-
-                    continue;
-                }
-
-                $denyByDepth[$depth] = ($denyByDepth[$depth] ?? 0) | $bits;
-            }
-
-            if (!$current->inherit_grants) {
-                break;
-            }
-        }
-
-        $mask = $this->foldDepths($chain, $allowByDepth, $denyByDepth, $level);
-
-        return [$mask->allowed, $mask->denied, $mask->level, $aces];
-    }
-
-    /**
-     * The machine-readable reason for an explain() verdict: an allow, a deny-veto
-     * (a required bit landed in the deny-mask), or simply no covering grant.
-     */
-    /**
-     * @param list<Node>      $chain
-     * @param array<int, int> $allows
-     * @param array<int, int> $denies
-     */
-    private function foldDepths(array $chain, array $allows, array $denies, ?GrantLevel $level): AclMask
-    {
-        $depths = [];
-        foreach ($chain as $depth => $current) {
-            $depths[] = ['allow' => $allows[$depth] ?? 0, 'deny' => $denies[$depth] ?? 0, 'level' => $level];
-            if (!$current->inherit_grants) {
-                break;
-            }
-        }
-
-        return (new AclFolder)->foldChain($depths);
-    }
-
-    private function explainReason(bool $allowed, Ability $ability, int $deniedBits): string
-    {
-        if ($allowed) {
-            return AccessExplanation::REASON_ALLOW;
-        }
-
-        if (($deniedBits & $ability->requiredBits()) !== 0) {
-            return AccessExplanation::REASON_DENY_VETO;
-        }
-
-        return AccessExplanation::REASON_NO_GRANT;
-    }
-
-    /**
-     * H.2 step 4 input — the host-role allow-mask + level. A driver Decision RAISES
-     * access (roleAllow); a driver-returned deny is folded the same way the ACL
-     * deny path is, but per H.2 the role lane primarily contributes allows (the
-     * final veto, computed from ACL deny, is what a role can never override).
-     *
-     * @param  list<Subject>                             $subjects
-     * @return array{0: int, 1: GrantLevel|null, 2: int}
-     */
-    private function resolveRole(
-        PermissionDriver $driver,
-        Authorizable $actor,
-        AccessScope $scope,
-        array $subjects,
-    ): array {
-        $bits = 0;
-        $level = null;
-        $denied = 0;
-
+        $decisions = [];
         foreach ($subjects as $subject) {
             $decision = $driver->resolve($subject, $actor, $scope);
-
-            if (!$decision instanceof Decision) {
-                continue;
+            if ($decision instanceof Decision) {
+                $decisions[] = [$subject, $decision];
             }
-            if ($decision->isDeny()) {
-                $denied |= $decision->bits;
-
-                continue;
-            }
-
-            $bits |= $decision->bits;
-            $level = $this->maxLevel($level, $decision->level);
         }
 
-        return [$bits, $level, $denied];
+        return $decisions;
     }
 
-    /**
-     * The CRUDS bits a grant row confers: the explicit permissions bitmask when set,
-     * else the level's bitmask. A row may carry both a level and extra bits — they
-     * are OR-ed so a level grant plus an extra SHARE bit both count.
-     */
-    private function bitsFor(NodeGrant $grant): int
+    /** Under strict tenancy the node is re-read so a forged model cannot be judged. */
+    private function fresh(Node $node): Node
     {
-        return $grant->level->bits() | $grant->permissions;
+        if (!$this->boundary->enforced()) {
+            return $node;
+        }
+        $this->boundary->assertNode($node);
+
+        return $node->newQuery()->whereKey($node->getRawOriginal($node->getKeyName()))->firstOrFail();
     }
 
     /**
      * The bounded ancestor chain nearest-first: the node, then each ancestor up to
-     * the storage root (the staudenmeir ancestor relation, storage-scoped). Falls
-     * back to a manual parent walk if the relation yields nothing (defensive — a
-     * detached node still resolves against itself).
+     * the drive root (the staudenmeir ancestor relation, drive-scoped).
      *
-     * Runs under withMaxDepth(NodeReadRepository::DEFAULT_MAX_DEPTH) — F-P4.2-01,
-     * VLT-REMED P4.3: this method executes on EVERY authorization check
-     * (can()/effectiveGrants()), so an unbounded recursive-CTE ancestor walk pays
-     * its cost on every request and, on SQLite, can hit
-     * SQLITE_MAX_RECURSION_DEPTH on a deep tree. ADR-0005 requires the same cap
-     * symmetrically on both traversal directions; descendants()/subtree() already
-     * carry it (NodeReadRepository), this was the missing ascend-side half.
+     * Runs under withMaxDepth(NodeReadRepository::DEFAULT_MAX_DEPTH): this executes
+     * on every authorization check, so an unbounded recursive-CTE walk would pay its
+     * cost on every request and, on SQLite, could hit SQLITE_MAX_RECURSION_DEPTH on a
+     * deep tree (ADR-0005 caps both traversal directions).
      *
      * @return list<Node>
      */
@@ -747,28 +448,6 @@ final class AccessResolver
         }
 
         return $chain;
-    }
-
-    private function maxLevel(?GrantLevel $a, ?GrantLevel $b): ?GrantLevel
-    {
-        if ($a === null) {
-            return $b;
-        }
-
-        if ($b === null) {
-            return $a;
-        }
-
-        return $a->max($b);
-    }
-
-    private function scopeFor(Drive $storage, Node $node): AccessScope
-    {
-        $owner = $node->owner_id === null
-            ? null
-            : new Subject(type: $storage->owner_type, id: $node->owner_id);
-
-        return AccessScope::forDrive($storage, $owner);
     }
 
     private function storageOf(Node $node): Drive

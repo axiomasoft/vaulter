@@ -164,7 +164,7 @@ it('records download ttfb and bytes on public share download', function (): void
     ShareTestHelpers::share(
         $file->refresh(),
         token: 'metrics-share',
-        permissions: Permission::Read->value,
+        permissions: (Permission::View->value | Permission::Download->value),
     );
 
     $response = $this->get('api/vaulter/share/metrics-share/download');

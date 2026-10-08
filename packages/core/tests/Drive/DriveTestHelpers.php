@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Tests\Drive;
 
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Drive\DriveHandle;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -54,11 +54,10 @@ final class DriveTestHelpers
             ->where('subject_type', $user->getMorphClass())
             ->where('subject_id', $id)
             ->where('scope', 'subtree')
-            ->where('effect', 'allow')
             ->exists()) {
             AccessTestHelpers::grant(
                 node: $root,
-                level: GrantLevel::Owner,
+                role: RoleRegistry::OWNER,
                 subjectId: $id,
                 subjectType: $user->getMorphClass(),
             );

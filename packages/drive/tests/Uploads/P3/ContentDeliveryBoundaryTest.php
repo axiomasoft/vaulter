@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Actions\Content\SettleScanWorkAction;
 use Vaulter\Content\ContentDelivery;
@@ -12,7 +13,6 @@ use Vaulter\Content\SignedContentUrl;
 use Vaulter\Contracts\Cas\DirectContentUrlSigner;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Content\ScanPolicyResolver;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Cas\ScanVerdict;
 use Vaulter\Exceptions\Files\ContentUnavailableException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
@@ -74,7 +74,7 @@ it('SEC-R17 PHP authorization is fresh with a retained model and descriptor afte
     $node = $this->system->files()->upload(UploadSource::fromString('secret', 'file.txt'));
     config()->set('vaulter.access.permission_driver', 'database');
     $user = AccessTestHelpers::user(87);
-    $grant = AccessTestHelpers::grant($node, GrantLevel::Reader, subjectId: 87);
+    $grant = AccessTestHelpers::grant($node, RoleRegistry::READER, subjectId: 87);
     $actor = Vaulter::drive($this->system->model())->actingAs($user);
     $descriptor = app(FileDescriptorFactory::class)->forNode($node);
     $stream = $actor->files()->read($node);

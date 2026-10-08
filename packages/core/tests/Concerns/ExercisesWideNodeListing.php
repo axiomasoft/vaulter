@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Tests\Concerns;
 
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Configuration\IdsConfig;
-use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Drive\Node;
@@ -29,9 +28,9 @@ trait ExercisesWideNodeListing
         $outside = AccessTestHelpers::folder($storage, $root, 'outside');
         $foreignStorage = AccessTestHelpers::storage();
         $foreign = AccessTestHelpers::folder($foreignStorage, null, 'foreign');
-        AccessTestHelpers::grant($root, GrantLevel::Reader, scope: GrantScope::Item);
-        AccessTestHelpers::grant($anchor, GrantLevel::Reader, scope: GrantScope::Subtree);
-        AccessTestHelpers::grant($foreign, GrantLevel::Reader, scope: GrantScope::Item);
+        AccessTestHelpers::grant($root, RoleRegistry::READER, scope: GrantScope::Item);
+        AccessTestHelpers::grant($anchor, RoleRegistry::READER, scope: GrantScope::Subtree);
+        AccessTestHelpers::grant($foreign, RoleRegistry::READER, scope: GrantScope::Item);
 
         // Real descendants, not a mocked candidate list. Insert in bounded statements
         // so fixture setup itself stays below PostgreSQL's 65535-parameter limit.
@@ -76,9 +75,10 @@ trait ExercisesWideNodeListing
             ->assertOk()->assertJsonCount(2, 'data')
             ->assertJsonPath('data.0.id', $this->wideNodeKey(1));
 
-        // Candidate listing remains a superset; exact per-action deny still wins.
+        // Candidate listing remains a superset; the exact per-action gate honours an
+        // inheritance boundary the SQL does not apply.
         $denied = Node::findOrFail($this->wideNodeKey(1));
-        AccessTestHelpers::grant($denied, GrantLevel::Reader, effect: Effect::Deny, scope: GrantScope::Item);
+        $denied->forceFill(['inherit_grants' => false])->save();
         expect($repository->queryForUser($actor)->whereKey($denied->getKey())->exists())->toBeTrue();
         $this->getJson('api/vaulter/nodes/'.$denied->getKey())->assertNotFound();
         expect($repository->queryForUser(AccessTestHelpers::user(2))->count())->toBe(0);

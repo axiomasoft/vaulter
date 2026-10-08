@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Content\NodeContentLifecycleRegistry;
 use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Contracts\Drive\NodeContentLifecycle;
@@ -18,7 +19,6 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\FileContentLifecycle;
 use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Providers\BindingsRegistrar;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
@@ -287,8 +287,8 @@ it('restores to the active original parent without Create and ignores an unused 
     $parent = $this->system->folders()->create('original');
     $source = $this->system->folders()->create('source', $parent);
     $unused = $this->system->folders()->create('hidden unused destination');
-    AccessTestHelpers::grant($parent, GrantLevel::Reader, scope: GrantScope::Item, subjectId: 83);
-    AccessTestHelpers::grant($source, GrantLevel::Reader, scope: GrantScope::Item, permissions: 9, subjectId: 83);
+    AccessTestHelpers::grant($parent, RoleRegistry::READER, scope: GrantScope::Item, subjectId: 83);
+    AccessTestHelpers::grant($source, RoleRegistry::WRITER, scope: GrantScope::Item, subjectId: 83);
     $this->system->nodes()->trash($source);
     $actor = Vaulter::drive($this->system->model())->actingAs($user);
 
@@ -302,10 +302,10 @@ it('authorizes View and Create on the actual fallback destination', function (st
     $parent = $this->system->folders()->create('original');
     $source = $this->system->folders()->create('source', $parent);
     $fallback = $this->system->folders()->create('explicit fallback');
-    AccessTestHelpers::grant($source, GrantLevel::Reader, scope: GrantScope::Item, permissions: 9, subjectId: 84);
+    AccessTestHelpers::grant($source, RoleRegistry::WRITER, scope: GrantScope::Item, subjectId: 84);
     if ($lane !== 'hidden') {
-        AccessTestHelpers::grant($fallback, GrantLevel::Reader, scope: GrantScope::Item,
-            permissions: $lane === 'allowed' ? 5 : 1, subjectId: 84);
+        AccessTestHelpers::grant($fallback, $lane === 'allowed' ? RoleRegistry::WRITER : RoleRegistry::READER, scope: GrantScope::Item,
+            subjectId: 84);
     }
     $this->system->nodes()->trash($source);
     $parent->delete();
@@ -326,9 +326,9 @@ it('repeats public destination authorization when the original parent changes af
     $parent = $this->system->folders()->create('racing original');
     $source = $this->system->folders()->create('source', $parent);
     $root = $this->system->root();
-    AccessTestHelpers::grant($source, GrantLevel::Reader, scope: GrantScope::Item, permissions: 9, subjectId: 85);
-    AccessTestHelpers::grant($parent, GrantLevel::Reader, scope: GrantScope::Item, subjectId: 85);
-    AccessTestHelpers::grant($root, GrantLevel::Reader, scope: GrantScope::Item, permissions: $allowFallback ? 5 : 1, subjectId: 85);
+    AccessTestHelpers::grant($source, RoleRegistry::WRITER, scope: GrantScope::Item, subjectId: 85);
+    AccessTestHelpers::grant($parent, RoleRegistry::READER, scope: GrantScope::Item, subjectId: 85);
+    AccessTestHelpers::grant($root, $allowFallback ? RoleRegistry::WRITER : RoleRegistry::READER, scope: GrantScope::Item, subjectId: 85);
     $this->system->nodes()->trash($source);
     $db = app(VaulterDatabase::class)->connection();
     $baselineLevel = $db->transactionLevel();

@@ -5,11 +5,11 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Gate;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\Drivers\GatePermissionDriver;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\OwnerRef;
@@ -55,8 +55,7 @@ it('maps a gate ability to a role-grant level', function (): void {
     $decision = $driver->resolve(Subject::ofModel($actor), $actor, $scope);
 
     expect($decision)->not->toBeNull()
-        ->and($decision->level)->toBe(GrantLevel::Writer)
-        ->and($decision->isAllow())->toBeTrue();
+        ->and($decision->role->key)->toBe(RoleRegistry::WRITER);
 });
 
 it('lets a gate-mapped ability raise access in the AccessResolver with no ACL row', function (): void {
@@ -115,7 +114,6 @@ it('the gate ability check is node-blind — it receives the workspace context o
         ->and($seen['drive_owner']->type)->toBe('project')
         ->and($seen['drive_owner']->id)->toBe(42)
         ->and($seen['drive_id'])->toBe(1)
-        ->and($seen['node_owner'])->toBeNull()
         ->and($seen['tenant_id'])->toBeNull();
 });
 

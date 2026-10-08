@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Azgard\AzgardGuardAdapter;
@@ -9,13 +10,12 @@ use Vaulter\Azgard\AzgardPermissionDriver;
 use Vaulter\Azgard\Contracts\AzgardGuard;
 use Vaulter\Azgard\Tests\Stubs\SpyAzgardUser;
 use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\ValueObjects\Access\OwnerRef;
 
 /**
  * The bridge driving the REAL Vaulter AzgardPermissionDriver: the adapter is bound as
  * the host's AzgardGuard, and the driver's every lane (super-admin override, the
- * workspace-role → GrantLevel fold, the create gate) is exercised end-to-end. Only the
+ * workspace-role → role fold, the create gate) is exercised end-to-end. Only the
  * leaf user is a controllable double; the adapter and the resolver are production code.
  */
 function bindAdapterFor(SpyAzgardUser $user): void
@@ -46,7 +46,7 @@ it('defers (no override) for a non super-admin', function (): void {
     expect(azgardDriver()->override($user, $scope))->toBeNull();
 });
 
-it('folds a workspace-scoped permission into the matching grant level', function (): void {
+it('folds a workspace-scoped permission into the matching role', function (): void {
     // documents.update is the Writer probe (Edit → documents.update) in the ability map.
     $user = SpyAzgardUser::make()->grantInWorkspace('project', 1, ['documents.update']);
     bindAdapterFor($user);
@@ -55,8 +55,7 @@ it('folds a workspace-scoped permission into the matching grant level', function
     $decision = azgardDriver()->resolve(Subject::ofModel($user), $user, $scope);
 
     expect($decision)->not->toBeNull()
-        ->and($decision->level)->toBe(GrantLevel::Writer)
-        ->and($decision->isAllow())->toBeTrue();
+        ->and($decision->role->key)->toBe(RoleRegistry::WRITER);
 });
 
 it('yields no decision when the workspace grants nothing', function (): void {

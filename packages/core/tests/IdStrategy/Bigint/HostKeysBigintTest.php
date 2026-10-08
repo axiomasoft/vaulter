@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Data\Activity\RecordActivityCommand;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Repositories\Activity\ActivityStoreRepository;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -17,9 +17,9 @@ it('round-trips a ULID grant subject and actor with bigint Vaulter IDs', functio
     $user->exists = true;
     $this->actingAs($user);
     $drive = DriveTestHelpers::drive(42);
-    AccessTestHelpers::grant($drive->root(), GrantLevel::Owner, subjectId: $user->getKey(), subjectType: $user->getMorphClass());
+    AccessTestHelpers::grant($drive->root(), RoleRegistry::OWNER, subjectId: $user->getKey(), subjectType: $user->getMorphClass());
     $node = $drive->actingAs($user)->folders()->create('ULID actor')->refresh();
-    $grant = AccessTestHelpers::grant($node, GrantLevel::Reader, subjectId: $ulid, subjectType: $user->getMorphClass());
+    $grant = AccessTestHelpers::grant($node, RoleRegistry::READER, subjectId: $ulid, subjectType: $user->getMorphClass());
     $activity = app(ActivityStoreRepository::class)->record(new RecordActivityCommand(
         verb: EventType::FolderCreated,
         storageId: $drive->model()->getKey(),

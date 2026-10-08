@@ -457,9 +457,9 @@ final class NodeReadRepository
      *
      * The candidate set is the grant ANCHORS for the actor's subject-set UNION the
      * descendants of every SUBTREE-scoped anchor (an item-scoped anchor contributes
-     * only its own node). It is a deliberate SUPERSET: it does NOT apply the deny-veto
-     * or the inherit_grants cut-off in SQL, so a node a nearer deny revokes can still
-     * be in the set. The candidate-set listing semantic is documented on
+     * only its own node). It is a deliberate SUPERSET: it does NOT apply the
+     * inherit_grants cut-off in SQL, so a node behind an inheritance boundary can
+     * still be in the set. The candidate-set listing semantic is documented on
      * {@see constrainToAccessible()}; per-ACTION authorization stays EXACT via the
      * {@see AccessResolver} on every mutation/show.
      *
@@ -510,8 +510,8 @@ final class NodeReadRepository
 
     /**
      * Narrow an already-loaded set of nodes to the ones the actor may actually View,
-     * delegating to the AccessResolver (the EXACT deny-veto / inherit-cutoff gate,
-     * H.2). This is the correctness companion to the SUPERSET candidate query: a
+     * delegating to the AccessResolver (the EXACT role-union / inheritance-boundary
+     * gate). This is the correctness companion to the SUPERSET candidate query: a
      * caller lists candidates cheaply, then runs the page through here.
      *
      * @param  iterable<Node> $nodes
@@ -523,9 +523,8 @@ final class NodeReadRepository
     }
 
     /**
-     * The "shared with me" top-level view (§2.6 / H.2): the nodes the actor holds a
-     * live allow-grant on, RE-RESOLVED through the full algorithm so a nearer deny
-     * that revokes a row excludes it (the EXACT gate, over a bounded candidate set —
+     * The "shared with me" top-level view (§2.6): the nodes the actor holds a live
+     * grant on, RE-RESOLVED through the full algorithm (the EXACT gate, over a bounded candidate set —
      * unlike the candidate-SQL listings). Cross-storage by nature: the subject index
      * is not storage-bound.
      *

@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
@@ -38,7 +37,7 @@ use Vaulter\Models\Drive\Node;
  * @property string          $token_hash
  * @property string          $token_prefix
  * @property int             $permissions
- * @property GrantLevel      $level
+ * @property string          $level
  * @property GrantScope      $scope
  * @property string|null     $password_hash
  * @property bool            $require_login
@@ -158,7 +157,6 @@ class NodeShare extends Model
     protected function casts(): array
     {
         return [
-            'level' => GrantLevel::class,
             'scope' => GrantScope::class,
             'permissions' => 'integer',
             'require_login' => 'boolean',

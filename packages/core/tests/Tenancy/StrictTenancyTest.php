@@ -12,6 +12,7 @@ use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Enums\Access\Permission;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
 use Vaulter\Facades\Vaulter;
@@ -165,7 +166,7 @@ it('V31 anonymous bearer shares derive only their target tenant and do not open 
     $a = Vaulter::drive(DriveTestHelpers::host())->asSystem('fixture');
     $rootA = $a->root();
     $childA = AccessTestHelpers::folder($a->model(), $rootA, 'shared child');
-    $link = $a->shares()->create($rootA, new ShareLinkInput(permissions: 1, scope: GrantScope::Subtree));
+    $link = $a->shares()->create($rootA, new ShareLinkInput(permissions: Permission::View->value | Permission::Download->value, scope: GrantScope::Subtree));
     $driveA = $a->model();
     app(TenantResolver::class)->tenant = 'B';
     $b = AccessTestHelpers::storage();

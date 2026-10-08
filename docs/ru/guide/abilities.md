@@ -1,6 +1,6 @@
 # Права (abilities) — интеграция с фронтендом
 
-Vaulter вычисляет права на документ на стороне сервера и отдаёт их фронтенду, поэтому
+Vaulter вычисляет права на документ на стороне сервера (по [ролям](/ru/concepts/authorization#abilities-and-roles) актора; `view` и `download` — отдельные права) и отдаёт их фронтенду, поэтому
 ваши Vue-компоненты отрисовывают только те действия, которые пользователю доступны. Никаких
 лишних обращений к API, никакого дублирования логики прав в JavaScript.
 
@@ -13,7 +13,7 @@ Vaulter вычисляет права на документ на стороне 
   "data": {
     "id": 1,
     "title": "Q3 Proposal",
-    "abilities": { "view": true, "comment": true, "edit": true, "manage": false, "delete": false }
+    "abilities": { "view": true, "download": true, "comment": true, "edit": true, "manage": false, "delete": false }
   }
 }
 ```

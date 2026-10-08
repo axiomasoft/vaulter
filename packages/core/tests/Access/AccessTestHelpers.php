@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Vaulter\Tests\Access;
 
 use Illuminate\Support\Carbon;
-use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Facades\Vaulter;
@@ -70,13 +68,12 @@ final class AccessTestHelpers
      */
     public static function grant(
         Node $node,
-        GrantLevel $level,
-        Effect $effect = Effect::Allow,
+        string $role,
         GrantScope $scope = GrantScope::Subtree,
-        int $permissions = 0,
         int|string $subjectId = 1,
         ?string $subjectType = null,
         ?Carbon $expiresAt = null,
+        int $roleVersion = 1,
     ): NodeGrant {
         $subjectType ??= (new TestUser)->getMorphClass();
 
@@ -88,9 +85,8 @@ final class AccessTestHelpers
             'node_id' => $node->id,
             'subject_type' => $subjectType,
             'subject_id' => $subjectId,
-            'level' => $level->value,
-            'permissions' => $permissions,
-            'effect' => $effect->value,
+            'role_key' => $role,
+            'role_version' => $roleVersion,
             'scope' => $scope->value,
             'expires_at' => $expiresAt,
         ])->save();

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Log;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Activity\ActivityRecorder;
 use Vaulter\Configuration\VaulterConfig;
@@ -10,7 +11,6 @@ use Vaulter\Data\Activity\RecordActivityCommand;
 use Vaulter\Data\Drive\CopyOptions;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Events\Access\NodeGrantCreated;
@@ -158,15 +158,16 @@ it('writes one node.purged row with the freed bytes and ids (no target)', functi
 it('writes one grant.created row from the grant event', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'shared');
-    $grant = AccessTestHelpers::grant($node, GrantLevel::Writer, scope: GrantScope::Subtree);
+    $grant = AccessTestHelpers::grant($node, RoleRegistry::WRITER, scope: GrantScope::Subtree);
 
     event(new NodeGrantCreated(grant: $grant, actorId: 7));
 
     $row = ActivityTestHelpers::only(EventType::GrantCreated->value);
 
     expect($row->target_id)->toEqual($node->getKey())
-        ->and($row->context['level'])->toBe('writer')
-        ->and($row->context['effect'])->toBe('allow');
+        ->and($row->context['role'])->toBe('writer')
+        ->and($row->context['role_version'])->toBe(1)
+        ->and($row->context)->not->toHaveKeys(['level', 'effect']);
 });
 
 it('writes one grant.revoked row from the revoke event', function (): void {

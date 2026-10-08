@@ -1,6 +1,6 @@
 ---
 title: Grants
-description: Per-node ACL grants — subject, level, effect, scope and expiry — the GrantNodeAccess / RevokeNodeAccess actions, the REST surface, events, and the Vue useNodeGrants composable.
+description: Per-node ACL grants — subject, role, scope and expiry — the GrantNodeAccess / RevokeNodeAccess actions, the REST surface, events, and the Vue useNodeGrants composable.
 outline: deep
 ---
 
@@ -13,22 +13,21 @@ how to write and revoke grants, the REST surface, and the events emitted.
 
 ::: info Where grants fit
 Grants are the **node-ACL lane**. The [role lane](./permission-drivers) (your host's
-roles) is folded in separately. A grant can only confer the access it states — but a
-`deny` grant is the final veto that no role can override.
+roles) is folded in separately. A grant only adds access — there is no deny grant; to
+cut a subtree off from grants above, use an [inheritance boundary](./authorization#inheritance-boundaries).
 :::
 
 ## Anatomy of a grant
 
-`Vaulter\Models\Access\NodeGrant` (table `v_node_grants`):
+`Vaulter\Models\Access\NodeGrant` (table `v_node_grants`, unique per node, subject and scope):
 
 | Column | Type | Meaning |
 |---|---|---|
 | `node_id` | id | the node the grant sits on |
 | `subject_type` | string | a registered morph alias — `user` / `role` / `team` / a host alias |
 | `subject_id` | id | the subject key the grant is addressed to |
-| `level` | `GrantLevel` | `reader` / `commenter` / `writer` / `organizer` / `owner` |
-| `permissions` | int | optional extra CRUDS bits, OR-ed with the level's bits |
-| `effect` | `Effect` | `allow` (widen) or `deny` (narrow — the final veto) |
+| `role_key` | string | `previewer` / `reader` / `commenter` / `writer` / `organizer` / `owner` |
+| `role_version` | int | the version of the role the grant was given (currently `1`) |
 | `scope` | `GrantScope` | `item` (this node only) or `subtree` (flows down) — defaults to `subtree` |
 | `expires_at` | datetime? | read-time expiry; `null` = never expires |
 | `granted_by` | id? | the actor who created the grant |
@@ -55,26 +54,26 @@ $role = new Subject(type: 'role', id: 'editor');
 $team = Subject::make('team', $teamId);
 ```
 
-### Level + permissions
+### Role
 
-A grant stores a ranked `level`, an optional extra `permissions` bitmask, or both. The
-resolver normalises a grant to bits via `level->bits() | permissions`, so a level grant
-plus an extra `SHARE` bit confers both. See
-[Abilities & levels](./authorization#abilities-levels-and-the-cruds-bitmask) for the
-level → bits table.
+A grant stores a role key and the role version it was given, so a later change to a role
+ships as a new version and never alters stored grants. An unknown key or version throws
+`UnknownRoleException` (`unknown_role`, 422). See
+[Abilities & roles](./authorization#abilities-and-roles) for the role → abilities table.
 
-### Effect
+### No deny
 
-`Vaulter\Enums\Access\Effect` — `allow` widens access, `deny` narrows it. A `deny` is
-the **final veto** after the max/OR pass: a host role can never resurrect a level a deny
-has forbidden, and a `deny` on the same node as an `allow` always wins. See the
-[deny-veto fold](./authorization#step-3-the-deny-veto-fold-explicit-beats-inherited).
+Grants only add access. Effective access is the **union** of the roles of every applicable
+grant up to an inheritance boundary; an administrative block belongs to the host's
+permission driver (`override()`), not to a grant. Restrict a subtree with
+`access()->restrictInheritance($node)` instead.
 
 ### Scope + inheritance
 
 `Vaulter\Enums\Access\GrantScope` — `item` applies only to the node it sits on;
 `subtree` (the default) additionally flows down to descendants during the ancestor walk,
-**until** an `inherit_grants = false` cut-off node. Only `subtree` grants inherit
+**up to and including** the first `inherit_grants = false` node — grants above that node
+never reach below it. Only `subtree` grants inherit
 downward (`GrantScope::inheritsDownward()`).
 
 ### Expiry
@@ -84,59 +83,56 @@ downward (`GrantScope::inheritsDownward()`).
 
 ## Writing a grant
 
-`Vaulter\Actions\Access\GrantNodeAccessAction` persists a grant (or deny). It is
-**idempotent** on the grant-unique key: re-granting the same subject the same
-scope/effect updates the level/bits/expiry. The write runs in a transaction and emits
+`access()->grant()` (backed by `Vaulter\Actions\Access\GrantNodeAccessAction`) persists a
+grant. It is **idempotent** on the grant-unique key: re-granting the same subject the same
+scope updates the role and expiry. The write runs in a transaction and emits
 `NodeGrantCreated`.
 
 ```php
-use Vaulter\Actions\Access\GrantNodeAccessAction;
-use Vaulter\Data\Access\GrantNodeAccessInput;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Enums\Access\GrantLevel;
-use Vaulter\Enums\Access\Effect;
+use Vaulter\Data\Access\GrantInput;
 use Vaulter\Enums\Access\GrantScope;
 
-$grant = app(GrantNodeAccessAction::class)->execute(
-    node: $node,
-    data: new GrantNodeAccessInput(
+$grant = Vaulter::drive($drive)->actingAs($actor)->access()->grant(
+    $node,
+    new GrantInput(
         subject: Subject::ofModel($collaborator),
-        level: GrantLevel::Writer,
-        effect: Effect::Allow,            // default
+        role: RoleRegistry::WRITER,
         scope: GrantScope::Subtree,       // default — flows to descendants
-        permissions: 0,                   // optional extra CRUDS bits
         expiresAt: now()->addDays(7),     // optional
-        grantedBy: $actor->getKey(),
     ),
 );
 ```
 
 ::: warning The Action does not authorize
-`GrantNodeAccessAction` persists; it does not re-authorize. The caller (controller /
-policy) must check the actor may `Share`/`Manage` the node **before** reaching the
-Action. The HTTP surface below does exactly that.
+`GrantNodeAccessAction` persists; it does not re-authorize. `access()->grant()` and the HTTP
+surface below check the actor may `Share`/`Manage` the node first; call the Action directly
+only after doing the same.
 :::
 
-### A deny grant
+### Walling a subtree off
 
-To carve out an exception inside an otherwise-shared subtree, write a `deny`:
+To keep a subfolder away from a team that has access higher up, stop inheritance on it and
+grant the people who need it directly:
 
 ```php
-new GrantNodeAccessInput(
-    subject: Subject::ofModel($contractor),
-    level: GrantLevel::Reader,
-    effect: Effect::Deny,           // veto — overrides farther/role allows
-    scope: GrantScope::Subtree,
-);
+$access = Vaulter::drive($drive)->actingAs($owner)->access();
+
+$access->grant($hr, new GrantInput(subject: Subject::ofModel($hrUser), role: RoleRegistry::READER));
+$access->restrictInheritance($hr);                                  // empty: only direct grants remain
+// $access->restrictInheritance($hr, InheritanceRestriction::CopyCurrent); // keep today's access
+$access->restoreInheritance($hr);                                   // open to grants from above again
 ```
 
-Because of the deny-veto, this hides the node (and its subtree, given `subtree` scope)
-from the contractor even if a higher-up `allow` or a host role would otherwise grant it.
+Both calls require `Manage` on the node. `copy_current` first gives each subject that
+currently inherits access a direct subtree grant — the role covering the inherited roles,
+never broader and never longer-lived than what it inherits.
 
 ## Revoking grants
 
 `Vaulter\Actions\Access\RevokeNodeAccessAction` removes **every** grant a subject holds
-on a node — both effects, both scopes — and returns the count removed. It emits
+on a node — both scopes — and returns the count removed. It emits
 `NodeGrantRevoked` only when something was actually revoked (an empty revoke is a silent
 no-op). Transactional.
 
@@ -160,7 +156,7 @@ change its grants. A denial 403s through `PermissionDeniedException`.
 | Method | Path | Action |
 |---|---|---|
 | `GET` | `nodes/{node}/grants` | list grants on the node (cursor-paginated) |
-| `POST` | `nodes/{node}/grants` | grant/deny a subject (201) |
+| `POST` | `nodes/{node}/grants` | grant a subject a role (201) |
 | `DELETE` | `nodes/{node}/grants` | revoke a subject's grants (204) |
 
 ::: tip Where the grants surface, listing-side
@@ -179,10 +175,8 @@ curl -X POST https://app.test/api/vaulter/nodes/01J.../grants \
   -d '{
     "subject_type": "user",
     "subject_id": "42",
-    "level": "writer",
-    "effect": "allow",
+    "role": "writer",
     "scope": "subtree",
-    "permissions": 0,
     "expires_at": "2026-12-31T23:59:59Z"
   }'
 ```
@@ -201,9 +195,8 @@ curl -X DELETE https://app.test/api/vaulter/nodes/01J.../grants \
     "node_id": "01J...",
     "subject_type": "user",
     "subject_id": "42",
-    "level": "writer",
-    "permissions": 0,
-    "effect": "allow",
+    "role": "writer",
+    "role_version": 1,
     "scope": "subtree",
     "expires_at": "2026-12-31T23:59:59Z",
     "created_at": "2026-06-30T10:00:00Z"
@@ -220,10 +213,8 @@ curl -X DELETE https://app.test/api/vaulter/nodes/01J.../grants \
 |---|---|
 | `subject_type` | required, string, max 255, a registered subject type |
 | `subject_id` | required |
-| `level` | required, one of the `GrantLevel` values |
-| `effect` | nullable enum (`allow`/`deny`), defaults `allow` |
+| `role` | required, one of the registered role keys |
 | `scope` | nullable enum (`item`/`subtree`), defaults `subtree` |
-| `permissions` | nullable integer, `0..31` |
 | `expires_at` | nullable date |
 
 ## Events
@@ -263,8 +254,7 @@ await list()
 await grant({
   subjectType: 'user',
   subjectId: 42,
-  level: 'writer',
-  effect: 'allow',
+  role: 'writer',
   scope: 'subtree',
 })
 
@@ -278,6 +268,6 @@ subject. The `VaulterNodeGrantsPanel` component wraps this for a drop-in grants 
 
 ## See also
 
-- [Authorization](./authorization) — how grants are walked, folded and vetoed.
+- [Authorization](./authorization) — how grants are walked and unioned up to a boundary.
 - [Permission Drivers](./permission-drivers) — the role lane folded alongside grants.
 - Panel-scoped grants and subtree inheritance details: `node_grants`, `inherit_grants`.

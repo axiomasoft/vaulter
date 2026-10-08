@@ -53,14 +53,23 @@ function nodeDataContractNode(Connection $db, int|string $driveId, int|string|nu
 }
 
 /** @return array{drive: int|string, root: int|string} */
-function nodeDataContractDrive(Connection $db): array
+function nodeDataContractDrive(Connection $db, int $owner = 1): array
 {
     $drives = app(DatabaseConfig::class)->table('drives');
-    $drive = $db->table($drives)->insertGetId(['owner_type' => 'team', 'owner_id' => 1, 'name' => 'Disk', 'created_at' => now(), 'updated_at' => now()]);
+    $drive = $db->table($drives)->insertGetId(['owner_type' => 'team', 'owner_id' => $owner, 'name' => 'Disk', 'created_at' => now(), 'updated_at' => now()]);
     $root = nodeDataContractNode($db, $drive, null, 'root');
     $db->table($drives)->where('id', $drive)->update(['root_node_id' => $root]);
 
     return ['drive' => $drive, 'root' => $root];
+}
+
+/** PostgreSQL jsonb does not keep key order, so compare the legacy keys sorted. */
+function nodeDataContractSortedLegacy(string $properties): array
+{
+    $decoded = json_decode($properties, true);
+    ksort($decoded['legacy']);
+
+    return $decoded;
 }
 
 it('upgrades names, legacy data, times and columns, keeping the earliest of colliding siblings', function (): void {
@@ -98,14 +107,14 @@ it('upgrades names, legacy data, times and columns, keeping the earliest of coll
         ->and($row($trashed)->name)->toBe('STRASSE ')
         ->and($row($upper)->name_key)->toBe(NodeName::key('STRASSE (conflict 1)'))
         ->and($db->table($nodes)->where('name_key', '')->count())->toBe(0)
-        ->and(json_decode((string) $row($legacy)->properties, true))->toBe(['legacy' => ['bad_key' => '{"x":1}', 'color' => 'red', 'n' => '5']])
+        ->and(nodeDataContractSortedLegacy((string) $row($legacy)->properties))->toBe(['legacy' => ['bad_key' => '{"x":1}', 'color' => 'red', 'n' => '5']])
         ->and((string) $row($nfc)->content_modified_at)->toBe($committed)
         ->and((string) $row($nfc)->content_modified_by)->toBe('7');
 
     $activity = $db->table(app(DatabaseConfig::class)->table('activity'))->where('verb', 'node.renamed')->orderBy('target_id')->get();
     expect($activity)->toHaveCount(2)
         ->and($activity->pluck('actor_type')->unique()->all())->toBe(['vaulter:system'])
-        ->and(json_decode((string) $activity[0]->context, true))->toBe(['from' => "Re\u{0301}sume\u{0301}.pdf", 'to' => "Re\u{0301}sume\u{0301} (conflict 1).pdf", 'reason' => 'name_key_upgrade']);
+        ->and(json_decode((string) $activity[0]->context, true))->toEqualCanonicalizing(['from' => "Re\u{0301}sume\u{0301}.pdf", 'to' => "Re\u{0301}sume\u{0301} (conflict 1).pdf", 'reason' => 'name_key_upgrade']);
     Log::shouldHaveReceived('warning')->twice();
 
     foreach (['drives', 'nodes', 'blobs', 'files', 'file_revisions', 'node_grants', 'node_shares', 'node_comments', 'documents', 'document_revisions', 'upload_sessions', 'activity'] as $entity) {
@@ -171,4 +180,25 @@ it('creates only the user-state table on a fresh install and drops only it on ro
 
     expect($schema->hasTable($states))->toBeFalse()
         ->and($schema->hasColumn(app(DatabaseConfig::class)->table('nodes'), 'name_key'))->toBeTrue();
+});
+
+it('never renames the roots of different drives, which only share a null parent', function (): void {
+    $db = app(VaulterDatabase::class)->connection();
+    $nodes = app(DatabaseConfig::class)->table('nodes');
+    nodeDataContractBefore($db);
+    ['drive' => $first, 'root' => $firstRoot] = nodeDataContractDrive($db);
+    ['drive' => $second, 'root' => $secondRoot] = nodeDataContractDrive($db, 2);
+    // Within one drive the folders are siblings and still collide.
+    $a = nodeDataContractNode($db, $first, $firstRoot, 'straße');
+    $b = nodeDataContractNode($db, $first, $firstRoot, 'STRASSE');
+    $c = nodeDataContractNode($db, $second, $secondRoot, 'straße');
+    Log::spy();
+
+    nodeDataContractMigration()->up();
+
+    $name = static fn (int|string $id): string => (string) $db->table($nodes)->where('id', $id)->value('name');
+    expect([$name($firstRoot), $name($secondRoot)])->toBe(['root', 'root'])
+        ->and($name($a))->toBe('straße')
+        ->and($name($b))->toBe('STRASSE (conflict 1)')
+        ->and($name($c))->toBe('straße');
 });

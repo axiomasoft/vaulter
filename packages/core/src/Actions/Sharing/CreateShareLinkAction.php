@@ -9,13 +9,13 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use InvalidArgumentException;
 use RuntimeException;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Configuration\SharingConfig;
 use Vaulter\Contracts\Sharing\ShareTokenGenerator;
 use Vaulter\Data\Sharing\CreateShareLinkInput;
 use Vaulter\Data\Sharing\MintedShareLink;
 use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\Permission;
 use Vaulter\Events\Sharing\NodeShareCreated;
 use Vaulter\Models\Drive\Node;
@@ -56,13 +56,14 @@ final readonly class CreateShareLinkAction
         private NodeShareStoreRepository $shares,
         private VaulterDatabase $database,
         private NodeLocator $locator,
+        private RoleRegistry $roles,
     ) {}
 
     public function execute(OperationContext $context, CreateShareLinkInput $input): MintedShareLink
     {
         $node = $this->locator->find(context: $context, key: $input->node);
         $data = $input->link;
-        if ($data->permissions < 0 || ($data->permissions & ~Permission::all()) !== 0 || $data->level === GrantLevel::Commenter || ($data->permissions & Permission::Comment->value) !== 0) {
+        if ($data->permissions < 0 || ($data->permissions & ~Permission::all()) !== 0 || !$this->roles->has($data->level) || $data->level === RoleRegistry::COMMENTER || ($data->permissions & Permission::Comment->value) !== 0) {
             throw new InvalidArgumentException('Invalid anonymous share permissions.');
         }
         if ($data->maxUses !== null && $data->maxUses < 1) {
@@ -117,7 +118,7 @@ final readonly class CreateShareLinkAction
                     tokenHash: ShareToken::hash($token),
                     tokenPrefix: ShareToken::prefix($token, $prefixLength),
                     permissions: $data->permissions,
-                    level: $data->level->value,
+                    level: $data->level,
                     scope: $data->scope->value,
                     passwordHash: $passwordHash,
                     requireLogin: $data->requireLogin,

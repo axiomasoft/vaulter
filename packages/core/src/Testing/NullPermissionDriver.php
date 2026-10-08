@@ -13,7 +13,7 @@ use Vaulter\Contracts\Access\NonProductionPermissionDriver;
 use Vaulter\Enums\Access\Effect;
 
 /**
- * The fail-loud OPEN host-role driver (master plan H.2 / D6″). It grants every
+ * The fail-loud OPEN host-role driver. It grants every
  * actor full access through an absolute Allow override, so a consumer can boot and
  * exercise Vaulter WITHOUT wiring a real role system.
  *
@@ -34,7 +34,7 @@ final class NullPermissionDriver implements NonEnumeratingPermissionDriver, NonP
     public function override(Authorizable $actor, AccessScope $scope): ?Effect
     {
         // Absolute open: every actor is treated as a super-admin in non-prod, so the
-        // ACL/role walk is short-circuited entirely (H.2 step 1).
+        // grant walk is skipped entirely.
         return Effect::Allow;
     }
 

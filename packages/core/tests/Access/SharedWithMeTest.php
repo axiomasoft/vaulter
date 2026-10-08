@@ -3,8 +3,7 @@
 declare(strict_types=1);
 
 use Vaulter\Access\AccessResolver;
-use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -19,8 +18,8 @@ it('lists the nodes a subject is granted access to', function (): void {
     $b = AccessTestHelpers::folder($storage, null, 'b');
     AccessTestHelpers::folder($storage, null, 'c'); // ungranted
 
-    AccessTestHelpers::grant($a, GrantLevel::Reader, scope: GrantScope::Item);
-    AccessTestHelpers::grant($b, GrantLevel::Reader, scope: GrantScope::Item);
+    AccessTestHelpers::grant($a, RoleRegistry::READER, scope: GrantScope::Item);
+    AccessTestHelpers::grant($b, RoleRegistry::READER, scope: GrantScope::Item);
 
     $resolver = app(AccessResolver::class);
     $ids = $resolver->sharedNodeIds(AccessTestHelpers::user());
@@ -30,21 +29,19 @@ it('lists the nodes a subject is granted access to', function (): void {
         ->and($ids)->toContain($b->id);
 });
 
-it('excludes a shared row revoked by a nearer deny on re-resolution', function (): void {
+it('excludes a candidate cut off by an inheritance boundary on re-resolution', function (): void {
     $storage = AccessTestHelpers::storage();
     $parent = AccessTestHelpers::folder($storage, null, 'parent');
-    $child = AccessTestHelpers::folder($storage, $parent, 'child');
+    $child = AccessTestHelpers::folder($storage, $parent, 'child', inheritGrants: false);
 
     // The subject is granted on the parent (subtree) — so it appears in the raw
-    // "shared" index for the parent, and the child inherits it…
-    AccessTestHelpers::grant($parent, GrantLevel::Reader, scope: GrantScope::Subtree);
-    // …but a nearer deny on the child revokes the child's visibility.
-    AccessTestHelpers::grant($child, GrantLevel::Reader, effect: Effect::Deny, scope: GrantScope::Item);
+    // "shared" index for the parent; the child's boundary cuts that grant off.
+    AccessTestHelpers::grant($parent, RoleRegistry::READER, scope: GrantScope::Subtree);
 
     $resolver = app(AccessResolver::class);
     $actor = AccessTestHelpers::user();
 
-    // Re-resolving each candidate node drops the child (the nearer deny wins).
+    // Re-resolving each candidate node drops the walled child.
     $candidates = Node::query()->whereIn('id', [$parent->id, $child->id])->get();
     $visible = $resolver->filterSharedWith($actor, $candidates);
     $visibleIds = array_map(static fn (Node $n): int|string => $n->id, $visible);

@@ -7,13 +7,12 @@ namespace Vaulter\Azgard\Tests\Access\Contract;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Access\PermissionDriverManager;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Azgard\AzgardPermissionDriver;
 use Vaulter\Azgard\Contracts\AzgardGuard;
 use Vaulter\Azgard\Tests\Access\AccessTestHelpers;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 
 /**
@@ -23,9 +22,9 @@ use Vaulter\Enums\Access\GrantScope;
  * Gate/Spatie/bridge drivers reuse — pointing the resolver at each driver over one
  * fixture and asserting identical results.
  *
- * The fixture: a Writer subtree allow on a parent, a deny on a child. Every
- * "pass-through" driver (no override, no extra subjects, no role decision) must
- * agree: parent editable, child denied.
+ * The fixture: a writer subtree grant on a parent and an inheritance boundary on its
+ * child. Every "pass-through" driver (no override, no extra subjects, no role
+ * decision) must agree: parent editable, child unreachable.
  */
 function bindDriver(PermissionDriver $driver): AccessResolver
 {
@@ -46,15 +45,9 @@ function decisionsOver(AccessResolver $resolver): array
     $actor = AccessTestHelpers::user();
     $storage = AccessTestHelpers::storage();
     $parent = AccessTestHelpers::folder($storage, null, 'parent');
-    $child = AccessTestHelpers::folder($storage, $parent, 'child');
+    $child = AccessTestHelpers::folder($storage, $parent, 'child', inheritGrants: false);
 
-    AccessTestHelpers::grant($parent, GrantLevel::Writer, scope: GrantScope::Subtree);
-    AccessTestHelpers::grant(
-        $child,
-        GrantLevel::Writer,
-        effect: Effect::Deny,
-        scope: GrantScope::Item,
-    );
+    AccessTestHelpers::grant($parent, RoleRegistry::WRITER, scope: GrantScope::Subtree);
 
     return [
         'parent.edit' => $resolver->can($actor, Ability::Edit, $parent),
@@ -65,7 +58,7 @@ function decisionsOver(AccessResolver $resolver): array
 
 /**
  * The shared truth the algorithm dictates on the fixture: parent editable, child
- * denied (deny-wins). EVERY pass-through driver must agree.
+ * cut off by its boundary. EVERY pass-through driver must agree.
  */
 function sharedFixtureTruth(): array
 {

@@ -1,6 +1,6 @@
 ---
 title: Гранты
-description: ACL-гранты на узлы — субъект, уровень, эффект, область и срок действия — экшены GrantNodeAccess / RevokeNodeAccess, REST-поверхность, события и Vue-composable useNodeGrants.
+description: ACL-гранты на узлы — субъект, роль, область и срок действия — экшены GrantNodeAccess / RevokeNodeAccess, REST-поверхность, события и Vue-composable useNodeGrants.
 outline: deep
 ---
 
@@ -13,22 +13,21 @@ outline: deep
 
 ::: info Куда встают гранты
 Гранты — это **полоса node-ACL**. [Полоса ролей](/ru/guide/permission-drivers) (роли вашего
-хоста) сворачивается отдельно. Грант может дать только тот доступ, что в нём заявлен — но
-грант `deny` — это финальное вето, которое не переопределит ни одна роль.
+хоста) сворачивается отдельно. Грант только добавляет доступ — grant-deny не существует; чтобы
+отрезать поддерево от грантов сверху, используйте [границу наследования](/ru/concepts/authorization#inheritance-boundaries).
 :::
 
 ## Анатомия гранта
 
-`Vaulter\Models\Access\NodeGrant` (таблица `v_node_grants`):
+`Vaulter\Models\Access\NodeGrant` (таблица `v_node_grants`, уникальна по узлу, субъекту и области):
 
 | Колонка | Тип | Смысл |
 |---|---|---|
 | `node_id` | id | узел, на котором сидит грант |
 | `subject_type` | string | зарегистрированный morph-алиас — `user` / `role` / `team` / алиас хоста |
 | `subject_id` | id | ключ субъекта, которому адресован грант |
-| `level` | `GrantLevel` | `reader` / `commenter` / `writer` / `organizer` / `owner` |
-| `permissions` | int | опциональные дополнительные CRUDS-биты, склеиваются по OR с битами уровня |
-| `effect` | `Effect` | `allow` (расширяет) или `deny` (сужает — финальное вето) |
+| `role_key` | string | `previewer` / `reader` / `commenter` / `writer` / `organizer` / `owner` |
+| `role_version` | int | версия роли, с которой выдан грант (сейчас `1`) |
 | `scope` | `GrantScope` | `item` (только этот узел) или `subtree` (спускается вниз) — по умолчанию `subtree` |
 | `expires_at` | datetime? | срок действия, проверяемый на чтении; `null` = никогда не истекает |
 | `granted_by` | id? | актор, создавший грант |
@@ -55,26 +54,25 @@ $role = new Subject(type: 'role', id: 'editor');
 $team = Subject::make('team', $teamId);
 ```
 
-### Уровень + permissions
+### Роль
 
-Грант хранит ранжированный `level`, опциональную дополнительную битовую маску `permissions`
-либо и то, и другое. Резолвер нормализует грант в биты через `level->bits() | permissions`, так
-что грант с уровнем плюс дополнительный бит `SHARE` даёт и то, и другое. Таблицу
-уровень → биты см. в
-[Права (abilities) и уровни](/ru/concepts/authorization#abilities-levels-and-the-cruds-bitmask).
+Грант хранит ключ роли и версию, с которой он выдан, поэтому последующее изменение роли
+выходит новой версией и не меняет сохранённые гранты. Неизвестный ключ или версия бросает
+`UnknownRoleException` (`unknown_role`, 422). Таблицу роль → способности см. в
+[Способности и роли](/ru/concepts/authorization#abilities-and-roles).
 
-### Эффект
+### Без deny
 
-`Vaulter\Enums\Access\Effect` — `allow` расширяет доступ, `deny` сужает. `deny` — это
-**финальное вето** после прохода max/OR: роль хоста никогда не воскресит уровень, запрещённый
-через deny, а `deny` на том же узле, что и `allow`, всегда побеждает. См.
-[свёртку deny-вето](/ru/concepts/authorization#step-3-the-deny-veto-fold-explicit-beats-inherited).
+Гранты только добавляют доступ. Эффективный доступ — **объединение** ролей всех применимых
+грантов до границы наследования; административная блокировка принадлежит permission-драйверу
+хоста (`override()`), а не гранту. Поддерево ограничивается через
+`access()->restrictInheritance($node)`.
 
 ### Область + наследование
 
 `Vaulter\Enums\Access\GrantScope` — `item` действует только на узле, где он сидит; `subtree`
-(по умолчанию) вдобавок спускается на потомков во время обхода предков, **пока** не встретится
-узел-отсечка с `inherit_grants = false`. Наследуются вниз только гранты `subtree`
+(по умолчанию) вдобавок спускается на потомков во время обхода предков, **до первого узла с
+`inherit_grants = false` включительно** — гранты выше него ниже не проходят. Наследуются вниз только гранты `subtree`
 (`GrantScope::inheritsDownward()`).
 
 ### Срок действия
@@ -84,58 +82,55 @@ $team = Subject::make('team', $teamId);
 
 ## Запись гранта
 
-`Vaulter\Actions\Access\GrantNodeAccessAction` сохраняет грант (или deny). Он **идемпотентен**
-по уникальному ключу гранта: повторная выдача тому же субъекту той же области/эффекта обновляет
-уровень/биты/срок. Запись идёт в транзакции и порождает `NodeGrantCreated`.
+`access()->grant()` (поверх `Vaulter\Actions\Access\GrantNodeAccessAction`) сохраняет грант.
+Он **идемпотентен** по уникальному ключу гранта: повторная выдача тому же субъекту той же
+области обновляет роль и срок. Запись идёт в транзакции и порождает `NodeGrantCreated`.
 
 ```php
-use Vaulter\Actions\Access\GrantNodeAccessAction;
-use Vaulter\Data\Access\GrantNodeAccessInput;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Enums\Access\GrantLevel;
-use Vaulter\Enums\Access\Effect;
+use Vaulter\Data\Access\GrantInput;
 use Vaulter\Enums\Access\GrantScope;
 
-$grant = app(GrantNodeAccessAction::class)->execute(
-    node: $node,
-    data: new GrantNodeAccessInput(
+$grant = Vaulter::drive($drive)->actingAs($actor)->access()->grant(
+    $node,
+    new GrantInput(
         subject: Subject::ofModel($collaborator),
-        level: GrantLevel::Writer,
-        effect: Effect::Allow,            // по умолчанию
+        role: RoleRegistry::WRITER,
         scope: GrantScope::Subtree,       // по умолчанию — спускается на потомков
-        permissions: 0,                   // опциональные дополнительные CRUDS-биты
         expiresAt: now()->addDays(7),     // опционально
-        grantedBy: $actor->getKey(),
     ),
 );
 ```
 
 ::: warning Экшен не авторизует
-`GrantNodeAccessAction` сохраняет; он не переавторизует. Вызывающая сторона (контроллер /
-политика) обязана проверить, что актор может `Share`/`Manage` узел, **до** обращения к экшену.
-HTTP-поверхность ниже делает ровно это.
+`GrantNodeAccessAction` сохраняет; он не переавторизует. `access()->grant()` и HTTP-поверхность
+ниже сначала проверяют, что актор может `Share`/`Manage` узел; при прямом вызове экшена сделайте
+то же самое.
 :::
 
-### Грант deny
+### Отгородить поддерево
 
-Чтобы вырезать исключение внутри в остальном расшаренного поддерева, запишите `deny`:
+Чтобы подпапка была недоступна команде, у которой есть доступ выше, остановите наследование на
+ней и выдайте нужным людям прямые гранты:
 
 ```php
-new GrantNodeAccessInput(
-    subject: Subject::ofModel($contractor),
-    level: GrantLevel::Reader,
-    effect: Effect::Deny,           // вето — перебивает более дальние и ролевые allow
-    scope: GrantScope::Subtree,
-);
+$access = Vaulter::drive($drive)->actingAs($owner)->access();
+
+$access->grant($hr, new GrantInput(subject: Subject::ofModel($hrUser), role: RoleRegistry::READER));
+$access->restrictInheritance($hr);                                  // empty: остаются только прямые гранты
+// $access->restrictInheritance($hr, InheritanceRestriction::CopyCurrent); // сохранить текущий доступ
+$access->restoreInheritance($hr);                                   // снова открыть для грантов сверху
 ```
 
-Благодаря deny-вето это скрывает узел (и его поддерево — при области `subtree`) от подрядчика,
-даже если вышестоящий `allow` или роль хоста иначе дали бы доступ.
+Оба вызова требуют `Manage` на узле. `copy_current` сначала даёт каждому субъекту, который
+сейчас наследует доступ, прямой subtree-грант — роль, покрывающую унаследованные, не шире и не
+дольше унаследованного.
 
 ## Отзыв грантов
 
-`Vaulter\Actions\Access\RevokeNodeAccessAction` удаляет **все** гранты субъекта на узле — оба
-эффекта, обе области — и возвращает число удалённых. Он порождает `NodeGrantRevoked` только
+`Vaulter\Actions\Access\RevokeNodeAccessAction` удаляет **все** гранты субъекта на узле — обе
+области — и возвращает число удалённых. Он порождает `NodeGrantRevoked` только
 тогда, когда что-то реально отозвано (пустой отзыв — тихий no-op). Транзакционный.
 
 ```php
@@ -158,7 +153,7 @@ Node-ACL выставлена под префиксом Drive (по умолча
 | Метод | Путь | Действие |
 |---|---|---|
 | `GET` | `nodes/{node}/grants` | список грантов на узле (курсорная пагинация) |
-| `POST` | `nodes/{node}/grants` | выдать/запретить субъекту (201) |
+| `POST` | `nodes/{node}/grants` | выдать субъекту роль (201) |
 | `DELETE` | `nodes/{node}/grants` | отозвать гранты субъекта (204) |
 
 ::: tip Где гранты проявляются на стороне листингов
@@ -177,10 +172,8 @@ curl -X POST https://app.test/api/vaulter/nodes/01J.../grants \
   -d '{
     "subject_type": "user",
     "subject_id": "42",
-    "level": "writer",
-    "effect": "allow",
+    "role": "writer",
     "scope": "subtree",
-    "permissions": 0,
     "expires_at": "2026-12-31T23:59:59Z"
   }'
 ```
@@ -199,9 +192,8 @@ curl -X DELETE https://app.test/api/vaulter/nodes/01J.../grants \
     "node_id": "01J...",
     "subject_type": "user",
     "subject_id": "42",
-    "level": "writer",
-    "permissions": 0,
-    "effect": "allow",
+    "role": "writer",
+    "role_version": 1,
     "scope": "subtree",
     "expires_at": "2026-12-31T23:59:59Z",
     "created_at": "2026-06-30T10:00:00Z"
@@ -218,10 +210,8 @@ curl -X DELETE https://app.test/api/vaulter/nodes/01J.../grants \
 |---|---|
 | `subject_type` | required, string, max 255, зарегистрированный тип субъекта |
 | `subject_id` | required |
-| `level` | required, одно из значений `GrantLevel` |
-| `effect` | nullable enum (`allow`/`deny`), по умолчанию `allow` |
+| `role` | required, один из зарегистрированных ключей ролей |
 | `scope` | nullable enum (`item`/`subtree`), по умолчанию `subtree` |
-| `permissions` | nullable integer, `0..31` |
 | `expires_at` | nullable date |
 
 ## События
@@ -261,8 +251,7 @@ await list()
 await grant({
   subjectType: 'user',
   subjectId: 42,
-  level: 'writer',
-  effect: 'allow',
+  role: 'writer',
   scope: 'subtree',
 })
 
@@ -276,6 +265,6 @@ await revoke({ subjectType: 'user', subjectId: 42 })
 
 ## См. также
 
-- [Авторизация](/ru/concepts/authorization) — как гранты обходятся, сворачиваются и вето.
+- [Авторизация](/ru/concepts/authorization) — как гранты обходятся и объединяются до границы.
 - [Драйверы прав](/ru/guide/permission-drivers) — полоса ролей, сворачиваемая вместе с грантами.
 - Детали грантов в рамках панели и наследования по поддереву: `node_grants`, `inherit_grants`.

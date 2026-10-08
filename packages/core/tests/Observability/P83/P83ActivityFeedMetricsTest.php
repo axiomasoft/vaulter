@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Http\Request;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Contracts\Observability\MetricsRecorder;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Http\Controllers\Activity\ActivityController;
 use Vaulter\Support\LoadTier;
 use Vaulter\Testing\FakeMetricsRecorder;
@@ -27,7 +27,7 @@ it('records vaulter_activity_feed_duration_seconds for storage feed reads', func
 
     $drive = DriveTestHelpers::drive();
     $storage = $drive->model();
-    AccessTestHelpers::grant($drive->root(), GrantLevel::Reader, subjectId: 1);
+    AccessTestHelpers::grant($drive->root(), RoleRegistry::READER, subjectId: 1);
 
     $user = new TestUser;
     $user->forceFill(['id' => 1]);

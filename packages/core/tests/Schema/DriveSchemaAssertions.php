@@ -28,7 +28,7 @@ final class DriveSchemaAssertions
             ['v_nodes', [
                 'id', 'profile', 'tenant_id', 'drive_id', 'parent_id', 'kind', 'name',
                 'name_key', 'mime_type', 'extension', 'size_bytes',
-                'inherit_grants', 'shortcut_target_id', 'owner_id', 'properties',
+                'inherit_grants', 'shortcut_target_id', 'properties',
                 'content_modified_at', 'content_modified_by', 'trashed_at', 'trashed_by',
                 'trashed_from_parent_id', 'created_by', 'updated_by',
                 'created_at', 'updated_at',
@@ -55,8 +55,8 @@ final class DriveSchemaAssertions
                 'length_bytes',
             ]],
             ['v_node_grants', [
-                'id', 'tenant_id', 'node_id', 'subject_type', 'subject_id', 'level',
-                'permissions', 'effect', 'scope',
+                'id', 'tenant_id', 'node_id', 'subject_type', 'subject_id', 'role_key',
+                'role_version', 'scope',
                 'expires_at', 'granted_by', 'created_at',
                 'updated_at',
             ]],

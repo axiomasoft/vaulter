@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Storage as StorageFacade;
 use Illuminate\Validation\ValidationException;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\PermissionDriverManager;
+use Vaulter\Access\Roles\Role;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
@@ -25,8 +27,9 @@ use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\UploadSessionManager;
+use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Access\Permission;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
@@ -46,20 +49,16 @@ final class R07dBitsDriver implements PermissionDriver
     public function __construct(
         private readonly int $bits,
         private readonly bool $workspaceCreate,
-        private readonly ?string $onlyOwnerId = null,
     ) {}
 
     public function resolve(Subject $subject, Authorizable $actor, AccessScope $scope): ?Decision
     {
-        if ($this->onlyOwnerId !== null) {
-            $ownerId = $scope->nodeOwner?->id;
-
-            if ($ownerId === null || (string) $ownerId !== $this->onlyOwnerId) {
-                return null;
-            }
+        if ($this->bits === 0) {
+            return null;
         }
 
-        return Decision::allow(level: GrantLevel::Reader, bits: $this->bits);
+        // An ad-hoc role carrying exactly the bits under test.
+        return new Decision(role: new Role(key: 'r07d', version: 1, abilities: Ability::fromMask($this->bits)));
     }
 
     public function override(Authorizable $actor, AccessScope $scope): ?Effect
@@ -149,12 +148,11 @@ function r07dStorage(): Drive
     return AccessTestHelpers::storage();
 }
 
-function r07dInstall(int $bits, bool $workspaceCreate, ?string $onlyOwnerId = null): void
+function r07dInstall(int $bits, bool $workspaceCreate): void
 {
     app()->instance(R07dBitsDriver::class, new R07dBitsDriver(
         bits: $bits,
         workspaceCreate: $workspaceCreate,
-        onlyOwnerId: $onlyOwnerId,
     ));
     config()->set('vaulter.access.permission_drivers.r07d', R07dBitsDriver::class);
     config()->set('vaulter.access.permission_driver', 'r07d');
@@ -332,7 +330,7 @@ it('refuses move and copy when workspace create is closed even if the node bits 
     ])->assertCreated()->json('data.id');
     $folderId = (string) $this->postJson($base.'/folders', ['name' => 'Dest'])->assertCreated()->json('data.id');
 
-    r07dInstall(bits: GrantLevel::Writer->bits(), workspaceCreate: false);
+    r07dInstall(bits: (new RoleRegistry)->latest(RoleRegistry::WRITER)->bits, workspaceCreate: false);
 
     $this->postJson('api/vaulter/nodes/'.$nodeId.'/move', ['parent_id' => $folderId])->assertForbidden();
     $this->postJson('api/vaulter/nodes/'.$nodeId.'/copy', [
@@ -349,10 +347,13 @@ it('authorizes the requested parent, not the storage root', function (): void {
         'file' => UploadedFile::fake()->createWithContent('src.txt', 'src'),
     ])->assertCreated()->json('data.id');
 
-    $storage->rootNode()->firstOrFail()->forceFill(['owner_id' => 1])->save();
-    Node::query()->whereKey([$folderId, $nodeId])->update(['owner_id' => 41]);
-
-    r07dInstall(bits: GrantLevel::Writer->bits(), workspaceCreate: true, onlyOwnerId: '41');
+    // Writer on the folder and the file only; nothing on the root. The driver lane is
+    // node-blind, so this case runs on the database driver's stored grants.
+    config()->set('vaulter.access.permission_driver', 'database');
+    app()->forgetInstance(PermissionDriverManager::class);
+    app()->forgetInstance(AccessResolver::class);
+    AccessTestHelpers::grant(Node::query()->findOrFail($folderId), RoleRegistry::WRITER, subjectId: 41);
+    AccessTestHelpers::grant(Node::query()->findOrFail($nodeId), RoleRegistry::WRITER, scope: GrantScope::Item, subjectId: 41);
 
     $this->postJson($base.'/folders', [
         'name' => 'Child',

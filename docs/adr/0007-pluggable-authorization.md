@@ -1,6 +1,6 @@
 # ADR-0007 — Pluggable authorization
 
-**Status:** accepted
+**Status:** accepted — superseded in part by [ADR-0025](/adr/0025-access-model-v1) (deny semantics: grants no longer deny; effective access is the union of roles up to an inheritance boundary)
 
 ## Context
 

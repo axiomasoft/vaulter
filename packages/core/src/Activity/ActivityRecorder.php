@@ -63,8 +63,8 @@ final readonly class ActivityRecorder
                 'grant_id' => Identity::stringify($event->grant->getKey()),
                 'subject_type' => $event->grant->subject_type,
                 'subject_id' => Identity::stringify($event->grant->subject_id),
-                'level' => $event->grant->level->value,
-                'effect' => $event->grant->effect->value,
+                'role' => $event->grant->role_key,
+                'role_version' => $event->grant->role_version,
                 'scope' => $event->grant->scope->value,
             ],
         );
@@ -101,7 +101,7 @@ final readonly class ActivityRecorder
             context: [
                 'share_id' => Identity::stringify($event->share->getKey()),
                 'token_prefix' => $event->share->token_prefix,
-                'level' => $event->share->level->value,
+                'level' => $event->share->level,
                 'scope' => $event->share->scope->value,
                 'permissions' => $event->share->permissions,
             ],

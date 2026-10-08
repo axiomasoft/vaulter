@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Vaulter\Data\Sharing;
 
 use Illuminate\Support\Carbon;
-use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Enums\Access\GrantScope;
 
 /**
  * The command DTO for minting a bearer share-link on a node (§2.7 / M2c). Carries
- * the permissions bitmask (default READ), the human-facing level, the reach
+ * the ability bitmask, the human-facing role key (level), the reach
  * (item|subtree), an optional plaintext password (hashed by the Action — never
  * stored raw), the require-login / allow-discovery flags, an optional expiry and an
  * optional use budget. Built from a validated request and consumed ONLY by
@@ -23,7 +23,7 @@ final readonly class ShareLinkInput
 {
     public function __construct(
         public int $permissions,
-        public GrantLevel $level = GrantLevel::Reader,
+        public string $level = RoleRegistry::READER,
         public GrantScope $scope = GrantScope::Item,
         public ?string $password = null,
         public bool $requireLogin = false,

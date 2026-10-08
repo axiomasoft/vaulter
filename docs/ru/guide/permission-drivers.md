@@ -13,7 +13,7 @@ Core поставляет `database`, `gate` и `spatie`; отдельный м�
 
 ::: info Контракт не видит узла
 `PermissionDriver` никогда не получает `Node` и не оперирует действиями-магическими-строками —
-только актором `Authorizable` и `AccessScope` (координаты панели + workspace + владелец узла).
+только актором `Authorizable` и `AccessScope` (профиль + диск + тенант).
 Это и делает каждый драйвер сменяемым, а resolver — единственной инстанцией власти.
 :::
 
@@ -25,8 +25,8 @@ Core поставляет `database`, `gate` и `spatie`; отдельный м�
 interface PermissionDriver
 {
     // Per-subject role decision, or null when the host has nothing to say.
-    // Folded as roleAllow into granted = max(aclAllow, roleAllow) — it can RAISE
-    // access but never override a deny (the final veto still applies).
+    // The role the host grants here (Decision{Role}), or null. It is UNIONED with the
+    // node grants — it can RAISE access but never lowers it.
     public function resolve(Subject $subject, Authorizable $actor, AccessScope $scope): ?Decision;
 
     // An absolute super-admin override, or null. Allow/Deny short-circuit BOTH
@@ -44,7 +44,8 @@ interface PermissionDriver
 ```
 
 Метод `resolve()` драйвера может только **поднять** доступ (он возвращает разрешающий `Decision`
-или `null`); вето-запрет остаётся делом ACL. `subjectsFor()` — это то, что позволяет строке
+или `null`); административная блокировка — дело `override()`, а не `Decision`. Драйвер, дающий
+несколько ролей, возвращает `Decision::union($roles)`. `subjectsFor()` — это то, что позволяет строке
 `v_node_grants`, адресованной роли или команде, совпасть с актором.
 
 ## Выбор драйвера
@@ -122,9 +123,9 @@ final class TeamAwareRoleDriver extends DatabasePermissionDriver
 
 - **`override`** спрашивает настраиваемое супер-право (по умолчанию `vaulter.super`). Когда Gate
   его разрешает, актор коротко замыкается на полный доступ; иначе — уступает (`null`, никогда не
-  жёсткий запрет).
-- **`resolve`** спрашивает у Gate каждое сопоставленное право (от низкого к высокому) и
-  подмешивает **наивысший разрешённый уровень** в `Decision`. Проверка Gate не видит узла — она
+  блокировка).
+- **`resolve`** спрашивает у Gate право каждой сопоставленной роли и
+  возвращает как `Decision` **объединение разрешённых ролей**. Проверка Gate не видит узла — она
   получает `{panel, workspace_type, workspace_id}` из `AccessScope`, но никогда `Node`.
 - **`subjectsFor`** = только `[Subject(actor)]`. Gate не выставляет перечислимых субъектов-ролей
   / команд, поэтому строки грантов, адресованные роли/команде, этой полосой не совпадают —
@@ -141,6 +142,7 @@ final class TeamAwareRoleDriver extends DatabasePermissionDriver
 // config/vaulter.php — used only when access.permission_driver = 'gate'
 'access' => ['gate' => [
     'abilities' => [
+        'previewer' => 'vaulter.preview',
         'reader'    => 'vaulter.view',
         'commenter' => 'vaulter.comment',
         'writer'    => 'vaulter.edit',
@@ -152,8 +154,9 @@ final class TeamAwareRoleDriver extends DatabasePermissionDriver
 ]],
 ```
 
-Карта `abilities` связывает `GrantLevel` из Vaulter со строкой хостового права Gate. Сопоставляйте
-только те уровни, которые вы действительно закрываете через gate. Реализуйте соответствующие
+Карта `abilities` связывает ключ роли Vaulter со строкой хостового права Gate. Сопоставляйте
+только те роли, которые вы действительно закрываете через gate; ключ, не являющийся ролью,
+бросает `UnknownRoleException`. Реализуйте соответствующие
 политики:
 
 ```php
@@ -177,7 +180,7 @@ Gate::define('vaulter.create', fn ($user, string $type, int|string $id) =>
   так что строка гранта, адресованная `role`/`team`, совпадает.
 - **`resolve`** проверяет каждое сопоставленное разрешение через `$actor->hasPermissionTo($name)`,
   **в области команды** для workspace (`setPermissionsTeamId($scope->workspaceId)`), затем
-  восстанавливает предыдущий team id и загруженные связи актора. Наивысший разрешённый уровень
+  восстанавливает предыдущий team id и загруженные связи актора. Объединение разрешённых ролей
   становится `Decision`.
 - **`override`** спрашивает настраиваемое супер-разрешение.
 - **`canCreateInWorkspace`** спрашивает разрешение на создание в контексте команды workspace.
@@ -195,6 +198,7 @@ Gate::define('vaulter.create', fn ($user, string $type, int|string $id) =>
 // config/vaulter.php — used only when access.permission_driver = 'spatie'
 'access' => ['spatie' => [
     'permissions' => [
+        'previewer' => 'vaulter.preview',
         'reader'    => 'vaulter.view',
         'commenter' => 'vaulter.comment',
         'writer'    => 'vaulter.edit',
@@ -219,7 +223,7 @@ Gate::define('vaulter.create', fn ($user, string $type, int|string $id) =>
 восстановить в `finally` — целиком живёт внутри драйвера, поэтому конкурентные панели никогда не
 перетекают друг в друга. После того как хост меняет роли/разрешения актора **вне** собственных
 хелперов assign/remove Spatie, он обязан сбросить кэш, чтобы устаревшее, привязанное к команде
-разрешение не выдало отозванный уровень при следующем resolve:
+разрешение не выдало отозванную роль при следующем resolve:
 
 ```php
 use Vaulter\Access\Drivers\SpatiePermissionDriver;
@@ -247,22 +251,22 @@ composer require axioma-studio/vaulter-azgard
 Составной порядок разрешения — node-ACL → роль в области workspace → global. Этот драйвер владеет
 полосой **роли в области workspace**:
 
-- **`override`** = `isSuperAdmin()` → `Effect::Allow`, иначе `null` (никогда не запрет).
-- **`resolve`** сопоставляет определяющее право (ability) каждого ранжированного уровня с
+- **`override`** = `isSuperAdmin()` → `Effect::Allow`, иначе `null` (никогда не блокировка).
+- **`resolve`** сопоставляет определяющее право (ability) каждой роли с
   разрешением AzGuard и спрашивает `hasPermissionIn($workspaceType, $workspaceId, $permission)`;
-  наивысший разрешённый уровень становится `Decision`. (`AccessScope` не видит узла, поэтому это
+  объединение разрешённых ролей становится `Decision`. (`AccessScope` не видит узла, поэтому это
   проверка в области workspace.)
 - **`subjectsFor`** = только `[Subject(actor)]` — AzGuard *отвечает* на проверки, а не перечисляет
   субъектов-роли. Хост, адресующий строки грантов на роли AzGuard, должен унаследоваться и
   дописать эти субъекты.
 - **`canCreateInWorkspace`** спрашивает `hasPermissionIn($type, $id, $createPermission)`.
 
-Пробы «уровень → определяющее право» таковы: `Reader → View`, `Commenter → Comment`,
-`Writer → Edit`, `Organizer → Delete`, `Owner → Manage`.
+Пробы «роль → определяющее право» таковы: `Previewer → View`, `Reader → Download`,
+`Commenter → Comment`, `Writer → Edit`, `Organizer → Share`, `Owner → Manage`.
 
 ### Конфигурация
 
-В отличие от Gate/Spatie (с ключами по `GrantLevel`), карта AzGuard **центрирована на действиях** —
+В отличие от Gate/Spatie (с ключами по ключу роли), карта AzGuard **центрирована на действиях** —
 с ключами по `Ability`:
 
 ```php
@@ -372,7 +376,7 @@ app()->bind(\Vaulter\Azgard\Contracts\AzgardGuard::class,
 | | Database | Gate | Spatie | AzGuard |
 |---|---|---|---|---|
 | Дополнительная зависимость | нет | нет (встроенный) | опциональная `spatie/laravel-permission` | `axioma-studio/vaulter-azgard` + его зависимости |
-| Карта с ключами по | — | `GrantLevel` | `GrantLevel` | `Ability` |
+| Карта с ключами по | — | ключ роли | ключ роли | `Ability` |
 | Перечисляет субъектов-роли/команды | через наследование | нет | да | нет |
 | Обход для супер-админа | нет | право `vaulter.super` | супер-разрешение | wildcard SuperAdmin |
 | Область workspace | гранты на уровне узла | node-blind контекст | в области команды | `hasPermissionIn` |
@@ -384,4 +388,4 @@ app()->bind(\Vaulter\Azgard\Contracts\AzgardGuard::class,
   решение.
 - [Гранты](/ru/guide/grants) — строки `v_node_grants`, с которыми сопоставляется набор субъектов.
 - [Рецепт мультитенантности](/ru/guide/recipes) — сквозная связка тенант + роль.
-- ADR-0002 (делегирование авторизации), ADR-0007 (шов AzGuard).
+- ADR-0002 (делегирование авторизации), ADR-0007 (шов AzGuard), ADR-0025 (модель доступа 1.0: роли, без deny).

@@ -19,8 +19,9 @@ use Vaulter\Support\Identity;
  *
  * The node-set is the share's scope:
  *  - scope=item    → only the shared node itself;
- *  - scope=subtree → the shared node and its descendants (bounded to the same
- *    storage tree — it can NEVER escape to siblings, ancestors or other storages).
+ *  - scope=subtree → the shared node and its descendants down to the next
+ *    inheritance boundary (bounded to the same drive tree — it can NEVER escape to
+ *    siblings, ancestors or other drives).
  *
  * Immutable.
  */
@@ -34,8 +35,7 @@ final readonly class ShareContext
 
     /**
      * Whether the share's bitmask grants the ability — purely from this share's
-     * permissions, never from an identity grant. The deny-veto of the identity ACL
-     * has no part here: a share is an allow-only grant of exactly its bits.
+     * permissions, never from an identity grant.
      */
     public function allows(Ability $ability): bool
     {
@@ -81,12 +81,16 @@ final readonly class ShareContext
     }
 
     /**
-     * Walk the candidate's ancestors (bounded to its storage) and return true iff
-     * the shared node is among them. The walk is bounded by the storage-scoped
-     * ancestor relation, so it can never leave the tree.
+     * Walk the candidate's ancestors (bounded to its drive) and return true iff the
+     * shared node is reached before an inheritance boundary: a link on an ancestor
+     * stops where grants from above stop (the candidate itself or any node between
+     * it and the shared node with inherit_grants=false).
      */
     private function isDescendantOfTarget(Node $candidate): bool
     {
+        if (!$candidate->inherit_grants) {
+            return false;
+        }
         $targetKey = Identity::stringify($this->node->getKey());
 
         foreach ($candidate->ancestors()->get() as $ancestor) {
@@ -96,6 +100,10 @@ final readonly class ShareContext
 
             if (Identity::stringify($ancestor->getKey()) === $targetKey) {
                 return true;
+            }
+
+            if (!$ancestor->inherit_grants) {
+                return false;
             }
         }
 

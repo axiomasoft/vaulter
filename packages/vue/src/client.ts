@@ -481,10 +481,8 @@ export function createVaulterClient(options: VaulterClientOptions = {}): Vaulter
           body: {
             subject_type: payload.subjectType,
             subject_id: payload.subjectId,
-            level: payload.level,
-            effect: payload.effect,
+            role: payload.role,
             scope: payload.scope,
-            permissions: payload.permissions,
             expires_at: payload.expiresAt,
           },
         })),

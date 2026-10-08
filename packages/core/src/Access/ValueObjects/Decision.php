@@ -4,48 +4,32 @@ declare(strict_types=1);
 
 namespace Vaulter\Access\ValueObjects;
 
-use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
+use LogicException;
+use Vaulter\Access\Roles\Role;
 
 /**
- * A single resolved access statement (master plan H.2): a level + its effect +
- * the concrete CRUDS bits it grants or forbids. The PermissionDriver returns one to
- * express "this actor has Writer here" (allow) and the AccessResolver folds the
- * node-ACL rows into Decisions before combining them.
- *
- * Final readonly VO.
+ * A PermissionDriver's answer for one subject: the host role system gives this role
+ * here. Decisions only add abilities — they are unioned with the node grants; an
+ * administrative block is PermissionDriver::override(), not a Decision.
  */
 final readonly class Decision
 {
     public function __construct(
-        public GrantLevel $level,
-        public Effect $effect,
-        public int $bits,
+        public Role $role,
     ) {}
 
     /**
-     * An allow decision for a level, defaulting its bits to the level's bitmask.
+     * The Decision for every role a host grants at once, or null for none. A role
+     * map lists nesting roles, so their union is the role that covers the others.
+     *
+     * @param list<Role> $roles
      */
-    public static function allow(GrantLevel $level, ?int $bits = null): self
+    public static function union(array $roles): ?self
     {
-        return new self(level: $level, effect: Effect::Allow, bits: $bits ?? $level->bits());
-    }
+        if ($roles === []) {
+            return null;
+        }
 
-    /**
-     * A deny decision for a level, defaulting its bits to the level's bitmask.
-     */
-    public static function deny(GrantLevel $level, ?int $bits = null): self
-    {
-        return new self(level: $level, effect: Effect::Deny, bits: $bits ?? $level->bits());
-    }
-
-    public function isAllow(): bool
-    {
-        return $this->effect === Effect::Allow;
-    }
-
-    public function isDeny(): bool
-    {
-        return $this->effect === Effect::Deny;
+        return new self(role: Role::covering($roles) ?? throw new LogicException('[Vaulter] A permission driver granted roles whose union is not a role.'));
     }
 }

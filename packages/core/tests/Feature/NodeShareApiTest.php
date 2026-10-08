@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage as StorageFacade;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Access\Permission;
 use Vaulter\Facades\Vaulter;
@@ -46,10 +46,10 @@ function expectedOpaqueNodeId(int|string $id): string
 it('lets an owner with the Share ability mint a link and returns the raw token once', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'shareable');
-    AccessTestHelpers::grant($node, GrantLevel::Owner, scope: GrantScope::Item); // grants SHARE bit
+    AccessTestHelpers::grant($node, RoleRegistry::OWNER, scope: GrantScope::Item); // grants SHARE bit
 
     $response = $this->postJson('api/vaulter/nodes/'.$node->getKey().'/shares', [
-        'permissions' => Permission::Read->value,
+        'permissions' => (Permission::View->value | Permission::Download->value),
     ])->assertCreated();
 
     // The raw token + URL come back exactly once.
@@ -65,10 +65,10 @@ it('lets an owner with the Share ability mint a link and returns the raw token o
 it('stamps a default expiry when none is supplied, never minting an immortal link (F-P1.3-03)', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'ttl-default');
-    AccessTestHelpers::grant($node, GrantLevel::Owner, scope: GrantScope::Item);
+    AccessTestHelpers::grant($node, RoleRegistry::OWNER, scope: GrantScope::Item);
 
     $this->postJson('api/vaulter/nodes/'.$node->getKey().'/shares', [
-        'permissions' => Permission::Read->value,
+        'permissions' => (Permission::View->value | Permission::Download->value),
     ])->assertCreated();
 
     $row = NodeShare::query()->firstOrFail();
@@ -81,11 +81,11 @@ it('stamps a default expiry when none is supplied, never minting an immortal lin
 it('rejects an explicit expiry above the configured ceiling (F-P1.3-03)', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'ttl-ceiling');
-    AccessTestHelpers::grant($node, GrantLevel::Owner, scope: GrantScope::Item);
+    AccessTestHelpers::grant($node, RoleRegistry::OWNER, scope: GrantScope::Item);
 
     // Config max is 720h (30 days) — 400 days is well past it.
     $this->postJson('api/vaulter/nodes/'.$node->getKey().'/shares', [
-        'permissions' => Permission::Read->value,
+        'permissions' => (Permission::View->value | Permission::Download->value),
         'expires_at' => now()->addDays(400)->toIso8601String(),
     ])
         ->assertStatus(422)
@@ -98,17 +98,17 @@ it('403s an owner WITHOUT the Share ability', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'locked');
     // Reader does NOT carry the SHARE bit.
-    AccessTestHelpers::grant($node, GrantLevel::Reader, scope: GrantScope::Item);
+    AccessTestHelpers::grant($node, RoleRegistry::READER, scope: GrantScope::Item);
 
     $this->postJson('api/vaulter/nodes/'.$node->getKey().'/shares', [
-        'permissions' => Permission::Read->value,
+        'permissions' => (Permission::View->value | Permission::Download->value),
     ])->assertStatus(403);
 });
 
 it('lists shares WITHOUT ever exposing the raw token or hash', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'listed');
-    AccessTestHelpers::grant($node, GrantLevel::Owner, scope: GrantScope::Item);
+    AccessTestHelpers::grant($node, RoleRegistry::OWNER, scope: GrantScope::Item);
     ShareTestHelpers::share($node, token: 'listing-secret');
 
     $response = $this->getJson('api/vaulter/nodes/'.$node->getKey().'/shares')->assertOk();
@@ -123,7 +123,7 @@ it('lists shares WITHOUT ever exposing the raw token or hash', function (): void
 it('revokes a share that belongs to the node', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'revoke-me');
-    AccessTestHelpers::grant($node, GrantLevel::Owner, scope: GrantScope::Item);
+    AccessTestHelpers::grant($node, RoleRegistry::OWNER, scope: GrantScope::Item);
     $share = ShareTestHelpers::share($node, token: 'kill-me');
 
     $this->deleteJson('api/vaulter/nodes/'.$node->getKey().'/shares/'.$share->getKey())
@@ -136,7 +136,7 @@ it('404s revoking a share that belongs to a DIFFERENT node', function (): void {
     $storage = AccessTestHelpers::storage();
     $nodeA = AccessTestHelpers::folder($storage, null, 'A');
     $nodeB = AccessTestHelpers::folder($storage, null, 'B');
-    AccessTestHelpers::grant($nodeA, GrantLevel::Owner, scope: GrantScope::Item);
+    AccessTestHelpers::grant($nodeA, RoleRegistry::OWNER, scope: GrantScope::Item);
     $shareOnB = ShareTestHelpers::share($nodeB, token: 'b-share');
 
     $this->deleteJson('api/vaulter/nodes/'.$nodeA->getKey().'/shares/'.$shareOnB->getKey())
@@ -150,7 +150,7 @@ it('404s revoking a share that belongs to a DIFFERENT node', function (): void {
 it('resolves a public share token to node metadata within scope', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'public-doc');
-    ShareTestHelpers::share($node, token: 'public-token', permissions: Permission::Read->value);
+    ShareTestHelpers::share($node, token: 'public-token', permissions: (Permission::View->value | Permission::Download->value));
 
     $this->getJson('api/vaulter/share/public-token')
         ->assertOk()
@@ -161,7 +161,7 @@ it('resolves a public share token to node metadata within scope', function (): v
 it('never exposes the raw sequential node id publicly, only an opaque projection (F-P1.3-05)', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'opaque-doc');
-    ShareTestHelpers::share($node, token: 'opaque-token', permissions: Permission::Read->value);
+    ShareTestHelpers::share($node, token: 'opaque-token', permissions: (Permission::View->value | Permission::Download->value));
 
     $response = $this->getJson('api/vaulter/share/opaque-token')->assertOk();
 
@@ -200,7 +200,7 @@ it('serves a public download within the READ bits, bounds it by max_uses, and ne
     $share = ShareTestHelpers::share(
         $fileNode->refresh(),
         token: 'dl-token',
-        permissions: Permission::Read->value,
+        permissions: (Permission::View->value | Permission::Download->value),
         maxUses: 1,
     );
 

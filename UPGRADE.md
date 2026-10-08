@@ -6,6 +6,55 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Access model 1.0: versioned roles, no deny, inheritance boundaries (PLAN2.D45, D46, D53; PLAN2.P4.9; ADR-0025)
+
+Back up the database before migrating. `2026_10_07_000005_access_model_v1` **refuses**
+(`UpgradePreflightException`, nothing changed) when `v_node_grants` holds a `deny` grant, a level
+that is not one of the five 0.x levels, or `permissions` bits beyond the level's own bits — such a
+grant has no positive equivalent. Rewrite those grants first (usually: remove the deny and put an
+inheritance boundary on the node, or give the people who need it a direct grant) and run it again.
+
+- **Levels become roles of the same name, version 1** (`reader`, `commenter`, `writer`,
+  `organizer`, `owner`; new `previewer`). Declared differences from the 0.x bitmasks: `writer` also
+  gains Trash and Restore; `organizer` gains Share and loses Delete. `reader` keeps what Read gave
+  and now includes Download — View and Download are separate abilities, so a `previewer` can see
+  without downloading or copying.
+- **`v_node_grants`**: `role_key`/`role_version` replace `level`, `permissions` and `effect`; the
+  grant is unique per (node, subject, scope). `v_nodes.owner_id` is dropped **without creating
+  grants**: no built-in driver granted anything from it, so a host that relied on "the creator
+  owns the node" must grant the creator a role explicitly.
+- **Algorithm.** Was: allow/deny buckets per depth, `max(rank)`, a final deny veto. Now: the
+  union of the roles of the node's direct grants, the subtree grants of its ancestors up to and
+  including the first `inherit_grants = false` node, and the driver's roles; a host
+  `override()` is the only block.
+- **Removed**: `GrantLevel`, `AclFolder`, `AclMask`, `AccessAce`, `GrantInput`'s `level`/`effect`/
+  `permissions` (now `GrantInput{subject, role, scope, expiresAt}`), `AccessScope::$nodeOwner` and
+  the `node_owner` Gate context entry. `Effect` remains only as the return type of
+  `PermissionDriver::override()`.
+- **Changed shapes**: `Permission` has one bit per ability (View 1, Edit 2, Create 4, Delete 8,
+  Share 16, Comment 32, Download 64, Move 128, Copy 256, Trash 512, Restore 1024, Manage 2048;
+  `all()` is 4095; was CRUDS 1..31); `Decision{Role $role}` (was level/bits/effect, build several
+  with `Decision::union()`); `GrantSet{allowedBits, superAllow, superDeny}` (no deny mask, no
+  level); `AccessExplanation{allowed, ability, reason, sources, restrictions, boundaryNodeId}`.
+- **Driver maps.** `vaulter.access.gate.abilities` and `vaulter.access.spatie.permissions` are
+  keyed by role key and gain `previewer => vaulter.preview`; a key that is not a role throws
+  `UnknownRoleException` (`unknown_role`, 422). The `azgard` lane probes
+  `previewer→View`, `reader→Download`, `commenter→Comment`, `writer→Edit`, `organizer→Share`,
+  `owner→Manage`; `AzgardPermissionDriver` takes a `RoleRegistry`. Custom drivers must return
+  `Decision{Role}` (or `null`).
+- **HTTP and events.** `POST nodes/{node}/grants` takes `role` (was `level`/`effect`/
+  `permissions`) and returns `role` and `role_version`; activity and webhook grant payloads carry
+  `role`/`role_version` instead of `level`/`permissions`/`effect`. `@vaulter/vue` follows: `NodeGrant`
+  has `role`/`role_version`, `GrantNodeAccessPayload` takes `role`, `GrantEffectName` is gone and
+  `VaulterNodeGrantsPanel` offers `roles` instead of `levels`/`effects` (share links keep `level`,
+  now a role key; `VaulterNodeSharePanel` defaults to `previewer`/`reader`/`writer`).
+- **New**: `access()->restrictInheritance($node, InheritanceRestriction::Empty|CopyCurrent)` and
+  `restoreInheritance($node)` (Manage); `explain()` lists the role sources and the boundary node;
+  copy now needs View + Download + Copy on every copied node.
+- **Share links** are adapted minimally: stored bits use the new layout, the share `level` column
+  holds a role key, and a link to a folder stops at inheritance boundaries. Their redesign is a
+  later change.
+
 ### Node data contract: names, properties, stars, times, drive policy (PLAN2.D39–D43; PLAN2.P4.11)
 
 Back up the database before migrating. `2026_10_07_000004_node_data_contract` refuses

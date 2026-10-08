@@ -8,12 +8,12 @@ use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Jobs\SyncJob;
 use Illuminate\Support\Facades\Http;
 use Symfony\Component\HttpFoundation\Response;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Activity\ActivityRecorder;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Drive\Actions\Nodes\MoveNodeAction;
 use Vaulter\Drive\Data\Nodes\MoveNodeInput;
 use Vaulter\Drive\Exceptions\Nodes\NodeCycleException;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Http\Middleware\RecordVaulterRequestMetrics;
@@ -78,13 +78,13 @@ it('records vaulter_tree_cte_anchors when grant filtering resolves subtree ancho
     AccessTestHelpers::folder($storage, $anchor, 'child');
     AccessTestHelpers::grant(
         $root,
-        GrantLevel::Reader,
+        RoleRegistry::READER,
         scope: GrantScope::Item,
         subjectId: 1,
     );
     AccessTestHelpers::grant(
         $anchor,
-        GrantLevel::Reader,
+        RoleRegistry::READER,
         scope: GrantScope::Subtree,
         subjectId: 1,
     );

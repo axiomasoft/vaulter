@@ -218,14 +218,15 @@ it('UploadFile L319: a file with no extension stores a null extension, not an em
     expect($node->extension)->toBeNull();
 });
 
-// L129 RemoveArrayItem: the new file node must carry the actor as owner_id and created_by.
-it('UploadFile L129-130: owner_id and created_by are set to actorId on new-file commit', function (): void {
+// L129 RemoveArrayItem: the new file node records the actor as created_by; nodes have
+// no implicit owner (PLAN2.D46/D53), so no owner_id is written.
+it('UploadFile L129-130: created_by is set to actorId on new-file commit and no node owner exists', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $node = $drive->actingAs(DriveTestHelpers::actor($drive, 77))->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('data'), 'f.txt'));
 
-    expect($node->owner_id)->toEqual(77)
-        ->and($node->created_by)->toEqual(77);
+    expect($node->created_by)->toEqual(77)
+        ->and(array_key_exists('owner_id', $node->refresh()->getAttributes()))->toBeFalse();
 });
 
 // ---------------------------------------------------------------------------

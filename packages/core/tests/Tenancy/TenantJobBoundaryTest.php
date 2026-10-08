@@ -5,8 +5,8 @@ declare(strict_types=1);
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Contracts\Tenancy\TenantResolver;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
 use Vaulter\Facades\Vaulter;
@@ -92,7 +92,7 @@ it('V08 rehydrates a user through Auth and evaluates changed permissions at exec
     $drive = AccessTestHelpers::storage();
     $actor = AccessTestHelpers::user(31);
     $root = Vaulter::drive($drive)->asSystem('fixture')->root();
-    $grant = AccessTestHelpers::grant($root, GrantLevel::Owner, subjectId: 31);
+    $grant = AccessTestHelpers::grant($root, RoleRegistry::OWNER, subjectId: 31);
     $provider = Mockery::mock(UserProvider::class);
     $provider->shouldReceive('retrieveById')->with(31)->twice()->andReturn($actor);
     Auth::shouldReceive('createUserProvider')->with('users')->twice()->andReturn($provider);

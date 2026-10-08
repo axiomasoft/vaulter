@@ -6,24 +6,28 @@ namespace Vaulter\Data\Access;
 
 use Illuminate\Support\Carbon;
 use InvalidArgumentException;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Access\Permission;
+use Vaulter\Exceptions\Access\UnknownRoleException;
 
+/**
+ * A positive grant: the subject gets the newest version of the named role on the
+ * node (and, for subtree, below it up to the next inheritance boundary).
+ */
 final readonly class GrantInput
 {
+    /**
+     * @throws UnknownRoleException
+     */
     public function __construct(
         public Subject $subject,
-        public GrantLevel $level,
-        public Effect $effect = Effect::Allow,
+        public string $role,
         public GrantScope $scope = GrantScope::Subtree,
-        public int $permissions = 0,
         public ?Carbon $expiresAt = null,
     ) {
-        if ($permissions < 0 || ($permissions & ~Permission::all()) !== 0) {
-            throw new InvalidArgumentException('Invalid grant permission bits.');
+        if (!(new RoleRegistry)->has($role)) {
+            throw UnknownRoleException::for($role);
         }
         if (trim($subject->type) === '' || strlen($subject->type) > 255 || (string) $subject->id === '' || strlen((string) $subject->id) > 191) {
             throw new InvalidArgumentException('A grant requires a nonempty scalar subject identity.');

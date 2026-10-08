@@ -7,17 +7,17 @@ namespace Vaulter\Access\Drivers;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Configuration\AccessConfig;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\ValueObjects\Access\OwnerRef;
 
 /**
- * The Laravel-Gate host-role driver (master plan §6 / H.2) — a zero-extra-dependency
+ * The Laravel-Gate host-role driver — a zero-extra-dependency
  * lane, because the Gate ships with the framework. It bridges a host that already
  * authorises through Gate abilities / policies into Vaulter WITHOUT teaching Vaulter
  * the host's abilities: every coupling lives in a configurable ability map.
@@ -28,10 +28,11 @@ use Vaulter\ValueObjects\Access\OwnerRef;
  *     simply not matched by this lane (use the Spatie/host authorization lane for that).
  *   - override(actor, scope) = a configurable super-admin ability (default
  *     'vaulter.super'); when the Gate allows it the actor short-circuits to full
- *     access, else this lane defers (null) — never a hard deny.
- *   - resolve(subject, actor, scope) = per requested level, the Gate is asked the
- *     mapped ability ('vaulter.view'/'vaulter.edit'/…); the HIGHEST allowed level
- *     becomes the Decision. The Gate check is Node-BLIND: it receives the AccessScope's
+ *     access, else this lane defers (null) — never a block.
+ *   - resolve(subject, actor, scope) = per role, the Gate is asked the mapped
+ *     ability ('vaulter.preview'/'vaulter.view'/'vaulter.edit'/…); the allowed roles
+ *     are unioned (the built-in roles nest, so the union is the role that covers the
+ *     others). The Gate check is Node-BLIND: it receives the AccessScope's
  *     panel + workspace coordinates, never a Node, so the contract stays swappable.
  *   - canCreateIn = the configured create ability, passed the full node-blind scope context.
  *
@@ -42,14 +43,12 @@ final class GatePermissionDriver implements PermissionDriver
 {
     public function __construct(
         private readonly AccessConfig $accessConfig,
+        private readonly RoleRegistry $roles,
     ) {}
 
     /**
-     * Per requested level (low → high) the Gate is asked the mapped ability; the
-     * highest one it allows becomes the role Decision the AccessResolver folds in.
-     * The AccessResolver itself iterates the subject-set, but the Gate is per-user
-     * (not per-subject), so we evaluate the actor's own abilities here and the
-     * resolve loop converges on the same Decision for the actor Subject.
+     * Each mapped role whose Gate ability the actor holds counts; the Decision is
+     * their union. The Gate is per-user, so only the actor's own Subject is answered.
      */
     public function resolve(Subject $subject, Authorizable $actor, AccessScope $scope): ?Decision
     {
@@ -60,33 +59,19 @@ final class GatePermissionDriver implements PermissionDriver
             return null;
         }
 
-        $granted = null;
-
-        foreach ($this->accessConfig->gateAbilityMap() as $levelValue => $ability) {
-            $level = GrantLevel::tryFrom($levelValue);
-
-            if ($level === null) {
-                continue;
+        $granted = [];
+        foreach ($this->accessConfig->gateAbilityMap() as $role => $ability) {
+            if ($this->gateAllows($actor, $ability, [$this->contextFor($scope)])) {
+                $granted[] = $this->roles->latest($role);
             }
-
-            if (!$this->gateAllows($actor, $ability, [$this->contextFor($scope)])) {
-                continue;
-            }
-
-            $granted = $granted === null ? $level : $granted->max($level);
         }
 
-        if ($granted === null) {
-            return null;
-        }
-
-        return Decision::allow($granted);
+        return Decision::union($granted);
     }
 
     /**
      * The super-admin override: an Effect::Allow when the host's super ability is
-     * granted, else null (never a deny — the Gate lane only widens access here, the
-     * deny veto stays the ACL's job).
+     * granted, else null (never a block — the Gate lane only widens access).
      */
     public function override(Authorizable $actor, AccessScope $scope): ?Effect
     {
@@ -141,14 +126,13 @@ final class GatePermissionDriver implements PermissionDriver
         return Gate::forUser($actor)->allows($ability, $arguments);
     }
 
-    /** @return array{profile:string, drive_owner: OwnerRef, drive_id:int|string, node_owner:?Subject, tenant_id:int|string|null} */
+    /** @return array{profile:string, drive_owner: OwnerRef, drive_id:int|string, tenant_id:int|string|null} */
     private function contextFor(AccessScope $scope): array
     {
         return [
             'profile' => $scope->profile,
             'drive_owner' => $scope->driveOwner,
             'drive_id' => $scope->driveId,
-            'node_owner' => $scope->nodeOwner,
             'tenant_id' => $scope->tenantId,
         ];
     }

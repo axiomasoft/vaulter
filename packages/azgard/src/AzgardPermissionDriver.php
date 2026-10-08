@@ -7,6 +7,8 @@ namespace Vaulter\Azgard;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Eloquent\Model;
+use Vaulter\Access\Roles\Role;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
@@ -15,10 +17,9 @@ use Vaulter\Contracts\Access\NonEnumeratingPermissionDriver;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
 
 /**
- * The AzGuard host-role driver (master plan §6 / H.2 / D6 / ADR-0007). It bridges a
+ * The AzGuard host-role driver (ADR-0007, ADR-0025). It bridges a
  * host running AzGuard's per-resource, scoped permission model into Vaulter's
  * composite ACL — WITHOUT vaulter-core depending on azguard/corex. Every AzGuard
  * touch goes through the narrow Vaulter-owned {@see AzgardGuard} seam, so PHPStan
@@ -37,13 +38,13 @@ use Vaulter\Enums\Access\GrantLevel;
  *      coordinates (H.2 / ADR-0007 node-blind boundary);
  *   3. global — folded inside AzGuard (its SuperAdmin wildcard surfaces as the
  *      override below, and a globally-granted permission satisfies hasPermissionIn).
- * The deny-veto stays the AccessResolver's job: this driver only ever RAISES access
- * (allow / null), it never returns a deny Decision (H.2 step 4 before step 5).
+ * The driver only ever RAISES access (a role or null); its roles are unioned with the
+ * node grants by the AccessResolver.
  *
- *   - override(actor, scope) = isSuperAdmin → Effect::Allow, else null (never a deny);
- *   - resolve(subject, actor, scope) = per ranked level (low→high) the level's primary
- *     Ability is mapped to a permission and checked via hasPermissionIn against the
- *     workspace; the HIGHEST allowed level becomes the Decision;
+ *   - override(actor, scope) = isSuperAdmin → Effect::Allow, else null (never a block);
+ *   - resolve(subject, actor, scope) = per role, the role's defining Ability is mapped
+ *     to a permission and checked via hasPermissionIn against the workspace; the
+ *     roles that pass are unioned into the Decision;
  *   - subjectsFor(actor) = [Subject(actor)] only — AzGuard's per-resource model ANSWERS
  *     checks, it does not enumerate the role-subjects a v_node_grants row could be
  *     addressed to, so the driver contributes just the actor (documented limitation:
@@ -71,6 +72,7 @@ final class AzgardPermissionDriver implements NonEnumeratingPermissionDriver, Pe
     public function __construct(
         private readonly Container $container,
         private readonly AzgardPermissionMap $permissions,
+        private readonly RoleRegistry $roles,
     ) {}
 
     public function resolve(Subject $subject, Authorizable $actor, AccessScope $scope): ?Decision
@@ -86,18 +88,12 @@ final class AzgardPermissionDriver implements NonEnumeratingPermissionDriver, Pe
         // Node-blind: AccessScope carries the workspace, not a Node, so the role lane is
         // the WORKSPACE-scoped permission check (composite order step 2). A null
         // workspace means there is nothing for AzGuard to scope against.
-        $granted = $this->highestLevelGranted($guard, $scope->driveOwner->type, $scope->driveOwner->id);
-
-        if ($granted === null) {
-            return null;
-        }
-
-        return Decision::allow($granted);
+        return Decision::union($this->rolesGranted($guard, $scope->driveOwner->type, $scope->driveOwner->id));
     }
 
     /**
      * The super-admin override: Effect::Allow when AzGuard's SuperAdmin wildcard is
-     * held, else null (never a deny — the deny veto stays the ACL's job, H.2 step 5).
+     * held, else null (never a block).
      */
     public function override(Authorizable $actor, AccessScope $scope): ?Effect
     {
@@ -154,50 +150,40 @@ final class AzgardPermissionDriver implements NonEnumeratingPermissionDriver, Pe
     }
 
     /**
-     * The highest GrantLevel the workspace-scoped guard grants: each level (low→high)
-     * is probed by its primary Ability's mapped permission via hasPermissionIn; the
-     * top level that passes is returned. Mirrors the Gate/Spatie lanes' "highest
-     * allowed level becomes the Decision" fold, but action-keyed (AzGuard is
-     * permission-per-action, so a level is represented by the ability that defines it).
+     * The roles the workspace-scoped guard grants: each role is probed by the mapped
+     * permission of the ability that defines it.
+     *
+     * @return list<Role>
      */
-    private function highestLevelGranted(AzgardGuard $guard, string $workspaceType, int|string $workspaceId): ?GrantLevel
+    private function rolesGranted(AzgardGuard $guard, string $workspaceType, int|string $workspaceId): array
     {
-        $granted = null;
-
-        foreach ($this->levelProbes() as $levelValue => $ability) {
-            $level = GrantLevel::tryFrom($levelValue);
+        $granted = [];
+        foreach ($this->roleProbes() as $role => $ability) {
             $permission = $this->permissions->permissionFor($ability);
-
-            if ($level === null || $permission === null) {
-                continue;
+            if ($permission !== null && $guard->hasPermissionIn(contextType: $workspaceType, contextId: $workspaceId, permission: $permission)) {
+                $granted[] = $this->roles->latest($role);
             }
-
-            if (!$guard->hasPermissionIn(contextType: $workspaceType, contextId: $workspaceId, permission: $permission)) {
-                continue;
-            }
-
-            $granted = $granted === null ? $level : $granted->max($level);
         }
 
         return $granted;
     }
 
     /**
-     * The level → defining-ability probe map. Each GrantLevel is gated by the AzGuard
-     * permission of the ability that most narrowly defines it: Reader by View,
-     * Commenter by Comment, Writer by Edit, Organizer by Delete (it adds the DELETE
-     * bit), Owner by Manage (full management).
+     * The role → defining-ability probe map: the ability each role adds over the
+     * narrower one. previewer by View, reader by Download, commenter by Comment,
+     * writer by Edit, organizer by Share, owner by Manage.
      *
      * @return array<string, Ability>
      */
-    private function levelProbes(): array
+    private function roleProbes(): array
     {
         return [
-            GrantLevel::Reader->value => Ability::View,
-            GrantLevel::Commenter->value => Ability::Comment,
-            GrantLevel::Writer->value => Ability::Edit,
-            GrantLevel::Organizer->value => Ability::Delete,
-            GrantLevel::Owner->value => Ability::Manage,
+            RoleRegistry::PREVIEWER => Ability::View,
+            RoleRegistry::READER => Ability::Download,
+            RoleRegistry::COMMENTER => Ability::Comment,
+            RoleRegistry::WRITER => Ability::Edit,
+            RoleRegistry::ORGANIZER => Ability::Share,
+            RoleRegistry::OWNER => Ability::Manage,
         ];
     }
 

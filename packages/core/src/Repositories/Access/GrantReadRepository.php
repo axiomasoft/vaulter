@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tenancy\TenancyBoundary;
@@ -23,6 +24,7 @@ final class GrantReadRepository
 {
     public function __construct(
         private readonly VaulterConfig $vaulterConfig,
+        private readonly TenancyBoundary $boundary,
     ) {}
 
     /**
@@ -46,7 +48,7 @@ final class GrantReadRepository
         $model = $this->vaulterConfig->model('grant');
 
         /** @var Collection<int, NodeGrant> $grants */
-        $grants = app(TenancyBoundary::class)->constrain($model::query(), 'node.storage')
+        $grants = $this->boundary->constrain($model::query(), 'node.storage')
             ->whereIn('node_id', $nodeIds)
             ->forSubjects($subjects)
             ->notExpired($now)
@@ -70,20 +72,21 @@ final class GrantReadRepository
     {
         $model = $this->vaulterConfig->model('grant');
 
-        return app(TenancyBoundary::class)->constrain($model::query(), 'node.storage')
+        return $this->boundary->constrain($model::query(), 'node.storage')
             ->where('node_id', $node->getKey())
             ->orderByDesc('created_at')
             ->orderByDesc('id');
     }
 
     /**
-     * Every live, non-expired ALLOW grant addressed to the subject-set across ALL
+     * Every live, non-expired grant addressed to the subject-set across ALL
      * nodes (the §2.6 subject index, unbounded by an ancestor chain). The
      * access-aware listing seam (NodeReadRepository::queryForUser) reads these as
      * the candidate ANCHORS: an item-scoped anchor contributes only its own node,
      * a subtree-scoped anchor additionally contributes its descendants. The caller
-     * still re-resolves each candidate through the AccessResolver, because a nearer
-     * deny may revoke a row (H.2) — this never decides visibility on its own.
+     * still re-resolves each candidate through the AccessResolver, because an
+     * inheritance boundary may cut a subtree anchor off — this never decides
+     * visibility on its own.
      *
      * @param  list<Subject>              $subjects
      * @return Collection<int, NodeGrant>
@@ -100,10 +103,9 @@ final class GrantReadRepository
         $model = $this->vaulterConfig->model('grant');
 
         /** @var Collection<int, NodeGrant> $grants */
-        $grants = app(TenancyBoundary::class)->constrain($model::query(), 'node.storage')
+        $grants = $this->boundary->constrain($model::query(), 'node.storage')
             ->forSubjects($subjects)
             ->notExpired($now)
-            ->where('effect', 'allow')
             ->get();
 
         return $grants;
@@ -112,7 +114,7 @@ final class GrantReadRepository
     /**
      * The distinct node ids a subject-set has ANY grant on — the "shared with me"
      * fast pass (§2.6 subject index). The caller re-resolves each node through the
-     * AccessResolver, because a nearer deny may have revoked a row (H.2).
+     * AccessResolver (an inheritance boundary or a host override may still hide it).
      *
      * @param  list<Subject>    $subjects
      * @return list<int|string>
@@ -126,14 +128,40 @@ final class GrantReadRepository
         $model = $this->vaulterConfig->model('grant');
 
         /** @var list<int|string> $ids */
-        $ids = app(TenancyBoundary::class)->constrain($model::query(), 'node.storage')
+        $ids = $this->boundary->constrain($model::query(), 'node.storage')
             ->forSubjects($subjects)
             ->notExpired($now)
-            ->where('effect', 'allow')
             ->distinct()
             ->pluck('node_id')
             ->all();
 
         return $ids;
+    }
+
+    /**
+     * Every live subtree grant on the given nodes, for any subject: what a node below
+     * them currently inherits when those nodes are its ancestors up to the boundary.
+     *
+     * @param  list<int|string>           $nodeIds
+     * @return Collection<int, NodeGrant>
+     */
+    public function subtreeGrantsOn(array $nodeIds, Carbon $now): Collection
+    {
+        if ($nodeIds === []) {
+            /** @var Collection<int, NodeGrant> $empty */
+            $empty = new Collection;
+
+            return $empty;
+        }
+        $model = $this->vaulterConfig->model('grant');
+        /** @var Collection<int, NodeGrant> $grants */
+        $grants = $this->boundary->constrain($model::query(), 'node.storage')
+            ->whereIn('node_id', $nodeIds)
+            ->where('scope', GrantScope::Subtree->value)
+            ->notExpired($now)
+            ->orderBy('id')
+            ->get();
+
+        return $grants;
     }
 }

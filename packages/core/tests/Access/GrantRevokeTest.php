@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Carbon;
 use Vaulter\Access\AccessResolver;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Actions\Access\GrantNodeAccessAction;
 use Vaulter\Actions\Access\RevokeNodeAccessAction;
@@ -11,8 +12,6 @@ use Vaulter\Data\Access\GrantInput;
 use Vaulter\Data\Access\GrantNodeAccessInput;
 use Vaulter\Data\Access\RevokeGrantInput;
 use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Events\Access\NodeGrantCreated;
 use Vaulter\Events\Access\NodeGrantRevoked;
@@ -34,11 +33,11 @@ it('grants access through the action and dispatches NodeGrantCreated', function 
 
     $grant = app(GrantNodeAccessAction::class)->execute(context: OperationContext::system($folder->storage()->firstOrFail(), 'fixture'), input: new GrantNodeAccessInput(node: $folder, grant: new GrantInput(
         subject: Subject::ofModel($actor),
-        level: GrantLevel::Writer,
+        role: RoleRegistry::WRITER,
         scope: GrantScope::Subtree,
     )));
 
-    expect($grant->level)->toBe(GrantLevel::Writer)
+    expect($grant->role_key)->toBe(RoleRegistry::WRITER)
         ->and(app(AccessResolver::class)->can($actor, Ability::Edit, $folder))->toBeTrue();
 
     Event::assertDispatched(NodeGrantCreated::class);
@@ -51,11 +50,11 @@ it('is idempotent on the grant-unique key (re-grant updates, not duplicates)', f
 
     $action = app(GrantNodeAccessAction::class);
 
-    $action->execute(OperationContext::system($folder->storage()->firstOrFail(), 'fixture'), new GrantNodeAccessInput(node: $folder, grant: new GrantInput(subject: $subject, level: GrantLevel::Reader)));
-    $action->execute(OperationContext::system($folder->storage()->firstOrFail(), 'fixture'), new GrantNodeAccessInput(node: $folder, grant: new GrantInput(subject: $subject, level: GrantLevel::Owner)));
+    $action->execute(OperationContext::system($folder->storage()->firstOrFail(), 'fixture'), new GrantNodeAccessInput(node: $folder, grant: new GrantInput(subject: $subject, role: RoleRegistry::READER)));
+    $action->execute(OperationContext::system($folder->storage()->firstOrFail(), 'fixture'), new GrantNodeAccessInput(node: $folder, grant: new GrantInput(subject: $subject, role: RoleRegistry::OWNER)));
 
     expect(NodeGrant::query()->where('node_id', $folder->id)->count())->toBe(1)
-        ->and(NodeGrant::query()->where('node_id', $folder->id)->first()->level)->toBe(GrantLevel::Owner);
+        ->and(NodeGrant::query()->where('node_id', $folder->id)->first()->role_key)->toBe(RoleRegistry::OWNER);
 });
 
 it('revokes a subject and stops authorising', function (): void {
@@ -66,7 +65,7 @@ it('revokes a subject and stops authorising', function (): void {
     $actor = AccessTestHelpers::user();
     $subject = Subject::ofModel($actor);
 
-    AccessTestHelpers::grant($folder, GrantLevel::Writer, scope: GrantScope::Item);
+    AccessTestHelpers::grant($folder, RoleRegistry::WRITER, scope: GrantScope::Item);
     expect(app(AccessResolver::class)->can($actor, Ability::View, $folder))->toBeTrue();
 
     $revoked = app(RevokeNodeAccessAction::class)->execute(context: OperationContext::system($storage, 'fixture'), input: new RevokeGrantInput(node: $folder, grant: NodeGrant::query()->where('node_id', $folder->id)->firstOrFail()));
@@ -96,8 +95,7 @@ it('carries a time-boxed expiry onto the stored grant', function (): void {
 
     $grant = app(GrantNodeAccessAction::class)->execute(context: OperationContext::system($folder->storage()->firstOrFail(), 'fixture'), input: new GrantNodeAccessInput(node: $folder, grant: new GrantInput(
         subject: Subject::ofModel(AccessTestHelpers::user()),
-        level: GrantLevel::Reader,
-        effect: Effect::Allow,
+        role: RoleRegistry::READER,
         expiresAt: $expires,
     )));
 

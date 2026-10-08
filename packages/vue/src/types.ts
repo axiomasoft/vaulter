@@ -211,8 +211,10 @@ export interface FileVersion {
   committed_at: string | null
 }
 
-export type GrantLevelName = 'reader' | 'commenter' | 'editor' | 'manager' | (string & {})
-export type GrantEffectName = 'allow' | 'deny' | (string & {})
+/** A role key of the 1.0 access model (a role is a closed set of abilities, versioned). */
+export type GrantRoleName = 'previewer' | 'reader' | 'commenter' | 'writer' | 'organizer' | 'owner' | (string & {})
+/** A share link stores a role key in its `level` field (share links are redesigned separately). */
+export type GrantLevelName = GrantRoleName
 export type GrantScopeName = 'item' | 'subtree' | (string & {})
 
 /** A per-node ACL grant (`NodeGrantResource`). */
@@ -221,9 +223,8 @@ export interface NodeGrant {
   node_id: NodeId
   subject_type: string
   subject_id: WorkspaceId
-  level: GrantLevelName
-  permissions: number
-  effect: GrantEffectName
+  role: GrantRoleName
+  role_version: number
   scope: GrantScopeName
   expires_at: string | null
   created_at: string | null
@@ -424,10 +425,8 @@ export interface CreateUploadSessionPayload {
 export interface GrantNodeAccessPayload {
   subjectType: string
   subjectId: WorkspaceId
-  level: GrantLevelName
-  effect?: GrantEffectName
+  role: GrantRoleName
   scope?: GrantScopeName
-  permissions?: number
   expiresAt?: string | null
 }
 

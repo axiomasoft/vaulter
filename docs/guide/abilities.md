@@ -1,6 +1,6 @@
 # Abilities (frontend integration)
 
-Vaulter computes per-document permissions server-side and ships them to the front-end, so
+Vaulter computes per-document permissions server-side (from the actor's [roles](./authorization#abilities-and-roles); `view` and `download` are separate abilities) and ships them to the front-end, so
 your Vue components render only the actions the user may perform. No extra API round-trips,
 no permission logic duplicated in JavaScript.
 
@@ -13,7 +13,7 @@ no permission logic duplicated in JavaScript.
   "data": {
     "id": 1,
     "title": "Q3 Proposal",
-    "abilities": { "view": true, "comment": true, "edit": true, "manage": false, "delete": false }
+    "abilities": { "view": true, "download": true, "comment": true, "edit": true, "manage": false, "delete": false }
   }
 }
 ```

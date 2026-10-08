@@ -98,7 +98,6 @@ it('createFolder activity context carries owner and creator ids', function (): v
         'correlation_id' => 'audited-folder',
         'parent_id' => (string) $drive->root()->getKey(),
     ])
-        ->and($folder->owner_id)->toEqual(42)
         ->and($folder->created_by)->toEqual(42);
 });
 

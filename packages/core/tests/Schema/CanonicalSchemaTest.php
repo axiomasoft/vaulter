@@ -24,8 +24,8 @@ it('creates the canonical schema independently of runtime features and legacy ta
     }
 
     foreach (['drives' => ['storage_type', 'slug', 'default_node_permissions', 'deleted_at'], 'files' => ['deleted_at'],
-        'nodes' => ['current_version_id', 'file_id', 'deleted_at'], 'document_revisions' => ['node_id', 'version_no', 'snapshot_label', 'format'],
-        'node_grants' => ['deleted_at', 'inherited', 'inherited_from_node_id', 'grant_active'], 'node_shares' => ['deleted_at']] as $entity => $columns) {
+        'nodes' => ['current_version_id', 'file_id', 'deleted_at', 'owner_id'], 'document_revisions' => ['node_id', 'version_no', 'snapshot_label', 'format'],
+        'node_grants' => ['deleted_at', 'inherited', 'inherited_from_node_id', 'grant_active', 'level', 'permissions', 'effect'], 'node_shares' => ['deleted_at']] as $entity => $columns) {
         foreach ($columns as $column) {
             expect($schema->hasColumn(app(DatabaseConfig::class)->table($entity), $column))->toBeFalse();
         }
@@ -34,7 +34,7 @@ it('creates the canonical schema independently of runtime features and legacy ta
     expect($schema->hasTable('v_storages'))->toBeFalse()
         ->and($schema->hasTable('v_node_document_versions'))->toBeFalse();
     $indexes = array_column($schema->getIndexes('v_node_grants'), null, 'name');
-    expect($indexes['v_node_grants_grant_uniq']['columns'])->toBe(['node_id', 'subject_type', 'subject_id', 'scope', 'effect']);
+    expect($indexes['v_node_grants_grant_uniq']['columns'])->toBe(['node_id', 'subject_type', 'subject_id', 'scope']);
     config()->set('vaulter.features', array_fill_keys(['grants', 'share_links', 'activity', 'webhooks', 'public_listing', 'spreadsheets'], false));
     config()->set('vaulter.database.table_prefix', 'features_off_');
     (new SchemaBuilder)->createAll();

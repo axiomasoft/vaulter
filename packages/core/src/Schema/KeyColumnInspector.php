@@ -24,7 +24,7 @@ final class KeyColumnInspector
     {
         $hostKeys = [
             ['drives', 'tenant_id'], ['drives', 'owner_id'], ['drives', 'created_by'],
-            ['nodes', 'tenant_id'], ['nodes', 'owner_id'], ['nodes', 'trashed_by'], ['nodes', 'created_by'], ['nodes', 'updated_by'], ['nodes', 'content_modified_by'],
+            ['nodes', 'tenant_id'], ['nodes', 'trashed_by'], ['nodes', 'created_by'], ['nodes', 'updated_by'], ['nodes', 'content_modified_by'],
             ['blobs', 'tenant_id'],
             ['files', 'tenant_id'], ['files', 'created_by'],
             ['file_revisions', 'tenant_id'], ['file_revisions', 'created_by'],

@@ -9,10 +9,10 @@ use Spatie\Permission\PermissionRegistrar;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\Drivers\SpatiePermissionDriver;
 use Vaulter\Access\PermissionDriverManager;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -71,7 +71,7 @@ it('resolves a permission granted directly to the actor (team-scoped)', function
     $decision = $driver->resolve(Subject::ofModel($user), $user, $scope);
 
     expect($decision)->not->toBeNull()
-        ->and($decision->level)->toBe(GrantLevel::Writer);
+        ->and($decision->role->key)->toBe(RoleRegistry::WRITER);
 });
 
 it('resolves a v_node_grants row granted to a spatie ROLE via subjectsFor', function (): void {
@@ -96,7 +96,7 @@ it('resolves a v_node_grants row granted to a spatie ROLE via subjectsFor', func
 
     AccessTestHelpers::grant(
         $folder,
-        GrantLevel::Writer,
+        RoleRegistry::WRITER,
         scope: GrantScope::Item,
         subjectId: $role->getKey(),
         subjectType: 'role',
@@ -224,7 +224,7 @@ it('expires a time-boxed role grant at read time', function (): void {
 
     AccessTestHelpers::grant(
         $folder,
-        GrantLevel::Writer,
+        RoleRegistry::WRITER,
         scope: GrantScope::Item,
         subjectId: $role->getKey(),
         subjectType: 'role',

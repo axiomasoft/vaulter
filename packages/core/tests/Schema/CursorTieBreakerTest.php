@@ -3,9 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\DB;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Access\NodeGrant;
@@ -102,13 +101,11 @@ it('GrantReadRepository::forNode() cursor pagination does not skip a same-timest
 
     $grant1 = ForceCreates::make(NodeGrant::class, [
         'node_id' => $root->id, 'subject_type' => $subjectType, 'subject_id' => 1,
-        'level' => GrantLevel::Reader->value, 'permissions' => 0,
-        'effect' => Effect::Allow->value, 'scope' => GrantScope::Subtree->value,
+        'role_key' => RoleRegistry::READER, 'role_version' => 1, 'scope' => GrantScope::Subtree->value,
     ]);
     $grant2 = ForceCreates::make(NodeGrant::class, [
         'node_id' => $root->id, 'subject_type' => $subjectType, 'subject_id' => 2,
-        'level' => GrantLevel::Reader->value, 'permissions' => 0,
-        'effect' => Effect::Allow->value, 'scope' => GrantScope::Subtree->value,
+        'role_key' => RoleRegistry::READER, 'role_version' => 1, 'scope' => GrantScope::Subtree->value,
     ]);
 
     // Force an IDENTICAL created_at — grants written in the same

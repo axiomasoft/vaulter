@@ -46,7 +46,6 @@ use Vaulter\Support\NodeName;
  * @property array<string, array<string, string>>|null $properties
  * @property bool                                      $inherit_grants
  * @property int|string|null                           $shortcut_target_id
- * @property int|string|null                           $owner_id
  * @property Carbon|null                               $trashed_at
  * @property int|string|null                           $trashed_by
  * @property int|string|null                           $trashed_from_parent_id
@@ -69,7 +68,7 @@ class Node extends Model
      * Closed allow-list (F-P1.8-02): only the handful of columns a caller
      * legitimately mass-assigns through fill()/create() with untrusted-shaped
      * arrays. Everything structural/security (id, tenant_id, drive_id,
-     * parent_id, owner_id, shortcut_target_id, the
+     * parent_id, inherit_grants, shortcut_target_id, the
      * trashed_* triplet, timestamps) is excluded — every write path that sets
      * those columns already uses forceFill() (NodeStoreRepository) and is
      * unaffected by this list.
@@ -80,7 +79,6 @@ class Node extends Model
         'name',
         'mime_type',
         'extension',
-        'inherit_grants',
     ];
 
     #[\Override]

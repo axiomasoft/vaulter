@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Documents\Actions\Collaboration\PersistCollaborationStateAction;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
@@ -11,7 +12,6 @@ use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Export\NodeExportService;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Support\LoadTier;
@@ -57,7 +57,7 @@ it('records vaulter_collab_session_issued_total', function (): void {
     $actor = new TestUser;
     $actor->forceFill(['id' => 1]);
     $actor->exists = true;
-    AccessTestHelpers::grant($node, GrantLevel::Owner, subjectId: 1);
+    AccessTestHelpers::grant($node, RoleRegistry::OWNER, subjectId: 1);
 
     app(CollaborationSessionService::class)->issue($actor, $node);
 

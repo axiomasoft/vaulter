@@ -8,7 +8,7 @@ Records of the significant architectural decisions behind Vaulter.
 - [ADR-0004 — Content format & versioning](/adr/0004-content-format)
 - [ADR-0005 — Unified node tree](/adr/0005-unified-node-tree)
 - [ADR-0006 — Content-addressed blobs & race-free GC](/adr/0006-content-addressed-blobs-gc)
-- [ADR-0007 — Pluggable authorization](/adr/0007-pluggable-authorization)
+- [ADR-0007 — Pluggable authorization](/adr/0007-pluggable-authorization) — _superseded in part by ADR-0025_
 - [ADR-0008 — Media Library: custom CAS, not spatie/laravel-medialibrary](/adr/0008-media-library-decision)
 - [ADR-0009 — Storage Panels](/adr/0009-storage-panels)
 - [ADR-0010 — PHP + npm monorepo & release](/adr/0010-php-npm-monorepo-release)
@@ -25,3 +25,4 @@ Records of the significant architectural decisions behind Vaulter.
 - [ADR-0022 — Revisions & documents aggregate](/adr/0022-revisions-and-documents-aggregate) — _proposed; amends ADR-0018_
 - [ADR-0023 — Event pipeline](/adr/0023-event-pipeline) — _proposed_
 - [ADR-0024 — REST v1 & errors](/adr/0024-rest-v1-and-errors) — _proposed_
+- [ADR-0025 — Access model 1.0](/adr/0025-access-model-v1) — _accepted; supersedes ADR-0007 in part_

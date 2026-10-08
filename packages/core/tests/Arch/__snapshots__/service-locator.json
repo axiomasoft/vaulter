@@ -42,7 +42,6 @@
     "core/src/Models/Webhooks/Outbox.php": 1,
     "core/src/Models/Webhooks/WebhookDelivery.php": 2,
     "core/src/Models/Webhooks/WebhookEndpoint.php": 2,
-    "core/src/Repositories/Access/GrantReadRepository.php": 4,
     "core/src/Repositories/Activity/ActivityReadRepository.php": 1,
     "core/src/Repositories/Drive/DriveReadRepository.php": 4,
     "core/src/Repositories/Drive/FileRevisionReadRepository.php": 5,

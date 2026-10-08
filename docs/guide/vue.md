@@ -218,7 +218,7 @@ import { useNodeGrants } from '@vaulter/vue'
 const { grants, loading, error, list, grant, revoke } = useNodeGrants(nodeId)
 
 await list()
-await grant({ subjectType: 'user', subjectId: 42, level: 'editor', scope: 'subtree' })
+await grant({ subjectType: 'user', subjectId: 42, role: 'writer', scope: 'subtree' })
 await revoke({ subjectType: 'user', subjectId: 42 })
 ```
 
@@ -229,9 +229,9 @@ await revoke({ subjectType: 'user', subjectId: 42 })
 | `grant(payload)` | `Promise<NodeGrant>` | add a grant (prepended to the list) |
 | `revoke(payload)` | `Promise<void>` | drop **every** grant the subject holds |
 
-The grant payload (`GrantNodeAccessPayload`) carries `subjectType`, `subjectId`, `level`
-(`reader` / `commenter` / `editor` / `manager`), and optional `effect` (`allow` / `deny`), `scope`
-(`item` / `subtree`), raw `permissions` bits and `expiresAt`.
+The grant payload (`GrantNodeAccessPayload`) carries `subjectType`, `subjectId`, `role`
+(`previewer` / `reader` / `commenter` / `writer` / `organizer` / `owner`), and optional `scope`
+(`item` / `subtree`) and `expiresAt`.
 
 ### `useNodeShares`
 
@@ -431,8 +431,7 @@ Per-node ACL management over `useNodeGrants` — list grants, add a grant, revok
 |------|------|---------|
 | `nodeId` | `NodeId` | — |
 | `autoLoad` | `boolean` | `true` |
-| `levels` | `GrantLevelName[]` | `['reader','commenter','editor','manager']` |
-| `effects` | `GrantEffectName[]` | `['allow','deny']` |
+| `roles` | `GrantRoleName[]` | `['previewer','reader','commenter','writer','organizer','owner']` |
 | `scopes` | `GrantScopeName[]` | `['item','subtree']` |
 | `resolveSubject` | `(type, id) => GrantSubject \| Promise<GrantSubject>` | passes raw type/id through |
 
@@ -453,7 +452,7 @@ Bearer share-link management over `useNodeShares`. On create the raw token + URL
 |------|------|---------|
 | `nodeId` | `NodeId` | — |
 | `autoLoad` | `boolean` | `true` |
-| `levels` | `GrantLevelName[]` | `['reader','commenter','editor','manager']` |
+| `levels` | `GrantLevelName[]` | `['previewer','reader','writer']` |
 | `scopes` | `GrantScopeName[]` | `['item','subtree']` |
 
 **Emits**: `created(share)`, `revoked(shareId)`.

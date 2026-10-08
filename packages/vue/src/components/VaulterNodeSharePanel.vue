@@ -25,7 +25,7 @@ const props = withDefaults(
   }>(),
   {
     autoLoad: true,
-    levels: () => ['reader', 'commenter', 'editor', 'manager'],
+    levels: () => ['previewer', 'reader', 'writer'],
     scopes: () => ['item', 'subtree'],
   },
 )

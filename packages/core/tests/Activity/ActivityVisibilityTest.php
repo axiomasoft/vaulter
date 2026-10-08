@@ -3,9 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Pagination\Cursor;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Data\Drive\ListOptions;
-use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Drive\NodeSort;
 use Vaulter\Enums\Events\EventType;
@@ -20,7 +19,7 @@ beforeEach(function (): void {
     config()->set('vaulter.access.permission_driver', 'database');
     $this->drive = AccessTestHelpers::storage();
     $this->root = $this->drive->rootNode()->firstOrFail();
-    AccessTestHelpers::grant($this->root, GrantLevel::Reader, scope: GrantScope::Item);
+    AccessTestHelpers::grant($this->root, RoleRegistry::READER, scope: GrantScope::Item);
     $this->context = new OperationContext($this->drive, Actor::user(AccessTestHelpers::user()), 'visibility');
     $this->operation = app()->makeWith(ActivityOperations::class, ['context' => $this->context]);
     Activity::query()->delete();
@@ -53,7 +52,7 @@ it('does not expose hidden unknown deleted or foreign targets under root View', 
 it('fills pages across hidden windows and retains stable tuple ties', function (): void {
     $visible = AccessTestHelpers::folder($this->drive, null, 'visible');
     $hidden = AccessTestHelpers::folder($this->drive, null, 'hidden');
-    AccessTestHelpers::grant($visible, GrantLevel::Reader);
+    AccessTestHelpers::grant($visible, RoleRegistry::READER);
     $expected = [];
     foreach (range(1, 6) as $i) {
         $expected[] = visibleActivityRow($visible, 1)->id;
@@ -72,7 +71,7 @@ it('continues from last scanned tuple even for an empty budget-limited page', fu
     config()->set('vaulter.listing.scan_budget', 2);
     $visible = AccessTestHelpers::folder($this->drive, null, 'visible');
     $hidden = AccessTestHelpers::folder($this->drive, null, 'hidden');
-    AccessTestHelpers::grant($visible, GrantLevel::Reader);
+    AccessTestHelpers::grant($visible, RoleRegistry::READER);
     $row = visibleActivityRow($visible, 1);
     visibleActivityRow($hidden, 2);
     visibleActivityRow($hidden, 3);
@@ -84,7 +83,7 @@ it('continues from last scanned tuple even for an empty budget-limited page', fu
 
 it('rejects tampered cross-scope and raw cursors and rechecks ACL across pages', function (): void {
     $node = AccessTestHelpers::folder($this->drive, null, 'live');
-    $grant = AccessTestHelpers::grant($node, GrantLevel::Reader);
+    $grant = AccessTestHelpers::grant($node, RoleRegistry::READER);
     visibleActivityRow($node, 1);
     visibleActivityRow($node, 2);
     $page = $this->operation->forDrive(new ListOptions(perPage: 1));
@@ -96,15 +95,15 @@ it('rejects tampered cross-scope and raw cursors and rechecks ACL across pages',
     expect(fn () => $this->operation->forDrive(new ListOptions(cursor: $tampered->encode())))->toThrow(InvalidArgumentException::class)
         ->and(fn () => $this->operation->forDrive(new ListOptions(cursor: 'invalid')))->toThrow(InvalidArgumentException::class)
         ->and(fn () => $this->operation->forDrive(new ListOptions(sort: NodeSort::Name)))->toThrow(InvalidArgumentException::class);
-    $grant->forceFill(['effect' => Effect::Deny])->save();
+    $grant->delete();
     expect($this->operation->forDrive(new ListOptions(cursor: $cursor->encode()))->items())->toBe([]);
 });
 
 it('SEC-I7-projection withholds request fingerprint and access details from a reader without Share', function (): void {
     $readOnly = AccessTestHelpers::folder($this->drive, null, 'read only');
     $managed = AccessTestHelpers::folder($this->drive, null, 'managed');
-    AccessTestHelpers::grant($readOnly, GrantLevel::Reader);
-    AccessTestHelpers::grant($managed, GrantLevel::Reader, permissions: 16);
+    AccessTestHelpers::grant($readOnly, RoleRegistry::READER);
+    AccessTestHelpers::grant($managed, RoleRegistry::ORGANIZER);
     $details = static fn (): array => [
         'ip' => '203.0.113.9', 'user_agent' => 'curl/8', 'request_id' => 'req-1', 'actor_type' => 'user', 'actor_id' => '42',
         'context' => ['subject_type' => 'user', 'subject_id' => '7', 'permissions' => 5, 'token_prefix' => 'abcd1234', 'level' => 'reader'],

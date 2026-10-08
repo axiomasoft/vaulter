@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Vaulter\Access\AccessResolver;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
@@ -15,13 +15,13 @@ use Vaulter\Tests\Fixtures\TestUser;
 /**
  * The NODE-attached comment HTTP surface (ADR-0014 шаг 1), the additive twin of the
  * legacy document_id-bound CommentController. Authorization runs through the real
- * database grant resolver: read ≥ View, create = the dedicated Comment bit, and
+ * database grant resolver: read ≥ View, create = the Comment ability, and
  * resolve/delete = the AUTHOR of the comment OR Manage on the node. These tests pin
  * the author-or-Manage boundary that a green happy-path would miss.
  */
 $user = static fn (int $id): TestUser => AccessTestHelpers::user($id);
 
-$commentNode = static function (GrantLevel $level, int $subjectId = 1, string $name = 'commentable'): array {
+$commentNode = static function (string $level, int $subjectId = 1, string $name = 'commentable'): array {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, $name);
     AccessTestHelpers::grant($node, $level, subjectId: $subjectId);
@@ -33,7 +33,7 @@ $url = static fn (Node $node): string => 'api/vaulter/nodes/'.$node->getKey().'/
 
 // A commenter creates the thread; a reader may only list it.
 it('lists the node comment thread for a viewer', function () use ($user, $commentNode, $url): void {
-    [, $node] = $commentNode(GrantLevel::Commenter);
+    [, $node] = $commentNode(RoleRegistry::COMMENTER);
     $this->actingAs($user(1));
 
     $this->postJson($url($node), ['body' => 'first'])->assertCreated();
@@ -46,20 +46,22 @@ it('lists the node comment thread for a viewer', function () use ($user, $commen
 });
 
 it('V29 denies Reader comment creation and Commenter editing', function () use ($user, $commentNode, $url): void {
-    [, $node] = $commentNode(GrantLevel::Reader);
+    [, $node] = $commentNode(RoleRegistry::READER);
     $this->actingAs($user(1));
     $this->getJson($url($node))->assertOk();
     $this->postJson($url($node), ['body' => 'forbidden'])->assertForbidden();
-    AccessTestHelpers::grant($node, GrantLevel::Commenter, subjectId: 2);
+    AccessTestHelpers::grant($node, RoleRegistry::COMMENTER, subjectId: 2);
     $this->actingAs($user(2));
     $this->postJson($url($node), ['body' => 'allowed'])->assertCreated();
     expect(app(AccessResolver::class)->can($user(2), Ability::Edit, $node))->toBeFalse();
 });
 
-it('vetoes Commenter creation with a same-node comment deny', function () use ($user, $commentNode, $url): void {
-    [, $node] = $commentNode(GrantLevel::Commenter);
-    AccessTestHelpers::grant($node, GrantLevel::Reader, effect: Effect::Deny, permissions: 32);
+it('refuses comment creation once an inheritance boundary cuts the inherited commenter role', function () use ($user, $commentNode, $url): void {
+    [$storage, $parent] = $commentNode(RoleRegistry::COMMENTER);
+    $node = AccessTestHelpers::folder($storage, $parent, 'walled', inheritGrants: false);
+    AccessTestHelpers::grant($node, RoleRegistry::READER, scope: GrantScope::Item);
     $this->actingAs($user(1));
+    $this->getJson($url($node))->assertOk();
     $this->postJson($url($node), ['body' => 'forbidden'])->assertForbidden();
     expect(NodeComment::query()->where('node_id', $node->id)->exists())->toBeFalse();
 });
@@ -79,7 +81,7 @@ it('creates a comment with the REGISTERED morph alias, not a raw FQCN', function
 
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'aliased');
-    AccessTestHelpers::grant($node, GrantLevel::Commenter, subjectId: 1);
+    AccessTestHelpers::grant($node, RoleRegistry::COMMENTER, subjectId: 1);
     $this->actingAs($user(1));
 
     $response = $this->postJson($url($node), [
@@ -100,9 +102,9 @@ it('403s creating a comment without a grant', function () use ($user, $url): voi
 });
 
 it('threads a reply and rejects a cross-node parent', function () use ($user, $commentNode, $url): void {
-    [$storage, $nodeA] = $commentNode(GrantLevel::Commenter, name: 'thread-a');
+    [$storage, $nodeA] = $commentNode(RoleRegistry::COMMENTER, name: 'thread-a');
     $nodeB = AccessTestHelpers::folder($storage, null, 'thread-b');
-    AccessTestHelpers::grant($nodeB, GrantLevel::Commenter, subjectId: 1);
+    AccessTestHelpers::grant($nodeB, RoleRegistry::COMMENTER, subjectId: 1);
     $this->actingAs($user(1));
 
     $root = $this->postJson($url($nodeA), ['body' => 'root'])->assertCreated()->json('data.id');
@@ -116,7 +118,7 @@ it('threads a reply and rejects a cross-node parent', function () use ($user, $c
 });
 
 it('lets the AUTHOR resolve and delete their own comment', function () use ($user, $commentNode, $url): void {
-    [, $node] = $commentNode(GrantLevel::Commenter);
+    [, $node] = $commentNode(RoleRegistry::COMMENTER);
     $this->actingAs($user(1));
 
     $id = $this->postJson($url($node), ['body' => 'mine'])->assertCreated()->json('data.id');
@@ -132,9 +134,9 @@ it('lets the AUTHOR resolve and delete their own comment', function () use ($use
 });
 
 it('403s a non-author WITHOUT Manage on resolve and delete', function () use ($user, $commentNode, $url): void {
-    [, $node] = $commentNode(GrantLevel::Commenter, subjectId: 1);
+    [, $node] = $commentNode(RoleRegistry::COMMENTER, subjectId: 1);
     // A second actor with only the comment bit — neither the author nor a manager.
-    AccessTestHelpers::grant($node, GrantLevel::Commenter, subjectId: 2);
+    AccessTestHelpers::grant($node, RoleRegistry::COMMENTER, subjectId: 2);
 
     $this->actingAs($user(1));
     $id = $this->postJson($url($node), ['body' => 'authored by 1'])->assertCreated()->json('data.id');
@@ -148,8 +150,8 @@ it('403s a non-author WITHOUT Manage on resolve and delete', function () use ($u
 });
 
 it('lets a MANAGER who is not the author resolve and delete', function () use ($user, $commentNode, $url): void {
-    [, $node] = $commentNode(GrantLevel::Commenter, subjectId: 1);
-    AccessTestHelpers::grant($node, GrantLevel::Owner, subjectId: 3); // Owner ⇒ Manage
+    [, $node] = $commentNode(RoleRegistry::COMMENTER, subjectId: 1);
+    AccessTestHelpers::grant($node, RoleRegistry::OWNER, subjectId: 3); // Owner ⇒ Manage
 
     $this->actingAs($user(1));
     $id = $this->postJson($url($node), ['body' => 'authored by 1'])->assertCreated()->json('data.id');

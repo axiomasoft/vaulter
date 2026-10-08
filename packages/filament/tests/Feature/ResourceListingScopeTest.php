@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Data\Sharing\ShareLinkInput;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Enums\Access\Permission;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Filament\Resources\ActivityResource;
 use Vaulter\Filament\Resources\DriveResource;
@@ -35,7 +36,7 @@ it('DriveResource lists a storage the acting admin can reach and hides one it ca
     $unreachable = DriveBuilder::storage();
 
     $this->actingAs($owner);
-    DriveBuilder::grant($reachable->rootNode()->first(), $owner, level: GrantLevel::Owner);
+    DriveBuilder::grant($reachable->rootNode()->first(), $owner, role: RoleRegistry::OWNER);
 
     $ids = DriveResource::getEloquentQuery()->pluck('id')->all();
 
@@ -58,12 +59,12 @@ it('NodeGrantResource lists a grant on a reachable node and hides one on an unre
     $unreachable = DriveBuilder::folder($storage, 'NotOwned');
 
     $this->actingAs($owner);
-    $ownGrant = DriveBuilder::grant($reachable, $owner, level: GrantLevel::Owner);
+    $ownGrant = DriveBuilder::grant($reachable, $owner, role: RoleRegistry::OWNER);
 
     // A grant that belongs to a DIFFERENT subject on a node the acting owner
     // cannot reach at all.
     $stranger = DriveBuilder::user(2);
-    $foreignGrant = DriveBuilder::grant($unreachable, $stranger, level: GrantLevel::Owner);
+    $foreignGrant = DriveBuilder::grant($unreachable, $stranger, role: RoleRegistry::OWNER);
 
     $ids = NodeGrantResource::getEloquentQuery()->pluck('id')->all();
 
@@ -83,11 +84,11 @@ it('NodeShareResource lists a share on a reachable node and hides one on an unre
 
     $storage = DriveBuilder::storage();
     $reachable = DriveBuilder::folder($storage, 'ShareHost');
-    DriveBuilder::grant($reachable, $owner, level: GrantLevel::Owner);
+    DriveBuilder::grant($reachable, $owner, role: RoleRegistry::OWNER);
 
     NodeShareResource::createFromData([
         'node_id' => $reachable->getKey(),
-        'level' => GrantLevel::Reader->value,
+        'level' => RoleRegistry::READER,
         'permissions' => 1,
     ]);
 
@@ -114,9 +115,9 @@ it('ActivityResource lists activity targeting a reachable node and hides a forei
     DriveBuilder::folder($foreignStorage, 'AlsoLoud'); // writes a foreign activity row
 
     $this->actingAs($owner);
-    DriveBuilder::grant($reachable, $owner, level: GrantLevel::Owner);
+    DriveBuilder::grant($reachable, $owner, role: RoleRegistry::OWNER);
 
-    DriveBuilder::grant($storage->rootNode()->firstOrFail(), $owner, level: GrantLevel::Reader, scope: GrantScope::Item);
+    DriveBuilder::grant($storage->rootNode()->firstOrFail(), $owner, role: RoleRegistry::READER, scope: GrantScope::Item);
 
     $targetIds = ActivityResource::getEloquentQuery()->pluck('target_id')->all();
 
@@ -171,15 +172,15 @@ it('V31 Filament node grant share and activity listings stay in the current tena
     $this->actingAs($actor);
     $a = Vaulter::drive(DriveBuilder::storage())->asSystem('fixture');
     $nodeA = DriveBuilder::folder($a->model(), 'Tenant A');
-    $grantA = DriveBuilder::grant($nodeA, $actor, level: GrantLevel::Owner);
-    $shareA = $a->shares()->create($nodeA, new ShareLinkInput(permissions: 1));
+    $grantA = DriveBuilder::grant($nodeA, $actor, role: RoleRegistry::OWNER);
+    $shareA = $a->shares()->create($nodeA, new ShareLinkInput(permissions: Permission::View->value | Permission::Download->value));
     $driveAId = $a->model()->id;
     $resolver->tenant = 'B';
     $b = Vaulter::drive(DriveBuilder::storage())->asSystem('fixture');
     $nodeB = DriveBuilder::folder($b->model(), 'Tenant B');
-    DriveBuilder::grant($nodeB, $actor, level: GrantLevel::Owner);
-    DriveBuilder::grant($b->root(), $actor, level: GrantLevel::Reader, scope: GrantScope::Item);
-    $shareB = $b->shares()->create($nodeB, new ShareLinkInput(permissions: 1));
+    DriveBuilder::grant($nodeB, $actor, role: RoleRegistry::OWNER);
+    DriveBuilder::grant($b->root(), $actor, role: RoleRegistry::READER, scope: GrantScope::Item);
+    $shareB = $b->shares()->create($nodeB, new ShareLinkInput(permissions: Permission::View->value | Permission::Download->value));
     expect(NodeResource::getEloquentQuery()->pluck('id')->all())->toContain($nodeB->id)->not->toContain($nodeA->id)
         ->and(NodeGrantResource::getEloquentQuery()->pluck('id')->all())->not->toContain($grantA->id)
         ->and(NodeShareResource::getEloquentQuery()->pluck('id')->all())->toContain($shareB->share->id)->not->toContain($shareA->share->id)

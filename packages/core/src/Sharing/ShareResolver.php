@@ -183,7 +183,7 @@ final class ShareResolver
      * hold Ability::Share on the node — the SAME ability the owner surface
      * ({@see ShareController::guardShare()})
      * requires to mint a link in the first place — through the real identity ACL
-     * (host-role driver + deny-veto), never a hand-rolled grant lookup, so this
+     * (host-role driver + grants), never a hand-rolled grant lookup, so this
      * honours exactly the algorithm every other authorization decision does.
      *
      * D14 binds the re-check to Ability::Share (the ability that authorized the

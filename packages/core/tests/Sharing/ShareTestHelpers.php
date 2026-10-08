@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Tests\Sharing;
 
 use Illuminate\Support\Carbon;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Access\Permission;
 use Vaulter\Models\Drive\Node;
@@ -29,8 +29,8 @@ final class ShareTestHelpers
     public static function share(
         Node $node,
         string $token = 'raw-share-token-value',
-        int $permissions = Permission::Read->value,
-        GrantLevel $level = GrantLevel::Reader,
+        int $permissions = (Permission::View->value | Permission::Download->value),
+        string $level = RoleRegistry::READER,
         GrantScope $scope = GrantScope::Item,
         ?string $passwordHash = null,
         bool $requireLogin = false,
@@ -49,7 +49,7 @@ final class ShareTestHelpers
             'token_hash' => ShareToken::hash($token),
             'token_prefix' => ShareToken::prefix($token, 8),
             'permissions' => $permissions,
-            'level' => $level->value,
+            'level' => $level,
             'scope' => $scope->value,
             'password_hash' => $passwordHash,
             'require_login' => $requireLogin,

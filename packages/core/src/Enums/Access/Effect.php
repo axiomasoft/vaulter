@@ -5,14 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Enums\Access;
 
 use Vaulter\Attributes\Label;
+use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Support\Concerns\HasLabel;
 
 /**
- * The polarity of a node grant (master plan §2.6 / H.2). An allow widens access,
- * a deny narrows it — and a deny ALWAYS wins as the final veto after the max/OR
- * pass, so a host role can never resurrect a level a deny has forbidden.
- *
- * The stored column value is allow|deny (§2.6).
+ * The direction of a host override ({@see PermissionDriver::override()}):
+ * Allow is a super-user bypass of the node ACL, Deny is an administrative block
+ * that no grant can lift. Grants themselves are always positive.
  */
 enum Effect: string
 {

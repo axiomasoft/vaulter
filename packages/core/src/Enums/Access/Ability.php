@@ -5,22 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Enums\Access;
 
 /**
- * The Drive action vocabulary the AccessResolver answers `can()` for, and the bits
- * each action requires (master plan §2.6 / H.2). One ability maps to exactly the
- * CRUDS permission(s) that must be present in the effective allow-mask for the
- * action to be permitted; the deny-veto then re-checks the SAME bits.
+ * The capabilities the AccessResolver answers `can()` for. Roles are named sets of
+ * these; an actor holds an ability on a node when any role that applies there
+ * contains it. Each ability owns exactly one {@see Permission} bit, so View and
+ * Download are independent (a previewer sees content but cannot take the original)
+ * and Manage means managing access, not "everything".
  *
- * Per H.2 there is no orphan stringly-typed delete action: permanent delete folds
- * into the DELETE bit (Organizer/Manage), so Trash and Delete both require DELETE.
- *
- *   View/Download         → READ
- *   Comment               → COMMENT
- *   Edit                  → UPDATE
- *   Create/Copy           → CREATE
- *   Move                  → UPDATE+CREATE (re-parent = update here, create there)
- *   Trash/Restore/Delete  → DELETE
- *   Share                 → SHARE
- *   Manage                → ALL (full management of the node)
+ * @closed The string values are part of the stable contract and never change.
  */
 enum Ability: string
 {
@@ -38,30 +29,61 @@ enum Ability: string
     case Delete = 'delete';
 
     /**
-     * The CRUDS bitmask this ability requires. An actor may perform the ability iff
-     * every bit here is present in the effective allow-mask (and absent from the
-     * deny-mask).
+     * This ability's own bit.
      */
-    public function requiredBits(): int
+    public function bits(): int
+    {
+        return $this->permission()->value;
+    }
+
+    public function permission(): Permission
     {
         return match ($this) {
-            self::View, self::Download => Permission::Read->value,
-            self::Comment => Permission::Comment->value,
-            self::Edit => Permission::Update->value,
-            self::Create, self::Copy => Permission::Create->value,
-            self::Move => Permission::Update->value | Permission::Create->value,
-            self::Trash, self::Restore, self::Delete => Permission::Delete->value,
-            self::Share => Permission::Share->value,
-            self::Manage => Permission::all(),
+            self::View => Permission::View,
+            self::Download => Permission::Download,
+            self::Comment => Permission::Comment,
+            self::Edit => Permission::Edit,
+            self::Create => Permission::Create,
+            self::Move => Permission::Move,
+            self::Copy => Permission::Copy,
+            self::Trash => Permission::Trash,
+            self::Restore => Permission::Restore,
+            self::Share => Permission::Share,
+            self::Manage => Permission::Manage,
+            self::Delete => Permission::Delete,
         };
     }
 
     /**
-     * Whether the effective allow-mask satisfies this ability (all required bits
-     * present). The caller still runs the deny-veto separately (H.2 step 5).
+     * Whether a bitmask carries this ability.
      */
     public function satisfiedBy(int $bits): bool
     {
-        return ($bits & $this->requiredBits()) === $this->requiredBits();
+        return ($bits & $this->bits()) === $this->bits();
+    }
+
+    /**
+     * The OR of the given abilities' bits.
+     *
+     * @param iterable<self> $abilities
+     */
+    public static function mask(iterable $abilities): int
+    {
+        $bits = 0;
+        foreach ($abilities as $ability) {
+            $bits |= $ability->bits();
+        }
+
+        return $bits;
+    }
+
+    /**
+     * The abilities a bitmask carries, in declaration order.
+     *
+     * @return list<self>
+     */
+    public static function fromMask(int $bits): array
+    {
+        return array_values(array_filter(self::cases(), static fn (self $ability): bool => $ability->satisfiedBy($bits)));
     }
 }

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vaulter\Access\OperationGuard;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Operations\OperationKind;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
@@ -38,7 +38,7 @@ it('SEC-R14 user and system both obey frozen share policy after user View', func
     guardProfile((new Profile)->key('default')->shareLinks(false)->comments(false));
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($drive, null, 'visible');
-    AccessTestHelpers::grant($node, GrantLevel::Owner);
+    AccessTestHelpers::grant($node, RoleRegistry::OWNER);
     $guard = app(OperationGuard::class);
     $user = new OperationContext($drive, Actor::user(AccessTestHelpers::user()), 'profile-test');
     $system = OperationContext::system($drive, 'maintenance');
@@ -96,7 +96,7 @@ it('SEC-R14 disabling grants removes scalar and batch ACL contributions without 
     guardProfile((new Profile)->key('default')->grants(false));
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($drive, null, 'grant-only');
-    AccessTestHelpers::grant($node, GrantLevel::Owner);
+    AccessTestHelpers::grant($node, RoleRegistry::OWNER);
     $user = new OperationContext($drive, Actor::user(AccessTestHelpers::user()), 'no-grants');
     $guard = app(OperationGuard::class);
     expect(fn () => $guard->authorize($user, Ability::View, $node))->toThrow(NodeNotFoundException::class)

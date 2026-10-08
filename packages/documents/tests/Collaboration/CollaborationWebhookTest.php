@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Firebase\JWT\JWT;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Collaboration\CollaborationCallResolver;
 use Vaulter\Documents\Configuration\DocumentsConfig;
@@ -10,7 +11,6 @@ use Vaulter\Documents\Contracts\HostUserResolver;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\FakeHostUserResolver;
@@ -63,7 +63,7 @@ function signedHeaders(array $body, array $identityHeaders = [], ?int $timestamp
     ]);
 }
 
-function webhookDocumentNode(?GrantLevel $level = GrantLevel::Writer, int $actorId = 1): Node
+function webhookDocumentNode(?string $level = RoleRegistry::WRITER, int $actorId = 1): Node
 {
     $drive = DocumentTestHelpers::drive();
 
@@ -333,7 +333,7 @@ it('does not burn the nonce for a REJECTED tampered delivery, so the genuine ori
 // ── collab/authenticate ─────────────────────────────────────────────────────────────
 
 it('authenticates a good room JWT and answers allowed + readOnly from the ability', function (): void {
-    $node = webhookDocumentNode(level: GrantLevel::Writer, actorId: 1);
+    $node = webhookDocumentNode(level: RoleRegistry::WRITER, actorId: 1);
 
     $body = ['node_id' => $node->getKey()];
 
@@ -345,7 +345,7 @@ it('authenticates a good room JWT and answers allowed + readOnly from the abilit
 });
 
 it('authenticates when the hub sends node_id EQUAL to the room name (regression)', function (): void {
-    $node = webhookDocumentNode(level: GrantLevel::Writer, actorId: 1);
+    $node = webhookDocumentNode(level: RoleRegistry::WRITER, actorId: 1);
     $room = app(DocumentsConfig::class)->collaborationRoom($node->getKey());
 
     // Тот же перекос node_id==room, что в collab/store — но на пути authenticate:
@@ -359,7 +359,7 @@ it('authenticates when the hub sends node_id EQUAL to the room name (regression)
 });
 
 it('answers readOnly=true when the user is only a commenter', function (): void {
-    $node = webhookDocumentNode(level: GrantLevel::Commenter, actorId: 1);
+    $node = webhookDocumentNode(level: RoleRegistry::COMMENTER, actorId: 1);
 
     $body = ['node_id' => $node->getKey()];
 
@@ -389,7 +389,7 @@ it('rejects an expired JWT on authenticate', function (): void {
 });
 
 it('authenticates a shared-secret call carrying the user out of band', function (): void {
-    $node = webhookDocumentNode(level: GrantLevel::Writer, actorId: 5);
+    $node = webhookDocumentNode(level: RoleRegistry::WRITER, actorId: 5);
 
     $body = ['node_id' => $node->getKey(), 'user_id' => 5];
 
@@ -400,7 +400,7 @@ it('authenticates a shared-secret call carrying the user out of band', function 
 });
 
 it('rejects an authenticate call with valid JWT identity but no signature (F-P1.6-02)', function (): void {
-    $node = webhookDocumentNode(level: GrantLevel::Writer, actorId: 1);
+    $node = webhookDocumentNode(level: RoleRegistry::WRITER, actorId: 1);
 
     test()->postJson('api/vaulter/collab/authenticate', [
         'node_id' => $node->getKey(),

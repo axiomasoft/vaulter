@@ -63,7 +63,6 @@ final readonly class CreateFolderAction
                 'kind' => NodeKind::Folder,
                 'name' => $name,
                 'size_bytes' => 0,
-                'owner_id' => $context->actor->ref()->id,
                 'created_by' => $context->actor->ref()->id,
             ]);
 

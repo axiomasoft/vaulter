@@ -7,10 +7,9 @@ use Vaulter\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Access\Drivers\GatePermissionDriver;
 use Vaulter\Access\Drivers\SpatiePermissionDriver;
 use Vaulter\Access\PermissionDriverManager;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Testing\Contracts\PermissionDriverContractTests;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -23,9 +22,9 @@ use Vaulter\Tests\Fixtures\Access\RoleStubDriver;
  * Gate/Spatie/Azgard drivers reuse — pointing the resolver at each driver over one
  * fixture and asserting identical results.
  *
- * The fixture: a Writer subtree allow on a parent, a deny on a child. Every
- * "pass-through" driver (no override, no extra subjects, no role decision) must
- * agree: parent editable, child denied.
+ * The fixture: a writer subtree grant on a parent and an inheritance boundary on its
+ * child. Every "pass-through" driver (no override, no extra subjects, no role
+ * decision) must agree: parent editable, child unreachable.
  */
 function bindDriver(PermissionDriver $driver): AccessResolver
 {
@@ -46,15 +45,9 @@ function decisionsOver(AccessResolver $resolver): array
     $actor = AccessTestHelpers::user();
     $storage = AccessTestHelpers::storage();
     $parent = AccessTestHelpers::folder($storage, null, 'parent');
-    $child = AccessTestHelpers::folder($storage, $parent, 'child');
+    $child = AccessTestHelpers::folder($storage, $parent, 'child', inheritGrants: false);
 
-    AccessTestHelpers::grant($parent, GrantLevel::Writer, scope: GrantScope::Subtree);
-    AccessTestHelpers::grant(
-        $child,
-        GrantLevel::Writer,
-        effect: Effect::Deny,
-        scope: GrantScope::Item,
-    );
+    AccessTestHelpers::grant($parent, RoleRegistry::WRITER, scope: GrantScope::Subtree);
 
     $contract = new PermissionDriverContractTests;
     $contract->assertPermissionDriverContract($resolver, $actor, $parent, $child);
@@ -68,7 +61,7 @@ function decisionsOver(AccessResolver $resolver): array
 
 /**
  * The shared truth the algorithm dictates on the fixture: parent editable, child
- * denied (deny-wins). EVERY pass-through driver must agree.
+ * cut off by its boundary. EVERY pass-through driver must agree.
  */
 function sharedFixtureTruth(): array
 {
@@ -85,7 +78,7 @@ it('yields identical decisions across pass-through host-role drivers on a shared
 
     // …and a stub driver that ALSO contributes only the actor, no roles/override.
     $stubDecisions = decisionsOver(bindDriver(new RoleStubDriver(
-        roleLevel: null,
+        role: null,
         overrideEffect: null,
         includeActor: true,
     )));

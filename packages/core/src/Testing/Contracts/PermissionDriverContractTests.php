@@ -11,9 +11,10 @@ use Vaulter\Enums\Access\Ability;
 use Vaulter\Models\Drive\Node;
 
 /**
- * Reusable assertions for a host driver in pass-through mode. The host supplies
- * a Writer subtree allow on $parent and a Writer item deny on $child for $actor.
- * No override or role permission should be enabled on that fixture.
+ * Reusable assertions for a host driver in pass-through mode. The host supplies a
+ * writer subtree grant on $parent for $actor, and $child (below $parent) has its
+ * inheritance restricted with no grant of its own. No override or role permission
+ * should be enabled on that fixture.
  */
 final class PermissionDriverContractTests
 {

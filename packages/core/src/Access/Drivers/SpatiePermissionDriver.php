@@ -7,6 +7,8 @@ namespace Vaulter\Access\Drivers;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Permission\PermissionRegistrar;
+use Vaulter\Access\Roles\Role;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
@@ -14,18 +16,17 @@ use Vaulter\Configuration\AccessConfig;
 use Vaulter\Contracts\Access\EnumeratesRoleSubjects;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
 
 /**
- * The spatie/laravel-permission host-role driver (master plan §6 / H.2 / D22). It
+ * The spatie/laravel-permission host-role driver. It
  * bridges a host running spatie roles/permissions — INCLUDING the v8 teams feature —
  * into Vaulter, and ENCAPSULATES THE ENTIRE v8 TEAM-SWITCH DANCE here so it never
- * leaks into the Vaulter-owned AccessResolver (H.2):
+ * leaks into the Vaulter-owned AccessResolver:
  *
  *   - subjectsFor(actor) = the actor + its role Subjects (+ its team Subject when
  *     teams are enabled), so a v_node_grants row granted to a role/team matches;
- *   - resolve(subject, actor, scope) = per requested level, the mapped spatie
- *     permission is checked via $actor->hasPermissionTo($name) — wrapped in
+ *   - resolve(subject, actor, scope) = per role, the mapped spatie permission is
+ *     checked via $actor->hasPermissionTo($name) and the held roles are unioned — wrapped in
  *     setPermissionsTeamId($scope->driveOwner->id) so the check is team-scoped, then
  *     the previous team id and the actor's loaded relations are RESTORED;
  *   - override = a configurable super-permission (a super-role owns it);
@@ -47,6 +48,7 @@ final class SpatiePermissionDriver implements EnumeratesRoleSubjects, Permission
 {
     public function __construct(
         private readonly AccessConfig $accessConfig,
+        private readonly RoleRegistry $roles,
     ) {}
 
     public function resolve(Subject $subject, Authorizable $actor, AccessScope $scope): ?Decision
@@ -62,27 +64,19 @@ final class SpatiePermissionDriver implements EnumeratesRoleSubjects, Permission
             return null;
         }
 
-        $granted = $this->withTeam($scope, function () use ($actor): ?GrantLevel {
-            $level = null;
-
-            foreach ($this->accessConfig->spatiePermissionMap() as $levelValue => $permission) {
-                $grantLevel = GrantLevel::tryFrom($levelValue);
-
-                if ($grantLevel === null || !$this->actorHasPermission($actor, $permission)) {
-                    continue;
+        /** @var list<Role> $granted */
+        $granted = $this->withTeam($scope, function () use ($actor): array {
+            $roles = [];
+            foreach ($this->accessConfig->spatiePermissionMap() as $role => $permission) {
+                if ($this->actorHasPermission($actor, $permission)) {
+                    $roles[] = $this->roles->latest($role);
                 }
-
-                $level = $level === null ? $grantLevel : $level->max($grantLevel);
             }
 
-            return $level;
+            return $roles;
         });
 
-        if ($granted === null) {
-            return null;
-        }
-
-        return Decision::allow($granted);
+        return Decision::union($granted);
     }
 
     public function override(Authorizable $actor, AccessScope $scope): ?Effect
@@ -153,10 +147,10 @@ final class SpatiePermissionDriver implements EnumeratesRoleSubjects, Permission
     }
 
     /**
-     * The consumer-facing cache-reset seam (H.2 / D22): after a host mutates an
+     * The consumer-facing cache-reset seam: after a host mutates an
      * actor's roles/permissions OUTSIDE spatie's own assign/remove helpers (which
      * already reset relations), it MUST call this so a stale, team-scoped permission
-     * cache cannot grant a revoked level on the next resolve. Encapsulated here so the
+     * cache cannot grant a revoked role on the next resolve. Encapsulated here so the
      * team-switch knowledge never leaks into Vaulter core — the host calls one method.
      */
     public static function forgetCachedPermissions(Authorizable $actor): void

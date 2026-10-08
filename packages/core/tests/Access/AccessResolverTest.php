@@ -5,22 +5,20 @@ declare(strict_types=1);
 use Illuminate\Support\Carbon;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\PermissionDriverManager;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\AccessExplanation;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Access\Permission;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\Access\RoleStubDriver;
 
 /**
- * The M2a effective-permission algorithm (master plan §2.6 / H.2). These are the
- * crux table-driven tests: every clause of the algorithm — direct allow, inherited
- * subtree allow, cut-off, deny-wins, the final veto after a role grant, bitmask
- * OR / level max, read-time expiry, the workspace boundary, super-admin override —
- * gets one focused row. The Database driver runs standalone (no host roles), so a
- * grant is the ONLY thing that authorises here.
+ * The 1.0 effective-access algorithm (PLAN2.D45). Every clause gets one focused
+ * row: direct grant, inherited subtree grant, inheritance boundary, union of roles
+ * across grants and the host role lane, read-time expiry, the drive boundary and
+ * the host override in both directions. The Database driver runs standalone (no
+ * host roles), so a grant is the ONLY thing that authorises here.
  */
 beforeEach(function (): void {
     // The standalone lane: decisions come purely from v_node_grants.
@@ -46,10 +44,10 @@ function useRoleDriver(RoleStubDriver $driver): void
     app()->forgetInstance(AccessResolver::class);
 }
 
-it('grants a direct allow on the node itself', function (): void {
+it('grants a direct role on the node itself', function (): void {
     $storage = AccessTestHelpers::storage();
     $folder = AccessTestHelpers::folder($storage, null, 'direct');
-    AccessTestHelpers::grant($folder, GrantLevel::Writer, scope: GrantScope::Item);
+    AccessTestHelpers::grant($folder, RoleRegistry::WRITER, scope: GrantScope::Item);
 
     $actor = AccessTestHelpers::user();
 
@@ -64,13 +62,12 @@ it('denies an actor with no grant at all', function (): void {
     expect(resolver()->can(AccessTestHelpers::user(), Ability::View, $folder))->toBeFalse();
 });
 
-it('inherits a subtree allow from an ancestor down to a descendant', function (): void {
+it('inherits a subtree grant from an ancestor down to a descendant', function (): void {
     $storage = AccessTestHelpers::storage();
     $parent = AccessTestHelpers::folder($storage, null, 'parent');
     $child = AccessTestHelpers::folder($storage, $parent, 'child');
 
-    // Subtree grant on the PARENT — flows down to the child.
-    AccessTestHelpers::grant($parent, GrantLevel::Reader, scope: GrantScope::Subtree);
+    AccessTestHelpers::grant($parent, RoleRegistry::READER, scope: GrantScope::Subtree);
 
     expect(resolver()->can(AccessTestHelpers::user(), Ability::View, $child))->toBeTrue();
 });
@@ -80,138 +77,129 @@ it('does NOT inherit an item-scoped ancestor grant', function (): void {
     $parent = AccessTestHelpers::folder($storage, null, 'parent');
     $child = AccessTestHelpers::folder($storage, $parent, 'child');
 
-    // Item grant on the parent only — must NOT reach the child.
-    AccessTestHelpers::grant($parent, GrantLevel::Reader, scope: GrantScope::Item);
+    AccessTestHelpers::grant($parent, RoleRegistry::READER, scope: GrantScope::Item);
 
     expect(resolver()->can(AccessTestHelpers::user(), Ability::View, $child))->toBeFalse();
 });
 
-it('stops inheriting at an inherit_grants=false cut-off node', function (): void {
+it('stops inheriting at an inheritance boundary', function (): void {
     $storage = AccessTestHelpers::storage();
     $top = AccessTestHelpers::folder($storage, null, 'top');
-    // The wall is a new permission root: it (and its subtree) ignore grants ABOVE
-    // it. A direct grant on the wall still works; top's subtree grant does not reach
-    // the wall or anything below it.
+    // The boundary ignores grants ABOVE it; a direct grant on it still works and
+    // flows below it.
     $wall = AccessTestHelpers::folder($storage, $top, 'wall', inheritGrants: false);
     $below = AccessTestHelpers::folder($storage, $wall, 'below');
 
-    AccessTestHelpers::grant($top, GrantLevel::Reader, scope: GrantScope::Subtree);
+    AccessTestHelpers::grant($top, RoleRegistry::READER, scope: GrantScope::Subtree);
 
-    // top's grant is walled off from the wall and below.
     expect(resolver()->can(AccessTestHelpers::user(), Ability::View, $wall))->toBeFalse()
         ->and(resolver()->can(AccessTestHelpers::user(), Ability::View, $below))->toBeFalse();
 
-    // A direct grant on the wall authorises the wall AND inherits to below (the wall
-    // only severs inheritance from ABOVE, not its own downward subtree grants).
-    AccessTestHelpers::grant($wall, GrantLevel::Reader, scope: GrantScope::Subtree);
+    AccessTestHelpers::grant($wall, RoleRegistry::READER, scope: GrantScope::Subtree);
 
     expect(resolver()->can(AccessTestHelpers::user(), Ability::View, $wall))->toBeTrue()
         ->and(resolver()->can(AccessTestHelpers::user(), Ability::View, $below))->toBeTrue();
 });
 
-it('lets a nearer explicit allow pierce a farther inherited deny', function (): void {
+it('applies a direct grant on a node below a boundary that cuts the parent grant off', function (): void {
+    // Formerly: a nearer explicit allow pierces a farther inherited deny.
+    $storage = AccessTestHelpers::storage();
+    $parent = AccessTestHelpers::folder($storage, null, 'parent');
+    $child = AccessTestHelpers::folder($storage, $parent, 'child', inheritGrants: false);
+
+    AccessTestHelpers::grant($parent, RoleRegistry::WRITER, scope: GrantScope::Subtree);
+    AccessTestHelpers::grant($child, RoleRegistry::READER, scope: GrantScope::Item);
+
+    expect(resolver()->can(AccessTestHelpers::user(), Ability::View, $child))->toBeTrue()
+        ->and(resolver()->can(AccessTestHelpers::user(), Ability::Edit, $child))->toBeFalse()
+        ->and(resolver()->can(AccessTestHelpers::user(), Ability::Edit, $parent))->toBeTrue();
+});
+
+it('removes an inherited role from a node by restricting its inheritance', function (): void {
+    // Formerly: a nearer deny beats a farther allow (deny-wins).
     $storage = AccessTestHelpers::storage();
     $parent = AccessTestHelpers::folder($storage, null, 'parent');
     $child = AccessTestHelpers::folder($storage, $parent, 'child');
 
-    // Farther inherited deny on the parent…
-    AccessTestHelpers::grant($parent, GrantLevel::Reader, effect: Effect::Deny, scope: GrantScope::Subtree);
-    // …pierced by a nearer explicit allow on the child.
-    AccessTestHelpers::grant($child, GrantLevel::Reader, effect: Effect::Allow, scope: GrantScope::Item);
+    AccessTestHelpers::grant($parent, RoleRegistry::WRITER, scope: GrantScope::Subtree);
+    expect(resolver()->can(AccessTestHelpers::user(), Ability::Edit, $child))->toBeTrue();
 
-    expect(resolver()->can(AccessTestHelpers::user(), Ability::View, $child))->toBeTrue();
+    $child->forceFill(['inherit_grants' => false])->save();
+
+    expect(resolver()->can(AccessTestHelpers::user(), Ability::Edit, $child))->toBeFalse()
+        ->and(resolver()->can(AccessTestHelpers::user(), Ability::View, $child))->toBeFalse();
 });
 
-it('lets a nearer deny beat a farther allow (deny-wins)', function (): void {
-    $storage = AccessTestHelpers::storage();
-    $parent = AccessTestHelpers::folder($storage, null, 'parent');
-    $child = AccessTestHelpers::folder($storage, $parent, 'child');
-
-    // Farther allow on the parent…
-    AccessTestHelpers::grant($parent, GrantLevel::Writer, effect: Effect::Allow, scope: GrantScope::Subtree);
-    // …revoked by a nearer deny on the child.
-    AccessTestHelpers::grant($child, GrantLevel::Writer, effect: Effect::Deny, scope: GrantScope::Item);
-
-    expect(resolver()->can(AccessTestHelpers::user(), Ability::Edit, $child))->toBeFalse();
-});
-
-it('lets a same-node deny veto a same-node allow regardless of row order', function (
-    bool $allowFirst,
+it('unions the roles of every grant that applies, whatever the row order', function (
+    bool $nearFirst,
 ): void {
+    // Formerly: a same-node deny vetoes a same-node allow regardless of row order.
+    // Positive grants cannot cancel each other: the nearer, narrower grant never
+    // hides the farther, broader one.
     $storage = AccessTestHelpers::storage();
-    $folder = AccessTestHelpers::folder($storage, null, 'same-node');
+    $parent = AccessTestHelpers::folder($storage, null, 'parent');
+    $folder = AccessTestHelpers::folder($storage, $parent, 'same-node');
 
-    // allow and deny on the SAME node for the SAME ability — the deny is an absolute
-    // veto (§2.6 / H.2 step 5): a same-node allow must NEVER swallow it, no matter
-    // which row was written (and therefore iterated) first.
-    if ($allowFirst) {
-        AccessTestHelpers::grant($folder, GrantLevel::Reader, effect: Effect::Allow, scope: GrantScope::Item);
-        AccessTestHelpers::grant($folder, GrantLevel::Reader, effect: Effect::Deny, scope: GrantScope::Item);
+    if ($nearFirst) {
+        AccessTestHelpers::grant($folder, RoleRegistry::PREVIEWER, scope: GrantScope::Item);
+        AccessTestHelpers::grant($parent, RoleRegistry::WRITER, scope: GrantScope::Subtree);
     } else {
-        AccessTestHelpers::grant($folder, GrantLevel::Reader, effect: Effect::Deny, scope: GrantScope::Item);
-        AccessTestHelpers::grant($folder, GrantLevel::Reader, effect: Effect::Allow, scope: GrantScope::Item);
+        AccessTestHelpers::grant($parent, RoleRegistry::WRITER, scope: GrantScope::Subtree);
+        AccessTestHelpers::grant($folder, RoleRegistry::PREVIEWER, scope: GrantScope::Item);
     }
 
-    expect(resolver()->can(AccessTestHelpers::user(), Ability::View, $folder))->toBeFalse();
+    $set = resolver()->effectiveGrants(AccessTestHelpers::user(), $folder);
+    expect($set->allows(Ability::View))->toBeTrue()
+        ->and($set->allows(Ability::Download))->toBeTrue()
+        ->and($set->allows(Ability::Edit))->toBeTrue()
+        ->and($set->allows(Ability::Share))->toBeFalse();
 })->with([
-    'allow row written first' => [true],
-    'deny row written first' => [false],
+    'nearer grant written first' => [true],
+    'farther grant written first' => [false],
 ]);
 
-it('applies the FINAL veto: a deny survives a host role grant', function (): void {
+it('lets an administrative override block survive a host role and grants', function (): void {
+    // Formerly: the final veto — a deny survives a host role grant.
     $storage = AccessTestHelpers::storage();
     $folder = AccessTestHelpers::folder($storage, null, 'vetoed');
+    AccessTestHelpers::grant($folder, RoleRegistry::OWNER, scope: GrantScope::Item);
 
-    // A node-ACL deny on the EDIT bit (Writer).
-    AccessTestHelpers::grant($folder, GrantLevel::Writer, effect: Effect::Deny, scope: GrantScope::Item);
+    useRoleDriver(new RoleStubDriver(role: RoleRegistry::WRITER, overrideEffect: Effect::Deny));
 
-    // A host role that WOULD grant Writer (so max(aclAllow, roleAllow) would allow
-    // Edit) — but the final veto (H.2 step 5) must still deny it.
-    useRoleDriver(new RoleStubDriver(roleLevel: GrantLevel::Writer));
-
-    expect(resolver()->can(AccessTestHelpers::user(), Ability::Edit, $folder))->toBeFalse();
+    expect(resolver()->can(AccessTestHelpers::user(), Ability::Edit, $folder))->toBeFalse()
+        ->and(resolver()->can(AccessTestHelpers::user(), Ability::View, $folder))->toBeFalse();
 });
 
-it('a host role grant can raise access when nothing denies it', function (): void {
+it('a host role grant raises access on its own', function (): void {
     $storage = AccessTestHelpers::storage();
     $folder = AccessTestHelpers::folder($storage, null, 'roled');
 
-    // No ACL rows at all; the host role alone grants Writer.
-    useRoleDriver(new RoleStubDriver(roleLevel: GrantLevel::Writer));
+    useRoleDriver(new RoleStubDriver(role: RoleRegistry::WRITER));
 
-    expect(resolver()->can(AccessTestHelpers::user(), Ability::Edit, $folder))->toBeTrue();
+    expect(resolver()->can(AccessTestHelpers::user(), Ability::Edit, $folder))->toBeTrue()
+        ->and(resolver()->can(AccessTestHelpers::user(), Ability::Share, $folder))->toBeFalse();
 });
 
-it('ORs the bitmask and maxes the level across multiple allow grants', function (): void {
+it('unions the host role with the node grants', function (): void {
+    // Formerly: ORs the bitmask and maxes the level across multiple allow grants.
     $storage = AccessTestHelpers::storage();
     $folder = AccessTestHelpers::folder($storage, null, 'mixed');
+    AccessTestHelpers::grant($folder, RoleRegistry::ORGANIZER, scope: GrantScope::Item);
 
-    // A Reader allow (READ) plus an extra explicit SHARE bit on a second row.
-    AccessTestHelpers::grant($folder, GrantLevel::Reader, scope: GrantScope::Item);
-    AccessTestHelpers::grant(
-        $folder,
-        GrantLevel::Reader,
-        scope: GrantScope::Subtree,
-        permissions: Permission::Share->value,
-    );
-
+    useRoleDriver(new RoleStubDriver(role: RoleRegistry::COMMENTER));
     $grants = resolver()->effectiveGrants(AccessTestHelpers::user(), $folder);
 
-    expect($grants->allows(Ability::View))->toBeTrue()
+    expect($grants->allows(Ability::Comment))->toBeTrue()
         ->and($grants->allows(Ability::Share))->toBeTrue()
-        ->and($grants->level)->toBe(GrantLevel::Reader);
+        ->and($grants->allows(Ability::Manage))->toBeFalse()
+        ->and($grants->allowedBits)->toBe((new RoleRegistry)->latest(RoleRegistry::ORGANIZER)->bits);
 });
 
 it('ignores an expired grant (read-time expiry)', function (): void {
     $storage = AccessTestHelpers::storage();
     $folder = AccessTestHelpers::folder($storage, null, 'expired');
 
-    AccessTestHelpers::grant(
-        $folder,
-        GrantLevel::Writer,
-        scope: GrantScope::Item,
-        expiresAt: Carbon::now()->subHour(),
-    );
+    AccessTestHelpers::grant($folder, RoleRegistry::WRITER, scope: GrantScope::Item, expiresAt: Carbon::now()->subHour());
 
     expect(resolver()->can(AccessTestHelpers::user(), Ability::View, $folder))->toBeFalse();
 });
@@ -220,136 +208,145 @@ it('honours a still-valid time-boxed grant', function (): void {
     $storage = AccessTestHelpers::storage();
     $folder = AccessTestHelpers::folder($storage, null, 'valid');
 
-    AccessTestHelpers::grant(
-        $folder,
-        GrantLevel::Reader,
-        scope: GrantScope::Item,
-        expiresAt: Carbon::now()->addHour(),
-    );
+    AccessTestHelpers::grant($folder, RoleRegistry::READER, scope: GrantScope::Item, expiresAt: Carbon::now()->addHour());
 
     expect(resolver()->can(AccessTestHelpers::user(), Ability::View, $folder))->toBeTrue();
 });
 
-it('never applies a grant from another storage (workspace boundary)', function (): void {
+it('never applies a grant from another drive', function (): void {
     $storageA = AccessTestHelpers::storage();
     $folderA = AccessTestHelpers::folder($storageA, null, 'a');
 
     $storageB = AccessTestHelpers::storage();
     $folderB = AccessTestHelpers::folder($storageB, null, 'b');
 
-    // A broad subtree allow in storage B must never authorise a node in storage A.
-    AccessTestHelpers::grant($folderB, GrantLevel::Owner, scope: GrantScope::Subtree);
+    AccessTestHelpers::grant($folderB, RoleRegistry::OWNER, scope: GrantScope::Subtree);
 
     expect(resolver()->can(AccessTestHelpers::user(), Ability::View, $folderA))->toBeFalse();
 });
 
-it('honours an absolute super-admin override in both directions', function (): void {
+it('honours an absolute host override in both directions', function (): void {
     $storage = AccessTestHelpers::storage();
     $folder = AccessTestHelpers::folder($storage, null, 'override');
 
-    // Allow override — full access regardless of (absent) grants.
     useRoleDriver(new RoleStubDriver(overrideEffect: Effect::Allow));
     expect(resolver()->can(AccessTestHelpers::user(), Ability::Manage, $folder))->toBeTrue();
 
-    // Deny override — no access even WITH an owner grant.
-    AccessTestHelpers::grant($folder, GrantLevel::Owner, scope: GrantScope::Item);
+    AccessTestHelpers::grant($folder, RoleRegistry::OWNER, scope: GrantScope::Item);
     useRoleDriver(new RoleStubDriver(overrideEffect: Effect::Deny));
     expect(resolver()->can(AccessTestHelpers::user(), Ability::View, $folder))->toBeFalse();
 });
 
-it('maps each ability to the right required bits', function (
-    GrantLevel $level,
+it('gives each role exactly its abilities', function (
+    string $role,
     Ability $ability,
     bool $expected,
 ): void {
     $storage = AccessTestHelpers::storage();
     $folder = AccessTestHelpers::folder($storage, null, 'bits');
-    AccessTestHelpers::grant($folder, $level, scope: GrantScope::Item);
+    AccessTestHelpers::grant($folder, $role, scope: GrantScope::Item);
 
     expect(resolver()->can(AccessTestHelpers::user(), $ability, $folder))->toBe($expected);
 })->with([
-    'reader can view' => [GrantLevel::Reader, Ability::View, true],
-    'reader cannot edit' => [GrantLevel::Reader, Ability::Edit, false],
-    'reader cannot share' => [GrantLevel::Reader, Ability::Share, false],
-    'writer can edit' => [GrantLevel::Writer, Ability::Edit, true],
-    'writer can create' => [GrantLevel::Writer, Ability::Create, true],
-    'writer cannot delete' => [GrantLevel::Writer, Ability::Trash, false],
-    'organizer can trash' => [GrantLevel::Organizer, Ability::Trash, true],
-    'organizer cannot share' => [GrantLevel::Organizer, Ability::Share, false],
-    'owner can share' => [GrantLevel::Owner, Ability::Share, true],
-    'owner can manage' => [GrantLevel::Owner, Ability::Manage, true],
+    'previewer can view' => [RoleRegistry::PREVIEWER, Ability::View, true],
+    'previewer cannot download' => [RoleRegistry::PREVIEWER, Ability::Download, false],
+    'reader can download' => [RoleRegistry::READER, Ability::Download, true],
+    'reader cannot edit' => [RoleRegistry::READER, Ability::Edit, false],
+    'reader cannot comment' => [RoleRegistry::READER, Ability::Comment, false],
+    'commenter can comment' => [RoleRegistry::COMMENTER, Ability::Comment, true],
+    'writer can edit' => [RoleRegistry::WRITER, Ability::Edit, true],
+    'writer can create' => [RoleRegistry::WRITER, Ability::Create, true],
+    'writer can trash' => [RoleRegistry::WRITER, Ability::Trash, true],
+    'writer cannot share' => [RoleRegistry::WRITER, Ability::Share, false],
+    'organizer can share' => [RoleRegistry::ORGANIZER, Ability::Share, true],
+    'organizer cannot delete' => [RoleRegistry::ORGANIZER, Ability::Delete, false],
+    'organizer cannot manage' => [RoleRegistry::ORGANIZER, Ability::Manage, false],
+    'owner can delete' => [RoleRegistry::OWNER, Ability::Delete, true],
+    'owner can manage' => [RoleRegistry::OWNER, Ability::Manage, true],
 ]);
 
-// ── F-P1.1-01: the inherit_grants=false wall is NOT an absolute deny barrier — a
-// nearer allow BELOW it pierces a deny sitting ON it (ADR-0007, no wall exception).
-// This pins the ACTUAL ADR-0007 behaviour so the corrected docblocks can never drift
-// back to the old "un-overridable wall" claim without turning this red. Behaviour is
-// unchanged (D17/D19: characterization/green, red-before structurally inapplicable).
-it('lets a nearer allow pierce a deny sitting ON the inherit_grants=false wall (ADR-0007), F-P1.1-01', function (): void {
+it('applies a subtree grant below a boundary to everything under it', function (): void {
+    // Formerly F-P1.1-01: a nearer allow pierces a deny sitting ON the wall.
     $storage = AccessTestHelpers::storage();
     $top = AccessTestHelpers::folder($storage, null, 'top');
-    // The wall carries a subtree DENY and severs inheritance from above.
     $wall = AccessTestHelpers::folder($storage, $top, 'wall', inheritGrants: false);
     $mid = AccessTestHelpers::folder($storage, $wall, 'mid');
     $target = AccessTestHelpers::folder($storage, $mid, 'target');
 
-    // Deny READ (subtree) ON the wall itself…
-    AccessTestHelpers::grant($wall, GrantLevel::Reader, effect: Effect::Deny, scope: GrantScope::Subtree);
-    // …pierced by a NEARER allow READ (subtree) on mid, between target and wall.
-    AccessTestHelpers::grant($mid, GrantLevel::Reader, effect: Effect::Allow, scope: GrantScope::Subtree);
+    AccessTestHelpers::grant($top, RoleRegistry::OWNER, scope: GrantScope::Subtree);
+    AccessTestHelpers::grant($mid, RoleRegistry::READER, scope: GrantScope::Subtree);
 
-    expect(resolver()->can(AccessTestHelpers::user(), Ability::View, $target))->toBeTrue();
+    expect(resolver()->can(AccessTestHelpers::user(), Ability::View, $target))->toBeTrue()
+        ->and(resolver()->can(AccessTestHelpers::user(), Ability::Edit, $target))->toBeFalse()
+        ->and(resolver()->can(AccessTestHelpers::user(), Ability::View, $wall))->toBeFalse();
 });
 
-// ── F-P1.1-01: the corrected docblocks must not re-assert the false "un-overridable
-// wall / can ever pierce" guarantee (guard against doc drift back to the finding).
 it('AccessResolver docblocks no longer claim an un-overridable wall, F-P1.1-01', function (): void {
     $file = (new ReflectionClass(AccessResolver::class))->getFileName();
     $source = file_get_contents($file);
 
     expect($source)->not->toContain('un-overridable wall')
-        ->and($source)->not->toContain('can ever pierce');
+        ->and($source)->not->toContain('can ever pierce')
+        ->and($source)->not->toContain('max(');
 });
 
-// ── F-P1.1-02: explain() surfaces the deciding ACE chain + depth + reason for a
-// deny-vetoed ability (red-before: the method does not exist prior to the fix).
-it('explain() returns the deciding ACE chain and reason for a deny-vetoed ability, F-P1.1-02', function (): void {
+it('explain() lists every applying role with its origin and the boundary that stopped the walk', function (): void {
+    // Formerly F-P1.1-02: the deciding ACE chain for a deny-vetoed ability.
     $storage = AccessTestHelpers::storage();
-    $parent = AccessTestHelpers::folder($storage, null, 'parent');
+    $top = AccessTestHelpers::folder($storage, null, 'top');
+    $parent = AccessTestHelpers::folder($storage, $top, 'parent', inheritGrants: false);
     $child = AccessTestHelpers::folder($storage, $parent, 'child');
 
-    // Farther allow on the parent, nearer deny on the child → Edit is denied by veto.
-    AccessTestHelpers::grant($parent, GrantLevel::Writer, scope: GrantScope::Subtree);
-    AccessTestHelpers::grant($child, GrantLevel::Writer, effect: Effect::Deny, scope: GrantScope::Item);
+    AccessTestHelpers::grant($top, RoleRegistry::OWNER, scope: GrantScope::Subtree);
+    $inherited = AccessTestHelpers::grant($parent, RoleRegistry::COMMENTER, scope: GrantScope::Subtree, expiresAt: Carbon::now()->addDay());
+    AccessTestHelpers::grant($parent, RoleRegistry::WRITER, scope: GrantScope::Item);
+    $direct = AccessTestHelpers::grant($child, RoleRegistry::PREVIEWER, scope: GrantScope::Item);
 
     $explanation = resolver()->explain(AccessTestHelpers::user(), Ability::Edit, $child);
 
     expect($explanation->allowed)->toBeFalse()
-        ->and($explanation->reason)->toBe(AccessExplanation::REASON_DENY_VETO)
+        ->and($explanation->reason)->toBe(AccessExplanation::REASON_NO_GRANT)
         ->and($explanation->ability)->toBe(Ability::Edit)
-        ->and($explanation->aces)->toHaveCount(2);
+        ->and($explanation->restrictions)->toBe([])
+        ->and((string) $explanation->boundaryNodeId)->toBe((string) $parent->id)
+        ->and($explanation->sources)->toHaveCount(2);
 
-    // The deciding deny ACE sits at depth 0 (the child itself); the allow at depth 1.
-    $denyAce = collect($explanation->aces)->firstWhere('effect', Effect::Deny);
-    $allowAce = collect($explanation->aces)->firstWhere('effect', Effect::Allow);
-
-    expect($denyAce)->not->toBeNull()
-        ->and($denyAce->depth)->toBe(0)
-        ->and($denyAce->counted)->toBeTrue()
-        ->and($allowAce)->not->toBeNull()
-        ->and($allowAce->depth)->toBe(1);
+    [$nearest, $farther] = $explanation->sources;
+    expect((string) $nearest->grantId)->toBe((string) $direct->id)
+        ->and($nearest->role)->toBe(RoleRegistry::PREVIEWER)
+        ->and($nearest->inherited)->toBeFalse()
+        ->and((string) $farther->grantId)->toBe((string) $inherited->id)
+        ->and($farther->role)->toBe(RoleRegistry::COMMENTER)
+        ->and($farther->roleVersion)->toBe(1)
+        ->and((string) $farther->originNodeId)->toBe((string) $parent->id)
+        ->and($farther->inherited)->toBeTrue()
+        ->and($farther->expiresAt?->equalTo($inherited->expires_at))->toBeTrue();
 });
 
-// ── F-P1.1-02: explain() reports a plain allow with the folded masks (control).
-it('explain() reports a granted ability with reason=allow, F-P1.1-02', function (): void {
+it('explain() reports a granted ability with reason=allow and names the host role source', function (): void {
     $storage = AccessTestHelpers::storage();
     $folder = AccessTestHelpers::folder($storage, null, 'granted');
-    AccessTestHelpers::grant($folder, GrantLevel::Writer, scope: GrantScope::Item);
+    AccessTestHelpers::grant($folder, RoleRegistry::READER, scope: GrantScope::Item);
+    useRoleDriver(new RoleStubDriver(role: RoleRegistry::WRITER));
 
     $explanation = resolver()->explain(AccessTestHelpers::user(), Ability::Edit, $folder);
 
     expect($explanation->allowed)->toBeTrue()
         ->and($explanation->reason)->toBe(AccessExplanation::REASON_ALLOW)
-        ->and($explanation->level)->toBe(GrantLevel::Writer)
-        ->and($explanation->aces)->toHaveCount(1);
+        ->and($explanation->boundaryNodeId)->toBeNull()
+        ->and(array_map(static fn ($source): string => $source->role, $explanation->sources))->toBe([RoleRegistry::READER, RoleRegistry::WRITER])
+        ->and($explanation->sources[1]->grantId)->toBeNull();
+});
+
+it('explain() names an administrative block as a restriction', function (): void {
+    $storage = AccessTestHelpers::storage();
+    $folder = AccessTestHelpers::folder($storage, null, 'blocked');
+    AccessTestHelpers::grant($folder, RoleRegistry::OWNER, scope: GrantScope::Item);
+    useRoleDriver(new RoleStubDriver(overrideEffect: Effect::Deny));
+
+    $explanation = resolver()->explain(AccessTestHelpers::user(), Ability::View, $folder);
+
+    expect($explanation->allowed)->toBeFalse()
+        ->and($explanation->reason)->toBe(AccessExplanation::REASON_OVERRIDE_DENY)
+        ->and($explanation->restrictions)->toBe([AccessExplanation::RESTRICTION_OVERRIDE_DENY]);
 });

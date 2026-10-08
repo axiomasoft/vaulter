@@ -66,7 +66,14 @@ to the current actor. Use an accessible storage; the response is 404 `drive_not_
 
 `PermissionDeniedException` — either the legacy document path's authorization hook, or
 the Drive ACL (`AccessResolver` + `PermissionDriver`), denied the attempted action. Grant
-the required level/scope on the node or an ancestor. The API maps this to `403`.
+a role that carries the ability on the node or an ancestor above any inheritance boundary.
+The API maps this to `403`.
+
+## unknown-role
+
+`UnknownRoleException` (422 `unknown_role`) — a grant, a share link or a permission driver
+role map named a role (or role version) that is not registered. The 1.0 roles are
+`previewer`, `reader`, `commenter`, `writer`, `organizer` and `owner`, all at version 1.
 
 ## unknown-document-type
 

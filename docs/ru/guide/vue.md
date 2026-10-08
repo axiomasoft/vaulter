@@ -220,7 +220,7 @@ import { useNodeGrants } from '@vaulter/vue'
 const { grants, loading, error, list, grant, revoke } = useNodeGrants(nodeId)
 
 await list()
-await grant({ subjectType: 'user', subjectId: 42, level: 'editor', scope: 'subtree' })
+await grant({ subjectType: 'user', subjectId: 42, role: 'writer', scope: 'subtree' })
 await revoke({ subjectType: 'user', subjectId: 42 })
 ```
 
@@ -231,9 +231,9 @@ await revoke({ subjectType: 'user', subjectId: 42 })
 | `grant(payload)` | `Promise<NodeGrant>` | добавить грант (добавляется в начало списка) |
 | `revoke(payload)` | `Promise<void>` | снять **все** гранты, что держит субъект |
 
-Полезная нагрузка гранта (`GrantNodeAccessPayload`) несёт `subjectType`, `subjectId`, `level`
-(`reader` / `commenter` / `editor` / `manager`) и опциональные `effect` (`allow` / `deny`), `scope`
-(`item` / `subtree`), сырые биты `permissions` и `expiresAt`.
+Полезная нагрузка гранта (`GrantNodeAccessPayload`) несёт `subjectType`, `subjectId`, `role`
+(`previewer` / `reader` / `commenter` / `writer` / `organizer` / `owner`) и опциональные `scope`
+(`item` / `subtree`) и `expiresAt`.
 
 ### `useNodeShares`
 
@@ -434,8 +434,7 @@ onBeforeUnmount(disconnect)
 |------|------|---------|
 | `nodeId` | `NodeId` | — |
 | `autoLoad` | `boolean` | `true` |
-| `levels` | `GrantLevelName[]` | `['reader','commenter','editor','manager']` |
-| `effects` | `GrantEffectName[]` | `['allow','deny']` |
+| `roles` | `GrantRoleName[]` | `['previewer','reader','commenter','writer','organizer','owner']` |
 | `scopes` | `GrantScopeName[]` | `['item','subtree']` |
 | `resolveSubject` | `(type, id) => GrantSubject \| Promise<GrantSubject>` | пробрасывает сырые type/id как есть |
 
@@ -456,7 +455,7 @@ onBeforeUnmount(disconnect)
 |------|------|---------|
 | `nodeId` | `NodeId` | — |
 | `autoLoad` | `boolean` | `true` |
-| `levels` | `GrantLevelName[]` | `['reader','commenter','editor','manager']` |
+| `levels` | `GrantLevelName[]` | `['previewer','reader','writer']` |
 | `scopes` | `GrantScopeName[]` | `['item','subtree']` |
 
 **Эмиты**: `created(share)`, `revoked(shareId)`.

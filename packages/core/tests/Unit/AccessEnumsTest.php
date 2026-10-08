@@ -2,66 +2,85 @@
 
 declare(strict_types=1);
 
+use Vaulter\Access\Roles\Role;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\Permission;
+use Vaulter\Exceptions\Access\UnknownRoleException;
 
 /**
- * The bitmask/level/ability mapping (master plan §2.6 / H.2): the single int the
- * whole engine reasons over. These pin the exact bits so a future edit cannot
- * silently widen or narrow a level.
+ * The bit layout, the ability → bit map and the v1 role table (PLAN2.D45, D53). These
+ * pin the exact sets so a future edit cannot silently widen or narrow a role: a
+ * changed set must be a new role version.
  */
-it('computes all six independent permission bits', function (): void {
-    expect(Permission::all())->toBe(63)
-        ->and(array_column(Permission::cases(), 'value'))->toBe([1, 2, 4, 8, 16, 32]);
+it('gives each ability its own bit and never reuses one', function (): void {
+    expect(Permission::all())->toBe(4095)
+        ->and(array_column(Permission::cases(), 'value'))->toBe([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048])
+        ->and(array_map(static fn (Ability $ability): int => $ability->bits(), Ability::cases()))
+        ->toBe([1, 64, 32, 2, 4, 128, 256, 512, 1024, 16, 2048, 8]);
 });
 
-it('ranks and bit-maps each grant level', function (
-    GrantLevel $level,
-    int $rank,
-    int $bits,
-): void {
-    expect($level->rank())->toBe($rank)
-        ->and($level->bits())->toBe($bits);
-})->with([
-    'reader' => [GrantLevel::Reader, 1, 1],            // READ
-    'commenter' => [GrantLevel::Commenter, 2, 33],         // READ
-    'writer' => [GrantLevel::Writer, 3, 39],            // READ|UPDATE|CREATE
-    'organizer' => [GrantLevel::Organizer, 4, 47],        // +DELETE
-    'owner' => [GrantLevel::Owner, 5, 63],            // ALL
-]);
-
-it('implies lower-ranked levels but not higher ones', function (): void {
-    expect(GrantLevel::Owner->implies(GrantLevel::Reader))->toBeTrue()
-        ->and(GrantLevel::Reader->implies(GrantLevel::Owner))->toBeFalse()
-        ->and(GrantLevel::Writer->max(GrantLevel::Reader))->toBe(GrantLevel::Writer);
-});
-
-it('maps each ability to its required bits', function (
-    Ability $ability,
-    int $bits,
-): void {
-    expect($ability->requiredBits())->toBe($bits);
+it('maps each ability to exactly its own bit', function (Ability $ability, int $bits): void {
+    expect($ability->bits())->toBe($bits)
+        ->and(Ability::fromMask($bits))->toBe([$ability]);
 })->with([
     'view' => [Ability::View, 1],
-    'download' => [Ability::Download, 1],
+    'download' => [Ability::Download, 64],
     'comment' => [Ability::Comment, 32],
     'edit' => [Ability::Edit, 2],
     'create' => [Ability::Create, 4],
-    'move' => [Ability::Move, 6],     // UPDATE|CREATE
-    'copy' => [Ability::Copy, 4],
-    'trash' => [Ability::Trash, 8],
-    'restore' => [Ability::Restore, 8],
-    'delete' => [Ability::Delete, 8],   // collapses into DELETE (no orphan action)
+    'move' => [Ability::Move, 128],
+    'copy' => [Ability::Copy, 256],
+    'trash' => [Ability::Trash, 512],
+    'restore' => [Ability::Restore, 1024],
+    'delete' => [Ability::Delete, 8],
     'share' => [Ability::Share, 16],
-    'manage' => [Ability::Manage, 63],
+    'manage' => [Ability::Manage, 2048],
 ]);
 
-it('satisfies an ability only when ALL its required bits are present', function (): void {
-    // Move needs UPDATE|CREATE (6); READ|UPDATE (3) is not enough, READ|UPDATE|CREATE (7) is.
-    expect(Ability::Move->satisfiedBy(0b011))->toBeFalse()
-        ->and(Ability::Move->satisfiedBy(0b111))->toBeTrue()
-        ->and(Ability::Manage->satisfiedBy(63))->toBeTrue()
-        ->and(Ability::Manage->satisfiedBy(31))->toBeFalse()
-        ->and(Ability::Manage->satisfiedBy(15))->toBeFalse();
+it('satisfies an ability by its bit alone; view and download are independent', function (): void {
+    expect(Ability::Download->satisfiedBy(Ability::View->bits()))->toBeFalse()
+        ->and(Ability::View->satisfiedBy(Ability::Download->bits()))->toBeFalse()
+        ->and(Ability::Manage->satisfiedBy(Permission::all() & ~Permission::Manage->value))->toBeFalse()
+        ->and(Ability::Move->satisfiedBy(Ability::mask([Ability::Edit, Ability::Create])))->toBeFalse();
+});
+
+it('pins the v1 role table', function (string $role, array $abilities): void {
+    $resolved = (new RoleRegistry)->get($role, 1);
+
+    expect($resolved->key)->toBe($role)
+        ->and($resolved->version)->toBe(1)
+        ->and(array_map(static fn (Ability $ability): string => $ability->value, Ability::fromMask($resolved->bits)))->toBe($abilities);
+})->with([
+    'previewer' => [RoleRegistry::PREVIEWER, ['view']],
+    'reader' => [RoleRegistry::READER, ['view', 'download']],
+    'commenter' => [RoleRegistry::COMMENTER, ['view', 'download', 'comment']],
+    'writer' => [RoleRegistry::WRITER, ['view', 'download', 'comment', 'edit', 'create', 'move', 'copy', 'trash', 'restore']],
+    'organizer' => [RoleRegistry::ORGANIZER, ['view', 'download', 'comment', 'edit', 'create', 'move', 'copy', 'trash', 'restore', 'share']],
+    'owner' => [RoleRegistry::OWNER, ['view', 'download', 'comment', 'edit', 'create', 'move', 'copy', 'trash', 'restore', 'share', 'manage', 'delete']],
+]);
+
+it('nests the built-in roles so any set of them unions to one of them', function (): void {
+    $roles = (new RoleRegistry)->all();
+    expect(array_map(static fn (Role $role): string => $role->key, $roles))
+        ->toBe(['previewer', 'reader', 'commenter', 'writer', 'organizer', 'owner']);
+    foreach ($roles as $i => $role) {
+        foreach (array_slice($roles, 0, $i) as $narrower) {
+            expect($role->covers($narrower))->toBeTrue()->and($narrower->covers($role))->toBeFalse();
+        }
+    }
+    expect(Role::covering([$roles[1], $roles[4], $roles[2]]))->toBe($roles[4])
+        ->and(Role::covering([new Role('a', 1, [Ability::View]), new Role('b', 1, [Ability::Download])]))->toBeNull();
+});
+
+it('refuses unknown role keys and versions', function (): void {
+    expect(fn () => (new RoleRegistry)->latest('editor'))->toThrow(UnknownRoleException::class)
+        ->and(fn () => (new RoleRegistry)->get(RoleRegistry::READER, 2))->toThrow(UnknownRoleException::class)
+        ->and((new RoleRegistry)->has(RoleRegistry::READER, 1))->toBeTrue()
+        ->and((new RoleRegistry)->has('Reader'))->toBeFalse();
+    try {
+        (new RoleRegistry)->latest('editor');
+    } catch (UnknownRoleException $exception) {
+        expect($exception->problemCode())->toBe('unknown_role')->and($exception->httpStatus())->toBe(422);
+    }
 });

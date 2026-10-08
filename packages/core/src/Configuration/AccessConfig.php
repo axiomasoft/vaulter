@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
+use Vaulter\Access\Roles\RoleRegistry;
+use Vaulter\Exceptions\Access\UnknownRoleException;
 /**
  * Typed accessors over config('vaulter.*'). All package code reads configuration
  * through here so the surface is type-safe and swappable models resolve consistently.
  */
 
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
 final readonly class AccessConfig
@@ -56,9 +57,9 @@ final readonly class AccessConfig
 
         $map = [];
 
-        foreach ($value as $level => $ability) {
-            if (is_string($level) && is_string($ability) && $ability !== '') {
-                $map[$level] = $ability;
+        foreach ($value as $role => $ability) {
+            if (is_string($role) && is_string($ability) && $ability !== '') {
+                $map[$this->roleKey($role)] = $ability;
             }
         }
 
@@ -83,11 +84,12 @@ final readonly class AccessConfig
     private function gateDefaults(): array
     {
         return [
-            GrantLevel::Reader->value => 'vaulter.view',
-            GrantLevel::Commenter->value => 'vaulter.comment',
-            GrantLevel::Writer->value => 'vaulter.edit',
-            GrantLevel::Organizer->value => 'vaulter.organize',
-            GrantLevel::Owner->value => 'vaulter.manage',
+            RoleRegistry::PREVIEWER => 'vaulter.preview',
+            RoleRegistry::READER => 'vaulter.view',
+            RoleRegistry::COMMENTER => 'vaulter.comment',
+            RoleRegistry::WRITER => 'vaulter.edit',
+            RoleRegistry::ORGANIZER => 'vaulter.organize',
+            RoleRegistry::OWNER => 'vaulter.manage',
         ];
     }
 
@@ -102,9 +104,9 @@ final readonly class AccessConfig
 
         $map = [];
 
-        foreach ($value as $level => $permission) {
-            if (is_string($level) && is_string($permission) && $permission !== '') {
-                $map[$level] = $permission;
+        foreach ($value as $role => $permission) {
+            if (is_string($role) && is_string($permission) && $permission !== '') {
+                $map[$this->roleKey($role)] = $permission;
             }
         }
 
@@ -156,11 +158,27 @@ final readonly class AccessConfig
     private function spatieDefaults(): array
     {
         return [
-            GrantLevel::Reader->value => 'vaulter.view',
-            GrantLevel::Commenter->value => 'vaulter.comment',
-            GrantLevel::Writer->value => 'vaulter.edit',
-            GrantLevel::Organizer->value => 'vaulter.organize',
-            GrantLevel::Owner->value => 'vaulter.manage',
+            RoleRegistry::PREVIEWER => 'vaulter.preview',
+            RoleRegistry::READER => 'vaulter.view',
+            RoleRegistry::COMMENTER => 'vaulter.comment',
+            RoleRegistry::WRITER => 'vaulter.edit',
+            RoleRegistry::ORGANIZER => 'vaulter.organize',
+            RoleRegistry::OWNER => 'vaulter.manage',
         ];
+    }
+
+    /**
+     * A role map key must name a registered role; a typo would otherwise silently
+     * grant nothing.
+     *
+     * @throws UnknownRoleException
+     */
+    private function roleKey(string $key): string
+    {
+        if (!(new RoleRegistry)->has($key)) {
+            throw UnknownRoleException::for($key);
+        }
+
+        return $key;
     }
 }

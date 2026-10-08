@@ -13,8 +13,7 @@ and role system into Vaulter.
 
 ::: info The contract is node-blind
 A `PermissionDriver` never receives a `Node` and never deals in magic-string actions —
-only an `Authorizable` actor and an `AccessScope` (panel + workspace coordinates + node
-owner). That keeps every driver swappable and the resolver the single authority.
+only an `Authorizable` actor and an `AccessScope` (profile + drive coordinates + tenant). That keeps every driver swappable and the resolver the single authority.
 :::
 
 ## The PermissionDriver contract
@@ -25,8 +24,8 @@ owner). That keeps every driver swappable and the resolver the single authority.
 interface PermissionDriver
 {
     // Per-subject role decision, or null when the host has nothing to say.
-    // Folded as roleAllow into granted = max(aclAllow, roleAllow) — it can RAISE
-    // access but never override a deny (the final veto still applies).
+    // The role the host grants here (Decision{Role}), or null. It is UNIONED with the
+    // node grants — it can RAISE access but never lowers it.
     public function resolve(Subject $subject, Authorizable $actor, AccessScope $scope): ?Decision;
 
     // An absolute super-admin override, or null. Allow/Deny short-circuit BOTH
@@ -44,7 +43,8 @@ interface PermissionDriver
 ```
 
 A driver's `resolve()` may only **raise** access (it returns an allow `Decision` or
-`null`); the deny veto stays the ACL's job. `subjectsFor()` is what lets a
+`null`); an administrative block is `override()`'s job, never a `Decision`. A driver that
+grants several roles returns `Decision::union($roles)`. `subjectsFor()` is what lets a
 `v_node_grants` row addressed to a role or team match an actor.
 
 ## Selecting a driver
@@ -122,9 +122,9 @@ dependencies.
 
 - **`override`** asks a configurable super ability (default `vaulter.super`). When the
   Gate allows it, the actor short-circuits to full access; otherwise it defers (`null`,
-  never a hard deny).
-- **`resolve`** asks the Gate each mapped ability (low → high) and folds the **highest
-  allowed level** into the `Decision`. The Gate check is node-blind — it receives the
+  never a block).
+- **`resolve`** asks the Gate each mapped role's ability and returns the **union of the
+  roles** it allows as the `Decision`. The Gate check is node-blind — it receives the
   `AccessScope`'s `{panel, workspace_type, workspace_id}`, never a `Node`.
 - **`subjectsFor`** = `[Subject(actor)]` only. The Gate exposes no enumerable role/team
   subjects, so grant rows addressed to a role/team are not matched by this lane — use
@@ -141,6 +141,7 @@ resolver.
 // config/vaulter.php — used only when access.permission_driver = 'gate'
 'access' => ['gate' => [
     'abilities' => [
+        'previewer' => 'vaulter.preview',
         'reader'    => 'vaulter.view',
         'commenter' => 'vaulter.comment',
         'writer'    => 'vaulter.edit',
@@ -152,8 +153,8 @@ resolver.
 ]],
 ```
 
-The `abilities` map couples a Vaulter `GrantLevel` to a host Gate ability string. Map
-only the levels you actually gate. Implement matching policies:
+The `abilities` map couples a Vaulter role key to a host Gate ability string. Map
+only the roles you actually gate; a key that is not a role throws `UnknownRoleException`. Implement matching policies:
 
 ```php
 // A host policy / Gate definition
@@ -176,8 +177,8 @@ entire v8 team-switch dance so it never leaks into the resolver.
   enabled), so a grant row addressed to a `role`/`team` matches.
 - **`resolve`** checks each mapped permission via `$actor->hasPermissionTo($name)`,
   **team-scoped** to the workspace (`setPermissionsTeamId($scope->workspaceId)`), then
-  restores the previous team id and the actor's loaded relations. The highest allowed
-  level becomes the `Decision`.
+  restores the previous team id and the actor's loaded relations. The union of the
+  allowed roles becomes the `Decision`.
 - **`override`** asks a configurable super permission.
 - **`canCreateInWorkspace`** asks the create permission in the workspace's team context.
 
@@ -194,6 +195,7 @@ to a safe deny (`null`/`false`), never a fatal error.
 // config/vaulter.php — used only when access.permission_driver = 'spatie'
 'access' => ['spatie' => [
     'permissions' => [
+        'previewer' => 'vaulter.preview',
         'reader'    => 'vaulter.view',
         'commenter' => 'vaulter.comment',
         'writer'    => 'vaulter.edit',
@@ -218,7 +220,7 @@ The full v8 dance — capture the current team id, `setPermissionsTeamId($worksp
 check, restore in a `finally` — lives entirely inside the driver, so concurrent panels
 never bleed into each other. After the host mutates an actor's roles/permissions
 **outside** Spatie's own assign/remove helpers, it must reset the cache so a stale,
-team-scoped permission can't grant a revoked level on the next resolve:
+team-scoped permission can't grant a revoked role on the next resolve:
 
 ```php
 use Vaulter\Access\Drivers\SpatiePermissionDriver;
@@ -246,22 +248,22 @@ and throws `MissingPermissionDriverException`.
 The composite resolution order is node-ACL → workspace-scoped role → global. This driver
 owns the **workspace-scoped role** lane:
 
-- **`override`** = `isSuperAdmin()` → `Effect::Allow`, else `null` (never a deny).
-- **`resolve`** maps each ranked level's defining ability to an AzGuard permission and
-  asks `hasPermissionIn($workspaceType, $workspaceId, $permission)`; the highest allowed
-  level becomes the `Decision`. (`AccessScope` is node-blind, so this is the
+- **`override`** = `isSuperAdmin()` → `Effect::Allow`, else `null` (never a block).
+- **`resolve`** maps each role's defining ability to an AzGuard permission and
+  asks `hasPermissionIn($workspaceType, $workspaceId, $permission)`; the union of the
+  allowed roles becomes the `Decision`. (`AccessScope` is node-blind, so this is the
   workspace-scoped check.)
 - **`subjectsFor`** = `[Subject(actor)]` only — AzGuard *answers* checks rather than
   enumerating role-subjects. A host that addresses grant rows to AzGuard roles should
   subclass and append those Subjects.
 - **`canCreateInWorkspace`** asks `hasPermissionIn($type, $id, $createPermission)`.
 
-The level → defining-ability probes are: `Reader → View`, `Commenter → Comment`,
-`Writer → Edit`, `Organizer → Delete`, `Owner → Manage`.
+The role → defining-ability probes are: `Previewer → View`, `Reader → Download`,
+`Commenter → Comment`, `Writer → Edit`, `Organizer → Share`, `Owner → Manage`.
 
 ### Configuration
 
-Unlike Gate/Spatie (keyed by `GrantLevel`), the AzGuard map is **action-centric** —
+Unlike Gate/Spatie (keyed by role key), the AzGuard map is **action-centric** —
 keyed by `Ability`:
 
 ```php
@@ -371,11 +373,11 @@ app()->bind(\Vaulter\Azgard\Contracts\AzgardGuard::class,
 | | Database | Gate | Spatie | AzGuard |
 |---|---|---|---|---|
 | Extra dependency | none | none (built-in) | optional `spatie/laravel-permission` | `axioma-studio/vaulter-azgard` + its dependencies |
-| Map keyed by | — | `GrantLevel` | `GrantLevel` | `Ability` |
+| Map keyed by | — | role key | role key | `Ability` |
 | Enumerates role/team subjects | subclass | no | yes | no |
 | Super-admin override | no | `vaulter.super` ability | super permission | SuperAdmin wildcard |
 | Workspace-scoped | per-node grants | node-blind context | team-scoped | `hasPermissionIn` |
-| Safe when not configured | n/a | yes | yes (deny) | only with the bridge installed |
+| Safe when not configured | n/a | yes | yes (no access) | only with the bridge installed |
 
 ## See also
 
@@ -383,4 +385,4 @@ app()->bind(\Vaulter\Azgard\Contracts\AzgardGuard::class,
   decision.
 - [Grants](./grants) — the `v_node_grants` rows the subject-set is matched against.
 - [Multi-tenancy recipe](../guide/recipes) — end-to-end tenant + role wiring.
-- ADR-0002 (authorization delegation), ADR-0007 (the AzGuard seam).
+- ADR-0002 (authorization delegation), ADR-0007 (the AzGuard seam), ADR-0025 (access model 1.0: roles, no deny).

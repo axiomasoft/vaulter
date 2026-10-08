@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Filament\Resources\ActivityResource;
@@ -49,11 +49,11 @@ it('reads the panel activity through current root and target visibility', functi
     $this->actingAs($actor);
     $drive = DriveBuilder::storage();
     $root = $drive->rootNode()->firstOrFail();
-    DriveBuilder::grant($root, $actor, GrantLevel::Reader, scope: GrantScope::Item);
+    DriveBuilder::grant($root, $actor, RoleRegistry::READER, scope: GrantScope::Item);
     $node = DriveBuilder::folder($drive, 'hidden');
     $hidden = Activity::query()->where('target_id', $node->id)->firstOrFail();
     expect(ActivityResource::getEloquentQuery()->whereKey($hidden->id)->exists())->toBeFalse();
-    $grant = DriveBuilder::grant($node, $actor, GrantLevel::Reader);
+    $grant = DriveBuilder::grant($node, $actor, RoleRegistry::READER);
     expect(ActivityResource::getEloquentQuery()->whereKey($hidden->id)->exists())->toBeTrue();
     $grant->delete();
     expect(ActivityResource::getEloquentQuery()->whereKey($hidden->id)->exists())->toBeFalse();

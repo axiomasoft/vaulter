@@ -3,12 +3,14 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Data\Access\GrantInput;
 use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Access\Permission;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Exceptions\Access\UnknownRoleException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Models\Activity\Activity;
@@ -36,16 +38,16 @@ it('conceals hidden grants and shares before checking Share', function (): void 
     foreach ([AccessOperations::class => 'grants', ShareOperations::class => 'list'] as $class => $method) {
         $operation = app()->makeWith($class, ['context' => $this->context]);
         expect(fn () => $operation->$method($this->node))->toThrow(NodeNotFoundException::class);
-        $grant = AccessTestHelpers::grant($this->node, GrantLevel::Reader);
+        $grant = AccessTestHelpers::grant($this->node, RoleRegistry::READER);
         expect(fn () => $operation->$method($this->node))->toThrow(PermissionDeniedException::class);
         $grant->delete();
     }
 });
 
 it('rejects foreign grants and forged model membership without side effects', function (): void {
-    AccessTestHelpers::grant($this->node, GrantLevel::Owner);
+    AccessTestHelpers::grant($this->node, RoleRegistry::OWNER);
     $foreign = AccessTestHelpers::folder($this->drive, null, 'other');
-    $grant = AccessTestHelpers::grant($foreign, GrantLevel::Reader);
+    $grant = AccessTestHelpers::grant($foreign, RoleRegistry::READER);
     $forged = clone $grant;
     $forged->node_id = $this->node->id;
     $operations = app()->makeWith(AccessOperations::class, ['context' => $this->context]);
@@ -54,7 +56,7 @@ it('rejects foreign grants and forged model membership without side effects', fu
 });
 
 it('requires caller Manage before explaining a privileged supplied subject', function (): void {
-    AccessTestHelpers::grant($this->node, GrantLevel::Reader);
+    AccessTestHelpers::grant($this->node, RoleRegistry::READER);
     $operations = app()->makeWith(AccessOperations::class, ['context' => $this->context]);
     expect(fn () => $operations->explain($this->node, Ability::View, AccessTestHelpers::user(99)))->toThrow(PermissionDeniedException::class);
 });
@@ -63,12 +65,12 @@ it('uses the grants feature independently of disabled bearer links', function ()
     $registry = new ProfileRegistry;
     $registry->register((new Profile)->key('default')->grants()->shareLinks(false));
     app()->instance(ProfileRegistry::class, $registry);
-    AccessTestHelpers::grant($this->node, GrantLevel::Owner);
+    AccessTestHelpers::grant($this->node, RoleRegistry::OWNER);
     $operations = app()->makeWith(AccessOperations::class, ['context' => $this->context]);
-    $grant = $operations->grant($this->node, new GrantInput(Subject::ofModel(AccessTestHelpers::user(2)), GrantLevel::Reader));
+    $grant = $operations->grant($this->node, new GrantInput(Subject::ofModel(AccessTestHelpers::user(2)), RoleRegistry::READER));
     expect($grant->granted_by)->toEqual(1);
     $shares = app()->makeWith(ShareOperations::class, ['context' => $this->context]);
-    expect(fn () => $shares->create($this->node, new ShareLinkInput(1)))->toThrow(ProfileRestrictionException::class);
+    expect(fn () => $shares->create($this->node, new ShareLinkInput(Permission::View->value | Permission::Download->value)))->toThrow(ProfileRestrictionException::class);
 });
 
 it('records explicit system actor and correlation without ambient auth attribution', function (): void {
@@ -77,7 +79,7 @@ it('records explicit system actor and correlation without ambient auth attributi
     $system = new OperationContext($this->drive, Actor::system('import fixture'), 'system-correlation');
     $operations = app()->makeWith(ShareOperations::class, ['context' => $system]);
     Activity::query()->delete();
-    $minted = $operations->create($this->node, new ShareLinkInput(1));
+    $minted = $operations->create($this->node, new ShareLinkInput(Permission::View->value | Permission::Download->value));
     $row = Activity::query()->sole();
     expect($row->actor_type)->toBe(ActorRef::SYSTEM_TYPE)
         ->and($row->actor_id)->toBeNull()
@@ -88,22 +90,24 @@ it('records explicit system actor and correlation without ambient auth attributi
         ->and(json_encode($minted->share->getAttributes()))->not->toContain($minted->token);
 });
 
-it('validates public grant bits and subject keys', function (): void {
-    foreach ([-1, 64, 128] as $bits) {
-        expect(fn () => new GrantInput(new Subject('user', 1), GrantLevel::Reader, permissions: $bits))->toThrow(InvalidArgumentException::class);
+it('validates public grant roles and subject keys', function (): void {
+    foreach (['', 'admin', 'Reader', 'editor'] as $role) {
+        expect(fn () => new GrantInput(new Subject('user', 1), $role))->toThrow(UnknownRoleException::class);
     }
-    expect(fn () => new GrantInput(new Subject('', ''), GrantLevel::Reader))->toThrow(InvalidArgumentException::class);
-    expect((new GrantInput(new Subject('user', 'key'), GrantLevel::Reader, permissions: 63))->permissions)->toBe(63);
+    expect(fn () => new GrantInput(new Subject('', ''), RoleRegistry::READER))->toThrow(InvalidArgumentException::class);
+    expect((new GrantInput(new Subject('user', 'key'), RoleRegistry::PREVIEWER))->role)->toBe(RoleRegistry::PREVIEWER);
 });
 
 it('applies the same guard on HTTP grants and conceals hidden nodes', function (): void {
     $this->actingAs(AccessTestHelpers::user());
     $url = 'api/vaulter/nodes/'.$this->node->id.'/grants';
     $this->getJson($url)->assertNotFound();
-    $grant = AccessTestHelpers::grant($this->node, GrantLevel::Reader);
+    $grant = AccessTestHelpers::grant($this->node, RoleRegistry::READER);
     $this->getJson($url)->assertForbidden();
-    $grant->forceFill(['level' => GrantLevel::Owner])->save();
-    $this->postJson($url, ['subject_type' => AccessTestHelpers::user()->getMorphClass(), 'subject_id' => 2, 'level' => 'reader', 'permissions' => 32])->assertCreated();
+    $grant->forceFill(['role_key' => RoleRegistry::OWNER])->save();
+    $this->postJson($url, ['subject_type' => AccessTestHelpers::user()->getMorphClass(), 'subject_id' => 2, 'role' => 'commenter'])->assertCreated()
+        ->assertJsonPath('data.role', 'commenter')->assertJsonPath('data.role_version', 1);
+    $this->postJson($url, ['subject_type' => AccessTestHelpers::user()->getMorphClass(), 'subject_id' => 3, 'role' => 'editor'])->assertUnprocessable();
     $this->getJson($url)->assertOk()->assertJsonCount(2, 'data');
     $this->deleteJson($url, ['subject_type' => AccessTestHelpers::user()->getMorphClass(), 'subject_id' => 2])->assertNoContent();
     $this->getJson($url)->assertOk()->assertJsonCount(1, 'data');
@@ -115,8 +119,8 @@ it('preserves request UUID and ULID correlation for every grant and share mutati
     $access = app()->makeWith(AccessOperations::class, ['context' => $context]);
     $shares = app()->makeWith(ShareOperations::class, ['context' => $context]);
     Activity::query()->delete();
-    $grant = $access->grant($this->node, new GrantInput(Subject::ofModel(AccessTestHelpers::user(2)), GrantLevel::Reader));
-    $minted = $shares->create($this->node, new ShareLinkInput(1));
+    $grant = $access->grant($this->node, new GrantInput(Subject::ofModel(AccessTestHelpers::user(2)), RoleRegistry::READER));
+    $minted = $shares->create($this->node, new ShareLinkInput(Permission::View->value));
     $access->revoke($this->node, $grant);
     $shares->revoke($this->node, $minted->share);
     $events = Activity::query()->get();

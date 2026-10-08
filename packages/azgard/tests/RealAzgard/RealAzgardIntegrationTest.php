@@ -5,6 +5,7 @@ declare(strict_types=1);
 use AzGuard\Facades\AzGuard;
 use AzGuard\Models\Role;
 use AzGuard\Testing\FakeGrantSource;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Azgard\AzgardGuardAdapter;
@@ -14,7 +15,6 @@ use Vaulter\Azgard\Tests\RealAzgard\Stubs\AzgardUser;
 use Vaulter\Azgard\Tests\RealAzgard\Stubs\Roles\DocsViewerRole;
 use Vaulter\Azgard\Tests\RealAzgard\Stubs\WorkspaceModel;
 use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\ValueObjects\Access\OwnerRef;
 
 /**
@@ -70,9 +70,9 @@ it('defers when the real user is not a super-admin', function (): void {
         ->and(driver()->override($user, $scope))->toBeNull();
 });
 
-it('folds a real workspace-context permission into the matching Vaulter grant level', function (): void {
+it('folds a real workspace-context permission into the matching Vaulter role', function (): void {
     // A real GrantSource grants documents.update; the real azguard-context ContextGuard
-    // answers hasPermissionIn, which the Vaulter driver maps to the Writer level.
+    // answers hasPermissionIn, which the Vaulter driver maps to the writer role.
     $user = realUser();
     registerGrants(fn (FakeGrantSource $f) => $f->grant('app', 'documents.update'));
     bindRealAdapter($user);
@@ -81,8 +81,7 @@ it('folds a real workspace-context permission into the matching Vaulter grant le
     $decision = driver()->resolve(Subject::ofModel($user), $user, $scope);
 
     expect($decision)->not->toBeNull()
-        ->and($decision->level)->toBe(GrantLevel::Writer)
-        ->and($decision->isAllow())->toBeTrue();
+        ->and($decision->role->key)->toBe(RoleRegistry::WRITER);
 });
 
 it('gates real workspace creation through the create permission', function (): void {

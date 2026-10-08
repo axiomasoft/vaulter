@@ -6,6 +6,7 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Access\Drivers\DatabasePermissionDriver;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Contracts\Drive\DriveHandle;
@@ -15,7 +16,6 @@ use Vaulter\Data\Drive\RestoreOptions;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Enums\Drive\OnNameConflict;
@@ -48,10 +48,10 @@ beforeEach(function (): void {
     $this->actor = Vaulter::drive($this->owner)->actingAs($this->user);
 });
 
-function operationMatrixGrant(DriveHandle $system, Node $node, Authorizable $user, int $bits): void
+function operationMatrixGrant(DriveHandle $system, Node $node, Authorizable $user, string $role): void
 {
     $system->access()->grant($node, new GrantInput(
-        subject: Subject::ofModel($user), level: GrantLevel::Reader, scope: GrantScope::Item, permissions: $bits,
+        subject: Subject::ofModel($user), role: $role, scope: GrantScope::Item,
     ));
 }
 
@@ -64,36 +64,49 @@ function operationMatrixState(): array
     ]);
 }
 
+/*
+ * Per operation: the narrowest role that may perform it on the source, and the
+ * broadest role that may not (null when View alone suffices). The roles nest, so the
+ * "missing" role is the strongest negative case the role model allows (PLAN2.D45):
+ * read needs download (previewer lacks it), copy needs view+download+copy on every
+ * copied node (D30), purge needs delete (organizer lacks it).
+ */
 dataset('operation permission matrix', static function (): array {
     $cases = [];
     foreach ([
-        'find' => 1, 'children' => 1, 'abilities' => 1, 'revisions' => 1, 'read' => 1, 'star' => 1, 'properties' => 1,
-        'rename' => 2, 'setProperties' => 2, 'move' => 6, 'copy' => 4, 'create' => 4, 'upload' => 4,
-        'addRevision' => 2, 'restoreRevision' => 2, 'trash' => 8, 'restore' => 8, 'purge' => 8,
-    ] as $operation => $bits) {
-        foreach (['hidden', 'allowed', ...($bits === 1 ? [] : ['missing'])] as $lane) {
-            $cases[$operation.' '.$lane] = [$operation, $bits, $lane];
+        'find' => [RoleRegistry::PREVIEWER, null], 'children' => [RoleRegistry::PREVIEWER, null], 'abilities' => [RoleRegistry::PREVIEWER, null],
+        'revisions' => [RoleRegistry::PREVIEWER, null], 'star' => [RoleRegistry::PREVIEWER, null], 'properties' => [RoleRegistry::PREVIEWER, null],
+        'read' => [RoleRegistry::READER, RoleRegistry::PREVIEWER],
+        'rename' => [RoleRegistry::WRITER, RoleRegistry::COMMENTER], 'setProperties' => [RoleRegistry::WRITER, RoleRegistry::COMMENTER],
+        'move' => [RoleRegistry::WRITER, RoleRegistry::COMMENTER], 'copy' => [RoleRegistry::WRITER, RoleRegistry::COMMENTER],
+        'create' => [RoleRegistry::WRITER, RoleRegistry::COMMENTER], 'upload' => [RoleRegistry::WRITER, RoleRegistry::COMMENTER],
+        'addRevision' => [RoleRegistry::WRITER, RoleRegistry::COMMENTER], 'restoreRevision' => [RoleRegistry::WRITER, RoleRegistry::COMMENTER],
+        'trash' => [RoleRegistry::WRITER, RoleRegistry::COMMENTER], 'restore' => [RoleRegistry::WRITER, RoleRegistry::COMMENTER],
+        'purge' => [RoleRegistry::OWNER, RoleRegistry::ORGANIZER],
+    ] as $operation => [$allowed, $missing]) {
+        foreach (['hidden', 'allowed', ...($missing === null ? [] : ['missing'])] as $lane) {
+            $cases[$operation.' '.$lane] = [$operation, $lane === 'missing' ? $missing : $allowed, $lane];
         }
     }
 
     return $cases;
 });
 
-it('enforces the complete public operation source permission matrix', function (string $operation, int $required, string $lane): void {
+it('enforces the complete public operation source permission matrix', function (string $operation, string $role, string $lane): void {
     $fileOperation = in_array($operation, ['revisions', 'read', 'addRevision', 'restoreRevision'], true);
     $source = $fileOperation
         ? $this->system->files()->upload(UploadSource::fromString('fixture bytes', 'source.txt'))
         : $this->system->folders()->create('source');
     $destination = $this->system->folders()->create('destination');
-    operationMatrixGrant($this->system, $destination, $this->user, 63);
+    operationMatrixGrant($this->system, $destination, $this->user, RoleRegistry::OWNER);
     if ($lane !== 'hidden') {
-        operationMatrixGrant($this->system, $source, $this->user, $lane === 'allowed' ? 1 | $required : 1);
+        operationMatrixGrant($this->system, $source, $this->user, $role);
     }
     if (in_array($operation, ['restore', 'purge'], true)) {
         $this->system->nodes()->trash($source);
     }
     if ($operation === 'restore') {
-        operationMatrixGrant($this->system, $this->system->root(), $this->user, 1);
+        operationMatrixGrant($this->system, $this->system->root(), $this->user, RoleRegistry::PREVIEWER);
     }
     $revision = $fileOperation ? $this->system->files()->revisions($source)->items()[0] : null;
     $run = fn () => match ($operation) {
@@ -190,9 +203,9 @@ it('checks each move copy and changed restore destination independently', functi
     $originalParent = $operation === 'restore' ? $this->system->folders()->create('original parent') : null;
     $source = $this->system->folders()->create('source', $originalParent);
     $destination = $this->system->folders()->create('destination');
-    operationMatrixGrant($this->system, $source, $this->user, 63);
+    operationMatrixGrant($this->system, $source, $this->user, RoleRegistry::OWNER);
     if ($lane === 'missing') {
-        operationMatrixGrant($this->system, $destination, $this->user, 1);
+        operationMatrixGrant($this->system, $destination, $this->user, RoleRegistry::COMMENTER);
     }
     if ($operation === 'restore') {
         $this->system->nodes()->trash($source);
@@ -210,7 +223,7 @@ it('checks each move copy and changed restore destination independently', functi
 
 it('checks the host drive admission gate for both create and upload despite a full parent grant', function (string $operation): void {
     $parent = $this->system->folders()->create('parent');
-    operationMatrixGrant($this->system, $parent, $this->user, 63);
+    operationMatrixGrant($this->system, $parent, $this->user, RoleRegistry::OWNER);
     config()->set('vaulter.access.permission_drivers.no_create', OperationMatrixNoCreateDriver::class);
     config()->set('vaulter.access.permission_driver', 'no_create');
     $before = operationMatrixState();
@@ -240,7 +253,7 @@ it('keeps system operations bound to their drive for foreign keys models revisio
 
 it('rebinds stale node models by original key and ignores forged scope attributes', function (): void {
     $source = $this->system->folders()->create('original');
-    operationMatrixGrant($this->system, $source, $this->user, 3);
+    operationMatrixGrant($this->system, $source, $this->user, RoleRegistry::WRITER);
     $stale = clone $source;
     $this->system->nodes()->rename($source, 'persisted', 0);
     $stale->forceFill(['drive_id' => -1, 'name' => 'forged', 'sequence' => 0]);
@@ -274,7 +287,7 @@ it('provisions once and resolves the ambient actor lazily while keeping explicit
     expect(fn () => $base->nodes()->find($node))->toThrow(MissingActorException::class);
     Auth::login($this->user);
     expect(fn () => $base->nodes()->find($node))->toThrow(NodeNotFoundException::class);
-    operationMatrixGrant($system, $node, $this->user, 1);
+    operationMatrixGrant($system, $node, $this->user, RoleRegistry::PREVIEWER);
     expect($base->nodes()->find($node)->id)->toBe($node->id);
     Auth::logout();
     expect(fn () => $base->nodes()->find($node))->toThrow(MissingActorException::class)
@@ -291,8 +304,8 @@ it('empty skips unauthorized roots and deletes only the independently authorized
     $hidden = $this->system->folders()->create('hidden');
     $visible = $this->system->folders()->create('visible');
     $allowed = $this->system->folders()->create('allowed');
-    operationMatrixGrant($this->system, $visible, $this->user, 1);
-    operationMatrixGrant($this->system, $allowed, $this->user, 9);
+    operationMatrixGrant($this->system, $visible, $this->user, RoleRegistry::ORGANIZER);
+    operationMatrixGrant($this->system, $allowed, $this->user, RoleRegistry::OWNER);
     foreach ([$hidden, $visible, $allowed] as $node) {
         $this->system->nodes()->trash($node);
     }
@@ -304,7 +317,7 @@ it('empty skips unauthorized roots and deletes only the independently authorized
 
 it('read blocks legacy infection and uncommitted content after Download authorization', function (string $scanStatus): void {
     $file = $this->system->files()->upload(UploadSource::fromString('read bytes', 'read.txt'));
-    operationMatrixGrant($this->system, $file, $this->user, 1);
+    operationMatrixGrant($this->system, $file, $this->user, RoleRegistry::READER);
     $revision = $this->system->files()->revisions($file)->items()[0];
     $revision->forceFill(['scan_status' => $scanStatus])->save();
     $before = operationMatrixState();
@@ -335,8 +348,8 @@ it('SEC-CONFLICT appends to the normalized case-insensitive sibling with no extr
 
 it('SEC-CONFLICT requires Edit on the actual case-insensitive revision target outside the transaction', function (): void {
     $node = $this->system->files()->upload(UploadSource::fromString('old', 'Report.txt'));
-    operationMatrixGrant($this->system, $this->system->root(), $this->user, 5);
-    operationMatrixGrant($this->system, $node, $this->user, 1);
+    operationMatrixGrant($this->system, $this->system->root(), $this->user, RoleRegistry::WRITER);
+    operationMatrixGrant($this->system, $node, $this->user, RoleRegistry::COMMENTER);
     $before = operationMatrixState();
     expect(fn () => $this->actor->files()->upload(UploadSource::fromString('new', 'report.TXT'), new UploadOptions(onConflict: OnNameConflict::AddRevision)))
         ->toThrow(PermissionDeniedException::class);
@@ -355,7 +368,7 @@ it('SEC-CONFLICT answers 404 about the requested name for a hidden sibling, file
     $hidden = $kind === 'file'
         ? $this->system->files()->upload(UploadSource::fromString('old', 'Report.txt'))
         : $this->system->folders()->create('Report.txt');
-    operationMatrixGrant($this->system, $this->system->root(), $this->user, 5);
+    operationMatrixGrant($this->system, $this->system->root(), $this->user, RoleRegistry::WRITER);
     $before = operationMatrixState();
     try {
         $this->actor->files()->upload(UploadSource::fromString('new', 'report.TXT'), new UploadOptions(onConflict: OnNameConflict::AddRevision));

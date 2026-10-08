@@ -13,7 +13,14 @@
 ## permission-denied
 
 `PermissionDeniedException` — ваш `PermissionResolver` вернул `false` для запрошенного
-действия. Выдайте нужный уровень доступа или поправьте resolver. API отображает это на `403`.
+действия. Выдайте роль с нужной способностью на узле или предке выше границы наследования
+либо поправьте resolver. API отображает это на `403`.
+
+## unknown-role
+
+`UnknownRoleException` (422 `unknown_role`) — грант, ссылка-шар или карта ролей драйвера
+указали незарегистрированную роль (или версию роли). Роли 1.0: `previewer`, `reader`,
+`commenter`, `writer`, `organizer`, `owner`, все версии 1.
 
 ## unknown-document-type
 

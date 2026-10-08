@@ -7,21 +7,22 @@ namespace Vaulter\Http\Requests\Sharing;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Configuration\SharingConfig;
 use Vaulter\Data\Sharing\ShareLinkInput;
-use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Access\Permission;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /**
  * Validates a create-share-link request (§2.7 / M2c) and assembles its
- * ShareLinkInput command. The permissions bitmask, level, scope, optional
+ * ShareLinkInput command. The ability bitmask, role key (level), scope, optional
  * password / require-login / discovery flags, expiry and use budget are
  * host-supplied; the controller authorizes Ability::Share on the node first.
  *
- * permissions defaults to READ (the safe minimum for a public link); the bitmask
- * is bounded to the permission range (0..63); anonymous Commenter shares are rejected. An EXPLICIT `expires_at` is bounded above
+ * permissions defaults to the reader role (view + download); the bitmask is bounded
+ * to the ability range; anonymous comment-capable shares are rejected. An EXPLICIT `expires_at` is bounded above
  * by `$sharingConfig->maxTtlHours()` (P1.2 / F-P1.3-03) — an omitted `expires_at`
  * defaults to `$sharingConfig->defaultTtlHours()` in {@see CreateShareLinkAction},
  * which this request never sees.
@@ -39,7 +40,7 @@ final class StoreShareLinkRequest extends VaulterFormRequest
                     $fail('Anonymous shares cannot grant Comment.');
                 }
             }],
-            'level' => ['nullable', Rule::enum(GrantLevel::class)->except([GrantLevel::Commenter])],
+            'level' => ['nullable', 'string', Rule::in(array_values(array_diff((new RoleRegistry)->keys(), [RoleRegistry::COMMENTER])))],
             'scope' => ['nullable', Rule::enum(GrantScope::class)],
             'password' => ['nullable', 'string', 'min:1', 'max:255'],
             'require_login' => ['nullable', 'boolean'],
@@ -59,7 +60,7 @@ final class StoreShareLinkRequest extends VaulterFormRequest
     {
         return [function (Validator $validator): void {
             $level = $this->input('level');
-            if ($this->input('permissions') === null && is_string($level) && ($resolved = GrantLevel::tryFrom($level)) !== null && ($resolved->bits() & Permission::Comment->value) !== 0) {
+            if ($this->input('permissions') === null && is_string($level) && (new RoleRegistry)->has($level) && (new RoleRegistry)->latest($level)->allows(Ability::Comment)) {
                 $validator->errors()->add('permissions', 'Anonymous shares cannot grant Comment. Supply explicit non-comment permissions.');
             }
         }];
@@ -73,7 +74,7 @@ final class StoreShareLinkRequest extends VaulterFormRequest
 
         return new ShareLinkInput(
             permissions: $this->resolvePermissions(),
-            level: GrantLevel::from($this->string('level', GrantLevel::Reader->value)->toString()),
+            level: $this->string('level', RoleRegistry::READER)->toString(),
             scope: GrantScope::from($this->string('scope', GrantScope::Item->value)->toString()),
             password: is_string($password) && $password !== '' ? $password : null,
             requireLogin: $this->boolean('require_login'),
@@ -85,8 +86,7 @@ final class StoreShareLinkRequest extends VaulterFormRequest
 
     /**
      * The bitmask to grant: the explicit permissions when supplied, else the
-     * bitmask the chosen level confers, else plain READ. A public link defaults to
-     * the smallest useful grant.
+     * abilities of the chosen role, else the reader role.
      */
     private function resolvePermissions(): int
     {
@@ -99,9 +99,9 @@ final class StoreShareLinkRequest extends VaulterFormRequest
         $level = $this->input('level');
 
         if (is_string($level) && $level !== '') {
-            return GrantLevel::from($level)->bits();
+            return (new RoleRegistry)->latest($level)->bits;
         }
 
-        return Permission::Read->value;
+        return (new RoleRegistry)->latest(RoleRegistry::READER)->bits;
     }
 }

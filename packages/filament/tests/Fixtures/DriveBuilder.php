@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Filament\Tests\Fixtures;
 
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Data\Access\GrantInput;
-use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Access\NodeGrant;
@@ -58,22 +57,20 @@ final class DriveBuilder
     }
 
     /**
-     * Grant a user a level on a node (the row the AccessResolver reads), written via
+     * Grant a user a role on a node (the row the AccessResolver reads), written via
      * the core store repository so the test does not hand-roll the schema.
      */
     public static function grant(
         Node $node,
         TestUser $user,
-        GrantLevel $level = GrantLevel::Owner,
-        Effect $effect = Effect::Allow,
+        string $role = RoleRegistry::OWNER,
         GrantScope $scope = GrantScope::Subtree,
     ): NodeGrant {
         return app(GrantStoreRepository::class)->grant(
             node: $node,
             data: new GrantInput(
                 subject: Subject::ofModel($user),
-                level: $level,
-                effect: $effect,
+                role: $role,
                 scope: $scope,
             ),
         );

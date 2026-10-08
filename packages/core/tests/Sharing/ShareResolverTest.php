@@ -6,8 +6,8 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Access\Permission;
 use Vaulter\Models\Access\NodeGrant;
@@ -35,7 +35,7 @@ function shareResolver(): ShareResolver
 it('resolves a valid token and grants exactly the share bits', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'doc');
-    ShareTestHelpers::share($node, token: 'good-token', permissions: Permission::Read->value);
+    ShareTestHelpers::share($node, token: 'good-token', permissions: (Permission::View->value | Permission::Download->value));
 
     $result = shareResolver()->resolve('good-token');
 
@@ -57,15 +57,15 @@ it('honours a wider share bitmask exactly (DOWNLOAD/EDIT) without identity inher
     ShareTestHelpers::share(
         $node,
         token: 'writer-token',
-        permissions: Permission::Read->value | Permission::Update->value,
-        level: GrantLevel::Writer,
+        permissions: (Permission::View->value | Permission::Download->value) | Permission::Edit->value,
+        level: RoleRegistry::WRITER,
     );
 
     $context = shareResolver()->resolve('writer-token')->context;
 
     expect($context->allows(Ability::Edit))->toBeTrue()
         ->and($context->allows(Ability::View))->toBeTrue()
-        // Update|Read does NOT include CREATE or SHARE — the share is exactly its bits.
+        // View|Download|Edit does NOT include CREATE or SHARE — the share is exactly its bits.
         ->and($context->allows(Ability::Create))->toBeFalse()
         ->and($context->allows(Ability::Share))->toBeFalse();
 });
@@ -195,7 +195,7 @@ it('resolves while its issuer still holds Ability::Share on the node (F-P1.3-02)
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'issuer-ok');
     $issuer = persistedIssuer();
-    AccessTestHelpers::grant($node, GrantLevel::Owner, scope: GrantScope::Item, subjectId: $issuer->getKey());
+    AccessTestHelpers::grant($node, RoleRegistry::OWNER, scope: GrantScope::Item, subjectId: $issuer->getKey());
 
     $share = ShareTestHelpers::share($node, token: 'issuer-ok-token');
     $share->forceFill(['granted_by' => $issuer->getKey()])->save();
@@ -209,7 +209,7 @@ it('404s once its issuer no longer holds Ability::Share on the node (confused de
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'issuer-revoked');
     $issuer = persistedIssuer();
-    AccessTestHelpers::grant($node, GrantLevel::Owner, scope: GrantScope::Item, subjectId: $issuer->getKey());
+    AccessTestHelpers::grant($node, RoleRegistry::OWNER, scope: GrantScope::Item, subjectId: $issuer->getKey());
 
     $share = ShareTestHelpers::share($node, token: 'issuer-revoked-token');
     $share->forceFill(['granted_by' => $issuer->getKey()])->save();
@@ -226,7 +226,7 @@ it('404s once its issuer is no longer resolvable (deleted account, F-P1.3-02)', 
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'issuer-gone');
     $issuer = persistedIssuer();
-    AccessTestHelpers::grant($node, GrantLevel::Owner, scope: GrantScope::Item, subjectId: $issuer->getKey());
+    AccessTestHelpers::grant($node, RoleRegistry::OWNER, scope: GrantScope::Item, subjectId: $issuer->getKey());
 
     $share = ShareTestHelpers::share($node, token: 'issuer-gone-token');
     $share->forceFill(['granted_by' => $issuer->getKey()])->save();

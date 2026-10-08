@@ -2,17 +2,16 @@
 import { onMounted, reactive } from 'vue'
 import { useNodeGrants } from '../composables/useNodeGrants'
 import type {
-  GrantEffectName,
-  GrantLevelName,
   GrantNodeAccessPayload,
+  GrantRoleName,
   GrantScopeName,
   NodeGrant,
   NodeId,
   WorkspaceId,
 } from '../types'
 
-// Per-node ACL management over `useNodeGrants`: list grants (subject, level,
-// effect, scope, expiry), add a grant and revoke one. The host owns subject
+// Per-node ACL management over `useNodeGrants`: list grants (subject, role,
+// scope, expiry), add a grant and revoke one. The host owns subject
 // selection — it cannot know your users/roles/teams — so picking a subject is
 // delegated to a `subject` slot (or a `resolveSubject` prop). Mirrors the legacy
 // VaulterPermissionsPanel ergonomics: slot-driven rows, emit on grant/revoke.
@@ -29,9 +28,8 @@ const props = withDefaults(
   defineProps<{
     nodeId: NodeId
     autoLoad?: boolean
-    /** Levels offered in the add form. */
-    levels?: GrantLevelName[]
-    effects?: GrantEffectName[]
+    /** Roles offered in the add form. */
+    roles?: GrantRoleName[]
     scopes?: GrantScopeName[]
     /**
      * A host-supplied subject resolver: given the in-form subject type + id, return
@@ -42,8 +40,7 @@ const props = withDefaults(
   }>(),
   {
     autoLoad: true,
-    levels: () => ['reader', 'commenter', 'editor', 'manager'],
-    effects: () => ['allow', 'deny'],
+    roles: () => ['previewer', 'reader', 'commenter', 'writer', 'organizer', 'owner'],
     scopes: () => ['item', 'subtree'],
     resolveSubject: undefined,
   },
@@ -60,15 +57,13 @@ const { grants, loading, error, list, grant, revoke } = useNodeGrants(props.node
 const form = reactive<{
   subjectType: string
   subjectId: string
-  level: GrantLevelName
-  effect: GrantEffectName
+  role: GrantRoleName
   scope: GrantScopeName
   expiresAt: string
 }>({
   subjectType: '',
   subjectId: '',
-  level: props.levels[0] ?? 'reader',
-  effect: props.effects[0] ?? 'allow',
+  role: props.roles[0] ?? 'reader',
   scope: props.scopes[0] ?? 'item',
   expiresAt: '',
 })
@@ -91,8 +86,7 @@ async function add(): Promise<void> {
   const payload: GrantNodeAccessPayload = {
     subjectType: resolved.type,
     subjectId: resolved.id,
-    level: form.level,
-    effect: form.effect,
+    role: form.role,
     scope: form.scope,
     expiresAt: form.expiresAt || undefined,
   }
@@ -124,11 +118,10 @@ defineExpose({ list, grant: add, revoke: remove, grants, loading, error, setSubj
     <slot v-if="loading" name="loading">Loading…</slot>
 
     <ul v-else class="vaulter-node-grants-panel__list">
-      <li v-for="g in grants" :key="g.id" class="vaulter-node-grants-panel__item" :data-effect="g.effect">
+      <li v-for="g in grants" :key="g.id" class="vaulter-node-grants-panel__item" :data-role="g.role">
         <slot name="item" :grant="g" :revoke="() => remove(g)">
           <span class="vaulter-node-grants-panel__subject">{{ g.subject_type }}#{{ g.subject_id }}</span>
-          <span class="vaulter-node-grants-panel__level">{{ g.level }}</span>
-          <span class="vaulter-node-grants-panel__effect">{{ g.effect }}</span>
+          <span class="vaulter-node-grants-panel__role">{{ g.role }}</span>
           <span class="vaulter-node-grants-panel__scope">{{ g.scope }}</span>
           <span v-if="g.expires_at" class="vaulter-node-grants-panel__expiry">until {{ g.expires_at }}</span>
           <button
@@ -163,11 +156,8 @@ defineExpose({ list, grant: add, revoke: remove, grants, loading, error, setSubj
         >
       </slot>
 
-      <select v-model="form.level" class="vaulter-node-grants-panel__level-select" aria-label="Level">
-        <option v-for="level in levels" :key="level" :value="level">{{ level }}</option>
-      </select>
-      <select v-model="form.effect" class="vaulter-node-grants-panel__effect-select" aria-label="Effect">
-        <option v-for="effect in effects" :key="effect" :value="effect">{{ effect }}</option>
+      <select v-model="form.role" class="vaulter-node-grants-panel__role-select" aria-label="Role">
+        <option v-for="role in roles" :key="role" :value="role">{{ role }}</option>
       </select>
       <select v-model="form.scope" class="vaulter-node-grants-panel__scope-select" aria-label="Scope">
         <option v-for="scope in scopes" :key="scope" :value="scope">{{ scope }}</option>

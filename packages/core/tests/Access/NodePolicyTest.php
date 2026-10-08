@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Gate;
-use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Policies\NodePolicy;
@@ -21,7 +21,7 @@ it('registers NodePolicy against the node model and delegates to the resolver', 
     // No grant ⇒ the Gate denies view; a grant ⇒ it allows.
     expect(Gate::forUser($actor)->allows('view', $folder))->toBeFalse();
 
-    AccessTestHelpers::grant($folder, GrantLevel::Writer, scope: GrantScope::Item);
+    AccessTestHelpers::grant($folder, RoleRegistry::WRITER, scope: GrantScope::Item);
 
     expect(Gate::forUser($actor)->allows('view', $folder))->toBeTrue()
         ->and(Gate::forUser($actor)->allows('edit', $folder))->toBeTrue()
@@ -34,7 +34,7 @@ it('exposes a policy method per ability', function (): void {
     $folder = AccessTestHelpers::folder($storage, null, 'methods');
     $actor = AccessTestHelpers::user();
 
-    AccessTestHelpers::grant($folder, GrantLevel::Owner, scope: GrantScope::Item);
+    AccessTestHelpers::grant($folder, RoleRegistry::OWNER, scope: GrantScope::Item);
 
     expect($policy->view($actor, $folder))->toBeTrue()
         ->and($policy->manage($actor, $folder))->toBeTrue()

@@ -218,7 +218,6 @@ final readonly class IngestFileAction
             'mime_type' => $data->mimeType,
             'extension' => $this->extension($data->originalName),
             'size_bytes' => $size,
-            'owner_id' => $context->actor->ref()->id,
             'created_by' => $context->actor->ref()->id,
             'content_modified_at' => now(),
             'content_modified_by' => $context->actor->ref()->id,

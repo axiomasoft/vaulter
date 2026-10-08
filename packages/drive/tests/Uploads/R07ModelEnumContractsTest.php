@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage as StorageFacade;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Drive\Data\Files\IngestFileInput;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
@@ -13,7 +14,6 @@ use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadPartStoreRepository;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -167,7 +167,7 @@ it('R07Model requires both root create ability and workspace gate for storage cr
     $actor = (new TestUser)->forceFill(['id' => 17]);
 
     Gate::define('vaulter.create', static fn (): bool => false);
-    AccessTestHelpers::grant($root, GrantLevel::Writer, scope: GrantScope::Subtree, subjectId: 17);
+    AccessTestHelpers::grant($root, RoleRegistry::WRITER, scope: GrantScope::Subtree, subjectId: 17);
 
     $request = Request::create('/api/vaulter/storages/'.$storage->getKey());
     $request->setUserResolver(static fn () => $actor);
@@ -181,7 +181,7 @@ it('R07Model requires both root create ability and workspace gate for storage cr
 
     Gate::define('vaulter.create', static fn (): bool => true);
     $storageReaderOnly = Vaulter::drive(DriveTestHelpers::host())->model();
-    AccessTestHelpers::grant($storageReaderOnly->rootNode()->firstOrFail(), GrantLevel::Reader, scope: GrantScope::Item, subjectId: 17);
+    AccessTestHelpers::grant($storageReaderOnly->rootNode()->firstOrFail(), RoleRegistry::READER, scope: GrantScope::Item, subjectId: 17);
 
     expect((new DriveResource($storageReaderOnly))->toArray($request)['abilities'])->toEqual([
         'view' => true,
@@ -191,7 +191,7 @@ it('R07Model requires both root create ability and workspace gate for storage cr
     ]);
 
     $storageBoth = Vaulter::drive(DriveTestHelpers::host())->model();
-    AccessTestHelpers::grant($storageBoth->rootNode()->firstOrFail(), GrantLevel::Writer, scope: GrantScope::Subtree, subjectId: 17);
+    AccessTestHelpers::grant($storageBoth->rootNode()->firstOrFail(), RoleRegistry::WRITER, scope: GrantScope::Subtree, subjectId: 17);
 
     expect((new DriveResource($storageBoth))->toArray($request)['abilities'])->toEqual([
         'view' => true,

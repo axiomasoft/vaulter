@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Drive\Content\ScanPolicyResolver;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\Permission;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Facades\Vaulter;
@@ -31,7 +31,7 @@ it('rejects foreign share identity even when a model claims own node membership'
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($drive, null, 'owner');
     $other = AccessTestHelpers::folder($drive, null, 'other');
-    AccessTestHelpers::grant($node, GrantLevel::Owner);
+    AccessTestHelpers::grant($node, RoleRegistry::OWNER);
     $share = ShareTestHelpers::share($other);
     $forged = clone $share;
     $forged->node_id = $node->id;
@@ -44,7 +44,7 @@ it('rejects invalid direct share inputs before minting or recording', function (
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($drive, null, 'validation');
     $operation = app()->makeWith(ShareOperations::class, ['context' => OperationContext::system($drive, 'fixture')]);
-    foreach ([new ShareLinkInput(1, GrantLevel::Commenter), new ShareLinkInput(Permission::Comment->value), new ShareLinkInput(64), new ShareLinkInput(-1), new ShareLinkInput(1, maxUses: 0), new ShareLinkInput(1, expiresAt: now()->subSecond()), new ShareLinkInput(1, expiresAt: now()->addYears(10))] as $input) {
+    foreach ([new ShareLinkInput(Permission::View->value | Permission::Download->value, RoleRegistry::COMMENTER), new ShareLinkInput(Permission::Comment->value), new ShareLinkInput(Permission::all() + 1), new ShareLinkInput(-1), new ShareLinkInput(Permission::View->value, 'admin'), new ShareLinkInput(Permission::View->value | Permission::Download->value, maxUses: 0), new ShareLinkInput(Permission::View->value | Permission::Download->value, expiresAt: now()->subSecond()), new ShareLinkInput(Permission::View->value | Permission::Download->value, expiresAt: now()->addYears(10))] as $input) {
         expect(fn () => $operation->create($node, $input))->toThrow(InvalidArgumentException::class);
     }
     expect(NodeShare::query()->count())->toBe(0);
@@ -59,7 +59,7 @@ it('denies every new resolution after revoke commit on independent connections',
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($drive, null, 'linearization');
     $operation = app()->makeWith(ShareOperations::class, ['context' => OperationContext::system($drive, 'fixture')]);
-    $minted = $operation->create($node, new ShareLinkInput(1));
+    $minted = $operation->create($node, new ShareLinkInput(Permission::View->value | Permission::Download->value));
     expect(app(ShareResolver::class)->resolve($minted->token)->isOk())->toBeTrue();
     if (DB::connection()->getDriverName() === 'pgsql') {
         $marker = sys_get_temp_dir().'/share-commit-'.bin2hex(random_bytes(8));

@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Vaulter\Access\AccessResolver;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeReadRepository;
@@ -31,7 +31,7 @@ it('never lets an actor granted in one storage reach a node in another via can()
     $nodeB = AccessTestHelpers::folder($storageB, null, 'in-b');
 
     $actor = AccessTestHelpers::user();
-    AccessTestHelpers::grant($nodeA, GrantLevel::Reader, scope: GrantScope::Item);
+    AccessTestHelpers::grant($nodeA, RoleRegistry::READER, scope: GrantScope::Item);
     // Deliberately NO grant for $actor anywhere in storageB.
 
     $access = app(AccessResolver::class);

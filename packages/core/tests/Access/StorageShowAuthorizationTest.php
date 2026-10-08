@@ -3,12 +3,13 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage as StorageFacade;
+use Vaulter\Access\AccessResolver;
 use Vaulter\Access\PermissionDriverManager;
-use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Tests\Fixtures\Access\ProfileDenyDriver;
 use Vaulter\Tests\Fixtures\TestUser;
 
 /**
@@ -18,7 +19,7 @@ use Vaulter\Tests\Fixtures\TestUser;
  * EXACT gate at the storage seam:
  *
  *   - a rooted storage opens ONLY when the actor holds a View-implying grant on the
- *     root; a missing grant, a deny-veto on the root, and a guest all 403;
+ *     root; a missing grant, an administrative block, and a guest all 403;
  *   - an un-ROOTED storage (root_node_id null) has no node to gate on and is a
  *     corrupt/transient state (provisioning is transactional) — it 404s for EVERYONE,
  *     authenticated or not, so the meta never leaks to a grantless actor;
@@ -64,7 +65,7 @@ it('shows a rooted storage for an actor holding a view grant on the root', funct
     $root = $storage->rootNode()->first();
 
     // Reader on the root carries the READ bit ⇒ View is allowed ⇒ the show opens.
-    AccessTestHelpers::grant($root, GrantLevel::Reader, scope: GrantScope::Subtree);
+    AccessTestHelpers::grant($root, RoleRegistry::READER, scope: GrantScope::Subtree);
 
     $this->getJson('api/vaulter/storages/'.$storage->getKey())
         ->assertOk()
@@ -82,21 +83,20 @@ it('refuses a rooted storage show for an actor with no grant on the root', funct
         ->assertStatus(403);
 });
 
-// ── (c) Deny-veto reaches the storage endpoint: an allow on the root vetoed by a
-//        nearer/same-node deny on the root → 403 (the EXACT gate, not just presence).
-it('refuses a rooted storage show when a deny vetoes the root view (exact gate)', function (): void {
+// ── (c) An administrative block reaches the storage endpoint: an owner grant on the
+//        root overridden by the permission driver's Deny → 403 (the EXACT gate, not
+//        just "a grant exists").
+it('refuses a rooted storage show when an administrative block overrides the root grant (exact gate)', function (): void {
     $storage = AccessTestHelpers::storage();
     $root = $storage->rootNode()->first();
 
-    // The storage root is the TOP of the tree (parent_id null) — it has no in-storage
-    // ancestor, so the only allow that flows to it is its own subtree grant. An Owner
-    // subtree allow on the root WOULD open View; an explicit Item DENY on the SAME root
-    // vetoes it (a same-node deny is an absolute veto — AccessResolver step 5, mirroring
-    // AccessAwareListingTest:271/:279 where a subtree-allow ancestor is overridden by a
-    // nearer deny). This proves the resolver's exact deny-veto reaches the storage show,
-    // not merely "a grant exists".
-    AccessTestHelpers::grant($root, GrantLevel::Owner, scope: GrantScope::Subtree);
-    AccessTestHelpers::grant($root, GrantLevel::Reader, effect: Effect::Deny, scope: GrantScope::Item);
+    // The root has no ancestor, so no inheritance boundary can cut it off; the host's
+    // administrative block is what still closes it.
+    AccessTestHelpers::grant($root, RoleRegistry::OWNER, scope: GrantScope::Subtree);
+    config()->set('vaulter.access.permission_drivers.blocked', ProfileDenyDriver::class);
+    config()->set('vaulter.access.permission_driver', 'blocked');
+    app()->forgetInstance(PermissionDriverManager::class);
+    app()->forgetInstance(AccessResolver::class);
 
     $this->getJson('api/vaulter/storages/'.$storage->getKey())
         ->assertStatus(403);
@@ -107,7 +107,7 @@ it('refuses a rooted storage show for an unauthenticated guest', function (): vo
     $storage = AccessTestHelpers::storage();
     // Even an Owner grant for user 1 is irrelevant — THIS request has no actor, so the
     // View-guard on the root denies it (the storage meta must never reach a guest).
-    AccessTestHelpers::grant($storage->rootNode()->first(), GrantLevel::Owner, scope: GrantScope::Subtree);
+    AccessTestHelpers::grant($storage->rootNode()->first(), RoleRegistry::OWNER, scope: GrantScope::Subtree);
 
     actAsStorageGuest();
 

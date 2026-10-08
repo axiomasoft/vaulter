@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Auth\User;
 use Vaulter\Access\AccessResolver;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Azgard\AzgardPermissionDriver;
@@ -13,7 +14,6 @@ use Vaulter\Azgard\Testing\FakeAzgardGuard;
 use Vaulter\Azgard\Tests\Access\AccessTestHelpers;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\ValueObjects\Access\OwnerRef;
 
@@ -90,7 +90,7 @@ it('lets a super-admin see every node through the AccessResolver', function (): 
     expect(app(AccessResolver::class)->can(AccessTestHelpers::user(), Ability::Manage, $folder))->toBeTrue();
 });
 
-it('maps a workspace-scoped AzGuard permission to a role-grant level', function (): void {
+it('maps a workspace-scoped AzGuard permission to a role', function (): void {
     // The host grants documents.update in this workspace → the actor gets a Writer
     // decision (Writer is gated by the Edit ability → documents.update).
     bindAzgardGuard(FakeAzgardGuard::grantingWorkspace('project', 1, 'documents.update'));
@@ -102,8 +102,7 @@ it('maps a workspace-scoped AzGuard permission to a role-grant level', function 
     $decision = $driver->resolve(Subject::ofModel($actor), $actor, $scope);
 
     expect($decision)->not->toBeNull()
-        ->and($decision->level)->toBe(GrantLevel::Writer)
-        ->and($decision->isAllow())->toBeTrue();
+        ->and($decision->role->key)->toBe(RoleRegistry::WRITER);
 });
 
 it('composite order: a workspace role grant raises access when NO node-ACL row exists', function (): void {
@@ -123,27 +122,22 @@ it('composite order: a workspace role grant raises access when NO node-ACL row e
         ->and($resolver->can(AccessTestHelpers::user(), Ability::Edit, $folder))->toBeFalse();
 });
 
-it('composite order: a node-ACL deny still vetoes a workspace role grant via the AccessResolver', function (): void {
+it('composite order: an inheritance boundary cuts node grants but not the workspace role', function (): void {
     $storage = AccessTestHelpers::storage();
     $parent = AccessTestHelpers::folder($storage, null, 'parent');
-    $child = AccessTestHelpers::folder($storage, $parent, 'child');
+    $child = AccessTestHelpers::folder($storage, $parent, 'child', inheritGrants: false);
 
-    // The workspace role lane grants edit everywhere in this workspace…
-    bindAzgardGuard(FakeAzgardGuard::grantingWorkspace($storage->owner_type, $storage->owner_id, 'documents.update'));
-
-    // …but an explicit node-ACL deny on the child must veto it (H.2 step 5 — the role
-    // lane can only RAISE access, never resurrect a denied bit).
-    AccessTestHelpers::grant(
-        $child,
-        GrantLevel::Writer,
-        effect: Effect::Deny,
-        scope: GrantScope::Item,
-    );
+    // The workspace role lane gives a previewer everywhere in this workspace; a node
+    // grant gives commenter on the parent subtree, cut off at the child.
+    bindAzgardGuard(FakeAzgardGuard::grantingWorkspace($storage->owner_type, $storage->owner_id, 'documents.view'));
+    AccessTestHelpers::grant($parent, RoleRegistry::COMMENTER, scope: GrantScope::Subtree);
 
     $resolver = app(AccessResolver::class);
 
-    expect($resolver->can(AccessTestHelpers::user(), Ability::Edit, $parent))->toBeTrue()
-        ->and($resolver->can(AccessTestHelpers::user(), Ability::Edit, $child))->toBeFalse();
+    expect($resolver->can(AccessTestHelpers::user(), Ability::Comment, $parent))->toBeTrue()
+        ->and($resolver->can(AccessTestHelpers::user(), Ability::Comment, $child))->toBeFalse()
+        // The node-blind workspace role is a union member everywhere, boundaries or not.
+        ->and($resolver->can(AccessTestHelpers::user(), Ability::View, $child))->toBeTrue();
 });
 
 it('gates workspace creation through hasPermissionIn with the create permission', function (): void {

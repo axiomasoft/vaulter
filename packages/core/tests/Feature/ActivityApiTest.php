@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Activity\Activity;
@@ -27,7 +27,7 @@ it('returns a storage-scoped feed newest-first to a viewer', function (): void {
     $storage = AccessTestHelpers::storage();
     $root = AccessTestHelpers::folder($storage, null, 'root-grant');
     // A View grant on the storage root opens the storage feed.
-    AccessTestHelpers::grant($root, GrantLevel::Reader, scope: GrantScope::Subtree, subjectId: 1);
+    AccessTestHelpers::grant($root, RoleRegistry::READER, scope: GrantScope::Subtree, subjectId: 1);
 
     // Provisioning fired background rows in this storage scope; isolate the two we
     // assert order on.
@@ -55,7 +55,7 @@ it('returns a node-scoped feed (only that node target)', function (): void {
     $storage = AccessTestHelpers::storage();
     $nodeA = AccessTestHelpers::folder($storage, null, 'A');
     $nodeB = AccessTestHelpers::folder($storage, null, 'B');
-    AccessTestHelpers::grant($nodeA, GrantLevel::Reader, scope: GrantScope::Item, subjectId: 1);
+    AccessTestHelpers::grant($nodeA, RoleRegistry::READER, scope: GrantScope::Item, subjectId: 1);
 
     targetedRow($storage->getKey(), $nodeA, EventType::NodeRenamed);
     targetedRow($storage->getKey(), $nodeB, EventType::NodeRenamed);
@@ -71,7 +71,7 @@ it('returns a node-scoped feed (only that node target)', function (): void {
 it('filters a node feed by verb', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'filtered');
-    AccessTestHelpers::grant($node, GrantLevel::Reader, scope: GrantScope::Item, subjectId: 1);
+    AccessTestHelpers::grant($node, RoleRegistry::READER, scope: GrantScope::Item, subjectId: 1);
 
     targetedRow($storage->getKey(), $node, EventType::NodeRenamed);
     targetedRow($storage->getKey(), $node, EventType::NodeMoved);
@@ -86,7 +86,7 @@ it('filters a node feed by verb', function (): void {
 it('cursor-paginates the feed', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'paged');
-    AccessTestHelpers::grant($node, GrantLevel::Reader, scope: GrantScope::Item, subjectId: 1);
+    AccessTestHelpers::grant($node, RoleRegistry::READER, scope: GrantScope::Item, subjectId: 1);
 
     foreach (range(1, 3) as $ignored) {
         targetedRow($storage->getKey(), $node, EventType::NodeRenamed);

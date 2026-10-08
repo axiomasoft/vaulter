@@ -2,6 +2,8 @@ Vaulter\Contracts\Access\AccessOperations
   explain(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Enums\Access\Ability $ability, ?\Illuminate\Contracts\Auth\Access\Authorizable $subject = null): \Vaulter\Access\ValueObjects\AccessExplanation
   grant(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Data\Access\GrantInput $grant): \Vaulter\Models\Access\NodeGrant
   grants(\Vaulter\Models\Drive\Node|int|string $node): \Illuminate\Database\Eloquent\Collection
+  restoreInheritance(\Vaulter\Models\Drive\Node|int|string $node): \Vaulter\Models\Drive\Node
+  restrictInheritance(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Enums\Access\InheritanceRestriction $mode = Vaulter\Enums\Access\InheritanceRestriction::Empty): \Vaulter\Models\Drive\Node
   revoke(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Models\Access\NodeGrant|int|string $grant): void
 
 Vaulter\Contracts\Access\EnumeratesRoleSubjects
@@ -324,9 +326,12 @@ Vaulter\Access\AccessResolver
   filterSharedWith(\Illuminate\Contracts\Auth\Access\Authorizable $actor, iterable $candidates): array
   sharedNodeIds(\Illuminate\Contracts\Auth\Access\Authorizable $actor): array
 
-Vaulter\Access\AclFolder
-  applyOwn(\Vaulter\Access\ValueObjects\AclMask $inherited, int $ownAllow, int $ownDeny, ?\Vaulter\Enums\Access\GrantLevel $ownLevel): \Vaulter\Access\ValueObjects\AclMask
-  foldChain(array $depths): \Vaulter\Access\ValueObjects\AclMask
+Vaulter\Access\Roles\RoleRegistry
+  all(): array
+  get(string $key, int $version): \Vaulter\Access\Roles\Role
+  has(string $key, ?int $version = null): bool
+  keys(): array
+  latest(string $key): \Vaulter\Access\Roles\Role
 
 Vaulter\Access\ExactListing
   __construct(\Vaulter\Configuration\ListingConfig $listingConfig, \Vaulter\Access\AccessResolver $access, \Vaulter\Database\VaulterDatabase $database, \Illuminate\Contracts\Encryption\Encrypter $encrypter)
@@ -440,24 +445,83 @@ Vaulter\Data\Drive\UploadSource
   name(): string
 
 Vaulter\Data\Access\GrantInput
-  __construct(\Vaulter\Access\ValueObjects\Subject $subject, \Vaulter\Enums\Access\GrantLevel $level, \Vaulter\Enums\Access\Effect $effect = Vaulter\Enums\Access\Effect::Allow, \Vaulter\Enums\Access\GrantScope $scope = Vaulter\Enums\Access\GrantScope::Subtree, int $permissions = 0, ?\Illuminate\Support\Carbon $expiresAt = null)
+  __construct(\Vaulter\Access\ValueObjects\Subject $subject, string $role, \Vaulter\Enums\Access\GrantScope $scope = Vaulter\Enums\Access\GrantScope::Subtree, ?\Illuminate\Support\Carbon $expiresAt = null)
   readonly ?\Illuminate\Support\Carbon $expiresAt
   readonly \Vaulter\Access\ValueObjects\Subject $subject
-  readonly \Vaulter\Enums\Access\Effect $effect
-  readonly \Vaulter\Enums\Access\GrantLevel $level
   readonly \Vaulter\Enums\Access\GrantScope $scope
-  readonly int $permissions
+  readonly string $role
+
+Vaulter\Access\Roles\Role
+  __construct(string $key, int $version, array $abilities)
+  allows(\Vaulter\Enums\Access\Ability $ability): bool
+  covering(array $roles): ?\self
+  covers(\self $other): bool
+  is(\self $other): bool
+  readonly array $abilities
+  readonly int $bits
+  readonly int $version
+  readonly string $key
+
+Vaulter\Access\ValueObjects\Decision
+  __construct(\Vaulter\Access\Roles\Role $role)
+  union(array $roles): ?\self
+  readonly \Vaulter\Access\Roles\Role $role
+
+Vaulter\Access\ValueObjects\GrantSet
+  __construct(int $allowedBits, bool $superAllow = false, bool $superDeny = false)
+  allows(\Vaulter\Enums\Access\Ability $ability): bool
+  none(): \self
+  superAllowed(): \self
+  superDenied(): \self
+  readonly bool $superAllow
+  readonly bool $superDeny
+  readonly int $allowedBits
+
+Vaulter\Access\ValueObjects\AccessExplanation
+  __construct(bool $allowed, \Vaulter\Enums\Access\Ability $ability, string $reason, array $sources, array $restrictions, int|null|string $boundaryNodeId)
+  readonly \Vaulter\Enums\Access\Ability $ability
+  readonly array $restrictions
+  readonly array $sources
+  readonly bool $allowed
+  readonly int|null|string $boundaryNodeId
+  readonly string $reason
+
+Vaulter\Access\ValueObjects\AccessSource
+  __construct(int|null|string $grantId, \Vaulter\Access\ValueObjects\Subject $subject, string $role, int $roleVersion, int|null|string $originNodeId, bool $inherited, ?\Illuminate\Support\Carbon $expiresAt)
+  readonly ?\Illuminate\Support\Carbon $expiresAt
+  readonly \Vaulter\Access\ValueObjects\Subject $subject
+  readonly bool $inherited
+  readonly int $roleVersion
+  readonly int|null|string $grantId
+  readonly int|null|string $originNodeId
+  readonly string $role
+
+Vaulter\Exceptions\Access\UnknownRoleException
+  __construct(string $message = '', int $code = 0, ?\Throwable $previous = null)
+  __toString(): string
+  __wakeup()
+  for(string $key, ?int $version = null): \self
+  getCode()
+  getFile(): string
+  getLine(): int
+  getMessage(): string
+  getPrevious(): ?\Throwable
+  getTrace(): array
+  getTraceAsString(): string
+  httpStatus(): int
+  problemCode(): string
+  render(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse|false
 
 Vaulter\Data\Sharing\ShareLinkInput
-  __construct(int $permissions, \Vaulter\Enums\Access\GrantLevel $level = Vaulter\Enums\Access\GrantLevel::Reader, \Vaulter\Enums\Access\GrantScope $scope = Vaulter\Enums\Access\GrantScope::Item, ?string $password = null, bool $requireLogin = false, bool $allowDiscovery = false, ?\Illuminate\Support\Carbon $expiresAt = null, ?int $maxUses = null)
+  __construct(int $permissions, string $level = Vaulter\Access\Roles\RoleRegistry::READER, \Vaulter\Enums\Access\GrantScope $scope = Vaulter\Enums\Access\GrantScope::Item, ?string $password = null, bool $requireLogin = false, bool $allowDiscovery = false, ?\Illuminate\Support\Carbon $expiresAt = null, ?int $maxUses = null)
   readonly ?\Illuminate\Support\Carbon $expiresAt
   readonly ?int $maxUses
   readonly ?string $password
-  readonly \Vaulter\Enums\Access\GrantLevel $level
   readonly \Vaulter\Enums\Access\GrantScope $scope
   readonly bool $allowDiscovery
   readonly bool $requireLogin
   readonly int $permissions
+  readonly string $level
 
 Vaulter\Data\Sharing\MintedShareLink
   __construct(\Vaulter\Models\Sharing\NodeShare $share, string $token)
@@ -465,10 +529,12 @@ Vaulter\Data\Sharing\MintedShareLink
   readonly string $token
 
 Vaulter\Operations\AccessOperations
-  __construct(\Vaulter\Operations\OperationContext $context, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Access\OperationGuard $guard, \Vaulter\Access\AccessResolver $resolver, \Vaulter\Configuration\VaulterConfig $config, \Vaulter\Actions\Access\GrantNodeAccessAction $create, \Vaulter\Actions\Access\RevokeNodeAccessAction $delete)
+  __construct(\Vaulter\Operations\OperationContext $context, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Access\OperationGuard $guard, \Vaulter\Access\AccessResolver $resolver, \Vaulter\Configuration\VaulterConfig $config, \Vaulter\Actions\Access\GrantNodeAccessAction $create, \Vaulter\Actions\Access\RevokeNodeAccessAction $delete, \Vaulter\Actions\Access\SetNodeInheritanceAction $inheritance)
   explain(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Enums\Access\Ability $ability, ?\Illuminate\Contracts\Auth\Access\Authorizable $subject = null): \Vaulter\Access\ValueObjects\AccessExplanation
   grant(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Data\Access\GrantInput $grant): \Vaulter\Models\Access\NodeGrant
   grants(\Vaulter\Models\Drive\Node|int|string $node): \Illuminate\Database\Eloquent\Collection
+  restoreInheritance(\Vaulter\Models\Drive\Node|int|string $node): \Vaulter\Models\Drive\Node
+  restrictInheritance(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Enums\Access\InheritanceRestriction $mode = Vaulter\Enums\Access\InheritanceRestriction::Empty): \Vaulter\Models\Drive\Node
   revoke(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Models\Access\NodeGrant|int|string $grant): void
 
 Vaulter\Operations\ShareOperations
@@ -483,9 +549,8 @@ Vaulter\Operations\ActivityOperations
   forNode(\Vaulter\Models\Drive\Node|int|string $node, ?\Vaulter\Data\Drive\ListOptions $options = null): \Illuminate\Pagination\CursorPaginator
 
 Vaulter\Access\ValueObjects\AccessScope
-  __construct(string $profile, \Vaulter\ValueObjects\Access\OwnerRef $driveOwner, int|string $driveId, ?\Vaulter\Access\ValueObjects\Subject $nodeOwner = null, int|null|string $tenantId = null)
-  forDrive(\Vaulter\Models\Drive\Drive $drive, ?\Vaulter\Access\ValueObjects\Subject $nodeOwner = null): \self
-  readonly ?\Vaulter\Access\ValueObjects\Subject $nodeOwner
+  __construct(string $profile, \Vaulter\ValueObjects\Access\OwnerRef $driveOwner, int|string $driveId, int|null|string $tenantId = null)
+  forDrive(\Vaulter\Models\Drive\Drive $drive): \self
   readonly \Vaulter\ValueObjects\Access\OwnerRef $driveOwner
   readonly int|null|string $tenantId
   readonly int|string $driveId
@@ -672,19 +737,18 @@ Vaulter\Testing\Contracts\PermissionDriverContractTests
   assertPermissionDriverContract(\Vaulter\Access\AccessResolver $resolver, \Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Models\Drive\Node $parent, \Vaulter\Models\Drive\Node $child): void
 
 Vaulter\Enums\Access\Permission
-  Read = 1
-  Update = 2
+  View = 1
+  Edit = 2
   Create = 4
   Delete = 8
   Share = 16
   Comment = 32
-
-Vaulter\Enums\Access\GrantLevel
-  Reader = reader
-  Commenter = commenter
-  Writer = writer
-  Organizer = organizer
-  Owner = owner
+  Download = 64
+  Move = 128
+  Copy = 256
+  Trash = 512
+  Restore = 1024
+  Manage = 2048
 
 Vaulter\Enums\Access\Ability
   View = view
@@ -699,6 +763,14 @@ Vaulter\Enums\Access\Ability
   Share = share
   Manage = manage
   Delete = delete
+
+Vaulter\Enums\Access\Effect
+  Allow = allow
+  Deny = deny
+
+Vaulter\Enums\Access\InheritanceRestriction
+  Empty = empty
+  CopyCurrent = copy_current
 
 Vaulter\Enums\Drive\OnNameConflict
   Fail = fail

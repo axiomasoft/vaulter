@@ -6,15 +6,18 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Vaulter\Access\ExactListing;
+use Vaulter\Access\PermissionDriverManager;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Drive\Queries\SharedWithActorQuery;
-use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Exceptions\Nodes\InvalidCursorException;
 use Vaulter\Http\Resources\Drive\NodeResource;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Profiles\Profile;
+use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Tests\Fixtures\Access\ProfileDenyDriver;
 
 beforeEach(function (): void {
     config()->set('vaulter.access.permission_driver', 'database');
@@ -22,16 +25,16 @@ beforeEach(function (): void {
     $this->actingAs($this->actor);
     $this->storage = AccessTestHelpers::storage();
     $this->folder = AccessTestHelpers::folder($this->storage, null, 'parent');
-    AccessTestHelpers::grant($this->folder, GrantLevel::Reader, scope: GrantScope::Subtree);
+    AccessTestHelpers::grant($this->folder, RoleRegistry::READER, scope: GrantScope::Subtree);
     $this->base = 'api/vaulter/storages/'.$this->storage->id;
 });
 
-it('V09 reaches the 301st candidate across empty pages and hides denied nodes everywhere', function (): void {
+it('V09 reaches the 301st candidate across empty pages and hides walled-off nodes everywhere', function (): void {
     config()->set('vaulter.listing.scan_budget', 100);
     $hidden = [];
     for ($i = 0; $i < 300; $i++) {
-        $child = AccessTestHelpers::folder($this->storage, $this->folder, sprintf('candidate-%04d', $i));
-        AccessTestHelpers::grant($child, GrantLevel::Reader, effect: Effect::Deny);
+        // Each candidate restricts inheritance, so the parent's subtree grant stops there.
+        $child = AccessTestHelpers::folder($this->storage, $this->folder, sprintf('candidate-%04d', $i), inheritGrants: false);
         $hidden[] = $child->id;
     }
     $visible = AccessTestHelpers::folder($this->storage, $this->folder, 'candidate-0300');
@@ -57,13 +60,23 @@ it('V09 reaches the 301st candidate across empty pages and hides denied nodes ev
     $this->getJson($this->base.'/trash')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $visible->id)->assertJsonMissingPath('meta.total');
 });
 
-it('V22 enforces a child deny after the Gate role lane allows the workspace', function (): void {
+it('V22 keeps a drive-wide Gate role through an inheritance boundary, which only cuts grants', function (): void {
+    // A boundary is a grant-inheritance rule, not a block: the host role lane is
+    // node-blind and still applies; only an override Deny closes a drive to a role.
+    $walled = AccessTestHelpers::folder($this->storage, $this->folder, 'walled', inheritGrants: false);
+    $visible = AccessTestHelpers::folder($this->storage, $this->folder, 'visible');
+    $this->getJson($this->base.'/nodes?parent_id='.$this->folder->id)->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $visible->id);
+
     config()->set('vaulter.access.permission_driver', 'gate');
     Gate::define('vaulter.view', fn (): bool => true);
-    $hidden = AccessTestHelpers::folder($this->storage, $this->folder, 'hidden');
-    $visible = AccessTestHelpers::folder($this->storage, $this->folder, 'visible');
-    AccessTestHelpers::grant($hidden, GrantLevel::Reader, effect: Effect::Deny);
-    $this->getJson($this->base.'/nodes?parent_id='.$this->folder->id)->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $visible->id);
+    $ids = array_column($this->getJson($this->base.'/nodes?parent_id='.$this->folder->id)->assertOk()->json('data'), 'id');
+    expect($ids)->toContain($walled->id)->toContain($visible->id);
+
+    Gate::define('vaulter.super', fn (): bool => false);
+    config()->set('vaulter.access.permission_drivers.blocked', ProfileDenyDriver::class);
+    config()->set('vaulter.access.permission_driver', 'blocked');
+    app()->forgetInstance(PermissionDriverManager::class);
+    $this->getJson('api/vaulter/nodes/'.$walled->id)->assertNotFound();
 });
 
 it('uses at most five Vaulter queries for 50 visible nodes including resource abilities', function (): void {
@@ -97,7 +110,7 @@ it('rejects forged signatures and a cursor from another parent', function (): vo
     $cursor = $this->getJson($url)->assertOk()->json('meta.next_cursor');
     $this->getJson($url.'&cursor='.urlencode($cursor.'x'))->assertStatus(422)->assertJsonPath('code', 'validation_failed')->assertJsonStructure(['errors' => ['cursor']]);
     $other = AccessTestHelpers::folder($this->storage, null, 'other');
-    AccessTestHelpers::grant($other, GrantLevel::Reader);
+    AccessTestHelpers::grant($other, RoleRegistry::READER);
     $this->getJson($this->base.'/nodes?parent_id='.$other->id.'&cursor='.urlencode($cursor))->assertStatus(422)->assertJsonPath('code', 'validation_failed');
 });
 
@@ -131,14 +144,23 @@ it('paginates trash in canonical default position name and id order without skip
     expect($found)->toBe($ids);
 });
 
-it('scans shared candidates across storages without totals or denied rows', function (): void {
+it('scans shared candidates across storages without totals or blocked rows', function (): void {
     config()->set('vaulter.listing.scan_budget', 1);
-    $hidden = AccessTestHelpers::folder($this->storage, $this->folder, 'a-hidden');
-    AccessTestHelpers::grant($hidden, GrantLevel::Reader);
-    AccessTestHelpers::grant($hidden, GrantLevel::Reader, effect: Effect::Deny);
+    // The hidden candidate's drive belongs to a profile whose driver blocks it
+    // administratively: a candidate by its grant, refused by the exact check.
+    config()->set('vaulter.access.permission_drivers.blocked', ProfileDenyDriver::class);
+    $registry = new ProfileRegistry;
+    $registry->register((new Profile)->key('default'));
+    $registry->register((new Profile)->key('blocked')->permissionDriver('blocked'));
+    $registry->freeze();
+    app()->instance(ProfileRegistry::class, $registry);
+    $blocked = AccessTestHelpers::storage();
+    $blocked->forceFill(['profile' => 'blocked'])->save();
+    $hidden = AccessTestHelpers::folder($blocked, null, 'a-hidden');
+    AccessTestHelpers::grant($hidden, RoleRegistry::READER);
     $otherStorage = AccessTestHelpers::storage();
     $visible = AccessTestHelpers::folder($otherStorage, null, 'z-visible');
-    AccessTestHelpers::grant($visible, GrantLevel::Reader);
+    AccessTestHelpers::grant($visible, RoleRegistry::READER);
     $cursor = null;
     $ids = [];
     do {
@@ -151,10 +173,10 @@ it('scans shared candidates across storages without totals or denied rows', func
 
 it('SEC-CURSOR binds shared-list cursors to the current actor identity', function (): void {
     $a = AccessTestHelpers::folder($this->storage, $this->folder, 'z-shared-a');
-    AccessTestHelpers::grant($a, GrantLevel::Reader);
+    AccessTestHelpers::grant($a, RoleRegistry::READER);
     $other = AccessTestHelpers::storage();
     $b = AccessTestHelpers::folder($other, null, 'a-shared-b');
-    AccessTestHelpers::grant($b, GrantLevel::Reader, subjectId: 2);
+    AccessTestHelpers::grant($b, RoleRegistry::READER, subjectId: 2);
     $query = app(SharedWithActorQuery::class);
     $options = new ListOptions(perPage: 1);
     $cursor = $query->execute($this->actor, $options)->nextCursor;

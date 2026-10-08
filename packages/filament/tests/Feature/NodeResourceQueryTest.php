@@ -2,8 +2,7 @@
 
 declare(strict_types=1);
 
-use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Filament\Resources\NodeResource;
@@ -16,7 +15,7 @@ use Vaulter\Repositories\Drive\NodeReadRepository;
  * narrows the admin table to the acting admin's grant-reachable CANDIDATE set — the
  * SAME candidate-SQL the core API listing uses, so the two surfaces are CONSISTENT.
  * The narrowing is a deliberate SUPERSET (it hides nodes with no grant-reachability
- * but does NOT apply the exact deny-veto in the listing SQL — deferred to the H.4
+ * but does NOT apply the exact inheritance boundary in the listing SQL — deferred to the H.4
  * read-model); per-ROW actions stay exactly gated by the AccessResolver.
  *
  * The full Livewire page render hits a known Filament-5/Testbench snag (see the note
@@ -46,7 +45,7 @@ it('narrows the table to the acting admin candidate set', function (): void {
 
     // A subtree grant on 'Granted' makes it (and any descendant) a candidate; the
     // sibling 'Ungranted' has no grant and must NOT appear in the admin table.
-    DriveBuilder::grant($granted, $admin, level: GrantLevel::Reader);
+    DriveBuilder::grant($granted, $admin, role: RoleRegistry::READER);
 
     $ids = NodeResource::getEloquentQuery()->pluck('id')->all();
 
@@ -112,7 +111,7 @@ it('constrains a raw builder to the item anchor only via the repository seam', f
     $child = Vaulter::drive($storage)->asSystem('test fixture')->folders()->create(name: 'Inside', parent: $folder);
 
     // ITEM scope = that node only; the child is not a candidate.
-    DriveBuilder::grant($folder, $admin, level: GrantLevel::Reader, scope: GrantScope::Item);
+    DriveBuilder::grant($folder, $admin, role: RoleRegistry::READER, scope: GrantScope::Item);
 
     $ids = app(NodeReadRepository::class)
         ->constrainToAccessible(Node::query(), $admin)
@@ -123,19 +122,19 @@ it('constrains a raw builder to the item anchor only via the repository seam', f
         ->and($ids)->not->toContain($child->getKey());
 });
 
-it('lists a deny-vetoed candidate in the table query (superset), per the listing decision', function (): void {
+it('lists a walled-off candidate in the table query (superset), per the listing decision', function (): void {
     $admin = DriveBuilder::user();
     $this->actingAs($admin);
 
     $storage = DriveBuilder::storage();
     $parent = DriveBuilder::folder($storage, 'Parent');
-    $child = Vaulter::drive($storage)->asSystem('test fixture')->folders()->create(name: 'Vetoed', parent: $parent);
+    $child = Vaulter::drive($storage)->asSystem('test fixture')->folders()->create(name: 'Walled', parent: $parent);
 
-    // A subtree allow on the parent makes the child a candidate; a nearer deny revokes
-    // the child's EXACT access. The candidate SUPERSET still LISTS the child (the deny
-    // is enforced on the per-row action, never in the listing SQL).
-    DriveBuilder::grant($parent, $admin, level: GrantLevel::Reader);
-    DriveBuilder::grant($child, $admin, level: GrantLevel::Reader, effect: Effect::Deny, scope: GrantScope::Item);
+    // A subtree grant on the parent makes the child a candidate; the child's inheritance
+    // boundary cuts its EXACT access. The candidate SUPERSET still LISTS the child (the
+    // boundary is enforced on the per-row action, never in the listing SQL).
+    DriveBuilder::grant($parent, $admin, role: RoleRegistry::READER);
+    $child->forceFill(['inherit_grants' => false])->save();
 
     $ids = NodeResource::getEloquentQuery()->pluck('id')->all();
 

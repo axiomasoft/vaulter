@@ -2,8 +2,7 @@
 
 declare(strict_types=1);
 
-use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Filament\Resources\NodeGrantResource;
@@ -33,17 +32,15 @@ it('creates a grant through the core GrantNodeAccessAction', function (): void {
         'node_id' => $folder->getKey(),
         'subject_type' => $subject->getMorphClass(),
         'subject_id' => 2,
-        'level' => GrantLevel::Writer->value,
-        'effect' => Effect::Allow->value,
+        'role' => RoleRegistry::WRITER,
         'scope' => GrantScope::Subtree->value,
-        'permissions' => 0,
         'expires_at' => '',
     ]);
 
     $grants = app(GrantReadRepository::class)->forNode($folder)->get();
 
     expect($grants)->toHaveCount(2) // the owner grant + the new writer grant
-        ->and($grants->contains(fn (NodeGrant $g): bool => $g->level === GrantLevel::Writer && (string) $g->subject_id === '2'))
+        ->and($grants->contains(fn (NodeGrant $g): bool => $g->role_key === RoleRegistry::WRITER && (string) $g->subject_id === '2'))
         ->toBeTrue();
 });
 
@@ -61,10 +58,8 @@ it('preserves the validated grant form contract at the core Action boundary', fu
         'node_id' => $folder->getKey(),
         'subject_type' => 'user',
         'subject_id' => '002',
-        'level' => GrantLevel::Writer->value,
-        'effect' => Effect::Deny->value,
+        'role' => RoleRegistry::WRITER,
         'scope' => GrantScope::Item->value,
-        'permissions' => '31',
         'expires_at' => '2035-01-02 03:04:05',
     ]);
 
@@ -75,10 +70,9 @@ it('preserves the validated grant form contract at the core Action boundary', fu
 
     expect($grant)->toBeInstanceOf(NodeGrant::class)
         ->and((string) $grant->subject_id)->toBe('2')
-        ->and($grant->level)->toBe(GrantLevel::Writer)
-        ->and($grant->effect)->toBe(Effect::Deny)
+        ->and($grant->role_key)->toBe(RoleRegistry::WRITER)
+        ->and($grant->role_version)->toBe(1)
         ->and($grant->scope)->toBe(GrantScope::Item)
-        ->and($grant->permissions)->toBe(31)
         ->and($grant->expires_at?->format('Y-m-d H:i:s'))->toBe('2035-01-02 03:04:05')
         ->and((string) $grant->granted_by)->toBe('41');
 
@@ -101,7 +95,7 @@ it('applies grant defaults when optional form values are omitted', function (): 
         'node_id' => $folder->getKey(),
         'subject_type' => 'user',
         'subject_id' => 'external-id',
-        'level' => GrantLevel::Reader->value,
+        'role' => RoleRegistry::READER,
     ]);
 
     $grant = app(GrantReadRepository::class)
@@ -110,9 +104,8 @@ it('applies grant defaults when optional form values are omitted', function (): 
         ->first(fn (NodeGrant $candidate): bool => $candidate->subject_id === 'external-id');
 
     expect($grant)->toBeInstanceOf(NodeGrant::class)
-        ->and($grant->effect)->toBe(Effect::Allow)
+        ->and($grant->role_key)->toBe(RoleRegistry::READER)
         ->and($grant->scope)->toBe(GrantScope::Subtree)
-        ->and($grant->permissions)->toBe(0)
         ->and($grant->expires_at)->toBeNull();
 });
 
@@ -144,10 +137,8 @@ it('does not create a grant when the admin may not share the node', function ():
         'node_id' => $folder->getKey(),
         'subject_type' => $stranger->getMorphClass(),
         'subject_id' => 9,
-        'level' => GrantLevel::Owner->value,
-        'effect' => Effect::Allow->value,
+        'role' => RoleRegistry::OWNER,
         'scope' => GrantScope::Subtree->value,
-        'permissions' => 0,
         'expires_at' => '',
     ]);
 
@@ -169,7 +160,7 @@ it('revokes every grant a subject holds through the core RevokeNodeAccessAction'
     DriveBuilder::grant($folder, $owner);
 
     $subject = DriveBuilder::user(2);
-    DriveBuilder::grant($folder, $subject, GrantLevel::Writer);
+    DriveBuilder::grant($folder, $subject, RoleRegistry::WRITER);
 
     expect(app(GrantReadRepository::class)->forNode($folder)->count())->toBe(2);
 
@@ -188,7 +179,7 @@ it('rechecks a reader and foreign membership inside actual grant revoke', functi
     $drive = DriveBuilder::storage();
     $node = DriveBuilder::folder($drive);
     $grant = DriveBuilder::grant($node, $owner);
-    $grant->forceFill(['level' => GrantLevel::Reader])->save();
+    $grant->forceFill(['role_key' => RoleRegistry::READER])->save();
     expect(fn () => NodeGrantResource::revokeRecord($grant))->toThrow(PermissionDeniedException::class)
         ->and($grant->fresh())->not->toBeNull()
         ->and(NodeGrantResource::getEloquentQuery()->count())->toBe(0);

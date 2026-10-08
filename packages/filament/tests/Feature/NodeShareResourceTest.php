@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Configuration\SharingConfig;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Access\Permission;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
@@ -35,7 +35,7 @@ it('creates a share link through the core CreateShareLinkAction', function (): v
 
     NodeShareResource::createFromData([
         'node_id' => $folder->getKey(),
-        'level' => GrantLevel::Reader->value,
+        'level' => RoleRegistry::READER,
         'scope' => GrantScope::Item->value,
         'permissions' => 0,
         'password' => '',
@@ -65,7 +65,7 @@ it('preserves the validated share form contract and one-time token notification'
     NodeShareResource::createFromData([
         'node_id' => $folder->getKey(),
         'permissions' => '31',
-        'level' => GrantLevel::Writer->value,
+        'level' => RoleRegistry::WRITER,
         'scope' => GrantScope::Subtree->value,
         'password' => 'top-secret',
         'require_login' => true,
@@ -78,7 +78,7 @@ it('preserves the validated share form contract and one-time token notification'
 
     expect($share)->toBeInstanceOf(NodeShare::class)
         ->and($share->permissions)->toBe(31)
-        ->and($share->level)->toBe(GrantLevel::Writer)
+        ->and($share->level)->toBe(RoleRegistry::WRITER)
         ->and($share->scope)->toBe(GrantScope::Subtree)
         ->and(Hash::check('top-secret', $share->password_hash))->toBeTrue()
         ->and($share->require_login)->toBeTrue()
@@ -123,8 +123,8 @@ it('applies safe share defaults to omitted and blank optional values', function 
         $share = app(NodeShareReadRepository::class)->forNode($folder)->first();
 
         expect($share)->toBeInstanceOf(NodeShare::class)
-            ->and($share->permissions)->toBe(Permission::Read->value)
-            ->and($share->level)->toBe(GrantLevel::Reader)
+            ->and($share->permissions)->toBe((Permission::View->value | Permission::Download->value))
+            ->and($share->level)->toBe(RoleRegistry::READER)
             ->and($share->scope)->toBe(GrantScope::Item)
             ->and($share->password_hash)->toBeNull()
             ->and($share->require_login)->toBeFalse()
@@ -161,7 +161,7 @@ it('never persists the raw token — only its hash and prefix', function (): voi
 
     NodeShareResource::createFromData([
         'node_id' => $folder->getKey(),
-        'level' => GrantLevel::Reader->value,
+        'level' => RoleRegistry::READER,
         'scope' => GrantScope::Item->value,
         'permissions' => 0,
         'password' => '',
@@ -190,7 +190,7 @@ it('reveals the token prefix but never the full hash in the prefix column', func
 
     NodeShareResource::createFromData([
         'node_id' => $folder->getKey(),
-        'level' => GrantLevel::Reader->value,
+        'level' => RoleRegistry::READER,
         'scope' => GrantScope::Item->value,
         'permissions' => 0,
         'password' => '',
@@ -217,7 +217,7 @@ it('revokes a share link through the core RevokeShareLinkAction', function (): v
 
     NodeShareResource::createFromData([
         'node_id' => $folder->getKey(),
-        'level' => GrantLevel::Reader->value,
+        'level' => RoleRegistry::READER,
         'scope' => GrantScope::Item->value,
         'permissions' => 0,
         'password' => '',
@@ -246,7 +246,7 @@ it('does not create a share when the admin may not share the node', function ():
 
     NodeShareResource::createFromData([
         'node_id' => $folder->getKey(),
-        'level' => GrantLevel::Reader->value,
+        'level' => RoleRegistry::READER,
         'scope' => GrantScope::Item->value,
         'permissions' => 0,
         'password' => '',
@@ -285,7 +285,7 @@ it('rechecks the reader ability inside the actual revoke mutation', function ():
     $grant = DriveBuilder::grant($node, $owner);
     NodeShareResource::createFromData(['node_id' => $node->id]);
     $share = NodeShare::query()->sole();
-    $grant->forceFill(['level' => GrantLevel::Reader])->save();
+    $grant->forceFill(['role_key' => RoleRegistry::READER])->save();
     expect(fn () => NodeShareResource::revokeRecord($share))->toThrow(PermissionDeniedException::class)
         ->and($share->fresh()->revoked_at)->toBeNull()
         ->and(NodeShareResource::getEloquentQuery()->count())->toBe(0);

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\Nodes\FolderCreated;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Events\Access\NodeGrantCreated;
 use Vaulter\Events\Access\NodeGrantRevoked;
@@ -96,7 +96,7 @@ it('is idempotent by event_id: re-staging the same occurrence stages no duplicat
 it('keeps distinct grant occurrences with identical parameters and deduplicates their replay', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'Granted');
-    $grant = AccessTestHelpers::grant(node: $node, level: GrantLevel::Reader);
+    $grant = AccessTestHelpers::grant(node: $node, role: RoleRegistry::READER);
     $subject = new Subject(type: $grant->subject_type, id: $grant->subject_id);
     Outbox::query()->delete();
 

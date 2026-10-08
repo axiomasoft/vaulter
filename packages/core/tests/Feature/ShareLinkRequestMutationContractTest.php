@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Hash;
-use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Access\Permission;
 use Vaulter\Models\Sharing\NodeShare;
@@ -17,7 +17,7 @@ beforeEach(function (): void {
 
     $storage = AccessTestHelpers::storage();
     $this->shareNode = AccessTestHelpers::folder($storage, null, 'mutation-contract');
-    AccessTestHelpers::grant($this->shareNode, GrantLevel::Owner, scope: GrantScope::Item);
+    AccessTestHelpers::grant($this->shareNode, RoleRegistry::OWNER, scope: GrantScope::Item);
 });
 
 it('rejects every invalid share-link request boundary', function (array $payload, string $field): void {
@@ -48,8 +48,8 @@ it('maps the complete valid request into the persisted share contract', function
     $expiresAt = now()->addHour()->startOfSecond();
 
     $this->postJson('api/vaulter/nodes/'.$this->shareNode->getKey().'/shares', [
-        'permissions' => Permission::Read->value | Permission::Update->value,
-        'level' => GrantLevel::Writer->value,
+        'permissions' => (Permission::View->value | Permission::Download->value) | Permission::Edit->value,
+        'level' => RoleRegistry::WRITER,
         'scope' => GrantScope::Subtree->value,
         'password' => 'secret',
         'require_login' => true,
@@ -60,8 +60,8 @@ it('maps the complete valid request into the persisted share contract', function
 
     $share = NodeShare::query()->sole();
 
-    expect($share->permissions)->toBe(Permission::Read->value | Permission::Update->value)
-        ->and($share->level)->toBe(GrantLevel::Writer)
+    expect($share->permissions)->toBe((Permission::View->value | Permission::Download->value) | Permission::Edit->value)
+        ->and($share->level)->toBe(RoleRegistry::WRITER)
         ->and($share->scope)->toBe(GrantScope::Subtree)
         ->and(Hash::check('secret', $share->password_hash))->toBeTrue()
         ->and($share->require_login)->toBeTrue()
@@ -73,7 +73,7 @@ it('maps the complete valid request into the persisted share contract', function
 
 it('rejects a default level mask containing Comment when no explicit mask is supplied', function (): void {
     $this->postJson('api/vaulter/nodes/'.$this->shareNode->getKey().'/shares', [
-        'level' => GrantLevel::Writer->value,
+        'level' => RoleRegistry::WRITER,
     ])->assertUnprocessable()->assertJsonValidationErrors('permissions');
 
     expect(NodeShare::query()->count())->toBe(0);
@@ -82,7 +82,7 @@ it('rejects a default level mask containing Comment when no explicit mask is sup
 it('preserves an explicit zero permission mask', function (): void {
     $this->postJson('api/vaulter/nodes/'.$this->shareNode->getKey().'/shares', [
         'permissions' => 0,
-        'level' => GrantLevel::Owner->value,
+        'level' => RoleRegistry::OWNER,
     ])->assertCreated();
 
     expect(NodeShare::query()->sole()->permissions)->toBe(0);

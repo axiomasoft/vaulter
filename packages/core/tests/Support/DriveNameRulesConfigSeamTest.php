@@ -33,29 +33,25 @@ it('accepts a name at the current default max length (255) unchanged, characteri
     expect($validator->fails())->toBeFalse();
 });
 
-it('honours a host-configured max_length instead of the hardcoded 255, F-P3.1-01', function (): void {
+it('ignores the deprecated host max_length and keeps the fixed byte bound, P4.11', function (): void {
+    config()->set('vaulter.drive.name_rules.max_length', 10);
+    config()->set('vaulter-drive.names.max_length', 10);
+
     $validator = Validator::make(
         ['name' => str_repeat('a', 11)],
-        ['name' => DriveNameRules::rules(maxLength: 10)],
+        ['name' => DriveNameRules::rules()],
         DriveNameRules::messages(),
     );
 
-    expect($validator->fails())->toBeTrue()
-        ->and($validator->errors()->first('name'))->not->toBeNull();
-
-    $validatorWithinBound = Validator::make(
-        ['name' => str_repeat('a', 10)],
-        ['name' => DriveNameRules::rules(maxLength: 10)],
-        DriveNameRules::messages(),
-    );
-
-    expect($validatorWithinBound->fails())->toBeFalse();
+    expect($validator->fails())->toBeFalse();
 });
 
 it('keeps separators fixed independently of a host naming length', function (): void {
+    config()->set('vaulter.drive.name_rules.max_length', 10);
+
     $validator = Validator::make(
         ['name' => 'foo/bar'],
-        ['name' => DriveNameRules::rules(maxLength: 10)],
+        ['name' => DriveNameRules::rules()],
         DriveNameRules::messages(),
     );
 

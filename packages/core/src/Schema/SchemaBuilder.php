@@ -229,7 +229,6 @@ final class SchemaBuilder
         $table->bigInteger('size_bytes')->default(0);
         $table->boolean('inherit_grants')->default(true);
         $ids->reference(table: $table, column: 'shortcut_target_id', nullable: true);
-        HostKeyColumns::add(table: $table, column: 'owner_id', nullable: true, index: false);
         // Namespaced string properties (PLAN2.D41): {namespace: {key: value}}.
         $table->jsonb('properties')->nullable();
         // The last content change (a file revision, a document state write), apart
@@ -416,11 +415,10 @@ final class SchemaBuilder
     }
 
     /**
-     * v_node_grants — the per-node ACL grant with inheritance (§2.6 / H.2). Gated
-     * on 'grants'. The (node_id, subject_type, subject_id, scope, effect) live-row
-     * UNIQUE (added driver-aware in afterCreate) keeps one allow + one deny per
-     * subject/scope per node; the (subject_type, subject_id) index backs the
-     * "shared with me" fast pass.
+     * v_node_grants — positive per-node grants of a versioned role (PLAN2.D45). Gated
+     * on 'grants'. The (node_id, subject_type, subject_id, scope) UNIQUE (added in
+     * afterCreate) keeps one grant per subject/scope per node; the
+     * (subject_type, subject_id) index backs the "shared with me" fast pass.
      */
     private function defineNodeGrants(Blueprint $table, IdStrategy $ids): void
     {
@@ -432,14 +430,9 @@ final class SchemaBuilder
         HostKeyColumns::add(table: $table, column: 'subject_id', nullable: false, index: true);
         $table->string('subject_type');
 
-        $table->string('level', 16)->index();
-        $table->unsignedInteger('permissions')->default(0);
-        $table->string('effect', 5)->default('allow')->index();
+        $table->string('role_key', 32);
+        $table->smallInteger('role_version')->default(1);
         $table->string('scope', 8)->default('subtree');
-
-        // Reserved for the OPTIONAL materialised effective-grants read-model — the
-        // source of truth in M2a is the direct rows + the tree, so these stay
-        // false/null (the inherited walk is computed, not stored).
 
         $table->timestamp('expires_at')->nullable()->index();
         HostKeyColumns::add(table: $table, column: 'granted_by', nullable: true, index: false);
@@ -449,7 +442,6 @@ final class SchemaBuilder
 
         // "Shared with me": every node a subject is granted access to (§2.6).
         $table->index(['subject_type', 'subject_id'], $name.'_subject_idx');
-        $table->index(['node_id', 'effect'], $name.'_node_effect_idx');
 
         $table->foreign('node_id')
             ->references('id')
@@ -1164,14 +1156,13 @@ final class SchemaBuilder
     }
 
     /**
-     * One LIVE grant per (node_id, subject_type, subject_id, scope, effect) — the
-     * §2.6 grant-unique key. Driver-aware: a partial (soft-delete-aware) index on
-     * Postgres/SQLite, a MySQL generated-column fallback, a plain unique elsewhere.
+     * One grant per (node_id, subject_type, subject_id, scope) — the §2.6
+     * grant-unique key.
      */
     private function addGrantUniqueIndex(string $table): void
     {
         $this->schemaConnection()->table($table, static function (Blueprint $blueprint) use ($table): void {
-            $blueprint->unique(['node_id', 'subject_type', 'subject_id', 'scope', 'effect'], $table.'_grant_uniq');
+            $blueprint->unique(['node_id', 'subject_type', 'subject_id', 'scope'], $table.'_grant_uniq');
         });
     }
 

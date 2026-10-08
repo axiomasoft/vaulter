@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Export\NodeExportService;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\OperationContext;
@@ -22,7 +22,7 @@ beforeEach(function (): void {
 it('SEC-R17-inline rechecks visibility on every PHP export with a retained node', function (): void {
     $user = AccessTestHelpers::user(97);
     $context = new OperationContext($this->handle->model(), Actor::user($user), 'export');
-    $grant = AccessTestHelpers::grant($this->node, GrantLevel::Reader, subjectId: 97);
+    $grant = AccessTestHelpers::grant($this->node, RoleRegistry::READER, subjectId: 97);
     $service = app(NodeExportService::class);
     expect($service->export($context, $this->node, 'html')->content)->toContain('secret body');
     $grant->delete();

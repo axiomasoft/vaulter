@@ -24,10 +24,10 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Override;
 use UnitEnum;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Configuration\SharingConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Data\Sharing\ShareLinkInput;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Access\Permission;
 use Vaulter\Exceptions\Access\MissingActorException;
@@ -117,8 +117,9 @@ final class NodeShareResource extends Resource
                     ->badge(),
 
                 TextColumn::make('level')
+                    ->label('Role')
                     ->badge()
-                    ->formatStateUsing(fn (GrantLevel $state): string => $state->label())
+                    ->formatStateUsing(fn (string $state): string => ucfirst($state))
                     ->toggleable(),
 
                 TextColumn::make('scope')
@@ -208,8 +209,9 @@ final class NodeShareResource extends Resource
                 ->required(),
 
             Select::make('level')
+                ->label('Role')
                 ->options(self::levelOptions())
-                ->default(GrantLevel::Reader->value)
+                ->default(RoleRegistry::READER)
                 ->required(),
 
             Select::make('scope')
@@ -218,12 +220,12 @@ final class NodeShareResource extends Resource
                 ->required(),
 
             TextInput::make('permissions')
-                ->label('Permissions (CRUDS bits)')
-                ->helperText('0–63. Defaults to READ (1) when 0.')
+                ->label('Permissions (ability bits)')
+                ->helperText('0–'.Permission::all().'. Defaults to the reader role (view + download) when 0.')
                 ->numeric()
                 ->minValue(0)
                 ->maxValue(Permission::all())
-                ->default(Permission::Read->value),
+                ->default(self::readerBits()),
 
             TextInput::make('password')
                 ->label('Password (optional)')
@@ -268,7 +270,7 @@ final class NodeShareResource extends Resource
             return;
         }
 
-        // -1, 0 and 1 defaults all normalize to READ below; only supplied values are significant.
+        // -1 and 0 normalize to the reader bits below; only supplied values are significant.
         $permissions = (int) ($data['permissions'] ?? 0); // @pest-mutate-ignore: DecrementInteger,IncrementInteger
         /** @var string $password */
         $password = $data['password'] ?? '';
@@ -279,9 +281,9 @@ final class NodeShareResource extends Resource
         $minted = self::operations($node)->create(
             node: $node,
             input: new ShareLinkInput(
-                permissions: $permissions > 0 ? $permissions : Permission::Read->value,
+                permissions: $permissions > 0 ? $permissions : self::readerBits(),
                 // Filament validation already supplies enum/string and toggle values with these types.
-                level: GrantLevel::from((string) ($data['level'] ?? GrantLevel::Reader->value)), // @pest-mutate-ignore: RemoveStringCast
+                level: (string) ($data['level'] ?? RoleRegistry::READER), // @pest-mutate-ignore: RemoveStringCast
                 scope: GrantScope::from((string) ($data['scope'] ?? GrantScope::Item->value)), // @pest-mutate-ignore: RemoveStringCast
                 password: $password === '' ? null : $password,
                 requireLogin: (bool) ($data['require_login'] ?? false), // @pest-mutate-ignore: RemoveBooleanCast
@@ -414,11 +416,20 @@ final class NodeShareResource extends Resource
     {
         $options = [];
 
-        foreach (GrantLevel::cases() as $level) {
-            $options[$level->value] = $level->label();
+        // A bearer link has no identity: the commenter role is never offered, and a
+        // role whose default abilities include comment needs an explicit mask.
+        foreach ((new RoleRegistry)->all() as $role) {
+            if ($role->key !== RoleRegistry::COMMENTER) {
+                $options[$role->key] = ucfirst($role->key);
+            }
         }
 
         return $options;
+    }
+
+    private static function readerBits(): int
+    {
+        return (new RoleRegistry)->latest(RoleRegistry::READER)->bits;
     }
 
     /**

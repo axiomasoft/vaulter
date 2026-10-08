@@ -167,7 +167,6 @@ final readonly class CopyNodeAction
             'properties' => $source->properties,
             'content_modified_at' => $source->content_modified_at,
             'content_modified_by' => $source->content_modified_by,
-            'owner_id' => $context->actor->ref()->id,
             'created_by' => $context->actor->ref()->id,
             'sequence' => 0,
         ]);

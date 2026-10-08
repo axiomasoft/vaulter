@@ -22,13 +22,11 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Override;
 use UnitEnum;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Data\Access\GrantInput;
-use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Access\Permission;
 use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\VaulterException;
@@ -44,8 +42,8 @@ use Vaulter\ValueObjects\Access\Actor;
 /**
  * The per-node ACL admin surface (master plan §2.6 / §3): list, create and revoke
  * the node grants the {@see AccessOperations} folds into effective permissions. A
- * grant addresses a subject (type + id) on a node with a level + CRUDS bits, an
- * allow|deny effect, an item|subtree scope and an optional read-time expiry.
+ * grant gives a subject (type + id) a role on a node, with an item|subtree scope
+ * and an optional read-time expiry; grants are positive only.
  *
  * Every mutation flows through a CORE Action — never a direct Eloquent write:
  *   - create → {@see AccessOperations} (idempotent upsert on the grant key);
@@ -114,24 +112,16 @@ final class NodeGrantResource extends Resource
                     ->formatStateUsing(fn (string $state, NodeGrant $record): string => $state.' #'.$record->subject_id)
                     ->searchable(),
 
-                TextColumn::make('level')
+                TextColumn::make('role_key')
+                    ->label('Role')
                     ->badge()
-                    ->formatStateUsing(fn (GrantLevel $state): string => $state->label())
+                    ->formatStateUsing(fn (string $state, NodeGrant $record): string => ucfirst($state).' v'.$record->role_version)
                     ->sortable(),
-
-                TextColumn::make('effect')
-                    ->badge()
-                    ->color(fn (Effect $state): string => $state === Effect::Deny ? 'danger' : 'success')
-                    ->formatStateUsing(fn (Effect $state): string => $state->label()),
 
                 TextColumn::make('scope')
                     ->badge()
                     ->formatStateUsing(fn (GrantScope $state): string => $state->label())
                     ->toggleable(),
-
-                TextColumn::make('permissions')
-                    ->label('Bits')
-                    ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('expires_at')
                     ->dateTime('d.m.Y H:i')
@@ -144,11 +134,9 @@ final class NodeGrantResource extends Resource
                     ->toggleable(),
             ])
             ->filters([
-                SelectFilter::make('effect')
-                    ->options(self::effectOptions()),
-
-                SelectFilter::make('level')
-                    ->options(self::levelOptions()),
+                SelectFilter::make('role_key')
+                    ->label('Role')
+                    ->options(self::roleOptions()),
             ])
             ->recordActions([
                 self::revokeAction(),
@@ -199,28 +187,15 @@ final class NodeGrantResource extends Resource
                 ->label('Subject id')
                 ->required(),
 
-            Select::make('level')
-                ->options(self::levelOptions())
-                ->default(GrantLevel::Reader->value)
-                ->required(),
-
-            Select::make('effect')
-                ->options(self::effectOptions())
-                ->default(Effect::Allow->value)
+            Select::make('role')
+                ->options(self::roleOptions())
+                ->default(RoleRegistry::READER)
                 ->required(),
 
             Select::make('scope')
                 ->options(self::scopeOptions())
                 ->default(GrantScope::Subtree->value)
                 ->required(),
-
-            TextInput::make('permissions')
-                ->label('Extra CRUDS bits')
-                ->helperText('0–63; OR-ed on top of the level bits. Leave 0 for level-only.')
-                ->numeric()
-                ->minValue(0)
-                ->maxValue(Permission::all())
-                ->default(0),
 
             DateTimePicker::make('expires_at')
                 ->label('Expires at')
@@ -262,10 +237,8 @@ final class NodeGrantResource extends Resource
                     type: (string) $data['subject_type'], // @pest-mutate-ignore: RemoveStringCast
                     id: self::scalarId($data['subject_id'] ?? ''),
                 ),
-                level: GrantLevel::from((string) $data['level']), // @pest-mutate-ignore: RemoveStringCast
-                effect: Effect::from((string) ($data['effect'] ?? Effect::Allow->value)), // @pest-mutate-ignore: RemoveStringCast
+                role: (string) $data['role'], // @pest-mutate-ignore: RemoveStringCast
                 scope: GrantScope::from((string) ($data['scope'] ?? GrantScope::Subtree->value)), // @pest-mutate-ignore: RemoveStringCast
-                permissions: (int) ($data['permissions'] ?? 0),
                 expiresAt: $expiresAt === '' ? null : Carbon::parse($expiresAt),
             ),
         );
@@ -380,26 +353,12 @@ final class NodeGrantResource extends Resource
     /**
      * @return array<string, string>
      */
-    private static function levelOptions(): array
+    private static function roleOptions(): array
     {
         $options = [];
 
-        foreach (GrantLevel::cases() as $level) {
-            $options[$level->value] = $level->label();
-        }
-
-        return $options;
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    private static function effectOptions(): array
-    {
-        $options = [];
-
-        foreach (Effect::cases() as $effect) {
-            $options[$effect->value] = $effect->label();
+        foreach ((new RoleRegistry)->all() as $role) {
+            $options[$role->key] = ucfirst($role->key);
         }
 
         return $options;

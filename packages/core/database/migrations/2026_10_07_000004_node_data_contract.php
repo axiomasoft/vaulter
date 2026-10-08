@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Database\Connection;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Log;
 use Vaulter\Configuration\DatabaseConfig;
@@ -303,8 +304,8 @@ return new class extends Migration
                     $name = is_string($row->name) ? $row->name : '';
                     $key = NodeName::key($name);
 
-                    if ($row->trashed_at === null && $this->keyTaken($db, $nodes, $id, $row->parent_id, $key)) {
-                        $renamed = $this->freeName($db, $nodes, $id, $row->parent_id, $name);
+                    if ($row->trashed_at === null && $this->keyTaken($db, $nodes, $id, $row->drive_id, $row->parent_id, $key)) {
+                        $renamed = $this->freeName($db, $nodes, $id, $row->drive_id, $row->parent_id, $name);
                         $db->table($nodes)->where('id', $id)->update(['name' => $renamed, 'name_key' => NodeName::key($renamed)]);
                         $this->recordRename($row, $id, $name, $renamed);
 
@@ -325,14 +326,24 @@ return new class extends Migration
         }
     }
 
-    private function keyTaken(Connection $db, string $nodes, int|string $id, mixed $parentId, string $key): bool
+    /**
+     * The other live nodes that share a name space with the node: the children of its
+     * parent, or — for a drive root, whose parent is null — the roots of the same drive
+     * only. Roots of different drives are not siblings (the unique index treats null
+     * parents as distinct), so they must never rename one another.
+     */
+    private function liveSiblings(Connection $db, string $nodes, int|string $id, mixed $driveId, mixed $parentId): Builder
     {
         return $db->table($nodes)
             ->where('parent_id', $parentId)
+            ->when($parentId === null, static fn (Builder $query) => $query->where('drive_id', $driveId))
             ->where('id', '<>', $id)
-            ->whereNull('trashed_at')
-            ->where('name_key', $key)
-            ->exists();
+            ->whereNull('trashed_at');
+    }
+
+    private function keyTaken(Connection $db, string $nodes, int|string $id, mixed $driveId, mixed $parentId, string $key): bool
+    {
+        return $this->liveSiblings($db, $nodes, $id, $driveId, $parentId)->where('name_key', $key)->exists();
     }
 
     /**
@@ -340,7 +351,7 @@ return new class extends Migration
      * still-present lower(name) index accepts. The base is shortened on a UTF-8
      * character boundary so the candidate fits the name column.
      */
-    private function freeName(Connection $db, string $nodes, int|string $id, mixed $parentId, string $name): string
+    private function freeName(Connection $db, string $nodes, int|string $id, mixed $driveId, mixed $parentId, string $name): string
     {
         $dot = strrpos($name, '.');
         [$base, $extension] = $dot === false || $dot === 0 ? [$name, ''] : [substr($name, 0, $dot), substr($name, $dot)];
@@ -350,9 +361,8 @@ return new class extends Migration
             // An extension too long to keep beside the marker is shortened with the base.
             [$head, $tail] = strlen($marker.$extension) < self::NAME_MAX_BYTES ? [$base, $extension] : [$name, ''];
             $candidate = mb_strcut($head, 0, self::NAME_MAX_BYTES - strlen($marker.$tail), 'UTF-8').$marker.$tail;
-            $taken = $this->keyTaken($db, $nodes, $id, $parentId, NodeName::key($candidate))
-                || $db->table($nodes)->where('parent_id', $parentId)->where('id', '<>', $id)->whereNull('trashed_at')
-                    ->whereRaw('lower(name) = lower(?)', [$candidate])->exists();
+            $taken = $this->keyTaken($db, $nodes, $id, $driveId, $parentId, NodeName::key($candidate))
+                || $this->liveSiblings($db, $nodes, $id, $driveId, $parentId)->whereRaw('lower(name) = lower(?)', [$candidate])->exists();
             if (!$taken) {
                 return $candidate;
             }

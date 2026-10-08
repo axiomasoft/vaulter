@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Documents\Tests\Comment\CommentsTestCase;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;
@@ -39,7 +39,7 @@ it('rejects profile document type restrictions after ACL and leaves unrestricted
 it('enforces comments policy for list create resolve and delete including the author path', function (): void {
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($drive, null, 'thread');
-    AccessTestHelpers::grant($node, GrantLevel::Owner);
+    AccessTestHelpers::grant($node, RoleRegistry::OWNER);
     $this->actingAs(AccessTestHelpers::user());
     $url = 'api/vaulter/nodes/'.$node->id.'/comments';
     $id = $this->postJson($url, ['body' => 'allowed'])->assertCreated()->json('data.id');

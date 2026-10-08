@@ -314,17 +314,17 @@ describe('createVaulterClient — Drive (M1–M4)', () => {
     it('lists, grants and revokes node grants', async () => {
       const fetchMock = vi.fn()
         .mockResolvedValueOnce(jsonResponse({ data: [{ id: 1 }], meta: { next_cursor: null, prev_cursor: null } }))
-        .mockResolvedValueOnce(jsonResponse({ data: { id: 2, level: 'editor' } }, 201))
+        .mockResolvedValueOnce(jsonResponse({ data: { id: 2, role: 'writer' } }, 201))
         .mockResolvedValueOnce(new Response(null, { status: 204 }))
       const client = createVaulterClient({ fetch: fetchMock })
 
       await client.grants.list(9)
-      await client.grants.grant(9, { subjectType: 'user', subjectId: 3, level: 'editor', scope: 'subtree' })
+      await client.grants.grant(9, { subjectType: 'user', subjectId: 3, role: 'writer', scope: 'subtree' })
       await client.grants.revoke(9, { subjectType: 'user', subjectId: 3 })
 
       expect(fetchMock.mock.calls[0][0]).toContain('/nodes/9/grants')
       const grantBody = JSON.parse(fetchMock.mock.calls[1][1].body)
-      expect(grantBody).toMatchObject({ subject_type: 'user', subject_id: 3, level: 'editor', scope: 'subtree' })
+      expect(grantBody).toMatchObject({ subject_type: 'user', subject_id: 3, role: 'writer', scope: 'subtree' })
       // Revoke addresses the subject in the body of a DELETE.
       expect(fetchMock.mock.calls[2][1].method).toBe('DELETE')
       expect(JSON.parse(fetchMock.mock.calls[2][1].body)).toEqual({ subject_type: 'user', subject_id: 3 })

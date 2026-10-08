@@ -7,7 +7,7 @@ use Filament\Notifications\Notification;
 use Filament\Support\Exceptions\Halt;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
-use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
@@ -44,7 +44,7 @@ it('gives a hidden source the same 404 through PHP HTTP and a forged panel callb
 });
 
 it('gives a visible source without Edit the same 403 through all three boundaries', function (): void {
-    DriveBuilder::grant($this->paritySource, $this->parityActor, GrantLevel::Reader, scope: GrantScope::Item);
+    DriveBuilder::grant($this->paritySource, $this->parityActor, RoleRegistry::READER, scope: GrantScope::Item);
     $handle = Vaulter::drive($this->parityDrive)->actingAs($this->parityActor);
     $action = parityAction('renameAction');
 
@@ -58,7 +58,7 @@ it('gives a visible source without Edit the same 403 through all three boundarie
 });
 
 it('renames with the same explicit actor through PHP HTTP and the actual panel callback', function (): void {
-    DriveBuilder::grant($this->paritySource, $this->parityActor, GrantLevel::Writer);
+    DriveBuilder::grant($this->paritySource, $this->parityActor, RoleRegistry::WRITER);
     Vaulter::drive($this->parityDrive)->actingAs($this->parityActor)->nodes()->rename($this->paritySource, 'PHP');
     $this->patchJson('api/vaulter/nodes/'.$this->paritySource->id, ['name' => 'HTTP'])
         ->assertOk()->assertJsonPath('data.name', 'HTTP');
@@ -70,7 +70,7 @@ it('renames with the same explicit actor through PHP HTTP and the actual panel c
 });
 
 it('hides a move destination without View consistently without changing the source', function (): void {
-    DriveBuilder::grant($this->paritySource, $this->parityActor, GrantLevel::Writer);
+    DriveBuilder::grant($this->paritySource, $this->parityActor, RoleRegistry::WRITER);
     $handle = Vaulter::drive($this->parityDrive)->actingAs($this->parityActor);
     $action = parityAction('moveAction');
     $parent = $this->paritySource->parent_id;
@@ -86,8 +86,8 @@ it('hides a move destination without View consistently without changing the sour
 });
 
 it('rejects a visible destination without Create and retains the panel denial notification', function (): void {
-    DriveBuilder::grant($this->paritySource, $this->parityActor, GrantLevel::Writer);
-    DriveBuilder::grant($this->parityTarget, $this->parityActor, GrantLevel::Reader);
+    DriveBuilder::grant($this->paritySource, $this->parityActor, RoleRegistry::WRITER);
+    DriveBuilder::grant($this->parityTarget, $this->parityActor, RoleRegistry::READER);
     $handle = Vaulter::drive($this->parityDrive)->actingAs($this->parityActor);
     $action = parityAction('moveAction');
     $parent = $this->paritySource->parent_id;
@@ -104,8 +104,8 @@ it('rejects a visible destination without Create and retains the panel denial no
 });
 
 it('permits a move only after both source and destination grants allow it', function (): void {
-    DriveBuilder::grant($this->paritySource, $this->parityActor, GrantLevel::Writer);
-    DriveBuilder::grant($this->parityTarget, $this->parityActor, GrantLevel::Writer);
+    DriveBuilder::grant($this->paritySource, $this->parityActor, RoleRegistry::WRITER);
+    DriveBuilder::grant($this->parityTarget, $this->parityActor, RoleRegistry::WRITER);
     Vaulter::drive($this->parityDrive)->actingAs($this->parityActor)->nodes()->move($this->paritySource, $this->parityTarget);
     $this->postJson('api/vaulter/nodes/'.$this->paritySource->id.'/move', ['parent_id' => $this->parityTarget->id])
         ->assertOk()->assertJsonPath('data.parent_id', $this->parityTarget->id);
@@ -116,7 +116,7 @@ it('permits a move only after both source and destination grants allow it', func
 });
 
 it('rejects non-scalar forged panel destinations before attempting a move', function (mixed $destination): void {
-    DriveBuilder::grant($this->paritySource, $this->parityActor, GrantLevel::Writer);
+    DriveBuilder::grant($this->paritySource, $this->parityActor, RoleRegistry::WRITER);
     $action = parityAction('moveAction');
     $parent = $this->paritySource->parent_id;
 

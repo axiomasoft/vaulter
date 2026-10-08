@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Spatie\Permission\Models\Role;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Data\Activity\RecordActivityCommand;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Profiles\Profile;
@@ -37,10 +37,10 @@ it('round-trips UUID users and bigint projects and Spatie roles with ULID Vaulte
 
     $drive = DriveTestHelpers::drive(42);
     $storage = $drive->model()->refresh();
-    AccessTestHelpers::grant($drive->root(), GrantLevel::Owner, subjectId: $user->getKey(), subjectType: $user->getMorphClass());
+    AccessTestHelpers::grant($drive->root(), RoleRegistry::OWNER, subjectId: $user->getKey(), subjectType: $user->getMorphClass());
     $node = $drive->actingAs($user)->folders()->create('UUID actor')->refresh();
-    $grant = AccessTestHelpers::grant($node, GrantLevel::Reader, subjectId: $user->getKey(), subjectType: $user->getMorphClass());
-    $roleGrant = AccessTestHelpers::grant($node, GrantLevel::Reader, subjectId: $role->getKey(), subjectType: $role->getMorphClass());
+    $grant = AccessTestHelpers::grant($node, RoleRegistry::READER, subjectId: $user->getKey(), subjectType: $user->getMorphClass());
+    $roleGrant = AccessTestHelpers::grant($node, RoleRegistry::READER, subjectId: $role->getKey(), subjectType: $role->getMorphClass());
     $activity = app(ActivityStoreRepository::class)->record(new RecordActivityCommand(
         verb: EventType::FolderCreated,
         storageId: $storage->getKey(),

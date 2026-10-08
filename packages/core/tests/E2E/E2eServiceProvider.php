@@ -6,13 +6,13 @@ namespace Vaulter\Tests\E2E;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Contracts\HostUserResolver;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\ValueObjects\TipTapContent;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -136,8 +136,8 @@ final class E2eServiceProvider extends ServiceProvider
                 parent: $drive->root(),
             ));
 
-            AccessTestHelpers::grant($node, GrantLevel::Writer, subjectId: 1);
-            AccessTestHelpers::grant($node, GrantLevel::Reader, subjectId: 2);
+            AccessTestHelpers::grant($node, RoleRegistry::WRITER, subjectId: 1);
+            AccessTestHelpers::grant($node, RoleRegistry::READER, subjectId: 2);
 
             return response()->json([
                 'node_id' => $node->getKey(),

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\DB;
 use Vaulter\Access\AccessResolver;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -31,7 +31,7 @@ it('AccessResolver::can() compiles the ancestor CTE with a withMaxDepth bound (F
     $storage = AccessTestHelpers::storage();
     $root = Node::find($storage->root_node_id);
 
-    AccessTestHelpers::grant($root, GrantLevel::Writer);
+    AccessTestHelpers::grant($root, RoleRegistry::WRITER);
 
     // A chain well below DEFAULT_MAX_DEPTH — this only proves the CAP is
     // compiled into the SQL, not that a deep chain is truncated (that would

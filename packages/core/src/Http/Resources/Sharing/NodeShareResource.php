@@ -55,7 +55,7 @@ final class NodeShareResource extends JsonResource
             'node_id' => $share->node_id,
             'token_prefix' => $share->token_prefix,
             'permissions' => $share->permissions,
-            'level' => $share->level->value,
+            'level' => $share->level,
             'scope' => $share->scope->value,
             'has_password' => $share->hasPassword(),
             'require_login' => $share->require_login,

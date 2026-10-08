@@ -41,11 +41,20 @@ function hostKeyFixtureColumns(): array
     ];
 }
 
-it('widens all 27 fixture host columns without losing values and rolls back', function (string $strategy): void {
+/** The fixture columns still present after the upgrade: the access model drops v_nodes.owner_id. */
+function hostKeyUpgradedColumns(): array
+{
+    $columns = hostKeyFixtureColumns();
+    $columns['nodes'] = array_values(array_diff($columns['nodes'], ['owner_id']));
+
+    return $columns;
+}
+
+it('widens all 26 fixture host columns without losing values and rolls back', function (string $strategy): void {
     $this->loadV02Fixture($strategy);
     $db = app(VaulterDatabase::class)->connection();
     $before = [];
-    foreach (hostKeyFixtureColumns() as $entity => $columns) {
+    foreach (hostKeyUpgradedColumns() as $entity => $columns) {
         // Only the host-key columns: later upgrade steps in the same batch legitimately
         // change other columns (the N04 repair re-parents nodes) and add activity rows.
         $legacy = app(DatabaseConfig::class)->legacyTable(match ($entity) {
@@ -67,7 +76,7 @@ it('widens all 27 fixture host columns without losing values and rolls back', fu
 
     $this->artisan('migrate', ['--force' => true])->assertSuccessful();
     $count = 0;
-    foreach (hostKeyFixtureColumns() as $entity => $columns) {
+    foreach (hostKeyUpgradedColumns() as $entity => $columns) {
         // Document versions keep their ids as document revisions.
         $table = app(DatabaseConfig::class)->table($entity === 'node_document_versions' ? 'document_revisions' : $entity);
         expect($db->table($table)->whereIn('id', array_column($before[$entity], 'id'))->orderBy('id')
@@ -80,7 +89,7 @@ it('widens all 27 fixture host columns without losing values and rolls back', fu
             $count++;
         }
     }
-    expect($count)->toBe(27);
+    expect($count)->toBe(26);
     $owners = $db->table(app(DatabaseConfig::class)->table('drives'))->orderBy('owner_id')->pluck('owner_id')->all();
     expect($owners)->toBe($strategy === 'bigint' ? ['1', '2', '3'] : [
         '01ARZ3NDEKTSV4RRFFQ69G5FAV', '01ARZ3NDEKTSV4RRFFQ69G5FAW', '01ARZ3NDEKTSV4RRFFQ69G5FAX',

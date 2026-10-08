@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage as StorageFacade;
-use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Access\NodeGrant;
@@ -44,7 +44,7 @@ it('allows an authorised show when the actor holds a grant', function (): void {
     $folder = AccessTestHelpers::folder($storage, null, 'visible');
 
     // The acting user (id 1) is granted Reader on the node.
-    AccessTestHelpers::grant($folder, GrantLevel::Reader, scope: GrantScope::Item);
+    AccessTestHelpers::grant($folder, RoleRegistry::READER, scope: GrantScope::Item);
 
     $this->getJson('api/vaulter/nodes/'.$folder->getKey())
         ->assertOk()
@@ -64,7 +64,7 @@ it('allows a folder create when the actor may create at the destination', functi
     $root = $storage->rootNode()->first();
 
     // Writer (CREATE bit) on the root, inherited subtree.
-    AccessTestHelpers::grant($root, GrantLevel::Writer, scope: GrantScope::Subtree);
+    AccessTestHelpers::grant($root, RoleRegistry::WRITER, scope: GrantScope::Subtree);
 
     $this->postJson('api/vaulter/storages/'.$storage->getKey().'/folders', ['name' => 'Allowed'])
         ->assertCreated()
@@ -76,7 +76,7 @@ it('fills the node abilities object from the resolver', function (): void {
     $folder = AccessTestHelpers::folder($storage, null, 'flags');
 
     // Reader only: view true, edit/trash false.
-    AccessTestHelpers::grant($folder, GrantLevel::Reader, scope: GrantScope::Item);
+    AccessTestHelpers::grant($folder, RoleRegistry::READER, scope: GrantScope::Item);
 
     $this->getJson('api/vaulter/nodes/'.$folder->getKey())
         ->assertOk()
@@ -91,7 +91,7 @@ it('grants then revokes access through the grant API', function (): void {
     $folder = AccessTestHelpers::folder($storage, null, 'managed');
 
     // The acting user needs SHARE on the node to manage its grants — give Owner.
-    AccessTestHelpers::grant($folder, GrantLevel::Owner, scope: GrantScope::Item);
+    AccessTestHelpers::grant($folder, RoleRegistry::OWNER, scope: GrantScope::Item);
 
     $subjectType = (new TestUser)->getMorphClass();
 
@@ -99,9 +99,9 @@ it('grants then revokes access through the grant API', function (): void {
     $this->postJson('api/vaulter/nodes/'.$folder->getKey().'/grants', [
         'subject_type' => $subjectType,
         'subject_id' => 2,
-        'level' => 'reader',
+        'role' => 'reader',
     ])->assertCreated()
-        ->assertJsonPath('data.level', 'reader');
+        ->assertJsonPath('data.role', 'reader');
 
     expect(NodeGrant::query()->where('node_id', $folder->id)->where('subject_id', 2)->exists())->toBeTrue();
 
@@ -124,14 +124,14 @@ it('rejects a grant with an unregistered subject_type (422)', function (): void 
     $folder = AccessTestHelpers::folder($storage, null, 'bogus-subject');
 
     // The actor may share the node — so the 422 comes from validation, not the guard.
-    AccessTestHelpers::grant($folder, GrantLevel::Owner, scope: GrantScope::Item);
+    AccessTestHelpers::grant($folder, RoleRegistry::OWNER, scope: GrantScope::Item);
 
     // A made-up / typo'd subject_type that maps to no host model must be rejected
     // before it can ever land in v_node_grants (§2.6 / H.2 — alias-only subjects).
     $this->postJson('api/vaulter/nodes/'.$folder->getKey().'/grants', [
         'subject_type' => 'totally-not-a-model',
         'subject_id' => 2,
-        'level' => 'reader',
+        'role' => 'reader',
     ])->assertStatus(422)
         ->assertJsonValidationErrorFor('subject_type');
 
@@ -142,7 +142,7 @@ it('rejects a revoke with an unregistered subject_type (422)', function (): void
     $storage = authStorage();
     $folder = AccessTestHelpers::folder($storage, null, 'bogus-revoke');
 
-    AccessTestHelpers::grant($folder, GrantLevel::Owner, scope: GrantScope::Item);
+    AccessTestHelpers::grant($folder, RoleRegistry::OWNER, scope: GrantScope::Item);
 
     $this->deleteJson('api/vaulter/nodes/'.$folder->getKey().'/grants', [
         'subject_type' => 'totally-not-a-model',
@@ -156,12 +156,12 @@ it('blocks the grant API for an actor without SHARE', function (): void {
     $folder = AccessTestHelpers::folder($storage, null, 'noshare');
 
     // Reader only — no SHARE bit ⇒ cannot manage grants.
-    AccessTestHelpers::grant($folder, GrantLevel::Reader, scope: GrantScope::Item);
+    AccessTestHelpers::grant($folder, RoleRegistry::READER, scope: GrantScope::Item);
 
     $this->postJson('api/vaulter/nodes/'.$folder->getKey().'/grants', [
         'subject_type' => (new TestUser)->getMorphClass(),
         'subject_id' => 2,
-        'level' => 'reader',
+        'role' => 'reader',
     ])->assertStatus(403);
 });
 
@@ -171,7 +171,7 @@ it('denies a download without a grant and allows it with one', function (): void
 
     // Grant create on root so the actor can upload, then a file appears.
     $root = $storage->rootNode()->first();
-    AccessTestHelpers::grant($root, GrantLevel::Writer, scope: GrantScope::Subtree);
+    AccessTestHelpers::grant($root, RoleRegistry::WRITER, scope: GrantScope::Subtree);
 
     $nodeId = $this->postJson($base.'/uploads', [
         'file' => UploadedFile::fake()->createWithContent('d.txt', 'bytes'),
