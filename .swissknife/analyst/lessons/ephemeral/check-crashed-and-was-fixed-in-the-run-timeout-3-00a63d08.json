@@ -1,0 +1,35 @@
+{
+  "id": "check-crashed-and-was-fixed-in-the-run-timeout-3-00a63d08",
+  "kind": "gotcha",
+  "trigger": "check crashed and was fixed in the run: timeout 300 env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Unit/BlobScopeTest.php 2>&1 | t",
+  "action": "fix the reason why the check failed: timeout 300 env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Unit/BlobScopeTest.php 2>&1 | t",
+  "evidence": [
+    "session:1ea5f8c8-31ea-42e1-9135-f6611f77b9e6",
+    "test-pass",
+    "attempts:10"
+  ],
+  "meta": {
+    "attempts": 10,
+    "files": [
+      "2026_10_07_000007_quota_all_revisions.php",
+      "FileOperations.php",
+      "RevisionRetentionPolicy.php"
+    ]
+  },
+  "review_hint": "Specify the ESSENCE of the fix when review (what exactly was corrected).",
+  "created_at": "2026-10-08T10:23:29Z",
+  "last_used_at": "2026-10-08T10:23:29Z",
+  "sessions_total": 1,
+  "sessions_success": 0,
+  "tests_total": 10,
+  "tests_passed": 9,
+  "state": "ephemeral",
+  "scope": "project:vaulter",
+  "source": "digest",
+  "supersedes": null,
+  "provenance": {
+    "session_id": "1ea5f8c8-31ea-42e1-9135-f6611f77b9e6",
+    "project": "vaulter",
+    "detector": "resolved-failure"
+  }
+}
