@@ -354,6 +354,7 @@ D29 C-строки P4: C02 (copy admission — P4.2/P4.9), C04 (операцио
 - P4.5
 - P4.7
 - P4.6
+- P4.14
 
 ## Batches
 
@@ -447,6 +448,13 @@ D29 C-строки P4: C02 (copy admission — P4.2/P4.9), C04 (операцио
     "id": "B413",
     "items": [
       "P4.6"
+    ],
+    "mode": "recommended"
+  },
+  {
+    "id": "BP4-14",
+    "items": [
+      "P4.14"
     ],
     "mode": "recommended"
   }

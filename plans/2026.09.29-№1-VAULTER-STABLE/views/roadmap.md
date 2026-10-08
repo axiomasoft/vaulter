@@ -39,8 +39,9 @@ Execution sheet: run the batches in order. Route is the maximum class/effort of 
 | 32 | P4 | B406 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.13` | frontier/high | done |
 | 33 | P4 | B407 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.2` | implementation/high | done |
 | 34 | P4 | B408 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.8` | frontier/high | done |
-| 35 | P4 | B409 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.3` | frontier/high | in progress |
-| 36 | P4 | B410 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.4` | implementation/medium | waiting: B409 |
-| 37 | P4 | B411 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.5` | frontier/high | waiting: B409 |
-| 38 | P4 | B412 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.7` | implementation/high | waiting: B409 |
-| 39 | P4 | B413 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.6` | implementation/high | waiting: B409 |
+| 35 | P4 | B409 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.3` | frontier/high | done |
+| 36 | P4 | B410 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.4` | implementation/medium | ready |
+| 37 | P4 | B411 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.5` | frontier/high | waiting: B410 |
+| 38 | P4 | B412 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.7` | implementation/high | waiting: B410 |
+| 39 | P4 | B413 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.6` | implementation/high | waiting: B410 |
+| 40 | P4 | BP4-14 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.14` | frontier/high | waiting: B410 |

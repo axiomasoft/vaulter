@@ -115,7 +115,7 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 | P1 | Исправления T0 на текущих именах | detailed | 11/11 | 🟠 Done with deviations |
 | P2 | Канон имён и конфигурации | detailed | 7/7 | 🟠 Done with deviations |
 | P3 | Прикладной слой: авторизованный публичный API | detailed | 8/8 | 🟢 Done |
-| P4 | Модель данных и документы | detailed | 8/13 | 🟡 In progress |
+| P4 | Модель данных и документы | detailed | 9/14 | 🟡 In progress |
 | P5 | Конвейер событий | skeleton | 0/0 | ⬜ Skeleton |
 | P6 | HTTP v1 и клиенты | skeleton | 0/0 | ⬜ Skeleton |
 | P7 | Эксплуатация и DX | skeleton | 0/0 | ⬜ Skeleton |
@@ -179,3 +179,6 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 | D52 | Q2: длительность внешней транзакции complete() — оставить на 1.0, claim вместо row-lock отдельной поправкой | accepted | 2026-10-07 |
 | D53 | P4.9: конверсия уровней и owner_id без legacy (уточнение D45/D46) | accepted | 2026-10-07 |
 | D54 | P4: согласование snapshot, writer, naming и дополнительных кодов ошибок (mid-phase audit) | accepted | 2026-10-08 |
+| D55 | P4.3: исполнимый контракт реестра типов (EV320–EV329) | accepted | 2026-10-08 |
+| D56 | AzGuard v1 без legacy для vaulter-azgard | accepted | 2026-10-08 |
+| D57 | OPUS-вход P4.14: handoff единиц моста AzGuard и прочтение 0.x как AzGuard v1 | accepted | 2026-10-08 |
