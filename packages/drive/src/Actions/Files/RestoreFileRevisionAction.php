@@ -17,6 +17,7 @@ use Vaulter\Models\Drive\FileRevisionBlob;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\NodeSequence;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Profiles\DrivePolicyEnforcer;
 use Vaulter\Repositories\Drive\DriveStoreRepository;
 use Vaulter\Repositories\Drive\FileRevisionStoreRepository;
 use Vaulter\Repositories\Drive\FileStoreRepository;
@@ -25,7 +26,7 @@ use Vaulter\Support\TreeGuard;
 
 final readonly class RestoreFileRevisionAction
 {
-    public function __construct(private VaulterDatabase $database, private TreeGuard $tree, private NodeLocator $locator, private NodeSequence $sequence, private FileStoreRepository $files, private FileRevisionStoreRepository $revisions, private NodeStoreRepository $nodes, private DriveStoreRepository $drives, private BlobStore $blobs, private CopyDestinationAdmission $admission) {}
+    public function __construct(private VaulterDatabase $database, private TreeGuard $tree, private NodeLocator $locator, private NodeSequence $sequence, private FileStoreRepository $files, private FileRevisionStoreRepository $revisions, private NodeStoreRepository $nodes, private DriveStoreRepository $drives, private BlobStore $blobs, private CopyDestinationAdmission $admission, private DrivePolicyEnforcer $policy) {}
 
     public function execute(OperationContext $context, RestoreFileRevisionInput $data): FileRevision
     {
@@ -37,6 +38,11 @@ final readonly class RestoreFileRevisionAction
             $this->sequence->assertExpected($node, $data->expectedSequence);
             $file = $this->files->lockForUpdate($node->file()->firstOrFail());
             $source = $file->versions()->whereKey($data->revision->getRawOriginal($data->revision->getKeyName()))->whereIn('status', ['committed', 'superseded'])->lockForUpdate()->first() ?? throw NodeNotFoundException::forId($node->id);
+            // A lowered limit leaves existing files readable and shrinkable, but
+            // restoring a larger payload must pass the current size admission.
+            if ($source->size_bytes > $file->size_bytes) {
+                $this->policy->assertFileSize($context->drive, $source->size_bytes);
+            }
             if ($source->scan_status === 'infected') {
                 throw new ContentQuarantinedException;
             }

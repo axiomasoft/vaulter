@@ -147,6 +147,47 @@ it('checks the declared, streamed and final file size against maxFileBytes', fun
         ->and($drive->files()->upload(UploadSource::fromString('1234', 'fits.txt'))->sizeBytes)->toBe(4);
 });
 
+it('applies a lowered size limit to file copies and every file in a copied subtree', function (): void {
+    $drive = policyDrive();
+    $folder = $drive->folders()->create('source');
+    $file = $drive->files()->upload(UploadSource::fromString('12345', 'large.txt'), new UploadOptions(parent: $folder));
+    $destination = $drive->folders()->create('destination');
+    policyDrive(static fn (DrivePolicyBuilder $p) => $p->maxFileBytes(4));
+    $used = $drive->quota()->usedBytes;
+    $count = Node::query()->where('drive_id', $drive->model()->id)->count();
+
+    expect(fn () => $drive->nodes()->copy($file, $destination))->toThrow(FileSizeLimitExceededException::class)
+        ->and(fn () => $drive->nodes()->copy($folder, $destination))->toThrow(FileSizeLimitExceededException::class)
+        ->and(Node::query()->where('drive_id', $drive->model()->id)->count())->toBe($count)
+        ->and($drive->quota()->usedBytes)->toBe($used);
+});
+
+it('refuses a restore that grows beyond a lowered size limit without changing the head or quota', function (): void {
+    $drive = policyDrive();
+    $file = $drive->files()->upload(UploadSource::fromString('12345', 'large.txt'));
+    $original = $drive->files()->revisions($file)->items[0];
+    $drive->files()->addRevision($file, UploadSource::fromString('1', 'large.txt'));
+    policyDrive(static fn (DrivePolicyBuilder $p) => $p->maxFileBytes(4));
+    $head = $drive->nodes()->find($file)->file?->revisionId;
+    $used = $drive->quota()->usedBytes;
+
+    expect(fn () => $drive->files()->restoreRevision($file, $original))->toThrow(FileSizeLimitExceededException::class)
+        ->and($drive->nodes()->find($file)->file?->revisionId)->toBe($head)
+        ->and($drive->files()->revisions($file)->items)->toHaveCount(2)
+        ->and($drive->quota()->usedBytes)->toBe($used);
+});
+
+it('allows restoring a smaller retained payload when both versions exceed a lowered limit', function (): void {
+    $drive = policyDrive();
+    $file = $drive->files()->upload(UploadSource::fromString('12345', 'large.txt'));
+    $original = $drive->files()->revisions($file)->items[0];
+    $drive->files()->addRevision($file, UploadSource::fromString('123456', 'large.txt'));
+    policyDrive(static fn (DrivePolicyBuilder $p) => $p->maxFileBytes(4));
+
+    expect($drive->files()->restoreRevision($file, $original)->sizeBytes)->toBe(5)
+        ->and($drive->quota()->usedBytes)->toBe(16);
+});
+
 it('renders the limit problems with their stable codes', function (): void {
     $drive = policyDrive(static fn (DrivePolicyBuilder $p) => $p->maxFolderChildren(1));
     $drive->folders()->create('only');

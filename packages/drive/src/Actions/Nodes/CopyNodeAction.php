@@ -128,6 +128,11 @@ final readonly class CopyNodeAction
 
         $children = [];
         foreach ($sources as $member) {
+            if ($member->kind === NodeKind::File) {
+                // A copy creates a new file even when the original predates a
+                // lowered size limit. Apply admission before reserving bytes.
+                $this->policy->assertFileSize($context->drive, $member->size_bytes);
+            }
             if ((string) $member->id !== (string) $root->id) {
                 $children[(string) $member->parent_id][] = (string) $member->id;
             }
