@@ -27,9 +27,13 @@ skeleton
 
 > Phase Assurance: live/irreversible (публикация) — owner gate; фазовый аудит (D03).
 
-**D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.
+D51 — единственная действующая политика: L каждого item, H по owning риску/блокам максимум 2 миграционных или 3 иных рискованных items, фазовый BARRIER и точный V90. @plan/knowledge/validation-and-execution-policy.json. Mutation tools запрещены; hosted CI/push только по уже применимому разрешению O-3.
 
 D29 — обязательные corrections при следующей детализации. Read @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json до разработки contracts; применимые C-rows разворачиваются в concrete owning item files/reads/named tests/exact validation, не остаются note-only. C10: P8.1 final matrix C01–C10 → actual current-candidate receipts/accepted explicit exceptions, cross-package crash/auth/cache/schema regressions. Исторический P2.6 MySQL canonical gate признаётся только своим scope, новые migrations и historical upgrade chain qualified отдельно. P8.2 controlled real-data upgrade/backfill/cutover, preserving revisions/CAS/tenant refs, проверка legacy dispatched ambiguity и rollback/recovery. P8.3 freeze только после essential corrections, owner release gates сохраняются.
+
+D32 закрывает историческую MySQL P1.7/P2.7 baseline: не повторять её как исправление старого дефекта. Release matrix новых миграций остаётся; MariaDB best-effort вне CI (D33). PHP/Laravel 12/13 compatibility проверяет guard newQuery и insertOrIgnoreReturning: отсутствие statement на старшей/младшей версии записывать фактически, на предоставляющей версии guard обязателен. В freeze входят свойства snapshot DTO/Page, enum cases, factory defaults; P4.3 нельзя считать принятым по WIP коммиту без V1–V3/V80/V81/NC1–NC5.
+
+OLD-Q2/D33: prepare внутри outer session-lock transaction принят для1.0 при bounded file size/lock_timeout. Release design обязан включить измерение крупных файлов (idle-in-transaction/lock hold/latency) существующим load-стендом, назвать exact command и применимый budget из принятой load policy. При превышении — owning correction prepare/session mutex без ослабления C03 idempotent replay; не считать latency неизвестной безусловно принятой.
 
 ## Depends on
 
@@ -65,7 +69,7 @@ D29 — обязательные corrections при следующей дета�
 
 > Phase Assurance: live/irreversible (публикация) — owner gate; фазовый аудит (D03).
 
-**D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.
+D51 — единственная действующая политика: L каждого item, H по owning риску/блокам максимум 2 миграционных или 3 иных рискованных items, фазовый BARRIER и точный V90. @plan/knowledge/validation-and-execution-policy.json. Mutation tools запрещены; hosted CI/push только по уже применимому разрешению O-3.
 
 D29 — обязательные corrections при следующей детализации. Read @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json до разработки contracts; применимые C-rows разворачиваются в concrete owning item files/reads/named tests/exact validation, не остаются note-only. C10: P8.1 final matrix C01–C10 → actual current-candidate receipts/accepted explicit exceptions, cross-package crash/auth/cache/schema regressions. Исторический P2.6 MySQL canonical gate признаётся только своим scope, новые migrations и historical upgrade chain qualified отдельно. P8.2 controlled real-data upgrade/backfill/cutover, preserving revisions/CAS/tenant refs, проверка legacy dispatched ambiguity и rollback/recovery. P8.3 freeze только после essential corrections, owner release gates сохраняются.
 
@@ -102,8 +106,16 @@ P7 закрыта. Owner gates: публикация (Packagist, npm, split-ре
 
 ## Mandatory validation/execution policy (D25)
 
-**D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.
+D51 — единственная действующая политика: L каждого item, H по owning риску/блокам максимум 2 миграционных или 3 иных рискованных items, фазовый BARRIER и точный V90. @plan/knowledge/validation-and-execution-policy.json. Mutation tools запрещены; hosted CI/push только по уже применимому разрешению O-3.
 
 ## Обязательные forward corrections (D29)
 
 D29 — обязательные corrections при следующей детализации. Read @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json до разработки contracts; применимые C-rows разворачиваются в concrete owning item files/reads/named tests/exact validation, не остаются note-only. C10: P8.1 final matrix C01–C10 → actual current-candidate receipts/accepted explicit exceptions, cross-package crash/auth/cache/schema regressions. Исторический P2.6 MySQL canonical gate признаётся только своим scope, новые migrations и historical upgrade chain qualified отдельно. P8.2 controlled real-data upgrade/backfill/cutover, preserving revisions/CAS/tenant refs, проверка legacy dispatched ambiguity и rollback/recovery. P8.3 freeze только после essential corrections, owner release gates сохраняются.
+
+## Обязательства сквозного аудита 2026-10-08
+
+D32 закрывает историческую MySQL P1.7/P2.7 baseline: не повторять её как исправление старого дефекта. Release matrix новых миграций остаётся; MariaDB best-effort вне CI (D33). PHP/Laravel 12/13 compatibility проверяет guard newQuery и insertOrIgnoreReturning: отсутствие statement на старшей/младшей версии записывать фактически, на предоставляющей версии guard обязателен. В freeze входят свойства snapshot DTO/Page, enum cases, factory defaults; P4.3 нельзя считать принятым по WIP коммиту без V1–V3/V80/V81/NC1–NC5. Источник: artifacts/P4-midaudit/ledger.json; при детализации развернуть в scope/reads/task_files/validation именованного item, не оставлять note-only.
+
+## Переданный D33 performance follow-up
+
+OLD-Q2/D33: prepare внутри outer session-lock transaction принят для1.0 при bounded file size/lock_timeout. Release design обязан включить измерение крупных файлов (idle-in-transaction/lock hold/latency) существующим load-стендом, назвать exact command и применимый budget из принятой load policy. При превышении — owning correction prepare/session mutex без ослабления C03 idempotent replay; не считать latency неизвестной безусловно принятой.

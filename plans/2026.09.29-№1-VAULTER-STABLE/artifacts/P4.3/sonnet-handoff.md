@@ -5,8 +5,23 @@ Paste everything below the line into a fresh Claude Code session started in
 
 ---
 
+> **Mid-audit 2026-10-08 update.** The working tree was clean at audit entry: P4.3
+> was transported in WIP commit `977f856d`, and its full type/codec audit was excluded
+> by the owner prompt condition. This commit does not close P4.3. The authoritative
+> run order, expected golden diff and stop conditions are now
+> `artifacts/P4-midaudit/check-plan.md`; read `artifacts/P4-midaudit/ledger.json` first.
+> The historical instructions below supply the P4.3 checks and doc leftovers. Do not
+> duplicate checks already run on unchanged inputs, and do not amend the WIP commit.
+> Core golden now also adds snapshot properties, Page, state enums and presentation DTO properties (D54); Page's
+> constructor is internal. Audit fixes in core/drive/documents have written tests but
+> have NOT been executed. P4.3 deviations EV320–329 are not approved by this audit:
+> settle their contract decisions under the existing owner delegation before finish.
+> Use the actual observed actor of the closing session; the model below is a launch
+> suggestion. Code and golden already in the WIP commit need no restaging unless
+> changed; commit only the closing session's concrete paths.
+
 You finish plan item **P4.3** of plan `2026.09.29-№1-VAULTER-STABLE` ("Document type registry, codecs and a safe
-fallback"). Code, tests and most docs are already written (uncommitted) by an Opus 5.5/high session that ran only
+fallback"). Code, tests and most docs were transported in WIP commit `977f856d` by an Opus 5.5/high session that ran only
 `php -l` and Pint on changed files (owner instruction: no long runs there). Your job: run the checks, fix **small**
 defects, finish two leftover doc mirrors, finish and commit. Do not redesign.
 
@@ -20,7 +35,7 @@ Do **not** run `plan.py start` (already started; your route is below the item's 
 ## 0. Read first (short)
 
 - `$A/check-profile.json`, `$A/completion-notes.md`, `$A/negative-controls.md`
-- `grep '"P4.3"' plans/2026.09.29-№1-VAULTER-STABLE/log.jsonl` — recorded deviations/assumptions (do not undo them)
+- `grep '"P4.3"' plans/2026.09.29-№1-VAULTER-STABLE/log.jsonl` — recorded deviations/assumptions (review them against D54 and the owning contracts; acceptance is not implied)
 - `git status --short`; on a failing test, the related part of `git diff`.
 
 Intended behaviour (do not "fix" back):

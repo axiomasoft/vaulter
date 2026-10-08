@@ -1,0 +1,33 @@
+{
+  "cwd": "/home/vostrikov/projects/packages/vaulter/packages/documents",
+  "checks": [
+    {
+      "cmd": [
+        "php8.4",
+        "-l",
+        "src/Actions/Documents/CreateDocumentAction.php"
+      ],
+      "exit": 0,
+      "output": "No syntax errors detected in src/Actions/Documents/CreateDocumentAction.php\n"
+    },
+    {
+      "cmd": [
+        "php8.4",
+        "-l",
+        "tests/Operations/DocumentOperationsTest.php"
+      ],
+      "exit": 0,
+      "output": "No syntax errors detected in tests/Operations/DocumentOperationsTest.php\n"
+    },
+    {
+      "cmd": [
+        "php8.4",
+        "vendor/bin/pint",
+        "src/Actions/Documents/CreateDocumentAction.php",
+        "tests/Operations/DocumentOperationsTest.php"
+      ],
+      "exit": 0,
+      "output": "{\"tool\":\"pint\",\"result\":\"fixed\",\"files\":[{\"path\":\"tests\\/Operations\\/DocumentOperationsTest.php\",\"fixers\":[\"fully_qualified_strict_types\",\"ordered_imports\"]}]}"
+    }
+  ]
+}

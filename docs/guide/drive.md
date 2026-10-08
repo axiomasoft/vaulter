@@ -190,6 +190,11 @@ Exceeding them throws `FolderChildrenLimitExceededException` (409), `TreeDepthLi
 (409) or `FileSizeLimitExceededException` (413). Lowering a limit deletes nothing: only
 operations that make an excess worse are refused.
 
+`maxFileBytes` also applies to every new file in a copy, including files inside a
+copied folder. Restoring a revision must fit the current limit when it increases
+the file's current size; restoring a smaller payload remains allowed after a limit
+was lowered. A refusal leaves revisions, quota and stored bytes unchanged.
+
 **Stars** are personal: `nodes()->star($node)`, `unstar($node)` and `starred(?ListOptions)`
 (the actor's visible starred nodes, newest star first). A star changes neither the node's
 sequence nor its timestamps; REST responses carry `viewer.starred` for the request user.

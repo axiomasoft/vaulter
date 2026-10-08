@@ -1,0 +1,318 @@
+[
+  {
+    "ref": "P4.3",
+    "patch": {
+      "scope": {
+        "include": [
+          "Контракты Vaulter\\Documents\\Contracts\\{DocumentType,DocumentCodec,DocumentContent,SupportsCollaboration,UpgradesSchema} ровно OPUS 06 §3; core Contracts\\Handlers\\DocumentContent и Exceptions\\Documents\\* переносятся в documents (03 §3).",
+          "Types\\DocumentTypeRegistry по P4-design#Types (register/replace/has/get/find/all key ASC, ключ-регэксп, vaulter/ зарезервирован, Duplicate, freeze на booted → core RegistryFrozenException, источники config vaulter-documents.types, тег vaulter.document_types, provider).",
+          "Встроенные Types\\{RichTextDocumentType,MarkdownDocumentType,SpreadsheetDocumentType}; Types\\UnknownDocumentType + Content\\OpaqueContent; Content\\TipTap\\TipTapCodec (strict decode + decodeForRead с lossless-флагом), Content\\OpaqueJsonCodec; переносы Content\\* по 03 §5.",
+          "DocumentSnapshot.editable=false и update → DocumentContentDegradedException при lossless=false; версия схемы документа > schemaVersion() типа → editable=false; UpgradesSchema on-read без переписывания истории.",
+          "Операции: create проверяет зарегистрированный тип и профиль documentTypes; edit/update/snapshot/restore/export/collab при недоступном типе → DocumentTypeUnavailableException; content/revisions/copy/trash/purge разрешены.",
+          "Presentation: core контракт Vaulter\\Contracts\\Presentation\\KindPresenter, реализация Vaulter\\Documents\\Presentation\\DocumentPresenter; NodePresentation документа (document_type, type_available, capabilities без richText); ContentCapabilities::richText удалён; файлы .docx/.md/.xlsx — preview/download, editable=false, collaborative=false (V34).",
+          "Удаление Enums\\Documents\\DocumentType, Engines\\Handlers\\{TipTapHandler,UniverHandler}, Attributes\\TiptapExtensions, Support\\TipTap\\Concerns\\HasTiptapExtensions, Registries\\DocumentTypeRegistry, DocumentsConfig::enabledDocumentTypes; нормализатор vaulter.enabled_document_types/features.spreadsheets (P4-design#Types карта); core Arch: TipTap/Univer не встречаются в core/src.",
+          "Генератор vaulter:make:document-type + stub; контрактный trait Testing\\Contracts\\DocumentTypeContractTests, встроенные типы через него; V10 сторонний тип: установка → создание → удаление → fallback → повторная установка.",
+          "Presentation/DocumentHeadSnapshot.typeAvailable в NodeSnapshot заполняются из реестра типов (D44).",
+          "NOTE330 mid-audit handoff: automated fresh-application boot test для unregistered default_type, который отсутствовал в WIP; boot отказ должен быть проверен через настоящий provider booted callback, без ручного вызова/ослабления freeze. Закрыть все doc leftovers из sonnet-handoff и проверить EV320–329 нормативные решения до finish."
+        ],
+        "exclude": [
+          "экспорт (P4.4)",
+          "протокол хаба/schema_version в токене (P4.5)",
+          "Vue viewer registry (P6.4; V37 — P6)",
+          "импорт файл→документ (T2)"
+        ]
+      },
+      "task_files": [
+        {
+          "path": "packages/documents/src/Contracts/{DocumentType,DocumentCodec,DocumentContent,SupportsCollaboration,UpgradesSchema}.php",
+          "change": "create"
+        },
+        {
+          "path": "packages/documents/src/Types/*.php",
+          "change": "create"
+        },
+        {
+          "path": "packages/documents/src/Content/**/*.php",
+          "change": "any"
+        },
+        {
+          "path": "packages/documents/src/Presentation/DocumentPresenter.php",
+          "change": "create"
+        },
+        {
+          "path": "packages/documents/src/Exceptions/*.php",
+          "change": "any"
+        },
+        {
+          "path": "packages/documents/src/{Enums/Documents/DocumentType,Engines/Handlers/TipTapHandler,Engines/Handlers/UniverHandler,Attributes/TiptapExtensions,Support/TipTap/Concerns/HasTiptapExtensions,Registries/DocumentTypeRegistry,ValueObjects/TipTapContent,ValueObjects/OpaqueDocumentContent,ValueObjects/LinkSchemeValidator,Support/TipTap/TipTapRenderer,Support/DocumentContentHasher}.php",
+          "change": "delete"
+        },
+        {
+          "path": "packages/documents/src/{Operations/DocumentOperations,Queries/DocumentQuery,Data/DocumentSnapshot,DocumentsManager,Configuration/DocumentsConfig}.php",
+          "change": "modify"
+        },
+        {
+          "path": "packages/documents/src/Providers/*.php",
+          "change": "modify"
+        },
+        {
+          "path": "packages/documents/config/vaulter-documents.php",
+          "change": "modify"
+        },
+        {
+          "path": "packages/documents/src/Console/MakeDocumentTypeCommand.php",
+          "change": "create"
+        },
+        {
+          "path": "packages/documents/stubs/document-type.stub",
+          "change": "create"
+        },
+        {
+          "path": "packages/documents/src/Testing/Contracts/DocumentTypeContractTests.php",
+          "change": "create"
+        },
+        {
+          "path": "packages/core/src/Contracts/Presentation/KindPresenter.php",
+          "change": "create"
+        },
+        {
+          "path": "packages/core/src/Exceptions/Registry/RegistryFrozenException.php",
+          "change": "create"
+        },
+        {
+          "path": "packages/core/src/{Handlers,ValueObjects/Handlers,Contracts/Handlers,Configuration}/*.php",
+          "change": "modify"
+        },
+        {
+          "path": "packages/core/src/Exceptions/Documents/*.php",
+          "change": "delete"
+        },
+        {
+          "path": "packages/documents/tests/Types/*.php",
+          "change": "create"
+        },
+        {
+          "path": "packages/documents/tests/Document/{DocumentHandlerRegistryTest,NodeHandlerDescriptorTest,SpreadsheetContentTest,LegacyDocumentContentTest}.php",
+          "change": "modify"
+        },
+        {
+          "path": "packages/documents/tests/Unit/{TipTapContentTest,TipTapRendererTest}.php",
+          "change": "modify"
+        },
+        {
+          "path": "packages/core/tests/Arch/ArchTest.php",
+          "change": "modify"
+        },
+        {
+          "path": "packages/core/tests/Configuration/*.php",
+          "change": "modify"
+        },
+        {
+          "path": "packages/{core,documents}/tests/Arch/PublicApiSnapshotTest.php",
+          "change": "modify"
+        },
+        {
+          "path": "packages/{core,documents}/tests/Arch/__snapshots__/*",
+          "change": "modify"
+        },
+        {
+          "path": "docs/guide/document-types.md",
+          "change": "create"
+        },
+        {
+          "path": "docs/reference/configuration.md",
+          "change": "modify"
+        },
+        {
+          "path": "UPGRADE.md",
+          "change": "modify"
+        },
+        {
+          "path": "CHANGELOG.md",
+          "change": "modify"
+        },
+        {
+          "path": "packages/documents/tests/Providers/InvalidDefaultDocumentTypeTest.php",
+          "change": "create"
+        }
+      ],
+      "validation": [
+        {
+          "id": "V1",
+          "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Types tests/Document tests/Unit tests/Operations tests/Arch",
+          "expect": "exit0; V10, V34, degraded, контрактные тесты типов, freeze/duplicate/reserved prefix, golden",
+          "kind": "acceptance",
+          "cwd": "packages/documents"
+        },
+        {
+          "id": "V2",
+          "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Arch packages/core/tests/Configuration packages/core/tests/Profiles",
+          "expect": "exit0; core без TipTap/Univer, нормализатор legacy-ключей, профиль documentTypes",
+          "kind": "acceptance",
+          "cwd": "."
+        },
+        {
+          "id": "V3",
+          "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Feature",
+          "expect": "exit0; Filament presentation без richText",
+          "kind": "acceptance",
+          "cwd": "packages/filament"
+        },
+        {
+          "id": "V80",
+          "procedure": "На own candidate по check-profile выполнить форматирование и статический анализ затронутых пакетов: scripts/php84 vendor/bin/pint --test packages/core && scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress (cwd .); cd packages/documents && ../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress; cd packages/filament && ../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress. Каждый новый guard/Arch-тест item получает ограниченный negative control (временная поломка → тест красный → точное восстановление), записанный в artifacts/P4.3/negative-controls.md.",
+          "expect": "все команды exit 0; negative controls записаны с фактическим красным выводом и восстановлением",
+          "kind": "acceptance"
+        },
+        {
+          "id": "V81",
+          "cmd": "python3 plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-coverage.py check",
+          "expect": "exit0; 1438 единиц, ledger-P4 и дословные входы совпадают",
+          "kind": "acceptance",
+          "cwd": "."
+        },
+        {
+          "id": "V82",
+          "kind": "acceptance",
+          "cwd": "packages/documents",
+          "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Providers/InvalidDefaultDocumentTypeTest.php",
+          "expect": "exit0; actual fresh app boot refuses missing default_type and accepts registered default independently of provider order"
+        }
+      ]
+    }
+  },
+  {
+    "ref": "P4.7",
+    "patch": {
+      "scope": {
+        "include": [
+          "Writer-матрица P4-design#Validators как исполняемый dataset тест DocumentValidatorMatrixTest (каждая операция × ожидаемые дельты sequence/state_version/epoch) для всех текущих writers drive и documents, включая collab store/seed/restore/update/copy/snapshot/setRetention/export(no-op)/purge.",
+          "PG: DocumentStateRaceTest (два update с expectedStateVersion=N → один N+1, второй 412 без записей), NodeSequenceDocumentIndependenceTest (rename с expectedSequence успешен при параллельных collab-store; sequence +1 только от rename), V36 вариант для документа (два rename с одинаковым expectedSequence → 412 node_sequence_mismatch второму).",
+          "События Documents\\Events\\Documents\\{DocumentCreated,DocumentContentUpdated} и Documents\\Events\\Revisions\\{DocumentRevisionCreated,DocumentRestored} получают int $stateVersion и int $epoch; activity-подписчики сохраняют их в context (без новых EventType — P5.2).",
+          "Обновление @plan writer map: P3-security-contracts §Sequence не переписывается — новая таблица фиксируется в docs/reference/concurrency.md и в artifacts/P4.7/writer-map.md с ссылкой на D35.",
+          "docs/reference/concurrency.md: валидаторы узла/содержимого, ETag-форматы для P6, отсутствие If-Match для CRDT, коды 412/409.",
+          "Матрица валидаторов включает setProperties (+1 sequence), star/unstar (0 sequence, 0 state_version), deleteRevision/setRevisionRetention файлов (0 sequence — история, не голова), restrictInheritance (0 sequence — ACL, не узел; изменение доступа отражается событием P5).",
+          "Действуют D51/D53/D54 и owning записи artifacts/P4-midaudit/ledger.json; публичные изменения отражаются в golden, UPGRADE/CHANGELOG, en/ru зеркалах.",
+          "EV227/F05/F06: stateVersion/epoch в событии берутся из результата writer, не из head checkpoint; гонки liveness/комментариев — owning P4.6 V82/V83, до закрытия фазы обязательны. Q3: на установленном framework count() -> aggregate()->setAggregate() удаляет ORDER BY при отсутствии GROUP BY (Builder.php:4117); опасение 42803 отвергнуто чтением. PG scan recovery остаётся обычной фазовой регрессией, не новый блокер.",
+          "F16 HIGH, P4.8↔P4.3 seam: lossless/schemaWritable проверяется сейчас перед D lock, поэтому restore более новой/деградированной схемы может коммитить между precheck и update(expectedStateVersion=null). Сохранить I16: проверять writeability фактического locked Document до overwrite; codec/type API не redesign. PG race stale lossless precheck||restore(newer schema) → update refuses document_content_degraded, stored content/yjs/schema/checkpoints unchanged by rejected write."
+        ],
+        "exclude": [
+          "HTTP ETag/If-Match/428 (P6.1/6.3)",
+          "EventRecorder и конверт sequence (P5.1)",
+          "создание колонки sequence (P3.3, D28)"
+        ]
+      },
+      "task_files": [
+        {
+          "path": "packages/documents/tests/Document/DocumentValidatorMatrixTest.php",
+          "change": "create"
+        },
+        {
+          "path": "packages/documents/tests/Concurrency/DocumentStateRaceTest.php",
+          "change": "create"
+        },
+        {
+          "path": "packages/documents/tests/Concurrency/NodeSequenceDocumentIndependenceTest.php",
+          "change": "create"
+        },
+        {
+          "path": "packages/documents/tests/Concurrency/DocumentRenameStaleTest.php",
+          "change": "create"
+        },
+        {
+          "path": "packages/documents/src/Events/**/*.php",
+          "change": "modify"
+        },
+        {
+          "path": "packages/documents/src/Actions/**/*.php",
+          "change": "modify"
+        },
+        {
+          "path": "packages/core/src/Activity/ActivityRecorder.php",
+          "change": "modify"
+        },
+        {
+          "path": "packages/documents/tests/Document/LegacyNodeSequenceTest.php",
+          "change": "delete"
+        },
+        {
+          "path": "packages/documents/tests/Document/LegacyNodeSequenceRaceTest.php",
+          "change": "delete"
+        },
+        {
+          "path": "docs/reference/concurrency.md",
+          "change": "create"
+        },
+        {
+          "path": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P4.7/writer-map.md",
+          "change": "create"
+        },
+        {
+          "path": "CHANGELOG.md",
+          "change": "modify"
+        },
+        {
+          "path": "packages/documents/src/Operations/DocumentOperations.php",
+          "change": "modify"
+        },
+        {
+          "path": "packages/documents/src/Content/ContentDecoder.php",
+          "change": "modify"
+        },
+        {
+          "path": "packages/documents/tests/Concurrency/DegradedContentRaceTest.php",
+          "change": "create"
+        }
+      ],
+      "validation": [
+        {
+          "id": "V1",
+          "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Document tests/Operations tests/Collaboration",
+          "expect": "exit0; полная матрица валидаторов и события",
+          "kind": "acceptance",
+          "cwd": "packages/documents"
+        },
+        {
+          "id": "V2",
+          "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Concurrency",
+          "expect": "exit0; DocumentStateRaceTest, NodeSequenceDocumentIndependenceTest, DocumentRenameStaleTest (V36), CollaborationFenceRaceTest; backend pids/barrier. Обязательный receipt: числовые executed_tests>=1 и skipped=0, discovered/matched test names и output; exit0 без тестов/с skip НЕ pass.",
+          "kind": "acceptance",
+          "cwd": "packages/documents"
+        },
+        {
+          "id": "V3",
+          "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Concurrency/NodeSequenceBoundaryTest.php",
+          "expect": "exit0; P3.3 регрессия узловой sequence без изменений. Обязательный receipt: числовые executed_tests>=1 и skipped=0, discovered/matched test names и output; exit0 без тестов/с skip НЕ pass.",
+          "kind": "acceptance",
+          "cwd": "packages/drive"
+        },
+        {
+          "id": "V80",
+          "procedure": "На own candidate по check-profile выполнить форматирование и статический анализ затронутых пакетов: scripts/php84 vendor/bin/pint --test packages/core && scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress (cwd .); cd packages/documents && ../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress. Каждый новый guard/Arch-тест item получает ограниченный negative control (временная поломка → тест красный → точное восстановление), записанный в artifacts/P4.7/negative-controls.md.",
+          "expect": "все команды exit 0; negative controls записаны с фактическим красным выводом и восстановлением",
+          "kind": "acceptance"
+        },
+        {
+          "id": "V81",
+          "cmd": "python3 plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-coverage.py check",
+          "expect": "exit0; 1438 единиц, ledger-P4 и дословные входы совпадают",
+          "kind": "acceptance",
+          "cwd": "."
+        },
+        {
+          "id": "V90",
+          "procedure": "Барьер D51 блока P4.2+P4.8+P4.5+P4.7: на текущем дереве (с изменениями всех items блока) после own acceptance исполнить отложенные H-проверки по их точным cmd/cwd/env:\n- P4.2 V4: cwd packages/documents — `env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Document/DocumentCopyLifecycleTest.php` (ожидание: числовые executed_tests>=1 и skipped=0, discovered/matched test names и output; exit0 без тестов/с skip НЕ pass.)\n- P4.8 V4: cwd packages/documents — `env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Operations/DocumentAbilityMatrixTest.php --filter=\"tenant\"` (ожидание: числовые executed_tests>=1 и skipped=0, discovered/matched test names и output; exit0 без тестов/с skip НЕ pass.)\n- P4.5 V2: cwd packages/documents — `env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Concurrency/CollaborationFenceRaceTest.php` (ожидание: числовые executed_tests>=1 и skipped=0, discovered/matched test names и output; exit0 без тестов/с skip НЕ pass.)\nПеред PG/MySQL — scripts/db-preflight.sh; receipts в artifacts/<item>/barrier-receipts.json (числовые executed>=1, skipped=0 для перечисленных файлов). Дефект — одна owning-коррекция в этом item с указанием item-источника в журнале, затем перезапуск только упавших/затронутых.",
+          "expect": "все перечисленные команды exit 0, skipped=0 для перечисленных тестов; own H-проверки (V2, V3) также зелёные",
+          "kind": "acceptance"
+        },
+        {
+          "id": "V4",
+          "kind": "acceptance",
+          "cwd": "packages/documents",
+          "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Concurrency/DegradedContentRaceTest.php",
+          "expect": "executed>=1,skipped=0; real backend pids/barrier, lossy/newer-schema state introduced after optimistic precheck cannot be overwritten, rejected update changes no state/revision/event"
+        }
+      ]
+    }
+  }
+]

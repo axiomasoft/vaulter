@@ -84,7 +84,7 @@ Source: [JSON](../../knowledge/artifacts-P4-design-P4.9-opus.json). This view is
 
 ## 03-glossary-and-renames.md — 7. Таблицы и колонки
 
-- `03:4a72151e` — _P4.9 (D46): owner_id НЕ переименовывается в owned_by — конвертируется в явные owner-гранты и удаляется (неявный владелец узла убран)._
+- `03:4a72151e` — _P4.9 (D46): owner_id НЕ переименовывается в owned_by — удаляется без грантов (D53 уточняет D46) (неявный владелец узла убран)._
 
 | `v_nodes.owner_id` (пользователь-владелец узла) | `v_nodes.owned_by` |
 
@@ -94,7 +94,7 @@ Source: [JSON](../../knowledge/artifacts-P4-design-P4.9-opus.json). This view is
 
 ## 08-data-model-and-migration.md — 2. Целевая схема (изменённые таблицы) / `v_nodes`
 
-- `08:24547dbd` — _P4.1: удаление current_version_id/file_id/deleted_at и sibling-unique; P4.7: sequence уже создан P3.3 (D28/D35); P4.9: owner_id → owner-гранты и удаление (D46, вместо owned_by); P4.11: extra — заменено namespaced properties, extra_data удалён везде (D41)._
+- `08:24547dbd` — _P4.1: удаление current_version_id/file_id/deleted_at и sibling-unique; P4.7: sequence уже создан P3.3 (D28/D35); P4.9: owner_id без грантов и удаление (D53 уточняет D46); P4.11: extra — заменено namespaced properties, extra_data удалён везде (D41)._
 
 Добавить: `sequence` unsigned int default 0. Переименовать: `storage_id` → `drive_id`, `owner_id` → `owned_by`
 (HK; пользователь-владелец узла, не путать с владельцем drive). Изменить тип на HK: `owned_by`, `created_by`,

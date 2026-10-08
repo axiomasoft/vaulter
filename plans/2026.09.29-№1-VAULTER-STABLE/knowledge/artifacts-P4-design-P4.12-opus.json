@@ -1,11 +1,11 @@
 {
   "$schema": "urn:swissknifeman:task:plan:document:v1",
   "id": "artifacts-P4-design-P4.12-opus",
-  "title": "OPUS — дословные требования для P4.12 (3 единиц)",
+  "title": "OPUS — дословные требования для P4.12 (2 единиц)",
   "sections": [
     {
       "id": "S1",
-      "title": "OPUS — дословные требования для P4.12 (3 единиц)",
+      "title": "OPUS — дословные требования для P4.12 (2 единиц)",
       "text": "> Сгенерировано `opus-coverage.py render`; не править руками. Каждая строка обязательна к исполнению\n> или к явному отказу через D# плана (D06)."
     },
     {
@@ -16,7 +16,7 @@
     {
       "id": "S3",
       "title": "12-operations-and-release.md — 1. Команды artisan (канон `vaulter:<area>:<verb>`)",
-      "text": "- `12:7e1380c4` — _P4.12: формула квоты по всем ревизиям (D48) для recount; repair-scopes переносит scope 'global' (D49)._\n\n| `vaulter:drives:recount [--drive=]` | drive | — | Пересчёт `used_bytes` |\n\n- `12:16d6e434` — _P4.12: формула квоты по всем ревизиям (D48) для recount; repair-scopes переносит scope 'global' (D49)._\n\n| `vaulter:blobs:repair-scopes [--dry-run\\|--execute]` | media | — | D20 |"
+      "text": "- `12:16d6e434` — _P4.12: формула квоты по всем ревизиям (D48) для recount; repair-scopes переносит scope 'global' (D49)._\n\n| `vaulter:blobs:repair-scopes [--dry-run\\|--execute]` | media | — | D20 |"
     }
   ],
   "applies_to": [

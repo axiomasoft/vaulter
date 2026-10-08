@@ -6,6 +6,30 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Admission and write guard corrections (PLAN2.D54)
+
+- **File copies and revision restores.** Was: `maxFileBytes` was enforced on uploads,
+  but an existing oversized file could be copied or restored after lowering the limit.
+  Now: every new file in a copy must fit the current limit; restoring a larger payload
+  must fit too (`413 file_size_limit_exceeded`). Existing files stay readable, and a
+  restore that reduces their size remains allowed. A refused operation leaves the
+  head, revisions, quota and CAS edges unchanged.
+- **Generated document names.** Was: conflict renaming could exceed the name policy
+  when the extension consumed the byte budget. Now: the generated name passes the
+  same policy as input; an invalid candidate returns `422 invalid_node_name` before
+  a second document is created.
+- **Model write guard.** Fresh statement builders retain their `WriteScope`, and
+  `insertOrIgnoreReturning` checks it on Laravel versions that provide that statement.
+  Was: those paths could bypass the guard. Now: an out-of-operation write returns
+  the integration error `write_outside_operation` (500). Raw host SQL remains outside
+  this guard, as documented in the compatibility guide.
+- **Snapshot contract.** Attribution columns without an actor type are exposed as
+  nullable string host keys. `GrantSnapshot::$subject` uses the existing `Subject`;
+  `FileHeadSnapshot::$fileId` and `Page::$scanned` are included in the public value
+  surface. Golden coverage now freezes snapshot properties, `Page`, their state
+  enums and presentation DTO properties. Constructors of snapshots and pages are internal; hosts read these values.
+
+
 ### Document type registry, codecs and a safe fallback (PLAN2.D14, D15, D34, D44; PLAN2.P4.3)
 
 No schema change: documents already store their type key (`vaulter/rich-text`, …) and schema

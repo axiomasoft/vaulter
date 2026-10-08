@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Admission and snapshot contract corrections (PLAN2.D54)
+
+- Fixed: file copy and growing revision restore now enforce `maxFileBytes`;
+  previously they could bypass a lowered limit. Refusal preserves all stored data.
+- Fixed: generated document conflict names now pass the drive name policy.
+- Fixed: derived query builders retain `WriteScope`; `insertOrIgnoreReturning`
+  cannot bypass the guard on Laravel versions that provide it.
+- Added regression coverage for domain HTTP codes and snapshot timestamp JSON.
+- Changed golden coverage to include snapshot properties, `Page`, `QuotaState`,
+  `ScanStatus`, `ShareAudience` and presentation DTO properties; marked the `Page`
+  constructor internal.
+
+
 ### Document type registry and safe fallback (PLAN2.D14, D15, D34, D44; PLAN2.P4.3)
 
 - Added the document type registry `Documents::types()` (`Types\DocumentTypeRegistry`: `register`,

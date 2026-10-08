@@ -27,9 +27,11 @@ REST /api/vaulter/v1 поверх Operations: invokable-контроллеры, 
 
 > Phase Assurance: public-contract (wire); фазовый аудит (D03).
 
-**D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.
+D51 — единственная действующая политика: L каждого item, H по owning риску/блокам максимум 2 миграционных или 3 иных рискованных items, фазовый BARRIER и точный V90. @plan/knowledge/validation-and-execution-policy.json. Mutation tools запрещены; hosted CI/push только по уже применимому разрешению O-3.
 
 D29 — обязательные corrections при следующей детализации. Read @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json до разработки contracts; применимые C-rows разворачиваются в concrete owning item files/reads/named tests/exact validation, не остаются note-only. P6.1/C07/C08: strict application-mediated egress default; opt-in direct URL exact version/TTL/bounded revoke. Strong representation ETag учитывает actual returned fields including permission/scan dependencies, а не bare sequence; authorization/quarantine до304. Critical existing-resource mutations require If-Match missing428/stale412. P6.2 problem codes stable; P6.3 OpenAPI/contract tests описывают режимы, preconditions и caches; P6.4/.5/.6 clients/Filament используют guards и opaque validators, не придумывают свой sequence ETag.
+
+MOVE EV249/275/323: Vue убрать is_pinned/rich_text, добавить viewer.starred/content_modified_at, document_type/type_available и null handler.id; VaulterNameDialog зеркалит portable-v1 reasons. Все en/ru страницы sharing/errors/rest-api/vue/filament сверить; writer/organizer по D53, previewer без download. PHP snapshot поля по D54; HTTP id строка, UTC timestamps string, неизвестный/нечитаемый 404. P6.4 обязан иметь contract tests client types vs JSON; прежний shared cursor исправлен, не возвращать page/total.
 
 ## Depends on
 
@@ -66,7 +68,7 @@ REST /api/vaulter/v1 поверх Operations: invokable-контроллеры, 
 
 > Phase Assurance: public-contract (wire); фазовый аудит (D03).
 
-**D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.
+D51 — единственная действующая политика: L каждого item, H по owning риску/блокам максимум 2 миграционных или 3 иных рискованных items, фазовый BARRIER и точный V90. @plan/knowledge/validation-and-execution-policy.json. Mutation tools запрещены; hosted CI/push только по уже применимому разрешению O-3.
 
 D29 — обязательные corrections при следующей детализации. Read @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json до разработки contracts; применимые C-rows разворачиваются в concrete owning item files/reads/named tests/exact validation, не остаются note-only. P6.1/C07/C08: strict application-mediated egress default; opt-in direct URL exact version/TTL/bounded revoke. Strong representation ETag учитывает actual returned fields including permission/scan dependencies, а не bare sequence; authorization/quarantine до304. Critical existing-resource mutations require If-Match missing428/stale412. P6.2 problem codes stable; P6.3 OpenAPI/contract tests описывают режимы, preconditions и caches; P6.4/.5/.6 clients/Filament используют guards и opaque validators, не придумывают свой sequence ETag.
 
@@ -106,7 +108,7 @@ P5 закрыта (контракты P3–P5 заморожены).
 
 ## Mandatory validation/execution policy (D25)
 
-**D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.
+D51 — единственная действующая политика: L каждого item, H по owning риску/блокам максимум 2 миграционных или 3 иных рискованных items, фазовый BARRIER и точный V90. @plan/knowledge/validation-and-execution-policy.json. Mutation tools запрещены; hosted CI/push только по уже применимому разрешению O-3.
 
 ## Обязательные forward corrections (D29)
 
@@ -119,3 +121,7 @@ D36: хаб использует третий webhook load; P6.1 вводит v1
 ## Швы раунда 2 из P4 (D38, D40–D47) — учесть при дизайне P6
 
 REST v1 строится из snapshot-DTO P4.13 (D44): все id — JSON-строки (D38), неизвестный/нечитаемый — одинаковый 404; abilities — строки Ability (D45, отдельный download); гранты/шары в JSON — role/roleVersion, share audience/tokenGeneration, без битов (D45/D47); узел — properties, viewer.starred, contentModifiedAt (D40–D42); ошибки новых кодов P4 (P4-design#Errors) в Problem Details; эндпоинты star/unstar/starred, properties PATCH, restrictInheritance/restoreInheritance, share rotate/update, revision delete/retention, drive archive/unarchive/delete. B2 (M3): решения P6 сверять с практикой через Perplexity.
+
+## Обязательства сквозного аудита 2026-10-08
+
+MOVE EV249/275/323: Vue убрать is_pinned/rich_text, добавить viewer.starred/content_modified_at, document_type/type_available и null handler.id; VaulterNameDialog зеркалит portable-v1 reasons. Все en/ru страницы sharing/errors/rest-api/vue/filament сверить; writer/organizer по D53, previewer без download. PHP snapshot поля по D54; HTTP id строка, UTC timestamps string, неизвестный/нечитаемый 404. P6.4 обязан иметь contract tests client types vs JSON; прежний shared cursor исправлен, не возвращать page/total. Источник: artifacts/P4-midaudit/ledger.json; при детализации развернуть в scope/reads/task_files/validation именованного item, не оставлять note-only.

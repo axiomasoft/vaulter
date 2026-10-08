@@ -178,3 +178,4 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 | D51 | Политика проверок: лёгкие в каждом пункте, тяжёлые — барьерами по риску (заменяет D25) | accepted | 2026-10-07 |
 | D52 | Q2: длительность внешней транзакции complete() — оставить на 1.0, claim вместо row-lock отдельной поправкой | accepted | 2026-10-07 |
 | D53 | P4.9: конверсия уровней и owner_id без legacy (уточнение D45/D46) | accepted | 2026-10-07 |
+| D54 | P4: согласование snapshot, writer, naming и дополнительных кодов ошибок (mid-phase audit) | accepted | 2026-10-08 |

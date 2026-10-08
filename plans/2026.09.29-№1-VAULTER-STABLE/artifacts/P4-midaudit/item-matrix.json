@@ -1,0 +1,426 @@
+[
+  {
+    "item": "P4.1",
+    "scope_include": [
+      "SchemaBuilder fresh: сущности documents и document_revisions вместо node_document_versions (P4-design#Schema дословно: колонки, BIGINT CHECK>=0, индексы, составной FK головы PG/MySQL, restored_from_revision_id); v_file_revisions.restored_from_revision_id и FK головы v_files; v_nodes без current_version_id/file_id/deleted_at и sibling-unique без deleted_at (owner_id остаётся до P4.9 — D46; extra_data — P4.11 — D41).",
+      "Три новые guarded миграции P4-design#Migrations: 2026_10_01_000005_documents_aggregate.php, 2026_10_07_000001_drop_node_legacy_pointers.php, 2026_10_07_000002_revision_provenance_and_heads.php — литеральные определения в теле миграций, пакетная обработка, down().",
+      "Модели: Vaulter\\Documents\\Models\\Documents\\Document (новая, связи node/currentRevision/revisions), DocumentRevision на таблице document_revisions (document(), restoredFrom(); payload guarded); Node без SoftDeletes/currentVersion()/file_id (owner_id и extra_data не трогать); File::currentRevision.",
+      "DocumentStateWriter (P4-design#WorkingState): write() и checkpoint(); Int64Counter в core (NodeSequence использует его без смены поведения); StaleDocumentStateException (412 document_state_mismatch); все текущие document writers (CreateDocumentAction, UpdateDocumentContentAction, PersistCollaborationStateAction, CreateNamedRevisionAction, RestoreDocumentRevisionAction) переведены на writer; DocumentRevisionStoreRepository::update удалён; NodeSequence::bump больше не вызывается документными writers (D35).",
+      "Конфиг: vaulter-documents.revisions.checkpoint_interval_seconds (default 300) и DocumentsConfig::checkpointIntervalSeconds(); legacy revisions.autosave_debounce_seconds → только E_USER_DEPRECATED.",
+      "Потребители указателей: все места из P4-design#Schema/граф использования (NodeStoreRepository::repointHead/update, NodeReadRepository deleted_at SQL, FileRevisionReadRepository, ScanSnapshot, StampsDriveTenant, TenancyBoundary/NodeLocator withTrashed, ShareResolver, IngestFileAction, RestoreFileRevisionAction (+restored_from_revision_id), FileContentLifecycle, FileOperations, NodePurged, CopyNodeAction, filament NodeResource); NodeResource JSON-ключи file_id/current_version_id сохраняются вычислением из агрегата до P6.",
+      "KeyColumnInspector::expected() по P4-design#Schema; docs/reference/database-compatibility.md (SQLite без FK головы), docs/guide/documents.md (рабочее состояние, checkpoint'ы), UPGRADE.md.",
+      "docs/adr/0022-revisions-and-documents-aggregate.md: раздел Amendment (D34 рабочее состояние/неизменяемые ревизии, D35 раздельные валидаторы) со ссылками PLAN2.D34/D35."
+    ],
+    "source_paths": [
+      "packages/documents/src/Content/DocumentStateWriter.php",
+      "packages/documents/src/Actions/Documents/CreateDocumentAction.php",
+      "packages/core/src/Schema/SchemaBuilder.php",
+      "packages/core/database/migrations/2026_10_01_000005_documents_aggregate.php",
+      "packages/core/database/migrations/2026_10_07_000002_revision_provenance_and_heads.php"
+    ],
+    "decisions_applied": [
+      "D34",
+      "D35",
+      "D54"
+    ],
+    "opus_units": [
+      "01:d6b2a4b8",
+      "02:d1487834",
+      "02:257806b4",
+      "03:792772ee",
+      "03:066edf53",
+      "03:dc334c0f",
+      "03:971a7bb6",
+      "03:9aab3dc5",
+      "03:6e18e511",
+      "03:c8b2b6ee",
+      "03:d4c8a122",
+      "03:8d8dc702",
+      "03:984a2bb6",
+      "03:4137602c",
+      "03:5f6dd72a",
+      "03:21105fb7",
+      "03:0cd8243b",
+      "03:afac6586",
+      "03:df01b816",
+      "03:d68b1e28",
+      "03:892e7968",
+      "03:de47717e",
+      "03:03085191",
+      "03:0f4a8ae9",
+      "03:5c2a7a35",
+      "03:33665f0a",
+      "03:3fb50e55",
+      "03:aec8bc91",
+      "03:03f56187",
+      "03:34c66a4a",
+      "03:f9a56114",
+      "03:67cf55b7",
+      "03:4f54622e",
+      "03:5a602ac4",
+      "03:bc2b9cac",
+      "03:c24494ec",
+      "03:512d5480",
+      "03:3fadab3c",
+      "03:96a81ae8",
+      "03:ba916cdb",
+      "03:4fd11389",
+      "03:03308ccb",
+      "03:f01146b6",
+      "03:313b0f14",
+      "03:ac759ee2",
+      "03:4a6db221",
+      "03:b81014f1",
+      "03:7d52a630",
+      "03:9f4b9a68",
+      "03:a1554f0d",
+      "03:6847ef0a",
+      "03:915ad18d",
+      "03:70a24154",
+      "03:14f7d698",
+      "03:32327904",
+      "03:dce17788",
+      "03:e1db5e86",
+      "03:bf5da1ee",
+      "03:4abdd62d",
+      "03:e93fbb8d",
+      "03:7ec3b07f",
+      "08:6aad1fce",
+      "08:1a18d71c",
+      "08:62762aa8",
+      "08:3a0362e2",
+      "08:4be50853",
+      "08:8397c3a7",
+      "08:4a18c3b1",
+      "08:1c4894ba",
+      "08:7db1d5be",
+      "08:08e3370c",
+      "08:ce144954",
+      "08:24547dbd",
+      "08:7b9f276b",
+      "08:5e3a72af",
+      "08:c1a76380",
+      "08:e6b6bbce",
+      "08:cced5613",
+      "08:f690e84e",
+      "08:e60fe87f",
+      "08:64726f03",
+      "08:e2c3c290",
+      "08:4a98c174",
+      "08:63ac5c98",
+      "08:80cc504e",
+      "08:e4f63f43",
+      "08:bd7ec0a7",
+      "08:c7629c6e",
+      "08:78a3a921",
+      "08:26c0ed61",
+      "08:01da7ba3",
+      "08:3f14eb29",
+      "08:215f094a",
+      "08:907d57d6",
+      "08:342a7303",
+      "08:eea48a6b",
+      "08:78d18835",
+      "08:8eb14e07",
+      "08:57fa9622",
+      "08:5c3a32cc",
+      "08:16c29100",
+      "08:02425ed3",
+      "08:11150906",
+      "13:89d82b57",
+      "13:7898e307",
+      "13:712ee562",
+      "13:9345fbcf",
+      "14:4fdf20f0",
+      "14:b6700626",
+      "02:20cf0d50"
+    ],
+    "disposition": "static_contract_trace_with_named_findings; runtime acceptance pending check-plan",
+    "findings": [
+      "F05",
+      "F15",
+      "F16"
+    ]
+  },
+  {
+    "item": "P4.2",
+    "scope_include": [
+      "Vaulter\\Documents\\Content\\DocumentContentLifecycle implements NodeContentLifecycle по P4-design#Lifecycle: copy (D источника FOR SHARE, новый Document той же type/schema_version, DocumentStateWriter::write cause copy forceCheckpoint, CopyResult addedBytes 0, тип недоступен — копирует непрозрачно), purge (ревизии пакетами по 500, затем строка documents).",
+      "NodeContentLifecycleRegistry: registerFallback(), DuplicateNodeContentLifecycleException (code duplicate_registration), assertCopySupported через marker Vaulter\\Contracts\\Drive\\PurgeOnlyContentLifecycle; drive DocumentPurgeLifecycle регистрируется как fallback и реализует marker; ShortcutPurgeLifecycle реализует marker (D40).",
+      "documents provider регистрирует DocumentContentLifecycle; копирование папки с документами и документа отдельно через CopyNodeAction/NodeOperations::copy.",
+      "Регрессия D30: CopySubtreeAuthorizationTest — документ без View у копирующего внутри папки → PermissionDeniedException 'copy', ни одной строки documents/document_revisions.",
+      "V33: копия документа с 3 ревизиями и копия папки с документом: копия имеет 1 ревизию и своё рабочее состояние, epoch 0, state_version 1; purge копии удаляет её ревизии, оригинал цел."
+    ],
+    "source_paths": [
+      "packages/documents/src/Content/DocumentContentLifecycle.php",
+      "packages/core/src/Content/NodeContentLifecycleRegistry.php",
+      "packages/drive/src/Content/FileContentLifecycle.php",
+      "packages/drive/src/Actions/Nodes/CopyNodeAction.php",
+      "packages/drive/src/Actions/Trash/PurgeNodeAction.php"
+    ],
+    "decisions_applied": [
+      "D30",
+      "D48",
+      "D54"
+    ],
+    "opus_units": [
+      "01:f8a4ee1a",
+      "02:fae474bb",
+      "02:92dcdf98",
+      "02:5f611dd5",
+      "06:5b78072a",
+      "13:a73d0509",
+      "13:ca5a85bf",
+      "13:85821922",
+      "13:f88c27d0",
+      "14:aaadf1f1",
+      "05:f8d28c3c",
+      "09:7d6ee90e",
+      "09:3e595b1b",
+      "04:46a3f968"
+    ],
+    "disposition": "static_contract_trace_with_named_findings; runtime acceptance pending check-plan",
+    "findings": [
+      "F13"
+    ]
+  },
+  {
+    "item": "P4.8",
+    "scope_include": [
+      "Vaulter\\Documents\\Operations\\{DocumentOperations,CommentOperations} — сигнатуры P4-design#Operations дословно; DocumentsManager::in/comments через DriveHandle::extension; фасад Documents @method docblock (types, exporters, in, comments).",
+      "snapshot-DTO документов Vaulter\\Documents\\Data\\Snapshots\\{DocumentSnapshot,DocumentRevisionSnapshot,CommentSnapshot} и Page<T> (P4-design#Operations, #Snapshots — D44), Queries\\DocumentQuery (content/revisions, курсор created_at DESC,id DESC по образцу ActivityOperations, комментарий строго внутри узла).",
+      "Actions documents → execute(OperationContext, *Input): CreateDocumentAction, UpdateDocumentContentAction, CreateNamedRevisionAction, RestoreDocumentRevisionAction (RestoreDocumentRevisionInput), UpdateRevisionRetentionAction (UpdateRevisionRetentionInput), AddCommentAction, ResolveCommentAction (ResolveCommentInput), DeleteCommentAction (DeleteCommentInput); actor из context (ActorRef), никакого ambient auth.",
+      "Abilities: create — authorizeCreate(parent)+профиль; content/revisions/collaborationSession — View; update/snapshot/restore/setRetention — Edit (Mutation); export — Download (ContentEgress); comments list View, add Comment, resolve Comment И (автор ИЛИ Edit), delete автор ИЛИ Manage; NodeLocator active-режим (узел в корзине → node_not_found), чужой drive/tenant → node_not_found.",
+      "Контроллеры DocumentNodeController, NodeCommentController, NodeCollaborationController::token переводятся на Operations без смены URL/JSON (P6); hub-эндпоинты authenticate/store не трогаются (P4.5). Core Http/Support/TrashGuard удаляется. drive/tests/Arch/OperationsBoundaryTest.php: documents-контроллеры удалены из $exempt; новый documents/tests/Arch/OperationsBoundaryTest.php.",
+      "CollaborationSessionService вызывается из DocumentOperations::collaborationSession с уже проверенным View (вместо AccessResolver), режим rw при Edit — до P4.5 формат токена не меняется.",
+      "Golden documents PublicApiSnapshotTest — полная поверхность Documents API; docs/guide/documents.md (PHP API), UPGRADE.md.",
+      "Все методы DocumentOperations/CommentOperations возвращают snapshot/Page и принимают id или snapshot (D44); Arch PublicApiReturnTypesTest распространяется на documents."
+    ],
+    "source_paths": [
+      "packages/documents/src/Operations/DocumentOperations.php",
+      "packages/documents/src/Operations/CommentOperations.php",
+      "packages/documents/src/Queries/DocumentQuery.php",
+      "packages/documents/src/Actions/Comments/AddCommentAction.php",
+      "packages/documents/src/Data/Snapshots/Mapping/DocumentSnapshotMapper.php"
+    ],
+    "decisions_applied": [
+      "D34",
+      "D35",
+      "D38",
+      "D44",
+      "D45",
+      "D54"
+    ],
+    "opus_units": [
+      "03:1c8eb862",
+      "03:4a818c7a",
+      "03:ef0e3704",
+      "03:56d823ba",
+      "03:4787ba44",
+      "03:f0521dd8",
+      "03:b527e9f0",
+      "03:cb9edbd4",
+      "03:8e9ff520",
+      "03:3125b669",
+      "03:d1a77358",
+      "03:01a48199",
+      "03:000c6f70",
+      "03:6633e1f7",
+      "03:479af98d",
+      "03:f70448f6",
+      "03:d42eb49d",
+      "03:e3b6dfaf",
+      "03:8c5774f6",
+      "03:b94adcbc",
+      "03:8acd683c",
+      "03:5b69268b",
+      "03:db11e9e3",
+      "03:63536083",
+      "05:bbd92453"
+    ],
+    "disposition": "static_contract_trace_with_named_findings; runtime acceptance pending check-plan",
+    "findings": [
+      "F03",
+      "F05",
+      "F06",
+      "F15",
+      "F16"
+    ]
+  },
+  {
+    "item": "P4.9",
+    "scope_include": [
+      "RoleRegistry/Role v1 и Ability-биты по P4-design#Access; GrantLevel заменяется ролями (enum удаляется или остаётся @internal алиасом ключей — удалить, golden), Decision {Role}, драйверы database/gate/spatie/azgard + NullPermissionDriver на роли; конфиг-карты получают previewer.",
+      "Миграция 2026_10_07_000005_access_model_v1.php: role_key/role_version, удаление level/permissions/effect, конверсия level, preflight-отказ на deny и нестандартных масках, конверсия owner_id → owner-гранты и удаление колонки; AccessScope.nodeOwner удалён.",
+      "AccessResolver/evaluateMany/листинг (P1.3) на объединении ролей и границах; OperationGuard мульти-ресурсные правила copy/move/restore; access()->restrictInheritance/restoreInheritance; explain с источниками; GrantInput{subject, role, scope, expiresAt} без битов и effect.",
+      "Регрессии P1.3/P3.4/P3.5 и drive/documents тесты переводятся на роли; AccessUpgradeEquivalenceTest на PG-фикстуре: матрица (актор × узел × способность) до/после совпадает для всех конвертируемых данных, кроме явно задокументированного разделения View/Download (reader получает download как раньше Read)."
+    ],
+    "source_paths": [
+      "packages/core/src/Access/AccessResolver.php",
+      "packages/core/src/Access/OperationGuard.php",
+      "packages/core/src/Access/Roles/RoleRegistry.php",
+      "packages/core/src/Repositories/Drive/NodeReadRepository.php",
+      "packages/core/database/migrations/2026_10_07_000005_access_model_v1.php"
+    ],
+    "decisions_applied": [
+      "D45",
+      "D46",
+      "D53"
+    ],
+    "opus_units": [
+      "03:2a43297d",
+      "03:266b3b43",
+      "03:27bfd895",
+      "03:d9feb74b",
+      "03:d1f9352b",
+      "03:0065c62f",
+      "03:15134404",
+      "03:5c0723c5",
+      "03:8378be94",
+      "03:5c8d45d6",
+      "03:b3a1507c",
+      "03:a98ead1f",
+      "03:85837af0",
+      "03:a5ace0af",
+      "03:c50234dd",
+      "03:4a72151e",
+      "03:2f6c6152",
+      "08:24547dbd"
+    ],
+    "disposition": "static_contract_trace_with_named_findings; runtime acceptance pending check-plan",
+    "findings": [
+      "F07",
+      "F13"
+    ]
+  },
+  {
+    "item": "P4.10",
+    "scope_include": [
+      "Миграция 2026_10_07_000006_share_links_v1.php по P4-design#Sharing с конверсией и preflight; модель NodeShare; ShareLinkInput{role, audience, scope, expiresAt, password, maxUses}; ShareLinkUpdate; ShareOperations::update/rotate.",
+      "ShareResolver: аудитория (tenant через TenantResolver), роль ссылки как источник способностей, previewer без download (оригинал не отдаётся), generation в сессии ссылки, редемпция один раз на сессию, проверка TTL политики при каждом доступе.",
+      "HTTP публичных ссылок и Filament NodeShareResource на новые поля; ShareSecurityBoundaryTest/ShareScopeTest дополняются."
+    ],
+    "source_paths": [
+      "packages/core/src/Sharing/ShareResolver.php",
+      "packages/core/src/Sharing/ShareSession.php",
+      "packages/core/src/Sharing/ShareLinkRules.php",
+      "packages/core/src/Actions/Sharing/RotateShareLinkAction.php",
+      "packages/core/src/Actions/Sharing/RedeemShareLinkAction.php",
+      "packages/core/database/migrations/2026_10_07_000006_share_links_v1.php"
+    ],
+    "decisions_applied": [
+      "D47",
+      "D53",
+      "D54"
+    ],
+    "opus_units": [
+      "03:2151a3b0"
+    ],
+    "disposition": "static_contract_trace_with_named_findings; runtime acceptance pending check-plan",
+    "findings": [
+      "EV275"
+    ]
+  },
+  {
+    "item": "P4.11",
+    "scope_include": [
+      "Миграция 2026_10_07_000004_node_data_contract.php + fresh SchemaBuilder ровно P4-design#NodeData: name_key + индексы (PG COLLATE \"C\", SQLite BINARY, MySQL name_key_hash), properties, удаление is_pinned/position, content_modified_at/by, удаление extra_data во всех таблицах и HasExtraData, v_node_user_states, v_file_revisions.client_modified_at; бэкфилл name_key с разрешением коллизий и activity; перенос nodes.extra_data в properties['legacy'] с preflight при превышении лимитов.",
+      "NodeName::normalize без trim + NodeName::key; NamePolicy, PortableNamePolicy (portable-v1, default), PermissivePolicy (permissive-v1); InvalidNodeNameException reasons; применение во всех создающих/переименовывающих/восстанавливающих путях drive и documents.",
+      "DrivePolicy в ProfilePolicy (P3.6) и builder; проверки maxFolderChildren/maxFolderDepth/maxFileBytes/properties-лимитов в Actions под блокировками, коды ошибок P4-design#Errors.",
+      "API: nodes()->star/unstar/starred, properties/setProperties; удаление nodes()->update() и UpdateNodeOptions; UploadOptions::clientModifiedAt; viewer.starred в ответах.",
+      "Конфиг: флаг vaulter.extra_data.enabled удалён (нормализатор E_USER_DEPRECATED + игнор); drive name max_length переносится в DrivePolicy (vaulter-drive.names.max_length нормализуется)."
+    ],
+    "source_paths": [
+      "packages/core/src/Naming/PortableNamePolicy.php",
+      "packages/core/src/Support/NodeName.php",
+      "packages/core/src/Profiles/DrivePolicyEnforcer.php",
+      "packages/drive/src/Actions/Nodes/NameConflictResolver.php",
+      "packages/drive/src/Actions/Nodes/CopyNodeAction.php"
+    ],
+    "decisions_applied": [
+      "D39",
+      "D40",
+      "D41",
+      "D42",
+      "D43",
+      "D54"
+    ],
+    "opus_units": [
+      "08:24547dbd"
+    ],
+    "disposition": "static_contract_trace_with_named_findings; runtime acceptance pending check-plan",
+    "findings": [
+      "F03",
+      "F04",
+      "F13",
+      "EV249"
+    ]
+  },
+  {
+    "item": "P4.12",
+    "scope_include": [
+      "RevisionRetentionPolicy в DrivePolicy; v_file_revisions.superseded_at (миграция 2026_10_07_000007_quota_all_revisions.php вместе с пересчётом used_bytes по QuotaCalculator).",
+      "DeleteFileRevisionAction, PruneFileRevisionsJob, команда vaulter:revisions:prune {--drive=*} {--dry-run}, расписание ежедневно; FileOperations::deleteRevision/setRevisionRetention; restoreRevision пишет restored_from_revision_id.",
+      "Квота по P4-design#Revisions во всех путях (IngestFileAction новая ревизия, RestoreFileRevisionAction, FileContentLifecycle copy, DeleteFileRevisionAction, PurgeNodeAction) — P1.6 условные UPDATE сохраняются; DriveHandle::quota() данные для QuotaSnapshot (состояние считается в P4.13).",
+      "media: DedupScope без global, InvalidConfigurationException, repair-scopes обрабатывает 'global'."
+    ],
+    "source_paths": [
+      "packages/core/src/Quota/QuotaCalculator.php",
+      "packages/drive/src/Actions/Files/DeleteFileRevisionAction.php",
+      "packages/drive/src/Actions/Files/RestoreFileRevisionAction.php",
+      "packages/drive/src/Jobs/PruneFileRevisionsJob.php",
+      "packages/core/src/Profiles/RevisionRetentionPolicy.php",
+      "packages/media/src/Configuration/DedupScope.php"
+    ],
+    "decisions_applied": [
+      "D48",
+      "D49",
+      "D54"
+    ],
+    "opus_units": [
+      "08:ac660fbe",
+      "12:16d6e434"
+    ],
+    "disposition": "static_contract_trace_with_named_findings; runtime acceptance pending check-plan",
+    "findings": [
+      "F04",
+      "F08",
+      "F09"
+    ]
+  },
+  {
+    "item": "P4.13",
+    "scope_include": [
+      "Snapshot-каталог и Page<T> ровно P4-design#Snapshots; @internal мапперы; DriveHandle::snapshot()/quota(); QuotaState.",
+      "Сигнатуры всех методов Contracts\\Drive\\*Operations, core Access/Share/Activity Operations и DriveHandle — на snapshot/Page/id (golden core+drive); ActivityOperations → Page<ActivityEntrySnapshot>.",
+      "WriteScope, GuardsWrites, GuardedBuilder, VaulterDatabase::transaction/write открывают scope; конфиг vaulter.database.write_guard (env VAULTER_DB_WRITE_GUARD, default true); базовые TestCase пакетов: config write_guard = (bool) env('VAULTER_TEST_WRITE_GUARD', false); тесты packages/{core,drive}/tests/WriteGuard/*.",
+      "HTTP-контроллеры и JsonResource строятся из snapshot (JSON-ключи и URL прежние до P6); Filament: действия через Operations, таблицы — внутренние запросы моделей.",
+      "Arch PublicApiReturnTypesTest: ни один публичный метод Operations/handle не возвращает и не принимает Illuminate\\Database\\Eloquent\\Model/Builder/Collection или Paginator.",
+      "docs/guide/compatibility.md (+ ru): политика BC 1.0 (P4-design#Stability); CHANGELOG.md — перенос записей P1–P3 из audit-p1-p3-fixes п.5 и запись D44."
+    ],
+    "source_paths": [
+      "packages/core/src/Data/Snapshots/Mapping/NodeSnapshotMapper.php",
+      "packages/core/src/Data/Snapshots/Mapping/SnapshotValue.php",
+      "packages/core/src/Database/GuardsStatements.php",
+      "packages/core/src/Models/Concerns/GuardsWrites.php",
+      "packages/core/tests/Arch/PublicApiSnapshotTest.php",
+      "packages/drive/src/DriveHandle.php"
+    ],
+    "decisions_applied": [
+      "D44",
+      "D54"
+    ],
+    "opus_units": [
+      "03:3a3c38ac",
+      "03:8da68288"
+    ],
+    "disposition": "static_contract_trace_with_named_findings; runtime acceptance pending check-plan",
+    "findings": [
+      "F01",
+      "F02",
+      "F10",
+      "F12",
+      "F14"
+    ]
+  }
+]

@@ -344,7 +344,7 @@ Drive 1─* Activity, UploadSession
 
 ## 08-data-model-and-migration.md — 2. Целевая схема (изменённые таблицы) / `v_nodes`
 
-- `08:24547dbd` — _P4.1: удаление current_version_id/file_id/deleted_at и sibling-unique; P4.7: sequence уже создан P3.3 (D28/D35); P4.9: owner_id → owner-гранты и удаление (D46, вместо owned_by); P4.11: extra — заменено namespaced properties, extra_data удалён везде (D41)._
+- `08:24547dbd` — _P4.1: удаление current_version_id/file_id/deleted_at и sibling-unique; P4.7: sequence уже создан P3.3 (D28/D35); P4.9: owner_id без грантов и удаление (D53 уточняет D46); P4.11: extra — заменено namespaced properties, extra_data удалён везде (D41)._
 
 Добавить: `sequence` unsigned int default 0. Переименовать: `storage_id` → `drive_id`, `owner_id` → `owned_by`
 (HK; пользователь-владелец узла, не путать с владельцем drive). Изменить тип на HK: `owned_by`, `created_by`,

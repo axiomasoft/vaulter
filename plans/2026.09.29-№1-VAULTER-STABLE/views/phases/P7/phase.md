@@ -27,9 +27,11 @@ vaulter:doctor с проверками всех пакетов; vaulter:install,
 
 > Phase Assurance: release-readiness; фазовый аудит (D03).
 
-**D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.
+D51 — единственная действующая политика: L каждого item, H по owning риску/блокам максимум 2 миграционных или 3 иных рискованных items, фазовый BARRIER и точный V90. @plan/knowledge/validation-and-execution-policy.json. Mutation tools запрещены; hosted CI/push только по уже применимому разрешению O-3.
 
 D29 — обязательные corrections при следующей детализации. Read @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json до разработки contracts; применимые C-rows разворачиваются в concrete owning item files/reads/named tests/exact validation, не остаются note-only. C09: P7.1 doctor проверяет configured scanner, effective policy/cutover, stalled/failed durable obligations, leases и invalid scope. P7.2 регистрирует bounded scan backfill/reconcile и fan-out/retry recovery schedules с безопасным maintenance scope; P7.4 reusable host contract tests scanner/scoping/policy/fault recovery; P7.6 эксплуатационные runbooks перехода legacy, failures/unsupported/password files, повторных доставок и direct URL limits. Disabled webhooks не отключают mandatory scan work.
+
+vaulter:drives:recount реализуется P4.6 (OPUS 12:7e1380c4), P7.1/P7.2 проверяют/планируют эксплуатацию существующей команды, не создают вторую формулу. Runbook по dedup=off downgrade/preflight, AzGuard штатные зависимости без transient composer override; doc recipes и ru/en должны использовать current Types/Content API, после P4.4 без core DocumentExporter/DocumentContent. Doctor избегает трактовки done_with_deviations как current-tree GREEN.
 
 ## Depends on
 
@@ -65,7 +67,7 @@ vaulter:doctor с проверками всех пакетов; vaulter:install,
 
 > Phase Assurance: release-readiness; фазовый аудит (D03).
 
-**D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.
+D51 — единственная действующая политика: L каждого item, H по owning риску/блокам максимум 2 миграционных или 3 иных рискованных items, фазовый BARRIER и точный V90. @plan/knowledge/validation-and-execution-policy.json. Mutation tools запрещены; hosted CI/push только по уже применимому разрешению O-3.
 
 D29 — обязательные corrections при следующей детализации. Read @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json до разработки contracts; применимые C-rows разворачиваются в concrete owning item files/reads/named tests/exact validation, не остаются note-only. C09: P7.1 doctor проверяет configured scanner, effective policy/cutover, stalled/failed durable obligations, leases и invalid scope. P7.2 регистрирует bounded scan backfill/reconcile и fan-out/retry recovery schedules с безопасным maintenance scope; P7.4 reusable host contract tests scanner/scoping/policy/fault recovery; P7.6 эксплуатационные runbooks перехода legacy, failures/unsupported/password files, повторных доставок и direct URL limits. Disabled webhooks не отключают mandatory scan work.
 
@@ -105,8 +107,12 @@ P6 закрыта. Owner gate O-4: тег AzGuard для vaulter-azgard (D02, Q9
 
 ## Mandatory validation/execution policy (D25)
 
-**D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.
+D51 — единственная действующая политика: L каждого item, H по owning риску/блокам максимум 2 миграционных или 3 иных рискованных items, фазовый BARRIER и точный V90. @plan/knowledge/validation-and-execution-policy.json. Mutation tools запрещены; hosted CI/push только по уже применимому разрешению O-3.
 
 ## Обязательные forward corrections (D29)
 
 D29 — обязательные corrections при следующей детализации. Read @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json до разработки contracts; применимые C-rows разворачиваются в concrete owning item files/reads/named tests/exact validation, не остаются note-only. C09: P7.1 doctor проверяет configured scanner, effective policy/cutover, stalled/failed durable obligations, leases и invalid scope. P7.2 регистрирует bounded scan backfill/reconcile и fan-out/retry recovery schedules с безопасным maintenance scope; P7.4 reusable host contract tests scanner/scoping/policy/fault recovery; P7.6 эксплуатационные runbooks перехода legacy, failures/unsupported/password files, повторных доставок и direct URL limits. Disabled webhooks не отключают mandatory scan work.
+
+## Обязательства сквозного аудита 2026-10-08
+
+vaulter:drives:recount реализуется P4.6 (OPUS 12:7e1380c4), P7.1/P7.2 проверяют/планируют эксплуатацию существующей команды, не создают вторую формулу. Runbook по dedup=off downgrade/preflight, AzGuard штатные зависимости без transient composer override; doc recipes и ru/en должны использовать current Types/Content API, после P4.4 без core DocumentExporter/DocumentContent. Doctor избегает трактовки done_with_deviations как current-tree GREEN. Источник: artifacts/P4-midaudit/ledger.json; при детализации развернуть в scope/reads/task_files/validation именованного item, не оставлять note-only.

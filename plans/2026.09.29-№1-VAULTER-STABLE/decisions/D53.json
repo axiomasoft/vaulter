@@ -22,6 +22,12 @@
   "context": "Расхождение найдено при исполнении P4.9 до первой продуктовой правки. Владелец 2026-10-07 в сессии P4.9: на вопрос об owner_id выбрал «Drop, no grants (Recommended)»; на вопрос о writer/organizer: «никакого legacy быть не должно, пакет еще нигде не используется, до завершения плана». Уточняет D45 (миграция уровней) и D46 (конверсия owner_id).",
   "decision": "A — Без legacy: level → одноимённая роль v1 (reader/commenter/owner совпадают; writer +trash/restore; organizer +share −delete — задокументированное изменение, а не скрытая совместимость). owner_id удаляется без создания грантов (встроенные драйверы им не пользовались). Deny и маски permissions вне битов уровня — preflight-отказ, как в D45.",
   "rationale": "Владелец в сессии P4.9 2026-10-07: «никакого legacy быть не должно, пакет еще нигде не используется, до завершения плана»; owner_id — «Drop, no grants (Recommended)».",
+  "applies_to": [
+    "P4",
+    "P4.9",
+    "P4.10",
+    "P6"
+  ],
   "actor": {
     "provider": "anthropic",
     "model": "claude-opus-5-5",

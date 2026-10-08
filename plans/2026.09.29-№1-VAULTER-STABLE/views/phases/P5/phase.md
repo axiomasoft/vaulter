@@ -27,9 +27,11 @@ skeleton
 
 > Phase Assurance: data-integrity (outbox atomicity); фазовый аудит (D03).
 
-**D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.
+D51 — единственная действующая политика: L каждого item, H по owning риску/блокам максимум 2 миграционных или 3 иных рискованных items, фазовый BARRIER и точный V90. @plan/knowledge/validation-and-execution-policy.json. Mutation tools запрещены; hosted CI/push только по уже применимому разрешению O-3.
 
 D29 — обязательные corrections при следующей детализации. Read @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json до разработки contracts; применимые C-rows разворачиваются в concrete owning item files/reads/named tests/exact validation, не остаются note-only. P5.1 C05: mandatory EventRecorder staging атомарно вместе с mutation/activity, failure rollback; optional host observers after commit отдельно. P5.2 stable occurrence+endpoint envelope, at-least-once HTTP и consumer dedup. NEW P5.3 C06: recoverable fan-out materialization с completion marker, уникальной delivery identity, bounded checkpoint/lease/fencing, crash/partial recovery и incomplete-prune protection; retained pending/failed retry recovery. Legacy dispatched ambiguity имеет upgrade plan, не фиктивную exactly-once гарантию.
+
+Laravel events P4.12 FileRevisionDeleted и P4.10 share update/rotate получают EventType/activity/outbox в P5.2; Document events используют stateVersion/epoch результата writer (D35), не checkpoint state_version. D31 projection сохраняется для всех новых context полей. MOVE EV286/273/227: именованные tests на after-commit/rollback и скрытые subject/token/request поля.
 
 ## Depends on
 
@@ -65,7 +67,7 @@ D29 — обязательные corrections при следующей дета�
 
 > Phase Assurance: data-integrity (outbox atomicity); фазовый аудит (D03).
 
-**D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.
+D51 — единственная действующая политика: L каждого item, H по owning риску/блокам максимум 2 миграционных или 3 иных рискованных items, фазовый BARRIER и точный V90. @plan/knowledge/validation-and-execution-policy.json. Mutation tools запрещены; hosted CI/push только по уже применимому разрешению O-3.
 
 D29 — обязательные corrections при следующей детализации. Read @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json до разработки contracts; применимые C-rows разворачиваются в concrete owning item files/reads/named tests/exact validation, не остаются note-only. P5.1 C05: mandatory EventRecorder staging атомарно вместе с mutation/activity, failure rollback; optional host observers after commit отдельно. P5.2 stable occurrence+endpoint envelope, at-least-once HTTP и consumer dedup. NEW P5.3 C06: recoverable fan-out materialization с completion marker, уникальной delivery identity, bounded checkpoint/lease/fencing, crash/partial recovery и incomplete-prune protection; retained pending/failed retry recovery. Legacy dispatched ambiguity имеет upgrade plan, не фиктивную exactly-once гарантию.
 
@@ -102,7 +104,7 @@ P4 закрыта (sequence foundation — P3.3/D28, Document writer integration
 
 ## Mandatory validation/execution policy (D25)
 
-**D25 — обязательная политика исполнения.** @plan/knowledge/validation-and-execution-policy.json читается до первого product edit. Ранние items выполняют конкретные affected checks; broad full non-mutation gates — один раз в последнем item текущей фазы/объявленного блока. Критические DB/auth/schema/concurrency scenarios и negative controls сохраняются. Каждый новый detailed item получает этот Required Read и exact check-profile; последний item получает acceptance carrier phase.validation. История/OPUS не переписываются; mutation tools и запускающие их dispatch/score lanes исключены; review только по applicable request/phase audit, bounded re-review. Полные команды нельзя запускать при одном plan edit.
+D51 — единственная действующая политика: L каждого item, H по owning риску/блокам максимум 2 миграционных или 3 иных рискованных items, фазовый BARRIER и точный V90. @plan/knowledge/validation-and-execution-policy.json. Mutation tools запрещены; hosted CI/push только по уже применимому разрешению O-3.
 
 ## Обязательные forward corrections (D29)
 
@@ -115,3 +117,7 @@ Laravel-события P4 уже несут поля для конверта: Do
 ## D50 — журнал изменений и тонкие webhooks (учесть при дизайне P5)
 
 Принято D50: P5 проектирует v_drive_changes (tenant_id, drive_id, seq BIGINT по счётчику drive под блокировкой в транзакции мутации, change_id, node_id без FK, operation upsert|remove, reason deleted|moved_out|permission_lost, node_sequence, occurred_at; PK (drive_id, seq)); курсор — подписанный непрозрачный токен {v, tenant, drive, epoch, after}; ретеншн 30 дней по умолчанию; устаревший курсор → 410 cursor_expired + полная ресинхронизация; webhooks — тонкий сигнал (event id, type, drive, cursor hint) с подписью Standard Webhooks (webhook-id, webhook-timestamp, webhook-signature v1 HMAC-SHA256, допуск 5 мин, две подписи при ротации секрета); v_webhook_endpoints получает tenant_id и опциональный drive-фильтр; автоотключение после N дней ошибок и ручной redelivery. Перед дизайном P5 переспросить Perplexity по webhooks (q7b раунда 2 не дал ответа). Источник: @plan/knowledge/P4-architecture-review-2026-10-07.json#Q7A.
+
+## Обязательства сквозного аудита 2026-10-08
+
+Laravel events P4.12 FileRevisionDeleted и P4.10 share update/rotate получают EventType/activity/outbox в P5.2; Document events используют stateVersion/epoch результата writer (D35), не checkpoint state_version. D31 projection сохраняется для всех новых context полей. MOVE EV286/273/227: именованные tests на after-commit/rollback и скрытые subject/token/request поля. Источник: artifacts/P4-midaudit/ledger.json; при детализации развернуть в scope/reads/task_files/validation именованного item, не оставлять note-only.

@@ -15,7 +15,8 @@
       "Presentation: core контракт Vaulter\\Contracts\\Presentation\\KindPresenter, реализация Vaulter\\Documents\\Presentation\\DocumentPresenter; NodePresentation документа (document_type, type_available, capabilities без richText); ContentCapabilities::richText удалён; файлы .docx/.md/.xlsx — preview/download, editable=false, collaborative=false (V34).",
       "Удаление Enums\\Documents\\DocumentType, Engines\\Handlers\\{TipTapHandler,UniverHandler}, Attributes\\TiptapExtensions, Support\\TipTap\\Concerns\\HasTiptapExtensions, Registries\\DocumentTypeRegistry, DocumentsConfig::enabledDocumentTypes; нормализатор vaulter.enabled_document_types/features.spreadsheets (P4-design#Types карта); core Arch: TipTap/Univer не встречаются в core/src.",
       "Генератор vaulter:make:document-type + stub; контрактный trait Testing\\Contracts\\DocumentTypeContractTests, встроенные типы через него; V10 сторонний тип: установка → создание → удаление → fallback → повторная установка.",
-      "Presentation/DocumentHeadSnapshot.typeAvailable в NodeSnapshot заполняются из реестра типов (D44)."
+      "Presentation/DocumentHeadSnapshot.typeAvailable в NodeSnapshot заполняются из реестра типов (D44).",
+      "NOTE330 mid-audit handoff: automated fresh-application boot test для unregistered default_type, который отсутствовал в WIP; boot отказ должен быть проверен через настоящий provider booted callback, без ручного вызова/ослабления freeze. Закрыть все doc leftovers из sonnet-handoff и проверить EV320–329 нормативные решения до finish."
     ],
     "exclude": [
       "экспорт (P4.4)",
@@ -51,7 +52,10 @@
     "D46",
     "D47",
     "D48",
-    "D49"
+    "D49",
+    "D51",
+    "D53",
+    "D54"
   ],
   "skills": [],
   "reads": [
@@ -101,18 +105,18 @@
       "required": false
     },
     {
-      "path": "packages/documents/src/ValueObjects/TipTapContent.php",
+      "path": "packages/documents/src/Content/TipTap/TipTapContent.php",
       "why": "Strict/decay пути и allow-list",
       "required": true
     },
     {
-      "path": "packages/documents/src/Engines/Handlers/TipTapHandler.php",
-      "why": "Удаляемые handlers и их дескрипторы",
+      "path": "packages/documents/src/Types/RichTextDocumentType.php",
+      "why": "Текущий replacement удалённого handler; прежний код — git show 064c58cb:packages/documents/src/Engines/Handlers/TipTapHandler.php",
       "required": true
     },
     {
-      "path": "packages/documents/src/Engines/Handlers/UniverHandler.php",
-      "why": "Удаляемые handlers и их дескрипторы",
+      "path": "packages/documents/src/Types/SpreadsheetDocumentType.php",
+      "why": "Текущий replacement удалённого handler; прежний код — git show 064c58cb:packages/documents/src/Engines/Handlers/UniverHandler.php",
       "required": true
     },
     {
@@ -250,6 +254,10 @@
     {
       "path": "CHANGELOG.md",
       "change": "modify"
+    },
+    {
+      "path": "packages/documents/tests/Providers/InvalidDefaultDocumentTypeTest.php",
+      "change": "create"
     }
   ],
   "rules": [
@@ -300,6 +308,13 @@
       "expect": "exit0; 1438 единиц, ledger-P4 и дословные входы совпадают",
       "kind": "acceptance",
       "cwd": "."
+    },
+    {
+      "id": "V82",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Providers/InvalidDefaultDocumentTypeTest.php",
+      "expect": "exit0; actual fresh app boot refuses missing default_type and accepts registered default independently of provider order",
+      "kind": "acceptance",
+      "cwd": "packages/documents"
     }
   ],
   "deliverables": [
@@ -332,5 +347,5 @@
       "session": "417b340b-409b-4255-bd7a-fc19ac290cc1"
     }
   },
-  "updated_at": "2026-10-08T16:06:41Z"
+  "updated_at": "2026-10-08T18:45:43Z"
 }
