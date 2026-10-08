@@ -43,14 +43,12 @@ final readonly class RestoreFileRevisionAction
             $this->admission->assertSource($source);
             $admissionSequence = app(ScanAdmission::class)->next($context);
             $previous = $file->currentRevision()->first();
-            $delta = $source->size_bytes - ($previous->size_bytes ?? 0);
-            if ($delta > 0) {
-                $this->drives->reserveBytes($context->drive, $delta);
-            } elseif ($delta < 0) {
-                $this->drives->adjustUsedBytes($context->drive, $delta);
+            // The restored copy is a new retained revision: its full size counts (PLAN2.D48).
+            if ($source->size_bytes > 0) {
+                $this->drives->reserveBytes($context->drive, $source->size_bytes);
             }
             $attributes = $source->getAttributes();
-            unset($attributes[$source->getKeyName()],$attributes['created_at']);
+            unset($attributes[$source->getKeyName()], $attributes['created_at'], $attributes['superseded_at']);
             $attributes = [...$attributes, 'status' => 'committed', 'number' => $file->revision_count + 1, 'created_by' => $context->actor->ref()->id, 'committed_at' => now(), 'scan_status' => $this->admission->status($context), 'scan_admission_sequence' => $admissionSequence, 'restored_from_revision_id' => $source->id];
             $revision = $this->revisions->create($attributes);
             foreach ($source->blobs as $blob) {

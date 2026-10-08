@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Config\Repository;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Media\Cas\FlysystemStorageDriver;
+use Vaulter\Media\Configuration\DedupScope;
 use Vaulter\Media\Configuration\MediaConfig;
 
 it('reads canonical media settings live and uses drive dedup scope', function (): void {
@@ -12,7 +13,7 @@ it('reads canonical media settings live and uses drive dedup scope', function ()
     $config = new MediaConfig($repository);
 
     expect($config->disk())->toBe('local')
-        ->and($config->dedupScope())->toBe('tenant')
+        ->and($config->dedupScope())->toBe(DedupScope::Tenant)
         ->and($config->storageDriver())->toBe(FlysystemStorageDriver::class);
 
     $repository->set('vaulter-media.disk', 'archive');
@@ -20,7 +21,7 @@ it('reads canonical media settings live and uses drive dedup scope', function ()
     $repository->set('vaulter-media.gc', ['grace_hours' => 48]);
 
     expect($config->disk())->toBe('archive')
-        ->and($config->dedupScope())->toBe('drive')
+        ->and($config->dedupScope())->toBe(DedupScope::Drive)
         ->and($config->orphanGraceHours())->toBe(48)
         ->and($config->gcGraceHours(2))->toBe(2);
 });
@@ -35,7 +36,7 @@ it('normalizes the storage scope from the canonical media environment setting wi
 
         expect($repository->has('vaulter.dedup.scope'))->toBeFalse()
             ->and($repository->get('vaulter-media.dedup.scope'))->toBe('storage')
-            ->and((new MediaConfig($repository))->dedupScope())->toBe('drive');
+            ->and((new MediaConfig($repository))->dedupScope())->toBe(DedupScope::Drive);
     } finally {
         if ($hadValue) {
             $_SERVER['VAULTER_DEDUP_SCOPE'] = $previousValue;
@@ -55,11 +56,11 @@ it('normalizes canonical storage scope changes on the live repository after boot
     $repository->set('vaulter-media.dedup.scope', 'storage');
 
     expect($repository->has('vaulter.dedup.scope'))->toBeFalse()
-        ->and($config->dedupScope())->toBe('drive');
+        ->and($config->dedupScope())->toBe(DedupScope::Drive);
 
     $repository->set('vaulter-media.dedup.scope', 'drive');
 
-    expect($config->dedupScope())->toBe('drive');
+    expect($config->dedupScope())->toBe(DedupScope::Drive);
 });
 
 it('floors grace windows and rejects incompatible CAS implementations', function (): void {
@@ -68,4 +69,18 @@ it('floors grace windows and rejects incompatible CAS implementations', function
 
     expect($config->gcGraceHours())->toBe(1)
         ->and(fn () => $config->contentStore())->toThrow(InvalidConfigurationException::class);
+});
+
+it('refuses the retired global scope and unknown scopes with a repair hint', function (mixed $value, string $message): void {
+    $config = new MediaConfig(new Repository(['vaulter-media' => ['dedup' => ['scope' => $value]]]));
+
+    expect(fn () => $config->dedupScope())->toThrow(InvalidConfigurationException::class, $message);
+})->with([
+    'global' => ['global', 'vaulter:blobs:repair-scopes'],
+    'unknown' => ['everything', 'tenant, drive or off'],
+    'not a string' => [[], 'tenant, drive or off'],
+]);
+
+it('accepts off', function (): void {
+    expect((new MediaConfig(new Repository(['vaulter-media' => ['dedup' => ['scope' => 'off']]])))->dedupScope())->toBe(DedupScope::Off);
 });

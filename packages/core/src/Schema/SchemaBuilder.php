@@ -363,6 +363,9 @@ final class SchemaBuilder
         HostKeyColumns::add(table: $table, column: 'created_by', nullable: true, index: false);
         $table->timestamp('created_at')->nullable();
         $table->timestamp('committed_at')->nullable();
+        // When the revision stopped being the head: the non-current age the
+        // retention policy counts from (PLAN2.D48).
+        $table->timestamp('superseded_at')->nullable();
         // The uploader's own modification time: informational, never trusted (PLAN2.D42).
         $table->timestamp('client_modified_at')->nullable();
 

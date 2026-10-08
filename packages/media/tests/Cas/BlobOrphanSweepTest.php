@@ -97,16 +97,26 @@ it('round-trip guard: НЕ канонический путь пропускае�
 // 3. tnull / snull scope — a null-tenant/storage orphan IS detected.
 // ─────────────────────────────────────────────────────────────────────────────
 it('tnull-scope: orphan с null-tenant (tenancy off) обнаруживается', function (): void {
-    // The producer path: commit with NULL tenant under tenant scope emits a "tnull"
-    // key segment — assert that's what BlobStore lays down, then orphan-detect it.
+    // The producer path: a NULL tenant under tenant scope now keeps to its drive
+    // (PLAN2.D49); legacy tnull objects must still be orphan-detected.
     $produced = app(BlobStore::class)->commit(CasTestHelpers::streamFor('producer'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), null, 'unused'));
-    expect($produced->storage_key)->toStartWith('g/');
+    expect($produced->storage_key)->toStartWith('d-unused/');
 
     $orphanKey = CasTestHelpers::seedOrphan(bytes: 'tnull orphan', scope: 'tnull', ageHours: 48);
 
     $report = app(BlobReconciler::class)->sweepOrphans(disk: 'local', graceHours: 24, prune: false);
 
     expect($orphanKey)->toStartWith('tnull/')
+        ->and($report['orphans'])->toContain($orphanKey);
+});
+
+it('off-scope: orphan отдельной загрузки (dedup off) обнаруживается', function (): void {
+    $segment = BlobScope::unshared()->segment();
+    $orphanKey = CasTestHelpers::seedOrphan(bytes: 'off orphan', scope: $segment, ageHours: 48);
+
+    $report = app(BlobReconciler::class)->sweepOrphans(disk: 'local', graceHours: 24, prune: false);
+
+    expect($orphanKey)->toStartWith($segment.'/')
         ->and($report['orphans'])->toContain($orphanKey);
 });
 

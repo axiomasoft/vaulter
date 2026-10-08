@@ -22,7 +22,6 @@ use Vaulter\Drive\Uploads\Inspection\UploadInspection;
 use Vaulter\Drive\Uploads\PreparedUpload;
 use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Enums\Drive\OnNameConflict;
 use Vaulter\Exceptions\Drive\QuotaExceededException as CoreQuotaExceededException;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Media\Configuration\MediaConfig;
@@ -47,15 +46,17 @@ use Vaulter\ValueObjects\Cas\BlobScope;
  * (content-addressed dedup) → File + FileRevision(number) + version↔blob edge
  * → file node (current_revision_id, mime, size, extension).
  *
- * Quota (§1.5 eager): the incoming size is checked against the storage's
- * quota_bytes by a conditional UPDATE WITHIN the transaction, before CAS promotion.
- * Preparation happens once outside SQL so transaction retries reuse the same bytes.
+ * Quota (§1.5 eager, PLAN2.D48): every retained revision counts with its full
+ * logical size, so the incoming size is reserved against the storage's quota_bytes
+ * by a conditional UPDATE WITHIN the transaction, before CAS promotion — whether the
+ * bytes deduplicate or not. Preparation happens once outside SQL so transaction
+ * retries reuse the same bytes.
  *
  * Two paths share one Action:
  *   - new file → create Node(kind=file) + File + FileRevision(number=1);
  *   - new version (upload onto an existing file node) → bump number, repoint
- *     current_revision_id, mark the prior head superseded, and adjust used_bytes by
- *     the SIZE DELTA (new size − previous head size), not the full size.
+ *     current_revision_id, mark the prior head superseded; the prior head stays a
+ *     retained revision, so used_bytes grows by the full new size.
  *
  * Operations authorize before this command; locked invariants remain in the Action.
  */
@@ -127,10 +128,8 @@ final readonly class IngestFileAction
         $staged = $prepared->staged;
 
         try {
-            // Revision deltas must use the locked head; a stale caller cannot reject them.
-            if (!$data->isNewVersion() && $data->onConflict !== OnNameConflict::AddRevision) {
-                $this->assertWithinQuota(data: $data, delta: $staged->sizeBytes());
-            }
+            // A fast refusal before any lock; the conditional UPDATE below is authoritative.
+            $this->assertWithinQuota(data: $data, delta: $staged->sizeBytes());
 
             $receipt = $this->database->transaction(function () use ($context, $data, $staged, $name, $parentId): IngestReceipt {
                 // Lock order: drive → nodes → file → quota → CAS, so concurrent writers never deadlock.
@@ -161,12 +160,8 @@ final readonly class IngestFileAction
                 $admissionSequence = $this->scans->next($context);
 
                 $size = $staged->sizeBytes();
-                $delta = $size - ($previousHead->size_bytes ?? 0);
-
-                if ($delta > 0) {
-                    $this->storageStore->reserveBytes(storage: $data->storage, delta: $delta);
-                } elseif ($delta < 0) {
-                    $this->storageStore->adjustUsedBytes(storage: $data->storage, delta: $delta);
+                if ($size > 0) {
+                    $this->storageStore->reserveBytes(storage: $data->storage, delta: $size);
                 }
 
                 $storageId = $data->storage->getKey();
@@ -177,7 +172,7 @@ final readonly class IngestFileAction
                 $blob = $this->blobs->commitStaged(
                     staged: $staged,
                     scope: BlobScope::forUpload(
-                        $this->mediaConfig->dedupScope(),
+                        $this->mediaConfig->dedupScope()->value,
                         $data->storage->tenant_id === null ? null : (string) $data->storage->tenant_id,
                         (string) $storageId,
                     ),
@@ -336,8 +331,8 @@ final readonly class IngestFileAction
 
     /**
      * Reject the upload BEFORE committing bytes when it would push used_bytes past
-     * quota_bytes (§1.5). A null quota is unlimited; a non-positive delta (a
-     * smaller new version) never trips the check.
+     * quota_bytes (§1.5). A null quota is unlimited; an empty upload never trips
+     * the check.
      */
     private function assertWithinQuota(IngestFileInput $data, int $delta): void
     {

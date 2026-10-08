@@ -16,6 +16,7 @@ use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Cas\Blob;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -33,9 +34,9 @@ beforeEach(function (): void {
     config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
-function initiateS3(int $totalBytes, string $name = 'multi.bin'): UploadSession
+function initiateS3(int $totalBytes, string $name = 'multi.bin', ?Drive $storage = null): UploadSession
 {
-    $storage = UploadTestHelpers::storage();
+    $storage ??= UploadTestHelpers::storage();
 
     return app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::S3Multipart,
@@ -162,12 +163,13 @@ it('abort удаляет per-part объекты и помечает aborted', f
     expect($session->refresh()->status)->toBe(UploadStatus::Aborted);
 });
 
-it('дедуп: multipart-сборка против идентичной прежней загрузки → один блоб (global)', function (): void {
-    config()->set('vaulter-media.dedup.scope', 'global');
+it('дедуп: multipart-сборка против идентичной прежней загрузки того же диска → один блоб', function (): void {
+    config()->set('vaulter-media.dedup.scope', 'drive');
     $bytes = 'shared multipart payload bytes';
+    $storage = UploadTestHelpers::storage();
 
     foreach (['a.bin', 'b.bin'] as $name) {
-        $session = initiateS3(totalBytes: strlen($bytes), name: $name);
+        $session = initiateS3(totalBytes: strlen($bytes), name: $name, storage: $storage);
         $handler = app(S3MultipartHandler::class);
         $handler->putPart($session->refresh(), partNo: 1, byteOffset: 0, chunk: UploadTestHelpers::streamFor($bytes));
         $handler->complete($session->refresh());
@@ -175,7 +177,7 @@ it('дедуп: multipart-сборка против идентичной пре�
         app(CompleteUploadAction::class)->execute(context: OperationContext::system($session->storage, 'test fixture'), session: $session->refresh());
     }
 
-    // Two file nodes + two versions, but ONE physical blob (global dedup).
+    // Two file nodes + two versions, but ONE physical blob (drive dedup).
     expect(FileRevision::query()->count())->toBe(2)
         ->and(Blob::query()->count())->toBe(1);
 });

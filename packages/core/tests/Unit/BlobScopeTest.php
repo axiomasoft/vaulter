@@ -18,12 +18,30 @@ it('retains legacy paths while sharing their numeric scope keys', function (stri
     ['snull', 'legacy:snull'], ['tnull', 'legacy:tnull'],
 ]);
 
-it('selects the host scope without coercing identifiers', function (): void {
-    expect(BlobScope::forUpload('tenant', null, 'drive')->key())->toBe('global')
+it('selects the host scope without coercing identifiers and never builds global', function (): void {
+    expect(BlobScope::forUpload('tenant', null, 'drive')->key())->toBe('drive:drive')
         ->and(BlobScope::forUpload('drive', null, 'drive')->key())->toBe('drive:drive')
         ->and(BlobScope::forUpload('storage', null, 'drive')->key())->toBe('drive:drive')
         ->and(BlobScope::forUpload('tenant', '001', 'drive')->key())->toBe('tenant:001')
-        ->and(BlobScope::forUpload('global', 'tenant', 'drive')->segment())->toBe('g');
+        ->and(fn () => BlobScope::forUpload('global', 'tenant', 'drive'))->toThrow(InvalidArgumentException::class);
+});
+
+it('gives every upload its own scope when deduplication is off', function (): void {
+    $a = BlobScope::forUpload('off', 'tenant', 'drive');
+    $b = BlobScope::forUpload('off', 'tenant', 'drive');
+
+    expect($a->key())->not->toBe($b->key())
+        ->and($a->key())->toStartWith('off:')
+        ->and($a->dedupScope())->toBe('off')
+        ->and($a->segment())->toStartWith('o-')
+        ->and(BlobScope::fromSegment($a->segment())->key())->toBe($a->key())
+        ->and($a->tenantId())->toBeNull()->and($a->storageId())->toBeNull();
+});
+
+it('still reads objects of the retired global scope', function (): void {
+    expect(BlobScope::fromSegment('g')->key())->toBe('global')
+        ->and(BlobScope::fromSegment('g')->segment())->toBe('g')
+        ->and(BlobScope::fromSegment('g')->isLegacy())->toBeFalse();
 });
 
 it('accepts canonical and legacy drive scope inputs with the same canonical identity', function (string $input): void {

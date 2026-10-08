@@ -143,6 +143,11 @@ final class Profile
         return $this;
     }
 
+    /**
+     * Shorthand for the drive policy's revision retention (PLAN2.D48): keep at most
+     * $max revisions per file, the head included — maxNoncurrentRevisions = $max − 1;
+     * null keeps every revision. The other retention settings stay as they are.
+     */
     public function revisionLimit(?int $max): static
     {
         $this->assertMutable();
@@ -150,6 +155,14 @@ final class Profile
             throw new InvalidProfileException('Revision limit must be positive or null.');
         }
         $this->revisionLimit = $max;
+        $current = $this->drive ?? new DrivePolicy;
+        $retention = $current->revisionRetention;
+        $this->drive = (new DrivePolicyBuilder($current))->revisionRetention(new RevisionRetentionPolicy(
+            maxNoncurrentRevisions: $max === null ? null : $max - 1,
+            maxNoncurrentAgeDays: $retention->maxNoncurrentAgeDays,
+            minNoncurrentAgeDays: $retention->minNoncurrentAgeDays,
+            protectPinned: $retention->protectPinned,
+        ))->build();
 
         return $this;
     }

@@ -156,9 +156,6 @@ it('дедуп: идентичная резюмируемая загрузка �
     app(UploadSessionManager::class)->markAssembled($b->refresh());
     app(CompleteUploadAction::class)->execute(context: OperationContext::system($b->storage, 'test fixture'), session: $b->refresh());
 
-    // global dedup so two storages share the blob; assert one physical blob.
-    config()->set('vaulter-media.dedup.scope', 'global');
-
     expect(Node::query()->where('kind', NodeKind::File->value)->count())->toBe(2)
         ->and(FileRevision::query()->count())->toBe(2);
 });

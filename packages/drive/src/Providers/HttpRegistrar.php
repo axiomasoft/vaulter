@@ -9,6 +9,7 @@ use Illuminate\Contracts\Foundation\Application;
 use Spatie\LaravelPackageTools\Package;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Drive\Activity\RecordsDriveActivity;
+use Vaulter\Drive\Console\PruneRevisionsCommand;
 use Vaulter\Drive\Console\PurgeTrashCommand;
 use Vaulter\Drive\Console\SweepUploadsCommand;
 use Vaulter\Drive\Webhooks\RecordsDriveOutbox;
@@ -20,6 +21,7 @@ final class HttpRegistrar
         $package
             ->hasRoute('drive')
             ->hasCommand(PurgeTrashCommand::class)
+            ->hasCommand(PruneRevisionsCommand::class)
             ->hasCommand(SweepUploadsCommand::class);
     }
 

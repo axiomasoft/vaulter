@@ -109,7 +109,7 @@ function stringStream(string $bytes)
 it('commitStaged keeps the temp file reusable across an outer SQL rollback', function (): void {
     $content = app(ContentStore::class);
     $staged = $content->stage(stringStream('reusable staged bytes'));
-    $scope = BlobScope::global();
+    $scope = BlobScope::tenant('1');
     try {
         expect(fn () => app(VaulterDatabase::class)->transaction(function () use ($staged, $scope): void {
             app(BlobStore::class)->commitStaged($staged, $scope);

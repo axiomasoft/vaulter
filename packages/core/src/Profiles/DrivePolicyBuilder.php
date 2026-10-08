@@ -21,6 +21,8 @@ final class DrivePolicyBuilder
 
     private ?int $maxShareLinkTtlDays;
 
+    private RevisionRetentionPolicy $revisionRetention;
+
     public function __construct(DrivePolicy $from = new DrivePolicy)
     {
         $this->namePolicy = $from->namePolicy;
@@ -30,6 +32,7 @@ final class DrivePolicyBuilder
         $this->maxPropertiesBytes = $from->maxPropertiesBytes;
         $this->maxPropertyCount = $from->maxPropertyCount;
         $this->maxShareLinkTtlDays = $from->maxShareLinkTtlDays;
+        $this->revisionRetention = $from->revisionRetention;
     }
 
     public function namePolicy(string $key): static
@@ -81,6 +84,13 @@ final class DrivePolicyBuilder
         return $this;
     }
 
+    public function revisionRetention(RevisionRetentionPolicy $policy): static
+    {
+        $this->revisionRetention = $policy;
+
+        return $this;
+    }
+
     public function build(): DrivePolicy
     {
         return new DrivePolicy(
@@ -91,6 +101,7 @@ final class DrivePolicyBuilder
             maxPropertiesBytes: $this->maxPropertiesBytes,
             maxPropertyCount: $this->maxPropertyCount,
             maxShareLinkTtlDays: $this->maxShareLinkTtlDays,
+            revisionRetention: $this->revisionRetention,
         );
     }
 }

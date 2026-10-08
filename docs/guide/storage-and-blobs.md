@@ -74,8 +74,8 @@ A blob is just metadata. The `v_blobs` row (model `Vaulter\Models\Cas\Blob`) car
 | `storage_key` | The scope-qualified path of the object — `"<scope>/ab/<sha256>"`. |
 | `status` | Lifecycle state (see [Blob lifecycle](#blob-lifecycle)). |
 | `ref_count` | A **reconciled cache** of the live edge count — *not* the liveness truth. |
-| `dedup_scope` | `global` \| `tenant` \| `storage` — the boundary the address is unique within. |
-| `scope_key` | Lossless `global`, `tenant:{id}` or `drive:{id}`; unique together with `sha256`. |
+| `dedup_scope` | `tenant` \| `drive` \| `off` (`global` on blobs not yet repaired) — the boundary the address is unique within. |
+| `scope_key` | Lossless `tenant:{id}`, `drive:{id}` or `off:{ulid}`; unique together with `sha256`. |
 | `tenant_id` / `storage_id` | Informational scope IDs; `scope_key` owns deduplication. |
 | `first_seen_at` / `committed_at` / `delete_after_at` | Staging, commit, and GC-grace timestamps. |
 
@@ -98,9 +98,12 @@ resolve to the same physical object.
 
 The scope segment is derived from the dedup scope:
 
-- `global` → `g`
-- `tenant` → `t-{id}`, or `g` when there is no tenant
-- `storage` → `d-{id}`
+- `tenant` → `t-{id}`, or `d-{drive id}` when the drive has no tenant
+- `drive` → `d-{id}`
+- `off` → `o-{ulid}`, a scope of its own for every upload
+
+Objects of the retired install-wide scope (`g`, and the legacy `global` segment) stay readable
+until `vaulter:blobs:repair-scopes` moves them.
 
 `BlobScope` preserves string IDs, including UUIDs, ULIDs and leading zeroes.
 Identifiers contain 1–96 bytes. An ID matching `[A-Za-z0-9_-]{1,64}` is used verbatim;
@@ -132,15 +135,22 @@ The dedup scope decides the boundary a content address is unique within:
 ```php
 // config/vaulter-media.php
 'dedup' => [
-    'scope' => env('VAULTER_DEDUP_SCOPE', 'tenant'), // global|tenant|drive
+    'scope' => env('VAULTER_DEDUP_SCOPE', 'tenant'), // tenant|drive|off
 ],
 ```
 
 | Scope | Uniqueness | Effect |
 |---|---|---|
-| `global` | `UNIQUE (scope_key, sha256)` | One physical object per `sha256` across the whole install. |
-| `tenant` | `UNIQUE (scope_key, sha256)` | One object per tenant — no cross-tenant existence leak. **Default.** |
-| `storage` | `UNIQUE (scope_key, sha256)` | One object per storage container. |
+| `tenant` | `UNIQUE (scope_key, sha256)` | One object per tenant — no cross-tenant existence leak; a drive without a tenant keeps to itself. **Default.** |
+| `drive` | `UNIQUE (scope_key, sha256)` | One object per drive (`storage` is read as `drive`). |
+| `off` | `UNIQUE (scope_key, sha256)` | Every upload is stored on its own. |
+
+Deduplication never crosses a tenant (PLAN2.D49): an install-wide scope lets one tenant
+learn that another stored a given file. The former `global` setting is refused at boot with
+`InvalidConfigurationException`; existing `global` blobs are moved to the tenant (or, without
+a tenant, the drive) of every referencing revision by
+`php artisan vaulter:blobs:repair-scopes --dry-run` then `--execute`. Upload responses and the
+quota never depend on whether bytes deduplicated.
 
 `BlobScope::forUpload()` selects a `scope_key` from this setting. The schema always
 uses `UNIQUE(scope_key, sha256)`; scope changes do not alter that index shape.
@@ -210,14 +220,16 @@ $stream = $blobStore->read($blob);         // resource|null over the canonical b
 In the Drive, `IngestFileAction` prepares and hashes bytes through
 `ContentStore::stage()` before entering its SQL transaction. Inside the transaction,
 locks follow **drive → nodes by id → file aggregate → quota → CAS**. A revision
-reads its previous head and `version_count` from the locked file; its new number is
-`version_count + 1` and its quota delta is new size minus that head's size.
+reads its previous head and `revision_count` from the locked file; its new number is
+`revision_count + 1` and it reserves its full size: every retained revision counts
+against the quota, without a dedup discount (PLAN2.D48).
 
 `DriveStoreRepository::reserveBytes()` applies a conditional atomic UPDATE:
 `used_bytes = used_bytes + delta` only when the quota is unlimited or the result
 fits `quota_bytes`. A failed reservation throws `QuotaExceededException` and rolls
 back all metadata. Copies reserve the sum of their subtree's heads in one UPDATE.
-`used_bytes` includes heads in the trash; only purge frees those bytes.
+`used_bytes` includes the revisions of trashed files; deleting or pruning a revision and
+purging a file free bytes.
 
 The upload then calls `BlobStore::commitStaged($staged, $scope, $disk)`, creates the
 file/version/edge and updates the head. `commitStaged()` leaves the staged object

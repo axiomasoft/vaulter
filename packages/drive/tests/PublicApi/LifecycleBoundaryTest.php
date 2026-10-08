@@ -167,7 +167,8 @@ it('copies and restores immutable payload identity edge attributes and metadata 
         ->and($original->fresh()->getAttributes())->toBe($originalBeforeRestore)
         ->and($node->refresh()->sequence)->toBe(2)
         ->and($copy->refresh()->sequence)->toBe(0)
-        ->and($this->system->model()->refresh()->used_bytes)->toBe(12);
+        // Every retained revision counts (PLAN2.D48): 6 + 6 (copy) + 21 + 6 (restored copy).
+        ->and($this->system->model()->refresh()->used_bytes)->toBe(39);
 });
 
 it('uses fresh destination admission without inheriting a legacy scan exemption', function (): void {

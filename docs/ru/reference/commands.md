@@ -18,6 +18,7 @@ spatie/laravel-package-tools) плюс восемь команд пакета, �
 | `vaulter:blobs:gc` | Двухфазная, устойчивая к гонкам сборка мусора блобов |
 | `vaulter:blobs:reconcile` | Пересчитать `ref_count` блобов и сообщить о висячих строках |
 | `vaulter:purge-trash` | Окончательно удалить узлы из корзины по истечении срока хранения |
+| `vaulter:revisions:prune` | Удалить нетекущие ревизии файлов сверх политики ретеншна профиля |
 | `vaulter:sweep-uploads` | Прервать и подчистить протухшие сессии резюмируемой загрузки |
 | `vaulter:relay-outbox` | Передать ожидающие события outbox на эндпоинты вебхуков |
 | `vaulter:retry-webhooks` | Повторно отправить доставки вебхуков, у которых истёк backoff |
@@ -125,6 +126,28 @@ php artisan vaulter:purge-trash --days=7  # своё окно хранения
 ```
 
 См. [Использование → Поиск и корзина](/ru/guide/search-trash).
+
+## `vaulter:revisions:prune`
+
+Применить `RevisionRetentionPolicy` профиля каждого диска (PLAN2.D48): удалить нетекущие ревизии
+каждого файла — в том числе файлов в корзине — сверх `maxNoncurrentRevisions` или старше
+`maxNoncurrentAgeDays`, но никогда не голову, не закреплённую ревизию и не ревизию, замещённую
+менее `minNoncurrentAgeDays` назад. Каждое удаление отцепляет рёбра блобов (байты становятся
+доступны для GC) и освобождает квоту. Диск, на котором произошла ошибка, пишется в лог, остальные
+обрабатываются.
+
+```
+vaulter:revisions:prune
+    {--drive=*}  Только эти id дисков
+    {--dry-run}  Показать, что было бы удалено
+```
+
+```bash
+php artisan vaulter:revisions:prune --dry-run
+php artisan vaulter:revisions:prune          # планируйте ежедневно
+```
+
+См. [Использование → Загрузки → Ретеншн ревизий](/ru/guide/uploads#квота-и-ретеншн-ревизий).
 
 ## `vaulter:sweep-uploads`
 

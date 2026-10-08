@@ -53,16 +53,26 @@ final readonly class FileContentLifecycle implements NodeContentLifecycle
         }
     }
 
-    /** @param iterable<array-key, Node> $sources */
-    public function preparePurge(iterable $sources): void
+    /**
+     * Lock the files (F) and every revision (R) of the file nodes about to be purged and
+     * return the bytes they hold against the quota: all retained revisions, not only
+     * the heads (PLAN2.D48).
+     *
+     * @param iterable<array-key, Node> $sources
+     */
+    public function preparePurge(iterable $sources): int
     {
         $pairs = $this->lockFiles($sources);
         if ($pairs === []) {
-            return;
+            return 0;
         }
         $ids = array_map(fn (array $pair): int|string => $pair[1]->id, $pairs);
-        $pairs[0][1]->versions()->getModel()->newQuery()->whereIn('file_id', $ids)
-            ->orderBy('id')->lockForUpdate()->get();
+        $bytes = 0;
+        foreach ($pairs[0][1]->versions()->getModel()->newQuery()->whereIn('file_id', $ids)->orderBy('id')->lockForUpdate()->get() as $revision) {
+            $bytes += $revision->size_bytes;
+        }
+
+        return $bytes;
     }
 
     /** @param iterable<array-key, Node> $sources

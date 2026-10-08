@@ -49,6 +49,7 @@ use Vaulter\Profiles\DrivePolicyBuilder;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileProvider;
 use Vaulter\Profiles\ProfileRegistry;
+use Vaulter\Profiles\RevisionRetentionPolicy;
 use Vaulter\Profiles\UploadPolicy;
 use Vaulter\Schema\HostKeyColumns;
 use Vaulter\Schema\VaulterSchema;
@@ -333,7 +334,7 @@ test('vaulter-core public API surface matches the frozen golden (VLT-REL P2.2)',
     }
 
     $driveValues = array_filter(vaulterSnapshotContracts(__DIR__.'/../../src/Data/Drive', 'Vaulter\Data\Drive'), static fn (string $class): bool => $class !== NodePage::class);
-    foreach (array_merge($driveValues, [GrantInput::class, Role::class, Decision::class, GrantSet::class, AccessExplanation::class, AccessSource::class, UnknownRoleException::class, ShareLinkInput::class, MintedShareLink::class, AccessOperations::class, ShareOperations::class, ActivityOperations::class, AccessScope::class, OwnerRef::class, Actor::class, ActorRef::class, OperationContext::class, NodeLocator::class, OperationGuard::class, MissingActorException::class, ProfileRestrictionException::class, Profile::class, ProfileRegistry::class, ProfileProvider::class, UploadPolicy::class, DrivePolicy::class, DrivePolicyBuilder::class, NamePolicy::class, PortableNamePolicy::class, PermissiveNamePolicy::class, ScanPolicySpec::class]) as $class) {
+    foreach (array_merge($driveValues, [GrantInput::class, Role::class, Decision::class, GrantSet::class, AccessExplanation::class, AccessSource::class, UnknownRoleException::class, ShareLinkInput::class, MintedShareLink::class, AccessOperations::class, ShareOperations::class, ActivityOperations::class, AccessScope::class, OwnerRef::class, Actor::class, ActorRef::class, OperationContext::class, NodeLocator::class, OperationGuard::class, MissingActorException::class, ProfileRestrictionException::class, Profile::class, ProfileRegistry::class, ProfileProvider::class, UploadPolicy::class, DrivePolicy::class, DrivePolicyBuilder::class, RevisionRetentionPolicy::class, NamePolicy::class, PortableNamePolicy::class, PermissiveNamePolicy::class, ScanPolicySpec::class]) as $class) {
         $reflection = new ReflectionClass($class);
         $properties = [];
         foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {

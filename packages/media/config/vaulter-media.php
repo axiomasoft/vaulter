@@ -8,6 +8,7 @@ use Vaulter\Media\Cas\Sha256ContentStore;
 
 return [
     'disk' => env('VAULTER_DISK', 'local'),
+    // tenant (default) | drive | off — identical bytes are never shared across tenants.
     'dedup' => ['scope' => env('VAULTER_DEDUP_SCOPE', 'tenant')],
     'gc' => [
         'grace_hours' => env('VAULTER_GC_GRACE_HOURS', 24),

@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace Vaulter\ValueObjects\Cas;
 
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 
+/**
+ * The deduplication scope of a CAS blob: identical bytes share one blob only inside
+ * one tenant or one drive (PLAN2.D49). 'off' gives every upload a scope of its own.
+ * Uploads never build the retired install-wide 'global' scope; it is still parsed so
+ * existing objects stay readable until vaulter:blobs:repair-scopes moves them.
+ */
 final readonly class BlobScope
 {
     private function __construct(private string $kind, private ?string $id = null, private ?string $legacySegment = null) {}
-
-    public static function global(): self
-    {
-        return new self('global');
-    }
 
     public static function tenant(string $id): self
     {
@@ -23,6 +25,12 @@ final readonly class BlobScope
     public static function drive(string $id): self
     {
         return self::identified('drive', $id);
+    }
+
+    /** A scope of its own for one upload: no other commit can deduplicate into it. */
+    public static function unshared(): self
+    {
+        return self::identified('off', (string) Str::ulid());
     }
 
     public static function legacy(string $segment): self
@@ -39,13 +47,17 @@ final readonly class BlobScope
         return new self($matches[1] === 's' ? 'drive' : 'tenant', $matches[2] === 'null' ? null : $matches[2], $segment);
     }
 
+    /**
+     * The scope a new upload commits into. A drive without a tenant deduplicates
+     * within itself under 'tenant': there is no tenant boundary to share.
+     */
     public static function forUpload(string $dedupScope, ?string $tenantId, string $storageId): self
     {
         return match ($dedupScope) {
-            'global' => self::global(),
-            'tenant' => $tenantId === null ? self::global() : self::tenant($tenantId),
+            'tenant' => $tenantId === null ? self::drive($storageId) : self::tenant($tenantId),
             'drive', 'storage' => self::drive($storageId),
-            default => throw new InvalidArgumentException('Unknown CAS dedup scope.'),
+            'off' => self::unshared(),
+            default => throw new InvalidArgumentException('Unknown CAS dedup scope "'.$dedupScope.'"; use tenant, drive or off.'),
         };
     }
 
@@ -72,16 +84,21 @@ final readonly class BlobScope
         $encoded = preg_match('/^[A-Za-z0-9_-]{1,64}$/D', $id) === 1
             ? $id : '~'.rtrim(strtr(base64_encode($id), '+/', '-_'), '=');
 
-        return ($this->kind === 'drive' ? 'd-' : 't-').$encoded;
+        return match ($this->kind) {
+            'drive' => 'd-',
+            'off' => 'o-',
+            default => 't-',
+        }.$encoded;
     }
 
     public static function fromSegment(string $segment): self
     {
         if ($segment === 'g') {
-            return self::global();
+            // Objects of the retired install-wide scope, readable until repaired.
+            return new self('global');
         }
 
-        if (preg_match('/^([td])-(~?[A-Za-z0-9_-]{1,128})$/D', $segment, $matches) !== 1) {
+        if (preg_match('/^([tdo])-(~?[A-Za-z0-9_-]{1,128})$/D', $segment, $matches) !== 1) {
             return self::legacy($segment);
         }
 
@@ -91,7 +108,11 @@ final readonly class BlobScope
             throw new InvalidArgumentException('Invalid encoded CAS scope identifier.');
         }
 
-        $scope = $matches[1] === 'd' ? self::drive($id) : self::tenant($id);
+        $scope = self::identified(match ($matches[1]) {
+            'd' => 'drive',
+            'o' => 'off',
+            default => 'tenant',
+        }, $id);
         if ($scope->segment() !== $segment) {
             throw new InvalidArgumentException('Noncanonical CAS scope segment.');
         }

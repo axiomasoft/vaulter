@@ -306,7 +306,7 @@ it("locks a new version's target before the CAS lock", function (): void {
     expect($nodeLock)->not->toBeNull()
         ->and($blobWork)->not->toBeNull()
         ->and($nodeLock)->toBeLessThan($blobWork)
-        ->and($drive->model()->refresh()->used_bytes)->toBe(8);
+        ->and($drive->model()->refresh()->used_bytes)->toBe(2 + 8);
 });
 
 it('refuses a new version for a node deleted after it was loaded', function (): void {

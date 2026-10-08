@@ -88,7 +88,7 @@ it('новая версия: бамп number, перенаведение head, �
         ->and($file->currentRevision->number)->toBe(2);
 });
 
-it('новая версия корректирует used_bytes на дельту размера', function (): void {
+it('новая версия добавляет к used_bytes свой полный размер', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('aaaa'), 'doc.txt')); // 4 bytes
@@ -96,8 +96,8 @@ it('новая версия корректирует used_bytes на дельт�
 
     $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('aaaaaaaaaa'), 'doc.txt')); // 10 bytes
 
-    // delta = 10 − 4 = 6 → total 10 (the live head size, not the sum of versions).
-    expect($drive->model()->refresh()->used_bytes)->toBe(10);
+    // Every retained revision counts (PLAN2.D48): 4 + 10.
+    expect($drive->model()->refresh()->used_bytes)->toBe(14);
 });
 
 it('диспатчит FileUploaded для нового файла и NodeVersionCommitted для версии', function (): void {

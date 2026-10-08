@@ -20,7 +20,7 @@ beforeEach(function (): void {
     Storage::fake('local');
 });
 
-it('V03 serializes revisions and accounts for their actual preceding heads', function (): void {
+it('V03 serializes revisions and accounts for every retained revision', function (): void {
     $drive = DriveTestHelpers::drive();
     $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('old'), 'a.txt'));
     // Both children inherit revision 1, even after the winner commits revision 2.
@@ -38,7 +38,8 @@ it('V03 serializes revisions and accounts for their actual preceding heads', fun
         ->and($file->revision_count)->toBe(3)
         ->and($head->number)->toBe(3)
         ->and($node->refresh()->file()->value('current_revision_id'))->toBe($head->id)
-        ->and($drive->model()->refresh()->used_bytes)->toBe($head->size_bytes)
+        // Every retained revision counts (PLAN2.D48).
+        ->and($drive->model()->refresh()->used_bytes)->toBe(strlen('old') + strlen('short') + strlen('a much longer head'))
         ->and($node->size_bytes)->toBe($head->size_bytes);
 });
 

@@ -9,8 +9,9 @@ use Vaulter\Models\Cas\Blob;
 use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
- * The dedup scope (D18 / H.3) decides what shares one physical object: global
- * (sha256 alone), tenant (tenant_id + sha256) or storage (drive_id + sha256).
+ * The dedup scope (D18 / H.3, PLAN2.D49) decides what shares one physical object:
+ * tenant (tenant_id + sha256; a drive without a tenant keeps to itself), storage
+ * (drive_id + sha256) or off (nothing). Nothing is shared across tenants.
  * The scope-qualified storage_key keeps two scopes from ever colliding on one
  * object, so one scope's GC can never touch another's bytes.
  */
@@ -18,16 +19,33 @@ beforeEach(function (): void {
     Storage::fake('local');
 });
 
-it('global: одинаковые байты в разных тенантах → ОДИН блоб', function (): void {
-    config()->set('vaulter-media.dedup.scope', 'global');
+it('global больше не строится: нет общей области между тенантами', function (): void {
+    expect(fn () => BlobScope::forUpload('global', '1', '10'))->toThrow(InvalidArgumentException::class);
+});
+
+it('tenant без тенанта: одинаковые байты в разных дисках → ДВА блоба', function (): void {
     $store = app(BlobStore::class);
 
-    $a = $store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
-    $b = $store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 2, 'unused'));
+    $a = $store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload('tenant', null, (string) 10));
+    $b = $store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload('tenant', null, (string) 20));
+    $c = $store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload('tenant', null, (string) 10));
 
-    expect($b->getKey())->toBe($a->getKey())
-        ->and(Blob::query()->count())->toBe(1)
-        ->and($a->storage_key)->toStartWith('g/');
+    expect($b->getKey())->not->toBe($a->getKey())
+        ->and($c->getKey())->toBe($a->getKey())
+        ->and($a->storage_key)->toStartWith('d-10/')
+        ->and($b->storage_key)->toStartWith('d-20/');
+});
+
+it('off: одинаковые байты одного диска → ДВА блоба', function (): void {
+    $store = app(BlobStore::class);
+
+    $a = $store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload('off', '1', (string) 10));
+    $b = $store->commit(CasTestHelpers::streamFor('shared'), scope: BlobScope::forUpload('off', '1', (string) 10));
+
+    expect($b->getKey())->not->toBe($a->getKey())
+        ->and($a->dedup_scope)->toBe('off')
+        ->and($a->storage_key)->toStartWith('o-')
+        ->and(Storage::disk('local')->allFiles())->toHaveCount(2);
 });
 
 it('tenant: одинаковые байты в разных тенантах → ДВА блоба, два объекта', function (): void {

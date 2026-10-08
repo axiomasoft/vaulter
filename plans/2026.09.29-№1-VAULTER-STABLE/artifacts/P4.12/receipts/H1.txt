@@ -1,0 +1,39 @@
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":1595974,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1595976}]},{"process_pid":1595975,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1595977}]}],"timed_out":[]}
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":1597813,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1597815}]},{"process_pid":1597814,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1597816}]}],"timed_out":[]}
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Concurrency\NodeSequenceBoundaryTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit SEC-R18 forks expected 7 rename against content with one sequen[39m[90m…[39m [90m10.97s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-R19-retry preserves the original expectation after serializa[39m[90m…[39m [90m9.20s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-REV-RECEIPT returns its own committed revision when a later[39m[90m… [39m [90m9.45s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-CONFLICT-RACE turns two locked same-name uploads into one no[39m[90m…[39m [90m9.53s[39m  
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":1598472,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1598473}]},{"process_pid":1598474,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1598475}]}],"timed_out":[]}
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":1598517,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1598519}]},{"process_pid":1598518,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1598520}]}],"timed_out":[]}
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":1598565,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1598567}]},{"process_pid":1598568,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1598569}]}],"timed_out":[]}
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":1598586,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1598588}]},{"process_pid":1598587,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1598589}]}],"timed_out":[]}
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":1598640,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1598642}]},{"process_pid":1598641,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1598643}]}],"timed_out":[]}
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":1598663,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1598665}]},{"process_pid":1598664,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1598666}]}],"timed_out":[]}
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":1598714,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1598716}]},{"process_pid":1598715,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1598717}]}],"timed_out":[]}
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":1598758,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1598764}]},{"process_pid":1598765,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1598766}]}],"timed_out":[]}
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":1598844,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1598846}]},{"process_pid":1598845,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1598847}]}],"timed_out":[]}
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":1598888,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1598889}]},{"process_pid":1598890,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1598891}]}],"timed_out":[]}
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":1599485,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1599487}]},{"process_pid":1599486,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1599488}]}],"timed_out":[]}
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Concurrency\LockOrderRaceTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit V21 completes ten overlapping move/upload races with an acyclic[39m[90m…[39m [90m13.45s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit copy and dedup upload finish with overlapping quota operations a[39m[90m…[39m [90m8.46s[39m  
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":1600038,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1600039}]},{"process_pid":1600040,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1600042}]}],"timed_out":[]}
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Concurrency\QuotaRaceTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit V02 admits exactly one 8 MiB upload into 10 MiB of free quota[39m[90m    [39m [90m7.98s[39m  
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":1600885,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1600886}]},{"process_pid":1600887,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1600888}]}],"timed_out":[]}
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":1601695,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1601698}]},{"process_pid":1601699,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1601700}]}],"timed_out":[]}
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":1602327,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1602329}]},{"process_pid":1602328,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1602330}]}],"timed_out":[]}
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Concurrency\CompleteUploadRaceTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit V19 two complete calls commit one node revision edge quota updat[39m[90m…[39m [90m7.68s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-CLEANUP-commit-kill surviving independent worker discovers d[39m[90m…[39m [90m7.54s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-CLEANUP-mutex holds the session lock through the outer commi[39m[90m…[39m [90m8.50s[39m  
+
+  [90mTests:[39m    [32;1m10 passed[39;22m[90m (560 assertions)[39m
+  [90mDuration:[39m [39m92.90s[39m
+

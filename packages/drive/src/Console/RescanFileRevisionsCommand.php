@@ -110,12 +110,12 @@ final class RescanFileRevisionsCommand extends Command
                     $this->withinMaintenanceScope = false;
                 }
             }
-            $activate = (bool) $this->option('activate-policy');
+            $activating = (bool) $this->option('activate-policy');
             if (($this->option('rescan') && $this->option('retry-failed'))
-                || ($activate && ($this->option('rescan') || $this->option('retry-failed') || $this->revisionKeys() !== []))) {
+                || ($activating && ($this->option('rescan') || $this->option('retry-failed') || $this->revisionKeys() !== []))) {
                 throw new InvalidArgumentException('Contradictory scan flags.');
             }
-            if (!$activate) {
+            if (!$activating) {
                 if (!app()->bound(ContentScanner::class)) {
                     throw new InvalidArgumentException('Rescan requires a configured scanner.');
                 }
@@ -126,7 +126,7 @@ final class RescanFileRevisionsCommand extends Command
                 throw new InvalidArgumentException('Request ID must be a UUIDv4.');
             }
             $request = strtolower($request);
-            $base = ['version' => 1, 'request_id' => $request, 'mode' => $activate ? 'activate' : ($this->option('rescan') ? 'rescan' : ($this->option('retry-failed') ? 'retry' : 'ensure')),
+            $base = ['version' => 1, 'request_id' => $request, 'mode' => $activating ? 'activate' : ($this->option('rescan') ? 'rescan' : ($this->option('retry-failed') ? 'retry' : 'ensure')),
                 'tenant' => $scope['tenant'], 'drive' => $scope['drive'], 'all_tenants' => $scope['all'], 'filters' => $this->revisionKeys(), 'dry_run' => (bool) $this->option('dry-run'), 'spec_keys' => []];
             $drives = self::drives($scope);
             foreach (app(ProfileRegistry::class)->all() as $profile) {
@@ -144,7 +144,7 @@ final class RescanFileRevisionsCommand extends Command
                         throw new InvalidArgumentException('Cursor scope or policy changed.');
                     }
                 }
-                $drives->where('id', $activate || $cursor['last_revision_id'] === null ? '>' : '>=', $cursor['last_drive_id']);
+                $drives->where('id', $activating || $cursor['last_revision_id'] === null ? '>' : '>=', $cursor['last_drive_id']);
             }
             $revisionClass = app(VaulterConfig::class)->model('file_revision');
             // Validate every explicit key before any mutation; keys never derive tenant privilege.
@@ -160,7 +160,7 @@ final class RescanFileRevisionsCommand extends Command
                 if ($out['scanned'] >= $scope['limit']) {
                     break;
                 }
-                if ($activate) {
+                if ($activating) {
                     $out['scanned']++;
                     if (!$out['dry_run']) {
                         $database->transaction(function () use ($database, $drive, $policies, $activate, $scope): void {

@@ -137,7 +137,7 @@ preview/download и обработчики установленного Document
 ```php
 // config/vaulter-media.php
 'disk' => env('VAULTER_DISK', 'local'),
-'dedup' => ['scope' => env('VAULTER_DEDUP_SCOPE', 'tenant')], // global | tenant | drive
+'dedup' => ['scope' => env('VAULTER_DEDUP_SCOPE', 'tenant')], // tenant | drive | off
 'gc' => ['grace_hours' => 24, 'orphan_grace_hours' => 24],
 'content_store' => \Vaulter\Media\Cas\Sha256ContentStore::class,
 'storage_driver' => \Vaulter\Media\Cas\FlysystemStorageDriver::class,
@@ -146,7 +146,9 @@ preview/download и обработчики установленного Document
 
 CAS-бакет должен быть без версионирования: удалением управляет двухфазный GC.
 Минимальное окно GC — один час. Каноническая область дедупликации — `drive`
-(раньше `storage`). Дедупликация использует сохранённый `scope_key`; смена области
+(раньше `storage`). `global` удалён (PLAN2.D49): провайдер отказывает при загрузке с
+`InvalidConfigurationException`; существующие глобальные блобы переносит
+`vaulter:blobs:repair-scopes`. Дедупликация использует сохранённый `scope_key`; смена области
 сохраняет старые блобы и влияет на новые загрузки.
 См. [Хранилище и блобы](/ru/guide/storage-and-blobs).
 

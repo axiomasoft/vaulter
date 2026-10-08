@@ -36,8 +36,8 @@ function storageKeyIndexColumns(): array
     return $indexes[$name]['columns'];
 }
 
-it('global scope → UNIQUE (scope_key, sha256)', function (): void {
-    config()->set('vaulter-media.dedup.scope', 'global');
+it('off scope → UNIQUE (scope_key, sha256)', function (): void {
+    config()->set('vaulter-media.dedup.scope', 'off');
     rebuildBlobsTable();
 
     expect(dedupIndexColumns())->toBe(['scope_key', 'sha256']);

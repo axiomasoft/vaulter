@@ -48,7 +48,7 @@ final class DriveSchemaAssertions
                 'id', 'tenant_id', 'file_id', 'number', 'blob_id',
                 'manifest_blob_id', 'sha256', 'size_bytes', 'mime_type',
                 'original_name', 'status', 'keep_forever', 'created_by',
-                'created_at', 'committed_at', 'client_modified_at',
+                'created_at', 'committed_at', 'superseded_at', 'client_modified_at',
             ]],
             ['v_file_revision_blobs', [
                 'file_revision_id', 'blob_id', 'role', 'ordinal', 'offset_bytes',

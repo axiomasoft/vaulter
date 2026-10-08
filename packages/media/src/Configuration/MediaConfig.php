@@ -24,15 +24,24 @@ final readonly class MediaConfig
         return is_string($value) && $value !== '' ? $value : 'local';
     }
 
-    public function dedupScope(): string
+    /**
+     * vaulter-media.dedup.scope: tenant (default), drive or off; 'storage' is read as
+     * drive. The install-wide 'global' scope was removed (PLAN2.D49).
+     */
+    public function dedupScope(): DedupScope
     {
         $value = $this->config->get(key: 'vaulter-media.dedup.scope', default: 'tenant');
 
         if ($value === 'storage') {
             $value = 'drive';
         }
+        if ($value === 'global') {
+            throw new InvalidConfigurationException('[Vaulter] vaulter-media.dedup.scope "global" was removed: identical files must not be shared across tenants. '
+                .'Fix: set it to tenant (default), drive or off, then run php artisan vaulter:blobs:repair-scopes --dry-run and --execute to move existing global blobs.');
+        }
 
-        return in_array($value, ['global', 'tenant', 'drive'], strict: true) ? $value : 'tenant';
+        return (is_string($value) ? DedupScope::tryFrom($value) : null)
+            ?? throw new InvalidConfigurationException('[Vaulter] vaulter-media.dedup.scope must be tenant, drive or off.');
     }
 
     public function gcGraceHours(int $override = 0): int

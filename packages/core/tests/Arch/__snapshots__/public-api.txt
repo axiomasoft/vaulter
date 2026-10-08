@@ -92,9 +92,11 @@ Vaulter\Contracts\Drive\DriveHandleFactory
 
 Vaulter\Contracts\Drive\FileOperations
   addRevision(\Vaulter\Models\Drive\Node|int|string $file, \Vaulter\Data\Drive\UploadSource $source, ?\Vaulter\Data\Drive\RevisionOptions $options = null): \Vaulter\Models\Drive\FileRevision
+  deleteRevision(\Vaulter\Models\Drive\Node|int|string $file, \Vaulter\Models\Drive\FileRevision|int|string $revision): void
   read(\Vaulter\Models\Drive\Node|int|string $file, \Vaulter\Models\Drive\FileRevision|int|null|string $revision = null): \Vaulter\Data\Drive\FileStream
   restoreRevision(\Vaulter\Models\Drive\Node|int|string $file, \Vaulter\Models\Drive\FileRevision|int|string $revision): \Vaulter\Models\Drive\FileRevision
   revisions(\Vaulter\Models\Drive\Node|int|string $file, ?\Vaulter\Data\Drive\ListOptions $options = null): \Illuminate\Pagination\CursorPaginator
+  setRevisionRetention(\Vaulter\Models\Drive\Node|int|string $file, \Vaulter\Models\Drive\FileRevision|int|string $revision, bool $keepForever): \Vaulter\Models\Drive\FileRevision
   upload(\Vaulter\Data\Drive\UploadSource $source, ?\Vaulter\Data\Drive\UploadOptions $options = null): \Vaulter\Models\Drive\Node
 
 Vaulter\Contracts\Drive\FolderOperations
@@ -684,10 +686,11 @@ Vaulter\Profiles\UploadPolicy
   readonly array $blockedExtensions
 
 Vaulter\Profiles\DrivePolicy
-  __construct(string $namePolicy = Vaulter\Naming\PortableNamePolicy::KEY, int $maxFolderDepth = 100, int $maxFolderChildren = 10000, ?int $maxFileBytes = null, int $maxPropertiesBytes = 16384, int $maxPropertyCount = 100, ?int $maxShareLinkTtlDays = null)
+  __construct(string $namePolicy = Vaulter\Naming\PortableNamePolicy::KEY, int $maxFolderDepth = 100, int $maxFolderChildren = 10000, ?int $maxFileBytes = null, int $maxPropertiesBytes = 16384, int $maxPropertyCount = 100, ?int $maxShareLinkTtlDays = null, \Vaulter\Profiles\RevisionRetentionPolicy $revisionRetention = Vaulter\Profiles\RevisionRetentionPolicy)
   names(): \Vaulter\Naming\NamePolicy
   readonly ?int $maxFileBytes
   readonly ?int $maxShareLinkTtlDays
+  readonly \Vaulter\Profiles\RevisionRetentionPolicy $revisionRetention
   readonly int $maxFolderChildren
   readonly int $maxFolderDepth
   readonly int $maxPropertiesBytes
@@ -704,6 +707,15 @@ Vaulter\Profiles\DrivePolicyBuilder
   maxPropertyCount(int $count): \static
   maxShareLinkTtlDays(?int $days): \static
   namePolicy(string $key): \static
+  revisionRetention(\Vaulter\Profiles\RevisionRetentionPolicy $policy): \static
+
+Vaulter\Profiles\RevisionRetentionPolicy
+  __construct(?int $maxNoncurrentRevisions = 100, ?int $maxNoncurrentAgeDays = null, int $minNoncurrentAgeDays = 7, bool $protectPinned = true)
+  prunes(): bool
+  readonly ?int $maxNoncurrentAgeDays
+  readonly ?int $maxNoncurrentRevisions
+  readonly bool $protectPinned
+  readonly int $minNoncurrentAgeDays
 
 Vaulter\Naming\NamePolicy
   apply(string $name): string
@@ -802,7 +814,6 @@ Vaulter\ValueObjects\Cas\BlobScope
   drive(string $id): \self
   forUpload(string $dedupScope, ?string $tenantId, string $storageId): \self
   fromSegment(string $segment): \self
-  global(): \self
   isLegacy(): bool
   key(): string
   legacy(string $segment): \self
@@ -810,6 +821,7 @@ Vaulter\ValueObjects\Cas\BlobScope
   storageId(): ?string
   tenant(string $id): \self
   tenantId(): ?string
+  unshared(): \self
 
 Vaulter\Schema\HostKeyColumns
   add(\Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable, bool $index): void

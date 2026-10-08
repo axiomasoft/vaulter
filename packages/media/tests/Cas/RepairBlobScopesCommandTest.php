@@ -65,13 +65,14 @@ it('splits mixed storage edges without losing bytes and resumes a partial failur
     expect(array_filter($entries, static fn ($entry): bool => $entry['action'] === 'move' && $entry['edges'] === 1))->not->toBe([]);
 })->with([false, true]);
 
-it('uses global for a host without tenants and reports unreferenced and corrupt bytes', function (): void {
+it('moves to the drive for a host without tenants and reports unreferenced and corrupt bytes', function (): void {
     $store = app(BlobStore::class);
     $old = $store->commit(CasTestHelpers::streamFor('host legacy'), BlobScope::legacy('tnull'));
     $version = CasTestHelpers::makeVersion();
     $store->attach($version, $old);
     $this->artisan('vaulter:blobs:repair-scopes', ['--execute' => true])->assertSuccessful();
-    expect(Blob::query()->where('scope_key', 'global')->count())->toBe(1);
+    expect(Blob::query()->where('scope_key', 'drive:'.$version->file->node->storage->getKey())->count())->toBe(1)
+        ->and(Blob::query()->where('scope_key', 'global')->count())->toBe(0);
     $this->artisan('vaulter:blobs:repair-scopes', ['--dry-run' => true])->expectsOutputToContain('unreferenced')->assertSuccessful();
     $bad = $store->commit(CasTestHelpers::streamFor('bad legacy'), BlobScope::legacy('snull'));
     $other = CasTestHelpers::makeVersion();
@@ -81,3 +82,27 @@ it('uses global for a host without tenants and reports unreferenced and corrupt 
     $this->artisan('vaulter:blobs:repair-scopes', ['--execute' => true])->expectsOutputToContain('hash_mismatch')->assertSuccessful();
     expect(FileRevisionBlob::query()->where('blob_id', $bad->getKey())->count())->toBe(1);
 });
+
+it('moves retired global blobs into the tenant or the drive of every referencing revision', function (string $segment): void {
+    $store = app(BlobStore::class);
+    $old = $store->commit(CasTestHelpers::streamFor('install-wide'), BlobScope::fromSegment($segment));
+    expect($old->scope_key)->toBe('global');
+    $tenanted = CasTestHelpers::makeVersion();
+    $tenanted->file->node->storage->forceFill(['tenant_id' => '77'])->save();
+    $plain = CasTestHelpers::makeVersion();
+    foreach ([$tenanted, $plain] as $version) {
+        $version->forceFill(['blob_id' => $old->getKey()])->save();
+        $store->attach($version, $old);
+    }
+
+    $this->artisan('vaulter:blobs:repair-scopes', ['--execute' => true])->assertSuccessful();
+
+    $tenantBlob = Blob::query()->where('scope_key', 'tenant:77')->sole();
+    $driveBlob = Blob::query()->where('scope_key', 'drive:'.$plain->file->node->storage->getKey())->sole();
+    expect(FileRevisionBlob::query()->where('file_revision_id', $tenanted->getKey())->sole()->blob_id)->toBe($tenantBlob->getKey())
+        ->and(FileRevisionBlob::query()->where('file_revision_id', $plain->getKey())->sole()->blob_id)->toBe($driveBlob->getKey())
+        ->and(FileRevisionBlob::query()->where('blob_id', $old->getKey())->exists())->toBeFalse()
+        ->and(stream_get_contents($store->read($tenantBlob)))->toBe('install-wide')
+        ->and(stream_get_contents($store->read($driveBlob)))->toBe('install-wide');
+    $this->artisan('vaulter:blobs:repair-scopes', ['--execute' => true])->expectsOutputToContain('Repaired: 0')->assertSuccessful();
+})->with(['g', 'global']);

@@ -57,7 +57,7 @@ use Vaulter\ValueObjects\Cas\BlobScope;
 final readonly class BlobReconciler
 {
     /** Both historical two-shard keys and lossless single-shard keys. */
-    private const string KEY_PATTERN = '#^(?<scope>global|[ts](?:\d+|null|[0-9A-HJKMNP-TV-Z]{26})|g|[td]-~?[A-Za-z0-9_-]{1,128})/[0-9a-f]{2}/(?:[0-9a-f]{2}/)?(?<sha256>[0-9a-f]{64})$#';
+    private const string KEY_PATTERN = '#^(?<scope>global|[ts](?:\d+|null|[0-9A-HJKMNP-TV-Z]{26})|g|[tdo]-~?[A-Za-z0-9_-]{1,128})/[0-9a-f]{2}/(?:[0-9a-f]{2}/)?(?<sha256>[0-9a-f]{64})$#';
 
     public function __construct(
         private ContentStore $content,

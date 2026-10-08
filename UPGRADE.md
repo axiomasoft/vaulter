@@ -6,6 +6,38 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### File revisions, quota over every revision, no global dedup (PLAN2.D48, D49; PLAN2.P4.12)
+
+Back up the database and stop writes before migrating.
+
+- **Quota recount.** `2026_10_07_000007_quota_all_revisions` adds `v_file_revisions.superseded_at`
+  (backfill: commit time of the next revision) and recounts `v_drives.used_bytes` as the sum of
+  every retained revision, trash included, without a dedup discount (`Vaulter\Quota\QuotaCalculator`).
+  Drives with history will show **higher usage** than before. A drive that ends up above
+  `quota_bytes` keeps reads, deletes and purges; uploads, new revisions, restores and copies are
+  refused (`quota_exceeded`) until revisions are deleted or pruned or the quota is raised. Check
+  before migrating if hard limits matter.
+- **Quota behaviour.** A new revision charges its full size (was: the difference from the head; a
+  smaller revision used to release space). Restoring a revision charges it again; deleting or pruning
+  a revision releases it.
+- **Retention.** Drive profiles prune non-current revisions by default: at most 100 per file, never
+  younger than 7 days after they were superseded, never the head or a pinned revision. Set
+  `->drivePolicy(fn ($p) => $p->revisionRetention(new RevisionRetentionPolicy(maxNoncurrentRevisions: null)))`
+  to keep everything, and schedule `vaulter:revisions:prune` daily (nothing is pruned until it
+  runs). `Profile::revisionLimit(n)` keeps `n` revisions including the head. The internal
+  `Vaulter\Drive\Files\FileRevisionRetention` helper is removed.
+- **API.** `FileOperations::deleteRevision($file, $revision)` (Manage; head → 409
+  `cannot_delete_head_revision`, pinned → 409 `revision_pinned`) and
+  `setRevisionRetention($file, $revision, bool $keepForever)` (Edit). Custom `FileOperations`
+  implementations must add both. `FileRevisionDeleted` is dispatched after commit.
+- **Dedup scope.** `vaulter-media.dedup.scope = global` (and `VAULTER_DEDUP_SCOPE=global`) now stops the
+  application at boot (`InvalidConfigurationException`). Use `tenant` (default), `drive` or `off`, then
+  run `php artisan vaulter:blobs:repair-scopes --dry-run` and `--execute` to move existing `global`
+  blobs into the tenant (or, without a tenant, the drive) of each referencing revision. Under
+  `tenant`, a drive without a tenant now deduplicates within itself (was install-wide).
+  `MediaConfig::dedupScope()` returns `Vaulter\Media\Configuration\DedupScope`;
+  `BlobScope::global()` is removed.
+
 ### Share links 1.0: role, audience, rotation, redemptions (PLAN2.D47; PLAN2.P4.10)
 
 Back up the database and stop writes before migrating. `2026_10_07_000006_share_links_v1` **refuses**

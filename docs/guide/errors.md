@@ -38,6 +38,8 @@ Codes are a stable public contract (AD29).
 | `folder_children_limit_exceeded` | 409 | `Vaulter\Exceptions\Policy\FolderChildrenLimitExceededException` |
 | `tree_depth_limit_exceeded` | 409 | `Vaulter\Exceptions\Policy\TreeDepthLimitExceededException` |
 | `file_size_limit_exceeded` | 413 | `Vaulter\Exceptions\Policy\FileSizeLimitExceededException` |
+| `cannot_delete_head_revision` | 409 | `Vaulter\Exceptions\Drive\CannotDeleteHeadRevisionException` |
+| `revision_pinned` | 409 | `Vaulter\Exceptions\Drive\RevisionPinnedException` |
 | `validation_failed` | 422 | `Vaulter\Exceptions\Webhooks\BlockedOutboundUrlException` |
 | `validation_failed` | 422 | `Vaulter\Exceptions\Access\UnenumerableGrantSubjectException` |
 | `unknown_profile` | 422 | `Vaulter\Exceptions\Profiles\UnknownProfileException` |

@@ -30,7 +30,13 @@ final class RepairBlobScopesCommand extends Command
 
     protected $signature = 'vaulter:blobs:repair-scopes {--dry-run} {--execute}';
 
-    protected $description = 'Copy legacy mixed-scope blobs to their lossless scopes and atomically redirect revision edges';
+    protected $description = 'Copy legacy mixed-scope and retired global blobs to their tenant or drive scopes and atomically redirect revision edges';
+
+    /**
+     * Scope keys that do not name one tenant or drive: the mixed legacy segments and
+     * the retired install-wide 'global' scope (PLAN2.D49).
+     */
+    private const array UNSAFE_SCOPES = ['legacy:snull', 'legacy:tnull', 'global'];
 
     public function handle(VaulterDatabase $database, ContentStore $content, BlobStoreRepository $blobs, BlobLock $lock): int
     {
@@ -49,7 +55,7 @@ final class RepairBlobScopesCommand extends Command
         $skipped = 0;
         $failed = false;
         $model = $this->vaulterConfig->model('blob');
-        $model::query()->whereIn('scope_key', ['legacy:snull', 'legacy:tnull'])->chunkById(100, function (Collection $batch) use ($database, $content, $blobs, $lock, &$repaired, &$skipped, &$failed): void {
+        $model::query()->whereIn('scope_key', self::UNSAFE_SCOPES)->chunkById(100, function (Collection $batch) use ($database, $content, $blobs, $lock, &$repaired, &$skipped, &$failed): void {
             $rows = [];
             foreach ($batch as $blob) {
                 $references = $this->referenceRows($database, $blob);
@@ -117,10 +123,10 @@ final class RepairBlobScopesCommand extends Command
             ->select(['versions.id as version_id', 'storages.id as drive_id', 'storages.tenant_id']);
     }
 
+    /** The tenant of the referencing drive, or the drive itself when it has none or the blob was drive-scoped. */
     private function target(Blob $blob, string $storageId, ?string $tenantId): BlobScope
     {
-        return $blob->scope_key === 'legacy:snull' ? BlobScope::drive($storageId)
-            : ($tenantId === null ? BlobScope::global() : BlobScope::tenant($tenantId));
+        return $blob->scope_key === 'legacy:snull' || $tenantId === null ? BlobScope::drive($storageId) : BlobScope::tenant($tenantId);
     }
 
     /** @param list<string> $storageIds */

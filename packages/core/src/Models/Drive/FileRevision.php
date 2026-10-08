@@ -46,6 +46,7 @@ use Vaulter\Models\Content\ScanUtcDateTime;
  * @property int|string|null      $created_by
  * @property Carbon|null          $created_at
  * @property Carbon|null          $committed_at
+ * @property Carbon|null          $superseded_at
  */
 class FileRevision extends Model
 {
@@ -136,6 +137,7 @@ class FileRevision extends Model
             'size_bytes' => 'integer',
             'keep_forever' => 'boolean',
             'committed_at' => 'datetime',
+            'superseded_at' => 'datetime',
         ];
     }
 }

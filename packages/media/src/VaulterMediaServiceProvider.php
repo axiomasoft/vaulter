@@ -49,7 +49,7 @@ final class VaulterMediaServiceProvider extends PackageServiceProvider
         $this->app->singleton(MediaConfig::class, fn (Container $app): MediaConfig => new MediaConfig($app->make('config')));
         $this->app->singletonIf(ConfigNormalizer::class);
         $this->app->make(ConfigNormalizer::class)->registerDefaults(root: 'vaulter-media', path: $path);
-        $this->app->bind('vaulter.dedup_scope', fn (Container $app): string => $app->make(MediaConfig::class)->dedupScope());
+        $this->app->bind('vaulter.dedup_scope', fn (Container $app): string => $app->make(MediaConfig::class)->dedupScope()->value);
 
         $this->app->singleton(StorageDriver::class, static function (Container $app): StorageDriver {
             $service = $app->make($app->make(MediaConfig::class)->storageDriver());
@@ -80,6 +80,7 @@ final class VaulterMediaServiceProvider extends PackageServiceProvider
     public function packageBooted(): void
     {
         $config = $this->app->make(MediaConfig::class);
+        $config->dedupScope();
         $config->contentStore();
         $config->storageDriver();
         $config->blobStore();

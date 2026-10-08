@@ -7,9 +7,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Contracts\Content\ScanPolicyResolver;
 use Vaulter\Data\Drive\UploadSource;
-use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\DriveProvisioner;
-use Vaulter\Drive\Files\FileRevisionRetention;
 use Vaulter\Drive\Policies\UploadPolicy as EffectiveUploadPolicy;
 use Vaulter\Drive\Tests\TestCase;
 use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
@@ -17,8 +15,10 @@ use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Profiles\DrivePolicyBuilder;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;
+use Vaulter\Profiles\RevisionRetentionPolicy;
 use Vaulter\Profiles\UploadPolicy;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
@@ -98,7 +98,11 @@ it('uses the profile retention cutoff per drive and preserves an explicit mainte
     expect(Node::query()->whereKey($a->id)->exists())->toBeFalse();
 });
 
-it('prunes edges while preserving head permanent revisions quota and allocation high-watermark', function (): void {
+it('prunes by the profile revision limit while preserving head, pinned revisions and the allocation high-watermark', function (): void {
+    // revisionLimit(2) keeps the head and one more unpinned revision; age protection off.
+    driveProfile((new Profile)->key('default')
+        ->drivePolicy(fn (DrivePolicyBuilder $policy) => $policy->revisionRetention(new RevisionRetentionPolicy(minNoncurrentAgeDays: 0)))
+        ->revisionLimit(2));
     $handle = DriveTestHelpers::drive();
     $node = $handle->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('one'), 'a.txt'));
     $handle->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('two'), 'a.txt'));
@@ -107,14 +111,12 @@ it('prunes edges while preserving head permanent revisions quota and allocation 
     $file = $node->file()->firstOrFail()->refresh();
     $file->versions()->where('number', 1)->update(['keep_forever' => true]);
     $used = $handle->model()->refresh()->used_bytes;
-    $profile = (new Profile)->key('default')->revisionLimit(2);
-    $pruned = app(VaulterDatabase::class)->transaction(function () use ($file, $profile): int {
-        $locked = $file->newQuery()->whereKey($file->id)->lockForUpdate()->firstOrFail();
 
-        return app(FileRevisionRetention::class)->prune($locked, $profile);
-    });
-    expect($pruned)->toBe(1)->and($file->versions()->orderBy('number')->pluck('number')->all())->toBe([1, 3, 4])
-        ->and($file->refresh()->revision_count)->toBe(4)->and($handle->model()->refresh()->used_bytes)->toBe($used);
+    $this->artisan('vaulter:revisions:prune')->assertSuccessful();
+
+    // Revision 2 ('two', 3 bytes) goes and its bytes leave the quota (PLAN2.D48).
+    expect($file->versions()->orderBy('number')->pluck('number')->all())->toBe([1, 3, 4])
+        ->and($file->refresh()->revision_count)->toBe(4)->and($handle->model()->refresh()->used_bytes)->toBe($used - 3);
     $handle->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('five'), 'a.txt'));
     expect(FileRevision::query()->max('number'))->toBe(5);
 });

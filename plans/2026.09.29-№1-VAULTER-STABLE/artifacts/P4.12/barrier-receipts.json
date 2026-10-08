@@ -1,0 +1,115 @@
+{
+  "item": "PLAN2.P4.12",
+  "recorded_at": "2026-10-08",
+  "runtime": "anthropic/claude-sonnet-5-5/medium",
+  "checks": [
+    {
+      "id": "V1",
+      "cwd": "packages/drive",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Drive tests/Uploads tests/PublicApi",
+      "exit": 0,
+      "executed": 438,
+      "passed": 437,
+      "skipped": 1,
+      "note": "skip = PG-only advisory-lock case on SQLite",
+      "secs": 107,
+      "receipt": "receipts/V1.txt"
+    },
+    {
+      "id": "V2",
+      "cwd": "packages/media",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests",
+      "exit": 0,
+      "executed": 177,
+      "passed": 155,
+      "skipped": 18,
+      "risky": 4,
+      "note": "skips = PG-only tests (covered by H2 on PG)",
+      "secs": 58,
+      "receipt": "receipts/V2.txt"
+    },
+    {
+      "id": "V3",
+      "cwd": "packages/drive",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Concurrency/RevisionPruneRaceTest.php tests/Concurrency/RevisionNumberRaceTest.php",
+      "exit": 0,
+      "executed": 5,
+      "passed": 5,
+      "skipped": 0,
+      "tests": [
+        "RevisionPruneRaceTest: honours a pin and a new head committed between the prune choice",
+        "RevisionPruneRaceTest: releases the bytes of a revision once when two deletes race",
+        "RevisionNumberRaceTest: V03 serializes revisions and accounts for every retained revision",
+        "RevisionNumberRaceTest: V03 aggregate lock protects counter allocation",
+        "RevisionNumberRaceTest: reuses prepared bytes on a serialization retry"
+      ],
+      "secs": 29,
+      "receipt": "receipts/V3.txt"
+    },
+    {
+      "id": "V4",
+      "cwd": ".",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Upgrade",
+      "exit": 0,
+      "executed": 56,
+      "passed": 56,
+      "skipped": 0,
+      "secs": 299,
+      "receipt": "receipts/V4.txt"
+    },
+    {
+      "id": "V90.P4.10-V3",
+      "cwd": ".",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Sharing/ShareSecurityBoundaryTest.php packages/core/tests/Upgrade",
+      "exit": 0,
+      "executed": 60,
+      "passed": 60,
+      "skipped": 0,
+      "secs": 410,
+      "receipt": "receipts/V90a.txt"
+    },
+    {
+      "id": "V90.mysql",
+      "cwd": ".",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=mysql DB_HOST=127.0.0.1 DB_PORT=3306 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Schema/NameKeyUniquenessTest.php packages/core/tests/Schema/CanonicalSchemaTest.php",
+      "exit": 0,
+      "executed": 9,
+      "passed": 9,
+      "skipped": 0,
+      "secs": 388,
+      "receipt": "receipts/V90b.txt"
+    },
+    {
+      "id": "H1",
+      "kind": "impact",
+      "cwd": "packages/drive",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Concurrency/NodeSequenceBoundaryTest.php tests/Concurrency/LockOrderRaceTest.php tests/Concurrency/QuotaRaceTest.php tests/Concurrency/CompleteUploadRaceTest.php",
+      "exit": 0,
+      "executed": 10,
+      "passed": 10,
+      "skipped": 0,
+      "note": "first run 1 failed (SEC-CONFLICT-RACE: quota_bytes 3 + used_bytes 3 expectations stale under D48); fixed test (quota 6, used 6) and re-ran green",
+      "secs": 93,
+      "receipt": "receipts/H1.txt"
+    },
+    {
+      "id": "H2",
+      "kind": "impact",
+      "cwd": "packages/media",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Cas/RepairBlobScopesCommandTest.php",
+      "exit": 0,
+      "executed": 6,
+      "passed": 6,
+      "skipped": 0,
+      "secs": 76,
+      "receipt": "receipts/H2.txt"
+    },
+    {
+      "id": "V80",
+      "cwd": "packages/drive",
+      "cmd": "../../scripts/php84 vendor/bin/pint --test",
+      "exit": 0,
+      "note": "re-run for drive after test edit; core/media/phpstan green per completion-notes.md (no product PHP changed)"
+    }
+  ]
+}

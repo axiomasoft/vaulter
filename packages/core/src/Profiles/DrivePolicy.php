@@ -15,7 +15,8 @@ use Vaulter\Naming\PortableNamePolicy;
  * system, import and restore. Lowering a limit deletes nothing; it only refuses
  * operations that would make an existing excess worse.
  *
- * maxShareLinkTtlDays is enforced by share links (PLAN2.D47).
+ * maxShareLinkTtlDays is enforced by share links (PLAN2.D47); revisionRetention by
+ * the revision pruning (PLAN2.D48).
  */
 final readonly class DrivePolicy
 {
@@ -27,6 +28,7 @@ final readonly class DrivePolicy
         public int $maxPropertiesBytes = 16_384,
         public int $maxPropertyCount = 100,
         public ?int $maxShareLinkTtlDays = null,
+        public RevisionRetentionPolicy $revisionRetention = new RevisionRetentionPolicy,
     ) {
         if (!in_array($namePolicy, [PortableNamePolicy::KEY, PermissiveNamePolicy::KEY], true)) {
             throw new InvalidProfileException('Unknown name policy "'.$namePolicy.'"; use portable-v1 or permissive-v1.');

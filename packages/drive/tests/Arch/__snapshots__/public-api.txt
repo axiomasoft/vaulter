@@ -51,6 +51,18 @@ Vaulter\Drive\Events\Files\FileRevisionAdded
   readonly int|null|string $actorId
   readonly string $eventId
 
+Vaulter\Drive\Events\Files\FileRevisionDeleted
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Models\Drive\File $file, int|string $revisionId, int $revisionNo, int $sizeBytes, int|null|string $actorId = null, ?string $eventId = null, ?\Vaulter\ValueObjects\Access\ActorRef $actor = null, ?string $correlationId = null)
+  readonly ?\Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly ?string $correlationId
+  readonly \Vaulter\Models\Drive\File $file
+  readonly \Vaulter\Models\Drive\Node $node
+  readonly int $revisionNo
+  readonly int $sizeBytes
+  readonly int|null|string $actorId
+  readonly int|string $revisionId
+  readonly string $eventId
+
 Vaulter\Drive\Events\Files\FileUploaded
   __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Models\Drive\File $file, \Vaulter\Models\Drive\FileRevision $version, int|null|string $actorId = null, ?string $eventId = null, ?\Vaulter\ValueObjects\Access\ActorRef $actor = null, ?string $correlationId = null)
   readonly ?\Vaulter\ValueObjects\Access\ActorRef $actor

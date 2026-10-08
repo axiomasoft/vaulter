@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schema;
+use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Media\VaulterMediaServiceProvider;
 
 it('boots the media provider on top of core', function (): void {
@@ -21,4 +22,11 @@ it('registers the canonical CAS command names without legacy aliases', function 
     expect(Artisan::all())->toHaveKeys(['vaulter:blobs:gc', 'vaulter:blobs:reconcile'])
         ->not->toHaveKey('vaulter:'.'gc-blobs')
         ->not->toHaveKey('vaulter:'.'reconcile-blobs');
+});
+
+it('refuses to boot with the retired global dedup scope', function (): void {
+    config()->set('vaulter-media.dedup.scope', 'global');
+
+    expect(fn () => (new VaulterMediaServiceProvider(app()))->packageBooted())
+        ->toThrow(InvalidConfigurationException::class, 'repair-scopes');
 });

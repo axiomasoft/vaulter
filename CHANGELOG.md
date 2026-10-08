@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### File revisions and quota (PLAN2.D48, D49; PLAN2.P4.12)
+
+- Changed the quota to count every retained revision (trash included) with its full logical size,
+  without a dedup discount. Was: only the head of each file, a new revision charged
+  `new − old head`. A new revision and a restored revision add their size, a copy adds its head,
+  deleting/pruning a revision and purging free bytes; growth past the quota is refused, reads and
+  deletes keep working on a drive above it.
+- Added `RevisionRetentionPolicy` in `DrivePolicy::$revisionRetention` (`maxNoncurrentRevisions` 100,
+  `maxNoncurrentAgeDays` null, `minNoncurrentAgeDays` 7, pinned always protected),
+  `DrivePolicyBuilder::revisionRetention()`, `vaulter:revisions:prune {--drive=*} {--dry-run}` and
+  `PruneFileRevisionsJob` (schedule daily). `Profile::revisionLimit(n)` now sets
+  `maxNoncurrentRevisions = n − 1`. Was: an unwired `Vaulter\Drive\Files\FileRevisionRetention`
+  helper (removed).
+- Added `FileOperations::deleteRevision()` (Manage; `cannot_delete_head_revision`, `revision_pinned`)
+  and `setRevisionRetention()` (Edit), the `FileRevisionDeleted` event and
+  `v_file_revisions.superseded_at`.
+- Removed the `global` dedup scope: `vaulter-media.dedup.scope` is `tenant` (default), `drive` or the
+  new `off`; `global` fails at boot with `InvalidConfigurationException`. `MediaConfig::dedupScope()`
+  returns the `DedupScope` enum (was a string); `BlobScope::global()` is gone and a drive without a
+  tenant deduplicates within itself under `tenant` (was install-wide). `vaulter:blobs:repair-scopes`
+  moves `global` blobs like `legacy:snull`/`legacy:tnull`.
+- Migration `2026_10_07_000007_quota_all_revisions` adds and backfills `superseded_at` and recounts
+  `used_bytes` for every drive.
+- Fixed `vaulter:scan-rescan --activate-policy`, which failed with a `TypeError` (a boolean shadowed
+  the activation action).
+
 ### Share links 1.0 (PLAN2.D47; PLAN2.P4.10)
 
 - Added `role`/`audience` on share links: previewer, reader and commenter for any audience, writer

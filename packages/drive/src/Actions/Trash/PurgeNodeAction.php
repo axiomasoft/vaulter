@@ -45,7 +45,6 @@ final readonly class PurgeNodeAction
             if ($current->trashed_at === null) {
                 throw NodeNotTrashedException::forNode($current);
             }
-            $freedBytes = 0;
             foreach ($locked as $member) {
                 if (!$this->tree->sameStorage($member, $context->driveId())) {
                     throw InvalidDestinationException::otherDrive($member, $context->driveId());
@@ -53,11 +52,9 @@ final readonly class PurgeNodeAction
                 if ($member->kind !== NodeKind::Folder) {
                     $this->lifecycles->forKind($member->kind);
                 }
-                if ($member->kind === NodeKind::File) {
-                    $freedBytes += $member->size_bytes;
-                }
             }
-            app(FileContentLifecycle::class)->preparePurge($locked);
+            // Every retained revision of every purged file leaves the quota (PLAN2.D48).
+            $freedBytes = app(FileContentLifecycle::class)->preparePurge($locked);
             if ($freedBytes > 0) {
                 $this->storageStore->adjustUsedBytes(storage: $context->drive, delta: -$freedBytes);
             }

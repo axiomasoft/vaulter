@@ -83,6 +83,7 @@ dataset('operation permission matrix', static function (): array {
         'addRevision' => [RoleRegistry::WRITER, RoleRegistry::COMMENTER], 'restoreRevision' => [RoleRegistry::WRITER, RoleRegistry::COMMENTER],
         'trash' => [RoleRegistry::WRITER, RoleRegistry::COMMENTER], 'restore' => [RoleRegistry::WRITER, RoleRegistry::COMMENTER],
         'purge' => [RoleRegistry::OWNER, RoleRegistry::ORGANIZER],
+        'setRevisionRetention' => [RoleRegistry::WRITER, RoleRegistry::COMMENTER], 'deleteRevision' => [RoleRegistry::OWNER, RoleRegistry::ORGANIZER],
     ] as $operation => [$allowed, $missing]) {
         foreach (['hidden', 'allowed', ...($missing === null ? [] : ['missing'])] as $lane) {
             $cases[$operation.' '.$lane] = [$operation, $lane === 'missing' ? $missing : $allowed, $lane];
@@ -93,7 +94,7 @@ dataset('operation permission matrix', static function (): array {
 });
 
 it('enforces the complete public operation source permission matrix', function (string $operation, string $role, string $lane): void {
-    $fileOperation = in_array($operation, ['revisions', 'read', 'addRevision', 'restoreRevision'], true);
+    $fileOperation = in_array($operation, ['revisions', 'read', 'addRevision', 'restoreRevision', 'setRevisionRetention', 'deleteRevision'], true);
     $source = $fileOperation
         ? $this->system->files()->upload(UploadSource::fromString('fixture bytes', 'source.txt'))
         : $this->system->folders()->create('source');
@@ -109,6 +110,10 @@ it('enforces the complete public operation source permission matrix', function (
         operationMatrixGrant($this->system, $this->system->root(), $this->user, RoleRegistry::PREVIEWER);
     }
     $revision = $fileOperation ? $this->system->files()->revisions($source)->items()[0] : null;
+    if ($operation === 'deleteRevision') {
+        // Only a non-current revision can be deleted.
+        $this->system->files()->addRevision($source, UploadSource::fromString('newer bytes', 'source.txt'));
+    }
     $run = fn () => match ($operation) {
         'find' => $this->actor->nodes()->find($source),
         'children' => $this->actor->nodes()->children($source),
@@ -128,6 +133,8 @@ it('enforces the complete public operation source permission matrix', function (
         'trash' => $this->actor->nodes()->trash($source),
         'restore' => $this->actor->trash()->restore($source),
         'purge' => $this->actor->trash()->purge($source),
+        'setRevisionRetention' => $this->actor->files()->setRevisionRetention($source, $revision, keepForever: true),
+        'deleteRevision' => $this->actor->files()->deleteRevision($source, $revision),
     };
     $before = operationMatrixState();
     if ($lane === 'allowed') {
@@ -191,6 +198,13 @@ it('enforces the complete public operation source permission matrix', function (
                 break;
             case 'purge':
                 expect(Node::query()->whereKey($source->id)->exists())->toBeFalse();
+                break;
+            case 'setRevisionRetention':
+                expect($result->id)->toBe($revision->id)->and($result->keep_forever)->toBeTrue()
+                    ->and($revision->refresh()->keep_forever)->toBeTrue();
+                break;
+            case 'deleteRevision':
+                expect(FileRevision::query()->whereKey($revision->id)->exists())->toBeFalse();
                 break;
         }
     } else {
@@ -334,16 +348,17 @@ it('read blocks legacy infection and uncommitted content after Download authoriz
     expect(fn () => $this->actor->files()->read($file, $revision))->toThrow(NodeNotFoundException::class);
 })->with(['infected']);
 
-it('SEC-CONFLICT appends to the normalized case-insensitive sibling with no extra node or quota charge', function (string $stored, string $incoming): void {
+it('SEC-CONFLICT appends to the normalized case-insensitive sibling with no extra node, charging the revision in full', function (string $stored, string $incoming): void {
     $node = $this->system->files()->upload(UploadSource::fromString('old', $stored));
-    $this->system->model()->forceFill(['quota_bytes' => 3])->save();
+    // Both revisions are retained, so both count (PLAN2.D48).
+    $this->system->model()->forceFill(['quota_bytes' => 6])->save();
     $result = $this->system->files()->upload(UploadSource::fromString('new', $incoming), new UploadOptions(onConflict: OnNameConflict::AddRevision));
     expect($result->id)->toBe($node->id)
         ->and($result->sequence)->toBe(1)
         ->and($result->file->currentRevision->sha256)->toBe(hash('sha256', 'new'))
         ->and(Node::query()->count())->toBe(2)
         ->and(FileRevision::query()->count())->toBe(2)
-        ->and($this->system->model()->used_bytes)->toBe(3);
+        ->and($this->system->model()->used_bytes)->toBe(6);
 })->with([['Report.txt', 'report.TXT'], ['Résumé.txt', "Re\u{0301}sume\u{0301}.txt"], ['résumé.txt', 'RÉSUMÉ.txt']]);
 
 it('SEC-CONFLICT requires Edit on the actual case-insensitive revision target outside the transaction', function (): void {

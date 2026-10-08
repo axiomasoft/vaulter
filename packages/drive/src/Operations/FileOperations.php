@@ -16,8 +16,10 @@ use Vaulter\Data\Drive\RevisionOptions;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Actions\Files\DeleteFileRevisionAction;
 use Vaulter\Drive\Actions\Files\IngestFileAction;
 use Vaulter\Drive\Actions\Files\RestoreFileRevisionAction;
+use Vaulter\Drive\Actions\Files\SetFileRevisionRetentionAction;
 use Vaulter\Drive\Actions\Nodes\NameConflictResolver;
 use Vaulter\Drive\Data\Files\IngestFileInput;
 use Vaulter\Drive\Data\Files\IngestReceipt;
@@ -38,7 +40,7 @@ use Vaulter\Support\TreeGuard;
 
 final readonly class FileOperations implements Contract
 {
-    public function __construct(private OperationContext $context, private NodeLocator $locator, private OperationGuard $guard, private IngestFileAction $ingest, private RestoreFileRevisionAction $restore, private ContentDelivery $delivery, private VaulterDatabase $database, private TreeGuard $tree, private NameConflictResolver $names) {}
+    public function __construct(private OperationContext $context, private NodeLocator $locator, private OperationGuard $guard, private IngestFileAction $ingest, private RestoreFileRevisionAction $restore, private ContentDelivery $delivery, private VaulterDatabase $database, private TreeGuard $tree, private NameConflictResolver $names, private DeleteFileRevisionAction $deleteRevision, private SetFileRevisionRetentionAction $retention) {}
 
     public function upload(UploadSource $source, ?UploadOptions $options = null): Node
     {
@@ -90,6 +92,21 @@ final readonly class FileOperations implements Contract
         return $this->restore->execute($this->context, new RestoreFileRevisionInput($node, $this->revision($node, $revision)));
     }
 
+    public function deleteRevision(Node|int|string $file, FileRevision|int|string $revision): void
+    {
+        // Permanent removal of stored data: authorized like a purge, without the
+        // upload/egress profile gates (PLAN2.D48).
+        $node = $this->file($file, Ability::Manage, OperationKind::Purge);
+        $this->deleteRevision->execute($this->context, $node, $this->revision($node, $revision));
+    }
+
+    public function setRevisionRetention(Node|int|string $file, FileRevision|int|string $revision, bool $keepForever): FileRevision
+    {
+        $node = $this->file($file, Ability::Edit);
+
+        return $this->retention->execute($node, $this->revision($node, $revision), $keepForever);
+    }
+
     public function read(Node|int|string $file, FileRevision|int|string|null $revision = null): FileStream
     {
         $node = $this->file($file, Ability::Download);
@@ -98,10 +115,10 @@ final readonly class FileOperations implements Contract
         return $this->delivery->stream($this->context, $node, $revision);
     }
 
-    private function file(Node|int|string $key, Ability $ability): Node
+    private function file(Node|int|string $key, Ability $ability, ?OperationKind $operation = null): Node
     {
         $node = $this->locator->find($this->context, $key);
-        $this->guard->authorize($this->context, $ability, $node, $ability === Ability::Download ? OperationKind::ContentEgress : ($ability === Ability::Edit ? OperationKind::Mutation : OperationKind::Metadata));
+        $this->guard->authorize($this->context, $ability, $node, $operation ?? ($ability === Ability::Download ? OperationKind::ContentEgress : ($ability === Ability::Edit ? OperationKind::Mutation : OperationKind::Metadata)));
         if ($node->kind !== NodeKind::File || $node->file()->first() === null) {
             throw new NotAFileException;
         }

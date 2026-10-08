@@ -78,25 +78,24 @@ function r07bActStorage(): Drive
 // UploadFileAction
 // ---------------------------------------------------------------------------
 
-// L78 MinusToPlus: quota delta uses subtraction (new - old), not addition.
-// A version that SHRINKS the file has delta ≤ 0 and must bypass the quota
-// check even when used_bytes == quota_bytes after the prior head.
-it('UploadFile L78: shrinking version passes when quota is at capacity (delta is new-old, not new+old)', function (): void {
+// L78: a new version is a new retained revision (PLAN2.D48) — it is charged with its
+// full size, even when it is smaller than the head, so at capacity it is refused and
+// with room for its full size it passes.
+it('UploadFile L78: a smaller version is charged in full and refused at capacity', function (): void {
     $drive = DriveTestHelpers::drive();
 
     // Upload an 8-byte file to fill storage to exactly 8 bytes.
     $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('12345678'), 'f.bin'));
     expect($drive->model()->refresh()->used_bytes)->toBe(8);
 
-    // Clamp quota to current usage — any positive delta would now fail.
-    $drive->model()->forceFill(['quota_bytes' => 8])->save();
+    $drive->model()->forceFill(['quota_bytes' => 13])->save();
+    expect(fn () => $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('abcdef'), 'f.bin')))
+        ->toThrow(QuotaExceededException::class);
+    expect($drive->model()->refresh()->used_bytes)->toBe(8);
 
-    // Upload a 6-byte version (delta = 6 − 8 = −2 ≤ 0) — must NOT throw.
-    // MinusToPlus mutant: delta = 6 + 8 = 14 → quota check fires → exception.
+    $drive->model()->forceFill(['quota_bytes' => 14])->save();
     $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('abcdef'), 'f.bin'));
-
-    // used_bytes drops to 6 (delta = −2).
-    expect($drive->model()->refresh()->used_bytes)->toBe(6);
+    expect($drive->model()->refresh()->used_bytes)->toBe(14);
 });
 
 // L80 IfNegated / L81 RemoveMethodCall: assertNameAvailable is called for new
@@ -111,19 +110,16 @@ it('UploadFile L80/L81: sibling-name conflict is rejected for a new-file upload'
         ->toThrow(NodeNameConflictException::class);
 });
 
-// L106 DecrementInteger: delta=0→-1 comparison — a delta of exactly −1 must
-// still call adjustUsedBytes; if the condition becomes !== -1, delta=−1 skips
-// the adjustment and used_bytes is stuck at the old value.
-it('UploadFile L106: used_bytes is decremented when the new version is exactly 1 byte smaller', function (): void {
+// L106: the prior head stays retained, so a version 1 byte smaller still adds its
+// full size (PLAN2.D48).
+it('UploadFile L106: used_bytes grows by the full size of a version 1 byte smaller', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('12345'), 'f.bin')); // 5 bytes
     expect($drive->model()->refresh()->used_bytes)->toBe(5);
 
-    $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('1234'), 'f.bin')); // 4 bytes, delta = −1
-    // DecrementInteger mutant: condition becomes $delta !== -1, which is FALSE for delta=−1
-    // → adjustUsedBytes is skipped → used_bytes stays at 5. Test fails on the expect below.
-    expect($drive->model()->refresh()->used_bytes)->toBe(4);
+    $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('1234'), 'f.bin')); // 4 bytes
+    expect($drive->model()->refresh()->used_bytes)->toBe(9);
 });
 
 // L196/L203 CoalesceRemoveLeft: when a new-version upload carries a different
@@ -158,23 +154,17 @@ it('UploadFile L234-236: committed version has status=committed, correct created
         ->and($version->committed_at->equalTo(now()))->toBeTrue();
 });
 
-// L249 SmallerOrEqualToSmaller / Decrement: delta=0 must be treated as ≤0 and
-// skip the quota check — even when storage is already over quota. If the
-// boundary shifts to <0, a delta-0 version upload against an over-quota storage
-// incorrectly fires the exception.
-it('UploadFile L249 SmallerOrEqualToSmaller/Decrement: same-size version passes even when storage is over quota', function (): void {
+// L249: a drive over its quota keeps reading and deleting, but any growth — a
+// same-size version included — is refused (PLAN2.D48).
+it('UploadFile L249: a same-size version is refused while the drive is over its quota', function (): void {
     $drive = DriveTestHelpers::drive();
     $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('hello'), 'f.bin')); // 5 bytes; used=5
 
     // Force storage into over-quota state (used > quota).
     $drive->model()->forceFill(['quota_bytes' => 4, 'used_bytes' => 5])->save();
 
-    // New version of same 5-byte size → delta = 5 − 5 = 0. Must NOT throw.
-    // SmallerOrEqualToSmaller mutant: $delta <= 0 → $delta < 0; delta=0 is not <0
-    //   → quota check fires → 5+0 > 4 = true → QuotaExceededException. Test fails.
-    $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('world'), 'f.bin'));
-
-    // used_bytes stays at 5 (delta=0, adjustUsedBytes not called for 0 delta).
+    expect(fn () => $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('world'), 'f.bin')))
+        ->toThrow(QuotaExceededException::class);
     expect($drive->model()->refresh()->used_bytes)->toBe(5);
 });
 

@@ -31,12 +31,8 @@ it('isolates real identifier strategies across dedup scopes and GC', function (s
     $b = $store->commit(CasTestHelpers::streamFor('same bytes'), BlobScope::forUpload($dedup, $bStorage->tenant_id, (string) $bStorage->getKey()));
     $store->attach($aVersion, $a);
     $store->attach($bVersion, $b);
-    if ($dedup === 'global') {
-        expect($a->getKey())->toBe($b->getKey());
-    } else {
-        expect($a->scope_key)->not->toBe($b->scope_key)
-            ->and($a->getKey())->not->toBe($b->getKey())->and($a->storage_key)->not->toBe($b->storage_key);
-    }
+    expect($a->scope_key)->not->toBe($b->scope_key)
+        ->and($a->getKey())->not->toBe($b->getKey())->and($a->storage_key)->not->toBe($b->storage_key);
     expect(app(BlobReconciler::class)->sweepOrphans('local', 0, false)['orphans'])->toBe([]);
     // A rowless object must actually be recognized in each new scope layout.
     $orphanKeys = [];
@@ -54,14 +50,15 @@ it('isolates real identifier strategies across dedup scopes and GC', function (s
     Storage::disk('local')->delete($orphanKeys);
     // Purge the first revision's edges, then sweep its past-grace tombstone.
     $aVersion->delete();
-    if ($dedup !== 'global') {
-        $a->forceFill(['status' => BlobStatus::Tombstoned, 'delete_after_at' => now()->subHour()])->save();
-    }
+    $a->forceFill(['status' => BlobStatus::Tombstoned, 'delete_after_at' => now()->subHour()])->save();
     app(BlobGarbageCollector::class)->sweep();
     Storage::disk($b->disk)->assertExists($b->storage_key);
     expect(stream_get_contents($store->read($b)))->toBe('same bytes');
+    // The frozen 0.2 rollback maps 'off' to a bare UNIQUE(sha256), which per-upload
+    // blobs of equal bytes cannot satisfy; roll back as a tenant-scoped host would.
+    config()->set('vaulter-media.dedup.scope', 'tenant');
 })->with([
-    ['bigint', 'global'], ['bigint', 'tenant'], ['bigint', 'storage'],
-    ['ulid', 'global'], ['ulid', 'tenant'], ['ulid', 'storage'],
-    ['uuid7', 'global'], ['uuid7', 'tenant'], ['uuid7', 'storage'],
+    ['bigint', 'off'], ['bigint', 'tenant'], ['bigint', 'storage'],
+    ['ulid', 'off'], ['ulid', 'tenant'], ['ulid', 'storage'],
+    ['uuid7', 'off'], ['uuid7', 'tenant'], ['uuid7', 'storage'],
 ]);

@@ -400,3 +400,11 @@ it('SEC-RECOVERY-remaining-due counts all still-due work whatever the batch limi
     expect($dry['scanned'])->toBe(1)->and($dry['remaining_due'])->toBe(3)
         ->and($live['published'])->toBe(1)->and($live['remaining_due'])->toBe(2);
 });
+
+it('activates the desired scan policies of a drive with --activate-policy', function (): void {
+    $drive = UploadTestHelpers::storage();
+
+    expect(Artisan::call('vaulter:scan-rescan', ['--drive' => (string) $drive->id, '--activate-policy' => true, '--request-id' => (string) Str::uuid(), '--reason' => 'fixture', '--json' => true]))->toBe(0);
+
+    expect(json_decode(Artisan::output(), true)['activated'])->toBe(1);
+});

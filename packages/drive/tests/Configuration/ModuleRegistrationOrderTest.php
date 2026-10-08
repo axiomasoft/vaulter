@@ -8,6 +8,7 @@ use Illuminate\Foundation\Application;
 use Vaulter\Configuration\ConfigNormalizer;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Providers\BindingsRegistrar as DriveBindingsRegistrar;
+use Vaulter\Media\Configuration\DedupScope;
 use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Media\VaulterMediaServiceProvider;
 use Vaulter\Providers\BindingsRegistrar as CoreBindingsRegistrar;
@@ -48,7 +49,7 @@ it('retains module defaults and normalizes legacy settings when modules register
         }
 
         expect($app->make(DriveConfig::class)->maxFileSize())->toBe(2048)
-            ->and($app->make(MediaConfig::class)->dedupScope())->toBe('drive')
+            ->and($app->make(MediaConfig::class)->dedupScope())->toBe(DedupScope::Drive)
             ->and($deprecations)->toHaveCount(2);
     } finally {
         Container::setInstance($previousContainer);

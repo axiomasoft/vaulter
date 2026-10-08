@@ -18,6 +18,7 @@ outbox relay, webhook retry, webhook prune) are designed to be scheduled.
 | `vaulter:blobs:gc` | Two-phase, race-safe blob garbage collection |
 | `vaulter:blobs:reconcile` | Rebuild blob `ref_count` and report dangling rows |
 | `vaulter:purge-trash` | Permanently delete trashed nodes past retention |
+| `vaulter:revisions:prune` | Delete non-current file revisions past the profile retention policy |
 | `vaulter:sweep-uploads` | Abort and clean up stale resumable-upload sessions |
 | `vaulter:relay-outbox` | Relay pending outbox events to webhook endpoints |
 | `vaulter:retry-webhooks` | Re-dispatch webhook deliveries whose backoff elapsed |
@@ -125,6 +126,27 @@ php artisan vaulter:purge-trash --days=7  # custom retention
 ```
 
 See [Usage → Search & trash](/guide/search-trash).
+
+## `vaulter:revisions:prune`
+
+Apply each drive profile's `RevisionRetentionPolicy` (PLAN2.D48): delete the non-current revisions
+of every file — trashed files included — past `maxNoncurrentRevisions` or older than
+`maxNoncurrentAgeDays`, never the head, a pinned revision or one superseded less than
+`minNoncurrentAgeDays` ago. Each deletion detaches the blob edges (the bytes become GC-eligible)
+and releases the quota. A drive that fails is logged and the others still run.
+
+```
+vaulter:revisions:prune
+    {--drive=*}  Only these drive ids
+    {--dry-run}  Report what would be deleted
+```
+
+```bash
+php artisan vaulter:revisions:prune --dry-run
+php artisan vaulter:revisions:prune          # schedule daily
+```
+
+See [Usage → Uploads → Revision retention](/guide/uploads#revision-retention).
 
 ## `vaulter:sweep-uploads`
 

@@ -94,6 +94,17 @@ NFC, если установлен ext-intl.
 потоковый или итоговый размер больше `maxFileBytes` политики диска или
 `vaulter-drive.uploads.max_file_size` установки.
 
+## cannot-delete-head-revision
+
+`CannotDeleteHeadRevisionException` (409 `cannot_delete_head_revision`) — `deleteRevision()`
+вызван для текущей (head) ревизии файла. Голову удалить нельзя: удалите файл или сначала
+создайте новую ревизию.
+
+## revision-pinned
+
+`RevisionPinnedException` (409 `revision_pinned`) — ревизия закреплена (`keep_forever`) и не
+удаляется ни вручную, ни прунингом. Сначала снимите закрепление через `setRevisionRetention()`.
+
 ## invalid-properties
 
 `InvalidPropertiesException` (422 `invalid_properties`, `reason`) — патч свойств нарушил

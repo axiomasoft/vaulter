@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.12",
   "title": "Ревизии файлов: ретеншн, удаление, закрепление; квота по всем ревизиям; дедупликация без global",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Ревизии файлов подчиняются RevisionRetentionPolicy профиля (прунинг командой/джобой), отдельные ревизии можно удалить (кроме головы) и закрепить; квота считает логический размер всех сохранённых ревизий включая корзину; глобальная дедупликация удалена.",
   "why": "Сейчас ревизии файлов растут без предела, keep_forever без API, квота считает только головы (история бесплатна), dedup global создаёт межтенантный side-channel (R6 §5). Риски: удаление нужной ревизии, расхождение квоты, гонка прунинга с новой ревизией.",
   "scope": {
@@ -309,6 +309,61 @@
     "status": "not_needed",
     "notes": "Внешние факты проверены при дизайне: @plan/knowledge/P4-architecture-review-2026-10-07.json"
   },
-  "result": null,
-  "updated_at": "2026-10-07T15:50:18Z"
+  "result": {
+    "started_at": "2026-10-08T09:38:56Z",
+    "finished_at": "2026-10-08T10:50:42Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "session": "1ea5f8c8-31ea-42e1-9135-f6611f77b9e6"
+    },
+    "registered_by": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium"
+    },
+    "notes": "См. artifacts/P4.12/completion-notes.md: ревизионный ретеншн/удаление/пин, квота по всем ревизиям, dedup без global. P4-I18/I19 self-check в completion-notes; receipts artifacts/P4.12/barrier-receipts.json (V3 5/5, V4 56/56, V90 PG 60/60 + MySQL 9/9, skipped=0; H1 10/10 после правки, H2 6/6); негативные контроли NC1–NC7.",
+    "deviations": [
+      "H1 NodeSequenceBoundaryTest SEC-CONFLICT-RACE expectation updated for D48 (test-only, quota 6/used 6); RU doc mirrors added"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T10:50:42Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T10:50:42Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T10:50:42Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T10:50:42Z"
+      },
+      {
+        "id": "V80",
+        "exit": 0,
+        "at": "2026-10-08T10:50:42Z"
+      },
+      {
+        "id": "V81",
+        "exit": 0,
+        "at": "2026-10-08T10:50:42Z"
+      },
+      {
+        "id": "V90",
+        "exit": 0,
+        "at": "2026-10-08T10:50:42Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T10:50:43Z"
 }

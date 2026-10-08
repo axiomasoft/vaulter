@@ -69,16 +69,18 @@ it('rolls back an entire subtree copy when its summed heads exceed quota', funct
         ->and(Blob::query()->count())->toBe(2);
 });
 
-it('uses the locked file head despite stale node size and stale quota snapshots', function (): void {
+it('reserves a revision against the database quota value despite a stale node and drive snapshot', function (): void {
     $drive = DriveTestHelpers::drive();
     $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('aaaa'), 'a.txt'));
     $stale = $node->fresh();
     $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('abcdefghij'), 'a.txt'));
-    $drive->model()->forceFill(['quota_bytes' => 10])->save();
-    // The stale node says 4 bytes; the locked file head says 10. Replacing it
-    // with 8 bytes releases 2, rather than reserving 4 and rejecting the upload.
+    // 14 retained bytes; the stale node still says 4.
+    $drive->model()->forceFill(['quota_bytes' => 21])->save();
+    expect(fn () => $drive->files()->addRevision($stale, UploadSource::fromStream(DriveTestHelpers::streamFor('abcdefgh'), 'a.txt')))
+        ->toThrow(QuotaExceededException::class);
+    $drive->model()->forceFill(['quota_bytes' => 22])->save();
     $drive->files()->addRevision($stale, UploadSource::fromStream(DriveTestHelpers::streamFor('abcdefgh'), 'a.txt'));
-    expect($drive->model()->refresh()->used_bytes)->toBe(8)
+    expect($drive->model()->refresh()->used_bytes)->toBe(22)
         ->and($stale->fresh()->file->revision_count)->toBe(3);
 });
 
@@ -90,5 +92,5 @@ it('copies a stale file from its current head and reserves that exact size', fun
     $copy = $drive->nodes()->copy($stale, destination: null, options: new CopyOptions(name: 'copy.txt'));
     expect($copy->size_bytes)->toBe(10)
         ->and($copy->file->currentRevision->size_bytes)->toBe(10)
-        ->and($drive->model()->refresh()->used_bytes)->toBe(20);
+        ->and($drive->model()->refresh()->used_bytes)->toBe(4 + 10 + 10);
 });

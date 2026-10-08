@@ -22,15 +22,65 @@ The server never trusts a client-supplied hash. A declared `expected_sha256` is 
 
 A one-shot upload prepares its bytes once before the commit transaction (a resumable
 `complete()` is the exception, see [Transaction length of `complete()`](#transaction-length-of-complete)).
-The transaction locks drive → nodes by ascending id → file → quota → CAS. It reserves a positive
-head-size delta with a conditional UPDATE, so simultaneous writers cannot exceed
+The transaction locks drive → nodes by ascending id → file → quota → CAS. It reserves the
+full size of the new revision with a conditional UPDATE, so simultaneous writers cannot exceed
 `quota_bytes`. An unlimited quota is `null`; an exact-boundary reservation succeeds.
-The preliminary check is only a fast rejection for new files.
+The preliminary check is only a fast rejection; the conditional UPDATE decides.
 
-A new revision reads the locked file's current head and counter, allocates
-`version_count + 1`, and accounts for the difference from that actual head. Smaller
-heads release space; trashed heads keep using space until purge. A subtree copy
-reserves all copied head bytes together or rolls back the whole copy.
+The quota is **logical** (PLAN2.D48): `used_bytes` is the sum of `size_bytes` of every
+retained revision of every file of the drive, trash included, with no discount for
+deduplicated bytes — two identical uploads use twice their size. A new revision allocates
+`revision_count + 1` from the locked file and adds its full size, because the previous head
+stays as a retained revision. Restoring a revision copies it forward as a new revision and
+adds its size again; a copy adds the size of the head it copies. Deleting a revision,
+pruning by the retention policy and purging a file release the bytes. A drive whose usage
+ends up above its quota (a lowered quota, the upgrade recount) keeps reading, deleting and
+purging; only growth is refused.
+
+## Revision retention
+
+Every revision of a file stays until it is deleted, pruned or the file is purged. The
+drive profile's `RevisionRetentionPolicy` decides what pruning removes:
+
+```php
+use Vaulter\Profiles\DrivePolicyBuilder;
+use Vaulter\Profiles\RevisionRetentionPolicy;
+
+$profile->drivePolicy(fn (DrivePolicyBuilder $policy) => $policy->revisionRetention(new RevisionRetentionPolicy(
+    maxNoncurrentRevisions: 100, // newest non-current revisions kept per file; null = no count limit
+    maxNoncurrentAgeDays: null,  // delete non-current revisions superseded longer ago; null = no age limit
+    minNoncurrentAgeDays: 7,     // never prune a revision superseded more recently than this
+)));
+// Shorthand: keep at most 10 revisions per file, the head included.
+$profile->revisionLimit(10);
+```
+
+Protection order: the head is never pruned, then pinned revisions, then revisions superseded
+less than `minNoncurrentAgeDays` ago; of the rest, everything past the newest
+`maxNoncurrentRevisions` unpinned non-current revisions and everything older than
+`maxNoncurrentAgeDays` goes. Pinned revisions do not count against the limit. The age counts
+from `superseded_at`, the moment a revision stopped being the head.
+
+Pruning runs as `php artisan vaulter:revisions:prune [--drive=ID ...] [--dry-run]` (system actor
+`revision-retention`, files in batches of 500) or as the queued
+`Vaulter\Drive\Jobs\PruneFileRevisionsJob` for one drive. Schedule it daily, like
+`vaulter:purge-trash`:
+
+```php
+Schedule::command('vaulter:revisions:prune')->daily();
+```
+
+Single revisions are managed through the file API:
+
+```php
+$drive->files()->setRevisionRetention($file, $revision, keepForever: true); // Edit: pin / unpin
+$drive->files()->deleteRevision($file, $revision);                          // Manage: delete now
+```
+
+`deleteRevision` refuses the head (409 `cannot_delete_head_revision`) and pinned revisions
+(409 `revision_pinned`); unpin first. Delete and prune take the same locks
+(drive → file node → file → revision → quota → CAS), so a revision pinned or made non-deletable
+after the pruning chose it is skipped. Revision numbers are never reused.
 
 The transaction retries serialization failures/deadlocks up to three attempts,
 reusing the staged object, then discards it in `finally`. If SQL fails after physical

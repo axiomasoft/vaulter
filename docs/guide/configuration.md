@@ -138,7 +138,7 @@ under `webhooks.*`, including the URL guard, timeout, retry/backoff and retentio
 ```php
 // config/vaulter-media.php
 'disk' => env('VAULTER_DISK', 'local'),
-'dedup' => ['scope' => env('VAULTER_DEDUP_SCOPE', 'tenant')], // global | tenant | drive
+'dedup' => ['scope' => env('VAULTER_DEDUP_SCOPE', 'tenant')], // tenant | drive | off
 'gc' => ['grace_hours' => 24, 'orphan_grace_hours' => 24],
 'content_store' => \Vaulter\Media\Cas\Sha256ContentStore::class,
 'storage_driver' => \Vaulter\Media\Cas\FlysystemStorageDriver::class,
@@ -147,6 +147,8 @@ under `webhooks.*`, including the URL guard, timeout, retry/backoff and retentio
 
 Use an unversioned CAS bucket; blob deletion is managed by two-phase GC. Grace windows
 are floored at one hour. The canonical dedup scope is `drive` (formerly `storage`).
+`global` was removed (PLAN2.D49): the provider refuses it at boot with
+`InvalidConfigurationException`; run `vaulter:blobs:repair-scopes` to move existing global blobs.
 Deduplication uses the stored `scope_key`; changing the scope leaves existing blobs valid
 and affects new uploads. See [Storage & blobs](/guide/storage-and-blobs).
 
