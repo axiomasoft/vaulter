@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Exceptions\DocumentContentDegradedException;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Documents\Document;
@@ -70,7 +71,7 @@ it('keeps a document written in a newer schema read-only', function (): void {
     $handle = DocumentTestHelpers::drive();
     $documents = Documents::in($handle);
     $node = $documents->create('Board', type: 'acme/kanban', content: ['columns' => []]);
-    Document::query()->where('node_id', $node->id)->update(['schema_version' => 2]);
+    app(VaulterDatabase::class)->write(fn () => Document::query()->where('node_id', $node->id)->update(['schema_version' => 2]));
 
     $read = $documents->content($node->id);
     expect($read->typeAvailable)->toBeTrue()

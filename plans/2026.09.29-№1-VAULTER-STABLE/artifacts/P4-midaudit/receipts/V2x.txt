@@ -1,0 +1,5 @@
+cwd: .
+cmd: env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Feature packages/core/tests/Unit packages/core/tests/Content packages/core/tests/ObservabilityDocuments packages/core/tests/E2E packages/core/tests/Providers packages/core/tests/Support
+head: b68d2d63
+{"tool":"pest","result":"passed","tests":247,"passed":247,"assertions":832,"duration_ms":37452,"risky":3}
+exit: 0

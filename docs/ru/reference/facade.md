@@ -30,8 +30,6 @@ $panel = Vaulter::profiles()->get('project_drive'); // резолв Storage Pane
 |---|---|---|
 | `for(Model $entity, ?string $panel = null)` | `DriveHandle` | Открыть Drive-хэндл, привязанный к хранилищу сущности хоста в панели |
 | `forStorage(Drive $storage)` | `DriveHandle` | Открыть Drive-хэндл, привязанный к уже разрешённой строке-хранилищу |
-| `registerDocumentType(string $type, array $definition)` | `void` | Зарегистрировать пользовательский тип документа |
-| `documentTypes()` | `array` | Зарегистрированные пользовательские типы документов |
 | `profiles()` | `ProfileRegistry` | Именованные профили Drive (`get`, `register`, `registerProvider`) |
 | `handlers()` | `FileHandlerRegistry` | Реестр document handler'ов |
 | `registerExporter(DocumentExporter $exporter)` | `void` | Зарегистрировать пользовательский формат экспорта |
@@ -78,11 +76,10 @@ $drive = Vaulter::forStorage($storage);
 
 ## Типы документов и handler'ы
 
-### `registerDocumentType(string $type, array $definition): void` / `documentTypes(): array`
+### Типы документов
 
-Зарегистрировать и прочитать обратно пользовательские определения типов документов
-(хранятся в памяти на manager'е). Встроенные типы документов настраиваются отдельно
-через `config('vaulter.enabled_document_types')`.
+Типов документов на этом фасаде нет: они живут в `vaulter-documents` как `Documents::types()`
+(`Vaulter\Documents\Types\DocumentTypeRegistry`). См. [Типы документов](/ru/guide/document-types).
 
 ### `handlers(): FileHandlerRegistry`
 

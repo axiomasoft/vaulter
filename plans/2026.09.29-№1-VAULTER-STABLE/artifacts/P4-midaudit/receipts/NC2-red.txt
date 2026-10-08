@@ -1,0 +1,36 @@
+
+   FAIL  Tests\Types\DocumentTypeRegistryTest
+  ✓ it registers the configured types at boot and freezes once the appl… 0.40s  
+  ✓ it answers has, get and find for registered and unknown keys         0.18s  
+  ✓ it refuses a duplicate key and replaces only through replace()       0.16s  
+  ✓ it rejects keys outside vendor/name and the reserved vaulter/ prefi… 0.15s  
+  ✓ it rejects keys outside vendor/name and the reserved vaulter/ prefi… 0.16s  
+  ✓ it rejects keys outside vendor/name and the reserved vaulter/ prefi… 0.15s  
+  ✓ it rejects keys outside vendor/name and the reserved vaulter/ prefi… 0.16s  
+  ⨯ it rejects keys outside vendor/name and the reserved vaulter/ prefi… 0.16s  
+  ✓ it rejects a class name that is not a document type with dataset "m… 0.16s  
+  ✓ it rejects a class name that is not a document type with dataset "n… 0.16s  
+  ✓ it orders types by key whatever order the providers registered them… 0.16s  
+  ✓ it collects types from two providers in either order and from the c… 0.16s  
+  ✓ it serializes no class name: all() is keyed by the type key          0.16s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Types\DocumentTypeRegistryTest > it rejects keys outside ve…   
+  Exception "Vaulter\Exceptions\Configuration\InvalidConfigurationException" not thrown.
+
+  at tests/Types/DocumentTypeRegistryTest.php:65
+     61▕     expect(fn () => $types->replace('acme/missing', new KeyedType('acme/missing')))->toThrow(UnknownDocumentTypeException::class);
+     62▕ });
+     63▕ 
+     64▕ it('rejects keys outside vendor/name and the reserved vaulter/ prefix for third parties', function (string $key): void {
+  ➜  65▕     expect(fn () => freshTypes()->register(new KeyedType($key)))->toThrow(InvalidConfigurationException::class);
+     66▕ })->with([
+     67▕     'no vendor' => ['kanban'],
+     68▕     'upper case' => ['Acme/Kanban'],
+     69▕     'three segments' => ['acme/kanban/board'],
+
+  1   tests/Types/DocumentTypeRegistryTest.php:65
+
+
+  Tests:    1 failed, 12 passed (33 assertions)
+  Duration: 2.43s
+

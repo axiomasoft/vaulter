@@ -17,13 +17,19 @@ final readonly class OpaqueJsonCodec implements DocumentCodec
 {
     public function __construct(private ?int $maxSizeBytes = null) {}
 
+    /** @param array<array-key, mixed> $raw */
     public function decode(array $raw, int $schemaVersion): DocumentContent
     {
         if ($raw !== [] && array_is_list($raw)) {
             throw InvalidDocumentContentException::notAnObject();
         }
 
-        return OpaqueContent::fromArray($raw);
+        $object = [];
+        foreach ($raw as $key => $value) {
+            $object[(string) $key] = $value;
+        }
+
+        return OpaqueContent::fromArray($object);
     }
 
     public function maxSizeBytes(): ?int

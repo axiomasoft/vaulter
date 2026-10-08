@@ -179,6 +179,13 @@ contract: `namespace` (`^[a-z0-9][a-z0-9.-]{0,127}$`), `key` (`^[A-Za-z0-9_.-]{1
 `InvalidDocumentContentException::missingDocNode()` — the content root must be
 `{"type":"doc", …}`. Pass a valid TipTap JSON document or use `TipTapContent::empty()`.
 
+## invalid-document-content
+
+`InvalidDocumentContentException::notAnObject()` (422 `invalid_document_content`, reason
+`invalid_json`) — the document type stores a JSON object (a spreadsheet, a host's own type) and
+received a list or a scalar. Send an object. A content above the type's `maxSizeBytes()` or
+`vaulter-documents.content.max_size_kb` answers the same code with reason `too_large`.
+
 ## content-too-large
 
 `InvalidDocumentContentException::tooLarge()` — the content exceeds

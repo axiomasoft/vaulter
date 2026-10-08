@@ -1,0 +1,60 @@
+
+   FAIL  Tests\Types\DegradedContentTest
+  ⨯ it reads content of a switched-off editor extension degraded and re… 0.50s  
+  ⨯ it answers 409 document_content_degraded to an HTTP autosave         0.24s  
+  ⨯ it keeps a document written in a newer schema read-only              0.21s  
+  ✓ it upgrades an older schema on read without rewriting the stored co… 0.21s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Types\DegradedContentTest > it reads content of a switched-…   
+  Exception "Vaulter\Documents\Exceptions\DocumentContentDegradedException" not thrown.
+
+  at tests/Types/DegradedContentTest.php:48
+     44▕         ->and($read->editable)->toBeFalse()
+     45▕         ->and(array_column($read->content->toArray()['content'], 'type'))->toBe(['paragraph']);
+     46▕ 
+     47▕     expect(fn () => $documents->update($node->id, ['type' => 'doc', 'content' => []]))
+  ➜  48▕         ->toThrow(DocumentContentDegradedException::class);
+     49▕ 
+     50▕     // Nothing was lost.
+     51▕     expect(Document::query()->where('node_id', $node->id)->firstOrFail()->content)->toBe(widgetDocument());
+     52▕
+
+  1   tests/Types/DegradedContentTest.php:48
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Types\DegradedContentTest > it answers 409 document_content…   
+  Expected response status code [409] but received 200.
+Failed asserting that 200 is identical to 409.
+
+  at tests/Types/DegradedContentTest.php:66
+     62▕     config()->set('vaulter-documents.tiptap.extra_nodes', []);
+     63▕ 
+     64▕     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
+     65▕     $this->patchJson('api/vaulter/nodes/'.$node->id.'/content', ['content' => ['type' => 'doc', 'content' => []]])
+  ➜  66▕         ->assertStatus(409)
+     67▕         ->assertJsonPath('code', 'document_content_degraded');
+     68▕ });
+     69▕ 
+     70▕ it('keeps a document written in a newer schema read-only', function (): void {
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Types\DegradedContentTest > it keeps a document written in…    
+  Exception "Vaulter\Documents\Exceptions\DocumentContentDegradedException" not thrown.
+
+  at tests/Types/DegradedContentTest.php:81
+     77▕     expect($read->typeAvailable)->toBeTrue()
+     78▕         ->and($read->schemaVersion)->toBe(2)
+     79▕         ->and($read->editable)->toBeFalse();
+     80▕ 
+  ➜  81▕     expect(fn () => $documents->update($node->id, ['columns' => []]))->toThrow(DocumentContentDegradedException::class);
+     82▕ });
+     83▕ 
+     84▕ it('upgrades an older schema on read without rewriting the stored content', function (): void {
+     85▕     $handle = DocumentTestHelpers::drive();
+
+  1   tests/Types/DegradedContentTest.php:81
+
+
+  Tests:    3 failed, 1 passed (16 assertions)
+  Duration: 1.28s
+

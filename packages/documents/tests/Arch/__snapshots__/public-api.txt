@@ -2,11 +2,36 @@ Vaulter\Documents\Contracts\CollaborationDriver
   issueSession(\Vaulter\Models\Drive\Node $node, \Vaulter\Enums\Access\Ability $ability, int|string $actorId): \Vaulter\Documents\Data\Collaboration\CollaborationSession
   type(): \Vaulter\Documents\Enums\Collaboration\CollaborationDriverType
 
+Vaulter\Documents\Contracts\DocumentCodec
+  decode(array $raw, int $schemaVersion): \Vaulter\Documents\Contracts\DocumentContent
+  maxSizeBytes(): ?int
+
+Vaulter\Documents\Contracts\DocumentContent
+  contentHash(): string
+  sizeInBytes(): int
+  toArray(): array
+
+Vaulter\Documents\Contracts\DocumentType
+  capabilities(): \Vaulter\ValueObjects\Handlers\ContentCapabilities
+  codec(): \Vaulter\Documents\Contracts\DocumentCodec
+  defaultContent(): \Vaulter\Documents\Contracts\DocumentContent
+  key(): string
+  label(): string
+  schemaVersion(): int
+  viewer(): \Vaulter\ValueObjects\Handlers\ViewerDescriptor
+
 Vaulter\Documents\Contracts\ExportFilenameResolver
   resolve(\Vaulter\Models\Drive\Node $node, string $extension): string
 
 Vaulter\Documents\Contracts\HostUserResolver
   find(int|string $id): ?\Illuminate\Contracts\Auth\Access\Authorizable
+
+Vaulter\Documents\Contracts\SupportsCollaboration
+  collaborationProtocol(): string
+  projectFromState(string $state): ?\Vaulter\Documents\Contracts\DocumentContent
+
+Vaulter\Documents\Contracts\UpgradesSchema
+  upgrade(array $content, int $fromVersion): array
 
 Vaulter\Documents\Configuration\DocumentsConfig
   __construct(\Illuminate\Contracts\Config\Repository $config)
@@ -16,8 +41,8 @@ Vaulter\Documents\Configuration\DocumentsConfig
   collaborationEnabled(): bool
   collaborationRoom(mixed $nodeId): string
   commentsEnabled(): bool
+  defaultType(): string
   enabled(): bool
-  enabledDocumentTypes(): array
   exporters(): array
   hubJwtSecret(): ?string
   hubTimestampTolerance(): int
@@ -28,11 +53,11 @@ Vaulter\Documents\Configuration\DocumentsConfig
   model(string $key): string
   nodeIdFromRoom(string $room): string
   revisionLimit(): int
-  spreadsheetsEnabled(): bool
   tiptapExtraAttributes(): array
   tiptapExtraMarks(): array
   tiptapExtraNodes(): array
   tiptapUrlAttributes(): array
+  types(): array
 
 Vaulter\Documents\Events\Comments\CommentAdded
   __construct(\Vaulter\Documents\Models\Comments\NodeComment $comment, ?string $eventId = null)
@@ -90,17 +115,17 @@ FACADE Vaulter\Documents\Facades\Documents
   static DocumentTypeRegistry types()
 
 Vaulter\Documents\DocumentsManager
-  __construct(\Vaulter\Documents\Registries\DocumentTypeRegistry $types, \Vaulter\Documents\Registries\DocumentExporterRegistry $exporters)
+  __construct(\Vaulter\Documents\Types\DocumentTypeRegistry $types, \Vaulter\Documents\Registries\DocumentExporterRegistry $exporters)
   comments(\Vaulter\Contracts\Drive\DriveHandle $drive): \Vaulter\Documents\Operations\CommentOperations
   exporters(): \Vaulter\Documents\Registries\DocumentExporterRegistry
   in(\Vaulter\Contracts\Drive\DriveHandle $drive): \Vaulter\Documents\Operations\DocumentOperations
-  types(): \Vaulter\Documents\Registries\DocumentTypeRegistry
+  types(): \Vaulter\Documents\Types\DocumentTypeRegistry
 
 Vaulter\Documents\Operations\DocumentOperations
-  __construct(\Vaulter\Operations\OperationContext $context, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Access\OperationGuard $guard, \Vaulter\Profiles\ProfilePolicy $profiles, \Vaulter\Documents\Configuration\DocumentsConfig $config, \Vaulter\Documents\Actions\Documents\CreateDocumentAction $create, \Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction $update, \Vaulter\Documents\Actions\Revisions\CreateNamedRevisionAction $snapshot, \Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction $restore, \Vaulter\Documents\Actions\Revisions\UpdateRevisionRetentionAction $retention, \Vaulter\Documents\Export\NodeExportService $exports, \Vaulter\Documents\Collaboration\CollaborationSessionService $sessions, \Vaulter\Documents\Queries\DocumentQuery $query, \Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper $mapper, \Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper $nodes, \Vaulter\Handlers\FileDescriptorFactory $descriptors, \Vaulter\Handlers\FileHandlerRegistry $handlers)
+  __construct(\Vaulter\Operations\OperationContext $context, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Access\OperationGuard $guard, \Vaulter\Profiles\ProfilePolicy $profiles, \Vaulter\Documents\Configuration\DocumentsConfig $config, \Vaulter\Documents\Types\DocumentTypeRegistry $types, \Vaulter\Documents\Content\ContentDecoder $decoder, \Vaulter\Documents\Actions\Documents\CreateDocumentAction $create, \Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction $update, \Vaulter\Documents\Actions\Revisions\CreateNamedRevisionAction $snapshot, \Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction $restore, \Vaulter\Documents\Actions\Revisions\UpdateRevisionRetentionAction $retention, \Vaulter\Documents\Export\NodeExportService $exports, \Vaulter\Documents\Collaboration\CollaborationSessionService $sessions, \Vaulter\Documents\Queries\DocumentQuery $query, \Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper $mapper, \Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper $nodes)
   collaborationSession(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $document, ?int $clientSchemaVersion = null): \Vaulter\Documents\Data\Collaboration\CollaborationSession
   content(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $document, \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|null|string $revision = null): \Vaulter\Documents\Data\Snapshots\DocumentSnapshot
-  create(string $name, string $type = 'vaulter/rich-text', ?array $content = null, \Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $parent = null, ?\Vaulter\Data\Drive\CreateFolderOptions $options = null): \Vaulter\Data\Snapshots\NodeSnapshot
+  create(string $name, ?string $type = null, ?array $content = null, \Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $parent = null, ?\Vaulter\Data\Drive\CreateFolderOptions $options = null): \Vaulter\Data\Snapshots\NodeSnapshot
   export(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $document, string $format, \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|null|string $revision = null): \Vaulter\Documents\ValueObjects\DocumentExport
   restore(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $document, \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|string $revision, ?int $expectedStateVersion = null): \Vaulter\Documents\Data\Snapshots\DocumentSnapshot
   revisions(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $document, ?\Vaulter\Data\Drive\ListOptions $options = null): \Vaulter\Data\Page
@@ -123,7 +148,7 @@ Vaulter\Documents\Data\Snapshots\DocumentSnapshot
   readonly ?string $headRevisionId
   readonly ?string $updatedBy
   readonly \DateTimeImmutable $updatedAt
-  readonly \Vaulter\Contracts\Handlers\DocumentContent $content
+  readonly \Vaulter\Documents\Contracts\DocumentContent $content
   readonly bool $dirty
   readonly bool $editable
   readonly bool $typeAvailable
@@ -191,3 +216,95 @@ Vaulter\Documents\ValueObjects\DocumentExport
   readonly string $filename
   readonly string $format
   readonly string $mimeType
+
+Vaulter\Documents\Types\DocumentTypeRegistry
+  __construct(\Illuminate\Contracts\Container\Container $container)
+  all(): array
+  find(string $key): ?\Vaulter\Documents\Contracts\DocumentType
+  get(string $key): \Vaulter\Documents\Contracts\DocumentType
+  has(string $key): bool
+  register(\Vaulter\Documents\Contracts\DocumentType|string $type): void
+  replace(string $key, \Vaulter\Documents\Contracts\DocumentType|string $type): void
+
+Vaulter\Documents\Types\RichTextDocumentType
+  capabilities(): \Vaulter\ValueObjects\Handlers\ContentCapabilities
+  codec(): \Vaulter\Documents\Contracts\DocumentCodec
+  collaborationProtocol(): string
+  defaultContent(): \Vaulter\Documents\Contracts\DocumentContent
+  key(): string
+  label(): string
+  projectFromState(string $state): ?\Vaulter\Documents\Contracts\DocumentContent
+  schemaVersion(): int
+  viewer(): \Vaulter\ValueObjects\Handlers\ViewerDescriptor
+
+Vaulter\Documents\Types\MarkdownDocumentType
+  capabilities(): \Vaulter\ValueObjects\Handlers\ContentCapabilities
+  codec(): \Vaulter\Documents\Contracts\DocumentCodec
+  collaborationProtocol(): string
+  defaultContent(): \Vaulter\Documents\Contracts\DocumentContent
+  key(): string
+  label(): string
+  projectFromState(string $state): ?\Vaulter\Documents\Contracts\DocumentContent
+  schemaVersion(): int
+  viewer(): \Vaulter\ValueObjects\Handlers\ViewerDescriptor
+
+Vaulter\Documents\Types\SpreadsheetDocumentType
+  capabilities(): \Vaulter\ValueObjects\Handlers\ContentCapabilities
+  codec(): \Vaulter\Documents\Contracts\DocumentCodec
+  defaultContent(): \Vaulter\Documents\Contracts\DocumentContent
+  key(): string
+  label(): string
+  schemaVersion(): int
+  viewer(): \Vaulter\ValueObjects\Handlers\ViewerDescriptor
+
+Vaulter\Documents\Content\OpaqueContent
+  contentHash(): string
+  fromArray(array $data): \self
+  sizeInBytes(): int
+  toArray(): array
+
+Vaulter\Documents\Content\OpaqueJsonCodec
+  __construct(?int $maxSizeBytes = null)
+  decode(array $raw, int $schemaVersion): \Vaulter\Documents\Contracts\DocumentContent
+  maxSizeBytes(): ?int
+
+Vaulter\Documents\Content\TipTap\TipTapContent
+  allowedAttributes(string $type): array
+  allowedMarkTypes(): array
+  allowedNodeTypes(): array
+  contentHash(): string
+  decayFrom(array $doc, ?\Vaulter\Documents\Content\TipTap\TipTapSchema $schema = null): \self
+  decayReporting(array $doc, ?\Vaulter\Documents\Content\TipTap\TipTapSchema $schema = null): array
+  empty(): \self
+  ensureWithin(int $maxKb): \self
+  fromArray(array $doc, ?\Vaulter\Documents\Content\TipTap\TipTapSchema $schema = null): \self
+  sizeInBytes(): int
+  sizeInKb(): float
+  toArray(): array
+  urlAttributes(string $type): array
+  withSanitizedUrls(): \self
+
+Vaulter\Documents\Content\TipTap\TipTapCodec
+  __construct(\Vaulter\Documents\Content\TipTap\TipTapSchema $schema, ?int $maxSizeBytes = null)
+  decode(array $raw, int $schemaVersion): \Vaulter\Documents\Contracts\DocumentContent
+  decodeForRead(array $stored): \Vaulter\Documents\Content\ReadContent
+  maxSizeBytes(): ?int
+  schema(): \Vaulter\Documents\Content\TipTap\TipTapSchema
+
+Vaulter\Documents\Content\TipTap\TipTapSchema
+  allowsMark(string $type): bool
+  allowsNode(string $type): bool
+  attributes(string $type): array
+  markTypes(): array
+  markdown(): \self
+  nodeTypes(): array
+  richText(): \self
+  urlAttributes(string $type): array
+
+Vaulter\Documents\Presentation\DocumentPresenter
+  __construct(\Vaulter\Documents\Content\ContentDecoder $decoder)
+  kind(): \Vaulter\Enums\Drive\NodeKind
+  present(\Vaulter\Data\Snapshots\NodeSnapshot|\Vaulter\Models\Drive\Node $node): \Vaulter\ValueObjects\Handlers\NodePresentation
+
+Vaulter\Documents\Testing\Contracts\DocumentTypeContractTests
+  assertDocumentTypeContract(\Vaulter\Documents\Contracts\DocumentType $type): void

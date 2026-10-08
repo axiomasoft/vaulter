@@ -78,21 +78,19 @@ php artisan vendor:publish --tag=vaulter-config
 | `features.grants` | `true` | Гранты на узлы (ACL) |
 | `features.activity` | `true` | Журнал активности |
 | `features.share_links` | `false` | Bearer-ссылки на узлы (share) |
-| `features.spreadsheets` | `false` | `UniverHandler` за фича-флагом (редактирование xlsx) |
 | `features.public_listing` | `false` | Публичный листинг |
 | `features.webhooks` | `true` | Подписчик outbox + маршруты эндпойнтов |
 
 ## Обработчики документов — `handlers`
 
-Список FQCN `FileHandler`, которые принадлежащий core `Vaulter\Handlers\FileHandlerRegistry` резолвит по цепочке mime → расширение → возможность → приоритет, с откатом к null-объекту `DownloadOnlyHandler`. Две базовые записи — СОБСТВЕННЫЙ дефолт core (VLT-CANON P0.4/D10 — резолвятся даже без установленного `vaulter-documents`); `vaulter-documents` регистрирует `TipTapHandler` через `vaulter.file_handlers`.
+Список FQCN `FileHandler`, которые принадлежащий core `Vaulter\Handlers\FileHandlerRegistry` резолвит по цепочке mime → расширение → возможность → приоритет, с откатом к null-объекту `DownloadOnlyHandler`. Две базовые записи — СОБСТВЕННЫЙ дефолт core (VLT-CANON P0.4/D10 — резолвятся даже без установленного `vaulter-documents`). Обработчики обслуживают только файлы: узлы-документы представляются своим [типом документа](/ru/guide/document-types).
 
 | Встроенные обработчики через тег | Владелец |
 |---|---|
 | `Vaulter\Handlers\Builtin\PreviewHandler` | core |
 | `Vaulter\Handlers\Builtin\DownloadOnlyHandler` | core |
-| `Vaulter\Documents\Engines\Handlers\TipTapHandler` | vaulter-documents |
 
-`UniverHandler` (xlsx) добавляется сервис-провайдером **только** когда включён `features.spreadsheets`. Добавьте новый формат одним классом + записью здесь (или через `Vaulter::handlers()->register()`).
+Добавьте новый формат файлов одним классом + записью здесь (или через `Vaulter::handlers()->register()`).
 
 ## Тенантность — `tenancy.*`
 
@@ -296,12 +294,18 @@ php artisan vendor:publish --tag=vaulter-config
 
 См. [Использование → Версии](/ru/guide/documents).
 
-## Документы — `enabled_document_types`, `vaulter-documents.content.max_size_kb`
+## Документы — `vaulter-documents.types`, `default_type`, `content.max_size_kb`
 
 | Ключ | По умолчанию |
 |---|---|
-| `enabled_document_types` | `['richtext', 'table', 'markdown', 'template']` |
-| `vaulter-documents.content.max_size_kb` | `5120` |
+| `vaulter-documents.types` | `[RichTextDocumentType::class, MarkdownDocumentType::class]` — зарегистрированные [типы документов](/ru/guide/document-types); добавьте `SpreadsheetDocumentType::class` или свой |
+| `vaulter-documents.default_type` | `'vaulter/rich-text'` — тип, который использует `create()`, если тип не указан; обязан быть зарегистрирован |
+| `vaulter-documents.content.max_size_kb` | `5120` — лимит кодека, у которого `maxSizeBytes()` равен `null` |
+
+Ключи 0.2 нормализуются с предупреждением об устаревании: `vaulter.enabled_document_types`
+(`richtext`/`table`/`template` → `RichTextDocumentType`, `markdown` → `MarkdownDocumentType`)
+и `vaulter.features.spreadsheets = true` (добавляет `SpreadsheetDocumentType`) превращаются в
+`vaulter-documents.types`.
 
 ## Форматы экспорта — `vaulter-documents.exporters`
 
@@ -372,4 +376,4 @@ Yjs — источник истины; TipTap JSON — производная п
 Документы включены при установке пакета; блобы и ревизии файлов включены всегда.
 Комментарии теперь включены по умолчанию; старый `features.comments = false` переносится.
 Карта экспортёров сохраняет формат → FQCN. `enabled_document_types` и `features.spreadsheets`
-пока остаются в core. См. [карту миграции](/ru/guide/configuration#переход-с-опубликованной-конфигурации-0-2).
+стали `vaulter-documents.types`. См. [карту миграции](/ru/guide/configuration#переход-с-опубликованной-конфигурации-0-2).

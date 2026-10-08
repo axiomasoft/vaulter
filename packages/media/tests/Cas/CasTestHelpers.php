@@ -6,6 +6,7 @@ namespace Vaulter\Media\Tests\Cas;
 
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Contracts\Cas\ContentStore;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Media\Cas\Sha256ContentStore;
@@ -43,7 +44,7 @@ final class CasTestHelpers
             'owner_id' => $owner,
             'name' => 'Disk',
         ]);
-        $storage->save();
+        self::write(static fn () => $storage->save());
 
         $node = new Node;
         $node->forceFill([
@@ -51,7 +52,7 @@ final class CasTestHelpers
             'kind' => NodeKind::File,
             'name' => $name,
         ]);
-        $node->save();
+        self::write(static fn () => $node->save());
 
         $file = new File;
         $file->forceFill([
@@ -59,7 +60,7 @@ final class CasTestHelpers
             'mime_type' => 'application/octet-stream',
             'size_bytes' => 0,
         ]);
-        $file->save();
+        self::write(static fn () => $file->save());
 
         $version = new FileRevision;
         $version->forceFill([
@@ -70,7 +71,7 @@ final class CasTestHelpers
             'original_name' => $name,
             'status' => 'committed',
         ]);
-        $version->save();
+        self::write(static fn () => $version->save());
 
         return $version;
     }
@@ -163,9 +164,15 @@ final class CasTestHelpers
             'scope_key' => BlobScope::fromSegment($scope)->key(),
             'committed_at' => $status === BlobStatus::Committed ? now() : null,
         ]);
-        $blob->save();
+        self::write(static fn () => $blob->save());
 
         return $blob;
+    }
+
+    /** Seed rows through the write scope so the guard lane stays on for the code under test. */
+    public static function write(callable $callback): void
+    {
+        app(VaulterDatabase::class)->write($callback);
     }
 
     private static function contentStore(): ContentStore

@@ -33,10 +33,10 @@ function r21SeedCandidates(int $count, BlobStatus $status = BlobStatus::Committe
         $blob = CasTestHelpers::seedBlobRow('r21 candidate '.$i, $status);
 
         if ($status !== BlobStatus::Committed) {
-            $blob->forceFill([
+            CasTestHelpers::write(static fn () => $blob->forceFill([
                 'delete_after_at' => now()->subHour(),
                 'first_seen_at' => now()->subDays(2),
-            ])->save();
+            ])->save());
         }
 
         $blobs[] = $blob;
@@ -62,7 +62,7 @@ it('caps mark batches and advances past live candidates without per-row liveness
     // Stale ref_count pins candidates in the scan; both full batches contain
     // skipped rows, including the checkpoint boundary.
     foreach ([0, 999, 1000, 1999, 2104] as $index) {
-        $store->attach($version, $blobs[$index]);
+        CasTestHelpers::write(static fn () => $store->attach($version, $blobs[$index]));
     }
 
     $reads = [];
@@ -87,7 +87,7 @@ it('caps mark batches and advances past live candidates without per-row liveness
 it('caps sweep and pending batches while skipped rows stay eligible', function (BlobStatus $status): void {
     $blobs = r21SeedCandidates(1005, $status);
     $version = CasTestHelpers::makeVersion();
-    app(BlobStore::class)->attach($version, $blobs[999]);
+    CasTestHelpers::write(static fn () => app(BlobStore::class)->attach($version, $blobs[999]));
 
     $collector = app(BlobGarbageCollector::class);
     $result = $status === BlobStatus::Pending ? $collector->sweepPending(graceHours: 24) : $collector->sweep();
@@ -128,7 +128,7 @@ it('rechecks a later candidate whose live edge is added by an earlier model obse
 
     Blob::updated(function (Blob $blob) use ($first, $later, $version, $store): void {
         if ($blob->is($first)) {
-            $store->attach($version, $later);
+            CasTestHelpers::write(static fn () => $store->attach($version, $later));
         }
     });
 
@@ -144,8 +144,8 @@ it('rechecks live edges and status after the cheap scan in the optimized mark pa
     DB::listen(function (QueryExecuted $query) use (&$injected, $live, $changed, $version): void {
         if (!$injected && str_contains($query->sql, 'limit 1000')) {
             $injected = true;
-            app(BlobStore::class)->attach($version, $live);
-            $changed->forceFill(['status' => BlobStatus::Pending])->save();
+            CasTestHelpers::write(static fn () => app(BlobStore::class)->attach($version, $live));
+            CasTestHelpers::write(static fn () => $changed->forceFill(['status' => BlobStatus::Pending])->save());
         }
     });
 
@@ -162,11 +162,11 @@ it('rechecks status liveness and grace for a materialized deletion batch', funct
     DB::listen(function (QueryExecuted $query) use (&$injected, $live, $changed, $recent, $version, $status): void {
         if (!$injected && str_contains($query->sql, 'limit 1000')) {
             $injected = true;
-            app(BlobStore::class)->attach($version, $live);
-            $changed->forceFill(['status' => BlobStatus::Committed])->save();
-            $recent->forceFill($status === BlobStatus::Pending
+            CasTestHelpers::write(static fn () => app(BlobStore::class)->attach($version, $live));
+            CasTestHelpers::write(static fn () => $changed->forceFill(['status' => BlobStatus::Committed])->save());
+            CasTestHelpers::write(static fn () => $recent->forceFill($status === BlobStatus::Pending
                 ? ['first_seen_at' => now()]
-                : ['delete_after_at' => now()->addHour()])->save();
+                : ['delete_after_at' => now()->addHour()])->save());
         }
     });
 
@@ -238,17 +238,17 @@ it('advances sparse string and native UUID keys with configured models', functio
         : sprintf('blob-%08d', $index * 3);
 
     for ($i = 1004; $i >= 0; $i--) {
-        (new ($model::class))->forceFill([
+        CasTestHelpers::write(static fn () => (new ($model::class))->forceFill([
             'blob_key' => $keyFor($i),
             'sha256' => hash('sha256', 'string blob '.$i),
             'dedup_scope' => 'global',
             'scope_key' => 'global',
             'status' => BlobStatus::Committed,
             'ref_count' => 0,
-        ])->save();
+        ])->save());
     }
 
-    (new ($edgeModel::class))->forceFill(['blob_id' => $keyFor(999)])->save();
+    CasTestHelpers::write(static fn () => (new ($edgeModel::class))->forceFill(['blob_id' => $keyFor(999)])->save());
 
     expect(app(BlobGarbageCollector::class)->mark(graceHours: 24))->toBe(['tombstoned' => 1004, 'skipped' => 1])
         ->and(r21MetricValues($this->metrics, 'vaulter_gc_batch_rows'))->toBe([1000, 5])

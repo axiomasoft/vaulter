@@ -13,13 +13,12 @@ outline: deep
 `Vaulter\Handlers\FileHandlerRegistry` подбирает лучший обработчик для файла, и клиент
 направляет узел на эту поверхность **без зашитой mime-логики**. Реестр и его базовые обработчики
 (`PreviewHandler`/`DownloadOnlyHandler`) принадлежат core — хост только с Drive, без других
-пакетов, всё равно резолвит preview/download для любого файла; пакет вроде `vaulter-documents`
-лишь добавляет более богатые форматы (TipTap, Univer, …).
+пакетов, всё равно резолвит preview/download для любого файла. Обработчики обслуживают только
+**файлы**: узел-документ представляется своим [типом документа](./document-types.md), а не обработчиком.
 
 Главное свойство: **добавление нового формата — это операция «один класс + одна регистрация»: без
 миграции, без правки ядра, без ограничения каким-либо запечатанным enum.** Строковые ключи реестра
-(mime / расширение) — единственный источник истины; встроенные enum `NodeKind` / `DocumentType`
-нужны лишь для удобства и никогда не выступают ограничителем.
+(mime / расширение) — единственный источник истины; никакой enum их не ограничивает.
 
 ::: tip Куда это встраивается
 [Узлы-документы](./documents.md) несут *контент*; обработчики решают вопрос *поверхности*.
@@ -95,12 +94,13 @@ new ContentCapabilities(
 
 ```php
 new ViewerDescriptor(
-    key: 'vaulter/tiptap',     // the Vue component the client mounts
-    props:     ['format' => 'richtext'], // arbitrary serialisable props
+    key: 'vaulter/pdf-preview',          // viewer, который монтирует клиент
+    props: ['page' => 1],                // произвольные сериализуемые props
 );
 ```
 
-Это встраивается в payload узла (как `NodePresentation` — `id` + `capabilities` + `ui`), чтобы
+Это встраивается в payload узла (как `NodePresentation` — `id` + `document_type` +
+`type_available` + `capabilities` + `ui`; у файла `document_type` равен `null`), чтобы
 Vue-клиент направил узел, не прогоняя mime-логику заново. Компонент
 [`VaulterDocumentNode`](#mounting-the-resolved-handler-in-vue) сопоставляет `ui.key` дескриптора
 с конкретным редактором.
@@ -117,23 +117,13 @@ Vue-клиент направил узел, не прогоняя mime-логи�
 никогда не сможет навязать обработчик редактирования/превью на враждебные байты.
 :::
 
-## DocumentType
+## Файлы — не документы
 
-`Vaulter\Enums\Documents\DocumentType` — это встроенный **синтаксический сахар** поверх реестра:
-небольшой набор форматов rich-text с меткой, иконкой и списком расширений TipTap, который
-`TipTapHandler` отдаёт как prop `viewer.props.extensions`. Это **не** ограничитель: реестр маршрутизирует
-по строкам mime/расширения, а хост добавляет новые форматы
-[обработчиком](#adding-a-new-format-a-worked-example), а не расширением этого enum.
-
-| Кейс | value | Расширения TipTap |
-|---|---|---|
-| `RichText` | `richtext` | StarterKit · Image · Table · Link |
-| `Table` | `table` | StarterKit · Table |
-| `Markdown` | `markdown` | StarterKit · CodeBlock |
-| `Template` | `template` | StarterKit · Placeholder |
-
-Эти четыре значения `value` — то, что принимает поле `format` при [создании узла-документа](./documents.md#creating-a-document-node)
-(по умолчанию `richtext`).
+Загруженный файл `.docx`, `.doc`, `.md` или `.xlsx` — это **файл**: он резолвится в
+`PreviewHandler` или `DownloadOnlyHandler` и никогда не объявляется редактируемым или совместным,
+пока не появится импорт «файл → документ». Редактируемое содержимое живёт в узлах-документах,
+представление которых задаёт их [тип документа](./document-types.md) (`vaulter/rich-text`,
+`vaulter/markdown`, `vaulter/spreadsheet` или собственный).
 
 ## Алгоритм подбора
 
@@ -161,7 +151,6 @@ Vue-клиент направил узел, не прогоняя mime-логи�
 ```php
 // config/vaulter.php
 'handlers' => [
-    Vaulter\Documents\Engines\Handlers\TipTapHandler::class,
     Vaulter\Handlers\Builtin\PreviewHandler::class,
     Vaulter\Handlers\Builtin\DownloadOnlyHandler::class,
 ],
@@ -169,29 +158,12 @@ Vue-клиент направил узел, не прогоняя mime-логи�
 
 | Обработчик | `key` | Заявляет | Возможности | UI-компонент | Приоритет |
 |---|---|---|---|---|---|
-| `TipTapHandler` | `vaulter/tiptap` | `application/vnd.vaulter.document+json`, `text/markdown`, docx/msword; ext `md`, `markdown`, `doc`, `docx`, `vdoc` | edit · preview · **collaborate** | `vaulter/tiptap` | 100 |
 | `PreviewHandler` | `vaulter/preview` | `application/pdf`, `image/*`; ext `pdf`, `png`, `jpg`, `jpeg`, `gif`, `webp`, `avif`, `bmp` | preview · thumbnail | `vaulter/pdf-preview` | 80 |
 | `DownloadOnlyHandler` | `vaulter/download` | `*` (catch-all) | download | `vaulter/download` | −1000 |
 
-Узел-документ, созданный через `CreateDocumentAction`, помечается mime-типом документа Vaulter
-(`application/vnd.vaulter.document+json`), поэтому он всегда маршрутизируется в `TipTapHandler`
-независимо от расширения в его имени.
-
-::: details UniverHandler — обработчик таблиц под фичефлагом
-`Vaulter\Documents\Engines\Handlers\UniverHandler` (`key: vaulter/univer`, заявляет xlsx/xls, приоритет 90,
-редактируемый + с превью, но **однопользовательский** — совместное редактирование в Univer — это
-отдельный OT-движок, а не полоса Yjs) **не** входит в список конфига по умолчанию. Сервис-провайдер
-добавляет его в тегированный набор `vaulter.file_handlers` **только** тогда, когда включена фича
-`spreadsheets`:
-
-```php
-// config/vaulter.php
-'features' => ['spreadsheets' => true],
-```
-
-С выключенным флагом xlsx проваливается в `DownloadOnlyHandler`. Это доказательство того, что
-расширяемость «один класс + регистрация» работает и для редактора, не относящегося к rich-text.
-:::
+Узел-документ несёт mime документа Vaulter (`application/vnd.vaulter.document+json`), но через
+этот реестр не маршрутизируется: `NodePresenter` ядра передаёт каждый узел вида `document`
+kind-презентеру, который помечает тегом `vaulter-documents` (`vaulter.kind_presenters`).
 
 ## Подбор обработчика для узла
 
@@ -202,19 +174,25 @@ Vue-клиент направил узел, не прогоняя mime-логи�
 ```bash [HTTP]
 # GET {prefix}/nodes/{node}/handler
 curl https://app.test/api/vaulter/nodes/77/handler
-# → { "data": { "id": "vaulter/tiptap",
+# PDF-файл:
+# → { "data": { "id": "vaulter/preview", "document_type": null, "type_available": true,
+#               "capabilities": { "editable": false, "previewable": true,
+#                                 "downloadable": true, "thumbnailable": true,
+#                                 "collaborative": false },
+#               "ui": { "key": "vaulter/pdf-preview", "props": {} } } }
+# документ rich text:
+# → { "data": { "id": null, "document_type": "vaulter/rich-text", "type_available": true,
 #               "capabilities": { "editable": true, "previewable": true,
-#                                 "downloadable": true, "thumbnailable": false,
+#                                 "downloadable": false, "thumbnailable": false,
 #                                 "collaborative": true },
-#               "ui": { "key": "vaulter/tiptap",
-#                       "props": { "format": "richtext", "extensions": [...] } } } }
+#               "ui": { "key": "vaulter/tiptap", "props": { "preset": "rich-text" } } } }
 ```
 
 ```php [PHP — the resolver]
 use Vaulter\Contracts\Handlers\NodePresenter;
 
 $descriptor = app(NodePresenter::class)->present($node);
-// NodePresentation: ->id, ->capabilities, ->ui  (call ->toArray() to serialise)
+// NodePresentation: ->id, ->documentType, ->typeAvailable, ->capabilities, ->ui (->toArray() для сериализации)
 ```
 
 ```ts [Vue — composable]
@@ -227,7 +205,7 @@ await loadHandler()
 
 :::
 
-`NodePresenter` строит `FileDescriptor` из узла (mime, которому доверяет сервер) и спрашивает
+Для файла `NodePresenter` строит `FileDescriptor` из узла (mime, которому доверяет сервер) и спрашивает
 реестр на **самом широком** уровне возможностей (`Download` — его удовлетворяет любой обработчик),
 чтобы победил **самый специфичный** совпавший обработчик; дальше дескриптор сообщает полный набор
 возможностей этого обработчика, чтобы клиент мог ветвиться по ним.
@@ -311,7 +289,6 @@ enum не тронут.
 ```php [config — cache-safe FQCN list]
 // config/vaulter.php — append to the handlers list (FQCN only, config-cache safe)
 'handlers' => [
-    Vaulter\Documents\Engines\Handlers\TipTapHandler::class,
     Vaulter\Handlers\Builtin\PreviewHandler::class,
     App\Vaulter\Handlers\CsvHandler::class,        // [!code ++]
     Vaulter\Handlers\Builtin\DownloadOnlyHandler::class,
@@ -338,7 +315,8 @@ $this->app->tag([App\Vaulter\Handlers\CsvHandler::class], 'vaulter.file_handlers
   статического обработчика.
 - **`Vaulter::handlers()->register()`** — шов для рантайма: регистрируйте условно на boot; повторное
   наполнение слитого набора + сброс кеша сохраняют корректность последующего подбора.
-- **тегированная привязка** — это то, что использует сам пакет для условного `UniverHandler`.
+- **тегированная привязка** — канал, которым core регистрирует свои базовые обработчики;
+  используйте его для обработчика, который поставляет пакет.
 :::
 
 ### 3. И оно просто работает
@@ -416,7 +394,7 @@ registerEngineComponent('AppCsvPreview', AppCsvPreview)
 компонента), называя оба канала регистрации — тот же пробел, который string-key биндинг
 `Nova.booting` у Nova оставляет молчаливым.
 
-Если подобранный обработчик **collaborative** (например, `TipTapHandler`) и совместное редактирование
+Если представление **collaborative** (например, документ `vaulter/rich-text`) и совместное редактирование
 включено, `VaulterDocumentNode` открывает Yjs-сессию и запускает редактор в режиме совместного
 редактирования; иначе он использует путь автосохранения, описанный в
 [Узлах-документах](./documents.md#autosave-vs-named-versions).
@@ -429,6 +407,6 @@ registerEngineComponent('AppCsvPreview', AppCsvPreview)
 - Шов менеджера — `Vaulter\VaulterManager::handlers()->register()` / `::handlers()`
 - VO — `ContentCapabilities`, `ViewerDescriptor`, `NodePresentation`, `FileDescriptor`
 - Enum — `Vaulter\Enums\Handlers\Capability`
-- Встроенные — `TipTapHandler`, `PreviewHandler`, `UniverHandler`, `DownloadOnlyHandler`
+- Встроенные — `PreviewHandler`, `DownloadOnlyHandler` (документы: см. [Типы документов](./document-types.md))
 - Фронтовый реестр (`@vaulter/vue`) — `registerEngineComponent`, `unregisterEngineComponent`,
   `resolveEngineComponent`, `registeredEngineComponentIds`, `clearEngineComponents`

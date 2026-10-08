@@ -173,6 +173,10 @@ Vaulter\Contracts\Observability\MetricsRecorder
 Vaulter\Contracts\Observability\TraceRecorder
   span(string $name, callable $operation, array $attributes = []): mixed
 
+Vaulter\Contracts\Presentation\KindPresenter
+  kind(): \Vaulter\Enums\Drive\NodeKind
+  present(\Vaulter\Data\Snapshots\NodeSnapshot|\Vaulter\Models\Drive\Node $node): \Vaulter\ValueObjects\Handlers\NodePresentation
+
 Vaulter\Contracts\Sharing\ShareOperations
   create(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Data\Sharing\ShareLinkInput $input): \Vaulter\Data\Snapshots\MintedShareLink
   list(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): array
@@ -744,6 +748,187 @@ Vaulter\Content\ScanPolicySpec
   readonly string $scannerKey
   readonly string $scannerVersion
 
+Vaulter\Data\Page
+  count(): int
+  getIterator(): \Traversable
+  hasMore(): bool
+  readonly ?string $nextCursor
+  readonly array $items
+  readonly int $scanned
+
+Vaulter\Data\Snapshots\ActivityEntrySnapshot
+
+  readonly ?string $actorId
+  readonly ?string $actorType
+  readonly ?string $driveId
+  readonly ?string $ip
+  readonly ?string $requestId
+  readonly ?string $targetId
+  readonly ?string $targetType
+  readonly ?string $userAgent
+  readonly \DateTimeImmutable $createdAt
+  readonly array $context
+  readonly string $id
+  readonly string $verb
+
+Vaulter\Data\Snapshots\DocumentHeadSnapshot
+
+  readonly ?string $headRevisionId
+  readonly bool $typeAvailable
+  readonly int $epoch
+  readonly int $schemaVersion
+  readonly int $stateVersion
+  readonly string $type
+
+Vaulter\Data\Snapshots\DriveSnapshot
+
+  readonly ?string $tenantId
+  readonly \DateTimeImmutable $createdAt
+  readonly string $id
+  readonly string $name
+  readonly string $ownerId
+  readonly string $ownerType
+  readonly string $profile
+  readonly string $status
+
+Vaulter\Data\Snapshots\FileHeadSnapshot
+
+  readonly ?string $mimeType
+  readonly \Vaulter\Enums\Drive\ScanStatus $scanStatus
+  readonly int $revisionNumber
+  readonly int $sizeBytes
+  readonly string $fileId
+  readonly string $revisionId
+  readonly string $sha256
+
+Vaulter\Data\Snapshots\FileRevisionSnapshot
+
+  readonly ?\DateTimeImmutable $clientModifiedAt
+  readonly ?string $createdBy
+  readonly ?string $declaredMimeType
+  readonly ?string $mimeType
+  readonly ?string $restoredFromRevisionId
+  readonly \DateTimeImmutable $createdAt
+  readonly \Vaulter\Enums\Drive\ScanStatus $scanStatus
+  readonly bool $isHead
+  readonly bool $keepForever
+  readonly int $number
+  readonly int $sizeBytes
+  readonly string $fileNodeId
+  readonly string $id
+  readonly string $sha256
+
+Vaulter\Data\Snapshots\GrantSnapshot
+
+  readonly ?\DateTimeImmutable $expiresAt
+  readonly ?string $grantedBy
+  readonly \DateTimeImmutable $createdAt
+  readonly \Vaulter\Access\ValueObjects\Subject $subject
+  readonly \Vaulter\Enums\Access\GrantScope $scope
+  readonly int $roleVersion
+  readonly string $id
+  readonly string $nodeId
+  readonly string $role
+
+Vaulter\Data\Snapshots\MintedShareLink
+
+  readonly \Vaulter\Data\Snapshots\ShareLinkSnapshot $link
+  readonly string $token
+
+Vaulter\Data\Snapshots\NodeSnapshot
+
+  readonly ?\DateTimeImmutable $contentModifiedAt
+  readonly ?\DateTimeImmutable $trashedAt
+  readonly ?\Vaulter\Data\Snapshots\DocumentHeadSnapshot $document
+  readonly ?\Vaulter\Data\Snapshots\FileHeadSnapshot $file
+  readonly ?\Vaulter\Data\Snapshots\ViewerStateSnapshot $viewer
+  readonly ?string $contentModifiedBy
+  readonly ?string $createdBy
+  readonly ?string $extension
+  readonly ?string $mimeType
+  readonly ?string $parentId
+  readonly ?string $trashedBy
+  readonly ?string $updatedBy
+  readonly \DateTimeImmutable $createdAt
+  readonly \DateTimeImmutable $updatedAt
+  readonly \Vaulter\Enums\Drive\NodeKind $kind
+  readonly array $properties
+  readonly bool $inheritsAccess
+  readonly bool $trashRoot
+  readonly int $sequence
+  readonly int $sizeBytes
+  readonly string $driveId
+  readonly string $id
+  readonly string $name
+
+Vaulter\Data\Snapshots\QuotaSnapshot
+
+  readonly ?int $limitBytes
+  readonly ?int $remainingBytes
+  readonly \Vaulter\Enums\Drive\QuotaState $state
+  readonly int $trashedBytes
+  readonly int $usedBytes
+
+Vaulter\Data\Snapshots\ShareLinkSnapshot
+
+  readonly ?\DateTimeImmutable $expiresAt
+  readonly ?\DateTimeImmutable $revokedAt
+  readonly ?int $maxUses
+  readonly ?string $createdBy
+  readonly \DateTimeImmutable $createdAt
+  readonly \Vaulter\Enums\Access\GrantScope $scope
+  readonly \Vaulter\Enums\Sharing\ShareAudience $audience
+  readonly bool $passwordProtected
+  readonly int $roleVersion
+  readonly int $tokenGeneration
+  readonly int $useCount
+  readonly string $id
+  readonly string $nodeId
+  readonly string $role
+  readonly string $tokenPrefix
+
+Vaulter\Data\Snapshots\ViewerStateSnapshot
+
+  readonly bool $starred
+
+Vaulter\ValueObjects\Handlers\ContentCapabilities
+  __construct(bool $editable = false, bool $previewable = false, bool $downloadable = true, bool $thumbnailable = false, bool $collaborative = false)
+  downloadOnly(): \self
+  toArray(): array
+  readonly bool $collaborative
+  readonly bool $downloadable
+  readonly bool $editable
+  readonly bool $previewable
+  readonly bool $thumbnailable
+
+Vaulter\ValueObjects\Handlers\FileDescriptor
+  __construct(int|string $nodeId, string $filename, ?string $extension = null, ?string $claimedMime = null, ?string $detectedMime = null, ?string $objectHash = null, int $size = 0)
+  canonicalMime(): ?string
+  make(int|string $nodeId, string $filename, ?string $extension = null, ?string $claimedMime = null, ?string $detectedMime = null, ?string $objectHash = null, int $size = 0): \self
+  normalizedExtension(): ?string
+  readonly ?string $claimedMime
+  readonly ?string $detectedMime
+  readonly ?string $extension
+  readonly ?string $objectHash
+  readonly int $size
+  readonly int|string $nodeId
+  readonly string $filename
+
+Vaulter\ValueObjects\Handlers\NodePresentation
+  __construct(?string $id, \Vaulter\ValueObjects\Handlers\ContentCapabilities $capabilities, \Vaulter\ValueObjects\Handlers\ViewerDescriptor $ui, ?string $documentType = null, bool $typeAvailable = true)
+  toArray(): array
+  readonly ?string $documentType
+  readonly ?string $id
+  readonly \Vaulter\ValueObjects\Handlers\ContentCapabilities $capabilities
+  readonly \Vaulter\ValueObjects\Handlers\ViewerDescriptor $ui
+  readonly bool $typeAvailable
+
+Vaulter\ValueObjects\Handlers\ViewerDescriptor
+  __construct(string $key, array $props = [])
+  toArray(): array
+  readonly array $props
+  readonly string $key
+
 Vaulter\Enums\Operations\OperationKind
   Metadata = metadata
   Mutation = mutation
@@ -799,6 +984,24 @@ Vaulter\Enums\Drive\NodeSort
   Name = name
   UpdatedAt = updated_at
   Size = size
+
+Vaulter\Enums\Drive\QuotaState
+  Normal = normal
+  Nearing = nearing
+  Critical = critical
+  Exceeded = exceeded
+
+Vaulter\Enums\Drive\ScanStatus
+  NotRequired = not_required
+  Pending = pending
+  Clean = clean
+  Infected = infected
+  Failed = failed
+
+Vaulter\Enums\Sharing\ShareAudience
+  Anyone = anyone
+  Authenticated = authenticated
+  Tenant = tenant
 
 Vaulter\ValueObjects\Access\ActorRef::SYSTEM_TYPE = vaulter:system
 

@@ -1,0 +1,24 @@
+
+   FAIL  Tests\Drive\DrivePolicyEnforcementTest
+  ⨯ it applies a lowered size limit to file copies and every file in a…  0.69s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Drive\DrivePolicyEnforcementTest > it applies a lowered siz…   
+  Exception "Vaulter\Exceptions\Policy\FileSizeLimitExceededException" not thrown.
+
+  at tests/Drive/DrivePolicyEnforcementTest.php:159
+    155▕     policyDrive(static fn (DrivePolicyBuilder $p) => $p->maxFileBytes(4));
+    156▕     $used = $drive->quota()->usedBytes;
+    157▕     $count = Node::query()->where('drive_id', $drive->model()->id)->count();
+    158▕ 
+  ➜ 159▕     expect(fn () => $drive->nodes()->copy($file, $destination))->toThrow(FileSizeLimitExceededException::class)
+    160▕         ->and(fn () => $drive->nodes()->copy($folder, $destination))->toThrow(FileSizeLimitExceededException::class)
+    161▕         ->and(Node::query()->where('drive_id', $drive->model()->id)->count())->toBe($count)
+    162▕         ->and($drive->quota()->usedBytes)->toBe($used);
+    163▕ });
+
+  1   tests/Drive/DrivePolicyEnforcementTest.php:159
+
+
+  Tests:    1 failed (1 assertions)
+  Duration: 0.79s
+

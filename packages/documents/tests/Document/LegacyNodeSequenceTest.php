@@ -16,6 +16,8 @@ use Vaulter\Documents\Data\Revisions\RestoreDocumentRevisionInput;
 use Vaulter\Documents\Data\Revisions\UpdateRevisionRetentionInput;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Documents\Tests\Fixtures\Types\KeyedType;
+use Vaulter\Exceptions\Registry\RegistryFrozenException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -85,9 +87,10 @@ it('touches the node change stamp without the sequence on a content write', func
         ->and($fresh->updated_at?->greaterThan($node->created_at))->toBeTrue();
 });
 
-it('owns runtime document types and exporter registrations in the documents manager', function (): void {
-    Documents::types()->register('sheet', ['label' => 'Sheet']);
-    expect(Documents::types()->all())->toHaveKey('sheet', ['label' => 'Sheet']);
+it('owns the document type registry and exporter registrations in the documents manager', function (): void {
+    // Types register while the application boots; afterwards the set is frozen (PLAN2.P4.3).
+    expect(array_keys(Documents::types()->all()))->toBe(['vaulter/markdown', 'vaulter/rich-text'])
+        ->and(fn () => Documents::types()->register(new KeyedType('acme/sheet')))->toThrow(RegistryFrozenException::class);
 
     Documents::exporters()->register(FakeExporter::class);
     expect(Documents::exporters()->get('fake'))->toBeInstanceOf(FakeExporter::class)

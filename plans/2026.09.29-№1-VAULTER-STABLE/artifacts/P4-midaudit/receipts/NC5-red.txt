@@ -1,0 +1,47 @@
+
+   FAIL  Tests\Document\NodeHandlerDescriptorTest
+  ⨯ it presents a document node by its document type, not by a file han… 0.47s  
+  ⨯ it embeds the handler descriptor in the NodeResource payload         0.19s  
+  ✓ it omits the handler descriptor for a folder node                    0.18s  
+  ✓ it describes a file node by its server-trusted mime (never a claime… 0.18s  
+  ✓ it presents docx, md and xlsx FILES as preview/download, never edit… 0.18s  
+  ✓ it presents docx, md and xlsx FILES as preview/download, never edit… 0.18s  
+  ✓ it presents docx, md and xlsx FILES as preview/download, never edit… 0.18s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Document\NodeHandlerDescriptorTest > it presents a document…   
+  Failed asserting that 'vaulter/download' is null.
+
+  at tests/Document/NodeHandlerDescriptorTest.php:33
+     29▕     ));
+     30▕ 
+     31▕     $descriptor = app(NodePresenter::class)->present($node);
+     32▕ 
+  ➜  33▕     expect($descriptor->id)->toBeNull()
+     34▕         ->and($descriptor->documentType)->toBe('vaulter/rich-text')
+     35▕         ->and($descriptor->typeAvailable)->toBeTrue()
+     36▕         ->and($descriptor->capabilities->editable)->toBeTrue()
+     37▕         ->and($descriptor->capabilities->collaborative)->toBeTrue()
+
+  1   tests/Document/NodeHandlerDescriptorTest.php:33
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Document\NodeHandlerDescriptorTest > it embeds the handler…    
+  Failed asserting that 'vaulter/download' is null.
+
+  at tests/Document/NodeHandlerDescriptorTest.php:56
+     52▕     $payload = NodeResource::make(app(NodeSnapshotMapper::class)->map($node))->toArray(request());
+     53▕ 
+     54▕     expect($payload)->toHaveKey('handler')
+     55▕         ->and($payload['handler'])->toBeArray()
+  ➜  56▕         ->and($payload['handler']['id'])->toBeNull()
+     57▕         ->and($payload['handler']['document_type'])->toBe('vaulter/rich-text')
+     58▕         ->and($payload['handler']['type_available'])->toBeTrue()
+     59▕         ->and($payload['handler']['capabilities'])->toHaveKey('editable')
+     60▕         ->and($payload['handler']['capabilities'])->not->toHaveKey('rich_text')
+
+  1   tests/Document/NodeHandlerDescriptorTest.php:56
+
+
+  Tests:    2 failed, 5 passed (21 assertions)
+  Duration: 1.67s
+

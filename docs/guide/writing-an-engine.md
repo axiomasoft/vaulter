@@ -69,8 +69,6 @@ final class MyEditorHandler implements FileHandler
             editable: true,
             previewable: true,
             collaborative: false,
-            // richText stays at its default (false, §3) — this handler's content
-            // is its OWN shape, not a TipTap {"type":"doc"} projection.
         );
     }
 
@@ -93,11 +91,10 @@ they stay `final` (H.5).
 `ContentCapabilities` is an **additive, open axis set** (P0.5). Three rules keep your handler
 (and every handler that comes after it) safe to compose:
 
-1. **A capability you don't declare is `false`, never inferred.** `richText` defaults to
-   `false` — a kind-neutral handler makes no claim about content shape unless it opts in. If
-   your handler's editable content IS a TipTap `{"type":"doc"}` document, set `richText: true`
-   explicitly; otherwise leave it at the default and your content round-trips as an opaque
-   snapshot (`OpaqueContent`) — never validated, never coerced into TipTap's shape.
+1. **A capability you don't declare is `false`, never inferred** (except `downloadable`, which
+   defaults to `true` for a file). Content shape is not a capability: a handler describes a
+   file, and structured, editable content is a [document type](./document-types.md) with its
+   own codec.
 2. **A future new capability flag must not break your handler.** You are not required to know
    about every flag `ContentCapabilities` carries — the constructor gives every flag a safe
    default. The client mirrors this: `ContentCapabilities` on the TypeScript side carries an
@@ -141,20 +138,17 @@ public function viewer(FileDescriptor $file): ViewerDescriptor
 }
 ```
 
-The contract does **not** force your handler to reproduce `TipTapHandler`'s `viewer.props` shape
-(`format`, `extensions`) — `props` is an arbitrary, handler-decided map. Document your own
+The contract does **not** force your handler to reproduce another viewer's `props` shape — `props`
+is an arbitrary, handler-decided map. Document your own
 handler's `props` shape for the client team that consumes it; there is no shared schema to
 conform to beyond "serialisable."
 
 ## 4. Versioning your own content shape
 
-If your handler's `DocumentContent` implementation evolves after nodes already exist with the
-old shape, carry a `schemaVersion` (or similar) key inside your own payload — `DocumentContent`
-is opaque to the core by design (`toArray()`/`contentHash()`/`sizeInBytes()` only), so schema
-evolution is entirely your handler's responsibility. `TipTapContent` does not currently carry
-one; if you fork or extend that shape, decide up front whether you need it — retrofitting a
-version discriminator onto already-persisted rows is far more expensive than shipping one from
-day one.
+A handler serves file bytes and has no content schema of its own. If your editor stores
+structured content in Vaulter, write a [document type](./document-types.md) instead: its
+`schemaVersion()` is stored with every document, and `UpgradesSchema::upgrade()` raises older
+content on read without rewriting history.
 
 ## 5. Licensing boundaries in third-party editor SDKs
 
@@ -170,7 +164,7 @@ mistake to make silently.
 Same three channels as any handler — see
 [Document Handlers → Register it](./document-handlers.md#2-register-it): the config FQCN list
 (cache-safe), `Vaulter::handlers()->register()` (runtime), or a tagged `'vaulter.file_handlers'` binding
-(what the package itself uses for the feature-flagged `UniverHandler`).
+(the channel core uses for its baseline handlers).
 
 ## 7. Mounting it on the client
 
@@ -222,7 +216,7 @@ registerEngineComponent('my-editor', AppMyEditor)
 
 No separate frontend package is required (D8, VLT-CANON P1.1): a third-party engine ships as
 plain host application code — a `.vue` file plus one `registerEngineComponent` call — the same
-way `@vaulter/vue` itself bundles `TipTapHandler`'s editor rather than publishing it standalone.
+way `@vaulter/vue` itself bundles its TipTap editor rather than publishing it standalone.
 A dedicated `@vaulter/vue-engine-<name>` package is introduced later, lazily, only once a real
 external consumer of that specific engine exists.
 
@@ -230,13 +224,10 @@ external consumer of that specific engine exists.
 
 - [ ] `key()` is a stable, unique string — never renamed once shipped (H.5: a handler is a
       SemVer-frozen public surface from its release).
-- [ ] `richText` is set explicitly TRUE only if your content really is a TipTap
-      `{"type":"doc"}` document; otherwise left at its default FALSE.
+- [ ] The handler serves files; editable structured content is a document type, not a handler.
 - [ ] `priority()` reflects how specific your match is relative to handlers you know conflict
       with you on the same extension/mime.
 - [ ] `viewer.props` shape is documented for your own client code — it is not assumed to match
-      `TipTapHandler`'s.
-- [ ] If your content shape may evolve, you decided on a `schemaVersion` (or explicitly decided
-      you don't need one yet).
+      any other viewer's.
 - [ ] If wrapping a dual-licensed SDK, the free/commercial import boundary is enforced, not just
       remembered.

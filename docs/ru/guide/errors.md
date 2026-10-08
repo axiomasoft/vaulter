@@ -60,6 +60,13 @@
 `InvalidDocumentContentException::missingDocNode()` — корень контента должен быть
 `{"type":"doc", …}`. Передайте валидный TipTap-документ в JSON или используйте `TipTapContent::empty()`.
 
+## invalid-document-content
+
+`InvalidDocumentContentException::notAnObject()` (422 `invalid_document_content`, reason
+`invalid_json`) — тип документа хранит JSON-объект (spreadsheet, собственный тип хоста), а пришёл
+список или скаляр. Отправьте объект. Содержимое больше `maxSizeBytes()` типа или
+`vaulter-documents.content.max_size_kb` даёт тот же код с reason `too_large`.
+
 ## content-too-large
 
 `InvalidDocumentContentException::tooLarge()` — контент превышает

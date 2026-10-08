@@ -1,0 +1,4 @@
+cwd: packages/media
+cmd: ../../scripts/php84 vendor/bin/pint --test
+head: b68d2d63
+{"tool":"pint","result":"passed"}exit: 0

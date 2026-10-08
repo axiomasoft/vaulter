@@ -1,0 +1,7 @@
+
+   PASS  Tests\Drive\DrivePolicyEnforcementTest
+  ✓ it applies a lowered size limit to file copies and every file in a…  0.64s  
+
+  Tests:    1 passed (4 assertions)
+  Duration: 0.76s
+

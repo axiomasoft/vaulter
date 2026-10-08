@@ -1,0 +1,24 @@
+
+   FAIL  Tests\Operations\DocumentOperationsTest
+  ⨯ it refuses an oversized generated conflict name without creating a…  0.50s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Operations\DocumentOperationsTest > it refuses an oversized…   
+  Exception "Vaulter\Exceptions\Nodes\InvalidNodeNameException" not thrown.
+
+  at tests/Operations/DocumentOperationsTest.php:209
+    205▕     $name = 'a.'.str_repeat('x', 253);
+    206▕     $node = $documents->create($name);
+    207▕ 
+    208▕     expect(fn () => $documents->create($name, options: new CreateFolderOptions(OnNameConflict::Rename)))
+  ➜ 209▕         ->toThrow(InvalidNodeNameException::class)
+    210▕         ->and(Document::query()->count())->toBe(1)
+    211▕         ->and($documents->content($node)->stateVersion)->toBe(1);
+    212▕ });
+    213▕
+
+  1   tests/Operations/DocumentOperationsTest.php:209
+
+
+  Tests:    1 failed (1 assertions)
+  Duration: 0.62s
+

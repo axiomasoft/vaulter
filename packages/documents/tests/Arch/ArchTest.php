@@ -30,6 +30,12 @@ test('non-test src never references the host App namespace (E5.1, F-P4.3-01)', f
     $src = __DIR__.'/../../src';
     $offenders = [];
 
+    // Scaffolding commands legitimately emit `App\*` as a STRING (the namespace of
+    // generated host code), never as a real import/dependency of the package itself.
+    $allowlist = [
+        'Console/MakeDocumentTypeCommand.php',
+    ];
+
     /** @var Iterator<SplFileInfo> $files */
     $files = new RegexIterator(
         new RecursiveIteratorIterator(new RecursiveDirectoryIterator($src)),
@@ -37,6 +43,10 @@ test('non-test src never references the host App namespace (E5.1, F-P4.3-01)', f
     );
 
     foreach ($files as $file) {
+        if (in_array(str_replace($src.'/', '', $file->getPathname()), $allowlist, true)) {
+            continue;
+        }
+
         $contents = file_get_contents($file->getPathname());
 
         if ($contents === false) {

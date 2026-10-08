@@ -1,0 +1,58 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "artifacts-P4-design-P4.14-opus",
+  "title": "OPUS — дословные требования для P4.14 (13 единиц)",
+  "sections": [
+    {
+      "id": "S1",
+      "title": "OPUS — дословные требования для P4.14 (13 единиц)",
+      "text": "> Сгенерировано `opus-coverage.py render`; не править руками. Каждая строка обязательна к исполнению\n> или к явному отказу через D# плана (D06)."
+    },
+    {
+      "id": "S2",
+      "title": "01-review.md — 4. Новые находки (не было ни в аудите, ни у Codex) / N21 (S3). AzGuard-специфика живёт в core, а мост требует `dev-main`",
+      "text": "- `01:1c3d640e` — _Передано из ledger-P2 (handoff, D57): обязательство моста AzGuard, владелец — P4.14; сохраняется при порте на AzGuard v1 (D56)._\n\n`Contracts\\Access\\AzgardGuard`, `Drivers\\Permission\\AzgardPermissionResolver`, `Support\\AzgardConfig` и ключи\n`azgard.*` — в core; `vaulter-azgard` содержит только адаптер и требует `axioma-studio/azguard-core: dev-main` —\nс таким требованием стабильный релиз невозможен."
+    },
+    {
+      "id": "S3",
+      "title": "02-decisions.md — D02 — Пакеты: сохранить набор, сделать зависимости честными · T1",
+      "text": "- `02:e15b4066` — _Передано из ledger-P2 (handoff, D57): обязательство моста AzGuard, владелец — P4.14; сохраняется при порте на AzGuard v1 (D56)._\n\n5. Всё AzGuard-специфичное (`AzgardGuard`, драйвер, карта прав, ключи `azgard.*`)\n   переносится из core в `vaulter-azgard` (N21).\n\n- `02:7bf67b19` — _Передано из ledger-P2 (handoff, D57): обязательство моста AzGuard, владелец — P4.14; сохраняется при порте на AzGuard v1 (D56)._\n\n   - **мосты** (azgard, filament) не содержат доменной логики."
+    },
+    {
+      "id": "S4",
+      "title": "04-packages-and-layout.md — 1. Пакеты и зависимости",
+      "text": "- `04:5bbb932e` — _Передано из ledger-P2 (handoff, D57): обязательство моста AzGuard, владелец — P4.14; сохраняется при порте на AzGuard v1 (D56)._\n\n| azgard | `axioma-studio/vaulter-azgard` | `Vaulter\\Azgard\\` | core | Драйвер прав AzGuard + адаптер guard |"
+    },
+    {
+      "id": "S5",
+      "title": "06-extension-points.md — 5. Permission driver (core)",
+      "text": "- `06:53200da4` — _Передано из ledger-P2 (handoff, D57): обязательство моста AzGuard, владелец — P4.14; сохраняется при порте на AzGuard v1 (D56)._\n\n- Встроенные ключи: `database`, `gate`, `spatie` (core), `azgard` (vaulter-azgard регистрирует ключ сам),\n  `null` (только тесты; в production — исключение boot)."
+    },
+    {
+      "id": "S6",
+      "title": "07-configuration.md — 5. `config/vaulter-azgard.php`",
+      "text": "- `07:e40ce5c1` — _Передано из ledger-P2 (handoff, D57): обязательство моста AzGuard, владелец — P4.14; сохраняется при порте на AzGuard v1 (D56)._\n\n```php\nreturn [\n    'panel_id' => env('VAULTER_AZGARD_PANEL'),\n    'permissions' => [ /* ability → AzGuard permission, как сейчас в vaulter.azgard.permissions */ ],\n    'create_permission' => 'documents.create',\n];\n```\n\n- `07:35c9e07d` — _Передано из ledger-P2 (handoff, D57): обязательство моста AzGuard, владелец — P4.14; сохраняется при порте на AzGuard v1 (D56)._\n\nДрайвер регистрирует ключ `azgard` в `vaulter.access.permission_drivers` из своего provider'а."
+    },
+    {
+      "id": "S7",
+      "title": "03-glossary-and-renames.md — 3. Классы: core (`Vaulter\\`)",
+      "text": "- `03:0065c62f` — _Справочно (D57): канон имён моста закрыт P2.4; при порте на AzGuard v1 публичные имена Vaulter\\Azgard\\* не меняются._\n\n| `Drivers\\Permission\\AzgardPermissionResolver` | → `Vaulter\\Azgard\\AzgardPermissionDriver` | в пакет azgard |\n\n- `03:15134404` — _Справочно (D57): канон имён моста закрыт P2.4; при порте на AzGuard v1 публичные имена Vaulter\\Azgard\\* не меняются._\n\n| `Contracts\\Access\\AzgardGuard` | → `Vaulter\\Azgard\\Contracts\\AzgardGuard` | в пакет azgard |\n\n- `03:5c0723c5` — _Справочно (D57): канон имён моста закрыт P2.4; при порте на AzGuard v1 публичные имена Vaulter\\Azgard\\* не меняются._\n\n| `Support\\AzgardConfig` | → `Vaulter\\Azgard\\AzgardPermissionMap` | в пакет azgard |\n\n- `03:8378be94` — _Справочно (D57): канон имён моста закрыт P2.4; при порте на AzGuard v1 публичные имена Vaulter\\Azgard\\* не меняются._\n\n| `Testing\\FakeAzgardGuard` | → `Vaulter\\Azgard\\Testing\\FakeAzgardGuard` | в пакет azgard |"
+    },
+    {
+      "id": "S8",
+      "title": "02-decisions.md — D36 — Релиз и артефакты · T0 (блокеры) / T1",
+      "text": "- `02:27c3be4b` — _D57: «^0.x»/«azguard-core» читается как AzGuard v1 — P4.14 требует axiomasoft/azguard: ^1.0 без dev-main; гейт публикации — P7._\n\nMetapackage; проверка согласованности версий split-пакетов; `vaulter-azgard` публикуется только\nпри тегированном `azguard-core`, иначе исключается из релиза; clean-consumer установка из собранных\nархивов; upgrade 0.2 → 0.3 на данных. Детали — [12-operations-and-release.md](12-operations-and-release.md)."
+    },
+    {
+      "id": "S9",
+      "title": "12-operations-and-release.md — 6. Релиз и версии",
+      "text": "- `12:268fa6e9` — _D57: «^0.x»/«azguard-core» читается как AzGuard v1 — P4.14 требует axiomasoft/azguard: ^1.0 без dev-main; гейт публикации — P7._\n\n| `vaulter-azgard` | публикуется только при тегированной версии AzGuard (`^0.x`), `dev-main` запрещён в `require`; иначе исключается из релиза с пометкой в CHANGELOG |"
+    }
+  ],
+  "applies_to": [
+    "P4.14"
+  ],
+  "provenance": {
+    "note": "Rendered 2026-10-08 from artifacts/coverage/ledger-P4.tsv by opus-coverage.py render (D57 handoff for P4.14, D56); OPUS bytes unchanged."
+  }
+}

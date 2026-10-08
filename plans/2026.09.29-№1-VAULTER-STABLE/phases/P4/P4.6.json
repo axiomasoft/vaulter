@@ -33,7 +33,8 @@
     ]
   },
   "depends_on": [
-    "P4.7"
+    "P4.7",
+    "P4.14"
   ],
   "decisions": [
     "D01",
@@ -606,5 +607,5 @@
     "notes": "Внешние факты проверены при дизайне: @plan/knowledge/P4-industry-research-2026-10-07.json; исполнителю повторный поиск не нужен"
   },
   "result": null,
-  "updated_at": "2026-10-08T18:59:59Z"
+  "updated_at": "2026-10-08T18:24:54Z"
 }

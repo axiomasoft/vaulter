@@ -1,0 +1,169 @@
+# cwd: packages/drive
+# cmd: env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Drive/DrivePolicyEnforcementTest.php tests/Drive/CopyNodeTest.php tests/Drive/QuotaLedgerTest.php tests/Drive/RevisionRetentionTest.php tests/PublicApi
+# head: b68d2d63
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Drive\DrivePolicyEnforcementTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit applies portable-v1 to create, rename, upload and copy-as, with[39m[90m… [39m [90m0.59s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit applies portable-v1 to create, rename, upload and copy-as, with[39m[90m… [39m [90m0.27s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit applies portable-v1 to create, rename, upload and copy-as, with[39m[90m… [39m [90m0.27s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit applies portable-v1 to create, rename, upload and copy-as, with[39m[90m… [39m [90m0.27s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit accepts under permissive-v1 what portable-v1 refuses[39m[90m             [39m [90m0.20s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit treats NFC/NFD and case variants as one sibling name and lets a[39m[90m… [39m [90m0.33s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit never renames a stored name the policy refuses, but every new na[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces maxFolderChildren on create, upload, move, copy and res[39m[90m…[39m [90m0.40s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces maxFolderDepth on create, upload, move, copy and restor[39m[90m…[39m [90m0.41s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit checks the declared, streamed and final file size against maxFil[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit applies a lowered size limit to file copies and every file in a[39m[90m… [39m [90m0.34s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses a restore that grows beyond a lowered size limit without[39m[90m…[39m [90m0.37s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit allows restoring a smaller retained payload when both versions e[39m[90m…[39m [90m0.39s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit renders the limit problems with their stable codes[39m[90m               [39m [90m0.19s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit resolves a conflict rename with a name the policy accepts[39m[90m        [39m [90m0.24s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Drive\CopyNodeTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit копия файла переиспользует ОДИН блоб через новое ребро[39m[90m           [39m [90m0.36s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit глубокая копия папки клонирует всё поддерево[39m[90m                     [39m [90m0.40s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit copy отклоняет конфликт имён в месте назначения[39m[90m                  [39m [90m0.21s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Drive\QuotaLedgerTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit counts every retained revision on every path[39m[90m                     [39m [90m0.50s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit charges identical uploads twice: the quota is logical, never ded[39m[90m…[39m [90m0.41s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit charges a copy with the head it copies, not the source history[39m[90m   [39m [90m0.41s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit frees every revision of a purged subtree[39m[90m                         [39m [90m0.52s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses a revision past the quota and still lets a drive over it[39m[90m…[39m [90m0.37s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses to delete the head or a pinned revision and keeps their[39m[90m… [39m [90m0.38s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit forgets the source of restores whose source revision is deleted[39m[90m  [39m [90m0.43s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit lets a writer pin but only a manager delete revisions[39m[90m            [39m [90m0.38s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Drive\RevisionRetentionTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit keeps the head and the newest non-current revisions; a pinned on[39m[90m…[39m [90m0.67s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit never prunes a revision superseded less than minNoncurrentAgeDay[39m[90m…[39m [90m0.35s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit prunes by age past maxNoncurrentAgeDays even under the count lim[39m[90m…[39m [90m0.37s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit reports without deleting on --dry-run and prunes only the select[39m[90m…[39m [90m0.56s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit prunes trashed files too and releases their bytes[39m[90m                [39m [90m0.39s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit leaves recent history alone under the default policy and on driv[39m[90m…[39m [90m0.56s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit stamps superseded_at when a revision stops being the head, never[39m[90m…[39m [90m0.36s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit validates the retention policy with dataset "negative count"[39m[90m     [39m [90m0.16s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit validates the retention policy with dataset "zero max age"[39m[90m       [39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit validates the retention policy with dataset "negative min age"[39m[90m   [39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit validates the retention policy with dataset "max age below min a[39m[90m…[39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit validates the retention policy with dataset "unprotected pins"[39m[90m   [39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit maps the profile revision limit onto the retention policy[39m[90m        [39m [90m0.15s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\PublicApi\CopySubtreeAuthorizationTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit SEC-D30-copy-subtree refuses the whole copy when a descendant is[39m[90m…[39m [90m0.61s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-D30-copy-subtree refuses a hidden document descendant before[39m[90m…[39m [90m0.37s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-D30-copy-subtree refuses the whole copy when a visible desce[39m[90m…[39m [90m0.42s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-D30-copy-subtree refuses the whole copy when a visible desce[39m[90m…[39m [90m0.38s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-D30-copy-subtree lets a system actor copy everything but sti[39m[90m…[39m [90m0.52s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-D30-copy-subtree refuses a descendant outside the authorised[39m[90m…[39m [90m0.35s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-D30-copy-subtree refuses a copy of nodes the actor may view[39m[90m… [39m [90m0.30s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\PublicApi\LifecycleBoundaryTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit preflights a mixed subtree before any copy rows quota edges or e[39m[90m…[39m [90m0.29s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit preflights a mixed subtree before any copy rows quota edges or e[39m[90m…[39m [90m0.29s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects duplicate lifecycle registrations without replacing the[39m[90m… [39m [90m0.18s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit copies and restores immutable payload identity edge attributes a[39m[90m…[39m [90m0.47s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit uses fresh destination admission without inheriting a legacy sca[39m[90m…[39m [90m0.42s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses known infected immutable bytes before copying changes th[39m[90m…[39m [90m0.26s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit purge rolls back the entire physical subtree payload edges quota[39m[90m…[39m [90m0.29s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit empty completes later roots then rethrows the first original fai[39m[90m…[39m [90m0.39s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit empty counts successful subtree roots rather than the number of[39m[90m… [39m [90m0.28s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit retention purge reports a failed root exits one and still physic[39m[90m…[39m [90m0.37s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit restores to the active original parent without Create and ignore[39m[90m…[39m [90m0.26s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes View and Create on the actual fallback destination wi[39m[90m…[39m [90m0.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes View and Create on the actual fallback destination wi[39m[90m…[39m [90m0.26s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes View and Create on the actual fallback destination wi[39m[90m…[39m [90m0.29s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit repeats public destination authorization when the original paren[39m[90m…[39m [90m0.27s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit repeats public destination authorization when the original paren[39m[90m…[39m [90m0.29s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\PublicApi\NodeSequenceContractTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit SEC-R19-noop checks a current or stale expectation before every[39m[90m… [39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-R19-noop checks a current or stale expectation before every[39m[90m… [39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-R19-noop checks a current or stale expectation before every[39m[90m… [39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit increments sequence once for each metadata or content transition[39m[90m…[39m [90m0.57s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-R20-subtree increments every descendant once on trash and re[39m[90m…[39m [90m0.28s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-R20-overflow admits max minus one and rolls back max mutatio[39m[90m…[39m [90m0.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-R20-overflow rejects negative expectations and corrupted neg[39m[90m…[39m [90m0.20s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-R19-replay returns the committed result without ingesting or[39m[90m…[39m [90m0.42s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\PublicApi\OperationMatrixTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.28s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.29s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.26s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.28s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.33s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.30s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.27s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.27s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.29s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.27s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.34s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.29s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.27s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.35s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.29s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.27s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.29s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.28s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.26s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.26s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.29s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.30s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.30s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.34s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.35s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit enforces the complete public operation source permission matrix[39m[90m… [39m [90m0.34s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit checks each move copy and changed restore destination independen[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit checks each move copy and changed restore destination independen[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit checks each move copy and changed restore destination independen[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit checks each move copy and changed restore destination independen[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit checks each move copy and changed restore destination independen[39m[90m…[39m [90m0.28s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit checks each move copy and changed restore destination independen[39m[90m…[39m [90m0.29s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit checks the host drive admission gate for both create and upload[39m[90m… [39m [90m0.21s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit checks the host drive admission gate for both create and upload[39m[90m… [39m [90m0.21s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit keeps system operations bound to their drive for foreign keys mo[39m[90m…[39m [90m0.42s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rebinds a stale node snapshot by its id and ignores forged attri[39m[90m…[39m [90m0.30s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit provisions once and resolves the ambient actor lazily while keep[39m[90m…[39m [90m0.31s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit empty skips unauthorized roots and deletes only the independentl[39m[90m…[39m [90m0.32s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit read blocks legacy infection and uncommitted content after Downl[39m[90m…[39m [90m0.36s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-CONFLICT appends to the normalized case-insensitive sibling[39m[90m… [39m [90m0.31s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-CONFLICT appends to the normalized case-insensitive sibling[39m[90m… [39m [90m0.30s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-CONFLICT appends to the normalized case-insensitive sibling[39m[90m… [39m [90m0.30s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-CONFLICT requires Edit on the actual case-insensitive revisi[39m[90m…[39m [90m0.28s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-CONFLICT keeps a folder sibling as an upload conflict withou[39m[90m…[39m [90m0.20s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-CONFLICT answers 404 about the requested name for a hidden s[39m[90m…[39m [90m0.26s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-CONFLICT answers 404 about the requested name for a hidden s[39m[90m…[39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit SEC-CURSOR rejects a file list cursor for a different kind filte[39m[90m…[39m [90m0.28s[39m  
+
+  [90mTests:[39m    [32;1m145 passed[39;22m[90m (504 assertions)[39m
+  [90mDuration:[39m [39m43.67s[39m
+
+# exit: 0  duration: 44s

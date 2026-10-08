@@ -1,0 +1,190 @@
+cwd: packages/documents
+cmd: env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: VAULTER_TEST_WRITE_GUARD=1 ../../scripts/php84 vendor/bin/pest --ci tests/Operations tests/Document/DocumentCopyLifecycleTest.php tests/Types
+head: b68d2d63
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Operations\CommentOperationsTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit adds a comment authored by the acting user and returns a snapsho[39m[90m…[39m [90m0.47s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit records the registered morph alias as the author type[39m[90m            [39m [90m0.19s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses a comment from the system: nobody to attribute it to[39m[90m     [39m [90m0.19s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit lists a thread oldest first in pages[39m[90m                             [39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit threads a reply only under a comment of the same node[39m[90m            [39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit resolves a comment of another node as comment_not_found[39m[90m          [39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit lets the author resolve with Comment, refuses a commenter who is[39m[90m…[39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit lets an editor who is not the author resolve[39m[90m                     [39m [90m0.21s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses resolve to an author who no longer holds Comment[39m[90m         [39m [90m0.21s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit deletes for the author or a manager only[39m[90m                         [39m [90m0.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit applies the drive profile comments feature to every method[39m[90m       [39m [90m0.22s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Operations\DocumentAbilityMatrixTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "none con[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "none rev[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "none upd[39m[90m…[39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "none sna[39m[90m…[39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "none res[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "none set[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "none exp[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "none col[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "none com[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "none com[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "previewe[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "previewe[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "previewe[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "previewe[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "previewe[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "previewe[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "previewe[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "previewe[39m[90m…[39m [90m0.26s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "previewe[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "previewe[39m[90m…[39m [90m0.29s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "reader e[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "reader c[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "reader r[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "reader u[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "reader s[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "reader r[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "reader s[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "reader c[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "reader c[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "reader c[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "commente[39m[90m…[39m [90m0.27s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "commente[39m[90m…[39m [90m0.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "commente[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "commente[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "commente[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "commente[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "commente[39m[90m…[39m [90m0.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "commente[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "commente[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "commente[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "writer u[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "writer s[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "writer r[39m[90m…[39m [90m0.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "writer s[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "writer c[39m[90m…[39m [90m0.26s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "writer c[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "writer e[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "writer c[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "writer r[39m[90m…[39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "writer c[39m[90m…[39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "owner up[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "owner sn[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "owner re[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "owner se[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "owner co[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "owner co[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "owner ex[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "owner co[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "owner re[39m[90m…[39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit authorizes every documents method by role with dataset "owner co[39m[90m…[39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers node_not_found for a trashed document on every method wi[39m[90m…[39m [90m0.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers node_not_found for a trashed document on every method wi[39m[90m…[39m [90m0.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers node_not_found for a trashed document on every method wi[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers node_not_found for a trashed document on every method wi[39m[90m…[39m [90m0.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers node_not_found for a trashed document on every method wi[39m[90m…[39m [90m0.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers node_not_found for a trashed document on every method wi[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers node_not_found for a trashed document on every method wi[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers node_not_found for a trashed document on every method wi[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers node_not_found for a trashed document on every method wi[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers node_not_found for a trashed document on every method wi[39m[90m…[39m [90m0.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers node_not_found for a document of another drive on every[39m[90m… [39m [90m0.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers node_not_found for a document of another drive on every[39m[90m… [39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers node_not_found for a document of another drive on every[39m[90m… [39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers node_not_found for a document of another drive on every[39m[90m… [39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers node_not_found for a document of another drive on every[39m[90m… [39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers node_not_found for a document of another drive on every[39m[90m… [39m [90m0.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers node_not_found for a document of another drive on every[39m[90m… [39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers node_not_found for a document of another drive on every[39m[90m… [39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers node_not_found for a document of another drive on every[39m[90m… [39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers node_not_found for a document of another drive on every[39m[90m… [39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers node_not_found for a document of another tenant on every[39m[90m…[39m [90m0.27s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers node_not_found for a document of another tenant on every[39m[90m…[39m [90m0.27s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers node_not_found for a document of another tenant on every[39m[90m…[39m [90m0.27s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers node_not_found for a document of another tenant on every[39m[90m…[39m [90m0.27s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers node_not_found for a document of another tenant on every[39m[90m…[39m [90m0.29s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers node_not_found for a document of another tenant on every[39m[90m…[39m [90m0.28s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers node_not_found for a document of another tenant on every[39m[90m…[39m [90m0.30s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers node_not_found for a document of another tenant on every[39m[90m…[39m [90m0.29s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers node_not_found for a document of another tenant on every[39m[90m…[39m [90m0.27s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers node_not_found for a document of another tenant on every[39m[90m…[39m [90m0.28s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit returns the same codes through the HTTP routes with dataset "pre[39m[90m…[39m [90m0.26s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit returns the same codes through the HTTP routes with dataset "pre[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit returns the same codes through the HTTP routes with dataset "pre[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit returns the same codes through the HTTP routes with dataset "rea[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit returns the same codes through the HTTP routes with dataset "rea[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit returns the same codes through the HTTP routes with dataset "com[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit returns the same codes through the HTTP routes with dataset "com[39m[90m…[39m [90m0.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit returns the same codes through the HTTP routes with dataset "wri[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit returns the same codes through the HTTP routes with dataset "no[39m[90m… [39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit returns the same codes through the HTTP routes with dataset "no[39m[90m… [39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit returns the same codes through the HTTP routes with dataset "no[39m[90m… [39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit returns the same codes through the HTTP routes with dataset "no[39m[90m… [39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit hides a trashed document from the HTTP routes with node_not_foun[39m[90m…[39m [90m0.27s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Operations\DocumentOperationsTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit creates a document and returns a node snapshot[39m[90m                   [39m [90m0.28s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit reads the working state as a snapshot with its validators[39m[90m        [39m [90m0.20s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit updates the working state under its own validator, leaving the n[39m[90m…[39m [90m0.26s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit snapshots a named head revision and lists revisions newest first[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit reads a historical revision read-only and refuses a revision of[39m[90m… [39m [90m0.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit restores a revision forward with a new epoch and the content pre[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit pins and releases a revision[39m[90m                                     [39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit exports the working state or a chosen revision[39m[90m                   [39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses a type that is not registered on create, and uses the co[39m[90m…[39m [90m0.21s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit applies the drive profile document types on create[39m[90m               [39m [90m0.19s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit fails or renames on a name conflict as asked[39m[90m                     [39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses an oversized generated conflict name without creating a[39m[90m… [39m [90m0.21s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses document methods on a folder[39m[90m                             [39m [90m0.19s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit needs a user for a collaboration session and maps Edit to read-w[39m[90m…[39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit records the acting user on content writes[39m[90m                        [39m [90m0.22s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Document\DocumentCopyLifecycleTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit V33 copies a document into a new aggregate with one revision and[39m[90m…[39m [90m0.28s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit V33 copies a folder with a document inside[39m[90m                       [39m [90m0.29s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit copies the content of a document whose type is not registered, a[39m[90m…[39m [90m0.25s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Types\BuiltInDocumentTypesTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit keeps the document type contract with dataset "rich text"[39m[90m        [39m [90m0.16s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit keeps the document type contract with dataset "markdown"[39m[90m         [39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit keeps the document type contract with dataset "spreadsheet"[39m[90m      [39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit keeps the document type contract with dataset "third party"[39m[90m      [39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit describes each built-in type by key, viewer and collaboration[39m[90m    [39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit restricts markdown to the nodes and marks Markdown can represent[39m[90m…[39m [90m0.16s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit restricts markdown to the nodes and marks Markdown can represent[39m[90m…[39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit restricts markdown to the nodes and marks Markdown can represent[39m[90m…[39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit keeps the markdown schema closed to host editor extensions[39m[90m       [39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit accepts any JSON object for an opaque type and refuses a list[39m[90m    [39m [90m0.15s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Types\DegradedContentTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit reads content of a switched-off editor extension degraded and re[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers 409 document_content_degraded to an HTTP autosave[39m[90m        [39m [90m0.21s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit keeps a document written in a newer schema read-only[39m[90m             [39m [90m0.20s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit upgrades an older schema on read without rewriting the stored co[39m[90m…[39m [90m0.22s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Types\DocumentTypeRegistryTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit registers the configured types at boot and freezes once the appl[39m[90m…[39m [90m0.16s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers has, get and find for registered and unknown keys[39m[90m        [39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses a duplicate key and replaces only through replace()[39m[90m      [39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects keys outside vendor/name and the reserved vaulter/ prefi[39m[90m…[39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects keys outside vendor/name and the reserved vaulter/ prefi[39m[90m…[39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects keys outside vendor/name and the reserved vaulter/ prefi[39m[90m…[39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects keys outside vendor/name and the reserved vaulter/ prefi[39m[90m…[39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects keys outside vendor/name and the reserved vaulter/ prefi[39m[90m…[39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects a class name that is not a document type with dataset "m[39m[90m…[39m [90m0.16s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects a class name that is not a document type with dataset "n[39m[90m…[39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit orders types by key whatever order the providers registered them[39m[90m…[39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit collects types from two providers in either order and from the c[39m[90m…[39m [90m0.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit serializes no class name: all() is keyed by the type key[39m[90m         [39m [90m0.15s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Types\MakeDocumentTypeCommandTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit writes a document type class with an app/ key and does not touch[39m[90m…[39m [90m0.17s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit accepts a kebab-case name and refuses to overwrite without --for[39m[90m…[39m [90m0.16s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Types\UnknownDocumentTypeFallbackTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit keeps a document of a removed type readable, read-only and movab[39m[90m…[39m [90m0.33s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit answers 409 document_type_unavailable over HTTP and still serves[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit presents a document of a removed type with the unsupported viewe[39m[90m…[39m [90m0.21s[39m  
+
+  [90mTests:[39m    [32;1m164 passed[39;22m[90m (426 assertions)[39m
+  [90mDuration:[39m [39m37.40s[39m
+
+exit: 0

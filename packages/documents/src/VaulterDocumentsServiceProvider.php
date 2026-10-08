@@ -12,6 +12,7 @@ use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Console\MakeDocumentTypeCommand;
+use Vaulter\Documents\Contracts\DocumentType;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Providers\BindingsRegistrar;
 use Vaulter\Documents\Providers\CollaborationRegistrar;
@@ -71,7 +72,9 @@ final class VaulterDocumentsServiceProvider extends PackageServiceProvider
             $types->register($class);
         }
         foreach ($this->app->tagged('vaulter.document_types') as $type) {
-            $types->register($type);
+            if ($type instanceof DocumentType || is_string($type)) {
+                $types->register($type);
+            }
         }
 
         $this->app->booted(static function () use ($types, $config): void {

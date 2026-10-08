@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.3",
   "title": "Реестр типов документов, кодеки и безопасный fallback",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "Типы документов — классы DocumentType в замороженном реестре с ключами vendor/name, кодеками и версиями схемы; неизвестный тип читается непрозрачно и только на чтение, деградированный при чтении контент не редактируется; TipTapHandler/UniverHandler/enum DocumentType удалены, .docx/.md-файлы не объявлены редактируемыми.",
   "why": "E5/N16: registerDocumentType не подключён, TipTapHandler объявляет файлы редактируемыми. D15: тип — расширяемая точка с политикой коллизий. Исследование: fallback не должен становиться lossy serializer — иначе следующий save удалит неизвестные узлы.",
   "scope": {
@@ -340,12 +340,49 @@
   },
   "result": {
     "started_at": "2026-10-08T16:06:41Z",
+    "finished_at": "2026-10-08T18:54:26Z",
     "executor": {
       "provider": "anthropic",
       "model": "claude-opus-5-5",
       "effort": "high",
       "session": "417b340b-409b-4255-bd7a-fc19ac290cc1"
-    }
+    },
+    "notes": "Type registry (config/tag/provider, frozen, vendor/name, vaulter/ reserved), built-ins rich-text/markdown/spreadsheet, TipTapCodec lossless read, unknown-type fallback (V10), degraded presented by type (V34), default_type boot check (V82), generator and contract trait. V81 closed by D57 (P4.14 OPUS input rendered). Receipts: artifacts/P4-midaudit/receipts/.",
+    "deviations": [
+      "D55 (EV320–EV329): core DocumentContent stays parent until P4.4; create(?type) defaults to default_type; export via document type; kind presenter tag; vaulter/ first-party rule; degraded/newer-schema content refused for update; size limits for all types; service-locator baseline moved; HTTP type field; files beyond task_files. D56/D57: AzGuard lane moved to P4.14."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T18:54:26Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T18:54:26Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T18:54:26Z"
+      },
+      {
+        "id": "V80",
+        "exit": 0,
+        "at": "2026-10-08T18:54:26Z"
+      },
+      {
+        "id": "V81",
+        "exit": 0,
+        "at": "2026-10-08T18:54:26Z"
+      },
+      {
+        "id": "V82",
+        "exit": 0,
+        "at": "2026-10-08T18:54:26Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-08T18:45:43Z"
+  "updated_at": "2026-10-08T18:54:26Z"
 }

@@ -1,0 +1,45 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D57",
+  "title": "OPUS-вход P4.14: handoff единиц моста AzGuard и прочтение 0.x как AzGuard v1",
+  "date": "2026-10-08",
+  "status": "accepted",
+  "question": "Какие дословные OPUS-единицы входят в P4.14 (D56) и как читать единицы OPUS, требующие AzGuard 0.x / azguard-core, после удаления legacy?",
+  "context": "P4.14 создан D56 после render P4-design; opus-coverage.py check требует knowledge/artifacts-P4-design-P4.14-opus.json, но ни одна строка ledger-P0..P4 не называет P4.14. Обязательства моста AzGuard закреплены за закрытым P2.4/P2.5 (N21, D02 п.5, 04 §1, 06 §5, 07 §5, 03 §3), а 12 §6 и D36 требуют тегированного AzGuard `^0.x` / `azguard-core`, которых после azguard@904d3e5 не существует. AzGuard v1: пакет axiomasoft/azguard, branch-alias dev-main → 1.0.x-dev.",
+  "decision": "1) Единицы моста AzGuard передаются в ledger-P4.tsv владельцу P4.14 по образцу handoff P1/P2 → P4: 01:1c3d640e (N21), 02:e15b4066 и 02:7bf67b19 (D02), 04:5bbb932e, 06:53200da4, 07:e40ce5c1, 07:35c9e07d; строки канона имён 03:0065c62f, 03:15134404, 03:5c0723c5, 03:8378be94 — «Справочно»: публичные имена Vaulter\\Azgard\\* при порте не меняются. Вход P4.14 — только render из ledger (D06), без ручных правок. 2) В 12:268fa6e9 и 02:27c3be4b «AzGuard `^0.x`» и «azguard-core» читаются как AzGuard v1: `axiomasoft/azguard` с диапазоном `^1.0`. P4.14 обязан требовать `axiomasoft/azguard: ^1.0` (не dev-main; path-репозиторий только как источник разработки); гейт публикации vaulter-azgard при тегированном v1 остаётся за релизной фазой P7. 3) Строка 12:630e43d3 (doctor azgard.dependency) за P4.14 не закрепляется: проверка doctor — P7.1, её смысл (пакет AzGuard и guard разрешаются) от версии не зависит.",
+  "rationale": "Обязательства моста уже записаны в OPUS и закрыты P2 для 0.x; порт на v1 обязан их сохранить, поэтому их вход — handoff существующих единиц, а не новые требования или исключение из гейта D06. Версия 0.x буквально противоречит D56 (никакого legacy), поэтому единицы уточняются, а не отменяются: смысл «стабильный релиз без dev-main» сохраняется.",
+  "consequences": [
+    "ledger-P4.tsv: 13 строк P4.14; knowledge/artifacts-P4-design-P4.14-opus — render opus-coverage.py.",
+    "P4.14.reads: первым read — knowledge/artifacts-P4-design-P4.14-opus; decisions += D57.",
+    "P7 (релиз) читает 12 §6 и D36 по D57 п.2."
+  ],
+  "applies_to": [
+    "P4.14",
+    "P7"
+  ],
+  "evidence": [
+    {
+      "kind": "owner",
+      "ref": "session 2026-10-08",
+      "note": "«решения ищи сам оптимальные, без костылей, чтобы была чистая архитектура»"
+    },
+    {
+      "kind": "repo",
+      "ref": "artifacts/coverage/opus-units.tsv#01:1c3d640e,12:268fa6e9,02:27c3be4b"
+    },
+    {
+      "kind": "repo",
+      "ref": "../azguard/packages/core/composer.json#name,extra.branch-alias"
+    },
+    {
+      "kind": "repo",
+      "ref": "decisions/D56.json"
+    }
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "answered_by": "owner"
+}

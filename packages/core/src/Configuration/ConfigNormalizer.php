@@ -246,7 +246,7 @@ final class ConfigNormalizer
         $canonical = 'vaulter-documents.types';
         $default = Arr::get($packageDefaults, $canonical);
         $current = Arr::get($original, $canonical);
-        $types = is_array($current) ? array_values($current) : (is_array($default) ? array_values($default) : []);
+        $types = array_values(array_filter(is_array($current) ? $current : (is_array($default) ? $default : []), is_string(...)));
 
         if ($legacyList) {
             $map = [

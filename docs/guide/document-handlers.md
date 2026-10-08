@@ -13,12 +13,12 @@ the client opens the node in. The `Vaulter\Handlers\FileHandlerRegistry` resolve
 handler for a file, and the client routes the node to that surface **without hard-coding mime
 logic**. The registry and its baseline handlers (`PreviewHandler`/`DownloadOnlyHandler`) are
 core-owned — a drive-only host with no other package installed still resolves preview/download
-for every file; a package like `vaulter-documents` only adds richer formats (TipTap, Univer, …).
+for every file. Handlers serve **files** only: a document node is presented by its
+[document type](./document-types.md), not by a handler.
 
 The headline property: **adding a new format is a one-class + one-register operation — no
 migration, no core change, not gated by any sealed enum.** The registry's string keys
-(mime / extension) are the source of truth; the built-in `NodeKind` / `DocumentType` enums are
-only convenience, never a gate.
+(mime / extension) are the source of truth; no enum gates them.
 
 ::: tip Where this fits
 [Document nodes](./documents.md) carry the *content*; handlers decide the *surface*. A
@@ -94,12 +94,13 @@ stable viewer key and any extra serialisable props:
 
 ```php
 new ViewerDescriptor(
-    key: 'vaulter/tiptap',     // the Vue component the client mounts
-    props:     ['format' => 'richtext'], // arbitrary serialisable props
+    key: 'vaulter/pdf-preview',          // the viewer the client mounts
+    props: ['page' => 1],                // arbitrary serialisable props
 );
 ```
 
-This is embedded in the node payload (as a `NodePresentation` — `id` + `capabilities` + `ui`)
+This is embedded in the node payload (as a `NodePresentation` — `id` + `document_type` +
+`type_available` + `capabilities` + `ui`; for a file `document_type` is `null`)
 so the Vue client routes the node without re-running mime logic. The
 [`VaulterDocumentNode`](#mounting-the-resolved-handler-in-vue) component maps the descriptor's
 `ui.key` to a concrete editor.
@@ -116,23 +117,13 @@ client-supplied `claimedMime` when no sniff is available. A spoofed `Content-Typ
 force an editable/preview handler onto hostile bytes.
 :::
 
-## DocumentType
+## Files are not documents
 
-`Vaulter\Enums\Documents\DocumentType` is the built-in **sugar** over the registry — a small
-set of rich-text formats with a label, icon and the TipTap extension list a `TipTapHandler`
-surfaces as a `viewer.props.extensions` prop. It is **not** a gate: the registry routes by
-mime/extension strings, and a host adds new formats with a [handler](#adding-a-new-format-a-worked-example),
-not by extending this enum.
-
-| Case | value | TipTap extensions |
-|---|---|---|
-| `RichText` | `richtext` | StarterKit · Image · Table · Link |
-| `Table` | `table` | StarterKit · Table |
-| `Markdown` | `markdown` | StarterKit · CodeBlock |
-| `Template` | `template` | StarterKit · Placeholder |
-
-These four `value`s are what the `format` field accepts when [creating a document
-node](./documents.md#creating-a-document-node) (default `richtext`).
+An uploaded `.docx`, `.doc`, `.md` or `.xlsx` file is a **file**: it resolves to
+`PreviewHandler` or `DownloadOnlyHandler` and is never declared editable or collaborative,
+until an import "file → document" exists. Editable content lives in document nodes, whose
+presentation comes from their [document type](./document-types.md) (`vaulter/rich-text`,
+`vaulter/markdown`, `vaulter/spreadsheet` or your own).
 
 ## Resolution algorithm
 
@@ -160,7 +151,6 @@ The default set is registered from config (`config('vaulter.handlers')`):
 ```php
 // config/vaulter.php
 'handlers' => [
-    Vaulter\Documents\Engines\Handlers\TipTapHandler::class,
     Vaulter\Handlers\Builtin\PreviewHandler::class,
     Vaulter\Handlers\Builtin\DownloadOnlyHandler::class,
 ],
@@ -168,40 +158,12 @@ The default set is registered from config (`config('vaulter.handlers')`):
 
 | Handler | `key` | Claims | Capabilities | Viewer key | Priority |
 |---|---|---|---|---|---|
-| `TipTapHandler` | `vaulter/tiptap` | `application/vnd.vaulter.document+json`, `text/markdown`, docx/msword; ext `md`, `markdown`, `doc`, `docx`, `vdoc` | edit · preview · **collaborate** | `vaulter/tiptap` | 100 |
 | `PreviewHandler` | `vaulter/preview` | `application/pdf`, `image/*`; ext `pdf`, `png`, `jpg`, `jpeg`, `gif`, `webp`, `avif`, `bmp` | preview · thumbnail | `vaulter/pdf-preview` | 80 |
 | `DownloadOnlyHandler` | `vaulter/download` | `*` (catch-all) | download | `vaulter/download` | −1000 |
 
-A document node created via `CreateDocumentAction` is stamped with the Vaulter document
-mime (`application/vnd.vaulter.document+json`), so it always routes to `TipTapHandler`
-regardless of any extension in its name.
-
-::: details UniverHandler — the feature-flagged spreadsheet handler
-`Vaulter\Documents\Engines\Handlers\UniverHandler` (`key: vaulter/univer`, claims xlsx/xls, priority 90,
-editable + previewable but **single-user** — Univer collaboration is a separate OT engine, not
-the Yjs lane) is **not** in the default config list. The service provider adds it to the tagged
-`vaulter.file_handlers` set **only** when the `spreadsheets` feature is on:
-
-```php
-// config/vaulter.php
-'features' => ['spreadsheets' => true],
-```
-
-With the flag off, xlsx falls through to `DownloadOnlyHandler`. It is the proof that the
-one-class + register extensibility works for a non-rich-text editor.
-
-The create path is **handler-aware**: pass a `mime` to `POST {prefix}/storages/{storage}/documents`
-and the node is born on the matching handler — its content is stored the handler's way
-(a validated TipTap doc for a rich-text handler, an opaque snapshot otherwise) and the node is
-stamped with the handler's canonical mime so a later read re-resolves the same editor. With no
-`mime`, the node is a rich-text TipTap document (the default). A `mime` that resolves to a
-non-editable handler (e.g. xlsx while `spreadsheets` is off) is rejected `422`.
-
-```ts
-// @vaulter/vue — create a spreadsheet node natively (defaults to the xlsx mime)
-await client.documentNodes.createWorkbookNode(storageId, { name: 'Budget.xlsx', workbook })
-```
-:::
+A document node carries the Vaulter document mime (`application/vnd.vaulter.document+json`)
+but is never routed through this registry: core's `NodePresenter` hands every `document` node
+to the kind presenter `vaulter-documents` tags (`vaulter.kind_presenters`).
 
 ## Resolving a node's handler
 
@@ -212,19 +174,25 @@ The handler descriptor is exposed per node, so the client knows which surface to
 ```bash [HTTP]
 # GET {prefix}/nodes/{node}/handler
 curl https://app.test/api/vaulter/nodes/77/handler
-# → { "data": { "id": "vaulter/tiptap",
+# a PDF file:
+# → { "data": { "id": "vaulter/preview", "document_type": null, "type_available": true,
+#               "capabilities": { "editable": false, "previewable": true,
+#                                 "downloadable": true, "thumbnailable": true,
+#                                 "collaborative": false },
+#               "ui": { "key": "vaulter/pdf-preview", "props": {} } } }
+# a rich-text document:
+# → { "data": { "id": null, "document_type": "vaulter/rich-text", "type_available": true,
 #               "capabilities": { "editable": true, "previewable": true,
-#                                 "downloadable": true, "thumbnailable": false,
+#                                 "downloadable": false, "thumbnailable": false,
 #                                 "collaborative": true },
-#               "ui": { "key": "vaulter/tiptap",
-#                       "props": { "format": "richtext", "extensions": [...] } } } }
+#               "ui": { "key": "vaulter/tiptap", "props": { "preset": "rich-text" } } } }
 ```
 
 ```php [PHP — the resolver]
 use Vaulter\Contracts\Handlers\NodePresenter;
 
 $descriptor = app(NodePresenter::class)->present($node);
-// NodePresentation: ->id, ->capabilities, ->ui  (call ->toArray() to serialise)
+// NodePresentation: ->id, ->documentType, ->typeAvailable, ->capabilities, ->ui (->toArray() to serialise)
 ```
 
 ```ts [Vue — composable]
@@ -237,7 +205,7 @@ await loadHandler()
 
 :::
 
-`NodePresenter` builds the `FileDescriptor` from the node (server-trusted mime) and asks
+For a file, `NodePresenter` builds the `FileDescriptor` from the node (server-trusted mime) and asks
 the registry at the **broadest** capability (`Download` — every handler satisfies it), so the
 **most specific** matching handler wins; the descriptor then reports that handler's full
 capability set for the client to branch on.
@@ -321,7 +289,6 @@ once, so registering in two places is safe):
 ```php [config — cache-safe FQCN list]
 // config/vaulter.php — append to the handlers list (FQCN only, config-cache safe)
 'handlers' => [
-    Vaulter\Documents\Engines\Handlers\TipTapHandler::class,
     Vaulter\Handlers\Builtin\PreviewHandler::class,
     App\Vaulter\Handlers\CsvHandler::class,        // [!code ++]
     Vaulter\Handlers\Builtin\DownloadOnlyHandler::class,
@@ -348,7 +315,8 @@ $this->app->tag([App\Vaulter\Handlers\CsvHandler::class], 'vaulter.file_handlers
   handler.
 - **`Vaulter::handlers()->register()`** is the runtime seam — register conditionally at boot;
   re-priming the merged set + clearing the cache keeps a later resolve correct.
-- **tagged binding** is what the package itself uses for the conditional `UniverHandler`.
+- **tagged binding** is the channel core uses for its own baseline handlers; use it for a
+  handler a package contributes.
 :::
 
 ### 3. It just works
@@ -424,7 +392,7 @@ In development, `VaulterDocumentNode` logs one `console.warn` per unmapped `ui.k
 (not repeated for the same key WITHIN ONE component instance) naming both registration
 channels — the same gap Nova's string-key `Nova.booting` binding leaves silent.
 
-If the resolved handler is **collaborative** (e.g. `TipTapHandler`) and collaboration is
+If the presentation is **collaborative** (e.g. a `vaulter/rich-text` document) and collaboration is
 enabled, `VaulterDocumentNode` opens a Yjs session and runs the editor in collaborative mode;
 otherwise it uses the autosave path described in [Document nodes](./documents.md#autosave-vs-named-versions).
 
@@ -436,6 +404,6 @@ otherwise it uses the autosave path described in [Document nodes](./documents.md
 - Manager seam — `Vaulter\VaulterManager::handlers()->register()` / `::handlers()`
 - VOs — `ContentCapabilities`, `ViewerDescriptor`, `NodePresentation`, `FileDescriptor`
 - Enum — `Vaulter\Enums\Handlers\Capability`
-- Built-ins — `TipTapHandler`, `PreviewHandler`, `UniverHandler`, `DownloadOnlyHandler`
+- Built-ins — `PreviewHandler`, `DownloadOnlyHandler` (documents: see [Document Types](./document-types.md))
 - Frontend registry (`@vaulter/vue`) — `registerEngineComponent`, `unregisterEngineComponent`,
   `resolveEngineComponent`, `registeredEngineComponentIds`, `clearEngineComponents`

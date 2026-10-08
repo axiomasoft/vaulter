@@ -1,0 +1,5 @@
+# cwd: .
+# cmd: env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Arch packages/core/tests/Support packages/core/tests/WriteGuard
+# head: b68d2d63
+{"tool":"pest","result":"failed","tests":167,"passed":166,"assertions":1981,"duration_ms":37339,"failed":1,"failures":[{"test":"P\\Packages\\core\\tests\\Support\\DocsDriftGuardTest::__pest_evaluable_it_has_an_errors_md_heading_for_every_self__docs___anchor_actually_used_in_code__F_P2_5_03","file":"/home/vostrikov/projects/packages/vaulter/packages/core/tests/Support/DocsDriftGuardTest.php","line":60,"message":"errors.md is missing a heading for anchor [invalid-document-content], used by self::docs('invalid-document-content') in code \u2014 the Docs: link would 404.\nFailed asserting that false is true."}]}
+# exit: 1  duration: 38s

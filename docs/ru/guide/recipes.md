@@ -339,7 +339,6 @@ final class CadHandler implements FileHandler
 ```php [config]
 // config/vaulter.php
 'handlers' => [
-    \Vaulter\Documents\Engines\Handlers\TipTapHandler::class,
     \App\Vaulter\Handlers\CadHandler::class, // before the fallbacks
     \Vaulter\Handlers\Builtin\PreviewHandler::class,
     \Vaulter\Handlers\Builtin\DownloadOnlyHandler::class,
