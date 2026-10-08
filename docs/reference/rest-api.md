@@ -514,8 +514,8 @@ never the content address). → `complete`
 ## Sharing (bearer node share-links)
 
 The bearer share-link channel (`Sharing\ShareController` for owners,
-`Sharing\PublicShareController` for the public). A share grants **exactly its
-bitmask** on its node-set — the identity ACL is never consulted on the public path.
+`Sharing\PublicShareController` for the public). A share grants **exactly the
+abilities of its role** on its node-set — the identity ACL is never consulted on the public path.
 See [Sharing](/guide/sharing).
 
 ### Owner surface (authenticated)
@@ -535,17 +535,14 @@ Mint a share-link. → `store`
 
 | Param | Rule |
 |---|---|
-| `permissions` | nullable, integer `0..31` (CRUDS bitmask) |
-| `level` | nullable, a `GrantLevel` value |
+| `role` | nullable, a role key (`previewer`, `reader` default, `commenter`, `writer`; `organizer`/`owner` are refused with `share_role_not_allowed`) |
+| `audience` | nullable, `anyone` (default), `authenticated` or `tenant`; `writer` needs `authenticated`/`tenant` |
 | `scope` | nullable, a `GrantScope` value (`item` default, or `subtree`) |
 | `password` | nullable, string 1–255 |
-| `require_login` | nullable, boolean |
-| `allow_discovery` | nullable, boolean |
-| `expires_at` | nullable, date, after now |
-| `max_uses` | nullable, integer ≥ 1 |
+| `expires_at` | nullable, date, after now, within the TTL ceilings (profile `maxShareLinkTtlDays` → `422 share_link_ttl_exceeded`) |
+| `max_uses` | nullable, integer ≥ 1 (successful redemptions) |
 
-If `permissions` is omitted it defaults to the chosen `level`'s bits, else plain
-`READ`. **Response:** `201` `NodeShareResource` — the **raw `token` and full
+**Response:** `201` `NodeShareResource` — the **raw `token` and full
 `url` are returned exactly once here** (every list/show omits them):
 
 ```json
@@ -554,13 +551,13 @@ If `permissions` is omitted it defaults to the chosen `level`'s bits, else plain
     "id": "01J…",
     "node_id": "01J…",
     "token_prefix": "abc12345",
-    "permissions": 1,
-    "level": "reader",
+    "role": "reader",
+    "role_version": 1,
+    "audience": "anyone",
     "scope": "item",
     "has_password": false,
-    "require_login": false,
-    "allow_discovery": false,
-    "expires_at": null,
+    "token_generation": 1,
+    "expires_at": "…",
     "max_uses": null,
     "use_count": 0,
     "revoked_at": null,
@@ -570,6 +567,26 @@ If `permissions` is omitted it defaults to the chosen `level`'s bits, else plain
   }
 }
 ```
+
+#### `PATCH nodes/{node}/shares/{share}`
+
+Change a live link without changing its token. → `update`
+
+| Param | Rule |
+|---|---|
+| `audience` | sometimes, `anyone`/`authenticated`/`tenant`; refused if the stored role does not fit |
+| `password` | sometimes, nullable string 1–255 (`null` removes it) |
+| `expires_at` | sometimes, date, after now, within the TTL ceilings |
+| `max_uses` | sometimes, nullable integer ≥ 1 (`null` removes it) |
+
+**Response:** `200` `NodeShareResource` (no token).
+
+#### `POST nodes/{node}/shares/{share}/rotate`
+
+Replace the token: the old one is `404` at once, `token_generation` is raised, and the new raw
+`token`/`url` are returned exactly once. → `rotate`
+
+**Response:** `200` `NodeShareResource` with `token` and `url`. A revoked link is `404`.
 
 #### `DELETE nodes/{node}/shares/{share}`
 
@@ -581,31 +598,32 @@ id `404`s). → `destroy`
 ### Public surface (token-resolved)
 
 These routes carry **no auth middleware** — only `ResolveShareToken`, which hashes
-the `{token}`, resolves the live share, runs the timing-safe compare + password /
-require-login gates, and stashes a `ShareContext`. Authorization is **only** the
-share's own bitmask.
+the `{token}`, resolves the live share, runs the timing-safe compare + audience /
+password gates, redeems the visit and stashes a `ShareContext`. Authorization is **only**
+the share's own role. The first request of a visit returns a signed `X-Share-Session`
+header; send it back and the rest of the visit costs no further use.
 
 #### `GET share/{token}`
 
 The target node's metadata within scope. A `scope=subtree` folder embeds its
 immediate children. → `PublicShareController::show`
 
-**Requires:** the `View` bit. **Response:** `SharedNodeResource`.
+**Requires:** the `view` ability. **Response:** `SharedNodeResource`.
 
 #### `GET share/{token}/nodes`
 
 List the in-scope children — **only** for `scope=subtree` (an item-scope share has
 no listing → `404`). → `nodes`
 
-**Requires:** the `View` bit. **Response:** `SharedNodeResource` collection.
+**Requires:** the `view` ability. **Response:** `SharedNodeResource` collection.
 
 #### `GET share/{token}/download`
 
-Stream the shared file's current head within the `Download` bit, intersected with
-item-safety (the blob must be `Committed`). Consumes one use atomically (bounded by
-`max_uses`) before streaming. → `download`
+Stream the shared file's current head when the role carries `download`, intersected with
+item-safety (the blob must be `Committed`). A previewer link gets `403 permission_denied`.
+→ `download`
 
-**Requires:** the `Download` bit. **Response:** `302` to a signed URL or a streamed
+**Requires:** the `download` ability. **Response:** `302` to a signed URL or a streamed
 download (as for the [authenticated download](#download)).
 
 ---

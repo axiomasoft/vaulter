@@ -6,6 +6,37 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Share links 1.0: role, audience, rotation, redemptions (PLAN2.D47; PLAN2.P4.10)
+
+Back up the database and stop writes before migrating. `2026_10_07_000006_share_links_v1` **refuses**
+(`UpgradePreflightException`, nothing changed) when a link's ability mask is not exactly the abilities
+of a role a link may carry. Revoke such links, or recreate them with a role, and run it again.
+
+- **`v_node_shares`**: `role_key`, `role_version`, `audience` and `token_generation` replace
+  `permissions`, `permissions_version`, `level`, `require_login` and `allow_discovery`. Conversion:
+  mask 65 → `reader`, 97 → `commenter`, 1 → `previewer` (view without download; never widened to
+  reader), `require_login = true` → audience `authenticated`, otherwise `anyone`. A 0.x mask is read
+  as before (1 → `reader`, 33 → `commenter`). `allow_discovery` was never used and is dropped.
+  The earlier migration `2026_10_07_000005` now skips its share-mask steps when `permissions` is
+  absent (a fresh install); upgraded databases behave as before.
+- **API.** `ShareLinkInput{role, audience, scope, expiresAt, password, maxUses}` (was
+  `permissions`, `level`, `requireLogin`, `allowDiscovery`); new `ShareLinkUpdate`;
+  `ShareOperations::update()` and `rotate()`; `ShareContext` carries a `Role`, not a mask.
+  REST: `role`/`audience` replace `permissions`/`level`/`require_login`/`allow_discovery`;
+  new `PATCH nodes/{node}/shares/{share}` and `POST …/rotate`.
+- **Rules.** `writer` links need audience `authenticated` or `tenant`; `organizer` and `owner` are
+  never allowed (`share_role_not_allowed`, 422). Expiry may not pass the profile's
+  `maxShareLinkTtlDays`, at creation and on every visit (`share_link_ttl_exceeded`, 422).
+- **Behaviour.** A previewer link gets `403 permission_denied` on download. `max_uses` now counts
+  redemptions: the first request of a visit counts and returns an `X-Share-Session` header; requests
+  that send it back do not. Before, every download counted and previews did not. New tokens are
+  43-character `base64url(random_bytes(32))` (was 48 alphanumerics); stored tokens keep working.
+- **Vue.** `CreateNodeSharePayload{role, audience, …}`; `NodeShare` has `role`, `role_version`,
+  `audience`, `token_generation`; `nodeShares.update()` / `rotate()`; the panel takes `roles` and
+  `audiences` props instead of `levels`.
+- **Activity/webhook payloads** of share events carry `role`, `role_version`, `audience`, `scope`
+  instead of `level` and `permissions`.
+
 ### Access model 1.0: versioned roles, no deny, inheritance boundaries (PLAN2.D45, D46, D53; PLAN2.P4.9; ADR-0025)
 
 Back up the database and stop writes before migrating. `2026_10_07_000005_access_model_v1` **refuses**

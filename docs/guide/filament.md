@@ -230,25 +230,20 @@ status. The raw token is surfaced **exactly once**, at mint time, via a persiste
 
 - **Create** (the list page's `Create share link` header action) → `CreateShareLinkAction`
   (mints + hashes the token; the raw value is shown once).
+- **Rotate token** (row action) → `ShareOperations::rotate()` (new token shown once; the old one stops working).
 - **Revoke** (row action) → `RevokeShareLinkAction` (stamps `revoked_at`; idempotent).
 
 Both require `Ability::Share` on the node.
 
 ```php
-$minted = app(CreateShareLinkAction::class)->execute(
-    node: $node,
-    data: new ShareLinkInput(
-        permissions: $bits > 0 ? $bits : Permission::Read->value, // defaults to READ (1)
-        level: GrantLevel::from($level),
-        scope: GrantScope::from($scope),   // item | subtree
-        password: $password,
-        requireLogin: $requireLogin,
-        allowDiscovery: $allowDiscovery,
-        expiresAt: $expiresAt,
-        maxUses: $maxUses,
-        grantedBy: PanelActor::id(),
-    ),
-);
+$minted = Vaulter::drive($owner)->actingAs($user)->shares()->create($node, new ShareLinkInput(
+    role: $role,                       // previewer | reader | commenter | writer
+    audience: ShareAudience::from($audience), // anyone | authenticated | tenant
+    scope: GrantScope::from($scope),   // item | subtree
+    expiresAt: $expiresAt,
+    password: $password,
+    maxUses: $maxUses,
+));
 
 // Shown exactly once — never recoverable from the row afterward:
 //   app(\Vaulter\Configuration\SharingConfig::class)->urlBase() . '/' . $minted->token

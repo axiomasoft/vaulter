@@ -128,13 +128,13 @@ describe('useNodeShares', () => {
   it('surfaces the one-time token via lastCreated and prepends the share', async () => {
     const created: NodeShareCreated = {
       id: 1, node_id: 9, token_prefix: 'abc', token: 'abc.SECRET', url: 'https://x/s/abc.SECRET',
-      permissions: 1, level: 'reader', scope: 'item', has_password: false, require_login: false,
-      allow_discovery: false, expires_at: null, max_uses: null, use_count: 0, revoked_at: null, created_at: null,
+      role: 'reader', role_version: 1, audience: 'anyone', token_generation: 1, scope: 'item', has_password: false,
+      expires_at: null, max_uses: null, use_count: 0, revoked_at: null, created_at: null,
     }
     const create = vi.fn().mockResolvedValue(created)
     const { vm } = mountWith({ nodeShares: { create } as never }, () => useNodeShares(9))
 
-    const result = await vm.create({ level: 'reader' })
+    const result = await vm.create({ role: 'reader' })
 
     expect(result.token).toBe('abc.SECRET')
     expect(vm.lastCreated.value?.token).toBe('abc.SECRET')

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Enums\Sharing\ShareAudience;
 use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Support\ShareToken;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -21,24 +22,30 @@ it('creates the v_node_shares table with every §2.7 column', function (): void 
     $table = app(DatabaseConfig::class)->table('node_shares');
 
     expect(Schema::hasColumns($table, [
-        'id', 'tenant_id', 'node_id', 'token_hash', 'token_prefix', 'permissions', 'permissions_version',
-        'level', 'scope', 'password_hash', 'require_login', 'allow_discovery',
+        'id', 'tenant_id', 'node_id', 'token_hash', 'token_prefix', 'role_key', 'role_version',
+        'audience', 'token_generation', 'scope', 'password_hash',
         'expires_at', 'max_uses', 'use_count', 'revoked_at', 'granted_by',
         'created_at', 'updated_at',
-    ]))->toBeTrue();
+    ]))->toBeTrue()
+        ->and(Schema::hasColumns($table, ['permissions', 'permissions_version', 'level', 'require_login', 'allow_discovery']))->toBeFalse();
+    foreach (['permissions', 'permissions_version', 'level', 'require_login', 'allow_discovery'] as $legacy) {
+        expect(Schema::hasColumn($table, $legacy))->toBeFalse();
+    }
 });
 
-it('defaults new shares to the versioned reader mask', function (): void {
+it('defaults new shares to version 1 of their role, the anyone audience and generation 1', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'reader-default');
     $share = ForceCreates::make(app(VaulterConfig::class)->model('node_share'), [
         'node_id' => $node->id,
         'token_hash' => ShareToken::hash('reader-default'),
         'token_prefix' => 'reader-d',
+        'role_key' => 'reader',
     ])->fresh();
 
-    expect($share?->permissions)->toBe(65)
-        ->and((int) $share?->getAttribute('permissions_version'))->toBe(1);
+    expect($share?->role_version)->toBe(1)
+        ->and($share?->audience)->toBe(ShareAudience::Anyone)
+        ->and($share?->token_generation)->toBe(1);
 });
 
 it('rejects a duplicate token_hash (UNIQUE)', function (): void {
@@ -52,8 +59,7 @@ it('rejects a duplicate token_hash (UNIQUE)', function (): void {
         'node_id' => $node->getKey(),
         'token_hash' => $hash,
         'token_prefix' => 'the-toke',
-        'permissions' => 1,
-        'level' => 'reader',
+        'role_key' => 'reader',
         'scope' => 'item',
     ];
 
@@ -76,8 +82,7 @@ it('stores the token hash, never the raw token', function (): void {
         'node_id' => $node->getKey(),
         'token_hash' => $share,
         'token_prefix' => 'raw-secr',
-        'permissions' => 1,
-        'level' => 'reader',
+        'role_key' => 'reader',
         'scope' => 'item',
     ]);
 

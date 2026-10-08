@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Share links 1.0 (PLAN2.D47; PLAN2.P4.10)
+
+- Added `role`/`audience` on share links: previewer, reader and commenter for any audience, writer
+  only for `authenticated` or `tenant`, never organizer or owner (`share_role_not_allowed`).
+  Was: an ability mask, a `level`, `require_login` and an unused `allow_discovery`.
+- Added `ShareOperations::update()` (expiry, budget, password, audience — token unchanged) and
+  `rotate()` (new token, `token_generation` + 1, old token and its sessions void), with
+  `PATCH nodes/{node}/shares/{share}` and `POST …/rotate`.
+- Changed `max_uses` to count redemptions: one per link session (signed `X-Share-Session`), not per
+  download; the update is atomic and bound to the token generation.
+- Added `tenant` audience (signed in and the host's current tenant is the drive's tenant) and the
+  drive policy's `maxShareLinkTtlDays` for links, checked on creation, update and every visit
+  (`share_link_ttl_exceeded`).
+- Changed previewer links to refuse the original with `403 permission_denied`; subtree links stay
+  live against the tree and inheritance boundaries.
+- Changed share tokens to `base64url(random_bytes(32))`, and share activity/webhook context to
+  `role`/`role_version`/`audience`/`scope`.
+- Migration `2026_10_07_000006_share_links_v1` converts masks to roles (65 reader, 97 commenter,
+  1 previewer) and refuses any other mask; `2026_10_07_000005` skips its share-mask steps on a fresh
+  schema. @vaulter/vue and the Filament share resource moved to role/audience (+ rotate).
+
 ### Access model 1.0 (PLAN2.D45, D46, D53; PLAN2.P4.9; ADR-0025)
 
 - Added versioned roles (`Role`/`RoleRegistry`: previewer, reader, commenter, writer, organizer,

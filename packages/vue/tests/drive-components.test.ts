@@ -762,30 +762,43 @@ describe('VaulterNodeGrantsPanel', () => {
 describe('VaulterNodeSharePanel', () => {
   function share(partial: Partial<NodeShare> & Pick<NodeShare, 'id'>): NodeShare {
     return {
-      node_id: 9, token_prefix: 'pfx', permissions: 1, level: 'reader', scope: 'item',
-      has_password: false, require_login: false, allow_discovery: false, expires_at: null,
+      node_id: 9, token_prefix: 'pfx', role: 'reader', role_version: 1, audience: 'anyone', token_generation: 1,
+      scope: 'item', has_password: false, expires_at: null,
       max_uses: null, use_count: 0, revoked_at: null, created_at: null, ...partial,
     }
   }
 
-  it.each([
-    ['previewer', 1],
-    ['reader', 65],
-    ['writer', 1991],
-    ['organizer', 2007],
-    ['owner', 4063],
-  ])('sends explicit anonymous permissions for the %s role', async (level, permissions) => {
+  it.each(['previewer', 'reader', 'commenter', 'writer'] as const)('sends the %s role and the chosen audience, never an ability mask', async (role) => {
     const createFn = vi.fn().mockResolvedValue({ ...share({ id: 5 }), token: 'token', url: 'https://x/share/token' })
     const wrapper = mount(VaulterNodeSharePanel, {
-      props: { nodeId: 9, autoLoad: false, levels: [level] },
+      props: { nodeId: 9, autoLoad: false, roles: [role], audiences: ['authenticated'] },
       ...withClient({ nodeShares: { create: createFn } as never }),
     })
 
     await wrapper.get('.vaulter-node-share-panel__create').trigger('submit')
     await flushAll()
 
-    expect(createFn).toHaveBeenCalledWith(9, expect.objectContaining({ level, permissions }))
-    expect(permissions & 32).toBe(0)
+    expect(createFn).toHaveBeenCalledWith(9, expect.objectContaining({ role, audience: 'authenticated' }))
+    expect(createFn.mock.calls[0][1]).not.toHaveProperty('permissions')
+    expect(createFn.mock.calls[0][1]).not.toHaveProperty('requireLogin')
+  })
+
+  it('rotates a link from the list and shows the new token once', async () => {
+    const rotated: NodeShareCreated = { ...share({ id: 1, token_prefix: 'new', token_generation: 2 }), token: 'new.SECRET', url: 'https://x/share/new.SECRET' }
+    const rotateFn = vi.fn().mockResolvedValue(rotated)
+    const wrapper = mount(VaulterNodeSharePanel, {
+      props: { nodeId: 9 },
+      ...withClient({ nodeShares: { list: vi.fn().mockResolvedValue(page([share({ id: 1, token_prefix: 'old' })])), rotate: rotateFn } as never }),
+    })
+    await flushAll()
+
+    await wrapper.get('.vaulter-node-share-panel__rotate').trigger('click')
+    await flushAll()
+
+    expect(rotateFn).toHaveBeenCalledWith(9, 1)
+    expect((wrapper.get('.vaulter-node-share-panel__token').element as HTMLInputElement).value).toBe('https://x/share/new.SECRET')
+    expect(wrapper.emitted('rotated')?.[0]?.[0]).toMatchObject({ token: 'new.SECRET' })
+    expect(wrapper.get('.vaulter-node-share-panel__list').html()).not.toContain('SECRET')
   })
 
   it('shows the one-time token on create and never renders a stored raw token in the list', async () => {

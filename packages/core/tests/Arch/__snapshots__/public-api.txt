@@ -174,6 +174,8 @@ Vaulter\Contracts\Sharing\ShareOperations
   create(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Data\Sharing\ShareLinkInput $input): \Vaulter\Data\Sharing\MintedShareLink
   list(\Vaulter\Models\Drive\Node|int|string $node): \Illuminate\Database\Eloquent\Collection
   revoke(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Models\Sharing\NodeShare|int|string $share): void
+  rotate(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Models\Sharing\NodeShare|int|string $share): \Vaulter\Data\Sharing\MintedShareLink
+  update(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Models\Sharing\NodeShare|int|string $share, \Vaulter\Data\Sharing\ShareLinkUpdate $changes): \Vaulter\Models\Sharing\NodeShare
 
 Vaulter\Contracts\Sharing\ShareTokenGenerator
   generate(): string
@@ -513,15 +515,13 @@ Vaulter\Exceptions\Access\UnknownRoleException
   render(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse|false
 
 Vaulter\Data\Sharing\ShareLinkInput
-  __construct(int $permissions, string $level = Vaulter\Access\Roles\RoleRegistry::READER, \Vaulter\Enums\Access\GrantScope $scope = Vaulter\Enums\Access\GrantScope::Item, ?string $password = null, bool $requireLogin = false, bool $allowDiscovery = false, ?\Illuminate\Support\Carbon $expiresAt = null, ?int $maxUses = null)
+  __construct(string $role = Vaulter\Access\Roles\RoleRegistry::READER, \Vaulter\Enums\Sharing\ShareAudience $audience = Vaulter\Enums\Sharing\ShareAudience::Anyone, \Vaulter\Enums\Access\GrantScope $scope = Vaulter\Enums\Access\GrantScope::Item, ?\Illuminate\Support\Carbon $expiresAt = null, ?string $password = null, ?int $maxUses = null)
   readonly ?\Illuminate\Support\Carbon $expiresAt
   readonly ?int $maxUses
   readonly ?string $password
   readonly \Vaulter\Enums\Access\GrantScope $scope
-  readonly bool $allowDiscovery
-  readonly bool $requireLogin
-  readonly int $permissions
-  readonly string $level
+  readonly \Vaulter\Enums\Sharing\ShareAudience $audience
+  readonly string $role
 
 Vaulter\Data\Sharing\MintedShareLink
   __construct(\Vaulter\Models\Sharing\NodeShare $share, string $token)
@@ -538,10 +538,12 @@ Vaulter\Operations\AccessOperations
   revoke(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Models\Access\NodeGrant|int|string $grant): void
 
 Vaulter\Operations\ShareOperations
-  __construct(\Vaulter\Operations\OperationContext $context, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Access\OperationGuard $guard, \Vaulter\Configuration\VaulterConfig $config, \Vaulter\Actions\Sharing\CreateShareLinkAction $createLink, \Vaulter\Actions\Sharing\RevokeShareLinkAction $deleteLink)
+  __construct(\Vaulter\Operations\OperationContext $context, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Access\OperationGuard $guard, \Vaulter\Configuration\VaulterConfig $config, \Vaulter\Actions\Sharing\CreateShareLinkAction $createLink, \Vaulter\Actions\Sharing\RevokeShareLinkAction $deleteLink, \Vaulter\Actions\Sharing\UpdateShareLinkAction $updateLink, \Vaulter\Actions\Sharing\RotateShareLinkAction $rotateLink)
   create(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Data\Sharing\ShareLinkInput $input): \Vaulter\Data\Sharing\MintedShareLink
   list(\Vaulter\Models\Drive\Node|int|string $node): \Illuminate\Database\Eloquent\Collection
   revoke(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Models\Sharing\NodeShare|int|string $share): void
+  rotate(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Models\Sharing\NodeShare|int|string $share): \Vaulter\Data\Sharing\MintedShareLink
+  update(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Models\Sharing\NodeShare|int|string $share, \Vaulter\Data\Sharing\ShareLinkUpdate $changes): \Vaulter\Models\Sharing\NodeShare
 
 Vaulter\Operations\ActivityOperations
   __construct(\Vaulter\Operations\OperationContext $context, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Access\OperationGuard $guard, \Vaulter\Queries\Activity\VisibleActivityQuery $query)

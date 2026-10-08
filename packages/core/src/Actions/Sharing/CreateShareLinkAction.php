@@ -4,25 +4,23 @@ declare(strict_types=1);
 
 namespace Vaulter\Actions\Sharing;
 
-use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use InvalidArgumentException;
-use RuntimeException;
-use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Configuration\SharingConfig;
-use Vaulter\Contracts\Sharing\ShareTokenGenerator;
+use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Data\Sharing\CreateShareLinkInput;
 use Vaulter\Data\Sharing\MintedShareLink;
-use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Enums\Access\Permission;
+use Vaulter\Enums\Sharing\ShareAudience;
 use Vaulter\Events\Sharing\NodeShareCreated;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Sharing\NodeShareStoreRepository;
-use Vaulter\Support\ShareToken;
+use Vaulter\Sharing\ShareLinkRules;
+use Vaulter\Sharing\ShareTokenMinter;
 
 /**
  * Mint a bearer share-link on a node (§2.7 / M2c) — the SEPARATE public sharing
@@ -31,68 +29,66 @@ use Vaulter\Support\ShareToken;
  * stored. Any password is hashed before it touches the DB. The write runs in a
  * transaction and emits NodeShareCreated.
  *
- * A link is never minted immortal by omission (P1.2 / F-P1.3-03, S4.1): when the
- * caller supplies no `expiresAt`, the Action stamps `now() + $this->sharingConfig->defaultTtlHours()`
- * at mint time (NOT a DB column default, so it stays host-config-overridable and
- * every direct repository write in a test still goes through the same rule when it
- * routes through this Action). An explicit `expiresAt` above
- * `$this->sharingConfig->maxTtlHours()` is rejected both by request validation and by the Action before minting.
+ * The role and audience obey {@see ShareLinkRules}, and the expiry may not pass the
+ * drive profile's maxShareLinkTtlDays. A link is never minted immortal by omission
+ * (P1.2 / F-P1.3-03, S4.1): without an `expiresAt` the Action stamps
+ * `now() + sharingConfig->defaultTtlHours()` (cut back to the profile limit) at mint
+ * time, NOT a DB column default, so it stays host-config-overridable. An explicit
+ * `expiresAt` above `sharingConfig->maxTtlHours()` is rejected before minting.
  *
- * Authorization (the actor may Share the node) is enforced by the caller
- * (controller via AccessResolver Ability::Share) before reaching the Action — the
- * Action mints + persists, it does not re-authorize.
+ * Authorization (the actor may Share the node) is enforced by the caller before
+ * reaching the Action — the Action mints + persists, it does not re-authorize.
  */
 final readonly class CreateShareLinkAction
 {
-    /**
-     * How many times to retry on the (astronomically unlikely) token_hash UNIQUE
-     * collision before failing loud rather than silently returning a wrong link.
-     */
-    private const int MAX_MINT_ATTEMPTS = 5;
-
     public function __construct(
-        private readonly SharingConfig $sharingConfig,
-        private ShareTokenGenerator $tokens,
+        private SharingConfig $sharingConfig,
+        private ShareTokenMinter $minter,
         private NodeShareStoreRepository $shares,
         private VaulterDatabase $database,
         private NodeLocator $locator,
-        private RoleRegistry $roles,
+        private ShareLinkRules $rules,
+        private TenancyConfig $tenancy,
     ) {}
 
     public function execute(OperationContext $context, CreateShareLinkInput $input): MintedShareLink
     {
         $node = $this->locator->find(context: $context, key: $input->node);
         $data = $input->link;
-        if ($data->permissions < 0 || ($data->permissions & ~Permission::all()) !== 0 || !$this->roles->has($data->level) || $data->level === RoleRegistry::COMMENTER || ($data->permissions & Permission::Comment->value) !== 0) {
-            throw new InvalidArgumentException('Invalid anonymous share permissions.');
-        }
+        $now = Carbon::now();
+
+        $role = $this->rules->roleFor($data->role, $data->audience);
+        $this->assertTenantAudience($data->audience);
         if ($data->maxUses !== null && $data->maxUses < 1) {
             throw new InvalidArgumentException('A share use budget must be positive.');
         }
         if ($data->password !== null && strlen($data->password) > 255) {
             throw new InvalidArgumentException('Share password is too long.');
         }
-        if ($data->expiresAt !== null && ($data->expiresAt->lte(Carbon::now()) || $data->expiresAt->gt(Carbon::now()->addHours($this->sharingConfig->maxTtlHours())))) {
-            throw new InvalidArgumentException('Share expiry must be within the configured TTL.');
+        if ($data->expiresAt !== null) {
+            $this->rules->assertExpiry($context->drive, $data->expiresAt, $now);
+            $this->assertWithinConfiguredTtl($data->expiresAt, $now);
         }
-        $passwordHash = $data->password === null || $data->password === ''
-            ? null
-            : Hash::make($data->password);
+        $passwordHash = $data->password === null || $data->password === '' ? null : Hash::make($data->password);
 
         // F-P1.3-03: an omitted expiry defaults to the configured TTL, stamped at
         // mint time (not a DB default) so it stays host-overridable.
-        $expiresAt = $data->expiresAt instanceof Carbon
-            ? $data->expiresAt
-            : Carbon::now()->addHours($this->sharingConfig->defaultTtlHours());
+        $expiresAt = $data->expiresAt ?? $this->defaultExpiry($context->drive, $now);
 
-        return $this->database->transaction(function () use ($context, $node, $data, $passwordHash, $expiresAt): MintedShareLink {
-            $minted = $this->mint(
-                context: $context,
+        return $this->database->transaction(function () use ($context, $node, $data, $role, $passwordHash, $expiresAt): MintedShareLink {
+            [$share, $token] = $this->minter->mint(fn (string $tokenHash, string $tokenPrefix) => $this->shares->create(
                 node: $node,
-                data: $data,
+                tokenHash: $tokenHash,
+                tokenPrefix: $tokenPrefix,
+                role: $role,
+                audience: $data->audience,
+                scope: $data->scope->value,
                 passwordHash: $passwordHash,
                 expiresAt: $expiresAt,
-            );
+                maxUses: $data->maxUses,
+                grantedBy: $context->actor->ref()->id,
+            ));
+            $minted = new MintedShareLink(share: $share, token: $token);
 
             event(new NodeShareCreated(share: $minted->share, actorId: $context->actor->ref()->id, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
@@ -100,58 +96,25 @@ final readonly class CreateShareLinkAction
         });
     }
 
-    /**
-     * Generate a unique raw token (retrying on the token_hash UNIQUE collision) and
-     * persist its hash + prefix. Returns the raw token alongside the row exactly
-     * once — it is never recoverable afterward.
-     */
-    private function mint(OperationContext $context, Node $node, ShareLinkInput $data, ?string $passwordHash, Carbon $expiresAt): MintedShareLink
+    private function assertTenantAudience(ShareAudience $audience): void
     {
-        $prefixLength = $this->sharingConfig->prefixLength();
-
-        for ($attempt = 0; $attempt < self::MAX_MINT_ATTEMPTS; $attempt++) {
-            $token = $this->tokens->generate();
-
-            try {
-                $share = $this->shares->create(
-                    node: $node,
-                    tokenHash: ShareToken::hash($token),
-                    tokenPrefix: ShareToken::prefix($token, $prefixLength),
-                    permissions: $data->permissions,
-                    level: $data->level,
-                    scope: $data->scope->value,
-                    passwordHash: $passwordHash,
-                    requireLogin: $data->requireLogin,
-                    allowDiscovery: $data->allowDiscovery,
-                    expiresAt: $expiresAt,
-                    maxUses: $data->maxUses,
-                    grantedBy: $context->actor->ref()->id,
-                );
-            } catch (QueryException $exception) {
-                // A token_hash collision (or any unique violation on this row) means
-                // the freshly-minted token already exists — retry with a new one.
-                if ($this->isUniqueViolation($exception)) {
-                    continue;
-                }
-
-                throw $exception;
-            }
-
-            return new MintedShareLink(share: $share, token: $token);
+        if ($audience === ShareAudience::Tenant && !$this->tenancy->enabled()) {
+            throw new InvalidArgumentException('The tenant audience needs tenancy to be enabled.');
         }
-
-        throw new RuntimeException(
-            'Vaulter could not mint a unique share token after '.self::MAX_MINT_ATTEMPTS.' attempts.',
-        );
     }
 
-    private function isUniqueViolation(QueryException $exception): bool
+    private function assertWithinConfiguredTtl(Carbon $expiresAt, Carbon $now): void
     {
-        // 23000 / 23505 are the SQLSTATE integrity-constraint-violation codes
-        // (MySQL/SQLite use 23000, Postgres 23505 for unique).
-        $state = $exception->errorInfo[0] ?? $exception->getCode();
-        $sqlState = is_scalar($state) ? (string) $state : '';
+        if ($expiresAt->lte($now) || $expiresAt->gt($now->copy()->addHours($this->sharingConfig->maxTtlHours()))) {
+            throw new InvalidArgumentException('Share expiry must be within the configured TTL.');
+        }
+    }
 
-        return in_array($sqlState, ['23000', '23505'], strict: true);
+    private function defaultExpiry(Drive $drive, Carbon $now): Carbon
+    {
+        $expiresAt = $now->copy()->addHours($this->sharingConfig->defaultTtlHours());
+        $limit = $this->rules->latestExpiry($drive, $now);
+
+        return $limit !== null && $expiresAt->gt($limit) ? $limit : $expiresAt;
     }
 }

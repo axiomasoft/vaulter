@@ -12,7 +12,7 @@ use Vaulter\Models\Sharing\NodeShare;
 /**
  * The read shape of a bearer share-link (§2.7 / M2c). It NEVER serializes the
  * token_hash or the raw token: it exposes only the non-secret token_prefix, the
- * grant shape (permissions/level/scope), the gates and the lifecycle counters.
+ * grant shape (role/audience/scope), the password flag and the lifecycle counters.
  *
  * The raw token is surfaced EXACTLY ONCE — at mint time the create endpoint calls
  * {@see self::withToken()} to attach it (and the full share URL built from the
@@ -54,12 +54,12 @@ final class NodeShareResource extends JsonResource
             'id' => $share->getKey(),
             'node_id' => $share->node_id,
             'token_prefix' => $share->token_prefix,
-            'permissions' => $share->permissions,
-            'level' => $share->level,
+            'role' => $share->role_key,
+            'role_version' => $share->role_version,
+            'audience' => $share->audience->value,
             'scope' => $share->scope->value,
             'has_password' => $share->hasPassword(),
-            'require_login' => $share->require_login,
-            'allow_discovery' => $share->allow_discovery,
+            'token_generation' => $share->token_generation,
             'expires_at' => $share->expires_at,
             'max_uses' => $share->max_uses,
             'use_count' => $share->use_count,

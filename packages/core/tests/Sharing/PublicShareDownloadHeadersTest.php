@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
-use Vaulter\Enums\Access\Permission;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
@@ -35,7 +34,7 @@ it('serves a public download of a text/html declared mime as octet-stream with n
 
     $fileNode = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('<script>alert(1)</script>'), 'evil.txt'), new UploadOptions(declaredMimeType: 'text/html'));
 
-    ShareTestHelpers::share($fileNode->refresh(), token: 'html-dl-token', permissions: (Permission::View->value | Permission::Download->value));
+    ShareTestHelpers::share($fileNode->refresh(), token: 'html-dl-token');
 
     $response = $this->get('api/vaulter/share/html-dl-token/download');
 
@@ -49,7 +48,7 @@ it('serves a public download of a whitelisted image/png declared mime as-is, nos
 
     $fileNode = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor(base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jE1cAAAAASUVORK5CYII=')), 'photo.png'), new UploadOptions(declaredMimeType: 'image/png'));
 
-    ShareTestHelpers::share($fileNode->refresh(), token: 'png-dl-token', permissions: (Permission::View->value | Permission::Download->value));
+    ShareTestHelpers::share($fileNode->refresh(), token: 'png-dl-token');
 
     $response = $this->get('api/vaulter/share/png-dl-token/download');
 

@@ -9,19 +9,18 @@ use Filament\Actions\Action;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\PageRegistration;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Schema;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 use Override;
 use UnitEnum;
 use Vaulter\Access\Roles\RoleRegistry;
@@ -29,9 +28,11 @@ use Vaulter\Configuration\SharingConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Access\Permission;
+use Vaulter\Enums\Sharing\ShareAudience;
 use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Exceptions\Sharing\ShareLinkTtlExceededException;
+use Vaulter\Exceptions\Sharing\ShareRoleNotAllowedException;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Filament\Resources\NodeShareResource\Pages\ListNodeShares;
 use Vaulter\Filament\Support\PanelActor;
@@ -116,10 +117,15 @@ final class NodeShareResource extends Resource
                     ->formatStateUsing(fn (string $state): string => $state.'…')
                     ->badge(),
 
-                TextColumn::make('level')
+                TextColumn::make('role_key')
                     ->label('Role')
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => ucfirst($state))
+                    ->toggleable(),
+
+                TextColumn::make('audience')
+                    ->badge()
+                    ->formatStateUsing(fn (ShareAudience $state): string => ucfirst($state->value))
                     ->toggleable(),
 
                 TextColumn::make('scope')
@@ -135,11 +141,6 @@ final class NodeShareResource extends Resource
                         'Revoked' => 'danger',
                         default => 'warning',
                     }),
-
-                IconColumn::make('require_login')
-                    ->label('Login')
-                    ->boolean()
-                    ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('use_count')
                     ->label('Uses')
@@ -169,6 +170,7 @@ final class NodeShareResource extends Resource
                     ),
             ])
             ->recordActions([
+                self::rotateAction(),
                 self::revokeAction(),
             ])
             ->defaultSort('created_at', 'desc');
@@ -208,10 +210,17 @@ final class NodeShareResource extends Resource
                 ->searchable()
                 ->required(),
 
-            Select::make('level')
+            Select::make('role')
                 ->label('Role')
-                ->options(self::levelOptions())
+                ->options(self::roleOptions())
                 ->default(RoleRegistry::READER)
+                ->helperText('A writer link needs an audience that is signed in.')
+                ->required(),
+
+            Select::make('audience')
+                ->label('Who can open it')
+                ->options(self::audienceOptions())
+                ->default(ShareAudience::Anyone->value)
                 ->required(),
 
             Select::make('scope')
@@ -219,22 +228,10 @@ final class NodeShareResource extends Resource
                 ->default(GrantScope::Item->value)
                 ->required(),
 
-            TextInput::make('permissions')
-                ->label('Permissions (ability bits)')
-                ->helperText('0–'.Permission::all().'. Defaults to the reader role (view + download) when 0.')
-                ->numeric()
-                ->minValue(0)
-                ->maxValue(Permission::all())
-                ->default(self::readerBits()),
-
             TextInput::make('password')
                 ->label('Password (optional)')
                 ->password()
                 ->maxLength(255),
-
-            Toggle::make('require_login')->label('Require login'),
-
-            Toggle::make('allow_discovery')->label('Allow discovery'),
 
             TextInput::make('max_uses')
                 ->label('Max uses (optional)')
@@ -270,34 +267,42 @@ final class NodeShareResource extends Resource
             return;
         }
 
-        // -1 and 0 normalize to the reader bits below; only supplied values are significant.
-        $permissions = (int) ($data['permissions'] ?? 0); // @pest-mutate-ignore: DecrementInteger,IncrementInteger
         /** @var string $password */
         $password = $data['password'] ?? '';
         /** @var string $expiresAt */
         $expiresAt = $data['expires_at'] ?? '';
         $maxUses = $data['max_uses'] ?? null;
 
-        $minted = self::operations($node)->create(
-            node: $node,
-            input: new ShareLinkInput(
-                permissions: $permissions > 0 ? $permissions : self::readerBits(),
-                // Filament validation already supplies enum/string and toggle values with these types.
-                level: (string) ($data['level'] ?? RoleRegistry::READER), // @pest-mutate-ignore: RemoveStringCast
-                scope: GrantScope::from((string) ($data['scope'] ?? GrantScope::Item->value)), // @pest-mutate-ignore: RemoveStringCast
-                password: $password === '' ? null : $password,
-                requireLogin: (bool) ($data['require_login'] ?? false), // @pest-mutate-ignore: RemoveBooleanCast
-                allowDiscovery: (bool) ($data['allow_discovery'] ?? false), // @pest-mutate-ignore: RemoveBooleanCast
-                expiresAt: $expiresAt === '' ? null : Carbon::parse($expiresAt),
-                maxUses: $maxUses === null || $maxUses === '' ? null : (int) $maxUses,
-            ),
-        );
+        try {
+            $minted = self::operations($node)->create(
+                node: $node,
+                input: new ShareLinkInput(
+                    // Filament validation already supplies enum/string values with these types.
+                    role: (string) ($data['role'] ?? RoleRegistry::READER), // @pest-mutate-ignore: RemoveStringCast
+                    audience: ShareAudience::from((string) ($data['audience'] ?? ShareAudience::Anyone->value)), // @pest-mutate-ignore: RemoveStringCast
+                    scope: GrantScope::from((string) ($data['scope'] ?? GrantScope::Item->value)), // @pest-mutate-ignore: RemoveStringCast
+                    expiresAt: $expiresAt === '' ? null : Carbon::parse($expiresAt),
+                    password: $password === '' ? null : $password,
+                    maxUses: $maxUses === null || $maxUses === '' ? null : (int) $maxUses,
+                ),
+            );
+        } catch (InvalidArgumentException|ShareRoleNotAllowedException|ShareLinkTtlExceededException $exception) {
+            // A role the audience cannot carry, the tenant audience without tenancy, an out-of-range budget or expiry.
+            self::notifyDenied($exception->getMessage());
+
+            return;
+        }
 
         // The raw token is shown exactly once, here — it is never persisted and never
         // recoverable from the row afterward.
+        self::notifyToken('Share link created', $minted->token);
+    }
+
+    private static function notifyToken(string $title, string $token): void
+    {
         Notification::make()
-            ->title('Share link created')
-            ->body('Copy it now — it is shown only once: '.app(SharingConfig::class)->urlBase().'/'.$minted->token)
+            ->title($title)
+            ->body('Copy it now — it is shown only once: '.app(SharingConfig::class)->urlBase().'/'.$token)
             ->persistent()
             ->success()
             ->send();
@@ -319,6 +324,22 @@ final class NodeShareResource extends Resource
                 self::revokeRecord($record);
 
                 Notification::make()->title('Share link revoked')->success()->send();
+            });
+    }
+
+    /**
+     * Replace a link's token via the core Action. The new raw token is shown once.
+     */
+    private static function rotateAction(): Action
+    {
+        return Action::make('rotate')
+            ->label('Rotate token')
+            ->icon('heroicon-o-arrow-path')
+            ->requiresConfirmation()
+            ->modalDescription('The current link stops working at once.')
+            ->visible(fn (NodeShare $record): bool => !$record->isRevoked() && self::actorCanShare($record->node))
+            ->action(function (NodeShare $record): void {
+                self::notifyToken('Share link rotated', self::rotateRecord($record));
             });
     }
 
@@ -360,6 +381,14 @@ final class NodeShareResource extends Resource
     {
         $node = self::resolveNode($record->getRawOriginal('node_id')) ?? throw NodeNotFoundException::forId('missing');
         self::operations($node)->revoke(node: $node, share: $record);
+    }
+
+    /** Rotate the record's token; returns the new raw token. */
+    public static function rotateRecord(NodeShare $record): string
+    {
+        $node = self::resolveNode($record->getRawOriginal('node_id')) ?? throw NodeNotFoundException::forId('missing');
+
+        return self::operations($node)->rotate(node: $node, share: $record)->token;
     }
 
     private static function operations(Node $node): ShareOperations
@@ -410,26 +439,34 @@ final class NodeShareResource extends Resource
     }
 
     /**
+     * The roles a link can carry; organizer and owner never. Whether a role fits the
+     * chosen audience is decided by the core Action.
+     *
      * @return array<string, string>
      */
-    private static function levelOptions(): array
+    private static function roleOptions(): array
     {
         $options = [];
 
-        // A bearer link has no identity: the commenter role is never offered, and a
-        // role whose default abilities include comment needs an explicit mask.
-        foreach ((new RoleRegistry)->all() as $role) {
-            if ($role->key !== RoleRegistry::COMMENTER) {
-                $options[$role->key] = ucfirst($role->key);
-            }
+        foreach ([RoleRegistry::PREVIEWER, RoleRegistry::READER, RoleRegistry::COMMENTER, RoleRegistry::WRITER] as $key) {
+            $options[$key] = ucfirst($key);
         }
 
         return $options;
     }
 
-    private static function readerBits(): int
+    /**
+     * @return array<string, string>
+     */
+    private static function audienceOptions(): array
     {
-        return (new RoleRegistry)->latest(RoleRegistry::READER)->bits;
+        $options = [];
+
+        foreach (ShareAudience::cases() as $audience) {
+            $options[$audience->value] = ucfirst($audience->value);
+        }
+
+        return $options;
     }
 
     /**

@@ -75,6 +75,19 @@ The API maps this to `403`.
 role map named a role (or role version) that is not registered. The 1.0 roles are
 `previewer`, `reader`, `commenter`, `writer`, `organizer` and `owner`, all at version 1.
 
+## share-role-not-allowed
+
+`ShareRoleNotAllowedException` (422 `share_role_not_allowed`) — a share link cannot carry this
+role for this audience. Links grant `previewer`, `reader` or `commenter` to any audience,
+`writer` only to `authenticated` or `tenant` visitors, and never `organizer` or `owner`.
+
+## share-link-ttl-exceeded
+
+`ShareLinkTtlExceededException` (422 `share_link_ttl_exceeded`, extra `limit_days`) — the link
+would stay valid longer than the drive profile's `maxShareLinkTtlDays`. The limit applies when
+a link is created or changed and again on every visit, so tightening it also ends older links
+until their owner shortens them.
+
 ## unknown-document-type
 
 `UnknownDocumentTypeException` — the supplied `type` is not in

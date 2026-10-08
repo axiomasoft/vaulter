@@ -6,24 +6,23 @@ namespace Vaulter\Http\Requests\Sharing;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Validator;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Configuration\SharingConfig;
 use Vaulter\Data\Sharing\ShareLinkInput;
-use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Access\Permission;
+use Vaulter\Enums\Sharing\ShareAudience;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /**
  * Validates a create-share-link request (§2.7 / M2c) and assembles its
- * ShareLinkInput command. The ability bitmask, role key (level), scope, optional
- * password / require-login / discovery flags, expiry and use budget are
- * host-supplied; the controller authorizes Ability::Share on the node first.
+ * ShareLinkInput command. The role key, audience, scope, optional password, expiry
+ * and use budget are host-supplied; the controller authorizes Ability::Share on the
+ * node first. Which roles a link may carry for which audience is decided by the
+ * Action (share_role_not_allowed), so the one rule table lives in one place.
  *
- * permissions defaults to the reader role (view + download); the bitmask is bounded
- * to the ability range; anonymous comment-capable shares are rejected. An EXPLICIT `expires_at` is bounded above
- * by `$sharingConfig->maxTtlHours()` (P1.2 / F-P1.3-03) — an omitted `expires_at`
+ * role defaults to reader and audience to anyone. An EXPLICIT `expires_at` is bounded
+ * above by `$sharingConfig->maxTtlHours()` (P1.2 / F-P1.3-03) and by the drive
+ * profile's maxShareLinkTtlDays (checked by the Action) — an omitted `expires_at`
  * defaults to `$sharingConfig->defaultTtlHours()` in {@see CreateShareLinkAction},
  * which this request never sees.
  */
@@ -35,16 +34,10 @@ final class StoreShareLinkRequest extends VaulterFormRequest
     public function rules(SharingConfig $sharingConfig): array
     {
         return [
-            'permissions' => ['nullable', 'integer', 'min:0', 'max:'.Permission::all(), function (string $attribute, mixed $value, \Closure $fail): void {
-                if (is_numeric($value) && ((int) $value & Permission::Comment->value) !== 0) {
-                    $fail('Anonymous shares cannot grant Comment.');
-                }
-            }],
-            'level' => ['nullable', 'string', Rule::in(array_values(array_diff((new RoleRegistry)->keys(), [RoleRegistry::COMMENTER])))],
+            'role' => ['nullable', 'string', Rule::in((new RoleRegistry)->keys())],
+            'audience' => ['nullable', Rule::enum(ShareAudience::class)],
             'scope' => ['nullable', Rule::enum(GrantScope::class)],
             'password' => ['nullable', 'string', 'min:1', 'max:255'],
-            'require_login' => ['nullable', 'boolean'],
-            'allow_discovery' => ['nullable', 'boolean'],
             'expires_at' => [
                 'nullable',
                 'date',
@@ -55,17 +48,6 @@ final class StoreShareLinkRequest extends VaulterFormRequest
         ];
     }
 
-    /** @return list<\Closure(Validator): void> */
-    public function after(): array
-    {
-        return [function (Validator $validator): void {
-            $level = $this->input('level');
-            if ($this->input('permissions') === null && is_string($level) && (new RoleRegistry)->has($level) && (new RoleRegistry)->latest($level)->allows(Ability::Comment)) {
-                $validator->errors()->add('permissions', 'Anonymous shares cannot grant Comment. Supply explicit non-comment permissions.');
-            }
-        }];
-    }
-
     public function toData(): ShareLinkInput
     {
         $expiresAt = $this->input('expires_at');
@@ -73,35 +55,12 @@ final class StoreShareLinkRequest extends VaulterFormRequest
         $maxUses = $this->input('max_uses');
 
         return new ShareLinkInput(
-            permissions: $this->resolvePermissions(),
-            level: $this->string('level', RoleRegistry::READER)->toString(),
+            role: $this->string('role', RoleRegistry::READER)->toString(),
+            audience: ShareAudience::from($this->string('audience', ShareAudience::Anyone->value)->toString()),
             scope: GrantScope::from($this->string('scope', GrantScope::Item->value)->toString()),
-            password: is_string($password) && $password !== '' ? $password : null,
-            requireLogin: $this->boolean('require_login'),
-            allowDiscovery: $this->boolean('allow_discovery'),
             expiresAt: is_string($expiresAt) ? Carbon::parse($expiresAt) : null,
+            password: is_string($password) && $password !== '' ? $password : null,
             maxUses: is_numeric($maxUses) ? (int) $maxUses : null,
         );
-    }
-
-    /**
-     * The bitmask to grant: the explicit permissions when supplied, else the
-     * abilities of the chosen role, else the reader role.
-     */
-    private function resolvePermissions(): int
-    {
-        $permissions = $this->input('permissions');
-
-        if (is_numeric($permissions)) {
-            return (int) $permissions;
-        }
-
-        $level = $this->input('level');
-
-        if (is_string($level) && $level !== '') {
-            return (new RoleRegistry)->latest($level)->bits;
-        }
-
-        return (new RoleRegistry)->latest(RoleRegistry::READER)->bits;
     }
 }

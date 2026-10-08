@@ -9,8 +9,10 @@ use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Drive\Content\ScanPolicyResolver;
-use Vaulter\Enums\Access\Permission;
+use Vaulter\Enums\Sharing\ShareAudience;
+use Vaulter\Exceptions\Access\UnknownRoleException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Exceptions\Sharing\ShareRoleNotAllowedException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Operations\OperationContext;
@@ -44,8 +46,12 @@ it('rejects invalid direct share inputs before minting or recording', function (
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($drive, null, 'validation');
     $operation = app()->makeWith(ShareOperations::class, ['context' => OperationContext::system($drive, 'fixture')]);
-    foreach ([new ShareLinkInput(Permission::View->value | Permission::Download->value, RoleRegistry::COMMENTER), new ShareLinkInput(Permission::Comment->value), new ShareLinkInput(Permission::all() + 1), new ShareLinkInput(-1), new ShareLinkInput(Permission::View->value, 'admin'), new ShareLinkInput(Permission::View->value | Permission::Download->value, maxUses: 0), new ShareLinkInput(Permission::View->value | Permission::Download->value, expiresAt: now()->subSecond()), new ShareLinkInput(Permission::View->value | Permission::Download->value, expiresAt: now()->addYears(10))] as $input) {
+    foreach ([new ShareLinkInput(maxUses: 0), new ShareLinkInput(expiresAt: now()->subSecond()), new ShareLinkInput(expiresAt: now()->addYears(10)), new ShareLinkInput(audience: ShareAudience::Tenant)] as $input) {
         expect(fn () => $operation->create($node, $input))->toThrow(InvalidArgumentException::class);
+    }
+    expect(fn () => $operation->create($node, new ShareLinkInput(role: 'admin')))->toThrow(UnknownRoleException::class);
+    foreach ([[RoleRegistry::WRITER, ShareAudience::Anyone], [RoleRegistry::ORGANIZER, ShareAudience::Authenticated], [RoleRegistry::OWNER, ShareAudience::Tenant]] as [$role, $audience]) {
+        expect(fn () => $operation->create($node, new ShareLinkInput(role: $role, audience: $audience)))->toThrow(ShareRoleNotAllowedException::class);
     }
     expect(NodeShare::query()->count())->toBe(0);
 });
@@ -59,7 +65,7 @@ it('denies every new resolution after revoke commit on independent connections',
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($drive, null, 'linearization');
     $operation = app()->makeWith(ShareOperations::class, ['context' => OperationContext::system($drive, 'fixture')]);
-    $minted = $operation->create($node, new ShareLinkInput(Permission::View->value | Permission::Download->value));
+    $minted = $operation->create($node, new ShareLinkInput);
     expect(app(ShareResolver::class)->resolve($minted->token)->isOk())->toBeTrue();
     if (DB::connection()->getDriverName() === 'pgsql') {
         $marker = sys_get_temp_dir().'/share-commit-'.bin2hex(random_bytes(8));

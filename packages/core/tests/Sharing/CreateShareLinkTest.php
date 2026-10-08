@@ -11,7 +11,7 @@ use Vaulter\Data\Sharing\CreateShareLinkInput;
 use Vaulter\Data\Sharing\RevokeShareInput;
 use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Access\Permission;
+use Vaulter\Enums\Sharing\ShareAudience;
 use Vaulter\Events\Sharing\NodeShareCreated;
 use Vaulter\Events\Sharing\NodeShareRevoked;
 use Vaulter\Models\Sharing\NodeShare;
@@ -31,7 +31,7 @@ it('returns the raw token once and persists ONLY its hash + prefix', function ()
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'shared');
 
-    $minted = app(CreateShareLinkAction::class)->execute(context: OperationContext::system($node->storage()->firstOrFail(), 'fixture'), input: new CreateShareLinkInput(node: $node, link: new ShareLinkInput(permissions: (Permission::View->value | Permission::Download->value))));
+    $minted = app(CreateShareLinkAction::class)->execute(context: OperationContext::system($node->storage()->firstOrFail(), 'fixture'), input: new CreateShareLinkInput(node: $node, link: new ShareLinkInput));
 
     // The raw token is surfaced exactly once, on the result.
     expect($minted->token)->toBeString()->not->toBe('');
@@ -49,7 +49,7 @@ it('hashes a share password — the plaintext never lands in the row', function 
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'protected');
 
-    app(CreateShareLinkAction::class)->execute(context: OperationContext::system($node->storage()->firstOrFail(), 'fixture'), input: new CreateShareLinkInput(node: $node, link: new ShareLinkInput(permissions: (Permission::View->value | Permission::Download->value), password: 's3cret')));
+    app(CreateShareLinkAction::class)->execute(context: OperationContext::system($node->storage()->firstOrFail(), 'fixture'), input: new CreateShareLinkInput(node: $node, link: new ShareLinkInput(password: 's3cret')));
 
     $row = NodeShare::query()->firstOrFail();
 
@@ -58,15 +58,19 @@ it('hashes a share password — the plaintext never lands in the row', function 
         ->and(Hash::check('s3cret', $row->password_hash))->toBeTrue();
 });
 
-it('defaults the bitmask to READ and the scope to item', function (): void {
+it('defaults to a reader link for anyone on the item, born at generation 1', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'plain');
 
-    $minted = app(CreateShareLinkAction::class)->execute(context: OperationContext::system($node->storage()->firstOrFail(), 'fixture'), input: new CreateShareLinkInput(node: $node, link: new ShareLinkInput(permissions: (Permission::View->value | Permission::Download->value))));
+    $minted = app(CreateShareLinkAction::class)->execute(context: OperationContext::system($node->storage()->firstOrFail(), 'fixture'), input: new CreateShareLinkInput(node: $node, link: new ShareLinkInput));
 
-    expect($minted->share->permissions)->toBe((Permission::View->value | Permission::Download->value))
+    expect($minted->share->role_key)->toBe(RoleRegistry::READER)
+        ->and($minted->share->role_version)->toBe(1)
+        ->and($minted->share->audience)->toBe(ShareAudience::Anyone)
+        ->and($minted->share->token_generation)->toBe(1)
         ->and($minted->share->scope)->toBe(GrantScope::Item)
-        ->and($minted->share->use_count)->toBe(0);
+        ->and($minted->share->use_count)->toBe(0)
+        ->and(strlen($minted->token))->toBe(43);
 });
 
 it('emits NodeShareCreated on mint', function (): void {
@@ -75,7 +79,7 @@ it('emits NodeShareCreated on mint', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'evented');
 
-    app(CreateShareLinkAction::class)->execute(context: OperationContext::system($node->storage()->firstOrFail(), 'fixture'), input: new CreateShareLinkInput(node: $node, link: new ShareLinkInput(permissions: (Permission::View->value | Permission::Download->value))));
+    app(CreateShareLinkAction::class)->execute(context: OperationContext::system($node->storage()->firstOrFail(), 'fixture'), input: new CreateShareLinkInput(node: $node, link: new ShareLinkInput));
 
     Event::assertDispatched(NodeShareCreated::class);
 });
@@ -86,7 +90,7 @@ it('revokes a share (stamps revoked_at) and emits NodeShareRevoked', function ()
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'revocable');
 
-    $minted = app(CreateShareLinkAction::class)->execute(context: OperationContext::system($node->storage()->firstOrFail(), 'fixture'), input: new CreateShareLinkInput(node: $node, link: new ShareLinkInput(permissions: (Permission::View->value | Permission::Download->value))));
+    $minted = app(CreateShareLinkAction::class)->execute(context: OperationContext::system($node->storage()->firstOrFail(), 'fixture'), input: new CreateShareLinkInput(node: $node, link: new ShareLinkInput));
 
     $revoked = app(RevokeShareLinkAction::class)->execute(context: OperationContext::system($storage, 'fixture'), input: new RevokeShareInput(node: $node, share: $minted->share));
 
@@ -102,7 +106,7 @@ it('is a no-op (and emits nothing) when revoking an already-revoked share', func
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'twice');
 
-    $minted = app(CreateShareLinkAction::class)->execute(context: OperationContext::system($node->storage()->firstOrFail(), 'fixture'), input: new CreateShareLinkInput(node: $node, link: new ShareLinkInput(permissions: (Permission::View->value | Permission::Download->value), level: RoleRegistry::READER)));
+    $minted = app(CreateShareLinkAction::class)->execute(context: OperationContext::system($node->storage()->firstOrFail(), 'fixture'), input: new CreateShareLinkInput(node: $node, link: new ShareLinkInput(role: RoleRegistry::READER)));
 
     app(RevokeShareLinkAction::class)->execute(context: OperationContext::system($storage, 'fixture'), input: new RevokeShareInput(node: $node, share: $minted->share));
     Event::assertDispatchedTimes(NodeShareRevoked::class, 1);

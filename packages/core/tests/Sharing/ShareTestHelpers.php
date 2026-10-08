@@ -8,7 +8,7 @@ use Illuminate\Support\Carbon;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Access\Permission;
+use Vaulter\Enums\Sharing\ShareAudience;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Support\ShareToken;
@@ -29,11 +29,11 @@ final class ShareTestHelpers
     public static function share(
         Node $node,
         string $token = 'raw-share-token-value',
-        int $permissions = (Permission::View->value | Permission::Download->value),
-        string $level = RoleRegistry::READER,
+        string $role = RoleRegistry::READER,
+        ShareAudience $audience = ShareAudience::Anyone,
         GrantScope $scope = GrantScope::Item,
         ?string $passwordHash = null,
-        bool $requireLogin = false,
+        int $generation = 1,
         ?Carbon $expiresAt = null,
         ?int $maxUses = null,
         int $useCount = 0,
@@ -48,12 +48,12 @@ final class ShareTestHelpers
             'node_id' => $node->getKey(),
             'token_hash' => ShareToken::hash($token),
             'token_prefix' => ShareToken::prefix($token, 8),
-            'permissions' => $permissions,
-            'level' => $level,
+            'role_key' => $role,
+            'role_version' => 1,
+            'audience' => $audience,
+            'token_generation' => $generation,
             'scope' => $scope->value,
             'password_hash' => $passwordHash,
-            'require_login' => $requireLogin,
-            'allow_discovery' => false,
             'expires_at' => $expiresAt,
             'max_uses' => $maxUses,
             'use_count' => $useCount,

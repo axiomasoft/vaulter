@@ -469,18 +469,17 @@ final class SchemaBuilder
         $table->char('token_hash', 64);
         $table->string('token_prefix', 16)->index();
 
-        // A share grants exactly its ability bits (default View + Download).
-        // Version 0 marks legacy CRUDS masks during the resumable upgrade only.
-        $table->unsignedInteger('permissions')->default(65);
-        $table->smallInteger('permissions_version')->default(1);
-        $table->string('level', 16)->default('reader');
+        // A share carries a role (a stored version keeps its meaning forever), an
+        // audience (anyone|authenticated|tenant) and the generation of its token:
+        // rotating the token raises it and ends every link session of the old one.
+        $table->string('role_key', 32);
+        $table->smallInteger('role_version')->default(1);
+        $table->string('audience', 16)->default('anyone');
+        $table->unsignedInteger('token_generation')->default(1);
         $table->string('scope', 8)->default('item');
 
-        // Optional access gates (§2.7): a hashed password, a require-login flag and
-        // a discovery flag (whether the share may be listed/indexed).
+        // Optional password gate (§2.7): stored only as a hash.
         $table->string('password_hash')->nullable();
-        $table->boolean('require_login')->default(false);
-        $table->boolean('allow_discovery')->default(false);
 
         // Lifecycle bounds: an optional expiry, an optional atomic use budget and a
         // revocation tombstone (§2.7). use_count is incremented atomically and

@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Schema;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Access\Permission;
+use Vaulter\Enums\Sharing\ShareAudience;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Sharing\ShareResolution;
 use Vaulter\Sharing\ShareResolver;
@@ -32,18 +32,18 @@ function shareResolver(): ShareResolver
     return app(ShareResolver::class);
 }
 
-it('resolves a valid token and grants exactly the share bits', function (): void {
+it('resolves a valid token and grants exactly the abilities of the link role', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'doc');
-    ShareTestHelpers::share($node, token: 'good-token', permissions: (Permission::View->value | Permission::Download->value));
+    ShareTestHelpers::share($node, token: 'good-token');
 
     $result = shareResolver()->resolve('good-token');
 
     expect($result->isOk())->toBeTrue();
     $context = $result->context;
 
-    // EXACTLY the bits: READ allows View, but not Edit/Share — no identity grant
-    // ever widens a share.
+    // EXACTLY the role: reader allows View and Download, but not Edit/Share — no
+    // identity grant ever widens a share.
     expect($context->allows(Ability::View))->toBeTrue()
         ->and($context->allows(Ability::Download))->toBeTrue()
         ->and($context->allows(Ability::Edit))->toBeFalse()
@@ -51,23 +51,41 @@ it('resolves a valid token and grants exactly the share bits', function (): void
         ->and($context->node->getKey())->toBe($node->getKey());
 });
 
-it('honours a wider share bitmask exactly (DOWNLOAD/EDIT) without identity inheritance', function (): void {
+it('honours a wider role exactly (writer) without identity inheritance', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'editable');
-    ShareTestHelpers::share(
-        $node,
-        token: 'writer-token',
-        permissions: (Permission::View->value | Permission::Download->value) | Permission::Edit->value,
-        level: RoleRegistry::WRITER,
-    );
+    ShareTestHelpers::share($node, token: 'writer-token', role: RoleRegistry::WRITER, audience: ShareAudience::Authenticated);
 
-    $context = shareResolver()->resolve('writer-token')->context;
+    $context = shareResolver()->resolve('writer-token', actor: (new TestUser)->forceFill(['id' => 7]))->context;
 
     expect($context->allows(Ability::Edit))->toBeTrue()
         ->and($context->allows(Ability::View))->toBeTrue()
-        // View|Download|Edit does NOT include CREATE or SHARE — the share is exactly its bits.
-        ->and($context->allows(Ability::Create))->toBeFalse()
-        ->and($context->allows(Ability::Share))->toBeFalse();
+        // A writer link never carries Share or Manage.
+        ->and($context->allows(Ability::Share))->toBeFalse()
+        ->and($context->allows(Ability::Manage))->toBeFalse();
+});
+
+it('keeps a previewer link from downloading while it can view', function (): void {
+    $storage = AccessTestHelpers::storage();
+    $node = AccessTestHelpers::folder($storage, null, 'preview');
+    ShareTestHelpers::share($node, token: 'preview-token', role: RoleRegistry::PREVIEWER);
+
+    $context = shareResolver()->resolve('preview-token')->context;
+
+    expect($context->allows(Ability::View))->toBeTrue()
+        ->and($context->allows(Ability::Download))->toBeFalse();
+});
+
+it('treats a stored role the link rules no longer allow as not found', function (): void {
+    $storage = AccessTestHelpers::storage();
+    $node = AccessTestHelpers::folder($storage, null, 'forged');
+    // A writer link for anyone cannot be created; if one is stored it never resolves.
+    ShareTestHelpers::share($node, token: 'writer-anyone', role: RoleRegistry::WRITER);
+    ShareTestHelpers::share($node, token: 'organizer-link', role: RoleRegistry::ORGANIZER, audience: ShareAudience::Authenticated);
+    $actor = (new TestUser)->forceFill(['id' => 7]);
+
+    expect(shareResolver()->resolve('writer-anyone', actor: $actor)->resolution)->toBe(ShareResolution::NotFound)
+        ->and(shareResolver()->resolve('organizer-link', actor: $actor)->resolution)->toBe(ShareResolution::NotFound);
 });
 
 it('denies a wrong token (NotFound)', function (): void {
@@ -128,10 +146,10 @@ it('demands a password when the share is password-gated', function (): void {
     expect(shareResolver()->resolve('pw-token', password: 'letmein')->isOk())->toBeTrue();
 });
 
-it('demands login when the share requires it', function (): void {
+it('demands login when the share audience is authenticated', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'doc');
-    ShareTestHelpers::share($node, token: 'login-token', requireLogin: true);
+    ShareTestHelpers::share($node, token: 'login-token', audience: ShareAudience::Authenticated);
 
     // No actor → login required.
     expect(shareResolver()->resolve('login-token')->resolution)->toBe(ShareResolution::LoginRequired);

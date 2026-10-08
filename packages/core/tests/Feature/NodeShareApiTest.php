@@ -8,7 +8,6 @@ use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Access\Permission;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -49,7 +48,7 @@ it('lets an owner with the Share ability mint a link and returns the raw token o
     AccessTestHelpers::grant($node, RoleRegistry::OWNER, scope: GrantScope::Item); // grants SHARE bit
 
     $response = $this->postJson('api/vaulter/nodes/'.$node->getKey().'/shares', [
-        'permissions' => (Permission::View->value | Permission::Download->value),
+        'role' => RoleRegistry::READER,
     ])->assertCreated();
 
     // The raw token + URL come back exactly once.
@@ -68,7 +67,7 @@ it('stamps a default expiry when none is supplied, never minting an immortal lin
     AccessTestHelpers::grant($node, RoleRegistry::OWNER, scope: GrantScope::Item);
 
     $this->postJson('api/vaulter/nodes/'.$node->getKey().'/shares', [
-        'permissions' => (Permission::View->value | Permission::Download->value),
+        'role' => RoleRegistry::READER,
     ])->assertCreated();
 
     $row = NodeShare::query()->firstOrFail();
@@ -85,7 +84,7 @@ it('rejects an explicit expiry above the configured ceiling (F-P1.3-03)', functi
 
     // Config max is 720h (30 days) — 400 days is well past it.
     $this->postJson('api/vaulter/nodes/'.$node->getKey().'/shares', [
-        'permissions' => (Permission::View->value | Permission::Download->value),
+        'role' => RoleRegistry::READER,
         'expires_at' => now()->addDays(400)->toIso8601String(),
     ])
         ->assertStatus(422)
@@ -101,7 +100,7 @@ it('403s an owner WITHOUT the Share ability', function (): void {
     AccessTestHelpers::grant($node, RoleRegistry::READER, scope: GrantScope::Item);
 
     $this->postJson('api/vaulter/nodes/'.$node->getKey().'/shares', [
-        'permissions' => (Permission::View->value | Permission::Download->value),
+        'role' => RoleRegistry::READER,
     ])->assertStatus(403);
 });
 
@@ -150,7 +149,7 @@ it('404s revoking a share that belongs to a DIFFERENT node', function (): void {
 it('resolves a public share token to node metadata within scope', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'public-doc');
-    ShareTestHelpers::share($node, token: 'public-token', permissions: (Permission::View->value | Permission::Download->value));
+    ShareTestHelpers::share($node, token: 'public-token');
 
     $this->getJson('api/vaulter/share/public-token')
         ->assertOk()
@@ -161,7 +160,7 @@ it('resolves a public share token to node metadata within scope', function (): v
 it('never exposes the raw sequential node id publicly, only an opaque projection (F-P1.3-05)', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'opaque-doc');
-    ShareTestHelpers::share($node, token: 'opaque-token', permissions: (Permission::View->value | Permission::Download->value));
+    ShareTestHelpers::share($node, token: 'opaque-token');
 
     $response = $this->getJson('api/vaulter/share/opaque-token')->assertOk();
 
@@ -200,7 +199,6 @@ it('serves a public download within the READ bits, bounds it by max_uses, and ne
     $share = ShareTestHelpers::share(
         $fileNode->refresh(),
         token: 'dl-token',
-        permissions: (Permission::View->value | Permission::Download->value),
         maxUses: 1,
     );
 
@@ -219,14 +217,15 @@ it('serves a public download within the READ bits, bounds it by max_uses, and ne
     expect($share->refresh()->use_count)->toBe(1);
 });
 
-it('denies a public download when the share lacks the READ bit', function (): void {
+it('denies a public download to a previewer link while it still shows the node', function (): void {
     $drive = Vaulter::drive(DriveTestHelpers::host())->asSystem('test fixture');
     $fileNode = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('secret bytes'), 'no.txt'));
 
-    // permissions=0 → no READ/DOWNLOAD bit; the download is denied.
-    ShareTestHelpers::share($fileNode->refresh(), token: 'norights-token', permissions: 0);
+    // A previewer sees the node but never takes the original.
+    ShareTestHelpers::share($fileNode->refresh(), token: 'norights-token', role: RoleRegistry::PREVIEWER);
 
-    $this->get('api/vaulter/share/norights-token/download')->assertNotFound();
+    $this->getJson('api/vaulter/share/norights-token')->assertOk();
+    $this->getJson('api/vaulter/share/norights-token/download')->assertForbidden()->assertJsonPath('code', 'permission_denied');
 });
 
 it('lists a subtree share but 404s a listing on an item share', function (): void {

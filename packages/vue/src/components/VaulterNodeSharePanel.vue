@@ -4,11 +4,12 @@ import { useNodeShares } from '../composables/useNodeShares'
 import { useVaulterClient } from '../composables/useVaulterClient'
 import type {
   CreateNodeSharePayload,
-  GrantLevelName,
   GrantScopeName,
   NodeId,
   NodeShare,
   NodeShareCreated,
+  ShareAudienceName,
+  ShareRoleName,
 } from '../types'
 
 // Bearer share-link management over `useNodeShares`. On create, the raw token +
@@ -20,53 +21,53 @@ const props = withDefaults(
   defineProps<{
     nodeId: NodeId
     autoLoad?: boolean
-    levels?: GrantLevelName[]
+    roles?: ShareRoleName[]
+    audiences?: ShareAudienceName[]
     scopes?: GrantScopeName[]
   }>(),
   {
     autoLoad: true,
-    levels: () => ['previewer', 'reader', 'writer'],
+    roles: () => ['previewer', 'reader', 'commenter', 'writer'],
+    audiences: () => ['anyone', 'authenticated'],
     scopes: () => ['item', 'subtree'],
   },
 )
 
 const emit = defineEmits<{
   created: [share: NodeShareCreated]
+  rotated: [share: NodeShareCreated]
   revoked: [shareId: NodeId]
 }>()
 
 const client = useVaulterClient()
-const { shares, lastCreated, loading, error, list, create, revoke, clearLastCreated } = useNodeShares(props.nodeId)
+const { shares, lastCreated, loading, error, list, create, rotate, revoke, clearLastCreated } = useNodeShares(props.nodeId)
 
-const form = reactive<{ level: GrantLevelName, scope: GrantScopeName, requireLogin: boolean, expiresAt: string }>({
-  level: props.levels[0] ?? 'reader',
+const form = reactive<{ role: ShareRoleName, audience: ShareAudienceName, scope: GrantScopeName, expiresAt: string }>({
+  role: props.roles[0] ?? 'reader',
+  audience: props.audiences[0] ?? 'anyone',
   scope: props.scopes[0] ?? 'item',
-  requireLogin: false,
   expiresAt: '',
 })
 
 const copied = ref(false)
 
-// Stable ability bits of each role, excluding Comment on the bearer-link channel.
-const sharePermissions: Record<string, number> = {
-  previewer: 1,
-  reader: 65,
-  writer: 1991,
-  organizer: 2007,
-  owner: 4063,
-}
-
 async function add(): Promise<void> {
+  // The server decides which role fits which audience (a writer link needs a signed-in audience).
   const payload: CreateNodeSharePayload = {
-    level: form.level,
-    permissions: sharePermissions[form.level],
+    role: form.role,
+    audience: form.audience,
     scope: form.scope,
-    requireLogin: form.requireLogin,
     expiresAt: form.expiresAt || undefined,
   }
   const created = await create(payload)
   copied.value = false
   emit('created', created)
+}
+
+async function replaceToken(share: NodeShare): Promise<void> {
+  const rotated = await rotate(share.id)
+  copied.value = false
+  emit('rotated', rotated)
 }
 
 async function remove(share: NodeShare): Promise<void> {
@@ -99,7 +100,7 @@ onMounted(() => {
   }
 })
 
-defineExpose({ list, create: add, revoke: remove, shares, lastCreated, loading, error, clearLastCreated })
+defineExpose({ list, create: add, rotate: replaceToken, revoke: remove, shares, lastCreated, loading, error, clearLastCreated })
 </script>
 
 <template>
@@ -138,11 +139,21 @@ defineExpose({ list, create: add, revoke: remove, shares, lastCreated, loading, 
 
     <ul v-else class="vaulter-node-share-panel__list">
       <li v-for="share in shares" :key="share.id" class="vaulter-node-share-panel__item" :data-status="share.revoked_at ? 'revoked' : 'active'">
-        <slot name="item" :share="share" :revoke="() => remove(share)">
+        <slot name="item" :share="share" :rotate="() => replaceToken(share)" :revoke="() => remove(share)">
           <span class="vaulter-node-share-panel__prefix">{{ share.token_prefix }}…</span>
-          <span class="vaulter-node-share-panel__level">{{ share.level }}</span>
+          <span class="vaulter-node-share-panel__role">{{ share.role }}</span>
+          <span class="vaulter-node-share-panel__audience">{{ share.audience }}</span>
           <span class="vaulter-node-share-panel__state">{{ share.revoked_at ? 'revoked' : 'active' }}</span>
           <span v-if="share.expires_at" class="vaulter-node-share-panel__expiry">until {{ share.expires_at }}</span>
+          <button
+            v-if="!share.revoked_at"
+            type="button"
+            class="vaulter-node-share-panel__rotate"
+            :aria-label="`Rotate token of share ${share.token_prefix}`"
+            @click="replaceToken(share)"
+          >
+            Rotate
+          </button>
           <button
             v-if="!share.revoked_at"
             type="button"
@@ -157,15 +168,15 @@ defineExpose({ list, create: add, revoke: remove, shares, lastCreated, loading, 
     </ul>
 
     <form class="vaulter-node-share-panel__create" @submit.prevent="add">
-      <select v-model="form.level" class="vaulter-node-share-panel__level-select" aria-label="Level">
-        <option v-for="level in levels" :key="level" :value="level">{{ level }}</option>
+      <select v-model="form.role" class="vaulter-node-share-panel__role-select" aria-label="Role">
+        <option v-for="role in roles" :key="role" :value="role">{{ role }}</option>
+      </select>
+      <select v-model="form.audience" class="vaulter-node-share-panel__audience-select" aria-label="Audience">
+        <option v-for="audience in audiences" :key="audience" :value="audience">{{ audience }}</option>
       </select>
       <select v-model="form.scope" class="vaulter-node-share-panel__scope-select" aria-label="Scope">
         <option v-for="scope in scopes" :key="scope" :value="scope">{{ scope }}</option>
       </select>
-      <label class="vaulter-node-share-panel__require-login">
-        <input v-model="form.requireLogin" type="checkbox"> Require login
-      </label>
       <input
         v-model="form.expiresAt"
         class="vaulter-node-share-panel__expiry-input"

@@ -15,6 +15,7 @@ use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Http\Middleware\ResolveShareToken;
 use Vaulter\Http\Resources\Sharing\SharedNodeResource;
@@ -25,7 +26,6 @@ use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\FileRevisionReadRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
-use Vaulter\Repositories\Sharing\NodeShareStoreRepository;
 use Vaulter\Sharing\ShareContext;
 use Vaulter\Sharing\ShareResolver;
 use Vaulter\Support\LoadTier;
@@ -35,13 +35,14 @@ use Vaulter\Tenancy\ShareTenantContext;
  * The PUBLIC, token-resolved surface for bearer share-links (§2.7 / M2c) — the
  * SEPARATE sharing pass. Every action sits behind {@see ResolveShareToken} (no auth
  * middleware of its own); the middleware has already produced the ShareContext, so
- * authorization here is ONLY the share's own bitmask on its own node-set — the
- * identity ACL / AccessResolver is never consulted.
+ * authorization here is ONLY the share's own role on its own node-set — the
+ *    identity ACL / AccessResolver is never consulted.
  *
- *  - show     → the target node's metadata within scope (READ bit).
- *  - download → stream the target file's current head within the READ/DOWNLOAD
- *    bits, intersected with item-safety (the blob must be committed). The use
- *    budget is consumed atomically, bounded by max_uses.
+ *  - show     → the target node's metadata within scope (View).
+ *  - download → stream the target file's current head when the role carries
+ *    Download (a previewer gets 403 permission_denied: the original is never
+ *    handed out), intersected with item-safety (the blob must be committed).
+ *    The use was already counted when the visit was redeemed by the middleware.
  *  - nodes    → list the in-scope children, ONLY when scope=subtree (a scope=item
  *    share exposes a single node, never a listing).
  *
@@ -53,7 +54,6 @@ final class PublicShareController extends Controller
     public function __construct(
         private readonly NodeReadRepository $nodes,
         private readonly FileRevisionReadRepository $versions,
-        private readonly NodeShareStoreRepository $shares,
         private readonly MetricsRecorder $metrics,
         private readonly ShareResolver $resolver,
     ) {}
@@ -97,10 +97,8 @@ final class PublicShareController extends Controller
     }
 
     /**
-     * Stream the shared file's current head version within the READ/DOWNLOAD bits,
-     * intersected with item-safety (the blob must be committed). Consumes one use
-     * atomically (bounded by max_uses) BEFORE streaming, so an over-budget hit is
-     * rejected.
+     * Stream the shared file's current head version when the role carries Download,
+     * intersected with item-safety (the blob must be committed).
      */
     public function download(Request $request): StreamedResponse
     {
@@ -108,7 +106,9 @@ final class PublicShareController extends Controller
 
         $context = ResolveShareToken::context($request);
 
-        $this->requireBit($context, Ability::Download);
+        if (!$context->allows(Ability::Download)) {
+            throw PermissionDeniedException::forAbility(Ability::Download->value);
+        }
 
         $node = $context->node;
 
@@ -122,18 +122,12 @@ final class PublicShareController extends Controller
             throw new NotFoundHttpException('Share link not found or no longer available.');
         }
 
-        // Atomic, max_uses-bounded use consumption — an exhausted budget loses the
-        // race here and is denied before a single byte is served.
-        if (!$this->shares->consumeUse($context->share)) {
-            throw new NotFoundHttpException('Share link not found or no longer available.');
-        }
-
         return $this->stream($context, $node, app(ShareTenantContext::class)->evaluate($storage, fn () => $this->versions->head($node)), $storage, startedAt: $startedAt);
     }
 
     /**
-     * Reject the request unless the share's bitmask satisfies the ability. This is
-     * the ONLY authorization on the public path — purely the share's bits, never an
+     * Reject the request unless the share's role carries the ability. This is the
+     * ONLY authorization on the public path — purely the share's role, never an
      * identity grant.
      */
     private function requireBit(ShareContext $context, Ability $ability): void

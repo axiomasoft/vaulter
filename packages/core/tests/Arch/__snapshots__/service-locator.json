@@ -11,7 +11,7 @@
     "core/src/Http/Controllers/Access/GrantController.php": 3,
     "core/src/Http/Controllers/Activity/ActivityController.php": 1,
     "core/src/Http/Controllers/Sharing/PublicShareController.php": 3,
-    "core/src/Http/Controllers/Sharing/ShareController.php": 3,
+    "core/src/Http/Controllers/Sharing/ShareController.php": 1,
     "core/src/Http/Middleware/VaulterThrottledRouteMap.php": 1,
     "core/src/Http/Requests/Webhooks/RegisterWebhookEndpointRequest.php": 1,
     "core/src/Http/Resources/Drive/NodeResource.php": 2,

@@ -309,7 +309,8 @@ return new class extends Migration
     private function refuseShareMasks(Connection $db, string $shares, bool $rollback = false): void
     {
         $schema = $db->getSchemaBuilder();
-        if (!$schema->hasTable($shares)) {
+        // Share links 1.0 (2026_10_07_000006) store a role, not a mask: nothing to check.
+        if (!$schema->hasTable($shares) || !$schema->hasColumn($shares, 'permissions')) {
             return;
         }
         $columns = array_column($schema->getColumns($shares), null, 'name');
@@ -348,7 +349,7 @@ return new class extends Migration
     private function upgradeShareMasks(Connection $db, string $shares): void
     {
         $schema = $db->getSchemaBuilder();
-        if (!$schema->hasTable($shares)) {
+        if (!$schema->hasTable($shares) || !$schema->hasColumn($shares, 'permissions')) {
             return;
         }
         if (!$schema->hasColumn($shares, 'permissions_version')) {

@@ -15,7 +15,7 @@ namespace Vaulter\Sharing;
  *                    target" — both 404.
  *  - PasswordRequired → the share is password-gated and no/incorrect password was
  *                    supplied (401 + a password challenge).
- *  - LoginRequired → the share requires an authenticated host user and none is
+ *  - LoginRequired → the share's audience needs a signed-in host user and none is
  *                    present (401).
  */
 enum ShareResolution: string

@@ -5,6 +5,7 @@ import type {
   NodeId,
   NodeShare,
   NodeShareCreated,
+  UpdateNodeSharePayload,
 } from '../types'
 
 export interface UseNodeSharesReturn {
@@ -15,6 +16,10 @@ export interface UseNodeSharesReturn {
   lastCreated: ShallowRef<NodeShareCreated | null>
   list: () => Promise<NodeShare[]>
   create: (payload?: CreateNodeSharePayload) => Promise<NodeShareCreated>
+  /** Change expiry, budget, password or audience of a link; its token stays. */
+  update: (shareId: NodeId, payload: UpdateNodeSharePayload) => Promise<NodeShare>
+  /** Replace a link's token; the new raw token is held once in `lastCreated`. */
+  rotate: (shareId: NodeId) => Promise<NodeShareCreated>
   revoke: (shareId: NodeId) => Promise<void>
   /** Forget the last-minted token (so a stale secret never lingers in memory). */
   clearLastCreated: () => void
@@ -53,6 +58,19 @@ export function useNodeShares(nodeId: NodeId): UseNodeSharesReturn {
     return created
   }
 
+  async function update(shareId: NodeId, payload: UpdateNodeSharePayload): Promise<NodeShare> {
+    const updated = await client.nodeShares.update(nodeId, shareId, payload)
+    shares.value = shares.value.map((share) => (share.id === shareId ? updated : share))
+    return updated
+  }
+
+  async function rotate(shareId: NodeId): Promise<NodeShareCreated> {
+    const rotated = await client.nodeShares.rotate(nodeId, shareId)
+    lastCreated.value = rotated
+    shares.value = shares.value.map((share) => (share.id === shareId ? rotated : share))
+    return rotated
+  }
+
   async function revoke(shareId: NodeId): Promise<void> {
     await client.nodeShares.revoke(nodeId, shareId)
     shares.value = shares.value.filter((share) => share.id !== shareId)
@@ -65,5 +83,5 @@ export function useNodeShares(nodeId: NodeId): UseNodeSharesReturn {
     lastCreated.value = null
   }
 
-  return { shares, lastCreated, loading, error, list, create, revoke, clearLastCreated }
+  return { shares, lastCreated, loading, error, list, create, update, rotate, revoke, clearLastCreated }
 }

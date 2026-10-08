@@ -241,10 +241,10 @@ Reactive management of a node's **bearer share-links**. The raw token surfaces *
 ```ts
 import { useNodeShares } from '@vaulter/vue'
 
-const { shares, lastCreated, loading, error, list, create, revoke, clearLastCreated } =
+const { shares, lastCreated, loading, error, list, create, update, rotate, revoke, clearLastCreated } =
   useNodeShares(nodeId)
 
-const created = await create({ level: 'reader', scope: 'item', requireLogin: true })
+const created = await create({ role: 'reader', audience: 'authenticated', scope: 'item' })
 // created.token + created.url are present HERE — and only here.
 clearLastCreated() // forget the secret so it never lingers in memory
 ```
@@ -452,11 +452,12 @@ Bearer share-link management over `useNodeShares`. On create the raw token + URL
 |------|------|---------|
 | `nodeId` | `NodeId` | — |
 | `autoLoad` | `boolean` | `true` |
-| `levels` | `GrantLevelName[]` | `['previewer','reader','writer']` |
+| `roles` | `ShareRoleName[]` | `['previewer','reader','commenter','writer']` |
+| `audiences` | `ShareAudienceName[]` | `['anyone','authenticated']` |
 | `scopes` | `GrantScopeName[]` | `['item','subtree']` |
 
-**Emits**: `created(share)`, `revoked(shareId)`.
-**Slots**: `created` (with `share`, `url`, `copy`, `dismiss`, `copied`), `loading`, `item`, `error`.
+**Emits**: `created(share)`, `rotated(share)`, `revoked(shareId)`.
+**Slots**: `created` (with `share`, `url`, `copy`, `dismiss`, `copied`), `loading`, `item` (with `share`, `rotate`, `revoke`), `error`.
 
 ### `VaulterDocumentNode`
 

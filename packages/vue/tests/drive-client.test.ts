@@ -338,18 +338,34 @@ describe('createVaulterClient — Drive (M1–M4)', () => {
           data: { id: 1, node_id: 9, token_prefix: 'abc', token: 'abc.SECRET', url: 'https://x/s/abc.SECRET', level: 'reader' },
         }, 201))
         .mockResolvedValueOnce(jsonResponse({
-          data: [{ id: 1, node_id: 9, token_prefix: 'abc', level: 'reader' }],
+          data: [{ id: 1, node_id: 9, token_prefix: 'abc', role: 'reader', audience: 'anyone' }],
           meta: { next_cursor: null, prev_cursor: null },
         }))
       const client = createVaulterClient({ fetch: fetchMock })
 
-      const created = await client.nodeShares.create(9, { level: 'reader', expiresAt: null })
+      const created = await client.nodeShares.create(9, { role: 'reader', audience: 'authenticated', expiresAt: null })
       expect(created.token).toBe('abc.SECRET')
       expect(created.url).toContain('abc.SECRET')
 
       const page = await client.nodeShares.list(9)
       // The list shape never carries a token field.
       expect(page.data[0]).not.toHaveProperty('token')
+    })
+
+    it('updates a share without sending the fields it leaves out, and rotates its token', async () => {
+      const fetchMock = vi.fn()
+        .mockResolvedValueOnce(jsonResponse({ data: { id: 1, node_id: 9, token_prefix: 'abc', role: 'reader', audience: 'authenticated' } }))
+        .mockResolvedValueOnce(jsonResponse({ data: { id: 1, node_id: 9, token_prefix: 'xyz', token: 'xyz.NEW', url: '/share/xyz.NEW', token_generation: 2 } }))
+      const client = createVaulterClient({ fetch: fetchMock })
+
+      const updated = await client.nodeShares.update(9, 1, { audience: 'authenticated', password: null })
+      expect(updated.audience).toBe('authenticated')
+      expect(fetchMock.mock.calls[0]).toMatchObject(['/api/vaulter/nodes/9/shares/1', { method: 'PATCH' }])
+      expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ audience: 'authenticated', password: null })
+
+      const rotated = await client.nodeShares.rotate(9, 1)
+      expect(rotated.token).toBe('xyz.NEW')
+      expect(fetchMock.mock.calls[1]).toMatchObject(['/api/vaulter/nodes/9/shares/1/rotate', { method: 'POST' }])
     })
 
     it('revokes a share and resolves a public token', async () => {

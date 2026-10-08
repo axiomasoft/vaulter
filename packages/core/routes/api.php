@@ -56,10 +56,12 @@ Route::prefix(app(RoutesConfig::class)->prefix())
             // Authorized via AccessResolver Ability::Share on the node. create()
             // returns the raw token once; index() never exposes it. The fixed
             // /shares segment sits before the catch-all /{node}. The {share} id is a
-            // plain scalar (not route-model bound) — the controller verifies it
-            // belongs to the authorized node before revoking.
+            // plain scalar (not route-model bound) — the operations verify it
+            // belongs to the authorized node before changing, rotating or revoking.
             Route::get('nodes/{node}/shares', [NodeShareController::class, 'index']);
             Route::post('nodes/{node}/shares', [NodeShareController::class, 'store']);
+            Route::patch('nodes/{node}/shares/{share}', [NodeShareController::class, 'update']);
+            Route::post('nodes/{node}/shares/{share}/rotate', [NodeShareController::class, 'rotate']);
             Route::delete('nodes/{node}/shares/{share}', [NodeShareController::class, 'destroy']);
 
             // Per-node activity feed (§2.9 / M2c-activity). Authorized via

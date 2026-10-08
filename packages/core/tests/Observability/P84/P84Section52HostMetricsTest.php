@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Data\Drive\UploadSource;
-use Vaulter\Enums\Access\Permission;
 use Vaulter\Load\Http\Middleware\RecordRequestPeakMemory;
 use Vaulter\Load\Listeners\RecordThrottledResponse;
 use Vaulter\Load\Observability\DownloadStreamMetrics;
@@ -161,11 +160,7 @@ it('records download ttfb and bytes on public share download', function (): void
     config()->set('vaulter.features.share_links', true);
     $drive = DriveTestHelpers::drive();
     $file = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('share-bytes'), 'shared.bin'));
-    ShareTestHelpers::share(
-        $file->refresh(),
-        token: 'metrics-share',
-        permissions: (Permission::View->value | Permission::Download->value),
-    );
+    ShareTestHelpers::share($file->refresh(), token: 'metrics-share');
 
     $response = $this->get('api/vaulter/share/metrics-share/download');
     $response->assertOk();

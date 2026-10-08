@@ -8,7 +8,6 @@ use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Data\Access\GrantInput;
 use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Access\Permission;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Access\UnknownRoleException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
@@ -68,7 +67,7 @@ it('refuses organizer grant management and self-promotion through operations and
 
     // Share remains sufficient for bearer links, independently of grant management.
     $shares = app()->makeWith(ShareOperations::class, ['context' => $this->context]);
-    expect($shares->create($this->node, new ShareLinkInput(Permission::View->value | Permission::Download->value))->share->exists)->toBeTrue();
+    expect($shares->create($this->node, new ShareLinkInput)->share->exists)->toBeTrue();
 });
 
 it('rejects foreign grants and forged model membership without side effects', function (): void {
@@ -97,7 +96,7 @@ it('uses the grants feature independently of disabled bearer links', function ()
     $grant = $operations->grant($this->node, new GrantInput(Subject::ofModel(AccessTestHelpers::user(2)), RoleRegistry::READER));
     expect($grant->granted_by)->toEqual(1);
     $shares = app()->makeWith(ShareOperations::class, ['context' => $this->context]);
-    expect(fn () => $shares->create($this->node, new ShareLinkInput(Permission::View->value | Permission::Download->value)))->toThrow(ProfileRestrictionException::class);
+    expect(fn () => $shares->create($this->node, new ShareLinkInput))->toThrow(ProfileRestrictionException::class);
 });
 
 it('records explicit system actor and correlation without ambient auth attribution', function (): void {
@@ -106,7 +105,7 @@ it('records explicit system actor and correlation without ambient auth attributi
     $system = new OperationContext($this->drive, Actor::system('import fixture'), 'system-correlation');
     $operations = app()->makeWith(ShareOperations::class, ['context' => $system]);
     Activity::query()->delete();
-    $minted = $operations->create($this->node, new ShareLinkInput(Permission::View->value | Permission::Download->value));
+    $minted = $operations->create($this->node, new ShareLinkInput);
     $row = Activity::query()->sole();
     expect($row->actor_type)->toBe(ActorRef::SYSTEM_TYPE)
         ->and($row->actor_id)->toBeNull()
@@ -147,7 +146,7 @@ it('preserves request UUID and ULID correlation for every grant and share mutati
     $shares = app()->makeWith(ShareOperations::class, ['context' => $context]);
     Activity::query()->delete();
     $grant = $access->grant($this->node, new GrantInput(Subject::ofModel(AccessTestHelpers::user(2)), RoleRegistry::READER));
-    $minted = $shares->create($this->node, new ShareLinkInput(Permission::View->value));
+    $minted = $shares->create($this->node, new ShareLinkInput(role: RoleRegistry::PREVIEWER));
     $access->revoke($this->node, $grant);
     $shares->revoke($this->node, $minted->share);
     $events = Activity::query()->get();

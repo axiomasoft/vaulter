@@ -101,9 +101,10 @@ final readonly class ActivityRecorder
             context: [
                 'share_id' => Identity::stringify($event->share->getKey()),
                 'token_prefix' => $event->share->token_prefix,
-                'level' => $event->share->level,
+                'role' => $event->share->role_key,
+                'role_version' => $event->share->role_version,
+                'audience' => $event->share->audience->value,
                 'scope' => $event->share->scope->value,
-                'permissions' => $event->share->permissions,
             ],
         );
     }

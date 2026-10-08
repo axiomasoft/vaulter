@@ -213,8 +213,13 @@ export interface FileVersion {
 
 /** A role key of the 1.0 access model (a role is a closed set of abilities, versioned). */
 export type GrantRoleName = 'previewer' | 'reader' | 'commenter' | 'writer' | 'organizer' | 'owner' | (string & {})
-/** A share link stores a role key in its `level` field (share links are redesigned separately). */
 export type GrantLevelName = GrantRoleName
+
+/** The roles a share link can carry (organizer and owner never; writer needs a signed-in audience). */
+export type ShareRoleName = 'previewer' | 'reader' | 'commenter' | 'writer'
+
+/** Who may open a share link: the token is always required. */
+export type ShareAudienceName = 'anyone' | 'authenticated' | 'tenant'
 export type GrantScopeName = 'item' | 'subtree' | (string & {})
 
 /** A per-node ACL grant (`NodeGrantResource`). */
@@ -239,12 +244,13 @@ export interface NodeShare {
   id: NodeId
   node_id: NodeId
   token_prefix: string
-  permissions: number
-  level: GrantLevelName
+  role: ShareRoleName
+  role_version: number
+  audience: ShareAudienceName
+  /** Raised each time the token is rotated. */
+  token_generation: number
   scope: GrantScopeName
   has_password: boolean
-  require_login: boolean
-  allow_discovery: boolean
   expires_at: string | null
   max_uses: number | null
   use_count: number
@@ -436,15 +442,21 @@ export interface RevokeNodeAccessPayload {
 }
 
 export interface CreateNodeSharePayload {
-  /** The explicit CRUDS bitmask (0..31). */
-  permissions?: number
-  /** Or a level whose bitmask is conferred when `permissions` is omitted. */
-  level?: GrantLevelName
+  /** The role the link grants; reader when omitted. */
+  role?: ShareRoleName
+  /** Who may open it; anyone when omitted. */
+  audience?: ShareAudienceName
   scope?: GrantScopeName
   password?: string | null
-  requireLogin?: boolean
-  allowDiscovery?: boolean
   expiresAt?: string | null
+  maxUses?: number | null
+}
+
+/** Changes to a live link. A field left out stays; `null` removes the password or the use budget. The token never changes. */
+export interface UpdateNodeSharePayload {
+  audience?: ShareAudienceName
+  password?: string | null
+  expiresAt?: string
   maxUses?: number | null
 }
 

@@ -14,11 +14,16 @@ final readonly class ShareResult
     private function __construct(
         public ShareResolution $resolution,
         public ?ShareContext $context,
+        public bool $inSession = false,
     ) {}
 
-    public static function ok(ShareContext $context): self
+    /**
+     * @param bool $inSession the request carried a valid link session, so this visit
+     *                        was already redeemed and costs no further use
+     */
+    public static function ok(ShareContext $context, bool $inSession = false): self
     {
-        return new self(resolution: ShareResolution::Ok, context: $context);
+        return new self(resolution: ShareResolution::Ok, context: $context, inSession: $inSession);
     }
 
     public static function notFound(): self

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Repositories\Sharing;
 
 use Illuminate\Support\Carbon;
+use Vaulter\Access\Roles\Role;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Enums\Sharing\ShareAudience;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Sharing\NodeShare;
 
@@ -30,12 +32,10 @@ final class NodeShareStoreRepository
         Node $node,
         string $tokenHash,
         string $tokenPrefix,
-        int $permissions,
-        string $level,
+        Role $role,
+        ShareAudience $audience,
         string $scope,
         ?string $passwordHash,
-        bool $requireLogin,
-        bool $allowDiscovery,
         ?Carbon $expiresAt,
         ?int $maxUses,
         int|string|null $grantedBy,
@@ -52,18 +52,48 @@ final class NodeShareStoreRepository
             'node_id' => $node->getKey(),
             'token_hash' => $tokenHash,
             'token_prefix' => $tokenPrefix,
-            'permissions' => $permissions,
-            'level' => $level,
+            'role_key' => $role->key,
+            'role_version' => $role->version,
+            'audience' => $audience,
+            'token_generation' => 1,
             'scope' => $scope,
             'password_hash' => $passwordHash,
-            'require_login' => $requireLogin,
-            'allow_discovery' => $allowDiscovery,
             'expires_at' => $expiresAt,
             'max_uses' => $maxUses,
             'use_count' => 0,
             'granted_by' => $grantedBy,
         ]);
         $share->save();
+
+        return $share->refresh();
+    }
+
+    /**
+     * Change the mutable fields of a link (audience, expiry, use budget, password
+     * hash). The token, the role and the generation never move here.
+     *
+     * @param array<string, mixed> $attributes
+     */
+    public function update(NodeShare $share, array $attributes): NodeShare
+    {
+        if ($attributes !== []) {
+            $share->forceFill($attributes)->save();
+        }
+
+        return $share->refresh();
+    }
+
+    /**
+     * Swap the link's token for a new one and move it to the next generation, so
+     * the old token and every session opened with it stop working at once.
+     */
+    public function rotate(NodeShare $share, string $tokenHash, string $tokenPrefix): NodeShare
+    {
+        $share->forceFill([
+            'token_hash' => $tokenHash,
+            'token_prefix' => $tokenPrefix,
+            'token_generation' => $share->token_generation + 1,
+        ])->save();
 
         return $share->refresh();
     }
@@ -84,10 +114,12 @@ final class NodeShareStoreRepository
     }
 
     /**
-     * Atomically consume one use of a share, bounded by max_uses (§2.7). A single
-     * conditional UPDATE increments use_count only while it is still below
-     * max_uses (or max_uses is null/unbounded), so two concurrent public hits can
-     * never push it past the budget. Returns true when a use was consumed.
+     * Atomically redeem one use of a share, bounded by max_uses (§2.7). A single
+     * conditional UPDATE increments use_count only while the link is not revoked,
+     * is still on the generation the caller resolved and is still below max_uses
+     * (or max_uses is null/unbounded), so two concurrent visits can never push it
+     * past the budget and a rotation that commits first wins. Returns true when a
+     * use was redeemed.
      */
     public function consumeUse(NodeShare $share): bool
     {
@@ -95,6 +127,7 @@ final class NodeShareStoreRepository
 
         $query = $model::query()
             ->whereKey($share->getKey())
+            ->where('token_generation', $share->token_generation)
             ->whereNull('revoked_at');
 
         if ($share->max_uses !== null) {

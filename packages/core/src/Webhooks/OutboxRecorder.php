@@ -99,9 +99,10 @@ class OutboxRecorder
                 'node_id' => $this->id($node->getKey()),
                 'drive_id' => $this->id($node->drive_id),
                 'token_prefix' => $event->share->token_prefix,
-                'level' => $event->share->level,
+                'role' => $event->share->role_key,
+                'role_version' => $event->share->role_version,
+                'audience' => $event->share->audience->value,
                 'scope' => $event->share->scope->value,
-                'permissions' => $event->share->permissions,
             ],
             actorId: $event->actorId,
         );

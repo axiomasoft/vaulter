@@ -8,9 +8,12 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Vaulter\Access\Roles\Role;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Enums\Sharing\ShareAudience;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Models\Concerns\StampsDriveTenant;
@@ -18,10 +21,11 @@ use Vaulter\Models\Drive\Node;
 
 /**
  * A bearer share-link on a node (master plan §2.7) — the SEPARATE public sharing
- * channel. A share grants exactly its own `permissions` bitmask on its node-set
- * (the node itself for scope=item; the node + its descendants for scope=subtree),
- * evaluated in its OWN pass intersected with item-safety — it is NEVER unioned
- * with the identity ACL.
+ * channel. A share grants exactly the abilities of its role (role_key, role_version)
+ * on its node-set (the node itself for scope=item; the node + its descendants for
+ * scope=subtree), evaluated in its OWN pass intersected with item-safety — it is
+ * NEVER unioned with the identity ACL. Its audience says who may open it and its
+ * token_generation rises each time the token is rotated.
  *
  * The raw bearer token is NEVER stored: only its sha256 `token_hash` (a UNIQUE
  * char(64)) plus a short, non-secret `token_prefix` for owner-side UX lookup. The
@@ -36,12 +40,12 @@ use Vaulter\Models\Drive\Node;
  * @property int|string      $node_id
  * @property string          $token_hash
  * @property string          $token_prefix
- * @property int             $permissions
- * @property string          $level
+ * @property string          $role_key
+ * @property int             $role_version
+ * @property ShareAudience   $audience
+ * @property int             $token_generation
  * @property GrantScope      $scope
  * @property string|null     $password_hash
- * @property bool            $require_login
- * @property bool            $allow_discovery
  * @property Carbon|null     $expires_at
  * @property int|null        $max_uses
  * @property int             $use_count
@@ -58,21 +62,19 @@ class NodeShare extends Model
     use StampsDriveTenant;
 
     /**
-     * Closed allow-list (F-P1.8-02): the share's own permission/lifecycle
-     * shape — never token_hash/token_prefix (the bearer secret's hash) nor
-     * use_count/granted_by/node_id/tenant_id (server-computed/security). The
+     * Closed allow-list (F-P1.8-02): the share's own audience/lifecycle shape —
+     * never the role, token_hash/token_prefix (the bearer secret's hash),
+     * token_generation nor use_count/granted_by/node_id/tenant_id
+     * (server-computed/security). The
      * sole writer, NodeShareStoreRepository, uses forceFill() exclusively and
      * is unaffected by this list.
      *
      * @var list<string>
      */
     protected $fillable = [
-        'permissions',
-        'level',
+        'audience',
         'scope',
         'password_hash',
-        'require_login',
-        'allow_discovery',
         'expires_at',
         'max_uses',
     ];
@@ -106,6 +108,14 @@ class NodeShare extends Model
             ->where(static function (Builder $inner) use ($now): void {
                 $inner->whereNull('expires_at')->orWhere('expires_at', '>', $now);
             });
+    }
+
+    /**
+     * The role this link grants, at the version it was created with.
+     */
+    public function role(): Role
+    {
+        return (new RoleRegistry)->get($this->role_key, $this->role_version);
     }
 
     /**
@@ -158,9 +168,9 @@ class NodeShare extends Model
     {
         return [
             'scope' => GrantScope::class,
-            'permissions' => 'integer',
-            'require_login' => 'boolean',
-            'allow_discovery' => 'boolean',
+            'audience' => ShareAudience::class,
+            'role_version' => 'integer',
+            'token_generation' => 'integer',
             'expires_at' => 'datetime',
             'max_uses' => 'integer',
             'use_count' => 'integer',

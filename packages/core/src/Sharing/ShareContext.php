@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Sharing;
 
+use Vaulter\Access\Roles\Role;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Models\Drive\Node;
@@ -13,8 +14,8 @@ use Vaulter\Support\Identity;
 /**
  * The authorization context a resolved bearer share produces (§2.7 / M2c) — the
  * SEPARATE sharing pass. It is used INSTEAD of the identity ACL for a
- * share-authorized request: a share grants EXACTLY its own permissions bitmask on
- * its node-set and NOTHING inherited from any identity. The AccessResolver is never
+ * share-authorized request: a share grants EXACTLY the abilities of its role on its
+ * node-set and NOTHING inherited from any identity. The AccessResolver is never
  * consulted on this path.
  *
  * The node-set is the share's scope:
@@ -30,16 +31,16 @@ final readonly class ShareContext
     public function __construct(
         public NodeShare $share,
         public Node $node,
-        public int $permissions,
+        public Role $role,
     ) {}
 
     /**
-     * Whether the share's bitmask grants the ability — purely from this share's
-     * permissions, never from an identity grant.
+     * Whether the share's role grants the ability — purely from this share's role,
+     * never from an identity grant. A previewer sees but cannot take the original.
      */
     public function allows(Ability $ability): bool
     {
-        return $ability->satisfiedBy($this->permissions);
+        return $this->role->allows($ability);
     }
 
     /**

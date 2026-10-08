@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Hash;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Access\Permission;
+use Vaulter\Enums\Sharing\ShareAudience;
 use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
@@ -27,16 +27,12 @@ it('rejects every invalid share-link request boundary', function (array $payload
 
     expect(NodeShare::query()->count())->toBe(0);
 })->with([
-    'permissions must be an integer' => [['permissions' => 'read'], 'permissions'],
-    'permissions cannot be negative' => [['permissions' => -1], 'permissions'],
-    'permissions cannot exceed the CRUDS mask' => [['permissions' => Permission::all() + 1], 'permissions'],
-    'raw Comment bit is never anonymous' => [['permissions' => Permission::Comment->value], 'permissions'],
-    'level must be a GrantLevel' => [['level' => 'super-owner'], 'level'],
+    'role must be a role key' => [['role' => 'super-owner'], 'role'],
+    'role must be a string' => [['role' => 3], 'role'],
+    'audience must be an audience' => [['audience' => 'everyone'], 'audience'],
     'scope must be a GrantScope' => [['scope' => 'workspace'], 'scope'],
     'password must be a string' => [['password' => ['secret']], 'password'],
     'password is bounded' => [['password' => str_repeat('x', 256)], 'password'],
-    'require_login must be boolean' => [['require_login' => 'sometimes'], 'require_login'],
-    'allow_discovery must be boolean' => [['allow_discovery' => 'sometimes'], 'allow_discovery'],
     'expiry must be a date' => [['expires_at' => 'tomorrow-ish'], 'expires_at'],
     'expiry must be in the future' => [['expires_at' => now()->subSecond()->toIso8601String()], 'expires_at'],
     'expiry cannot exceed the configured ceiling' => [['expires_at' => now()->addHours(721)->toIso8601String()], 'expires_at'],
@@ -48,60 +44,54 @@ it('maps the complete valid request into the persisted share contract', function
     $expiresAt = now()->addHour()->startOfSecond();
 
     $this->postJson('api/vaulter/nodes/'.$this->shareNode->getKey().'/shares', [
-        'permissions' => (Permission::View->value | Permission::Download->value) | Permission::Edit->value,
-        'level' => RoleRegistry::WRITER,
+        'role' => RoleRegistry::WRITER,
+        'audience' => ShareAudience::Authenticated->value,
         'scope' => GrantScope::Subtree->value,
         'password' => 'secret',
-        'require_login' => true,
-        'allow_discovery' => true,
         'expires_at' => $expiresAt->toIso8601String(),
         'max_uses' => 7,
-    ])->assertCreated();
+    ])->assertCreated()
+        ->assertJsonPath('data.role', RoleRegistry::WRITER)
+        ->assertJsonPath('data.audience', 'authenticated')
+        ->assertJsonPath('data.token_generation', 1)
+        ->assertJsonMissingPath('data.permissions')
+        ->assertJsonMissingPath('data.require_login');
 
     $share = NodeShare::query()->sole();
 
-    expect($share->permissions)->toBe((Permission::View->value | Permission::Download->value) | Permission::Edit->value)
-        ->and($share->level)->toBe(RoleRegistry::WRITER)
+    expect($share->role_key)->toBe(RoleRegistry::WRITER)
+        ->and($share->role_version)->toBe(1)
+        ->and($share->audience)->toBe(ShareAudience::Authenticated)
         ->and($share->scope)->toBe(GrantScope::Subtree)
         ->and(Hash::check('secret', $share->password_hash))->toBeTrue()
-        ->and($share->require_login)->toBeTrue()
-        ->and($share->allow_discovery)->toBeTrue()
         ->and($share->expires_at?->equalTo($expiresAt))->toBeTrue()
         ->and($share->max_uses)->toBe(7)
         ->and($share->granted_by)->toBe('1');
 });
 
-it('rejects a default level mask containing Comment when no explicit mask is supplied', function (): void {
-    $this->postJson('api/vaulter/nodes/'.$this->shareNode->getKey().'/shares', [
-        'level' => RoleRegistry::WRITER,
-    ])->assertUnprocessable()->assertJsonValidationErrors('permissions');
-
-    expect(NodeShare::query()->count())->toBe(0);
+it('defaults to a reader link for anyone', function (): void {
+    $this->postJson('api/vaulter/nodes/'.$this->shareNode->getKey().'/shares', [])
+        ->assertCreated()->assertJsonPath('data.role', 'reader')->assertJsonPath('data.audience', 'anyone');
 });
 
-it('accepts the anonymous role masks sent by the Vue share panel', function (string $role, int $permissions): void {
-    $this->postJson('api/vaulter/nodes/'.$this->shareNode->id.'/shares', [
-        'level' => $role,
-        'permissions' => $permissions,
-        'scope' => GrantScope::Item->value,
-        'require_login' => false,
-    ])->assertCreated()->assertJsonPath('data.permissions', $permissions);
+it('accepts the roles a link may carry for anyone', function (string $role): void {
+    $this->postJson('api/vaulter/nodes/'.$this->shareNode->id.'/shares', ['role' => $role, 'scope' => GrantScope::Item->value])
+        ->assertCreated()->assertJsonPath('data.role', $role);
 
-    expect(NodeShare::query()->sole()->permissions)->toBe($permissions);
+    expect(NodeShare::query()->sole()->role_key)->toBe($role);
+})->with(['previewer', 'reader', 'commenter']);
+
+it('refuses the roles a link cannot carry with share_role_not_allowed', function (string $role, string $audience): void {
+    $this->postJson('api/vaulter/nodes/'.$this->shareNode->id.'/shares', ['role' => $role, 'audience' => $audience])
+        ->assertUnprocessable()->assertJsonPath('code', 'share_role_not_allowed');
+
+    expect(NodeShare::query()->count())->toBe(0);
 })->with([
-    ['previewer', 1], ['reader', 65], ['writer', 1991], ['organizer', 2007], ['owner', 4063],
+    'writer for anyone' => ['writer', 'anyone'],
+    'organizer for authenticated' => ['organizer', 'authenticated'],
+    'owner for authenticated' => ['owner', 'authenticated'],
 ]);
 
-it('preserves an explicit zero permission mask', function (): void {
-    $this->postJson('api/vaulter/nodes/'.$this->shareNode->getKey().'/shares', [
-        'permissions' => 0,
-        'level' => RoleRegistry::OWNER,
-    ])->assertCreated();
-
-    expect(NodeShare::query()->sole()->permissions)->toBe(0);
-});
-
-it('rejects anonymous commenter shares', function (): void {
-    $this->postJson('api/vaulter/nodes/'.$this->shareNode->id.'/shares', ['level' => 'commenter'])->assertUnprocessable();
-    expect(NodeShare::query()->count())->toBe(0);
+it('answers unknown_role for a stored-role lookup that does not exist', function (): void {
+    $this->postJson('api/vaulter/nodes/'.$this->shareNode->id.'/shares', ['role' => 'admin'])->assertUnprocessable()->assertJsonValidationErrors('role');
 });

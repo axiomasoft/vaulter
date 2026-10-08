@@ -1,6 +1,6 @@
 ---
 title: Sharing
-description: Bearer share-links — a separate, token-resolved public channel that grants exactly its own permission bitmask on its node-set, intersected with item-safety.
+description: Bearer share-links — a separate, token-resolved public channel that grants exactly the abilities of one role, to a chosen audience, on its node-set, intersected with item-safety.
 outline: deep
 ---
 
@@ -9,9 +9,18 @@ outline: deep
 A **bearer share-link** is a secret token that grants access to a single node (and,
 optionally, its subtree) **without the recipient being a registered subject**. It is the
 **separate sharing channel** — a share is resolved in its *own* pass and grants **exactly
-its own permission bitmask** on its own node-set, intersected with item-safety. It is
+the abilities of its role** on its own node-set, intersected with item-safety. It is
 **never unioned with the identity ACL**: the `AccessResolver` is never consulted on a
 share-authorized request.
+
+A link has four settings that matter:
+
+| Setting    | Values | Meaning |
+| ---------- | ------ | ------- |
+| **role**   | `previewer`, `reader`, `commenter`, `writer` | What the holder may do. A previewer sees the node but never receives the original (no `download`). `organizer` and `owner` can never be shared. |
+| **audience** | `anyone`, `authenticated`, `tenant` | Who may open it: the token alone, a signed-in host user, or a signed-in user whose host tenant is the drive's tenant. |
+| **scope**  | `item`, `subtree` | The node only, or the node and its descendants down to the next inheritance boundary. |
+| **generation** | integer | Raised by every rotation; ends every visit opened with the previous token. |
 
 ::: info Two distinct channels
 This page documents **node** share-links (`v_node_shares`, the Drive channel). The legacy
@@ -20,22 +29,42 @@ separate, older surface that grants a stringly-typed level on a `Document`. New 
 use node share-links.
 :::
 
+## Roles and audiences
+
+| Role        | Abilities | Audience |
+| ----------- | --------- | -------- |
+| `previewer` | `view` | any |
+| `reader`    | `view`, `download` | any |
+| `commenter` | `view`, `download`, `comment` | any |
+| `writer`    | commenter + `edit`, `create`, `move`, `copy`, `trash`, `restore` | `authenticated` or `tenant` only |
+| `organizer`, `owner` | — | never (`share_role_not_allowed`) |
+
+A role version is stored with the link (`role_key`, `role_version`) and keeps its meaning
+forever. The pair is checked again on **every** visit: a stored combination the rules no
+longer allow resolves to `404`.
+
+`tenant` means the visitor is signed in **and** the host's `TenantResolver::current()` equals
+the drive's tenant — an exact comparison of tenant keys, never an e-mail suffix. A visitor from
+another tenant gets the same opaque `404` as for a wrong token. It needs
+`vaulter.tenancy.enabled`; without tenancy, creating a `tenant` link throws
+`InvalidArgumentException`.
+
 ## How it works
 
 Minting and resolving a share are governed by two different authorities:
 
 - **Minting** a link goes through the **identity ACL**: the authenticated owner must hold
-  `Ability::Share` on the node (the `SHARE` bit). This is the gate on *who may create a
-  public link*.
+  `Ability::Share` on the node. This is the gate on *who may create a public link*.
 - **Resolving** a link is the **separate sharing pass**: the public endpoints carry no auth
   middleware — only the `ResolveShareToken` middleware, which hashes the token, looks up the
   live share, runs the gates, intersects with item-safety, and produces a `ShareContext`.
-  That context grants only the share's bits on its node-set — nothing inherited from any
+  That context grants only the role's abilities on its node-set — nothing inherited from any
   identity.
 
-The raw token is **never stored**. Only its `sha256` hash (`token_hash`, a `UNIQUE`
-`char(64)`) and a short, non-secret `token_prefix` are persisted. The raw token is returned
-to the creator **exactly once** at mint time (`MintedShareLink`) and is never re-derivable.
+The raw token is **never stored**. It is `base64url(random_bytes(32))` (43 characters). Only its
+`sha256` hash (`token_hash`, a `UNIQUE` `char(64)`) and a short, non-secret `token_prefix` are
+persisted. The raw token is returned to the creator **exactly once** at mint time
+(`MintedShareLink`) and is never re-derivable.
 
 ## The owner surface
 
@@ -43,44 +72,43 @@ to the creator **exactly once** at mint time (`MintedShareLink`) and is never re
 owner surface. Every action requires `Ability::Share` on the node, enforced by the
 `AccessResolver` — a denial is a `403` via `PermissionDeniedException`.
 
-| Method   | Route                                | Action    | Ability        |
-| -------- | ------------------------------------ | --------- | -------------- |
-| `GET`    | `/nodes/{node}/shares`               | `index`   | `Share` on node |
-| `POST`   | `/nodes/{node}/shares`               | `store`   | `Share` on node |
-| `DELETE` | `/nodes/{node}/shares/{share}`       | `destroy` | `Share` on node |
+| Method   | Route                                     | Action    |
+| -------- | ----------------------------------------- | --------- |
+| `GET`    | `/nodes/{node}/shares`                    | `index`   |
+| `POST`   | `/nodes/{node}/shares`                    | `store`   |
+| `PATCH`  | `/nodes/{node}/shares/{share}`            | `update`  |
+| `POST`   | `/nodes/{node}/shares/{share}/rotate`     | `rotate`  |
+| `DELETE` | `/nodes/{node}/shares/{share}`            | `destroy` |
 
 Routes are mounted under the configured prefix (default `api/vaulter`). The `{share}` id is a
-plain scalar (not route-model bound) — `destroy` verifies it belongs to the authorized node
-before revoking, so a foreign share id can never be revoked through this node (and yields a
+plain scalar (not route-model bound) — update, rotate and revoke verify it belongs to the
+authorized node, so a foreign share id can never be changed through this node (and yields a
 `404` that leaks nothing).
 
 ### Create a link
 
 `POST /nodes/{node}/shares` mints a link and returns the raw token **once** (`201`). Every
-input is optional; `permissions` defaults to plain `READ` (the safe minimum for a public
-link). The validated request (`StoreShareLinkRequest`) accepts:
+input is optional. The validated request (`StoreShareLinkRequest`) accepts:
 
-| Field             | Type      | Default          | Notes |
-| ----------------- | --------- | ---------------- | ----- |
-| `permissions`     | int       | `1` (`READ`)     | CRUDS bitmask, bounded `0..31` (`Permission::allBits()`). |
-| `level`           | string    | `reader`         | `reader`/`commenter`/`writer`/`organizer`/`owner`; if `permissions` is omitted, the level's `bits()` are used. |
-| `scope`           | string    | `item`           | `item` (the node only) or `subtree` (the node + its descendants). |
-| `password`        | string    | `null`           | 1–255 chars; hashed before it touches the DB (`Hash::make`) — never stored raw. |
-| `require_login`   | bool      | `false`          | Require an authenticated host user to resolve. |
-| `allow_discovery` | bool      | `false`          | A non-secret discovery flag for owner-side UX. |
-| `expires_at`      | ISO-8601  | `null` (never)   | Must be `after:now`. |
-| `max_uses`        | int       | `null` (∞)       | The use budget; `min:1`. |
+| Field        | Type     | Default        | Notes |
+| ------------ | -------- | -------------- | ----- |
+| `role`       | string   | `reader`       | A role key. Which roles fit which audience is decided by the Action (`share_role_not_allowed`). |
+| `audience`   | string   | `anyone`       | `anyone`, `authenticated` or `tenant`. |
+| `scope`      | string   | `item`         | `item` (the node only) or `subtree` (the node + its descendants). |
+| `password`   | string   | `null`         | 1–255 chars; hashed before it touches the DB (`Hash::make`) — never stored raw. |
+| `expires_at` | ISO-8601 | now + 72 h     | Must be `after:now`, within `vaulter.sharing.max_ttl_hours` **and** the drive profile's `maxShareLinkTtlDays`. |
+| `max_uses`   | int      | `null` (∞)     | The number of successful redemptions; `min:1`. |
 
 ::: code-group
 
 ```bash [curl]
-# Mint a read-only, subtree, password-gated link that expires in 7 days.
+# Mint a read-only, subtree, password-gated link for signed-in users that expires in 7 days.
 curl -X POST https://app.test/api/vaulter/nodes/01J.../shares \
   -H 'Authorization: Bearer <user-token>' \
   -H 'Content-Type: application/json' \
   -d '{
-        "level": "reader",
-        "permissions": 1,
+        "role": "reader",
+        "audience": "authenticated",
         "scope": "subtree",
         "password": "s3cret",
         "expires_at": "2026-07-07T00:00:00Z",
@@ -89,30 +117,22 @@ curl -X POST https://app.test/api/vaulter/nodes/01J.../shares \
 ```
 
 ```php [PHP]
-use Vaulter\Actions\Sharing\CreateShareLinkAction;
 use Vaulter\Data\Sharing\ShareLinkInput;
-use Vaulter\Enums\Access\GrantLevel;
 use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Access\Permission;
+use Vaulter\Enums\Sharing\ShareAudience;
 
-// The controller authorizes Ability::Share first; the Action only mints + persists.
-$minted = app(CreateShareLinkAction::class)->execute(
-    node: $node,
-    data: new ShareLinkInput(
-        permissions: Permission::Read->value,
-        level: GrantLevel::Reader,
-        scope: GrantScope::Subtree,
-        password: 's3cret',
-        requireLogin: false,
-        allowDiscovery: false,
-        expiresAt: now()->addDays(7),
-        maxUses: 100,
-        grantedBy: $actorId,
-    ),
-);
+// shares() authorizes Ability::Share on the node; the Action only mints + persists.
+$minted = Vaulter::drive($owner)->actingAs($user)->shares()->create($node, new ShareLinkInput(
+    role: 'reader',
+    audience: ShareAudience::Authenticated,
+    scope: GrantScope::Subtree,
+    expiresAt: now()->addDays(7),
+    password: 's3cret',
+    maxUses: 100,
+));
 
 // The raw token is here and ONLY here — returned exactly once.
-$rawToken = $minted->token;   // e.g. "kQ3...48-char..."
+$rawToken = $minted->token;   // 43 characters
 $share    = $minted->share;   // persisted NodeShare (token_hash only)
 ```
 
@@ -124,7 +144,8 @@ const { create, lastCreated, clearLastCreated } = useNodeShares(nodeId)
 
 async function mint() {
   const created = await create({
-    level: 'reader',
+    role: 'reader',
+    audience: 'authenticated',
     scope: 'subtree',
     password: 's3cret',
     maxUses: 100,
@@ -147,19 +168,19 @@ the token is unrecoverable from the stored row, so capture it now.
     "id": "01J...",
     "node_id": "01J...",
     "token_prefix": "kQ3aB7xZ",
-    "permissions": 1,
-    "level": "reader",
+    "role": "reader",
+    "role_version": 1,
+    "audience": "authenticated",
     "scope": "subtree",
     "has_password": true,
-    "require_login": false,
-    "allow_discovery": false,
+    "token_generation": 1,
     "expires_at": "2026-07-07T00:00:00.000000Z",
     "max_uses": 100,
     "use_count": 0,
     "revoked_at": null,
     "created_at": "2026-06-30T10:00:00.000000Z",
-    "token": "kQ3aB7xZ...48-char-raw-token...",
-    "url": "/share/kQ3aB7xZ...48-char-raw-token..."
+    "token": "kQ3aB7xZ...43-char-raw-token...",
+    "url": "/share/kQ3aB7xZ...43-char-raw-token..."
   }
 }
 ```
@@ -167,10 +188,41 @@ the token is unrecoverable from the stored row, so capture it now.
 ### List links
 
 `GET /nodes/{node}/shares` returns the live + revoked links for the node, cursor-paginated
-(`per_page`, 1–200, default 50). The listing carries the grant shape, the gates and the
-lifecycle counters (`use_count`, `max_uses`, `expires_at`, `revoked_at`) — but **never** the
-`token` or `token_hash`. The non-secret `token_prefix` is exposed so an owner can recognise a
-link in their UI.
+(`per_page`, 1–200, default 50). The listing carries the role, audience, scope, the password
+flag and the lifecycle counters (`use_count`, `max_uses`, `expires_at`, `revoked_at`) — but
+**never** the `token` or `token_hash`. The non-secret `token_prefix` is exposed so an owner can
+recognise a link in their UI.
+
+### Change a link
+
+`PATCH /nodes/{node}/shares/{share}` changes `expires_at`, `max_uses`, `password` and
+`audience` of a **live** link. **The token does not change.** A field you leave out stays;
+`"password": null` removes the password and `"max_uses": null` removes the budget. The role
+and the scope are fixed at creation — a different grant is a different link — and an audience
+change is refused (`share_role_not_allowed`) when the stored role does not fit the new
+audience. The new expiry obeys the same bounds as at creation. Changing the password or the
+audience ends the link sessions opened before the change.
+
+```php
+use Vaulter\Data\Sharing\ShareLinkUpdate;
+
+Vaulter::drive($owner)->actingAs($user)->shares()->update($node, $share, new ShareLinkUpdate(
+    expiresAt: now()->addDay(),
+    removePassword: true,
+));
+```
+
+### Rotate a link
+
+`POST /nodes/{node}/shares/{share}/rotate` replaces the token. The **old token stops
+resolving the moment the rotation commits**, `token_generation` is raised by one so every
+visit opened with the old token is void, and the new raw token comes back **once**. Role,
+audience, expiry, budget, password and `use_count` stay. Rotating a revoked link is a `404`.
+
+```php
+$minted = Vaulter::drive($owner)->actingAs($user)->shares()->rotate($node, $share);
+$minted->token; // the new raw token, shown once
+```
 
 ### Revoke a link
 
@@ -178,23 +230,17 @@ link in their UI.
 again** (the resolver filters on `revoked_at`). It is **idempotent** — re-revoking an
 already-revoked share is a silent no-op that emits nothing.
 
-```php
-use Vaulter\Actions\Sharing\RevokeShareLinkAction;
-
-app(RevokeShareLinkAction::class)->execute(share: $share, actorId: $actorId);
-```
-
 ## The public surface
 
 `PublicShareController` is the public, token-resolved surface. Its routes carry **no auth
 middleware** — only `ResolveShareToken`, which has already produced the `ShareContext`. The
-only authorization here is the share's own bitmask on its own node-set.
+only authorization here is the role of the share on its own node-set.
 
-| Method | Route                       | Action     | Required bit |
-| ------ | --------------------------- | ---------- | ------------ |
-| `GET`  | `/share/{token}`            | `show`     | `View` (`READ`) |
-| `GET`  | `/share/{token}/nodes`      | `nodes`    | `View` (`READ`), `scope=subtree` only |
-| `GET`  | `/share/{token}/download`   | `download` | `Download` (`READ`) |
+| Method | Route                       | Action     | Required ability |
+| ------ | --------------------------- | ---------- | ---------------- |
+| `GET`  | `/share/{token}`            | `show`     | `view` |
+| `GET`  | `/share/{token}/nodes`      | `nodes`    | `view`, `scope=subtree` only |
+| `GET`  | `/share/{token}/download`   | `download` | `download` |
 
 - **`show`** returns the target node's metadata (`SharedNodeResource` — deliberately leaner
   than the owner-side node resource; it carries **no** per-actor abilities map). For a
@@ -202,26 +248,41 @@ only authorization here is the share's own bitmask on its own node-set.
   level without a second call.
 - **`nodes`** lists the in-scope direct children — **only** when `scope=subtree`. A
   `scope=item` share never lists; it exposes exactly one node (a `404` otherwise).
-- **`download`** streams the target file's current head version. The use budget is consumed
-  **atomically before streaming** (a single conditional `UPDATE` bounded by `max_uses`), so an
-  over-budget hit loses the race and is denied before a byte is served. A
-  `temporaryUrl` off the `StorageDriver` is preferred (a 5-minute signed redirect); otherwise
-  the bytes are streamed from the disk.
+- **`download`** streams the target file's current head version. A **previewer** link gets
+  `403 permission_denied`: the original is never handed out. Inheritance boundaries below the
+  shared folder apply live, with the current tree.
+
+### Redemptions and link sessions
+
+`max_uses` counts **successful redemptions**, not requests. The first request that passes
+every gate redeems one use (a single conditional `UPDATE` bounded by `max_uses`, `token_generation`
+and `revoked_at`, so two concurrent visits can never overspend the budget, and a rotation or
+revocation that commits first wins) and the response carries a signed **link session** in the
+`X-Share-Session` header. Send it back and the requests that follow are the same visit —
+opening a preview, paging a listing and fetching ranges cost **one** use. A request without
+it is a new visit.
+
+The session is an HMAC of the link, its generation and the settings that decide who may open
+it (token, role, audience, password), valid for an hour and never beyond the link's expiry. It
+carries no secret and grants nothing by itself: every request still passes the full resolve,
+including the audience, the password and the policy checks below. A visitor whose session has
+redeemed keeps working after the budget is spent; every *new* visit gets `404`.
 
 ::: code-group
 
 ```bash [curl]
 # The password travels in a header so the secret stays out of the URL/logs.
-curl https://app.test/api/vaulter/share/<token> \
+curl -i https://app.test/api/vaulter/share/<token> \
   -H 'X-Share-Password: s3cret'
+# → X-Share-Session: eyJ2MXx...
 
-# Subtree listing (scope=subtree only):
+# The rest of the visit presents the session and costs no further use:
 curl https://app.test/api/vaulter/share/<token>/nodes \
-  -H 'X-Share-Password: s3cret'
+  -H 'X-Share-Password: s3cret' -H 'X-Share-Session: eyJ2MXx...'
 
-# Download the file behind the link:
+# Download the file behind the link (reader, commenter, writer):
 curl -L https://app.test/api/vaulter/share/<token>/download \
-  -H 'X-Share-Password: s3cret' -o file.bin
+  -H 'X-Share-Password: s3cret' -H 'X-Share-Session: eyJ2MXx...' -o file.bin
 ```
 
 ```vue [Vue]
@@ -245,50 +306,67 @@ reasons are deliberately conflated so a probe cannot tell *which* gate failed.
 
 | Outcome            | Status | When |
 | ------------------ | ------ | ---- |
-| **Ok**             | proceed | A live share resolved; the `ShareContext` is stashed. |
-| **NotFound**       | `404`   | Wrong / expired / revoked / over-`max_uses` token, **or** the target failed item-safety (trashed / soft-deleted / detached). |
+| **Ok**             | proceed | A live share resolved; the `ShareContext` is stashed and the visit is redeemed. |
+| **NotFound**       | `404`   | Wrong / expired / revoked / rotated token, a new visit past `max_uses`, a visitor outside the `tenant` audience, a role or expiry the rules no longer allow, **or** the target failed item-safety (trashed / detached). |
 | **PasswordRequired** | `401` | The share is password-gated and no/incorrect password was supplied. The body carries `"password_required": true`. |
-| **LoginRequired**  | `401`   | The share has `require_login` and no authenticated host user is present. The body carries `"login_required": true`. |
+| **LoginRequired**  | `401`   | The audience is `authenticated` or `tenant` and no host user is signed in. The body carries `"login_required": true`. |
 
 ::: tip Password header vs query
 The middleware reads the password from the `X-Share-Password` header **first** (so the secret
 never lands in a URL or access log), then falls back to a `password` query/body param.
 :::
 
+## Lifetime and the drive policy
+
+A link always expires. Without `expires_at` the Action stamps now plus
+`vaulter.sharing.default_ttl_hours`; an explicit value may not pass
+`vaulter.sharing.max_ttl_hours`. On top of that, the drive profile can cap every link of its
+drives:
+
+```php
+$profile->drivePolicy(fn (DrivePolicyBuilder $policy) => $policy->maxShareLinkTtlDays(7));
+```
+
+With the cap, `expires_at` may not be later than *now + 7 days* — when the link is created or
+changed (`422 share_link_ttl_exceeded`) **and on every visit**. Tightening the policy therefore
+takes effect at once: an older link whose expiry is beyond the new limit resolves to `404`
+until its owner shortens it.
+
 ## Scope and item-safety
 
-A share grants its bits on a bounded **node-set** (`ShareContext`):
+A share grants its role on a bounded **node-set** (`ShareContext`):
 
 - **`scope=item`** → only the shared node itself.
 - **`scope=subtree`** → the shared node **plus its descendants**, bounded to the **same
-  storage tree**. The subtree walk can never escape to a sibling, an ancestor, or another
-  storage — `containsNode` rejects any candidate outside the storage boundary, so a subtree
-  share can never be used to climb out of its tree.
+  drive tree** and live: access to a descendant follows the current tree and stops at the
+  first node with `inherit_grants = false` (see `restrictInheritance()`). The walk can never
+  escape to a sibling, an ancestor, or another drive.
 
 Every resolution additionally passes **item-safety** (`§2.7`): the target node must not be
-trashed (`trashed_at`) or soft-deleted, and must belong to a real storage (the tenant/storage
-boundary). A share on an unsafe node resolves to `NotFound` — **indistinguishable from a wrong
-token**. On download, the blob must additionally be `Committed` (a pending or tombstoned blob
-is never served publicly).
+trashed (`trashed_at`) and must belong to a real drive (the tenant/drive boundary), the drive's
+profile must still have `share_links` enabled, and the issuer of the link must still hold
+`Ability::Share` on the node. A share on an unsafe node resolves to `NotFound` —
+**indistinguishable from a wrong token**. On download, the blob must additionally be
+`Committed` (a pending or tombstoned blob is never served publicly).
 
 ## Security model
 
 The hardening is in the code, not bolted on:
 
 - **The raw token is never persisted.** Only `sha256(token)` and a non-secret prefix are
-  stored; the raw token is returned once. (`ShareToken::hash`, `MintedShareLink`.)
+  stored; the raw token is returned once. (`ShareToken::hash`, `MintedShareLink`.) Tokens,
+  hashes and passwords never reach the activity feed, the outbox, logs or exceptions — also on
+  update and rotation.
 - **Timing-safe compare.** Even after the hash lookup matches, the resolver re-verifies with
   `hash_equals` (`ShareToken::hashesMatch`) so the resolve path is never a timing oracle.
-- **Opaque denials.** Wrong / expired / revoked / over-budget / unsafe-target all collapse to
-  a single `404`, so a probe can't distinguish "wrong token" from "trashed target".
-- **Read-time liveness.** Expiry, revocation and the use budget are enforced **read-time**,
-  never by a cron — an expired or revoked share simply never resolves (`NodeShare::scopeLive`,
-  `isExhausted`).
-- **Atomic, race-free budget.** `max_uses` is enforced with a single conditional `UPDATE`
-  (`consumeUse`), so two concurrent public hits can never push `use_count` past the budget.
-- **Allow-only.** A share is an allow-only grant of exactly its bits — the identity ACL's
-  deny-veto plays no part on this path. `ShareContext::allows()` reads purely the share's
-  bitmask.
+- **Opaque denials.** Wrong / expired / revoked / rotated / over-budget / foreign-tenant /
+  unsafe-target all collapse to a single `404`.
+- **Read-time liveness.** Expiry, revocation, rotation, the use budget and the policy limit are
+  enforced **read-time**, never by a cron.
+- **Atomic, race-free budget.** The redemption is a single conditional `UPDATE`, so two
+  concurrent visits can never push `use_count` past the budget.
+- **Allow-only.** A share is an allow-only grant of exactly its role's abilities — the identity
+  ACL's override plays no part on this path.
 
 ## Configuration
 
@@ -296,7 +374,7 @@ The hardening is in the code, not bolted on:
 // config/vaulter.php
 'sharing' => [
     // The \Vaulter\Contracts\Sharing\ShareTokenGenerator used to mint the raw token.
-    // Only its sha256 hash is ever stored. Default: RandomShareTokenGenerator (48 chars).
+    // Only its sha256 hash is ever stored. Default: RandomShareTokenGenerator (43 chars).
     'token_generator' => RandomShareTokenGenerator::class,
 
     // The public base a share URL is built from in the create response (the raw token
@@ -305,23 +383,41 @@ The hardening is in the code, not bolted on:
 
     // How many leading characters of the raw token are stored as the non-secret prefix.
     'prefix_length' => 8,
+
+    // Default and maximum lifetime of a link (hours).
+    'default_ttl_hours' => env('VAULTER_SHARE_DEFAULT_TTL_HOURS', 72),
+    'max_ttl_hours' => env('VAULTER_SHARE_MAX_TTL_HOURS', 720),
 ],
 ```
 
 The swappable `NodeShare` model is bound via `config('vaulter.models.node_share')` and its
 table name via `config('vaulter.table_names.node_shares')`. The default share-token generator
-mints a 48-character random alphanumeric string; swap it for short/prefixed tokens by binding
-your own `ShareTokenGenerator` — see [Custom share-token generator](/guide/recipes).
+mints 43 characters of `base64url(random_bytes(32))`; swap it by binding your own
+`ShareTokenGenerator` — see [Custom share-token generator](/guide/recipes).
+
+## Errors
+
+| Code | Status | When |
+| ---- | ------ | ---- |
+| `share_role_not_allowed` | `422` | The role cannot be carried for the audience (writer for `anyone`; organizer or owner). |
+| `share_link_ttl_exceeded` | `422` | `expires_at` is later than the profile's `maxShareLinkTtlDays` allows. |
+| `unknown_role` | `422` | The role key is not registered. |
+| `permission_denied` | `403` | A previewer link asked for the original, or the owner lacks `Share`. |
 
 ## Events
 
-Both events implement `ShouldDispatchAfterCommit`, so a listener never sees an uncommitted
-row. Neither carries the raw token (the persisted `NodeShare` holds the hash only).
+Both events are dispatched synchronously inside the transaction, so the activity and outbox
+rows stage atomically with the change. Neither carries the raw token (the persisted
+`NodeShare` holds the hash only), and their activity/outbox context lists `role`,
+`role_version`, `audience` and `scope`.
 
 | Event                                          | Dispatched when |
 | ---------------------------------------------- | --------------- |
 | `Vaulter\Events\Sharing\NodeShareCreated`      | A link is minted. Carries the `NodeShare` + `actorId`. |
 | `Vaulter\Events\Sharing\NodeShareRevoked`      | A link is revoked (only on a real state change — re-revoke is silent). |
+
+Updating and rotating a link emit no event of their own yet; the event pipeline of 1.0 adds
+them.
 
 ## See also
 

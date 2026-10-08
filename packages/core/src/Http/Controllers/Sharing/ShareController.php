@@ -14,6 +14,7 @@ use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Http\Requests\Sharing\StoreShareLinkRequest;
+use Vaulter\Http\Requests\Sharing\UpdateShareLinkRequest;
 use Vaulter\Http\Resources\Sharing\NodeShareResource;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\OperationContext;
@@ -24,25 +25,45 @@ final class ShareController extends Controller
 {
     public function index(Request $request, Node $node): AnonymousResourceCollection
     {
-        $operations = app()->makeWith(ShareOperations::class, ['context' => $this->context($request, $node)]);
+        $operations = $this->operations($request, $node);
 
         return NodeShareResource::collection($operations->paginate(node: $node, perPage: max(1, min($request->integer('per_page', 50), 200)))->withQueryString());
     }
 
     public function store(StoreShareLinkRequest $request, Node $node): JsonResponse
     {
-        $operations = app()->makeWith(ShareOperations::class, ['context' => $this->context($request, $node)]);
+        $operations = $this->operations($request, $node);
         $minted = $operations->create(node: $node, input: $request->toData());
 
         return NodeShareResource::make($minted->share)->withToken($minted->token)->response()->setStatusCode(201);
     }
 
+    public function update(UpdateShareLinkRequest $request, Node $node, int|string $share): JsonResponse
+    {
+        $operations = $this->operations($request, $node);
+
+        return NodeShareResource::make($operations->update(node: $node, share: $share, changes: $request->toData()))->response();
+    }
+
+    public function rotate(Request $request, Node $node, int|string $share): JsonResponse
+    {
+        $operations = $this->operations($request, $node);
+        $minted = $operations->rotate(node: $node, share: $share);
+
+        return NodeShareResource::make($minted->share)->withToken($minted->token)->response();
+    }
+
     public function destroy(Request $request, Node $node, int|string $share): Response
     {
-        $operations = app()->makeWith(ShareOperations::class, ['context' => $this->context($request, $node)]);
+        $operations = $this->operations($request, $node);
         $operations->revoke(node: $node, share: $share);
 
         return response()->noContent();
+    }
+
+    private function operations(Request $request, Node $node): ShareOperations
+    {
+        return app()->makeWith(ShareOperations::class, ['context' => $this->context($request, $node)]);
     }
 
     private function context(Request $request, Node $node): OperationContext

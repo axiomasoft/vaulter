@@ -5,6 +5,7 @@ import type {
   CreateWorkbookNodePayload,
   CreateDriveFolderPayload,
   CreateNodeSharePayload,
+  UpdateNodeSharePayload,
   CreateUploadSessionPayload,
   CursorPage,
   CursorQuery,
@@ -195,6 +196,10 @@ export interface VaulterClient {
     list(nodeId: NodeId, query?: CursorQuery): Promise<CursorPage<NodeShare>>
     /** Mint a share-link — the response carries the raw token EXACTLY ONCE. */
     create(nodeId: NodeId, payload?: CreateNodeSharePayload): Promise<NodeShareCreated>
+    /** Change expiry, budget, password or audience; the token stays. */
+    update(nodeId: NodeId, shareId: NodeId, payload: UpdateNodeSharePayload): Promise<NodeShare>
+    /** Replace the token — the old one stops working at once; the response carries the new raw token ONCE. */
+    rotate(nodeId: NodeId, shareId: NodeId): Promise<NodeShareCreated>
     revoke(nodeId: NodeId, shareId: NodeId): Promise<void>
     /** Resolve a public token-shared node (the separate sharing channel). */
     publicResolve(token: string): Promise<SharedNode>
@@ -498,16 +503,26 @@ export function createVaulterClient(options: VaulterClientOptions = {}): Vaulter
       create: (nodeId, payload) =>
         unwrap(request<Envelope<NodeShareCreated>>('POST', `/nodes/${nodeId}/shares`, {
           body: {
-            permissions: payload?.permissions,
-            level: payload?.level,
+            role: payload?.role,
+            audience: payload?.audience,
             scope: payload?.scope,
             password: payload?.password,
-            require_login: payload?.requireLogin,
-            allow_discovery: payload?.allowDiscovery,
             expires_at: payload?.expiresAt,
             max_uses: payload?.maxUses,
           },
         })),
+      update: (nodeId, shareId, payload) =>
+        unwrap(request<Envelope<NodeShare>>('PATCH', `/nodes/${nodeId}/shares/${shareId}`, {
+          // `undefined` keys are dropped by JSON, so only the fields given reach the server.
+          body: {
+            audience: payload.audience,
+            password: payload.password,
+            expires_at: payload.expiresAt,
+            max_uses: payload.maxUses,
+          },
+        })),
+      rotate: (nodeId, shareId) =>
+        unwrap(request<Envelope<NodeShareCreated>>('POST', `/nodes/${nodeId}/shares/${shareId}/rotate`)),
       revoke: (nodeId, shareId) => request<void>('DELETE', `/nodes/${nodeId}/shares/${shareId}`),
       publicResolve: (token) => unwrap(request<Envelope<SharedNode>>('GET', `/share/${token}`)),
       publicNodes: (token) => unwrap(request<Envelope<SharedNode[]>>('GET', `/share/${token}/nodes`)),

@@ -15,6 +15,7 @@ use Vaulter\Data\Access\GrantInput;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Data\Sharing\MintedShareLink;
 use Vaulter\Data\Sharing\ShareLinkInput;
+use Vaulter\Data\Sharing\ShareLinkUpdate;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\InheritanceRestriction;
 use Vaulter\Enums\Drive\NodeKind;
@@ -69,6 +70,7 @@ function p32ExpectedType(string $type): string
         'CursorPaginator' => CursorPaginator::class,
         'GrantInput' => GrantInput::class,
         'ShareLinkInput' => ShareLinkInput::class,
+        'ShareLinkUpdate' => ShareLinkUpdate::class,
         'MintedShareLink' => MintedShareLink::class,
         'UploadedFile' => UploadedFile::class,
         'StreamInterface' => StreamInterface::class,
@@ -114,7 +116,7 @@ function p32AssertSignature(ReflectionMethod $method, string $parameters, string
 
 it('matches all seven Operations signatures against the literal normative PHP API', function (): void {
     $literal = file_get_contents(dirname(__DIR__, 4).'/audits/2026-09-29-stable-audit/opus/05-php-api.md');
-    // Plan amendments of the literal 05 interfaces (PLAN2.D40, D41, D45).
+    // Plan amendments of the literal 05 interfaces (PLAN2.D40, D41, D45, D47).
     $removed = ['NodeOperations::update'];
     $amendments = ['NodeOperations' => '
         public function star(NodeKey $node): Node;
@@ -125,6 +127,9 @@ it('matches all seven Operations signatures against the literal normative PHP AP
     ', 'AccessOperations' => '
         public function restrictInheritance(NodeKey $node, InheritanceRestriction $mode = InheritanceRestriction::Empty): Node;
         public function restoreInheritance(NodeKey $node): Node;
+    ', 'ShareOperations' => '
+        public function update(NodeKey $node, NodeShare|int|string $share, ShareLinkUpdate $changes): NodeShare;
+        public function rotate(NodeKey $node, NodeShare|int|string $share): MintedShareLink;
     '];
     $count = 0;
     foreach (['Drive' => ['NodeOperations', 'FolderOperations', 'FileOperations', 'TrashOperations'], 'Access' => ['AccessOperations'], 'Sharing' => ['ShareOperations'], 'Activity' => ['ActivityOperations']] as $domain => $names) {
@@ -141,7 +146,7 @@ it('matches all seven Operations signatures against the literal normative PHP AP
             }
         }
     }
-    expect($count)->toBe(34);
+    expect($count)->toBe(36);
 });
 
 it('matches immutable value constructors and UploadSource factory signatures against literal 05', function (): void {

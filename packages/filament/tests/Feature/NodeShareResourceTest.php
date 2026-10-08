@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Hash;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Configuration\SharingConfig;
 use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Access\Permission;
+use Vaulter\Enums\Sharing\ShareAudience;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Filament\Resources\NodeShareResource;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
@@ -35,12 +35,10 @@ it('creates a share link through the core CreateShareLinkAction', function (): v
 
     NodeShareResource::createFromData([
         'node_id' => $folder->getKey(),
-        'level' => RoleRegistry::READER,
+        'role' => RoleRegistry::READER,
+        'audience' => ShareAudience::Anyone->value,
         'scope' => GrantScope::Item->value,
-        'permissions' => 0,
         'password' => '',
-        'require_login' => false,
-        'allow_discovery' => false,
         'max_uses' => null,
         'expires_at' => '',
     ]);
@@ -64,12 +62,10 @@ it('preserves the validated share form contract and one-time token notification'
 
     NodeShareResource::createFromData([
         'node_id' => $folder->getKey(),
-        'permissions' => '31',
-        'level' => RoleRegistry::WRITER,
+        'role' => RoleRegistry::WRITER,
+        'audience' => ShareAudience::Authenticated->value,
         'scope' => GrantScope::Subtree->value,
         'password' => 'top-secret',
-        'require_login' => true,
-        'allow_discovery' => true,
         'expires_at' => $expires->toDateTimeString(),
         'max_uses' => '7',
     ]);
@@ -77,12 +73,10 @@ it('preserves the validated share form contract and one-time token notification'
     $share = app(NodeShareReadRepository::class)->forNode($folder)->first();
 
     expect($share)->toBeInstanceOf(NodeShare::class)
-        ->and($share->permissions)->toBe(31)
-        ->and($share->level)->toBe(RoleRegistry::WRITER)
+        ->and($share->role_key)->toBe(RoleRegistry::WRITER)
+        ->and($share->audience)->toBe(ShareAudience::Authenticated)
         ->and($share->scope)->toBe(GrantScope::Subtree)
         ->and(Hash::check('top-secret', $share->password_hash))->toBeTrue()
-        ->and($share->require_login)->toBeTrue()
-        ->and($share->allow_discovery)->toBeTrue()
         ->and($share->expires_at?->format('Y-m-d H:i:s'))->toBe($expires->toDateTimeString())
         ->and($share->max_uses)->toBe(7)
         ->and((string) $share->granted_by)->toBe('51');
@@ -123,12 +117,10 @@ it('applies safe share defaults to omitted and blank optional values', function 
         $share = app(NodeShareReadRepository::class)->forNode($folder)->first();
 
         expect($share)->toBeInstanceOf(NodeShare::class)
-            ->and($share->permissions)->toBe((Permission::View->value | Permission::Download->value))
-            ->and($share->level)->toBe(RoleRegistry::READER)
+            ->and($share->role_key)->toBe(RoleRegistry::READER)
+            ->and($share->audience)->toBe(ShareAudience::Anyone)
             ->and($share->scope)->toBe(GrantScope::Item)
             ->and($share->password_hash)->toBeNull()
-            ->and($share->require_login)->toBeFalse()
-            ->and($share->allow_discovery)->toBeFalse()
             ->and($share->expires_at?->equalTo(now()->addHours(app(SharingConfig::class)->defaultTtlHours())))->toBeTrue()
             ->and($share->max_uses)->toBeNull()
             ->and((string) $share->granted_by)->toBe('52');
@@ -161,12 +153,10 @@ it('never persists the raw token — only its hash and prefix', function (): voi
 
     NodeShareResource::createFromData([
         'node_id' => $folder->getKey(),
-        'level' => RoleRegistry::READER,
+        'role' => RoleRegistry::READER,
+        'audience' => ShareAudience::Anyone->value,
         'scope' => GrantScope::Item->value,
-        'permissions' => 0,
         'password' => '',
-        'require_login' => false,
-        'allow_discovery' => false,
         'max_uses' => null,
         'expires_at' => '',
     ]);
@@ -190,12 +180,10 @@ it('reveals the token prefix but never the full hash in the prefix column', func
 
     NodeShareResource::createFromData([
         'node_id' => $folder->getKey(),
-        'level' => RoleRegistry::READER,
+        'role' => RoleRegistry::READER,
+        'audience' => ShareAudience::Anyone->value,
         'scope' => GrantScope::Item->value,
-        'permissions' => 0,
         'password' => '',
-        'require_login' => false,
-        'allow_discovery' => false,
         'max_uses' => null,
         'expires_at' => '',
     ]);
@@ -217,12 +205,10 @@ it('revokes a share link through the core RevokeShareLinkAction', function (): v
 
     NodeShareResource::createFromData([
         'node_id' => $folder->getKey(),
-        'level' => RoleRegistry::READER,
+        'role' => RoleRegistry::READER,
+        'audience' => ShareAudience::Anyone->value,
         'scope' => GrantScope::Item->value,
-        'permissions' => 0,
         'password' => '',
-        'require_login' => false,
-        'allow_discovery' => false,
         'max_uses' => null,
         'expires_at' => '',
     ]);
@@ -246,12 +232,10 @@ it('does not create a share when the admin may not share the node', function ():
 
     NodeShareResource::createFromData([
         'node_id' => $folder->getKey(),
-        'level' => RoleRegistry::READER,
+        'role' => RoleRegistry::READER,
+        'audience' => ShareAudience::Anyone->value,
         'scope' => GrantScope::Item->value,
-        'permissions' => 0,
         'password' => '',
-        'require_login' => false,
-        'allow_discovery' => false,
         'max_uses' => null,
         'expires_at' => '',
     ]);
@@ -289,4 +273,52 @@ it('rechecks the reader ability inside the actual revoke mutation', function ():
     expect(fn () => NodeShareResource::revokeRecord($share))->toThrow(PermissionDeniedException::class)
         ->and($share->fresh()->revoked_at)->toBeNull()
         ->and(NodeShareResource::getEloquentQuery()->count())->toBe(0);
+});
+
+it('rotates a link through the core Action and rechecks Share inside the mutation', function (): void {
+    $owner = DriveBuilder::user();
+    $this->actingAs($owner);
+    $drive = DriveBuilder::storage();
+    $node = DriveBuilder::folder($drive);
+    $grant = DriveBuilder::grant($node, $owner);
+    NodeShareResource::createFromData(['node_id' => $node->id]);
+    $share = NodeShare::query()->sole();
+    $before = $share->token_hash;
+
+    $token = NodeShareResource::rotateRecord($share);
+
+    expect(ShareToken::hash($token))->toBe($share->fresh()->token_hash)
+        ->and($share->fresh()->token_hash)->not->toBe($before)
+        ->and($share->fresh()->token_generation)->toBe(2);
+
+    $grant->forceFill(['role_key' => RoleRegistry::READER])->save();
+    expect(fn () => NodeShareResource::rotateRecord($share))->toThrow(PermissionDeniedException::class)
+        ->and($share->fresh()->token_generation)->toBe(2);
+});
+
+it('offers organizer and owner roles to nobody', function (): void {
+    $options = (new ReflectionClass(NodeShareResource::class))->getMethod('roleOptions')->invoke(null);
+
+    expect(array_keys($options))->toBe([RoleRegistry::PREVIEWER, RoleRegistry::READER, RoleRegistry::COMMENTER, RoleRegistry::WRITER]);
+});
+
+it('shows the refusal instead of failing when the role does not fit the audience', function (): void {
+    $owner = DriveBuilder::user();
+    $this->actingAs($owner);
+    $drive = DriveBuilder::storage();
+    $node = DriveBuilder::folder($drive);
+    DriveBuilder::grant($node, $owner);
+    session()->forget('filament.notifications');
+
+    NodeShareResource::createFromData(['node_id' => $node->id, 'role' => RoleRegistry::WRITER, 'audience' => ShareAudience::Anyone->value]);
+    $writer = session('filament.notifications.0');
+    session()->forget('filament.notifications');
+    NodeShareResource::createFromData(['node_id' => $node->id, 'audience' => ShareAudience::Tenant->value]);
+    $tenant = session('filament.notifications.0');
+
+    expect(NodeShare::query()->count())->toBe(0)
+        ->and($writer['status'])->toBe('warning')
+        ->and($writer['body'])->toContain('writer')
+        ->and($tenant['status'])->toBe('warning')
+        ->and($tenant['body'])->toContain('tenant');
 });

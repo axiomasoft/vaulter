@@ -6,7 +6,6 @@ use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Access\Permission;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Filament\Resources\ActivityResource;
 use Vaulter\Filament\Resources\DriveResource;
@@ -173,14 +172,14 @@ it('V31 Filament node grant share and activity listings stay in the current tena
     $a = Vaulter::drive(DriveBuilder::storage())->asSystem('fixture');
     $nodeA = DriveBuilder::folder($a->model(), 'Tenant A');
     $grantA = DriveBuilder::grant($nodeA, $actor, role: RoleRegistry::OWNER);
-    $shareA = $a->shares()->create($nodeA, new ShareLinkInput(permissions: Permission::View->value | Permission::Download->value));
+    $shareA = $a->shares()->create($nodeA, new ShareLinkInput);
     $driveAId = $a->model()->id;
     $resolver->tenant = 'B';
     $b = Vaulter::drive(DriveBuilder::storage())->asSystem('fixture');
     $nodeB = DriveBuilder::folder($b->model(), 'Tenant B');
     DriveBuilder::grant($nodeB, $actor, role: RoleRegistry::OWNER);
     DriveBuilder::grant($b->root(), $actor, role: RoleRegistry::READER, scope: GrantScope::Item);
-    $shareB = $b->shares()->create($nodeB, new ShareLinkInput(permissions: Permission::View->value | Permission::Download->value));
+    $shareB = $b->shares()->create($nodeB, new ShareLinkInput);
     expect(NodeResource::getEloquentQuery()->pluck('id')->all())->toContain($nodeB->id)->not->toContain($nodeA->id)
         ->and(NodeGrantResource::getEloquentQuery()->pluck('id')->all())->not->toContain($grantA->id)
         ->and(NodeShareResource::getEloquentQuery()->pluck('id')->all())->toContain($shareB->share->id)->not->toContain($shareA->share->id)
