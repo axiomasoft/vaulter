@@ -34,13 +34,13 @@ Execution sheet: run the batches in order. Route is the maximum class/effort of 
 | 27 | P4 | B401 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.1` | frontier/high | done |
 | 28 | P4 | B402 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.11` | frontier/high | done |
 | 29 | P4 | B403 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.9` | frontier/high | done |
-| 30 | P4 | B404 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.10` | implementation/high | ready |
-| 31 | P4 | B405 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.12` | frontier/high | waiting: B404 |
-| 32 | P4 | B406 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.13` | frontier/high | waiting: B404 |
-| 33 | P4 | B407 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.2` | implementation/high | waiting: B404 |
-| 34 | P4 | B408 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.8` | frontier/high | waiting: B404 |
-| 35 | P4 | B409 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.3` | frontier/high | waiting: B404 |
-| 36 | P4 | B410 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.4` | implementation/medium | waiting: B404 |
-| 37 | P4 | B411 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.5` | frontier/high | waiting: B404 |
-| 38 | P4 | B412 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.7` | implementation/high | waiting: B404 |
-| 39 | P4 | B413 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.6` | implementation/high | waiting: B404 |
+| 30 | P4 | B404 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.10` | implementation/high | done |
+| 31 | P4 | B405 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.12` | frontier/high | ready |
+| 32 | P4 | B406 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.13` | frontier/high | waiting: B405 |
+| 33 | P4 | B407 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.2` | implementation/high | waiting: B405 |
+| 34 | P4 | B408 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.8` | frontier/high | waiting: B405 |
+| 35 | P4 | B409 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.3` | frontier/high | waiting: B405 |
+| 36 | P4 | B410 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.4` | implementation/medium | waiting: B405 |
+| 37 | P4 | B411 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.5` | frontier/high | waiting: B405 |
+| 38 | P4 | B412 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.7` | implementation/high | waiting: B405 |
+| 39 | P4 | B413 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.6` | implementation/high | waiting: B405 |
