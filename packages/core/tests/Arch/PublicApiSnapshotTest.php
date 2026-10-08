@@ -15,6 +15,7 @@ use Vaulter\Access\ValueObjects\GrantSet;
 use Vaulter\Content\ScanPolicySpec;
 use Vaulter\Data\Access\GrantInput;
 use Vaulter\Data\Drive\NodePage;
+use Vaulter\Data\Page;
 use Vaulter\Data\Sharing\MintedShareLink;
 use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Database\VaulterDatabase;
@@ -24,8 +25,11 @@ use Vaulter\Enums\Access\InheritanceRestriction;
 use Vaulter\Enums\Access\Permission;
 use Vaulter\Enums\Drive\NodeSort;
 use Vaulter\Enums\Drive\OnNameConflict;
+use Vaulter\Enums\Drive\QuotaState;
+use Vaulter\Enums\Drive\ScanStatus;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Enums\Operations\OperationKind;
+use Vaulter\Enums\Sharing\ShareAudience;
 use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Exceptions\Access\UnknownRoleException;
 use Vaulter\Exceptions\Contracts\ProblemException;
@@ -343,12 +347,24 @@ test('vaulter-core public API surface matches the frozen golden (VLT-REL P2.2)',
         sort($properties);
         $blocks[] = vaulterSnapshotInterface($class).($properties === [] ? '' : "\n".implode("\n", $properties));
     }
+    // Returning a snapshot type in an Operations signature does not freeze its
+    // fields: include the values themselves, while their internal mappers stay out.
+    foreach (array_merge([Page::class], vaulterSnapshotContracts(__DIR__.'/../../src/Data/Snapshots', 'Vaulter\Data\Snapshots')) as $class) {
+        $reflection = new ReflectionClass($class);
+        $properties = [];
+        foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
+            $properties[] = '  '.($property->isReadOnly() ? 'readonly ' : '').vaulterSnapshotType($property->getType()).' $'.$property->getName();
+        }
+        sort($properties);
+        $blocks[] = vaulterSnapshotInterface($class)."\n".implode("\n", $properties);
+    }
+
     $blocks[] = OperationKind::class."\n".implode("\n", array_map(
         static fn (OperationKind $case): string => '  '.$case->name.' = '.$case->value,
         OperationKind::cases(),
     ));
     $blocks[] = vaulterSnapshotInterface(PermissionDriverContractTests::class);
-    foreach ([Permission::class, Ability::class, Effect::class, InheritanceRestriction::class, OnNameConflict::class, NodeSort::class] as $enum) {
+    foreach ([Permission::class, Ability::class, Effect::class, InheritanceRestriction::class, OnNameConflict::class, NodeSort::class, QuotaState::class, ScanStatus::class, ShareAudience::class] as $enum) {
         $blocks[] = $enum."\n".implode("\n", array_map(static fn ($case): string => '  '.$case->name.' = '.$case->value, $enum::cases()));
     }
     $blocks[] = ActorRef::class.'::SYSTEM_TYPE = '.ActorRef::SYSTEM_TYPE;

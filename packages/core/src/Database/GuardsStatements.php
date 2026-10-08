@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Database;
 
+use Illuminate\Support\Collection;
 use Vaulter\Exceptions\Database\WriteOutsideOperationException;
 
 /**
@@ -23,6 +24,33 @@ trait GuardsStatements
         $this->writeScope = $scope;
 
         return $this;
+    }
+
+    /** A fresh statement builder must keep the scope of the model it came from. */
+    #[\Override]
+    public function newQuery(): static
+    {
+        /** @var static $query */
+        $query = parent::newQuery();
+        $query->writeScope = $this->writeScope;
+
+        return $query;
+    }
+
+    /**
+     * No Override attribute: older supported Laravel versions lack this statement.
+     * On versions that provide it, it writes directly instead of calling insert().
+     *
+     * @param  array<mixed>                                            $values
+     * @param  non-empty-array<non-empty-string>                       $returning
+     * @param  non-empty-string|non-empty-array<non-empty-string>|null $uniqueBy
+     * @return Collection<int, object>
+     */
+    public function insertOrIgnoreReturning(array $values, array $returning = ['*'], array|string|null $uniqueBy = null): Collection
+    {
+        $this->guard();
+
+        return parent::insertOrIgnoreReturning($values, $returning, $uniqueBy);
     }
 
     /** @param array<mixed> $values */

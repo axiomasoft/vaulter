@@ -19,7 +19,11 @@ use Traversable;
  */
 final readonly class Page implements Countable, IteratorAggregate
 {
-    /** @param list<T> $items */
+    /**
+     * @internal
+     *
+     * @param list<T> $items
+     */
     public function __construct(public array $items, public ?string $nextCursor, public int $scanned = 0) {}
 
     public function hasMore(): bool

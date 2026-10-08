@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Database\WriteOutsideOperationException;
@@ -23,6 +24,27 @@ it('refuses to update a node through a mass query outside an operation', functio
         ->toThrow(WriteOutsideOperationException::class);
 
     expect(Node::query()->whereKey($this->folder->id)->value('name'))->toBe('Reports');
+});
+
+it('keeps the guard on a fresh statement builder and its descendants', function (): void {
+    $query = Node::query()->toBase()->newQuery()->newQuery()->from((new Node)->getTable());
+
+    expect(fn () => $query->where('id', $this->folder->id)->update(['name' => 'Bypassed']))
+        ->toThrow(WriteOutsideOperationException::class)
+        ->and(Node::query()->whereKey($this->folder->id)->value('name'))->toBe('Reports');
+
+    app(VaulterDatabase::class)->write(fn () => $query->update(['size_bytes' => 8]));
+    expect((int) Node::query()->whereKey($this->folder->id)->value('size_bytes'))->toBe(8);
+});
+
+it('guards insert-or-ignore with returning on framework versions that provide it', function (): void {
+    if (!method_exists(Builder::class, 'insertOrIgnoreReturning')) {
+        $this->markTestSkipped('This Laravel version has no insertOrIgnoreReturning statement.');
+    }
+
+    $query = Node::query()->toBase();
+    expect(fn () => $query->insertOrIgnoreReturning(['id' => $this->folder->id]))
+        ->toThrow(WriteOutsideOperationException::class);
 });
 
 it('refuses to save, create and delete a model outside an operation', function (): void {
