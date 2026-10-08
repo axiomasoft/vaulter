@@ -134,7 +134,9 @@ final readonly class CreateDocumentAction
         $candidate = $name;
         for ($i = 2; $i <= 7; $i++) {
             if (!$this->nodes->siblingNameExists(storage: $storage, parentId: $parentId, name: $candidate)) {
-                return $candidate;
+                // Truncation plus a long extension can produce a name that no
+                // longer fits; generated names obey the same policy as input.
+                return $candidate === $name ? $candidate : $this->policy->name($storage, $candidate);
             }
             if ($onConflict !== OnNameConflict::Rename || $i === 7) {
                 break;

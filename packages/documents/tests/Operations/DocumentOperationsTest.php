@@ -15,6 +15,7 @@ use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Exceptions\StaleDocumentStateException;
 use Vaulter\Documents\Exceptions\UnknownDocumentTypeException;
 use Vaulter\Documents\Facades\Documents;
+use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Operations\DocumentOperations;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\ValueObjects\DocumentExport;
@@ -22,6 +23,7 @@ use Vaulter\Drive\DriveHandle;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Enums\Drive\OnNameConflict;
 use Vaulter\Exceptions\Access\MissingActorException;
+use Vaulter\Exceptions\Nodes\InvalidNodeNameException;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Profiles\Profile;
@@ -196,6 +198,17 @@ it('fails or renames on a name conflict as asked', function (): void {
 
     expect(fn () => $documents->create('Spec'))->toThrow(NodeNameConflictException::class)
         ->and($documents->create('Spec', options: new CreateFolderOptions(OnNameConflict::Rename))->name)->toBe('Spec (2)');
+});
+
+it('refuses an oversized generated conflict name without creating a second document', function (): void {
+    $documents = Documents::in(DocumentTestHelpers::drive());
+    $name = 'a.'.str_repeat('x', 253);
+    $node = $documents->create($name);
+
+    expect(fn () => $documents->create($name, options: new CreateFolderOptions(OnNameConflict::Rename)))
+        ->toThrow(InvalidNodeNameException::class)
+        ->and(Document::query()->count())->toBe(1)
+        ->and($documents->content($node)->stateVersion)->toBe(1);
 });
 
 it('refuses document methods on a folder', function (): void {
