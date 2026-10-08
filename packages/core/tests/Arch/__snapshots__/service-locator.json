@@ -52,7 +52,7 @@
     "core/src/Schema/SchemaBuilder.php": 39,
     "core/src/Schema/VaulterSchema.php": 2,
     "core/src/Sharing/ShareContentGuard.php": 1,
-    "core/src/Sharing/ShareResolver.php": 4,
+    "core/src/Sharing/ShareResolver.php": 2,
     "core/src/Support/Concerns/HasIcon.php": 1,
     "core/src/Support/Concerns/HasLabel.php": 1,
     "core/src/Support/LoadTier.php": 4,

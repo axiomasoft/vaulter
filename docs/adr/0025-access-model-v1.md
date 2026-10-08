@@ -107,5 +107,6 @@ carries the node owner; the Gate context has no `node_owner`.
   every answer explainable by listing roles.
 - Hosts that stored deny grants must resolve them (usually by an inheritance boundary or an
   administrative override) before upgrading.
-- Share links are adapted minimally (stored bits use the new layout, the level column holds a
-  role key, subtree links stop at inheritance boundaries); their redesign is P4.10.
+- Share links were adapted minimally here (stored bits use the new layout, subtree links
+  stop at inheritance boundaries); migration `2026_10_07_000006_share_links_v1` then replaced
+  the mask and `level` with a role, an audience and a token generation (see the sharing guide).
