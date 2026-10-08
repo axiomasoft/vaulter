@@ -5,7 +5,7 @@ Source: [JSON](../../knowledge/artifacts-P1.10-grok-review.json). This view is f
 
 ## Applies to
 
-
+- P1.10
 
 ## Provenance
 

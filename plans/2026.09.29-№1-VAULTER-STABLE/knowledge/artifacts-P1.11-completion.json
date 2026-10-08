@@ -19,7 +19,9 @@
       "text": "P1.9, P1.10 and P1.11 are closed-green. B1-B authorized scope is complete; P1 remains open (6/11 items done). Generated states/status and next bundle are reconciled. plan-lint: OK, 0 errors, 0 warnings. Session open-run/batch check passes. Post-close lifecycle is scope-complete, Context continue-root, reason authorized-scope-complete. Next recommends P1.7 without executing it. Prior owner changes to shared plan/configuration remain outside the scoped commits. No push or publication performed."
     }
   ],
-  "applies_to": [],
+  "applies_to": [
+    "P1.11"
+  ],
   "provenance": {
     "path": "artifacts/P1.11/completion.md",
     "sha256": "1f908db08ecb0bbbb4eacb96801008e9bd8052c03e32271a9c823afecd18c9b9"

@@ -9,7 +9,9 @@
       "text": "Skeleton-носители фаз P1–P8 до их очереди. Не phase carriers: Task tooling их не читает.\n`task:plan-design 2026.09.29-№1-VAULTER-STABLE <Pn>` переносит `backlog/Pn.md` в `phases/Pn/Pn.md` и детализирует items по фактическому коду;\nзатем `finish` → `task:plan-audit … design` → исполнение → фазовый аудит → закрытие (D03).\n\nДизайн фазы по D06: `python3 artifacts/coverage/opus-coverage.py seed-ledger --phase Pn > artifacts/coverage/ledger-Pn.tsv`,\nдоводка назначения каждой единицы до конкретного item (или item будущей фазы / `plan:Dnn` с обоснованием в `note`),\n`opus-coverage.py render --item Pn.m > artifacts/Pn-design/Pn.m-opus.md` для каждого item, self-check D06 п.6 в индексе\nфазы, `opus-coverage.py check` exit 0. Planned Items в `Pn.md` — владельцы секций в `section-owners.tsv`; их ID не меняются."
     }
   ],
-  "applies_to": [],
+  "applies_to": [
+    "P0"
+  ],
   "provenance": {
     "path": "backlog/README.md",
     "sha256": "e93adc273a6c97f558174c169d015a0da05c836bf40d72dedeab4f91127f3ed0"

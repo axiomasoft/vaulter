@@ -5,7 +5,7 @@ Source: [JSON](../../knowledge/artifacts-P0.2-completion.json). This view is for
 
 ## Applies to
 
-
+- P0.2
 
 ## Provenance
 

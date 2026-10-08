@@ -5,7 +5,7 @@ Source: [JSON](../../knowledge/artifacts-P2.2-qualification-bookkeeping-20261005
 
 ## Applies to
 
-
+- P2.2
 
 ## Provenance
 

@@ -111,3 +111,11 @@ P5 закрыта (контракты P3–P5 заморожены).
 ## Обязательные forward corrections (D29)
 
 D29 — обязательные corrections при следующей детализации. Read @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json до разработки contracts; применимые C-rows разворачиваются в concrete owning item files/reads/named tests/exact validation, не остаются note-only. P6.1/C07/C08: strict application-mediated egress default; opt-in direct URL exact version/TTL/bounded revoke. Strong representation ETag учитывает actual returned fields including permission/scan dependencies, а не bare sequence; authorization/quarantine до304. Critical existing-resource mutations require If-Match missing428/stale412. P6.2 problem codes stable; P6.3 OpenAPI/contract tests описывают режимы, preconditions и caches; P6.4/.5/.6 clients/Filament используют guards и opaque validators, не придумывают свой sequence ETag.
+
+## Входящие швы из P4 (D35, D36) — учесть при дизайне P6
+
+D36: хаб использует третий webhook load; P6.1 вводит v1/collaboration/hub/{authenticate,load,store} (load — дополнение к OPUS 10 §4). D35: ETag узла "{nodeId}.{sequence}" (If-Match для rename/move/trash/restore/purge), ETag содержимого документа "{documentId}.{epoch}.{stateVersion}" (If-Match для PUT content/restore → 412 document_state_mismatch); CRDT-путь без If-Match. Контракт — docs/reference/concurrency.md (P4.7). Экспорт уже файловый (P4.4), P6 меняет только путь /export/{format}. B1 (M2): решения P6 сверять с практикой через Perplexity.
+
+## Швы раунда 2 из P4 (D38, D40–D47) — учесть при дизайне P6
+
+REST v1 строится из snapshot-DTO P4.13 (D44): все id — JSON-строки (D38), неизвестный/нечитаемый — одинаковый 404; abilities — строки Ability (D45, отдельный download); гранты/шары в JSON — role/roleVersion, share audience/tokenGeneration, без битов (D45/D47); узел — properties, viewer.starred, contentModifiedAt (D40–D42); ошибки новых кодов P4 (P4-design#Errors) в Problem Details; эндпоинты star/unstar/starred, properties PATCH, restrictInheritance/restoreInheritance, share rotate/update, revision delete/retention, drive archive/unarchive/delete. B2 (M3): решения P6 сверять с практикой через Perplexity.

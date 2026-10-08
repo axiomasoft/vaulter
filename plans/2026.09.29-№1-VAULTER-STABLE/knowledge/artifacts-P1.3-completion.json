@@ -44,7 +44,9 @@
       "text": "Finalization exposed an OPUS D20/local-plan-D20 citation collision in P1.5 Inputs. The reference was qualified as OPUS AD20 without changing requirements; the one-line patch and before/after digests are in next-reference-repair.patch/json. The preexisting owner P1.5 spec remains unstaged. Finalization converged after this repair."
     }
   ],
-  "applies_to": [],
+  "applies_to": [
+    "P1.3"
+  ],
   "provenance": {
     "path": "artifacts/P1.3/completion.md",
     "sha256": "6cefcad1c09efcdb91311e846deb40fe175ddc4c7db0a82ad38ac067e84c8a08"

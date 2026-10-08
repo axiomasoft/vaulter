@@ -14,7 +14,9 @@
       "text": "P0 phase audit (D11) finding PA01 (Major): the no-barrier mutant survived. Repaired in `packages/core/tests/Concurrency/ForkRaceTest.php` only\n(commit `731cbb8`); harness source, production code, media and CI untouched. The connection test now forces exactly one child to fail\nreconnect before readiness (atomic `fopen(..., 'x')`); its sibling must return `ForkRace\\BarrierTimeout` and no task may write its started marker.\n\n| Validation | Result | Evidence |\n|:--|:--|:--|\n| PG serial ×5 | 5/5 exit 0, each 4 passed / 17 assertions | `P0.2-PA01/serial-pgsql-{1..5}.log` |\n| SQLite | exit 0, 4 skipped | `P0.2-PA01/sqlite.log` |\n| Pint | exit 0 | `P0.2-PA01/pint.log` |\n| Barrier-only mutant | RED: only readiness test fails (`null` instead of `BarrierTimeout`) | `P0.2-PA01/barrier-bypass-final.log` |\n| Sequential mutant | RED: lost-update `[0, 1]` and readiness | `P0.2-PA01/sequential.log` |\n| E19/E20 media + root PG | reused (unchanged inputs, original `executed_at`) | `P0.2-PA01/validation-provenance.json` |\n\nreview: codex/gpt-6.1-sol/high GREEN, findings:0 (same-model, D13) — `P0.2-PA01/review-gpt61.md`. Input-only review of the saved prompt; the reviewer did not rerun tests.\nIt closes E23 for PA01/P0.2 only and is not an independent phase acceptance.\nReceipts: E15–E22 re-bound to this session's contract hash with original `executed_at` (no re-execution, product tree `84084cef…` unchanged); E23 fresh.\nGates: pre_mutation allow · pre_final allow.\n\nNot covered (unchanged, not claimed GREEN): hosted O-3-CI on the changed candidate stays a phase gate; no CI configuration or dispatch was made in this run (owner: «CI пока не настраивай»)."
     }
   ],
-  "applies_to": [],
+  "applies_to": [
+    "P0.2"
+  ],
   "provenance": {
     "path": "artifacts/P0.2/completion.md",
     "sha256": "053a8e2db9e96eca29d80ea817562611dc328be40ee916f230af89e968b44ae4"

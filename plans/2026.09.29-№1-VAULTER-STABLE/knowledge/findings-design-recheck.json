@@ -24,7 +24,9 @@
       "text": "**GREEN дизайна P0**, same-author recheck по D08.\n\nFingerprint: `b9c4769d06a7593e99dfbebf5757032e59e8e9eee13910bb99adc1b45eb4fc19`. Run: `cb450b4d-3801-4593-abc4-b31920751d50`.\nFinish exit 0; lint 0 ошибок/0 предупреждений; item/decision views свежие;\ncoverage и diff-check exit 0; receipt проверен. Запись audit-green — journal.jsonl.\nНезависимого второго аудита не было; разрешённое владельцем исключение явно сохранено."
     }
   ],
-  "applies_to": [],
+  "applies_to": [
+    "P0"
+  ],
   "provenance": {
     "path": "findings/design-recheck.md",
     "sha256": "0d211e858d1d8c761e9cdac9eb80c84a1a7ab0138198905ddf2a77f3e070eb9d"

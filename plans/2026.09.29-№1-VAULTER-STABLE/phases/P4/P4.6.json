@@ -1,0 +1,377 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P4.6",
+  "title": "Одна модель удаления, корни корзины, жизненный цикл drive и фазовый барьер P4",
+  "status": "todo",
+  "summary": "Корзина различает явные корни (trash_root_id): restore возвращает только своё поддерево и не переносит молча в корень; drive имеет статусы active|archived|deleting с read-only архивом и асинхронным идемпотентным удалением; HasDrives с delete_with_owner; SoftDeletes нигде нет. Последний item несёт полный барьер P4 (D25).",
+  "why": "N13/N22/D27: две модели удаления, нет жизненного цикла drive. D37: restore папки воскрешает независимо удалённых потомков (RestoreNodeAction.php:85) и тихо переносит в корень — расходится с Drive/Box. Риски: потеря/воскрешение данных, утечка через перенос, незавершённое удаление drive.",
+  "scope": {
+    "include": [
+      "Миграция 2026_10_07_000003_node_trash_roots.php + fresh SchemaBuilder: v_nodes.trash_root_id, индекс (drive_id, trash_root_id), детерминированный backfill (P4-design#Deletion).",
+      "TrashNodeAction/RestoreNodeAction/TrashOperations::list/PurgeTrashCommand/EmptyTrashAction по D37: NodeTrashedByAncestorException, RestoreDestinationRequiredException, только корни в листинге, retention от корня.",
+      "DriveStatus enum (@closed), Drive cast; OperationGuard: archived → DriveArchivedException для не-system Mutation/Purge/создания, deleting → отсутствует для всех кроме system 'drive-purge'; DriveHandle::archive/unarchive/delete (контракт core + golden).",
+      "drive Actions\\Drives\\{ArchiveDriveAction,UnarchiveDriveAction,DeleteDriveAction}, Jobs\\PurgeDriveJob (unique, chunked, tries 5), PurgeNodeInput::bypassTrashRequirement только для system 'drive-purge', Console vaulter:drives:purge {--drive=*} {--dry-run} {--sync}; события DriveArchived/DriveUnarchived/DriveDeleted (Laravel).",
+      "Vaulter\\Concerns\\HasDrives (drive(), drives(), bootHasDrives с forceDeleted для SoftDeletes хоста), VaulterConfig::drivesDeleteWithOwner() ключ vaulter.drives.delete_with_owner default false.",
+      "Arch NoSoftDeletesTest по packages/*/src; карантинные ревизии purge/GC тем же путём (D29).",
+      "Фазовый барьер: V901–V928 из phase.validation исполняются здесь один раз на стабильном итоговом P4 (D25 carrier V90).",
+      "DriveHandle::archive/unarchive/delete возвращают DriveSnapshot; TrashOperations::list → Page<NodeSnapshot> только корней; trash/restore → NodeSnapshot (D44).",
+      "Фазовый барьер включает полосу write_guard (V930) и все новые PG/MySQL сценарии P4.9–P4.13."
+    ],
+    "exclude": [
+      "retention policies/legal holds (T2)",
+      "перенос/передача drive другому владельцу (T2)",
+      "doctor-проверки зависших deleting (P7.1)",
+      "EventType drive.archived/drive.deleted (P5.2)"
+    ]
+  },
+  "depends_on": [
+    "P4.7"
+  ],
+  "decisions": [
+    "D01",
+    "D03",
+    "D06",
+    "D25",
+    "D28",
+    "D29",
+    "D30",
+    "D31",
+    "D34",
+    "D35",
+    "D36",
+    "D37",
+    "D38",
+    "D39",
+    "D40",
+    "D41",
+    "D42",
+    "D43",
+    "D44",
+    "D45",
+    "D46",
+    "D47",
+    "D48",
+    "D49"
+  ],
+  "skills": [],
+  "reads": [
+    {
+      "ref": "knowledge/artifacts-P4-design-P4.6-opus",
+      "why": "Первый read: дословные OPUS-единицы item с заметками ledger (D06); строки «Справочно» не реализуются заново",
+      "required": true
+    },
+    {
+      "ref": "knowledge/validation-and-execution-policy",
+      "why": "D25: check-profile до product edit, affected checks, broad barrier только в P4.6, без mutation tools",
+      "required": true
+    },
+    {
+      "ref": "knowledge/P4-design#Deletion",
+      "why": "Нормативный контракт раздела Deletion: имена, сигнатуры, алгоритм, развилки уже решены",
+      "required": true
+    },
+    {
+      "ref": "knowledge/P4-design#Errors",
+      "why": "Нормативный контракт раздела Errors: имена, сигнатуры, алгоритм, развилки уже решены",
+      "required": true
+    },
+    {
+      "ref": "knowledge/P4-design#Stability",
+      "why": "Нормативный контракт раздела Stability: имена, сигнатуры, алгоритм, развилки уже решены",
+      "required": true
+    },
+    {
+      "ref": "knowledge/P4-design#Seams",
+      "why": "Нормативный контракт раздела Seams: имена, сигнатуры, алгоритм, развилки уже решены",
+      "required": true
+    },
+    {
+      "ref": "knowledge/P4-invariants",
+      "why": "Порядок блокировок T→N→(D|F)→R→Q→C, инварианты P4-I1…I16, интерферирующие пары, запрещённые обходы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/security-correction-contract",
+      "why": "D29: применимые C-строки (C02 copy admission, C07 sequence/validators, C08 egress) — owning acceptance этого item",
+      "required": true
+    },
+    {
+      "ref": "knowledge/P4-industry-research-2026-10-07#Adoption",
+      "why": "Почему выбраны D34–D37: что принято/отложено/отклонено; не расширять scope за пределы Adoption",
+      "required": false
+    },
+    {
+      "ref": "knowledge/P4-industry-research-2026-10-07#R4-Lifecycle",
+      "why": "Drive/Box семантика корзины и восстановления",
+      "required": true
+    },
+    {
+      "path": "packages/drive/src/Actions/Trash/TrashNodeAction.php",
+      "why": "Текущая логика; строка 85 RestoreNodeAction — дефект D37",
+      "required": true
+    },
+    {
+      "path": "packages/drive/src/Actions/Trash/RestoreNodeAction.php",
+      "why": "Текущая логика; строка 85 RestoreNodeAction — дефект D37",
+      "required": true
+    },
+    {
+      "path": "packages/drive/src/Actions/Trash/PurgeNodeAction.php",
+      "why": "Текущая логика; строка 85 RestoreNodeAction — дефект D37",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Repositories/Drive/NodeStoreRepository.php",
+      "section": "trashSubtree/restoreSubtree/trash listing 340–380",
+      "why": "Запись и листинг корзины",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Repositories/Drive/NodeReadRepository.php",
+      "section": "trashSubtree/restoreSubtree/trash listing 340–380",
+      "why": "Запись и листинг корзины",
+      "required": true
+    },
+    {
+      "path": "packages/drive/src/Console/PurgeTrashCommand.php",
+      "why": "Per-root транзакции и re-lock",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Models/Drive/Drive.php",
+      "why": "status и owner morph",
+      "required": true
+    },
+    {
+      "path": "audits/2026-09-29-stable-audit/opus/05-php-api.md",
+      "section": "9",
+      "why": "Сигнатуры HasDrives",
+      "required": true
+    },
+    {
+      "ref": "knowledge/implementation-security-assessment-2026-10-06",
+      "why": "D29: оценка репозитория по C01–C10 — проверить применимые к item находки до разработки",
+      "required": true
+    },
+    {
+      "ref": "knowledge/P4-design#Snapshots",
+      "why": "Возвращаемые типы drive lifecycle (D44)",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/core/database/migrations/2026_10_07_000003_node_trash_roots.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Schema/SchemaBuilder.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Enums/Drive/DriveStatus.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Concerns/HasDrives.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Models/Drive/{Drive,Node}.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Access/OperationGuard.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Contracts/Drive/DriveHandle.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Exceptions/{Nodes/NodeTrashedByAncestorException,Nodes/RestoreDestinationRequiredException,Drive/DriveArchivedException,Drive/InvalidDriveStateException}.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Configuration/VaulterConfig.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Repositories/Drive/{NodeStoreRepository,NodeReadRepository,DriveReadRepository}.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Operations/NodeLocator.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/src/Actions/Trash/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/src/Actions/Drives/{ArchiveDriveAction,UnarchiveDriveAction,DeleteDriveAction}.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/src/Jobs/PurgeDriveJob.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/src/Console/{PurgeDrivesCommand,PurgeTrashCommand}.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Data/Trash/PurgeNodeInput.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/src/Events/Drives/{DriveArchived,DriveUnarchived,DriveDeleted}.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/src/{DriveHandle,Operations/TrashOperations}.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/src/Providers/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/tests/Drive/{TrashRootsTest,DriveArchiveTest,DrivePurgeTest,HasDrivesTest}.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/tests/Concurrency/DriveArchiveRaceTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Upgrade/TrashRootsBackfillTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Arch/NoSoftDeletesTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/tests/**/*Restore*Test.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/{core,drive}/tests/Arch/PublicApiSnapshotTest.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/{core,drive}/tests/Arch/__snapshots__/*",
+      "change": "modify"
+    },
+    {
+      "path": "docs/guide/trash.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/guide/drive.md",
+      "change": "modify"
+    },
+    {
+      "path": "UPGRADE.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Risk-class: data-integrity + concurrency + public-contract; invariant-model: @plan/knowledge/P4-invariants.json. Перед finish — self-check применимых P4-I* и интерферирующих пар в Completion Notes.",
+    "До первого product edit создать plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P4.6/check-profile.json: фактические изменяемые пути/вызывающие/фикстуры, точные cwd/env/команды, негативные контроли и отложенный broad barrier P4.6 (D25).",
+    "Только перечисленные пакеты и файлы-потребители; чужие dirty-правки, исторические миграции 2026_06_13_*, 2026_10_01_000001…000009, 2026_10_06_* и OPUS не менять. Расхождение кода с досье → стоп и описание в Completion Notes/новый D#, не импровизация (D01).",
+    "Перед PG/MySQL-тестами: native laravel-testing:test-isolation-guard + devops:db-test-preflight и scripts/db-preflight.sh; только БД vaulter_test.",
+    "Публичная поверхность изменилась → golden PublicApiSnapshotTest пакета, UPGRADE.md (было → стало, ссылки PLAN2.D34–D37/AD) и текст для CHANGELOG в plans/2026.09.29-№1-VAULTER-STABLE/artifacts/<item>/changelog-entry.md (CHANGELOG.md закрыт для чтения агентам — переносит владелец, P4-design#Stability).",
+    "Комментарии в коде объясняют «почему», без кодов задач плана; документация (docs/guide, docs/reference) меняется в том же item.",
+    "Нет push/PR/hosted CI/публикации и mutation tools (Infection, pest --mutate). Review: none (D25) — self-check + acceptance.",
+    "Изменение поведения restore (P1/P3) фиксируется новыми тестами и правкой старых регрессий с явной записью в UPGRADE.md; старые ожидания «restore в корень» не сохраняются.",
+    "Фазовый барьер исполняется только после зелёных own V1–V6 и на финальном дереве P4; повтор полных команд — по изменившимся входам (D25).",
+    "Если меняется страница docs/guide/<x>.md, у которой есть зеркало docs/ru/guide/<x>.md, — обновить зеркало в том же item тем же смыслом.",
+    "Прогоны (D51): BARRIER фазы — own V3–V5 (PG/MySQL) + V90 фазовый барьер V901–V931; к этому моменту отложенных H-проверок фазы не остаётся."
+  ],
+  "guidance": "TrashRootsTest: trash(A/child) → trash(A) → restore(A): child остаётся в корзине с trash_root_id=child; restore(A/b, trashed via A) → 409 node_trashed_by_ancestor; purge родителя исходного корня → restore(child) без destination → 409 restore_destination_required; с destination → ok. DriveArchiveRaceTest (PG): upload complete держит T shared до barrier, archive ждёт T exclusive → после commit upload статус archived; новая мутация → 409 drive_archived. DrivePurgeTest: исключение в середине батча → повторный запуск доводит до конца, blobs ref_count→0 и tombstone.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Drive tests/PublicApi tests/Arch",
+      "expect": "exit0; trash roots, restore destination, archive/delete, HasDrives V35, golden",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V2",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Arch packages/core/tests/Operations packages/core/tests/Schema",
+      "expect": "exit0; NoSoftDeletes, guard archived/deleting, схема trash_root_id",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Upgrade/TrashRootsBackfillTest.php",
+      "expect": "exit0; backfill на фикстурах P0.3. Обязательный receipt: числовые executed_tests>=1 и skipped=0, discovered/matched test names и output; exit0 без тестов/с skip НЕ pass.",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Concurrency/DriveArchiveRaceTest.php tests/Drive/DrivePurgeTest.php",
+      "expect": "exit0; archive‖mutation, возобновляемый purge на PG. Обязательный receipt: числовые executed_tests>=1 и skipped=0, discovered/matched test names и output; exit0 без тестов/с skip НЕ pass.",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V5",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=mysql DB_HOST=127.0.0.1 DB_PORT=3306 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Schema/CanonicalSchemaTest.php",
+      "expect": "exit0; trash_root_id на свежей MySQL-установке. Обязательный receipt: числовые executed_tests>=1 и skipped=0, discovered/matched test names и output; exit0 без тестов/с skip НЕ pass.",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V80",
+      "procedure": "На own candidate по check-profile выполнить форматирование и статический анализ затронутых пакетов: scripts/php84 vendor/bin/pint --test packages/core && scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress (cwd .); cd packages/drive && ../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress; cd packages/documents && ../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress; cd packages/media && ../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress; cd packages/filament && ../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress; cd packages/azgard && ../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress. Каждый новый guard/Arch-тест item получает ограниченный negative control (временная поломка → тест красный → точное восстановление), записанный в artifacts/P4.6/negative-controls.md.",
+      "expect": "все команды exit 0; negative controls записаны с фактическим красным выводом и восстановлением",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V90",
+      "procedure": "Фазовый барьер P4 (D51 фазовый барьер; ранее D25 carrier): на стабильном финальном дереве P4 исполнить V901–V931 из phase.validation P4 (точные cmd/cwd/env), сохранить receipts в artifacts/P4.6/phase-barrier/ (exit, executed_tests, skipped, длительность, вывод); PG/MySQL лейны — только после preflight.",
+      "expect": "все V901–V931 exit0; PG/MySQL receipts executed_tests>=1 и skipped=0; повторно используемые receipts помечены с доказательством неизменных входов",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V81",
+      "cmd": "python3 plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-coverage.py check",
+      "expect": "exit0; 1438 единиц, ledger-P4 и дословные входы совпадают",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "Trash roots и честный restore",
+    "Жизненный цикл drive и HasDrives",
+    "Фазовый барьер P4 с receipts",
+    "check-profile.json, negative-controls.md, changelog-entry.md в artifacts/P4.6"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed",
+    "notes": "Внешние факты проверены при дизайне: @plan/knowledge/P4-industry-research-2026-10-07.json; исполнителю повторный поиск не нужен"
+  },
+  "result": null,
+  "updated_at": "2026-10-07T15:50:18Z"
+}

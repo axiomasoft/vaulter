@@ -29,7 +29,9 @@
       "text": "Changed packages: core, drive and media, as explicitly selected by P1.6. Documents and filament were validated only. Adding the common core quota exception, preserving the Drive boundary and UPGRADE are necessary architecture/public-contract repairs. No document revision-counter changes, schema migrations, production mutations, push or release.\n\nTests used in-memory SQLite and the isolated native PostgreSQL vaulter_test database with fake local disks. MySQL concurrency was source-inspected, not exercised. The classified P1.7 MySQL installation deviation remains with its owning item. Phase-wide hosted CI requires owner gate O-3-CI and was not run by this item. P1.6 completion does not claim P1 phase closure.\n\nPreviously dirty configuration, plan source, journal and generated plan carriers stay in the owner's worktree; shared bookkeeping is left unstaged. Product changes, P1.6-owned evidence and clean-baseline handoff are the scoped commit.\n\nwrite-site: pre_mutation: allow · pre_final: allow"
     }
   ],
-  "applies_to": [],
+  "applies_to": [
+    "P1.6"
+  ],
   "provenance": {
     "path": "artifacts/P1.6/completion.md",
     "sha256": "91f8df9b2fa4fefd587047925ac3bdca3cefe97a67263c6749916285a3493481"

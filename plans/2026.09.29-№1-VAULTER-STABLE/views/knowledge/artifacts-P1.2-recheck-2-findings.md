@@ -5,7 +5,7 @@ Source: [JSON](../../knowledge/artifacts-P1.2-recheck-2-findings.json). This vie
 
 ## Applies to
 
-
+- P1.2
 
 ## Provenance
 

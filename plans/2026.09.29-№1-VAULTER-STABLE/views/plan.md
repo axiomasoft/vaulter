@@ -79,12 +79,12 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
   `backlog/Pn.md`. Цикл фазы: design → finish → независимый design audit → execute → **фазовый аудит** → close.
   Для повторной проверки исправлений текущего дизайна P0 владелец разрешил same-author recheck до GREEN (D08);
   исходный независимый RED сохранён. Это исключение не распространяется на проверку реализации или будущие фазы.
-- **Проверки по impact (D25).** До продуктовой правки — check-profile с реальными paths/callers/fixtures, точными командами и фазовой границей. После правок и перед ранним item finish — affected acceptance/regression/Arch/DB checks, Pint по затронутым PHP и поддерживаемый PHPStan impacted package. Полный Pest/CI non-mutation набор — один раз на стабильной phase/block boundary, не после каждого item. Подробный обязательный протокол: @plan/knowledge/validation-and-execution-policy.json. Пропуск/падение не равны успеху.
+- **Проверки (D51, единственная политика; заменила D25).** Каждый item исполняет только ЛЁГКИЕ проверки: затронутые Pest-тесты на SQLite, Arch/golden, Pint, PHPStan затронутых пакетов, клиентские unit/typecheck, ограниченные negative controls на SQLite, coverage и plan check; check-profile до первой правки. ТЯЖЁЛЫЕ (PG/MySQL, upgrade-фикстуры, гонки, e2e процессов, полные сьюты, hosted CI) — только в барьерных items: в конце короткого рискованного блока (≤2 items с миграциями или ≤3 прочих рискованных) и в последнем item фазы; отложенное не переходит границу фазы. Исключение L+H-own — если результат пункта доказуем только на H. В каждом item есть правило «Прогоны (D51): L | L+H-own | BARRIER …»; отложенные H-проверки — kind=impact с адресом барьера. Подробно: @plan/decisions/D51.json.
 - Изменение публичной поверхности → обновлённый `PublicApiSnapshotTest` golden в том же item, запись в `UPGRADE.md` и
   `CHANGELOG.md [Unreleased]` («было → стало», ссылка на `AD##`).
 - Переименования — по FQN-якорям (`php:namespace-refactor-safety`), не по голому токену (`Node` ⊂ `NodeGrant`); массовые
   переносы — инструментом по карте (Rector/скрипт), карта коммитится артефактом фазы.
-- Нельзя: отключать meaningful regression/critical checks, || true в CI, ослаблять retained coverage/type-coverage/PHPStan пороги, выдавать deferred/reused checks за исполненные или менять нормы без D#. Mutation lanes/score/thresholds исключены из workflow PLAN2 решением D25.
+- Нельзя: отключать meaningful regression/critical checks, || true в CI, ослаблять retained coverage/type-coverage/PHPStan пороги, выдавать deferred/reused checks за исполненные или менять нормы без D#. Mutation lanes/score/thresholds исключены из workflow PLAN2 решением D51 (сохранено из D25).
 - Тесты конкурентности — только PostgreSQL через харнесс P0.2 (D04).
 - **Окружение** (D04): PHP 8.4 через `scripts/php84`, PG 16 `127.0.0.1:5432` (`vaulter_test`), MySQL 8 `127.0.0.1:3306`.
   Owner gates O-1 (роль PG), O-2 (пользователь MySQL) — точные команды в D04.
@@ -93,7 +93,7 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 - Комментарии в коде объясняют «почему», не историю плана; ссылки на работу — только квалифицированные (`PLAN2.D03`,
   `PLAN2.P1.3`) и только когда без них решение непонятно. Внутренние коды задач в docblock'ах не добавляются.
 - Документация меняется в том же item, что и код.
-- Item закрывается по собственным affected Validation; последний исполняемый item дополнительно требует phase/block barrier. В phase.validation — точные broad commands, в последнем item — acceptance carrier их реальной квалификации (D25). Новый guard/харнесс имеет ограниченный negative control. Обязательная инструкция всех будущих items: @plan/knowledge/validation-and-execution-policy.json.
+- Item закрывается по своим acceptance-проверкам (D51). Барьерный item несёт acceptance V90 «Барьер D51» — кумулятивный H-набор блока по точным cmd/cwd/env на текущем дереве с изменениями предыдущих items; последний item фазы — фазовый барьер с phase.validation. Дефект барьера чинится в барьерном item одной owning-коррекцией (журнал называет item-источник), затем перезапуск только упавших/затронутых проверок. Новый guard/харнесс имеет ограниченный negative control (H-only guard — в барьере). Дизайн каждой фазы обязан выставить режим «Прогоны (D51)» каждому item и раскладку барьеров в контексте фазы; design audit проверяет это.
 - Внешние действия (push, PR, merge, теги, Packagist/npm, split-репозитории) — owner gates (O-3, P8).
   Для P0 D07 уточняет O-3: push итогового candidate и workflow_dispatch — O-3-CI до фазового аудита;
   PR/merge — O-3-PR после GREEN аудита. Оба требуют отдельного явного запроса владельца.
@@ -102,9 +102,9 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 - **Маршрут запуска** (D05): класс/effort — §3 Routing; исполнитель/ревьюер — `@plan/plan.json` `execution-sheet/v1`;
   native launch — `@plan/knowledge/session-routing.json`. Запуск на более слабом классе/effort запрещён; frontier-items не смешиваются в
   батче с implementation/economy.
-- **Review (D25).** Нет blanket per-item независимого review: только применимый explicit request или принятый фазовый audit. Fresh read-only exact native route, изменённый продукт/нормы/dependencies/validation без executor history; первая проверка по scope, re-review только findings+новая delta/closure. Не больше 2 completed rounds и одной owning correction. Применимые прежние owner waivers и честные historical verdicts сохраняются.
-- **Mutation tools исключены (D25).** Infection/Pest --mutate/Composer mutation aliases/wrappers/mutation workflow dispatch/score remediation не входят в PLAN2. Общие full-CI gates трактуются без mutation lanes; регрессии с Mutation в имени и ограниченные negative controls сохранены. Не dispatch workflows с активирующимися mutation jobs.
-- **Экономика и контекст (D25).** Canonical context хранить в файле; в основном контексте — текущие нормы/decisions/короткие итоги. Свежие агенты — independent research/detailed QA. Единый evidence writer; generation заканчивается до lint. Повтор проверки — по изменившимся inputs, не по одному global SHA; reuse явно с original receipt и dependency proof. Phase/block boundary заранее объявлена, future issues отдельно.
+- **Review (D51, сохранено из D25).** Нет blanket per-item независимого review: только применимый explicit request или принятый фазовый audit. Fresh read-only exact native route, изменённый продукт/нормы/dependencies/validation без executor history; первая проверка по scope, re-review только findings+новая delta/closure. Не больше 2 completed rounds и одной owning correction. Применимые прежние owner waivers и честные historical verdicts сохраняются.
+- **Mutation tools исключены (D51, сохранено из D25).** Infection/Pest --mutate/Composer mutation aliases/wrappers/mutation workflow dispatch/score remediation не входят в PLAN2. Общие full-CI gates трактуются без mutation lanes; регрессии с Mutation в имени и ограниченные negative controls сохранены. Не dispatch workflows с активирующимися mutation jobs.
+- **Экономика и контекст (D51, сохранено из D25).** Canonical context хранить в файле; в основном контексте — текущие нормы/decisions/короткие итоги. Свежие агенты — independent research/detailed QA. Единый evidence writer; generation заканчивается до lint. Повтор проверки — по изменившимся inputs, не по одному global SHA; reuse явно с original receipt и dependency proof. Phase/block boundary заранее объявлена, future issues отдельно.
 - **Research corrections (D26=C, D27=A, D28=A, D29).** Обязательный нормативный вход всех remaining designs P3–P8: @plan/knowledge/security-correction-contract.json; repository assessment: @plan/knowledge/implementation-security-assessment-2026-10-06.json. Каждая применимая C01–C10 строка получает owning item scope/files/Required Read/acceptance при детализации; отчёт исследования сам по себе не закрывает correction. P3 supplemental contracts завершены в @plan/knowledge/P3-security-contracts.json; design audit repaired closure GREEN (F12/F13) в @plan/knowledge/audit-design-2026-10-06-p3-green.json. Historical RED сохранён. Это не phase audit и не product qualification; runtime run-items не запускает исполнение. P5 добавляет P5.3 recoverable fan-out. P8.1 собирает actual qualification matrix, P8.3 не freeze с essential unresolved correction. Closed P0/P1/P2 не переписываются; исправления прежнего кода выполняются будущими owning items. Explicit accepted amendments имеют приоритет над literal OPUS только в описанной delta; OPUS bytes/owners неизменны.
 
 ## Phases
@@ -115,7 +115,7 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 | P1 | Исправления T0 на текущих именах | detailed | 11/11 | 🟠 Done with deviations |
 | P2 | Канон имён и конфигурации | detailed | 7/7 | 🟠 Done with deviations |
 | P3 | Прикладной слой: авторизованный публичный API | detailed | 8/8 | 🟢 Done |
-| P4 | Модель данных и документы | skeleton | 0/0 | ⬜ Skeleton |
+| P4 | Модель данных и документы | detailed | 2/13 | 🟡 In progress |
 | P5 | Конвейер событий | skeleton | 0/0 | ⬜ Skeleton |
 | P6 | HTTP v1 и клиенты | skeleton | 0/0 | ⬜ Skeleton |
 | P7 | Эксплуатация и DX | skeleton | 0/0 | ⬜ Skeleton |
@@ -149,12 +149,32 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 | D22 | владелец отменил дальнейшие review P2.2 + P2.3 | accepted | 2026-10-05 |
 | D23 | P2.4: exact temporary Hocuspocus runtime key allowance until P2.5 | accepted | 2026-10-06 |
 | D24 | P2.5 executable configuration boundaries and immutable v0.2 fixture | accepted | 2026-10-06 |
-| D25 | Impact-based checks, phase barriers and no mutation testing | accepted | 2026-10-06 |
+| D25 | Impact-based checks, phase barriers and no mutation testing | superseded | 2026-10-06 |
 | D26 | P3/F05: legacy not_required — трактовка OPUS 09 §6 и OPUS D18 | accepted | 2026-10-06 |
 | D27 | P3/F06: system обходит только ACL, ProfileRestriction остаётся | accepted | 2026-10-06 |
 | D28 | P3/F08: amend D03/P4.7 — sequence foundation переносится в P3.3 | accepted | 2026-10-06 |
 | D29 | Research adoption: обязательные forward corrections P3–P8 и durable delivery | accepted | 2026-10-06 |
-| D30 | COPY папки: права на потомков (аудит F02) | open | 2026-10-07 |
-| D31 | Activity: проекция полей для читателей без Share (аудит F05) | open | 2026-10-07 |
-| D32 | Снять MySQL-часть с P8.1 после квитанции полной установки (аудит F06) | open | 2026-10-07 |
-| D33 | Вопросы владельцу из аудита P1–P3: Q2, Q4, Q5, Q6 | open | 2026-10-07 |
+| D30 | COPY папки: права на потомков (аудит F02) | accepted | 2026-10-07 |
+| D31 | Activity: проекция полей для читателей без Share (аудит F05) | accepted | 2026-10-07 |
+| D32 | Снять MySQL-часть с P8.1 после квитанции полной установки (аудит F06) | accepted | 2026-10-07 |
+| D33 | Вопросы владельцу из аудита P1–P3: Q2, Q4, Q5, Q6 | accepted | 2026-10-07 |
+| D34 | P4: рабочее состояние документа и неизменяемые checkpoint-ревизии (поправка OPUS D16/05 §10/08 §2) | accepted | 2026-10-07 |
+| D35 | P4: раздельные валидаторы узла и содержимого документа (поправка OPUS D23, writer map P3.3) | accepted | 2026-10-07 |
+| D36 | P4.5: серверная загрузка состояния хабом, поколение в имени комнаты, storage fence (расширение OPUS D24) | accepted | 2026-10-07 |
+| D37 | P4: явные корни корзины, восстановление без тихого переноса, статусы drive (уточнение OPUS D27) | accepted | 2026-10-07 |
+| D38 | P4: публичная идентичность — непрозрачные строковые id и единый 404 | accepted | 2026-10-07 |
+| D39 | P4: контракт имён — name_key, портируемая политика, без молчаливого trim | accepted | 2026-10-07 |
+| D40 | P4: персональное состояние вместо глобальных is_pinned/position | accepted | 2026-10-07 |
+| D41 | P4: свойства узла — namespaced properties вместо extra_data | accepted | 2026-10-07 |
+| D42 | P4: временные метки содержимого и клиентские времена | accepted | 2026-10-07 |
+| D43 | P4: DrivePolicy — лимиты как исполняемые инварианты профиля | accepted | 2026-10-07 |
+| D44 | P4: публичный API возвращает неизменяемые snapshot-DTO; Eloquent — внутренний | accepted | 2026-10-07 |
+| D45 | P4: модель доступа 1.0 — роли с версиями, capabilities, без пользовательского DENY | accepted | 2026-10-07 |
+| D46 | P4: владение — без неявного владельца узла | accepted | 2026-10-07 |
+| D47 | P4: ссылки-шары 1.0 — аудитория, роль, ротация, редемпции | accepted | 2026-10-07 |
+| D48 | P4: жизненный цикл ревизий файлов и квота по всем ревизиям | accepted | 2026-10-07 |
+| D49 | P4: дедупликация только внутри tenant/drive | accepted | 2026-10-07 |
+| D50 | P5: журнал изменений drive и тонкие webhooks (вперёд) | accepted | 2026-10-07 |
+| D51 | Политика проверок: лёгкие в каждом пункте, тяжёлые — барьерами по риску (заменяет D25) | accepted | 2026-10-07 |
+| D52 | Q2: длительность внешней транзакции complete() — оставить на 1.0, claim вместо row-lock отдельной поправкой | accepted | 2026-10-07 |
+| D53 | P4.9: конверсия уровней и owner_id без legacy (уточнение D45/D46) | accepted | 2026-10-07 |

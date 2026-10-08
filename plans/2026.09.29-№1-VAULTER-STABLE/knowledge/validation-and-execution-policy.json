@@ -4,6 +4,11 @@
   "title": "PLAN2 validation and execution policy (D25)",
   "sections": [
     {
+      "id": "D51-Policy",
+      "title": "Действующая политика проверок (D51; заменяет D25-разделы ниже при расхождении)",
+      "text": "Источник: @plan/decisions/D51.json (решение владельца 2026-10-07). Разделы ниже — история D25; где они требуют тяжёлых проверок в каждом item или broad-набора по старой схеме, действует D51.\n\nЛЁГКИЕ (каждый item): затронутые Pest на SQLite, Arch/golden, Pint по затронутым файлам, PHPStan затронутых пакетов, клиентские unit/typecheck, ограниченные negative controls на SQLite, opus-coverage, plan check.\nТЯЖЁЛЫЕ (только барьеры): PostgreSQL/MySQL (upgrade-фикстуры, SchemaParity, ForkRace, блокировки), e2e процессов, полные сьюты всех пакетов, hosted CI (O-3).\n\nРежимы item (явно в правиле «Прогоны (D51): …»):\n- L — только лёгкие; H-проверки item записаны kind=impact с «→ барьер <item>».\n- L+H-own — плюс собственные H как acceptance, если результат доказуем только на H.\n- BARRIER — acceptance V90 «Барьер D51»: свои H + все отложенные H блока по точным cmd/cwd/env на текущем дереве.\n\nРаскладка барьеров (дизайнер фазы по риску): конец непрерывного рискованного блока — не длиннее 2 items с миграциями/схемой или 3 прочих рискованных (конкурентность/блокировки, безопасность/тенантность); последний item фазы — всегда фазовый барьер (все остатки фазы + phase.validation). Отложенное не переходит границу фазы. Минимальные/низкорисковые items — L без H.\n\nДефект в барьере: одна owning-коррекция в барьерном item (журнал называет item-источник), перезапуск упавших/затронутых; изменение контракта закрытого item — escalation.\n\nСохраняется из D25: impact-подбор, check-profile до правки, запрет mutation tools, пропуск/падение ≠ успех, повтор только при изменившихся входах, единый evidence writer, review только по запросу.\n\nОбязанность дизайна фазы: режим каждого item, H→impact с адресом барьера, V90 барьерных items с кумулятивным списком, раскладка барьеров в контексте фазы; design audit проверяет."
+    },
+    {
       "id": "Authority",
       "title": "Authority and scope",
       "text": "D25 — прямое owner-решение, применяется к последующим workflow всего PLAN2. Закрытые items, исходные OPUS, ledger/provenance и факты ранее выполненных запусков неизменны. Изменение политики не запускает P2.6 или будущие items. При конфликте старого per-item broad scheduling с этой политикой действует D25."
@@ -49,7 +54,10 @@
       "text": "P2.6 — последний item по D16; это phase-end barrier. Его PG KeyColumnTypesTest+Canon03UpgradeTest, MySQL KeyColumnTypesTest и negative control outbox.drive_id не откладываются и не заменяются SQLite. В phase.validation P2 находятся V901–V926 с точными cwd/commands: full core+5 packages, исходные P1 PG matrices, phase Upgrade+Schema PG, CanonicalSchema MySQL, coverage, поддерживаемые native plan check/render freshness и hosted safe non-mutation CI under O-3. P2.6 V2 требует результаты всех этих phase checks. APP_ENV=testing, безопасные $SQ/$PG/$MY и доступность required runtime берутся из phase context/D04; DB preflight перед DB-mutating checks. Не выполнять эти команды при редактировании этой политики.\nСтарый plan-lint.py отсутствует в actual native v3. Его structural closure заменён поддерживаемыми plan.py check и plan.py render --check; никакие retired plan-work receipts не создаются. Existing MySQL baseline/deviation rules сохраняются в точной прежней области; пропуск не выдаётся за green.\nV919 исполняет единый PG набор Concurrency+Database+Upgrade+Schema. V921 проверяет покрытие Upgrade+Schema по тому же receipt: отдельный повтор этих каталогов не назначается. P2.6 V1 PG scenarios также могут ссылаться на покрывающий итоговый PG run при доказанно идентичных входах; negative control выполняется отдельно и не заменяется обычным green run."
     }
   ],
-  "applies_to": [],
+  "applies_to": [
+    "P3",
+    "P4"
+  ],
   "provenance": {
     "note": "Owner instruction recorded in D25; factual audit of P2.5 receipts; installed native SKM plan-protocol execution mode."
   }

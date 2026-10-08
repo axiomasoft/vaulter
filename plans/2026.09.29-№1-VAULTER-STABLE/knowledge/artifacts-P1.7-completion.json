@@ -19,7 +19,9 @@
       "text": "review: grok/grok-4.7 GREEN. Fresh independent read-only high-effort context; actual model grok-4.7-build. Verbatim verdict, raw result, route and packet retained. The prior incomplete CLI invocation reached its turn cap without a verdict; it is retained and not counted as completed review. Reviewed product bytes match product-manifest.json.\n\nwrite-site: pre_mutation: allow · pre_final: allow\n\nP1.7 closes with deviations solely for the contract's pre-existing MySQL installation gap. P1 remains open; the successor recommendation is P1.2, outside this invocation's authorized scope. Product changes and task-owned evidence will be committed in one scoped commit; shared pre-existing dirty plan/configuration carriers remain unstaged. No push, publication or unrelated edit."
     }
   ],
-  "applies_to": [],
+  "applies_to": [
+    "P1.7"
+  ],
   "provenance": {
     "path": "artifacts/P1.7/completion.md",
     "sha256": "5229c95b15fb586388be733f52c316a98754133de35e711af059a6beb697c98f"

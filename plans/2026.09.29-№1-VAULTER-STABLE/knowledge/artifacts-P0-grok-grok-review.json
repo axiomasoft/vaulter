@@ -54,7 +54,9 @@
       "text": "- P0.1. Обёртка и preflight совпали со спецификацией, негативы exit 1 проверены. `filament.yml` по-прежнему маскирует Rector `|| true`: условие снятия не выполнено (B-02). B-05 (нет pcntl и нет шага Concurrency) в workflows закрыт: pcntl/posix стоят на PG job tests, drive, media, documents; шаг харнесса есть только в `tests.yml:test-pgsql`, как в P0.2.\n- P0.2. Четыре теста. Readiness: ровно один ребёнок падает в `DB::extend` до `ready.*` (`fopen` с `x`), второй обязан получить `ForkRace\\BarrierTimeout` и не создать `task-started`. Lost update требует оба чтения 0 и итог 1. Изоляция pid сохранена в том же тесте.\n- P0.3. MySQL-дампов нет по D09, это не пересматривалось. Формы §4 в README и в `--verify` есть, включая preflight-red отдельно от основных дампов.\n- P0.4. ADR 0019–0024 в `proposed`. Тексты D02, D05, D15–D17, D22–D23, D29–D31 перенесены без нового решения; 0009 и 0018 помечены amendment и сами не переписаны. Якоря `#dNN` в `02-decisions.md` есть. В памяти `project:vaulter` находятся AD01, AD07, AD20, AD40."
     }
   ],
-  "applies_to": [],
+  "applies_to": [
+    "P0"
+  ],
   "provenance": {
     "path": "artifacts/P0-grok/grok-review.md",
     "sha256": "15703ef47932373eb3f74584b6664dd3afdde9c12d20599db40bd4b6fb336e0b"

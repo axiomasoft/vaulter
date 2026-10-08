@@ -29,7 +29,9 @@
       "text": "Green in the supplied log: V01 on SQLite, 9 passed; `BlobScopeTest` and `BlobScopeKeyMigrationTest` on PostgreSQL, 20 passed; media SQLite Pest, Pint, and PHPStan.\n\nNot green, and not a rerun of the supplied tree: `tests/Cas` on PostgreSQL exited 2 (6 failed, 134 passed). The frame is `2026_10_01_000003_host_key_columns.php:85` during `ALTER`. The note says those were V01 fixture casts fixed in `BlobScopeKeyTest`. That write happens after `migrate:fresh`, so this log does not show V13 or V14 passing. Core Pest, core PHPStan, drive Pest, and drive PHPStan also failed in that log. The supplied `UploadFileAction` now imports `Config` and narrows the storage id, and the migration rejects non-scalar ids, which matches the cited errors, but there is no new log. The numeric-coercion negative control is claimed, not included.\n\nV01’s reconciler check only asserts that `sweepOrphans` reports no orphans. A path the pattern does not recognize is skipped, not reported, so that assertion does not prove both new keys were recognized. The implementation’s round-trip does recognize `d-{ulid}` and `d-{uuid}` paths.\n\nVerdict: RED"
     }
   ],
-  "applies_to": [],
+  "applies_to": [
+    "P1.5"
+  ],
   "provenance": {
     "path": "artifacts/P1.5/grok-review-first.md",
     "sha256": "4838e9e167a9870a452a821e404cceb931dbb38e2cc4a7f92c418c20d9315f77"

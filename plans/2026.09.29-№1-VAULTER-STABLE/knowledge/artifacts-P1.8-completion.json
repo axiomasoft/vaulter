@@ -34,7 +34,9 @@
       "text": "P1.8 only; next recommendation is P1.4. Prior unrelated plan edits, :memory: artifact, and concurrent .gitignore/.swissknife.json edits are preserved. No push, tag, release, migration or external write was performed.\n\nwrite-site: pre_mutation: allow · pre_final: allow\n\nTask terminal journal and generated P1.8 state are GREEN. plan-lint: OK, 0 errors, 0 warnings. The first terminal append exceeded Task's 300-character note limit and was rejected before mutation; shortening the note allowed the same run to close. Shared journal/status and prior P1 design files already contained owner work and are left in the working tree; the scoped commit contains only P1.8 product files, its evidence/state and updated handoff.\n\nThe raw review prompt embeds git diff context lines and verbatim test output, so its trailing whitespace is intentional evidence. It is kept byte-identical to the submitted prompt. The product-only staged diff passes git diff --check; the raw review input is not a product whitespace violation."
     }
   ],
-  "applies_to": [],
+  "applies_to": [
+    "P1.8"
+  ],
   "provenance": {
     "path": "artifacts/P1.8/completion.md",
     "sha256": "4ddcd4975acf3316ff7b19aa43f10bb355b333982a6153699d3a61b25c3ecd37"

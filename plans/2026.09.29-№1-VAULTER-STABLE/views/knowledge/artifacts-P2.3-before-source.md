@@ -5,7 +5,7 @@ Source: [JSON](../../knowledge/artifacts-P2.3-before-source.json). This view is 
 
 ## Applies to
 
-
+- P2.3
 
 ## Provenance
 

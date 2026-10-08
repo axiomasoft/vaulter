@@ -5,7 +5,7 @@ Source: [JSON](../../knowledge/artifacts-P1.2-review-1-findings.json). This view
 
 ## Applies to
 
-
+- P1.2
 
 ## Provenance
 

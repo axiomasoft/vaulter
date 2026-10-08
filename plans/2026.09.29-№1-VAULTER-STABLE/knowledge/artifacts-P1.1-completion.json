@@ -29,7 +29,9 @@
       "text": "P1.1 is closed-green in the append-only journal and generated state. Plan format repair preserves the declared execution order, makes every future producer dependency parseable, and resolves one existing directory read selector to NodeResourceTest.php. Preimages and the bounded repair record are preserved in plan-format-preimages/ and plan-format-repair.json. Future states were regenerated through their owner. Final plan-lint: 0 errors, 0 warnings. P1.8 is recommended only; no successor was executed.\n\nThe scoped local commit contains the implementation, owned P1.1 evidence and handoff. Pre-existing dirty plan carriers remain in the working tree; no push or publication was performed."
     }
   ],
-  "applies_to": [],
+  "applies_to": [
+    "P1.1"
+  ],
   "provenance": {
     "path": "artifacts/P1.1/completion.md",
     "sha256": "087c14f3f9ca154322e1a0302798adcb6d6e3eaa3f265cb7ceb90a803d1eeb99"

@@ -1,1 +1,2 @@
 {"action": "digest", "id": "recurrence-of-run-pathology-no-verify-25-last-ru-d430f1a1", "detector": "no-verify", "session": "435e81cc-06a8-4332-a784-e141d5a46aac", "state": "ephemeral", "ts": "2026-10-04T12:54:11Z"}
+{"action": "digest", "id": "check-crashed-and-was-fixed-in-the-run-scriptsph-7d6d7f1b", "detector": "resolved-failure", "session": "80c760da-a176-4dbb-8695-e9e810ff34f7", "state": "ephemeral", "ts": "2026-10-07T17:54:13Z"}

@@ -5,7 +5,7 @@ Source: [JSON](../../knowledge/artifacts-P2.7-pg-p1-core-incomplete.json). This 
 
 ## Applies to
 
-
+- P2.7
 
 ## Provenance
 

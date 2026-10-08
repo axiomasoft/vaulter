@@ -1,0 +1,40 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D34",
+  "title": "P4: рабочее состояние документа и неизменяемые checkpoint-ревизии (поправка OPUS D16/05 §10/08 §2)",
+  "date": "2026-10-07",
+  "status": "accepted",
+  "question": "Как хранить содержимое документа: перезаписываемая autosave-голова в v_document_revisions (OPUS D16, 05 §10 update) или отдельное рабочее состояние агрегата плюс неизменяемые checkpoint-ревизии?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Working state + immutable checkpoints. v_documents хранит рабочее состояние (content, content_hash, yjs_state, state_size, state_version); v_document_revisions — неизменяемые checkpoint'ы (payload и provenance не меняются; меняется только keep_forever). Autosave-checkpoint создаётся по интервалу, named — snapshot(), restore — copy-forward с restored_from_revision_id. restored_from_revision_id добавляется и в v_file_revisions. Голова агрегата защищена составным FK (current_revision_id, id) → (id, document_id|file_id).",
+      "pros": "Совпадает с Box/Graph/Confluence (copy-forward restore, неизменяемая ревизия), Drive (живой документ отдельно от ревизий), Hocuspocus/Yjs (одно компактное состояние + отдельные снапшоты). Экспорт/ETag кэшируются по неизменяемой ревизии; живые сейвы не раздувают историю.",
+      "cons": "Отклонение от OPUS D16/08 §2/05 §10; переписываются все Document writers и миграция №5."
+    },
+    {
+      "id": "B",
+      "text": "Как в OPUS: autosave перезаписывает голову в окне debounce, каждая ревизия хранит полный Yjs-state.",
+      "pros": "Меньше изменений.",
+      "cons": "Ревизия мутабельна; кэш экспорта/ETag по ревизии некорректен; полный Yjs-state в каждой ревизии."
+    }
+  ],
+  "context": "Код: PersistCollaborationStateAction/UpdateDocumentContentAction обновляют head in place (shouldOverwrite) и пишут yjs_state в каждую строку. Исследование Perplexity 2026-10-07 (@plan/knowledge/P4-industry-research-2026-10-07.json §Aggregates/§Persistence): «immutable content revisions, copy-forward restore, distinct mutable collaboration state»; «immutable revision = immutable payload and provenance, retention flags may change»; «cache exports by immutable source checkpoint». Владелец 2026-10-07 выбрал вариант «Working state + checkpoints (Recommended)».",
+  "decision": "A — Working state + immutable checkpoints. v_documents хранит рабочее состояние (content, content_hash, yjs_state, state_size, state_version); v_document_revisions — неизменяемые checkpoint'ы (payload и provenance не меняются; меняется только keep_forever). Autosave-checkpoint создаётся по интервалу, named — snapshot(), restore — copy-forward с restored_from_revision_id. restored_from_revision_id добавляется и в v_file_revisions. Голова агрегата защищена составным FK (current_revision_id, id) → (id, document_id|file_id).",
+  "rationale": "Владелец 2026-10-07 в ответе на вопрос выбрал «Working state + checkpoints (Recommended)». Основание — @plan/knowledge/P4-industry-research-2026-10-07.json (R1 §1, §Persistence).",
+  "applies_to": [
+    "P4",
+    "P4.1",
+    "P4.2",
+    "P4.4",
+    "P4.5",
+    "P4.7",
+    "P4.8"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "answered_by": "owner"
+}

@@ -5,7 +5,7 @@ Source: [JSON](../../knowledge/artifacts-P1.7-mysql-known-deviation.json). This 
 
 ## Applies to
 
-
+- P1.7
 
 ## Provenance
 

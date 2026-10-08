@@ -1,0 +1,33 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "artifacts-P4-design-P4.9-opus",
+  "title": "OPUS — дословные требования для P4.9 (18 единиц)",
+  "sections": [
+    {
+      "id": "S1",
+      "title": "OPUS — дословные требования для P4.9 (18 единиц)",
+      "text": "> Сгенерировано `opus-coverage.py render`; не править руками. Каждая строка обязательна к исполнению\n> или к явному отказу через D# плана (D06)."
+    },
+    {
+      "id": "S2",
+      "title": "03-glossary-and-renames.md — 3. Классы: core (`Vaulter\\`)",
+      "text": "- `03:2a43297d` — _Справочно: канон доступа закрыт P2.1/P2.4/P3.5; P4.9 меняет семантику (роли, без deny) без переименования этих классов._\n\n| `Contracts\\Access\\HostRoleDriver` | `Contracts\\Access\\PermissionDriver` | сигнатуры — 06 §5 |\n\n- `03:266b3b43` — _Справочно: канон доступа закрыт P2.1/P2.4/P3.5; P4.9 меняет семантику (роли, без deny) без переименования этих классов._\n\n| `Access\\HostRoleDriverManager` | `Access\\PermissionDriverManager` | |\n\n- `03:27bfd895` — _Справочно: канон доступа закрыт P2.1/P2.4/P3.5; P4.9 меняет семантику (роли, без deny) без переименования этих классов._\n\n| `Drivers\\Permission\\DatabasePermissionResolver` | `Access\\Drivers\\DatabasePermissionDriver` | |\n\n- `03:d9feb74b` — _Справочно: канон доступа закрыт P2.1/P2.4/P3.5; P4.9 меняет семантику (роли, без deny) без переименования этих классов._\n\n| `Drivers\\Permission\\GatePermissionResolver` | `Access\\Drivers\\GatePermissionDriver` | |\n\n- `03:d1f9352b` — _Справочно: канон доступа закрыт P2.1/P2.4/P3.5; P4.9 меняет семантику (роли, без deny) без переименования этих классов._\n\n| `Drivers\\Permission\\SpatiePermissionResolver` | `Access\\Drivers\\SpatiePermissionDriver` | |\n\n- `03:0065c62f` — _Справочно: канон доступа закрыт P2.1/P2.4/P3.5; P4.9 меняет семантику (роли, без deny) без переименования этих классов._\n\n| `Drivers\\Permission\\AzgardPermissionResolver` | → `Vaulter\\Azgard\\AzgardPermissionDriver` | в пакет azgard |\n\n- `03:15134404` — _Справочно: канон доступа закрыт P2.1/P2.4/P3.5; P4.9 меняет семантику (роли, без deny) без переименования этих классов._\n\n| `Contracts\\Access\\AzgardGuard` | → `Vaulter\\Azgard\\Contracts\\AzgardGuard` | в пакет azgard |\n\n- `03:5c0723c5` — _Справочно: канон доступа закрыт P2.1/P2.4/P3.5; P4.9 меняет семантику (роли, без deny) без переименования этих классов._\n\n| `Support\\AzgardConfig` | → `Vaulter\\Azgard\\AzgardPermissionMap` | в пакет azgard |\n\n- `03:8378be94` — _Справочно: канон доступа закрыт P2.1/P2.4/P3.5; P4.9 меняет семантику (роли, без deny) без переименования этих классов._\n\n| `Testing\\FakeAzgardGuard` | → `Vaulter\\Azgard\\Testing\\FakeAzgardGuard` | в пакет azgard |\n\n- `03:5c8d45d6` — _Справочно: канон доступа закрыт P2.1/P2.4/P3.5; P4.9 меняет семантику (роли, без deny) без переименования этих классов._\n\n| `Support\\GateConfig`, `Support\\SpatieConfig` | `Configuration\\AccessConfig` | |\n\n- `03:b3a1507c` — _Справочно: канон доступа закрыт P2.1/P2.4/P3.5; P4.9 меняет семантику (роли, без deny) без переименования этих классов._\n\n| `Testing\\NullRoleDriver` | `Testing\\NullPermissionDriver` | |\n\n- `03:a98ead1f` — _Справочно: канон доступа закрыт P2.1/P2.4/P3.5; P4.9 меняет семантику (роли, без deny) без переименования этих классов._\n\n| `Exceptions\\Access\\MissingHostRoleDriverException` | `Exceptions\\Access\\MissingPermissionDriverException` | |\n\n- `03:85837af0` — _Справочно: канон доступа закрыт P2.1/P2.4/P3.5; P4.9 меняет семантику (роли, без deny) без переименования этих классов._\n\n| `Access\\ValueObjects\\AclScope` | `Access\\ValueObjects\\AccessScope` | поля см. 06 §5 |\n\n- `03:a5ace0af` — _Справочно: канон доступа закрыт P2.1/P2.4/P3.5; P4.9 меняет семантику (роли, без deny) без переименования этих классов._\n\n| `Access\\Abilities\\NodeAbilities` | `Access\\ValueObjects\\NodeAbilities` | |\n\n- `03:c50234dd` — _Справочно: канон доступа закрыт P2.1/P2.4/P3.5; P4.9 меняет семантику (роли, без deny) без переименования этих классов._\n\n| `Enums\\Access\\PermissionLevel` | — удалить | мёртвый |"
+    },
+    {
+      "id": "S3",
+      "title": "03-glossary-and-renames.md — 7. Таблицы и колонки",
+      "text": "- `03:4a72151e` — _P4.9 (D46): owner_id НЕ переименовывается в owned_by — конвертируется в явные owner-гранты и удаляется (неявный владелец узла убран)._\n\n| `v_nodes.owner_id` (пользователь-владелец узла) | `v_nodes.owned_by` |\n\n- `03:2f6c6152` — _Справочно: строка канона закрыта P2.7; P4.9 перестраивает схему грантов (role_key/role_version, без effect/permissions/level, D45)._\n\n| `v_node_grants.inherited`, `inherited_from_node_id` | — удалить (не используются) |"
+    },
+    {
+      "id": "S4",
+      "title": "08-data-model-and-migration.md — 2. Целевая схема (изменённые таблицы) / `v_nodes`",
+      "text": "- `08:24547dbd` — _P4.1: удаление current_version_id/file_id/deleted_at и sibling-unique; P4.7: sequence уже создан P3.3 (D28/D35); P4.9: owner_id → owner-гранты и удаление (D46, вместо owned_by); P4.11: extra — заменено namespaced properties, extra_data удалён везде (D41)._\n\nДобавить: `sequence` unsigned int default 0. Переименовать: `storage_id` → `drive_id`, `owner_id` → `owned_by`\n(HK; пользователь-владелец узла, не путать с владельцем drive). Изменить тип на HK: `owned_by`, `created_by`,\n`updated_by`, `trashed_by`, `tenant_id`. `extra` — jsonb null всегда (флаг `extra_data` удалён).\nУдалить: `current_version_id`, `file_id`, `deleted_at`.\nИндексы: как сейчас + `UNIQUE (drive_id) WHERE parent_id IS NULL`; sibling-unique без `deleted_at`."
+    }
+  ],
+  "applies_to": [
+    "P4.9"
+  ],
+  "provenance": {
+    "note": "Rendered 2026-10-07 from artifacts/coverage/ledger-P4.tsv by opus-coverage.py render during task:plan-design P4; OPUS bytes unchanged."
+  }
+}

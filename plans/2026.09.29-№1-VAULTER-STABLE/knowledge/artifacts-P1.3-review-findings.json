@@ -29,7 +29,9 @@
       "text": "These parts match the item and the reported runs: `AclFolder` folding (nearer allow pierces a farther deny, same-node deny does not), `evaluateMany` grouping by storage and owner, one subject load, subtree-only inheritance, `ExactListing` keyset order including descending `trashed_at` ties, HMAC cursor rejection, empty unauthenticated pages, no `meta.total` on REST listings, and Filament’s simple paginator plus an exact filter of the already fetched page. V09, V22, and the ≤5 query count are consistent with that code on the paths those tests hit. The signed cursor payload includes the last inspected sort key, including `name` for children; that matches the specified cursor format.\n\nResidual limits, not separate defects: `show` still loads every child before `evaluateMany`, and the batch grants query is one `whereIn`. The cursor is signed, not encrypted."
     }
   ],
-  "applies_to": [],
+  "applies_to": [
+    "P1.3"
+  ],
   "provenance": {
     "path": "artifacts/P1.3/review-findings.md",
     "sha256": "feced010c18bbd446a1ba3f0a3840c89e32e689e65b9f9a3425ce2af762110d8"

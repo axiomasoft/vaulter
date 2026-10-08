@@ -44,7 +44,9 @@
       "text": "Final-review findings that concern quota/size accounting, not tree invariants or lock cycles:\n\n- New-version quota check runs before the transaction on the caller's `used_bytes`; two concurrent\n  versions can each pass the eager check (the delta itself is now taken from the locked row).\n- Copy reads the source subtree without locking it; a version committed between loading the source\n  and copying it is copied with the old `size_bytes` (quota of copy is explicitly P1.6 — item Scope\n  Excluded «квота копии одним условным UPDATE»)."
     }
   ],
-  "applies_to": [],
+  "applies_to": [
+    "P1.2"
+  ],
   "provenance": {
     "path": "artifacts/P1.2/lock-matrix.md",
     "sha256": "7bad2da9deaee36e171cb786423d94e435197942d722e2ccc82d46bd1f933fd5"

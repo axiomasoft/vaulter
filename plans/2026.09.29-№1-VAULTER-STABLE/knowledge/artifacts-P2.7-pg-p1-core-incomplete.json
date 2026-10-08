@@ -9,7 +9,9 @@
       "text": "Initial broad P1 lane stopped without a verdict after detecting redundant Testbench per-test migration/rollback processors. No successful result is claimed for that incomplete run. Core and Spatie RefreshDatabase harnesses now register migration paths only; repeated final grid is authoritative."
     }
   ],
-  "applies_to": [],
+  "applies_to": [
+    "P2.7"
+  ],
   "provenance": {
     "path": "artifacts/P2.7/pg-p1-core-incomplete.md",
     "sha256": "e6fe41a9ff0563882999196a31ac9782eb537d08fb5a20b8fd3aea4f1cd9ca96"

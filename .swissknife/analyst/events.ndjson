@@ -1,1 +1,2 @@
 {"id": "recurrence-of-run-pathology-no-verify-25-last-ru-d430f1a1", "source": "digest", "session": "435e81cc-06a8-4332-a784-e141d5a46aac", "sessions_total": 1, "sessions_success": 1, "tests_total": 0, "tests_passed": 0, "ts": "2026-10-04T12:54:11Z"}
+{"id": "check-crashed-and-was-fixed-in-the-run-scriptsph-7d6d7f1b", "source": "digest", "session": "80c760da-a176-4dbb-8695-e9e810ff34f7", "sessions_total": 1, "sessions_success": 1, "tests_total": 2, "tests_passed": 1, "ts": "2026-10-07T17:54:13Z"}

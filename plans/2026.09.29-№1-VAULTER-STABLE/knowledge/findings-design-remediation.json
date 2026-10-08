@@ -24,7 +24,9 @@
       "text": "P0 и finish повторно финализированы штатным Task tooling с actor gpt-6-sol/high,\nexit 0, без warnings. Итоговый fingerprint: `39bc301bd08c5cf62f4133d3ccf1a8132eb41e91f0e6922abe62576523bb5299`.\nGate: `PLAN_DESIGN_AUDIT_MISSING`, allowed=false; GREEN не записывался.\nReceipt: `findings/design-remediation-handoff-receipt.json`; финализация — journal.jsonl.\nПредыдущий audit-red сохранён. Все P0 items остаются Not started. Независимый reviewer должен\nпроверить новую ревизию и записать audit verdict её fingerprint; автор этих правок\nне выдаёт собственному исправлению независимый GREEN.\n\nПоследующее решение владельца D08 разрешило завершить bounded same-author recheck\nдо GREEN в этой сессии. Актуальный результат — @plan/knowledge/findings-design-recheck.json и новый\nverdict в @plan/log.jsonl; требование ещё одного независимого прохода для этой ревизии снято."
     }
   ],
-  "applies_to": [],
+  "applies_to": [
+    "P0"
+  ],
   "provenance": {
     "path": "findings/design-remediation.md",
     "sha256": "80a1390d1133643923cc4e783fc0c8cabba2a3d8e19f0d28c36156753c845a68"

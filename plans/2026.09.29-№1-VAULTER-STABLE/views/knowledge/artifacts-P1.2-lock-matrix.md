@@ -5,7 +5,7 @@ Source: [JSON](../../knowledge/artifacts-P1.2-lock-matrix.json). This view is fo
 
 ## Applies to
 
-
+- P1.2
 
 ## Provenance
 

@@ -1,0 +1,58 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "artifacts-P4-design-P4.2-opus",
+  "title": "OPUS — дословные требования для P4.2 (14 единиц)",
+  "sections": [
+    {
+      "id": "S1",
+      "title": "OPUS — дословные требования для P4.2 (14 единиц)",
+      "text": "> Сгенерировано `opus-coverage.py render`; не править руками. Каждая строка обязательна к исполнению\n> или к явному отказу через D# плана (D06)."
+    },
+    {
+      "id": "S2",
+      "title": "01-review.md — 4. Новые находки (не было ни в аудите, ни у Codex) / N06 (S2). Копия документа — пустой документ",
+      "text": "- `01:f8a4ee1a` — _P4.2 (P4-design#Lifecycle)._\n\n`CopyNodeAction::copyNode` копирует полезную нагрузку только для `File`, рекурсию — для `Folder` (строки 101–106).\nДля `Document` создаётся узел `kind=document` без ревизий и без указателя головы. Нет механизма «содержимое узла\nпо его kind» для copy/purge/size."
+    },
+    {
+      "id": "S3",
+      "title": "02-decisions.md — D17 — Содержимое узла по kind: `NodeContentLifecycle` · T1",
+      "text": "- `02:fae474bb` — _P4.2 (P4-design#Lifecycle)._\n\n**Решение.** Контракт в core:\n\n- `02:92dcdf98` — _P4.2 (P4-design#Lifecycle)._\n\n```php\ninterface NodeContentLifecycle\n{\n    public function kind(): NodeKind;\n    public function copy(OperationContext $context, Node $source, Node $copy): CopyResult; // bytes added\n    public function purge(OperationContext $context, Node $node): void;                   // до удаления узла\n}\n```\n\n- `02:5f611dd5` — _P4.2 (P4-design#Lifecycle)._\n\nDrive регистрирует `FileContentLifecycle`, documents — `DocumentContentLifecycle`, папки —\nрекурсия в `CopyNodeAction`. `CopyNodeAction`/`PurgeNodeAction` диспетчеризуют по kind; kind\nбез зарегистрированного lifecycle → `UnsupportedNodeKindException` (N06)."
+    },
+    {
+      "id": "S4",
+      "title": "06-extension-points.md — 8. Содержимое узла по kind (core)",
+      "text": "- `06:5b78072a` — _P4.2 (P4-design#Lifecycle)._\n\n`NodeContentLifecycle` — [D17](02-decisions.md#d17). Регистрация тегом `vaulter.content_lifecycles`;\nодна реализация на kind (дубликат → исключение при boot). `CopyResult { int $addedBytes }`."
+    },
+    {
+      "id": "S5",
+      "title": "13-workstreams.md — F4 — Модель данных и документы (T1) / P4.2 — Содержимое по kind",
+      "text": "- `13:a73d0509` — _P4.2 (P4-design#Lifecycle)._\n\n- Решения: D17 · Находки: N06 · Сценарии: V33.\n\n- `13:ca5a85bf` — _P4.2 (P4-design#Lifecycle)._\n\n- Сделать: `NodeContentLifecycle`, `FileContentLifecycle`, `DocumentContentLifecycle`, диспетчеризация в Copy/Purge.\n\n- `13:85821922` — _P4.2 (P4-design#Lifecycle)._\n\n- Готово: V33 (копия документа с контентом; purge документа удаляет ревизии).\n\n- `13:f88c27d0` — _P4.2 (P4-design#Lifecycle)._\n\n- Исполнитель: sonnet/medium."
+    },
+    {
+      "id": "S6",
+      "title": "14-verification.md — Новые",
+      "text": "- `14:aaadf1f1` — _V33: acceptance-сценарий владельца P4.2 (точный тест — Validation item)._\n\n| V33 | Копия документа с 3 ревизиями и копия папки с документом внутри | Копия имеет контент головы (1 ревизия), свой `v_documents`; purge копии удаляет её ревизии, оригинал цел | любая | P4.2 |"
+    },
+    {
+      "id": "S7",
+      "title": "05-php-api.md — 11. Исключения публичного API",
+      "text": "- `05:f8d28c3c` — _Передано из ledger-P1 (handoff): обязательство закрытой фазы, владелец — P4.2; реализуется в scope этого item по P4-design._\n\n| `UnsupportedNodeKindException` | core | `unsupported_node_kind` | kind без lifecycle / shortcut |"
+    },
+    {
+      "id": "S8",
+      "title": "09-integrity-and-security.md — 4. Инварианты дерева в Actions (D13)",
+      "text": "- `09:7d6ee90e` — _Передано из ledger-P1 (handoff): обязательство закрытой фазы, владелец — P4.2; реализуется в scope этого item по P4-design._\n\n| `CopyNodeAction` | назначение — активная папка того же drive; копия поддерева без узлов в корзине; байты через lifecycle; квота одним условным UPDATE на сумму |\n\n- `09:3e595b1b` — _Передано из ledger-P1 (handoff): обязательство закрытой фазы, владелец — P4.2; реализуется в scope этого item по P4-design._\n\n| `PurgeNodeAction` | `lockTree`; узел в корзине; для каждого узла поддерева — `NodeContentLifecycle::purge()`; освобождение квоты одним UPDATE |"
+    },
+    {
+      "id": "S9",
+      "title": "04-packages-and-layout.md — 7. Service providers",
+      "text": "- `04:46a3f968` — _Передано из ledger-P2 (handoff): обязательство закрытой фазы, владелец — P4.2; реализуется в scope этого item по P4-design._\n\n| `vaulter.content_lifecycles` | `NodeContentLifecycle` | drive, documents |"
+    }
+  ],
+  "applies_to": [
+    "P4.2"
+  ],
+  "provenance": {
+    "note": "Rendered 2026-10-07 from artifacts/coverage/ledger-P4.tsv by opus-coverage.py render during task:plan-design P4; OPUS bytes unchanged."
+  }
+}

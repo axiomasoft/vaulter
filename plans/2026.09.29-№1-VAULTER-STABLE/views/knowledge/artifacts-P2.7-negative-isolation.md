@@ -5,7 +5,7 @@ Source: [JSON](../../knowledge/artifacts-P2.7-negative-isolation.json). This vie
 
 ## Applies to
 
-
+- P2.7
 
 ## Provenance
 

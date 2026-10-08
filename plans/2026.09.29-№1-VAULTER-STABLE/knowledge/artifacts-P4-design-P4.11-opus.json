@@ -1,0 +1,23 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "artifacts-P4-design-P4.11-opus",
+  "title": "OPUS — дословные требования для P4.11 (1 единиц)",
+  "sections": [
+    {
+      "id": "S1",
+      "title": "OPUS — дословные требования для P4.11 (1 единиц)",
+      "text": "> Сгенерировано `opus-coverage.py render`; не править руками. Каждая строка обязательна к исполнению\n> или к явному отказу через D# плана (D06)."
+    },
+    {
+      "id": "S2",
+      "title": "08-data-model-and-migration.md — 2. Целевая схема (изменённые таблицы) / `v_nodes`",
+      "text": "- `08:24547dbd` — _P4.1: удаление current_version_id/file_id/deleted_at и sibling-unique; P4.7: sequence уже создан P3.3 (D28/D35); P4.9: owner_id → owner-гранты и удаление (D46, вместо owned_by); P4.11: extra — заменено namespaced properties, extra_data удалён везде (D41)._\n\nДобавить: `sequence` unsigned int default 0. Переименовать: `storage_id` → `drive_id`, `owner_id` → `owned_by`\n(HK; пользователь-владелец узла, не путать с владельцем drive). Изменить тип на HK: `owned_by`, `created_by`,\n`updated_by`, `trashed_by`, `tenant_id`. `extra` — jsonb null всегда (флаг `extra_data` удалён).\nУдалить: `current_version_id`, `file_id`, `deleted_at`.\nИндексы: как сейчас + `UNIQUE (drive_id) WHERE parent_id IS NULL`; sibling-unique без `deleted_at`."
+    }
+  ],
+  "applies_to": [
+    "P4.11"
+  ],
+  "provenance": {
+    "note": "Rendered 2026-10-07 from artifacts/coverage/ledger-P4.tsv by opus-coverage.py render during task:plan-design P4; OPUS bytes unchanged."
+  }
+}

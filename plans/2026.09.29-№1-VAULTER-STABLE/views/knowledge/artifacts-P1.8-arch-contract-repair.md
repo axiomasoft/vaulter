@@ -5,7 +5,7 @@ Source: [JSON](../../knowledge/artifacts-P1.8-arch-contract-repair.json). This v
 
 ## Applies to
 
-
+- P1.8
 
 ## Provenance
 

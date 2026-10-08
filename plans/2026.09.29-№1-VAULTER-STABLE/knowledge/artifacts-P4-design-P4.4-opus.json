@@ -1,0 +1,63 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "artifacts-P4-design-P4.4-opus",
+  "title": "OPUS — дословные требования для P4.4 (12 единиц)",
+  "sections": [
+    {
+      "id": "S1",
+      "title": "OPUS — дословные требования для P4.4 (12 единиц)",
+      "text": "> Сгенерировано `opus-coverage.py render`; не править руками. Каждая строка обязательна к исполнению\n> или к явному отказу через D# плана (D06)."
+    },
+    {
+      "id": "S2",
+      "title": "02-decisions.md — D28 — Экспорт принадлежит documents · T1",
+      "text": "- `02:451489b7` — _P4.4 (P4-design#Export)._\n\nКонтракт `DocumentExporter` и реестр переносятся в `vaulter-documents`; экспортёр объявляет\n`documentTypes()` и `format()`; реестр резолвит по паре (тип, формат). HTTP-экспорт отдаёт\nфайл (`Content-Disposition`), а не JSON. `VaulterManager::registerExporter/exporter/exporterFormats`\nудаляются."
+    },
+    {
+      "id": "S3",
+      "title": "03-glossary-and-renames.md — 3. Классы: core (`Vaulter\\`)",
+      "text": "- `03:42c3a3e4` — _P4.4: контракт экспортёра переезжает в documents (P4-design#Export)._\n\n| `Contracts\\Handlers\\DocumentExporter` | → `Vaulter\\Documents\\Contracts\\DocumentExporter` | в documents |"
+    },
+    {
+      "id": "S4",
+      "title": "03-glossary-and-renames.md — 5. Классы: documents (`Vaulter\\Documents\\`)",
+      "text": "- `03:0eefbcc4` — _P4.4: экспорт через DocumentExporterRegistry + ExportDocumentAction (P4-design#Export)._\n\n| `Enums\\Export\\ExportFormat` | — удалить (формат объявляет экспортёр) |\n\n- `03:fd63f791` — _P4.4: экспорт через DocumentExporterRegistry + ExportDocumentAction (P4-design#Export)._\n\n| `Export\\NodeExportService` | `Export\\DocumentExporterRegistry` + `Actions\\Export\\ExportDocumentAction` |"
+    },
+    {
+      "id": "S5",
+      "title": "05-php-api.md — 10. Documents API (пакет documents)",
+      "text": "- `05:bbd92453` — _P4.8 владеет DocumentOperations/CommentOperations/DocumentSnapshot (с поправками D34/D35: update/restore → DocumentSnapshot, expectedStateVersion; export требует Download); P4.3 тип/typeAvailable, P4.4 export, P4.5 collaborationSession._\n\n```php\nnamespace Vaulter\\Documents\\Operations;\n\nfinal readonly class DocumentOperations\n{\n    public function __construct(DriveHandle $handle, /* зависимости из контейнера */);\n\n    /** @throws UnknownDocumentTypeException, ProfileRestrictionException, InvalidDocumentContentException, … */\n    public function create(string $name, string $type = 'vaulter/rich-text', ?array $content = null, NodeKey|null $parent = null, ?CreateFolderOptions $options = null): Node;\n\n    /** Голова или указанная ревизия. Требует View. */\n    public function content(NodeKey $document, DocumentRevision|int|string|null $revision = null): DocumentSnapshot;\n\n    /** Автосохранение: обновляет автосейв-голову в окне debounce или создаёт ревизию. Требует Edit. */\n    public function update(NodeKey $document, array $content, ?int $expectedSequence = null): DocumentRevision;\n\n    /** Именованная ревизия. Требует Edit. */\n    public function snapshot(NodeKey $document, ?string $label = null, bool $keepForever = false): DocumentRevision;\n\n    /** @return CursorPaginator<int, DocumentRevision> */\n    public function revisions(NodeKey $document, ?ListOptions $options = null): CursorPaginator;\n\n    /** Новая голова = копия ревизии; увеличивает collab_epoch. Требует Edit. */\n    public function restore(NodeKey $document, DocumentRevision|int|string $revision): DocumentRevision;\n\n    public function setRetention(NodeKey $document, DocumentRevision|int|string $revision, bool $keepForever): DocumentRevision;\n\n    /** @throws UnknownExportFormatException, DocumentTypeUnavailableException. Требует Download. */\n    public function export(NodeKey $document, string $format): DocumentExport;\n\n    /** Токен для хаба (Edit → read-write, View → read-only). */\n    public function collaborationSession(NodeKey $document): CollaborationSession;\n}\n\nfinal readonly class CommentOperations\n{\n    public function list(NodeKey $node, ?ListOptions $options = null): CursorPaginator;          // View\n    public function add(NodeKey $node, AddCommentInput $input): NodeComment;                      // Comment\n    public function resolve(NodeKey $node, NodeComment|int|string $comment): NodeComment;         // Comment (автор) или Edit\n    public function delete(NodeKey $node, NodeComment|int|string $comment): void;                 // автор или Manage\n}\n\nfinal readonly class DocumentSnapshot\n{\n    public function __construct(\n        public Document $document,\n        public DocumentRevision $revision,\n        public string $type,\n        public int $schemaVersion,\n        public DocumentContent $content,\n        public bool $typeAvailable,     // false → тип не зарегистрирован, контент непрозрачный\n    ) {}\n}\n```"
+    },
+    {
+      "id": "S6",
+      "title": "06-extension-points.md — 4. Exporter (documents)",
+      "text": "- `06:5ea8b465` — _P4.4 (P4-design#Export)._\n\n```php\ninterface DocumentExporter\n{\n    public function key(): string;                 // 'vaulter/html'\n    public function format(): string;              // 'html' — сегмент URL /export/{format}\n    public function mimeType(): string;\n    public function extension(): string;\n    /** @return list<string> ключи типов документов */\n    public function documentTypes(): array;\n    public function export(DocumentContent $content, DocumentType $type): string;\n}\n```\n\n- `06:edb319ad` — _P4.4 (P4-design#Export)._\n\n`DocumentExporterRegistry::for(string $typeKey, string $format): DocumentExporter`, `formatsFor(string $typeKey): list<string>`.\nКоллизия — два экспортёра на одну пару (тип, формат) без `replace()` → исключение при boot."
+    },
+    {
+      "id": "S7",
+      "title": "12-operations-and-release.md — 1. Команды artisan (канон `vaulter:<area>:<verb>`)",
+      "text": "- `12:18fcb6a2` — _P4.3: vaulter:make:document-type; P4.4: vaulter:make:exporter (stub документ-экспортёра)._\n\n| `vaulter:make:document-type` / `vaulter:make:exporter` | documents | — | Генераторы |"
+    },
+    {
+      "id": "S8",
+      "title": "13-workstreams.md — F4 — Модель данных и документы (T1) / P4.4 — Экспорт в documents",
+      "text": "- `13:d17cceed` — _P4.4 (P4-design#Export)._\n\n- Решения: D28. Сделать: контракт/реестр по (тип, формат), экспорт отдаёт файл.\n\n- `13:4bc0209f` — _P4.4 (P4-design#Export)._\n\n- Исполнитель: sonnet/low."
+    },
+    {
+      "id": "S9",
+      "title": "04-packages-and-layout.md — 2. Владение (ADR-0019 «Kernel ownership», создать)",
+      "text": "- `04:5bee56b4` — _Передано из ledger-P2 (handoff): обязательство закрытой фазы, владелец — P4.3, P4.4; реализуется в scope этого item по P4-design._\n\n| Контракты, которые вызывает только модуль | модуль | `DocumentType`, `DocumentExporter`, `CollaborationDriver`, `UploadProtocolHandler` |"
+    },
+    {
+      "id": "S10",
+      "title": "04-packages-and-layout.md — 7. Service providers",
+      "text": "- `04:98579722` — _Передано из ledger-P2 (handoff): обязательство закрытой фазы, владелец — P4.4; реализуется в scope этого item по P4-design._\n\n| `vaulter.exporters` | `DocumentExporter` | documents, расширения |"
+    }
+  ],
+  "applies_to": [
+    "P4.4"
+  ],
+  "provenance": {
+    "note": "Rendered 2026-10-07 from artifacts/coverage/ledger-P4.tsv by opus-coverage.py render during task:plan-design P4; OPUS bytes unchanged."
+  }
+}

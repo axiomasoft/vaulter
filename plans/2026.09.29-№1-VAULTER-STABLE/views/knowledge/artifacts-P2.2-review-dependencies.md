@@ -5,7 +5,7 @@ Source: [JSON](../../knowledge/artifacts-P2.2-review-dependencies.json). This vi
 
 ## Applies to
 
-
+- P2.2
 
 ## Provenance
 

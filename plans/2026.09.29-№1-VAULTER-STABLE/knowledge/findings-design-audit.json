@@ -59,7 +59,9 @@
       "text": "Автору дизайна исправить DA01–DA05 в P0, учесть DA06; затем повторить phase finalization\nP0 и finish, проверить coverage/lint и провести design audit нового fingerprint.\nИсполнение P0 сейчас не допущено. Аудит не запускает исправления или исполнение."
     }
   ],
-  "applies_to": [],
+  "applies_to": [
+    "P0"
+  ],
   "provenance": {
     "path": "findings/design-audit.md",
     "sha256": "f7c22ca823dcbe36951df3b36c5e26e1f6a27a7153a8d421f18be7b25ca3c795"

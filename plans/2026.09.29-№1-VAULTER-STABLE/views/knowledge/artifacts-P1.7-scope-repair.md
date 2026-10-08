@@ -5,7 +5,7 @@ Source: [JSON](../../knowledge/artifacts-P1.7-scope-repair.json). This view is f
 
 ## Applies to
 
-
+- P1.7
 
 ## Provenance
 

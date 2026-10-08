@@ -29,7 +29,9 @@
       "text": "Любой агент завершает команду переписанным `@plan/plan.json` с одним semantic Next и launch-block из строки execution-sheet.\nСледующий агент стартует только по этому Next."
     }
   ],
-  "applies_to": [],
+  "applies_to": [
+    "P0"
+  ],
   "provenance": {
     "path": "session-routing.md",
     "sha256": "8a92fa65b4a02f5f11af9a93e8d9d0df4398f8c4a4bc5dc1381978de7096efdb"

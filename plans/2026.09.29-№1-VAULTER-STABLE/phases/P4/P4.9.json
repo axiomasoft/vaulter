@@ -1,0 +1,364 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P4.9",
+  "title": "Модель доступа 1.0: роли с версиями, отдельный Download, без пользовательского DENY, границы наследования",
+  "status": "in_progress",
+  "summary": "Гранты хранят роль и её версию; эффективные способности — объединение ролей до границы наследования минус административный override; View и Download разделены; deny-гранты и неявный владелец узла удалены с точной конверсией; добавлены restrictInheritance/restoreInheritance и мульти-ресурсные правила copy/move/restore.",
+  "why": "R8: DENY делает доступ немонотонным и необъяснимым; Drive/Box используют позитивные роли и границы наследования; Download сейчас неотделим от View (невозможен previewer); неявный owner_id даёт создателю права навсегда (D46). Риски: молчаливое расширение доступа при апгрейде, регрессии листинга (P1.3) и драйверов.",
+  "scope": {
+    "include": [
+      "RoleRegistry/Role v1 и Ability-биты по P4-design#Access; GrantLevel заменяется ролями (enum удаляется или остаётся @internal алиасом ключей — удалить, golden), Decision {Role}, драйверы database/gate/spatie/azgard + NullPermissionDriver на роли; конфиг-карты получают previewer.",
+      "Миграция 2026_10_07_000005_access_model_v1.php: role_key/role_version, удаление level/permissions/effect, конверсия level, preflight-отказ на deny и нестандартных масках, конверсия owner_id → owner-гранты и удаление колонки; AccessScope.nodeOwner удалён.",
+      "AccessResolver/evaluateMany/листинг (P1.3) на объединении ролей и границах; OperationGuard мульти-ресурсные правила copy/move/restore; access()->restrictInheritance/restoreInheritance; explain с источниками; GrantInput{subject, role, scope, expiresAt} без битов и effect.",
+      "Регрессии P1.3/P3.4/P3.5 и drive/documents тесты переводятся на роли; AccessUpgradeEquivalenceTest на PG-фикстуре: матрица (актор × узел × способность) до/после совпадает для всех конвертируемых данных, кроме явно задокументированного разделения View/Download (reader получает download как раньше Read)."
+    ],
+    "exclude": [
+      "share links (P4.10)",
+      "snapshot-DTO (P4.13)",
+      "передача владения, admin policy objects (T2)",
+      "closure/материализованный ACL (T2)"
+    ]
+  },
+  "depends_on": [
+    "P4.11"
+  ],
+  "decisions": [
+    "D01",
+    "D03",
+    "D06",
+    "D25",
+    "D28",
+    "D29",
+    "D30",
+    "D31",
+    "D34",
+    "D35",
+    "D36",
+    "D37",
+    "D38",
+    "D39",
+    "D40",
+    "D41",
+    "D42",
+    "D43",
+    "D44",
+    "D45",
+    "D46",
+    "D47",
+    "D48",
+    "D49"
+  ],
+  "skills": [],
+  "reads": [
+    {
+      "ref": "knowledge/artifacts-P4-design-P4.9-opus",
+      "why": "Первый read: дословные OPUS-единицы item (D06); строки «Справочно» не реализуются заново",
+      "required": true
+    },
+    {
+      "ref": "knowledge/validation-and-execution-policy",
+      "why": "D25: check-profile до product edit, affected checks, broad barrier только в P4.6, без mutation tools",
+      "required": true
+    },
+    {
+      "ref": "knowledge/P4-design#Access",
+      "why": "Нормативный контракт раздела Access",
+      "required": true
+    },
+    {
+      "ref": "knowledge/P4-design#Migrations",
+      "why": "Нормативный контракт раздела Migrations",
+      "required": true
+    },
+    {
+      "ref": "knowledge/P4-design#Errors",
+      "why": "Нормативный контракт раздела Errors",
+      "required": true
+    },
+    {
+      "ref": "knowledge/P4-design#Stability",
+      "why": "Нормативный контракт раздела Stability",
+      "required": true
+    },
+    {
+      "ref": "knowledge/P4-invariants",
+      "why": "Порядок блокировок, P4-I*, интерферирующие пары",
+      "required": true
+    },
+    {
+      "ref": "knowledge/security-correction-contract",
+      "why": "D29: применимые C-строки",
+      "required": true
+    },
+    {
+      "ref": "knowledge/implementation-security-assessment-2026-10-06",
+      "why": "D29: оценка C01–C10 до разработки",
+      "required": true
+    },
+    {
+      "ref": "knowledge/P4-architecture-review-2026-10-07#Q8",
+      "why": "Отраслевое обоснование решения (Perplexity, раунд 2) — не расширять scope за пределы P4-design",
+      "required": false
+    },
+    {
+      "path": "packages/core/src/Access/AccessResolver.php",
+      "why": "Текущий алгоритм allow/deny/level",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Enums/Access/Permission.php",
+      "why": "Биты и уровни",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Enums/Access/GrantLevel.php",
+      "why": "Биты и уровни",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Enums/Access/Ability.php",
+      "why": "Биты и уровни",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Enums/Access/Effect.php",
+      "why": "Биты и уровни",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Access/ValueObjects/Decision.php",
+      "why": "VO решений",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Access/ValueObjects/AccessScope.php",
+      "why": "VO решений",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Access/ValueObjects/GrantSet.php",
+      "why": "VO решений",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Access/Drivers/DatabasePermissionDriver.php",
+      "why": "Драйверы",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Access/Drivers/GatePermissionDriver.php",
+      "why": "Драйверы",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Access/Drivers/SpatiePermissionDriver.php",
+      "why": "Драйверы",
+      "required": true
+    },
+    {
+      "path": "packages/azgard/src/AzgardPermissionDriver.php",
+      "why": "Внешний драйвер",
+      "required": true
+    },
+    {
+      "path": "docs/adr/0007-pluggable-authorization.md",
+      "why": "Прежняя семантика deny — ADR-0007 получает пометку superseded-in-part новым docs/adr/0025-access-model-v1.md",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/core/src/Access/**/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Access/Roles/{Role,RoleRegistry}.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Enums/Access/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Data/Access/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Operations/AccessOperations.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Contracts/Access/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Actions/Access/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Repositories/{Access,Drive}/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/database/migrations/2026_10_07_000005_access_model_v1.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Schema/SchemaBuilder.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/config/vaulter.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/azgard/src/**/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/src/{Operations,Actions}/**/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/filament/src/Resources/NodeGrantResource*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/{core,drive,azgard,filament,documents}/tests/**/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/Upgrade/AccessUpgradeEquivalenceTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Access/AccessModelV1Test.php",
+      "change": "create"
+    },
+    {
+      "path": "docs/adr/0025-access-model-v1.md",
+      "change": "create"
+    },
+    {
+      "path": "docs/adr/0007-pluggable-authorization.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/guide/{authorization,grants,abilities,permission-drivers}.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/ru/guide/{authorization,grants,abilities,permission-drivers}.md",
+      "change": "modify"
+    },
+    {
+      "path": "UPGRADE.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Risk-class: security-boundary + data-migration + public-contract; invariant-model: @plan/knowledge/P4-invariants.json. Перед finish — self-check применимых P4-I* в Completion Notes.",
+    "До первого product edit создать plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P4.9/check-profile.json (D25).",
+    "Только перечисленные пакеты/потребители; применённые миграции и OPUS не менять; расхождение кода с досье → стоп и описание/новый D#.",
+    "Перед PG/MySQL-тестами: laravel-testing:test-isolation-guard + devops:db-test-preflight и scripts/db-preflight.sh; только vaulter_test.",
+    "Публичная поверхность изменилась → golden PublicApiSnapshotTest пакета, UPGRADE.md и CHANGELOG.md [Unreleased] (было → стало, PLAN2.D#) в этом же item.",
+    "Новые upgrade-миграции: guard пропускает шаг только при полной ожидаемой структуре, иначе UpgradePreflightException (P4-design#Migrations); бэкфиллы пакетами и возобновляемы; тело миграции не вызывает изменяемые методы SchemaBuilder.",
+    "Если меняется docs/guide/<x>.md с зеркалом docs/ru/guide/<x>.md — обновить зеркало.",
+    "Нет push/PR/hosted CI и mutation tools. Review: none (D25).",
+    "Нигде не использовать max(rank) для разрешения доступа; роли объединяются.",
+    "Ни один тест не удаляется без эквивалента: старые deny-сценарии переписываются в сценарии границы наследования либо в admin override драйвера, с таблицей соответствия в artifacts/P4.9/test-map.md.",
+    "Прогоны (D51): BARRIER блока миграций P4.11+P4.9 — own V4 (PG upgrade доступа) + V90 с отложенными V3/V4 P4.11."
+  ],
+  "guidance": "Пример: команда Engineering — writer на /proj (subtree), на /proj/hr стоит restrictInheritance(Empty) и прямой reader для HR → инженер не видит /proj/hr; HR-пользователь — reader (view+download). previewer по ссылке/гранту видит превью, но download → permission_denied. Copy папки: источник требует view+download+copy на КАЖДОМ узле (D30), назначение — create.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Access packages/core/tests/Operations packages/core/tests/Sharing packages/core/tests/Arch",
+      "expect": "exit0; роли, границы, explain, мульти-ресурсные правила, golden",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests",
+      "expect": "exit0; azgard на ролях",
+      "kind": "acceptance",
+      "cwd": "packages/azgard"
+    },
+    {
+      "id": "V3",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Drive tests/PublicApi",
+      "expect": "exit0; copy/move/restore по новым правилам",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V4",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Upgrade/AccessUpgradeEquivalenceTest.php packages/core/tests/Access",
+      "expect": "exit0; эквивалентность до/после, preflight-отказ на deny, листинг P1.3 на PG. Обязательный receipt: числовые executed_tests>=1 и skipped=0, discovered/matched test names и output; exit0 без тестов/с skip НЕ pass.",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Feature",
+      "expect": "exit0; Filament гранты на ролях",
+      "kind": "acceptance",
+      "cwd": "packages/filament"
+    },
+    {
+      "id": "V80",
+      "procedure": "Форматирование и статанализ затронутых пакетов: scripts/php84 vendor/bin/pint --test packages/core && scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress (cwd .); cd packages/azgard && ../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress; cd packages/drive && ../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress; cd packages/filament && ../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress. Негативные контроли новых guard/Arch-тестов — в artifacts/P4.9/negative-controls.md.",
+      "expect": "все exit 0; negative controls записаны",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V81",
+      "cmd": "python3 plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-coverage.py check",
+      "expect": "exit0; ledger-P4 и дословные входы совпадают",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V90",
+      "procedure": "Барьер D51 блока P4.11+P4.9: на текущем дереве (с изменениями всех items блока) после own acceptance исполнить отложенные H-проверки по их точным cmd/cwd/env:\n- P4.11 V3: cwd . — `env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Upgrade packages/core/tests/Schema/NameKeyUniquenessTest.php` (ожидание: числовые executed_tests>=1 и skipped=0, discovered/matched test names и output; exit0 без тестов/с skip НЕ pass.)\n- P4.11 V4: cwd . — `env APP_ENV=testing DB_CONNECTION=mysql DB_HOST=127.0.0.1 DB_PORT=3306 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Schema/NameKeyUniquenessTest.php packages/core/tests/Schema/CanonicalSchemaTest.php` (ожидание: числовые executed_tests>=1 и skipped=0, discovered/matched test names и output; exit0 без тестов/с skip НЕ pass.)\nПеред PG/MySQL — scripts/db-preflight.sh; receipts в artifacts/<item>/barrier-receipts.json (числовые executed>=1, skipped=0 для перечисленных файлов). Дефект — одна owning-коррекция в этом item с указанием item-источника в журнале, затем перезапуск только упавших/затронутых.",
+      "expect": "все перечисленные команды exit 0, skipped=0 для перечисленных тестов; own H-проверки (V4) также зелёные",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "RoleRegistry и модель v1",
+    "Миграция с эквивалентностью и preflight",
+    "ADR-0025",
+    "check-profile.json и negative-controls.md в artifacts/P4.9"
+  ],
+  "route": {
+    "class": "frontier",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed",
+    "notes": "Внешние факты проверены при дизайне: @plan/knowledge/P4-architecture-review-2026-10-07.json"
+  },
+  "result": {
+    "started_at": "2026-10-07T19:32:46Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "session": "232434b5-f43f-4975-8253-846c57cbeb9a"
+    }
+  },
+  "updated_at": "2026-10-07T19:32:46Z"
+}

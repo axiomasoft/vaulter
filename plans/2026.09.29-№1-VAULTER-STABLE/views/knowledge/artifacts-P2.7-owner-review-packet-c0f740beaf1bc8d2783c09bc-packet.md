@@ -5,7 +5,7 @@ Source: [JSON](../../knowledge/artifacts-P2.7-owner-review-packet-c0f740beaf1bc8
 
 ## Applies to
 
-
+- P2.7
 
 ## Provenance
 

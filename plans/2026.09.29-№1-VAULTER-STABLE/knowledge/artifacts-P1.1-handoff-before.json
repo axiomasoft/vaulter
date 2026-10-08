@@ -9,7 +9,9 @@
       "text": "**Next:** P0 закрыта. Исполнение P1 не начато (D12 п.2: только после этого закрытия, отдельным запросом).\n\n| Parameter | Meaning |\n|:--|:--|\n| Batch | P0 |\n| Model class | implementation |\n| Model | grok-4.7 |\n| Effort | medium |\n| Thinking | medium |\n| Context | continue-root |\n| The bottom line | P0 closed. Mutation follow-up stopped (D14). Two review minors fixed. |\n\n```session-continuity-decision/v1\n{\"outcome\": \"scope-complete\", \"reason\": \"authorized-scope-complete\", \"evidence\": [\"decision:D14\", \"review:@plan/knowledge/artifacts-P0-grok-grok-review.json\", \"hosted:37120372889 harness 4 passed\"], \"runnable\": false, \"schema_version\": \"session-continuity-decision/v1\"}\n```\n\n**Done:** P0.1 закрыт с записанным отклонением по mutation, и это отклонение больше не долг (D14). P0.2/P0.3/P0.4 закрыты. Независимое ревью 2026-10-03: два Minor, оба исправлены (шаг CI харнесса не зелёный при skip; provenance E15/E16/E18). Hosted tests.yml на зеркале, SHA `a5d8792`, run 37120372889: Postgres job success, harness 4 passed / 0 skipped; L12/L13 только B-01.\n\n**Remaining:** нет по P0. Mutation-score не добирается.\n\n**Open risks:** PR/merge не разрешены. P1 не стартовала.\n\n**Sources of truth:** @plan/decisions/D14.json; @plan/knowledge/artifacts-P0-grok-grok-review.json; @plan/knowledge/findings-baseline.json B-12 и B-16."
     }
   ],
-  "applies_to": [],
+  "applies_to": [
+    "P1.1"
+  ],
   "provenance": {
     "path": "artifacts/P1.1/handoff-before.md",
     "sha256": "a3a4f388eba2c40f4ddc8a56ba222968bc6adda43dd9b6357672b565e9b0c659"

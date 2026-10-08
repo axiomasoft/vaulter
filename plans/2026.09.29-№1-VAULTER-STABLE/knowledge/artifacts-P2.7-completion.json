@@ -29,7 +29,9 @@
       "text": "Post-fix PostgreSQL Upgrade+Schema: 101 passed, 649 assertions, no failures/skips;\nnew SQLite feature-off lifecycle: 1 passed, 38 assertions. Scoped Pint and core\nPHPStan exit 0. git diff --check passes. Plan lint exits 1: a pre-existing P2.1\ncompletion diagnostic and two unresolved bare read-budget filenames in untouched\nP2.6 (AutoIncrementIds.php, Uuid7Ids.php). It reports no P2.7 diagnostic. Those\nout-of-scope carriers are not edited or represented as a successful whole-plan lint."
     }
   ],
-  "applies_to": [],
+  "applies_to": [
+    "P2.7"
+  ],
   "provenance": {
     "path": "artifacts/P2.7/completion.md",
     "sha256": "3a5a0458384986a50f47d6fb7dd6c63e34a331db48918f3da033f33017e6f779"

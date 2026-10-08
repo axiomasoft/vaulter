@@ -1,0 +1,40 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D35",
+  "title": "P4: раздельные валидаторы узла и содержимого документа (поправка OPUS D23, writer map P3.3)",
+  "date": "2026-10-07",
+  "status": "accepted",
+  "question": "Один v_nodes.sequence на все изменения (OPUS D23, P3.3 bump на каждый Yjs-сейв) или раздельные валидаторы узла и содержимого документа?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Разделить. v_nodes.sequence — валидатор узла: name/parent/trash-состояние/position/is_pinned/extra/owned_by и смена головы файла (как в P3.3). Содержимое документа — отдельный токен v_documents.collab_epoch + v_documents.state_version (signed BIGINT 0..2^63-1, тот же контракт overflow, что у sequence). Любая запись рабочего состояния документа (hub store, update(), restore, copy-seed) увеличивает state_version ровно на 1 и НЕ трогает v_nodes.sequence; restore и внешняя замена collaborative-документа дополнительно увеличивают collab_epoch. DocumentOperations::update/restore принимают expectedStateVersion (412 document_state_mismatch), rename/move/trash — expectedSequence. P5: события document.* несут state_version; P6: ETag узла \"{id}.{sequence}\", ETag содержимого документа \"{documentId}.{epoch}.{stateVersion}\".",
+      "pros": "Graph eTag/cTag, Drive version/headRevisionId: метаданные и контент имеют разные валидаторы; CRDT-обновления не требуют If-Match; rename во время живого редактирования не получает ложный 412.",
+      "cons": "Поправка к OPUS D23 и к writer map P3.3 (Document writers перестают bump node.sequence); новый exception/код."
+    },
+    {
+      "id": "B",
+      "text": "Как OPUS D23: одна sequence, bump на каждый сейв.",
+      "pros": "Один счётчик.",
+      "cons": "Ложные 412 для метаданных во время коллаборации; события сайвов перемешаны с узловыми."
+    }
+  ],
+  "context": "P3.3 (D28=A) поставил v_nodes.sequence и NodeSequence; writer map включает PersistCollaborationStateAction (+1 на каждый эффективный сейв). Perplexity 2026-10-07 §Concurrency: «Every Yjs update should not create an editorial revision or bump a metadata validator… CRDT updates themselves should not require If-Match». Владелец 2026-10-07 выбрал «Разделить (Recommended)». Колонка sequence и StaleNodeException не пересоздаются (D28).",
+  "decision": "A — Разделить. v_nodes.sequence — валидатор узла: name/parent/trash-состояние/position/is_pinned/extra/owned_by и смена головы файла (как в P3.3). Содержимое документа — отдельный токен v_documents.collab_epoch + v_documents.state_version (signed BIGINT 0..2^63-1, тот же контракт overflow, что у sequence). Любая запись рабочего состояния документа (hub store, update(), restore, copy-seed) увеличивает state_version ровно на 1 и НЕ трогает v_nodes.sequence; restore и внешняя замена collaborative-документа дополнительно увеличивают collab_epoch. DocumentOperations::update/restore принимают expectedStateVersion (412 document_state_mismatch), rename/move/trash — expectedSequence. P5: события document.* несут state_version; P6: ETag узла \"{id}.{sequence}\", ETag содержимого документа \"{documentId}.{epoch}.{stateVersion}\".",
+  "rationale": "Владелец 2026-10-07 выбрал «Разделить (Recommended)». Основание — @plan/knowledge/P4-industry-research-2026-10-07.json (R1 §3 Concurrency).",
+  "applies_to": [
+    "P4",
+    "P4.1",
+    "P4.5",
+    "P4.7",
+    "P4.8",
+    "P5",
+    "P6"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "answered_by": "owner"
+}

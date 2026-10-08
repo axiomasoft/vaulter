@@ -1,0 +1,236 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P4.7",
+  "title": "Валидаторы: writer-матрица sequence/state_version/epoch и V36",
+  "status": "todo",
+  "summary": "Каждый writer узла и документа следует матрице D35: node.sequence — только узловые изменения и голова файла, state_version — каждая эффективная запись рабочего состояния документа, epoch — restore/замена; доказано PG-гонками; события документов несут stateVersion/epoch; контракт ETag для P6 записан.",
+  "why": "D35/C07: без явной матрицы writers расходятся (двойной bump, ложные 412 во время коллаборации). P3.3 writer map устарел после D34/D36. P5/P6 зависят от этих полей.",
+  "scope": {
+    "include": [
+      "Writer-матрица P4-design#Validators как исполняемый dataset тест DocumentValidatorMatrixTest (каждая операция × ожидаемые дельты sequence/state_version/epoch) для всех текущих writers drive и documents, включая collab store/seed/restore/update/copy/snapshot/setRetention/export(no-op)/purge.",
+      "PG: DocumentStateRaceTest (два update с expectedStateVersion=N → один N+1, второй 412 без записей), NodeSequenceDocumentIndependenceTest (rename с expectedSequence успешен при параллельных collab-store; sequence +1 только от rename), V36 вариант для документа (два rename с одинаковым expectedSequence → 412 node_sequence_mismatch второму).",
+      "События Documents\\Events\\{DocumentCreated,DocumentContentUpdated,DocumentRevisionCreated,DocumentRestored} получают int $stateVersion и int $epoch; activity-подписчики сохраняют их в context (без новых EventType — P5.2).",
+      "Обновление @plan writer map: P3-security-contracts §Sequence не переписывается — новая таблица фиксируется в docs/reference/concurrency.md и в artifacts/P4.7/writer-map.md с ссылкой на D35.",
+      "docs/reference/concurrency.md: валидаторы узла/содержимого, ETag-форматы для P6, отсутствие If-Match для CRDT, коды 412/409.",
+      "Матрица валидаторов включает setProperties (+1 sequence), star/unstar (0 sequence, 0 state_version), deleteRevision/setRevisionRetention файлов (0 sequence — история, не голова), restrictInheritance (0 sequence — ACL, не узел; изменение доступа отражается событием P5)."
+    ],
+    "exclude": [
+      "HTTP ETag/If-Match/428 (P6.1/6.3)",
+      "EventRecorder и конверт sequence (P5.1)",
+      "создание колонки sequence (P3.3, D28)"
+    ]
+  },
+  "depends_on": [
+    "P4.5"
+  ],
+  "decisions": [
+    "D01",
+    "D03",
+    "D06",
+    "D25",
+    "D28",
+    "D29",
+    "D30",
+    "D31",
+    "D34",
+    "D35",
+    "D36",
+    "D37",
+    "D38",
+    "D39",
+    "D40",
+    "D41",
+    "D42",
+    "D43",
+    "D44",
+    "D45",
+    "D46",
+    "D47",
+    "D48",
+    "D49"
+  ],
+  "skills": [],
+  "reads": [
+    {
+      "ref": "knowledge/artifacts-P4-design-P4.7-opus",
+      "why": "Первый read: дословные OPUS-единицы item с заметками ledger (D06); строки «Справочно» не реализуются заново",
+      "required": true
+    },
+    {
+      "ref": "knowledge/validation-and-execution-policy",
+      "why": "D25: check-profile до product edit, affected checks, broad barrier только в P4.6, без mutation tools",
+      "required": true
+    },
+    {
+      "ref": "knowledge/P4-design#Validators",
+      "why": "Нормативный контракт раздела Validators: имена, сигнатуры, алгоритм, развилки уже решены",
+      "required": true
+    },
+    {
+      "ref": "knowledge/P4-design#WorkingState",
+      "why": "Нормативный контракт раздела WorkingState: имена, сигнатуры, алгоритм, развилки уже решены",
+      "required": true
+    },
+    {
+      "ref": "knowledge/P4-design#Collaboration",
+      "why": "Нормативный контракт раздела Collaboration: имена, сигнатуры, алгоритм, развилки уже решены",
+      "required": true
+    },
+    {
+      "ref": "knowledge/P4-invariants",
+      "why": "Порядок блокировок T→N→(D|F)→R→Q→C, инварианты P4-I1…I16, интерферирующие пары, запрещённые обходы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/security-correction-contract",
+      "why": "D29: применимые C-строки (C02 copy admission, C07 sequence/validators, C08 egress) — owning acceptance этого item",
+      "required": true
+    },
+    {
+      "ref": "knowledge/P4-industry-research-2026-10-07#Adoption",
+      "why": "Почему выбраны D34–D37: что принято/отложено/отклонено; не расширять scope за пределы Adoption",
+      "required": false
+    },
+    {
+      "ref": "knowledge/P3-security-contracts#Sequence",
+      "why": "Исходный writer map P3.3 и инварианты helper",
+      "required": true
+    },
+    {
+      "path": "packages/core/tests/Concurrency/NodeSequenceBoundaryTest.php",
+      "why": "Образец PG ForkRace для expectedSequence",
+      "required": true
+    },
+    {
+      "path": "packages/documents/tests/Document/LegacyNodeSequenceRaceTest.php",
+      "why": "Переносимые сценарии",
+      "required": true
+    },
+    {
+      "ref": "knowledge/implementation-security-assessment-2026-10-06",
+      "why": "D29: оценка репозитория по C01–C10 — проверить применимые к item находки до разработки",
+      "required": true
+    },
+    {
+      "ref": "knowledge/P4-design#NodeData",
+      "why": "Согласование с решениями второго раунда (D38–D49)",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/documents/tests/Document/DocumentValidatorMatrixTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/documents/tests/Concurrency/{DocumentStateRaceTest,NodeSequenceDocumentIndependenceTest,DocumentRenameStaleTest}.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/documents/src/Events/**/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/documents/src/Actions/**/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Activity/ActivityRecorder.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/documents/tests/Document/{LegacyNodeSequenceTest,LegacyNodeSequenceRaceTest}.php",
+      "change": "delete"
+    },
+    {
+      "path": "docs/reference/concurrency.md",
+      "change": "create"
+    },
+    {
+      "path": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P4.7/writer-map.md",
+      "change": "create"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Risk-class: concurrency + public-contract; invariant-model: @plan/knowledge/P4-invariants.json. Перед finish — self-check применимых P4-I* и интерферирующих пар в Completion Notes.",
+    "До первого product edit создать plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P4.7/check-profile.json: фактические изменяемые пути/вызывающие/фикстуры, точные cwd/env/команды, негативные контроли и отложенный broad barrier P4.6 (D25).",
+    "Только перечисленные пакеты и файлы-потребители; чужие dirty-правки, исторические миграции 2026_06_13_*, 2026_10_01_000001…000009, 2026_10_06_* и OPUS не менять. Расхождение кода с досье → стоп и описание в Completion Notes/новый D#, не импровизация (D01).",
+    "Перед PG/MySQL-тестами: native laravel-testing:test-isolation-guard + devops:db-test-preflight и scripts/db-preflight.sh; только БД vaulter_test.",
+    "Публичная поверхность изменилась → golden PublicApiSnapshotTest пакета, UPGRADE.md (было → стало, ссылки PLAN2.D34–D37/AD) и текст для CHANGELOG в plans/2026.09.29-№1-VAULTER-STABLE/artifacts/<item>/changelog-entry.md (CHANGELOG.md закрыт для чтения агентам — переносит владелец, P4-design#Stability).",
+    "Комментарии в коде объясняют «почему», без кодов задач плана; документация (docs/guide, docs/reference) меняется в том же item.",
+    "Нет push/PR/hosted CI/публикации и mutation tools (Infection, pest --mutate). Review: none (D25) — self-check + acceptance.",
+    "Удаление Legacy*Sequence тестов допустимо только после того, как каждый их сценарий найден в новых тестах (таблица соответствия в artifacts/P4.7/writer-map.md).",
+    "Если меняется страница docs/guide/<x>.md, у которой есть зеркало docs/ru/guide/<x>.md, — обновить зеркало в том же item тем же смыслом.",
+    "Прогоны (D51): BARRIER блока конкурентности P4.2+P4.8+P4.5+P4.7 — own V2/V3 (PG race-матрица) + V90 с отложенными V4 P4.2, V4 P4.8, V2 P4.5."
+  ],
+  "guidance": "Матрица — Pest dataset: ['rename', fn → nodes()->rename(...)], ожидание [seq+1, sv+0, ep+0]; ['collab store', …, [0, +1, 0]]; ['restore doc', …, [0, +1, +1]]; ['snapshot', …, [0,0,0]]; ['export', …, [0,0,0]]; ['file upload revision', …, [+1, n/a, n/a]].",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Document tests/Operations tests/Collaboration",
+      "expect": "exit0; полная матрица валидаторов и события",
+      "kind": "acceptance",
+      "cwd": "packages/documents"
+    },
+    {
+      "id": "V2",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Concurrency",
+      "expect": "exit0; DocumentStateRaceTest, NodeSequenceDocumentIndependenceTest, DocumentRenameStaleTest (V36), CollaborationFenceRaceTest; backend pids/barrier. Обязательный receipt: числовые executed_tests>=1 и skipped=0, discovered/matched test names и output; exit0 без тестов/с skip НЕ pass.",
+      "kind": "acceptance",
+      "cwd": "packages/documents"
+    },
+    {
+      "id": "V3",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Concurrency/NodeSequenceBoundaryTest.php",
+      "expect": "exit0; P3.3 регрессия узловой sequence без изменений. Обязательный receipt: числовые executed_tests>=1 и skipped=0, discovered/matched test names и output; exit0 без тестов/с skip НЕ pass.",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V80",
+      "procedure": "На own candidate по check-profile выполнить форматирование и статический анализ затронутых пакетов: scripts/php84 vendor/bin/pint --test packages/core && scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress (cwd .); cd packages/documents && ../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress. Каждый новый guard/Arch-тест item получает ограниченный negative control (временная поломка → тест красный → точное восстановление), записанный в artifacts/P4.7/negative-controls.md.",
+      "expect": "все команды exit 0; negative controls записаны с фактическим красным выводом и восстановлением",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V81",
+      "cmd": "python3 plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-coverage.py check",
+      "expect": "exit0; 1438 единиц, ledger-P4 и дословные входы совпадают",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V90",
+      "procedure": "Барьер D51 блока P4.2+P4.8+P4.5+P4.7: на текущем дереве (с изменениями всех items блока) после own acceptance исполнить отложенные H-проверки по их точным cmd/cwd/env:\n- P4.2 V4: cwd packages/documents — `env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Document/DocumentCopyLifecycleTest.php` (ожидание: числовые executed_tests>=1 и skipped=0, discovered/matched test names и output; exit0 без тестов/с skip НЕ pass.)\n- P4.8 V4: cwd packages/documents — `env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Operations/DocumentAbilityMatrixTest.php --filter=\"tenant\"` (ожидание: числовые executed_tests>=1 и skipped=0, discovered/matched test names и output; exit0 без тестов/с skip НЕ pass.)\n- P4.5 V2: cwd packages/documents — `env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Concurrency/CollaborationFenceRaceTest.php` (ожидание: числовые executed_tests>=1 и skipped=0, discovered/matched test names и output; exit0 без тестов/с skip НЕ pass.)\nПеред PG/MySQL — scripts/db-preflight.sh; receipts в artifacts/<item>/barrier-receipts.json (числовые executed>=1, skipped=0 для перечисленных файлов). Дефект — одна owning-коррекция в этом item с указанием item-источника в журнале, затем перезапуск только упавших/затронутых.",
+      "expect": "все перечисленные команды exit 0, skipped=0 для перечисленных тестов; own H-проверки (V2, V3) также зелёные",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "Исполняемая writer-матрица",
+    "PG-доказательства валидаторов",
+    "docs/reference/concurrency.md и writer-map",
+    "check-profile.json, negative-controls.md, changelog-entry.md в artifacts/P4.7"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed",
+    "notes": "Внешние факты проверены при дизайне: @plan/knowledge/P4-industry-research-2026-10-07.json; исполнителю повторный поиск не нужен"
+  },
+  "result": null,
+  "updated_at": "2026-10-07T15:50:18Z"
+}

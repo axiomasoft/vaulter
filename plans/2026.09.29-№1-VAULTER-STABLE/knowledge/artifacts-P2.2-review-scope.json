@@ -44,7 +44,9 @@
       "text": "- The canon is an **executable specification**, not prose: a regression that\n  drops a class back into a flat layer root (Law 2) or nests a layer under a\n  domain (Law 1) trips an arch test naming the exact offender.\n- `documents` and `drive` carry a KNOWN, encoded structural debt: their canon\n  arch tests are red-in-principle (`->todo()`), so the debt is visible in the\n  test report and cannot be silently forgotten. P4.10 discharges it.\n- **Breaking change on execution (D3 — package unreleased, no BC obligation):**\n  P4.10 changes public FQCNs (`Vaulter\\Drive\\Uploads\\Actions\\CommitUploadAction`\n  → `Vaulter\\Drive\\Actions\\Uploads\\CommitUploadAction`, the documents flat\n  classes gain a domain segment). Morph aliases, `config/vaulter.php` FQCN\n  defaults, and docs references must move with the classes; recorded in\n  `UPGRADE.md`. P4.9 itself changes NO code and breaks nothing.\n- `filament` staying on the Filament convention is a deliberate, documented\n  exception, not drift — future audits should not flag it against Canon A."
     }
   ],
-  "applies_to": [],
+  "applies_to": [
+    "P2.2"
+  ],
   "provenance": {
     "path": "artifacts/P2.2/review/scope.md",
     "sha256": "b52d462a0f7acfd75c9b13d5fc7adff555c8aead868033ea066c76a8532e9fe1"

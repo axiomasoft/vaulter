@@ -5,7 +5,7 @@ Source: [JSON](../../knowledge/artifacts-P0-O3CI-o3ci.json). This view is for pe
 
 ## Applies to
 
-
+- P0
 
 ## Provenance
 

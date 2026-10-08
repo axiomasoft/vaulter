@@ -29,7 +29,9 @@
       "text": "None in this repair delta.\n\nResidual limits, not separate defects: the single-node walk is still documented as depth-capped, while `withMaxDepth(64)` does not cap negative ancestor depths, and the batch walk matches that live behavior. SQLite path-suffix cycle checks remain the dependency’s own rule on both walks. `VaulterSharedWithMe` still shows the empty-list copy when the first cursor page has no visible rows; `hasMore` stays true and the Load more control stays available, which is the continuation the candidate covers in `useSharedNodes`."
     }
   ],
-  "applies_to": [],
+  "applies_to": [
+    "P1.3"
+  ],
   "provenance": {
     "path": "artifacts/P1.3/recheck-findings.md",
     "sha256": "d940dd76512c39b488354e3d11bdf59d0ff515c81384c430eca04cc0d053dbc0"

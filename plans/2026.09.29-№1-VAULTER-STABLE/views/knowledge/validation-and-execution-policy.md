@@ -5,7 +5,8 @@ Source: [JSON](../../knowledge/validation-and-execution-policy.json). This view 
 
 ## Applies to
 
-
+- P3
+- P4
 
 ## Provenance
 
@@ -14,6 +15,26 @@ Source: [JSON](../../knowledge/validation-and-execution-policy.json). This view 
   "note": "Owner instruction recorded in D25; factual audit of P2.5 receipts; installed native SKM plan-protocol execution mode."
 }
 ```
+
+## Действующая политика проверок (D51; заменяет D25-разделы ниже при расхождении)
+
+Источник: @plan/decisions/D51.json (решение владельца 2026-10-07). Разделы ниже — история D25; где они требуют тяжёлых проверок в каждом item или broad-набора по старой схеме, действует D51.
+
+ЛЁГКИЕ (каждый item): затронутые Pest на SQLite, Arch/golden, Pint по затронутым файлам, PHPStan затронутых пакетов, клиентские unit/typecheck, ограниченные negative controls на SQLite, opus-coverage, plan check.
+ТЯЖЁЛЫЕ (только барьеры): PostgreSQL/MySQL (upgrade-фикстуры, SchemaParity, ForkRace, блокировки), e2e процессов, полные сьюты всех пакетов, hosted CI (O-3).
+
+Режимы item (явно в правиле «Прогоны (D51): …»):
+- L — только лёгкие; H-проверки item записаны kind=impact с «→ барьер <item>».
+- L+H-own — плюс собственные H как acceptance, если результат доказуем только на H.
+- BARRIER — acceptance V90 «Барьер D51»: свои H + все отложенные H блока по точным cmd/cwd/env на текущем дереве.
+
+Раскладка барьеров (дизайнер фазы по риску): конец непрерывного рискованного блока — не длиннее 2 items с миграциями/схемой или 3 прочих рискованных (конкурентность/блокировки, безопасность/тенантность); последний item фазы — всегда фазовый барьер (все остатки фазы + phase.validation). Отложенное не переходит границу фазы. Минимальные/низкорисковые items — L без H.
+
+Дефект в барьере: одна owning-коррекция в барьерном item (журнал называет item-источник), перезапуск упавших/затронутых; изменение контракта закрытого item — escalation.
+
+Сохраняется из D25: impact-подбор, check-profile до правки, запрет mutation tools, пропуск/падение ≠ успех, повтор только при изменившихся входах, единый evidence writer, review только по запросу.
+
+Обязанность дизайна фазы: режим каждого item, H→impact с адресом барьера, V90 барьерных items с кумулятивным списком, раскладка барьеров в контексте фазы; design audit проверяет.
 
 ## Authority and scope
 

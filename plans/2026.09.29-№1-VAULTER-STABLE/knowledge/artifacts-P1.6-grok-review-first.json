@@ -24,7 +24,9 @@
       "text": "Author evidence in this pass is core Pint and PHPStan, both exit 0, plus the negative controls: quota control exit 1 once, revision control exit 1 on all five runs. The supplied note matches the aggregate test: with the upload node lock still present, removing `FileStoreRepository::lockForUpdate` is what produces duplicate `(file_id, version_no)`. The positive PostgreSQL suite, the SQLite `QuotaReserveTest` run, and the media CAS run are not in this evidence. They were not re-executed here.\n\nV21 checks ten iterations of move-into-F beside upload-into-F, an acyclic tree, and `used_bytes` equal to the sum of file head sizes. It does not record retry counts, so the OPUS “at most one retry” bound is not measured. The lock sequence above is why a deadlock between those two should not form: each takes the tree lock before any node lock, and shared and exclusive advisory locks on that key queue.\n\n`TusConcurrentPatchTest.php`, `ResolvesVaulterConnection`, and `CommitUploadAction` were not in the source bundle. Direct uploads stage outside any transaction. `UploadSessionManager::commitAssembled()` already holds the session row across the commit callable, which is the existing sweeper barrier. The inner upload retry still reuses one staged object. An assembled stream is seekable, and `Sha256ContentStore::stage()` rewinds seekable streams.\n\nConcurrency tests use `DatabaseMigrations`, not `RefreshDatabase` (`packages/drive/tests/Pest.php`). `ForkRace` skips unless the driver is PostgreSQL, refuses a database name that does not end in `_test`, and gives each child its own connection. SQLite coverage of this item is `QuotaReserveTest`: unlimited quota, exact boundary, one byte over with `used_bytes` unchanged, zero and negative release, subtree copy over quota with no new rows, stale revision head, and stale copy head."
     }
   ],
-  "applies_to": [],
+  "applies_to": [
+    "P1.6"
+  ],
   "provenance": {
     "path": "artifacts/P1.6/grok-review-first.md",
     "sha256": "1ad52938d7e9a11c26d36fcae3c1349843c6435392fe939c3572432a8117833f"

@@ -24,7 +24,9 @@
       "text": "P1.4 only, including its explicitly declared core/drive/documents files and root upgrade/changelog. Prior dirty plan/configuration files and other owner changes remain visible and outside the scoped commit. No successor, push, tag, release or external write is authorized by this invocation.\n\nwrite-site: pre_mutation: allow · pre_final: allow\n\nTask terminal journal and generated item state are GREEN. plan-lint: OK, 0 errors, 0 warnings; terminal delivery receipt validated. A single scoped local commit includes P1.4 product files, evidence, its state and handoff; shared plan/journal/status and pre-existing authored carriers remain outside it."
     }
   ],
-  "applies_to": [],
+  "applies_to": [
+    "P1.4"
+  ],
   "provenance": {
     "path": "artifacts/P1.4/completion.md",
     "sha256": "b7c9eeb28d0035535f691c75e29d3f917c702a3a734624328239adcc97fd4579"

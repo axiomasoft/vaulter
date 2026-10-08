@@ -1,0 +1,35 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D39",
+  "title": "P4: контракт имён — name_key, портируемая политика, без молчаливого trim",
+  "date": "2026-10-07",
+  "status": "accepted",
+  "question": "Как нормализовать и сравнивать имена узлов?",
+  "options": [
+    {
+      "id": "A",
+      "text": "v_nodes.name_key varchar(1024) NOT NULL = NFC(casefold_full(NFC(name))) (mb_convert_case MB_CASE_FOLD), уникальность активных соседей — UNIQUE по (parent_id, name_key) только для trashed_at IS NULL на бинарном сравнении (PG text COLLATE \"C\", MySQL varbinary/utf8mb4_bin, SQLite BINARY), вместо LOWER(name). Политика имён версионируется и выбирается профилем: portable-v1 (по умолчанию) отклоняет пустое, '.', '..', NUL/управляющие, < > : \" / \\ | ? *, ведущие/хвостовые пробелы, хвостовые точки, имена устройств Windows (CON, PRN, AUX, NUL, COM0–9, LPT0–9, с расширением, без учёта регистра), desktop.ini, .DS_Store; длина ≤255 байт UTF-8 и ≤255 единиц UTF-16 после NFC; permissive-v1 — только базовые правила (текущее поведение без trim). Пробелы больше не обрезаются молча — отказ invalid_node_name. Существующие имена: name_key заполняется, коллизии новых ключей у активных соседей разрешаются суффиксом ' (conflict N)' с activity от vaulter:system; невалидные по новой политике старые имена не переименовываются (read ok, rename обязан пройти политику).",
+      "pros": "Подтверждено исследованием и анализом кода; см. context.",
+      "cons": "Больший объём работ в P4; меняет уже реализованное поведение — регрессии переписываются явно, UPGRADE.md."
+    },
+    {
+      "id": "B",
+      "text": "Оставить LOWER(name) и trim.",
+      "pros": "Меньше изменений.",
+      "cons": "Расходится с отраслевой практикой; фиксирует слабое место в 1.0."
+    }
+  ],
+  "context": "R5 §2: «store name and a binary-compared name_key; do not delegate the contract to the database collation»; Windows naming rules; Dropbox case-insensitive collisions. Основание: @plan/knowledge/P4-architecture-review-2026-10-07.json. Делегирование владельца 2026-10-07 (brief M2/M3): «решения все за тобой… нет неприкосновенного кода… если есть лучшее решение, сто процентов подтверждённое и тобой, и исследованиями, то мы идём к нему».",
+  "decision": "A — v_nodes.name_key varchar(1024) NOT NULL = NFC(casefold_full(NFC(name))) (mb_convert_case MB_CASE_FOLD), уникальность активных соседей — UNIQUE по (parent_id, name_key) только для trashed_at IS NULL на бинарном сравнении (PG text COLLATE \"C\", MySQL varbinary/utf8mb4_bin, SQLite BINARY), вместо LOWER(name). Политика имён версионируется и выбирается профилем: portable-v1 (по умолчанию) отклоняет пустое, '.', '..', NUL/управляющие, < > : \" / \\ | ? *, ведущие/хвостовые пробелы, хвостовые точки, имена устройств Windows (CON, PRN, AUX, NUL, COM0–9, LPT0–9, с расширением, без учёта регистра), desktop.ini, .DS_Store; длина ≤255 байт UTF-8 и ≤255 единиц UTF-16 после NFC; permissive-v1 — только базовые правила (текущее поведение без trim). Пробелы больше не обрезаются молча — отказ invalid_node_name. Существующие имена: name_key заполняется, коллизии новых ключей у активных соседей разрешаются суффиксом ' (conflict N)' с activity от vaulter:system; невалидные по новой политике старые имена не переименовываются (read ok, rename обязан пройти политику).",
+  "rationale": "Делегирование владельца 2026-10-07 (brief M2/M3): «решения все за тобой… нет неприкосновенного кода… если есть лучшее решение, сто процентов подтверждённое и тобой, и исследованиями, то мы идём к нему». Исследование: @plan/knowledge/P4-architecture-review-2026-10-07.json.",
+  "applies_to": [
+    "P4",
+    "P4.11"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

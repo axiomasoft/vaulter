@@ -14,7 +14,9 @@
       "text": "E23 closed: `review-gpt61.md` — codex/gpt-6.1-sol/high, GREEN, 0 findings (same-model, D13; input-only review, no test reruns). The waiting-external gate is resolved; the earlier claude-sonnet-5-5 attempt (HTTP 429) produced no verdict and is not counted.\nReceipts E15–E22 re-bound to the current contract hash without re-execution; E23 fresh (`validation-provenance.json`). Hosted CI was not touched.\n\nwrite-site: pre_mutation: allow · pre_final: allow — terminal `closed-green` journal event 2026-10-03T12:06:14Z; `plan-work finalize` exit 0, plan-lint 0 errors."
     }
   ],
-  "applies_to": [],
+  "applies_to": [
+    "P0.2"
+  ],
   "provenance": {
     "path": "artifacts/P0.2-PA01/completion.md",
     "sha256": "7cdabc7bccc2c3e24018dab54196ff4da5e0a19a6749e854b41e82f947fbb1e1"

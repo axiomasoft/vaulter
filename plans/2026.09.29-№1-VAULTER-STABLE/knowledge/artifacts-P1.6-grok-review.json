@@ -24,7 +24,9 @@
       "text": "Core Pint, PHPStan, and Pest passed (662 passed, 28 inherited skips, 17 inherited risky). Drive concurrency passed 17 tests with zero skips on each of five runs. Media CAS on PostgreSQL passed 142 with 4 inherited skips. The SQLite quota and staged-commit runs passed. V02 and V03 negative controls stayed red and the sources were restored. Those results are author evidence; this pass did not re-run them."
     }
   ],
-  "applies_to": [],
+  "applies_to": [
+    "P1.6"
+  ],
   "provenance": {
     "path": "artifacts/P1.6/grok-review.md",
     "sha256": "6693a3270aac3f25cce1bab7a77231f61476ffe78087f405fefd42105b035e53"

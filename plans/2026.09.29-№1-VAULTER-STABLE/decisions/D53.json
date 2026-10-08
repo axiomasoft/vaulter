@@ -1,0 +1,31 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D53",
+  "title": "P4.9: конверсия уровней и owner_id без legacy (уточнение D45/D46)",
+  "date": "2026-10-07",
+  "status": "accepted",
+  "question": "P4.9: как конвертировать гранты writer/organizer и v_nodes.owner_id, если буквальные D45/D46 расходятся с P4-I21 и критерием эквивалентности? Факты кода: старый writer = view, download, comment, edit, create, copy, move (без trash/restore — нет бита DELETE); старый organizer = writer + trash, restore, delete (без share). Роли v1: writer добавляет trash/restore; organizer получает share и теряет delete. owner_id не даёт доступа ни в одном встроенном драйвере (database/gate/spatie/azgard): AccessScope.nodeOwner только передаётся Gate-хосту как контекст node_owner; owner-грант (drive.owner_type, owner_id) расширил бы доступ (каждый создатель — owner) и для team-drive дал бы субъект (team, <id пользователя>).",
+  "options": [
+    {
+      "id": "A",
+      "text": "Без legacy: level → одноимённая роль v1 (reader/commenter/owner совпадают; writer +trash/restore; organizer +share −delete — задокументированное изменение, а не скрытая совместимость). owner_id удаляется без создания грантов (встроенные драйверы им не пользовались). Deny и маски permissions вне битов уровня — preflight-отказ, как в D45."
+    },
+    {
+      "id": "B",
+      "text": "Legacy-версии ролей writer v0/organizer v0 с точными правами 0.x и owner-гранты по D46."
+    },
+    {
+      "id": "C",
+      "text": "Preflight-отказ на writer/organizer и owner_id."
+    }
+  ],
+  "context": "Расхождение найдено при исполнении P4.9 до первой продуктовой правки. Владелец 2026-10-07 в сессии P4.9: на вопрос об owner_id выбрал «Drop, no grants (Recommended)»; на вопрос о writer/organizer: «никакого legacy быть не должно, пакет еще нигде не используется, до завершения плана». Уточняет D45 (миграция уровней) и D46 (конверсия owner_id).",
+  "decision": "A — Без legacy: level → одноимённая роль v1 (reader/commenter/owner совпадают; writer +trash/restore; organizer +share −delete — задокументированное изменение, а не скрытая совместимость). owner_id удаляется без создания грантов (встроенные драйверы им не пользовались). Deny и маски permissions вне битов уровня — preflight-отказ, как в D45.",
+  "rationale": "Владелец в сессии P4.9 2026-10-07: «никакого legacy быть не должно, пакет еще нигде не используется, до завершения плана»; owner_id — «Drop, no grants (Recommended)».",
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "answered_by": "owner"
+}

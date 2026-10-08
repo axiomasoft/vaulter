@@ -19,7 +19,9 @@
       "text": "Design-аудит и независимое ревью не запускались по указанию владельца, D17; audit GREEN нет.\nПроверки Azgard используют неизменённую P0-версию зависимости из build/azguard;\nлокальные vendor symlinks переключены на неё, composer manifests/locks и соседний Azguard не менялись.\nНовый API живого соседнего checkout несовместим: квалификация его dev-main остаётся P2.4.\nСм. [azgard-dependency-witness.json](azgard-dependency-witness.json) для исходных symlinks/commit.\nmaind health --cwd подтвердил соединение; отдельно обнаружен FAIL native-memory/digest-injection,\nне влияющий на перечисленные проверки продукта. Настройки среды не исправлялись вне scope.\nVue/TS и HTTP-представление NodePresentation целиком переходят в последующих пунктах;\nздесь сохраняются поля id/capabilities/ui, ui теперь содержит key/props.\nИзменения оставлены в рабочем дереве; commit, push, hosted CI, release не выполнялись.\n\nСледующий пункт по D16 — P2.7. P2.1 завершён; вся фаза P2 не закрыта."
     }
   ],
-  "applies_to": [],
+  "applies_to": [
+    "P2.1"
+  ],
   "provenance": {
     "path": "artifacts/P2.1/completion.md",
     "sha256": "6bfc6a60893463e6bc8dba18b01c7e05b5014fd630c06e8683158235dae57d0a"

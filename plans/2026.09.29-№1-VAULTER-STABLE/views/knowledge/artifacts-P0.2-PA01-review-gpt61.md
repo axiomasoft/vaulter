@@ -5,7 +5,7 @@ Source: [JSON](../../knowledge/artifacts-P0.2-PA01-review-gpt61.json). This view
 
 ## Applies to
 
-
+- P0.2
 
 ## Provenance
 
