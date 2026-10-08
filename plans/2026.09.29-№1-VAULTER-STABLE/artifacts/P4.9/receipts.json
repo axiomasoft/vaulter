@@ -2,23 +2,23 @@
  "item": "PLAN2.P4.9",
  "finished_by": "anthropic/claude-sonnet-5-5/medium",
  "date": "2026-10-08",
- "note": "Final-tree runs (after every edit). V2 ran with a temporary untracked COMPOSER=composer.p49.json (path repos ../core and azguard/legacy/0.3/packages core+context), removed afterwards.",
+ "note": "Re-run on the final tree after f1af3d88 (review fix).",
  "runs": [
   {
    "id": "V1",
    "cwd": ".",
    "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Access packages/core/tests/Operations packages/core/tests/Sharing packages/core/tests/Arch",
    "exit": 0,
-   "tests": 285,
-   "passed": 285
+   "tests": 286,
+   "passed": 286
   },
   {
    "id": "core-wide-sqlite",
    "cwd": ".",
    "cmd": "pest --ci core/tests/{Upgrade,Activity,Schema,PublicApi,Unit,Feature,Support,Drive,Tenancy,Webhooks,Naming,Profiles,Observability}",
    "exit": 0,
-   "tests": 619,
-   "passed": 584,
+   "tests": 635,
+   "passed": 600,
    "skipped": 35,
    "note": "skips are PG/MySQL/psql-only cases; covered by V4/V90 receipts"
   },
@@ -43,7 +43,7 @@
    "cwd": "packages/filament",
    "cmd": "pest --ci tests/Feature",
    "exit": 0,
-   "passed": 91,
+   "passed": 92,
    "skipped": 1
   },
   {

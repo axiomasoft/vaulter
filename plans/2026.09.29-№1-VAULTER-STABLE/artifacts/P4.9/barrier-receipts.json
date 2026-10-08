@@ -5,7 +5,7 @@
    "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Upgrade/AccessUpgradeEquivalenceTest.php packages/core/tests/Access",
    "database": "PostgreSQL 16.15",
    "exit": 0,
-   "executed_tests": 125,
+   "executed_tests": 134,
    "skipped": 0,
    "failed": 0,
    "discovered_test_names_sample": [
@@ -18,12 +18,12 @@
     "it applies a direct grant on a node below a boundary that cuts the parent grant off",
     "it applies a subtree grant below a boundary to everything under it",
     "it authorises purely from grants with no host roles (standalone database lane)",
+    "it backfills grants and shares in bounded batches ordered by id",
     "it carries a time-boxed expiry onto the stored grant",
-    "it carries no TENANT global scope on the default Node model (the barrier is per-action, not query-level, F-P1.9-02)",
-    "it constrains a subtree anchor to the anchor plus all its descendants"
+    "it carries no TENANT global scope on the default Node model (the barrier is per-action, not query-level, F-P1.9-02)"
    ],
-   "test_name_count": 125,
-   "junit": "v4.xml",
+   "test_name_count": 134,
+   "junit": "g4.xml",
    "finished": "2026-10-08"
   },
   {
@@ -31,25 +31,25 @@
    "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Upgrade packages/core/tests/Schema/NameKeyUniquenessTest.php",
    "database": "PostgreSQL 16.15",
    "exit": 0,
-   "executed_tests": 44,
+   "executed_tests": 53,
    "skipped": 0,
    "failed": 0,
    "discovered_test_names_sample": [
     "it accepts the same key once the rival is trashed, and names that differ in edge spaces",
+    "it backfills grants and shares in bounded batches ordered by id",
     "it backfills historical blob scopes without moving their objects with data set \"('bigint')\"",
     "it backfills historical blob scopes without moving their objects with data set \"('ulid')\"",
     "it backs sibling uniqueness with name_key instead of lower(name)",
     "it converts permissions inside the level bits and rolls back to the 0.3 shape",
     "it creates historical feature-disabled tables on upgrade",
     "it creates only the user-state table on a fresh install and drops only it on rollback",
+    "it drops and restores the node owner when the legacy grants table is absent",
     "it drops the root index on rollback and keeps the repaired tree",
     "it keeps a renamed long name within the name column",
-    "it keeps the access matrix of every convertible grant, up to the declared role changes with data set \"dataset \"0.2 fixture (PostgreSQL)\"\"",
-    "it keeps the access matrix of every convertible grant, up to the declared role changes with data set \"dataset \"synthetic tree\"\"",
-    "it lets a node change only the case of its own name"
+    "it keeps the access matrix of every convertible grant, up to the declared role changes with data set \"dataset \"0.2 fixture (PostgreSQL)\"\""
    ],
-   "test_name_count": 44,
-   "junit": "v90a.xml",
+   "test_name_count": 53,
+   "junit": "g90a.xml",
    "finished": "2026-10-08"
   },
   {
@@ -72,9 +72,9 @@
     "it stores the key with every name write"
    ],
    "test_name_count": 9,
-   "junit": "v90b.xml",
+   "junit": "g90b.xml",
    "finished": "2026-10-08"
   }
  ],
- "note": "V90 PG/MySQL re-run after the root-sibling fix of migration 000004 (roots of different drives are not siblings)."
+ "note": "Re-run on the final tree after f1af3d88 (review findings fix)."
 }
