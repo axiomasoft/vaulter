@@ -326,9 +326,9 @@ final class NodeReadRepository
      *
      * The caller-supplied term is untrusted (F-P1.8-03): `LIKE` metacharacters
      * (`%`, `_`, `\`) are escaped BEFORE the substring wildcards are wrapped
-     * around it, with an explicit `ESCAPE '\'` clause — a raw `%`/`_` in the
-     * term is matched LITERALLY, never as a wildcard, on both SQLite and
-     * PostgreSQL. Case-folding happens first so escaping never touches
+     * around it, with an explicit `ESCAPE` clause (the backslash is BOUND, not a literal: MySQL reads `'\'` as an escaped quote) — a raw `%`/`_` in the
+     * term is matched LITERALLY, never as a wildcard, on SQLite, MySQL
+     * and PostgreSQL. Case-folding happens first so escaping never touches
      * multibyte case-mapping. `orderBy('id')` is a stable tie-breaker
      * (F-P4.2-05, VLT-REMED P4.3): `name` is unique only per-parent (ADR-0005)
      * and this method searches across the WHOLE tree, so cursorPaginate()'s
@@ -347,7 +347,7 @@ final class NodeReadRepository
                 return $this->query()
                     ->treeOf($storage->id)
                     ->whereNull('trashed_at')
-                    ->whereRaw("lower(name) like ? escape '\\'", ['%'.$escaped.'%'])
+                    ->whereRaw('lower(name) like ? escape ?', ['%'.$escaped.'%', '\\'])
                     ->orderBy('name')
                     ->orderBy('id');
             },
