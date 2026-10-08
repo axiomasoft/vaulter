@@ -18,6 +18,7 @@ use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Concurrency\ForkRace;
 use Vaulter\Tests\Concurrency\RaceOutcome;
+use Vaulter\Tests\Drive\DriveTestHelpers;
 
 beforeEach(function (): void {
     ForkRace::skipUnlessSupported($this, app(VaulterDatabase::class)->connection()->getName());
@@ -30,7 +31,7 @@ function legacyRaceDocument(): Node
         storage: $drive->model(),
         name: 'Race document',
         content: DocumentTestHelpers::content('initial'),
-        parent: $drive->root(),
+        parent: DriveTestHelpers::model($drive->root()),
     ));
     Node::query()->whereKey($node->id)->update(['sequence' => 7]);
 

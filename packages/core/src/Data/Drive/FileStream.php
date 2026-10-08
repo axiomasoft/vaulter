@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Data\Drive;
 
 use InvalidArgumentException;
-use Vaulter\Models\Drive\FileRevision;
+use Vaulter\Data\Snapshots\FileRevisionSnapshot;
 
 final readonly class FileStream
 {
@@ -16,7 +16,7 @@ final readonly class FileStream
         public string $mimeType,
         public int $size,
         public string $sha256,
-        public FileRevision $revision,
+        public FileRevisionSnapshot $revision,
     ) {
         if (!is_resource($stream) || get_resource_type($stream) !== 'stream') {
             throw new InvalidArgumentException('FileStream requires an open byte stream.');

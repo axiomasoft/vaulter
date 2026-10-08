@@ -10,6 +10,7 @@ use Symfony\Component\HtmlSanitizer\HtmlSanitizer;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
 use Vaulter\Configuration\ConfigNormalizer;
+use Vaulter\Contracts\Drive\NodeDocumentHeads;
 use Vaulter\Contracts\Profiles\CommentsFeature;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Contracts\ExportFilenameResolver;
@@ -19,6 +20,7 @@ use Vaulter\Documents\Engines\Handlers\UniverHandler;
 use Vaulter\Documents\Export\DefaultExportFilenameResolver;
 use Vaulter\Documents\Registries\DocumentExporterRegistry;
 use Vaulter\Documents\Registries\DocumentTypeRegistry;
+use Vaulter\Documents\Support\DocumentHeads;
 
 final class BindingsRegistrar extends ServiceProvider
 {
@@ -34,6 +36,7 @@ final class BindingsRegistrar extends ServiceProvider
         $this->app->singleton(DocumentTypeRegistry::class);
         $this->app->singleton(DocumentExporterRegistry::class);
         $this->app->singleton(DocumentsManager::class);
+        $this->app->bind(NodeDocumentHeads::class, DocumentHeads::class);
         $this->app->alias(DocumentsManager::class, 'vaulter.documents');
         $this->app->tag([TipTapHandler::class], 'vaulter.file_handlers');
 

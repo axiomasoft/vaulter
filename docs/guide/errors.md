@@ -44,6 +44,7 @@ Codes are a stable public contract (AD29).
 | `validation_failed` | 422 | `Vaulter\Exceptions\Access\UnenumerableGrantSubjectException` |
 | `unknown_profile` | 422 | `Vaulter\Exceptions\Profiles\UnknownProfileException` |
 | `concurrent_update` | 409 | `Vaulter\Exceptions\Database\ConcurrentUpdateException` |
+| `write_outside_operation` | 500 | `Vaulter\Exceptions\Database\WriteOutsideOperationException` |
 | `node_not_found` | 404 | `Vaulter\Exceptions\Nodes\NodeNotFoundException` |
 | `drive_not_found` | 404 | `Vaulter\Exceptions\Nodes\StorageNotFoundException` |
 
@@ -325,3 +326,12 @@ the node and its content have separate validators.
 `collaboration_epoch_mismatch` (409) — a collaboration write came from a room of an older
 generation: the document was restored or its JSON replaced since the room opened. The write is
 refused so the abandoned history is not merged back; reopen the document in a new room.
+
+## write-outside-operation
+
+`write_outside_operation` (500, an integration error) — code outside the Vaulter operations saved,
+updated or deleted a Vaulter model (`Node::query()->update(...)`, `$node->save()`). Rows change only
+through the `DriveHandle` operations, which keep the invariants, the authorization and the audit
+trail; the model guard (`vaulter.database.write_guard`, default `true`) refuses the write before it
+reaches the database. Move the write to an operation. `DB::table()` and raw SQL are not intercepted:
+the guard is defence in depth, not a sandbox.

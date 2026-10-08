@@ -51,8 +51,8 @@ it('walls a subfolder off from a team writer and gives HR a direct reader role (
     $access = accessV1($this->owner, $this->drive);
 
     // The owner reaches /proj/hr only through the inherited root grant, so grant first, then wall off.
-    $access->grant($hr, new GrantInput(subject: Subject::ofModel(AccessTestHelpers::user(3)), role: RoleRegistry::READER));
-    $access->restrictInheritance($hr);
+    $access->grant($hr->id, new GrantInput(subject: Subject::ofModel(AccessTestHelpers::user(3)), role: RoleRegistry::READER));
+    $access->restrictInheritance($hr->id);
 
     expect(accessV1Can(2, Ability::Edit, $proj))->toBeTrue()
         ->and(accessV1Can(2, Ability::View, $hr))->toBeFalse()
@@ -79,12 +79,12 @@ it('requires Manage to restrict or restore inheritance', function (): void {
     AccessTestHelpers::grant($folder, RoleRegistry::ORGANIZER, subjectId: 5);
     $organizer = accessV1(AccessTestHelpers::user(5), $this->drive);
 
-    expect(fn () => $organizer->restrictInheritance($folder))->toThrow(PermissionDeniedException::class)
+    expect(fn () => $organizer->restrictInheritance($folder->id))->toThrow(PermissionDeniedException::class)
         ->and($folder->refresh()->inherit_grants)->toBeTrue();
 
-    $node = accessV1($this->owner, $this->drive)->restrictInheritance($folder);
-    expect($node->inherit_grants)->toBeFalse()
-        ->and(fn () => $organizer->restoreInheritance($folder))->toThrow(PermissionDeniedException::class);
+    $node = accessV1($this->owner, $this->drive)->restrictInheritance($folder->id);
+    expect($node->inheritsAccess)->toBeFalse()
+        ->and(fn () => $organizer->restoreInheritance($folder->id))->toThrow(PermissionDeniedException::class);
 });
 
 it('restores inheritance and keeps the direct grants', function (): void {
@@ -96,9 +96,9 @@ it('restores inheritance and keeps the direct grants', function (): void {
 
     expect(accessV1Can(6, Ability::View, $child))->toBeFalse();
 
-    $node = accessV1($this->owner, $this->drive)->restoreInheritance($child);
+    $node = accessV1($this->owner, $this->drive)->restoreInheritance($child->id);
 
-    expect($node->inherit_grants)->toBeTrue()
+    expect($node->inheritsAccess)->toBeTrue()
         ->and(accessV1Can(6, Ability::Edit, $child))->toBeTrue()
         ->and(accessV1Can(7, Ability::Comment, $child))->toBeTrue()
         ->and(NodeGrant::query()->where('node_id', $child->id)->count())->toBe(2);
@@ -113,7 +113,7 @@ it('copies the inherited roles onto the node with copy_current and keeps access 
     // An item grant on the parent never reached the child and is not copied.
     AccessTestHelpers::grant($parent, RoleRegistry::OWNER, scope: GrantScope::Item, subjectId: 10);
 
-    accessV1($this->owner, $this->drive)->restrictInheritance($child, InheritanceRestriction::CopyCurrent);
+    accessV1($this->owner, $this->drive)->restrictInheritance($child->id, InheritanceRestriction::CopyCurrent);
 
     $copies = NodeGrant::query()->where('node_id', $child->id)->get()->keyBy(fn (NodeGrant $grant): string => (string) $grant->subject_id);
     expect($child->refresh()->inherit_grants)->toBeFalse()
@@ -147,7 +147,7 @@ it('never makes a copy broader or longer-lived than the inherited roles', functi
     AccessTestHelpers::grant($top, RoleRegistry::ORGANIZER, subjectId: 13, expiresAt: $later);
     AccessTestHelpers::grant($leaf, RoleRegistry::READER, subjectId: 13, expiresAt: $soon);
 
-    accessV1($this->owner, $this->drive)->restrictInheritance($leaf, InheritanceRestriction::CopyCurrent);
+    accessV1($this->owner, $this->drive)->restrictInheritance($leaf->id, InheritanceRestriction::CopyCurrent);
 
     $grant = static fn (int $subject): NodeGrant => NodeGrant::query()->where('node_id', $leaf->id)->where('subject_id', $subject)->sole();
     expect($grant(11)->role_key)->toBe(RoleRegistry::WRITER)
@@ -163,7 +163,7 @@ it('is a no-op when the node already has the requested inheritance', function ()
     AccessTestHelpers::grant($folder, RoleRegistry::OWNER, scope: GrantScope::Item, subjectId: 1);
     $before = NodeGrant::query()->count();
 
-    accessV1($this->owner, $this->drive)->restrictInheritance($folder, InheritanceRestriction::CopyCurrent);
+    accessV1($this->owner, $this->drive)->restrictInheritance($folder->id, InheritanceRestriction::CopyCurrent);
 
     expect(NodeGrant::query()->count())->toBe($before)
         ->and($folder->refresh()->inherit_grants)->toBeFalse();
@@ -171,10 +171,10 @@ it('is a no-op when the node already has the requested inheritance', function ()
 
 it('grants the newest version of a role and refuses unknown roles', function (): void {
     $folder = AccessTestHelpers::folder($this->drive, null, 'versioned');
-    $grant = accessV1($this->owner, $this->drive)->grant($folder, new GrantInput(subject: new Subject('user', 14), role: RoleRegistry::COMMENTER));
+    $grant = accessV1($this->owner, $this->drive)->grant($folder->id, new GrantInput(subject: new Subject('user', 14), role: RoleRegistry::COMMENTER));
 
-    expect($grant->role_key)->toBe(RoleRegistry::COMMENTER)
-        ->and($grant->role_version)->toBe(1)
+    expect($grant->role)->toBe(RoleRegistry::COMMENTER)
+        ->and($grant->roleVersion)->toBe(1)
         ->and(fn () => new GrantInput(subject: new Subject('user', 14), role: 'editor'))->toThrow(UnknownRoleException::class);
 });
 

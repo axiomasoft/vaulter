@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Vaulter\Operations;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\CursorPaginator;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\OperationGuard;
@@ -18,6 +17,10 @@ use Vaulter\Contracts\Access\AccessOperations as Contract;
 use Vaulter\Data\Access\GrantInput;
 use Vaulter\Data\Access\GrantNodeAccessInput;
 use Vaulter\Data\Access\RevokeGrantInput;
+use Vaulter\Data\Snapshots\GrantSnapshot;
+use Vaulter\Data\Snapshots\Mapping\AccessSnapshotMapper;
+use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\InheritanceRestriction;
 use Vaulter\Enums\Operations\OperationKind;
@@ -27,37 +30,37 @@ use Vaulter\Models\Drive\Node;
 
 final readonly class AccessOperations implements Contract
 {
-    public function __construct(private OperationContext $context, private NodeLocator $locator, private OperationGuard $guard, private AccessResolver $resolver, private VaulterConfig $config, private GrantNodeAccessAction $create, private RevokeNodeAccessAction $delete, private SetNodeInheritanceAction $inheritance) {}
+    public function __construct(private OperationContext $context, private NodeLocator $locator, private OperationGuard $guard, private AccessResolver $resolver, private VaulterConfig $config, private GrantNodeAccessAction $create, private RevokeNodeAccessAction $delete, private SetNodeInheritanceAction $inheritance, private AccessSnapshotMapper $grantMapper, private NodeSnapshotMapper $nodeMapper) {}
 
-    /** @return Collection<int, NodeGrant> */
-    public function grants(Node|int|string $node): Collection
+    /** @return list<GrantSnapshot> */
+    public function grants(NodeSnapshot|string|int $node): array
     {
         $node = $this->located($node);
         $this->guard->authorizeGrants(context: $this->context, node: $node);
         $class = $this->config->model('grant');
 
-        return $class::query()->where('node_id', $node->id)->orderByDesc('created_at')->orderByDesc('id')->get();
+        return array_values($class::query()->where('node_id', $node->id)->orderByDesc('created_at')->orderByDesc('id')->get()->map(fn (NodeGrant $grant): GrantSnapshot => $this->grantMapper->grant($grant))->all());
     }
 
-    public function grant(Node|int|string $node, GrantInput $grant): NodeGrant
+    public function grant(NodeSnapshot|string|int $node, GrantInput $grant): GrantSnapshot
     {
         $node = $this->located($node);
         $this->guard->authorizeGrants(context: $this->context, node: $node);
 
-        return $this->create->execute(context: $this->context, input: new GrantNodeAccessInput(node: $node, grant: $grant));
+        return $this->grantMapper->grant($this->create->execute(context: $this->context, input: new GrantNodeAccessInput(node: $node, grant: $grant)));
     }
 
-    public function revoke(Node|int|string $node, NodeGrant|int|string $grant): void
+    public function revoke(NodeSnapshot|string|int $node, GrantSnapshot|string|int $grant): void
     {
         $node = $this->located($node);
         $this->guard->authorizeGrants(context: $this->context, node: $node);
         $class = $this->config->model('grant');
-        $key = $grant instanceof NodeGrant ? $grant->getRawOriginal($grant->getKeyName()) : $grant;
+        $key = $grant instanceof GrantSnapshot ? $grant->id : $grant;
         $row = $class::query()->where('node_id', $node->id)->whereKey($key)->first() ?? throw NodeNotFoundException::forId($node->id);
         $this->delete->execute(context: $this->context, input: new RevokeGrantInput(node: $node, grant: $row));
     }
 
-    public function explain(Node|int|string $node, Ability $ability, ?Authorizable $subject = null): AccessExplanation
+    public function explain(NodeSnapshot|string|int $node, Ability $ability, ?Authorizable $subject = null): AccessExplanation
     {
         $node = $this->located($node);
         $this->guard->authorize(context: $this->context, ability: Ability::Manage, node: $node);
@@ -69,35 +72,35 @@ final readonly class AccessOperations implements Contract
         return $this->resolver->explain(actor: $subject, ability: $ability, node: $node);
     }
 
-    public function restrictInheritance(Node|int|string $node, InheritanceRestriction $mode = InheritanceRestriction::Empty): Node
+    public function restrictInheritance(NodeSnapshot|string|int $node, InheritanceRestriction $mode = InheritanceRestriction::Empty): NodeSnapshot
     {
         $node = $this->located($node);
         $this->guard->authorize(context: $this->context, ability: Ability::Manage, node: $node, operation: OperationKind::Mutation);
 
-        return $this->inheritance->execute(context: $this->context, node: $node, inherit: false, mode: $mode);
+        return $this->nodeMapper->map($this->inheritance->execute(context: $this->context, node: $node, inherit: false, mode: $mode), $this->context->actor->ref());
     }
 
-    public function restoreInheritance(Node|int|string $node): Node
+    public function restoreInheritance(NodeSnapshot|string|int $node): NodeSnapshot
     {
         $node = $this->located($node);
         $this->guard->authorize(context: $this->context, ability: Ability::Manage, node: $node, operation: OperationKind::Mutation);
 
-        return $this->inheritance->execute(context: $this->context, node: $node, inherit: true);
+        return $this->nodeMapper->map($this->inheritance->execute(context: $this->context, node: $node, inherit: true), $this->context->actor->ref());
     }
 
     /** @internal Existing HTTP list pagination.
-     * @return CursorPaginator<int, NodeGrant>
+     * @return CursorPaginator<int, GrantSnapshot>
      */
-    public function paginate(Node|int|string $node, int $perPage = 50): CursorPaginator
+    public function paginate(NodeSnapshot|string|int $node, int $perPage = 50): CursorPaginator
     {
         $node = $this->located($node);
         $this->guard->authorizeGrants(context: $this->context, node: $node);
         $class = $this->config->model('grant');
 
-        return $class::query()->where('node_id', $node->id)->orderByDesc('created_at')->orderByDesc('id')->cursorPaginate(perPage: $perPage);
+        return $class::query()->where('node_id', $node->id)->orderByDesc('created_at')->orderByDesc('id')->cursorPaginate(perPage: $perPage)->through(fn (NodeGrant $grant): GrantSnapshot => $this->grantMapper->grant($grant));
     }
 
-    private function located(Node|int|string $node): Node
+    private function located(NodeSnapshot|string|int $node): Node
     {
         $node = $this->locator->find(context: $this->context, key: $node);
         if ($node->trashed_at !== null) {

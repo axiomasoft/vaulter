@@ -48,7 +48,7 @@ it('allows an authorised show when the actor holds a grant', function (): void {
 
     $this->getJson('api/vaulter/nodes/'.$folder->getKey())
         ->assertOk()
-        ->assertJsonPath('data.id', $folder->getKey());
+        ->assertJsonPath('data.id', (string) $folder->getKey());
 });
 
 it('hides an unauthorised folder-create destination with 404', function (): void {

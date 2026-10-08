@@ -11,6 +11,7 @@ use Vaulter\Data\Drive\CopyOptions;
 use Vaulter\Data\Drive\RevisionOptions;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\Nodes\NodePurged;
 use Vaulter\Drive\Exceptions\Quota\QuotaExceededException;
@@ -124,7 +125,7 @@ it('UploadFile L106: used_bytes grows by the full size of a version 1 byte small
 
 // L196/L203 CoalesceRemoveLeft: when a new-version upload carries a different
 // mimeType, both repointHead calls must use $data->mimeType, not the file's
-// stale value ($file->mime_type / $node->mime_type).
+// stale value ($file->mime_type / $node->mimeType).
 it('UploadFile L196/L203: new version with a changed mime type updates node and file mime', function (): void {
     $drive = DriveTestHelpers::drive();
     $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('v1 bytes'), 'f.bin'), new UploadOptions(declaredMimeType: 'text/plain'));
@@ -132,11 +133,11 @@ it('UploadFile L196/L203: new version with a changed mime type updates node and 
     // Upload a version with a different declared mime.
     $image = UploadedFile::fake()->image('revision.png', 1, 1);
     $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor(file_get_contents($image->getRealPath())), 'f.bin'), new RevisionOptions(declaredMimeType: 'image/png'));
-    $updated = $node->refresh();
+    $updated = $node;
 
     // CoalesceRemoveLeft mutant: $file->mime_type ('text/plain') is used instead.
-    expect($updated->refresh()->mime_type)->toBe('image/png');
-    expect($updated->file()->first()->mime_type)->toBe('image/png');
+    expect(DriveTestHelpers::model($updated)->mime_type)->toBe('image/png');
+    expect(DriveTestHelpers::model($updated)->file()->first()->mime_type)->toBe('image/png');
 });
 
 // L234-236 RemoveArrayItem: the version row created by makeVersion must carry
@@ -147,7 +148,7 @@ it('UploadFile L234-236: committed version has status=committed, correct created
 
     $node = $drive->actingAs(DriveTestHelpers::actor($drive, 42))->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('data'), 'doc.txt'));
 
-    $version = $node->file()->firstOrFail()->currentRevision()->first();
+    $version = DriveTestHelpers::model($node)->file()->firstOrFail()->currentRevision()->first();
     expect($version->status)->toBe('committed')        // L234
         ->and($version->created_by)->toEqual(42)       // L235
         ->and($version->committed_at)->not->toBeNull() // L236
@@ -193,7 +194,7 @@ it('UploadFile L312 Increment: probeSize probe does not add a phantom byte at th
     // Increment mutant: probedSize=10 → delta=10 → 91+10=101 > 100 → throws. Test fails.
     $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('123456789'), 'f.bin'));
 
-    expect($node)->toBeInstanceOf(Node::class);
+    expect($node)->toBeInstanceOf(NodeSnapshot::class);
     expect($drive->model()->refresh()->used_bytes)->toBe(100);
 });
 
@@ -215,8 +216,8 @@ it('UploadFile L129-130: created_by is set to actorId on new-file commit and no 
 
     $node = $drive->actingAs(DriveTestHelpers::actor($drive, 77))->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('data'), 'f.txt'));
 
-    expect($node->created_by)->toEqual(77)
-        ->and(array_key_exists('owner_id', $node->refresh()->getAttributes()))->toBeFalse();
+    expect($node->createdBy)->toEqual('77')
+        ->and(array_key_exists('owner_id', DriveTestHelpers::model($node)->getAttributes()))->toBeFalse();
 });
 
 // ---------------------------------------------------------------------------
@@ -321,8 +322,8 @@ it('CopyNode: inherit_grants and properties propagate from source to copy', func
 
     $copy = $drive->nodes()->copy($source, destination: null, options: new CopyOptions(name: 'copy.bin'));
 
-    expect((bool) $copy->inherit_grants)->toBeTrue()
-        ->and($copy->properties)->toBeNull();
+    expect((bool) $copy->inheritsAccess)->toBeTrue()
+        ->and($copy->properties)->toBe([]);
 });
 
 // Shortcut payload copy is deliberately unavailable until its full lifecycle exists.
@@ -330,7 +331,7 @@ it('CopyNode rejects a real shortcut before inserting a copy or charging quota',
     $drive = DriveTestHelpers::drive();
     $target = $drive->folders()->create('Target');
     $source = $drive->folders()->create('Shortcut');
-    $source->forceFill(['kind' => NodeKind::Shortcut, 'shortcut_target_id' => $target->getKey()])->save();
+    DriveTestHelpers::model($source)->forceFill(['kind' => NodeKind::Shortcut, 'shortcut_target_id' => $target->id])->save();
     $db = app(VaulterDatabase::class)->connection();
     $state = static fn (): array => [
         $db->table('v_nodes')->count(),
@@ -343,7 +344,7 @@ it('CopyNode rejects a real shortcut before inserting a copy or charging quota',
     expect(fn () => $drive->nodes()->copy($source, options: new CopyOptions(name: 'Shortcut Copy')))
         ->toThrow(UnsupportedNodeKindException::class)
         ->and($state())->toBe($before)
-        ->and($source->refresh()->shortcut_target_id)->toEqual($target->getKey());
+        ->and(DriveTestHelpers::model($source)->shortcut_target_id)->toEqual($target->id);
 });
 
 // L151 RemoveArrayItem in copyFilePayload's version create: status must be 'committed'.
@@ -353,7 +354,7 @@ it('CopyNode L151: copied file version has status=committed', function (): void 
 
     $copy = $drive->nodes()->copy($source, destination: null, options: new CopyOptions(name: 'src-copy.bin'));
 
-    $version = $copy->file()->firstOrFail()->currentRevision()->first();
+    $version = DriveTestHelpers::model($copy)->file()->firstOrFail()->currentRevision()->first();
     // RemoveArrayItem mutant: 'status' key missing → DB default (likely null or empty).
     expect($version->status)->toBe('committed');
 });
@@ -469,7 +470,7 @@ it('ForceDelete L67: NodeForceDeleted event carries numerically indexed nodeIds 
     Event::fake([NodePurged::class]);
     $drive = DriveTestHelpers::drive();
     $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('data'), 'f.bin'));
-    $nodeId = $node->getKey();
+    $nodeId = $node->id;
 
     $drive->nodes()->trash($node);
 

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
@@ -27,8 +28,12 @@ use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\Actor;
+
+// These tests drive handlers and repositories directly; Vaulter's entry points open the write scope, these calls do not.
+beforeEach(fn () => DriveTestHelpers::insideOperation());
 
 beforeEach(function (): void {
     Storage::fake('local');
@@ -46,7 +51,7 @@ it('initiate persists the full server-built session shape from UploadInitData', 
         'name' => 'inbox',
         'size_bytes' => 0,
     ]);
-    $folder->save();
+    app(VaulterDatabase::class)->write(fn () => $folder->save());
 
     $session = app(UploadSessionManager::class)->initiate(context: new OperationContext(drive: $storage, actor: Actor::user((new TestUser)->forceFill(['id' => 42])), correlationId: (string) Str::ulid()), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
@@ -123,7 +128,7 @@ it('initiate leaves a tus session ready for PATCH after handler initialise', fun
 
 it('markAssembled refuses an illegal status transition', function (): void {
     $session = UploadTestHelpers::session(UploadTestHelpers::storage(), totalSizeBytes: 4);
-    $session->forceFill(['status' => UploadStatus::Committed])->save();
+    app(VaulterDatabase::class)->write(fn () => $session->forceFill(['status' => UploadStatus::Committed])->save());
 
     expect(fn () => app(UploadSessionManager::class)->markAssembled($session->refresh()))
         ->toThrow(ValidationException::class);
@@ -177,9 +182,9 @@ it('countActiveForActor counts only initiated and uploading rows', function (): 
 
     UploadTestHelpers::session($storage, totalSizeBytes: 4, createdBy: 55);
     $uploading = UploadTestHelpers::session($storage, totalSizeBytes: 4, createdBy: 55);
-    $uploading->forceFill(['status' => UploadStatus::Uploading])->save();
+    app(VaulterDatabase::class)->write(fn () => $uploading->forceFill(['status' => UploadStatus::Uploading])->save());
     $aborted = UploadTestHelpers::session($storage, totalSizeBytes: 4, createdBy: 55);
-    $aborted->forceFill(['status' => UploadStatus::Aborted])->save();
+    app(VaulterDatabase::class)->write(fn () => $aborted->forceFill(['status' => UploadStatus::Aborted])->save());
 
     expect($read->countActiveForActor(55))->toBe(2)
         ->and($read->countActiveForActor(null))->toBe(0);
@@ -209,7 +214,7 @@ it('commit commits PNG bytes when declared mime matches and discards staged temp
     $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAD0lEQVR42mP8z5BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', true) ?: '';
     $storage = UploadTestHelpers::storage();
     $session = UploadTestHelpers::session($storage, totalSizeBytes: strlen($png), parentId: $storage->root_node_id);
-    $session->forceFill(['mime_type' => 'image/png'])->save();
+    app(VaulterDatabase::class)->write(fn () => $session->forceFill(['mime_type' => 'image/png'])->save());
 
     app(TusUploadHandler::class)->patch($session->refresh(), UploadTestHelpers::streamFor($png), 0);
     app(UploadSessionManager::class)->markAssembled($session->refresh());
@@ -234,7 +239,7 @@ it('commit places a new file under the session target_parent_id, not implicit ro
         'name' => 'dest',
         'size_bytes' => 0,
     ]);
-    $folder->save();
+    app(VaulterDatabase::class)->write(fn () => $folder->save());
 
     $bytes = 'folder-target';
     $session = UploadTestHelpers::session(
@@ -277,7 +282,7 @@ it('commit rejects image/jpg declared when magic bytes are PNG', function (): vo
     $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAD0lEQVR42mP8z5BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', true) ?: '';
     $storage = UploadTestHelpers::storage();
     $session = UploadTestHelpers::session($storage, totalSizeBytes: strlen($png));
-    $session->forceFill(['mime_type' => 'image/jpg'])->save();
+    app(VaulterDatabase::class)->write(fn () => $session->forceFill(['mime_type' => 'image/jpg'])->save());
 
     app(TusUploadHandler::class)->patch($session->refresh(), UploadTestHelpers::streamFor($png), 0);
     app(UploadSessionManager::class)->markAssembled($session->refresh());

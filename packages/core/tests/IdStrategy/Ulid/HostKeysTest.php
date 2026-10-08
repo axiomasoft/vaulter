@@ -38,7 +38,7 @@ it('round-trips UUID users and bigint projects and Spatie roles with ULID Vaulte
     $drive = DriveTestHelpers::drive(42);
     $storage = $drive->model()->refresh();
     AccessTestHelpers::grant($drive->root(), RoleRegistry::OWNER, subjectId: $user->getKey(), subjectType: $user->getMorphClass());
-    $node = $drive->actingAs($user)->folders()->create('UUID actor')->refresh();
+    $node = $drive->actingAs($user)->folders()->create('UUID actor');
     $grant = AccessTestHelpers::grant($node, RoleRegistry::READER, subjectId: $user->getKey(), subjectType: $user->getMorphClass());
     $roleGrant = AccessTestHelpers::grant($node, RoleRegistry::READER, subjectId: $role->getKey(), subjectType: $role->getMorphClass());
     $activity = app(ActivityStoreRepository::class)->record(new RecordActivityCommand(
@@ -49,10 +49,10 @@ it('round-trips UUID users and bigint projects and Spatie roles with ULID Vaulte
     ))->refresh();
 
     expect($storage->owner_id)->toBe('42')
-        ->and($node->created_by)->toBe($uuid)
+        ->and($node->createdBy)->toBe($uuid)
         ->and($grant->subject_id)->toBe($uuid)
         ->and($roleGrant->subject_id)->toBe('42')
         ->and($activity->actor_id)->toBe($uuid)
-        ->and(NodeGrant::query()->where('node_id', $node->getKey())->where('subject_type', $user->getMorphClass())->where('subject_id', $uuid)->count())->toBe(1)
-        ->and(strlen((string) $node->getKey()))->toBe(26);
+        ->and(NodeGrant::query()->where('node_id', $node->id)->where('subject_type', $user->getMorphClass())->where('subject_id', $uuid)->count())->toBe(1)
+        ->and(strlen((string) $node->id))->toBe(26);
 });

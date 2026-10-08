@@ -18,7 +18,7 @@ it('round-trips a ULID grant subject and actor with bigint Vaulter IDs', functio
     $this->actingAs($user);
     $drive = DriveTestHelpers::drive(42);
     AccessTestHelpers::grant($drive->root(), RoleRegistry::OWNER, subjectId: $user->getKey(), subjectType: $user->getMorphClass());
-    $node = $drive->actingAs($user)->folders()->create('ULID actor')->refresh();
+    $node = $drive->actingAs($user)->folders()->create('ULID actor');
     $grant = AccessTestHelpers::grant($node, RoleRegistry::READER, subjectId: $ulid, subjectType: $user->getMorphClass());
     $activity = app(ActivityStoreRepository::class)->record(new RecordActivityCommand(
         verb: EventType::FolderCreated,
@@ -29,6 +29,6 @@ it('round-trips a ULID grant subject and actor with bigint Vaulter IDs', functio
 
     expect($grant->subject_id)->toBe($ulid)
         ->and($activity->actor_id)->toBe($ulid)
-        ->and($node->created_by)->toBe($ulid)
-        ->and($node->getKey())->toBeInt();
+        ->and($node->createdBy)->toBe($ulid)
+        ->and($node->id)->toBeString()->toBeNumeric();
 });

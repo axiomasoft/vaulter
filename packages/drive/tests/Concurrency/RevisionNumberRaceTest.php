@@ -32,15 +32,15 @@ it('V03 serializes revisions and accounts for every retained revision', function
         expect($outcome->ok)->toBeTrue($outcome->message ?? '');
     }
 
-    $file = $node->file()->firstOrFail();
+    $file = DriveTestHelpers::model($node)->file()->firstOrFail();
     $head = $file->currentRevision;
     expect($file->versions()->orderBy('number')->pluck('number')->all())->toBe([1, 2, 3])
         ->and($file->revision_count)->toBe(3)
         ->and($head->number)->toBe(3)
-        ->and($node->refresh()->file()->value('current_revision_id'))->toBe($head->id)
+        ->and(DriveTestHelpers::model($node)->file()->value('current_revision_id'))->toBe($head->id)
         // Every retained revision counts (PLAN2.D48).
         ->and($drive->model()->refresh()->used_bytes)->toBe(strlen('old') + strlen('short') + strlen('a much longer head'))
-        ->and($node->size_bytes)->toBe($head->size_bytes);
+        ->and($node->sizeBytes)->toBe($head->size_bytes);
 });
 
 // Upload's node lock ALSO serializes revisions. Exercise the aggregate repository

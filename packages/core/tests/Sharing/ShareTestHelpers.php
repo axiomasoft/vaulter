@@ -7,6 +7,8 @@ namespace Vaulter\Tests\Sharing;
 use Illuminate\Support\Carbon;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Data\Snapshots\NodeSnapshot;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Sharing\ShareAudience;
 use Vaulter\Models\Drive\Node;
@@ -27,7 +29,7 @@ final class ShareTestHelpers
      * caller already knows the raw token to present.
      */
     public static function share(
-        Node $node,
+        Node|NodeSnapshot $node,
         string $token = 'raw-share-token-value',
         string $role = RoleRegistry::READER,
         ShareAudience $audience = ShareAudience::Anyone,
@@ -40,12 +42,14 @@ final class ShareTestHelpers
         ?Carbon $revokedAt = null,
     ): NodeShare {
         $model = app(VaulterConfig::class)->model('node_share');
+        $nodeModel = app(VaulterConfig::class)->model('node');
+        $row = $node instanceof Node ? $node : $nodeModel::query()->findOrFail($node->id);
 
         /** @var NodeShare $share */
         $share = new $model;
         $share->forceFill([
-            'tenant_id' => $node->tenant_id,
-            'node_id' => $node->getKey(),
+            'tenant_id' => $row->tenant_id,
+            'node_id' => $row->getKey(),
             'token_hash' => ShareToken::hash($token),
             'token_prefix' => ShareToken::prefix($token, 8),
             'role_key' => $role,
@@ -58,7 +62,8 @@ final class ShareTestHelpers
             'max_uses' => $maxUses,
             'use_count' => $useCount,
             'revoked_at' => $revokedAt,
-        ])->save();
+        ]);
+        app(VaulterDatabase::class)->write(static fn (): bool => $share->save());
 
         return $share->refresh();
     }

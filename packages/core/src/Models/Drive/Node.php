@@ -15,6 +15,7 @@ use Staudenmeir\LaravelAdjacencyList\Eloquent\HasRecursiveRelationships;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Models\Concerns\StampsDriveTenant;
@@ -59,7 +60,9 @@ use Vaulter\Support\NodeName;
  */
 class Node extends Model
 {
-    use HasRecursiveRelationships;
+    use GuardsWrites, HasRecursiveRelationships {
+        GuardsWrites::newBaseQueryBuilder insteadof HasRecursiveRelationships;
+    }
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
     use StampsDriveTenant;

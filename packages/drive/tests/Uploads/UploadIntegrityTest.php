@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Exceptions\Uploads\UploadContentMismatchException;
@@ -14,6 +15,10 @@ use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Tests\Drive\DriveTestHelpers;
+
+// These tests drive handlers and repositories directly; Vaulter's entry points open the write scope, these calls do not.
+beforeEach(fn () => DriveTestHelpers::insideOperation());
 
 /**
  * Integrity gates on the resumable-upload commit path (W0/B5): the assembled object
@@ -125,7 +130,7 @@ it('append не поднимает пиковую память до размер
 it('commit отклоняет объект с mime image/png и magic-bytes ZIP, F-P1.4-11', function (): void {
     $storage = UploadTestHelpers::storage();
     $session = UploadTestHelpers::session($storage, totalSizeBytes: null);
-    $session->forceFill(['mime_type' => 'image/png'])->save();
+    app(VaulterDatabase::class)->write(fn () => $session->forceFill(['mime_type' => 'image/png'])->save());
 
     // A genuine ZIP archive (finfo reliably detects application/zip) declared as PNG.
     $zipPath = tempnam(sys_get_temp_dir(), 'vlt_zip_').'.zip';

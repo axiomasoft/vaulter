@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Pagination\Cursor;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Data\Drive\ListOptions;
+use Vaulter\Data\Snapshots\ActivityEntrySnapshot;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Drive\NodeSort;
 use Vaulter\Enums\Events\EventType;
@@ -44,9 +45,9 @@ it('does not expose hidden unknown deleted or foreign targets under root View', 
     $other = AccessTestHelpers::folder(AccessTestHelpers::storage(), null, 'foreign');
     $foreign = visibleActivityRow($other, 3);
     $foreign->forceFill(['drive_id' => $this->drive->id])->save();
-    expect($this->operation->forDrive()->items())->toBe([]);
+    expect($this->operation->forDrive()->items)->toBe([]);
     $system = app()->makeWith(ActivityOperations::class, ['context' => OperationContext::system($this->drive, 'audit')]);
-    expect($system->forDrive()->items())->toHaveCount(4);
+    expect($system->forDrive()->items)->toHaveCount(4);
 });
 
 it('fills pages across hidden windows and retains stable tuple ties', function (): void {
@@ -61,10 +62,10 @@ it('fills pages across hidden windows and retains stable tuple ties', function (
         visibleActivityRow($hidden, 2);
     }
     $page = $this->operation->forDrive(new ListOptions(perPage: 3));
-    expect($page->items())->toHaveCount(3)->and($page->previousCursor())->toBeNull();
-    $next = $this->operation->forDrive(new ListOptions(perPage: 3, cursor: $page->nextCursor()->encode()));
-    expect($next->items())->toHaveCount(3)->and(array_intersect(array_column($page->items(), 'id'), array_column($next->items(), 'id')))->toBe([])
-        ->and($next->nextCursor())->toBeNull();
+    expect($page->items)->toHaveCount(3)->and($page->nextCursor)->not->toBeNull();
+    $next = $this->operation->forDrive(new ListOptions(perPage: 3, cursor: $page->nextCursor));
+    expect($next->items)->toHaveCount(3)->and(array_intersect(array_column($page->items, 'id'), array_column($next->items, 'id')))->toBe([])
+        ->and($next->nextCursor)->toBeNull();
 });
 
 it('continues from last scanned tuple even for an empty budget-limited page', function (): void {
@@ -76,9 +77,9 @@ it('continues from last scanned tuple even for an empty budget-limited page', fu
     visibleActivityRow($hidden, 2);
     visibleActivityRow($hidden, 3);
     $page = $this->operation->forDrive();
-    expect($page->items())->toBe([])->and($page->nextCursor())->not->toBeNull();
-    $next = $this->operation->forDrive(new ListOptions(cursor: $page->nextCursor()->encode()));
-    expect($next->items())->toHaveCount(1)->and($next->items()[0]->id)->toBe($row->id);
+    expect($page->items)->toBe([])->and($page->nextCursor)->not->toBeNull();
+    $next = $this->operation->forDrive(new ListOptions(cursor: $page->nextCursor));
+    expect($next->items)->toHaveCount(1)->and($next->items[0]->id)->toBe((string) $row->id);
 });
 
 it('rejects tampered cross-scope and raw cursors and rechecks ACL across pages', function (): void {
@@ -87,8 +88,8 @@ it('rejects tampered cross-scope and raw cursors and rechecks ACL across pages',
     visibleActivityRow($node, 1);
     visibleActivityRow($node, 2);
     $page = $this->operation->forDrive(new ListOptions(perPage: 1));
-    $cursor = $page->nextCursor();
-    expect(fn () => $this->operation->forNode($node, new ListOptions(cursor: $cursor->encode())))->toThrow(InvalidArgumentException::class);
+    $cursor = Cursor::fromEncoded($page->nextCursor);
+    expect(fn () => $this->operation->forNode($node->id, new ListOptions(cursor: $cursor->encode())))->toThrow(InvalidArgumentException::class);
     $params = $cursor->toArray();
     $params['id'] = 'forged';
     $tampered = new Cursor($params);
@@ -96,7 +97,7 @@ it('rejects tampered cross-scope and raw cursors and rechecks ACL across pages',
         ->and(fn () => $this->operation->forDrive(new ListOptions(cursor: 'invalid')))->toThrow(InvalidArgumentException::class)
         ->and(fn () => $this->operation->forDrive(new ListOptions(sort: NodeSort::Name)))->toThrow(InvalidArgumentException::class);
     $grant->delete();
-    expect($this->operation->forDrive(new ListOptions(cursor: $cursor->encode()))->items())->toBe([]);
+    expect($this->operation->forDrive(new ListOptions(cursor: $cursor->encode()))->items)->toBe([]);
 });
 
 it('SEC-I7-projection withholds request fingerprint and access details from a reader without Share', function (): void {
@@ -113,23 +114,21 @@ it('SEC-I7-projection withholds request fingerprint and access details from a re
         $rows[(string) $node->id] = visibleActivityRow($node, $index + 1)->forceFill($details());
         $rows[(string) $node->id]->save();
     }
-    $byTarget = static fn (array $items): array => array_combine(array_map(static fn (Activity $row): string => (string) $row->target_id, $items), $items);
+    $byTarget = static fn (array $items): array => array_combine(array_map(static fn (ActivityEntrySnapshot $row): string => (string) $row->targetId, $items), $items);
 
-    $seen = $byTarget($this->operation->forDrive()->items());
+    $seen = $byTarget($this->operation->forDrive()->items);
 
     $restricted = $seen[(string) $readOnly->id];
-    expect($restricted->ip)->toBeNull()->and($restricted->user_agent)->toBeNull()->and($restricted->request_id)->toBeNull()
-        ->and($restricted->actor_id)->toBeNull()->and($restricted->actor_type)->toBe('user')
+    expect($restricted->ip)->toBeNull()->and($restricted->userAgent)->toBeNull()->and($restricted->requestId)->toBeNull()
+        ->and($restricted->actorId)->toBeNull()->and($restricted->actorType)->toBe('user')
         ->and($restricted->context)->toBe(['level' => 'reader']);
     $full = $seen[(string) $managed->id];
-    expect($full->ip)->toBe('203.0.113.9')->and($full->actor_id)->toBe('42')->and($full->context)->toHaveKeys(['subject_id', 'permissions', 'token_prefix']);
+    expect($full->ip)->toBe('203.0.113.9')->and($full->actorId)->toBe('42')->and($full->context)->toHaveKeys(['subject_id', 'permissions', 'token_prefix']);
 
     $system = app()->makeWith(ActivityOperations::class, ['context' => OperationContext::system($this->drive, 'audit')]);
-    foreach ($system->forDrive()->items() as $row) {
+    foreach ($system->forDrive()->items as $row) {
         expect($row->ip)->toBe('203.0.113.9')->and($row->context)->toHaveKey('subject_id');
     }
     // The projection is read-only: nothing was written back.
     expect(Activity::query()->findOrFail($rows[(string) $readOnly->id]->id)->ip)->toBe('203.0.113.9');
-    $restricted->forceFill(['verb' => EventType::NodeRenamed])->save();
-    expect(Activity::query()->findOrFail($restricted->id)->ip)->toBe('203.0.113.9');
 });

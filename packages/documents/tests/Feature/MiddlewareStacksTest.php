@@ -17,6 +17,7 @@ use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Tests\Collaboration\CollaborationEnabledTestCase;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Http\Middleware\RecordVaulterRequestMetrics;
+use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\FakeHostUserResolver;
 use Vaulter\Tests\Sharing\ShareTestHelpers;
 use Vaulter\Webhooks\WebhookSigner;
@@ -65,7 +66,7 @@ it('accepts a signed hub JWT without a Sanctum token', function (): void {
     $drive = DocumentTestHelpers::drive();
     app()->bind(HostUserResolver::class, fn () => new FakeHostUserResolver);
     $node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
-        storage: $drive->model(), name: 'Hub', content: DocumentTestHelpers::content(), parent: $drive->root(),
+        storage: $drive->model(), name: 'Hub', content: DocumentTestHelpers::content(), parent: DriveTestHelpers::model($drive->root()),
     ));
     $body = ['node_id' => $node->getKey()];
     $timestamp = time();

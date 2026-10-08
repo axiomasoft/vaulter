@@ -7,6 +7,7 @@ namespace Vaulter\Tests\Concerns;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Configuration\IdsConfig;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Drive\Node;
@@ -73,12 +74,12 @@ trait ExercisesWideNodeListing
 
         $this->getJson('api/vaulter/storages/'.$storage->getKey().'/nodes?parent_id='.$anchor->getKey().'&per_page=2')
             ->assertOk()->assertJsonCount(2, 'data')
-            ->assertJsonPath('data.0.id', $this->wideNodeKey(1));
+            ->assertJsonPath('data.0.id', (string) $this->wideNodeKey(1));
 
         // Candidate listing remains a superset; the exact per-action gate honours an
         // inheritance boundary the SQL does not apply.
         $denied = Node::findOrFail($this->wideNodeKey(1));
-        $denied->forceFill(['inherit_grants' => false])->save();
+        app(VaulterDatabase::class)->write(fn () => $denied->forceFill(['inherit_grants' => false])->save());
         expect($repository->queryForUser($actor)->whereKey($denied->getKey())->exists())->toBeTrue();
         $this->getJson('api/vaulter/nodes/'.$denied->getKey())->assertNotFound();
         expect($repository->queryForUser(AccessTestHelpers::user(2))->count())->toBe(0);

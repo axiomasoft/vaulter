@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Data\Drive;
 
 use InvalidArgumentException;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Enums\Drive\OnNameConflict;
-use Vaulter\Models\Drive\Node;
 
 final readonly class RestoreOptions
 {
     public function __construct(
-        public Node|int|string|null $destination = null,
+        public NodeSnapshot|string|int|null $destination = null,
         public OnNameConflict $onConflict = OnNameConflict::Rename,
     ) {
         if ($onConflict === OnNameConflict::AddRevision) {
@@ -24,7 +24,7 @@ final readonly class RestoreOptions
         return new self;
     }
 
-    public function destination(Node|int|string|null $destination): self
+    public function destination(NodeSnapshot|string|int|null $destination): self
     {
         return new self(destination: $destination, onConflict: $this->onConflict);
     }

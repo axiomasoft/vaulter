@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Storage;
 use Vaulter\Data\Drive\RestoreOptions;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Drive\OnNameConflict;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -28,8 +29,8 @@ it('trash помечает узел и всё поддерево, used_bytes н�
     $drive->nodes()->trash($folder);
 
     // The whole subtree is trashed atomically.
-    expect($folder->refresh()->trashed_at)->not->toBeNull()
-        ->and($sub->refresh()->trashed_at)->not->toBeNull()
+    expect(DriveTestHelpers::model($folder)->trashed_at)->not->toBeNull()
+        ->and(DriveTestHelpers::model($sub)->trashed_at)->not->toBeNull()
         // Trashed bytes still occupy storage — used_bytes is UNCHANGED.
         ->and($drive->model()->refresh()->used_bytes)->toBe($usedBefore);
 });
@@ -42,7 +43,7 @@ it('trash освобождает имя для нового сиблинга (pa
 
     // Same name is now free because the trashed row is excluded from the index.
     $second = $drive->folders()->create('Docs');
-    expect($second->getKey())->not->toEqual($first->getKey());
+    expect($second->id)->not->toEqual($first->id);
 });
 
 it('restore очищает trashed-триплет на поддереве', function (): void {
@@ -54,8 +55,8 @@ it('restore очищает trashed-триплет на поддереве', func
     $drive->nodes()->trash($folder);
     $drive->trash()->restore($folder);
 
-    expect($folder->refresh()->trashed_at)->toBeNull()
-        ->and($sub->refresh()->trashed_at)->toBeNull();
+    expect(DriveTestHelpers::model($folder)->trashed_at)->toBeNull()
+        ->and(DriveTestHelpers::model($sub)->trashed_at)->toBeNull();
 });
 
 it('restore при живом сиблинге с тем же именем → конфликт', function (): void {
@@ -80,10 +81,10 @@ it('restore возвращает к корню, если исходный род
     // Trash the child (records trashed_from_parent_id = Parent), then make the
     // original home vanish by soft-deleting the parent directly.
     $drive->nodes()->trash($child);
-    $parent->delete();
+    app(VaulterDatabase::class)->write(fn () => DriveTestHelpers::model($parent)->delete());
 
-    $restored = $drive->trash()->restore($child->refresh());
+    $restored = $drive->trash()->restore($child);
 
     // Re-homed to the storage root node, deterministically.
-    expect($restored->parent_id)->toEqual($drive->root()->getKey());
+    expect($restored->parentId)->toEqual($drive->root()->id);
 });

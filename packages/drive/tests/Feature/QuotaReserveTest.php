@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Storage;
 use Vaulter\Data\Drive\CopyOptions;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Exceptions\Quota\QuotaExceededException;
 use Vaulter\Exceptions\Drive\QuotaExceededException as CoreQuotaExceededException;
@@ -61,7 +62,7 @@ it('rolls back an entire subtree copy when its summed heads exceed quota', funct
     $drive->model()->forceFill(['quota_bytes' => 19])->save();
     $counts = [Node::query()->count(), File::query()->count(), FileRevision::query()->count(), FileRevisionBlob::query()->count()];
 
-    expect(fn (): Node => $drive->nodes()->copy($folder, destination: null, options: new CopyOptions(name: 'copy')))->toThrow(QuotaExceededException::class);
+    expect(fn (): NodeSnapshot => $drive->nodes()->copy($folder, destination: null, options: new CopyOptions(name: 'copy')))->toThrow(QuotaExceededException::class);
 
     expect([Node::query()->count(), File::query()->count(), FileRevision::query()->count(), FileRevisionBlob::query()->count()])->toBe($counts)
         ->and(Node::query()->where('name', 'copy')->exists())->toBeFalse()
@@ -72,14 +73,14 @@ it('rolls back an entire subtree copy when its summed heads exceed quota', funct
 it('reserves a revision against the database quota value despite a stale node and drive snapshot', function (): void {
     $drive = DriveTestHelpers::drive();
     $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('aaaa'), 'a.txt'));
-    $stale = $node->fresh();
+    $stale = DriveTestHelpers::model($node);
     $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('abcdefghij'), 'a.txt'));
     // 14 retained bytes; the stale node still says 4.
     $drive->model()->forceFill(['quota_bytes' => 21])->save();
-    expect(fn () => $drive->files()->addRevision($stale, UploadSource::fromStream(DriveTestHelpers::streamFor('abcdefgh'), 'a.txt')))
+    expect(fn () => $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('abcdefgh'), 'a.txt')))
         ->toThrow(QuotaExceededException::class);
     $drive->model()->forceFill(['quota_bytes' => 22])->save();
-    $drive->files()->addRevision($stale, UploadSource::fromStream(DriveTestHelpers::streamFor('abcdefgh'), 'a.txt'));
+    $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('abcdefgh'), 'a.txt'));
     expect($drive->model()->refresh()->used_bytes)->toBe(22)
         ->and($stale->fresh()->file->revision_count)->toBe(3);
 });
@@ -87,10 +88,10 @@ it('reserves a revision against the database quota value despite a stale node an
 it('copies a stale file from its current head and reserves that exact size', function (): void {
     $drive = DriveTestHelpers::drive();
     $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('aaaa'), 'a.txt'));
-    $stale = $node->fresh();
+    $stale = DriveTestHelpers::model($node);
     $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('abcdefghij'), 'a.txt'));
-    $copy = $drive->nodes()->copy($stale, destination: null, options: new CopyOptions(name: 'copy.txt'));
-    expect($copy->size_bytes)->toBe(10)
-        ->and($copy->file->currentRevision->size_bytes)->toBe(10)
+    $copy = $drive->nodes()->copy($node, destination: null, options: new CopyOptions(name: 'copy.txt'));
+    expect($copy->sizeBytes)->toBe(10)
+        ->and($copy->file->sizeBytes)->toBe(10)
         ->and($drive->model()->refresh()->used_bytes)->toBe(4 + 10 + 10);
 });

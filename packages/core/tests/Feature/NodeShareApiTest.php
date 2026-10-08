@@ -197,7 +197,7 @@ it('serves a public download within the READ bits, bounds it by max_uses, and ne
     $fileNode = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('public bytes'), 'pub.txt'), new UploadOptions(declaredMimeType: 'text/plain'));
 
     $share = ShareTestHelpers::share(
-        $fileNode->refresh(),
+        $fileNode,
         token: 'dl-token',
         maxUses: 1,
     );
@@ -222,7 +222,7 @@ it('denies a public download to a previewer link while it still shows the node',
     $fileNode = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('secret bytes'), 'no.txt'));
 
     // A previewer sees the node but never takes the original.
-    ShareTestHelpers::share($fileNode->refresh(), token: 'norights-token', role: RoleRegistry::PREVIEWER);
+    ShareTestHelpers::share($fileNode, token: 'norights-token', role: RoleRegistry::PREVIEWER);
 
     $this->getJson('api/vaulter/share/norights-token')->assertOk();
     $this->getJson('api/vaulter/share/norights-token/download')->assertForbidden()->assertJsonPath('code', 'permission_denied');

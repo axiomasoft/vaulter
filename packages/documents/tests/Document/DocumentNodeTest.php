@@ -21,6 +21,7 @@ use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\ValueObjects\TipTapContent;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /**
  * The M4a document-node lifecycle (§2.5) on the document aggregate: create a
@@ -38,7 +39,7 @@ it('creates a kind=document node with its aggregate and checkpoint #1', function
         storage: $drive->model(),
         name: 'Spec',
         content: DocumentTestHelpers::content('First draft'),
-        parent: $drive->root(),
+        parent: DriveTestHelpers::model($drive->root()),
     ));
     $document = DocumentTestHelpers::document($node);
     $first = DocumentTestHelpers::head($node);
@@ -66,7 +67,7 @@ it('round-trips the content through TipTapRenderer', function (): void {
         storage: $drive->model(),
         name: 'Doc',
         content: DocumentTestHelpers::content('Round trip'),
-        parent: $drive->root(),
+        parent: DriveTestHelpers::model($drive->root()),
     ));
 
     $html = app(TipTapRenderer::class)->toHtml(DocumentTestHelpers::head($node)->tipTapContent());
@@ -213,7 +214,7 @@ function createDocument($drive, string $name): Node
         storage: $drive->model(),
         name: $name,
         content: DocumentTestHelpers::content('seed'),
-        parent: $drive->root(),
+        parent: DriveTestHelpers::model($drive->root()),
     ));
 }
 
@@ -233,7 +234,7 @@ it('CreateDocumentAction rejects content over max_document_size_kb, F-P1.11-05',
         storage: $drive->model(),
         name: 'Too big',
         content: oversizedContent(),
-        parent: $drive->root(),
+        parent: DriveTestHelpers::model($drive->root()),
     ));
 })->throws(InvalidDocumentContentException::class);
 

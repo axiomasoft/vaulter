@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
@@ -20,7 +21,11 @@ use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\Access\ProfileCreateGate;
+
+// These tests drive handlers and repositories directly; Vaulter's entry points open the write scope, these calls do not.
+beforeEach(fn () => DriveTestHelpers::insideOperation());
 
 /**
  * The S3-multipart path exercised against the FAKED 'local' disk (a real S3 is not
@@ -194,7 +199,7 @@ it('gates S3 initiation through the profile driver', function (bool $allow): voi
 it('gates the S3 parts controller through the profile driver', function (bool $allow): void {
     $session = initiateS3(totalBytes: 5, name: 'profile-parts.bin');
     $actor = AccessTestHelpers::user();
-    $session->forceFill(['created_by' => $actor->getKey(), 'metadata' => ['actor_type' => $actor->getMorphClass()]])->save();
+    app(VaulterDatabase::class)->write(fn () => $session->forceFill(['created_by' => $actor->getKey(), 'metadata' => ['actor_type' => $actor->getMorphClass()]])->save());
     $this->actingAs($actor);
     ProfileCreateGate::install($allow);
     $this->call('POST', 'api/vaulter/resumable-uploads/'.$session->upload_id.'/parts',

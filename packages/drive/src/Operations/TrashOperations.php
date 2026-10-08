@@ -10,8 +10,10 @@ use Throwable;
 use Vaulter\Access\OperationGuard;
 use Vaulter\Contracts\Drive\TrashOperations as Contract;
 use Vaulter\Data\Drive\ListOptions;
-use Vaulter\Data\Drive\NodePage;
 use Vaulter\Data\Drive\RestoreOptions;
+use Vaulter\Data\Page;
+use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Actions\Trash\PurgeNodeAction;
 use Vaulter\Drive\Actions\Trash\RestoreNodeAction;
 use Vaulter\Drive\Data\Trash\PurgeNodeInput;
@@ -39,14 +41,16 @@ final readonly class TrashOperations implements Contract
         private ListTrashQuery $listing,
         private RestoreNodeAction $restoreAction,
         private PurgeNodeAction $purgeAction,
+        private NodeSnapshotMapper $mapper,
     ) {}
 
-    public function list(?ListOptions $options = null): NodePage
+    /** @return Page<NodeSnapshot> */
+    public function list(?ListOptions $options = null): Page
     {
-        return $this->listing->execute(context: $this->context, options: $options ?? new ListOptions);
+        return $this->mapper->page($this->listing->execute(context: $this->context, options: $options ?? new ListOptions), $this->context->actor->ref());
     }
 
-    public function restore(Node|int|string $node, ?RestoreOptions $options = null): Node
+    public function restore(NodeSnapshot|string|int $node, ?RestoreOptions $options = null): NodeSnapshot
     {
         $options ??= new RestoreOptions;
         for ($attempt = 0; $attempt < 3; $attempt++) {
@@ -59,8 +63,8 @@ final readonly class TrashOperations implements Contract
                 $this->guard->authorizeCreate(context: $this->context, parent: $destination);
             }
             try {
-                return $this->restoreAction->execute(context: $this->context,
-                    data: new RestoreNodeInput(node: $source, destination: $destination, onConflict: $options->onConflict));
+                return $this->mapper->map($this->restoreAction->execute(context: $this->context,
+                    data: new RestoreNodeInput(node: $source, destination: $destination, onConflict: $options->onConflict)), $this->context->actor->ref());
             } catch (RestoreDestinationChangedException $exception) {
                 if ($attempt === 2) {
                     throw $exception;
@@ -70,7 +74,7 @@ final readonly class TrashOperations implements Contract
         throw new RestoreDestinationChangedException;
     }
 
-    public function purge(Node|int|string $node): void
+    public function purge(NodeSnapshot|string|int $node): void
     {
         $source = $this->locator->find(context: $this->context, key: $node, includeTrashed: true);
         $this->guard->authorize(context: $this->context, ability: Ability::Delete, node: $source, operation: OperationKind::Purge);

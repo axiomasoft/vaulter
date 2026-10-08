@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Data\Snapshots\NodeSnapshot;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\Files\FileRevisionAdded;
 use Vaulter\Drive\Events\Files\FileUploaded;
 use Vaulter\Drive\Exceptions\Quota\QuotaExceededException;
@@ -28,10 +30,10 @@ it('загружает файл: node kind=file + File + FileRevision + ребр
     expect($node->kind)->toBe(NodeKind::File)
         ->and($node->name)->toBe('hello.txt')
         ->and($node->extension)->toBe('txt')
-        ->and($node->mime_type)->toBe('text/plain')
-        ->and($node->size_bytes)->toBe(11)
-        ->and($node->file()->value('id'))->not->toBeNull()
-        ->and($node->file()->value('current_revision_id'))->not->toBeNull()
+        ->and($node->mimeType)->toBe('text/plain')
+        ->and($node->sizeBytes)->toBe(11)
+        ->and(DriveTestHelpers::model($node)->file()->value('id'))->not->toBeNull()
+        ->and(DriveTestHelpers::model($node)->file()->value('current_revision_id'))->not->toBeNull()
         ->and(FileRevision::query()->count())->toBe(1)
         ->and(Blob::query()->count())->toBe(1);
 });
@@ -48,7 +50,7 @@ it('дедуп: два одинаковых файла → один блоб, д
     $blob = Blob::query()->first();
 
     expect($blob->versions()->count())->toBe(2)
-        ->and($a->getKey())->not->toEqual($b->getKey());
+        ->and($a->id)->not->toEqual($b->id);
 });
 
 it('увеличивает used_bytes в рамках транзакции загрузки', function (): void {
@@ -61,9 +63,9 @@ it('увеличивает used_bytes в рамках транзакции за�
 
 it('квота: загрузка сверх квоты отклоняется ДО коммита блоба', function (): void {
     $drive = DriveTestHelpers::drive();
-    $drive->model()->forceFill(['quota_bytes' => 5])->save();
+    app(VaulterDatabase::class)->write(fn () => $drive->model()->forceFill(['quota_bytes' => 5])->save());
 
-    expect(fn (): Node => $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('too many bytes'), 'x.bin')))
+    expect(fn (): NodeSnapshot => $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('too many bytes'), 'x.bin')))
         ->toThrow(QuotaExceededException::class);
 
     expect(Blob::query()->count())->toBe(0)
@@ -75,10 +77,10 @@ it('новая версия: бамп number, перенаведение head, �
     $drive = DriveTestHelpers::drive();
 
     $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('v1'), 'doc.txt'));
-    $firstVersionId = $node->file()->value('current_revision_id');
+    $firstVersionId = DriveTestHelpers::model($node)->file()->value('current_revision_id');
 
     $updated = $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('version two longer'), 'doc.txt'));
-    $updated = $node->refresh();
+    $updated = DriveTestHelpers::model($node);
 
     $file = $updated->file;
 

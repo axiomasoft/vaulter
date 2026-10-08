@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\Data\Drive;
 
 use InvalidArgumentException;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 
 final readonly class SearchOptions
 {
     public function __construct(
         public int $perPage = 50,
         public ?string $cursor = null,
-        public Node|int|string|null $within = null,
+        public NodeSnapshot|string|int|null $within = null,
     ) {
         if ($perPage < 1 || $perPage > 200) {
             throw new InvalidArgumentException('Page size must be between 1 and 200.');
@@ -34,7 +34,7 @@ final readonly class SearchOptions
         return new self(perPage: $this->perPage, cursor: $cursor, within: $this->within);
     }
 
-    public function within(Node|int|string|null $within): self
+    public function within(NodeSnapshot|string|int|null $within): self
     {
         return new self(perPage: $this->perPage, cursor: $this->cursor, within: $within);
     }

@@ -66,7 +66,7 @@ function assertOneMoveWins(array $outcomes): void
 
 it('lets exactly one of move(A→B) and move(B→A) win and leaves no cycle', function (): void {
     $drive = DriveTestHelpers::drive();
-    $rootId = $drive->root()->getKey();
+    $rootId = $drive->root()->id;
     $a = $drive->folders()->create('A')->getKey();
     $b = $drive->folders()->create('B')->getKey();
 
@@ -81,13 +81,13 @@ it('lets exactly one of move(A→B) and move(B→A) win and leaves no cycle', fu
 // second cycle check from reading a subtree the first move is about to change.
 it('lets exactly one of move(A→B/B1) and move(B→A/A1) win and leaves no cycle', function (): void {
     $drive = DriveTestHelpers::drive();
-    $rootId = $drive->root()->getKey();
+    $rootId = $drive->root()->id;
     $a = $drive->folders()->create('A');
     $b = $drive->folders()->create('B');
     $a1 = $drive->folders()->create('A1', $a)->getKey();
     $b1 = $drive->folders()->create('B1', $b)->getKey();
 
-    assertOneMoveWins(ForkRace::run([raceMove($a->getKey(), $b1), raceMove($b->getKey(), $a1)]));
+    assertOneMoveWins(ForkRace::run([raceMove($a->id, $b1), raceMove($b->id, $a1)]));
 
     expect(reachesRoot($a1, $rootId))->toBeTrue()
         ->and(reachesRoot($b1, $rootId))->toBeTrue();

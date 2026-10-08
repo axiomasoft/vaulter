@@ -66,7 +66,7 @@ it('flips between live and trashed WITHIN the accessible set via the Trashed fil
     DriveBuilder::grant($live, $admin);
     DriveBuilder::grant($trashed, $admin);
 
-    Vaulter::drive($storage)->actingAs($admin)->nodes()->trash(node: $trashed);
+    Vaulter::drive($storage)->actingAs($admin)->nodes()->trash(node: $trashed->getKey());
 
     $base = NodeResource::getEloquentQuery();
 
@@ -93,8 +93,8 @@ it('keeps force-deleted tombstones out of the resource table', function (): void
     DriveBuilder::grant($live, $admin);
     DriveBuilder::grant($deleted, $admin);
 
-    Vaulter::drive($storage)->actingAs($admin)->nodes()->trash(node: $deleted);
-    Vaulter::drive($storage)->actingAs($admin)->trash()->purge(node: $deleted);
+    Vaulter::drive($storage)->actingAs($admin)->nodes()->trash(node: $deleted->getKey());
+    Vaulter::drive($storage)->actingAs($admin)->trash()->purge(node: $deleted->getKey());
 
     $ids = NodeResource::getEloquentQuery()->pluck('id')->all();
 
@@ -108,7 +108,7 @@ it('constrains a raw builder to the item anchor only via the repository seam', f
 
     $storage = DriveBuilder::storage();
     $folder = DriveBuilder::folder($storage, 'ItemOnly');
-    $child = Vaulter::drive($storage)->asSystem('test fixture')->folders()->create(name: 'Inside', parent: $folder);
+    $child = Node::query()->findOrFail(Vaulter::drive($storage)->asSystem('test fixture')->folders()->create(name: 'Inside', parent: $folder->getKey())->id);
 
     // ITEM scope = that node only; the child is not a candidate.
     DriveBuilder::grant($folder, $admin, role: RoleRegistry::READER, scope: GrantScope::Item);
@@ -128,7 +128,8 @@ it('lists a walled-off candidate in the table query (superset), per the listing 
 
     $storage = DriveBuilder::storage();
     $parent = DriveBuilder::folder($storage, 'Parent');
-    $child = Vaulter::drive($storage)->asSystem('test fixture')->folders()->create(name: 'Walled', parent: $parent);
+    $childSnapshot = Vaulter::drive($storage)->asSystem('test fixture')->folders()->create(name: 'Walled', parent: $parent->getKey());
+    $child = Node::query()->findOrFail($childSnapshot->id);
 
     // A subtree grant on the parent makes the child a candidate; the child's inheritance
     // boundary cuts its EXACT access. The candidate SUPERSET still LISTS the child (the

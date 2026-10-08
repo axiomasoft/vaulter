@@ -19,6 +19,7 @@ use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\ActivityOperations;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Support\Identity;
 use Vaulter\Support\LoadTier;
 use Vaulter\ValueObjects\Access\Actor;
 
@@ -47,6 +48,6 @@ final class ActivityController extends Controller
         $cursor = $request->query('cursor');
         $options = new ListOptions(perPage: max(1, min($request->integer('per_page', 50), 200)), cursor: is_string($cursor) ? $cursor : null);
 
-        return $this->metrics->timing(name: 'vaulter_activity_feed_duration_seconds', operation: fn (): AnonymousResourceCollection => ActivityResource::collection($operations->filtered(node: $node, options: $options, verb: $verb)->withQueryString()), labels: ['filtered' => $verb !== null, 'tier' => LoadTier::label()]);
+        return $this->metrics->timing(name: 'vaulter_activity_feed_duration_seconds', operation: fn (): AnonymousResourceCollection => ActivityResource::collection($operations->filtered(node: $node === null ? null : Identity::stringify($node->getKey()), options: $options, verb: $verb)->withQueryString()), labels: ['filtered' => $verb !== null, 'tier' => LoadTier::label()]);
     }
 }

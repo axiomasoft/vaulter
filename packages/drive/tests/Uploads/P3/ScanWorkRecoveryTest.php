@@ -31,6 +31,10 @@ use Vaulter\Exceptions\Files\ContentUnavailableException;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Content\ScanObligationRepository;
+use Vaulter\Tests\Drive\DriveTestHelpers;
+
+// These tests drive handlers and repositories directly; Vaulter's entry points open the write scope, these calls do not.
+beforeEach(fn () => DriveTestHelpers::insideOperation());
 
 it('SEC-BACKFILL materializes bounded durable activation work and checkpoints it', function (): void {
     Storage::fake('local');
@@ -139,9 +143,9 @@ it('SEC-RECOVERY ledger deduplicates old requests and terminal exhaustion requir
     $second = $request($newKey);
     $replayed = $request($oldKey);
     expect($second->generation)->toBe($first->generation + 1)->and($replayed->generation)->toBe($second->generation);
-    $second->forceFill(['attempt' => 4])->save();
+    app(VaulterDatabase::class)->write(fn () => $second->forceFill(['attempt' => 4])->save());
     $attempt = app(ClaimScanWorkAction::class)->execute($second->id, $second->generation, new DateTimeImmutable('now'));
-    $second->refresh()->forceFill(['lease_expires_at' => now()->subSecond()])->save();
+    app(VaulterDatabase::class)->write(fn () => $second->refresh()->forceFill(['lease_expires_at' => now()->subSecond()])->save());
     expect(app(RecoverScanWorkAction::class)->execute($second, new DateTimeImmutable('now')))->toBeTrue()
         ->and($second->refresh()->state)->toBe('settled')->and($second->reason)->toBe('attempts_exhausted')
         ->and(app(SettleScanWorkAction::class)->execute($attempt, new ScanResult(ScanVerdict::Clean)))->toBeFalse();
@@ -297,15 +301,15 @@ it('SEC-RECOVERY-UTC selects due work and expired leases by UTC in either app ti
         $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'utc.txt', 'text/plain'));
         fclose($stream);
         $work = $node->file()->firstOrFail()->currentRevision()->firstOrFail()->scanObligations()->firstOrFail();
-        $work->forceFill(['last_published_at' => null, 'available_at' => now('UTC')->subSecond()])->save();
+        app(VaulterDatabase::class)->write(fn () => $work->forceFill(['last_published_at' => null, 'available_at' => now('UTC')->subSecond()])->save());
         expect(app(ScanWorkReconciler::class)->reconcile()['published'])->toBe(1)
             ->and(app(ScanWorkReconciler::class)->reconcile()['scanned'])->toBe(0);
         $attempt = app(ClaimScanWorkAction::class)->execute($work->id, $work->generation, new DateTimeImmutable('now'));
         expect($attempt)->not->toBeNull()->and(app(ScanWorkReconciler::class)->reconcile()['scanned'])->toBe(0);
-        $work->refresh()->forceFill(['lease_expires_at' => now('UTC')->subSecond(), 'last_published_at' => null])->save();
+        app(VaulterDatabase::class)->write(fn () => $work->refresh()->forceFill(['lease_expires_at' => now('UTC')->subSecond(), 'last_published_at' => null])->save());
         expect(app(ScanWorkReconciler::class)->reconcile()['published'])->toBe(1)
             ->and($work->refresh()->state)->toBe('retry_wait')->and($work->lease_token)->toBeNull();
-        $work->forceFill(['last_published_at' => null, 'available_at' => now('UTC')->subSecond()])->save();
+        app(VaulterDatabase::class)->write(fn () => $work->forceFill(['last_published_at' => null, 'available_at' => now('UTC')->subSecond()])->save());
         $bus = Mockery::mock(Dispatcher::class);
         $bus->shouldReceive('dispatch')->andThrow(new RuntimeException('broker unavailable'));
         $publisher = new ScanWorkReconciler(database: app(VaulterDatabase::class), config: app(VaulterConfig::class), driveConfig: app(DriveConfig::class), work: app(ScanObligationRepository::class), recover: app(RecoverScanWorkAction::class), supersede: app(SupersedeScanWorkAction::class), policies: app(ScanPolicyResolver::class), bus: $bus);
@@ -333,7 +337,7 @@ it('SEC-C03-db-clock decides which scan work is due regardless of application cl
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'skew.txt', 'text/plain'));
     fclose($stream);
     $work = $node->file()->firstOrFail()->currentRevision()->firstOrFail()->scanObligations()->firstOrFail();
-    $work->forceFill(['last_published_at' => null, 'available_at' => now('UTC')->addMinutes(5)])->save();
+    app(VaulterDatabase::class)->write(fn () => $work->forceFill(['last_published_at' => null, 'available_at' => now('UTC')->addMinutes(5)])->save());
 
     // The application clock runs ten minutes ahead; the database clock still says "not due yet".
     $this->travel(10)->minutes();
@@ -391,7 +395,7 @@ it('SEC-RECOVERY-remaining-due counts all still-due work whatever the batch limi
         fclose($stream);
     }
     $class = app(VaulterConfig::class)->model('scan_obligation');
-    $class::query()->update(['last_published_at' => null, 'available_at' => now('UTC')->subSecond()]);
+    app(VaulterDatabase::class)->write(fn () => $class::query()->update(['last_published_at' => null, 'available_at' => now('UTC')->subSecond()]));
 
     // The count must not inherit the batch's ORDER BY/LIMIT (PostgreSQL rejects ORDER BY on a bare aggregate).
     $dry = app(ScanWorkReconciler::class)->reconcile(limit: 1, dryRun: true);

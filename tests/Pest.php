@@ -48,6 +48,7 @@ uses(TestCase::class, RefreshDatabase::class)->in(
     $core.'/Support',
     $core.'/Configuration',
     $core.'/Webhooks',
+    $core.'/WriteGuard',
 );
 
 // The additive sequence carrier owns only its shadow schema and real FK enforcement.

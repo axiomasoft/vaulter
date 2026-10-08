@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Configuration\WebhooksConfig;
+use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Repositories\Webhooks\OutboxStoreRepository;
 use Vaulter\Repositories\Webhooks\WebhookDeliveryStoreRepository;
@@ -33,6 +34,8 @@ use Vaulter\Repositories\Webhooks\WebhookDeliveryStoreRepository;
  */
 final class PruneWebhooksCommand extends Command
 {
+    use OpensWriteScope;
+
     protected $signature = 'vaulter:prune-webhooks
         {--days= : Override the retention window in days (config vaulter.webhooks.retention_days)}
         {--dry-run : Report what would be pruned without deleting}';

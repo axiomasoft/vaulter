@@ -34,7 +34,7 @@ it('gives a hidden source the same 404 through PHP HTTP and a forged panel callb
     $handle = Vaulter::drive($this->parityDrive)->actingAs($this->parityActor);
     $action = parityAction('renameAction');
 
-    expect(fn () => $handle->nodes()->rename($this->paritySource, 'Forbidden'))
+    expect(fn () => $handle->nodes()->rename($this->paritySource->getKey(), 'Forbidden'))
         ->toThrow(NodeNotFoundException::class);
     $this->patchJson('api/vaulter/nodes/'.$this->paritySource->id, ['name' => 'Forbidden'])->assertNotFound();
     expect(fn () => ($action->getActionFunction())($this->paritySource, ['name' => 'Forbidden']))
@@ -48,7 +48,7 @@ it('gives a visible source without Edit the same 403 through all three boundarie
     $handle = Vaulter::drive($this->parityDrive)->actingAs($this->parityActor);
     $action = parityAction('renameAction');
 
-    expect(fn () => $handle->nodes()->rename($this->paritySource, 'Forbidden'))
+    expect(fn () => $handle->nodes()->rename($this->paritySource->getKey(), 'Forbidden'))
         ->toThrow(PermissionDeniedException::class);
     $this->patchJson('api/vaulter/nodes/'.$this->paritySource->id, ['name' => 'Forbidden'])->assertForbidden();
     expect(fn () => ($action->getActionFunction())($this->paritySource, ['name' => 'Forbidden']))
@@ -59,7 +59,7 @@ it('gives a visible source without Edit the same 403 through all three boundarie
 
 it('renames with the same explicit actor through PHP HTTP and the actual panel callback', function (): void {
     DriveBuilder::grant($this->paritySource, $this->parityActor, RoleRegistry::WRITER);
-    Vaulter::drive($this->parityDrive)->actingAs($this->parityActor)->nodes()->rename($this->paritySource, 'PHP');
+    Vaulter::drive($this->parityDrive)->actingAs($this->parityActor)->nodes()->rename($this->paritySource->getKey(), 'PHP');
     $this->patchJson('api/vaulter/nodes/'.$this->paritySource->id, ['name' => 'HTTP'])
         ->assertOk()->assertJsonPath('data.name', 'HTTP');
     $action = parityAction('renameAction');
@@ -75,7 +75,7 @@ it('hides a move destination without View consistently without changing the sour
     $action = parityAction('moveAction');
     $parent = $this->paritySource->parent_id;
 
-    expect(fn () => $handle->nodes()->move($this->paritySource, $this->parityTarget))
+    expect(fn () => $handle->nodes()->move($this->paritySource->getKey(), $this->parityTarget->getKey()))
         ->toThrow(NodeNotFoundException::class);
     $this->postJson('api/vaulter/nodes/'.$this->paritySource->id.'/move', ['parent_id' => $this->parityTarget->id])
         ->assertNotFound();
@@ -92,7 +92,7 @@ it('rejects a visible destination without Create and retains the panel denial no
     $action = parityAction('moveAction');
     $parent = $this->paritySource->parent_id;
 
-    expect(fn () => $handle->nodes()->move($this->paritySource, $this->parityTarget))
+    expect(fn () => $handle->nodes()->move($this->paritySource->getKey(), $this->parityTarget->getKey()))
         ->toThrow(PermissionDeniedException::class);
     $this->postJson('api/vaulter/nodes/'.$this->paritySource->id.'/move', ['parent_id' => $this->parityTarget->id])
         ->assertForbidden();
@@ -106,9 +106,9 @@ it('rejects a visible destination without Create and retains the panel denial no
 it('permits a move only after both source and destination grants allow it', function (): void {
     DriveBuilder::grant($this->paritySource, $this->parityActor, RoleRegistry::WRITER);
     DriveBuilder::grant($this->parityTarget, $this->parityActor, RoleRegistry::WRITER);
-    Vaulter::drive($this->parityDrive)->actingAs($this->parityActor)->nodes()->move($this->paritySource, $this->parityTarget);
+    Vaulter::drive($this->parityDrive)->actingAs($this->parityActor)->nodes()->move($this->paritySource->getKey(), $this->parityTarget->getKey());
     $this->postJson('api/vaulter/nodes/'.$this->paritySource->id.'/move', ['parent_id' => $this->parityTarget->id])
-        ->assertOk()->assertJsonPath('data.parent_id', $this->parityTarget->id);
+        ->assertOk()->assertJsonPath('data.parent_id', (string) $this->parityTarget->id);
     $action = parityAction('moveAction');
     ($action->getActionFunction())($this->paritySource, ['parent_id' => $this->parityTarget->id], $action);
     expect($this->paritySource->refresh()->parent_id)->toBe($this->parityTarget->id)

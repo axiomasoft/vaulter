@@ -140,8 +140,8 @@ it('records vaulter_subtree_nodes_touched during move cycle guard', function ():
         correlationId: 'subtree-metrics',
     );
     expect(fn () => app(MoveNodeAction::class)->execute($context, new MoveNodeInput(
-        node: $parent,
-        into: $child,
+        node: DriveTestHelpers::model($parent),
+        into: DriveTestHelpers::model($child),
     )))->toThrow(NodeCycleException::class);
 
     app(MetricsRecorder::class)->assertHistogram(

@@ -269,7 +269,7 @@ it('counts a 10-byte download as one 10-byte chunk', function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
     $file = DriveTestHelpers::drive()->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('0123456789'), 'ten.bin'));
 
-    $response = $this->get('api/vaulter/nodes/'.$file->getKey().'/download');
+    $response = $this->get('api/vaulter/nodes/'.$file->id.'/download');
     $response->assertOk();
     expect($response->streamedContent())->toBe('0123456789');
 
@@ -285,7 +285,7 @@ it('records download ttfb once for a body larger than one read', function (): vo
     $bytes = str_repeat('x', (1024 * 256) + 1);
     $file = DriveTestHelpers::drive()->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor($bytes), 'wide.bin'));
 
-    $response = $this->get('api/vaulter/nodes/'.$file->getKey().'/download');
+    $response = $this->get('api/vaulter/nodes/'.$file->id.'/download');
     $response->assertOk();
     expect(strlen($response->streamedContent()))->toBe(strlen($bytes));
 
@@ -301,7 +301,7 @@ it('keeps the source original name on a copied version', function (): void {
     $source = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('abc'), 'kept-name.txt'));
     $copy = $drive->nodes()->copy(node: $source, options: new CopyOptions(name: 'other.txt'));
 
-    expect($copy->refresh()->file->currentRevision->original_name)->toBe('kept-name.txt');
+    expect(DriveTestHelpers::model($copy)->file->currentRevision->original_name)->toBe('kept-name.txt');
 });
 
 it('hides move copy and revision sources when Create is present but Read is absent', function (): void {

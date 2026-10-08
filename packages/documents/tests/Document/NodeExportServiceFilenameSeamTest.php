@@ -10,6 +10,7 @@ use Vaulter\Documents\Export\NodeExportService;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /*
  * P4.5 / F-P3.1-04: the export filename scheme becomes a container-bound
@@ -27,7 +28,7 @@ beforeEach(function (): void {
         storage: $this->drive->model(),
         name: 'Report',
         content: DocumentTestHelpers::content('Exportable body'),
-        parent: $this->drive->root(),
+        parent: DriveTestHelpers::model($this->drive->root()),
     ));
 });
 

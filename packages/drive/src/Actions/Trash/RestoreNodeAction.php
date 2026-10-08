@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Actions\Trash;
 
 use Illuminate\Support\Collection;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Nodes\NameConflictResolver;
 use Vaulter\Drive\Data\Trash\RestoreNodeInput;
@@ -37,7 +38,7 @@ final readonly class RestoreNodeAction
     ) {}
 
     /** Public authorization must use the destination this resolution actually chooses. */
-    public function resolveDestination(OperationContext $context, Node $node, Node|int|string|null $explicit = null): Node
+    public function resolveDestination(OperationContext $context, Node $node, Node|NodeSnapshot|int|string|null $explicit = null): Node
     {
         $node = $this->locator->find(context: $context, key: $node, includeTrashed: true);
         $originalId = $node->trashed_from_parent_id ?? $node->parent_id;

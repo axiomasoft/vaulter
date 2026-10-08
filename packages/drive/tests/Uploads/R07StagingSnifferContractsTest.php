@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Exceptions\Uploads\StagedUploadMissingException;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\Inspection\MimeSniffer;
@@ -92,7 +93,7 @@ it('rangeMatches requires staged length to cover offset plus chunk length exactl
 it('HEAD offset uses the smaller of staged bytes and recorded received_bytes', function (): void {
     $session = UploadTestHelpers::session(UploadTestHelpers::storage(), totalSizeBytes: 20);
     app(StagedUpload::class)->write($session, str_repeat('a', 10));
-    $session->forceFill(['received_bytes' => 18])->save();
+    app(VaulterDatabase::class)->write(fn () => $session->forceFill(['received_bytes' => 18])->save());
 
     expect(app(TusUploadHandler::class)->offset($session->refresh()))->toBe(10);
 });

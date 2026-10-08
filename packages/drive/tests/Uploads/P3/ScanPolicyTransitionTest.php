@@ -50,7 +50,7 @@ it('SEC-POLICY rejects enabled unactivated drives without allocating admission',
 
 it('SEC-POLICY preserves first new content boundary across reactivation and off', function (): void {
     $drive = UploadTestHelpers::storage();
-    $drive->forceFill(['scan_admission_sequence' => 7])->save();
+    app(VaulterDatabase::class)->write(fn () => $drive->forceFill(['scan_admission_sequence' => 7])->save());
     config()->set('vaulter.scan.mode', 'new_content_only');
     config()->set('vaulter.scan.rollout_key', 'first');
     $context = OperationContext::system($drive, 'fixture');
@@ -59,7 +59,7 @@ it('SEC-POLICY preserves first new content boundary across reactivation and off'
     expect($class::query()->where('drive_id', $drive->id)->pluck('boundary_sequence')->all())->toBe([7, 7]);
     config()->set('vaulter.scan.mode', 'off');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
-    $drive->forceFill(['scan_admission_sequence' => 12])->save();
+    app(VaulterDatabase::class)->write(fn () => $drive->forceFill(['scan_admission_sequence' => 12])->save());
     config()->set('vaulter.scan.mode', 'new_content_only');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     expect($class::query()->where('drive_id', $drive->id)->pluck('boundary_sequence')->all())->toBe([7, 7]);
@@ -74,7 +74,7 @@ it('SEC-R01 all content blocks legacy bytes until versioned rescan evidence is c
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
     $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
-    $revision->forceFill(['scan_status' => 'clean'])->save();
+    app(VaulterDatabase::class)->write(fn () => $revision->forceFill(['scan_status' => 'clean'])->save());
     config()->set('vaulter.scan.mode', 'all_content');
     config()->set('vaulter.scan.scanner_key', 'fixture');
     config()->set('vaulter.scan.scanner_version', '1');
@@ -103,7 +103,7 @@ it('SEC-R02 forged timestamps cannot exempt a new admission and failures remain 
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
     $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
-    $revision->forceFill(['created_at' => '1990-01-01', 'committed_at' => '1990-01-01'])->save();
+    app(VaulterDatabase::class)->write(fn () => $revision->forceFill(['created_at' => '1990-01-01', 'committed_at' => '1990-01-01'])->save());
     expect($revision->scan_admission_sequence)->toBe(1);
     expect(fn () => app(ContentAvailabilityGuard::class)->assertAvailable($context, $node, $revision))
         ->toThrow(ContentUnavailableException::class);
@@ -155,7 +155,7 @@ it('SEC-R05 trash restoration preserves admission while current scan policy bloc
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
     $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
-    $node->forceFill(['trashed_at' => now(), 'trashed_from_parent_id' => $drive->root_node_id])->save();
+    app(VaulterDatabase::class)->write(fn () => $node->forceFill(['trashed_at' => now(), 'trashed_from_parent_id' => $drive->root_node_id])->save());
     config()->set('vaulter.scan.mode', 'all_content');
     config()->set('vaulter.scan.scanner_key', 'fixture');
     config()->set('vaulter.scan.scanner_version', '1');

@@ -32,6 +32,7 @@ use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Contracts\Webhooks\HostResolver;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Database\WriteScope;
 use Vaulter\Enums\Cas\ScanMode;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
@@ -87,6 +88,7 @@ final class BindingsRegistrar
         $app->singleton(ConfigValidator::class);
 
         $app->singleton(VaulterDatabase::class);
+        $app->scoped(WriteScope::class);
         $app->bind(NodeLocator::class);
         $app->singleton(IdStrategyResolver::class);
 

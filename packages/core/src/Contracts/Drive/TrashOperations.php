@@ -5,17 +5,18 @@ declare(strict_types=1);
 namespace Vaulter\Contracts\Drive;
 
 use Vaulter\Data\Drive\ListOptions;
-use Vaulter\Data\Drive\NodePage;
 use Vaulter\Data\Drive\RestoreOptions;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Data\Page;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 
 interface TrashOperations
 {
-    public function list(?ListOptions $options = null): NodePage;
+    /** @return Page<NodeSnapshot> */
+    public function list(?ListOptions $options = null): Page;
 
-    public function restore(Node|int|string $node, ?RestoreOptions $options = null): Node;
+    public function restore(NodeSnapshot|string|int $node, ?RestoreOptions $options = null): NodeSnapshot;
 
-    public function purge(Node|int|string $node): void;
+    public function purge(NodeSnapshot|string|int $node): void;
 
     public function empty(): int;
 }

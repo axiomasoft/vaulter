@@ -7,6 +7,7 @@ use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Export\NodeExportService;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /**
  * The node-attached export path (§7 / M4a): a document node routes through the
@@ -19,7 +20,7 @@ beforeEach(function (): void {
         storage: $this->drive->model(),
         name: 'Report',
         content: DocumentTestHelpers::content('Exportable body'),
-        parent: $this->drive->root(),
+        parent: DriveTestHelpers::model($this->drive->root()),
     ));
 });
 

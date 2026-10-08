@@ -9,6 +9,7 @@ use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Contracts\Access\PermissionDriver;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
@@ -48,7 +49,7 @@ it('requires both the workspace gate and parent Create permission', function ():
     $context = new OperationContext(drive: $drive, actor: Actor::user(AccessTestHelpers::user()), correlationId: 'test');
     $guard = app(OperationGuard::class);
     expect(fn () => $guard->authorizeCreate(context: $context, parent: $node))->toThrow(PermissionDeniedException::class);
-    $grant->forceFill(['role_key' => RoleRegistry::WRITER])->save();
+    app(VaulterDatabase::class)->write(fn () => $grant->forceFill(['role_key' => RoleRegistry::WRITER])->save());
     $guard->authorizeCreate(context: $context, parent: $node);
     $driver = Mockery::mock(PermissionDriver::class);
     $driver->shouldReceive('subjectsFor')->andReturn([Subject::ofModel(AccessTestHelpers::user())]);
@@ -85,7 +86,7 @@ it('batches visibility in input order and re-evaluates ACL on every call', funct
         expect($guard->abilities(context: $context, node: $node)->flags['view'])->toBeTrue();
         expect($guard->abilities(context: $context, node: $node)->flags)->toBe(array_replace(app(AccessResolver::class)->abilitiesFor(actor: AccessTestHelpers::user(), node: $node), ['share' => false, 'comment' => false]));
     }
-    $grant->delete();
+    app(VaulterDatabase::class)->write(fn () => $grant->delete());
     expect(fn () => $guard->authorize(context: $context, ability: Ability::View, node: $a))->toThrow(NodeNotFoundException::class)
         ->and(array_map(fn ($node) => $node->id, $guard->visible(context: $context, nodes: [$a, $b])))->toBe([$b->id])
         ->and($guard->visible(context: $context, nodes: []))->toBe([]);

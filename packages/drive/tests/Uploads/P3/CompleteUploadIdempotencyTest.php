@@ -23,7 +23,11 @@ use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\ValueObjects\Access\Actor;
+
+// These tests drive handlers and repositories directly; Vaulter's entry points open the write scope, these calls do not.
+beforeEach(fn () => DriveTestHelpers::insideOperation());
 
 beforeEach(fn () => Storage::set('local', Storage::fake('uploads-p37-'.getmypid())));
 
@@ -41,7 +45,7 @@ it('SEC-R19-replay replays persisted exact revision after a newer head and witho
     $context = OperationContext::system($session->storage, 'upload test');
     $node = app(CompleteUploadAction::class)->execute(context: $context, session: $session);
     $revisionId = $session->refresh()->result_revision_id;
-    app(DriveHandleFactory::class)->forDrive($context->drive)->asSystem('upload test')->files()->addRevision(file: $node, source: UploadSource::fromStream(UploadTestHelpers::streamFor('new head'), 'new.txt'));
+    app(DriveHandleFactory::class)->forDrive($context->drive)->asSystem('upload test')->files()->addRevision(file: $node->id, source: UploadSource::fromStream(UploadTestHelpers::streamFor('new head'), 'new.txt'));
     $session->forceFill(['metadata' => [...($session->metadata ?? []), 'correlation_id' => 'ignored']])->save();
     $replayed = app(CompleteUploadAction::class)->execute(context: $context, session: $session);
     expect($replayed->id)->toBe($node->id)->and(FileRevision::query()->count())->toBe(2)

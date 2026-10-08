@@ -20,6 +20,7 @@ use Vaulter\Configuration\WebhooksConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Contracts\Observability\TraceRecorder;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Models\Webhooks\WebhookDelivery;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Observability\TracingAttributes;
@@ -66,7 +67,13 @@ final class DeliverWebhook implements ShouldQueue
         private readonly string $deliveryId,
     ) {}
 
-    public function handle(WebhookSigner $signer, OutboundUrlGuard $urlGuard, VaulterConfig $vaulterConfig, WebhooksConfig $webhooksConfig): void
+    public function handle(WebhookSigner $signer, OutboundUrlGuard $urlGuard, VaulterConfig $vaulterConfig, WebhooksConfig $webhooksConfig, ?VaulterDatabase $database = null): void
+    {
+        // The container always injects the database; a direct call without one runs unscoped.
+        $database === null ? $this->deliver($signer, $urlGuard, $vaulterConfig, $webhooksConfig) : $database->write(fn () => $this->deliver($signer, $urlGuard, $vaulterConfig, $webhooksConfig));
+    }
+
+    private function deliver(WebhookSigner $signer, OutboundUrlGuard $urlGuard, VaulterConfig $vaulterConfig, WebhooksConfig $webhooksConfig): void
     {
         $this->vaulterConfig = $vaulterConfig;
         $this->webhooksConfig = $webhooksConfig;

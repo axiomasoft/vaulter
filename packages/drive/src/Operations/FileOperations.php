@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Operations;
 
-use Illuminate\Pagination\CursorPaginator;
 use InvalidArgumentException;
 use Psr\Http\Message\StreamInterface;
 use Vaulter\Access\OperationGuard;
@@ -15,6 +14,11 @@ use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Drive\RevisionOptions;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Data\Page;
+use Vaulter\Data\Snapshots\FileRevisionSnapshot;
+use Vaulter\Data\Snapshots\Mapping\FileRevisionSnapshotMapper;
+use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Files\DeleteFileRevisionAction;
 use Vaulter\Drive\Actions\Files\IngestFileAction;
@@ -40,9 +44,9 @@ use Vaulter\Support\TreeGuard;
 
 final readonly class FileOperations implements Contract
 {
-    public function __construct(private OperationContext $context, private NodeLocator $locator, private OperationGuard $guard, private IngestFileAction $ingest, private RestoreFileRevisionAction $restore, private ContentDelivery $delivery, private VaulterDatabase $database, private TreeGuard $tree, private NameConflictResolver $names, private DeleteFileRevisionAction $deleteRevision, private SetFileRevisionRetentionAction $retention) {}
+    public function __construct(private OperationContext $context, private NodeLocator $locator, private OperationGuard $guard, private IngestFileAction $ingest, private RestoreFileRevisionAction $restore, private ContentDelivery $delivery, private VaulterDatabase $database, private TreeGuard $tree, private NameConflictResolver $names, private DeleteFileRevisionAction $deleteRevision, private SetFileRevisionRetentionAction $retention, private NodeSnapshotMapper $nodes, private FileRevisionSnapshotMapper $revisions) {}
 
-    public function upload(UploadSource $source, ?UploadOptions $options = null): Node
+    public function upload(UploadSource $source, ?UploadOptions $options = null): NodeSnapshot
     {
         $options ??= new UploadOptions;
         $parent = $this->locator->find($this->context, $options->parent ?? $this->context->drive->root_node_id ?? throw NodeNotFoundException::forId('root'));
@@ -57,24 +61,24 @@ final readonly class FileOperations implements Contract
                 }
                 $target = $this->file($target, Ability::Edit);
 
-                return $this->ingestSource($source, null, $target, null, $options->declaredMimeType, null, OnNameConflict::Fail, $options->clientModifiedAt)->node;
+                return $this->nodes->map($this->ingestSource($source, null, $target, null, $options->declaredMimeType, null, OnNameConflict::Fail, $options->clientModifiedAt)->node, $this->context->actor->ref());
             }
         }
 
-        return $this->ingestSource($source, $parent, null, $options->name, $options->declaredMimeType, null, $options->onConflict, $options->clientModifiedAt)->node;
+        return $this->nodes->map($this->ingestSource($source, $parent, null, $options->name, $options->declaredMimeType, null, $options->onConflict, $options->clientModifiedAt)->node, $this->context->actor->ref());
     }
 
-    public function addRevision(Node|int|string $file, UploadSource $source, ?RevisionOptions $options = null): FileRevision
+    public function addRevision(NodeSnapshot|string|int $file, UploadSource $source, ?RevisionOptions $options = null): FileRevisionSnapshot
     {
         $node = $this->file($file, Ability::Edit);
         $options ??= new RevisionOptions;
         $receipt = $this->ingestSource($source, null, $node, null, $options->declaredMimeType, $options->expectedSequence, OnNameConflict::Fail);
 
-        return $this->revision($receipt->node, $receipt->revision);
+        return $this->revisions->map($this->revision($receipt->node, $receipt->revision), $receipt->node->file()->firstOrFail());
     }
 
-    /** @return CursorPaginator<int, FileRevision> */
-    public function revisions(Node|int|string $file, ?ListOptions $options = null): CursorPaginator
+    /** @return Page<FileRevisionSnapshot> */
+    public function revisions(NodeSnapshot|string|int $file, ?ListOptions $options = null): Page
     {
         $node = $this->file($file, Ability::View);
         $options ??= new ListOptions;
@@ -82,17 +86,23 @@ final readonly class FileOperations implements Contract
             throw new InvalidArgumentException('Revision lists support perPage and cursor only.');
         }
 
-        return $node->file()->firstOrFail()->versions()->orderByDesc('number')->orderByDesc('id')->cursorPaginate(perPage: $options->perPage, cursor: $options->cursor);
+        $aggregate = $node->file()->firstOrFail();
+        $page = $aggregate->versions()->orderByDesc('number')->orderByDesc('id')->cursorPaginate(perPage: $options->perPage, cursor: $options->cursor);
+
+        return new Page(
+            items: array_values($page->getCollection()->map(fn (FileRevision $revision): FileRevisionSnapshot => $this->revisions->map($revision, $aggregate))->all()),
+            nextCursor: $page->nextCursor()?->encode(),
+        );
     }
 
-    public function restoreRevision(Node|int|string $file, FileRevision|int|string $revision): FileRevision
+    public function restoreRevision(NodeSnapshot|string|int $file, FileRevisionSnapshot|string|int $revision): FileRevisionSnapshot
     {
         $node = $this->file($file, Ability::Edit);
 
-        return $this->restore->execute($this->context, new RestoreFileRevisionInput($node, $this->revision($node, $revision)));
+        return $this->revisions->map($this->restore->execute($this->context, new RestoreFileRevisionInput($node, $this->revision($node, $revision))), $node->file()->firstOrFail());
     }
 
-    public function deleteRevision(Node|int|string $file, FileRevision|int|string $revision): void
+    public function deleteRevision(NodeSnapshot|string|int $file, FileRevisionSnapshot|string|int $revision): void
     {
         // Permanent removal of stored data: authorized like a purge, without the
         // upload/egress profile gates (PLAN2.D48).
@@ -100,14 +110,14 @@ final readonly class FileOperations implements Contract
         $this->deleteRevision->execute($this->context, $node, $this->revision($node, $revision));
     }
 
-    public function setRevisionRetention(Node|int|string $file, FileRevision|int|string $revision, bool $keepForever): FileRevision
+    public function setRevisionRetention(NodeSnapshot|string|int $file, FileRevisionSnapshot|string|int $revision, bool $keepForever): FileRevisionSnapshot
     {
         $node = $this->file($file, Ability::Edit);
 
-        return $this->retention->execute($node, $this->revision($node, $revision), $keepForever);
+        return $this->revisions->map($this->retention->execute($node, $this->revision($node, $revision), $keepForever), $node->file()->firstOrFail());
     }
 
-    public function read(Node|int|string $file, FileRevision|int|string|null $revision = null): FileStream
+    public function read(NodeSnapshot|string|int $file, FileRevisionSnapshot|string|int|null $revision = null): FileStream
     {
         $node = $this->file($file, Ability::Download);
         $revision = $this->revision($node, $revision);
@@ -115,7 +125,7 @@ final readonly class FileOperations implements Contract
         return $this->delivery->stream($this->context, $node, $revision);
     }
 
-    private function file(Node|int|string $key, Ability $ability, ?OperationKind $operation = null): Node
+    private function file(Node|NodeSnapshot|int|string $key, Ability $ability, ?OperationKind $operation = null): Node
     {
         $node = $this->locator->find($this->context, $key);
         $this->guard->authorize($this->context, $ability, $node, $operation ?? ($ability === Ability::Download ? OperationKind::ContentEgress : ($ability === Ability::Edit ? OperationKind::Mutation : OperationKind::Metadata)));
@@ -126,10 +136,10 @@ final readonly class FileOperations implements Contract
         return $node;
     }
 
-    private function revision(Node $node, FileRevision|int|string|null $key): FileRevision
+    private function revision(Node $node, FileRevision|FileRevisionSnapshot|int|string|null $key): FileRevision
     {
         $file = $node->file()->firstOrFail();
-        $id = $key instanceof FileRevision ? $key->getRawOriginal($key->getKeyName()) : ($key ?? $file->current_revision_id);
+        $id = $key instanceof FileRevision ? $key->getRawOriginal($key->getKeyName()) : ($key instanceof FileRevisionSnapshot ? $key->id : ($key ?? $file->current_revision_id));
 
         return $file->versions()->whereKey($id)->whereIn('status', ['committed', 'superseded'])->first() ?? throw NodeNotFoundException::forId($node->id);
     }

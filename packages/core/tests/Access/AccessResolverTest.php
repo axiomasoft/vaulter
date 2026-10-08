@@ -7,6 +7,7 @@ use Vaulter\Access\AccessResolver;
 use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\AccessExplanation;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantScope;
@@ -124,7 +125,7 @@ it('removes an inherited role from a node by restricting its inheritance', funct
     AccessTestHelpers::grant($parent, RoleRegistry::WRITER, scope: GrantScope::Subtree);
     expect(resolver()->can(AccessTestHelpers::user(), Ability::Edit, $child))->toBeTrue();
 
-    $child->forceFill(['inherit_grants' => false])->save();
+    app(VaulterDatabase::class)->write(fn () => $child->forceFill(['inherit_grants' => false])->save());
 
     expect(resolver()->can(AccessTestHelpers::user(), Ability::Edit, $child))->toBeFalse()
         ->and(resolver()->can(AccessTestHelpers::user(), Ability::View, $child))->toBeFalse();

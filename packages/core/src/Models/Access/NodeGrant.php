@@ -15,6 +15,7 @@ use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Exceptions\Access\UnknownRoleException;
+use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Models\Concerns\StampsDriveTenant;
@@ -45,6 +46,7 @@ use Vaulter\Models\Drive\Node;
  */
 class NodeGrant extends Model
 {
+    use GuardsWrites;
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
     use StampsDriveTenant;

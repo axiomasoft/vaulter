@@ -17,6 +17,7 @@ use Vaulter\Content\ScanInput;
 use Vaulter\Content\ScanResult;
 use Vaulter\Content\ScanSnapshot;
 use Vaulter\Contracts\Cas\ContentScanner;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\PrivateScanReader;
 use Vaulter\Enums\Cas\ScanVerdict;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
@@ -44,12 +45,12 @@ final class ScanFileRevision implements ShouldQueue
     }
 
     public function handle(ScanObligationRepository $work, ClaimScanWorkAction $claim, FenceScanAttemptAction $fence, FailScanAttemptAction $fail, SettleScanWorkAction $settle, PrivateScanReader $reader, ScanSnapshot $snapshots,
-        ScanConfig $config): void
+        ScanConfig $config, VaulterDatabase $database): void
     {
         if (app(TenancyConfig::class)->enabled()) {
             app(TenancyBoundary::class)->assertJobDrive($this->driveId, $this->tenantId);
         }
-        app(TenancyBypass::class)->suspend(fn () => $this->execute($work, $claim, $fence, $fail, $settle, $reader, $snapshots, $config));
+        $database->write(fn () => app(TenancyBypass::class)->suspend(fn () => $this->execute($work, $claim, $fence, $fail, $settle, $reader, $snapshots, $config)));
     }
 
     private function execute(ScanObligationRepository $work, ClaimScanWorkAction $claim, FenceScanAttemptAction $fence, FailScanAttemptAction $fail, SettleScanWorkAction $settle, PrivateScanReader $reader, ScanSnapshot $snapshots, ScanConfig $config): void

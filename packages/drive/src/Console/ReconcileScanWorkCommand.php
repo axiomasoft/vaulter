@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Console;
 
 use Illuminate\Console\Command;
 use InvalidArgumentException;
+use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Contracts\Cas\ContentScanner;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Content\ScanBackfillReconciler;
@@ -16,6 +17,8 @@ use Vaulter\VaulterManager;
 
 final class ReconcileScanWorkCommand extends Command
 {
+    use OpensWriteScope;
+
     private bool $withinMaintenanceScope = false;
 
     protected $signature = 'vaulter:scan-reconcile {--tenant=} {--drive=} {--all-tenants} {--reason=} {--limit=100} {--max-seconds=30} {--dry-run} {--json}';

@@ -41,7 +41,9 @@ final class DriveBuilder
      */
     public static function folder(Drive $storage, string $name = 'Docs'): Node
     {
-        return Vaulter::drive($storage)->asSystem('test fixture')->asSystem('test fixture')->folders()->create(name: $name);
+        $snapshot = Vaulter::drive($storage)->asSystem('test fixture')->folders()->create(name: $name);
+
+        return Node::query()->findOrFail($snapshot->id);
     }
 
     /**

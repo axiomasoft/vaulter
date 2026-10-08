@@ -39,7 +39,7 @@ it('trashes a node through the core Trash Action (the row action path)', functio
     expect($folder->fresh()->trashed_at)->toBeNull();
 
     // The row action calls exactly this DriveContext path (TrashNodeAction).
-    Vaulter::drive($folder->storage)->actingAs($user)->nodes()->trash(node: $folder);
+    Vaulter::drive($folder->storage)->actingAs($user)->nodes()->trash(node: $folder->getKey());
 
     expect($folder->fresh()->trashed_at)->not->toBeNull();
 });
@@ -53,10 +53,10 @@ it('restores a trashed node through the core Restore Action', function (): void 
     $folder = DriveBuilder::folder($storage, 'Restorable');
     DriveBuilder::grant($folder, $user);
 
-    Vaulter::drive($storage)->asSystem('test fixture')->nodes()->trash(node: $folder);
+    Vaulter::drive($storage)->asSystem('test fixture')->nodes()->trash(node: $folder->getKey());
     expect($folder->fresh()->trashed_at)->not->toBeNull();
 
-    Vaulter::drive($folder->storage)->actingAs($user)->trash()->restore(node: $folder);
+    Vaulter::drive($folder->storage)->actingAs($user)->trash()->restore(node: $folder->getKey());
 
     expect($folder->fresh()->trashed_at)->toBeNull();
 });
@@ -69,7 +69,7 @@ it('renames a node through the core Rename Action', function (): void {
     $folder = DriveBuilder::folder($storage, 'Before');
     DriveBuilder::grant($folder, $user);
 
-    Vaulter::drive($folder->storage)->actingAs($user)->nodes()->rename(node: $folder, name: 'After');
+    Vaulter::drive($folder->storage)->actingAs($user)->nodes()->rename(node: $folder->getKey(), name: 'After');
 
     expect($folder->fresh()->name)->toBe('After');
 });
@@ -82,9 +82,9 @@ it('force-deletes a trashed node through the core ForceDelete Action', function 
     $folder = DriveBuilder::folder($storage, 'Purgeable');
     DriveBuilder::grant($folder, $user);
 
-    Vaulter::drive($storage)->asSystem('test fixture')->nodes()->trash(node: $folder);
+    Vaulter::drive($storage)->asSystem('test fixture')->nodes()->trash(node: $folder->getKey());
 
-    Vaulter::drive($folder->storage)->actingAs($user)->trash()->purge(node: $folder);
+    Vaulter::drive($folder->storage)->actingAs($user)->trash()->purge(node: $folder->getKey());
 
     expect($folder->fresh())->toBeNull()
         ->and($folder->newQuery()->whereKey($folder->getKey())->exists())->toBeFalse();

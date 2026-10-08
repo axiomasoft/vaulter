@@ -8,14 +8,21 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Vaulter\Contracts\Access\AccessOperations;
 use Vaulter\Contracts\Activity\ActivityOperations;
 use Vaulter\Contracts\Sharing\ShareOperations;
+use Vaulter\Data\Snapshots\DriveSnapshot;
+use Vaulter\Data\Snapshots\NodeSnapshot;
+use Vaulter\Data\Snapshots\QuotaSnapshot;
 use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Profiles\Profile;
 use Vaulter\ValueObjects\Access\Actor;
 
 interface DriveHandle
 {
+    /** @internal The Eloquent row, for Vaulter packages and tests; hosts use snapshot(). */
     public function model(): Drive;
+
+    public function snapshot(): DriveSnapshot;
+
+    public function quota(): QuotaSnapshot;
 
     public function profile(): Profile;
 
@@ -27,7 +34,7 @@ interface DriveHandle
 
     public function withCorrelationId(string $correlationId): static;
 
-    public function root(): Node;
+    public function root(): NodeSnapshot;
 
     public function nodes(): NodeOperations;
 

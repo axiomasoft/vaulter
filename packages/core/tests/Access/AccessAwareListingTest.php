@@ -78,14 +78,14 @@ it('index lists the subtree-anchor descendants and hides an un-granted sibling',
     $this->getJson('api/vaulter/storages/'.$storage->getKey().'/nodes?parent_id='.$anchor->getKey())
         ->assertOk()
         ->assertJsonCount(1, 'data')
-        ->assertJsonPath('data.0.id', $child->getKey());
+        ->assertJsonPath('data.0.id', (string) $child->getKey());
 
     // Listing the ROOT surfaces the anchor (a candidate), but NOT the un-granted sibling.
     $rootIds = collect($this->getJson('api/vaulter/storages/'.$storage->getKey().'/nodes')->assertOk()->json('data'))
         ->pluck('id')->all();
 
-    expect($rootIds)->toContain($anchor->getKey())
-        ->and($rootIds)->not->toContain($sibling->getKey());
+    expect($rootIds)->toContain((string) $anchor->getKey())
+        ->and($rootIds)->not->toContain((string) $sibling->getKey());
 });
 
 // ── 2. an item-scoped anchor yields zero candidate children; the folder itself still opens.
@@ -105,7 +105,7 @@ it('lists zero children for an item-scoped folder grant while the folder itself 
     // …yet View/show of the folder ITSELF works (it is the item-scoped candidate).
     $this->getJson('api/vaulter/nodes/'.$folder->getKey())
         ->assertOk()
-        ->assertJsonPath('data.id', $folder->getKey());
+        ->assertJsonPath('data.id', (string) $folder->getKey());
 
     expect($child)->not->toBeNull(); // (the child exists; it is simply not a candidate)
 });
@@ -122,8 +122,8 @@ it('returns cross-storage allow-grants in the shared view', function (): void {
 
     $ids = collect($this->getJson('api/vaulter/shared')->assertOk()->json('data'))->pluck('id')->all();
 
-    expect($ids)->toContain($folderA->getKey())
-        ->and($ids)->toContain($folderB->getKey());
+    expect($ids)->toContain((string) $folderA->getKey())
+        ->and($ids)->toContain((string) $folderB->getKey());
 });
 
 // ── 4. GET shared is EXACT: an expired grant is excluded; a direct grant behind an
@@ -147,9 +147,9 @@ it('excludes an expired grant and keeps a direct grant behind a boundary in the 
 
     $ids = collect($this->getJson('api/vaulter/shared')->assertOk()->json('data'))->pluck('id')->all();
 
-    expect($ids)->toContain($parent->getKey())
-        ->and($ids)->toContain($child->getKey())
-        ->and($ids)->not->toContain($expired->getKey());
+    expect($ids)->toContain((string) $parent->getKey())
+        ->and($ids)->toContain((string) $child->getKey())
+        ->and($ids)->not->toContain((string) $expired->getKey());
 });
 
 // ── 5. GET shared requires an actor and never returns granted data to a guest.
@@ -217,7 +217,7 @@ it('constrains a subtree anchor to the anchor plus all its descendants', functio
     $ids = nodeRepo()->queryForUser(AccessTestHelpers::user())->pluck('id')->all();
 
     expect($ids)->toContain($anchor->getKey(), $childA->getKey(), $grandchild->getKey())
-        ->and($ids)->not->toContain($outside->getKey())
+        ->and($ids)->not->toContain((string) $outside->getKey())
         ->and($ids)->toHaveCount(3);
 });
 
@@ -367,7 +367,7 @@ it('keeps the listing OPEN (every node) on the null driver', function (): void {
         $this->getJson('api/vaulter/storages/'.$storage->getKey().'/nodes')->assertOk()->json('data'),
     )->pluck('id')->all();
 
-    expect($rootIds)->toContain($a->getKey(), $b->getKey());
+    expect($rootIds)->toContain((string) $a->getKey(), (string) $b->getKey());
 });
 
 // ── 12. Scale/chunking smoke: a modest fan-out lists complete through whereIn chunking.

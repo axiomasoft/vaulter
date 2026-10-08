@@ -7,6 +7,7 @@ namespace Vaulter\Operations;
 use Illuminate\Database\Eloquent\Builder;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\Node;
@@ -21,7 +22,7 @@ final readonly class NodeLocator
         private TenancyBoundary $boundary,
     ) {}
 
-    public function find(OperationContext $context, Node|int|string $key, bool $includeTrashed = false): Node
+    public function find(OperationContext $context, Node|NodeSnapshot|int|string $key, bool $includeTrashed = false): Node
     {
         $id = $this->key($key);
         if ($id === null) {
@@ -80,8 +81,11 @@ final readonly class NodeLocator
         return $this->boundary->constrain($model->newQuery())->where(column: 'drive_id', operator: '=', value: $context->driveId());
     }
 
-    private function key(Node|int|string $key): int|string|null
+    private function key(Node|NodeSnapshot|int|string $key): int|string|null
     {
+        if ($key instanceof NodeSnapshot) {
+            return $key->id === '' ? null : $key->id;
+        }
         if (!$key instanceof Node) {
             return $key === '' ? null : $key;
         }

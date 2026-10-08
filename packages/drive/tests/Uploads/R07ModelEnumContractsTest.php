@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Access\Roles\RoleRegistry;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\Files\IngestFileInput;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
@@ -144,7 +145,7 @@ it('R07Model returns the full UploadSessionResource JSON shape with nullables an
 
 it('R07Model returns all-false storage abilities without an actor or root node', function (): void {
     $storage = Vaulter::drive(DriveTestHelpers::host())->model();
-    $storage->forceFill(['root_node_id' => null])->save();
+    app(VaulterDatabase::class)->write(fn () => $storage->forceFill(['root_node_id' => null])->save());
 
     $guestRequest = Request::create('/api/vaulter/storages/'.$storage->getKey());
     $guestRequest->setUserResolver(static fn (): null => null);

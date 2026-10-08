@@ -18,7 +18,7 @@ it('keeps stars per user, without touching the node sequence or timestamps', fun
     $alice = $drive->actingAs(DriveTestHelpers::actor($drive, 7));
     $bob = $drive->actingAs(DriveTestHelpers::actor($drive, 8));
     $folder = $drive->folders()->create('Projects');
-    $state = static fn (): array => [$folder->refresh()->sequence, $folder->getRawOriginal('updated_at')];
+    $state = static fn (): array => [DriveTestHelpers::model($folder)->sequence, DriveTestHelpers::model($folder)->getRawOriginal('updated_at')];
     $before = $state();
 
     $alice->nodes()->star($folder);
@@ -93,15 +93,15 @@ it('stamps content times on upload and keeps the client time informational', fun
     $client = new DateTimeImmutable('2020-05-06 07:08:09');
 
     $file = $user->files()->upload(UploadSource::fromString('x', 'a.txt'), UploadOptions::make()->clientModifiedAt($client));
-    $revision = $file->file()->firstOrFail()->currentRevision()->firstOrFail();
+    $revision = DriveTestHelpers::model($file)->file()->firstOrFail()->currentRevision()->firstOrFail();
 
-    expect($file->refresh()->content_modified_at?->toDateTimeString())->toBe(now()->toDateTimeString())
-        ->and((string) $file->content_modified_by)->toBe('7')
+    expect(DriveTestHelpers::model($file)->content_modified_at?->toDateTimeString())->toBe(now()->toDateTimeString())
+        ->and((string) $file->contentModifiedBy)->toBe('7')
         ->and((string) $revision->getRawOriginal('client_modified_at'))->toBe('2020-05-06 07:08:09');
 
     $this->travel(5)->minutes();
     $drive->nodes()->rename($file, 'b.txt');
-    expect($file->refresh()->content_modified_at?->toDateTimeString())->not->toBe(now()->toDateTimeString());
+    expect(DriveTestHelpers::model($file)->content_modified_at?->toDateTimeString())->not->toBe(now()->toDateTimeString());
 });
 
 it('answers viewer.starred for the request user on a node and its listed children', function (): void {
@@ -114,14 +114,14 @@ it('answers viewer.starred for the request user on a node and its listed childre
     $drive->actingAs($user)->nodes()->star($folder);
     $this->actingAs($user);
 
-    $response = $this->getJson('api/vaulter/nodes/'.$folder->getKey())->assertOk()
+    $response = $this->getJson('api/vaulter/nodes/'.$folder->id)->assertOk()
         ->assertJsonPath('data.viewer.starred', true)
         ->assertJsonMissingPath('data.is_pinned')
         ->assertJsonMissingPath('data.position');
     $children = collect($response->json('data.children'))->mapWithKeys(fn (array $child): array => [$child['name'] => $child['viewer']['starred']]);
     expect($children->all())->toBe(['plain' => false, 'starred' => true]);
 
-    $this->getJson('api/vaulter/storages/'.$drive->model()->getKey().'/nodes?parent_id='.$folder->getKey())->assertOk()
+    $this->getJson('api/vaulter/storages/'.$drive->model()->getKey().'/nodes?parent_id='.$folder->id)->assertOk()
         ->assertJsonPath('data.0.name', 'plain')->assertJsonPath('data.0.viewer.starred', false)
         ->assertJsonPath('data.1.name', 'starred')->assertJsonPath('data.1.viewer.starred', true);
 });

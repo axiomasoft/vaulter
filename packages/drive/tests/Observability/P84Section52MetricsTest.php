@@ -130,7 +130,7 @@ it('records single-shot upload bytes and chunk duration', function (): void {
     );
     app(IngestFileAction::class)->execute($context, new IngestFileInput(
         storage: $storage,
-        into: $root,
+        into: DriveTestHelpers::model($root),
         stream: DriveTestHelpers::streamFor('single-shot'),
         originalName: 'one.bin',
         mimeType: 'application/octet-stream',
@@ -151,7 +151,7 @@ it('records download ttfb and bytes for the current file stream', function (): v
     $drive = DriveTestHelpers::drive();
     $file = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('file-bytes'), 'current.bin'));
 
-    $response = $this->get('api/vaulter/nodes/'.$file->getKey().'/download');
+    $response = $this->get('api/vaulter/nodes/'.$file->id.'/download');
     $response->assertOk();
     expect($response->streamedContent())->toBe('file-bytes');
 
@@ -172,13 +172,13 @@ it('records download ttfb and bytes for a historical version stream', function (
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
     $drive = DriveTestHelpers::drive();
     $file = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('first-ver'), 'ver.bin'));
-    $firstVersionId = $file->refresh()->file()->value('current_revision_id');
+    $firstVersionId = DriveTestHelpers::model($file)->file()->value('current_revision_id');
 
-    $drive->files()->addRevision($file->refresh(), UploadSource::fromStream(DriveTestHelpers::streamFor('second-ver'), 'ver.bin'));
+    $drive->files()->addRevision($file, UploadSource::fromStream(DriveTestHelpers::streamFor('second-ver'), 'ver.bin'));
 
     $response = $this->get(sprintf(
         'api/vaulter/nodes/%s/versions/%s/download',
-        $file->getKey(),
+        $file->id,
         $firstVersionId,
     ));
     $response->assertOk();

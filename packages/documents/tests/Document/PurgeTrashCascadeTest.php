@@ -10,6 +10,7 @@ use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /**
  * F-P1.12-02, on real PostgreSQL only (SQLite does not enforce the FK
@@ -34,7 +35,7 @@ it('physically deletes a trashed document node\'s inline version content on purg
         storage: $drive->model(),
         name: 'Sensitive',
         content: DocumentTestHelpers::content('erase me'),
-        parent: $drive->root(),
+        parent: DriveTestHelpers::model($drive->root()),
     ));
 
     $document = DocumentTestHelpers::document($node);

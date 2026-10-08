@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\NodeLocator;
@@ -39,7 +40,7 @@ it('conceals foreign absent and unpersisted nodes', function (): void {
 it('excludes trashed nodes unless the internal trash mode is explicit', function (): void {
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder(storage: $drive, parent: null, name: 'trashed');
-    $node->forceFill(['trashed_at' => now()])->save();
+    app(VaulterDatabase::class)->write(fn () => $node->forceFill(['trashed_at' => now()])->save());
     $context = OperationContext::system(drive: $drive, reason: 'test');
     expect(fn () => app(NodeLocator::class)->find(context: $context, key: $node->id))->toThrow(NodeNotFoundException::class)
         ->and(app(NodeLocator::class)->find(context: $context, key: $node->id, includeTrashed: true)->trashed_at)->not->toBeNull();

@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Access\Roles\RoleRegistry;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -126,7 +127,7 @@ it('404s a no-root storage show for an authenticated grantless actor (no meta le
     // Null the root (a hard-deleted root leaves root_node_id dangling — it is NOT a DB FK).
     // The acting user (id=1) holds NO grant anywhere: a 200 here would be an IDOR leak of
     // the storage owner/name/quota to any authenticated caller.
-    $storage->forceFill(['root_node_id' => null])->save();
+    app(VaulterDatabase::class)->write(fn () => $storage->forceFill(['root_node_id' => null])->save());
 
     $this->getJson('api/vaulter/storages/'.$storage->getKey())
         ->assertStatus(404);
@@ -137,7 +138,7 @@ it('404s a no-root storage show for an unauthenticated guest', function (): void
 
     // No root AND no actor: still 404 — the corrupt-state miss fires before any meta is
     // shaped, so the name/owner/quota never reach an actor-less caller either.
-    $storage->forceFill(['root_node_id' => null])->save();
+    app(VaulterDatabase::class)->write(fn () => $storage->forceFill(['root_node_id' => null])->save());
 
     actAsStorageGuest();
 

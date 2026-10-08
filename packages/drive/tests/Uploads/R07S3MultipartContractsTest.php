@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Models\Uploads\UploadPart;
@@ -15,6 +16,9 @@ use Vaulter\Facades\Vaulter;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
+
+// These tests drive handlers and repositories directly; Vaulter's entry points open the write scope, these calls do not.
+beforeEach(fn () => DriveTestHelpers::insideOperation());
 
 beforeEach(function (): void {
     Storage::fake('local');
@@ -133,7 +137,7 @@ it('rejects complete when copied bytes do not match the recorded part size', fun
 
     $handler->putPart($session->refresh(), partNo: 1, byteOffset: 0, chunk: UploadTestHelpers::streamFor('abcd'));
 
-    UploadPart::query()->where('upload_session_id', $session->getKey())->update(['size_bytes' => 3]);
+    app(VaulterDatabase::class)->write(fn () => UploadPart::query()->where('upload_session_id', $session->getKey())->update(['size_bytes' => 3]));
 
     expect(fn () => $handler->complete($session->refresh()))
         ->toThrow(ValidationException::class, 'size does not match its recorded bytes');

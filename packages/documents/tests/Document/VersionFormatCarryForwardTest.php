@@ -14,6 +14,7 @@ use Vaulter\Documents\Http\Resources\DocumentRevisionResource;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /*
  * VLT-CANON P0.4 (L3) stamped the 0.2 per-version `format` explicitly so appended rows
@@ -39,7 +40,7 @@ it('keeps a markdown document markdown across an autosave checkpoint (P0.4/L3)',
         storage: $this->drive->model(),
         name: 'Notes',
         content: DocumentTestHelpers::content(),
-        parent: $this->drive->root(),
+        parent: DriveTestHelpers::model($this->drive->root()),
         format: DocumentType::Markdown->value,
     ));
     expect(DocumentTestHelpers::document($node)->type)->toBe('vaulter/markdown')
@@ -60,7 +61,7 @@ it('maps every 0.2 rich-text flavour to the one rich-text type (P0.4/L3)', funct
         storage: $this->drive->model(),
         name: 'Doc '.$format,
         content: DocumentTestHelpers::content(),
-        parent: $this->drive->root(),
+        parent: DriveTestHelpers::model($this->drive->root()),
         format: $format,
     ));
     $result = app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
@@ -78,7 +79,7 @@ it('takes a checkpoint for a document whose head is missing, without dereferenci
         storage: $this->drive->model(),
         name: 'Headless',
         content: DocumentTestHelpers::content(),
-        parent: $this->drive->root(),
+        parent: DriveTestHelpers::model($this->drive->root()),
         format: DocumentType::Markdown->value,
     ));
     // SQLite has no head FK; a missing head must still lead to a fresh checkpoint.
@@ -100,7 +101,7 @@ it('keeps the type on a NAMED checkpoint too (P0.4/L3)', function (): void {
         storage: $this->drive->model(),
         name: 'Notes',
         content: DocumentTestHelpers::content(),
-        parent: $this->drive->root(),
+        parent: DriveTestHelpers::model($this->drive->root()),
         format: DocumentType::Markdown->value,
     ));
 

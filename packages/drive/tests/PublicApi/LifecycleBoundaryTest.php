@@ -15,6 +15,7 @@ use Vaulter\Data\Drive\RestoreOptions;
 use Vaulter\Data\Drive\RevisionOptions;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\FileContentLifecycle;
 use Vaulter\Drive\Content\ScanPolicyResolver;
@@ -86,7 +87,7 @@ function lifecycleBoundaryEdges(FileRevision $revision): array
     ])->sortBy(fn (array $edge): string => $edge['role'].':'.$edge['ordinal'])->values()->all();
 }
 
-function lifecycleBoundaryInjectFailure(Node $node, RuntimeException $failure): void
+function lifecycleBoundaryInjectFailure(Node|NodeSnapshot $node, RuntimeException $failure): void
 {
     $registry = new NodeContentLifecycleRegistry;
     $registry->register(new LifecycleBoundaryFailingFile(app(FileContentLifecycle::class), $node->id, $failure));
@@ -98,7 +99,7 @@ it('preflights a mixed subtree before any copy rows quota edges or events', func
     $this->system->files()->upload(UploadSource::fromString('valid bytes', 'first.txt'), new UploadOptions(parent: $folder));
     $branch = $this->system->folders()->create('later branch', $folder);
     $leaf = AccessTestHelpers::folder($this->system->model(), $branch, 'unsupported payload');
-    $leaf->forceFill(['kind' => $unsupported])->save();
+    app(VaulterDatabase::class)->write(fn () => $leaf->forceFill(['kind' => $unsupported])->save());
     $before = lifecycleBoundaryState();
 
     expect(fn () => $this->system->nodes()->copy($folder, options: new CopyOptions(name: 'would be partial')))
@@ -126,22 +127,23 @@ it('rejects duplicate lifecycle registrations without replacing the first handle
 
 it('copies and restores immutable payload identity edge attributes and metadata with correct sequence', function (): void {
     $node = $this->system->files()->upload(UploadSource::fromString('abcdef', 'source.txt'));
-    $original = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
+    $original = DriveTestHelpers::model($node)->file()->firstOrFail()->currentRevision()->firstOrFail();
     $blob = $original->blob()->firstOrFail();
-    $original->forceFill([
+    app(VaulterDatabase::class)->write(fn () => app(VaulterDatabase::class)->write(fn () => $original->forceFill([
         'manifest_blob_id' => $blob->id,
         'declared_mime_type' => 'text/plain',
         'keep_forever' => true,
-    ])->save();
+    ])->save()));
+    DriveTestHelpers::insideOperation(); // the CAS edge is attached by hand, outside an operation
     app(BlobStore::class)->attach(version: $original, blob: $blob, attributes: [
         'role' => 'chunk', 'ordinal' => 7, 'offset_bytes' => 1, 'length_bytes' => 3,
     ]);
     $edges = lifecycleBoundaryEdges($original);
     $originalBeforeCopy = $original->fresh()->getAttributes();
     $copy = $this->system->nodes()->copy($node, options: new CopyOptions(name: 'copied.txt'));
-    $copied = $copy->file()->firstOrFail()->currentRevision()->firstOrFail();
+    $copied = DriveTestHelpers::model($copy)->file()->firstOrFail()->currentRevision()->firstOrFail();
 
-    expect($copy->sequence)->toBe(0)->and($node->refresh()->sequence)->toBe(0)
+    expect($copy->sequence)->toBe(0)->and(DriveTestHelpers::model($node)->sequence)->toBe(0)
         ->and($copied->id)->not->toBe($original->id)
         ->and($copied->blob_id)->toBe($original->blob_id)
         ->and($copied->manifest_blob_id)->toBe($original->manifest_blob_id)
@@ -153,7 +155,7 @@ it('copies and restores immutable payload identity edge attributes and metadata 
 
     $this->system->files()->addRevision($node, UploadSource::fromString('different newer bytes', 'source.txt'), new RevisionOptions(expectedSequence: 0));
     $originalBeforeRestore = $original->fresh()->getAttributes();
-    $restored = $this->system->files()->restoreRevision($node, $original);
+    $restored = FileRevision::query()->findOrFail($this->system->files()->restoreRevision($node, $original->getKey())->id);
     expect($restored->id)->not->toBe($original->id)
         ->and($restored->number)->toBe(3)
         ->and($restored->blob_id)->toBe($original->blob_id)
@@ -165,15 +167,15 @@ it('copies and restores immutable payload identity edge attributes and metadata 
         ->and($copied->restored_from_revision_id)->toBeNull()
         ->and(lifecycleBoundaryEdges($restored))->toBe($edges)
         ->and($original->fresh()->getAttributes())->toBe($originalBeforeRestore)
-        ->and($node->refresh()->sequence)->toBe(2)
-        ->and($copy->refresh()->sequence)->toBe(0)
+        ->and(DriveTestHelpers::model($node)->sequence)->toBe(2)
+        ->and(DriveTestHelpers::model($copy)->sequence)->toBe(0)
         // Every retained revision counts (PLAN2.D48): 6 + 6 (copy) + 21 + 6 (restored copy).
         ->and($this->system->model()->refresh()->used_bytes)->toBe(39);
 });
 
 it('uses fresh destination admission without inheriting a legacy scan exemption', function (): void {
     $node = $this->system->files()->upload(UploadSource::fromString('legacy admitted bytes', 'legacy.txt'));
-    $original = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
+    $original = DriveTestHelpers::model($node)->file()->firstOrFail()->currentRevision()->firstOrFail();
     $original->forceFill(['scan_status' => 'not_required'])->save();
     config()->set('vaulter.scan.mode', 'new_content_only');
     config()->set('vaulter.scan.rollout_key', 'legacy-copy');
@@ -181,7 +183,7 @@ it('uses fresh destination admission without inheriting a legacy scan exemption'
     config()->set('vaulter.scan.scanner_version', '1');
     app(ScanPolicyResolver::class)->initialize($this->system->model(), OperationContext::system($this->system->model(), 'lifecycle acceptance fixture'));
     $copy = $this->system->nodes()->copy($node);
-    $copied = $copy->file()->firstOrFail()->currentRevision()->firstOrFail();
+    $copied = DriveTestHelpers::model($copy)->file()->firstOrFail()->currentRevision()->firstOrFail();
 
     expect($copied->scan_status)->toBe('pending')
         ->and($original->fresh()->scan_status)->toBe('not_required');
@@ -189,7 +191,7 @@ it('uses fresh destination admission without inheriting a legacy scan exemption'
 
 it('refuses known infected immutable bytes before copying changes the database', function (): void {
     $node = $this->system->files()->upload(UploadSource::fromString('infected fixture bytes', 'infected.txt'));
-    $node->file()->firstOrFail()->currentRevision()->firstOrFail()->forceFill(['scan_status' => 'infected'])->save();
+    app(VaulterDatabase::class)->write(fn () => DriveTestHelpers::model($node)->file()->firstOrFail()->currentRevision()->firstOrFail()->forceFill(['scan_status' => 'infected'])->save());
     $before = lifecycleBoundaryState();
 
     expect(fn () => $this->system->nodes()->copy($node))->toThrow(ContentQuarantinedException::class)
@@ -224,9 +226,9 @@ it('empty completes later roots then rethrows the first original failure with fa
     $this->system->nodes()->trash($failed);
     $this->system->nodes()->trash($later);
     // Distinct timestamps guarantee the failed root is processed first.
-    $failed->refresh()->forceFill(['trashed_at' => Carbon::now()->subDays(2)])->save();
-    $later->refresh()->forceFill(['trashed_at' => Carbon::now()->subDay()])->save();
-    $failedRevision = $failed->file()->firstOrFail()->currentRevision()->firstOrFail();
+    app(VaulterDatabase::class)->write(fn () => DriveTestHelpers::model($failed)->forceFill(['trashed_at' => Carbon::now()->subDays(2)])->save());
+    app(VaulterDatabase::class)->write(fn () => DriveTestHelpers::model($later)->forceFill(['trashed_at' => Carbon::now()->subDay()])->save());
+    $failedRevision = DriveTestHelpers::model($failed)->file()->firstOrFail()->currentRevision()->firstOrFail();
     $failedEdges = lifecycleBoundaryEdges($failedRevision);
     $failure = new RuntimeException('first original failure');
     lifecycleBoundaryInjectFailure($failed, $failure);
@@ -239,7 +241,7 @@ it('empty completes later roots then rethrows the first original failure with fa
     }
     expect(Node::query()->whereKey($failed->id)->exists())->toBeTrue()
         ->and(Node::query()->whereKey($later->id)->exists())->toBeFalse()
-        ->and($failed->fresh()->sequence)->toBe(1)
+        ->and(DriveTestHelpers::model($failed)->sequence)->toBe(1)
         ->and(lifecycleBoundaryEdges($failedRevision->fresh()))->toBe($failedEdges)
         ->and($this->system->model()->refresh()->used_bytes)->toBe(strlen('bad payload'));
     Log::shouldHaveReceived('error')->once();
@@ -263,9 +265,9 @@ it('retention purge reports a failed root exits one and still physically commits
     foreach ([$failed, $later] as $root) {
         $this->system->nodes()->trash($root);
     }
-    $failed->refresh()->forceFill(['trashed_at' => Carbon::now()->subDays(42)])->save();
-    $later->refresh()->forceFill(['trashed_at' => Carbon::now()->subDays(41)])->save();
-    $failedRevision = $failed->file()->firstOrFail()->currentRevision()->firstOrFail();
+    app(VaulterDatabase::class)->write(fn () => DriveTestHelpers::model($failed)->forceFill(['trashed_at' => Carbon::now()->subDays(42)])->save());
+    app(VaulterDatabase::class)->write(fn () => DriveTestHelpers::model($later)->forceFill(['trashed_at' => Carbon::now()->subDays(41)])->save());
+    $failedRevision = DriveTestHelpers::model($failed)->file()->firstOrFail()->currentRevision()->firstOrFail();
     $edges = lifecycleBoundaryEdges($failedRevision);
     lifecycleBoundaryInjectFailure($failed, new RuntimeException('controlled retention failure'));
     Log::spy();
@@ -294,7 +296,7 @@ it('restores to the active original parent without Create and ignores an unused 
     $actor = Vaulter::drive($this->system->model())->actingAs($user);
 
     $restored = $actor->trash()->restore($source, new RestoreOptions(destination: $unused));
-    expect($restored->parent_id)->toBe($parent->id)->and($restored->sequence)->toBe(2);
+    expect($restored->parentId)->toBe($parent->id)->and($restored->sequence)->toBe(2);
 });
 
 it('authorizes View and Create on the actual fallback destination', function (string $lane): void {
@@ -309,12 +311,12 @@ it('authorizes View and Create on the actual fallback destination', function (st
             subjectId: 84);
     }
     $this->system->nodes()->trash($source);
-    $parent->delete();
+    app(VaulterDatabase::class)->write(fn () => DriveTestHelpers::model($parent)->delete());
     $before = lifecycleBoundaryState();
     $actor = Vaulter::drive($this->system->model())->actingAs($user);
     $run = fn () => $actor->trash()->restore($source, new RestoreOptions(destination: $fallback));
     if ($lane === 'allowed') {
-        expect($run()->parent_id)->toBe($fallback->id)->and($source->refresh()->sequence)->toBe(2);
+        expect($run()->parentId)->toBe($fallback->id)->and(DriveTestHelpers::model($source)->sequence)->toBe(2);
     } else {
         expect($run)->toThrow($lane === 'hidden' ? NodeNotFoundException::class : PermissionDeniedException::class)
             ->and(lifecycleBoundaryState())->toBe($before);
@@ -345,18 +347,18 @@ it('repeats public destination authorization when the original parent changes af
         }
         if ((string) $model->id === (string) $source->id && $parentReads >= 2) {
             $raced = true;
-            Node::query()->whereKey($parent->id)->update(['trashed_at' => Carbon::now()]);
+            app(VaulterDatabase::class)->write(fn () => Node::query()->whereKey($parent->id)->update(['trashed_at' => Carbon::now()]));
         }
     });
     $actor = Vaulter::drive($this->system->model())->actingAs($user);
     if ($allowFallback) {
-        expect($actor->trash()->restore($source)->parent_id)->toBe($root->id)
-            ->and($source->refresh()->sequence)->toBe(2);
+        expect($actor->trash()->restore($source)->parentId)->toBe((string) $root->id)
+            ->and(DriveTestHelpers::model($source)->sequence)->toBe(2);
     } else {
         expect(fn () => $actor->trash()->restore($source))->toThrow(PermissionDeniedException::class)
-            ->and($source->refresh()->trashed_at)->not->toBeNull()
-            ->and($source->sequence)->toBe(1)
-            ->and($source->parent_id)->toBe($parent->id);
+            ->and(DriveTestHelpers::model($source)->trashed_at)->not->toBeNull()
+            ->and(DriveTestHelpers::model($source)->sequence)->toBe(1)
+            ->and(DriveTestHelpers::model($source)->parent_id)->toEqual($parent->id);
     }
-    expect($raced)->toBeTrue()->and($parent->fresh()->trashed_at)->not->toBeNull();
+    expect($raced)->toBeTrue()->and(DriveTestHelpers::model($parent)->trashed_at)->not->toBeNull();
 })->with([false, true]);

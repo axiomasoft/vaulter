@@ -8,6 +8,7 @@ use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Contracts\Access\PermissionDriver;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantScope;
@@ -142,7 +143,7 @@ it('preserves deciding grants and boundaries above the 64th ancestor', function 
     $storage = AccessTestHelpers::storage();
     $root = AccessTestHelpers::folder($storage, null, 'deep-root');
     // Fixed-width bigint ids avoid the dependency's SQLite path suffix collisions.
-    $root->forceFill(['id' => 10000])->save();
+    app(VaulterDatabase::class)->write(fn () => $root->forceFill(['id' => 10000])->save());
     AccessTestHelpers::grant($root, RoleRegistry::READER);
     $parent = $root;
     for ($i = 0; $i < 66; $i++) {
@@ -165,7 +166,7 @@ it('stops a batch ancestor walk at the same cycle as individual resolution', fun
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'cycle-node');
     $parent = AccessTestHelpers::folder($storage, $node, 'cycle-parent');
-    $node->forceFill(['parent_id' => $parent->id])->save();
+    app(VaulterDatabase::class)->write(fn () => $node->forceFill(['parent_id' => $parent->id])->save());
     AccessTestHelpers::grant($parent, RoleRegistry::READER);
     $resolver = app(AccessResolver::class);
     $actor = AccessTestHelpers::user();

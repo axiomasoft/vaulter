@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Contracts\Handlers;
 
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Models\Drive\Node;
 use Vaulter\ValueObjects\Handlers\NodePresentation;
 
@@ -25,5 +26,5 @@ use Vaulter\ValueObjects\Handlers\NodePresentation;
  */
 interface NodePresenter
 {
-    public function present(Node $node): NodePresentation;
+    public function present(Node|NodeSnapshot $node): NodePresentation;
 }

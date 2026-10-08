@@ -13,6 +13,7 @@ use Illuminate\Support\Carbon;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Cas\Blob;
+use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Models\Concerns\StampsDriveTenant;
@@ -47,9 +48,11 @@ use Vaulter\Models\Content\ScanUtcDateTime;
  * @property Carbon|null          $created_at
  * @property Carbon|null          $committed_at
  * @property Carbon|null          $superseded_at
+ * @property Carbon|null          $client_modified_at
  */
 class FileRevision extends Model
 {
+    use GuardsWrites;
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
     use StampsDriveTenant;
@@ -136,6 +139,7 @@ class FileRevision extends Model
             'number' => 'integer',
             'size_bytes' => 'integer',
             'keep_forever' => 'boolean',
+            'client_modified_at' => 'datetime',
             'committed_at' => 'datetime',
             'superseded_at' => 'datetime',
         ];

@@ -60,8 +60,8 @@ it('purge физически удаляет всё поддерево', function
     $drive->trash()->purge($folder);
 
     // Purge physically removes the entire subtree; only the drive root survives.
-    expect(Node::query()->pluck('id')->all())->toBe([$drive->root()->getKey()])
-        ->and(Node::query()->whereIn('id', [$folder->getKey(), $sub->getKey(), $file->getKey()])->exists())->toBeFalse();
+    expect(array_map('strval', Node::query()->pluck('id')->all()))->toBe([$drive->root()->id])
+        ->and(Node::query()->whereIn('id', [$folder->id, $sub->id, $file->id])->exists())->toBeFalse();
 });
 
 it('forceDelete не трогает байты на диске (GC отдельно)', function (): void {

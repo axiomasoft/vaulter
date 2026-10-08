@@ -3,12 +3,14 @@
 declare(strict_types=1);
 
 use Vaulter\Contracts\Handlers\NodePresenter;
+use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Http\Resources\Drive\NodeResource;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /**
  * The handler descriptor embedded in the node payload (§4.5 / §5 / M4a): the client
@@ -22,7 +24,7 @@ it('resolves a document node to the TipTap handler descriptor', function (): voi
         storage: $drive->model(),
         name: 'Doc',
         content: DocumentTestHelpers::content(),
-        parent: $drive->root(),
+        parent: DriveTestHelpers::model($drive->root()),
     ));
 
     $descriptor = app(NodePresenter::class)->present($node);
@@ -40,10 +42,10 @@ it('embeds the handler descriptor in the NodeResource payload', function (): voi
         storage: $drive->model(),
         name: 'Payload',
         content: DocumentTestHelpers::content(),
-        parent: $drive->root(),
+        parent: DriveTestHelpers::model($drive->root()),
     ));
 
-    $payload = NodeResource::make($node)->toArray(request());
+    $payload = NodeResource::make(app(NodeSnapshotMapper::class)->map($node))->toArray(request());
 
     expect($payload)->toHaveKey('handler')
         ->and($payload['handler'])->toBeArray()

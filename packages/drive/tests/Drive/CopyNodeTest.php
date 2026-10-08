@@ -28,7 +28,7 @@ it('копия файла переиспользует ОДИН блоб чер�
 
     expect($copy->kind)->toBe(NodeKind::File)
         ->and($copy->name)->toBe('a-copy.txt')
-        ->and($copy->getKey())->not->toEqual($original->getKey())
+        ->and($copy->id)->not->toEqual($original->id)
         // One physical blob, two File handles, two versions referencing it.
         ->and(Blob::query()->count())->toBe(1)
         ->and(File::query()->count())->toBe(2);
@@ -51,7 +51,7 @@ it('глубокая копия папки клонирует всё подде�
     expect(Node::query()->where('kind', '!=', NodeKind::Folder->value)->count())->toBe(2) // two file nodes
         ->and(Node::query()->count())->toBeGreaterThanOrEqual(9); // + storage root
 
-    $copiedSub = $copy->children()->where('name', 'Sub')->first();
+    $copiedSub = DriveTestHelpers::model($copy)->children()->where('name', 'Sub')->first();
     expect($copiedSub)->not->toBeNull()
         ->and($copiedSub->children()->count())->toBe(2); // Leaf + data.bin
 

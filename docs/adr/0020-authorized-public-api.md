@@ -22,11 +22,12 @@ jobs — the Laravel analogue is `Gate` with the current user and `Gate::forUser
 
 **1. The public PHP API stays Laravel-native (D06).**
 
-- Methods accept and return Eloquent models; a node argument is typed `Node|int|string` (model or
-  key).
-- The handle **never trusts** the state of a passed model: it takes the key and re-reads the node
+- ~~Methods accept and return Eloquent models; a node argument is typed `Node|int|string`.~~
+  **Amended by [ADR-0026](/adr/0026-public-api-snapshots) (PLAN2.D44):** methods take an id or a
+  snapshot (`NodeSnapshot|string|int`) and return immutable snapshots; lists return `Page<T>`.
+- The handle **never trusts** the state of what it is passed: it takes the id and re-reads the node
   within its own drive (under a lock for writes); a foreign drive → `NodeNotFoundException` (N27).
-- Lists return `NodePage` (items + `nextCursor`), not a `Collection`.
+- Lists return a `Page` (items + `nextCursor`), not a `Collection`.
 - Ambiguous positional arguments are replaced by typed `*Options` / `UploadSource`.
 - `actorId` parameters are removed from all methods: the subject is set on the handle.
 

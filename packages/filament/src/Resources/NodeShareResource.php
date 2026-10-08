@@ -40,6 +40,7 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Operations\ShareOperations;
+use Vaulter\Support\Identity;
 use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\ValueObjects\Access\Actor;
 
@@ -86,8 +87,8 @@ final class NodeShareResource extends Resource
         $nodeClass = app(VaulterConfig::class)->model('node');
         foreach (app(TenancyBoundary::class)->constrain($nodeClass::query())->whereNull('trashed_at')->lazyById(100) as $node) {
             try {
-                foreach (self::operations($node)->list($node) as $row) {
-                    $ids[] = $row->getKey();
+                foreach (self::operations($node)->list(Identity::stringify($node->getKey())) as $row) {
+                    $ids[] = $row->id;
                 }
             } catch (VaulterException) {
                 // Hidden nodes and disabled features contribute no rows.
@@ -275,7 +276,7 @@ final class NodeShareResource extends Resource
 
         try {
             $minted = self::operations($node)->create(
-                node: $node,
+                node: Identity::stringify($node->getKey()),
                 input: new ShareLinkInput(
                     // Filament validation already supplies enum/string values with these types.
                     role: (string) ($data['role'] ?? RoleRegistry::READER), // @pest-mutate-ignore: RemoveStringCast
@@ -369,7 +370,7 @@ final class NodeShareResource extends Resource
         }
 
         try {
-            self::operations($node)->list($node);
+            self::operations($node)->list(Identity::stringify($node->getKey()));
 
             return true;
         } catch (VaulterException) {
@@ -380,7 +381,7 @@ final class NodeShareResource extends Resource
     public static function revokeRecord(NodeShare $record): void
     {
         $node = self::resolveNode($record->getRawOriginal('node_id')) ?? throw NodeNotFoundException::forId('missing');
-        self::operations($node)->revoke(node: $node, share: $record);
+        self::operations($node)->revoke(node: Identity::stringify($node->getKey()), share: Identity::stringify($record->getKey()));
     }
 
     /** Rotate the record's token; returns the new raw token. */
@@ -388,7 +389,7 @@ final class NodeShareResource extends Resource
     {
         $node = self::resolveNode($record->getRawOriginal('node_id')) ?? throw NodeNotFoundException::forId('missing');
 
-        return self::operations($node)->rotate(node: $node, share: $record)->token;
+        return self::operations($node)->rotate(node: Identity::stringify($node->getKey()), share: Identity::stringify($record->getKey()))->token;
     }
 
     private static function operations(Node $node): ShareOperations

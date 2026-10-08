@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Files\DeleteFileRevisionAction;
 use Vaulter\Drive\Jobs\PruneFileRevisionsJob;
@@ -24,6 +25,8 @@ use Vaulter\VaulterManager;
  */
 final class PruneRevisionsCommand extends Command
 {
+    use OpensWriteScope;
+
     protected $signature = 'vaulter:revisions:prune {--drive=* : Only these drive ids} {--dry-run : Report what would be deleted}';
 
     protected $description = 'Delete non-current file revisions past their profile retention policy.';

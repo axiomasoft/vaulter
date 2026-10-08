@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.13",
   "title": "Публичный API на snapshot-DTO и Page<T>; Eloquent внутренний; WriteScope",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Все публичные Operations (drive, access, share, activity, handle) принимают id/snapshot и возвращают только неизменяемые snapshot-DTO и Page<T>; модели помечены @internal и защищены WriteScope; HTTP-ресурсы и Filament адаптированы без смены JSON; опубликована политика совместимости.",
   "why": "R9 §1: Eloquent в публичном API позволяет хосту писать в обход инвариантов/авторизации и делает каждую колонку контрактом; mass update/delete обходят события модели. До фиксации 1.0 — единственный момент сменить форму API (D44, D38).",
   "scope": {
@@ -373,6 +373,58 @@
     "status": "not_needed",
     "notes": "Внешние факты проверены при дизайне: @plan/knowledge/P4-architecture-review-2026-10-07.json"
   },
-  "result": null,
-  "updated_at": "2026-10-07T15:50:18Z"
+  "result": {
+    "started_at": "2026-10-08T10:52:45Z",
+    "finished_at": "2026-10-08T13:50:16Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "cbbae3a7-243e-44f6-9827-4e473d61dafe"
+    },
+    "notes": "See artifacts/P4.13/completion-notes.md, negative-controls.md, review-verdict.md. Guard lanes V3/V4 green on SQLite; full suites with the guard on were not run.",
+    "deviations": [
+      "V80: pint passes for core, drive, media, documents, filament, azgard and PHPStan passes for core, drive, media, documents, filament; azgard PHPStan (and its 18 tests) fail only because the AzGuard dependency is not installed in this environment (untouched code). Receipts: artifacts/P4.13/receipts/.",
+      "Snapshot shape deviations (status string, scalar actors, fileId, Page.scanned), guard on the base query builder without model events, DriveHandle::model() kept @internal — see the item log.",
+      "After the grok review one fix (REST timestamps via SnapshotValue::iso) was applied by reading and NOT re-run: the owner forbade runs after the review; V1–V5 receipts predate it. Known low gap: guard misses insertOrIgnoreReturning/unbound newQuery."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T13:50:16Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T13:50:16Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T13:50:16Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T13:50:16Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-08T13:50:16Z"
+      },
+      {
+        "id": "V80",
+        "exit": 1,
+        "at": "2026-10-08T13:50:16Z"
+      },
+      {
+        "id": "V81",
+        "exit": 0,
+        "at": "2026-10-08T13:50:16Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T13:50:16Z"
 }

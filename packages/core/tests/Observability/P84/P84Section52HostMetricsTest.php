@@ -160,7 +160,7 @@ it('records download ttfb and bytes on public share download', function (): void
     config()->set('vaulter.features.share_links', true);
     $drive = DriveTestHelpers::drive();
     $file = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('share-bytes'), 'shared.bin'));
-    ShareTestHelpers::share($file->refresh(), token: 'metrics-share');
+    ShareTestHelpers::share($file, token: 'metrics-share');
 
     $response = $this->get('api/vaulter/share/metrics-share/download');
     $response->assertOk();

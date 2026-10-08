@@ -11,6 +11,7 @@ use Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
 /**
@@ -26,7 +27,7 @@ function createDocumentForRelease(): Node
         storage: $drive->model(),
         name: 'Pinned',
         content: DocumentTestHelpers::content('seed'),
-        parent: $drive->root(),
+        parent: DriveTestHelpers::model($drive->root()),
     ));
 }
 

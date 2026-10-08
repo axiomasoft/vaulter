@@ -35,6 +35,8 @@ return [
     'database' => [
         'connection' => env('VAULTER_DB_CONNECTION'),
         'table_prefix' => env('VAULTER_TABLE_PREFIX', 'v_'),
+        // Refuse writes to Vaulter models outside the Vaulter operations (defence in depth, not a sandbox).
+        'write_guard' => env('VAULTER_DB_WRITE_GUARD', true),
     ],
     'ids' => [
         'strategy' => env('VAULTER_ID_STRATEGY', 'ulid'),

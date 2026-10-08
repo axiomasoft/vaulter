@@ -92,7 +92,7 @@ it('stores detected MIME separately when the upload source provides no declared 
 
     $node = $drive->actingAs(DriveTestHelpers::actor($drive, 17))->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('bytes'), 'raw.bin'), new UploadOptions(declaredMimeType: null));
 
-    expect($node->mime_type)->toBe('text/plain')->and($node->file()->firstOrFail()->currentRevision()->firstOrFail()->declared_mime_type)->toBeNull();
+    expect($node->mimeType)->toBe('text/plain')->and(DriveTestHelpers::model($node)->file()->firstOrFail()->currentRevision()->firstOrFail()->declared_mime_type)->toBeNull();
 
     $activity = Activity::query()->where('verb', EventType::FileUploaded->value)->sole();
 
@@ -162,8 +162,8 @@ it('deep-copies every live descendant and charges the summed logical bytes', fun
 
     $copy = $drive->nodes()->copy($root, destination: null, options: new CopyOptions(name: 'Root copy'));
 
-    expect($copy->children()->sole()->name)->toBe('Child')
-        ->and($copy->children()->sole()->children()->sole()->name)->toBe('leaf.bin')
+    expect(DriveTestHelpers::model($copy)->children()->sole()->name)->toBe('Child')
+        ->and(DriveTestHelpers::model($copy)->children()->sole()->children()->sole()->name)->toBe('leaf.bin')
         ->and($drive->model()->refresh()->used_bytes)->toBe($used + 3);
 });
 

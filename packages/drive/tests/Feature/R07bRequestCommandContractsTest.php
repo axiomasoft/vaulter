@@ -276,7 +276,7 @@ it('R07b: purge-trash decrements storage used_bytes — ForceDeleteNodeAction mu
     $usedAfterUpload = $storage->refresh()->used_bytes;
     expect($usedAfterUpload)->toBeGreaterThan(0);
 
-    $file->forceFill(['trashed_at' => Carbon::now()->subDay()])->save();
+    DriveTestHelpers::model($file)->forceFill(['trashed_at' => Carbon::now()->subDay()])->save();
 
     Artisan::call('vaulter:purge-trash', ['--days' => '0']);
 

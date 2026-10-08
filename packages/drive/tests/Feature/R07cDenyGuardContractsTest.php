@@ -119,7 +119,7 @@ it('places a folder under the requested parent, not the storage root', function 
 
     $this->getJson('api/vaulter/nodes/'.$childId)
         ->assertOk()
-        ->assertJsonPath('data.parent_id', (int) $parentId);
+        ->assertJsonPath('data.parent_id', (string) $parentId);
 });
 
 it('uses the default page size of 50 when per_page is omitted', function (): void {

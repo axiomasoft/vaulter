@@ -13,6 +13,7 @@ use Vaulter\Actions\Content\ActivateScanPolicyAction;
 use Vaulter\Actions\Content\RequestScanWorkAction;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Content\ScanSnapshot;
 use Vaulter\Contracts\Cas\ContentScanner;
 use Vaulter\Database\VaulterDatabase;
@@ -30,6 +31,8 @@ use Vaulter\VaulterManager;
 
 final class RescanFileRevisionsCommand extends Command
 {
+    use OpensWriteScope;
+
     private bool $withinMaintenanceScope = false;
 
     protected $signature = 'vaulter:scan-rescan {--tenant=} {--drive=} {--all-tenants} {--reason=} {--revision=*} {--after=} {--limit=100} {--request-id=} {--rescan} {--retry-failed} {--activate-policy} {--dry-run} {--json}';

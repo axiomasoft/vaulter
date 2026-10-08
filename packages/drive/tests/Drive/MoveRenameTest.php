@@ -21,12 +21,12 @@ it('move = ОДИН UPDATE по parent_id, поддерево не трогае�
     $updates = array_filter(DB::getQueryLog(), fn (array $q): bool => str_starts_with(strtolower($q['query']), 'update') && str_contains(strtolower($q['query']), 'parent_id'));
     DB::disableQueryLog();
 
-    expect($child->refresh()->parent_id)->toEqual($b->getKey())
+    expect(DriveTestHelpers::model($child)->parent_id)->toEqual($b->id)
         // Descendants ride along untouched — exactly one row was re-parented.
-        ->and($grandchild->refresh()->parent_id)->toEqual($child->getKey())
+        ->and(DriveTestHelpers::model($grandchild)->parent_id)->toEqual($child->id)
         ->and(count($updates))->toBe(1)
-        ->and($child->sequence)->toBe(1)
-        ->and($grandchild->sequence)->toBe(0);
+        ->and(DriveTestHelpers::model($child)->sequence)->toBe(1)
+        ->and(DriveTestHelpers::model($grandchild)->sequence)->toBe(0);
 });
 
 it('цикл-гард: запрет перемещения в самого себя', function (): void {

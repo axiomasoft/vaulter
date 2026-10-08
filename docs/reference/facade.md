@@ -66,7 +66,9 @@ run inside the right panel scope.
 $drive = Vaulter::forStorage($storage);
 ```
 
-See [`DriveHandle`](/guide/drive) for the handle's full method surface.
+See [`DriveHandle`](/guide/drive) for the handle's full method surface. Every operation of the handle
+returns immutable snapshots and `Page<T>` lists (`$drive->snapshot()`, `$drive->quota()`,
+`$drive->nodes()->children()`); models are internal — see [API compatibility](/guide/compatibility).
 
 ## Profiles
 

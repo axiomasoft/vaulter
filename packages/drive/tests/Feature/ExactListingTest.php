@@ -9,6 +9,7 @@ use Vaulter\Access\ExactListing;
 use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Data\Drive\ListOptions;
+use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Queries\SharedWithActorQuery;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Exceptions\Nodes\InvalidCursorException;
@@ -18,6 +19,7 @@ use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\Access\ProfileDenyDriver;
+use Vaulter\ValueObjects\Access\Actor;
 
 beforeEach(function (): void {
     config()->set('vaulter.access.permission_driver', 'database');
@@ -52,12 +54,12 @@ it('V09 reaches the 301st candidate across empty pages and hides walled-off node
         $found = array_merge($found, array_column($data, 'id'));
         expect($emptyPages)->toBeLessThan(10);
     } while ($cursor !== null);
-    expect($emptyPages)->toBe(3)->and($found)->toBe([$visible->id]);
-    $this->getJson('api/vaulter/nodes/'.$this->folder->id)->assertOk()->assertJsonCount(1, 'data.children')->assertJsonPath('data.children.0.id', $visible->id);
+    expect($emptyPages)->toBe(3)->and($found)->toBe([(string) $visible->id]);
+    $this->getJson('api/vaulter/nodes/'.$this->folder->id)->assertOk()->assertJsonCount(1, 'data.children')->assertJsonPath('data.children.0.id', (string) $visible->id);
     config()->set('vaulter.listing.scan_budget', 1000);
-    $this->getJson($this->base.'/search?q=candidate')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $visible->id)->assertJsonMissingPath('meta.total');
+    $this->getJson($this->base.'/search?q=candidate')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', (string) $visible->id)->assertJsonMissingPath('meta.total');
     Node::query()->whereIn('id', [...$hidden, $visible->id])->update(['trashed_at' => now()]);
-    $this->getJson($this->base.'/trash')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $visible->id)->assertJsonMissingPath('meta.total');
+    $this->getJson($this->base.'/trash')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', (string) $visible->id)->assertJsonMissingPath('meta.total');
 });
 
 it('V22 keeps a drive-wide Gate role through an inheritance boundary, which only cuts grants', function (): void {
@@ -65,12 +67,12 @@ it('V22 keeps a drive-wide Gate role through an inheritance boundary, which only
     // node-blind and still applies; only an override Deny closes a drive to a role.
     $walled = AccessTestHelpers::folder($this->storage, $this->folder, 'walled', inheritGrants: false);
     $visible = AccessTestHelpers::folder($this->storage, $this->folder, 'visible');
-    $this->getJson($this->base.'/nodes?parent_id='.$this->folder->id)->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $visible->id);
+    $this->getJson($this->base.'/nodes?parent_id='.$this->folder->id)->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', (string) $visible->id);
 
     config()->set('vaulter.access.permission_driver', 'gate');
     Gate::define('vaulter.view', fn (): bool => true);
     $ids = array_column($this->getJson($this->base.'/nodes?parent_id='.$this->folder->id)->assertOk()->json('data'), 'id');
-    expect($ids)->toContain($walled->id)->toContain($visible->id);
+    expect($ids)->toContain((string) $walled->id)->toContain((string) $visible->id);
 
     Gate::define('vaulter.super', fn (): bool => false);
     config()->set('vaulter.access.permission_drivers.blocked', ProfileDenyDriver::class);
@@ -95,8 +97,9 @@ it('uses at most five Vaulter queries for 50 visible nodes including resource ab
     $page = $listing->page($this->actor, $query, [['column' => 'name', 'direction' => 'asc'], ['column' => 'id', 'direction' => 'asc']], 50, null, 'queries');
     $request = Request::create('/');
     $request->setUserResolver(fn () => $this->actor);
-    foreach ($page->items as $node) {
-        $data = NodeResource::make($node)->withGrantSet($listing->grantSetFor($node))->resolve($request);
+    $snapshots = app(NodeSnapshotMapper::class)->mapMany($page->items, Actor::user($this->actor)->ref());
+    foreach ($page->items as $index => $node) {
+        $data = NodeResource::make($snapshots[$index])->withGrantSet($listing->grantSetFor($node))->resolve($request);
         expect($data['abilities']['view'])->toBeTrue();
     }
     $counting = false;
@@ -141,7 +144,7 @@ it('paginates trash in canonical default position name and id order without skip
         $found = array_merge($found, array_column($response->json('data'), 'id'));
         $cursor = $response->json('meta.next_cursor');
     } while ($cursor !== null);
-    expect($found)->toBe($ids);
+    expect($found)->toBe(array_map('strval', $ids));
 });
 
 it('scans shared candidates across storages without totals or blocked rows', function (): void {
@@ -168,7 +171,7 @@ it('scans shared candidates across storages without totals or blocked rows', fun
         $ids = array_merge($ids, array_column($response->json('data'), 'id'));
         $cursor = $response->json('meta.next_cursor');
     } while ($cursor !== null);
-    expect($ids)->toContain($visible->id)->not->toContain($hidden->id);
+    expect($ids)->toContain((string) $visible->id)->not->toContain((string) $hidden->id);
 });
 
 it('SEC-CURSOR binds shared-list cursors to the current actor identity', function (): void {

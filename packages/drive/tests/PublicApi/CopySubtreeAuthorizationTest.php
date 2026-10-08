@@ -17,6 +17,8 @@ use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Data\Access\GrantInput;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Data\Snapshots\NodeSnapshot;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Nodes\CopyNodeAction;
 use Vaulter\Drive\Data\Nodes\CopyNodeInput;
 use Vaulter\Enums\Access\Ability;
@@ -41,7 +43,7 @@ beforeEach(function (): void {
     $this->actor = Vaulter::drive($this->owner)->actingAs($this->user);
 });
 
-function copySubtreeGrant(DriveHandle $system, Node $node, object $user, string $role, GrantScope $scope): void
+function copySubtreeGrant(DriveHandle $system, Node|NodeSnapshot $node, object $user, string $role, GrantScope $scope): void
 {
     $system->access()->grant($node, new GrantInput(
         subject: Subject::ofModel($user), role: $role, scope: $scope,
@@ -57,7 +59,7 @@ function copySubtreeFixture(object $test): array
     copySubtreeGrant($test->system, $destination, $test->user, RoleRegistry::OWNER, GrantScope::Item);
     copySubtreeGrant($test->system, $folder, $test->user, RoleRegistry::WRITER, GrantScope::Subtree);
     // The secret file cuts inheritance: nothing granted on the folder reaches it.
-    $secret->forceFill(['inherit_grants' => false])->save();
+    app(VaulterDatabase::class)->write(fn () => DriveTestHelpers::model($secret)->forceFill(['inherit_grants' => false])->save());
 
     return [$folder, $visible, $secret, $destination];
 }
@@ -104,7 +106,7 @@ it('SEC-D30-copy-subtree refuses a descendant outside the authorised key set at 
 
     expect(fn () => app(CopyNodeAction::class)->execute(
         $context,
-        new CopyNodeInput($folder, $destination, 'late', OnNameConflict::Rename, [(string) $folder->id, (string) $visible->id]),
+        new CopyNodeInput(DriveTestHelpers::model($folder), DriveTestHelpers::model($destination), 'late', OnNameConflict::Rename, [(string) $folder->id, (string) $visible->id]),
     ))->toThrow(PermissionDeniedException::class);
 
     expect(Node::query()->count())->toBe($nodes);

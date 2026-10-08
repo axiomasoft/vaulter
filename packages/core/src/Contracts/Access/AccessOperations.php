@@ -5,32 +5,31 @@ declare(strict_types=1);
 namespace Vaulter\Contracts\Access;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
-use Illuminate\Database\Eloquent\Collection;
 use Vaulter\Access\ValueObjects\AccessExplanation;
 use Vaulter\Data\Access\GrantInput;
+use Vaulter\Data\Snapshots\GrantSnapshot;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\InheritanceRestriction;
-use Vaulter\Models\Access\NodeGrant;
-use Vaulter\Models\Drive\Node;
 
 interface AccessOperations
 {
-    /** @return Collection<int, NodeGrant> */
-    public function grants(Node|int|string $node): Collection;
+    /** @return list<GrantSnapshot> */
+    public function grants(NodeSnapshot|string|int $node): array;
 
-    public function grant(Node|int|string $node, GrantInput $grant): NodeGrant;
+    public function grant(NodeSnapshot|string|int $node, GrantInput $grant): GrantSnapshot;
 
-    public function revoke(Node|int|string $node, NodeGrant|int|string $grant): void;
+    public function revoke(NodeSnapshot|string|int $node, GrantSnapshot|string|int $grant): void;
 
-    public function explain(Node|int|string $node, Ability $ability, ?Authorizable $subject = null): AccessExplanation;
+    public function explain(NodeSnapshot|string|int $node, Ability $ability, ?Authorizable $subject = null): AccessExplanation;
 
     /**
      * Stop grants from above applying to the node and its subtree (requires Manage).
      */
-    public function restrictInheritance(Node|int|string $node, InheritanceRestriction $mode = InheritanceRestriction::Empty): Node;
+    public function restrictInheritance(NodeSnapshot|string|int $node, InheritanceRestriction $mode = InheritanceRestriction::Empty): NodeSnapshot;
 
     /**
      * Let grants from above apply again; the node's direct grants stay (requires Manage).
      */
-    public function restoreInheritance(Node|int|string $node): Node;
+    public function restoreInheritance(NodeSnapshot|string|int $node): NodeSnapshot;
 }

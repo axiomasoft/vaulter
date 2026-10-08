@@ -6,6 +6,7 @@ namespace Vaulter\Models\Drive;
 
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 
 /**
@@ -23,6 +24,7 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  */
 class FileRevisionBlob extends Pivot
 {
+    use GuardsWrites;
     use ResolvesVaulterConnection;
 
     public $incrementing = false;

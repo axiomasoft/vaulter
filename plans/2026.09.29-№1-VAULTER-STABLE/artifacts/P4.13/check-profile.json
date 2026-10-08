@@ -1,0 +1,23 @@
+{
+  "item": "PLAN2.P4.13",
+  "prepared_at": "2026-10-08T11:30:00Z",
+  "runtime": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-5-5",
+    "effort": "high",
+    "session": "cbbae3a7-243e-44f6-9827-4e473d61dafe",
+    "source": "observed /model output 'Set model to Sonnet 5.5 … high effort'; plan.py start --actor anthropic/claude-sonnet-5-5/high"
+  },
+  "base_head": "af7571787ab4a007c33fa88de8fa55c867cc9f79",
+  "runs_mode": "D51 L: SQLite, Arch/golden, Pint, PHPStan only; WriteGuard lanes on SQLite. No PG/MySQL in this item.",
+  "reviewer_requested": "grok/grok-4.7 (owner message in running session), after GREEN checks, via plan.py bridge launch (read-only)",
+  "decisions_applied": ["D44 snapshot-DTO + Page<T> + WriteScope", "D38 opaque string ids", "D29 C-rows: no authorization weakened by signature changes", "D51 checks policy"],
+  "php": "scripts/php84",
+  "focused_checks_per_step": [
+    {"cwd": ".", "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/<affected>", "why": "core snapshots, WriteGuard, Arch"},
+    {"cwd": "packages/drive", "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/<affected>", "why": "drive operations on snapshots"}
+  ],
+  "acceptance": "V1 core full, V2 drive full, V3/V4 WriteGuard lanes (VAULTER_TEST_WRITE_GUARD=1), V5 filament Feature, V80 pint+phpstan core/drive/media/documents/filament/azgard, V81 opus-coverage",
+  "negative_controls": "artifacts/P4.13/negative-controls.md",
+  "deferred_broad_checks": "none (no H checks in this item; phase barrier stays with the last P4 item)"
+}

@@ -13,9 +13,16 @@ use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Contracts\Drive\NodeContentLifecycle;
 use Vaulter\Data\Access\GrantInput;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Data\Page;
 use Vaulter\Data\Sharing\MintedShareLink;
 use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Data\Sharing\ShareLinkUpdate;
+use Vaulter\Data\Snapshots\ActivityEntrySnapshot;
+use Vaulter\Data\Snapshots\FileRevisionSnapshot;
+use Vaulter\Data\Snapshots\GrantSnapshot;
+use Vaulter\Data\Snapshots\MintedShareLink as SnapshotMintedShareLink;
+use Vaulter\Data\Snapshots\NodeSnapshot;
+use Vaulter\Data\Snapshots\ShareLinkSnapshot;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\InheritanceRestriction;
 use Vaulter\Enums\Drive\NodeKind;
@@ -46,7 +53,10 @@ function p32Type(?ReflectionType $type): string
     return implode('|', $parts);
 }
 
-function p32ExpectedType(string $type): string
+/**
+ * @param bool $snapshots PLAN2.D44 amends the literal model types of the operations to snapshots and pages
+ */
+function p32ExpectedType(string $type, bool $snapshots = false): string
 {
     if ($type === '') {
         return '';
@@ -76,6 +86,19 @@ function p32ExpectedType(string $type): string
         'StreamInterface' => StreamInterface::class,
         'DateTimeInterface' => DateTimeInterface::class,
     ];
+    if ($snapshots) {
+        $symbols = [...$symbols,
+            'Node' => NodeSnapshot::class,
+            'FileRevision' => FileRevisionSnapshot::class,
+            'NodeGrant' => GrantSnapshot::class,
+            'NodeShare' => ShareLinkSnapshot::class,
+            'Activity' => ActivityEntrySnapshot::class,
+            'MintedShareLink' => SnapshotMintedShareLink::class,
+            'NodePage' => Page::class,
+            'CursorPaginator' => Page::class,
+            'Collection' => 'array',
+        ];
+    }
     $type = str_replace('NodeKey', 'Node|int|string', $type);
     if (str_starts_with($type, '?')) {
         $type = substr($type, 1).'|null';
@@ -86,7 +109,7 @@ function p32ExpectedType(string $type): string
     return implode('|', $parts);
 }
 
-function p32AssertSignature(ReflectionMethod $method, string $parameters, string $return): void
+function p32AssertSignature(ReflectionMethod $method, string $parameters, string $return, bool $snapshots = false): void
 {
     $parameters = preg_replace('/\/\*\*.*?\*\//s', '', $parameters);
     $parameters = preg_replace('/\/\/[^\n]*/', '', $parameters);
@@ -98,25 +121,26 @@ function p32AssertSignature(ReflectionMethod $method, string $parameters, string
         expect($matches)->not->toBeEmpty();
         $ref = $actual[$index];
         expect($ref->getName())->toBe($matches[2])
-            ->and(p32Type($ref->getType()))->toBe(p32ExpectedType($matches[1] ?? ''))
+            ->and(p32Type($ref->getType()))->toBe(p32ExpectedType($matches[1] ?? '', $snapshots))
             ->and($ref->isDefaultValueAvailable())->toBe(isset($matches[3]));
         if (isset($matches[3])) {
             $default = trim($matches[3]);
             $value = match ($default) {
                 'null' => null, 'true' => true, 'false' => false, '[]' => [], '50' => 50,
-                default => constant(p32ExpectedType(explode('::', $default)[0]).'::'.explode('::', $default)[1]),
+                default => constant(p32ExpectedType(explode('::', $default)[0], $snapshots).'::'.explode('::', $default)[1]),
             };
             expect($ref->getDefaultValue())->toBe($value);
         }
     }
     if ($method->getName() !== '__construct') {
-        expect(p32Type($method->getReturnType()))->toBe(p32ExpectedType($return));
+        expect(p32Type($method->getReturnType()))->toBe(p32ExpectedType($return, $snapshots));
     }
 }
 
 it('matches all seven Operations signatures against the literal normative PHP API', function (): void {
     $literal = file_get_contents(dirname(__DIR__, 4).'/audits/2026-09-29-stable-audit/opus/05-php-api.md');
-    // Plan amendments of the literal 05 interfaces (PLAN2.D40, D41, D45, D47).
+    // Plan amendments of the literal 05 interfaces (PLAN2.D40, D41, D45, D47, D48). PLAN2.D44 turns the
+    // model, pagination and collection types of every operation into snapshots and Page.
     $removed = ['NodeOperations::update'];
     $amendments = ['NodeOperations' => '
         public function star(NodeKey $node): Node;
@@ -124,6 +148,9 @@ it('matches all seven Operations signatures against the literal normative PHP AP
         public function starred(?ListOptions $options = null): NodePage;
         public function properties(NodeKey $node): array;
         public function setProperties(NodeKey $node, string $namespace, array $set, array $unset = [], ?int $expectedSequence = null): Node;
+    ', 'FileOperations' => '
+        public function deleteRevision(NodeKey $file, FileRevision|int|string $revision): void;
+        public function setRevisionRetention(NodeKey $file, FileRevision|int|string $revision, bool $keepForever): FileRevision;
     ', 'AccessOperations' => '
         public function restrictInheritance(NodeKey $node, InheritanceRestriction $mode = InheritanceRestriction::Empty): Node;
         public function restoreInheritance(NodeKey $node): Node;
@@ -141,12 +168,12 @@ it('matches all seven Operations signatures against the literal normative PHP AP
             $ref = new ReflectionClass('Vaulter\\Contracts\\'.$domain.'\\'.$name);
             expect($ref->isInterface())->toBeTrue()->and($ref->getMethods())->toHaveCount(count($methods));
             foreach ($methods as $method) {
-                p32AssertSignature($ref->getMethod($method[1]), $method[2], $method[3]);
+                p32AssertSignature($ref->getMethod($method[1]), $method[2], $method[3], snapshots: true);
                 $count++;
             }
         }
     }
-    expect($count)->toBe(36);
+    expect($count)->toBe(38);
 });
 
 it('matches immutable value constructors and UploadSource factory signatures against literal 05', function (): void {
@@ -163,7 +190,7 @@ it('matches immutable value constructors and UploadSource factory signatures aga
             // PLAN2.D42: the uploader's own modification time, informational only.
             $matches[1] = rtrim($matches[1], " \n\r\t,").', public ?DateTimeInterface $clientModifiedAt = null';
         }
-        p32AssertSignature($ref->getConstructor(), $matches[1], '');
+        p32AssertSignature($ref->getConstructor(), $matches[1], '', snapshots: true);
     }
     preg_match('/final readonly class UploadSource\s*\{(.*?)\n\}/s', $literal, $body);
     preg_match_all('/public (static )?function (\w+)\((.*?)\): (\S+);/s', $body[1], $methods, PREG_SET_ORDER);

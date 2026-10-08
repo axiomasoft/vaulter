@@ -7,6 +7,7 @@ use Vaulter\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Actions\Content\SettleScanWorkAction;
 use Vaulter\Content\ScanResult;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Enums\Cas\ScanVerdict;
 use Vaulter\Exceptions\Files\ContentUnavailableException;
@@ -27,8 +28,8 @@ beforeEach(function (): void {
 
 it('SEC-R01 legacy not_required and bare clean cannot authorize required public bytes', function (): void {
     $node = $this->system->files()->upload(UploadSource::fromString('legacy', 'legacy.txt'));
-    $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
-    $revision->forceFill(['scan_status' => 'clean'])->save();
+    $revision = DriveTestHelpers::model($node)->file()->firstOrFail()->currentRevision()->firstOrFail();
+    app(VaulterDatabase::class)->write(fn () => $revision->forceFill(['scan_status' => 'clean'])->save());
     config()->set('vaulter.scan.mode', 'all_content');
     config()->set('vaulter.scan.scanner_key', 'fixture');
     config()->set('vaulter.scan.scanner_version', '1');
@@ -45,7 +46,7 @@ it('SEC-R07 required structured failure never grants PHP or share bytes', functi
     config()->set('vaulter.scan.scanner_version', '1');
     app(ScanPolicyResolver::class)->initialize($this->system->model(), $this->context);
     $node = $this->system->files()->upload(UploadSource::fromString('payload', 'file.txt'));
-    $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
+    $revision = DriveTestHelpers::model($node)->file()->firstOrFail()->currentRevision()->firstOrFail();
     $work = ScanObligation::query()->where('revision_id', $revision->id)->firstOrFail();
     $repo = app(ScanObligationRepository::class);
     $attempt = app(ClaimScanWorkAction::class)->execute($work->id, $work->generation, new DateTimeImmutable);
@@ -64,6 +65,6 @@ it('SEC-R17 public share stream rechecks revocation after descriptor resolution 
     $share = ShareTestHelpers::share($node, token: 'revoked-at-open');
     $resolved = app(ShareResolver::class)->resolve('revoked-at-open');
     expect($resolved->isOk())->toBeTrue();
-    $share->forceFill(['revoked_at' => now()])->save();
+    app(VaulterDatabase::class)->write(fn () => $share->forceFill(['revoked_at' => now()])->save());
     $this->get('api/vaulter/share/revoked-at-open/download')->assertNotFound();
 });

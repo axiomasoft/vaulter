@@ -14,6 +14,7 @@ use Vaulter\Configuration\ConfigValidator;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Data\Access\GrantInput;
 use Vaulter\Data\Access\GrantNodeAccessInput;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\Permission;
 use Vaulter\Exceptions\Access\MissingPermissionDriverException;
@@ -52,7 +53,7 @@ function permissionDrive(string $profile): Drive
 {
     $drive = AccessTestHelpers::storage();
     $drive->profile = $profile;
-    $drive->save();
+    app(VaulterDatabase::class)->write(fn () => $drive->save());
 
     return $drive;
 }
@@ -96,7 +97,7 @@ it('keeps per-drive override decisions local to each batch group and reads chang
     $ordinary = AccessTestHelpers::folder(permissionDrive('default'), null, 'acl');
     $grant = AccessTestHelpers::grant($ordinary, RoleRegistry::COMMENTER);
     expect($resolver->can($actor, Ability::Comment, $ordinary))->toBeTrue();
-    $grant->delete();
+    app(VaulterDatabase::class)->write(fn () => $grant->delete());
     expect($resolver->can($actor, Ability::Comment, $ordinary))->toBeFalse();
     ProfileAllowDriver::$blocked = [];
 });

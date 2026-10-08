@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\DriveProvisioner;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
@@ -38,10 +39,10 @@ it('purge-trash purges on the cutoff day but spares one day newer', function ():
     $storage = AccessTestHelpers::storage();
 
     $onCutoff = AccessTestHelpers::folder($storage, null, 'on-cutoff');
-    $onCutoff->forceFill(['trashed_at' => Carbon::parse('2026-02-09 12:00:00')])->save();
+    app(VaulterDatabase::class)->write(fn () => $onCutoff->forceFill(['trashed_at' => Carbon::parse('2026-02-09 12:00:00')])->save());
 
     $newer = AccessTestHelpers::folder($storage, null, 'newer');
-    $newer->forceFill(['trashed_at' => Carbon::parse('2026-02-10 00:00:01')])->save();
+    app(VaulterDatabase::class)->write(fn () => $newer->forceFill(['trashed_at' => Carbon::parse('2026-02-10 00:00:01')])->save());
 
     Artisan::call('vaulter:purge-trash', ['--days' => '1']);
     $output = Artisan::output();
@@ -57,7 +58,7 @@ it('purge-trash pluralizes multiple purged roots', function (): void {
 
     foreach (['a', 'b'] as $name) {
         $node = AccessTestHelpers::folder($storage, null, $name);
-        $node->forceFill(['trashed_at' => Carbon::now()->subDays(3)])->save();
+        app(VaulterDatabase::class)->write(fn () => $node->forceFill(['trashed_at' => Carbon::now()->subDays(3)])->save());
     }
 
     Artisan::call('vaulter:purge-trash', ['--days' => '1']);
@@ -73,7 +74,7 @@ it('records sweep counters for the materialised stale batch size', function (): 
     $storage = UploadTestHelpers::storage();
     foreach (['one', 'two'] as $name) {
         $session = UploadTestHelpers::session($storage, targetName: $name.'.bin');
-        $session->forceFill(['expires_at' => Carbon::now()->subHour()])->save();
+        app(VaulterDatabase::class)->write(fn () => $session->forceFill(['expires_at' => Carbon::now()->subHour()])->save());
     }
 
     Artisan::call('vaulter:sweep-uploads');
@@ -88,7 +89,7 @@ it('records sweep counters for the materialised stale batch size', function (): 
 
 it('createFolder activity context carries owner and creator ids', function (): void {
     $drive = DriveTestHelpers::drive();
-    Activity::query()->delete();
+    app(VaulterDatabase::class)->write(fn () => Activity::query()->delete());
 
     $folder = $drive->actingAs(DriveTestHelpers::actor($drive, 42))->withCorrelationId('audited-folder')->folders()->create('Audited');
 
@@ -96,9 +97,9 @@ it('createFolder activity context carries owner and creator ids', function (): v
         'kind' => 'folder',
         'name' => 'Audited',
         'correlation_id' => 'audited-folder',
-        'parent_id' => (string) $drive->root()->getKey(),
+        'parent_id' => (string) $drive->root()->id,
     ])
-        ->and($folder->created_by)->toEqual(42);
+        ->and($folder->createdBy)->toEqual('42');
 });
 
 it('move within the same parent is a no-op without NodeMoved activity', function (): void {
@@ -106,8 +107,8 @@ it('move within the same parent is a no-op without NodeMoved activity', function
     $parent = $drive->folders()->create('Parent');
     $child = $drive->folders()->create('Child', $parent);
 
-    Activity::query()->delete();
-    Outbox::query()->delete();
+    app(VaulterDatabase::class)->write(fn () => Activity::query()->delete());
+    app(VaulterDatabase::class)->write(fn () => Outbox::query()->delete());
 
     $drive->actingAs(DriveTestHelpers::actor($drive, 17))->nodes()->move($child, $parent);
 
@@ -126,7 +127,7 @@ it('forceDelete on a folder subtree records zero freed bytes and skips quota adj
 
     expect($drive->model()->refresh()->used_bytes)->toBe($used)
         ->and(Activity::query()->where('verb', EventType::NodePurged->value)->sole()->context)->toEqual([
-            'node_ids' => [(string) $folder->getKey()],
+            'node_ids' => [(string) $folder->id],
             'freed_bytes' => 0,
             'correlation_id' => 'audited-purge',
         ]);
@@ -140,9 +141,9 @@ it('restore re-homes to the storage root when the original parent was trashed', 
     $drive->nodes()->trash($child);
     $drive->nodes()->trash($parent);
 
-    $restored = $drive->actingAs(DriveTestHelpers::actor($drive, 17))->withCorrelationId('audited-restore')->trash()->restore($child->refresh());
+    $restored = $drive->actingAs(DriveTestHelpers::actor($drive, 17))->withCorrelationId('audited-restore')->trash()->restore($child);
 
-    expect($restored->parent_id)->toEqual($drive->model()->root_node_id)
+    expect($restored->parentId)->toEqual($drive->model()->root_node_id)
         ->and(Activity::query()->where('verb', EventType::NodeRestored->value)->orderByDesc('id')->firstOrFail()->context)->toEqual([
             'name' => 'Child',
             'correlation_id' => 'audited-restore',
@@ -152,7 +153,7 @@ it('restore re-homes to the storage root when the original parent was trashed', 
 
 it('upload session initiated activity carries the exact lifecycle context', function (): void {
     $drive = DriveTestHelpers::drive();
-    Activity::query()->delete();
+    app(VaulterDatabase::class)->write(fn () => Activity::query()->delete());
 
     $session = app(UploadSessionManager::class)->initiate(context: OperationContext::system($drive->model(), 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
@@ -173,7 +174,7 @@ it('upload session initiated activity carries the exact lifecycle context', func
 
 it('force-delete outbox occurrence ids are distinct ULIDs', function (): void {
     $drive = DriveTestHelpers::drive();
-    Outbox::query()->delete();
+    app(VaulterDatabase::class)->write(fn () => Outbox::query()->delete());
 
     $first = $drive->folders()->create('One');
     $drive->nodes()->trash($first);
@@ -196,7 +197,7 @@ it('DriveContext upload from a string uses the provided original name for the ve
     $node = $drive->actingAs(DriveTestHelpers::actor($drive, 3))->files()->upload(UploadSource::fromString('plain-bytes', 'from-string.txt'), new UploadOptions(declaredMimeType: 'text/plain'));
 
     expect($node->name)->toBe('from-string.txt')
-        ->and($node->file()->firstOrFail()->currentRevision()->firstOrFail()->original_name)->toBe('from-string.txt');
+        ->and(DriveTestHelpers::model($node)->file()->firstOrFail()->currentRevision()->firstOrFail()->original_name)->toBe('from-string.txt');
 });
 
 it('StorageManager root() provisions a missing root with an empty name', function (): void {
@@ -206,8 +207,8 @@ it('StorageManager root() provisions a missing root with an empty name', functio
 
     // The root row must be gone for good: even a soft-deleted parentless row is the
     // drive's one parentless node under the single-root index.
-    $storage->forceFill(['root_node_id' => null])->save();
-    Node::query()->whereKey($oldRootId)->delete();
+    app(VaulterDatabase::class)->write(fn () => $storage->forceFill(['root_node_id' => null])->save());
+    app(VaulterDatabase::class)->write(fn () => Node::query()->whereKey($oldRootId)->delete());
 
     $root = app(DriveProvisioner::class)->root($storage->refresh());
 

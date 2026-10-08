@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Spatie\LaravelPackageTools\Package;
 use Vaulter\Drive\Activity\RecordsDriveActivity;
+use Vaulter\Drive\Console\PruneRevisionsCommand;
 use Vaulter\Drive\Console\PurgeTrashCommand;
 use Vaulter\Drive\Console\SweepUploadsCommand;
 use Vaulter\Drive\Events\Nodes\FolderCreated;
@@ -62,7 +63,7 @@ it('declares the existing routes and commands and preserves route feature gates'
     (new HttpRegistrar)->configure($package);
 
     expect($package->routeFileNames)->toBe(['drive'])
-        ->and($package->commands)->toBe([PurgeTrashCommand::class, SweepUploadsCommand::class]);
+        ->and($package->commands)->toBe([PurgeTrashCommand::class, PruneRevisionsCommand::class, SweepUploadsCommand::class]);
 
     $original = Route::getFacadeRoot();
     $router = new Router(new Dispatcher($this->app), $this->app);

@@ -12,10 +12,12 @@ use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\AccessSource;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\GrantSet;
+use Vaulter\Access\ValueObjects\NodeAbilities;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Access\PermissionDriver;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Models\Access\NodeGrant;
@@ -217,6 +219,19 @@ final class AccessResolver
         }
 
         return $flags;
+    }
+
+    /**
+     * The UI ability flags for a node known by its snapshot; all false when the node is gone.
+     *
+     * @return array<string, bool>
+     */
+    public function abilitiesForSnapshot(Authorizable $actor, NodeSnapshot $snapshot): array
+    {
+        $class = $this->vaulterConfig->model('node');
+        $node = $class::query()->find($snapshot->id);
+
+        return $node instanceof Node ? $this->abilitiesFor($actor, $node) : NodeAbilities::denied()->toArray();
     }
 
     /**

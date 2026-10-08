@@ -60,7 +60,7 @@ final class PruneFileRevisionsJob implements ShouldBeUnique, ShouldQueue
 
     public function handle(DeleteFileRevisionAction $delete, ProfileRegistry $profiles, VaulterDatabase $database, DatabaseConfig $tables, VaulterConfig $config): void
     {
-        $this->run($delete, $profiles, $database, $tables, $config);
+        $database->write(fn (): array => $this->run($delete, $profiles, $database, $tables, $config));
     }
 
     /** @return array{candidates: int, deleted: int, skipped: int, freed_bytes: int} */

@@ -14,14 +14,15 @@ use Vaulter\Data\Drive\RestoreOptions;
 use Vaulter\Data\Drive\RevisionOptions;
 use Vaulter\Data\Drive\SearchOptions;
 use Vaulter\Data\Drive\UploadOptions;
+use Vaulter\Data\Snapshots\FileRevisionSnapshot;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Enums\Drive\NodeSort;
 use Vaulter\Enums\Drive\OnNameConflict;
-use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
 
 it('builds independent options with named fields and preserves original defaults', function (): void {
-    $parent = (new ReflectionClass(Node::class))->newInstanceWithoutConstructor();
+    $parent = (new ReflectionClass(NodeSnapshot::class))->newInstanceWithoutConstructor();
     $base = UploadOptions::make();
     $upload = $base->parent($parent)->name('report.pdf')->onConflict(OnNameConflict::AddRevision)->declaredMimeType('application/pdf');
     expect($base->parent)->toBeNull()->and($base->name)->toBeNull()->and($base->onConflict)->toBe(OnNameConflict::Fail)
@@ -76,7 +77,7 @@ it('adds GrantInput without caller supplied audit identity and leaves migration 
 it('returns a byte stream with exact metadata and caller ownership without a URL', function (): void {
     $stream = tmpfile();
     try {
-        $revision = (new ReflectionClass(FileRevision::class))->newInstanceWithoutConstructor();
+        $revision = (new ReflectionClass(FileRevisionSnapshot::class))->newInstanceWithoutConstructor();
         $result = new FileStream(stream: $stream, filename: 'file.txt', mimeType: 'text/plain', size: 0, sha256: hash('sha256', ''), revision: $revision);
         expect($result->stream)->toBe($stream)->and($result->revision)->toBe($revision)
             ->and((new ReflectionClass($result))->hasProperty('url'))->toBeFalse()

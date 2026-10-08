@@ -13,6 +13,7 @@ use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /*
  * DocumentStateWriter is the only writer of the working state (P4-design#WorkingState).
@@ -28,7 +29,7 @@ function writerDocument(): Node
         storage: $drive->model(),
         name: 'Writer '.bin2hex(random_bytes(3)),
         content: DocumentTestHelpers::content('v1'),
-        parent: $drive->root(),
+        parent: DriveTestHelpers::model($drive->root()),
     ));
 }
 

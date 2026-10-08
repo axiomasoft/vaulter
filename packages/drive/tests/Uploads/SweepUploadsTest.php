@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Models\Uploads\UploadSession;
@@ -23,7 +24,7 @@ it('sweep помечает протухшие открытые сессии expi
     // Stage some bytes so there is a temp to reclaim.
     app(TusUploadHandler::class)->patch($stale->refresh(), UploadTestHelpers::streamFor('partial'), 0);
     // Force it past its TTL.
-    $stale->forceFill(['expires_at' => Carbon::now()->subHour()])->save();
+    app(VaulterDatabase::class)->write(fn () => $stale->forceFill(['expires_at' => Carbon::now()->subHour()])->save());
 
     $stagedKey = app(StagedUpload::class)->keyFor($stale);
     Storage::disk('local')->assertExists($stagedKey);
@@ -38,7 +39,7 @@ it('sweep НЕ трогает свежие (не протухшие) сесси�
     $storage = UploadTestHelpers::storage();
 
     $fresh = UploadTestHelpers::session($storage, totalSizeBytes: 100);
-    $fresh->forceFill(['expires_at' => Carbon::now()->addHour()])->save();
+    app(VaulterDatabase::class)->write(fn () => $fresh->forceFill(['expires_at' => Carbon::now()->addHour()])->save());
 
     $this->artisan('vaulter:sweep-uploads')->assertSuccessful();
 
@@ -49,10 +50,10 @@ it('sweep НЕ трогает уже завершённые/aborted сессии
     $storage = UploadTestHelpers::storage();
 
     $committed = UploadTestHelpers::session($storage);
-    $committed->forceFill([
+    app(VaulterDatabase::class)->write(fn () => $committed->forceFill([
         'status' => UploadStatus::Committed,
         'expires_at' => Carbon::now()->subDay(),
-    ])->save();
+    ])->save());
 
     $this->artisan('vaulter:sweep-uploads')->assertSuccessful();
 
@@ -70,17 +71,17 @@ it('sweepable scope выбирает initiated|uploading|assembled в грани
     // Distinct, staggered expires_at (the scope orders by it) so the assertion
     // below is not at the mercy of insertion-order ties.
     // initiated + stale → swept.
-    UploadTestHelpers::session($storage)->forceFill(['expires_at' => $threshold->copy()->subHours(3)])->save();
+    app(VaulterDatabase::class)->write(fn () => UploadTestHelpers::session($storage)->forceFill(['expires_at' => $threshold->copy()->subHours(3)])->save());
     // uploading + stale → swept.
-    UploadTestHelpers::session($storage)->forceFill([
+    app(VaulterDatabase::class)->write(fn () => UploadTestHelpers::session($storage)->forceFill([
         'status' => UploadStatus::Uploading,
         'expires_at' => $threshold->copy()->subHours(2),
-    ])->save();
+    ])->save());
     // assembled + stale → NOW in the sweepable set (F-P1.4-10).
-    UploadTestHelpers::session($storage)->forceFill([
+    app(VaulterDatabase::class)->write(fn () => UploadTestHelpers::session($storage)->forceFill([
         'status' => UploadStatus::Assembled,
         'expires_at' => $threshold->copy()->subHour(),
-    ])->save();
+    ])->save());
 
     // The model scope itself makes no ordering promise (only the read-repository's
     // sweepable() wraps it with orderBy('expires_at')) — order by id here so the
@@ -102,7 +103,7 @@ it('sweep сметает застрявшую Assembled-сессию за TTL и
     $stuck = UploadTestHelpers::session($storage, totalSizeBytes: 10);
     app(TusUploadHandler::class)->patch($stuck->refresh(), UploadTestHelpers::streamFor('1234567890'), 0);
     // Commit was interrupted after every byte landed: force Assembled, past TTL.
-    $stuck->forceFill(['status' => UploadStatus::Assembled, 'expires_at' => Carbon::now()->subHour()])->save();
+    app(VaulterDatabase::class)->write(fn () => $stuck->forceFill(['status' => UploadStatus::Assembled, 'expires_at' => Carbon::now()->subHour()])->save());
 
     $stagedKey = app(StagedUpload::class)->keyFor($stuck);
     Storage::disk('local')->assertExists($stagedKey);
@@ -119,7 +120,7 @@ it('sweep НЕ трогает свежую Assembled-сессию в преде�
     $fresh = UploadTestHelpers::session($storage, totalSizeBytes: 10);
     app(TusUploadHandler::class)->patch($fresh->refresh(), UploadTestHelpers::streamFor('1234567890'), 0);
     // Assembled but still well within its TTL — a valid in-flight commit, not stuck.
-    $fresh->forceFill(['status' => UploadStatus::Assembled, 'expires_at' => Carbon::now()->addHour()])->save();
+    app(VaulterDatabase::class)->write(fn () => $fresh->forceFill(['status' => UploadStatus::Assembled, 'expires_at' => Carbon::now()->addHour()])->save());
 
     $stagedKey = app(StagedUpload::class)->keyFor($fresh);
 
@@ -135,7 +136,7 @@ it('sweep абортит S3-multipart части протухшей сессии
     $stale = UploadTestHelpers::session($storage, protocol: UploadProtocol::S3Multipart, totalSizeBytes: 10);
     app(S3MultipartHandler::class)
         ->putPart($stale->refresh(), partNo: 1, byteOffset: 0, chunk: UploadTestHelpers::streamFor('1234567890'));
-    $stale->forceFill(['expires_at' => Carbon::now()->subHour()])->save();
+    app(VaulterDatabase::class)->write(fn () => $stale->forceFill(['expires_at' => Carbon::now()->subHour()])->save());
 
     Storage::disk('local')->assertExists("tmp/uploads/{$stale->upload_id}.parts/1");
 

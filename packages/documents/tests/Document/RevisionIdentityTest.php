@@ -27,13 +27,13 @@ it('V32 keeps a file revision and a document revision with the same id apart', f
         storage: $drive->model(),
         name: 'Spec',
         content: DocumentTestHelpers::content('document body'),
-        parent: $drive->root(),
+        parent: DriveTestHelpers::model($drive->root()),
     ));
     $file = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('file bytes'), 'report.txt'));
 
     // Advance whichever head is behind until both kinds have a head revision with the
     // same id — the collision 0.2 could not tell apart.
-    $fileHead = fn (): int => (int) $file->file()->firstOrFail()->current_revision_id;
+    $fileHead = fn (): int => (int) DriveTestHelpers::model($file)->file()->firstOrFail()->current_revision_id;
     $documentHead = fn (): int => (int) DocumentTestHelpers::document($document)->current_revision_id;
     $bytes = 'file bytes';
     for ($round = 0; $fileHead() !== $documentHead(); $round++) {
@@ -49,18 +49,18 @@ it('V32 keeps a file revision and a document revision with the same id apart', f
 
     $stream = $drive->files()->read($file);
     expect(stream_get_contents($stream->stream))->toBe($bytes)
-        ->and($stream->revision->id)->toBe($id)
+        ->and($stream->revision->id)->toBe((string) $id)
         ->and(app(DocumentRevisionReadRepository::class)->head($document)?->tipTapContent()->toArray())
         ->toBe(DocumentTestHelpers::content('document body')->toArray())
         ->and(app(DocumentRevisionReadRepository::class)->head($document)?->id)->toBe($id)
-        ->and(app(DocumentRevisionReadRepository::class)->forNode($file, $id))->toBeNull();
+        ->and(app(DocumentRevisionReadRepository::class)->forNode(DriveTestHelpers::model($file), $id))->toBeNull();
 
     $this->getJson('api/vaulter/nodes/'.$document->id.'/content')
         ->assertOk()
         ->assertJsonPath('data.id', $id)
         ->assertJsonPath('data.content.content.0.content.0.text', 'document body');
 
-    foreach ([$document->refresh(), $file->refresh()] as $node) {
+    foreach ([$document->refresh(), DriveTestHelpers::model($file)] as $node) {
         expect($node->getAttributes())->not->toHaveKey('current_version_id')
             ->and($node->getAttributes())->not->toHaveKey('file_id');
     }

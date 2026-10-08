@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Contracts\Drive\DriveHandleFactory;
+use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Http\Requests\Uploads\CreateUploadSessionRequest;
@@ -22,7 +24,9 @@ use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Http\Resources\Drive\NodeResource;
 use Vaulter\Models\Drive\Drive;
+use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\DriveReadRepository;
+use Vaulter\ValueObjects\Access\Actor;
 
 /**
  * The tus.io CORE resumable-upload surface (§2.8 / D16 / M3a). Thin HTTP: it resolves
@@ -51,6 +55,7 @@ final class TusProtocolController extends Controller
         private readonly DriveHandleFactory $handles,
         private readonly DriveConfig $driveConfig,
         private readonly RoutesConfig $routesConfig,
+        private readonly NodeSnapshotMapper $snapshots,
     ) {}
 
     /**
@@ -142,7 +147,7 @@ final class TusProtocolController extends Controller
         // discard the staged bytes mid-commit.
         $node = $this->uploads(request: $request, storage: $this->storageOf($session))->complete($session);
 
-        return NodeResource::make($node)
+        return NodeResource::make($this->snapshotOf($node, $request))
             ->response()
             ->setStatusCode(201)
             ->withHeaders([
@@ -411,6 +416,13 @@ final class TusProtocolController extends Controller
     /**
      * Authorize an ability on a node through the AccessResolver (H.2); 403 on denial.
      */
+    private function snapshotOf(Node $node, Request $request): NodeSnapshot
+    {
+        $user = $this->authorizable($request);
+
+        return $this->snapshots->map($node, $user === null ? null : Actor::user($user)->ref());
+    }
+
     private function authorizable(Request $request): ?Authorizable
     {
         $user = $request->user();

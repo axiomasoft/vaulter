@@ -13,6 +13,7 @@ use Vaulter\Documents\Casts\BinaryString;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\ValueObjects\OpaqueDocumentContent;
 use Vaulter\Documents\ValueObjects\TipTapContent;
+use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 
@@ -46,6 +47,7 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  */
 class DocumentRevision extends Model
 {
+    use GuardsWrites;
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
 

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 
@@ -36,6 +37,7 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  */
 class WebhookEndpoint extends Model
 {
+    use GuardsWrites;
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
 

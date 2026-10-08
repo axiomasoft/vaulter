@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Vaulter\Tests\Drive;
 
 use Vaulter\Access\Roles\RoleRegistry;
+use Vaulter\Data\Snapshots\NodeSnapshot;
+use Vaulter\Database\WriteScope;
 use Vaulter\Drive\DriveHandle;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Access\NodeGrant;
+use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\Panels\FakeProject;
 use Vaulter\Tests\Fixtures\TestUser;
@@ -50,7 +53,7 @@ final class DriveTestHelpers
         $user->exists = true;
         $root = $drive->asSystem('test fixture')->root();
         if (!NodeGrant::query()
-            ->where('node_id', $root->getKey())
+            ->where('node_id', $root->id)
             ->where('subject_type', $user->getMorphClass())
             ->where('subject_id', $id)
             ->where('scope', 'subtree')
@@ -64,6 +67,27 @@ final class DriveTestHelpers
         }
 
         return $user;
+    }
+
+    /**
+     * For tests that drive internal handlers and repositories directly: Vaulter's own entry points
+     * (Operations, controllers, commands, jobs) open the write scope, these calls do not.
+     */
+    public static function insideOperation(): void
+    {
+        app(WriteScope::class)->enter();
+    }
+
+    /** The stored node row behind a snapshot (internal Actions and fixtures still take models). */
+    public static function model(Node|NodeSnapshot|string $node): Node
+    {
+        if ($node instanceof Node) {
+            return $node;
+        }
+
+        $class = config('vaulter.models.node');
+
+        return $class::query()->findOrFail(is_string($node) ? $node : $node->id);
     }
 
     /**

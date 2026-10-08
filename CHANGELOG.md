@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Public API on snapshots and pages; Eloquent is internal (PLAN2.D44, D38; PLAN2.P4.13)
+
+- Changed every public `Operations` method and `DriveHandle` to take an id or a snapshot and return
+  immutable snapshots: `NodeSnapshot`, `FileRevisionSnapshot`, `GrantSnapshot`, `ShareLinkSnapshot`,
+  `ActivityEntrySnapshot`, `DriveSnapshot`, `QuotaSnapshot` and `Page<T>`. Was: `Node`, `FileRevision`,
+  `NodeGrant`, `NodeShare`, `Activity` models, `NodePage`, `CursorPaginator` and Eloquent `Collection`
+  results, with `Node|int|string` parameters. Parameters are now `NodeSnapshot|string|int`,
+  `FileRevisionSnapshot|string|int`, `GrantSnapshot|string|int`, `ShareLinkSnapshot|string|int`.
+- Added `DriveHandle::snapshot()` and `quota()` (`QuotaState`: normal, nearing at 90 %, critical at 98 %,
+  exceeded above the limit). `DriveHandle::model()` stays, marked `@internal`.
+- Changed `ShareOperations::create()`/`rotate()` to return `Snapshots\MintedShareLink{link, token}` (was
+  `MintedShareLink{share, token}` over a model); `AccessOperations::grants()` and
+  `ShareOperations::list()` return `list<…Snapshot>` (was a model collection);
+  `ActivityOperations::forDrive()`/`forNode()` return `Page<ActivityEntrySnapshot>` (was a cursor
+  paginator of models, with hidden fields already null).
+- Changed the REST resources to be built from snapshots. Keys are unchanged; ids are strings under every
+  id strategy (bigint ids were integers in JSON).
+- Added the write guard: Vaulter models refuse `save()`, `delete()`, `touch()` and mass `update`, `delete`,
+  `insert`, `upsert`, `increment` outside `VaulterDatabase::transaction()`/`write()` and throw
+  `WriteOutsideOperationException` (`write_outside_operation`, 500). `vaulter.database.write_guard`
+  (`VAULTER_DB_WRITE_GUARD`, default `true`). `DB::table()` and raw SQL are not intercepted.
+- Added `docs/guide/compatibility.md`: what 1.0 freezes (operations, snapshots, enums, exceptions and
+  codes, events, config keys, upgrade path) and what it does not (models, Actions, tables).
+- Added `NodeSnapshot::$file->fileId` and `Page::$scanned`, so the listing JSON keeps `file_id` and
+  `meta.scanned`.
+
+### P1–P3 audit follow-ups, carried over (PLAN2 audit 2026-10-07)
+
+- Added `concurrent_update` (409, `Retry-After: 1`): upload completion retries a deadlock or
+  serialization failure up to three times at the outermost level, then answers with it.
+- Added `OperationGuard::copyableSubtree()` and `visibleWith()`, the `ScanWorkSettings` and
+  `CommentsFeature` contracts and `scripts/check-commit-closure.py`.
+- Changed COPY to check the actor's rights on every descendant (fail closed), activity to hide the
+  request fingerprint, the actor key and grant details from readers without `Share`, scan work to
+  run on the database clock, and the test harness to throw on an unknown `DB_CONNECTION`.
+
 ### File revisions and quota (PLAN2.D48, D49; PLAN2.P4.12)
 
 - Changed the quota to count every retained revision (trash included) with its full logical size,

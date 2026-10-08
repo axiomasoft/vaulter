@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Handlers;
 
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Models\Drive\Node;
 use Vaulter\ValueObjects\Handlers\FileDescriptor;
 
@@ -19,8 +20,18 @@ use Vaulter\ValueObjects\Handlers\FileDescriptor;
  */
 final class FileDescriptorFactory
 {
-    public function forNode(Node $node, ?string $detectedMime = null): FileDescriptor
+    public function forNode(Node|NodeSnapshot $node, ?string $detectedMime = null): FileDescriptor
     {
+        if ($node instanceof NodeSnapshot) {
+            return FileDescriptor::make(
+                nodeId: $node->id,
+                filename: $node->name,
+                extension: $node->extension,
+                detectedMime: $detectedMime ?? $node->mimeType,
+                size: $node->sizeBytes,
+            );
+        }
+
         return FileDescriptor::make(
             nodeId: $node->id,
             filename: $node->name,

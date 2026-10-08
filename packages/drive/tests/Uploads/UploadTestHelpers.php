@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Tests\Uploads;
 
 use Illuminate\Support\Str;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Models\Uploads\UploadSession;
@@ -40,7 +41,7 @@ final class UploadTestHelpers
             'quota_bytes' => $quotaBytes,
             'used_bytes' => 0,
         ]);
-        $storage->save();
+        app(VaulterDatabase::class)->write(fn () => $storage->save());
 
         $root = new Node;
         $root->forceFill([
@@ -50,9 +51,9 @@ final class UploadTestHelpers
             'name' => '',
             'size_bytes' => 0,
         ]);
-        $root->save();
+        app(VaulterDatabase::class)->write(fn () => $root->save());
 
-        $storage->forceFill(['root_node_id' => $root->getKey()])->save();
+        app(VaulterDatabase::class)->write(fn () => $storage->forceFill(['root_node_id' => $root->getKey()])->save());
 
         return $storage->refresh();
     }
@@ -86,7 +87,7 @@ final class UploadTestHelpers
             'mime_type' => 'application/octet-stream',
             'created_by' => $createdBy,
         ]);
-        $session->save();
+        app(VaulterDatabase::class)->write(fn () => $session->save());
 
         return $session;
     }

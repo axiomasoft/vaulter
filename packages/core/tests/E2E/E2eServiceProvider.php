@@ -133,7 +133,7 @@ final class E2eServiceProvider extends ServiceProvider
                 storage: $storage,
                 name: 'E2E Spec',
                 content: $content,
-                parent: $drive->root(),
+                parent: DriveTestHelpers::model($drive->root()),
             ));
 
             AccessTestHelpers::grant($node, RoleRegistry::WRITER, subjectId: 1);

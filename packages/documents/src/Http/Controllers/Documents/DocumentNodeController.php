@@ -11,6 +11,8 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Str;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Contracts\Handlers\NodePresenter;
+use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
 use Vaulter\Documents\Actions\Revisions\CreateNamedRevisionAction;
@@ -68,6 +70,7 @@ final class DocumentNodeController extends Controller
         private readonly UpdateRevisionRetentionAction $releaseKeptVersion,
         private readonly NodePresenter $handlers,
         private readonly NodeExportService $exports,
+        private readonly NodeSnapshotMapper $snapshots,
     ) {}
 
     /**
@@ -91,7 +94,7 @@ final class DocumentNodeController extends Controller
             actorId: $this->actorId($request),
         ));
 
-        return NodeResource::make($node)->response()->setStatusCode(201);
+        return NodeResource::make($this->snapshotOf($node, $request))->response()->setStatusCode(201);
     }
 
     /**
@@ -312,6 +315,13 @@ final class DocumentNodeController extends Controller
         }
 
         return $root;
+    }
+
+    private function snapshotOf(Node $node, Request $request): NodeSnapshot
+    {
+        $user = $this->authorizable($request);
+
+        return $this->snapshots->map($node, $user === null ? null : Actor::user($user)->ref());
     }
 
     private function authorizable(Request $request): ?Authorizable

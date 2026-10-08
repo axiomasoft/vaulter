@@ -495,7 +495,7 @@ registry the resolver consults.
 ```php
 interface NodePresenter
 {
-    public function present(Node $node): NodePresentation;
+    public function present(Node|NodeSnapshot $node): NodePresentation;
 }
 ```
 
@@ -597,3 +597,30 @@ See [Auth → Multi-tenancy](/guide/multi-tenancy) for morph alignment.
 - [Facade & Manager](/reference/facade) — the methods that accept and return these
 - [Configuration reference](/reference/configuration) — the binding keys
 - [Events reference](/reference/events) — what's dispatched across these seams
+
+---
+
+## Operations results: snapshots and pages
+
+The operations contracts (`NodeOperations`, `FolderOperations`, `FileOperations`, `TrashOperations`,
+`AccessOperations`, `ShareOperations`, `ActivityOperations`) and `DriveHandle` take ids or snapshots
+(`NodeSnapshot|string|int`, `FileRevisionSnapshot|string|int`, `GrantSnapshot|string|int`,
+`ShareLinkSnapshot|string|int`) and return only the immutable snapshots of `Vaulter\Data\Snapshots` and
+`Vaulter\Data\Page<T>` — never an Eloquent model, builder, collection or paginator. See
+[API compatibility](/guide/compatibility) and [ADR-0026](/adr/0026-public-api-snapshots).
+
+```php
+interface NodeOperations
+{
+    public function find(NodeSnapshot|string|int $node): NodeSnapshot;
+
+    /** @return Page<NodeSnapshot> */
+    public function children(NodeSnapshot|string|int|null $folder = null, ?ListOptions $options = null): Page;
+
+    public function rename(NodeSnapshot|string|int $node, string $name, ?int $expectedSequence = null): NodeSnapshot;
+    // move, copy, trash, star, unstar, starred, properties, setProperties, abilities …
+}
+```
+
+`Vaulter\Contracts\Drive\NodeDocumentHeads` (internal) lets the documents package fill
+`NodeSnapshot::$document`; without it a document node has no head in its snapshot.

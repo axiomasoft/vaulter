@@ -7,6 +7,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Vaulter\Access\Roles\RoleRegistry;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Sharing\ShareAudience;
@@ -165,7 +166,7 @@ it('fails item-safety for a trashed target (NotFound)', function (): void {
     ShareTestHelpers::share($node, token: 'trash-token');
 
     // Send the target to the trash — the share must no longer resolve.
-    $node->forceFill(['trashed_at' => Carbon::now()])->save();
+    app(VaulterDatabase::class)->write(fn () => $node->forceFill(['trashed_at' => Carbon::now()])->save());
 
     expect(shareResolver()->resolve('trash-token')->resolution)->toBe(ShareResolution::NotFound);
 });
@@ -175,7 +176,7 @@ it('fails item-safety for a purged target (NotFound)', function (): void {
     $node = AccessTestHelpers::folder($storage, null, 'gone');
     ShareTestHelpers::share($node, token: 'deleted-token');
 
-    $node->delete(); // purge is a real DELETE; the share row cascades with it
+    app(VaulterDatabase::class)->write(fn () => $node->delete()); // purge is a real DELETE; the share row cascades with it
 
     expect(shareResolver()->resolve('deleted-token')->resolution)->toBe(ShareResolution::NotFound);
 });
@@ -216,7 +217,7 @@ it('resolves while its issuer still holds Ability::Share on the node (F-P1.3-02)
     AccessTestHelpers::grant($node, RoleRegistry::OWNER, scope: GrantScope::Item, subjectId: $issuer->getKey());
 
     $share = ShareTestHelpers::share($node, token: 'issuer-ok-token');
-    $share->forceFill(['granted_by' => $issuer->getKey()])->save();
+    app(VaulterDatabase::class)->write(fn () => $share->forceFill(['granted_by' => $issuer->getKey()])->save());
 
     expect(shareResolver()->resolve('issuer-ok-token')->isOk())->toBeTrue();
 });
@@ -230,10 +231,10 @@ it('404s once its issuer no longer holds Ability::Share on the node (confused de
     AccessTestHelpers::grant($node, RoleRegistry::OWNER, scope: GrantScope::Item, subjectId: $issuer->getKey());
 
     $share = ShareTestHelpers::share($node, token: 'issuer-revoked-token');
-    $share->forceFill(['granted_by' => $issuer->getKey()])->save();
+    app(VaulterDatabase::class)->write(fn () => $share->forceFill(['granted_by' => $issuer->getKey()])->save());
 
     // The issuer's own grant is pulled — the link they minted must die with it.
-    NodeGrant::query()->where('subject_id', $issuer->getKey())->delete();
+    app(VaulterDatabase::class)->write(fn () => NodeGrant::query()->where('subject_id', $issuer->getKey())->delete());
 
     expect(shareResolver()->resolve('issuer-revoked-token')->resolution)->toBe(ShareResolution::NotFound);
 });
@@ -247,7 +248,7 @@ it('404s once its issuer is no longer resolvable (deleted account, F-P1.3-02)', 
     AccessTestHelpers::grant($node, RoleRegistry::OWNER, scope: GrantScope::Item, subjectId: $issuer->getKey());
 
     $share = ShareTestHelpers::share($node, token: 'issuer-gone-token');
-    $share->forceFill(['granted_by' => $issuer->getKey()])->save();
+    app(VaulterDatabase::class)->write(fn () => $share->forceFill(['granted_by' => $issuer->getKey()])->save());
 
     $issuer->delete();
 

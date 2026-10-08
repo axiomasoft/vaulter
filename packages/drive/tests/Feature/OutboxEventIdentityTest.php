@@ -18,10 +18,10 @@ it('stages three distinct occurrences for rename A to B to A to B', function ():
     $node = $drive->folders()->create('A');
 
     foreach (['B', 'A', 'B'] as $name) {
-        $drive->nodes()->rename($node->refresh(), $name);
+        $drive->nodes()->rename($node, $name);
     }
 
-    $rows = Outbox::query()->where('topic', (string) $node->getKey())
+    $rows = Outbox::query()->where('topic', (string) $node->id)
         ->where('event', EventType::NodeRenamed->value)->orderBy('id')->get();
 
     expect($rows)->toHaveCount(3)
@@ -40,10 +40,10 @@ it('stages three distinct occurrences for trash restore trash', function (): voi
     $node = $drive->folders()->create('Lifecycle');
 
     $drive->nodes()->trash($node);
-    $drive->trash()->restore($node->refresh());
-    $drive->nodes()->trash($node->refresh());
+    $drive->trash()->restore($node);
+    $drive->nodes()->trash($node);
 
-    $rows = Outbox::query()->where('topic', (string) $node->getKey())
+    $rows = Outbox::query()->where('topic', (string) $node->id)
         ->whereIn('event', [EventType::NodeTrashed->value, EventType::NodeRestored->value])
         ->orderBy('id')->get();
 
@@ -63,7 +63,7 @@ it('stages three distinct occurrences for trash restore trash', function (): voi
 
 it('stages one row when the same event occurrence is dispatched twice', function (): void {
     $node = DriveTestHelpers::drive()->folders()->create('A');
-    $event = new NodeRenamed(node: $node, fromName: 'A', toName: 'B');
+    $event = new NodeRenamed(node: DriveTestHelpers::model($node), fromName: 'A', toName: 'B');
 
     event($event);
     event($event);

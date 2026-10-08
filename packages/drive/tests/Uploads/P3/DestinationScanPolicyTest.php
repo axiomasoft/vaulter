@@ -95,7 +95,7 @@ it('SEC-R06 legacy infected source refuses COPY and same blob reupload atomicall
     $stream = UploadTestHelpers::streamFor('infected legacy');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
-    $node->file()->firstOrFail()->currentRevision()->firstOrFail()->forceFill(['scan_status' => 'infected'])->save();
+    app(VaulterDatabase::class)->write(fn () => $node->file()->firstOrFail()->currentRevision()->firstOrFail()->forceFill(['scan_status' => 'infected'])->save());
     expect(fn () => app(CopyNodeAction::class)->execute($context, new CopyNodeInput($node, $drive->rootNode()->firstOrFail(), 'copy.txt')))
         ->toThrow(ContentQuarantinedException::class);
     $stream = UploadTestHelpers::streamFor('infected legacy');
@@ -115,7 +115,7 @@ it('SEC-R03 folder COPY creates every child obligation and later failure rolls b
     $drive = UploadTestHelpers::storage();
     $context = OperationContext::system($drive, 'fixture');
     $folder = new Node;
-    $folder->forceFill(['drive_id' => $drive->id, 'parent_id' => $drive->root_node_id, 'kind' => NodeKind::Folder, 'name' => 'folder', 'size_bytes' => 0])->save();
+    app(VaulterDatabase::class)->write(fn () => $folder->forceFill(['drive_id' => $drive->id, 'parent_id' => $drive->root_node_id, 'kind' => NodeKind::Folder, 'name' => 'folder', 'size_bytes' => 0])->save());
     foreach (['a', 'b'] as $name) {
         $stream = UploadTestHelpers::streamFor($name);
         app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, $name.'.txt', 'text/plain', $folder));

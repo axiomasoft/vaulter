@@ -16,6 +16,7 @@ use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Http\Support\HttpResourceResolver;
+use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\DriveReadRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Sharing\ShareResolver;
@@ -39,7 +40,7 @@ it('V31 stamps authoritative drive and children and retained system handles rech
     $handle = Vaulter::drive(DriveTestHelpers::host())->asSystem('fixture');
     $drive = $handle->model();
     $root = $handle->root();
-    expect($drive->tenant_id)->toBe('A')->and($root->tenant_id)->toBe('A');
+    expect($drive->tenant_id)->toBe('A')->and(Node::query()->findOrFail($root->id)->tenant_id)->toBe('A');
     app(TenantResolver::class)->tenant = 'B';
     expect(fn () => $handle->root())->toThrow(NodeNotFoundException::class)
         ->and(fn () => Vaulter::drive($drive))->toThrow(NodeNotFoundException::class);
@@ -102,7 +103,7 @@ it('I15 restores nested maintenance exceptions without carrying bypass into a Fi
     $a = AccessTestHelpers::storage();
     app(TenantResolver::class)->tenant = 'B';
     expect(fn () => Vaulter::withoutTenancy(function () use ($a): void {
-        expect(Vaulter::drive($a)->asSystem('maintenance')->root()->tenant_id)->toBe('A');
+        expect(Node::query()->findOrFail(Vaulter::drive($a)->asSystem('maintenance')->root()->id)->tenant_id)->toBe('A');
         $fiber = new Fiber(function () use ($a): void {
             expect(fn () => Vaulter::drive($a))->toThrow(NodeNotFoundException::class);
         });
@@ -120,7 +121,7 @@ it('I15 maintenance keeps ACL checks and authoritative child consistency', funct
     Vaulter::withoutTenancy(function () use ($a, $node): void {
         expect(fn () => Vaulter::drive($a)->actingAs(AccessTestHelpers::user(99))->root())->toThrow(NodeNotFoundException::class);
         $node->forceFill(['tenant_id' => 'wrong'])->save();
-        expect(fn () => Vaulter::drive($a)->asSystem('maintenance')->nodes()->find($node))->toThrow(NodeNotFoundException::class);
+        expect(fn () => Vaulter::drive($a)->asSystem('maintenance')->nodes()->find($node->id))->toThrow(NodeNotFoundException::class);
     });
 });
 
@@ -172,11 +173,11 @@ it('V31 anonymous bearer shares derive only their target tenant and do not open 
     $nodeB = AccessTestHelpers::folder($b, null, 'foreign child');
     app(TenantResolver::class)->tenant = null;
     $result = app(ShareResolver::class)->resolve($link->token);
-    expect($result->context?->node->id)->toBe($rootA->id);
+    expect($result->context?->node->id)->toEqual($rootA->id);
     $this->getJson('api/vaulter/share/'.$link->token)->assertOk()->assertJsonFragment(['name' => 'shared child'])->assertJsonMissing(['name' => 'foreign child']);
     app(TenantResolver::class)->tenant = 'B';
     expect(fn () => Vaulter::drive($driveA))->toThrow(NodeNotFoundException::class);
-    $link->share->forceFill(['tenant_id' => 'B'])->save();
+    AccessTestHelpers::shareRow($link)->forceFill(['tenant_id' => 'B'])->save();
     $this->getJson('api/vaulter/share/'.$link->token)->assertNotFound();
 });
 

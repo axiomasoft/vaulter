@@ -84,7 +84,7 @@ final class ActivityResource extends Resource
                     foreach ($page as $row) {
                         $ids[] = $row->id;
                     }
-                    $cursor = $page->nextCursor()?->encode();
+                    $cursor = $page->nextCursor;
                 } while ($cursor !== null);
             } catch (VaulterException) {
                 // Drives without root View contribute no activity.

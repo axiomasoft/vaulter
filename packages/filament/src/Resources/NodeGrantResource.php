@@ -36,6 +36,7 @@ use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\AccessOperations;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Support\Identity;
 use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\ValueObjects\Access\Actor;
 
@@ -81,8 +82,8 @@ final class NodeGrantResource extends Resource
         $nodeClass = app(VaulterConfig::class)->model('node');
         foreach (app(TenancyBoundary::class)->constrain($nodeClass::query())->whereNull('trashed_at')->lazyById(100) as $node) {
             try {
-                foreach (self::operations($node)->grants($node) as $row) {
-                    $ids[] = $row->getKey();
+                foreach (self::operations($node)->grants(Identity::stringify($node->getKey())) as $row) {
+                    $ids[] = $row->id;
                 }
             } catch (VaulterException) {
                 // Hidden nodes and disabled features contribute no rows.
@@ -230,7 +231,7 @@ final class NodeGrantResource extends Resource
         $expiresAt = $data['expires_at'] ?? '';
 
         self::operations($node)->grant(
-            node: $node,
+            node: Identity::stringify($node->getKey()),
             grant: new GrantInput(
                 subject: new Subject(
                     // Filament validation already supplies these enum/string fields with their declared types.
@@ -278,7 +279,7 @@ final class NodeGrantResource extends Resource
         }
 
         try {
-            self::operations($node)->grants($node);
+            self::operations($node)->grants(Identity::stringify($node->getKey()));
 
             return true;
         } catch (VaulterException) {
@@ -289,7 +290,7 @@ final class NodeGrantResource extends Resource
     public static function revokeRecord(NodeGrant $record): void
     {
         $node = self::resolveNode($record->getRawOriginal('node_id')) ?? throw NodeNotFoundException::forId('missing');
-        self::operations($node)->revoke(node: $node, grant: $record);
+        self::operations($node)->revoke(node: Identity::stringify($node->getKey()), grant: Identity::stringify($record->getKey()));
     }
 
     private static function operations(Node $node): AccessOperations

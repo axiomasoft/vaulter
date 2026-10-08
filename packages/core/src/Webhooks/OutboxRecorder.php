@@ -6,6 +6,7 @@ namespace Vaulter\Webhooks;
 
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Events\Access\NodeGrantCreated;
 use Vaulter\Events\Access\NodeGrantRevoked;
@@ -40,6 +41,7 @@ class OutboxRecorder
     public function __construct(
         private readonly VaulterConfig $vaulterConfig,
         private readonly MetricsRecorder $metrics,
+        private readonly VaulterDatabase $database,
     ) {}
 
     public function recordGrantCreated(NodeGrantCreated $event): ?Outbox
@@ -172,7 +174,7 @@ class OutboxRecorder
                     'status' => 'pending',
                     'attempts' => 0,
                 ]);
-                $outbox->save();
+                $this->database->write(static fn (): bool => $outbox->save());
 
                 return $outbox;
             },

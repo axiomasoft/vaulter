@@ -8,6 +8,7 @@ use Illuminate\Foundation\Application;
 use Vaulter\Configuration\ConfigNormalizer;
 use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Contracts\Drive\DriveHandleFactory as DriveHandleFactoryContract;
+use Vaulter\Contracts\Profiles\CommentsFeature;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\DriveHandleFactory;
 use Vaulter\Drive\DriveProvisioner;
@@ -15,6 +16,7 @@ use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Providers\BindingsRegistrar;
 use Vaulter\Drive\Uploads\UploadSessionManager;
+use Vaulter\Profiles\DisabledCommentsFeature;
 
 it('fills upload model defaults during normalization without replacing host overrides', function (): void {
     $app = new Application;
@@ -43,6 +45,7 @@ it('registers the factory and preserves singleton service lifetimes in a fresh c
     $app->instance('config', $config);
     $app->instance(VaulterDatabase::class, $this->app->make(VaulterDatabase::class));
     $app->instance(StorageDriver::class, $this->app->make(StorageDriver::class));
+    $app->instance(CommentsFeature::class, new DisabledCommentsFeature);
 
     (new BindingsRegistrar($app))->register();
 

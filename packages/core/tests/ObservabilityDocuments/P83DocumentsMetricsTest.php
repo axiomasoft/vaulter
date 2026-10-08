@@ -17,6 +17,7 @@ use Vaulter\Operations\OperationContext;
 use Vaulter\Support\LoadTier;
 use Vaulter\Testing\FakeMetricsRecorder;
 use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
 function p83DocumentNode(): Node
@@ -27,7 +28,7 @@ function p83DocumentNode(): Node
         storage: $drive->model(),
         name: 'Metrics doc',
         content: DocumentTestHelpers::content('Body'),
-        parent: $drive->root(),
+        parent: DriveTestHelpers::model($drive->root()),
     ));
 }
 

@@ -58,7 +58,7 @@ it('frees the blob edges of a purged file subtree (GC-eligible)', function (): v
     $blob = Blob::query()->firstOrFail();
     expect($blob->versions()->count())->toBe(1);
 
-    $fileNode->refresh()->forceFill(['trashed_at' => Carbon::now()->subDays(40)])->save();
+    DriveTestHelpers::model($fileNode)->forceFill(['trashed_at' => Carbon::now()->subDays(40)])->save();
 
     $this->artisan('vaulter:purge-trash')->assertSuccessful();
 
@@ -73,16 +73,16 @@ it('cascades the physical purge to file/version rows on PostgreSQL, F-P1.12-02',
 
     $drive = Vaulter::drive(DriveTestHelpers::host())->asSystem('test fixture');
     $fileNode = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('purge me too'), 'p2.txt'));
-    $fileId = $fileNode->file()->first()->getKey();
+    $fileId = DriveTestHelpers::model($fileNode)->file()->first()->getKey();
 
-    $fileNode->refresh()->forceFill(['trashed_at' => Carbon::now()->subDays(40)])->save();
+    DriveTestHelpers::model($fileNode)->forceFill(['trashed_at' => Carbon::now()->subDays(40)])->save();
 
     $this->artisan('vaulter:purge-trash')->assertSuccessful();
 
     // The node AND every row that FK-cascades off it are physically gone — not
     // just the version↔blob edge (already covered by the GC-eligibility test
     // above), the v_files/v_file_revisions rows themselves.
-    expect(Node::query()->whereKey($fileNode->getKey())->exists())->toBeFalse()
+    expect(Node::query()->whereKey($fileNode->id)->exists())->toBeFalse()
         ->and(DB::table('v_files')->where('id', $fileId)->exists())->toBeFalse()
         ->and(DB::table('v_file_revisions')->where('file_id', $fileId)->exists())->toBeFalse();
 });
@@ -93,9 +93,9 @@ it('does not physically purge a node restored between candidate materialisation 
 
     $drive->nodes()->trash($node);
     // Backdate past the retention window so it becomes a purge candidate.
-    $node->refresh()->forceFill(['trashed_at' => Carbon::now()->subDays(40)])->save();
+    DriveTestHelpers::model($node)->forceFill(['trashed_at' => Carbon::now()->subDays(40)])->save();
 
-    $targetId = $node->getKey();
+    $targetId = $node->id;
     $restoredOnce = false;
 
     // Fires when the candidate row is hydrated by PurgeTrashCommand's initial
@@ -104,12 +104,12 @@ it('does not physically purge a node restored between candidate materialisation 
     // TOCTOU window between candidate materialisation and the transaction that
     // physically (and irreversibly, ADR-0016) deletes the subtree.
     Node::retrieved(function (Node $model) use ($drive, $targetId, &$restoredOnce): void {
-        if ($restoredOnce || $model->getKey() !== $targetId) {
+        if ($restoredOnce || (string) $model->getKey() !== (string) $targetId) {
             return;
         }
 
         $restoredOnce = true;
-        $drive->trash()->restore(Node::query()->whereKey($targetId)->firstOrFail());
+        $drive->trash()->restore((string) $targetId);
     });
 
     $this->artisan('vaulter:purge-trash')->assertSuccessful();
@@ -119,7 +119,7 @@ it('does not physically purge a node restored between candidate materialisation 
     // survives, live and un-trashed, instead of being physically deleted out
     // from under the user who just restored it.
     expect(Node::query()->whereKey($targetId)->exists())->toBeTrue()
-        ->and($node->refresh()->trashed_at)->toBeNull();
+        ->and(DriveTestHelpers::model($node)->trashed_at)->toBeNull();
 });
 
 it('honours the --days override', function (): void {

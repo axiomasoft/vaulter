@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Storage;
 use Vaulter\Data\Drive\RevisionOptions;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Data\Snapshots\FileRevisionSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Files\IngestFileAction;
 use Vaulter\Drive\Data\Files\IngestFileInput;
@@ -57,7 +58,7 @@ it('I9 ingest receipt names the revision this call created, not the head a post-
 
     $own = $handle->files()->addRevision($fileId, UploadSource::fromString('own bytes', 'receipt.txt'), new RevisionOptions(expectedSequence: 0));
 
-    expect($later)->toBeInstanceOf(FileRevision::class)
+    expect($later)->toBeInstanceOf(FileRevisionSnapshot::class)
         ->and([$own->number, $own->sha256])->toBe([2, hash('sha256', 'own bytes')])
         ->and([$later->number, $later->sha256])->toBe([3, hash('sha256', 'later bytes')])
         ->and($own->id)->not->toBe($later->id);

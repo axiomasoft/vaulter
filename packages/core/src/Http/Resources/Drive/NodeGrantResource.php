@@ -6,14 +6,15 @@ namespace Vaulter\Http\Resources\Drive;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Vaulter\Models\Access\NodeGrant;
+use Vaulter\Data\Snapshots\GrantSnapshot;
+use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
 
 /**
  * The read shape of a node grant (§2.6): the subject, level, effect, scope and
- * expiry the Drive permissions UI lists. Read-only — transforms an already-loaded
- * NodeGrant, never queries.
+ * expiry the Drive permissions UI lists. Read-only — transforms a GrantSnapshot,
+ * never queries.
  *
- * @mixin NodeGrant
+ * @mixin GrantSnapshot
  */
 final class NodeGrantResource extends JsonResource
 {
@@ -23,19 +24,19 @@ final class NodeGrantResource extends JsonResource
     #[\Override]
     public function toArray(Request $request): array
     {
-        /** @var NodeGrant $grant */
+        /** @var GrantSnapshot $grant */
         $grant = $this->resource;
 
         return [
-            'id' => $grant->getKey(),
-            'node_id' => $grant->node_id,
-            'subject_type' => $grant->subject_type,
-            'subject_id' => $grant->subject_id,
-            'role' => $grant->role_key,
-            'role_version' => $grant->role_version,
+            'id' => $grant->id,
+            'node_id' => $grant->nodeId,
+            'subject_type' => $grant->subject->type,
+            'subject_id' => $grant->subject->id,
+            'role' => $grant->role,
+            'role_version' => $grant->roleVersion,
             'scope' => $grant->scope->value,
-            'expires_at' => $grant->expires_at,
-            'created_at' => $grant->created_at,
+            'expires_at' => SnapshotValue::iso($grant->expiresAt),
+            'created_at' => SnapshotValue::iso($grant->createdAt),
         ];
     }
 }

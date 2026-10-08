@@ -12,6 +12,8 @@ use Vaulter\Models\Sharing\NodeShare;
  * hash + prefix; this DTO carries the raw token alongside it so the creating
  * controller can return it exactly once. It is never persisted and never
  * serialized by any Resource.
+ *
+ * @internal The public result is {@see \Vaulter\Data\Snapshots\MintedShareLink}.
  */
 final readonly class MintedShareLink
 {

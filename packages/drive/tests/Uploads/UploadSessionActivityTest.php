@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage as StorageFacade;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Facades\Vaulter;
@@ -45,7 +46,7 @@ it('abort пишет activity-строку upload.aborted (F-P1.4-13, red-before
         'name' => 'activity-abort.bin',
         'total_size_bytes' => 4,
     ])->json('data.upload_id');
-    Activity::query()->delete();
+    app(VaulterDatabase::class)->write(fn () => Activity::query()->delete());
 
     $this->delete('api/vaulter/resumable-uploads/'.$uploadId, [], ['Tus-Resumable' => '1.0.0'])->assertNoContent();
 
@@ -62,11 +63,11 @@ it('sweep-expire пишет activity-строку upload.expired без акто
         'name' => 'activity-expire.bin',
         'total_size_bytes' => 4,
     ])->json('data.upload_id');
-    Activity::query()->delete();
+    app(VaulterDatabase::class)->write(fn () => Activity::query()->delete());
 
-    UploadSession::query()
+    app(VaulterDatabase::class)->write(fn () => UploadSession::query()
         ->where('upload_id', $uploadId)
-        ->update(['expires_at' => now()->subHour()]);
+        ->update(['expires_at' => now()->subHour()]));
 
     // The sweeper is a console/schedule path with no HTTP actor: log out the
     // request-scoped actingAs user so ActivityRecorder's auth()->user() fallback

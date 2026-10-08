@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Event;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Events\Nodes\FolderCreated;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
@@ -18,8 +19,8 @@ it('создаёт папку в корне хранилища (под root-уз
     // sibling of it — the root node is the top of the tree.
     expect($folder->kind)->toBe(NodeKind::Folder)
         ->and($folder->name)->toBe('Docs')
-        ->and($folder->parent_id)->toEqual($drive->root()->getKey())
-        ->and($folder->drive_id)->toEqual($drive->model()->getKey());
+        ->and($folder->parentId)->toEqual($drive->root()->id)
+        ->and($folder->driveId)->toEqual($drive->model()->getKey());
 });
 
 it('создаёт вложенную папку под родителем', function (): void {
@@ -28,7 +29,7 @@ it('создаёт вложенную папку под родителем', fun
     $parent = $drive->folders()->create('Docs');
     $child = $drive->folders()->create('2026', $parent);
 
-    expect($child->parent_id)->toEqual($parent->getKey());
+    expect($child->parentId)->toEqual($parent->id);
 });
 
 it('детерминированно отклоняет конфликт имён сиблингов', function (): void {
@@ -36,7 +37,7 @@ it('детерминированно отклоняет конфликт имё�
 
     $drive->folders()->create('Docs');
 
-    expect(fn (): Node => $drive->folders()->create('Docs'))
+    expect(fn (): NodeSnapshot => $drive->folders()->create('Docs'))
         ->toThrow(NodeNameConflictException::class);
 });
 
@@ -45,7 +46,7 @@ it('игнорирует регистр при проверке сиблинго
 
     $drive->folders()->create('Docs');
 
-    expect(fn (): Node => $drive->folders()->create('DOCS'))
+    expect(fn (): NodeSnapshot => $drive->folders()->create('DOCS'))
         ->toThrow(NodeNameConflictException::class);
 });
 
@@ -58,7 +59,7 @@ it('разрешает одинаковые имена в разных роди�
     $drive->folders()->create('Shared', $a);
     $shared = $drive->folders()->create('Shared', $b);
 
-    expect($shared->parent_id)->toEqual($b->getKey());
+    expect($shared->parentId)->toEqual($b->id);
 });
 
 it('диспатчит NodeCreated при создании папки', function (): void {
@@ -68,7 +69,7 @@ it('диспатчит NodeCreated при создании папки', function
 
     Event::assertDispatched(
         FolderCreated::class,
-        fn (FolderCreated $event): bool => $event->node->getKey() === $folder->getKey(),
+        fn (FolderCreated $event): bool => (string) $event->node->getKey() === $folder->id,
     );
 });
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Data\Uploads;
 
 use InvalidArgumentException;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Models\Drive\Node;
 
@@ -13,9 +14,9 @@ final readonly class InitiateUploadInput
     /** @param array<string, mixed> $metadata */
     public function __construct(
         public UploadProtocol $protocol,
-        public Node|int|string|null $targetParent = null,
+        public Node|NodeSnapshot|int|string|null $targetParent = null,
         public ?string $targetName = null,
-        public Node|int|string|null $targetNode = null,
+        public Node|NodeSnapshot|int|string|null $targetNode = null,
         public ?string $expectedSha256 = null,
         public ?int $totalSizeBytes = null,
         public ?string $mimeType = null,

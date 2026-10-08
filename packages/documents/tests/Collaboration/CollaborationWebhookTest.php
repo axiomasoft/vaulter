@@ -13,6 +13,7 @@ use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\FakeHostUserResolver;
 use Vaulter\Webhooks\WebhookSigner;
 
@@ -71,7 +72,7 @@ function webhookDocumentNode(?string $level = RoleRegistry::WRITER, int $actorId
         storage: $drive->model(),
         name: 'Spec',
         content: DocumentTestHelpers::content('Draft'),
-        parent: $drive->root(),
+        parent: DriveTestHelpers::model($drive->root()),
     ));
 
     if ($level !== null) {

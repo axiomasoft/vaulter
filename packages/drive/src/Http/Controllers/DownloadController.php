@@ -15,6 +15,7 @@ use Vaulter\Http\Controllers\Controller;
 use Vaulter\Http\Support\DownloadHeaders;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Support\Identity;
 use Vaulter\Support\LoadTier;
 use Vaulter\VaulterManager;
 
@@ -46,7 +47,7 @@ final class DownloadController extends Controller
         if (!$storage->exists) {
             $storage = $node->storage()->first() ?? throw NodeNotFoundException::forId($node->id);
         }
-        $file = $this->vaulter->drive(ownerOrDrive: $storage)->actingAs($actor)->files()->read(file: $node, revision: $version);
+        $file = $this->vaulter->drive(ownerOrDrive: $storage)->actingAs($actor)->files()->read(file: Identity::stringify($node->getKey()), revision: $version);
 
         return $this->stream($file, $source, $startedAt);
     }

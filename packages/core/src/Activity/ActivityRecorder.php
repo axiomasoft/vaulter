@@ -7,6 +7,7 @@ namespace Vaulter\Activity;
 use Illuminate\Database\Eloquent\Model;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Data\Activity\RecordActivityCommand;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Events\Access\NodeGrantCreated;
 use Vaulter\Events\Access\NodeGrantRevoked;
@@ -45,6 +46,7 @@ final readonly class ActivityRecorder
     public function __construct(
         private ActivityStoreRepository $store,
         private MetricsRecorder $metrics,
+        private VaulterDatabase $database,
     ) {}
 
     public function recordGrantCreated(NodeGrantCreated $event): Activity
@@ -179,7 +181,8 @@ final readonly class ActivityRecorder
             $context = [...($context ?? []), 'correlation_id' => $correlationId];
         }
 
-        $activity = $this->store->record(new RecordActivityCommand(
+        // Subscribers run inside the operation's transaction or after its commit: either way this is Vaulter's own write.
+        $activity = $this->database->write(fn (): Activity => $this->store->record(new RecordActivityCommand(
             verb: $verb,
             tenantId: $tenantId,
             storageId: $storageId,
@@ -191,7 +194,7 @@ final readonly class ActivityRecorder
             ip: $request->ip,
             userAgent: $request->userAgent,
             requestId: $request->requestId,
-        ));
+        )));
 
         $this->metrics->counter(
             name: 'vaulter_activity_write_total',

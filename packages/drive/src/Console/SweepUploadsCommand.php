@@ -6,6 +6,7 @@ namespace Vaulter\Drive\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
+use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Contracts\Observability\TraceRecorder;
 use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
@@ -30,6 +31,8 @@ use Vaulter\VaulterManager;
  */
 final class SweepUploadsCommand extends Command
 {
+    use OpensWriteScope;
+
     protected $signature = 'vaulter:sweep-uploads';
 
     protected $description = 'Abort and clean up stale resumable-upload sessions past their TTL (§2.8).';

@@ -97,7 +97,7 @@ final class PublishedConfigV02Test extends TestCase
         $folder = $handle->folders()->create('published-config');
         $uploadedFile = UploadedFile::fake()->createWithContent('fixture.txt', 'published v0.2 works');
         $file = $handle->files()->upload(UploadSource::fromUploadedFile($uploadedFile), new UploadOptions(parent: $folder));
-        self::assertSame($folder->getKey(), $file->parent_id);
+        self::assertSame($folder->id, $file->parentId);
         self::assertSame('fixture.txt', $file->name);
     }
 }

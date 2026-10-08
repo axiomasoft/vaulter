@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Activity\RecordsDriveActivity;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
@@ -26,8 +27,12 @@ use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\Actor;
+
+// These tests drive handlers and repositories directly; Vaulter's entry points open the write scope, these calls do not.
+beforeEach(fn () => DriveTestHelpers::insideOperation());
 
 beforeEach(function (): void {
     Storage::fake('local');
@@ -53,7 +58,7 @@ function r07bReqTenantStorage(int $tenantId): Drive
         'tenant_id' => $tenantId,
         'used_bytes' => 0,
     ]);
-    $storage->save();
+    app(VaulterDatabase::class)->write(fn () => $storage->save());
 
     $root = new Node;
     $root->forceFill([
@@ -63,9 +68,9 @@ function r07bReqTenantStorage(int $tenantId): Drive
         'name' => '',
         'size_bytes' => 0,
     ]);
-    $root->save();
+    app(VaulterDatabase::class)->write(fn () => $root->save());
 
-    $storage->forceFill(['root_node_id' => $root->getKey()])->save();
+    app(VaulterDatabase::class)->write(fn () => $storage->forceFill(['root_node_id' => $root->getKey()])->save());
 
     return $storage->refresh();
 }
@@ -124,7 +129,7 @@ it('R07b: initiate node_id stored from UploadInitData targetNode (L71 RemoveArra
         'name' => 'versioned.bin',
         'size_bytes' => 0,
     ]);
-    $node->save();
+    app(VaulterDatabase::class)->write(fn () => $node->save());
 
     $session = app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
@@ -251,7 +256,7 @@ it('R07b: max_active_sessions=0 disables the cap for any actorId (L269 RemoveArr
 
 it('R07b: guardTransition ValidationException carries the "status" field in errors (L300 RemoveArrayItem)', function (): void {
     $session = UploadTestHelpers::session(UploadTestHelpers::storage(), totalSizeBytes: 4);
-    $session->forceFill(['status' => UploadStatus::Committed])->save();
+    app(VaulterDatabase::class)->write(fn () => $session->forceFill(['status' => UploadStatus::Committed])->save());
 
     try {
         app(UploadSessionManager::class)->markAssembled($session->refresh());
@@ -265,7 +270,7 @@ it('R07b: guardTransition ValidationException carries the "status" field in erro
 
 it('R07b: advanceReceived works on an Uploading session (L182 RemoveArrayItem Uploading)', function (): void {
     $session = UploadTestHelpers::session(UploadTestHelpers::storage(), totalSizeBytes: 16);
-    $session->forceFill(['status' => UploadStatus::Uploading, 'received_bytes' => 4])->save();
+    app(VaulterDatabase::class)->write(fn () => $session->forceFill(['status' => UploadStatus::Uploading, 'received_bytes' => 4])->save());
 
     app(UploadSessionStoreRepository::class)->advanceReceived($session->refresh(), 8);
 
@@ -275,7 +280,7 @@ it('R07b: advanceReceived works on an Uploading session (L182 RemoveArrayItem Up
 
 it('R07b: advanceReceived throws on an Aborted session (L182 boundary — non-open status)', function (): void {
     $session = UploadTestHelpers::session(UploadTestHelpers::storage(), totalSizeBytes: 4);
-    $session->forceFill(['status' => UploadStatus::Aborted])->save();
+    app(VaulterDatabase::class)->write(fn () => $session->forceFill(['status' => UploadStatus::Aborted])->save());
 
     expect(fn () => app(UploadSessionStoreRepository::class)->advanceReceived($session->refresh(), 4))
         ->toThrow(UploadConflictException::class);
@@ -293,7 +298,7 @@ it('R07b: markCommitted throws UploadConflictException on an Initiated session (
 
 it('R07b: markCommitted throws on an Uploading session — only Assembled passes (L217 boundary)', function (): void {
     $session = UploadTestHelpers::session(UploadTestHelpers::storage(), totalSizeBytes: 4);
-    $session->forceFill(['status' => UploadStatus::Uploading])->save();
+    app(VaulterDatabase::class)->write(fn () => $session->forceFill(['status' => UploadStatus::Uploading])->save());
 
     expect(fn () => app(UploadSessionStoreRepository::class)->markCommitted($session->refresh(), 99))
         ->toThrow(UploadConflictException::class);
@@ -340,10 +345,10 @@ it('R07b: UploadPart received_at casts to Carbon (L57/L61 received_at cast)', fu
 // ── RecordsDriveActivity: handleUploadSessionAborted context (L237/238) ───────
 
 it('R07b: handleUploadSessionAborted records all three context keys (L237/238 RemoveArrayItem)', function (): void {
-    Activity::query()->delete();
+    app(VaulterDatabase::class)->write(fn () => Activity::query()->delete());
 
     $session = UploadTestHelpers::session(UploadTestHelpers::storage(), totalSizeBytes: 8);
-    $session->forceFill(['received_bytes' => 5])->save();
+    app(VaulterDatabase::class)->write(fn () => $session->forceFill(['received_bytes' => 5])->save());
     $session->refresh();
 
     // Call handler directly (synchronous, no ShouldDispatchAfterCommit delay in test context)
@@ -360,7 +365,7 @@ it('R07b: handleUploadSessionAborted records all three context keys (L237/238 Re
 });
 
 it('R07b: handleUploadSessionAborted upload_id context is the session upload_id (L237 exact value)', function (): void {
-    Activity::query()->delete();
+    app(VaulterDatabase::class)->write(fn () => Activity::query()->delete());
 
     $session = UploadTestHelpers::session(UploadTestHelpers::storage(), totalSizeBytes: 4);
     app(RecordsDriveActivity::class)->handleUploadSessionAborted(
@@ -374,10 +379,10 @@ it('R07b: handleUploadSessionAborted upload_id context is the session upload_id 
 // ── RecordsDriveActivity: handleUploadSessionExpired context (L252/253) ───────
 
 it('R07b: handleUploadSessionExpired records all three context keys (L252/253 RemoveArrayItem)', function (): void {
-    Activity::query()->delete();
+    app(VaulterDatabase::class)->write(fn () => Activity::query()->delete());
 
     $session = UploadTestHelpers::session(UploadTestHelpers::storage(), totalSizeBytes: 8);
-    $session->forceFill(['received_bytes' => 3])->save();
+    app(VaulterDatabase::class)->write(fn () => $session->forceFill(['received_bytes' => 3])->save());
     $session->refresh();
 
     app(RecordsDriveActivity::class)->handleUploadSessionExpired(
@@ -392,7 +397,7 @@ it('R07b: handleUploadSessionExpired records all three context keys (L252/253 Re
 });
 
 it('R07b: handleUploadSessionExpired protocol is the tus protocol value (L253 exact value)', function (): void {
-    Activity::query()->delete();
+    app(VaulterDatabase::class)->write(fn () => Activity::query()->delete());
 
     $session = UploadTestHelpers::session(
         UploadTestHelpers::storage(),
@@ -411,7 +416,7 @@ it('R07b: handleUploadSessionExpired protocol is the tus protocol value (L253 ex
 // ── RecordsDriveActivity: handleNodeForceDeleted node_ids are strings (L200 UnwrapArrayMap) ──
 
 it('R07b: handleNodeForceDeleted node_ids are string-typed after Identity::stringify (L200 UnwrapArrayMap)', function (): void {
-    Activity::query()->delete();
+    app(VaulterDatabase::class)->write(fn () => Activity::query()->delete());
 
     $storage = UploadTestHelpers::storage();
     $root = $storage->rootNode()->first();
@@ -425,7 +430,7 @@ it('R07b: handleNodeForceDeleted node_ids are string-typed after Identity::strin
         'name' => 'str-check',
         'size_bytes' => 0,
     ]);
-    $node1->save();
+    app(VaulterDatabase::class)->write(fn () => $node1->save());
 
     app(RecordsDriveActivity::class)->handleNodeForceDeleted(new NodePurged(
         storageId: $storage->getKey(),

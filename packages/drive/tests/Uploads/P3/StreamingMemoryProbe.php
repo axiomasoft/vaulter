@@ -85,7 +85,7 @@ try {
         $psr = $kind === 'psr' ? new Stream($resource) : null;
         $source = $psr === null ? UploadSource::fromStream($resource, 'resource.txt', 1) : UploadSource::fromPsrStream($psr, 'psr.txt');
         $node = $drive->files()->upload($source);
-        $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
+        $revision = DriveTestHelpers::model($node)->file()->firstOrFail()->currentRevision()->firstOrFail();
         $blob = $revision->blob()->firstOrFail();
         if ($revision->size_bytes !== 209715200 || $revision->sha256 !== $digest || $blob->sha256 !== $digest
             || hash_file('sha256', Storage::disk('local')->path($blob->storage_key)) !== $digest

@@ -1,0 +1,30 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Vaulter\Exceptions\Database;
+
+use Vaulter\Exceptions\Contracts\ProblemException;
+use Vaulter\Exceptions\VaulterException;
+
+/**
+ * A Vaulter model was written outside an operation: an integration error, never a
+ * client one. Go through the DriveHandle operations.
+ */
+final class WriteOutsideOperationException extends VaulterException implements ProblemException
+{
+    public function __construct(string $target, ?string $caller = null)
+    {
+        parent::__construct('[Vaulter] '.$target.' was written outside a Vaulter operation'.($caller === null ? '' : ' (issued at '.$caller.')').'. Use the DriveHandle operations (or disable vaulter.database.write_guard knowingly). Docs: '.self::docs('write-outside-operation'));
+    }
+
+    public function problemCode(): string
+    {
+        return 'write_outside_operation';
+    }
+
+    public function httpStatus(): int
+    {
+        return 500;
+    }
+}

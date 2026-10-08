@@ -5,19 +5,19 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Http\Controllers;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
-use Vaulter\Access\AccessResolver;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Data\Drive\CopyOptions;
 use Vaulter\Data\Drive\ListOptions;
-use Vaulter\Data\Drive\NodePage;
 use Vaulter\Data\Drive\SearchOptions;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Data\Page;
+use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Http\Requests\Files\UploadFileRequest;
 use Vaulter\Drive\Http\Requests\Folders\CreateFolderRequest;
 use Vaulter\Drive\Http\Requests\Nodes\CopyNodeRequest;
@@ -31,6 +31,8 @@ use Vaulter\Http\Controllers\Controller;
 use Vaulter\Http\Resources\Drive\NodeResource;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Support\Identity;
+use Vaulter\ValueObjects\Access\Actor;
 use Vaulter\VaulterManager;
 
 /** The existing REST representation over the authorized PHP operations. */
@@ -40,7 +42,7 @@ final class NodeController extends Controller
         private readonly VaulterManager $vaulter,
         private readonly NodeBrowserQuery $browser,
         private readonly SharedWithActorQuery $sharedNodes,
-        private readonly AccessResolver $access,
+        private readonly NodeSnapshotMapper $mapper,
     ) {}
 
     public function index(Request $request, Drive $storage): AnonymousResourceCollection
@@ -55,29 +57,27 @@ final class NodeController extends Controller
 
     public function shared(Request $request): AnonymousResourceCollection
     {
-        return $this->listingResponse($request, $this->sharedNodes->execute(
-            actor: $this->authorizable($request), options: $this->listOptions($request),
-        ));
+        $page = $this->sharedNodes->execute(actor: $this->authorizable($request), options: $this->listOptions($request));
+        $user = $this->authorizable($request);
+
+        return $this->listingResponse($request, $this->mapper->page($page, Actor::user($user)->ref()));
     }
 
     public function show(Request $request, Node $node): NodeResource
     {
         $drive = $this->driveFor($request, $this->browser->driveForNode($node));
-        $node = $drive->nodes()->find($node);
-        $resource = NodeResource::make($node)->withBreadcrumb($this->browser->breadcrumb($drive, $node));
+        $snapshot = $drive->nodes()->find(Identity::stringify($node->getKey()));
+        $resource = NodeResource::make($snapshot)->withBreadcrumb($this->browser->breadcrumb($drive, $node));
 
-        if ($node->kind === NodeKind::Folder) {
+        if ($snapshot->kind === NodeKind::Folder) {
             $items = [];
             $cursor = null;
             do {
-                $page = $drive->nodes()->children(folder: $node, options: new ListOptions(perPage: 200, cursor: $cursor));
+                $page = $drive->nodes()->children(folder: $snapshot->id, options: new ListOptions(perPage: 200, cursor: $cursor));
                 array_push($items, ...$page->items);
                 $cursor = $page->nextCursor;
             } while ($cursor !== null);
-            $children = new Collection($items);
-            $resource->withChildren($children)->withChildrenGrantSets($this->access->evaluateMany(
-                actor: $this->authorizable($request), nodes: $children,
-            ));
+            $resource->withChildren($items)->withChildrenGrantSets($this->browser->grantSets($this->authorizable($request), $items));
         }
 
         return $resource;
@@ -112,21 +112,21 @@ final class NodeController extends Controller
     public function rename(RenameNodeRequest $request, Node $node): NodeResource
     {
         return NodeResource::make($this->driveFor($request, $this->browser->driveForNode($node))->nodes()->rename(
-            node: $node, name: $request->name(),
+            node: Identity::stringify($node->getKey()), name: $request->name(),
         ));
     }
 
     public function move(MoveNodeRequest $request, Node $node): NodeResource
     {
         return NodeResource::make($this->driveFor($request, $this->browser->driveForNode($node))->nodes()->move(
-            node: $node, destination: $request->parentId(),
+            node: Identity::stringify($node->getKey()), destination: $request->parentId(),
         ));
     }
 
     public function copy(CopyNodeRequest $request, Node $node): JsonResponse
     {
         $copy = $this->driveFor($request, $this->browser->driveForNode($node))->nodes()->copy(
-            node: $node, destination: $request->parentId(), options: new CopyOptions(name: $request->name()),
+            node: Identity::stringify($node->getKey()), destination: $request->parentId(), options: new CopyOptions(name: $request->name()),
         );
 
         return NodeResource::make($copy)->response()->setStatusCode(201);
@@ -134,17 +134,17 @@ final class NodeController extends Controller
 
     public function trash(Request $request, Node $node): NodeResource
     {
-        return NodeResource::make($this->driveFor($request, $this->browser->driveForNode($node))->nodes()->trash($node));
+        return NodeResource::make($this->driveFor($request, $this->browser->driveForNode($node))->nodes()->trash(Identity::stringify($node->getKey())));
     }
 
     public function restore(Request $request, Node $node): NodeResource
     {
-        return NodeResource::make($this->driveFor($request, $this->browser->driveForNode($node))->trash()->restore($node));
+        return NodeResource::make($this->driveFor($request, $this->browser->driveForNode($node))->trash()->restore(Identity::stringify($node->getKey())));
     }
 
     public function forceDelete(Request $request, Node $node): Response
     {
-        $this->driveFor($request, $this->browser->driveForNode($node))->trash()->purge($node);
+        $this->driveFor($request, $this->browser->driveForNode($node))->trash()->purge(Identity::stringify($node->getKey()));
 
         return response()->noContent();
     }
@@ -185,10 +185,11 @@ final class NodeController extends Controller
         return new ListOptions(perPage: $this->perPage($request), cursor: $this->cursor($request));
     }
 
-    private function listingResponse(Request $request, NodePage $page): AnonymousResourceCollection
+    /** @param Page<NodeSnapshot> $page */
+    private function listingResponse(Request $request, Page $page): AnonymousResourceCollection
     {
-        $sets = $this->access->evaluateMany(actor: $this->authorizable($request), nodes: $page->items);
-        $resources = array_map(static fn (Node $node): NodeResource => NodeResource::make($node)->withGrantSet($sets[(string) $node->id]), $page->items);
+        $sets = $this->browser->grantSets($this->authorizable($request), $page->items);
+        $resources = array_map(static fn (NodeSnapshot $node): NodeResource => NodeResource::make($node)->withGrantSet($sets[$node->id]), $page->items);
 
         return NodeResource::collection($resources)->additional(['meta' => [
             'path' => $request->url(), 'per_page' => $this->perPage($request),

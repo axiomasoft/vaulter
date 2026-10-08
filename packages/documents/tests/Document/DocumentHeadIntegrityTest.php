@@ -17,6 +17,7 @@ use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /*
  * I6 for documents: the head of a document is always one of its own checkpoints.
@@ -32,7 +33,7 @@ function headIntegrityDocument(string $name): Node
         storage: $drive->model(),
         name: $name,
         content: DocumentTestHelpers::content($name),
-        parent: $drive->root(),
+        parent: DriveTestHelpers::model($drive->root()),
     ));
 }
 

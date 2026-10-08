@@ -16,6 +16,7 @@ const guideSidebar = [
       { text: 'Installation', link: '/guide/installation' },
       { text: 'Configuration', link: '/guide/configuration' },
       { text: 'Database compatibility', link: '/guide/database-compatibility' },
+      { text: 'API compatibility', link: '/guide/compatibility' },
     ],
   },
   {
@@ -128,6 +129,7 @@ const ruGuideSidebar = [
       { text: 'Установка', link: '/ru/guide/installation' },
       { text: 'Конфигурация', link: '/ru/guide/configuration' },
       { text: 'Совместимость с БД', link: '/ru/guide/database-compatibility' },
+      { text: 'Совместимость API', link: '/ru/guide/compatibility' },
     ],
   },
   {

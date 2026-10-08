@@ -54,7 +54,7 @@ function shareLimitProfile(int $days): void
 }
 
 it('counts the redemption once per link session however many preview requests follow', function (): void {
-    $minted = ($this->shares)()->create($this->node, new ShareLinkInput);
+    $minted = ($this->shares)()->create($this->node->id, new ShareLinkInput);
 
     $first = $this->getJson('api/vaulter/share/'.$minted->token)->assertOk();
     $session = $first->headers->get(ShareSession::HEADER);
@@ -64,69 +64,69 @@ it('counts the redemption once per link session however many preview requests fo
     $this->getJson('api/vaulter/share/'.$minted->token.'/nodes', [ShareSession::HEADER => $session]);
     $this->getJson('api/vaulter/share/'.$minted->token, [ShareSession::HEADER => $session])->assertOk();
 
-    expect($minted->share->refresh()->use_count)->toBe(1);
+    expect(AccessTestHelpers::shareRow($minted)->use_count)->toBe(1);
 
     // Without the session every request is a new visit.
     $this->getJson('api/vaulter/share/'.$minted->token)->assertOk();
-    expect($minted->share->refresh()->use_count)->toBe(2);
+    expect(AccessTestHelpers::shareRow($minted)->use_count)->toBe(2);
 });
 
 it('lets a visit that already redeemed keep working once max_uses is reached, and refuses new visits', function (): void {
-    $minted = ($this->shares)()->create($this->node, new ShareLinkInput(maxUses: 1));
+    $minted = ($this->shares)()->create($this->node->id, new ShareLinkInput(maxUses: 1));
 
     $session = $this->getJson('api/vaulter/share/'.$minted->token)->assertOk()->headers->get(ShareSession::HEADER);
     $this->getJson('api/vaulter/share/'.$minted->token, [ShareSession::HEADER => $session])->assertOk();
     $this->getJson('api/vaulter/share/'.$minted->token)->assertNotFound();
 
-    expect($minted->share->refresh()->use_count)->toBe(1);
+    expect(AccessTestHelpers::shareRow($minted)->use_count)->toBe(1);
 });
 
 it('ignores a forged, expired or foreign session', function (): void {
-    $one = ($this->shares)()->create($this->node, new ShareLinkInput);
-    $two = ($this->shares)()->create($this->node, new ShareLinkInput);
+    $one = ($this->shares)()->create($this->node->id, new ShareLinkInput);
+    $two = ($this->shares)()->create($this->node->id, new ShareLinkInput);
     $sessions = app(ShareSession::class);
-    $valid = $sessions->issue($one->share->refresh(), Carbon::now());
+    $valid = $sessions->issue(AccessTestHelpers::shareRow($one), Carbon::now());
 
-    expect($sessions->valid($valid, $one->share, Carbon::now()))->toBeTrue()
-        ->and($sessions->valid($valid, $two->share, Carbon::now()))->toBeFalse()
-        ->and($sessions->valid($valid.'x', $one->share, Carbon::now()))->toBeFalse()
-        ->and($sessions->valid('forged.value', $one->share, Carbon::now()))->toBeFalse()
-        ->and($sessions->valid($valid, $one->share, Carbon::now()->addHours(2)))->toBeFalse();
+    expect($sessions->valid($valid, AccessTestHelpers::shareRow($one), Carbon::now()))->toBeTrue()
+        ->and($sessions->valid($valid, AccessTestHelpers::shareRow($two), Carbon::now()))->toBeFalse()
+        ->and($sessions->valid($valid.'x', AccessTestHelpers::shareRow($one), Carbon::now()))->toBeFalse()
+        ->and($sessions->valid('forged.value', AccessTestHelpers::shareRow($one), Carbon::now()))->toBeFalse()
+        ->and($sessions->valid($valid, AccessTestHelpers::shareRow($one), Carbon::now()->addHours(2)))->toBeFalse();
 });
 
 it('rotates the token: the old one is a 404, the new one works, sessions of the old one are void', function (): void {
-    $minted = ($this->shares)()->create($this->node, new ShareLinkInput(maxUses: 5));
+    $minted = ($this->shares)()->create($this->node->id, new ShareLinkInput(maxUses: 5));
     $old = $minted->token;
     $session = $this->getJson('api/vaulter/share/'.$old)->assertOk()->headers->get(ShareSession::HEADER);
 
-    $rotated = ($this->shares)()->rotate($this->node, $minted->share);
+    $rotated = ($this->shares)()->rotate($this->node->id, $minted->link->id);
 
     expect($rotated->token)->not->toBe($old)
-        ->and($rotated->share->token_generation)->toBe(2)
-        ->and($rotated->share->token_hash)->toBe(hash('sha256', $rotated->token))
-        ->and($rotated->share->token_prefix)->toBe(substr($rotated->token, 0, 8))
-        ->and($rotated->share->use_count)->toBe(1);
+        ->and(AccessTestHelpers::shareRow($rotated)->token_generation)->toBe(2)
+        ->and(AccessTestHelpers::shareRow($rotated)->token_hash)->toBe(hash('sha256', $rotated->token))
+        ->and(AccessTestHelpers::shareRow($rotated)->token_prefix)->toBe(substr($rotated->token, 0, 8))
+        ->and(AccessTestHelpers::shareRow($rotated)->use_count)->toBe(1);
 
     $this->getJson('api/vaulter/share/'.$old, [ShareSession::HEADER => $session])->assertNotFound();
     // The old session names generation 1; on the new token it buys nothing.
     $this->getJson('api/vaulter/share/'.$rotated->token, [ShareSession::HEADER => $session])->assertOk();
-    expect($rotated->share->refresh()->use_count)->toBe(2);
+    expect(AccessTestHelpers::shareRow($rotated)->use_count)->toBe(2);
 });
 
 it('refuses to rotate a revoked link', function (): void {
-    $minted = ($this->shares)()->create($this->node, new ShareLinkInput);
-    ($this->shares)()->revoke($this->node, $minted->share);
+    $minted = ($this->shares)()->create($this->node->id, new ShareLinkInput);
+    ($this->shares)()->revoke($this->node->id, $minted->link->id);
 
-    expect(fn () => ($this->shares)()->rotate($this->node, $minted->share))->toThrow(NodeNotFoundException::class);
+    expect(fn () => ($this->shares)()->rotate($this->node->id, $minted->link->id))->toThrow(NodeNotFoundException::class);
 });
 
 it('updates password, expiry, budget and audience without changing the token', function (): void {
-    $minted = ($this->shares)()->create($this->node, new ShareLinkInput);
-    $hash = $minted->share->token_hash;
+    $minted = ($this->shares)()->create($this->node->id, new ShareLinkInput);
+    $hash = AccessTestHelpers::shareRow($minted)->token_hash;
 
-    $updated = ($this->shares)()->update($this->node, $minted->share, new ShareLinkUpdate(
+    $updated = AccessTestHelpers::shareRow(($this->shares)()->update($this->node->id, $minted->link->id, new ShareLinkUpdate(
         expiresAt: now()->addDay(), password: 'open-sesame', maxUses: 3, audience: ShareAudience::Authenticated,
-    ));
+    )));
 
     expect($updated->token_hash)->toBe($hash)
         ->and($updated->token_generation)->toBe(1)
@@ -140,32 +140,33 @@ it('updates password, expiry, budget and audience without changing the token', f
     expect(app(ShareResolver::class)->resolve($minted->token, actor: $actor)->resolution)->toBe(ShareResolution::PasswordRequired)
         ->and(app(ShareResolver::class)->resolve($minted->token, actor: $actor, password: 'open-sesame')->isOk())->toBeTrue();
 
-    $cleared = ($this->shares)()->update($this->node, $minted->share, new ShareLinkUpdate(removePassword: true, removeMaxUses: true));
+    $cleared = AccessTestHelpers::shareRow(($this->shares)()->update($this->node->id, $minted->link->id, new ShareLinkUpdate(removePassword: true, removeMaxUses: true)));
     expect($cleared->password_hash)->toBeNull()->and($cleared->max_uses)->toBeNull();
 });
 
 it('voids the session of a link when its password changes', function (): void {
-    $minted = ($this->shares)()->create($this->node, new ShareLinkInput);
+    $minted = ($this->shares)()->create($this->node->id, new ShareLinkInput);
     $sessions = app(ShareSession::class);
-    $session = $sessions->issue($minted->share->refresh(), Carbon::now());
+    $session = $sessions->issue(AccessTestHelpers::shareRow($minted), Carbon::now());
 
-    $updated = ($this->shares)()->update($this->node, $minted->share, new ShareLinkUpdate(password: 'new-secret'));
+    $updated = AccessTestHelpers::shareRow(($this->shares)()->update($this->node->id, $minted->link->id, new ShareLinkUpdate(password: 'new-secret')));
 
     expect($sessions->valid($session, $updated, Carbon::now()))->toBeFalse();
 });
 
 it('does not let update change what a link may carry', function (): void {
-    $writer = ($this->shares)()->create($this->node, new ShareLinkInput(role: RoleRegistry::WRITER, audience: ShareAudience::Authenticated));
+    $writer = ($this->shares)()->create($this->node->id, new ShareLinkInput(role: RoleRegistry::WRITER, audience: ShareAudience::Authenticated));
 
-    expect(fn () => ($this->shares)()->update($this->node, $writer->share, new ShareLinkUpdate(audience: ShareAudience::Anyone)))
+    expect(fn () => ($this->shares)()->update($this->node->id, $writer->link->id, new ShareLinkUpdate(audience: ShareAudience::Anyone)))
         ->toThrow(ShareRoleNotAllowedException::class)
-        ->and($writer->share->refresh()->audience)->toBe(ShareAudience::Authenticated);
+        ->and(AccessTestHelpers::shareRow($writer)->audience)->toBe(ShareAudience::Authenticated);
 });
 
 it('refuses a previewer link the original while it shows the node', function (): void {
-    $file = Vaulter::drive(DriveTestHelpers::host())->asSystem('fixture')->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('bytes'), 'p.txt'));
-    $preview = app()->makeWith(ShareOperations::class, ['context' => OperationContext::system($file->storage()->firstOrFail(), 'fixture')])
-        ->create($file, new ShareLinkInput(role: RoleRegistry::PREVIEWER));
+    $drive = Vaulter::drive(DriveTestHelpers::host())->asSystem('fixture');
+    $file = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('bytes'), 'p.txt'));
+    $preview = app()->makeWith(ShareOperations::class, ['context' => OperationContext::system($drive->model(), 'fixture')])
+        ->create($file->id, new ShareLinkInput(role: RoleRegistry::PREVIEWER));
 
     $this->getJson('api/vaulter/share/'.$preview->token)->assertOk();
     $this->getJson('api/vaulter/share/'.$preview->token.'/download')->assertForbidden()->assertJsonPath('code', 'permission_denied');
@@ -179,7 +180,7 @@ it('keeps a foreign tenant out of a tenant link with an opaque 404', function ()
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($drive, null, 'tenant-only');
     $minted = app()->makeWith(ShareOperations::class, ['context' => OperationContext::system($drive, 'fixture')])
-        ->create($node, new ShareLinkInput(audience: ShareAudience::Tenant));
+        ->create($node->id, new ShareLinkInput(audience: ShareAudience::Tenant));
     $actor = (new TestUser)->forceFill(['id' => 9]);
     $resolve = fn (?TestUser $who) => app(ShareResolver::class)->resolve($minted->token, actor: $who)->resolution;
 
@@ -197,29 +198,29 @@ it('keeps a foreign tenant out of a tenant link with an opaque 404', function ()
 it('caps a link at the drive policy and applies a tightened policy to existing links at once', function (): void {
     shareLimitProfile(7);
 
-    expect(fn () => ($this->shares)()->create($this->node, new ShareLinkInput(expiresAt: now()->addDays(10))))
+    expect(fn () => ($this->shares)()->create($this->node->id, new ShareLinkInput(expiresAt: now()->addDays(10))))
         ->toThrow(ShareLinkTtlExceededException::class);
 
-    $short = ($this->shares)()->create($this->node, new ShareLinkInput(expiresAt: now()->addDays(6)));
-    $default = ($this->shares)()->create($this->node, new ShareLinkInput);
-    expect($default->share->expires_at->lte(now()->addDays(7)->addMinute()))->toBeTrue();
+    $short = ($this->shares)()->create($this->node->id, new ShareLinkInput(expiresAt: now()->addDays(6)));
+    $default = ($this->shares)()->create($this->node->id, new ShareLinkInput);
+    expect(AccessTestHelpers::shareRow($default)->expires_at->lte(now()->addDays(7)->addMinute()))->toBeTrue();
 
     $this->getJson('api/vaulter/share/'.$short->token)->assertOk();
 
     // A long-lived link made before the policy was tightened stops resolving now.
     shareLimitProfile(1);
     $this->getJson('api/vaulter/share/'.$short->token)->assertNotFound();
-    expect(fn () => ($this->shares)()->update($this->node, $short->share, new ShareLinkUpdate(expiresAt: now()->addDays(3))))
+    expect(fn () => ($this->shares)()->update($this->node->id, $short->link->id, new ShareLinkUpdate(expiresAt: now()->addDays(3))))
         ->toThrow(ShareLinkTtlExceededException::class);
 
-    ($this->shares)()->update($this->node, $short->share, new ShareLinkUpdate(expiresAt: now()->addHours(12)));
+    ($this->shares)()->update($this->node->id, $short->link->id, new ShareLinkUpdate(expiresAt: now()->addHours(12)));
     $this->getJson('api/vaulter/share/'.$short->token)->assertOk();
 });
 
 it('never writes tokens or passwords into the activity feed or the outbox', function (): void {
-    $minted = ($this->shares)()->create($this->node, new ShareLinkInput(password: 'hunter2-secret'));
-    ($this->shares)()->update($this->node, $minted->share, new ShareLinkUpdate(password: 'another-secret'));
-    $rotated = ($this->shares)()->rotate($this->node, $minted->share);
+    $minted = ($this->shares)()->create($this->node->id, new ShareLinkInput(password: 'hunter2-secret'));
+    ($this->shares)()->update($this->node->id, $minted->link->id, new ShareLinkUpdate(password: 'another-secret'));
+    $rotated = ($this->shares)()->rotate($this->node->id, $minted->link->id);
 
     $dump = json_encode([
         Activity::query()->get()->toArray(),

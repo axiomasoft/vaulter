@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Media\Console;
 
 use Illuminate\Console\Command;
+use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Media\Cas\BlobReconciler;
 use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\VaulterManager;
@@ -31,6 +32,8 @@ use Vaulter\VaulterManager;
  */
 final class ReconcileBlobsCommand extends Command
 {
+    use OpensWriteScope;
+
     public function __construct(
         private readonly MediaConfig $mediaConfig,
     ) {

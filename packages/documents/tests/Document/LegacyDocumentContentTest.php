@@ -9,6 +9,7 @@ use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Support\TipTap\TipTapRenderer;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\ValueObjects\TipTapContent;
+use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /**
  * VLT-REMED P5.2 / R-01 (Blocker) — ВТОРОЙ, более тяжёлый удар барьера P0.1: он бил не
@@ -29,7 +30,7 @@ function legacyVersion(array $content): DocumentRevision
         storage: $drive->model(),
         name: 'Legacy '.bin2hex(random_bytes(4)),
         content: DocumentTestHelpers::content('placeholder'),
-        parent: $drive->root(),
+        parent: DriveTestHelpers::model($drive->root()),
     ));
 
     $headId = Document::query()->where('node_id', $node->getKey())->value('current_revision_id');

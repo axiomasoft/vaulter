@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Storage;
 use Vaulter\Content\ScanInput;
 use Vaulter\Content\ScanResult;
 use Vaulter\Contracts\Cas\ContentScanner;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Files\IngestFileAction;
 use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Data\Files\IngestFileInput;
@@ -100,7 +101,7 @@ it('SEC-R12 corrupted immutable identity fails terminally before scanner bytes',
     fclose($stream);
     $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     $row = $revision->scanObligations()->firstOrFail();
-    $revision->blob()->firstOrFail()->forceFill(['storage_key' => 'changed-key'])->save();
+    app(VaulterDatabase::class)->write(fn () => $revision->blob()->firstOrFail()->forceFill(['storage_key' => 'changed-key'])->save());
     app()->call([new ScanFileRevision($row->id, $row->generation, $drive->id, $row->tenant_id), 'handle']);
     expect($scanner->reads)->toBe(0)->and($row->refresh()->state)->toBe('settled')
         ->and($row->outcome)->toBe('failed')->and($row->reason)->toBe('content_identity_mismatch')

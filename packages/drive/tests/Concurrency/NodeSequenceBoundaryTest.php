@@ -70,14 +70,14 @@ it('SEC-R18 forks expected 7 rename against content with one sequence 8 winner a
         ->and($loser[0]['exception'])->toBe(StaleNodeException::class)
         ->and($loser[0]['status'])->toBe(412)->and($loser[0]['events'])->toBe([])
         ->and($winner[0]['events'])->toHaveCount(1)
-        ->and($node->refresh()->sequence)->toBe(8);
+        ->and(DriveTestHelpers::model($node)->sequence)->toBe(8);
     $contentWon = $winner[0]['operation'] === 'content';
     $expectedSize = $contentWon ? strlen('new longer bytes') : strlen('old');
     expect($node->name)->toBe($contentWon ? 'race.txt' : 'winner.txt')
-        ->and($node->size_bytes)->toBe($expectedSize)
+        ->and($node->sizeBytes)->toBe($expectedSize)
         // Every retained revision counts (PLAN2.D48).
         ->and($drive->model()->refresh()->used_bytes)->toBe($contentWon ? strlen('old') + strlen('new longer bytes') : strlen('old'))
-        ->and($node->file()->firstOrFail()->revision_count)->toBe($contentWon ? 2 : 1);
+        ->and(DriveTestHelpers::model($node)->file()->firstOrFail()->revision_count)->toBe($contentWon ? 2 : 1);
     $db = app(VaulterDatabase::class)->connection();
     foreach (['v_nodes', 'v_files'] as $table) {
         expect($db->table($table)->count())->toBe($before[$table]);
@@ -85,7 +85,7 @@ it('SEC-R18 forks expected 7 rename against content with one sequence 8 winner a
     foreach (['v_file_revisions', 'v_blobs', 'v_file_revision_blobs'] as $table) {
         expect($db->table($table)->count())->toBe($before[$table] + (int) $contentWon);
     }
-    expect(FileRevision::query()->where('file_id', $node->file()->value('id'))->orderBy('number')->pluck('number')->all())
+    expect(FileRevision::query()->where('file_id', DriveTestHelpers::model($node)->file()->value('id'))->orderBy('number')->pluck('number')->all())
         ->toBe($contentWon ? [1, 2] : [1]);
     foreach (['v_activity', 'v_outbox'] as $table) {
         expect($db->table($table)->count() - $before[$table])->toBeLessThanOrEqual(1);
@@ -115,7 +115,7 @@ it('SEC-R19-retry preserves the original expectation after serialization retry',
     });
     expect(fn () => $drive->nodes()->rename($node, 'retry overwrite', 7))->toThrow(StaleNodeException::class)
         ->and($failed)->toBeTrue()->and($advanced)->toBeTrue()
-        ->and($node->refresh()->name)->toBe('original');
+        ->and(DriveTestHelpers::model($node)->name)->toBe('original');
 });
 
 it('SEC-REV-RECEIPT returns its own committed revision when a later writer changes the head before return', function (): void {
@@ -140,7 +140,7 @@ it('SEC-REV-RECEIPT returns its own committed revision when a later writer chang
         ->and($later->number)->toBe(3)
         ->and($later->sha256)->toBe(hash('sha256', 'later bytes'))
         ->and($receipt->id)->not->toBe($later->id)
-        ->and($node->refresh()->file()->value('current_revision_id'))->toBe($later->id)
+        ->and(DriveTestHelpers::model($node)->file()->value('current_revision_id'))->toBe($later->id)
         ->and($node->sequence)->toBe(2)
         ->and(FileRevision::query()->count())->toBe(3);
 });

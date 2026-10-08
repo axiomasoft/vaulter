@@ -14,6 +14,7 @@ use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /**
  * Драйверный слой M4b (мастер-план §7 / ADR-0001): issueSession кодирует readOnly из
@@ -29,7 +30,7 @@ function documentNode(): Node
         storage: $drive->model(),
         name: 'Spec',
         content: DocumentTestHelpers::content('First draft'),
-        parent: $drive->root(),
+        parent: DriveTestHelpers::model($drive->root()),
     ));
 }
 

@@ -8,6 +8,9 @@ use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Data\Drive\CopyOptions;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Data\Snapshots\FileRevisionSnapshot;
+use Vaulter\Data\Snapshots\NodeSnapshot;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\DriveHandle;
 use Vaulter\Drive\Events\Files\FileRevisionDeleted;
 use Vaulter\Enums\Drive\OnNameConflict;
@@ -34,12 +37,12 @@ beforeEach(function (): void {
     config()->set('vaulter-media.dedup.scope', 'tenant');
 });
 
-function quotaLedgerUpload(DriveHandle $drive, string $bytes, string $name = 'a.bin'): Node
+function quotaLedgerUpload(DriveHandle $drive, string $bytes, string $name = 'a.bin'): NodeSnapshot
 {
     return $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor($bytes), $name));
 }
 
-function quotaLedgerRevision(DriveHandle $drive, Node $node, string $bytes): FileRevision
+function quotaLedgerRevision(DriveHandle $drive, Node|NodeSnapshot $node, string $bytes): FileRevisionSnapshot
 {
     return $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor($bytes), $node->name));
 }
@@ -57,7 +60,7 @@ it('counts every retained revision on every path', function (): void {
     $drive = DriveTestHelpers::drive();
     $node = quotaLedgerUpload($drive, str_repeat('a', 100));
     expect(quotaLedgerUsed($drive))->toBe(100);
-    $r1 = $node->file()->firstOrFail()->current_revision_id;
+    $r1 = DriveTestHelpers::model($node)->file()->firstOrFail()->current_revision_id;
 
     $r2 = quotaLedgerRevision($drive, $node, str_repeat('b', 120));
     expect(quotaLedgerUsed($drive))->toBe(220);
@@ -70,8 +73,8 @@ it('counts every retained revision on every path', function (): void {
 
     $restored = $drive->files()->restoreRevision($node, $r1);
     expect(quotaLedgerUsed($drive))->toBe(320)
-        ->and($restored->size_bytes)->toBe(100)
-        ->and((string) $restored->restored_from_revision_id)->toBe((string) $r1);
+        ->and($restored->sizeBytes)->toBe(100)
+        ->and((string) $restored->restoredFromRevisionId)->toBe((string) $r1);
 
     $drive->files()->deleteRevision($node, $r2);
     expect(quotaLedgerUsed($drive))->toBe(200)
@@ -101,7 +104,7 @@ it('charges a copy with the head it copies, not the source history', function ()
 
     $copy = $drive->nodes()->copy($node, destination: null, options: new CopyOptions(name: 'copy.bin'));
 
-    expect($copy->file()->firstOrFail()->versions()->count())->toBe(1)
+    expect(DriveTestHelpers::model($copy)->file()->firstOrFail()->versions()->count())->toBe(1)
         ->and(quotaLedgerUsed($drive))->toBe(70);
 });
 
@@ -119,23 +122,23 @@ it('frees every revision of a purged subtree', function (): void {
     $drive->trash()->purge($folder);
 
     expect(quotaLedgerUsed($drive))->toBe(4)
-        ->and($outside->refresh()->exists)->toBeTrue();
+        ->and(DriveTestHelpers::model($outside)->exists)->toBeTrue();
 });
 
 it('refuses a revision past the quota and still lets a drive over its quota delete', function (): void {
     $drive = DriveTestHelpers::drive();
     $node = quotaLedgerUpload($drive, str_repeat('a', 6));
-    $old = $node->file()->firstOrFail()->current_revision_id;
+    $old = DriveTestHelpers::model($node)->file()->firstOrFail()->current_revision_id;
     quotaLedgerRevision($drive, $node, str_repeat('b', 4));
     // 10 retained bytes; a quota of 12 admits 2 more, not 3.
-    $drive->model()->forceFill(['quota_bytes' => 12])->save();
+    app(VaulterDatabase::class)->write(fn () => $drive->model()->forceFill(['quota_bytes' => 12])->save());
     expect(fn () => quotaLedgerRevision($drive, $node, 'ccc'))->toThrow(QuotaExceededException::class)
         ->and(fn () => $drive->files()->restoreRevision($node, $old))->toThrow(QuotaExceededException::class)
         ->and(fn () => $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('ccc'), 'b.bin'), new UploadOptions(onConflict: OnNameConflict::Rename)))->toThrow(QuotaExceededException::class)
         ->and(quotaLedgerUsed($drive))->toBe(10);
 
     // A lowered quota leaves the drive over it: deleting still works and frees bytes.
-    $drive->model()->forceFill(['quota_bytes' => 5])->save();
+    app(VaulterDatabase::class)->write(fn () => $drive->model()->forceFill(['quota_bytes' => 5])->save());
     $drive->files()->deleteRevision($node, $old);
     expect(quotaLedgerUsed($drive))->toBe(4);
 });
@@ -143,17 +146,17 @@ it('refuses a revision past the quota and still lets a drive over its quota dele
 it('refuses to delete the head or a pinned revision and keeps their bytes', function (): void {
     $drive = DriveTestHelpers::drive();
     $node = quotaLedgerUpload($drive, 'first');
-    $first = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
+    $first = DriveTestHelpers::model($node)->file()->firstOrFail()->currentRevision()->firstOrFail();
     $head = quotaLedgerRevision($drive, $node, 'second');
 
     expect(fn () => $drive->files()->deleteRevision($node, $head))->toThrow(CannotDeleteHeadRevisionException::class);
 
-    $pinned = $drive->files()->setRevisionRetention($node, $first, keepForever: true);
-    expect($pinned->keep_forever)->toBeTrue()
-        ->and(fn () => $drive->files()->deleteRevision($node, $first))->toThrow(RevisionPinnedException::class)
+    $pinned = $drive->files()->setRevisionRetention($node, $first->id, keepForever: true);
+    expect($pinned->keepForever)->toBeTrue()
+        ->and(fn () => $drive->files()->deleteRevision($node, $first->id))->toThrow(RevisionPinnedException::class)
         ->and(quotaLedgerUsed($drive))->toBe(11);
 
-    expect($drive->files()->setRevisionRetention($node, $first, keepForever: false)->keep_forever)->toBeFalse();
+    expect($drive->files()->setRevisionRetention($node, $first->id, keepForever: false)->keepForever)->toBeFalse();
     Event::fake([FileRevisionDeleted::class]);
     $drive->files()->deleteRevision($node, $first->id);
     Event::assertDispatched(FileRevisionDeleted::class, fn (FileRevisionDeleted $event): bool => (string) $event->revisionId === (string) $first->id
@@ -165,13 +168,13 @@ it('refuses to delete the head or a pinned revision and keeps their bytes', func
 it('forgets the source of restores whose source revision is deleted', function (): void {
     $drive = DriveTestHelpers::drive();
     $node = quotaLedgerUpload($drive, 'first');
-    $first = $node->file()->firstOrFail()->current_revision_id;
+    $first = DriveTestHelpers::model($node)->file()->firstOrFail()->current_revision_id;
     quotaLedgerRevision($drive, $node, 'second');
     $restored = $drive->files()->restoreRevision($node, $first);
 
     $drive->files()->deleteRevision($node, $first);
 
-    expect($restored->refresh()->restored_from_revision_id)->toBeNull()
+    expect(FileRevision::query()->findOrFail($restored->id)->restored_from_revision_id)->toBeNull()
         ->and($drive->files()->read($node)->stream)->not->toBeNull();
 });
 
@@ -179,7 +182,7 @@ it('lets a writer pin but only a manager delete revisions', function (): void {
     config()->set('vaulter.access.permission_driver', 'database');
     $system = DriveTestHelpers::drive();
     $node = quotaLedgerUpload($system, 'first');
-    $first = $node->file()->firstOrFail()->current_revision_id;
+    $first = DriveTestHelpers::model($node)->file()->firstOrFail()->current_revision_id;
     quotaLedgerRevision($system, $node, 'second');
     $user = new TestUser;
     $user->forceFill(['id' => 31]);
@@ -187,7 +190,7 @@ it('lets a writer pin but only a manager delete revisions', function (): void {
     AccessTestHelpers::grant(node: $system->root(), role: RoleRegistry::WRITER, subjectId: 31, subjectType: $user->getMorphClass());
     $writer = $system->actingAs($user);
 
-    expect($writer->files()->setRevisionRetention($node, $first, keepForever: true)->keep_forever)->toBeTrue()
+    expect($writer->files()->setRevisionRetention($node, $first, keepForever: true)->keepForever)->toBeTrue()
         ->and(fn () => $writer->files()->deleteRevision($node, $first))->toThrow(PermissionDeniedException::class);
 
     $owner = $system->actingAs(DriveTestHelpers::actor($system, 32));

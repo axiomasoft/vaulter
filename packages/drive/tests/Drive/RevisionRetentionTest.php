@@ -6,6 +6,8 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Contracts\Content\ScanPolicyResolver;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Data\Snapshots\NodeSnapshot;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\ScanPolicyResolver as DriveScanPolicyResolver;
 use Vaulter\Drive\DriveHandle;
 use Vaulter\Drive\DriveProvisioner;
@@ -53,13 +55,13 @@ function retentionFile(DriveHandle $drive, int $revisions, string $name = 'a.txt
         $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('r'.$i), $name));
     }
 
-    return [$node, $node->file()->firstOrFail()->versions()->orderBy('number')->pluck('id')->all()];
+    return [$node, DriveTestHelpers::model($node)->file()->firstOrFail()->versions()->orderBy('number')->pluck('id')->all()];
 }
 
 /** @return list<int> */
-function retentionNumbers(Node $node): array
+function retentionNumbers(Node|NodeSnapshot $node): array
 {
-    return $node->file()->firstOrFail()->versions()->orderBy('number')->pluck('number')->all();
+    return DriveTestHelpers::model($node)->file()->firstOrFail()->versions()->orderBy('number')->pluck('number')->all();
 }
 
 it('keeps the head and the newest non-current revisions; a pinned one survives beyond the limit', function (): void {
@@ -73,7 +75,7 @@ it('keeps the head and the newest non-current revisions; a pinned one survives b
 
     expect(retentionNumbers($node))->toBe([2, 3, 4])
         ->and(retentionNumbers($pinnedNode))->toBe([1, 2, 3, 4])
-        ->and($node->file()->firstOrFail()->current_revision_id)->toBe($ids[3])
+        ->and(DriveTestHelpers::model($node)->file()->firstOrFail()->current_revision_id)->toBe($ids[3])
         ->and($drive->model()->refresh()->used_bytes)->toBe(app(QuotaCalculator::class)->usedBytes($drive->model()->id))
         ->and($drive->model()->used_bytes)->toBe(3 * 2 + 4 * 2);
 
@@ -85,7 +87,7 @@ it('never prunes a revision superseded less than minNoncurrentAgeDays ago', func
     retentionProfile(new RevisionRetentionPolicy(maxNoncurrentRevisions: 0, minNoncurrentAgeDays: 7));
     $drive = DriveTestHelpers::drive();
     [$node, $ids] = retentionFile($drive, 3);
-    FileRevision::query()->whereKey($ids[0])->update(['superseded_at' => Carbon::now()->subDays(8)]);
+    app(VaulterDatabase::class)->write(fn () => FileRevision::query()->whereKey($ids[0])->update(['superseded_at' => Carbon::now()->subDays(8)]));
 
     $this->artisan('vaulter:revisions:prune')->assertSuccessful();
 
@@ -96,8 +98,8 @@ it('prunes by age past maxNoncurrentAgeDays even under the count limit', functio
     retentionProfile(new RevisionRetentionPolicy(maxNoncurrentRevisions: 10, maxNoncurrentAgeDays: 30, minNoncurrentAgeDays: 1));
     $drive = DriveTestHelpers::drive();
     [$node, $ids] = retentionFile($drive, 3);
-    FileRevision::query()->whereKey($ids[0])->update(['superseded_at' => Carbon::now()->subDays(31)]);
-    FileRevision::query()->whereKey($ids[1])->update(['superseded_at' => Carbon::now()->subDays(29)]);
+    app(VaulterDatabase::class)->write(fn () => FileRevision::query()->whereKey($ids[0])->update(['superseded_at' => Carbon::now()->subDays(31)]));
+    app(VaulterDatabase::class)->write(fn () => FileRevision::query()->whereKey($ids[1])->update(['superseded_at' => Carbon::now()->subDays(29)]));
 
     $this->artisan('vaulter:revisions:prune')->assertSuccessful();
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Console;
 
 use Illuminate\Console\Command;
+use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Webhooks\OutboxRelay;
 use Vaulter\Webhooks\WebhookRetryDispatcher;
 
@@ -22,6 +23,8 @@ use Vaulter\Webhooks\WebhookRetryDispatcher;
  */
 final class RelayWebhooksCommand extends Command
 {
+    use OpensWriteScope;
+
     protected $signature = 'vaulter:relay-outbox {--limit= : Max outbox rows to drain this tick}';
 
     protected $description = 'Relay pending outbox events to webhook endpoints and re-dispatch due retries (§2.11).';

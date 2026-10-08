@@ -17,12 +17,16 @@ use Vaulter\Contracts\Drive\FolderOperations;
 use Vaulter\Contracts\Drive\NodeOperations;
 use Vaulter\Contracts\Drive\TrashOperations;
 use Vaulter\Contracts\Sharing\ShareOperations;
+use Vaulter\Data\Snapshots\DriveSnapshot;
+use Vaulter\Data\Snapshots\Mapping\DriveSnapshotMapper;
+use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Data\Snapshots\NodeSnapshot;
+use Vaulter\Data\Snapshots\QuotaSnapshot;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Support\MissingPackageException;
 use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Profiles\Profile;
@@ -34,9 +38,20 @@ final readonly class DriveHandle implements Contract
 {
     public function __construct(private Drive $drive, private Container $container, private ?Actor $explicitActor = null, private ?string $correlationId = null) {}
 
+    /** @internal The Eloquent row, for Vaulter packages and tests; hosts use snapshot(). */
     public function model(): Drive
     {
         return $this->container->make(TenancyBoundary::class)->assertDrive($this->drive);
+    }
+
+    public function snapshot(): DriveSnapshot
+    {
+        return $this->container->make(DriveSnapshotMapper::class)->map($this->model());
+    }
+
+    public function quota(): QuotaSnapshot
+    {
+        return $this->container->make(DriveSnapshotMapper::class)->quota($this->model());
     }
 
     public function profile(): Profile
@@ -82,14 +97,14 @@ final readonly class DriveHandle implements Contract
         return new OperationContext(drive: $this->model(), actor: $this->actor(), correlationId: $this->correlationId ?? (string) Str::ulid());
     }
 
-    public function root(): Node
+    public function root(): NodeSnapshot
     {
         $context = $this->context();
         $rootId = $context->drive->root_node_id ?? throw NodeNotFoundException::forId('root');
         $root = $this->container->make(NodeLocator::class)->find($context, $rootId);
         $this->container->make(OperationGuard::class)->authorize($context, Ability::View, $root);
 
-        return $root;
+        return $this->container->make(NodeSnapshotMapper::class)->map($root, $context->actor->ref());
     }
 
     public function nodes(): NodeOperations

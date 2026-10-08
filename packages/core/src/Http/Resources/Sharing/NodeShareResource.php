@@ -7,7 +7,8 @@ namespace Vaulter\Http\Resources\Sharing;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Vaulter\Configuration\SharingConfig;
-use Vaulter\Models\Sharing\NodeShare;
+use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
+use Vaulter\Data\Snapshots\ShareLinkSnapshot;
 
 /**
  * The read shape of a bearer share-link (§2.7 / M2c). It NEVER serializes the
@@ -19,7 +20,7 @@ use Vaulter\Models\Sharing\NodeShare;
  * configurable base). Every listing/show response omits it, because it is
  * unrecoverable from the stored row.
  *
- * @mixin NodeShare
+ * @mixin ShareLinkSnapshot
  */
 final class NodeShareResource extends JsonResource
 {
@@ -47,24 +48,24 @@ final class NodeShareResource extends JsonResource
     #[\Override]
     public function toArray(Request $request): array
     {
-        /** @var NodeShare $share */
+        /** @var ShareLinkSnapshot $share */
         $share = $this->resource;
 
         $payload = [
-            'id' => $share->getKey(),
-            'node_id' => $share->node_id,
-            'token_prefix' => $share->token_prefix,
-            'role' => $share->role_key,
-            'role_version' => $share->role_version,
+            'id' => $share->id,
+            'node_id' => $share->nodeId,
+            'token_prefix' => $share->tokenPrefix,
+            'role' => $share->role,
+            'role_version' => $share->roleVersion,
             'audience' => $share->audience->value,
             'scope' => $share->scope->value,
-            'has_password' => $share->hasPassword(),
-            'token_generation' => $share->token_generation,
-            'expires_at' => $share->expires_at,
-            'max_uses' => $share->max_uses,
-            'use_count' => $share->use_count,
-            'revoked_at' => $share->revoked_at,
-            'created_at' => $share->created_at,
+            'has_password' => $share->passwordProtected,
+            'token_generation' => $share->tokenGeneration,
+            'expires_at' => SnapshotValue::iso($share->expiresAt),
+            'max_uses' => $share->maxUses,
+            'use_count' => $share->useCount,
+            'revoked_at' => SnapshotValue::iso($share->revokedAt),
+            'created_at' => SnapshotValue::iso($share->createdAt),
         ];
 
         // The raw token + URL are present ONLY in the create response (returned

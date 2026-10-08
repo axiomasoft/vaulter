@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Storage;
 use Vaulter\Data\Drive\MoveOptions;
 use Vaulter\Data\Drive\RevisionOptions;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
@@ -40,7 +41,7 @@ function sequenceContractState(): array
 
 it('SEC-R19-noop checks a current or stale expectation before every effective no-op', function (string $operation): void {
     $node = $this->drive->folders()->create('same');
-    $run = fn (int $expected): Node => match ($operation) {
+    $run = fn (int $expected): NodeSnapshot => match ($operation) {
         'rename' => $this->drive->nodes()->rename($node, 'same', $expected),
         'move' => $this->drive->nodes()->move($node, $this->drive->root(), new MoveOptions(expectedSequence: $expected)),
         'setProperties' => $this->drive->nodes()->setProperties($node, 'acme', [], ['absent'], $expected),
@@ -63,15 +64,15 @@ it('increments sequence once for each metadata or content transition and leaves 
     expect($folder->sequence)->toBe(0)->and($file->sequence)->toBe(0);
     expect($this->drive->nodes()->rename($file, 'renamed.txt', 0)->sequence)->toBe(1);
     $this->drive->files()->addRevision($file, UploadSource::fromString('second', 'renamed.txt'), new RevisionOptions(expectedSequence: 1));
-    expect($file->refresh()->sequence)->toBe(2)
+    expect(DriveTestHelpers::model($file)->sequence)->toBe(2)
         ->and($this->drive->nodes()->move($file, $folder, new MoveOptions(expectedSequence: 2))->sequence)->toBe(3)
         ->and($this->drive->nodes()->setProperties($file, 'acme', ['k' => 'v'], [], 3)->sequence)->toBe(4);
-    $revisions = $this->drive->files()->revisions($file)->items();
+    $revisions = $this->drive->files()->revisions($file)->items;
     $oldest = collect($revisions)->sortBy('number')->first();
     $this->drive->files()->restoreRevision($file, $oldest);
-    expect($file->refresh()->sequence)->toBe(5);
+    expect(DriveTestHelpers::model($file)->sequence)->toBe(5);
     $copy = $this->drive->nodes()->copy($file);
-    expect($copy->sequence)->toBe(0)->and($file->refresh()->sequence)->toBe(5);
+    expect($copy->sequence)->toBe(0)->and(DriveTestHelpers::model($file)->sequence)->toBe(5);
 });
 
 it('SEC-R20-subtree increments every descendant once on trash and restore', function (): void {
@@ -81,20 +82,20 @@ it('SEC-R20-subtree increments every descendant once on trash and restore', func
     $outside = $this->drive->folders()->create('outside');
     $this->drive->nodes()->rename($middle, 'middle changed', 0);
     $this->drive->nodes()->trash($top, 0);
-    expect($top->refresh()->sequence)->toBe(1)->and($middle->refresh()->sequence)->toBe(2)
-        ->and($leaf->refresh()->sequence)->toBe(1)->and($outside->refresh()->sequence)->toBe(0);
+    expect(DriveTestHelpers::model($top)->sequence)->toBe(1)->and(DriveTestHelpers::model($middle)->sequence)->toBe(2)
+        ->and(DriveTestHelpers::model($leaf)->sequence)->toBe(1)->and(DriveTestHelpers::model($outside)->sequence)->toBe(0);
     $this->drive->trash()->restore($top);
-    expect($top->refresh()->sequence)->toBe(2)->and($middle->refresh()->sequence)->toBe(3)
-        ->and($leaf->refresh()->sequence)->toBe(2)->and($outside->refresh()->sequence)->toBe(0);
+    expect(DriveTestHelpers::model($top)->sequence)->toBe(2)->and(DriveTestHelpers::model($middle)->sequence)->toBe(3)
+        ->and(DriveTestHelpers::model($leaf)->sequence)->toBe(2)->and(DriveTestHelpers::model($outside)->sequence)->toBe(0);
     foreach ([$top, $middle, $leaf] as $node) {
-        expect($node->trashed_at)->toBeNull();
+        expect($node->trashedAt)->toBeNull();
     }
 });
 
 it('SEC-R20-overflow admits max minus one and rolls back max mutations including subtree peers', function (): void {
     $top = $this->drive->folders()->create('top');
     $child = $this->drive->folders()->create('child', $top);
-    Node::query()->whereKey($child->id)->update(['sequence' => PHP_INT_MAX - 1]);
+    app(VaulterDatabase::class)->write(fn () => Node::query()->whereKey($child->id)->update(['sequence' => PHP_INT_MAX - 1]));
     expect($this->drive->nodes()->rename($child, 'last name', PHP_INT_MAX - 1)->sequence)->toBe(PHP_INT_MAX);
     $before = sequenceContractState();
     expect(fn () => $this->drive->nodes()->rename($child, 'overflow', PHP_INT_MAX))->toThrow(SequenceOverflowException::class)
@@ -112,12 +113,13 @@ it('SEC-R20-overflow rejects negative expectations and corrupted negative helper
         $locked->forceFill(['sequence' => -1]);
         app(NodeSequence::class)->bump($locked);
     }))->toThrow(SequenceOverflowException::class);
-    expect($node->refresh()->sequence)->toBe(0)->and($node->name)->toBe('node');
+    expect(DriveTestHelpers::model($node)->sequence)->toBe(0)->and($node->name)->toBe('node');
 });
 
 it('SEC-R19-replay returns the committed result without ingesting or comparing the old expectation again', function (): void {
+    DriveTestHelpers::insideOperation(); // drives the S3 handler and the manager directly
     $node = $this->drive->files()->upload(UploadSource::fromString('original', 'replay.txt'));
-    Node::query()->whereKey($node->id)->update(['sequence' => 7]);
+    app(VaulterDatabase::class)->write(fn () => Node::query()->whereKey($node->id)->update(['sequence' => 7]));
     $bytes = 'committed session bytes';
     $manager = app(UploadSessionManager::class);
     $session = $manager->initiate(context: OperationContext::system($this->drive->model(), 'test fixture'), data: new InitiateUploadInput(
@@ -140,7 +142,7 @@ it('SEC-R19-replay returns the committed result without ingesting or comparing t
     $committed = $manager->commitAssembled($session->refresh(), $commit);
     $session->refresh();
     expect($committed->sequence)->toBe(8)->and($session->status)->toBe(UploadStatus::Committed)
-        ->and($session->result_node_id)->toBe($node->id)
+        ->and((string) $session->result_node_id)->toBe($node->id)
         ->and($session->result_revision_id)->toBe($committed->file()->value('current_revision_id'))
         ->and($session->input_fingerprint)->toBeString();
     $resultRevision = $session->result_revision_id;
@@ -153,12 +155,12 @@ it('SEC-R19-replay returns the committed result without ingesting or comparing t
     $before = sequenceContractState();
     $stored = $session->getAttributes();
     $replayed = $manager->commitAssembled($session->refresh(), $commit);
-    expect($replayed->id)->toBe($node->id)->and($replayed->sequence)->toBe(9)
+    expect((string) $replayed->id)->toBe($node->id)->and($replayed->sequence)->toBe(9)
         ->and($session->refresh()->result_revision_id)->toBe($resultRevision)
         ->and($session->getAttributes())->toBe($stored)
         ->and(sequenceContractState())->toBe($before);
 
     $session->forceFill(['target_name' => 'different persisted payload.txt'])->save();
     expect(fn () => $manager->commitAssembled($session->refresh(), $commit))->toThrow(UploadConflictException::class)
-        ->and(sequenceContractState())->toBe($before)->and($node->refresh()->sequence)->toBe(9);
+        ->and(sequenceContractState())->toBe($before)->and(DriveTestHelpers::model($node)->sequence)->toBe(9);
 });

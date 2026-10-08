@@ -108,7 +108,7 @@ it('prunes by the profile revision limit while preserving head, pinned revisions
     $handle->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('two'), 'a.txt'));
     $handle->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('three'), 'a.txt'));
     $handle->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('four'), 'a.txt'));
-    $file = $node->file()->firstOrFail()->refresh();
+    $file = DriveTestHelpers::model($node)->file()->firstOrFail()->refresh();
     $file->versions()->where('number', 1)->update(['keep_forever' => true]);
     $used = $handle->model()->refresh()->used_bytes;
 

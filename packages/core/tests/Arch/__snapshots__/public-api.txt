@@ -1,10 +1,10 @@
 Vaulter\Contracts\Access\AccessOperations
-  explain(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Enums\Access\Ability $ability, ?\Illuminate\Contracts\Auth\Access\Authorizable $subject = null): \Vaulter\Access\ValueObjects\AccessExplanation
-  grant(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Data\Access\GrantInput $grant): \Vaulter\Models\Access\NodeGrant
-  grants(\Vaulter\Models\Drive\Node|int|string $node): \Illuminate\Database\Eloquent\Collection
-  restoreInheritance(\Vaulter\Models\Drive\Node|int|string $node): \Vaulter\Models\Drive\Node
-  restrictInheritance(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Enums\Access\InheritanceRestriction $mode = Vaulter\Enums\Access\InheritanceRestriction::Empty): \Vaulter\Models\Drive\Node
-  revoke(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Models\Access\NodeGrant|int|string $grant): void
+  explain(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Enums\Access\Ability $ability, ?\Illuminate\Contracts\Auth\Access\Authorizable $subject = null): \Vaulter\Access\ValueObjects\AccessExplanation
+  grant(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Data\Access\GrantInput $grant): \Vaulter\Data\Snapshots\GrantSnapshot
+  grants(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): array
+  restoreInheritance(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): \Vaulter\Data\Snapshots\NodeSnapshot
+  restrictInheritance(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Enums\Access\InheritanceRestriction $mode = Vaulter\Enums\Access\InheritanceRestriction::Empty): \Vaulter\Data\Snapshots\NodeSnapshot
+  revoke(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Data\Snapshots\GrantSnapshot|int|string $grant): void
 
 Vaulter\Contracts\Access\EnumeratesRoleSubjects
 
@@ -19,8 +19,8 @@ Vaulter\Contracts\Access\PermissionDriver
   subjectsFor(\Illuminate\Contracts\Auth\Access\Authorizable $actor): array
 
 Vaulter\Contracts\Activity\ActivityOperations
-  forDrive(?\Vaulter\Data\Drive\ListOptions $options = null): \Illuminate\Pagination\CursorPaginator
-  forNode(\Vaulter\Models\Drive\Node|int|string $node, ?\Vaulter\Data\Drive\ListOptions $options = null): \Illuminate\Pagination\CursorPaginator
+  forDrive(?\Vaulter\Data\Drive\ListOptions $options = null): \Vaulter\Data\Page
+  forNode(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, ?\Vaulter\Data\Drive\ListOptions $options = null): \Vaulter\Data\Page
 
 Vaulter\Contracts\Cas\BlobStore
   attach(\Vaulter\Models\Drive\FileRevision $version, \Vaulter\Models\Cas\Blob $blob, array $attributes = []): void
@@ -77,11 +77,12 @@ Vaulter\Contracts\Drive\DriveHandle
   extension(string $operations): object
   files(): \Vaulter\Contracts\Drive\FileOperations
   folders(): \Vaulter\Contracts\Drive\FolderOperations
-  model(): \Vaulter\Models\Drive\Drive
   nodes(): \Vaulter\Contracts\Drive\NodeOperations
   profile(): \Vaulter\Profiles\Profile
-  root(): \Vaulter\Models\Drive\Node
+  quota(): \Vaulter\Data\Snapshots\QuotaSnapshot
+  root(): \Vaulter\Data\Snapshots\NodeSnapshot
   shares(): \Vaulter\Contracts\Sharing\ShareOperations
+  snapshot(): \Vaulter\Data\Snapshots\DriveSnapshot
   trash(): \Vaulter\Contracts\Drive\TrashOperations
   withCorrelationId(string $correlationId): \static
 
@@ -91,16 +92,16 @@ Vaulter\Contracts\Drive\DriveHandleFactory
   forOwner(\Illuminate\Database\Eloquent\Model $owner, string $profile): \Vaulter\Contracts\Drive\DriveHandle
 
 Vaulter\Contracts\Drive\FileOperations
-  addRevision(\Vaulter\Models\Drive\Node|int|string $file, \Vaulter\Data\Drive\UploadSource $source, ?\Vaulter\Data\Drive\RevisionOptions $options = null): \Vaulter\Models\Drive\FileRevision
-  deleteRevision(\Vaulter\Models\Drive\Node|int|string $file, \Vaulter\Models\Drive\FileRevision|int|string $revision): void
-  read(\Vaulter\Models\Drive\Node|int|string $file, \Vaulter\Models\Drive\FileRevision|int|null|string $revision = null): \Vaulter\Data\Drive\FileStream
-  restoreRevision(\Vaulter\Models\Drive\Node|int|string $file, \Vaulter\Models\Drive\FileRevision|int|string $revision): \Vaulter\Models\Drive\FileRevision
-  revisions(\Vaulter\Models\Drive\Node|int|string $file, ?\Vaulter\Data\Drive\ListOptions $options = null): \Illuminate\Pagination\CursorPaginator
-  setRevisionRetention(\Vaulter\Models\Drive\Node|int|string $file, \Vaulter\Models\Drive\FileRevision|int|string $revision, bool $keepForever): \Vaulter\Models\Drive\FileRevision
-  upload(\Vaulter\Data\Drive\UploadSource $source, ?\Vaulter\Data\Drive\UploadOptions $options = null): \Vaulter\Models\Drive\Node
+  addRevision(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, \Vaulter\Data\Drive\UploadSource $source, ?\Vaulter\Data\Drive\RevisionOptions $options = null): \Vaulter\Data\Snapshots\FileRevisionSnapshot
+  deleteRevision(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, \Vaulter\Data\Snapshots\FileRevisionSnapshot|int|string $revision): void
+  read(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, \Vaulter\Data\Snapshots\FileRevisionSnapshot|int|null|string $revision = null): \Vaulter\Data\Drive\FileStream
+  restoreRevision(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, \Vaulter\Data\Snapshots\FileRevisionSnapshot|int|string $revision): \Vaulter\Data\Snapshots\FileRevisionSnapshot
+  revisions(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, ?\Vaulter\Data\Drive\ListOptions $options = null): \Vaulter\Data\Page
+  setRevisionRetention(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, \Vaulter\Data\Snapshots\FileRevisionSnapshot|int|string $revision, bool $keepForever): \Vaulter\Data\Snapshots\FileRevisionSnapshot
+  upload(\Vaulter\Data\Drive\UploadSource $source, ?\Vaulter\Data\Drive\UploadOptions $options = null): \Vaulter\Data\Snapshots\NodeSnapshot
 
 Vaulter\Contracts\Drive\FolderOperations
-  create(string $name, \Vaulter\Models\Drive\Node|int|null|string $parent = null, ?\Vaulter\Data\Drive\CreateFolderOptions $options = null): \Vaulter\Models\Drive\Node
+  create(string $name, \Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $parent = null, ?\Vaulter\Data\Drive\CreateFolderOptions $options = null): \Vaulter\Data\Snapshots\NodeSnapshot
 
 Vaulter\Contracts\Drive\NodeContentLifecycle
   copy(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node $source, \Vaulter\Models\Drive\Node $copy): \Vaulter\Data\Drive\CopyResult
@@ -108,25 +109,25 @@ Vaulter\Contracts\Drive\NodeContentLifecycle
   purge(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node $node): void
 
 Vaulter\Contracts\Drive\NodeOperations
-  abilities(\Vaulter\Models\Drive\Node|int|string $node): \Vaulter\Access\ValueObjects\NodeAbilities
-  children(\Vaulter\Models\Drive\Node|int|null|string $folder = null, ?\Vaulter\Data\Drive\ListOptions $options = null): \Vaulter\Data\Drive\NodePage
-  copy(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Models\Drive\Node|int|null|string $destination = null, ?\Vaulter\Data\Drive\CopyOptions $options = null): \Vaulter\Models\Drive\Node
-  find(\Vaulter\Models\Drive\Node|int|string $node): \Vaulter\Models\Drive\Node
-  move(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Models\Drive\Node|int|null|string $destination, ?\Vaulter\Data\Drive\MoveOptions $options = null): \Vaulter\Models\Drive\Node
-  properties(\Vaulter\Models\Drive\Node|int|string $node): array
-  rename(\Vaulter\Models\Drive\Node|int|string $node, string $name, ?int $expectedSequence = null): \Vaulter\Models\Drive\Node
-  search(string $term, ?\Vaulter\Data\Drive\SearchOptions $options = null): \Vaulter\Data\Drive\NodePage
-  setProperties(\Vaulter\Models\Drive\Node|int|string $node, string $namespace, array $set, array $unset = [], ?int $expectedSequence = null): \Vaulter\Models\Drive\Node
-  star(\Vaulter\Models\Drive\Node|int|string $node): \Vaulter\Models\Drive\Node
-  starred(?\Vaulter\Data\Drive\ListOptions $options = null): \Vaulter\Data\Drive\NodePage
-  trash(\Vaulter\Models\Drive\Node|int|string $node, ?int $expectedSequence = null): \Vaulter\Models\Drive\Node
-  unstar(\Vaulter\Models\Drive\Node|int|string $node): \Vaulter\Models\Drive\Node
+  abilities(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): \Vaulter\Access\ValueObjects\NodeAbilities
+  children(\Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $folder = null, ?\Vaulter\Data\Drive\ListOptions $options = null): \Vaulter\Data\Page
+  copy(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $destination = null, ?\Vaulter\Data\Drive\CopyOptions $options = null): \Vaulter\Data\Snapshots\NodeSnapshot
+  find(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): \Vaulter\Data\Snapshots\NodeSnapshot
+  move(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $destination, ?\Vaulter\Data\Drive\MoveOptions $options = null): \Vaulter\Data\Snapshots\NodeSnapshot
+  properties(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): array
+  rename(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, string $name, ?int $expectedSequence = null): \Vaulter\Data\Snapshots\NodeSnapshot
+  search(string $term, ?\Vaulter\Data\Drive\SearchOptions $options = null): \Vaulter\Data\Page
+  setProperties(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, string $namespace, array $set, array $unset = [], ?int $expectedSequence = null): \Vaulter\Data\Snapshots\NodeSnapshot
+  star(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): \Vaulter\Data\Snapshots\NodeSnapshot
+  starred(?\Vaulter\Data\Drive\ListOptions $options = null): \Vaulter\Data\Page
+  trash(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, ?int $expectedSequence = null): \Vaulter\Data\Snapshots\NodeSnapshot
+  unstar(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): \Vaulter\Data\Snapshots\NodeSnapshot
 
 Vaulter\Contracts\Drive\TrashOperations
   empty(): int
-  list(?\Vaulter\Data\Drive\ListOptions $options = null): \Vaulter\Data\Drive\NodePage
-  purge(\Vaulter\Models\Drive\Node|int|string $node): void
-  restore(\Vaulter\Models\Drive\Node|int|string $node, ?\Vaulter\Data\Drive\RestoreOptions $options = null): \Vaulter\Models\Drive\Node
+  list(?\Vaulter\Data\Drive\ListOptions $options = null): \Vaulter\Data\Page
+  purge(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): void
+  restore(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, ?\Vaulter\Data\Drive\RestoreOptions $options = null): \Vaulter\Data\Snapshots\NodeSnapshot
 
 Vaulter\Contracts\Handlers\DocumentContent
   contentHash(): string
@@ -153,7 +154,7 @@ Vaulter\Contracts\Handlers\FileHandlerRegistry
   resolve(\Vaulter\ValueObjects\Handlers\FileDescriptor $file, \Vaulter\Enums\Handlers\Capability $capability = Vaulter\Enums\Handlers\Capability::Download): \Vaulter\Contracts\Handlers\FileHandler
 
 Vaulter\Contracts\Handlers\NodePresenter
-  present(\Vaulter\Models\Drive\Node $node): \Vaulter\ValueObjects\Handlers\NodePresentation
+  present(\Vaulter\Data\Snapshots\NodeSnapshot|\Vaulter\Models\Drive\Node $node): \Vaulter\ValueObjects\Handlers\NodePresentation
 
 Vaulter\Contracts\IdStrategy
   actor(\Illuminate\Database\Schema\Blueprint $table, string $column, bool $nullable = false): void
@@ -173,11 +174,11 @@ Vaulter\Contracts\Observability\TraceRecorder
   span(string $name, callable $operation, array $attributes = []): mixed
 
 Vaulter\Contracts\Sharing\ShareOperations
-  create(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Data\Sharing\ShareLinkInput $input): \Vaulter\Data\Sharing\MintedShareLink
-  list(\Vaulter\Models\Drive\Node|int|string $node): \Illuminate\Database\Eloquent\Collection
-  revoke(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Models\Sharing\NodeShare|int|string $share): void
-  rotate(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Models\Sharing\NodeShare|int|string $share): \Vaulter\Data\Sharing\MintedShareLink
-  update(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Models\Sharing\NodeShare|int|string $share, \Vaulter\Data\Sharing\ShareLinkUpdate $changes): \Vaulter\Models\Sharing\NodeShare
+  create(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Data\Sharing\ShareLinkInput $input): \Vaulter\Data\Snapshots\MintedShareLink
+  list(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): array
+  revoke(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Data\Snapshots\ShareLinkSnapshot|int|string $share): void
+  rotate(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Data\Snapshots\ShareLinkSnapshot|int|string $share): \Vaulter\Data\Snapshots\MintedShareLink
+  update(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Data\Snapshots\ShareLinkSnapshot|int|string $share, \Vaulter\Data\Sharing\ShareLinkUpdate $changes): \Vaulter\Data\Snapshots\ShareLinkSnapshot
 
 Vaulter\Contracts\Sharing\ShareTokenGenerator
   generate(): string
@@ -228,6 +229,7 @@ Vaulter\Configuration\DatabaseConfig
   legacyTable(string $legacyEntity): string
   table(string $name): string
   tablePrefix(): string
+  writeGuard(): bool
 
 Vaulter\Configuration\DownloadsConfig
   __construct(\Illuminate\Contracts\Config\Repository $config)
@@ -322,6 +324,7 @@ Vaulter\Configuration\WebhooksConfig
 Vaulter\Access\AccessResolver
   __construct(\Vaulter\Configuration\VaulterConfig $vaulterConfig, \Vaulter\Access\PermissionDriverManager $drivers, \Vaulter\Repositories\Access\GrantReadRepository $grants, \Vaulter\Repositories\Drive\DriveReadRepository $storages, \Vaulter\Configuration\TenancyConfig $tenancy, \Vaulter\Tenancy\TenancyBoundary $boundary)
   abilitiesFor(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Models\Drive\Node $node): array
+  abilitiesForSnapshot(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Data\Snapshots\NodeSnapshot $snapshot): array
   can(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Enums\Access\Ability $ability, \Vaulter\Models\Drive\Node $node): bool
   canCreateIn(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Models\Drive\Drive $drive): bool
   effectiveGrants(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Models\Drive\Node $node): \Vaulter\Access\ValueObjects\GrantSet
@@ -368,8 +371,8 @@ Vaulter\Data\Drive\CreateFolderOptions
   readonly \Vaulter\Enums\Drive\OnNameConflict $onConflict
 
 Vaulter\Data\Drive\FileStream
-  __construct(mixed $stream, string $filename, string $mimeType, int $size, string $sha256, \Vaulter\Models\Drive\FileRevision $revision)
-  readonly \Vaulter\Models\Drive\FileRevision $revision
+  __construct(mixed $stream, string $filename, string $mimeType, int $size, string $sha256, \Vaulter\Data\Snapshots\FileRevisionSnapshot $revision)
+  readonly \Vaulter\Data\Snapshots\FileRevisionSnapshot $revision
   readonly int $size
   readonly mixed $stream
   readonly string $filename
@@ -399,12 +402,12 @@ Vaulter\Data\Drive\MoveOptions
   readonly \Vaulter\Enums\Drive\OnNameConflict $onConflict
 
 Vaulter\Data\Drive\RestoreOptions
-  __construct(\Vaulter\Models\Drive\Node|int|null|string $destination = null, \Vaulter\Enums\Drive\OnNameConflict $onConflict = Vaulter\Enums\Drive\OnNameConflict::Rename)
-  destination(\Vaulter\Models\Drive\Node|int|null|string $destination): \self
+  __construct(\Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $destination = null, \Vaulter\Enums\Drive\OnNameConflict $onConflict = Vaulter\Enums\Drive\OnNameConflict::Rename)
+  destination(\Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $destination): \self
   make(): \self
   onConflict(\Vaulter\Enums\Drive\OnNameConflict $onConflict): \self
+  readonly \Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $destination
   readonly \Vaulter\Enums\Drive\OnNameConflict $onConflict
-  readonly \Vaulter\Models\Drive\Node|int|null|string $destination
 
 Vaulter\Data\Drive\RevisionOptions
   __construct(?int $expectedSequence = null, ?string $declaredMimeType = null)
@@ -415,28 +418,28 @@ Vaulter\Data\Drive\RevisionOptions
   readonly ?string $declaredMimeType
 
 Vaulter\Data\Drive\SearchOptions
-  __construct(int $perPage = 50, ?string $cursor = null, \Vaulter\Models\Drive\Node|int|null|string $within = null)
+  __construct(int $perPage = 50, ?string $cursor = null, \Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $within = null)
   cursor(?string $cursor): \self
   make(): \self
   perPage(int $perPage): \self
-  within(\Vaulter\Models\Drive\Node|int|null|string $within): \self
+  within(\Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $within): \self
   readonly ?string $cursor
-  readonly \Vaulter\Models\Drive\Node|int|null|string $within
+  readonly \Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $within
   readonly int $perPage
 
 Vaulter\Data\Drive\UploadOptions
-  __construct(\Vaulter\Models\Drive\Node|int|null|string $parent = null, ?string $name = null, \Vaulter\Enums\Drive\OnNameConflict $onConflict = Vaulter\Enums\Drive\OnNameConflict::Fail, ?string $declaredMimeType = null, ?\DateTimeInterface $clientModifiedAt = null)
+  __construct(\Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $parent = null, ?string $name = null, \Vaulter\Enums\Drive\OnNameConflict $onConflict = Vaulter\Enums\Drive\OnNameConflict::Fail, ?string $declaredMimeType = null, ?\DateTimeInterface $clientModifiedAt = null)
   clientModifiedAt(?\DateTimeInterface $clientModifiedAt): \self
   declaredMimeType(?string $declaredMimeType): \self
   make(): \self
   name(?string $name): \self
   onConflict(\Vaulter\Enums\Drive\OnNameConflict $onConflict): \self
-  parent(\Vaulter\Models\Drive\Node|int|null|string $parent): \self
+  parent(\Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $parent): \self
   readonly ?\DateTimeInterface $clientModifiedAt
   readonly ?string $declaredMimeType
   readonly ?string $name
+  readonly \Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $parent
   readonly \Vaulter\Enums\Drive\OnNameConflict $onConflict
-  readonly \Vaulter\Models\Drive\Node|int|null|string $parent
 
 Vaulter\Data\Drive\UploadSource
   declaredMimeType(): ?string
@@ -531,26 +534,26 @@ Vaulter\Data\Sharing\MintedShareLink
   readonly string $token
 
 Vaulter\Operations\AccessOperations
-  __construct(\Vaulter\Operations\OperationContext $context, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Access\OperationGuard $guard, \Vaulter\Access\AccessResolver $resolver, \Vaulter\Configuration\VaulterConfig $config, \Vaulter\Actions\Access\GrantNodeAccessAction $create, \Vaulter\Actions\Access\RevokeNodeAccessAction $delete, \Vaulter\Actions\Access\SetNodeInheritanceAction $inheritance)
-  explain(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Enums\Access\Ability $ability, ?\Illuminate\Contracts\Auth\Access\Authorizable $subject = null): \Vaulter\Access\ValueObjects\AccessExplanation
-  grant(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Data\Access\GrantInput $grant): \Vaulter\Models\Access\NodeGrant
-  grants(\Vaulter\Models\Drive\Node|int|string $node): \Illuminate\Database\Eloquent\Collection
-  restoreInheritance(\Vaulter\Models\Drive\Node|int|string $node): \Vaulter\Models\Drive\Node
-  restrictInheritance(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Enums\Access\InheritanceRestriction $mode = Vaulter\Enums\Access\InheritanceRestriction::Empty): \Vaulter\Models\Drive\Node
-  revoke(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Models\Access\NodeGrant|int|string $grant): void
+  __construct(\Vaulter\Operations\OperationContext $context, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Access\OperationGuard $guard, \Vaulter\Access\AccessResolver $resolver, \Vaulter\Configuration\VaulterConfig $config, \Vaulter\Actions\Access\GrantNodeAccessAction $create, \Vaulter\Actions\Access\RevokeNodeAccessAction $delete, \Vaulter\Actions\Access\SetNodeInheritanceAction $inheritance, \Vaulter\Data\Snapshots\Mapping\AccessSnapshotMapper $grantMapper, \Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper $nodeMapper)
+  explain(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Enums\Access\Ability $ability, ?\Illuminate\Contracts\Auth\Access\Authorizable $subject = null): \Vaulter\Access\ValueObjects\AccessExplanation
+  grant(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Data\Access\GrantInput $grant): \Vaulter\Data\Snapshots\GrantSnapshot
+  grants(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): array
+  restoreInheritance(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): \Vaulter\Data\Snapshots\NodeSnapshot
+  restrictInheritance(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Enums\Access\InheritanceRestriction $mode = Vaulter\Enums\Access\InheritanceRestriction::Empty): \Vaulter\Data\Snapshots\NodeSnapshot
+  revoke(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Data\Snapshots\GrantSnapshot|int|string $grant): void
 
 Vaulter\Operations\ShareOperations
-  __construct(\Vaulter\Operations\OperationContext $context, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Access\OperationGuard $guard, \Vaulter\Configuration\VaulterConfig $config, \Vaulter\Actions\Sharing\CreateShareLinkAction $createLink, \Vaulter\Actions\Sharing\RevokeShareLinkAction $deleteLink, \Vaulter\Actions\Sharing\UpdateShareLinkAction $updateLink, \Vaulter\Actions\Sharing\RotateShareLinkAction $rotateLink)
-  create(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Data\Sharing\ShareLinkInput $input): \Vaulter\Data\Sharing\MintedShareLink
-  list(\Vaulter\Models\Drive\Node|int|string $node): \Illuminate\Database\Eloquent\Collection
-  revoke(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Models\Sharing\NodeShare|int|string $share): void
-  rotate(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Models\Sharing\NodeShare|int|string $share): \Vaulter\Data\Sharing\MintedShareLink
-  update(\Vaulter\Models\Drive\Node|int|string $node, \Vaulter\Models\Sharing\NodeShare|int|string $share, \Vaulter\Data\Sharing\ShareLinkUpdate $changes): \Vaulter\Models\Sharing\NodeShare
+  __construct(\Vaulter\Operations\OperationContext $context, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Access\OperationGuard $guard, \Vaulter\Configuration\VaulterConfig $config, \Vaulter\Actions\Sharing\CreateShareLinkAction $createLink, \Vaulter\Actions\Sharing\RevokeShareLinkAction $deleteLink, \Vaulter\Actions\Sharing\UpdateShareLinkAction $updateLink, \Vaulter\Actions\Sharing\RotateShareLinkAction $rotateLink, \Vaulter\Data\Snapshots\Mapping\AccessSnapshotMapper $mapper)
+  create(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Data\Sharing\ShareLinkInput $input): \Vaulter\Data\Snapshots\MintedShareLink
+  list(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): array
+  revoke(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Data\Snapshots\ShareLinkSnapshot|int|string $share): void
+  rotate(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Data\Snapshots\ShareLinkSnapshot|int|string $share): \Vaulter\Data\Snapshots\MintedShareLink
+  update(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Data\Snapshots\ShareLinkSnapshot|int|string $share, \Vaulter\Data\Sharing\ShareLinkUpdate $changes): \Vaulter\Data\Snapshots\ShareLinkSnapshot
 
 Vaulter\Operations\ActivityOperations
-  __construct(\Vaulter\Operations\OperationContext $context, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Access\OperationGuard $guard, \Vaulter\Queries\Activity\VisibleActivityQuery $query)
-  forDrive(?\Vaulter\Data\Drive\ListOptions $options = null): \Illuminate\Pagination\CursorPaginator
-  forNode(\Vaulter\Models\Drive\Node|int|string $node, ?\Vaulter\Data\Drive\ListOptions $options = null): \Illuminate\Pagination\CursorPaginator
+  __construct(\Vaulter\Operations\OperationContext $context, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Access\OperationGuard $guard, \Vaulter\Queries\Activity\VisibleActivityQuery $query, \Vaulter\Data\Snapshots\Mapping\ActivitySnapshotMapper $mapper)
+  forDrive(?\Vaulter\Data\Drive\ListOptions $options = null): \Vaulter\Data\Page
+  forNode(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, ?\Vaulter\Data\Drive\ListOptions $options = null): \Vaulter\Data\Page
 
 Vaulter\Access\ValueObjects\AccessScope
   __construct(string $profile, \Vaulter\ValueObjects\Access\OwnerRef $driveOwner, int|string $driveId, int|null|string $tenantId = null)
@@ -590,7 +593,7 @@ Vaulter\Operations\OperationContext
 
 Vaulter\Operations\NodeLocator
   __construct(\Vaulter\Configuration\VaulterConfig $config, \Vaulter\Database\VaulterDatabase $database, \Vaulter\Configuration\TenancyConfig $tenancy, \Vaulter\Tenancy\TenancyBoundary $boundary)
-  find(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node|int|string $key, bool $includeTrashed = false): \Vaulter\Models\Drive\Node
+  find(\Vaulter\Operations\OperationContext $context, \Vaulter\Data\Snapshots\NodeSnapshot|\Vaulter\Models\Drive\Node|int|string $key, bool $includeTrashed = false): \Vaulter\Models\Drive\Node
 
 Vaulter\Access\OperationGuard
   __construct(\Vaulter\Access\AccessResolver $resolver, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Profiles\ProfilePolicy $profiles, \Vaulter\Configuration\TenancyConfig $tenancy, \Vaulter\Tenancy\TenancyBoundary $boundary)
@@ -800,7 +803,7 @@ Vaulter\Enums\Drive\NodeSort
 Vaulter\ValueObjects\Access\ActorRef::SYSTEM_TYPE = vaulter:system
 
 Vaulter\Database\VaulterDatabase
-  __construct(\Vaulter\Configuration\DatabaseConfig $databaseConfig, \Illuminate\Database\DatabaseManager $db)
+  __construct(\Vaulter\Configuration\DatabaseConfig $databaseConfig, \Illuminate\Database\DatabaseManager $db, \Illuminate\Contracts\Container\Container $container)
   advisoryLock(string $key): void
   afterCommit(\Closure $callback): void
   connection(): \Illuminate\Database\Connection

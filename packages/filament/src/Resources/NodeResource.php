@@ -34,6 +34,7 @@ use Vaulter\Facades\Vaulter;
 use Vaulter\Filament\Resources\NodeResource\Pages\ListNodes;
 use Vaulter\Filament\Support\PanelActor;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Support\Identity;
 
 /**
  * The Drive-node admin surface (master plan §2.2 / §3) — the heart of the panel. It
@@ -223,7 +224,7 @@ final class NodeResource extends Resource
                 $name = $data['name'];
 
                 self::driveFor($record)->nodes()->rename(
-                    node: $record,
+                    node: Identity::stringify($record->getKey()),
                     name: $name,
                 );
 
@@ -258,7 +259,7 @@ final class NodeResource extends Resource
                 }
                 try {
                     self::driveFor($record)->nodes()->move(
-                        node: $record,
+                        node: Identity::stringify($record->getKey()),
                         destination: $destination,
                     );
                 } catch (PermissionDeniedException) {
@@ -283,7 +284,7 @@ final class NodeResource extends Resource
             ->visible(fn (Node $record): bool => $record->trashed_at === null && self::actorCan(Ability::Trash, $record))
             ->action(function (Node $record): void {
                 self::driveFor($record)->nodes()->trash(
-                    node: $record,
+                    node: Identity::stringify($record->getKey()),
                 );
 
                 self::notifyDone('Node trashed');
@@ -302,7 +303,7 @@ final class NodeResource extends Resource
             ->visible(fn (Node $record): bool => $record->trashed_at !== null && self::actorCan(Ability::Restore, $record))
             ->action(function (Node $record): void {
                 self::driveFor($record)->trash()->restore(
-                    node: $record,
+                    node: Identity::stringify($record->getKey()),
                 );
 
                 self::notifyDone('Node restored');
@@ -323,7 +324,7 @@ final class NodeResource extends Resource
             ->visible(fn (Node $record): bool => $record->trashed_at !== null && self::actorCan(Ability::Delete, $record))
             ->action(function (Node $record): void {
                 self::driveFor($record)->trash()->purge(
-                    node: $record,
+                    node: Identity::stringify($record->getKey()),
                 );
 
                 self::notifyDone('Node permanently deleted');

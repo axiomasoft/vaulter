@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Gate;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Filament\Resources\NodeResource;
@@ -23,10 +24,10 @@ it('applies the selected profile create gate to folder options and canonical fol
     Gate::define('vaulter.manage', static fn (): bool => true);
     Gate::define('vaulter.create', static fn ($actor, array $context): bool => $allow && $context['profile'] === 'default');
     $options = new ReflectionMethod(NodeResource::class, 'folderOptions');
-    $create = static fn (): Node => Vaulter::drive($drive)->folders()->create('child');
+    $create = static fn (): NodeSnapshot => Vaulter::drive($drive)->folders()->create('child');
     if ($allow) {
         expect($options->invoke(null, $node))->not->toBe([]);
-        expect($create()->parent_id)->toEqual($drive->root_node_id);
+        expect($create()->parentId)->toEqual((string) $drive->root_node_id);
     } else {
         expect($options->invoke(null, $node))->toBe([]);
         $exception = rescue($create, static fn (Throwable $exception): Throwable => $exception, report: false);

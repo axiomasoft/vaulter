@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Database;
 
 use Closure;
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Connection;
 use Illuminate\Database\DatabaseManager;
 use LogicException;
@@ -17,6 +18,7 @@ final class VaulterDatabase
     public function __construct(
         private readonly DatabaseConfig $databaseConfig,
         private readonly DatabaseManager $db,
+        private readonly Container $container,
     ) {}
 
     public function connection(): Connection
@@ -38,7 +40,29 @@ final class VaulterDatabase
      */
     public function transaction(Closure $callback, int $attempts = 3): mixed
     {
-        return $this->connection()->transaction($callback, $attempts);
+        return $this->connection()->transaction(fn (Connection $connection): mixed => $this->scope()->run(static fn (): mixed => $callback($connection)), $attempts);
+    }
+
+    /**
+     * Run $callback as a Vaulter write outside a transaction (a job, a command, a
+     * listener staging rows after commit): model writes inside it pass the write guard.
+     *
+     * @internal
+     *
+     * @template TReturn
+     *
+     * @param  Closure(): TReturn $callback
+     * @return TReturn
+     */
+    public function write(Closure $callback): mixed
+    {
+        return $this->scope()->run($callback);
+    }
+
+    /** Resolved per call: the scope is a scoped service and this class is a singleton. */
+    private function scope(): WriteScope
+    {
+        return $this->container->make(WriteScope::class);
     }
 
     /**

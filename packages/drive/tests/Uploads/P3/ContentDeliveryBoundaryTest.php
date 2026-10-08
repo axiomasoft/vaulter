@@ -12,6 +12,7 @@ use Vaulter\Content\ScanResult;
 use Vaulter\Content\SignedContentUrl;
 use Vaulter\Contracts\Cas\DirectContentUrlSigner;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Enums\Cas\ScanVerdict;
 use Vaulter\Exceptions\Files\ContentUnavailableException;
@@ -41,7 +42,7 @@ function p37DeliveryRequireScan($test): void
 
 function p37DeliverySettle($node, ScanVerdict $verdict): void
 {
-    $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
+    $revision = DriveTestHelpers::model($node)->file()->firstOrFail()->currentRevision()->firstOrFail();
     $work = ScanObligation::query()->where('revision_id', $revision->id)->firstOrFail();
     $repo = app(ScanObligationRepository::class);
     $attempt = app(ClaimScanWorkAction::class)->execute($work->id, $work->generation, new DateTimeImmutable);
@@ -53,18 +54,18 @@ function p37DeliverySettle($node, ScanVerdict $verdict): void
 it('SEC-R17 checks pending head, explicit older clean, metadata and sticky infection before opening bytes', function (): void {
     p37DeliveryRequireScan($this);
     $node = $this->system->files()->upload(UploadSource::fromString('clean old', 'file.txt'));
-    $old = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
+    $old = DriveTestHelpers::model($node)->file()->firstOrFail()->currentRevision()->firstOrFail();
     expect(fn () => $this->system->files()->read($node))->toThrow(ContentUnavailableException::class);
     p37DeliverySettle($node, ScanVerdict::Clean);
     $descriptor = app(FileDescriptorFactory::class)->forNode($node);
     $this->system->files()->addRevision($node, UploadSource::fromString('pending new', 'file.txt'));
     expect($this->system->nodes()->find($node)->name)->toBe('file.txt');
     expect(fn () => $this->system->files()->read($node))->toThrow(ContentUnavailableException::class);
-    $stream = $this->system->files()->read($node, $old);
+    $stream = $this->system->files()->read($node, $old->getKey());
     expect(stream_get_contents($stream->stream))->toBe('clean old');
     fclose($stream->stream);
     expect($descriptor->filename)->toBe('file.txt');
-    p37DeliverySettle($node->refresh(), ScanVerdict::Infected);
+    p37DeliverySettle($node, ScanVerdict::Infected);
     config()->set('vaulter.scan.mode', 'off');
     app(ScanPolicyResolver::class)->initialize($this->system->model(), $this->context);
     expect(fn () => $this->system->files()->read($node))->toThrow(ContentUnavailableException::class);
@@ -80,7 +81,7 @@ it('SEC-R17 PHP authorization is fresh with a retained model and descriptor afte
     $stream = $actor->files()->read($node);
     expect(stream_get_contents($stream->stream))->toBe('secret');
     fclose($stream->stream);
-    $grant->delete();
+    app(VaulterDatabase::class)->write(fn () => $grant->delete());
     expect($descriptor->filename)->toBe('file.txt');
     expect(fn () => $actor->files()->read($node))->toThrow(NodeNotFoundException::class);
 });
@@ -90,20 +91,20 @@ it('SEC-R16 strict refuses bearer URLs before touching a signer', function (): v
     $signer = Mockery::mock(DirectContentUrlSigner::class);
     $signer->shouldNotReceive('sign');
     app()->instance(DirectContentUrlSigner::class, $signer);
-    expect(fn () => app(ContentDelivery::class)->directUrl($this->context, $node, $node->file()->firstOrFail()->currentRevision()->firstOrFail(), 60))->toThrow(ProfileRestrictionException::class);
+    expect(fn () => app(ContentDelivery::class)->directUrl($this->context, DriveTestHelpers::model($node), DriveTestHelpers::model($node)->file()->firstOrFail()->currentRevision()->firstOrFail(), 60))->toThrow(ProfileRestrictionException::class);
 });
 
 it('SEC-R16 explicit direct delivery binds exact immutable bytes and TTL with bounded revoke', function (): void {
     $node = $this->system->files()->upload(UploadSource::fromString('content', 'file.txt'));
-    $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
+    $revision = DriveTestHelpers::model($node)->file()->firstOrFail()->currentRevision()->firstOrFail();
     config()->set('vaulter.downloads.delivery_mode', 'direct_signed');
     $signer = Mockery::mock(DirectContentUrlSigner::class);
     $signer->shouldReceive('sign')->once()->andReturnUsing(static fn (ImmutableContentIdentity $identity, DateTimeImmutable $expiry): SignedContentUrl => new SignedContentUrl('https://storage.test/exact-capability', $expiry, $identity->fingerprint(), $identity->storageVersion));
     app()->instance(DirectContentUrlSigner::class, $signer);
-    $url = app(ContentDelivery::class)->directUrl($this->context, $node, $revision, 30);
+    $url = app(ContentDelivery::class)->directUrl($this->context, DriveTestHelpers::model($node), $revision, 30);
     expect($url->expiresAt->getTimestamp())->toBeLessThanOrEqual(time() + 30);
-    expect(fn () => app(ContentDelivery::class)->directUrl($this->context, $node, $revision, 61))->toThrow(InvalidArgumentException::class);
-    $revision->forceFill(['scan_status' => 'infected'])->save();
-    expect(fn () => app(ContentDelivery::class)->directUrl($this->context, $node, $revision, 30))->toThrow(ContentUnavailableException::class);
+    expect(fn () => app(ContentDelivery::class)->directUrl($this->context, DriveTestHelpers::model($node), $revision, 61))->toThrow(InvalidArgumentException::class);
+    app(VaulterDatabase::class)->write(fn () => $revision->forceFill(['scan_status' => 'infected'])->save());
+    expect(fn () => app(ContentDelivery::class)->directUrl($this->context, DriveTestHelpers::model($node), $revision, 30))->toThrow(ContentUnavailableException::class);
     expect($url->url)->toBe('https://storage.test/exact-capability'); // Issued bearer capability remains bounded by expiry.
 });

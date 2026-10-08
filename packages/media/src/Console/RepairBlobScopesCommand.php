@@ -12,6 +12,7 @@ use Throwable;
 use Vaulter\Cas\BlobLock;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Models\Cas\Blob;
@@ -21,6 +22,8 @@ use Vaulter\VaulterManager;
 
 final class RepairBlobScopesCommand extends Command
 {
+    use OpensWriteScope;
+
     public function __construct(
         private readonly DatabaseConfig $databaseConfig,
         private readonly VaulterConfig $vaulterConfig,

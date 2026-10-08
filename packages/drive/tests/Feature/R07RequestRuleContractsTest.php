@@ -157,7 +157,7 @@ it('R07Request validates multipart upload file parent and name rules', function 
         'file' => UploadedFile::fake()->createWithContent('a.txt', 'bytes'),
         'parent_id' => null,
     ])->assertCreated()
-        ->assertJsonPath('data.parent_id', $storage->root_node_id);
+        ->assertJsonPath('data.parent_id', (string) $storage->root_node_id);
 
     $response = $this->postJson($base, [
         'file' => UploadedFile::fake()->createWithContent('b.txt', 'bytes'),
@@ -198,22 +198,22 @@ it('R07Request validates copy name boundaries and separator message in isolation
     $drive = DriveTestHelpers::drive();
     $dest = $drive->folders()->create('CopyDest');
     $file = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('copy'), 'source.bin'), new UploadOptions(parent: $dest));
-    $uri = 'api/vaulter/nodes/'.$file->getKey().'/copy';
+    $uri = 'api/vaulter/nodes/'.$file->id.'/copy';
 
-    $response = $this->postJson($uri, ['parent_id' => $dest->getKey(), 'name' => str_repeat('c', 256)])->assertUnprocessable();
+    $response = $this->postJson($uri, ['parent_id' => $dest->id, 'name' => str_repeat('c', 256)])->assertUnprocessable();
     expect(array_keys($response->json('errors')))->toBe(['name']);
 
-    $response = $this->postJson($uri, ['parent_id' => $dest->getKey(), 'name' => 'a/b'])->assertUnprocessable();
+    $response = $this->postJson($uri, ['parent_id' => $dest->id, 'name' => 'a/b'])->assertUnprocessable();
     expect($response->json('errors.name.0'))->toBe(r07NameSeparatorMessage());
 
-    $this->postJson($uri, ['parent_id' => $dest->getKey(), 'name' => str_repeat('d', 255)])->assertCreated();
+    $this->postJson($uri, ['parent_id' => $dest->id, 'name' => str_repeat('d', 255)])->assertCreated();
 });
 
 it('R07Request accepts nullable copy parent_id and empty name override as null', function (): void {
     $drive = DriveTestHelpers::drive();
     $folder = $drive->folders()->create('Holder');
     $file = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('x'), 'keep-name.bin'), new UploadOptions(parent: $folder));
-    $uri = 'api/vaulter/nodes/'.$file->getKey().'/copy';
+    $uri = 'api/vaulter/nodes/'.$file->id.'/copy';
 
     $copy = $this->postJson($uri, ['parent_id' => null, 'name' => ''])->assertCreated()->json('data');
 
@@ -225,15 +225,15 @@ it('R07Request accepts nullable move parent_id only', function (): void {
     $folder = $drive->folders()->create('Hold');
     $node = $drive->folders()->create('Movable', $folder);
 
-    $this->postJson('api/vaulter/nodes/'.$node->getKey().'/move', ['parent_id' => null])
+    $this->postJson('api/vaulter/nodes/'.$node->id.'/move', ['parent_id' => null])
         ->assertOk()
-        ->assertJsonPath('data.parent_id', $drive->model()->root_node_id);
+        ->assertJsonPath('data.parent_id', (string) $drive->model()->root_node_id);
 });
 
 it('R07Request validates rename name rules and custom separator message', function (): void {
     $drive = DriveTestHelpers::drive();
     $node = $drive->folders()->create('Before');
-    $uri = 'api/vaulter/nodes/'.$node->getKey();
+    $uri = 'api/vaulter/nodes/'.$node->id;
 
     $response = $this->patchJson($uri, ['name' => ''])->assertUnprocessable();
     expect(array_keys($response->json('errors')))->toBe(['name']);
@@ -262,11 +262,11 @@ it('R07Request validates create-folder name and nullable parent_id', function ()
 
     $this->postJson($base, ['name' => str_repeat('f', 255), 'parent_id' => null])
         ->assertCreated()
-        ->assertJsonPath('data.parent_id', $storage->root_node_id);
+        ->assertJsonPath('data.parent_id', (string) $storage->root_node_id);
 
-    $this->postJson($base, ['name' => 'Nested', 'parent_id' => $child->getKey()])
+    $this->postJson($base, ['name' => 'Nested', 'parent_id' => $child->id])
         ->assertCreated()
-        ->assertJsonPath('data.parent_id', $child->getKey());
+        ->assertJsonPath('data.parent_id', $child->id);
 });
 
 it('R07Request enforces the dedicated upload size ceiling on the file rule only', function (): void {

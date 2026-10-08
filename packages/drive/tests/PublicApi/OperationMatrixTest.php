@@ -15,6 +15,7 @@ use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Drive\RestoreOptions;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Drive\NodeKind;
@@ -48,7 +49,7 @@ beforeEach(function (): void {
     $this->actor = Vaulter::drive($this->owner)->actingAs($this->user);
 });
 
-function operationMatrixGrant(DriveHandle $system, Node $node, Authorizable $user, string $role): void
+function operationMatrixGrant(DriveHandle $system, Node|NodeSnapshot $node, Authorizable $user, string $role): void
 {
     $system->access()->grant($node, new GrantInput(
         subject: Subject::ofModel($user), role: $role, scope: GrantScope::Item,
@@ -109,7 +110,7 @@ it('enforces the complete public operation source permission matrix', function (
     if ($operation === 'restore') {
         operationMatrixGrant($this->system, $this->system->root(), $this->user, RoleRegistry::PREVIEWER);
     }
-    $revision = $fileOperation ? $this->system->files()->revisions($source)->items()[0] : null;
+    $revision = $fileOperation ? $this->system->files()->revisions($source)->items[0] : null;
     if ($operation === 'deleteRevision') {
         // Only a non-current revision can be deleted.
         $this->system->files()->addRevision($source, UploadSource::fromString('newer bytes', 'source.txt'));
@@ -150,7 +151,7 @@ it('enforces the complete public operation source permission matrix', function (
                 expect($result->flags['view'])->toBeTrue();
                 break;
             case 'revisions':
-                expect($result->items())->toHaveCount(1)->and($result->items()[0]->id)->toBe($revision->id);
+                expect($result->items)->toHaveCount(1)->and($result->items[0]->id)->toBe((string) $revision->id);
                 break;
             case 'read':
                 try {
@@ -161,7 +162,7 @@ it('enforces the complete public operation source permission matrix', function (
                 }
                 break;
             case 'rename':
-                expect($result->id)->toBe($source->id)->and($source->refresh()->name)->toBe('renamed');
+                expect($result->id)->toBe($source->id)->and(DriveTestHelpers::model($source)->name)->toBe('renamed');
                 break;
             case 'star':
                 expect($result->id)->toBe($source->id)->and($this->actor->nodes()->starred()->items[0]->id ?? null)->toBe($source->id);
@@ -170,38 +171,38 @@ it('enforces the complete public operation source permission matrix', function (
                 expect($result)->toBe([]);
                 break;
             case 'setProperties':
-                expect($result->id)->toBe($source->id)->and($source->refresh()->properties)->toBe(['acme' => ['k' => 'v']]);
+                expect($result->id)->toBe($source->id)->and(DriveTestHelpers::model($source)->properties)->toBe(['acme' => ['k' => 'v']]);
                 break;
             case 'move':
-                expect($result->id)->toBe($source->id)->and($source->refresh()->parent_id)->toBe($destination->id);
+                expect($result->id)->toBe($source->id)->and(DriveTestHelpers::model($source)->parent_id)->toEqual($destination->id);
                 break;
             case 'copy':
-                expect($result->id)->not->toBe($source->id)->and($result->parent_id)->toBe($destination->id)
+                expect($result->id)->not->toBe($source->id)->and($result->parentId)->toBe($destination->id)
                     ->and(Node::query()->whereKey($source->id)->exists())->toBeTrue();
                 break;
             case 'create':
-                expect($result->parent_id)->toBe($source->id)->and($result->name)->toBe('new child');
+                expect($result->parentId)->toBe($source->id)->and($result->name)->toBe('new child');
                 break;
             case 'upload':
-                expect($result->parent_id)->toBe($source->id)->and($result->name)->toBe('new.txt')
-                    ->and($result->size_bytes)->toBe(strlen('new bytes'));
+                expect($result->parentId)->toBe($source->id)->and($result->name)->toBe('new.txt')
+                    ->and($result->sizeBytes)->toBe(strlen('new bytes'));
                 break;
             case 'addRevision':
             case 'restoreRevision':
-                expect($result->number)->toBe(2)->and($source->refresh()->file()->value('current_revision_id'))->toBe($result->id);
+                expect($result->number)->toBe(2)->and((string) DriveTestHelpers::model($source)->file()->value('current_revision_id'))->toBe($result->id);
                 break;
             case 'trash':
-                expect($result->id)->toBe($source->id)->and($source->refresh()->trashed_at)->not->toBeNull();
+                expect($result->id)->toBe($source->id)->and(DriveTestHelpers::model($source)->trashed_at)->not->toBeNull();
                 break;
             case 'restore':
-                expect($result->id)->toBe($source->id)->and($source->refresh()->trashed_at)->toBeNull();
+                expect($result->id)->toBe($source->id)->and(DriveTestHelpers::model($source)->trashed_at)->toBeNull();
                 break;
             case 'purge':
                 expect(Node::query()->whereKey($source->id)->exists())->toBeFalse();
                 break;
             case 'setRevisionRetention':
-                expect($result->id)->toBe($revision->id)->and($result->keep_forever)->toBeTrue()
-                    ->and($revision->refresh()->keep_forever)->toBeTrue();
+                expect($result->id)->toBe($revision->id)->and($result->keepForever)->toBeTrue()
+                    ->and(FileRevision::query()->findOrFail($revision->id)->keep_forever)->toBeTrue();
                 break;
             case 'deleteRevision':
                 expect(FileRevision::query()->whereKey($revision->id)->exists())->toBeFalse();
@@ -251,7 +252,7 @@ it('keeps system operations bound to their drive for foreign keys models revisio
     $other = Vaulter::drive(DriveTestHelpers::host())->asSystem('foreign fixture');
     $own = $this->system->files()->upload(UploadSource::fromString('own', 'own.txt'));
     $foreign = $other->files()->upload(UploadSource::fromString('foreign', 'foreign.txt'));
-    $revision = $other->files()->revisions($foreign)->items()[0];
+    $revision = $other->files()->revisions($foreign)->items[0];
     $before = operationMatrixState();
     foreach ([$foreign, $foreign->id] as $key) {
         expect(fn () => $this->system->nodes()->find($key))->toThrow(NodeNotFoundException::class)
@@ -265,18 +266,18 @@ it('keeps system operations bound to their drive for foreign keys models revisio
     expect(operationMatrixState())->toBe($before);
 });
 
-it('rebinds stale node models by original key and ignores forged scope attributes', function (): void {
+it('rebinds a stale node snapshot by its id and ignores forged attributes', function (): void {
     $source = $this->system->folders()->create('original');
     operationMatrixGrant($this->system, $source, $this->user, RoleRegistry::WRITER);
-    $stale = clone $source;
     $this->system->nodes()->rename($source, 'persisted', 0);
-    $stale->forceFill(['drive_id' => -1, 'name' => 'forged', 'sequence' => 0]);
-    expect($this->actor->nodes()->find($stale)->name)->toBe('persisted')
-        ->and($this->actor->nodes()->rename($stale, 'fresh', 1)->sequence)->toBe(2);
+    // Only the id of a snapshot is used; the drive, name and sequence it carries are not trusted.
+    $forged = new NodeSnapshot(...[...get_object_vars($source), 'driveId' => '-1', 'name' => 'forged', 'sequence' => 0]);
+    expect($this->actor->nodes()->find($forged)->name)->toBe('persisted')
+        ->and($this->actor->nodes()->rename($forged, 'fresh', 1)->sequence)->toBe(2);
     $foreign = Vaulter::drive(DriveTestHelpers::host())->asSystem('foreign fixture')->folders()->create('foreign');
-    $foreign->forceFill(['drive_id' => $source->drive_id, 'id' => $source->id]);
-    expect(fn () => $this->actor->nodes()->find($foreign))->toThrow(NodeNotFoundException::class)
-        ->and(fn () => $this->actor->nodes()->find(new Node))->toThrow(NodeNotFoundException::class);
+    $claimed = new NodeSnapshot(...[...get_object_vars($foreign), 'driveId' => $source->driveId]);
+    expect(fn () => $this->actor->nodes()->find($claimed))->toThrow(NodeNotFoundException::class)
+        ->and(fn () => $this->actor->nodes()->find(''))->toThrow(NodeNotFoundException::class);
 });
 
 it('provisions once and resolves the ambient actor lazily while keeping explicit clones independent', function (): void {
@@ -332,30 +333,31 @@ it('empty skips unauthorized roots and deletes only the independently authorized
 it('read blocks legacy infection and uncommitted content after Download authorization', function (string $scanStatus): void {
     $file = $this->system->files()->upload(UploadSource::fromString('read bytes', 'read.txt'));
     operationMatrixGrant($this->system, $file, $this->user, RoleRegistry::READER);
-    $revision = $this->system->files()->revisions($file)->items()[0];
-    $revision->forceFill(['scan_status' => $scanStatus])->save();
+    $revision = $this->system->files()->revisions($file)->items[0];
+    $row = FileRevision::query()->findOrFail($revision->id);
+    app(VaulterDatabase::class)->write(fn () => $row->forceFill(['scan_status' => $scanStatus])->save());
     $before = operationMatrixState();
     expect(fn () => $this->actor->files()->read($file))->toThrow(ContentUnavailableException::class)
         ->and(operationMatrixState())->toBe($before);
-    $revision->forceFill(['scan_status' => 'clean'])->save();
+    app(VaulterDatabase::class)->write(fn () => $row->forceFill(['scan_status' => 'clean'])->save());
     $stream = $this->actor->files()->read($file);
     try {
         expect(stream_get_contents($stream->stream))->toBe('read bytes');
     } finally {
         fclose($stream->stream);
     }
-    $revision->forceFill(['status' => 'rejected'])->save();
+    app(VaulterDatabase::class)->write(fn () => $row->forceFill(['status' => 'rejected'])->save());
     expect(fn () => $this->actor->files()->read($file, $revision))->toThrow(NodeNotFoundException::class);
 })->with(['infected']);
 
 it('SEC-CONFLICT appends to the normalized case-insensitive sibling with no extra node, charging the revision in full', function (string $stored, string $incoming): void {
     $node = $this->system->files()->upload(UploadSource::fromString('old', $stored));
     // Both revisions are retained, so both count (PLAN2.D48).
-    $this->system->model()->forceFill(['quota_bytes' => 6])->save();
+    app(VaulterDatabase::class)->write(fn () => $this->system->model()->forceFill(['quota_bytes' => 6])->save());
     $result = $this->system->files()->upload(UploadSource::fromString('new', $incoming), new UploadOptions(onConflict: OnNameConflict::AddRevision));
     expect($result->id)->toBe($node->id)
         ->and($result->sequence)->toBe(1)
-        ->and($result->file->currentRevision->sha256)->toBe(hash('sha256', 'new'))
+        ->and($result->file->sha256)->toBe(hash('sha256', 'new'))
         ->and(Node::query()->count())->toBe(2)
         ->and(FileRevision::query()->count())->toBe(2)
         ->and($this->system->model()->used_bytes)->toBe(6);

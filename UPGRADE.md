@@ -6,6 +6,47 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Public API on snapshots; models are internal; write guard (PLAN2.D44, D38; PLAN2.P4.13; ADR-0026)
+
+No schema change. Code that holds `Node`, `FileRevision`, `NodeGrant`, `NodeShare` or `Activity`
+results of the operations must switch to snapshots.
+
+- **Results.** Every method of `NodeOperations`, `FolderOperations`, `FileOperations`,
+  `TrashOperations`, `AccessOperations`, `ShareOperations`, `ActivityOperations` and the handle
+  returns an immutable snapshot (`Vaulter\Data\Snapshots\*`) or a `Vaulter\Data\Page<T>`
+  (`items`, `nextCursor`; `scanned` is the number of candidates examined). Was: Eloquent models,
+  `NodePage`, `CursorPaginator`, Eloquent `Collection`. Snapshot properties are camelCase:
+  `$node->parentId`, `->driveId`, `->sizeBytes`, `->trashedAt`, `->mimeType`, `->inheritsAccess`,
+  `->createdAt`, `->contentModifiedAt`; the viewer's star is `$node->viewer?->starred`; the file head is
+  `$node->file` (`fileId`, `revisionId`, `revisionNumber`, `sha256`, …). Actor fields (`createdBy`,
+  `updatedBy`, `trashedBy`) hold the host key of the user as a string, or null for the system.
+  Ids are strings.
+- **Parameters.** `Node|int|string` becomes `NodeSnapshot|string|int` (likewise for revisions, grants and
+  share links). Passing a model is a `TypeError`; pass `$model->getKey()`. `UploadOptions::$parent`,
+  `SearchOptions::$within` and `RestoreOptions::$destination` follow.
+- **Lists.** `$page->items()` on a paginator becomes `$page->items`; `$page->nextCursor()->encode()`
+  becomes `$page->nextCursor` (a string; pass it back as `ListOptions::$cursor`).
+  `AccessOperations::grants()` and `ShareOperations::list()` return a plain list.
+- **Share links.** `ShareOperations::create()`/`rotate()` return `Vaulter\Data\Snapshots\MintedShareLink`
+  with `->link` (a `ShareLinkSnapshot`) and `->token`. Was `->share` (a model). `update()` returns a
+  `ShareLinkSnapshot`. `ShareLinkSnapshot::$passwordProtected` replaces `hasPassword()`.
+- **Handle.** `DriveHandle::snapshot()` and `quota()` are new. `DriveHandle::model()` is `@internal`; use
+  `snapshot()` unless you really need the row. `DriveHandle::root()` returns a `NodeSnapshot`.
+- **Custom implementations.** A class implementing a changed contract must change its signatures. An
+  `AccessOperations`, `ShareOperations` or `ActivityOperations` double in tests: return snapshots.
+  `NodePresenter::present()` and `FileDescriptorFactory::forNode()` also accept a `NodeSnapshot`.
+- **REST.** JSON keys are unchanged. Ids are now always strings, so a bigint install now sees `"id": "42"`
+  where it saw `42`. The Vue client already types ids as strings.
+- **Write guard.** Vaulter models refuse to be written outside a Vaulter operation:
+  `$node->save()`, `Node::query()->update(...)`, `->delete()`, `->increment(...)` and the like throw
+  `WriteOutsideOperationException` (500 `write_outside_operation`). Go through the operations. Host
+  code that writes with `DB::table()` is not intercepted. Test fixtures that build rows with models can
+  wrap the write in `app(VaulterDatabase::class)->write(fn () => $model->save())`, or set
+  `vaulter.database.write_guard` (`VAULTER_DB_WRITE_GUARD`) to `false` in the test environment. Vaulter's
+  own suites do the latter by default and run dedicated lanes with `VAULTER_TEST_WRITE_GUARD=1`.
+- **Docs.** [API compatibility](docs/guide/compatibility.md) states what 1.0 freezes and what it does
+  not; [ADR-0026](docs/adr/0026-public-api-snapshots.md) records the decision.
+
 ### File revisions, quota over every revision, no global dedup (PLAN2.D48, D49; PLAN2.P4.12)
 
 Back up the database and stop writes before migrating.

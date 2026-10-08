@@ -29,8 +29,8 @@ it('never leaves a live node under a folder trashed concurrently', function (): 
     $storageId = $drive->model()->getKey();
     $top = $drive->folders()->create('Top');
     $inner = $drive->folders()->create('Inner', $top);
-    $topId = $top->getKey();
-    $innerId = $inner->getKey();
+    $topId = $top->id;
+    $innerId = $inner->id;
 
     $outcomes = ForkRace::run([
         static fn (): string => (string) app(TrashNodeAction::class)->execute(OperationContext::system(Drive::query()->findOrFail($storageId), 'test fixture'), new TrashNodeInput(Node::query()->findOrFail($topId)))->getKey(),

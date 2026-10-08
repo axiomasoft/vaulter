@@ -10,8 +10,10 @@ use Vaulter\Contracts\Drive\NodeOperations as Contract;
 use Vaulter\Data\Drive\CopyOptions;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Drive\MoveOptions;
-use Vaulter\Data\Drive\NodePage;
 use Vaulter\Data\Drive\SearchOptions;
+use Vaulter\Data\Page;
+use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Actions\Nodes\CopyNodeAction;
 use Vaulter\Drive\Actions\Nodes\MoveNodeAction;
 use Vaulter\Drive\Actions\Nodes\RenameNodeAction;
@@ -37,69 +39,72 @@ use Vaulter\Support\TreeGuard;
 
 final readonly class NodeOperations implements Contract
 {
-    public function __construct(private OperationContext $context, private NodeLocator $locator, private OperationGuard $guard, private TreeGuard $tree, private ListChildrenQuery $childrenQuery, private SearchQuery $searchQuery, private RenameNodeAction $renameAction, private MoveNodeAction $moveAction, private CopyNodeAction $copyAction, private TrashNodeAction $trashAction, private NodeReadRepository $nodes, private StarNodeAction $starAction, private SetNodePropertiesAction $propertiesAction, private NodePageQuery $pages) {}
+    public function __construct(private OperationContext $context, private NodeLocator $locator, private OperationGuard $guard, private TreeGuard $tree, private ListChildrenQuery $childrenQuery, private SearchQuery $searchQuery, private RenameNodeAction $renameAction, private MoveNodeAction $moveAction, private CopyNodeAction $copyAction, private TrashNodeAction $trashAction, private NodeReadRepository $nodes, private StarNodeAction $starAction, private SetNodePropertiesAction $propertiesAction, private NodePageQuery $pages, private NodeSnapshotMapper $mapper) {}
 
-    public function find(Node|int|string $node): Node
+    public function find(NodeSnapshot|string|int $node): NodeSnapshot
     {
-        return $this->authorized($node, Ability::View);
+        return $this->snapshot($this->authorized($node, Ability::View));
     }
 
-    public function children(Node|int|string|null $folder = null, ?ListOptions $options = null): NodePage
+    /** @return Page<NodeSnapshot> */
+    public function children(NodeSnapshot|string|int|null $folder = null, ?ListOptions $options = null): Page
     {
         $folder = $this->destination($folder, false);
 
-        return $this->childrenQuery->execute($this->context, $folder, $options ?? new ListOptions);
+        return $this->mapper->page($this->childrenQuery->execute($this->context, $folder, $options ?? new ListOptions), $this->context->actor->ref());
     }
 
-    public function search(string $term, ?SearchOptions $options = null): NodePage
+    /** @return Page<NodeSnapshot> */
+    public function search(string $term, ?SearchOptions $options = null): Page
     {
         $options ??= new SearchOptions;
         $within = $options->within === null ? null : $this->destination($options->within, false);
 
-        return $this->searchQuery->execute($this->context, $term, $options, $within);
+        return $this->mapper->page($this->searchQuery->execute($this->context, $term, $options, $within), $this->context->actor->ref());
     }
 
-    public function rename(Node|int|string $node, string $name, ?int $expectedSequence = null): Node
+    public function rename(NodeSnapshot|string|int $node, string $name, ?int $expectedSequence = null): NodeSnapshot
     {
-        return $this->renameAction->execute($this->context, new RenameNodeInput($this->authorized($node, Ability::Edit), $name, $expectedSequence));
+        return $this->snapshot($this->renameAction->execute($this->context, new RenameNodeInput($this->authorized($node, Ability::Edit), $name, $expectedSequence)));
     }
 
-    public function move(Node|int|string $node, Node|int|string|null $destination, ?MoveOptions $options = null): Node
+    public function move(NodeSnapshot|string|int $node, NodeSnapshot|string|int|null $destination, ?MoveOptions $options = null): NodeSnapshot
     {
         $node = $this->authorized($node, Ability::Move);
         $parent = $this->destination($destination);
         $options ??= new MoveOptions;
 
-        return $this->moveAction->execute($this->context, new MoveNodeInput($node, $parent, $options->expectedSequence, $options->onConflict));
+        return $this->snapshot($this->moveAction->execute($this->context, new MoveNodeInput($node, $parent, $options->expectedSequence, $options->onConflict)));
     }
 
-    public function copy(Node|int|string $node, Node|int|string|null $destination = null, ?CopyOptions $options = null): Node
+    public function copy(NodeSnapshot|string|int $node, NodeSnapshot|string|int|null $destination = null, ?CopyOptions $options = null): NodeSnapshot
     {
         $node = $this->authorized($node, Ability::Copy);
         $parent = $this->destination($destination);
         $options ??= new CopyOptions;
         $authorized = $this->guard->copyableSubtree($this->context, $node, $this->nodes->subtree($node));
 
-        return $this->copyAction->execute($this->context, new CopyNodeInput($node, $parent, $options->name, $options->onConflict, $authorized));
+        return $this->snapshot($this->copyAction->execute($this->context, new CopyNodeInput($node, $parent, $options->name, $options->onConflict, $authorized)));
     }
 
-    public function star(Node|int|string $node): Node
+    public function star(NodeSnapshot|string|int $node): NodeSnapshot
     {
-        return $this->starAction->execute($this->context, $this->authorized($node, Ability::View), starred: true);
+        return $this->snapshot($this->starAction->execute($this->context, $this->authorized($node, Ability::View), starred: true));
     }
 
-    public function unstar(Node|int|string $node): Node
+    public function unstar(NodeSnapshot|string|int $node): NodeSnapshot
     {
-        return $this->starAction->execute($this->context, $this->authorized($node, Ability::View), starred: false);
+        return $this->snapshot($this->starAction->execute($this->context, $this->authorized($node, Ability::View), starred: false));
     }
 
-    public function starred(?ListOptions $options = null): NodePage
+    /** @return Page<NodeSnapshot> */
+    public function starred(?ListOptions $options = null): Page
     {
-        return $this->pages->starred($this->context, $options ?? new ListOptions);
+        return $this->mapper->page($this->pages->starred($this->context, $options ?? new ListOptions), $this->context->actor->ref());
     }
 
     /** @return array<string, array<string, string>> */
-    public function properties(Node|int|string $node): array
+    public function properties(NodeSnapshot|string|int $node): array
     {
         return $this->authorized($node, Ability::View)->properties ?? [];
     }
@@ -108,22 +113,27 @@ final readonly class NodeOperations implements Contract
      * @param array<string, string> $set
      * @param list<string>          $unset
      */
-    public function setProperties(Node|int|string $node, string $namespace, array $set, array $unset = [], ?int $expectedSequence = null): Node
+    public function setProperties(NodeSnapshot|string|int $node, string $namespace, array $set, array $unset = [], ?int $expectedSequence = null): NodeSnapshot
     {
-        return $this->propertiesAction->execute($this->context, new SetNodePropertiesInput($this->authorized($node, Ability::Edit), $namespace, $set, $unset, $expectedSequence));
+        return $this->snapshot($this->propertiesAction->execute($this->context, new SetNodePropertiesInput($this->authorized($node, Ability::Edit), $namespace, $set, $unset, $expectedSequence)));
     }
 
-    public function trash(Node|int|string $node, ?int $expectedSequence = null): Node
+    public function trash(NodeSnapshot|string|int $node, ?int $expectedSequence = null): NodeSnapshot
     {
-        return $this->trashAction->execute($this->context, new TrashNodeInput($this->authorized($node, Ability::Trash), $expectedSequence));
+        return $this->snapshot($this->trashAction->execute($this->context, new TrashNodeInput($this->authorized($node, Ability::Trash), $expectedSequence)));
     }
 
-    public function abilities(Node|int|string $node): NodeAbilities
+    public function abilities(NodeSnapshot|string|int $node): NodeAbilities
     {
-        return $this->guard->abilities($this->context, $this->find($node));
+        return $this->guard->abilities($this->context, $this->authorized($node, Ability::View));
     }
 
-    private function authorized(Node|int|string $key, Ability $ability): Node
+    private function snapshot(Node $node): NodeSnapshot
+    {
+        return $this->mapper->map($node, $this->context->actor->ref());
+    }
+
+    private function authorized(NodeSnapshot|string|int $key, Ability $ability): Node
     {
         $node = $this->locator->find($this->context, $key);
         $this->guard->authorize($this->context, $ability, $node, $ability === Ability::View ? OperationKind::Metadata : OperationKind::Mutation);
@@ -131,7 +141,7 @@ final readonly class NodeOperations implements Contract
         return $node;
     }
 
-    private function destination(Node|int|string|null $key, bool $create = true): Node
+    private function destination(NodeSnapshot|string|int|null $key, bool $create = true): Node
     {
         $node = $this->authorized($key ?? $this->context->drive->root_node_id ?? throw NodeNotFoundException::forId('root'), Ability::View);
         $this->tree->assertActiveFolder($node);

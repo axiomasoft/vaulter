@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Actions\Sharing;
 
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Repositories\Sharing\NodeShareStoreRepository;
 
@@ -17,10 +18,10 @@ use Vaulter\Repositories\Sharing\NodeShareStoreRepository;
  */
 final readonly class RedeemShareLinkAction
 {
-    public function __construct(private NodeShareStoreRepository $shares) {}
+    public function __construct(private NodeShareStoreRepository $shares, private VaulterDatabase $database) {}
 
     public function execute(NodeShare $share): bool
     {
-        return $this->shares->consumeUse($share);
+        return $this->database->write(fn (): bool => $this->shares->consumeUse($share));
     }
 }

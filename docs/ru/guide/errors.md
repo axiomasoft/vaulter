@@ -112,3 +112,12 @@ NFC, если установлен ext-intl.
 `value_too_long` (значение — строка UTF-8 до 1024 байт), `too_many` / `too_large`
 (`maxPropertyCount` / `maxPropertiesBytes` политики диска) или `reserved_namespace` (`vaulter` и
 `vaulter.*` пишет только система).
+
+## write-outside-operation
+
+`write_outside_operation` (500, ошибка интеграции) — код вне операций Vaulter сохранил, обновил или
+удалил модель Vaulter (`Node::query()->update(...)`, `$node->save()`). Строки меняются только через
+операции `DriveHandle`: они держат инварианты, авторизацию и журнал; защита моделей
+(`vaulter.database.write_guard`, по умолчанию `true`) отклоняет запись до обращения к базе.
+Перенесите запись в операцию. `DB::table()` и сырой SQL не перехватываются: защита — это
+эшелонированная оборона, а не песочница.

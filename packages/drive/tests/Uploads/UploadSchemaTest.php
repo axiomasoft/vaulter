@@ -6,6 +6,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
@@ -54,7 +55,7 @@ it('rejects a duplicate upload_id (UNIQUE)', function (): void {
     $create = static function () use ($model, $base): void {
         $session = new $model;
         $session->forceFill($base);
-        $session->save();
+        app(VaulterDatabase::class)->write(fn () => $session->save());
     };
 
     $create();
@@ -84,7 +85,7 @@ it('casts the session enums and json columns', function (): void {
     $storage = UploadTestHelpers::storage();
     $session = UploadTestHelpers::session($storage, protocol: UploadProtocol::S3Multipart);
 
-    $session->forceFill(['metadata' => ['filename' => 'report.pdf']])->save();
+    app(VaulterDatabase::class)->write(fn () => $session->forceFill(['metadata' => ['filename' => 'report.pdf']])->save());
 
     $fresh = app(DriveConfig::class)->model('upload_session')::query()->find($session->getKey());
 

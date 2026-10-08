@@ -6,13 +6,15 @@ namespace Vaulter\Drive\Queries;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\OperationGuard;
+use Vaulter\Access\ValueObjects\GrantSet;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Drive\DriveHandle;
+use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Enums\Operations\OperationKind;
@@ -25,6 +27,7 @@ use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Drive\DriveReadRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
+use Vaulter\Support\Identity;
 
 /** @internal Read adapters for the existing browser and panel representations. */
 final readonly class NodeBrowserQuery
@@ -36,6 +39,7 @@ final readonly class NodeBrowserQuery
         private OperationGuard $guard,
         private AccessResolver $access,
         private VaulterConfig $config,
+        private NodeSnapshotMapper $mapper,
     ) {}
 
     public function driveForNode(Node $node): Drive
@@ -48,12 +52,30 @@ final readonly class NodeBrowserQuery
         return $this->drives->find($driveId) ?? throw NodeNotFoundException::forId($node->id);
     }
 
-    /** @return Collection<int, Node> */
-    public function breadcrumb(DriveHandle $handle, Node $node): Collection
+    /** @return list<NodeSnapshot> */
+    public function breadcrumb(DriveHandle $handle, Node $node): array
     {
-        $node = $handle->nodes()->find($node);
+        $handle->nodes()->find(Identity::stringify($node->getKey()));
+        $context = $this->context($handle);
 
-        return new Collection($this->guard->visible(context: $this->context($handle), nodes: $this->nodes->breadcrumb($node)));
+        return $this->mapper->mapMany($this->guard->visible(context: $context, nodes: $this->nodes->breadcrumb($node)), $context->actor->ref());
+    }
+
+    /**
+     * The actor's grant set of every listed node, from one query for the node rows.
+     *
+     * @param  list<NodeSnapshot>      $snapshots
+     * @return array<string, GrantSet>
+     */
+    public function grantSets(Authorizable $actor, array $snapshots): array
+    {
+        if ($snapshots === []) {
+            return [];
+        }
+        $model = $this->config->model('node');
+        $nodes = $model::query()->whereKey(array_map(static fn (NodeSnapshot $node): string => $node->id, $snapshots))->get();
+
+        return $this->access->evaluateMany(actor: $actor, nodes: $nodes);
     }
 
     /**

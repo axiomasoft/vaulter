@@ -11,12 +11,13 @@ use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\ValueObjects\Access\Actor;
 
 beforeEach(function (): void {
     config()->set('vaulter.access.permission_driver', 'database');
     $this->handle = DocumentTestHelpers::drive()->asSystem('document egress fixture');
-    $this->node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(storage: $this->handle->model(), name: 'protected', content: DocumentTestHelpers::content('secret body'), parent: $this->handle->root()));
+    $this->node = app(CreateDocumentAction::class)->execute(new CreateDocumentInput(storage: $this->handle->model(), name: 'protected', content: DocumentTestHelpers::content('secret body'), parent: DriveTestHelpers::model($this->handle->root())));
 });
 
 it('SEC-R17-inline rechecks visibility on every PHP export with a retained node', function (): void {

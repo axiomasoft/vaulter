@@ -24,6 +24,7 @@ use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Exceptions\Nodes\SequenceOverflowException;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /*
  * The content validator of a document (D35): state_version moves by exactly one per
@@ -39,7 +40,7 @@ function stateVersionDocument(): Node
         storage: $drive->model(),
         name: 'State version '.bin2hex(random_bytes(3)),
         content: DocumentTestHelpers::content('initial'),
-        parent: $drive->root(),
+        parent: DriveTestHelpers::model($drive->root()),
     ));
 }
 

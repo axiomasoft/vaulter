@@ -5,29 +5,26 @@ declare(strict_types=1);
 namespace Vaulter\Http\Resources\Drive;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Access\ValueObjects\GrantSet;
 use Vaulter\Access\ValueObjects\NodeAbilities;
 use Vaulter\Contracts\Handlers\NodePresenter;
+use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Drive\NodeUserState;
-use Vaulter\Support\Identity;
 
 /**
  * The read shape of a Drive node (§2.2 / §5): the unified folder|file|document
- * leaf the Vue client renders. Read-only — it transforms an already-loaded Node
- * and the optional children/breadcrumb collections handed to it, never queries.
+ * leaf the Vue client renders. Read-only — it transforms a {@see NodeSnapshot} and
+ * the optional children/breadcrumb snapshots handed to it.
  *
  * The `abilities` object is filled by the AccessResolver (§2.6 / H.2) for the
  * request's actor, so the client renders only the actions that actor may perform
  * on this node. With no acting user every flag is false (a read-only shell).
  *
- * @mixin Node
+ * @mixin NodeSnapshot
  */
 final class NodeResource extends JsonResource
 {
@@ -35,6 +32,12 @@ final class NodeResource extends JsonResource
 
     /** @var array<string, GrantSet> */
     private array $childrenGrants = [];
+
+    /** @var list<NodeSnapshot>|null */
+    private ?array $children = null;
+
+    /** @var list<NodeSnapshot>|null */
+    private ?array $breadcrumb = null;
 
     public function withGrantSet(GrantSet $set): static
     {
@@ -52,30 +55,12 @@ final class NodeResource extends JsonResource
     }
 
     /**
-     * Direct children of this node, attached by NodeController::show when listing
-     * a folder's contents alongside the node itself.
-     *
-     * @var Collection<int, Node>|null
-     */
-    private ?Collection $children = null;
-
-    /** Whether the request's user starred this node, when the caller already knows. */
-    private ?bool $viewerStarred = null;
-
-    /**
-     * The breadcrumb chain (root → this node), attached by NodeController::show.
-     *
-     * @var Collection<int, Node>|null
-     */
-    private ?Collection $breadcrumb = null;
-
-    /**
      * Embed the direct children of this node in the response (the folder listing
      * a `show` may return alongside the node).
      *
-     * @param Collection<int, Node> $children
+     * @param list<NodeSnapshot> $children
      */
-    public function withChildren(Collection $children): self
+    public function withChildren(array $children): self
     {
         $this->children = $children;
 
@@ -85,9 +70,9 @@ final class NodeResource extends JsonResource
     /**
      * Embed the breadcrumb chain (root first, this node last) in the response.
      *
-     * @param Collection<int, Node> $breadcrumb
+     * @param list<NodeSnapshot> $breadcrumb
      */
-    public function withBreadcrumb(Collection $breadcrumb): self
+    public function withBreadcrumb(array $breadcrumb): self
     {
         $this->breadcrumb = $breadcrumb;
 
@@ -100,27 +85,27 @@ final class NodeResource extends JsonResource
     #[\Override]
     public function toArray(Request $request): array
     {
-        /** @var Node $node */
+        /** @var NodeSnapshot $node */
         $node = $this->resource;
 
         return [
-            'id' => $node->getKey(),
+            'id' => $node->id,
             'kind' => $node->kind->value,
             'name' => $node->name,
-            'mime' => $node->mime_type,
+            'mime' => $node->mimeType,
             'extension' => $node->extension,
-            'size_bytes' => $node->size_bytes,
-            'storage_id' => $node->drive_id,
-            'parent_id' => $node->parent_id,
+            'size_bytes' => $node->sizeBytes,
+            'storage_id' => $node->driveId,
+            'parent_id' => $node->parentId,
             ...$this->headKeys($node),
-            'trashed_at' => $node->trashed_at,
-            'created_at' => $node->created_at,
-            'updated_at' => $node->updated_at,
-            'content_modified_at' => $node->content_modified_at,
-            'viewer' => $this->viewer($request, $node),
+            'trashed_at' => SnapshotValue::iso($node->trashedAt),
+            'created_at' => SnapshotValue::iso($node->createdAt),
+            'updated_at' => SnapshotValue::iso($node->updatedAt),
+            'content_modified_at' => SnapshotValue::iso($node->contentModifiedAt),
+            'viewer' => $node->viewer === null ? null : ['starred' => $node->viewer->starred],
             'children' => $this->children === null
                 ? null
-                : self::collection($this->childResources($request, $this->children)),
+                : self::collection(array_map(fn (NodeSnapshot $child): self => $this->child($child), $this->children)),
             'breadcrumb' => $this->breadcrumb === null
                 ? null
                 : self::collection($this->breadcrumb),
@@ -132,11 +117,20 @@ final class NodeResource extends JsonResource
         ];
     }
 
+    private function child(NodeSnapshot $child): self
+    {
+        $resource = self::make($child);
+        if (isset($this->childrenGrants[$child->id])) {
+            $resource->withGrantSet($this->childrenGrants[$child->id]);
+        }
+
+        return $resource;
+    }
+
     /**
      * The handler descriptor for a leaf node (file/document/shortcut) — resolved
      * through the registry by the node's server-trusted mime/extension (H.5). Null
-     * for a folder. Resolved lazily via the container so the Resource stays a pure
-     * transform and only computes it when serialising a leaf.
+     * for a folder.
      *
      * The {@see NodePresenter} contract and its engine are core-owned since
      * P0.4/D10: a host running Drive WITHOUT vaulter-documents still gets a real
@@ -146,7 +140,7 @@ final class NodeResource extends JsonResource
      *
      * @return array<string, mixed>|null
      */
-    private function handler(Node $node): ?array
+    private function handler(NodeSnapshot $node): ?array
     {
         if ($node->kind === NodeKind::Folder) {
             return null;
@@ -162,103 +156,35 @@ final class NodeResource extends JsonResource
      *
      * @return array<string, bool>
      */
-    private function abilities(Request $request, Node $node): array
+    private function abilities(Request $request, NodeSnapshot $snapshot): array
     {
         if ($this->grantSet !== null) {
             return NodeAbilities::fromGrantSet($this->grantSet)->toArray();
         }
 
         $user = $request->user();
-        $actor = $user instanceof Authorizable ? $user : null;
+        if (!$user instanceof Authorizable) {
+            return NodeAbilities::denied()->toArray();
+        }
 
-        return NodeAbilities::for(
-            actor: $actor,
-            node: $node,
-            resolver: app(AccessResolver::class),
-        )->toArray();
+        return app(AccessResolver::class)->abilitiesForSnapshot($user, $snapshot);
     }
 
     /**
-     * The request user's personal state of the node (PLAN2.D40); null without a
-     * user. A listing passes the stars of its page in one query.
-     *
-     * @return array{starred: bool}|null
-     */
-    private function viewer(Request $request, Node $node): ?array
-    {
-        $user = $request->user();
-        if (!$user instanceof Model) {
-            return null;
-        }
-
-        if ($this->viewerStarred !== null) {
-            return ['starred' => $this->viewerStarred];
-        }
-        // ExactListing preloads the stars of its actor, who is the request user.
-        if ($node->relationLoaded('userStates')) {
-            return ['starred' => $node->userStates->contains(static fn (NodeUserState $state): bool => $state->starred_at !== null
-                && $state->actor_type === $user->getMorphClass()
-                && Identity::stringify($state->actor_id) === Identity::stringify($user->getKey()))];
-        }
-
-        return ['starred' => $node->userStates()
-            ->where('actor_type', $user->getMorphClass())
-            ->where('actor_id', $user->getKey())
-            ->whereNotNull('starred_at')
-            ->exists()];
-    }
-
-    /**
-     * @param  Collection<int, Node>                     $children
-     * @return \Illuminate\Support\Collection<int, self>
-     */
-    private function childResources(Request $request, Collection $children): \Illuminate\Support\Collection
-    {
-        $user = $request->user();
-        $starred = [];
-        if ($user instanceof Model && $children->isNotEmpty()) {
-            $ids = NodeUserState::query()
-                ->where('actor_type', $user->getMorphClass())
-                ->where('actor_id', $user->getKey())
-                ->whereIn('node_id', $children->modelKeys())
-                ->whereNotNull('starred_at')
-                ->pluck('node_id');
-            foreach ($ids as $id) {
-                if (is_int($id) || is_string($id)) {
-                    $starred[Identity::stringify($id)] = true;
-                }
-            }
-        }
-
-        return $children->toBase()->map(function (Node $child) use ($starred): self {
-            $resource = isset($this->childrenGrants[(string) $child->id]) ? self::make($child)->withGrantSet($this->childrenGrants[(string) $child->id]) : self::make($child);
-            $resource->viewerStarred = isset($starred[Identity::stringify($child->id)]);
-
-            return $resource;
-        });
-    }
-
-    /**
-     * The legacy file_id/current_version_id keys, read from the kind's own
-     * aggregate now that the node carries no head pointer. Core does not depend on
-     * the documents package: the documents package registers the `document`
-     * relation on the node model, and without it a document has no head here.
+     * The legacy file_id/current_version_id keys, read from the kind's own head. Core
+     * does not depend on the documents package: it supplies the document head to the
+     * snapshot, and without it a document has no head here.
      *
      * @return array{file_id: int|string|null, current_version_id: int|string|null}
      */
-    private function headKeys(Node $node): array
+    private function headKeys(NodeSnapshot $node): array
     {
         if ($node->kind === NodeKind::File) {
-            $file = $node->relationLoaded('file') ? $node->file : $node->file()->first();
-
-            return ['file_id' => $file?->id, 'current_version_id' => $file?->current_revision_id];
+            return ['file_id' => $node->file?->fileId, 'current_version_id' => $node->file?->revisionId];
         }
 
         if ($node->kind === NodeKind::Document) {
-            $document = $node->getRelationValue('document');
-            $head = $document instanceof Model ? $document->getAttribute('current_revision_id') : null;
-
-            return ['file_id' => null, 'current_version_id' => is_int($head) || is_string($head) ? $head : null];
+            return ['file_id' => null, 'current_version_id' => $node->document?->headRevisionId];
         }
 
         return ['file_id' => null, 'current_version_id' => null];

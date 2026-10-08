@@ -9,6 +9,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Vaulter\Contracts\Drive\DriveHandleFactory;
+use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Operations\UploadOperations;
@@ -17,7 +19,9 @@ use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Http\Controllers\Controller;
 use Vaulter\Http\Resources\Drive\NodeResource;
 use Vaulter\Models\Drive\Drive;
+use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\DriveReadRepository;
+use Vaulter\ValueObjects\Access\Actor;
 
 /**
  * The S3-multipart resumable-upload surface (§2.8 / D16 / M3a). Thin HTTP: it
@@ -39,6 +43,7 @@ final class S3MultipartProtocolController extends Controller
         private readonly DriveReadRepository $storages,
         private readonly DriveHandleFactory $handles,
         private readonly DriveConfig $driveConfig,
+        private readonly NodeSnapshotMapper $snapshots,
     ) {}
 
     /**
@@ -81,7 +86,7 @@ final class S3MultipartProtocolController extends Controller
 
         $node = $this->uploads(request: $request, storage: $this->storageOf($session))->complete($session);
 
-        return NodeResource::make($node)->response()->setStatusCode(201);
+        return NodeResource::make($this->snapshotOf($node, $request))->response()->setStatusCode(201);
     }
 
     private function findSession(string $uploadId): UploadSession
@@ -158,6 +163,13 @@ final class S3MultipartProtocolController extends Controller
         }
 
         abort(Response::HTTP_REQUEST_ENTITY_TOO_LARGE, "The upload part exceeds the maximum chunk size of {$max} bytes.");
+    }
+
+    private function snapshotOf(Node $node, Request $request): NodeSnapshot
+    {
+        $user = $this->authorizable($request);
+
+        return $this->snapshots->map($node, $user === null ? null : Actor::user($user)->ref());
     }
 
     private function authorizable(Request $request): ?Authorizable

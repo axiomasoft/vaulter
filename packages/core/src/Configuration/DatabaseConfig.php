@@ -40,4 +40,10 @@ final readonly class DatabaseConfig
 
         return is_string($value) && $value !== '' ? $value : null;
     }
+
+    /** Whether writes to Vaulter models outside an operation are refused (vaulter.database.write_guard). */
+    public function writeGuard(): bool
+    {
+        return $this->config->get('vaulter.database.write_guard', true) !== false;
+    }
 }

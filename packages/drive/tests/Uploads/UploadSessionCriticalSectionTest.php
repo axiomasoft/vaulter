@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
@@ -20,6 +21,10 @@ use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Tests\Drive\DriveTestHelpers;
+
+// These tests drive handlers and repositories directly; Vaulter's entry points open the write scope, these calls do not.
+beforeEach(fn () => DriveTestHelpers::insideOperation());
 
 /**
  * VLT-REMED P5.2 — критическая секция upload-сессии. Это ДЕТЕРМИНИРОВАННЫЕ братья
@@ -69,7 +74,7 @@ it('advanceReceived() НЕ воскрешает терминальную сес�
     $session = UploadTestHelpers::session($storage, totalSizeBytes: 100);
 
     // Сессия ушла в терминальный статус (sweep/abort/commit) — как в гонке R-02.
-    $session->forceFill(['status' => $terminal])->save();
+    app(VaulterDatabase::class)->write(fn () => $session->forceFill(['status' => $terminal])->save());
 
     expect(fn () => app(UploadSessionStoreRepository::class)->advanceReceived($session, 42))
         ->toThrow(UploadConflictException::class);
@@ -119,7 +124,7 @@ it('vaulter:sweep-uploads реклеймит стухшую сессию и чи
     $session = UploadTestHelpers::session($storage, totalSizeBytes: 100);
 
     app(StagedUpload::class)->append($session, UploadTestHelpers::streamFor('0123456789'), 0);
-    $session->forceFill(['expires_at' => Carbon::now()->subHour()])->save();
+    app(VaulterDatabase::class)->write(fn () => $session->forceFill(['expires_at' => Carbon::now()->subHour()])->save());
 
     $this->artisan('vaulter:sweep-uploads')->assertSuccessful();
 
@@ -140,7 +145,7 @@ it('markCommitted() НЕ воскрешает реклеймленную сес�
     $storage = UploadTestHelpers::storage();
     $session = UploadTestHelpers::session($storage, totalSizeBytes: 10);
 
-    $session->forceFill(['status' => $terminal])->save();
+    app(VaulterDatabase::class)->write(fn () => $session->forceFill(['status' => $terminal])->save());
 
     expect(fn () => app(UploadSessionStoreRepository::class)->markCommitted($session, 777))
         ->toThrow(UploadConflictException::class);

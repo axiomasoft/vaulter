@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\Event;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
@@ -20,13 +21,13 @@ use Vaulter\Tests\Fixtures\TestUser;
  * folder (never a second parentless node), and an explicit parent must be a live
  * folder of the same drive.
  */
-function createDocumentUnder(DriveHandle $drive, string $name, ?Node $parent): Node
+function createDocumentUnder(DriveHandle $drive, string $name, Node|NodeSnapshot|null $parent): Node
 {
     return app(CreateDocumentAction::class)->execute(new CreateDocumentInput(
         storage: $drive->model(),
         name: $name,
         content: DocumentTestHelpers::content(),
-        parent: $parent,
+        parent: $parent === null ? null : DriveTestHelpers::model($parent),
     ));
 }
 
@@ -41,7 +42,7 @@ it('places a document without a parent under the drive root and lists it there',
 
     $this->getJson('api/vaulter/storages/'.$drive->model()->getKey().'/nodes')
         ->assertOk()
-        ->assertJsonPath('data.0.id', $node->getKey());
+        ->assertJsonPath('data.0.id', (string) $node->getKey());
 });
 
 it('rejects a document under a file, a document or a trashed folder', function (string $kind): void {

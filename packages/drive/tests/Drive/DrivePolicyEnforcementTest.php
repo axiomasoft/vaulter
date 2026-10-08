@@ -9,6 +9,7 @@ use Vaulter\Data\Drive\MoveOptions;
 use Vaulter\Data\Drive\RestoreOptions;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Uploads\InitiateUploadAction;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\DriveProvisioner;
@@ -88,7 +89,7 @@ it('treats NFC/NFD and case variants as one sibling name and lets a node change 
 it('never renames a stored name the policy refuses, but every new name passes it', function (): void {
     $drive = policyDrive();
     $legacy = $drive->folders()->create('legacy');
-    $legacy->forceFill(['name' => 'CON.txt'])->save();
+    app(VaulterDatabase::class)->write(fn () => DriveTestHelpers::model($legacy)->forceFill(['name' => 'CON.txt'])->save());
     $target = $drive->folders()->create('target');
 
     // Moving keeps the stored name untouched; renaming to it is refused.
@@ -133,7 +134,7 @@ it('enforces maxFolderDepth on create, upload, move, copy and restore', function
         ->and(fn () => $drive->nodes()->move($branch, $one))->toThrow(TreeDepthLimitExceededException::class)
         ->and(fn () => $drive->nodes()->copy($branch, $one))->toThrow(TreeDepthLimitExceededException::class)
         ->and(fn () => $drive->trash()->restore($trashed, new RestoreOptions(destination: $two)))->toThrow(TreeDepthLimitExceededException::class)
-        ->and($drive->nodes()->move($loose, $one)->parent_id)->toBe($one->id);
+        ->and($drive->nodes()->move($loose, $one)->parentId)->toBe($one->id);
 });
 
 it('checks the declared, streamed and final file size against maxFileBytes', function (): void {
@@ -143,7 +144,7 @@ it('checks the declared, streamed and final file size against maxFileBytes', fun
     expect(fn () => $drive->files()->upload(UploadSource::fromString('12345', 'big.txt')))->toThrow(FileSizeLimitExceededException::class)
         ->and(fn () => app(InitiateUploadAction::class)->execute($context, new InitiateUploadInput(protocol: UploadProtocol::Tus, targetParent: null, targetName: 'big.txt', totalSizeBytes: 5)))
         ->toThrow(FileSizeLimitExceededException::class)
-        ->and($drive->files()->upload(UploadSource::fromString('1234', 'fits.txt'))->size_bytes)->toBe(4);
+        ->and($drive->files()->upload(UploadSource::fromString('1234', 'fits.txt'))->sizeBytes)->toBe(4);
 });
 
 it('renders the limit problems with their stable codes', function (): void {

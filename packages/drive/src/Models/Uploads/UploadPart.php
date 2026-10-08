@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Models\Uploads;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Support\Carbon;
 use Vaulter\Configuration\DatabaseConfig;
+use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 
 /**
@@ -29,6 +30,7 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  */
 class UploadPart extends Pivot
 {
+    use GuardsWrites;
     use ResolvesVaulterConnection;
 
     public $incrementing = false;

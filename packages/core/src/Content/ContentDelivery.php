@@ -10,6 +10,7 @@ use Vaulter\Configuration\DownloadsConfig;
 use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Contracts\Cas\DirectContentUrlSigner;
 use Vaulter\Data\Drive\FileStream;
+use Vaulter\Data\Snapshots\Mapping\FileRevisionSnapshotMapper;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Operations\OperationKind;
 use Vaulter\Exceptions\Files\ContentUnavailableException;
@@ -26,7 +27,7 @@ use Vaulter\Sharing\ShareResolver;
 /** Every new byte or capability request enters fresh authorization and availability. */
 final readonly class ContentDelivery
 {
-    public function __construct(private NodeLocator $locator, private OperationGuard $access, private ContentAvailabilityGuard $availability, private BlobStore $blobs, private DownloadsConfig $downloads, private ScanEvidenceRepository $evidence) {}
+    public function __construct(private NodeLocator $locator, private OperationGuard $access, private ContentAvailabilityGuard $availability, private BlobStore $blobs, private DownloadsConfig $downloads, private ScanEvidenceRepository $evidence, private FileRevisionSnapshotMapper $revisions) {}
 
     public function stream(OperationContext $context, Node $node, FileRevision $revision): FileStream
     {
@@ -83,6 +84,6 @@ final readonly class ContentDelivery
             throw NodeNotFoundException::forId($node->id);
         }
 
-        return new FileStream($stream, $revision->original_name ?: $node->name, $revision->mime_type ?? 'application/octet-stream', $revision->size_bytes, $revision->sha256, $revision);
+        return new FileStream($stream, $revision->original_name ?: $node->name, $revision->mime_type ?? 'application/octet-stream', $revision->size_bytes, $revision->sha256, $this->revisions->map($revision, $node->file()->firstOrFail()));
     }
 }

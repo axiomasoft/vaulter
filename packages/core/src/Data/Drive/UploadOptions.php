@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Vaulter\Data\Drive;
 
 use DateTimeInterface;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Enums\Drive\OnNameConflict;
-use Vaulter\Models\Drive\Node;
 
 final readonly class UploadOptions
 {
     public function __construct(
-        public Node|int|string|null $parent = null,
+        public NodeSnapshot|string|int|null $parent = null,
         public ?string $name = null,
         public OnNameConflict $onConflict = OnNameConflict::Fail,
         public ?string $declaredMimeType = null,
@@ -23,7 +23,7 @@ final readonly class UploadOptions
         return new self;
     }
 
-    public function parent(Node|int|string|null $parent): self
+    public function parent(NodeSnapshot|string|int|null $parent): self
     {
         return new self(parent: $parent, name: $this->name, onConflict: $this->onConflict, declaredMimeType: $this->declaredMimeType, clientModifiedAt: $this->clientModifiedAt);
     }

@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Events\Access\NodeGrantCreated;
 use Vaulter\Models\Webhooks\Outbox;
@@ -68,7 +69,7 @@ it('confines a staging failure to a savepoint so the mutation still commits, F-P
     {
         public function __construct(MetricsRecorder $metrics)
         {
-            parent::__construct(vaulterConfig: app(VaulterConfig::class), metrics: $metrics);
+            parent::__construct(vaulterConfig: app(VaulterConfig::class), metrics: $metrics, database: app(VaulterDatabase::class));
         }
 
         #[Override]

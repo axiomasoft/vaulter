@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Throwable;
+use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Trash\PurgeNodeAction;
@@ -23,6 +24,8 @@ use Vaulter\VaulterManager;
 
 final class PurgeTrashCommand extends Command
 {
+    use OpensWriteScope;
+
     protected $signature = 'vaulter:purge-trash {--days= : Override the retention window}';
 
     protected $description = 'Permanently delete trashed nodes whose retention window has elapsed.';

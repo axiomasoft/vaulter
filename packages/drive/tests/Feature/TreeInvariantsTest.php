@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\DriveHandle;
 use Vaulter\Drive\Exceptions\Nodes\NodeCycleException;
 use Vaulter\Enums\Drive\NodeKind;
@@ -34,18 +36,18 @@ beforeEach(function (): void {
 /**
  * A destination that is not a live folder of the drive.
  */
-function invalidDestination(DriveHandle $drive, string $kind): Node
+function invalidDestination(DriveHandle $drive, string $kind): Node|NodeSnapshot
 {
     return match ($kind) {
         'file' => $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('bytes'), 'target.bin')),
         // Drive cannot depend on documents; a document node is a plain kind=document row.
-        'document' => app(NodeStoreRepository::class)->create([
+        'document' => app(NodeSnapshotMapper::class)->map(app(NodeStoreRepository::class)->create([
             'drive_id' => $drive->model()->getKey(),
-            'parent_id' => $drive->root()->getKey(),
+            'parent_id' => $drive->root()->id,
             'kind' => NodeKind::Document,
             'name' => 'Spec',
             'size_bytes' => 0,
-        ]),
+        ])),
         'trashed folder' => $drive->nodes()->trash($drive->folders()->create('Gone')),
     };
 }
@@ -56,11 +58,11 @@ it('rejects creating a folder under a non-folder or trashed destination', functi
     $drive = DriveTestHelpers::drive();
     $destination = invalidDestination($drive, $kind);
 
-    expect(fn (): Node => $drive->folders()->create('Child', $destination))->toThrow($kind === 'trashed folder' ? NodeNotFoundException::class : InvalidDestinationException::class);
+    expect(fn (): NodeSnapshot => $drive->folders()->create('Child', $destination))->toThrow($kind === 'trashed folder' ? NodeNotFoundException::class : InvalidDestinationException::class);
 
     $this->postJson('api/vaulter/storages/'.$drive->model()->getKey().'/folders', [
         'name' => 'Child',
-        'parent_id' => $destination->getKey(),
+        'parent_id' => $destination->id,
     ])->assertStatus($kind === 'trashed folder' ? 404 : 409)->assertJsonPath('code', $kind === 'trashed folder' ? 'node_not_found' : 'invalid_destination');
 })->with($destinations);
 
@@ -68,11 +70,11 @@ it('rejects uploading a file into a non-folder or trashed destination', function
     $drive = DriveTestHelpers::drive();
     $destination = invalidDestination($drive, $kind);
 
-    expect(fn (): Node => $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('x'), 'x.bin'), new UploadOptions(parent: $destination)))
+    expect(fn (): NodeSnapshot => $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('x'), 'x.bin'), new UploadOptions(parent: $destination)))
         ->toThrow($kind === 'trashed folder' ? NodeNotFoundException::class : InvalidDestinationException::class);
 
     $this->postJson('api/vaulter/storages/'.$drive->model()->getKey().'/uploads', [
-        'parent_id' => $destination->getKey(),
+        'parent_id' => $destination->id,
         'file' => UploadedFile::fake()->createWithContent('x.txt', 'x'),
     ])->assertStatus($kind === 'trashed folder' ? 404 : 409)->assertJsonPath('code', $kind === 'trashed folder' ? 'node_not_found' : 'invalid_destination');
 })->with($destinations);
@@ -82,9 +84,9 @@ it('rejects moving a node into a non-folder or trashed destination', function (s
     $destination = invalidDestination($drive, $kind);
     $node = $drive->folders()->create('Mover');
 
-    expect(fn (): Node => $drive->nodes()->move($node, $destination))->toThrow($kind === 'trashed folder' ? NodeNotFoundException::class : InvalidDestinationException::class);
+    expect(fn (): NodeSnapshot => $drive->nodes()->move($node, $destination))->toThrow($kind === 'trashed folder' ? NodeNotFoundException::class : InvalidDestinationException::class);
 
-    $this->postJson('api/vaulter/nodes/'.$node->getKey().'/move', ['parent_id' => $destination->getKey()])
+    $this->postJson('api/vaulter/nodes/'.$node->id.'/move', ['parent_id' => $destination->id])
         ->assertStatus($kind === 'trashed folder' ? 404 : 409)
         ->assertJsonPath('code', $kind === 'trashed folder' ? 'node_not_found' : 'invalid_destination');
 })->with($destinations);
@@ -94,9 +96,9 @@ it('rejects copying a node into a non-folder or trashed destination', function (
     $destination = invalidDestination($drive, $kind);
     $node = $drive->folders()->create('Source');
 
-    expect(fn (): Node => $drive->nodes()->copy($node, $destination))->toThrow($kind === 'trashed folder' ? NodeNotFoundException::class : InvalidDestinationException::class);
+    expect(fn (): NodeSnapshot => $drive->nodes()->copy($node, $destination))->toThrow($kind === 'trashed folder' ? NodeNotFoundException::class : InvalidDestinationException::class);
 
-    $this->postJson('api/vaulter/nodes/'.$node->getKey().'/copy', ['parent_id' => $destination->getKey()])
+    $this->postJson('api/vaulter/nodes/'.$node->id.'/copy', ['parent_id' => $destination->id])
         ->assertStatus($kind === 'trashed folder' ? 404 : 409)
         ->assertJsonPath('code', $kind === 'trashed folder' ? 'node_not_found' : 'invalid_destination');
 })->with($destinations);
@@ -109,18 +111,18 @@ it('re-homes a restore to the root when the original parent is no longer a live 
     $drive->nodes()->trash($child);
     $drive->nodes()->trash($parent);
 
-    $this->postJson('api/vaulter/nodes/'.$child->getKey().'/restore')
+    $this->postJson('api/vaulter/nodes/'.$child->id.'/restore')
         ->assertOk()
-        ->assertJsonPath('data.parent_id', $drive->model()->root_node_id);
+        ->assertJsonPath('data.parent_id', (string) $drive->model()->root_node_id);
 });
 
 it('refuses to restore a node that is not in the trash', function (): void {
     $drive = DriveTestHelpers::drive();
     $node = $drive->folders()->create('Live');
 
-    expect(fn (): Node => $drive->trash()->restore($node))->toThrow(NodeNotTrashedException::class);
+    expect(fn (): NodeSnapshot => $drive->trash()->restore($node))->toThrow(NodeNotTrashedException::class);
 
-    $this->postJson('api/vaulter/nodes/'.$node->getKey().'/restore')
+    $this->postJson('api/vaulter/nodes/'.$node->id.'/restore')
         ->assertStatus(409)
         ->assertJsonPath('code', 'node_not_trashed');
 });
@@ -131,16 +133,16 @@ it('rejects a folder of another drive as the destination', function (string $ope
     $node = $drive->folders()->create('Local');
 
     $run = match ($operation) {
-        'create folder' => fn (): Node => $drive->folders()->create('Child', $foreign),
-        'upload' => fn (): Node => $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('x'), 'x.bin'), new UploadOptions(parent: $foreign)),
-        'move' => fn (): Node => $drive->nodes()->move($node, $foreign),
-        'copy' => fn (): Node => $drive->nodes()->copy($node, $foreign),
+        'create folder' => fn (): NodeSnapshot => $drive->folders()->create('Child', $foreign),
+        'upload' => fn (): NodeSnapshot => $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('x'), 'x.bin'), new UploadOptions(parent: $foreign)),
+        'move' => fn (): NodeSnapshot => $drive->nodes()->move($node, $foreign),
+        'copy' => fn (): NodeSnapshot => $drive->nodes()->copy($node, $foreign),
     };
 
     expect($run)->toThrow(NodeNotFoundException::class);
 
     // Over HTTP a foreign node id is not addressable through this drive at all.
-    $this->postJson('api/vaulter/nodes/'.$node->getKey().'/move', ['parent_id' => $foreign->getKey()])
+    $this->postJson('api/vaulter/nodes/'.$node->id.'/move', ['parent_id' => $foreign->id])
         ->assertNotFound();
 })->with(['create folder', 'upload', 'move', 'copy']);
 
@@ -148,7 +150,7 @@ it('hides a foreign destination as 404 node_not_found', function (): void {
     $drive = DriveTestHelpers::drive();
     $foreign = DriveTestHelpers::drive()->folders()->create('Elsewhere');
 
-    $exception = rescue(fn (): Node => $drive->folders()->create('Child', $foreign), fn (Throwable $e): Throwable => $e, report: false);
+    $exception = rescue(fn (): NodeSnapshot => $drive->folders()->create('Child', $foreign), fn (Throwable $e): Throwable => $e, report: false);
 
     expect($exception)->toBeInstanceOf(NodeNotFoundException::class);
 
@@ -164,27 +166,27 @@ it('never renames, moves, trashes or deletes the root', function (string $operat
     $folder = $drive->folders()->create('Folder');
 
     $run = match ($operation) {
-        'rename' => fn (): Node => $drive->nodes()->rename($root, 'Renamed'),
-        'move' => fn (): Node => $drive->nodes()->move($root, $folder),
-        'trash' => fn (): Node => $drive->nodes()->trash($root),
+        'rename' => fn (): NodeSnapshot => $drive->nodes()->rename($root, 'Renamed'),
+        'move' => fn (): NodeSnapshot => $drive->nodes()->move($root, $folder),
+        'trash' => fn (): NodeSnapshot => $drive->nodes()->trash($root),
         'force delete' => fn () => $drive->trash()->purge($root),
-        'copy' => fn (): Node => $drive->nodes()->copy($root, $folder),
+        'copy' => fn (): NodeSnapshot => $drive->nodes()->copy($root, $folder),
     };
 
     expect($run)->toThrow(InvalidDestinationException::class, 'drive root');
 
     $request = match ($operation) {
-        'rename' => fn () => $this->patchJson('api/vaulter/nodes/'.$root->getKey(), ['name' => 'Renamed']),
-        'move' => fn () => $this->postJson('api/vaulter/nodes/'.$root->getKey().'/move', ['parent_id' => $folder->getKey()]),
-        'trash' => fn () => $this->deleteJson('api/vaulter/nodes/'.$root->getKey()),
-        'force delete' => fn () => $this->deleteJson('api/vaulter/nodes/'.$root->getKey().'/force'),
-        'copy' => fn () => $this->postJson('api/vaulter/nodes/'.$root->getKey().'/copy', ['parent_id' => $folder->getKey()]),
+        'rename' => fn () => $this->patchJson('api/vaulter/nodes/'.$root->id, ['name' => 'Renamed']),
+        'move' => fn () => $this->postJson('api/vaulter/nodes/'.$root->id.'/move', ['parent_id' => $folder->id]),
+        'trash' => fn () => $this->deleteJson('api/vaulter/nodes/'.$root->id),
+        'force delete' => fn () => $this->deleteJson('api/vaulter/nodes/'.$root->id.'/force'),
+        'copy' => fn () => $this->postJson('api/vaulter/nodes/'.$root->id.'/copy', ['parent_id' => $folder->id]),
     };
 
     $request()->assertStatus(409)->assertJsonPath('code', 'invalid_destination');
 
-    expect($root->refresh()->parent_id)->toBeNull()
-        ->and($root->trashed_at)->toBeNull()
+    expect(DriveTestHelpers::model($root)->parent_id)->toBeNull()
+        ->and($root->trashedAt)->toBeNull()
         ->and($root->name)->toBe('');
 })->with(['rename', 'move', 'trash', 'force delete', 'copy']);
 
@@ -194,18 +196,18 @@ it('only force-deletes from the trash', function (): void {
 
     expect(fn () => $drive->trash()->purge($node))->toThrow(NodeNotTrashedException::class);
 
-    $this->deleteJson('api/vaulter/nodes/'.$node->getKey().'/force')
+    $this->deleteJson('api/vaulter/nodes/'.$node->id.'/force')
         ->assertStatus(409)
         ->assertJsonPath('code', 'node_not_trashed');
 
-    expect(Node::query()->find($node->getKey()))->not->toBeNull();
+    expect(Node::query()->find($node->id))->not->toBeNull();
 });
 
 it('refuses to trash a node that is already in the trash', function (): void {
     $drive = DriveTestHelpers::drive();
     $node = $drive->nodes()->trash($drive->folders()->create('Twice'));
 
-    expect(fn (): Node => $drive->nodes()->trash($node))->toThrow(NodeNotFoundException::class);
+    expect(fn (): NodeSnapshot => $drive->nodes()->trash($node))->toThrow(NodeNotFoundException::class);
 });
 
 it('rejects moving a folder into its own subtree', function (): void {
@@ -213,8 +215,8 @@ it('rejects moving a folder into its own subtree', function (): void {
     $parent = $drive->folders()->create('Parent');
     $child = $drive->folders()->create('Child', $parent);
 
-    expect(fn (): Node => $drive->nodes()->move($parent, $child))->toThrow(NodeCycleException::class)
-        ->and(fn (): Node => $drive->nodes()->move($parent, $parent))->toThrow(NodeCycleException::class);
+    expect(fn (): NodeSnapshot => $drive->nodes()->move($parent, $child))->toThrow(NodeCycleException::class)
+        ->and(fn (): NodeSnapshot => $drive->nodes()->move($parent, $parent))->toThrow(NodeCycleException::class);
 });
 
 it('resolves a missing destination to the root instead of a parentless node', function (): void {
@@ -224,13 +226,13 @@ it('resolves a missing destination to the root instead of a parentless node', fu
     $rootId = $drive->model()->root_node_id;
 
     $this->postJson('api/vaulter/storages/'.$storageId.'/folders', ['name' => 'Created'])
-        ->assertJsonPath('data.parent_id', $rootId);
+        ->assertJsonPath('data.parent_id', (string) $rootId);
     $this->postJson('api/vaulter/storages/'.$storageId.'/uploads', ['file' => UploadedFile::fake()->createWithContent('u.txt', 'u')])
-        ->assertJsonPath('data.parent_id', $rootId);
-    $this->postJson('api/vaulter/nodes/'.$folder->getKey().'/copy', ['parent_id' => null, 'name' => 'Copied'])
-        ->assertJsonPath('data.parent_id', $rootId);
-    $this->postJson('api/vaulter/nodes/'.$folder->getKey().'/move', ['parent_id' => null])
-        ->assertJsonPath('data.parent_id', $rootId);
+        ->assertJsonPath('data.parent_id', (string) $rootId);
+    $this->postJson('api/vaulter/nodes/'.$folder->id.'/copy', ['parent_id' => null, 'name' => 'Copied'])
+        ->assertJsonPath('data.parent_id', (string) $rootId);
+    $this->postJson('api/vaulter/nodes/'.$folder->id.'/move', ['parent_id' => null])
+        ->assertJsonPath('data.parent_id', (string) $rootId);
 
     expect(Node::query()->where('drive_id', $storageId)->whereNull('parent_id')->pluck('id')->all())
         ->toEqual([$rootId]);
@@ -255,11 +257,11 @@ it("restores to the parent recorded on the locked row, not the caller's stale mo
     $stale = $drive->folders()->create('Node', $a);
 
     // Another request moves the node to B and trashes it; the caller still holds the old model.
-    $fresh = Node::query()->findOrFail($stale->getKey());
-    $drive->nodes()->move($fresh, $b);
-    $drive->nodes()->trash($fresh);
+    $fresh = Node::query()->findOrFail($stale->id);
+    $drive->nodes()->move($fresh->id, $b);
+    $drive->nodes()->trash($fresh->id);
 
-    expect($drive->trash()->restore($stale)->parent_id)->toEqual($b->getKey());
+    expect($drive->trash()->restore($stale)->parentId)->toEqual($b->id);
 });
 
 it('takes the tree lock before any node row lock', function (string $operation): void {
@@ -312,12 +314,12 @@ it("locks a new version's target before the CAS lock", function (): void {
 it('refuses a new version for a node deleted after it was loaded', function (): void {
     $drive = DriveTestHelpers::drive();
     $file = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('v1'), 'f.bin'));
-    $stale = Node::query()->findOrFail($file->getKey());
+    $stale = Node::query()->findOrFail($file->id);
 
     $drive->nodes()->trash($file);
     $drive->trash()->purge($file);
 
-    expect(fn (): FileRevision => $drive->files()->addRevision($stale, UploadSource::fromStream(DriveTestHelpers::streamFor('v2'), $stale->name)))->toThrow(NodeNotFoundException::class);
+    expect(fn (): FileRevision => $drive->files()->addRevision($stale->id, UploadSource::fromStream(DriveTestHelpers::streamFor('v2'), $stale->name)))->toThrow(NodeNotFoundException::class);
 });
 
 it('purges trash under the tree lock taken before the trashed root row', function (): void {

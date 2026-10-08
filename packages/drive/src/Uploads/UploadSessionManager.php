@@ -11,6 +11,7 @@ use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler;
@@ -68,28 +69,30 @@ final readonly class UploadSessionManager
         $this->assertWithinMaxBytes($data->totalSizeBytes);
         $this->assertWithinActiveSessionCap($context->actor->ref()->id);
 
-        $session = $this->sessions->create([
-            'tenant_id' => $context->drive->tenant_id,
-            'drive_id' => $context->driveId(),
-            'upload_id' => (string) Str::uuid(),
-            'target_node_id' => $data->targetNode instanceof Node ? $data->targetNode->getKey() : $data->targetNode,
-            'target_parent_id' => $data->targetParent instanceof Node ? $data->targetParent->getKey() : $data->targetParent,
-            'target_name' => $data->targetName,
-            'protocol' => $data->protocol,
-            'status' => UploadStatus::Initiated,
-            'expected_sha256' => $data->expectedSha256,
-            'total_size_bytes' => $data->totalSizeBytes,
-            'received_bytes' => 0,
-            'chunk_size' => $this->driveConfig->chunkSize(),
-            'mime_type' => $data->mimeType,
-            'metadata' => [...$data->metadata, 'actor_type' => $context->actor->ref()->type, 'expected_sequence' => $data->expectedSequence],
-            'expires_at' => Carbon::now()->addHours($this->driveConfig->sessionTtlHours()),
-            'created_by' => $context->actor->ref()->id,
-        ]);
+        $session = $this->database->write(function () use ($context, $data): UploadSession {
+            $session = $this->sessions->create([
+                'tenant_id' => $context->drive->tenant_id,
+                'drive_id' => $context->driveId(),
+                'upload_id' => (string) Str::uuid(),
+                'target_node_id' => $data->targetNode instanceof Node ? $data->targetNode->getKey() : ($data->targetNode instanceof NodeSnapshot ? $data->targetNode->id : $data->targetNode),
+                'target_parent_id' => $data->targetParent instanceof Node ? $data->targetParent->getKey() : ($data->targetParent instanceof NodeSnapshot ? $data->targetParent->id : $data->targetParent),
+                'target_name' => $data->targetName,
+                'protocol' => $data->protocol,
+                'status' => UploadStatus::Initiated,
+                'expected_sha256' => $data->expectedSha256,
+                'total_size_bytes' => $data->totalSizeBytes,
+                'received_bytes' => 0,
+                'chunk_size' => $this->driveConfig->chunkSize(),
+                'mime_type' => $data->mimeType,
+                'metadata' => [...$data->metadata, 'actor_type' => $context->actor->ref()->type, 'expected_sequence' => $data->expectedSequence],
+                'expires_at' => Carbon::now()->addHours($this->driveConfig->sessionTtlHours()),
+                'created_by' => $context->actor->ref()->id,
+            ]);
 
-        $this->handlerFor($session)->initialise($session);
+            $this->handlerFor($session)->initialise($session);
 
-        $session = $session->refresh();
+            return $session->refresh();
+        });
 
         // F-P1.4-13: the lifecycle audit gap — create had no activity trace at all.
         event(new UploadInitiated($session, $context->actor->ref()->id));

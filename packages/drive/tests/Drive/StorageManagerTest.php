@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Event;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Events\Drives\DriveCreated;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Profiles\UnknownProfileException;
@@ -28,10 +29,10 @@ it('создаёт storage и корневую папку при первом о
 
     $root = $drive->root();
 
-    expect($root)->toBeInstanceOf(Node::class)
+    expect($root)->toBeInstanceOf(NodeSnapshot::class)
         ->and($root->kind)->toBe(NodeKind::Folder)
-        ->and($root->parent_id)->toBeNull()
-        ->and($root->getKey())->toEqual($drive->model()->root_node_id);
+        ->and($root->parentId)->toBeNull()
+        ->and($root->id)->toEqual($drive->model()->root_node_id);
 });
 
 it('идемпотентен: второе обращение возвращает тот же storage', function (): void {

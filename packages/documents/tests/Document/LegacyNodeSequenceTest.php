@@ -16,6 +16,7 @@ use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\Documents\FakeExporter;
 
 function legacySequenceDocument(): Node
@@ -26,7 +27,7 @@ function legacySequenceDocument(): Node
         storage: $drive->model(),
         name: 'Sequence document',
         content: DocumentTestHelpers::content('initial'),
-        parent: $drive->root(),
+        parent: DriveTestHelpers::model($drive->root()),
     ));
 }
 
@@ -55,7 +56,7 @@ it('keeps node and content validators independent: a rename bumps the node, not 
     $node = legacySequenceDocument();
     $drive = $node->storage;
 
-    Vaulter::drive($drive)->asSystem('validator independence')->nodes()->rename(node: $node, name: 'Renamed', expectedSequence: 0);
+    Vaulter::drive($drive)->asSystem('validator independence')->nodes()->rename(node: $node->getKey(), name: 'Renamed', expectedSequence: 0);
     app(UpdateDocumentContentAction::class)->execute(new UpdateDocumentContentInput(
         node: $node->refresh(),
         content: DocumentTestHelpers::content('after rename'),

@@ -7,6 +7,7 @@ use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Data\Drive\CopyOptions;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -21,24 +22,24 @@ it('copies node and current version attributes and charges the exact logical siz
     $dest = $drive->folders()->create('Destination');
     $source = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('first'), 'source.txt'), new UploadOptions(declaredMimeType: 'text/plain'));
     $drive->actingAs(DriveTestHelpers::actor($drive, 7))->files()->addRevision($source, UploadSource::fromStream(DriveTestHelpers::streamFor('second bytes'), $source->name));
-    $source->refresh()->forceFill(['properties' => ['acme' => ['k' => 'v']], 'inherit_grants' => false])->save();
-    $head = $source->file()->firstOrFail()->currentRevision()->firstOrFail();
+    app(VaulterDatabase::class)->write(fn () => DriveTestHelpers::model($source)->forceFill(['properties' => ['acme' => ['k' => 'v']], 'inherit_grants' => false])->save());
+    $head = DriveTestHelpers::model($source)->file()->firstOrFail()->currentRevision()->firstOrFail();
     $used = $drive->model()->refresh()->used_bytes;
 
     AccessTestHelpers::grant($source, RoleRegistry::OWNER, subjectId: 17);
-    $copy = $drive->actingAs(DriveTestHelpers::actor($drive, 17))->nodes()->copy($source, $dest)->refresh();
-    $file = $copy->file()->firstOrFail();
-    $version = $copy->file()->firstOrFail()->currentRevision()->firstOrFail();
+    $copy = $drive->actingAs(DriveTestHelpers::actor($drive, 17))->nodes()->copy($source, $dest);
+    $file = DriveTestHelpers::model($copy)->file()->firstOrFail();
+    $version = DriveTestHelpers::model($copy)->file()->firstOrFail()->currentRevision()->firstOrFail();
 
-    expect($copy->parent_id)->toEqual($dest->getKey())
+    expect($copy->parentId)->toEqual($dest->id)
         ->and($copy->name)->toBe('source.txt')
-        ->and($copy->mime_type)->toBe('text/plain')
+        ->and($copy->mimeType)->toBe('text/plain')
         ->and($copy->extension)->toBe($source->extension)
-        ->and($copy->size_bytes)->toBe(12)
+        ->and($copy->sizeBytes)->toBe(12)
         ->and($copy->properties)->toBe(['acme' => ['k' => 'v']])
-        ->and($copy->inherit_grants)->toBeFalse()
-        ->and($copy->created_by)->toEqual(17)
-        ->and($file->node_id)->toEqual($copy->getKey())
+        ->and($copy->inheritsAccess)->toBeFalse()
+        ->and($copy->createdBy)->toEqual('17')
+        ->and($file->node_id)->toEqual($copy->id)
         ->and($file->size_bytes)->toBe(12)
         ->and($file->mime_type)->toBe('text/plain')
         ->and($file->revision_count)->toBe(1)
@@ -71,6 +72,6 @@ it('charges only live copied descendants and excludes trashed children', functio
 
     $copy = $drive->nodes()->copy($folder, destination: null, options: new CopyOptions(name: 'Copy'));
 
-    expect($copy->children()->pluck('name')->all())->toBe(['live.bin'])
+    expect(DriveTestHelpers::model($copy)->children()->pluck('name')->all())->toBe(['live.bin'])
         ->and($drive->model()->refresh()->used_bytes)->toBe($used + 3);
 });

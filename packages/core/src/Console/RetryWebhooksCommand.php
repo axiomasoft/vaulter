@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Console;
 
 use Illuminate\Console\Command;
+use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Webhooks\WebhookRetryDispatcher;
 
 /**
@@ -22,6 +23,8 @@ use Vaulter\Webhooks\WebhookRetryDispatcher;
  */
 final class RetryWebhooksCommand extends Command
 {
+    use OpensWriteScope;
+
     protected $signature = 'vaulter:retry-webhooks';
 
     protected $description = 'Re-dispatch webhook deliveries whose backoff window has elapsed (§2.11).';

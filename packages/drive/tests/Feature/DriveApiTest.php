@@ -80,7 +80,7 @@ it('runs the full CRUD cycle: folder → upload → list → show → rename →
     // move to the storage root
     $this->postJson('api/vaulter/nodes/'.$node.'/move', ['parent_id' => null])
         ->assertOk()
-        ->assertJsonPath('data.parent_id', $storage->refresh()->root_node_id);
+        ->assertJsonPath('data.parent_id', (string) $storage->refresh()->root_node_id);
 
     // copy (shares the same blob via dedup)
     $copy = $this->postJson('api/vaulter/nodes/'.$node.'/copy', ['name' => 'copy.txt'])

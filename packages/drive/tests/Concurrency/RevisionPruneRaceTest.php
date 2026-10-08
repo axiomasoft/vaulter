@@ -41,7 +41,7 @@ it('honours a pin and a new head committed between the prune choice and its dele
     foreach (['r2', 'r3', 'r4'] as $bytes) {
         $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor($bytes), 'a.txt'));
     }
-    $ids = $node->file()->firstOrFail()->versions()->orderBy('number')->pluck('id')->all();
+    $ids = DriveTestHelpers::model($node)->file()->firstOrFail()->versions()->orderBy('number')->pluck('id')->all();
     $driveId = $drive->model()->id;
 
     $outcomes = ForkRace::run([
@@ -70,7 +70,7 @@ it('honours a pin and a new head committed between the prune choice and its dele
         expect($outcome->ok)->toBeTrue($outcome->message ?? '');
     }
 
-    $file = $node->file()->firstOrFail();
+    $file = DriveTestHelpers::model($node)->file()->firstOrFail();
     expect($outcomes[0]->value)->toMatchArray(['candidates' => 3, 'deleted' => 2, 'skipped' => 1])
         ->and($outcomes[2]->value)->toBe(5)
         ->and($file->versions()->orderBy('number')->pluck('number')->all())->toBe([2, 4, 5])
@@ -84,7 +84,7 @@ it('honours a pin and a new head committed between the prune choice and its dele
 it('releases the bytes of a revision once when two deletes race', function (): void {
     $drive = DriveTestHelpers::drive();
     $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('first bytes'), 'a.txt'));
-    $first = $node->file()->firstOrFail()->current_revision_id;
+    $first = DriveTestHelpers::model($node)->file()->firstOrFail()->current_revision_id;
     $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor('second'), 'a.txt'));
 
     $outcomes = ForkRace::run(array_map(

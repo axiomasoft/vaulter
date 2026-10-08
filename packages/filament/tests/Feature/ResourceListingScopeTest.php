@@ -172,16 +172,16 @@ it('V31 Filament node grant share and activity listings stay in the current tena
     $a = Vaulter::drive(DriveBuilder::storage())->asSystem('fixture');
     $nodeA = DriveBuilder::folder($a->model(), 'Tenant A');
     $grantA = DriveBuilder::grant($nodeA, $actor, role: RoleRegistry::OWNER);
-    $shareA = $a->shares()->create($nodeA, new ShareLinkInput);
+    $shareA = $a->shares()->create($nodeA->getKey(), new ShareLinkInput);
     $driveAId = $a->model()->id;
     $resolver->tenant = 'B';
     $b = Vaulter::drive(DriveBuilder::storage())->asSystem('fixture');
     $nodeB = DriveBuilder::folder($b->model(), 'Tenant B');
     DriveBuilder::grant($nodeB, $actor, role: RoleRegistry::OWNER);
-    DriveBuilder::grant($b->root(), $actor, role: RoleRegistry::READER, scope: GrantScope::Item);
-    $shareB = $b->shares()->create($nodeB, new ShareLinkInput);
+    DriveBuilder::grant(Node::query()->findOrFail($b->root()->id), $actor, role: RoleRegistry::READER, scope: GrantScope::Item);
+    $shareB = $b->shares()->create($nodeB->getKey(), new ShareLinkInput);
     expect(NodeResource::getEloquentQuery()->pluck('id')->all())->toContain($nodeB->id)->not->toContain($nodeA->id)
         ->and(NodeGrantResource::getEloquentQuery()->pluck('id')->all())->not->toContain($grantA->id)
-        ->and(NodeShareResource::getEloquentQuery()->pluck('id')->all())->toContain($shareB->share->id)->not->toContain($shareA->share->id)
+        ->and(array_map('strval', NodeShareResource::getEloquentQuery()->pluck('id')->all()))->toContain($shareB->link->id)->not->toContain($shareA->link->id)
         ->and(ActivityResource::getEloquentQuery()->pluck('drive_id')->all())->toContain($b->model()->id)->not->toContain($driveAId);
 });

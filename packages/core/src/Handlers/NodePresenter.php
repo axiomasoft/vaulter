@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Handlers;
 
 use Vaulter\Contracts\Handlers\NodePresenter as NodePresenterContract;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Enums\Handlers\Capability;
 use Vaulter\Models\Drive\Node;
 use Vaulter\ValueObjects\Handlers\NodePresentation;
@@ -30,7 +31,7 @@ final class NodePresenter implements NodePresenterContract
         private readonly FileDescriptorFactory $descriptors,
     ) {}
 
-    public function present(Node $node): NodePresentation
+    public function present(Node|NodeSnapshot $node): NodePresentation
     {
         $descriptor = $this->descriptors->forNode($node);
 

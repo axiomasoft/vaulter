@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Testing\TestResponse;
 use Illuminate\Validation\ValidationException;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
 use Vaulter\Drive\Exceptions\Uploads\StagedUploadMissingException;
@@ -16,6 +17,9 @@ use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
+
+// These tests drive handlers and repositories directly; Vaulter's entry points open the write scope, these calls do not.
+beforeEach(fn () => DriveTestHelpers::insideOperation());
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers — prefixed r07bS3 / r07bStage.
@@ -90,7 +94,7 @@ beforeEach(function (): void {
 // would make $e->errors() lack the key, silencing the diagnostic.
 it('[r07bS3] putPart ValidationException for a non-open session carries the status error key', function (): void {
     $session = r07bS3RawSession(totalSizeBytes: 4);
-    $session->forceFill(['status' => UploadStatus::Committed->value])->save();
+    app(VaulterDatabase::class)->write(fn () => $session->forceFill(['status' => UploadStatus::Committed->value])->save());
 
     try {
         app(S3MultipartHandler::class)->putPart(

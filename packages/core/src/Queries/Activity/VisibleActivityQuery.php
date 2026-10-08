@@ -19,7 +19,9 @@ use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\OperationContext;
 
-/** @internal Bounded exact scan; cursors advance over every examined candidate. */
+/**
+ * @internal Bounded exact scan; cursors advance over every examined candidate.
+ */
 final readonly class VisibleActivityQuery
 {
     /** Context keys that describe who holds access; only a Share-capable reader sees them. */
@@ -27,6 +29,7 @@ final readonly class VisibleActivityQuery
 
     public function __construct(private VaulterConfig $config, private ListingConfig $listing, private OperationGuard $guard, private Repository $repository) {}
 
+    /** @return VisibleActivityPaginator<Activity> */
     public function execute(OperationContext $context, ListOptions $options, ?Node $node = null, ?EventType $verb = null): VisibleActivityPaginator
     {
         if ($options->sort !== NodeSort::Default || $options->descending || $options->kinds !== []) {
