@@ -768,6 +768,26 @@ describe('VaulterNodeSharePanel', () => {
     }
   }
 
+  it.each([
+    ['previewer', 1],
+    ['reader', 65],
+    ['writer', 1991],
+    ['organizer', 2007],
+    ['owner', 4063],
+  ])('sends explicit anonymous permissions for the %s role', async (level, permissions) => {
+    const createFn = vi.fn().mockResolvedValue({ ...share({ id: 5 }), token: 'token', url: 'https://x/share/token' })
+    const wrapper = mount(VaulterNodeSharePanel, {
+      props: { nodeId: 9, autoLoad: false, levels: [level] },
+      ...withClient({ nodeShares: { create: createFn } as never }),
+    })
+
+    await wrapper.get('.vaulter-node-share-panel__create').trigger('submit')
+    await flushAll()
+
+    expect(createFn).toHaveBeenCalledWith(9, expect.objectContaining({ level, permissions }))
+    expect(permissions & 32).toBe(0)
+  })
+
   it('shows the one-time token on create and never renders a stored raw token in the list', async () => {
     const created: NodeShareCreated = {
       ...share({ id: 5, token_prefix: 'abc' }),

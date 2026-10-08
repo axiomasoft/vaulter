@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Connection;
+use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Carbon;
 use Symfony\Component\Process\ExecutableFinder;
@@ -12,7 +14,9 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Schema\UpgradePreflightException;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Sharing\ShareContext;
 use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Tests\Sharing\ShareTestHelpers;
 use Vaulter\Tests\Upgrade\LoadsV02Fixture;
 
 uses(LoadsV02Fixture::class);
@@ -337,4 +341,159 @@ it('converts permissions inside the level bits and rolls back to the 0.3 shape',
 
     accessV1Migration()->up();
     expect($schema->hasColumn($grants, 'role_key'))->toBeTrue();
+});
+
+it('resumes after partially committed grant DDL or backfill', function (string $stage): void {
+    $db = accessV1Prepare($this);
+    accessV1Seed($db);
+    $grants = app(DatabaseConfig::class)->table('node_grants');
+    $schema = $db->getSchemaBuilder();
+    $grammar = $db->getQueryGrammar();
+    $db->statement('ALTER TABLE '.$grammar->wrapTable($grants).' ADD COLUMN '.$grammar->wrap('role_key')." VARCHAR(32) NOT NULL DEFAULT ''");
+    if ($stage !== 'role_key') {
+        $schema->table($grants, static fn (Blueprint $table) => $table->smallInteger('role_version')->default(1));
+    }
+    if ($stage === 'backfill') {
+        $db->table($grants)->where('subject_id', 901)->update(['role_key' => 'writer']);
+    }
+
+    accessV1Migration()->up();
+    accessV1Migration()->up();
+
+    expect($db->table($grants)->where('role_key', '')->count())->toBe(0)
+        ->and($db->table($grants)->where('subject_id', 901)->value('role_key'))->toBe('writer')
+        ->and($schema->hasColumn($grants, 'level'))->toBeFalse()
+        ->and($schema->hasColumn(app(DatabaseConfig::class)->table('nodes'), 'owner_id'))->toBeFalse();
+})->with(['role_key', 'role_version', 'backfill']);
+
+it('refuses an incomplete role column that the migration could not have created', function (): void {
+    $db = accessV1Prepare($this);
+    $grants = app(DatabaseConfig::class)->table('node_grants');
+    $schema = $db->getSchemaBuilder();
+    $schema->table($grants, static fn (Blueprint $table) => $table->string('role_key', 32)->nullable());
+
+    expect(fn () => accessV1Migration()->up())->toThrow(UpgradePreflightException::class, 'only one of role_key/role_version')
+        ->and($schema->hasColumn($grants, 'role_version'))->toBeFalse()
+        ->and($schema->hasColumn(app(DatabaseConfig::class)->table('nodes'), 'owner_id'))->toBeTrue();
+});
+
+it('drops and restores the node owner when the legacy grants table is absent', function (): void {
+    $db = accessV1Prepare($this);
+    $schema = $db->getSchemaBuilder();
+    $schema->drop(app(DatabaseConfig::class)->table('node_grants'));
+    config()->set('vaulter.features.grants', false);
+    $nodes = app(DatabaseConfig::class)->table('nodes');
+
+    accessV1Migration()->up();
+    accessV1Migration()->up();
+    expect($schema->hasColumn($nodes, 'owner_id'))->toBeFalse();
+
+    $db->table('migrations')->insert(['migration' => ACCESS_V1_MIGRATION, 'batch' => 99]);
+    accessV1Migration()->down();
+    expect($schema->hasColumn($nodes, 'owner_id'))->toBeTrue();
+});
+
+it('preserves every legacy share ability and rolls its mask back exactly', function (): void {
+    $db = accessV1Prepare($this);
+    accessV1Seed($db);
+    $node = Node::query()->where('name', 'docs')->firstOrFail();
+    $shares = app(DatabaseConfig::class)->table('node_shares');
+    $ids = [];
+    for ($mask = 0; $mask <= 63; $mask++) {
+        $ids[$mask] = ShareTestHelpers::share($node, token: 'legacy-mask-'.$mask, permissions: $mask)->id;
+    }
+
+    accessV1Migration()->up();
+    foreach ($ids as $mask => $id) {
+        $share = config('vaulter.models.node_share')::query()->findOrFail($id);
+        $context = new ShareContext($share, $node, $share->permissions);
+        foreach (Ability::cases() as $ability) {
+            $required = LEGACY_REQUIRED[$ability->value];
+            expect($context->allows($ability))->toBe(($mask & $required) === $required);
+        }
+    }
+    $before = $db->table($shares)->orderBy('id')->pluck('permissions')->all();
+    accessV1Migration()->up();
+    expect($db->table($shares)->orderBy('id')->pluck('permissions')->all())->toBe($before);
+
+    $db->table('migrations')->insert(['migration' => ACCESS_V1_MIGRATION, 'batch' => 99]);
+    accessV1Migration()->down();
+    expect($db->table($shares)->orderBy('id')->pluck('permissions')->all())->toBe(range(0, 63))
+        ->and($db->getSchemaBuilder()->hasColumn($shares, 'permissions_version'))->toBeFalse();
+});
+
+it('resumes a partial share backfill without widening new previewer links', function (): void {
+    $db = accessV1Prepare($this);
+    accessV1Seed($db);
+    $node = Node::query()->where('name', 'docs')->firstOrFail();
+    $shares = app(DatabaseConfig::class)->table('node_shares');
+    $first = ShareTestHelpers::share($node, token: 'converted-reader', permissions: 1);
+    $second = ShareTestHelpers::share($node, token: 'pending-reader', permissions: 1);
+    $db->getSchemaBuilder()->table($shares, static fn (Blueprint $table) => $table->smallInteger('permissions_version')->default(0));
+    $db->table($shares)->where('id', $first->id)->update(['permissions' => 65, 'permissions_version' => 1]);
+
+    accessV1Migration()->up();
+    expect($first->fresh()?->permissions)->toBe(65)->and($second->fresh()?->permissions)->toBe(65);
+    $preview = ShareTestHelpers::share($node, token: 'new-preview', permissions: 1, level: 'previewer');
+    accessV1Migration()->up();
+    expect($preview->fresh()?->permissions)->toBe(1)
+        ->and((int) $db->table($shares)->where('id', $preview->id)->value('permissions_version'))->toBe(1);
+
+    $db->table('migrations')->insert(['migration' => ACCESS_V1_MIGRATION, 'batch' => 99]);
+    expect(fn () => accessV1Migration()->down())->toThrow(UpgradePreflightException::class, 'share')
+        ->and($first->fresh()?->permissions)->toBe(65)
+        ->and($db->getSchemaBuilder()->hasColumn(app(DatabaseConfig::class)->table('node_grants'), 'role_key'))->toBeTrue();
+});
+
+it('backfills grants and shares in bounded batches ordered by id', function (): void {
+    $db = accessV1Prepare($this);
+    accessV1Seed($db);
+    $nodes = app(DatabaseConfig::class)->table('nodes');
+    $grants = app(DatabaseConfig::class)->table('node_grants');
+    $shares = app(DatabaseConfig::class)->table('node_shares');
+    $nodeId = $db->table($nodes)->where('name', 'docs')->value('id');
+    $db->table($grants)->delete();
+    $grantRows = [];
+    $shareRows = [];
+    for ($i = 0; $i < 1201; $i++) {
+        $grantRows[] = ['node_id' => $nodeId, 'subject_type' => 'user', 'subject_id' => 1000 + $i, 'scope' => 'subtree', 'level' => 'reader', 'permissions' => 0, 'effect' => 'allow'];
+        $shareRows[] = ['node_id' => $nodeId, 'token_hash' => hash('sha256', 'batch-'.$i), 'token_prefix' => 'batch', 'permissions' => 1];
+    }
+    foreach (array_chunk($grantRows, 200) as $chunk) {
+        $db->table($grants)->insert($chunk);
+    }
+    foreach (array_chunk($shareRows, 200) as $chunk) {
+        $db->table($shares)->insert($chunk);
+    }
+    $batches = ['grants' => [], 'shares' => []];
+    $db->listen(function (QueryExecuted $query) use (&$batches, $grants, $shares): void {
+        if (str_starts_with(strtolower($query->sql), 'update ') && str_contains($query->sql, ' in (')) {
+            if (str_contains($query->sql, $grants)) {
+                $batches['grants'][] = count($query->bindings) - 1;
+            }
+            if (str_contains($query->sql, $shares)) {
+                $batches['shares'][] = count($query->bindings) - 1;
+            }
+        }
+    });
+
+    accessV1Migration()->up();
+
+    expect($batches)->toBe(['grants' => [500, 500, 201], 'shares' => [500, 500, 201]])
+        ->and($db->table($grants)->where('role_key', 'reader')->count())->toBe(1201)
+        ->and($db->table($shares)->where('permissions', 65)->count())->toBe(1201);
+});
+
+it('refuses an invalid legacy share mask before changing grants or nodes', function (): void {
+    $db = accessV1Prepare($this);
+    accessV1Seed($db);
+    $node = Node::query()->where('name', 'docs')->firstOrFail();
+    $share = ShareTestHelpers::share($node, permissions: 64);
+    $schema = $db->getSchemaBuilder();
+
+    expect(fn () => accessV1Migration()->up())->toThrow(UpgradePreflightException::class, 'shares')
+        ->and($share->fresh()?->permissions)->toBe(64)
+        ->and($schema->hasColumn(app(DatabaseConfig::class)->table('node_shares'), 'permissions_version'))->toBeFalse()
+        ->and($schema->hasColumn(app(DatabaseConfig::class)->table('node_grants'), 'role_key'))->toBeFalse()
+        ->and($schema->hasColumn(app(DatabaseConfig::class)->table('nodes'), 'owner_id'))->toBeTrue();
 });

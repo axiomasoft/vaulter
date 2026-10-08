@@ -8,7 +8,7 @@ changes that require action from consumers of the package.
 
 ### Access model 1.0: versioned roles, no deny, inheritance boundaries (PLAN2.D45, D46, D53; PLAN2.P4.9; ADR-0025)
 
-Back up the database before migrating. `2026_10_07_000005_access_model_v1` **refuses**
+Back up the database and stop writes before migrating. `2026_10_07_000005_access_model_v1` **refuses**
 (`UpgradePreflightException`, nothing changed) when `v_node_grants` holds a `deny` grant, a level
 that is not one of the five 0.x levels, or `permissions` bits beyond the level's own bits — such a
 grant has no positive equivalent. Rewrite those grants first (usually: remove the deny and put an
@@ -51,9 +51,15 @@ inheritance boundary on the node, or give the people who need it a direct grant)
 - **New**: `access()->restrictInheritance($node, InheritanceRestriction::Empty|CopyCurrent)` and
   `restoreInheritance($node)` (Manage); `explain()` lists the role sources and the boundary node;
   copy now needs View + Download + Copy on every copied node.
+- **Grant management requires Manage**, including listing, granting and revoking. An organizer's
+  Share permits bearer links; it cannot grant itself owner access.
 - **Share links** are adapted minimally: stored bits use the new layout, the share `level` column
   holds a role key, and a link to a folder stops at inheritance boundaries. Their redesign is a
-  later change.
+  later change. Legacy masks preserve their exact abilities, including Download for READ.
+  Internal `v_node_shares.permissions_version` makes conversion resumable; new links use version 1.
+  Vue sends explicit non-comment masks for anonymous roles. Rollback refuses new share masks
+  with no exact 0.x equivalent (for example, preview-only View) before changing anything.
+  The node owner column is removed even when the legacy grants table is absent.
 
 ### Node data contract: names, properties, stars, times, drive policy (PLAN2.D39–D43; PLAN2.P4.11)
 

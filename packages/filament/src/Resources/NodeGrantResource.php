@@ -48,7 +48,7 @@ use Vaulter\ValueObjects\Access\Actor;
  * Every mutation flows through a CORE Action — never a direct Eloquent write:
  *   - create → {@see AccessOperations} (idempotent upsert on the grant key);
  *   - revoke → {@see AccessOperations} (drops every grant a subject holds).
- * Both require Ability::Share on the target node, gated through the AccessOperations,
+ * Both require Ability::Manage on the target node, gated through the AccessOperations,
  * so the panel never bypasses the ACL. The model resolves through
  * {@see app(VaulterConfig::class)->model('grant')} for swappability.
  */
@@ -158,7 +158,7 @@ final class NodeGrantResource extends Resource
     #[Override]
     public static function canCreate(): bool
     {
-        // Created through the header action (which authorizes Share on the chosen
+        // Created through the header action (which authorizes Manage on the chosen
         // node and calls the core Action), not a flat resource create page.
         return false;
     }
@@ -205,7 +205,7 @@ final class NodeGrantResource extends Resource
 
     /**
      * Persist a grant from the validated create-form data via the core Action. The
-     * Share ability on the chosen node is enforced here; a denial surfaces as a
+     * Manage ability on the chosen node is enforced here; a denial surfaces as a
      * warning notification rather than a silent write.
      *
      * @param array<string, mixed> $data
@@ -220,8 +220,8 @@ final class NodeGrantResource extends Resource
             return;
         }
 
-        if (!self::actorCanShare($node)) {
-            self::notifyDenied('You may not manage sharing on this node.');
+        if (!self::actorCanManage($node)) {
+            self::notifyDenied('You may not manage access on this node.');
 
             return;
         }
@@ -248,7 +248,7 @@ final class NodeGrantResource extends Resource
 
     /**
      * Revoke every grant a subject holds on the row's node via the core Action.
-     * Gated by Ability::Share on the node.
+     * Gated by Ability::Manage on the node.
      */
     private static function revokeAction(): Action
     {
@@ -257,7 +257,7 @@ final class NodeGrantResource extends Resource
             ->icon('heroicon-o-trash')
             ->color('danger')
             ->requiresConfirmation()
-            ->visible(fn (NodeGrant $record): bool => self::actorCanShare($record->node))
+            ->visible(fn (NodeGrant $record): bool => self::actorCanManage($record->node))
             ->action(function (NodeGrant $record): void {
                 self::revokeRecord($record);
 
@@ -266,10 +266,10 @@ final class NodeGrantResource extends Resource
     }
 
     /**
-     * Whether the acting admin may share (manage grants on) the node. No acting
+     * Whether the acting admin may manage grants on the node. No acting
      * user ⇒ false.
      */
-    private static function actorCanShare(Node $node): bool
+    private static function actorCanManage(Node $node): bool
     {
         $actor = PanelActor::current();
 
@@ -325,7 +325,7 @@ final class NodeGrantResource extends Resource
             ->orderBy('drive_id')
             ->orderBy('name')
             ->get()
-            ->filter(fn (Node $node): bool => self::actorCanShare($node))
+            ->filter(fn (Node $node): bool => self::actorCanManage($node))
             ->mapWithKeys(fn (Node $node): array => [
                 $node->getKey() => sprintf('#%s %s [%s]', $node->getKey(), $node->name === '' ? '(root)' : $node->name, $node->drive_id),
             ])

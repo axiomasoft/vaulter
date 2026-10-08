@@ -79,6 +79,19 @@ it('rejects a default level mask containing Comment when no explicit mask is sup
     expect(NodeShare::query()->count())->toBe(0);
 });
 
+it('accepts the anonymous role masks sent by the Vue share panel', function (string $role, int $permissions): void {
+    $this->postJson('api/vaulter/nodes/'.$this->shareNode->id.'/shares', [
+        'level' => $role,
+        'permissions' => $permissions,
+        'scope' => GrantScope::Item->value,
+        'require_login' => false,
+    ])->assertCreated()->assertJsonPath('data.permissions', $permissions);
+
+    expect(NodeShare::query()->sole()->permissions)->toBe($permissions);
+})->with([
+    ['previewer', 1], ['reader', 65], ['writer', 1991], ['organizer', 2007], ['owner', 4063],
+]);
+
 it('preserves an explicit zero permission mask', function (): void {
     $this->postJson('api/vaulter/nodes/'.$this->shareNode->getKey().'/shares', [
         'permissions' => 0,

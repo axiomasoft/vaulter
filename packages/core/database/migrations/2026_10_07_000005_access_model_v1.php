@@ -46,27 +46,34 @@ return new class extends Migration
 
     private const array LEGACY_COLUMNS = ['level', 'permissions', 'effect'];
 
+    /** New ability bit => the legacy bits required to grant it (literal 0.x semantics). */
+    private const array SHARE_REQUIREMENTS = [
+        1 => 1, 2 => 2, 4 => 4, 8 => 8, 16 => 16, 32 => 32,
+        64 => 1, 128 => 6, 256 => 4, 512 => 8, 1024 => 8, 2048 => 63,
+    ];
+
     public function up(): void
     {
         $db = app(VaulterDatabase::class)->connection();
         $grants = $this->table('node_grants');
         $nodes = $this->table('nodes');
+        $shares = $this->table('node_shares');
         $schema = $db->getSchemaBuilder();
 
-        if (!$schema->hasTable($grants)) {
-            return;
+        $upgradeGrants = $schema->hasTable($grants) && !$this->complete($db, $grants, $nodes);
+        if ($upgradeGrants) {
+            $this->refuseUnknownShapes($db, $grants);
+            $this->refuseUnconvertibleGrants($db, $grants);
         }
-        if ($this->complete($db, $grants, $nodes)) {
-            return;
+        $this->refuseShareMasks($db, $shares);
+
+        if ($upgradeGrants) {
+            $this->addRoleColumns($db, $grants);
+            $this->backfillRoles($db, $grants);
+            $this->dropLegacyGrantColumns($db, $grants);
+            $this->createGrantUnique($db, $grants);
         }
-
-        $this->refuseUnknownShapes($db, $grants);
-        $this->refuseUnconvertibleGrants($db, $grants);
-
-        $this->addRoleColumns($db, $grants);
-        $this->backfillRoles($db, $grants);
-        $this->dropLegacyGrantColumns($db, $grants);
-        $this->createGrantUnique($db, $grants);
+        $this->upgradeShareMasks($db, $shares);
         $this->dropNodeOwner($db, $nodes);
     }
 
@@ -76,37 +83,45 @@ return new class extends Migration
         $schema = $db->getSchemaBuilder();
         $grants = $this->table('node_grants');
         $nodes = $this->table('nodes');
+        $shares = $this->table('node_shares');
 
         // A fresh install created the 1.0 shape in the base shells, which drop it.
-        if ($this->freshInstall() || !$schema->hasTable($grants) || !$schema->hasColumn($grants, 'role_key')) {
+        if ($this->freshInstall()) {
             return;
         }
 
-        $previewers = $db->table($grants)->whereNotIn('role_key', array_keys(self::LEVEL_BITS))->orderBy('id')->limit(50)->pluck('id')
-            ->map(fn (mixed $id): string => Identity::stringify($this->key($id)))->all();
-        if ($previewers !== []) {
-            throw new UpgradePreflightException(['grants ['.implode(', ', $previewers).'] hold roles without a 0.x level; revoke them before rolling back']);
+        $downgradeGrants = $schema->hasTable($grants) && $schema->hasColumn($grants, 'role_key');
+        if ($downgradeGrants) {
+            $previewers = $db->table($grants)->whereNotIn('role_key', array_keys(self::LEVEL_BITS))->orderBy('id')->limit(50)->pluck('id')
+                ->map(fn (mixed $id): string => Identity::stringify($this->key($id)))->all();
+            if ($previewers !== []) {
+                throw new UpgradePreflightException(['grants ['.implode(', ', $previewers).'] hold roles without a 0.x level; revoke them before rolling back']);
+            }
         }
+        $this->refuseShareMasks($db, $shares, rollback: true);
 
-        if (!$schema->hasColumn($grants, 'level')) {
-            $schema->table($grants, static function (Blueprint $table): void {
-                $table->string('level', 16)->default('');
-                $table->unsignedInteger('permissions')->default(0);
-                $table->string('effect', 5)->default('allow');
+        if ($downgradeGrants) {
+            if (!$schema->hasColumn($grants, 'level')) {
+                $schema->table($grants, static function (Blueprint $table): void {
+                    $table->string('level', 16)->default('');
+                    $table->unsignedInteger('permissions')->default(0);
+                    $table->string('effect', 5)->default('allow');
+                });
+            }
+            $db->table($grants)->update(['level' => $db->raw('role_key')]);
+
+            if ($schema->hasIndex($grants, $grants.'_grant_uniq')) {
+                $schema->table($grants, static fn (Blueprint $table) => $table->dropUnique($grants.'_grant_uniq'));
+            }
+            $schema->table($grants, static function (Blueprint $table) use ($grants): void {
+                $table->dropColumn(['role_key', 'role_version']);
+                $table->index('level', $grants.'_level_index');
+                $table->index('effect', $grants.'_effect_index');
+                $table->index(['node_id', 'effect'], $grants.'_node_effect_idx');
+                $table->unique(['node_id', 'subject_type', 'subject_id', 'scope', 'effect'], $grants.'_grant_uniq');
             });
         }
-        $db->table($grants)->update(['level' => $db->raw('role_key')]);
-
-        if ($schema->hasIndex($grants, $grants.'_grant_uniq')) {
-            $schema->table($grants, static fn (Blueprint $table) => $table->dropUnique($grants.'_grant_uniq'));
-        }
-        $schema->table($grants, static function (Blueprint $table) use ($grants): void {
-            $table->dropColumn(['role_key', 'role_version']);
-            $table->index('level', $grants.'_level_index');
-            $table->index('effect', $grants.'_effect_index');
-            $table->index(['node_id', 'effect'], $grants.'_node_effect_idx');
-            $table->unique(['node_id', 'subject_type', 'subject_id', 'scope', 'effect'], $grants.'_grant_uniq');
-        });
+        $this->downgradeShareMasks($db, $shares);
 
         if (!$schema->hasColumn($nodes, 'owner_id')) {
             $schema->table($nodes, static fn (Blueprint $table) => HostKeyColumns::add(table: $table, column: 'owner_id', nullable: true, index: false));
@@ -140,7 +155,12 @@ return new class extends Migration
         if (isset($columns['role_version']) && !in_array(strtolower($columns['role_version']['type_name']), ['smallint', 'int2', 'integer', 'int'], true)) {
             $problems[] = $grants.'.role_version has type '.$columns['role_version']['type_name'];
         }
-        if (isset($columns['role_version']) !== isset($columns['role_key'])) {
+        // The first ALTER may have committed before role_version was added on MySQL.
+        $partialRoleKey = isset($columns['role_key']) && !isset($columns['role_version'])
+            && !$columns['role_key']['nullable']
+            && in_array($columns['role_key']['default'], ['', "''", "''::character varying"], true)
+            && array_diff(self::LEGACY_COLUMNS, array_keys($columns)) === [];
+        if (isset($columns['role_version']) !== isset($columns['role_key']) && !$partialRoleKey) {
             $problems[] = $grants.' has only one of role_key/role_version';
         }
         if (!isset($columns['role_key']) && array_diff(self::LEGACY_COLUMNS, array_keys($columns)) !== []) {
@@ -283,6 +303,112 @@ return new class extends Migration
         }
         $this->dropIndexesOn($db, $nodes, ['owner_id']);
         $schema->table($nodes, static fn (Blueprint $table) => $table->dropColumn('owner_id'));
+    }
+
+    /** Refuse unsupported masks before any grant, share or node DDL changes. */
+    private function refuseShareMasks(Connection $db, string $shares, bool $rollback = false): void
+    {
+        $schema = $db->getSchemaBuilder();
+        if (!$schema->hasTable($shares)) {
+            return;
+        }
+        $columns = array_column($schema->getColumns($shares), null, 'name');
+        $versioned = isset($columns['permissions_version']);
+        if ($versioned && (!in_array(strtolower($columns['permissions_version']['type_name']), ['smallint', 'int2', 'integer', 'int'], true)
+            || $columns['permissions_version']['nullable'])) {
+            throw new UpgradePreflightException([$shares.'.permissions_version has an unknown shape']);
+        }
+        $last = null;
+        $refused = [];
+        do {
+            $rows = $db->table($shares)->when($last !== null, fn ($query) => $query->where('id', '>', $last))
+                ->orderBy('id')->limit(self::BATCH)->get($versioned ? ['id', 'permissions', 'permissions_version'] : ['id', 'permissions']);
+            foreach ($rows as $row) {
+                $last = $row->id;
+                $storedVersion = $versioned ? $row->permissions_version : 0;
+                $storedBits = $row->permissions;
+                if (!is_numeric($storedVersion) || !is_numeric($storedBits)) {
+                    $refused[] = Identity::stringify($this->key($row->id));
+
+                    continue;
+                }
+                $version = (int) $storedVersion;
+                $bits = (int) $storedBits;
+                if (!in_array($version, [0, 1], true) || $bits < 0 || ($bits & ~($version === 0 ? 63 : 4095)) !== 0
+                    || ($rollback && $version === 1 && $this->shareBits($bits & 63) !== $bits)) {
+                    $refused[] = Identity::stringify($this->key($row->id));
+                }
+            }
+        } while ($rows->count() === self::BATCH && count($refused) < 50);
+        if ($refused !== []) {
+            throw new UpgradePreflightException(['shares ['.implode(', ', $refused).'] hold permission masks without an exact '.($rollback ? '0.x' : '1.0').' equivalent']);
+        }
+    }
+
+    private function upgradeShareMasks(Connection $db, string $shares): void
+    {
+        $schema = $db->getSchemaBuilder();
+        if (!$schema->hasTable($shares)) {
+            return;
+        }
+        if (!$schema->hasColumn($shares, 'permissions_version')) {
+            $schema->table($shares, static fn (Blueprint $table) => $table->smallInteger('permissions_version')->default(0));
+        }
+        // The six legacy bits keep their meaning; expand their implied abilities.
+        $permissions = $db->raw('permissions
+            + CASE WHEN (permissions & 1) = 1 THEN 64 ELSE 0 END
+            + CASE WHEN (permissions & 6) = 6 THEN 128 ELSE 0 END
+            + CASE WHEN (permissions & 4) = 4 THEN 256 ELSE 0 END
+            + CASE WHEN (permissions & 8) = 8 THEN 1536 ELSE 0 END
+            + CASE WHEN (permissions & 63) = 63 THEN 2048 ELSE 0 END');
+        do {
+            $ids = $db->table($shares)->where('permissions_version', 0)->orderBy('id')->limit(self::BATCH)->pluck('id')->all();
+            if ($ids !== []) {
+                // Mask and marker change in the same UPDATE, so a committed batch is never converted twice.
+                $db->table($shares)->whereIn('id', $ids)->update(['permissions' => $permissions, 'permissions_version' => 1]);
+            }
+        } while (count($ids) === self::BATCH);
+
+        $columns = array_column($schema->getColumns($shares), null, 'name');
+        $versionDefault = $columns['permissions_version']['default'];
+        $permissionsDefault = $columns['permissions']['default'];
+        if (!is_numeric($versionDefault) || (int) $versionDefault !== 1
+            || !is_numeric($permissionsDefault) || (int) $permissionsDefault !== 65) {
+            $schema->table($shares, static function (Blueprint $table): void {
+                $table->smallInteger('permissions_version')->default(1)->change();
+                $table->unsignedInteger('permissions')->default(65)->change();
+            });
+        }
+    }
+
+    private function downgradeShareMasks(Connection $db, string $shares): void
+    {
+        $schema = $db->getSchemaBuilder();
+        if (!$schema->hasTable($shares) || !$schema->hasColumn($shares, 'permissions_version')) {
+            return;
+        }
+        do {
+            $ids = $db->table($shares)->where('permissions_version', 1)->orderBy('id')->limit(self::BATCH)->pluck('id')->all();
+            if ($ids !== []) {
+                $db->table($shares)->whereIn('id', $ids)->update(['permissions' => $db->raw('permissions & 63'), 'permissions_version' => 0]);
+            }
+        } while (count($ids) === self::BATCH);
+        $schema->table($shares, static function (Blueprint $table): void {
+            $table->unsignedInteger('permissions')->default(1)->change();
+            $table->dropColumn('permissions_version');
+        });
+    }
+
+    private function shareBits(int $legacy): int
+    {
+        $bits = 0;
+        foreach (self::SHARE_REQUIREMENTS as $bit => $required) {
+            if (($legacy & $required) === $required) {
+                $bits |= $bit;
+            }
+        }
+
+        return $bits;
     }
 
     /**

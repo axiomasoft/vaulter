@@ -47,9 +47,19 @@ const form = reactive<{ level: GrantLevelName, scope: GrantScopeName, requireLog
 
 const copied = ref(false)
 
+// Stable ability bits of each role, excluding Comment on the bearer-link channel.
+const sharePermissions: Record<string, number> = {
+  previewer: 1,
+  reader: 65,
+  writer: 1991,
+  organizer: 2007,
+  owner: 4063,
+}
+
 async function add(): Promise<void> {
   const payload: CreateNodeSharePayload = {
     level: form.level,
+    permissions: sharePermissions[form.level],
     scope: form.scope,
     requireLogin: form.requireLogin,
     expiresAt: form.expiresAt || undefined,

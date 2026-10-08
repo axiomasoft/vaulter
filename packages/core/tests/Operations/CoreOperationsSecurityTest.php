@@ -34,7 +34,7 @@ beforeEach(function (): void {
     $this->context = new OperationContext($this->drive, Actor::user(AccessTestHelpers::user()), 'explicit-correlation');
 });
 
-it('conceals hidden grants and shares before checking Share', function (): void {
+it('conceals hidden grants and shares before checking their management ability', function (): void {
     foreach ([AccessOperations::class => 'grants', ShareOperations::class => 'list'] as $class => $method) {
         $operation = app()->makeWith($class, ['context' => $this->context]);
         expect(fn () => $operation->$method($this->node))->toThrow(NodeNotFoundException::class);
@@ -42,6 +42,33 @@ it('conceals hidden grants and shares before checking Share', function (): void 
         expect(fn () => $operation->$method($this->node))->toThrow(PermissionDeniedException::class);
         $grant->delete();
     }
+});
+
+it('refuses organizer grant management and self-promotion through operations and HTTP', function (): void {
+    $organizer = AccessTestHelpers::grant($this->node, RoleRegistry::ORGANIZER, expiresAt: now()->addHour());
+    $other = AccessTestHelpers::grant($this->node, RoleRegistry::READER, subjectId: 2);
+    $operations = app()->makeWith(AccessOperations::class, ['context' => $this->context]);
+    $owner = new GrantInput(Subject::ofModel(AccessTestHelpers::user()), RoleRegistry::OWNER);
+    $events = Activity::query()->count();
+
+    expect(fn () => $operations->grants($this->node))->toThrow(PermissionDeniedException::class)
+        ->and(fn () => $operations->grant($this->node, $owner))->toThrow(PermissionDeniedException::class)
+        ->and(fn () => $operations->revoke($this->node, $other))->toThrow(PermissionDeniedException::class);
+
+    $this->actingAs(AccessTestHelpers::user());
+    $url = 'api/vaulter/nodes/'.$this->node->id.'/grants';
+    $this->getJson($url)->assertForbidden();
+    $this->postJson($url, ['subject_type' => $owner->subject->type, 'subject_id' => $owner->subject->id, 'role' => RoleRegistry::OWNER])->assertForbidden();
+    $this->deleteJson($url, ['subject_type' => $other->subject_type, 'subject_id' => $other->subject_id])->assertForbidden();
+
+    expect($organizer->fresh()?->role_key)->toBe(RoleRegistry::ORGANIZER)
+        ->and($organizer->fresh()?->expires_at)->not->toBeNull()
+        ->and($other->fresh())->not->toBeNull()
+        ->and(Activity::query()->count())->toBe($events);
+
+    // Share remains sufficient for bearer links, independently of grant management.
+    $shares = app()->makeWith(ShareOperations::class, ['context' => $this->context]);
+    expect($shares->create($this->node, new ShareLinkInput(Permission::View->value | Permission::Download->value))->share->exists)->toBeTrue();
 });
 
 it('rejects foreign grants and forged model membership without side effects', function (): void {

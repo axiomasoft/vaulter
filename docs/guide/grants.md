@@ -107,7 +107,7 @@ $grant = Vaulter::drive($drive)->actingAs($actor)->access()->grant(
 
 ::: warning The Action does not authorize
 `GrantNodeAccessAction` persists; it does not re-authorize. `access()->grant()` and the HTTP
-surface below check the actor may `Share`/`Manage` the node first; call the Action directly
+surface below check the actor may `Manage` the node first; call the Action directly
 only after doing the same.
 :::
 
@@ -150,8 +150,8 @@ $removed = app(RevokeNodeAccessAction::class)->execute(
 ## REST surface
 
 The per-node ACL is exposed under the Drive prefix (default `api/vaulter`). **Every**
-action requires the `Share` ability on the node — only someone who may share a node may
-change its grants. A denial 403s through `PermissionDeniedException`.
+action requires the `Manage` ability on the node. An organizer may create bearer links with
+`Share`, but managing grants requires owner access. A denial 403s through `PermissionDeniedException`.
 
 | Method | Path | Action |
 |---|---|---|

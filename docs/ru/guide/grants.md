@@ -105,7 +105,7 @@ $grant = Vaulter::drive($drive)->actingAs($actor)->access()->grant(
 
 ::: warning Экшен не авторизует
 `GrantNodeAccessAction` сохраняет; он не переавторизует. `access()->grant()` и HTTP-поверхность
-ниже сначала проверяют, что актор может `Share`/`Manage` узел; при прямом вызове экшена сделайте
+ниже сначала проверяют право `Manage` на узле; при прямом вызове экшена сделайте
 то же самое.
 :::
 
@@ -147,8 +147,8 @@ $removed = app(RevokeNodeAccessAction::class)->execute(
 ## REST-поверхность
 
 Node-ACL выставлена под префиксом Drive (по умолчанию `api/vaulter`). **Каждое** действие
-требует права (ability) `Share` на узле — только тот, кто может расшарить узел, может менять его
-гранты. Отказ отдаёт 403 через `PermissionDeniedException`.
+требует права `Manage` на узле. Organizer может создавать ссылки через `Share`, но управление
+грантами требует доступа owner. Отказ отдаёт 403 через `PermissionDeniedException`.
 
 | Метод | Путь | Действие |
 |---|---|---|

@@ -24,7 +24,7 @@ use Vaulter\Repositories\Access\GrantStoreRepository;
  * re-granting the same subject the same scope replaces the role and expiry. The
  * write runs in a transaction and emits NodeGrantCreated.
  *
- * Authorization (the actor may Share/Manage the node) is enforced by the caller
+ * Authorization (the actor may Manage the node) is enforced by the caller
  * (controller/policy) before reaching the Action — the Action persists, it does
  * not re-authorize.
  */

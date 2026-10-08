@@ -51,8 +51,8 @@ final readonly class OperationGuard
         if (!$context->actor->isSystem()) {
             $grants = $this->grants(context: $context, node: $node);
             $this->requireView(grants: $grants, node: $node);
-            if (!$grants->allows(Ability::Share)) {
-                throw PermissionDeniedException::forAbility(Ability::Share->value);
+            if (!$grants->allows(Ability::Manage)) {
+                throw PermissionDeniedException::forAbility(Ability::Manage->value);
             }
         }
         if (!$this->profileAllows(context: $context, node: $node, ability: Ability::Manage, operation: OperationKind::Metadata)) {

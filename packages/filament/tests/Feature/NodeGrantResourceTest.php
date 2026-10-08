@@ -24,7 +24,7 @@ it('creates a grant through the core GrantNodeAccessAction', function (): void {
 
     $storage = DriveBuilder::storage();
     $folder = DriveBuilder::folder($storage, 'Shared');
-    DriveBuilder::grant($folder, $owner); // Owner ⇒ may Share
+    DriveBuilder::grant($folder, $owner); // Owner ⇒ may Manage
 
     $subject = DriveBuilder::user(2);
 
@@ -123,13 +123,13 @@ it('rejects a missing grant node with the declared warning', function (): void {
         ->and($notification['status'])->toBe('warning');
 });
 
-it('does not create a grant when the admin may not share the node', function (): void {
+it('does not create a grant when the admin may not manage access on the node', function (): void {
     $stranger = DriveBuilder::user(9);
     $this->actingAs($stranger);
 
     $storage = DriveBuilder::storage();
     $folder = DriveBuilder::folder($storage, 'Locked');
-    // No grant for $stranger ⇒ AccessResolver denies Share ⇒ the create no-ops.
+    // No grant for $stranger ⇒ AccessResolver denies View ⇒ the create no-ops.
 
     session()->forget('filament.notifications');
 
@@ -147,8 +147,31 @@ it('does not create a grant when the admin may not share the node', function ():
     expect(app(GrantReadRepository::class)->forNode($folder)->count())->toBe(0)
         ->and($notification)->toBeArray()
         ->and($notification['title'])->toBe('Grant not saved')
-        ->and($notification['body'])->toBe('You may not manage sharing on this node.')
+        ->and($notification['body'])->toBe('You may not manage access on this node.')
         ->and($notification['status'])->toBe('warning');
+});
+
+it('prevents an organizer from granting itself owner or revoking another subject', function (): void {
+    $organizer = DriveBuilder::user(9);
+    $this->actingAs($organizer);
+    $drive = DriveBuilder::storage();
+    $node = DriveBuilder::folder($drive, 'Organizer');
+    $grant = DriveBuilder::grant($node, $organizer, RoleRegistry::ORGANIZER);
+    $other = DriveBuilder::grant($node, DriveBuilder::user(10), RoleRegistry::READER);
+    session()->forget('filament.notifications');
+
+    NodeGrantResource::grantFromData([
+        'node_id' => $node->id,
+        'subject_type' => $organizer->getMorphClass(),
+        'subject_id' => $organizer->id,
+        'role' => RoleRegistry::OWNER,
+    ]);
+
+    expect($grant->fresh()?->role_key)->toBe(RoleRegistry::ORGANIZER)
+        ->and(session('filament.notifications.0.status'))->toBe('warning')
+        ->and(NodeGrantResource::getEloquentQuery()->count())->toBe(0)
+        ->and(fn () => NodeGrantResource::revokeRecord($other))->toThrow(PermissionDeniedException::class)
+        ->and($other->fresh())->not->toBeNull();
 });
 
 it('revokes every grant a subject holds through the core RevokeNodeAccessAction', function (): void {

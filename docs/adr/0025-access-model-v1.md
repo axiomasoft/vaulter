@@ -26,7 +26,7 @@ unknown key or version throws `UnknownRoleException` (`unknown_role`, 422). Vers
 | `commenter` | reader + Comment |
 | `writer` | commenter + Edit, Create, Move, Copy, Trash, Restore |
 | `organizer` | writer + Share |
-| `owner` | organizer + Manage, Delete |
+| `owner` | organizer + Manage (list, grant, revoke and inheritance), Delete |
 
 A role is a closed set of abilities; a change to it ships as a new version, so a stored grant
 always resolves to the abilities it was given.
@@ -94,7 +94,12 @@ carries the node owner; the Gate context has no `node_owner`.
   `permissions` and `effect` are dropped.
 - `v_nodes.owner_id` is dropped **without creating grants**: no built-in driver granted
   anything from it (D46, D53). A host that relied on creator-owns must grant explicitly.
-- `down()` restores the 0.x shape.
+- Legacy share masks are translated to the abilities each CRUDS mask granted (including
+  Download for READ). Internal `permissions_version` marks converted rows so a partial
+  backfill can resume without converting new previewer links.
+- `owner_id` is removed even when the grants table is absent.
+- `down()` restores the 0.x shape and legacy share masks; a new share mask without an
+  exact 0.x equivalent (such as preview-only View) refuses rollback before any changes.
 
 ## Consequences
 

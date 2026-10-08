@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `effect`. Each level converts to the role of the same name, v1; `writer` gains Trash/Restore and
   `organizer` gains Share and loses Delete (D53).
 - Added one bit per ability and a separate Download (`Permission::all()` 4095). Was: CRUDS
-  bits where View, Download and Comment shared READ.
+  bits where View and Download shared READ.
 - Changed effective access to the union of roles up to the first `inherit_grants = false` node
   plus the driver's roles; removed deny grants, `max(rank)` and the final veto. The host
   `override()` is the only block. `GrantSet`, `Decision`, `AccessExplanation` and `AccessScope`
@@ -23,6 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `access()->restrictInheritance()` (`empty`, `copy_current`) and `restoreInheritance()`,
   both requiring Manage; `explain()` now lists role sources and the boundary node. Copy requires
   View + Download + Copy on every copied node (D30).
+- Fixed grant management to require Manage, preventing organizer self-promotion to owner.
+- Made access migration resume after partial role-column DDL and remove node `owner_id` when
+  the grants table is absent. Legacy share masks retain their abilities through a resumable,
+  versioned backfill; rollback refuses masks without an exact 0.x equivalent.
+- Fixed Vue's anonymous role requests to supply explicit masks without Comment.
 - Removed `v_nodes.owner_id` without creating grants (D46, D53). The migration
   `2026_10_07_000005_access_model_v1` refuses deny grants and permission bits beyond the level.
 - Changed the HTTP grant field to `role` (response adds `role_version`) and activity/webhook grant

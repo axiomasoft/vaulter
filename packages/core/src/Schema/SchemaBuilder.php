@@ -469,9 +469,10 @@ final class SchemaBuilder
         $table->char('token_hash', 64);
         $table->string('token_prefix', 16)->index();
 
-        // A share grants EXACTLY this bitmask on its node-set (default READ); level
-        // is the human-facing label that mirrors the bits.
-        $table->unsignedInteger('permissions')->default(1);
+        // A share grants exactly its ability bits (default View + Download).
+        // Version 0 marks legacy CRUDS masks during the resumable upgrade only.
+        $table->unsignedInteger('permissions')->default(65);
+        $table->smallInteger('permissions_version')->default(1);
         $table->string('level', 16)->default('reader');
         $table->string('scope', 8)->default('item');
 

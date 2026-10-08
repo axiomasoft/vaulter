@@ -21,11 +21,24 @@ it('creates the v_node_shares table with every §2.7 column', function (): void 
     $table = app(DatabaseConfig::class)->table('node_shares');
 
     expect(Schema::hasColumns($table, [
-        'id', 'tenant_id', 'node_id', 'token_hash', 'token_prefix', 'permissions',
+        'id', 'tenant_id', 'node_id', 'token_hash', 'token_prefix', 'permissions', 'permissions_version',
         'level', 'scope', 'password_hash', 'require_login', 'allow_discovery',
         'expires_at', 'max_uses', 'use_count', 'revoked_at', 'granted_by',
         'created_at', 'updated_at',
     ]))->toBeTrue();
+});
+
+it('defaults new shares to the versioned reader mask', function (): void {
+    $storage = AccessTestHelpers::storage();
+    $node = AccessTestHelpers::folder($storage, null, 'reader-default');
+    $share = ForceCreates::make(app(VaulterConfig::class)->model('node_share'), [
+        'node_id' => $node->id,
+        'token_hash' => ShareToken::hash('reader-default'),
+        'token_prefix' => 'reader-d',
+    ])->fresh();
+
+    expect($share?->permissions)->toBe(65)
+        ->and((int) $share?->getAttribute('permissions_version'))->toBe(1);
 });
 
 it('rejects a duplicate token_hash (UNIQUE)', function (): void {
