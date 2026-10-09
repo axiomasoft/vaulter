@@ -1,0 +1,34 @@
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":1817434,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1817435}]},{"process_pid":1817436,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1817440}]}],"timed_out":[]}
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":1818418,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1818420}]},{"process_pid":1818419,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1818421}]}],"timed_out":[]}
+
+   PASS  Tests\Concurrency\CollaborationFenceRaceTest
+  ✓ it serializes a store of the old room against a restore: never the…  5.97s  
+  ✓ it lets exactly one of two concurrent seeds of an empty document th… 5.63s  
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":1819500,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1819502}]},{"process_pid":1819501,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1819503}]}],"timed_out":[]}
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":1820340,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1820342}]},{"process_pid":1820341,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1820343}]}],"timed_out":[]}
+
+   PASS  Tests\Concurrency\DegradedContentRaceTest
+  ✓ it refuses an update whose precheck went stale to a restore that co… 5.62s  
+  ✓ it refuses an update whose precheck went stale to a restore that co… 5.42s  
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":1821231,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1821233}]},{"process_pid":1821232,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1821234}]}],"timed_out":[]}
+
+   PASS  Tests\Concurrency\DocumentRenameStaleTest
+  ✓ it V36 refuses the second of two renames with the same expectedSequ… 5.50s  
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":1822285,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1822286}]},{"process_pid":1822287,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1822288}]}],"timed_out":[]}
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":1823074,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1823075}]},{"process_pid":1823076,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1823077}]}],"timed_out":[]}
+
+   PASS  Tests\Concurrency\DocumentStateRaceTest
+  ✓ it lets one of two updates with expectedStateVersion N through and…  5.56s  
+  ✓ it shares the validator between an update and a restore: one wins,…  5.55s  
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":1823992,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1823994}]},{"process_pid":1823993,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1823995}]}],"timed_out":[]}
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":1824943,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1824945}]},{"process_pid":1824944,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1824949}]}],"timed_out":[]}
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":1825785,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1825787}]},{"process_pid":1825786,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1825788}]}],"timed_out":[]}
+
+   PASS  Tests\Concurrency\NodeSequenceDocumentIndependenceTest
+  ✓ it lets a rename with expectedSequence succeed beside a parallel co… 5.51s  
+  ✓ it lets a rename with expectedSequence succeed beside a parallel co… 5.61s  
+  ✓ it lets a rename with expectedSequence succeed beside a parallel co… 5.63s  
+
+  Tests:    10 passed (102 assertions)
+  Duration: 56.16s
+

@@ -1,0 +1,10 @@
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":1498410,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1498412}]},{"process_pid":1498411,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1498413}]}],"timed_out":[]}
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":1499387,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1499389}]},{"process_pid":1499388,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":1499390}]}],"timed_out":[]}
+
+   PASS  Tests\Concurrency\CollaborationFenceRaceTest
+  ✓ it serializes a store of the old room against a restore: never the…  4.05s  
+  ✓ it lets exactly one of two concurrent seeds of an empty document th… 5.49s  
+
+  Tests:    2 passed (14 assertions)
+  Duration: 9.66s
+

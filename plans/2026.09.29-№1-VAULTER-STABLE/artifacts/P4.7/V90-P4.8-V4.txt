@@ -1,0 +1,16 @@
+
+   PASS  Tests\Operations\DocumentAbilityMatrixTest
+  ✓ it answers node_not_found for a document of another tenant on every… 2.56s  
+  ✓ it answers node_not_found for a document of another tenant on every… 2.27s  
+  ✓ it answers node_not_found for a document of another tenant on every… 2.25s  
+  ✓ it answers node_not_found for a document of another tenant on every… 2.20s  
+  ✓ it answers node_not_found for a document of another tenant on every… 2.25s  
+  ✓ it answers node_not_found for a document of another tenant on every… 2.34s  
+  ✓ it answers node_not_found for a document of another tenant on every… 2.34s  
+  ✓ it answers node_not_found for a document of another tenant on every… 2.41s  
+  ✓ it answers node_not_found for a document of another tenant on every… 2.29s  
+  ✓ it answers node_not_found for a document of another tenant on every… 2.24s  
+
+  Tests:    10 passed (20 assertions)
+  Duration: 23.31s
+

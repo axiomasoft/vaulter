@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.7",
   "title": "Валидаторы: writer-матрица sequence/state_version/epoch и V36",
-  "status": "todo",
+  "status": "in_progress",
   "summary": "Каждый writer узла и документа следует матрице D35: node.sequence — только узловые изменения и голова файла, state_version — каждая эффективная запись рабочего состояния документа, epoch — restore/замена; доказано PG-гонками; события документов несут stateVersion/epoch; контракт ETag для P6 записан.",
   "why": "D35/C07: без явной матрицы writers расходятся (двойной bump, ложные 412 во время коллаборации). P3.3 writer map устарел после D34/D36. P5/P6 зависят от этих полей.",
   "scope": {
@@ -273,6 +273,14 @@
     "status": "not_needed",
     "notes": "Внешние факты проверены при дизайне: @plan/knowledge/P4-industry-research-2026-10-07.json; исполнителю повторный поиск не нужен"
   },
-  "result": null,
-  "updated_at": "2026-10-08T18:45:43Z"
+  "result": {
+    "started_at": "2026-10-09T05:01:47Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "11466684-f21d-46aa-a82f-f3846f931393"
+    }
+  },
+  "updated_at": "2026-10-09T05:01:47Z"
 }

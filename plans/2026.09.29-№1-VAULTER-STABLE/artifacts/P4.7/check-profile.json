@@ -1,0 +1,32 @@
+{
+  "item": "PLAN2.P4.7",
+  "prepared_at": "2026-10-09",
+  "runtime": {"provider": "anthropic", "model": "claude-sonnet-5-5", "effort": "high", "source": "/model output; plan.py start --actor anthropic/claude-sonnet-5-5/high"},
+  "runs_mode": "Owner 2026-10-09: 'делай пункт полностью' — this session runs V1/V2/V3/V80/V81 and the V90 barrier itself; PG preflight (scripts/db-preflight.sh pgsql) first. Review: grok/grok-4.7/high requested by the owner mid-session.",
+  "changed_paths": {
+    "documents_src": [
+      "Events/Documents/DocumentCreated, DocumentContentUpdated (+int $stateVersion, int $epoch)",
+      "Events/Revisions/DocumentRevisionCreated (+int $stateVersion, int $epoch)",
+      "Actions/Documents/CreateDocumentAction, UpdateDocumentContentAction, Actions/Collaboration/PersistCollaborationStateAction, Actions/Revisions/CreateNamedRevisionAction, RestoreDocumentRevisionAction (callers of the events; values from the writer result / locked row)"
+    ],
+    "documents_tests": [
+      "tests/Document/DocumentValidatorMatrixTest.php (new, dataset)",
+      "tests/Concurrency/DocumentStateRaceTest, NodeSequenceDocumentIndependenceTest, DocumentRenameStaleTest, DegradedContentRaceTest (new, PG ForkRace)",
+      "tests/Document/DocumentStateVersionTest / DocumentNodeTest / HubProtocolTest (event assertions)",
+      "tests/Document/LegacyNodeSequenceTest, LegacyNodeSequenceRaceTest (replaced; table in writer-map.md)",
+      "tests/Pest.php (binding of the removed race test), tests/Arch/__snapshots__/public-api.txt (golden)"
+    ],
+    "docs": ["docs/reference/concurrency.md (+ru), docs/reference/events.md (+ru), docs/guide/documents.md (+ru)", "UPGRADE.md", "CHANGELOG.md", "artifacts/P4.7/writer-map.md", "artifacts/P4.7/changelog-entry.md"]
+  },
+  "callers_checked": "grep new DocumentCreated|DocumentContentUpdated|DocumentRevisionCreated across packages/*/src, packages/*/tests, docs: only documents actions emit them; no activity/outbox subscriber maps them (RecordsDriveActivity/RecordsActivity do not listen to Documents events) — nothing to persist into context until P5.2.",
+  "commands": [
+    {"id": "V1", "cwd": "packages/documents", "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Document tests/Operations tests/Collaboration"},
+    {"id": "V2", "cwd": "packages/documents", "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Concurrency"},
+    {"id": "V3", "cwd": "packages/drive", "cmd": "same env as V2; vendor/bin/pest --ci tests/Concurrency/NodeSequenceBoundaryTest.php"},
+    {"id": "V80", "cwd": ".", "cmd": "pint --test packages/core; phpstan -c phpstan.neon; packages/documents: pint --test; phpstan --memory-limit=512M"},
+    {"id": "V4", "cwd": "packages/documents", "cmd": "same env as V2; vendor/bin/pest --ci tests/Concurrency/DegradedContentRaceTest.php"},
+    {"id": "V81", "cwd": ".", "cmd": "python3 plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-coverage.py check"},
+    {"id": "V90", "cwd": "packages/documents", "cmd": "three deferred PG commands from the item (P4.2 V4, P4.8 V4, P4.5 V2); receipts in artifacts/P4.7/barrier-receipts.json"}
+  ],
+  "negative_controls_file": "artifacts/P4.7/negative-controls.md"
+}
