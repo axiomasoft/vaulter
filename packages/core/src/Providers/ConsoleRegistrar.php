@@ -10,6 +10,7 @@ use Vaulter\Console\EventsReferenceCommand;
 use Vaulter\Console\LegacyFanoutCommand;
 use Vaulter\Console\MakeProfileCommand;
 use Vaulter\Console\PruneWebhooksCommand;
+use Vaulter\Console\RedeliverWebhooksCommand;
 use Vaulter\Console\RelayWebhooksCommand;
 use Vaulter\Console\RetryWebhooksCommand;
 
@@ -25,6 +26,7 @@ final class ConsoleRegistrar
                 RetryWebhooksCommand::class,
                 PruneWebhooksCommand::class,
                 LegacyFanoutCommand::class,
+                RedeliverWebhooksCommand::class,
             ]);
         });
     }

@@ -45,7 +45,10 @@ final readonly class ConfigValidator
             throw new InvalidConfigurationException('[Vaulter] Non-production permission driver "'.$key.'" is forbidden in production.');
         }
         // These accessors validate the untrusted class strings before returning them.
+        $config->webhooks()->assertNoRemovedKeys();
         $config->webhooks()->urlGuard();
+        $config->webhooks()->retrySchedule();
+        $config->webhooks()->retryJitter();
         $config->webhooks()->relayFanoutChunk();
         $config->sharing()->tokenGenerator();
         foreach ([

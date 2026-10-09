@@ -5,9 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\Tests\Webhooks;
 
 use Illuminate\Support\Str;
+use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Configuration\WebhooksConfig;
+use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
+use Vaulter\Jobs\Webhooks\DeliverWebhook;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Models\Webhooks\WebhookDelivery;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
+use Vaulter\Webhooks\WebhookSigner;
 
 /**
  * Row builders for the M3b reliability tests (§2.11): stage outbox rows, register
@@ -16,6 +21,9 @@ use Vaulter\Models\Webhooks\WebhookEndpoint;
  */
 final class WebhookTestHelpers
 {
+    /** whsec_ + base64 of 32 bytes (0x01..0x20): any valid secret works, this one is easy to recognise. */
+    public const string SECRET = 'whsec_AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyA=';
+
     /**
      * @param array<string, mixed> $attributes
      */
@@ -51,7 +59,7 @@ final class WebhookTestHelpers
         $endpoint->forceFill(array_merge([
             'url' => 'https://hooks.test/receive',
             'events' => ['folder.created'],
-            'signing_secret' => 'topsecret',
+            'signing_secret' => self::SECRET,
             'is_active' => true,
             'failure_count' => 0,
         ], $attributes));
@@ -79,5 +87,12 @@ final class WebhookTestHelpers
         $delivery->save();
 
         return $delivery;
+    }
+
+    /** Run the delivery job once, as a queue worker would. */
+    public static function deliver(WebhookDelivery $delivery): void
+    {
+        (new DeliverWebhook(deliveryId: (string) $delivery->getKey()))
+            ->handle(app(WebhookSigner::class), app(OutboundUrlGuard::class), app(VaulterConfig::class), app(WebhooksConfig::class));
     }
 }

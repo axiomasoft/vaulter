@@ -17,9 +17,12 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 /**
  * A subscriber endpoint receiving signed webhook deliveries for the events it is
  * subscribed to (master plan §2.11 / D14 / M3b). signing_secret is generated at
- * registration and shown to the owner exactly once; the deliveries are HMAC-SHA256
- * signed with it. failure_count drives the circuit breaker (auto-disable past the
- * threshold). tenant_id is the tenant the endpoint was registered in; it receives
+ * registration and shown to the owner exactly once; the deliveries are signed with it
+ * (Standard Webhooks, HMAC-SHA256 over its whsec_ key). After a rotation the previous
+ * secret keeps signing until previous_secret_expires_at. failing_since marks the start
+ * of the current unbroken run of failed attempts; once it is old enough the endpoint is
+ * disabled (disabled_at, disabled_reason 'failing'), as an owner's deactivation is
+ * ('manual'). tenant_id is the tenant the endpoint was registered in; it receives
  * only that tenant's events (null receives only events without a tenant). A set
  * drive_id narrows it further to the events of that drive.
  *
@@ -29,9 +32,14 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  * @property string             $url
  * @property array<int, string> $events
  * @property string             $signing_secret
+ * @property string|null        $previous_signing_secret
+ * @property Carbon|null        $previous_secret_expires_at
  * @property bool               $is_active
  * @property Carbon|null        $last_triggered_at
  * @property int                $failure_count
+ * @property Carbon|null        $failing_since
+ * @property Carbon|null        $disabled_at
+ * @property string|null        $disabled_reason
  * @property int|string|null    $tenant_id
  * @property int|string|null    $drive_id
  * @property Carbon|null        $created_at
@@ -46,8 +54,8 @@ class WebhookEndpoint extends Model
     use ResolvesVaulterConnection;
 
     /**
-     * Closed allow-list (F-P1.7-04): NEVER signing_secret (the HMAC key, F-P1.7-02)
-     * nor failure_count (the circuit-breaker counter) — both are server-only. The
+     * Closed allow-list (F-P1.7-04): NEVER the signing secrets (the HMAC keys,
+     * F-P1.7-02) nor the failure/disable bookkeeping — all server-only. The
      * sole writer, WebhookEndpointStoreRepository, uses forceFill() exclusively
      * and is unaffected by this list.
      *
@@ -58,6 +66,13 @@ class WebhookEndpoint extends Model
         'events',
         'is_active',
     ];
+
+    /**
+     * The HMAC keys never leave through toArray()/toJson(), whatever serializes the model.
+     *
+     * @var list<string>
+     */
+    protected $hidden = ['signing_secret', 'previous_signing_secret'];
 
     #[\Override]
     public function getTable(): string
@@ -90,6 +105,26 @@ class WebhookEndpoint extends Model
     }
 
     /**
+     * The secrets a delivery is signed with now: the current one first, then the previous
+     * one while its rotation overlap has not ended.
+     *
+     * @return list<string>
+     */
+    public function activeSigningSecrets(): array
+    {
+        $secrets = [$this->signing_secret];
+
+        if (
+            is_string($this->previous_signing_secret) && $this->previous_signing_secret !== ''
+            && $this->previous_secret_expires_at !== null && $this->previous_secret_expires_at->isFuture()
+        ) {
+            $secrets[] = $this->previous_signing_secret;
+        }
+
+        return $secrets;
+    }
+
+    /**
      * @return array<string, string>
      */
     #[\Override]
@@ -102,9 +137,13 @@ class WebhookEndpoint extends Model
             // APP_KEY on write and decrypts transparently on read (WebhookSigner sees
             // the plaintext); the column is text-typed to hold the longer ciphertext.
             'signing_secret' => 'encrypted',
+            'previous_signing_secret' => 'encrypted',
+            'previous_secret_expires_at' => 'datetime',
             'is_active' => 'boolean',
             'last_triggered_at' => 'datetime',
             'failure_count' => 'integer',
+            'failing_since' => 'datetime',
+            'disabled_at' => 'datetime',
         ];
     }
 }

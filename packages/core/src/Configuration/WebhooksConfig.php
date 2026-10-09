@@ -32,69 +32,102 @@ final readonly class WebhooksConfig
         'ff00::/8',
     ];
 
+    private const array DEFAULT_RETRY_SCHEDULE = [5, 300, 1800, 7200, 18000, 36000, 50400, 72000, 86400];
+
+    private const int DEFAULT_ROTATION_OVERLAP = 86400;
+
+    private const int MAX_ROTATION_OVERLAP = 604800;
+
+    /** Keys of the pre-1.0 delivery policy and the replacement each one is refused with. */
+    public const array REMOVED_KEYS = [
+        'max_attempts' => 'vaulter.webhooks.retry_schedule (attempts = entries + 1)',
+        'backoff' => 'vaulter.webhooks.retry_schedule',
+        'disable_after_failures' => 'vaulter.webhooks.disable_after_days',
+        'signature_header' => 'the Standard Webhooks headers webhook-id, webhook-timestamp and webhook-signature, which are fixed',
+        'timestamp_header' => 'the Standard Webhooks headers webhook-id, webhook-timestamp and webhook-signature, which are fixed',
+        'event_header' => 'the event type, which is the "type" field of the delivery body',
+    ];
+
     public function __construct(private Repository $config) {}
+
+    /** @throws InvalidConfigurationException when a pre-1.0 delivery key is still set */
+    public function assertNoRemovedKeys(): void
+    {
+        foreach (self::REMOVED_KEYS as $key => $replacement) {
+            if ($this->config->has('vaulter.webhooks.'.$key)) {
+                throw new InvalidConfigurationException(
+                    "[Vaulter] vaulter.webhooks.{$key} was removed: use {$replacement}. "
+                    .'Docs: https://github.com/axiomasoft/vaulter/blob/main/docs/reference/configuration.md',
+                );
+            }
+        }
+    }
 
     public function timeout(): int
     {
-        $value = $this->config->get('vaulter.webhooks.timeout', 5);
+        $value = $this->config->get('vaulter.webhooks.timeout', 15);
 
-        $seconds = is_numeric($value) ? (int) $value : 5;
+        $seconds = is_numeric($value) ? (int) $value : 15;
 
         return max($seconds, 1);
     }
 
-    public function maxAttempts(): int
+    /**
+     * Seconds to wait after the n-th failed attempt (1-based) before the next one. The
+     * schedule length plus one is the attempt budget; a delivery that fails past the
+     * last entry is dead.
+     *
+     * @return list<int>
+     */
+    public function retrySchedule(): array
     {
-        $value = $this->config->get('vaulter.webhooks.max_attempts', 5);
+        $schedule = $this->config->get('vaulter.webhooks.retry_schedule', self::DEFAULT_RETRY_SCHEDULE);
 
-        $attempts = is_numeric($value) ? (int) $value : 5;
-
-        return max($attempts, 1);
-    }
-
-    public function backoff(int $attempt): int
-    {
-        $schedule = $this->config->get('vaulter.webhooks.backoff', [10, 30, 60, 300, 1800]);
-
-        if (!is_array($schedule) || $schedule === []) {
-            return 0;
+        if (!is_array($schedule)) {
+            return self::DEFAULT_RETRY_SCHEDULE;
         }
 
-        $values = array_values(array_map(static fn (mixed $seconds): int => is_numeric($seconds) ? (int) $seconds : 0, $schedule));
+        $values = [];
+        foreach ($schedule as $seconds) {
+            if (!is_numeric($seconds) || (int) $seconds < 0) {
+                throw new InvalidConfigurationException('[Vaulter] vaulter.webhooks.retry_schedule must be a list of non-negative seconds.');
+            }
+            $values[] = (int) $seconds;
+        }
 
-        $index = max(0, $attempt - 1);
-
-        return $values[$index] ?? $values[array_key_last($values)];
+        return $values;
     }
 
-    public function disableAfterFailures(): int
+    /** Fraction (0..0.5) of a retry delay randomly added or removed so retries do not align. */
+    public function retryJitter(): float
     {
-        $value = $this->config->get('vaulter.webhooks.disable_after_failures', 10);
+        $value = $this->config->get('vaulter.webhooks.retry_jitter', 0.1);
 
-        $failures = is_numeric($value) ? (int) $value : 10;
+        if (!is_numeric($value) || (float) $value < 0.0 || (float) $value > 0.5) {
+            throw new InvalidConfigurationException('[Vaulter] vaulter.webhooks.retry_jitter must be a number between 0 and 0.5.');
+        }
 
-        return max($failures, 1);
+        return (float) $value;
     }
 
-    public function signatureHeader(): string
+    /** Days of uninterrupted failure after which an endpoint is disabled; 0 never disables. */
+    public function disableAfterDays(): int
     {
-        $value = $this->config->get('vaulter.webhooks.signature_header', 'X-Vaulter-Signature');
+        $value = $this->config->get('vaulter.webhooks.disable_after_days', 5);
 
-        return is_string($value) && $value !== '' ? $value : 'X-Vaulter-Signature';
+        $days = is_numeric($value) ? (int) $value : 5;
+
+        return max($days, 0);
     }
 
-    public function timestampHeader(): string
+    /** Seconds the previous secret keeps signing after a rotation (capped at seven days). */
+    public function secretRotationOverlap(): int
     {
-        $value = $this->config->get('vaulter.webhooks.timestamp_header', 'X-Vaulter-Timestamp');
+        $value = $this->config->get('vaulter.webhooks.secret_rotation_overlap', self::DEFAULT_ROTATION_OVERLAP);
 
-        return is_string($value) && $value !== '' ? $value : 'X-Vaulter-Timestamp';
-    }
+        $seconds = is_numeric($value) ? (int) $value : self::DEFAULT_ROTATION_OVERLAP;
 
-    public function eventHeader(): string
-    {
-        $value = $this->config->get('vaulter.webhooks.event_header', 'X-Vaulter-Event');
-
-        return is_string($value) && $value !== '' ? $value : 'X-Vaulter-Event';
+        return min(max($seconds, 0), self::MAX_ROTATION_OVERLAP);
     }
 
     public function retentionDays(): int

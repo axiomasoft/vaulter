@@ -17,15 +17,17 @@ use Vaulter\Profiles\Profile;
 use Vaulter\Schema\SchemaBuilder;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 use Vaulter\Webhooks\WebhookRetryDispatcher;
+use Vaulter\Webhooks\WebhookSecret;
 use Vaulter\Webhooks\WebhookSigner;
 
 /**
  * The reliable webhook delivery half (§2.11 / D14 / M3b), ported from chatom:
  * DeliverWebhook POSTs the signed payload over HTTP and persists the delivery's retry
- * bookkeeping. The signature is HMAC-SHA256 over "{timestamp}.{body}" — replay-resistant.
+ * bookkeeping. The signature follows Standard Webhooks: HMAC-SHA256 over
+ * "{webhook-id}.{webhook-timestamp}.{body}", keyed by the decoded whsec_ secret.
  *
  * HTTP is faked (Http::fake), so no socket opens; the job runs synchronously by
- * resolving it and invoking handle() with the real WebhookSigner (whose sign() we
+ * resolving it and invoking handle() with the real WebhookSigner (whose output we
  * re-derive to assert the signature header byte-for-byte). Re-driving handle() walks
  * the delivery failed → … → dead exactly as a queue worker would on each retry.
  */
@@ -40,8 +42,8 @@ function runDeliver(WebhookDelivery $delivery): void
 it('marks the delivery delivered and sends the signed POST on a 2xx', function (): void {
     Http::fake(['https://hooks.test/*' => Http::response('', 200)]);
 
-    $endpoint = WebhookTestHelpers::endpoint(['failure_count' => 3]);
-    $delivery = WebhookTestHelpers::delivery($endpoint);
+    $endpoint = WebhookTestHelpers::endpoint(['failure_count' => 3, 'failing_since' => now()->subDay()]);
+    $delivery = WebhookTestHelpers::delivery($endpoint, ['payload' => ['id' => 'evt-1', 'type' => 'folder.created']]);
 
     runDeliver($delivery);
 
@@ -53,43 +55,49 @@ it('marks the delivery delivered and sends the signed POST on a 2xx', function (
         ->and($delivery->next_retry_at)->toBeNull()
         ->and($delivery->last_error)->toBeNull()
         ->and($endpoint->failure_count)->toBe(0)
+        ->and($endpoint->failing_since)->toBeNull()
         ->and($endpoint->last_triggered_at)->toBeInstanceOf(Carbon::class);
 
-    // Verify the HMAC signature byte-for-byte: HMAC-SHA256 of "{timestamp}.{body}".
+    // Verify the signature byte-for-byte: HMAC-SHA256 of "{id}.{timestamp}.{body}" under the decoded key.
     Http::assertSent(function (Request $request): bool {
-        $signature = $request->header('X-Vaulter-Signature')[0];
-        $timestamp = $request->header('X-Vaulter-Timestamp')[0];
-        $expected = hash_hmac('sha256', "{$timestamp}.{$request->body()}", 'topsecret');
+        $signature = $request->header('webhook-signature')[0];
+        $timestamp = $request->header('webhook-timestamp')[0];
+        $expected = 'v1,'.base64_encode(hash_hmac('sha256', "evt-1.{$timestamp}.{$request->body()}", WebhookSecret::keyBytes(WebhookTestHelpers::SECRET), true));
 
         return $request->url() === 'https://hooks.test/receive'
             && $request->method() === 'POST'
-            && $request->header('X-Vaulter-Event')[0] === 'folder.created'
+            && $request->header('webhook-id')[0] === 'evt-1'
+            && $request->header('User-Agent')[0] === 'Vaulter-Webhooks/1'
+            && $request->header('Content-Type')[0] === 'application/json'
+            && $request->header('X-Vaulter-Event') === []
+            && $request->header('X-Vaulter-Signature') === []
             && $signature === $expected;
     });
 
     Http::assertSentCount(1);
 });
 
-it('signs with the per-endpoint secret and binds the timestamp (replay-resistant)', function (): void {
+it('signs with the per-endpoint secret and binds id and timestamp (replay-resistant)', function (): void {
     Http::fake(['https://hooks.test/*' => Http::response('', 200)]);
 
-    $endpoint = WebhookTestHelpers::endpoint(['signing_secret' => 'per-endpoint-secret']);
-    $delivery = WebhookTestHelpers::delivery($endpoint);
+    $secret = WebhookSecret::generate();
+    $endpoint = WebhookTestHelpers::endpoint(['signing_secret' => $secret]);
+    $delivery = WebhookTestHelpers::delivery($endpoint, ['payload' => ['id' => 'evt-2', 'type' => 'folder.created']]);
 
     runDeliver($delivery);
 
-    Http::assertSent(function (Request $request): bool {
-        $signature = $request->header('X-Vaulter-Signature')[0];
-        $timestamp = (int) $request->header('X-Vaulter-Timestamp')[0];
+    Http::assertSent(function (Request $request) use ($secret): bool {
+        $signature = $request->header('webhook-signature')[0];
+        $timestamp = (int) $request->header('webhook-timestamp')[0];
 
         $signer = new WebhookSigner;
 
-        // The signed material is "{ts}.{body}" — tampering with the timestamp (a replay)
-        // breaks the signature.
-        $valid = $signature === $signer->sign($request->body(), 'per-endpoint-secret', $timestamp);
-        $replayBroken = $signature !== $signer->sign($request->body(), 'per-endpoint-secret', $timestamp + 1);
+        // Changing the timestamp (a replay) or the id (another event) breaks the signature.
+        $valid = $signature === $signer->sign('evt-2', $timestamp, $request->body(), $secret);
+        $replayBroken = $signature !== $signer->sign('evt-2', $timestamp + 1, $request->body(), $secret);
+        $idBroken = $signature !== $signer->sign('evt-3', $timestamp, $request->body(), $secret);
 
-        return $valid && $replayBroken;
+        return $valid && $replayBroken && $idBroken;
     });
 });
 
@@ -111,7 +119,8 @@ it('marks the delivery failed and arms a future retry on a non-2xx', function ()
         ->and($delivery->next_retry_at)->toBeInstanceOf(Carbon::class)
         ->and($delivery->next_retry_at->isFuture())->toBeTrue()
         ->and($delivery->last_error)->toBe('HTTP 500')
-        ->and($endpoint->failure_count)->toBe(0)
+        ->and($endpoint->failure_count)->toBe(1)
+        ->and($endpoint->failing_since)->not->toBeNull()
         ->and($endpoint->is_active)->toBeTrue();
 });
 
@@ -131,9 +140,9 @@ it('records the transport error message when the POST throws', function (): void
         ->and($delivery->next_retry_at->isFuture())->toBeTrue();
 });
 
-it('uses the configured backoff schedule for next_retry_at', function (): void {
-    config()->set('vaulter.webhooks.backoff', [10, 30, 60, 300]);
-    config()->set('vaulter.webhooks.max_attempts', 5);
+it('uses the configured retry schedule for next_retry_at', function (): void {
+    config()->set('vaulter.webhooks.retry_schedule', [10, 30, 60, 300]);
+    config()->set('vaulter.webhooks.retry_jitter', 0);
 
     Http::fake(['https://hooks.test/*' => Http::response('', 503)]);
 
@@ -143,23 +152,23 @@ it('uses the configured backoff schedule for next_retry_at', function (): void {
 
         runDeliver($delivery);
 
-        // Attempt #1 uses backoff[0] = 10s (second-granular cast).
+        // Attempt #1 uses schedule[0] = 10s (second-granular cast).
         expect($delivery->refresh()->next_retry_at->format('Y-m-d H:i:s'))
             ->toBe(now()->addSeconds(10)->format('Y-m-d H:i:s'));
 
         runDeliver($delivery);
 
-        // Attempt #2 uses backoff[1] = 30s.
+        // Attempt #2 uses schedule[1] = 30s.
         expect($delivery->refresh()->next_retry_at->format('Y-m-d H:i:s'))
             ->toBe(now()->addSeconds(30)->format('Y-m-d H:i:s'));
     });
 });
 
-// ─────────────── max_attempts — dead (DLQ) + endpoint penalised ───────────────
+// ─────────────── schedule spent — dead (DLQ), endpoint failing run grows ───────────────
 
-it('parks the delivery dead after max_attempts and bumps the endpoint failure_count', function (): void {
-    config()->set('vaulter.webhooks.max_attempts', 3);
-    config()->set('vaulter.webhooks.disable_after_failures', 10);
+it('parks the delivery dead after the last scheduled retry and extends the endpoint failing run', function (): void {
+    config()->set('vaulter.webhooks.retry_schedule', [1, 1]);
+    config()->set('vaulter.webhooks.retry_jitter', 0);
 
     Http::fake(['https://hooks.test/*' => Http::response('', 500)]);
 
@@ -181,26 +190,11 @@ it('parks the delivery dead after max_attempts and bumps the endpoint failure_co
         ->and($delivery->attempts)->toBe(3)
         ->and($delivery->next_retry_at)->toBeNull()
         ->and($delivery->last_error)->toBe('HTTP 500')
-        ->and($endpoint->failure_count)->toBe(1)
+        ->and($endpoint->failure_count)->toBe(3)
+        ->and($endpoint->failing_since)->not->toBeNull()
         ->and($endpoint->is_active)->toBeTrue();
 
     Http::assertSentCount(3);
-});
-
-it('auto-disables the endpoint once failure_count reaches disable_after_failures', function (): void {
-    config()->set('vaulter.webhooks.max_attempts', 1);
-    config()->set('vaulter.webhooks.disable_after_failures', 3);
-
-    Http::fake(['https://hooks.test/*' => Http::response('', 500)]);
-
-    $endpoint = WebhookTestHelpers::endpoint(['failure_count' => 2]);
-
-    runDeliver(WebhookTestHelpers::delivery($endpoint));
-
-    $endpoint->refresh();
-
-    expect($endpoint->failure_count)->toBe(3)
-        ->and($endpoint->is_active)->toBeFalse();
 });
 
 // ─────────────── terminal idempotency ───────────────
@@ -279,7 +273,7 @@ it('keeps an active attempt out of the retry sweep and recovers an expired worke
 });
 
 it('does not let an expired worker overwrite the replacement attempt', function (): void {
-    $endpoint = WebhookTestHelpers::endpoint(['failure_count' => 2]);
+    $endpoint = WebhookTestHelpers::endpoint(['failure_count' => 2, 'failing_since' => now()]);
     $delivery = WebhookTestHelpers::delivery($endpoint);
     $posts = 0;
     Http::fake(function () use ($delivery, &$posts) {

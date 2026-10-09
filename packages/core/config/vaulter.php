@@ -133,13 +133,15 @@ return [
         ],
     ],
     'webhooks' => [
-        'timeout' => 5,
-        'max_attempts' => 5,
-        'backoff' => [10, 30, 60, 300, 1800],
-        'disable_after_failures' => 10,
-        'signature_header' => 'X-Vaulter-Signature',
-        'timestamp_header' => 'X-Vaulter-Timestamp',
-        'event_header' => 'X-Vaulter-Event',
+        'timeout' => 15,
+        // Seconds to wait after the n-th failed attempt; attempts = entries + 1 (about three
+        // days in total). Jitter is the +/- fraction applied to each delay.
+        'retry_schedule' => [5, 300, 1800, 7200, 18000, 36000, 50400, 72000, 86400],
+        'retry_jitter' => 0.1,
+        // Days of uninterrupted failure before an endpoint is disabled; 0 never disables.
+        'disable_after_days' => 5,
+        // Seconds the previous secret keeps signing after a rotation (max 604800).
+        'secret_rotation_overlap' => 86400,
         'retention_days' => 30,
         'retry_claim_seconds' => 60,
         // The outbox relay leases a row for claim_seconds while it materializes

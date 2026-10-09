@@ -296,18 +296,22 @@ See [Drive · lifecycle](/guide/drive#drive-lifecycle).
 
 ## Reliability — webhooks — `webhooks.*`
 
-A transactional outbox + signed webhook delivery (at-least-once, exponential backoff,
-DLQ).
+A transactional outbox + [Standard Webhooks](/guide/webhooks#headers-and-signature) signed delivery
+(at-least-once, a retry schedule, DLQ).
+
+**Removed in 1.0** — a published config that still sets one of these fails boot with
+`InvalidConfigurationException` naming the replacement: `webhooks.max_attempts` and `webhooks.backoff`
+(→ `retry_schedule`), `webhooks.disable_after_failures` (→ `disable_after_days`),
+`webhooks.signature_header`, `webhooks.timestamp_header` and `webhooks.event_header` (the headers are
+fixed by the standard).
 
 | Key | Env | Default | Controls |
 |---|---|---|---|
-| `webhooks.timeout` | — | `5` | HTTP request timeout (seconds) per delivery POST |
-| `webhooks.max_attempts` | — | `5` | Total attempts before a delivery is parked dead (DLQ) |
-| `webhooks.backoff` | — | `[10, 30, 60, 300, 1800]` | Per-attempt retry delay (seconds); the tail caps further retries |
-| `webhooks.disable_after_failures` | — | `10` | Consecutive dead deliveries that flip an endpoint `is_active` off |
-| `webhooks.signature_header` | — | `X-Vaulter-Signature` | The HMAC-SHA256 signature header |
-| `webhooks.timestamp_header` | — | `X-Vaulter-Timestamp` | The timestamp header (replay resistance) |
-| `webhooks.event_header` | — | `X-Vaulter-Event` | The event-name header |
+| `webhooks.timeout` | — | `15` | HTTP request timeout (seconds) per delivery POST |
+| `webhooks.retry_schedule` | — | `[5, 300, 1800, 7200, 18000, 36000, 50400, 72000, 86400]` | Seconds to wait after the n-th failed attempt; attempts = entries + 1 (about three days), the last failure makes the delivery dead |
+| `webhooks.retry_jitter` | — | `0.1` | Fraction (0–0.5) added or removed at random from each retry delay |
+| `webhooks.disable_after_days` | — | `5` | Days of unbroken failure after which an endpoint is switched off (`0` = never) |
+| `webhooks.secret_rotation_overlap` | — | `86400` | Seconds the previous secret keeps signing after a rotation (at most 604800) |
 | `webhooks.retention_days` | — | `30` | Age past which completed outbox rows + terminal deliveries are prunable (pending rows never are) |
 | `webhooks.relay.claim_seconds` | — | `60` | How long a relay worker leases an outbox row; a crashed worker's row is resumed after it. Also how long a pending delivery may wait for its job before the retry sweep re-queues it |
 | `webhooks.relay.fanout_chunk` | — | `100` | Endpoints written per fan-out transaction (integer 1..1000; anything else fails boot) |

@@ -562,11 +562,11 @@ Schedule::command('vaulter:prune-webhooks')->daily();        // reclaim settled 
 ```
 
 Subscriber endpoints are managed through the `webhook-endpoints` routes (gated by the
-`WebhookEndpointPolicy` manage ability). Each delivery POST carries an HMAC-SHA256 signature
-(`X-Vaulter-Signature`), a timestamp (`X-Vaulter-Timestamp`) and the event name
-(`X-Vaulter-Event`); consumers **dedupe on the `event_id`** in the payload, since delivery is
-at-least-once. Tune `config('vaulter.webhooks.*')` (`max_attempts`, `backoff`,
-`disable_after_failures`).
+`WebhookEndpointPolicy` manage ability). Each delivery POST is signed per
+[Standard Webhooks](/guide/webhooks#headers-and-signature) (`webhook-id`, `webhook-timestamp`,
+`webhook-signature`); consumers **dedupe on `webhook-id`** (the envelope `id`), since delivery is
+at-least-once. Tune `config('vaulter.webhooks.*')` (`retry_schedule`, `retry_jitter`,
+`disable_after_days`).
 
 ### Pruning settled outbox & webhook history
 

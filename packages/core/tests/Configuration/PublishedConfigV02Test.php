@@ -7,6 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Configuration\WebhooksConfig;
 use Vaulter\Contracts\Sharing\ShareTokenGenerator;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
@@ -62,6 +63,11 @@ final class PublishedConfigV02Test extends TestCase
         $legacy['default_panel'] = DefaultProfile::class;
         $legacy['share_token_generator'] = PublishedV02TokenGenerator::class;
         $legacy['enabled_document_types'] = ['markdown'];
+        // 1.0 refuses the pre-1.0 delivery keys at boot (ConfigValidatorTest pins that); this
+        // test is about the rest of a published 0.2 file, so the host is taken to have dropped them.
+        foreach (array_keys(WebhooksConfig::REMOVED_KEYS) as $removed) {
+            unset($legacy['webhooks'][$removed]);
+        }
         $app['config']->set('vaulter', $legacy);
 
         // Testbench installs its exception handler before defineEnvironment, then boots.

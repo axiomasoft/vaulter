@@ -21,9 +21,10 @@ outbox relay, webhook retry, webhook prune) are designed to be scheduled.
 | `vaulter:revisions:prune` | Delete non-current file revisions past the profile retention policy |
 | `vaulter:sweep-uploads` | Abort and clean up stale resumable-upload sessions |
 | `vaulter:relay-outbox` | Relay pending outbox events to webhook endpoints |
-| `vaulter:retry-webhooks` | Re-dispatch webhook deliveries whose backoff elapsed |
+| `vaulter:retry-webhooks` | Re-dispatch webhook deliveries whose retry delay elapsed |
 | `vaulter:prune-webhooks` | Delete completed outbox rows and terminal webhook deliveries past retention |
 | `vaulter:webhooks:legacy-fanout` | List or replay pre-1.0 outbox rows whose fan-out cannot be proven |
+| `vaulter:webhooks:redeliver` | Send finished webhook deliveries again with the same `webhook-id` |
 | `vaulter:events:reference` | Regenerate (or `--check`) the event catalogue table in the reference docs |
 
 ---
@@ -300,6 +301,30 @@ vaulter:webhooks:legacy-fanout
 php artisan vaulter:webhooks:legacy-fanout --since=2026-09-01
 php artisan vaulter:webhooks:legacy-fanout --since=2026-09-01 --replay --dry-run
 php artisan vaulter:webhooks:legacy-fanout --since=2026-09-01 --replay
+```
+
+---
+
+## `vaulter:webhooks:redeliver`
+
+Send finished deliveries again: one by id, or every delivery of a status (default `dead`)
+filtered by endpoint and age. Each goes through `RedeliverWebhookAction`: the same row returns to
+`pending` with `attempts = 0`, so the receiver gets the **same `webhook-id`**; a delivery whose
+endpoint is inactive, or that is still `pending`/`failed`, is reported and skipped. Only rows still
+inside `webhooks.retention_days` exist to redeliver. Exit code is non-zero when nothing could be
+sent. Gated by `features.webhooks`. See [Webhooks → Redelivery](/guide/webhooks#redelivery).
+
+```
+vaulter:webhooks:redeliver
+    {delivery?}    Id of one delivery
+    {--endpoint=}  Only deliveries of this endpoint id
+    {--since=}     Only deliveries created at or after this date/time
+    {--status=dead} delivered or dead
+```
+
+```bash
+php artisan vaulter:webhooks:redeliver 1042
+php artisan vaulter:webhooks:redeliver --endpoint=7 --since=2026-10-01
 ```
 
 ---

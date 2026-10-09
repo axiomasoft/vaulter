@@ -6,6 +6,60 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Standard Webhooks delivery 1.0 (PLAN2.P5.4, D58–D60/D50/D35)
+
+Run `php artisan migrate`: `2026_10_10_000003_webhook_endpoints_v1` adds the rotation and
+auto-disable columns and converts the stored secrets. **Receivers must be updated before the
+first delivery after the upgrade** — the wire format changes.
+
+- **Signature and headers (breaking for every receiver).** Before: `X-Vaulter-Signature` =
+  `hex(HMAC-SHA256(secret, "{timestamp}.{body}"))`, plus `X-Vaulter-Timestamp` and
+  `X-Vaulter-Event`. Now: [Standard Webhooks](https://www.standardwebhooks.com/) — `webhook-id`
+  (the envelope `id`), `webhook-timestamp`, `webhook-signature: v1,<base64>` over
+  `"{webhook-id}.{webhook-timestamp}.{body}"`; the event type is the body's `type`. Verify with any
+  Standard Webhooks library or, in PHP:
+
+  ```php
+  // Before
+  $ok = hash_equals(hash_hmac('sha256', $request->header('X-Vaulter-Timestamp').'.'.$body, $secret),
+      $request->header('X-Vaulter-Signature'));
+
+  // After — $secret is the whsec_… string; the body must be the raw bytes
+  (new \Vaulter\Webhooks\StandardWebhookVerifier)->verify($request->headers->all(), $body, [$secret]);
+  // throws \Vaulter\Exceptions\Webhooks\InvalidWebhookSignatureException (answer 400)
+  ```
+- **Secrets are `whsec_` + base64(key).** The migration rewrites every stored secret `S` as
+  `whsec_` + base64(`S`) (encrypted as before), so the HMAC key keeps exactly the bytes it had:
+  a receiver that kept the old string `S` as its key now stores `whsec_` + base64(`S`) — or
+  keeps using `S` as the raw key in its own HMAC code. It stops with a message, changing nothing,
+  if a secret does not decrypt with the current `APP_KEY` or is not 24–64 bytes. `down()` restores
+  the old secrets (an endpoint created after the upgrade gets its random key bytes back).
+  `WebhookSigner::sign(string $body, string $secret, int $timestamp)` became
+  `sign(string $webhookId, int $timestamp, string $body, string $secret)`.
+- **Rotation (new).** `RotateWebhookSecretAction::execute($endpoint, ?int $overlapSeconds = null)`
+  returns `RotatedWebhookSecret` once; the old secret keeps signing for
+  `webhooks.secret_rotation_overlap`. New columns `previous_signing_secret`,
+  `previous_secret_expires_at`. `RegisterWebhookEndpointAction` now generates a `whsec_` secret
+  (before: 64 random characters).
+- **Retry policy (breaking config).** Before: `webhooks.max_attempts` 5, `backoff`
+  `[10, 30, 60, 300, 1800]`, `timeout` 5. Now: `retry_schedule`
+  `[5, 300, 1800, 7200, 18000, 36000, 50400, 72000, 86400]` (ten attempts, about three days),
+  `retry_jitter` 0.1, `timeout` 15. **`max_attempts`, `backoff`, `disable_after_failures`,
+  `signature_header`, `timestamp_header`, `event_header` are removed — a published config that
+  still has one fails boot** with `InvalidConfigurationException` naming the replacement; delete
+  them from `config/vaulter.php`.
+- **Auto-disable (breaking).** Before: `disable_after_failures` (10) dead deliveries switched an
+  endpoint off. Now: `webhooks.disable_after_days` (5, `0` = never) of unbroken failure, measured
+  from `failing_since`; any success resets it. A disabled endpoint's pending/failed deliveries are
+  `dead` (`last_error = 'endpoint_disabled'`) and `Vaulter\Webhooks\Events\WebhookEndpointDisabled`
+  is dispatched after commit. Manual deactivation (`disabled_reason = 'manual'`) kills them too;
+  re-enabling clears `failing_since`/`disabled_*`.
+- **Redelivery (new).** `RedeliverWebhookAction` and `php artisan vaulter:webhooks:redeliver`
+  re-arm a `delivered`/`dead` delivery with the same `webhook-id`
+  (`webhook_delivery_not_redeliverable`, 409 otherwise).
+- **`WebhookEndpoint` no longer serializes secrets** (`toArray()`/`toJson()` omit `signing_secret`
+  and `previous_signing_secret`).
+
 ### Recoverable webhook fan-out (PLAN2.P5.3, D29/D50/D60)
 
 Run `php artisan migrate`: `2026_10_10_000002_webhook_fanout` changes three tables.

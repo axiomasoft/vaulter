@@ -54,6 +54,8 @@ Codes are a stable public contract (AD29).
 | `cannot_delete_head_revision` | 409 | `Vaulter\Exceptions\Drive\CannotDeleteHeadRevisionException` |
 | `revision_pinned` | 409 | `Vaulter\Exceptions\Drive\RevisionPinnedException` |
 | `validation_failed` | 422 | `Vaulter\Exceptions\Webhooks\BlockedOutboundUrlException` |
+| `webhook_delivery_not_redeliverable` | 409 | `Vaulter\Exceptions\Webhooks\WebhookDeliveryNotRedeliverableException` |
+| `invalid_webhook_signature` | 400 | `Vaulter\Exceptions\Webhooks\InvalidWebhookSignatureException` |
 | `validation_failed` | 422 | `Vaulter\Exceptions\Access\UnenumerableGrantSubjectException` |
 | `unknown_profile` | 422 | `Vaulter\Exceptions\Profiles\UnknownProfileException` |
 | `concurrent_update` | 409 | `Vaulter\Exceptions\Database\ConcurrentUpdateException` |
@@ -376,6 +378,20 @@ empty) body, or raise the limit.
 `BlockedOutboundUrlException` — the outbound webhook URL was refused: a disallowed
 scheme, a malformed URL, or a host resolving to a blocked network (SSRF protection).
 Register the endpoint with a public http(s) URL.
+
+## webhook-delivery-not-redeliverable
+
+`WebhookDeliveryNotRedeliverableException` — a manual redelivery was asked for a delivery that is
+still `pending` or `failed` (its retries are not finished) or whose endpoint is inactive. Wait
+for the retries to end or for the delivery to die, and re-enable the endpoint first.
+
+## webhook-signature
+
+`InvalidWebhookSignatureException` — `StandardWebhookVerifier` refused a received webhook: a
+header is missing, `webhook-timestamp` is outside the tolerance, or no signature matches the raw
+body and the secrets. Verify the unmodified request body with the endpoint's `whsec_` secret (both
+secrets during a rotation) and check the receiver's clock. See
+[Webhooks → Verifying a delivery](/guide/webhooks#verifying-a-delivery).
 
 ## invalid-cursor
 

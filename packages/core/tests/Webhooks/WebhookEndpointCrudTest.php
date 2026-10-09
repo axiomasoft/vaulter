@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Gate;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Tests\Fixtures\TestUser;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
+use Vaulter\Webhooks\WebhookSecret;
 
 /**
  * The webhook-endpoint management HTTP surface (§2.11 / D14 / M3b): register / list /
@@ -31,7 +32,8 @@ it('registers an endpoint and returns the signing_secret exactly once', function
     $secret = $response->json('data.signing_secret');
 
     expect($secret)->toBeString()
-        ->and(strlen((string) $secret))->toBe(64)
+        ->and($secret)->toStartWith('whsec_')
+        ->and(strlen(WebhookSecret::keyBytes((string) $secret)))->toBe(32)
         ->and($response->json('data.url'))->toBe('https://hooks.test/receive')
         ->and($response->json('data.events'))->toBe(['folder.created', 'share.created'])
         ->and($response->json('data.is_active'))->toBeTrue();

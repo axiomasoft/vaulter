@@ -103,4 +103,25 @@ final readonly class WebhookDeliveryStoreRepository
 
         return $model::query();
     }
+
+    /**
+     * Finish every delivery of an endpoint that is still waiting or retrying as dead.
+     * Used when the endpoint is switched off: nothing may be sent to it afterwards, and
+     * dropping the claim fences a job that is mid-flight so it cannot settle the row.
+     */
+    public function killOpenForEndpoint(int|string $endpointId, string $reason): int
+    {
+        return $this->newQuery()
+            ->where('endpoint_id', $endpointId)
+            ->whereIn('status', ['pending', 'failed'])
+            ->toBase()
+            ->update([
+                'status' => 'dead',
+                'next_retry_at' => null,
+                'claim_token' => null,
+                'claim_until' => null,
+                'last_error' => $reason,
+                'updated_at' => now(),
+            ]);
+    }
 }

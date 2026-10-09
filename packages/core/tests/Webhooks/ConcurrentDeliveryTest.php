@@ -93,6 +93,10 @@ it('excludes a duplicate worker while another process is posting the same delive
             ->and($fresh->attempts)->toBe(1)
             ->and($fresh->claim_token)->toBeNull()
             ->and($fresh->claim_until)->toBeNull();
+        // Only the worker that held the lease accounts the attempt on the endpoint.
+        $settled = $endpoint->newQuery()->findOrFail($endpointId);
+        expect($settled->failure_count)->toBe($outcome === '200' ? 0 : 1)
+            ->and($settled->failing_since === null)->toBe($outcome === '200');
     } finally {
         if (!$released) {
             fwrite($parent, "release\n");

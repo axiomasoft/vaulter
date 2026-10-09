@@ -214,3 +214,17 @@ NFC, если установлен ext-intl.
 (`vaulter.database.write_guard`, по умолчанию `true`) отклоняет запись до обращения к базе.
 Перенесите запись в операцию. `DB::table()` и сырой SQL не перехватываются: защита — это
 эшелонированная оборона, а не песочница.
+
+## webhook-delivery-not-redeliverable
+
+`WebhookDeliveryNotRedeliverableException` (`webhook_delivery_not_redeliverable`, 409) — ручная
+повторная доставка запрошена для доставки, которая ещё `pending` или `failed` (повторы не
+закончились), либо чей эндпоинт неактивен. Дождитесь конца повторов или смерти доставки и
+сначала включите эндпоинт.
+
+## webhook-signature
+
+`InvalidWebhookSignatureException` (`invalid_webhook_signature`, 400) — `StandardWebhookVerifier`
+отклонил полученный вебхук: нет заголовка, `webhook-timestamp` вне допуска или ни одна подпись не
+совпала с сырым телом и секретами. Проверяйте неизменённое тело секретом эндпоинта `whsec_` (при
+ротации — обоими) и сверьте часы получателя.

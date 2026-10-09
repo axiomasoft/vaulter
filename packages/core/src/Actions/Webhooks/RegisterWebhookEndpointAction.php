@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vaulter\Actions\Webhooks;
 
-use Illuminate\Support\Str;
 use Vaulter\Data\Webhooks\RegisteredWebhookEndpoint;
 use Vaulter\Data\Webhooks\RegisterWebhookEndpointInput;
 use Vaulter\Database\VaulterDatabase;
@@ -14,13 +13,14 @@ use Vaulter\Repositories\Drive\DriveReadRepository;
 use Vaulter\Repositories\Webhooks\WebhookEndpointStoreRepository;
 use Vaulter\Support\Identity;
 use Vaulter\Tenancy\TenancyBoundary;
+use Vaulter\Webhooks\WebhookSecret;
 
 /**
  * Register a webhook endpoint (master plan §2.11 / D14 / M3b). It GENERATES the
- * signing_secret here — a 64-char random string the receiver verifies HMAC-SHA256
+ * signing secret here — a Standard Webhooks "whsec_" secret the receiver verifies
  * signatures with — persists it, and returns the raw secret ONCE via the result. The
- * resource never re-exposes it, so it is unrecoverable afterward (the owner must
- * rotate by re-registering to get a new one).
+ * resource never re-exposes it, so it is unrecoverable afterward (the owner gets a new
+ * one with RotateWebhookSecretAction).
  *
  * The endpoint belongs to the current tenant under strict tenancy (null otherwise)
  * and receives only that tenant's events. A drive filter must name a drive visible
@@ -40,7 +40,7 @@ final readonly class RegisterWebhookEndpointAction
 
     public function execute(RegisterWebhookEndpointInput $data): RegisteredWebhookEndpoint
     {
-        $secret = $this->generateSecret();
+        $secret = WebhookSecret::generate();
 
         return $this->database->transaction(function () use ($data, $secret): RegisteredWebhookEndpoint {
             $endpoint = $this->endpoints->create(
@@ -65,14 +65,5 @@ final readonly class RegisterWebhookEndpointAction
         }
 
         return Identity::key($drive->getKey()) ?? throw NodeNotFoundException::forId('drive');
-    }
-
-    /**
-     * A 64-char (256-bit) random hex secret — ample entropy for an HMAC key, and a
-     * fixed length the signing_secret column always fits.
-     */
-    private function generateSecret(): string
-    {
-        return Str::random(64);
     }
 }

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 use Vaulter\Webhooks\SigningSecretEncryptor;
+use Vaulter\Webhooks\WebhookSecret;
 
 /**
  * The webhook signing_secret is encrypted at rest (§2.11 / F-P1.7-02): a DB
@@ -57,4 +58,59 @@ it('encrypts a legacy plaintext secret in place, idempotently, F-P1.7-02', funct
 
     $second = DB::table($table)->where('url', 'https://legacy.test/hook')->value('signing_secret');
     expect($second)->toBe($first);
+});
+
+it('converts a pre-1.0 secret to whsec_ keeping the key bytes, idempotently and reversibly', function (): void {
+    $table = app(DatabaseConfig::class)->table('webhook_endpoints');
+    $legacy = 'legacy-secret-with-24-or-more-bytes';
+    $native = WebhookSecret::generate();
+    foreach (['https://legacy.test/a' => $legacy, 'https://native.test/b' => $native] as $url => $secret) {
+        DB::table($table)->insert([
+            'url' => $url, 'events' => json_encode(['folder.created']), 'signing_secret' => Crypt::encryptString($secret),
+            'is_active' => true, 'failure_count' => 0, 'created_at' => now(), 'updated_at' => now(),
+        ]);
+    }
+    $stored = static fn (string $url): string => Crypt::decryptString((string) DB::table($table)->where('url', $url)->value('signing_secret'));
+    $encryptor = app(SigningSecretEncryptor::class);
+
+    // Only the legacy row changes; the native whsec_ secret is left alone.
+    expect($encryptor->convertToWebhookSecrets($table))->toBe(1)
+        ->and($stored('https://legacy.test/a'))->toBe(WebhookSecret::fromKeyBytes($legacy))
+        ->and(WebhookSecret::keyBytes($stored('https://legacy.test/a')))->toBe($legacy)
+        ->and($stored('https://native.test/b'))->toBe($native)
+        ->and($encryptor->convertToWebhookSecrets($table))->toBe(0);
+
+    // Rollback restores the old plaintext; a natively generated secret yields its key bytes.
+    expect($encryptor->revertFromWebhookSecrets($table))->toBe(2)
+        ->and($stored('https://legacy.test/a'))->toBe($legacy)
+        ->and($stored('https://native.test/b'))->toBe(WebhookSecret::keyBytes($native))
+        ->and($encryptor->revertFromWebhookSecrets($table))->toBe(0);
+});
+
+it('stops the conversion on a legacy secret that cannot be a Standard Webhooks key', function (): void {
+    $table = app(DatabaseConfig::class)->table('webhook_endpoints');
+    DB::table($table)->insert([
+        'url' => 'https://short.test/a', 'events' => json_encode(['folder.created']), 'signing_secret' => Crypt::encryptString('too-short'),
+        'is_active' => true, 'failure_count' => 0, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    expect(fn () => app(SigningSecretEncryptor::class)->convertToWebhookSecrets($table))
+        ->toThrow(RuntimeException::class, 'outside the 24 to 64 bytes');
+});
+
+it('stops the whole conversion when a secret cannot be decrypted', function (): void {
+    $table = app(DatabaseConfig::class)->table('webhook_endpoints');
+    $good = 'legacy-secret-with-24-or-more-bytes';
+    foreach ([['https://good.test/a', Crypt::encryptString($good)], ['https://bad.test/b', 'not-encrypted-with-this-key']] as [$url, $value]) {
+        DB::table($table)->insert([
+            'url' => $url, 'events' => json_encode(['folder.created']), 'signing_secret' => $value,
+            'is_active' => true, 'failure_count' => 0, 'created_at' => now(), 'updated_at' => now(),
+        ]);
+    }
+
+    expect(fn () => app(SigningSecretEncryptor::class)->convertToWebhookSecrets($table))
+        ->toThrow(RuntimeException::class, 'nothing was changed');
+
+    // All or nothing: the readable row was not converted either.
+    expect(Crypt::decryptString((string) DB::table($table)->where('url', 'https://good.test/a')->value('signing_secret')))->toBe($good);
 });

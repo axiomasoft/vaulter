@@ -303,21 +303,20 @@ Vaulter\Configuration\WebhooksConfig
   __construct(\Illuminate\Contracts\Config\Repository $config)
   allowedIpRanges(): array
   allowedSchemes(): array
-  backoff(int $attempt): int
+  assertNoRemovedKeys(): void
   blockedIpRanges(): array
   connectTimeout(): int
-  disableAfterFailures(): int
-  eventHeader(): string
+  disableAfterDays(): int
   manageAbility(): ?string
-  maxAttempts(): int
   maxResponseBytes(): int
   relayClaimSeconds(): int
   relayFanoutChunk(): int
   retentionDays(): int
   retryClaimSeconds(): int
-  signatureHeader(): string
+  retryJitter(): float
+  retrySchedule(): array
+  secretRotationOverlap(): int
   timeout(): int
-  timestampHeader(): string
   urlGuard(): string
 
 Vaulter\Access\AccessResolver

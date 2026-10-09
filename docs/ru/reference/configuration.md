@@ -271,17 +271,17 @@ php artisan vendor:publish --tag=vaulter-config
 
 ## Надёжность — вебхуки — `webhooks.*`
 
-Транзакционный outbox + подписанная доставка вебхуков (at-least-once, экспоненциальный backoff, DLQ).
+Транзакционный outbox + доставка, подписанная по [Standard Webhooks](/guide/webhooks#headers-and-signature) (at-least-once, расписание повторов, DLQ).
+
+**Удалено в 1.0** — опубликованный конфиг с любым из этих ключей не загрузится: `InvalidConfigurationException` назовёт замену. `webhooks.max_attempts` и `webhooks.backoff` (→ `retry_schedule`), `webhooks.disable_after_failures` (→ `disable_after_days`), `webhooks.signature_header`, `webhooks.timestamp_header`, `webhooks.event_header` (заголовки зафиксированы стандартом).
 
 | Ключ | Env | По умолчанию | Управляет |
 |---|---|---|---|
-| `webhooks.timeout` | — | `5` | Таймаут HTTP-запроса (секунды) на каждый POST доставки |
-| `webhooks.max_attempts` | — | `5` | Всего попыток, прежде чем доставка паркуется как мёртвая (DLQ) |
-| `webhooks.backoff` | — | `[10, 30, 60, 300, 1800]` | Задержка повторной попытки (секунды) на каждую попытку; хвост ограничивает дальнейшие ретраи |
-| `webhooks.disable_after_failures` | — | `10` | Сколько подряд мёртвых доставок выключают `is_active` у эндпойнта |
-| `webhooks.signature_header` | — | `X-Vaulter-Signature` | Заголовок подписи HMAC-SHA256 |
-| `webhooks.timestamp_header` | — | `X-Vaulter-Timestamp` | Заголовок метки времени (защита от повторов) |
-| `webhooks.event_header` | — | `X-Vaulter-Event` | Заголовок имени события |
+| `webhooks.timeout` | — | `15` | Таймаут HTTP-запроса (секунды) на каждый POST доставки |
+| `webhooks.retry_schedule` | — | `[5, 300, 1800, 7200, 18000, 36000, 50400, 72000, 86400]` | Пауза (секунды) после n-й неудачной попытки; попыток = элементов + 1 (около трёх суток), последняя неудача делает доставку мёртвой |
+| `webhooks.retry_jitter` | — | `0.1` | Доля (0–0,5), на которую случайно меняется каждая пауза повтора |
+| `webhooks.disable_after_days` | — | `5` | Сколько суток непрерывных сбоев выключают эндпоинт (`0` — никогда) |
+| `webhooks.secret_rotation_overlap` | — | `86400` | Сколько секунд прежний секрет продолжает подписывать после ротации (не более 604800) |
 | `webhooks.retention_days` | — | `30` | Возраст, после которого завершённые строки outbox + терминальные доставки можно вычищать (строки в `pending` — никогда) |
 | `webhooks.relay.claim_seconds` | — | `60` | Сколько relay-воркер держит аренду строки outbox; строку упавшего воркера продолжают после неё. Столько же ожидающая доставка ждёт свой job, прежде чем retry sweep поставит её заново |
 | `webhooks.relay.fanout_chunk` | — | `100` | Сколько эндпоинтов пишется за одну транзакцию раскрытия (целое 1..1000; иное значение валит загрузку) |

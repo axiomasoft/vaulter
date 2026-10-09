@@ -1,0 +1,42 @@
+{
+ "item": "PLAN2.P5.4",
+ "prepared_at": "2026-10-10",
+ "runtime": {"provider": "anthropic", "model": "claude-sonnet-5-5", "effort": "high", "source": "CLAUDE_EFFORT=high, session model Sonnet 5.5; plan.py start --actor anthropic/claude-sonnet-5-5/high"},
+ "runs_mode": "Owner instruction 2026-10-10: no heavy runs in plan-run — write code, verify with targeted SQLite Pest tests only. V2-V4 (PG/MySQL) and V90 (block B barrier) are NOT executed here; they remain deferred to the phase-wide barrier run. Pint/PHPStan/opus-coverage (V80/V81) are not run either unless the owner asks. No mutation tools.",
+ "risk_class": "security-boundary (signature, secrets, replay tolerance) + data-migration (encrypted secret conversion) + concurrency (settlement vs auto-disable); public API (config keys removed, wire format, actions, command)",
+ "changed_paths": {
+  "core_src": [
+   "Webhooks/{WebhookSecret,StandardWebhookVerifier}.php (new), Webhooks/WebhookSigner.php (rewrite), Webhooks/Events/WebhookEndpointDisabled.php (new)",
+   "Jobs/Webhooks/DeliverWebhook.php (headers, retry schedule + jitter, failing_since settlement, auto-disable under endpoint lock)",
+   "Actions/Webhooks/{RotateWebhookSecretAction,RedeliverWebhookAction}.php (new); Register/Update/Deactivate actions (whsec_, disabled_reason, deliveries -> dead)",
+   "Data/Webhooks/RotatedWebhookSecret.php (new)",
+   "Exceptions/Webhooks/{InvalidWebhookSignatureException,WebhookDeliveryNotRedeliverableException}.php (new)",
+   "Console/RedeliverWebhooksCommand.php (new) + Providers/ConsoleRegistrar.php",
+   "Models/Webhooks/{WebhookEndpoint,WebhookDelivery}.php; Repositories/Webhooks/{WebhookEndpointStoreRepository,WebhookDeliveryStoreRepository}.php",
+   "Configuration/{WebhooksConfig,ConfigValidator}.php, config/vaulter.php",
+   "Schema/SchemaBuilder.php + database/migrations/2026_10_10_000003_webhook_endpoints_v1.php"
+  ],
+  "tests": [
+   "core/tests/Webhooks/{StandardWebhooksSigningTest,StandardWebhookVerifierTest,WebhookSecretRotationTest,WebhookRetryScheduleTest,WebhookAutoDisableTest,RedeliverWebhookTest}.php (new, SQLite)",
+   "core/tests/Concurrency/WebhookAutoDisableRaceTest.php, core/tests/Upgrade/WebhookEndpointsV1UpgradeTest.php (new, PG; skipped on SQLite) -> barrier",
+   "core/tests/Webhooks/{DeliverWebhookTest,SigningSecretEncryptionTest,ConcurrentDeliveryTest,WebhookEndpointCrudTest,OutboxRelayTest,OutboundUrlGuardTest}.php (update)",
+   "core/tests/Configuration (removed-keys test), core/tests/Observability/P85/P85Section53CoreMetricsTest.php, core/tests/Arch public-api golden"
+  ],
+  "docs": ["docs/guide/webhooks.md", "docs/guide/errors.md + ru", "docs/reference/configuration.md + ru", "docs/reference/commands.md + ru", "UPGRADE.md", "CHANGELOG.md", "artifacts/P5.4/changelog-entry.md"]
+ },
+ "callers_checked": "WebhookSigner::sign: DeliverWebhook + tests only (documents/azgard have their own collaboration signing). WebhooksConfig removed accessors (maxAttempts/backoff/disableAfterFailures/*Header): DeliverWebhook + tests; ScanWork* hits are unrelated. Fixture tests/Fixtures/config/vaulter-0.2.php is a 0.2 snapshot and stays untouched.",
+ "behaviour": [
+  "Headers exactly: Content-Type, User-Agent Vaulter-Webhooks/1, webhook-id = payload id, webhook-timestamp, webhook-signature (current secret first, previous while previous_secret_expires_at > now).",
+  "Signature v1,base64(HMAC-SHA256(\"{id}.{ts}.{body}\", base64-decoded whsec_ key)) over the exact bytes sent.",
+  "Retry delay after n-th failure = retry_schedule[n-1] with +-jitter; attempt count+1 exhausted -> dead.",
+  "failing_since set on first failure, cleared on success; >= disable_after_days -> endpoint inactive, disabled_reason failing, pending/failed -> dead (endpoint_disabled), event after commit; locked endpoint row.",
+  "Redeliver: delivered|dead + active endpoint -> same row pending, attempts 0.",
+  "Migration converts non-whsec_ secrets in one transaction, idempotent, reversible."
+ ],
+ "commands": {
+  "targeted": "cwd . : env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci <the new/changed P5.4 test files>",
+  "V1_equivalent": "same env over packages/core/tests/Webhooks packages/core/tests/Configuration packages/core/tests/Exceptions packages/core/tests/Schema packages/core/tests/Arch"
+ },
+ "negative_controls": {"a": "sign without webhook-id -> StandardWebhooksSigningTest red", "b": "do not move deliveries to dead on disable -> WebhookAutoDisableTest red", "record": "artifacts/P5.4/negative-controls.md (to run only when owner allows verification runs)"},
+ "deferred_to_barrier": "V2 (PG upgrade + SchemaParity), V3 (PG race + ConcurrentDelivery), V4 (MySQL Webhooks+Schema), V80, V81, V90 incl. P5.3 deferred V2-V4"
+}

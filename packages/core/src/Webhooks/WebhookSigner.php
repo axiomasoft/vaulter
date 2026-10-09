@@ -5,33 +5,36 @@ declare(strict_types=1);
 namespace Vaulter\Webhooks;
 
 /**
- * Signs webhook delivery payloads with HMAC-SHA256 for the signature header the
- * relay sends (master plan §2.11 / D14). The signature is computed over a
- * "{timestamp}.{body}" string — binding the timestamp into the signed material is
- * what makes a captured request REPLAY-RESISTANT: a receiver rejects a request whose
- * timestamp is outside its tolerance, and the timestamp cannot be changed without
- * invalidating the signature.
+ * Signs webhook deliveries as the Standard Webhooks spec defines: HMAC-SHA256 over
+ * "{webhook-id}.{webhook-timestamp}.{body}" keyed by the decoded whsec_ secret,
+ * base64-encoded and prefixed "v1,". Binding the id and the timestamp into the signed
+ * bytes is what lets a receiver both deduplicate by id and reject a replayed request.
  *
- * Thin, stateless, read-only helper: it computes a digest and nothing else. It
- * persists nothing and never accepts a Request.
+ * Stateless: it computes digests and nothing else.
  */
 final class WebhookSigner
 {
-    /**
-     * The HMAC-SHA256 signature of "{timestamp}.{body}" keyed by the endpoint's
-     * signing_secret. The receiver re-derives it the same way to verify the request.
-     */
-    public function sign(string $body, string $secret, int $timestamp): string
+    public function sign(string $webhookId, int $timestamp, string $body, string $secret): string
     {
-        return hash_hmac(algo: 'sha256', data: $this->signedPayload(body: $body, timestamp: $timestamp), key: $secret);
+        return 'v1,'.base64_encode(hash_hmac(
+            algo: 'sha256',
+            data: "{$webhookId}.{$timestamp}.{$body}",
+            key: WebhookSecret::keyBytes($secret),
+            binary: true,
+        ));
     }
 
     /**
-     * The exact bytes that are signed: the timestamp, a dot separator, then the JSON
-     * body. Exposed so a test (and a real receiver) can reconstruct it deterministically.
+     * The webhook-signature header value: one signature per secret, space separated,
+     * in the given order (callers list the current secret first).
+     *
+     * @param list<string> $secrets
      */
-    public function signedPayload(string $body, int $timestamp): string
+    public function signatureHeader(string $webhookId, int $timestamp, string $body, array $secrets): string
     {
-        return "{$timestamp}.{$body}";
+        return implode(' ', array_map(
+            fn (string $secret): string => $this->sign(webhookId: $webhookId, timestamp: $timestamp, body: $body, secret: $secret),
+            $secrets,
+        ));
     }
 }

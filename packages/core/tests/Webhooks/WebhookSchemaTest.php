@@ -34,6 +34,7 @@ it('creates v_webhook_endpoints with every §2.11 column', function (): void {
         'id', 'url', 'events', 'signing_secret', 'is_active',
         'last_triggered_at', 'failure_count', 'created_at', 'updated_at',
         'tenant_id', 'drive_id',
+        'previous_signing_secret', 'previous_secret_expires_at', 'failing_since', 'disabled_at', 'disabled_reason',
     ]))->toBeTrue();
 });
 

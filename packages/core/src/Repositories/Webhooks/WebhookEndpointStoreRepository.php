@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Vaulter\Repositories\Webhooks;
 
+use Illuminate\Support\Carbon;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
 
 /**
  * The write side of webhook-endpoint persistence (master plan §2.11 / D14 / M3b). It
- * shapes the rows — create, attribute update, deactivate, delete — and opens NO
- * transaction (the Action owns it). It never generates the signing_secret: the Action
- * mints it (returned once) and hands the stored value here.
+ * shapes the rows — create, attribute update, deactivate, secret rotation, delete —
+ * and opens NO transaction (the Action owns it). It never generates a signing secret:
+ * the Action mints it (returned once) and hands the stored value here.
  */
 final readonly class WebhookEndpointStoreRepository
 {
@@ -67,8 +68,14 @@ final readonly class WebhookEndpointStoreRepository
             $attributes['events'] = $events;
         }
 
-        if ($isActive !== null) {
-            $attributes['is_active'] = $isActive;
+        if ($isActive === true) {
+            // Turning an endpoint back on starts it clean: the old failure run and the
+            // reason it was off no longer apply.
+            $attributes += ['is_active' => true, 'failure_count' => 0, 'failing_since' => null, 'disabled_at' => null, 'disabled_reason' => null];
+        }
+
+        if ($isActive === false && $endpoint->is_active) {
+            $attributes += ['is_active' => false, 'failure_count' => 0, 'failing_since' => null, 'disabled_at' => now(), 'disabled_reason' => 'manual'];
         }
 
         if ($driveId !== null) {
@@ -81,14 +88,47 @@ final readonly class WebhookEndpointStoreRepository
     }
 
     /**
-     * Flip the endpoint inactive (the relay stops fanning events out to it) and reset
-     * the failure counter so a later re-activation starts clean.
+     * Flip the endpoint inactive on the owner's request (the relay stops fanning events
+     * out to it) and reset the failure run so a later re-activation starts clean.
      */
     public function deactivate(WebhookEndpoint $endpoint): WebhookEndpoint
     {
         $endpoint->forceFill([
             'is_active' => false,
             'failure_count' => 0,
+            'failing_since' => null,
+            'disabled_at' => now(),
+            'disabled_reason' => 'manual',
+        ])->save();
+
+        return $endpoint;
+    }
+
+    /**
+     * Switch the endpoint off because its deliveries kept failing. failing_since stays
+     * so the disabled event and the owner can tell when the failures began.
+     */
+    public function disableFailing(WebhookEndpoint $endpoint): WebhookEndpoint
+    {
+        $endpoint->forceFill([
+            'is_active' => false,
+            'disabled_at' => now(),
+            'disabled_reason' => 'failing',
+        ])->save();
+
+        return $endpoint;
+    }
+
+    /**
+     * Make $secret the signing secret and keep the one it replaces for $previousUntil.
+     * A null $previousUntil drops the old secret at once (a compromised secret).
+     */
+    public function rotateSecret(WebhookEndpoint $endpoint, string $secret, ?Carbon $previousUntil): WebhookEndpoint
+    {
+        $endpoint->forceFill([
+            'previous_signing_secret' => $previousUntil === null ? null : $endpoint->signing_secret,
+            'previous_secret_expires_at' => $previousUntil,
+            'signing_secret' => $secret,
         ])->save();
 
         return $endpoint;

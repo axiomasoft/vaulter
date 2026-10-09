@@ -923,7 +923,8 @@ final class SchemaBuilder
      * v_webhook_endpoints — the subscriber endpoints (master plan §2.11 / D14 / M3b),
      * ported from chatom 1:1. Gated on 'reliability'. events is the JSON subscription
      * list (matched in SQL with whereJsonContains); signing_secret signs the
-     * deliveries (HMAC-SHA256); failure_count drives the circuit breaker. tenant_id
+     * deliveries (Standard Webhooks, HMAC-SHA256); failing_since is the auto-disable
+     * clock, previous_signing_secret the rotation overlap. tenant_id
      * and the optional drive_id narrow which events the endpoint receives.
      */
     private function defineWebhookEndpoints(Blueprint $table, IdStrategy $ids): void
@@ -935,9 +936,17 @@ final class SchemaBuilder
         // text, not string: the signing_secret is encrypted at rest (F-P1.7-02) and
         // the ciphertext is longer than the 64-char plaintext.
         $table->text('signing_secret');
+        // The secret before the last rotation, valid for signing until its expiry.
+        $table->text('previous_signing_secret')->nullable();
+        $table->timestamp('previous_secret_expires_at')->nullable();
         $table->boolean('is_active')->default(true)->index();
         $table->timestamp('last_triggered_at')->nullable();
         $table->unsignedInteger('failure_count')->default(0);
+        // Start of the current unbroken run of failed attempts; the auto-disable clock.
+        $table->timestamp('failing_since')->nullable();
+        $table->timestamp('disabled_at')->nullable();
+        // 'failing' (auto-disabled) or 'manual'.
+        $table->string('disabled_reason', 32)->nullable();
         $table->timestamps();
         $this->tenant(table: $table);
         $ids->reference(table: $table, column: 'drive_id', nullable: true);

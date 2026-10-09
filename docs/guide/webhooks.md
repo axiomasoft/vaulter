@@ -103,8 +103,94 @@ into every delivery:
   drop a stale update.
 - `version` is the schema version of `data` for this `type`.
 
-## Event names
+## Headers and signature
 
+Every delivery is a `POST` of the envelope with exactly these headers, as defined by
+[Standard Webhooks](https://www.standardwebhooks.com/):
+
+| Header | Value |
+|---|---|
+| `Content-Type` | `application/json` |
+| `User-Agent` | `Vaulter-Webhooks/1` |
+| `webhook-id` | the envelope `id` — identical on every retry and redelivery |
+| `webhook-timestamp` | Unix seconds of this attempt |
+| `webhook-signature` | `v1,<base64>` — several signatures separated by a space while a secret is being rotated |
+
+The signature is `base64(HMAC-SHA256(key, "{webhook-id}.{webhook-timestamp}.{body}"))` over
+the exact bytes sent. The secret is `whsec_` followed by the base64 of the key; the key is
+the decoded part. It is shown once, when the endpoint is registered or rotated. The event
+type is the `type` field of the body (there is no event header).
+
+## Verifying a delivery
+
+Any Standard Webhooks library verifies Vaulter deliveries — see the
+[official libraries](https://github.com/standard-webhooks/standard-webhooks/tree/main/libraries).
+In PHP, `Vaulter\Webhooks\StandardWebhookVerifier` does it without extra dependencies:
+
+```php
+use Vaulter\Exceptions\Webhooks\InvalidWebhookSignatureException;
+use Vaulter\Webhooks\StandardWebhookVerifier;
+
+// $request->getContent() is the RAW body: verify it before decoding or re-encoding.
+try {
+    (new StandardWebhookVerifier)->verify(
+        headers: $request->headers->all(),
+        body: $request->getContent(),
+        secrets: [config('services.vaulter.webhook_secret')], // whsec_… (add the old one during a rotation)
+        toleranceSeconds: 300,
+    );
+} catch (InvalidWebhookSignatureException) {
+    abort(400);
+}
+```
+
+The check needs all three headers, a `webhook-timestamp` within the tolerance (300 s by
+default, in both directions — this is what rejects a replay), and a `v1` signature that
+matches one of the secrets (compared in constant time). Reply with a `2xx` within the
+timeout; anything else — a redirect included — counts as a failed attempt.
+
+## Rotating a secret
+
+`RotateWebhookSecretAction::execute($endpoint, ?int $overlapSeconds = null)` returns a
+`RotatedWebhookSecret` (`endpointId`, `secret`) — the new secret, once. The old secret keeps
+signing for `webhooks.secret_rotation_overlap` seconds (default 86400, at most 604800), so
+`webhook-signature` carries two signatures and a receiver holding either secret verifies the
+delivery. Deploy the new secret to the receiver during that window. An overlap of `0` drops the
+old secret at once — use it when a secret leaked.
+
+## Retries and automatic disabling
+
+A failed attempt (non-2xx, redirect, timeout, connection error) is retried after
+`webhooks.retry_schedule` seconds (default `5, 300, 1800, 7200, 18000, 36000, 50400, 72000,
+86400`, each ±`webhooks.retry_jitter`, default 10 %). That is ten attempts over about three
+days; the failure after the last one makes the delivery `dead`. The HTTP timeout is
+`webhooks.timeout` (default 15 s).
+
+The first failed attempt of an endpoint starts a *failing run* (`failing_since`); any
+successful delivery ends it. When the run is `webhooks.disable_after_days` old (default 5; `0`
+never disables) the endpoint is switched off (`is_active = false`, `disabled_reason = 'failing'`)
+and its pending and failed deliveries become `dead` with `last_error = 'endpoint_disabled'`.
+After the commit Laravel dispatches `Vaulter\Webhooks\Events\WebhookEndpointDisabled`
+(`endpointId`, `reason`, `failingSince`) — listen to it to tell the endpoint's owner. Switching
+an endpoint off by hand (`disabled_reason = 'manual'`) kills its open deliveries the same way;
+switching it on clears the run and the reason.
+
+## Redelivery
+
+`RedeliverWebhookAction::execute($delivery)` sends a `delivered` or `dead` delivery again: the
+same row goes back to `pending` with `attempts = 0`, so the receiver sees the **same
+`webhook-id`**. Its endpoint must be active, and a delivery that is still `pending` or `failed`
+is refused — `WebhookDeliveryNotRedeliverableException`
+([`webhook_delivery_not_redeliverable`](/guide/errors#webhook-delivery-not-redeliverable), 409).
+In bulk: [`vaulter:webhooks:redeliver`](/reference/commands#vaulter-webhooks-redeliver).
+Only deliveries still inside `webhooks.retention_days` can be redelivered.
+
+## Deduplication and ordering
+
+Delivery is at-least-once and unordered: deduplicate on `webhook-id` (the envelope `id`), and
+use `sequence` to drop a stale update.
+
+## Event names
 
 `Vaulter\Enums\Events\EventType` uses the canonical 0.3 names. Upgrade migration
 №9 converts `v_activity.verb`, `v_outbox.event`, `v_webhook_deliveries.event` and

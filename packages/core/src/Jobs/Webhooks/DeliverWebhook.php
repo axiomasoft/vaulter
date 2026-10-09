@@ -12,6 +12,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;
@@ -26,23 +27,27 @@ use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Observability\TracingAttributes;
 use Vaulter\Observability\TracingSpanNames;
 use Vaulter\ValueObjects\Webhooks\PinnedOutboundEndpoint;
+use Vaulter\Webhooks\Events\WebhookEndpointDisabled;
 use Vaulter\Webhooks\ResponseSizeLimit;
 use Vaulter\Webhooks\WebhookSigner;
 
 /**
- * Delivers one WebhookDelivery to its endpoint over signed HTTP POST (master plan
- * §2.11 / D14 / M3b), ported from chatom — the reliable webhook channel. The delivery
- * is QUEUED, so it never blocks the originating request.
+ * Delivers one WebhookDelivery to its endpoint over a Standard Webhooks signed HTTP POST
+ * (master plan §2.11 / D14 / M3b, PLAN2.D60). The delivery is QUEUED, so it never blocks
+ * the originating request.
  *
- * At-least-once with exponential backoff and a dead-letter terminal state:
- *   - 2xx        → delivery 'delivered'; endpoint failure_count reset, touched.
- *   - non-2xx /
- *     transport  → attempts++, last_error recorded. If attempts are left, the delivery
- *     exception      is parked 'failed' with next_retry_at on the configured backoff
- *                    and the job returns; the relay tick (vaulter:relay-outbox /
- *                    vaulter:retry-webhooks) re-dispatches it once due. Otherwise it is
- *                    parked 'dead' (DLQ) and the endpoint's failure_count is bumped —
- *                    once it reaches disable_after_failures the endpoint auto-disables.
+ * At-least-once with a retry schedule and a dead-letter terminal state:
+ *   - 2xx        → delivery 'delivered'; the endpoint's failure run is cleared.
+ *   - anything   → attempts++, last_error recorded. While the schedule has entries the
+ *     else           delivery is parked 'failed' with next_retry_at (schedule delay with
+ *                    jitter) and the job returns; the relay tick (vaulter:relay-outbox /
+ *                    vaulter:retry-webhooks) re-dispatches it once due. Past the last
+ *                    entry it is parked 'dead' (DLQ).
+ *   Redirects, 3xx, 4xx and 5xx all count as failures; only 2xx is success.
+ *
+ * Every failed attempt starts or extends the endpoint's failing run (failing_since).
+ * Once the run is disable_after_days old the endpoint is switched off and its open
+ * deliveries die, in the same transaction that settles the attempt; a success ends the run.
  *
  * Retry has a SINGLE owner: the relay's due-retry sweep, NOT the queue. The job never
  * self-releases, so a running worker and a scheduled relay can't both re-arm the same
@@ -106,7 +111,7 @@ final class DeliverWebhook implements ShouldQueue
                     $response = $this->post(signer: $signer, urlGuard: $urlGuard, delivery: $delivery, endpoint: $endpoint);
                 } catch (Throwable $throwable) {
                     $outcome = $throwable instanceof ConnectionException ? 'timeout' : 'failure';
-                    if ($this->settle(delivery: $delivery, operation: fn () => $this->recordFailure(delivery: $delivery, endpoint: $endpoint, error: $throwable->getMessage()))) {
+                    if ($this->settle(delivery: $delivery, endpoint: $endpoint, operation: fn (WebhookEndpoint $locked) => $this->recordFailure(delivery: $delivery, endpoint: $locked, error: $throwable->getMessage()))) {
                         $this->recordWebhookMetrics(metrics: $metrics, started: $started, delivery: $delivery, outcome: $outcome);
                     }
 
@@ -114,15 +119,15 @@ final class DeliverWebhook implements ShouldQueue
                 }
 
                 if ($response->successful()) {
-                    if ($this->settle(delivery: $delivery, operation: fn () => $this->recordSuccess(delivery: $delivery, endpoint: $endpoint))) {
+                    if ($this->settle(delivery: $delivery, endpoint: $endpoint, operation: fn (WebhookEndpoint $locked) => $this->recordSuccess(delivery: $delivery, endpoint: $locked))) {
                         $this->recordWebhookMetrics(metrics: $metrics, started: $started, delivery: $delivery, outcome: 'success');
                     }
 
                     return;
                 }
 
-                if (!$this->settle(delivery: $delivery, operation: fn () => $this->recordFailure(
-                    delivery: $delivery, endpoint: $endpoint, error: 'HTTP '.$response->status(),
+                if (!$this->settle(delivery: $delivery, endpoint: $endpoint, operation: fn (WebhookEndpoint $locked) => $this->recordFailure(
+                    delivery: $delivery, endpoint: $locked, error: 'HTTP '.$response->status(),
                 ))) {
                     return;
                 }
@@ -167,9 +172,11 @@ final class DeliverWebhook implements ShouldQueue
     }
 
     /**
-     * POST the signed payload to the endpoint. The signature is HMAC-SHA256 over
-     * "{timestamp}.{body}" with the endpoint's signing_secret, so the receiver can
-     * verify it byte-for-byte AND reject a replayed request whose timestamp is stale.
+     * POST the signed payload to the endpoint with the Standard Webhooks headers. The
+     * signature covers "{webhook-id}.{webhook-timestamp}.{body}" over the exact bytes
+     * sent, so the receiver verifies byte-for-byte, deduplicates by webhook-id (the event
+     * id, identical on every retry) and rejects a replay by timestamp. While a rotation
+     * overlap lasts the header carries two signatures, the current secret's first.
      *
      * SSRF-hardened (§2.11 / N2 / F-P1.7-01): the guard resolves + range-checks the
      * URL on the delivery path and hands back the vetted IP, which is PINNED onto the
@@ -192,6 +199,8 @@ final class DeliverWebhook implements ShouldQueue
 
         $body = (string) json_encode($delivery->payload);
         $timestamp = now()->getTimestamp();
+        $payloadId = $delivery->payload['id'] ?? null;
+        $webhookId = is_string($payloadId) && $payloadId !== '' ? $payloadId : (string) $delivery->event_id;
 
         $request = Http::timeout($this->webhooksConfig->timeout())
             ->connectTimeout($this->webhooksConfig->connectTimeout())
@@ -200,12 +209,14 @@ final class DeliverWebhook implements ShouldQueue
             ->withOptions($this->transportOptions(pinned: $pinned))
             ->withHeaders([
                 'Content-Type' => 'application/json',
-                $this->webhooksConfig->eventHeader() => $delivery->event,
-                $this->webhooksConfig->timestampHeader() => (string) $timestamp,
-                $this->webhooksConfig->signatureHeader() => $signer->sign(
-                    body: $body,
-                    secret: $endpoint->signing_secret,
+                'User-Agent' => 'Vaulter-Webhooks/1',
+                'webhook-id' => $webhookId,
+                'webhook-timestamp' => (string) $timestamp,
+                'webhook-signature' => $signer->signatureHeader(
+                    webhookId: $webhookId,
                     timestamp: $timestamp,
+                    body: $body,
+                    secrets: $endpoint->activeSigningSecrets(),
                 ),
             ])
             ->withBody($body, 'application/json');
@@ -266,54 +277,102 @@ final class DeliverWebhook implements ShouldQueue
             'last_error' => null,
         ])->save();
 
+        // A success ends the failing run: the auto-disable clock restarts at the next failure.
         $endpoint->forceFill([
             'last_triggered_at' => now(),
             'failure_count' => 0,
+            'failing_since' => null,
         ])->save();
     }
 
     /**
      * Account a failed attempt: bump attempts, record the error, then either arm the
-     * next retry (durable next_retry_at on backoff — the relay sweep re-dispatches it
-     * once due, the job does NOT self-release) or, once the attempt budget is spent,
-     * park the delivery dead and bump the endpoint's failure counter — auto-disabling
-     * it past the configured threshold.
+     * next retry (durable next_retry_at from the schedule — the relay sweep re-dispatches
+     * it once due, the job does NOT self-release) or, once the schedule is spent, park
+     * the delivery dead. Either way the endpoint's failing run grows, and a run that
+     * reached disable_after_days switches the endpoint off.
      */
     private function recordFailure(WebhookDelivery $delivery, WebhookEndpoint $endpoint, string $error): void
     {
         $attempts = $delivery->attempts + 1;
+        $schedule = $this->webhooksConfig->retrySchedule();
 
-        if ($attempts < $this->webhooksConfig->maxAttempts()) {
-            $backoff = $this->webhooksConfig->backoff(attempt: $attempts);
-
+        if ($attempts <= count($schedule)) {
             $delivery->forceFill([
                 'status' => 'failed',
                 'attempts' => $attempts,
-                'next_retry_at' => now()->addSeconds($backoff),
+                'next_retry_at' => now()->addSeconds($this->jitteredDelay(seconds: $schedule[$attempts - 1])),
                 'last_error' => $error,
             ])->save();
+        } else {
+            $delivery->forceFill([
+                'status' => 'dead',
+                'attempts' => $attempts,
+                'next_retry_at' => null,
+                'last_error' => $error,
+            ])->save();
+        }
 
+        $this->extendFailingRun(delivery: $delivery, endpoint: $endpoint);
+    }
+
+    /**
+     * Start or extend the endpoint's unbroken run of failures and switch the endpoint
+     * off when the run is old enough. Runs under the endpoint row lock (see settle()),
+     * so concurrent settlements disable it once.
+     */
+    private function extendFailingRun(WebhookDelivery $delivery, WebhookEndpoint $endpoint): void
+    {
+        if (!$endpoint->is_active) {
             return;
         }
 
-        $delivery->forceFill([
-            'status' => 'dead',
-            'attempts' => $attempts,
-            'next_retry_at' => null,
-            'last_error' => $error,
+        $endpoint->forceFill([
+            'failing_since' => $endpoint->failing_since ?? now(),
+            'failure_count' => $endpoint->failure_count + 1,
         ])->save();
 
-        $this->penalizeEndpoint(endpoint: $endpoint);
+        $days = $this->webhooksConfig->disableAfterDays();
+        $failingSince = $endpoint->failing_since;
+
+        if ($days === 0 || $failingSince === null || $failingSince->greaterThan(now()->subDays($days))) {
+            return;
+        }
+
+        $endpoint->forceFill(['is_active' => false, 'disabled_at' => now(), 'disabled_reason' => 'failing'])->save();
+
+        // Same outcome as WebhookDeliveryStoreRepository::killOpenForEndpoint(): nothing may be
+        // sent afterwards, and dropping the claims fences the jobs still in flight. Written
+        // here, not injected, because a queued job's handle() takes no further collaborators.
+        $delivery->newQuery()
+            ->where('endpoint_id', $endpoint->getKey())
+            ->whereIn('status', ['pending', 'failed'])
+            ->toBase()
+            ->update([
+                'status' => 'dead',
+                'next_retry_at' => null,
+                'claim_token' => null,
+                'claim_until' => null,
+                'last_error' => 'endpoint_disabled',
+                'updated_at' => now(),
+            ]);
+
+        // Hosts hear about it only once the disabling is durable.
+        $endpoint->getConnection()->afterCommit(static function () use ($endpoint, $failingSince): void {
+            Event::dispatch(new WebhookEndpointDisabled(endpointId: $endpoint->getKey(), reason: 'failing', failingSince: $failingSince));
+        });
     }
 
-    private function penalizeEndpoint(WebhookEndpoint $endpoint): void
+    private function jitteredDelay(int $seconds): int
     {
-        $failures = $endpoint->failure_count + 1;
+        $jitter = $this->webhooksConfig->retryJitter();
 
-        $endpoint->forceFill([
-            'failure_count' => $failures,
-            'is_active' => $failures < $this->webhooksConfig->disableAfterFailures(),
-        ])->save();
+        if ($jitter === 0.0 || $seconds === 0) {
+            return $seconds;
+        }
+
+        // +/- jitter around the scheduled delay, so a burst of failures does not retry in lockstep.
+        return max(0, (int) round($seconds * (1 + $jitter * (random_int(-1000, 1000) / 1000))));
     }
 
     private function isTerminal(WebhookDelivery $delivery): bool
@@ -344,13 +403,24 @@ final class DeliverWebhook implements ShouldQueue
     }
 
     /**
-     * @param Closure(): void $operation
+     * @param Closure(WebhookEndpoint): void $operation receives the endpoint row as locked inside the transaction
      */
-    private function settle(WebhookDelivery $delivery, Closure $operation): bool
+    private function settle(WebhookDelivery $delivery, WebhookEndpoint $endpoint, Closure $operation): bool
     {
-        return $delivery->getConnection()->transaction(function () use ($delivery, $operation): bool {
+        return $delivery->getConnection()->transaction(function () use ($delivery, $endpoint, $operation): bool {
+            // The endpoint is locked BEFORE the delivery is touched: auto-disable rewrites
+            // every open delivery of the endpoint, so any other order could deadlock two
+            // settlements. Serialising here also makes the disable decision see the failure
+            // count and failing_since the previous settlement committed.
+            $locked = $endpoint->newQuery()->whereKey($endpoint->getKey())->lockForUpdate()->first();
+
+            if (!$locked instanceof WebhookEndpoint) {
+                return false;
+            }
+
             // An atomic conditional write also fences on SQLite, where FOR UPDATE
-            // is unavailable. A superseded worker cannot overwrite its successor.
+            // is unavailable. A superseded worker cannot overwrite its successor — and
+            // a delivery the disabling just killed has lost its claim.
             $owned = $delivery->newQuery()->whereKey($delivery->getKey())
                 ->where('claim_token', $delivery->claim_token)
                 ->update(['claim_token' => null, 'claim_until' => null]);
@@ -360,7 +430,7 @@ final class DeliverWebhook implements ShouldQueue
             }
 
             $delivery->forceFill(['claim_token' => null, 'claim_until' => null]);
-            $operation();
+            $operation($locked);
 
             return true;
         });

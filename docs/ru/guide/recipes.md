@@ -570,11 +570,10 @@ Schedule::command('vaulter:prune-webhooks')->daily();        // reclaim settled 
 ```
 
 Эндпоинтами подписчиков управляют через маршруты `webhook-endpoints` (завязаны на право manage
-из `WebhookEndpointPolicy`). Каждый POST доставки несёт подпись HMAC-SHA256
-(`X-Vaulter-Signature`), метку времени (`X-Vaulter-Timestamp`) и имя события
-(`X-Vaulter-Event`); потребители **дедуплицируют по `event_id`** из полезной нагрузки, поскольку
-доставка «хотя бы один раз». Настройте `config('vaulter.webhooks.*')` (`max_attempts`, `backoff`,
-`disable_after_failures`).
+из `WebhookEndpointPolicy`). Каждый POST доставки подписан по Standard Webhooks (`webhook-id`,
+`webhook-timestamp`, `webhook-signature`); потребители **дедуплицируют по `webhook-id`**
+(это `id` конверта), поскольку доставка «хотя бы один раз». Настройте `config('vaulter.webhooks.*')`
+(`retry_schedule`, `retry_jitter`, `disable_after_days`).
 
 ### Обрезка урегулированной истории outbox и вебхуков
 

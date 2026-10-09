@@ -21,9 +21,10 @@ spatie/laravel-package-tools) плюс восемь команд пакета, �
 | `vaulter:revisions:prune` | Удалить нетекущие ревизии файлов сверх политики ретеншна профиля |
 | `vaulter:sweep-uploads` | Прервать и подчистить протухшие сессии резюмируемой загрузки |
 | `vaulter:relay-outbox` | Передать ожидающие события outbox на эндпоинты вебхуков |
-| `vaulter:retry-webhooks` | Повторно отправить доставки вебхуков, у которых истёк backoff |
+| `vaulter:retry-webhooks` | Повторно отправить доставки вебхуков, у которых истекла пауза повтора |
 | `vaulter:prune-webhooks` | Удалить завершённые строки outbox и терминальные доставки старше срока хранения |
 | `vaulter:webhooks:legacy-fanout` | Показать или переиграть строки outbox до 1.0, у которых раскрытие нельзя доказать |
+| `vaulter:webhooks:redeliver` | Повторно отправить завершённые доставки вебхуков с тем же `webhook-id` |
 | `vaulter:events:reference` | Перегенерировать (или проверить `--check`) таблицу каталога событий в справке |
 
 ---
@@ -275,6 +276,30 @@ vaulter:webhooks:legacy-fanout
 ```bash
 php artisan vaulter:webhooks:legacy-fanout --since=2026-09-01 --replay --dry-run
 php artisan vaulter:webhooks:legacy-fanout --since=2026-09-01 --replay
+```
+
+---
+
+## `vaulter:webhooks:redeliver`
+
+Отправляет завершённые доставки заново: одну по id или все доставки статуса (по умолчанию `dead`)
+с фильтром по эндпоинту и возрасту. Каждая идёт через `RedeliverWebhookAction`: та же строка
+возвращается в `pending` с `attempts = 0`, поэтому получатель видит **тот же `webhook-id`**;
+доставка неактивного эндпоинта или всё ещё `pending`/`failed` пропускается с сообщением. Доступны
+только строки в пределах `webhooks.retention_days`. Код выхода не нулевой, если не ушло ни одной.
+Управляется флагом `features.webhooks`.
+
+```
+vaulter:webhooks:redeliver
+    {delivery?}    Id одной доставки
+    {--endpoint=}  Только доставки этого эндпоинта
+    {--since=}     Только доставки, созданные не раньше этой даты/времени
+    {--status=dead} delivered или dead
+```
+
+```bash
+php artisan vaulter:webhooks:redeliver 1042
+php artisan vaulter:webhooks:redeliver --endpoint=7 --since=2026-10-01
 ```
 
 ---
