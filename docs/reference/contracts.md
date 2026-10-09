@@ -89,8 +89,11 @@ exactly this surface, and a contract test asserts they all yield identical
 ### `Vaulter\Azgard\Contracts\AzgardGuard`
 
 The narrow Vaulter-owned seam the host's AzGuard-backed actor satisfies, so
-`vaulter-core` carries **no** hard dependency on `azguard`/`corex`. The
-`azgard` permission driver talks only to this interface — never AzGuard's classes.
+`vaulter-core` carries **no** dependency on AzGuard. The `azgard` permission driver
+talks only to this interface — never AzGuard's classes. Both methods are AzGuard v1
+decisions (`hasPermission(on: $entity)` and `hasPermission(on: AssignmentScopeRef::of($type, $id))`);
+there is no super-admin method — an AzGuard super-admin reaches the owner role through
+these decisions.
 
 ```php
 interface AzgardGuard
@@ -98,8 +101,6 @@ interface AzgardGuard
     public function hasScopedPermission(string $permission, object $entity): bool;
 
     public function hasPermissionIn(string $contextType, int|string $contextId, string $permission): bool;
-
-    public function isSuperAdmin(): bool;
 }
 ```
 
@@ -109,24 +110,25 @@ Its provider registers the driver and adapter automatically.
 
 **Use when** `config('vaulter.access.permission_driver') = 'azgard'`: install with
 `composer require axioma-studio/vaulter-azgard`, add
-`Vaulter\Azgard\Contracts\AzgardBackedUser` to your user model and align ULID morphs
-(`vaulter.ids.strategy=ulid` + `corex.ids.strategy=Ulid` + `AZ_GUARD_MORPH_TYPE=ulid`).
+`Vaulter\Azgard\Contracts\AzgardBackedUser` to your user model, register morph aliases for
+the user and workspace models and declare the workspace aliases as assignment scope types
+of the AzGuard panel.
 Fake-based tests also require the bridge and its installed dependencies.
 See [Permission drivers](/guide/permission-drivers).
 
 ### `Vaulter\Azgard\Contracts\AzgardBackedUser` (azgard)
 
-The host `User` model contract the `AzgardGuardAdapter` bridges into Vaulter,
-composed straight from AzGuard's own public contracts (`HasPermissions` +
-`HasScopedRoles`) — no re-declared signature to drift out of sync.
+The host `User` model contract the `AzgardGuardAdapter` bridges into Vaulter: AzGuard v1's
+own public subject contract `AzGuard\Contracts\AzGuardSubject` — no re-declared signature
+to drift out of sync.
 
 ```php
-interface AzgardBackedUser extends HasPermissions, HasScopedRoles {}
+interface AzgardBackedUser extends AzGuardSubject {}
 ```
 
 **Implement when** `config('vaulter.access.permission_driver') = 'azgard'` — the host
-`User` model satisfies it with no extra method bodies by composing
-`AzGuard\Concerns\HasAzGuard` + `AzGuard\Concerns\HasScopedRoles`.
+`User` model satisfies it with no extra method bodies through the
+`AzGuard\Concerns\HasAzGuard` trait, and is a subject model of the AzGuard panel.
 
 ### `Vaulter\Contracts\Access\GrantAuthoritativeDriver`
 

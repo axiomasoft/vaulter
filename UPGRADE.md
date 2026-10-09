@@ -41,7 +41,8 @@ changes that require action from consumers of the package.
   AzGuard selects the panel by a full name or panel prefix in the permission, else the panel of
   the request, else the panel of the user model. The default `vaulter-azgard.permissions` map
   (`documents.view`, …) names local keys of that panel, so its resource prefix must not be
-  `documents` (map full names `<panel>:documents.view` otherwise); a panel with tenants needs
+  `documents` (AzGuard refuses such a panel with `PrefixConflictException`; give it another
+  `resourcePrefix()` or map the abilities to other permissions); a panel with tenants needs
   its current tenant, and AzGuard denies without one. The `Vaulter\Azgard\*` class names and
   config keys are unchanged.
 

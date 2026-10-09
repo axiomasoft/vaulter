@@ -340,9 +340,10 @@ return [
 `panel_id` is passed to AzGuard as `guard:`. With `null`, AzGuard selects the panel by a
 full name (`app:documents.view`) or a panel prefix in the permission, else the panel of
 the request, else the panel of the user model; the default map names local keys of that
-panel, so that panel's resource prefix must not be `documents` (AzGuard would read
-`documents.` as the prefix and reject the one-segment key) — otherwise map full names
-(`<panel>:documents.view`). Set `VAULTER_AZGARD_PANEL` when the user model belongs to
+panel, so that panel's resource prefix must not be `documents`: AzGuard refuses to boot a
+panel whose prefix is the first segment of one of its permissions (`PrefixConflictException`).
+Give the panel another `resourcePrefix()` (or `resourcePrefix(false)`), or map the abilities to
+permissions that do not start with the prefix. Set `VAULTER_AZGARD_PANEL` when the user model belongs to
 several panels or the checks must not depend on the request panel; AzGuard throws when no
 panel can be selected. A panel with tenants needs its current tenant; without one AzGuard
 denies the check.

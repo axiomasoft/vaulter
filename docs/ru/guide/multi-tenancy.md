@@ -1,6 +1,6 @@
 ---
 title: Мультитенантность
-description: Как Vaulter вписывается в мультитенантное Laravel-приложение — колонка tenant_id, которой владеет хост, подмена на tenant-aware модель и согласование ulid-морфов с экосистемой Corex / AzGuard.
+description: Как Vaulter вписывается в мультитенантное Laravel-приложение — колонка tenant_id, которой владеет хост, подмена на tenant-aware модель и согласование id и morph-алиасов с AzGuard.
 outline: deep
 ---
 
@@ -202,10 +202,10 @@ class TenantStorage extends BaseStorage
 Сегмент области в ключе (`t<id>/…`) делает это осязаемым на диске.
 :::
 
-## Согласование ulid-морфов с Corex / AzGuard
+## Согласование id и морфов с AzGuard
 
-Vaulter по умолчанию выбирает стратегию первичного ключа **ulid** именно затем, чтобы его
-морф-ключи стыковались с экосистемой Corex / AzGuard:
+Vaulter по умолчанию выбирает стратегию первичного ключа **ulid**, чтобы его ключи стыковались
+с моделями хоста в экосистеме:
 
 ```php
 // config/vaulter.php
@@ -215,41 +215,35 @@ Vaulter по умолчанию выбирает стратегию первич
 ],
 ```
 
-> По умолчанию ulid, чтобы морф-ключи стыковались с экосистемой Corex/Azgard.
-> — `config/vaulter.php`, блок `ids`
+Это важно, когда вы используете **драйвер ролей хоста AzGuard** для авторизации в приложении со
+скоупом по тенантам. Этот драйвер (`Vaulter\Azgard\AzgardPermissionDriver`) общается только со
+швом `Vaulter\Azgard\Contracts\AzgardGuard`, которым владеет Vaulter, — так что vaulter-core от
+AzGuard **не зависит** — и задаёт вопросы в области workspace как решения AzGuard v1 в
+**assignment scope**: `hasPermission($permission, on: AssignmentScopeRef::of($type, $id))`, где
+`$type`/`$id` — morph-алиас и ключ владельца диска.
 
-Это важно, когда вы гоняете **драйвер ролей хоста AzGuard** для авторизации в приложении со
-скоупом по тенантам. Этот драйвер
-(`Vaulter\Azgard\AzgardPermissionDriver`) общается только со швом
-`Vaulter\Azgard\Contracts\AzgardGuard`, которым владеет Vaulter — так что vaulter-core не несёт
-**никакой** жёсткой зависимости от `azguard` / `corex` — и маршрутизирует свои проверки ролей
-со скоупом по workspace через `hasPermissionIn($contextType, $contextId, $permission)`, что
-является контекстной проверкой Corex `TenantContextGuard` (полоса тенанта/workspace).
+Чтобы идентичности совпали, хост согласует три вещи:
 
-Чтобы эти морф-типы корректно резолвились между пакетами, хост должен согласовать конфигурацию
-ulid-морфов от края до края:
+1. **Morph-алиасы.** Идентичности AzGuard — алиасы типов (`[a-z0-9][a-z0-9_.-]*`), а не имена
+   классов. Зарегистрируйте пользователя и каждую модель workspace:
 
-```dotenv
-# Vaulter
-VAULTER_ID_STRATEGY=ulid
+   ```php
+   Relation::enforceMorphMap([
+       'user' => User::class,
+       'team' => Team::class,
+   ]);
+   ```
 
-# AzGuard
-AZ_GUARD_MORPH_TYPE=ulid
-```
+   Владелец диска с типом-именем класса вызывает `InvalidAssignmentScopeException`.
 
-```php
-// Corex
-'ids' => ['strategy' => \Corex\…\Ulid::class],   // corex.ids.strategy = Ulid
-```
+2. **Типы assignment scope.** Объявите каждый алиас workspace типом assignment scope панели
+   AzGuard (`PanelBuilder::scopes(AssignmentScopePolicy::inherit(...))`); алиас, не объявленный
+   панелью, получает отказ. **Тенанты** AzGuard (`TenantPolicy`) — отдельная граница: панели с
+   тенантами нужен текущий тенант, без него AzGuard отказывает.
 
-…и зарегистрировать морф-типы workspace / owner как **морф-алиасы Corex**
-(`EntityRegistry` / Corex ADR-003), как задокументировано на контракте `AzgardGuard`:
-
-```php
-// Vaulter\Azgard\Contracts\AzgardGuard (docblock)
-// The $contextType / $entity morph types MUST be registered Corex morph aliases
-// aligned with vaulter.ids.strategy=ulid + corex.ids.strategy=Ulid + AZ_GUARD_MORPH_TYPE=ulid.
-```
+3. **Колонки ключей хоста.** Если AzGuard хранит гранты для ulid-ключей, согласуйте его тип
+   ключей хоста (`azguard.ids.host_keys` / `azguard.storages.*.host_keys`) со стратегией
+   ключей ваших моделей.
 
 ::: info Установите мост AzGuard
 `composer require axioma-studio/vaulter-azgard` устанавливает драйвер, реальный
@@ -269,8 +263,8 @@ AZ_GUARD_MORPH_TYPE=ulid
 3. Отнаследуйте те модели Vaulter, что нужно скоупить (как минимум `storage`; обычно `node`,
    `file`, `blob`, `activity`), и направьте на них карту `models`. Каждый подкласс штампует
    `tenant_id` при создании и применяет ваш глобальный скоуп.
-4. Если используете AzGuard для авторизации, оставьте `ids.strategy = ulid` и согласуйте
-   конфигурацию морфов Corex / AzGuard, как выше.
+4. Если используете AzGuard для авторизации, зарегистрируйте morph-алиасы, объявите алиасы
+   workspace типами assignment scope панели AzGuard и согласуйте тип ключей хоста, как выше.
 
 Дальше каждая загрузка автоматически протягивает тенант к своему блобу, а ваш слой моделей —
 не Vaulter — обеспечивает, что каждый тенант видит.

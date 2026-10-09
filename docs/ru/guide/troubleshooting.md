@@ -1,6 +1,6 @@
 ---
 title: Диагностика проблем
-description: Типичные сбои Vaulter и их устранение — нет драйвера прав в проде, morph-алиасы Azgard, область дедупликации, оговорки по рекурсивным CTE в MariaDB и порядок миграций.
+description: Типичные сбои Vaulter и их устранение — нет драйвера прав в проде, панель AzGuard и morph-алиасы, область дедупликации, оговорки по рекурсивным CTE в MariaDB и порядок миграций.
 outline: deep
 ---
 
@@ -55,51 +55,51 @@ VAULTER_PERMISSION_DRIVER=database   # or gate | spatie | azgard
 (или `config:clear`) после изменения `.env`.
 :::
 
-## morph-алиасы Azgard / Corex не согласованы {#azgard-morphs}
+## Панель AzGuard или morph-алиасы не согласованы {#azgard-morphs}
 
-**Симптом.** При `access.permission_driver = 'azgard'` проверки прав возвращают `false` для пользователей,
-которые явно держат роль, либо всплывает ошибка вида `Class "AzGuard\…" not found`, либо гранты,
-адресованные workspace, никогда не совпадают.
+**Симптом.** При `access.permission_driver = 'azgard'` проверки отказывают пользователям, которые
+явно держат разрешение, либо AzGuard бросает `InvalidAssignmentScopeException`,
+`PanelNotResolvedException` или `PrefixConflictException`, либо всплывает ошибка вида
+`Class "AzGuard\…" not found`.
 
-**Почему.** Драйвер и контракт `Vaulter\Azgard\Contracts\AzgardGuard`
-находятся в `vaulter-azgard`, а не в core. Мост сам привязывает реальный адаптер,
-но хост должен добавить `Vaulter\Azgard\Contracts\AzgardBackedUser` на модель
-пользователя и согласовать morph-типы workspace/владельца с AzGuard/Corex.
+**Почему.** Драйвер и шов `Vaulter\Azgard\Contracts\AzgardGuard` находятся в `vaulter-azgard`,
+а не в core. Обе проверки шва — решения AzGuard v1, поэтому панель AzGuard хоста должна знать
+пользователя, workspace и разрешения, о которых спрашивает Vaulter.
 
 **Решение.**
 
-1. Установите мост и его зависимости; provider зарегистрирует драйвер `azgard`
-   и реальный адаптер без ручной привязки:
+1. Установите мост; он требует AzGuard v1 (`axiomasoft/azguard`, закреплён на коммите), а его
+   provider сам регистрирует драйвер `azgard` и реальный адаптер:
 
    ```bash
    composer require axioma-studio/vaulter-azgard
    ```
 
-   Добавьте `AzgardBackedUser` на модель пользователя, реализующую контракты AzGuard
-   через traits `HasAzGuard` и `HasScopedRoles`. Настройки моста — `vaulter-azgard.*`.
+   Модель пользователя `implements Vaulter\Azgard\Contracts\AzgardBackedUser` и использует
+   `AzGuard\Concerns\HasAzGuard`. Настройки моста — `vaulter-azgard.*`.
 
-2. Согласуйте ULID morph-стратегию во всех трёх системах, чтобы morph-типы совпали:
+2. Зарегистрируйте **morph-алиасы** для пользователя и каждой модели workspace (владельца диска)
+   (`Relation::enforceMorphMap([...])`). Идентичности AzGuard — алиасы вида
+   `[a-z0-9][a-z0-9_.-]*`, а не имена классов: владелец диска с типом-именем класса вызывает
+   `InvalidAssignmentScopeException`. Vaulter прокидывает строку `type` workspace **нетронутой** —
+   он никогда не резолвит алиас сам.
 
-   ```php
-   // config/vaulter.php
-   'ids' => ['strategy' => 'ulid'],
-   ```
+3. Объявите каждый алиас workspace **типом assignment scope** панели
+   (`PanelBuilder::scopes(AssignmentScopePolicy::inherit(...))`). Корректный алиас, не объявленный
+   панелью, получает отказ. При `isolated(...)` грант на весь тенант — включая роль super-admin —
+   внутри workspace не действует; выдавайте грант внутри workspace.
 
-   ```dotenv
-   # .env
-   VAULTER_ID_STRATEGY=ulid
-   AZ_GUARD_MORPH_TYPE=ulid
-   # corex.ids.strategy=Ulid in the Corex config
-   ```
+4. Проверьте выбор панели: карта `vaulter-azgard.permissions` по умолчанию называет локальные
+   ключи (`documents.view`, …), поэтому префикс ресурсов панели не должен быть `documents`
+   (AzGuard не загрузит такую панель — `PrefixConflictException`; задайте другой
+   `resourcePrefix()`). Если модель пользователя входит в несколько панелей, задайте
+   `VAULTER_AZGARD_PANEL`.
 
-3. Зарегистрируйте типы моделей workspace/владельца как **morph-алиасы Corex** (EntityRegistry).
-   Vaulter прокидывает строку `type` для workspace **нетронутой** — он никогда не резолвит алиас
-   сам, поэтому незарегистрированный алиас втихую никогда не совпадёт.
-
-::: tip Шов зеркалит AzGuard один-в-один
-`hasScopedPermission($perm, $entity)`, `hasPermissionIn($type, $id, $perm)` и `isSuperAdmin()`
-точно зеркалят методы AzGuard, так что адаптер — это тонкий проброс. Расхождение почти всегда в
-morph-типе, а не в адаптере.
+::: tip Шов — это два решения AzGuard
+`hasScopedPermission($perm, $entity)` — это `hasPermission($perm, on: $entity)`, а
+`hasPermissionIn($type, $id, $perm)` — `hasPermission($perm, on: AssignmentScopeRef::of($type, $id))`.
+Обхода для super-admin нет: super-admin AzGuard получает роль owner через эти решения.
+Расхождение почти всегда в объявлении панели или morph-алиасе, а не в адаптере.
 :::
 
 ## Область дедупликации: межтенантные утечки или «неправильная» дедупликация {#dedup-scope}

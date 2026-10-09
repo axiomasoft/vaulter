@@ -1,6 +1,6 @@
 ---
 title: Troubleshooting
-description: Common Vaulter failure modes and their fixes — missing permission driver in production, Azgard morph aliases, dedup scope, MariaDB recursive-CTE caveats, and migration order.
+description: Common Vaulter failure modes and their fixes — missing permission driver in production, AzGuard panel and morph aliases, dedup scope, MariaDB recursive-CTE caveats, and migration order.
 outline: deep
 ---
 
@@ -55,51 +55,49 @@ config still has the old value. Re-run `php artisan config:cache` (or `config:cl
 changing `.env`.
 :::
 
-## Azgard / Corex morph aliases not aligned {#azgard-morphs}
+## AzGuard panel or morph aliases not aligned {#azgard-morphs}
 
-**Symptom.** With `access.permission_driver = 'azgard'`, permission checks return `false` for users
-who clearly hold the role, or a `Class "AzGuard\…" not found` style error surfaces, or grants
-addressed to a workspace never match.
+**Symptom.** With `access.permission_driver = 'azgard'`, checks deny users who clearly hold the
+permission, or AzGuard throws `InvalidAssignmentScopeException`, `PanelNotResolvedException` or
+`PrefixConflictException`, or a `Class "AzGuard\…" not found` style error surfaces.
 
-**Why.** The driver and `Vaulter\Azgard\Contracts\AzgardGuard` contract live
-in `vaulter-azgard`, rather than core. The bridge supplies a real adapter, but the host
-must add `Vaulter\Azgard\Contracts\AzgardBackedUser` to its user model and align
-workspace/owner morph types with AzGuard/Corex.
+**Why.** The driver and the `Vaulter\Azgard\Contracts\AzgardGuard` seam live in
+`vaulter-azgard`, rather than core. Both checks of the seam are AzGuard v1 decisions, so the
+host's AzGuard panel must know the user, the workspace and the permissions Vaulter asks about.
 
 **Fix.**
 
-1. Install the bridge and its dependencies; its provider registers the `azgard` driver
-   and the real adapter automatically:
+1. Install the bridge; it requires AzGuard v1 (`axiomasoft/azguard`, pinned to one commit) and
+   its provider registers the `azgard` driver and the real adapter automatically:
 
    ```bash
    composer require axioma-studio/vaulter-azgard
    ```
 
-   Add `AzgardBackedUser` to the user model implementing the AzGuard contracts through
-   the `HasAzGuard` and `HasScopedRoles` traits. Bridge settings use `vaulter-azgard.*`.
+   The user model `implements Vaulter\Azgard\Contracts\AzgardBackedUser` and uses
+   `AzGuard\Concerns\HasAzGuard`. Bridge settings use `vaulter-azgard.*`.
 
-2. Align the ULID morph strategy across all three systems so the morph types line up:
+2. Register **morph aliases** for the user and every workspace (drive owner) model
+   (`Relation::enforceMorphMap([...])`). AzGuard identities are aliases matching
+   `[a-z0-9][a-z0-9_.-]*`, never class names: a drive owner typed by a class name throws
+   `InvalidAssignmentScopeException`. Vaulter passes the workspace `type` string through
+   **untouched** — it never resolves the alias itself.
 
-   ```php
-   // config/vaulter.php
-   'ids' => ['strategy' => 'ulid'],
-   ```
+3. Declare each workspace alias as an **assignment scope type** of the panel
+   (`PanelBuilder::scopes(AssignmentScopePolicy::inherit(...))`). A valid alias the panel does
+   not declare is denied. Under `isolated(...)` a tenant-wide grant — the super-admin role
+   included — does not hold inside a workspace; grant inside the workspace instead.
 
-   ```dotenv
-   # .env
-   VAULTER_ID_STRATEGY=ulid
-   AZ_GUARD_MORPH_TYPE=ulid
-   # corex.ids.strategy=Ulid in the Corex config
-   ```
+4. Check the panel selection: the default `vaulter-azgard.permissions` map names local keys
+   (`documents.view`, …), so the panel's resource prefix must not be `documents` (AzGuard
+   refuses such a panel with `PrefixConflictException`; give it another `resourcePrefix()`).
+   When the user model belongs to several panels, set `VAULTER_AZGARD_PANEL`.
 
-3. Register your workspace/owner model types as **Corex morph aliases** (the EntityRegistry).
-   Vaulter passes the workspace `type` string through **untouched** — it never resolves the
-   alias itself, so an unregistered alias silently never matches.
-
-::: tip The seam mirrors AzGuard 1:1
-`hasScopedPermission($perm, $entity)`, `hasPermissionIn($type, $id, $perm)` and `isSuperAdmin()`
-mirror AzGuard's methods exactly, so the adapter is a thin pass-through. The mismatch is almost
-always the morph type, not the adapter.
+::: tip The seam is two AzGuard decisions
+`hasScopedPermission($perm, $entity)` is `hasPermission($perm, on: $entity)` and
+`hasPermissionIn($type, $id, $perm)` is `hasPermission($perm, on: AssignmentScopeRef::of($type, $id))`.
+There is no super-admin override: an AzGuard super-admin gets the owner role through these
+decisions. A mismatch is almost always the panel declaration or a morph alias, not the adapter.
 :::
 
 ## Dedup scope: cross-tenant leaks or "wrong" dedup {#dedup-scope}

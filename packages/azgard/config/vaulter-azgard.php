@@ -13,8 +13,9 @@ return [
     | (`app:documents.view`) or a panel prefix in the permission, else the
     | panel of the request, else the panel of the user model. The default map
     | below names local keys (`documents.view`) of that panel, so the panel's
-    | resource prefix must not be `documents` (AzGuard would read `documents.`
-    | as the prefix); otherwise map full names (`<panel>:documents.view`). Set
+    | resource prefix must not be `documents` (AzGuard refuses such a panel
+    | with PrefixConflictException): give the panel another resourcePrefix()
+    | or map the abilities below to other permissions. Set
     | an explicit panel id when the user model belongs to several panels or the
     | checks must not depend on the request panel; AzGuard throws when no
     | panel can be selected.

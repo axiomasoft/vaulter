@@ -1,6 +1,6 @@
 ---
 title: Multi-tenancy
-description: How Vaulter fits into a multi-tenant Laravel app — the host-owned tenant_id column, swapping in a tenant-aware model, and aligning ulid morphs with the Corex / AzGuard ecosystem.
+description: How Vaulter fits into a multi-tenant Laravel app — the host-owned tenant_id column, swapping in a tenant-aware model, and aligning ids and morph aliases with AzGuard.
 outline: deep
 ---
 
@@ -204,10 +204,10 @@ nothing to observe. The scope segment in the key (`t<id>/…`) makes this concre
 disk.
 :::
 
-## Aligning ulid morphs with Corex / AzGuard
+## Aligning ids and morphs with AzGuard
 
-Vaulter defaults its primary-key strategy to **ulid** precisely so its morph keys
-line up with the Corex / AzGuard ecosystem:
+Vaulter defaults its primary-key strategy to **ulid** so its keys line up with the
+ecosystem's host models:
 
 ```php
 // config/vaulter.php
@@ -217,41 +217,34 @@ line up with the Corex / AzGuard ecosystem:
 ],
 ```
 
-> Default is ulid so morph keys line up with the Corex/Azgard ecosystem.
-> — `config/vaulter.php`, the `ids` block
-
 This matters when you run the **AzGuard host-role driver** for authorization in a
-tenant-scoped app. That driver
-(`Vaulter\Azgard\AzgardPermissionDriver`) talks only to the
-Vaulter-owned `Vaulter\Azgard\Contracts\AzgardGuard` seam — so vaulter-core carries
-**no** hard dependency on `azguard` / `corex` — and routes its workspace-scoped role
-checks through `hasPermissionIn($contextType, $contextId, $permission)`, which is
-the Corex `TenantContextGuard` contextual check (the tenant/workspace lane).
+tenant-scoped app. That driver (`Vaulter\Azgard\AzgardPermissionDriver`) talks only to the
+Vaulter-owned `Vaulter\Azgard\Contracts\AzgardGuard` seam — so vaulter-core carries **no**
+dependency on AzGuard — and asks its workspace-scoped questions as AzGuard v1 decisions in an
+**assignment scope**: `hasPermission($permission, on: AssignmentScopeRef::of($type, $id))`,
+where `$type`/`$id` are the drive owner's morph alias and key.
 
-For those morph types to resolve correctly across packages, the host must align the
-ulid morph configuration end to end:
+For those identities to match, the host aligns three things:
 
-```dotenv
-# Vaulter
-VAULTER_ID_STRATEGY=ulid
+1. **Morph aliases.** AzGuard identities are type aliases (`[a-z0-9][a-z0-9_.-]*`), never
+   class names. Register the user and every workspace model:
 
-# AzGuard
-AZ_GUARD_MORPH_TYPE=ulid
-```
+   ```php
+   Relation::enforceMorphMap([
+       'user' => User::class,
+       'team' => Team::class,
+   ]);
+   ```
 
-```php
-// Corex
-'ids' => ['strategy' => \Corex\…\Ulid::class],   // corex.ids.strategy = Ulid
-```
+   A drive owner typed by a class name throws `InvalidAssignmentScopeException`.
 
-…and register the workspace / owner morph types as **Corex morph aliases**
-(`EntityRegistry` / Corex ADR-003), as documented on the `AzgardGuard` contract:
+2. **Assignment scope types.** Declare each workspace alias as an assignment scope type of the
+   AzGuard panel (`PanelBuilder::scopes(AssignmentScopePolicy::inherit(...))`); an alias the
+   panel does not declare is denied. AzGuard **tenants** (`TenantPolicy`) are a separate
+   boundary: a panel with tenants needs its current tenant, and without one AzGuard denies.
 
-```php
-// Vaulter\Azgard\Contracts\AzgardGuard (docblock)
-// The $contextType / $entity morph types MUST be registered Corex morph aliases
-// aligned with vaulter.ids.strategy=ulid + corex.ids.strategy=Ulid + AZ_GUARD_MORPH_TYPE=ulid.
-```
+3. **Host key columns.** If AzGuard stores grants for ulid keys, match its host key type
+   (`azguard.ids.host_keys` / `azguard.storages.*.host_keys`) to your models' key strategy.
 
 ::: info Install the AzGuard bridge
 `composer require axioma-studio/vaulter-azgard` installs the driver, real adapter and
@@ -271,8 +264,8 @@ A typical tenant-scoped Vaulter install:
 3. Subclass the Vaulter models you need to scope (at least `storage`; usually `node`,
    `file`, `blob`, `activity`) and point the `models` map at them. Each subclass
    stamps `tenant_id` on create and applies your global scope.
-4. If you use AzGuard for authorization, keep `ids.strategy = ulid` and align the
-   Corex / AzGuard morph configuration as above.
+4. If you use AzGuard for authorization, register the morph aliases, declare the workspace
+   aliases as assignment scope types of the AzGuard panel and match its host key type, as above.
 
 From there, every upload threads the tenant through to its blob automatically, and
 your model layer — not Vaulter — enforces what each tenant can see.

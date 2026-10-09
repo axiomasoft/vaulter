@@ -105,8 +105,10 @@ interface PermissionDriver
 ### `Vaulter\Azgard\Contracts\AzgardGuard`
 
 Узкий принадлежащий Vaulter шов, который удовлетворяет актор хоста на базе AzGuard, так что
-`vaulter-core` не несёт **никакой** жёсткой зависимости от `azguard`/`corex`. Драйвер прав
-`azgard` общается только с этим интерфейсом — никогда с классами AzGuard.
+`vaulter-core` не зависит от AzGuard **никак**. Драйвер прав `azgard` общается только с этим
+интерфейсом — никогда с классами AzGuard. Оба метода — решения AzGuard v1
+(`hasPermission(on: $entity)` и `hasPermission(on: AssignmentScopeRef::of($type, $id))`);
+метода super-admin нет — super-admin AzGuard получает роль owner через эти решения.
 
 ```php
 interface AzgardGuard
@@ -114,8 +116,6 @@ interface AzgardGuard
     public function hasScopedPermission(string $permission, object $entity): bool;
 
     public function hasPermissionIn(string $contextType, int|string $contextId, string $permission): bool;
-
-    public function isSuperAdmin(): bool;
 }
 ```
 
@@ -125,9 +125,9 @@ Provider регистрирует драйвер и адаптер автома�
 
 **Используйте, когда** `config('vaulter.access.permission_driver') = 'azgard'`:
 установите `composer require axioma-studio/vaulter-azgard`, добавьте
-`Vaulter\Azgard\Contracts\AzgardBackedUser` на модель пользователя и согласуйте
-ULID-morph (`vaulter.ids.strategy=ulid` + `corex.ids.strategy=Ulid` +
-`AZ_GUARD_MORPH_TYPE=ulid`). Фейк также требует установленного моста и его зависимостей.
+`Vaulter\Azgard\Contracts\AzgardBackedUser` на модель пользователя, зарегистрируйте
+morph-алиасы моделей пользователя и workspace и объявите алиасы workspace типами assignment
+scope панели AzGuard. Фейк также требует установленного моста и его зависимостей.
 См. [Драйверы прав](/ru/guide/permission-drivers).
 
 ---
