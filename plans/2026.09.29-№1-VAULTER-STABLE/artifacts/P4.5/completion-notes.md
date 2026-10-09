@@ -65,3 +65,10 @@ Verdict was «request changes», 5 findings; all addressed in the working tree (
 
 Verified here: documents V1 214 passed, Pint ok, vue 125 passed + typecheck, `node --check` on hub files.
 NOT run: hub node tests touching `@hocuspocus/transformer` (deps not installed), V5 — #1/#2/#4 rest on Grok's reading of @hocuspocus 4.7 (`Connection.close`, Redis `afterLoadDocument`); owner run must confirm (restore-epoch.e2e expects code 4409).
+
+## Closing run (same day)
+
+- V3 unit: `npm install` (root workspace lockfile `package-lock.json` refreshed), `npm run check` ok, `npm test` **74 passed**. `Connection.close` of @hocuspocus/server 4.7 only sends the reason (no transport close) — finding #1 confirmed at runtime.
+- V80: PHPStan **No errors** (NodeCollaborationController narrows `content` to string keys), Pint ok, collaboration tests 54 passed.
+- NC3/NC4 executed: red → exact restore → green.
+- Still owner run: V5 (`scripts/collab-e2e.sh`), then `plan.py finish`.

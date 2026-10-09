@@ -16,3 +16,10 @@ Executed in this session (SQLite, `packages/documents`), raw output in
 |---|---|---|---|
 | NC3 | `onStoreDocument` rethrows on a terminal 409 (replace the `TERMINAL_CONFLICTS` branch body with `throw new Error('409')`) | `hocuspocus-server/test/epoch-fence.test.js` — "a 409 … closes the room with 4409 epoch_changed and never throws" | `cd hocuspocus-server && node --test test/epoch-fence.test.js` → red; revert exactly the injected line (compare sha256 before/after); rerun → green |
 | NC4 | `onLoadDocument` applies its own seed before the store answers (move `Y.applyUpdate(document, update)` above `webhook.storeDocument`) | `test/load-seed.test.js` — "takes the other instance's seed after a seed conflict" | same procedure |
+
+## Executed 2026-10-09 (hub dependencies installed; sha256 of `src/index.js` identical before/after)
+
+| # | Result |
+|---|---|
+| NC3 | `epoch-fence.test.js`: 4 fail → restored → green |
+| NC4 | `load-seed.test.js`: 2 fail → restored → green |

@@ -101,12 +101,14 @@ final class NodeCollaborationController extends Controller
         $call = ResolveCollaborationCall::call($request);
         $room = $this->hub->open($call, $request->input('room'));
         $content = $request->input('content');
+        // The projection is a JSON object (a document node): only its string keys are content.
+        $content = is_array($content) ? array_filter($content, is_string(...), ARRAY_FILTER_USE_KEY) : null;
 
         $result = $this->hub->store(
             room: $room,
             call: $call,
             yjsState: $this->yjsState($request),
-            content: is_array($content) ? $content : null,
+            content: $content,
             seed: $request->boolean('seed'),
         );
 
