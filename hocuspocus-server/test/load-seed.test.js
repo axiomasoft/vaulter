@@ -1,4 +1,5 @@
 import { test } from 'node:test'
+import { readFileSync } from 'node:fs'
 import assert from 'node:assert/strict'
 import * as Y from 'yjs'
 import { TiptapTransformer } from '@hocuspocus/transformer'
@@ -107,16 +108,31 @@ test('a read-only connection shows the seed but never stores it (single instance
   assert.equal(backend.calls.store.length, 0)
 })
 
-test('with a shared Y.Doc (Redis) a read-only connection applies no seed of its own', async () => {
-  const backend = stubBackend({ loads: [{ state: null, content: doc('Viewer'), type: 'vaulter/rich-text' }] })
+test('with a shared Y.Doc (Redis) a read-only connection to an unseeded document is refused, not cached empty', async () => {
+  const backend = stubBackend({
+    loads: [
+      { state: null, content: doc('Viewer'), type: 'vaulter/rich-text' },
+      { state: null, content: doc('Viewer'), type: 'vaulter/rich-text' },
+    ],
+  })
+  const hooks = createHooks({ webhook: backend.webhook, shared: true, log: { warn: () => {} } })
   const document = new Y.Doc()
 
-  await createHooks({ webhook: backend.webhook, shared: true, log: { warn: () => {} } }).onLoadDocument({
-    documentName: ROOM, document, context: { token: 'jwt-ro', mode: 'ro', readOnly: true },
-  })
-
+  await assert.rejects(
+    hooks.onLoadDocument({ documentName: ROOM, document, context: { token: 'jwt-ro', mode: 'ro', readOnly: true } }),
+    /not initialised/,
+  )
   assert.equal(Y.encodeStateAsUpdate(document).length, Y.encodeStateAsUpdate(new Y.Doc()).length)
   assert.equal(backend.calls.store.length, 0)
+
+  // The writer that comes next seeds the document with its real text, not an empty one.
+  const writerDoc = new Y.Doc()
+  await hooks.onLoadDocument({ documentName: ROOM, document: writerDoc, context: rw })
+
+  assert.equal(backend.calls.store.length, 1)
+  assert.equal(backend.calls.store[0].seed, true)
+  assert.deepEqual(backend.calls.store[0].content, doc('Viewer'))
+  assert.match(textOf(writerDoc), /Viewer/)
 })
 
 test('a seed the backend refused never enters the room', async () => {
@@ -142,4 +158,95 @@ test('refuses to load a room whose generation ended while seeding', async () => 
 
   await assert.rejects(hooks.onLoadDocument({ documentName: ROOM, document: new Y.Doc(), context: rw }), /epoch_changed/)
   assert.equal(hooks.isFenced(ROOM), true)
+})
+
+test('the seed of a document with a link carries only attributes the backend allows', async () => {
+  const withLink = {
+    type: 'doc',
+    content: [{ type: 'paragraph', content: [{ type: 'text', text: 'see', marks: [{ type: 'link', attrs: { href: 'https://example.com' } }] }] }],
+  }
+  const backend = stubBackend({ loads: [{ state: null, content: withLink, type: 'vaulter/rich-text' }] })
+
+  await createHooks({ webhook: backend.webhook }).onLoadDocument({ documentName: ROOM, document: new Y.Doc(), context: rw })
+
+  const [seed] = backend.calls.store
+  const attrs = seed.content.content[0].content[0].marks[0].attrs
+  const fixture = JSON.parse(readFileSync(new URL('../../packages/documents/tests/Fixtures/tiptap-schema.json', import.meta.url), 'utf8'))
+  const allowed = fixture['vaulter/rich-text'].attributes.link
+
+  assert.equal(attrs.href, 'https://example.com')
+  assert.deepEqual(Object.keys(attrs).filter((key) => !allowed.includes(key)), [])
+})
+
+test('the seed carries the state version collab/load returned', async () => {
+  const backend = stubBackend({ loads: [{ state: null, content: doc('From JSON'), type: 'vaulter/rich-text', stateVersion: 5 }] })
+
+  await createHooks({ webhook: backend.webhook }).onLoadDocument({ documentName: ROOM, document: new Y.Doc(), context: rw })
+
+  assert.equal(backend.calls.store[0].stateVersion, 5)
+})
+
+test('a seed refused because the JSON changed since the load is rebuilt from the current JSON', async () => {
+  const backend = stubBackend({
+    loads: [
+      { state: null, content: doc('Old'), type: 'vaulter/rich-text', stateVersion: 1 },
+      { state: null, content: doc('Written over REST'), type: 'vaulter/rich-text', stateVersion: 2 },
+    ],
+    store: async (args) => (args.stateVersion === 1
+      ? { ok: false, status: 409, code: 'collaboration_seed_conflict' }
+      : { ok: true, data: {} }),
+  })
+  const document = new Y.Doc()
+
+  await createHooks({ webhook: backend.webhook }).onLoadDocument({ documentName: ROOM, document, context: rw })
+
+  assert.deepEqual(backend.calls.store.map((call) => call.stateVersion), [1, 2])
+  assert.deepEqual(backend.calls.store[1].content, doc('Written over REST'))
+  // The room holds the REST text once; the stale 'Old' text never entered it.
+  assert.match(textOf(document), /Written over REST/)
+  assert.equal(textOf(document).includes('Old'), false)
+})
+
+test('gives up when the document keeps changing under the seed', async () => {
+  const loads = Array.from({ length: 4 }, (_, i) => ({ state: null, content: doc(`v${i}`), type: 'vaulter/rich-text', stateVersion: i }))
+  const backend = stubBackend({ loads, store: async () => ({ ok: false, status: 409, code: 'collaboration_seed_conflict' }) })
+
+  await assert.rejects(
+    createHooks({ webhook: backend.webhook, log: { warn: () => {} } }).onLoadDocument({ documentName: ROOM, document: new Y.Doc(), context: rw }),
+    /conflicted repeatedly/,
+  )
+  assert.equal(backend.calls.store.length, 3)
+})
+
+// A host that allows an extra attribute in the backend (tiptap.extra_attributes) but did not
+// add its extension to the hub: the hub's schema would cut it from the room and save the cut
+// document back.
+test('refuses a seed whose JSON the hub schema cannot carry whole', async () => {
+  const aligned = { type: 'doc', content: [{ type: 'paragraph', attrs: { textAlign: 'center' }, content: [{ type: 'text', text: 'Centered' }] }] }
+  const backend = stubBackend({ loads: [{ state: null, content: aligned, type: 'vaulter/rich-text' }] })
+  const warnings = []
+  const document = new Y.Doc()
+
+  await assert.rejects(
+    createHooks({ webhook: backend.webhook, log: { warn: (message) => warnings.push(message) } })
+      .onLoadDocument({ documentName: ROOM, document, context: rw }),
+    (error) => /seed refused/.test(error.message) && error.message.includes('paragraph.textAlign') && !error.message.includes('center'),
+  )
+  assert.equal(backend.calls.store.length, 0)
+  assert.equal(textOf(document).includes('Centered'), false)
+})
+
+test('a document whose attributes the schema keeps (defaults added, marks reordered) is not refused', async () => {
+  const rich = {
+    type: 'doc',
+    content: [{ type: 'paragraph', content: [
+      { type: 'text', text: 'a', marks: [{ type: 'italic' }, { type: 'bold' }, { type: 'link', attrs: { href: 'https://example.com', target: '_blank' } }] },
+      { type: 'text', text: 'b', marks: [{ type: 'italic' }, { type: 'bold' }, { type: 'link', attrs: { href: 'https://example.com', target: '_blank' } }] },
+    ] }],
+  }
+  const backend = stubBackend({ loads: [{ state: null, content: rich, type: 'vaulter/rich-text' }] })
+
+  await createHooks({ webhook: backend.webhook }).onLoadDocument({ documentName: ROOM, document: new Y.Doc(), context: rw })
+
+  assert.equal(backend.calls.store.length, 1)
 })

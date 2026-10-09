@@ -10,7 +10,7 @@ import {
   unregisterEngineComponent,
 } from '../src/engineRegistry'
 import { docVaultClientKey } from '../src/composables/useVaulterClient'
-import type { VaulterClient } from '../src/client'
+import { VaulterApiError, type VaulterClient } from '../src/client'
 import type { HandlerDescriptor, TipTapDocument } from '../src/types'
 
 function handler(overrides: Partial<HandlerDescriptor> = {}): HandlerDescriptor {
@@ -158,5 +158,70 @@ describe('VaulterDocumentNode — engine resolution', () => {
 
     expect(warn.mock.calls.filter(([msg]) => String(msg).includes('custom-engine'))).toHaveLength(0)
     warn.mockRestore()
+  })
+})
+
+describe('VaulterDocumentNode — collaboration session failures', () => {
+  afterEach(() => {
+    clearEngineComponents()
+  })
+
+  const doc: TipTapDocument = { type: 'doc', content: [] } as never
+
+  function collaborativeClient(token: () => Promise<unknown>): VaulterClient {
+    return {
+      documentNodes: {
+        content: vi.fn().mockResolvedValue({ id: 1, content: doc, format: null } as never),
+        handler: vi.fn().mockResolvedValue(handler({
+          capabilities: { editable: true, previewable: true, downloadable: true, thumbnailable: false, collaborative: true },
+        })),
+        // The autosave path; it must not be reached when collaboration merely failed.
+        update: vi.fn().mockResolvedValue({}),
+      },
+      nodeCollaboration: { token },
+    } as unknown as VaulterClient
+  }
+
+  function mountNode(client: VaulterClient) {
+    const seen: Array<Record<string, unknown>> = []
+    registerEngineComponent('AppCustomEngine', defineComponent({
+      props: { readonly: Boolean, collaborative: Boolean, onChange: { type: Function, default: null } },
+      setup(props) {
+        seen.push(props as never)
+        return () => h('div', { class: 'engine' })
+      },
+    }))
+
+    return { seen, wrapper: mount(VaulterDocumentNode, { props: { nodeId: 1, debounceMs: 0 }, ...withClient(client) }) }
+  }
+
+  it('falls back to autosave only for 409 collaboration_unavailable', async () => {
+    const unavailable = new VaulterApiError(409, 'off', {}, undefined, 'collaboration_unavailable')
+    const { seen, wrapper } = mountNode(collaborativeClient(() => Promise.reject(unavailable)))
+    await flushPromises()
+
+    expect(wrapper.emitted('collaboration-failed')).toBeUndefined()
+    expect(seen.at(-1)).toMatchObject({ readonly: false, collaborative: false })
+  })
+
+  for (const status of [0, 429, 500, 503]) {
+    it(`stays read-only and does not autosave when the session request fails with ${status || 'a network error'}`, async () => {
+      const failure = status === 0 ? new TypeError('Failed to fetch') : new VaulterApiError(status, 'later', {}, undefined, null)
+      const client = collaborativeClient(() => Promise.reject(failure))
+      const { seen, wrapper } = mountNode(client)
+      await flushPromises()
+
+      expect(seen.at(-1)).toMatchObject({ readonly: true, collaborative: false })
+      expect(wrapper.emitted('collaboration-failed')?.[0]).toEqual([failure])
+      expect((client.documentNodes as unknown as { update: ReturnType<typeof vi.fn> }).update).not.toHaveBeenCalled()
+    })
+  }
+
+  it('a 409 with another code is not "collaboration unavailable"', async () => {
+    const conflict = new VaulterApiError(409, 'epoch', {}, undefined, 'collaboration_epoch_mismatch')
+    const { seen } = mountNode(collaborativeClient(() => Promise.reject(conflict)))
+    await flushPromises()
+
+    expect(seen.at(-1)).toMatchObject({ readonly: true })
   })
 })

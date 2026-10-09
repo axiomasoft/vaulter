@@ -46,3 +46,43 @@ export function extensionsFor(type) {
 
   return build()
 }
+
+/**
+ * The attributes of `input` (a TipTap JSON document) that `projection` — the same document
+ * after a round trip through the hub's schema — no longer carries, as "type.attribute"
+ * names (values are never listed). A `null`/missing attribute is not a loss, and the
+ * comparison is by SET of "type, attribute, value": ProseMirror merges adjacent text nodes
+ * and reorders marks, which changes neither.
+ */
+export function lostAttributes(input, projection) {
+  const present = new Set(attributeEntries(projection).map(([key]) => key))
+  const lost = new Set()
+
+  for (const [key, label] of attributeEntries(input)) {
+    if (!present.has(key)) {
+      lost.add(label)
+    }
+  }
+
+  return [...lost].sort()
+}
+
+function attributeEntries(node, found = []) {
+  if (node === null || typeof node !== 'object') {
+    return found
+  }
+
+  for (const item of [node, ...(Array.isArray(node.marks) ? node.marks : [])]) {
+    for (const [name, value] of Object.entries(item?.attrs ?? {})) {
+      if (value !== null && value !== undefined) {
+        found.push([`${item.type}|${name}|${JSON.stringify(value)}`, `${item.type}.${name}`])
+      }
+    }
+  }
+
+  for (const child of Array.isArray(node.content) ? node.content : []) {
+    attributeEntries(child, found)
+  }
+
+  return found
+}

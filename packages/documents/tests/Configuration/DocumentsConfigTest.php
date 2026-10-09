@@ -136,3 +136,20 @@ it('refuses an exporter list that is not class names', function (): void {
 
     expect(fn () => (new DocumentsConfig($repository))->exporters())->toThrow(InvalidConfigurationException::class, 'class names only');
 });
+
+it('refuses a JWT secret equal to the webhook secret, in every environment (R9)', function (): void {
+    $repository = new Repository(['vaulter-documents' => ['collaboration' => ['enabled' => true, 'hub' => [
+        'jwt_secret' => 'one-value-for-both', 'webhook_secret' => 'one-value-for-both',
+    ]]]]);
+
+    expect(fn () => (new DocumentsConfig($repository))->assertDistinctHubSecrets())
+        ->toThrow(InvalidConfigurationException::class, 'must differ');
+
+    // Different, missing, or collaboration off: nothing to refuse here (core warns about "missing").
+    foreach ([['a', 'b', true], ['a', null, true], [null, null, true], ['same', 'same', false]] as [$jwt, $webhook, $enabled]) {
+        $repository->set('vaulter-documents.collaboration', ['enabled' => $enabled, 'hub' => ['jwt_secret' => $jwt, 'webhook_secret' => $webhook]]);
+        (new DocumentsConfig($repository))->assertDistinctHubSecrets();
+    }
+
+    expect(true)->toBeTrue();
+});

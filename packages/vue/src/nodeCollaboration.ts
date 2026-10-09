@@ -23,6 +23,14 @@ export const EPOCH_CHANGED_REASON = 'epoch_changed'
 export const TOKEN_EXPIRED_CODE = 4001
 export const TOKEN_EXPIRED_REASON = 'Collaboration token expired'
 
+/** Close code the hub sends when the backend refused a store because the writer may no longer write. */
+export const FORBIDDEN_CODE = 4403
+export const FORBIDDEN_REASON = 'forbidden'
+
+/** Close code the hub sends when the backend refused a store as a payload (too large, invalid). */
+export const STORE_REFUSED_CODE = 4422
+export const STORE_REFUSED_REASON = 'store_refused'
+
 /** One remote participant lifted from the awareness states (best-effort shape). */
 export interface Collaborator {
   clientId: number
@@ -37,8 +45,13 @@ export interface AwarenessLike {
   off: (event: 'change' | 'update', handler: () => void) => void
 }
 
-/** Why the hub ended a session: its generation is over, or its token expired. */
-export type NodeCollaborationEnd = 'epoch_changed' | 'token_expired'
+/**
+ * Why the hub ended a session: its generation is over (`epoch_changed`), its token expired
+ * (`token_expired`), the writer lost the right to write (`forbidden` — a renewed session
+ * comes back read-only), or the backend refused the document's state itself
+ * (`store_refused` — a renewed session would be refused again).
+ */
+export type NodeCollaborationEnd = 'epoch_changed' | 'token_expired' | 'forbidden' | 'store_refused'
 
 /** The transport handle a provider factory returns. */
 export interface NodeCollaborationProviderHandle {
@@ -88,9 +101,17 @@ export function sessionEnd(code: number | undefined, reason: string | undefined)
     return 'epoch_changed'
   }
 
-  // Hocuspocus' provider can report a hub close as code 1000 with only the reason, so the
-  // reason identifies the expiry as well.
-  return code === TOKEN_EXPIRED_CODE || reason === TOKEN_EXPIRED_REASON ? 'token_expired' : null
+  // Hocuspocus' provider can report a hub close as code 1000 with only the reason (and an
+  // authentication refusal carries nothing but the reason), so the reason identifies the
+  // end as well.
+  if (code === TOKEN_EXPIRED_CODE || reason === TOKEN_EXPIRED_REASON) {
+    return 'token_expired'
+  }
+  if (code === FORBIDDEN_CODE || reason === FORBIDDEN_REASON) {
+    return 'forbidden'
+  }
+
+  return code === STORE_REFUSED_CODE || reason === STORE_REFUSED_REASON ? 'store_refused' : null
 }
 
 function defaultHocuspocusProvider(args: {

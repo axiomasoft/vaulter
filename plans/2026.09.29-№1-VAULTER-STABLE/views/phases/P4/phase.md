@@ -461,6 +461,16 @@ D29 C-строки P4: C02 (copy admission — P4.2/P4.9), C04 (операцио
 ]
 ```
 
+## Closed
+
+```json
+{
+  "at": "2026-10-09T14:29:28Z",
+  "result": "done_with_deviations",
+  "summary": "14 item(s): 2 done, 12 done_with_deviations"
+}
+```
+
 ## Orchestration
 
 ```json

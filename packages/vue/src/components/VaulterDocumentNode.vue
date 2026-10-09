@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, markRaw, onBeforeUnmount, onMounted, ref, watch, type Component } from 'vue'
 import type { Doc as YDoc } from 'yjs'
+import { VaulterApiError } from '../client'
 import { useDocumentNode } from '../composables/useDocumentNode'
 import { useNodeCollaboration } from '../composables/useNodeCollaboration'
 import { resolveEngineComponent } from '../engineRegistry'
@@ -25,7 +26,11 @@ import type { HandlerDescriptor, NodeId, TipTapDocument } from '../types'
 // NO `content` then: the hub seeds the room once on the server, and an editor that also
 // set the JSON would duplicate it. When the hub ends the room's generation (a restore),
 // `ydoc` is replaced by a new document — rebind to it. Otherwise the autosave path is
-// used. The host still supplies the actual editor via the componentMap.
+// used — but ONLY when the session endpoint answers 409 collaboration_unavailable (the
+// contract for "not offered here"). Any other session failure (network, 429, 5xx) leaves
+// the editor read-only and emits `collaboration-failed`: autosaving into a document that
+// has a Yjs state would reset it and throw the other participants out. The host still
+// supplies the actual editor via the componentMap.
 
 /**
  * A mountable editor for a document node. It receives the loaded `content`, the
@@ -99,6 +104,8 @@ const emit = defineEmits<{
   collaborating: [readonly: boolean]
   /** The document is in a newer schema than the editor supports: update the application. */
   'schema-outdated': [schemaVersion: number]
+  /** The collaboration session failed for a transient/unknown reason; the editor is read-only (call `load()` to retry). */
+  'collaboration-failed': [error: unknown]
 }>()
 
 /** The handler `ui.component` identifiers that mean "the TipTap rich-text editor". */
@@ -170,8 +177,16 @@ watch([handler, resolved], ([h, r]) => {
   )
 })
 
-/** Read-only is forced by the prop OR by a read-only collaboration session. */
-const isReadonly = computed<boolean>(() => props.readonly || (collaborative.value && collab.readOnly.value))
+/** The session could not be opened for a reason that does not make autosave safe. */
+const sessionFailed = ref(false)
+
+/** The documented answer for "realtime editing is not offered here": 409 collaboration_unavailable. */
+function collaborationUnavailable(error: unknown): boolean {
+  return error instanceof VaulterApiError && error.status === 409 && error.code === 'collaboration_unavailable'
+}
+
+/** Read-only is forced by the prop, a failed session, OR by a read-only collaboration session. */
+const isReadonly = computed<boolean>(() => props.readonly || sessionFailed.value || (collaborative.value && collab.readOnly.value))
 
 const editorProps = computed<DocumentNodeEditorProps | null>(() => {
   if (!handler.value) {
@@ -222,6 +237,7 @@ function handlerIsCollaborative(descriptor: HandlerDescriptor): boolean {
 
 async function loadAll(): Promise<void> {
   const descriptor = await loadHandler()
+  sessionFailed.value = false
 
   // Decide the path BEFORE loading content: a collaborative handler opens a Yjs
   // session and skips the content fetch's role as the editing source (the doc is the
@@ -234,10 +250,21 @@ async function loadAll(): Promise<void> {
       if (collab.schemaOutdated.value && collab.session.value) {
         emit('schema-outdated', collab.session.value.schema_version)
       }
-    } catch {
-      // The token handshake failed (collab unavailable / not configured) — fall back
-      // to the M4a autosave path rather than blocking the editor.
+    } catch (caught) {
       collaborative.value = false
+
+      if (collaborationUnavailable(caught)) {
+        // The contract says collaboration is off for this document (disabled, or a type
+        // that cannot collaborate): the ordinary autosave path is the way to edit it.
+        sessionFailed.value = false
+      } else {
+        // Anything else (network, 429, 5xx, 403) says nothing about the document. A
+        // document that HAS a Yjs state must not be autosaved over from here: the update
+        // moves its epoch, drops the state and throws every other participant out. Stay
+        // read-only on the loaded content; a later load() retries the session.
+        sessionFailed.value = true
+        emit('collaboration-failed', caught)
+      }
     }
   }
 
@@ -264,6 +291,7 @@ defineExpose({
   error,
   loading,
   collaborative,
+  sessionFailed,
   connected: collab.connected,
   collaborators: collab.collaborators,
 })

@@ -134,12 +134,33 @@ test('storeDocument posts the base64 state, the projection and the seed flag', a
   assert.deepEqual(result, { ok: true, data: { changed: true, epoch: 0 } })
 })
 
+test('storeDocument sends the state version a seed was built from, and nothing else adds it', async () => {
+  const { fetchImpl, calls } = mockFetch(() => jsonResponse({ data: {} }))
+
+  await storeDocument({ room: 'r', state: 'AAA=', seed: true, stateVersion: 7, token: 't' }, { config: cfg, fetchImpl })
+  await storeDocument({ room: 'r', state: 'AAA=', token: 't' }, { config: cfg, fetchImpl })
+
+  assert.equal(JSON.parse(calls[0].init.body).state_version, 7)
+  assert.equal('state_version' in JSON.parse(calls[1].init.body), false)
+})
+
 test('storeDocument reports a 4xx as a terminal answer instead of throwing (no retry loop)', async () => {
   for (const [status, code] of [[409, 'collaboration_epoch_mismatch'], [409, 'collaboration_seed_conflict'], [403, 'permission_denied'], [404, 'node_not_found']]) {
     const { fetchImpl } = mockFetch(() => jsonResponse({ code }, status))
     assert.deepEqual(
       await storeDocument({ room: 'r', state: 'AAA=', token: 't' }, { config: cfg, fetchImpl }),
       { ok: false, status, code },
+    )
+  }
+})
+
+test('storeDocument throws on 408/425/429 (try later) so the hub retries instead of reporting a refusal', async () => {
+  for (const status of [408, 425, 429]) {
+    const { fetchImpl } = mockFetch(() => jsonResponse({ code: 'throttled' }, status))
+
+    await assert.rejects(
+      storeDocument({ room: 'r', state: 'AAA=', token: 't' }, { config: cfg, fetchImpl }),
+      new RegExp(`collab/store failed \\(${status}\\)`),
     )
   }
 })

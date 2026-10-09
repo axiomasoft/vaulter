@@ -22,6 +22,10 @@ use Vaulter\Models\Drive\Node;
  *                     that are not a room.
  *   - seed          — the first state built from the JSON: refused unless the document
  *                     has no Yjs state yet (409 collaboration_seed_conflict).
+ *   - expectedStateVersion — a seed only: the state_version the hub read in collab/load.
+ *                     A document that moved on since (a REST update does not move the
+ *                     epoch while there is no Yjs state) refuses the seed with the same
+ *                     409, and the hub loads again. Null skips the check.
  */
 final readonly class PersistCollaborationStateInput
 {
@@ -33,5 +37,6 @@ final readonly class PersistCollaborationStateInput
         public int|string|null $actorId = null,
         public ?int $expectedEpoch = null,
         public bool $seed = false,
+        public ?int $expectedStateVersion = null,
     ) {}
 }

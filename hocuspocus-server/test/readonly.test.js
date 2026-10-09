@@ -75,3 +75,16 @@ test('an expired token stops every further message', async () => {
   await assert.doesNotReject(hooks.beforeHandleMessage({ context: { exp: Math.floor(Date.now() / 1000) + 60 } }))
   await assert.rejects(hooks.beforeHandleMessage({ context: { exp: Math.floor(Date.now() / 1000) - 1 } }), /expired/)
 })
+
+test('a reconnect with an expired token is refused with the reason the client renews its session on', async () => {
+  const calls = []
+  const hooks = createHooks({ webhook: { authenticate: async (args) => { calls.push(args); return { allowed: true, mode: 'rw', userId: '1' } } } })
+  const expired = token({ exp: Math.floor(Date.now() / 1000) - 5 })
+
+  await assert.rejects(
+    hooks.onAuthenticate({ token: expired, documentName: ROOM }),
+    (error) => error.reason === 'Collaboration token expired' && error.message === 'Collaboration token expired',
+  )
+  // Refused before the backend is asked: it would answer an opaque 401.
+  assert.equal(calls.length, 0)
+})

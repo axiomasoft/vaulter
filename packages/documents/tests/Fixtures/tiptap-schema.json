@@ -19,7 +19,26 @@
             "italic",
             "link",
             "strike"
-        ]
+        ],
+        "attributes": {
+            "codeBlock": [
+                "language"
+            ],
+            "heading": [
+                "level"
+            ],
+            "link": [
+                "class",
+                "href",
+                "rel",
+                "target",
+                "title"
+            ],
+            "orderedList": [
+                "start",
+                "type"
+            ]
+        }
     },
     "vaulter/rich-text": {
         "nodes": [
@@ -47,6 +66,44 @@
             "link",
             "strike",
             "underline"
-        ]
+        ],
+        "attributes": {
+            "codeBlock": [
+                "language"
+            ],
+            "heading": [
+                "level"
+            ],
+            "image": [
+                "alt",
+                "height",
+                "src",
+                "title",
+                "width"
+            ],
+            "link": [
+                "class",
+                "href",
+                "rel",
+                "target",
+                "title"
+            ],
+            "orderedList": [
+                "start",
+                "type"
+            ],
+            "tableCell": [
+                "align",
+                "colspan",
+                "colwidth",
+                "rowspan"
+            ],
+            "tableHeader": [
+                "align",
+                "colspan",
+                "colwidth",
+                "rowspan"
+            ]
+        }
     }
 }

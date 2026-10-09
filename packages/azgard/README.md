@@ -29,9 +29,17 @@ Vaulter AccessResolver ─▶ AzgardPermissionDriver ─▶ AzgardGuard (seam)
 - **`AzgardPermissionMap`** maps abilities to permission keys through the live
   `Configuration\AzgardConfig` repository.
 - **`VaulterAzgardServiceProvider`** registers the `azgard` driver key while preserving
-  host overrides and binds the seam from the current request's user. A
-  request with no AzGuard-backed user gets the deny-all `NullAzgardGuard` — a safe
-  pass-through, never a fatal.
+  host overrides and binds the seam from the current request's user (for code that asks
+  `AzgardGuard` about the request user). A request with no AzGuard-backed user gets the
+  deny-all `NullAzgardGuard` — a safe pass-through, never a fatal.
+- **`AzgardPermissionDriver` answers for the decision's actor, not for the request.** It uses
+  the actor itself when it implements `AzgardGuard`; else a guard the **host** bound in the
+  container (the host's override must answer for the actor it is asked about); else an
+  `AzgardGuardAdapter` it builds over the actor when the actor is an `AzgardBackedUser`
+  (with `panel_id`). The request-bound default binding is never lent to another actor: an
+  acting-as/preview check cannot inherit the request user's rights, and a call with no request
+  user (the collaboration hub resolves the token subject itself) is decided by the actor's own
+  AzGuard rights.
 
 ## Install
 

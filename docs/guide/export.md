@@ -31,7 +31,8 @@ interface DocumentExporter
 ```
 
 An exporter receives **decoded inline content only**. It must not read storage, blobs or URLs
-(an architecture test enforces this for the package's own exporters), so an export can never reach
+(an architecture test enforces this for the package's **built-in** exporters only; for your own
+classes it is a requirement you keep, not one the test checks), so an export can never reach
 bytes the egress gate did not release. Images and attachments stay links in the output. Narrow to
 the content class you understand inside `export()` and throw
 `UnsupportedDocumentContentException` otherwise.
@@ -83,6 +84,16 @@ $export->sourceEpoch; $export->sourceStateVersion; $export->sourceRevisionId;
 Without a revision the export renders the **working state** at `(sourceEpoch,
 sourceStateVersion)` and `sourceRevisionId` is `null`; with one it renders that immutable
 checkpoint. An export never creates a revision and never changes the state version.
+
+`sourceEpoch` is always the **document's** collaboration epoch at the moment of the export, also
+for a checkpoint: a checkpoint records no epoch of its own, so it is identified by
+`sourceRevisionId` and its own `sourceStateVersion`, and the epoch only says which room
+generation was current when it was rendered.
+
+`$export->lossy` is `true` when the stored content could not be read whole (written by a newer
+schema, or content its type reads only partly): the bytes are what the type could read, not
+necessarily everything that is stored. Do not cache or archive such a render as the document's
+export. Over HTTP the file carries `X-Vaulter-Export-Lossy: 1` in that case.
 
 If you cache renders, key them on `(documentId, sourceEpoch, sourceStateVersion | sourceRevisionId,
 exporter key, format)` and re-check access on every hit.

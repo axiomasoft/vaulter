@@ -31,15 +31,4 @@ final class CollaborationConfigException extends VaulterException
             .'Docs: '.self::docs('missing-collab-secret'),
         );
     }
-
-    public static function noVerifier(): self
-    {
-        return new self(
-            '[Vaulter] The collaboration webhook surface has no way to authenticate callers. '
-            .'Why: neither a shared webhook secret nor a JWT signing secret is configured, '
-            .'so the collab/authenticate + collab/store endpoints cannot verify the Node hub. '
-            .'Fix: set VAULTER_COLLAB_WEBHOOK_SECRET (shared secret) and/or VAULTER_COLLAB_SECRET (JWT key). '
-            .'Docs: '.self::docs('collab-webhook-unconfigured'),
-        );
-    }
 }

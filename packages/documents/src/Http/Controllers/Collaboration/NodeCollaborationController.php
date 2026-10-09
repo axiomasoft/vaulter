@@ -93,7 +93,7 @@ final class NodeCollaborationController extends Controller
 
     /**
      * The hub's onStoreDocument: {room, state (base64 Yjs), content (JSON projection),
-     * seed}. A read-only token or room is 403; a room of a past generation, or a seed
+     * seed, state_version (a seed's precondition: the version collab/load returned)}. A read-only token or room is 403; a room of a past generation, or a seed
      * over an existing state, is 409 and the hub closes the room without retrying.
      */
     public function store(Request $request): JsonResponse
@@ -110,6 +110,7 @@ final class NodeCollaborationController extends Controller
             yjsState: $this->yjsState($request),
             content: $content,
             seed: $request->boolean('seed'),
+            stateVersion: $this->stateVersion($request),
         );
 
         return new JsonResponse([
@@ -120,6 +121,23 @@ final class NodeCollaborationController extends Controller
                 'yjs_state_size' => $result->document->yjs_state_size,
             ],
         ]);
+    }
+
+    /**
+     * The `state_version` the hub read in collab/load (sent with a seed). Absent → null;
+     * present but not a non-negative integer → 422.
+     */
+    private function stateVersion(Request $request): ?int
+    {
+        $version = $request->input('state_version');
+        if ($version === null) {
+            return null;
+        }
+        if (!is_int($version) || $version < 0) {
+            abort(422, 'The state_version must be a non-negative integer.');
+        }
+
+        return $version;
     }
 
     /**

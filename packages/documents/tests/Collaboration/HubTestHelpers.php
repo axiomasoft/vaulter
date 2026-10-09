@@ -136,13 +136,14 @@ final class HubTestHelpers
      * @param  array<string, mixed>|null $content
      * @return array<string, mixed>
      */
-    public static function storeBody(Node $node, string $state, ?array $content = null, bool $seed = false, ?int $epoch = null): array
+    public static function storeBody(Node $node, string $state, ?array $content = null, bool $seed = false, ?int $epoch = null, ?int $stateVersion = null): array
     {
         return array_filter([
             'room' => self::room($node, $epoch),
             'state' => base64_encode($state),
             'content' => $content ?? self::tiptap('From hub'),
             'seed' => $seed ?: null,
+            'state_version' => $stateVersion,
         ], static fn (mixed $value): bool => $value !== null);
     }
 

@@ -14,7 +14,7 @@ uses(RealAzgardTestCase::class, RefreshDatabase::class, InteractsWithAzGuard::cl
 uses(IsolatedRealAzgardTestCase::class, RefreshDatabase::class, InteractsWithAzGuard::class)->in('RealAzgardIsolated');
 
 // The adapter / provider / Vaulter-resolver unit + integration tests (no azguard DB).
-uses(TestCase::class)->in('AdapterTest.php', 'ProviderBindingTest.php', 'VaulterResolverIntegrationTest.php');
+uses(TestCase::class)->in('AdapterTest.php', 'ActorGuardTest.php', 'ProviderBindingTest.php', 'VaulterResolverIntegrationTest.php');
 
 uses(AccessTestCase::class, RefreshDatabase::class)->in('Access');
 uses(TestCase::class)->in('ConfigurationTest.php');

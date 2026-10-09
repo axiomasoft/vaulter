@@ -103,6 +103,11 @@ describe('createNodeCollaborationSession', () => {
     expect(sessionEnd(undefined, 'epoch_changed')).toBe('epoch_changed')
     expect(sessionEnd(4001, 'Collaboration token expired')).toBe('token_expired')
     expect(sessionEnd(1000, 'Collaboration token expired')).toBe('token_expired')
+    // An authentication refusal (reconnect with an expired token) carries only the reason.
+    expect(sessionEnd(undefined, 'Collaboration token expired')).toBe('token_expired')
+    expect(sessionEnd(4403, 'forbidden')).toBe('forbidden')
+    expect(sessionEnd(undefined, 'forbidden')).toBe('forbidden')
+    expect(sessionEnd(4422, 'store_refused')).toBe('store_refused')
     expect(sessionEnd(1006, '')).toBeNull()
     expect(sessionEnd(undefined, 'permission-denied')).toBeNull()
   })
@@ -199,6 +204,50 @@ describe('useNodeCollaboration', () => {
 
     expect(vm.doc.value).toBe(doc)
     expect(provider.mock.calls[1][0]).toMatchObject({ token: 'jwt-renewed', document: doc })
+  })
+
+  it('on 4403 forbidden renews the session (read-only now) on the same Y.Doc', async () => {
+    const first = endableProvider()
+    const second = endableProvider()
+    const token = vi.fn()
+      .mockResolvedValueOnce(hocuspocusSession())
+      .mockResolvedValueOnce(hocuspocusSession({ mode: 'ro', token: 'jwt-ro' }))
+    const provider = vi.fn().mockReturnValueOnce(first.handle).mockReturnValueOnce(second.handle)
+
+    const { vm } = mountWith(
+      { nodeCollaboration: { token } } as never,
+      () => useNodeCollaboration(42, { providers: { createHocuspocusProvider: provider } }),
+    )
+    await vm.connect()
+    const doc = vm.doc.value
+
+    first.end('forbidden')
+    await flush()
+
+    expect(vm.doc.value).toBe(doc)
+    expect(vm.readOnly.value).toBe(true)
+    expect(provider.mock.calls[1][0]).toMatchObject({ token: 'jwt-ro', document: doc })
+  })
+
+  it('on 4422 store_refused does not reopen: it reports an error and stays disconnected', async () => {
+    const first = endableProvider()
+    const token = vi.fn().mockResolvedValue(hocuspocusSession())
+    const provider = vi.fn().mockReturnValue(first.handle)
+
+    const { vm } = mountWith(
+      { nodeCollaboration: { token } } as never,
+      () => useNodeCollaboration(42, { providers: { createHocuspocusProvider: provider } }),
+    )
+    await vm.connect()
+
+    first.end('store_refused')
+    await flush()
+
+    expect(token).toHaveBeenCalledOnce()
+    expect(provider).toHaveBeenCalledOnce()
+    expect(first.destroy).toHaveBeenCalledOnce()
+    expect(vm.connected.value).toBe(false)
+    expect(vm.error.value).toBeInstanceOf(Error)
   })
 
   it('sends the supported schema version and opens a newer schema read-only', async () => {

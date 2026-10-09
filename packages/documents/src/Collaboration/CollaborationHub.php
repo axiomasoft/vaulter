@@ -18,6 +18,7 @@ use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Enums\Access\Ability;
+use Vaulter\Enums\Drive\DriveStatus;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\Node;
@@ -74,7 +75,7 @@ final readonly class CollaborationHub
         }
 
         $driveStatus = $node->storage()->value('status');
-        if ($driveStatus !== 'active' && $driveStatus !== 'archived') {
+        if ($driveStatus !== DriveStatus::Active && $driveStatus !== DriveStatus::Archived) {
             throw NodeNotFoundException::forId($ref->nodeId);
         }
 
@@ -94,7 +95,7 @@ final readonly class CollaborationHub
         // every condition still holds.
         $writable = $call->mode === 'rw'
             && $ability === Ability::Edit
-            && $driveStatus === 'active'
+            && $driveStatus === DriveStatus::Active
             && $type !== null
             && $call->schemaVersion === $type->schemaVersion()
             && $this->decoder->editable($document);
@@ -105,7 +106,7 @@ final readonly class CollaborationHub
             type: $type,
             ability: $ability,
             writable: $writable,
-            driveActive: $driveStatus === 'active',
+            driveActive: $driveStatus === DriveStatus::Active,
             userId: $call->subject,
         );
     }
@@ -144,7 +145,7 @@ final readonly class CollaborationHub
      * @throws PermissionDeniedException       a read-only token or a room that may no longer write
      * @throws InvalidDocumentContentException the type needs the JSON projection and none was sent
      */
-    public function store(HubRoom $room, CollaborationCall $call, string $yjsState, ?array $content, bool $seed): DocumentStateResult
+    public function store(HubRoom $room, CollaborationCall $call, string $yjsState, ?array $content, bool $seed, ?int $stateVersion = null): DocumentStateResult
     {
         $this->assertCanView($room);
         // Whatever takes the right to write away is a 403. Content this installation
@@ -167,6 +168,7 @@ final readonly class CollaborationHub
             actorId: $room->userId,
             expectedEpoch: $call->ref->epoch,
             seed: $seed,
+            expectedStateVersion: $seed ? $stateVersion : null,
         ));
     }
 

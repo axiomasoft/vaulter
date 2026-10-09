@@ -167,6 +167,8 @@ final class DocumentNodeController extends Controller
             'Content-Disposition' => HeaderUtils::makeDisposition(HeaderUtils::DISPOSITION_ATTACHMENT, $export->filename, $fallback),
             'Cache-Control' => 'private, no-store',
             'X-Content-Type-Options' => 'nosniff',
+            // The stored content could not be read whole (newer schema / partly readable type).
+            ...($export->lossy ? ['X-Vaulter-Export-Lossy' => '1'] : []),
         ]);
     }
 

@@ -12,6 +12,7 @@ use Vaulter\Documents\Data\Snapshots\CommentSnapshot;
 use Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot;
 use Vaulter\Documents\Data\Snapshots\DocumentSnapshot;
 use Vaulter\Documents\DocumentsManager;
+use Vaulter\Documents\Export\DocumentExporterRegistry;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
@@ -311,6 +312,8 @@ test('vaulter-documents public API surface matches the frozen golden (VLT-REL P2
     // building blocks a host's own type is made of; the presenter and the contract test.
     foreach ([
         DocumentTypeRegistry::class,
+        // PLAN2.P4.4: the exporter registry a host extends through Documents::exporters().
+        DocumentExporterRegistry::class,
         RichTextDocumentType::class,
         MarkdownDocumentType::class,
         SpreadsheetDocumentType::class,

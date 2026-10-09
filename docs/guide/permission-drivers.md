@@ -365,14 +365,26 @@ interface AzgardGuard
 }
 ```
 
-If the actor itself implements `AzgardGuard`, the driver uses it directly.
-Otherwise the bridge provider supplies `AzgardGuardAdapter` for the current user
-implementing `Vaulter\Azgard\Contracts\AzgardBackedUser`. For guests or other users,
-it returns `NullAzgardGuard`, which grants no permissions.
+The driver always answers for the decision's **actor**, never for whoever the request is:
+
+1. If the actor itself implements `AzgardGuard`, the driver uses it directly.
+2. Otherwise, a guard the **host** bound in the container is used (see the override below).
+3. Otherwise, for an actor implementing `Vaulter\Azgard\Contracts\AzgardBackedUser`, the
+   driver builds an `AzgardGuardAdapter` over that actor, in the `vaulter-azgard.panel_id` panel.
+4. Any other actor gets no AzGuard lane (nothing is raised, `canCreateIn` is `false`).
+
+The binding of `AzgardGuard` that the bridge provider registers (an adapter over the **request**
+user, `NullAzgardGuard` for a guest) is for code that asks the seam about the request user. The
+driver never lends it to another actor: an acting-as or preview check does not inherit the
+request user's rights, and a call without a request user — the collaboration hub resolves the
+token subject itself — is decided by the actor's own AzGuard rights.
 
 ::: details Optionally overriding the supplied adapter
-The bridge already binds a real adapter. A host can override `AzgardGuard`; the
-supplied adapter is a thin pass-through onto AzGuard v1:
+The bridge already binds a real adapter. A host can override `AzgardGuard`; the driver then
+uses the host's guard for every actor, so it must answer for the actor it is asked about, not
+for the request user (the example below shows the shape; closing over the request user is only
+correct when the decision is about that user). The supplied adapter is a thin pass-through onto
+AzGuard v1:
 
 ```php
 use AzGuard\Kernel\Identity\AssignmentScopeRef;

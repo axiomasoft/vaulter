@@ -7,6 +7,7 @@ use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Tests\Drive\DriveTestHelpers;
 
 function exportedNode(string $name, string $text = 'file body'): array
 {
@@ -52,4 +53,19 @@ it('does not answer JSON and creates no revision', function (): void {
 
     expect($response->headers->get('Content-Type'))->not->toContain('json')
         ->and(DocumentRevision::query()->count())->toBe($revisions);
+});
+
+it('marks an export of partly readable content with X-Vaulter-Export-Lossy', function (): void {
+    [$node, $user] = exportedNode('Partly readable');
+    DocumentTestHelpers::document(DriveTestHelpers::model($node))->forceFill(['content' => ['type' => 'doc', 'content' => [
+        ['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'kept']]],
+        ['type' => 'hostWidgetNode'],
+    ]]])->save();
+    $this->actingAs($user);
+
+    $this->get('api/vaulter/nodes/'.$node->id.'/export')->assertOk()->assertHeader('X-Vaulter-Export-Lossy', '1');
+
+    [$whole, $reader] = exportedNode('Whole');
+    $this->actingAs($reader);
+    expect($this->get('api/vaulter/nodes/'.$whole->id.'/export')->assertOk()->headers->has('X-Vaulter-Export-Lossy'))->toBeFalse();
 });

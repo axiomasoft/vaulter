@@ -40,7 +40,9 @@ use Vaulter\Support\TreeGuard;
  * So a store from a room opened before a restore either commits before it (and is
  * replaced by it) or is refused with 409 — it never lands on top of the restored state,
  * however late the hub's debounce fires. A seed is written only while the document
- * has no Yjs state, so two hub instances cannot both build insertions from the JSON.
+ * has no Yjs state AND the document is still at the state version the hub loaded it at, so
+ * two hub instances cannot both build insertions from the JSON, and a seed never overwrites
+ * a newer REST update with a stale projection.
  *
  * A room may only write what the autosave path may: a type that is not installed or
  * cannot collaborate, content written in a newer schema, or content its type reads
@@ -110,6 +112,12 @@ final readonly class PersistCollaborationStateAction
                 }
                 if ($data->seed && $document->yjs_state !== null) {
                     throw new CollaborationSeedConflictException(Identity::stringify($nodeId));
+                }
+                // The epoch does not move on a JSON update of a document without Yjs state, so
+                // a seed built from what the hub loaded earlier is only valid while the state
+                // version is still the one it read.
+                if ($data->seed && $data->expectedStateVersion !== null && $data->expectedStateVersion !== $document->state_version) {
+                    throw new CollaborationSeedConflictException(Identity::stringify($nodeId), $data->expectedStateVersion, $document->state_version);
                 }
                 $content = $data->content === null
                     ? $type->projectFromState($data->yjsState)

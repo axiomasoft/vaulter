@@ -53,6 +53,7 @@ final class VaulterDocumentsServiceProvider extends PackageServiceProvider
         // Core reads a document head through this relation without depending on
         // the documents package; subclasses of the configured node model inherit it.
         Node::resolveRelationUsing('document', static fn (Node $node): HasOne => $node->hasOne(Document::class, 'node_id'));
+        $config->assertDistinctHubSecrets();
         ConfigValidator::assertCollaborationSecrets(
             enabled: $config->collaborationEnabled(),
             jwtSecret: $config->hubJwtSecret(),

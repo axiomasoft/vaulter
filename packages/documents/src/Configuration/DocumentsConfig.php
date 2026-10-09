@@ -147,6 +147,28 @@ final readonly class DocumentsConfig implements CommentsFeature
         return is_string($value) && $value !== '' ? $value : null;
     }
 
+    /**
+     * The JWT signing secret and the webhook secret are two different trust boundaries: the
+     * hub owns the webhook secret, so a JWT secret equal to it would let the hub sign any
+     * room token (mode rw, any user). Reusing one value is refused at boot in EVERY
+     * environment — core's ConfigValidator only warns outside production, and a copied
+     * dev value tends to reach production unchanged.
+     *
+     * @throws InvalidConfigurationException when collaboration is enabled and both secrets are the same value
+     */
+    public function assertDistinctHubSecrets(): void
+    {
+        $jwt = $this->hubJwtSecret();
+
+        if ($this->collaborationEnabled() && $jwt !== null && $jwt === $this->hubWebhookSecret()) {
+            throw new InvalidConfigurationException(
+                '[Vaulter] vaulter-documents.collaboration.hub.jwt_secret and webhook_secret must differ. '
+                .'Why: the hub holds the webhook secret, so with the same value it could sign a room token for any user. '
+                .'Fix: set VAULTER_COLLAB_SECRET (JWT key, Laravel only) and VAULTER_COLLAB_WEBHOOK_SECRET (shared with the hub) to different values.',
+            );
+        }
+    }
+
     public function hubTimestampTolerance(): int
     {
         $value = $this->config->get(key: 'vaulter-documents.collaboration.hub.timestamp_tolerance', default: 300);

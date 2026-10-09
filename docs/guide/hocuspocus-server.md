@@ -46,30 +46,47 @@ Vaulter.
    socket; `mode: ro` makes the connection read-only (Hocuspocus drops its updates).
 4. `onLoadDocument` asks `collab/load`: the binary Yjs working state, or — for a document
    without one — its JSON. The hub builds the Y.Doc from the JSON **once** with
-   `@hocuspocus/transformer` and `src/schema.js` and stores it with `seed: true`. Clients
-   never seed.
+   `@hocuspocus/transformer` and `src/schema.js` and stores it with `seed: true` and the
+   `state_version` it loaded (a document updated in between answers `409
+   collaboration_seed_conflict` and is loaded again). Clients never seed. A seed that would
+   lose anything is refused (see the schema section), and with Redis a read-only first
+   connection to a document without Yjs state is refused until a writer has seeded it.
 5. `onStoreDocument` (debounced) sends the binary state and its JSON projection to
    `collab/store`. The backend fences stores by the room's epoch: after a restore, the old
    room's store answers `409 collaboration_epoch_mismatch`. The hub does **not** retry then:
    it closes the room's connections with close code **4409** `epoch_changed` and drops every
    later store of that room; clients reopen the document with a new Y.Doc. A `404` (document
-   removed) closes the room with `4404`; network errors and `5xx` are retried.
+   removed) closes the room with `4404`; network errors, `5xx` and `408`/`425`/`429` are retried.
+   Every other refusal is **not** a successful save: `401` closes the room with `4001`, `403`
+   with `4403` `forbidden`, `413`/`422` with `4422` `store_refused`, and the hook throws so
+   Hocuspocus keeps the unsaved state in memory instead of treating it as persisted. The
+   close codes and what the client does with each are in
+   [Collaboration](/guide/collaboration#when-the-backend-refuses-a-store).
 6. Every call is signed (HMAC of the exact body with `VAULTER_COLLAB_WEBHOOK_SECRET`, with a
    timestamp and a random nonce) and carries the room JWT; the backend requires both.
 
 The hub does **not** need the JWT signing secret — Laravel mints the token and verifies it on
 every call. The hub never logs tokens. Once a token expires the hub refuses its connection's
-messages and closes it with code `4001`.
+messages and closes it with code `4001`. A reconnect with a token that has already expired is
+refused at authentication with the reason `Collaboration token expired`, so the client renews
+its session.
 
 ### The TipTap schema of the hub
 
 `src/schema.js` lists the TipTap extensions the hub seeds and projects with: StarterKit,
 Link, Image and Table for `vaulter/rich-text`; the Markdown subset for `vaulter/markdown`.
 It must match the backend allow-list — `test/schema-parity.test.js` compares it with
-`packages/documents/tests/Fixtures/tiptap-schema.json`. A host that adds nodes through
-`vaulter-documents.tiptap.extra_*` adds the matching extensions to `src/schema.js` too;
-otherwise the hub drops those nodes from a seed and the backend refuses projections that
-contain them. A document type the hub has no schema for cannot be seeded (its connection is
+`packages/documents/tests/Fixtures/tiptap-schema.json` for nodes, marks **and attributes**
+(what an extension serializes, `null`s included, must be allowed by the backend). A host that
+adds nodes or attributes through `vaulter-documents.tiptap.extra_*` adds the matching
+extensions to `src/schema.js` too.
+
+This is enforced fail-closed. ProseMirror silently drops whatever its schema does not declare,
+so the hub checks every seed: if the schema would lose anything from the document's JSON (an
+allowed `textAlign` attribute without the TextAlign extension, say) the seed is **refused**
+with `Collaboration seed refused: … would drop paragraph.textAlign …` — attribute names only,
+never values — and the room does not open, instead of the cut document being saved back.
+Register the extension in `extensionsFor` and the room opens. A document type the hub has no schema for cannot be seeded (its connection is
 refused while it has no Yjs state).
 
 ## Environment contract

@@ -12,6 +12,8 @@ use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
+use Vaulter\Azgard\Configuration\AzgardConfig;
+use Vaulter\Azgard\Contracts\AzgardBackedUser;
 use Vaulter\Azgard\Contracts\AzgardGuard;
 use Vaulter\Contracts\Access\NonEnumeratingPermissionDriver;
 use Vaulter\Contracts\Access\PermissionDriver;
@@ -57,14 +59,17 @@ use Vaulter\Enums\Access\Effect;
  *     those as Subjects, e.g. via a subclass; the guard answers the scoped checks);
  *   - canCreateIn = hasPermissionIn(type, id, the create permission).
  *
- * The actor's AzgardGuard is obtained leniently: if the actor itself implements the
- * seam (the host's User uses an AzGuard-backed adapter directly — the cleaner path,
- * since the AzGuard methods naturally live on the user), it is used as-is; otherwise
- * a host-bound AzgardGuard is resolved from the container (the adapter path — the
- * provider binds {@see AzgardGuardAdapter} over the request's AzGuard v1 subject). When
- * neither is available the lane is a safe pass-through (null / false), never a fatal — so
- * selecting 'azgard' without a real binding degrades gracefully, exactly like the
- * optional spatie lane.
+ * The guard is ALWAYS about the decision's `$actor`, never about whoever the request
+ * happens to be: the actor itself when it implements the seam; else a guard the HOST bound
+ * in the container (an explicit override — the host owns it and must answer for the actor
+ * it is asked about); else an {@see AzgardGuardAdapter} built over the actor when it is an
+ * {@see AzgardBackedUser} (with the configured panel). The package's own container binding
+ * is built from the REQUEST's user, so it is never used for a decision about someone else:
+ * an actor differing from the request user (an acting-as/preview check, or the
+ * collaboration hub's call that has no request user at all) must neither borrow the request
+ * user's rights nor be denied for the lack of them. When none applies the lane is a safe
+ * pass-through (null / false), never a fatal — so selecting 'azgard' without a real binding
+ * degrades gracefully, exactly like the optional spatie lane.
  *
  * The host owns the AzGuard v1 panel: its User is a subject model of the panel, the
  * workspace (drive owner) morph alias is an assignment scope type of the panel, and the
@@ -185,11 +190,10 @@ final class AzgardPermissionDriver implements NonEnumeratingPermissionDriver, Pe
     }
 
     /**
-     * Resolve the actor's AzgardGuard: the actor itself when it implements the seam
-     * (the cleaner duck-typed path), else a host-bound AzgardGuard from the container,
-     * else null (the lane is then a safe pass-through, never a fatal). The container
-     * binding lets a host wire an adapter that closes over the resolved actor (the
-     * provider's {@see AzgardGuardAdapter} binding).
+     * Resolve the guard that answers for `$actor` (see the class docblock): the actor
+     * itself, a guard the host bound, or an adapter over a backed actor. The package's own
+     * request-bound defaults ({@see AzgardGuardAdapter}, {@see NullAzgardGuard}) are about
+     * the request user and never stand in for another actor.
      */
     private function guardFor(Authorizable $actor): ?AzgardGuard
     {
@@ -197,11 +201,26 @@ final class AzgardPermissionDriver implements NonEnumeratingPermissionDriver, Pe
             return $actor;
         }
 
-        if (!$this->container->bound(AzgardGuard::class)) {
-            return null;
+        if ($this->container->bound(AzgardGuard::class)) {
+            $bound = $this->container->make(AzgardGuard::class);
+
+            if (!$bound instanceof AzgardGuardAdapter && !$bound instanceof NullAzgardGuard) {
+                return $bound;
+            }
         }
 
-        return $this->container->make(AzgardGuard::class);
+        if ($actor instanceof AzgardBackedUser) {
+            return new AzgardGuardAdapter(user: $actor, panelId: $this->panelId());
+        }
+
+        return null;
+    }
+
+    private function panelId(): ?string
+    {
+        return $this->container->bound(AzgardConfig::class)
+            ? $this->container->make(AzgardConfig::class)->panelId()
+            : null;
     }
 
     private function isActorSubject(Subject $subject, Authorizable $actor): bool

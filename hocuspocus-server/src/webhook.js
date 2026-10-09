@@ -20,6 +20,9 @@ import { config as defaultConfig } from './config.js'
 /** The backend answered 409 for a room that must not write again (no retry). */
 export const TERMINAL_CONFLICTS = Object.freeze(['collaboration_epoch_mismatch', 'collaboration_seed_conflict'])
 
+/** 4xx answers of collab/store that mean "try again later". */
+const RETRYABLE_CLIENT_ERRORS = Object.freeze([408, 425, 429])
+
 /**
  * A non-2xx answer the hub does not retry. `status` and the problem `code` only — the
  * request (and its token) is never attached.
@@ -130,12 +133,12 @@ export async function loadDocument({ token, room }, options = {}) {
 }
 
 /**
- * onStoreDocument and the seed: POST {room, state, content, seed}. Returns
+ * onStoreDocument and the seed: POST {room, state, content, seed, state_version}. Returns
  * { ok: true, data } or, for an answer that retrying cannot change, { ok: false,
  * status, code } — a 409 epoch/seed conflict, a 4xx refusal. Throws on 5xx and
  * network errors; the hub retries those a few times (losing data is worse).
  */
-export async function storeDocument({ room, state, content, seed = false, token }, options = {}) {
+export async function storeDocument({ room, state, content, seed = false, stateVersion, token }, options = {}) {
   const payload = { room, state }
 
   if (content !== undefined && content !== null) {
@@ -144,6 +147,11 @@ export async function storeDocument({ room, state, content, seed = false, token 
   if (seed) {
     payload.seed = true
   }
+  // A seed's precondition: the state version collab/load returned. The backend refuses the
+  // seed (409 collaboration_seed_conflict) when the document moved on since.
+  if (Number.isInteger(stateVersion)) {
+    payload.state_version = stateVersion
+  }
 
   const response = await post('store', payload, token, options)
 
@@ -151,7 +159,8 @@ export async function storeDocument({ room, state, content, seed = false, token 
     return { ok: true, data: (await response.json().catch(() => ({})))?.data ?? null }
   }
 
-  if (response.status >= 400 && response.status < 500) {
+  // 408/425/429 say "later", not "no": retried like a 5xx instead of reported as a refusal.
+  if (response.status >= 400 && response.status < 500 && !RETRYABLE_CLIENT_ERRORS.includes(response.status)) {
     return { ok: false, status: response.status, code: await problemCode(response) }
   }
 

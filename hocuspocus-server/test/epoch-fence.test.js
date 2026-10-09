@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import * as Y from 'yjs'
 import { TiptapTransformer } from '@hocuspocus/transformer'
-import { createHooks, DOCUMENT_GONE, EPOCH_CHANGED } from '../src/index.js'
+import { createHooks, DOCUMENT_GONE, EPOCH_CHANGED, FORBIDDEN, STORE_REFUSED, TOKEN_EXPIRED } from '../src/index.js'
 import { FIELD, extensionsFor } from '../src/schema.js'
 
 // onStoreDocument behind the backend's epoch fence: a 409 is terminal — the hub never
@@ -133,14 +133,51 @@ test('closing a room also closes the transport with the numeric code', async () 
   assert.deepEqual(transport, [EPOCH_CHANGED])
 })
 
-test('another refusal is logged without the token and not retried', async () => {
+test('a refusal is logged without the token, never retried and never reported as a save', async () => {
   const backend = backendAnswering({ ok: false, status: 422, code: 'invalid_document_content' })
   const logged = []
 
-  await createHooks({ webhook: backend.webhook, log: { error: (message) => logged.push(message) } })
-    .onStoreDocument({ documentName: ROOM, document: editedDocument(), lastContext: writer })
+  await assert.rejects(
+    createHooks({ webhook: backend.webhook, log: { error: (message) => logged.push(message) } })
+      .onStoreDocument({ documentName: ROOM, document: editedDocument(), lastContext: writer }),
+    /store refused \(422\)/,
+  )
 
+  assert.equal(backend.stores.length, 1)
   assert.equal(logged.length, 1)
   assert.match(logged[0], /422 invalid_document_content/)
   assert.equal(logged[0].includes('jwt-rw'), false)
+})
+
+// 401 / 403 / 413 / 422 used to be logged and swallowed: Hocuspocus read the hook as a
+// successful save and the writer's edits since the last good store were lost silently.
+for (const [status, code, expected] of [
+  [401, 'unauthenticated', TOKEN_EXPIRED],
+  [403, 'permission_denied', FORBIDDEN],
+  [413, 'document_state_too_large', STORE_REFUSED],
+  [422, 'invalid_document_content', STORE_REFUSED],
+]) {
+  test(`a ${status} store closes the room with ${expected.code} ${expected.reason} and throws so the state is not treated as saved`, async () => {
+    const backend = backendAnswering({ ok: false, status, code })
+    const { closed, instance } = fakeInstance()
+    const hooks = createHooks({ webhook: backend.webhook, log: { error: () => {} } })
+
+    await assert.rejects(hooks.onStoreDocument({ documentName: ROOM, document: editedDocument(), lastContext: writer, instance }), /store refused/)
+
+    assert.deepEqual(closed, [expected, expected])
+    // Not fenced: a writer that reconnects with a valid token stores the kept state.
+    assert.equal(hooks.isFenced(ROOM), false)
+  })
+}
+
+test('after a refused store the next store of the room is still sent', async () => {
+  const answers = [{ ok: false, status: 403, code: 'permission_denied' }, { ok: true, data: {} }]
+  const backend = backendAnswering(() => answers.shift())
+  const hooks = createHooks({ webhook: backend.webhook, log: { error: () => {} } })
+  const { instance } = fakeInstance()
+
+  await assert.rejects(hooks.onStoreDocument({ documentName: ROOM, document: editedDocument(), lastContext: writer, instance }))
+  await hooks.onStoreDocument({ documentName: ROOM, document: editedDocument(), lastContext: { ...writer, token: 'jwt-rw-2' }, instance })
+
+  assert.deepEqual(backend.stores.map((store) => store.token), ['jwt-rw', 'jwt-rw-2'])
 })

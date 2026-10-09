@@ -5,7 +5,7 @@ import { TiptapTransformer } from '@hocuspocus/transformer'
 import { createServer } from 'node:http'
 import * as Y from 'yjs'
 import { config, isOriginAllowed, validateConfig } from './config.js'
-import { extensionsFor, FIELD } from './schema.js'
+import { extensionsFor, FIELD, lostAttributes } from './schema.js'
 import * as backend from './webhook.js'
 
 // Vaulter collaboration hub — the external, env-configured Hocuspocus process.
@@ -130,6 +130,12 @@ function decodeTokenExpiry(token) {
 /** Close code and reason of a connection whose token has expired. */
 export const TOKEN_EXPIRED = Object.freeze({ code: 4001, reason: 'Collaboration token expired' })
 
+/** Close code for a store the backend refused because the writer may no longer write (403). */
+export const FORBIDDEN = Object.freeze({ code: 4403, reason: 'forbidden' })
+
+/** Close code for a store the backend refused as a payload (413 too large, 422 invalid). */
+export const STORE_REFUSED = Object.freeze({ code: 4422, reason: 'store_refused' })
+
 /**
  * Close one connection so the client sees BOTH the reason and the numeric code.
  * Hocuspocus' Connection.close() only writes the reason into the protocol (the provider
@@ -199,6 +205,45 @@ function epochChanged() {
   return Object.assign(new Error(EPOCH_CHANGED.reason), { reason: EPOCH_CHANGED.reason })
 }
 
+/** How many times a seed is rebuilt from a document that changed between collab/load and the seed. */
+const SEED_ATTEMPTS = 3
+
+/**
+ * The Y.Doc a document's JSON seeds, and the projection the backend will be sent for it.
+ * Fail-closed: the hub's TipTap schema only knows the extensions in src/schema.js, and
+ * ProseMirror silently drops what its schema does not declare — a host's extra attribute
+ * (vaulter-documents.tiptap.extra_attributes) would vanish from the room and from the
+ * saved JSON at the very first seed. So a document whose JSON the schema cannot carry
+ * whole is refused with the names of what would be lost, never seeded in a cut form.
+ */
+function buildSeed(loaded) {
+  const seed = TiptapTransformer.toYdoc(loaded.content, FIELD, extensionsFor(loaded.type))
+  const projection = TiptapTransformer.fromYdoc(seed, FIELD)
+  const lost = lostAttributes(loaded.content, projection)
+
+  if (lost.length > 0) {
+    throw new Error(
+      `Collaboration seed refused: the hub's TipTap schema would drop ${lost.join(', ')} from the document. `
+      + 'Add the extension that declares them to hocuspocus-server/src/schema.js (see the README).',
+    )
+  }
+
+  return { seed, projection }
+}
+
+/** Backend refusal status → how the room is closed (the writer's rights/token, or the payload). */
+const STORE_REFUSALS = Object.freeze({
+  401: TOKEN_EXPIRED,
+  403: FORBIDDEN,
+  413: STORE_REFUSED,
+  422: STORE_REFUSED,
+})
+
+/** The refusal of an expired token; the reason is what lets the client renew its session. */
+function tokenExpired() {
+  return Object.assign(new Error(TOKEN_EXPIRED.reason), { reason: TOKEN_EXPIRED.reason })
+}
+
 function base64(update) {
   return Buffer.from(update).toString('base64')
 }
@@ -240,6 +285,16 @@ export function createHooks({
       throw new Error('Missing collaboration token')
     }
 
+    // An expired token is refused HERE, with the reason the client recognises: a backend
+    // 401 is indistinguishable from any other refusal, and a reconnecting provider (laptop
+    // asleep past token_ttl) re-presents the old token. The signature is not checked — the
+    // backend does that; this only picks the reason, it grants nothing.
+    const exp = decodeTokenExpiry(token)
+
+    if (exp !== null && exp * 1000 <= Date.now()) {
+      throw tokenExpired()
+    }
+
     const result = await webhook.authenticate({ token, room: documentName })
 
     if (!result.allowed) {
@@ -250,7 +305,6 @@ export function createHooks({
     }
 
     const readOnly = result.mode !== 'rw'
-    const exp = decodeTokenExpiry(token)
 
     // v4 hands the per-connection settings as connectionConfig; older payloads as
     // connection. Set whichever is there.
@@ -292,67 +346,84 @@ export function createHooks({
    * into duplicated content.
    */
   async function onLoadDocument({ documentName, document, context, instance }) {
-    const loaded = await webhook.loadDocument({ token: context?.token, room: documentName })
+    let loaded = await webhook.loadDocument({ token: context?.token, room: documentName })
 
-    if (loaded.state) {
-      Y.applyUpdate(document, Buffer.from(loaded.state, 'base64'))
+    for (let attempt = 1; ; attempt++) {
+      if (loaded.state) {
+        Y.applyUpdate(document, Buffer.from(loaded.state, 'base64'))
 
-      return
-    }
+        return
+      }
 
-    if (!loaded.content) {
-      return
-    }
+      if (!loaded.content) {
+        return
+      }
 
-    const seed = TiptapTransformer.toYdoc(loaded.content, FIELD, extensionsFor(loaded.type))
-    const update = Y.encodeStateAsUpdate(seed)
+      // Two things are checked before the Y.Doc is built: the schema keeps every attribute of
+      // the JSON (an attribute the hub's extensions do not know would be silently cut from the
+      // room and then saved back without it), and the type is one the hub can seed.
+      const { seed, projection } = buildSeed(loaded)
+      const update = Y.encodeStateAsUpdate(seed)
 
-    // A read-only connection cannot store the seed; the first writer's room stores it
-    // through the ordinary path. It may show its own copy only when nothing else holds
-    // this room's Y.Doc — with Redis the copy would merge into the writer's seed.
-    if (context?.mode !== 'rw') {
-      if (shared) {
-        log.warn?.(`Vaulter collab hub: ${documentName} has no stored state yet; a read-only viewer waits for a writer's seed`)
-      } else {
+      // A read-only connection cannot store the seed. Without Redis the room is its own, so
+      // it may show its copy; with Redis the Y.Doc outlives this connection and is shared, so
+      // it must stay unloaded: an empty cached Y.Doc would reach the first writer (Hocuspocus
+      // does not call onLoadDocument again for a loaded room), whose store would then send
+      // the projection of an EMPTY document over the saved JSON. Refuse instead — Hocuspocus
+      // drops the document it failed to load — and the viewer retries after a writer's seed.
+      if (context?.mode !== 'rw') {
+        if (shared) {
+          log.warn?.(`Vaulter collab hub: ${documentName} has no stored state yet; a read-only viewer waits for a writer's seed`)
+
+          throw new Error('Collaboration document is not initialised yet; retry once a writer has opened it')
+        }
+
         Y.applyUpdate(document, update)
+
+        return
       }
 
-      return
-    }
+      const stored = await webhook.storeDocument({
+        room: documentName,
+        state: base64(update),
+        content: projection,
+        seed: true,
+        // The seed is only valid for the JSON the hub read: a REST update since then (it does
+        // not move the epoch while there is no Yjs state) makes the backend refuse it.
+        stateVersion: loaded.stateVersion,
+        token: context.token,
+      })
 
-    const stored = await webhook.storeDocument({
-      room: documentName,
-      state: base64(update),
-      content: TiptapTransformer.fromYdoc(seed, FIELD),
-      seed: true,
-      token: context.token,
-    })
+      if (stored.ok) {
+        Y.applyUpdate(document, update)
 
-    if (stored.ok) {
-      Y.applyUpdate(document, update)
-
-      return
-    }
-
-    if (stored.code === 'collaboration_seed_conflict') {
-      const reloaded = await webhook.loadDocument({ token: context.token, room: documentName })
-
-      if (reloaded.state) {
-        Y.applyUpdate(document, Buffer.from(reloaded.state, 'base64'))
+        return
       }
 
-      return
-    }
+      if (stored.code === 'collaboration_seed_conflict') {
+        // Either another hub seeded first (its state is loaded instead — never both, which
+        // would merge into duplicated content) or the JSON changed under us (seed again from
+        // the current JSON, a few times at most).
+        loaded = await webhook.loadDocument({ token: context.token, room: documentName })
 
-    if (stored.code === 'collaboration_epoch_mismatch') {
-      fence(instance, documentName, EPOCH_CHANGED)
-      throw epochChanged()
-    }
+        if (!loaded.state && attempt >= SEED_ATTEMPTS) {
+          log.warn?.(`Vaulter collab hub: the seed of ${documentName} kept conflicting (${attempt} attempts)`)
+          throw new Error('Collaboration seed conflicted repeatedly')
+        }
 
-    // A seed the backend refused is not content of the room: loading it would let the
-    // clients edit text that was never stored (and, with Redis, replicate it).
-    log.warn?.(`Vaulter collab hub: the seed of ${documentName} was refused (${stored.status} ${stored.code ?? ''})`)
-    throw new Error(`Collaboration seed refused (${stored.status})`)
+        continue
+      }
+
+      if (stored.code === 'collaboration_epoch_mismatch') {
+        fence(instance, documentName, EPOCH_CHANGED)
+        throw epochChanged()
+      }
+
+      // A seed the backend refused is not content of the room: loading it would let the
+      // clients edit text that was never stored (and, with Redis, replicate it).
+      log.warn?.(`Vaulter collab hub: the seed of ${documentName} was refused (${stored.status} ${stored.code ?? ''})`)
+      throw new Error(`Collaboration seed refused (${stored.status})`)
+    }
   }
 
   /**
@@ -408,7 +479,20 @@ export function createHooks({
       return
     }
 
-    log.error?.(`Vaulter collab hub: the store of ${documentName} was refused (${stored.status} ${stored.code ?? ''})`)
+    // 401/403/413/422 (and any other refusal) are NOT a successful save. The room is closed
+    // with a code the client can tell apart, and the hook throws so Hocuspocus does not treat
+    // the state as persisted: the document stays in memory and is stored again on the next
+    // change or when a writer with a valid token reconnects (the client keeps its Y.Doc and
+    // re-syncs it). The room is not fenced — the next store may well succeed.
+    const refusal = STORE_REFUSALS[stored.status] ?? null
+
+    log.error?.(`Vaulter collab hub: the store of ${documentName} was refused (${stored.status} ${stored.code ?? ''}); unsaved changes are kept in memory`)
+
+    if (refusal) {
+      closeRoom(instance, documentName, refusal)
+    }
+
+    throw new Error(`Collaboration store refused (${stored.status})`)
   }
 
   async function afterUnloadDocument({ documentName }) {

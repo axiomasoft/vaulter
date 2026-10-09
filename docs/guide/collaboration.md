@@ -44,14 +44,14 @@ All keys live under `config('vaulter-documents.collaboration')`:
 | `broadcast.channel_prefix` | — | `vaulter.documents` | Room namespace: a room is `<prefix>.<driveId>.<nodeId>.<epoch>`. |
 | `hub.url` | `VAULTER_COLLAB_URL` | `ws://localhost:1234` | The hub WebSocket URL the client connects to. |
 | `hub.jwt_secret` | `VAULTER_COLLAB_SECRET` | *(unset)* | HS256 key Vaulter mints and verifies the room JWT with. Lives only on Laravel. |
-| `hub.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | *(unset)* | Key of the HMAC body signature of every hub call. Shared with the hub; must differ from `jwt_secret`. |
+| `hub.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | *(unset)* | Key of the HMAC body signature of every hub call. Shared with the hub; must differ from `jwt_secret` — equal values are an `InvalidConfigurationException` at boot, in every environment (the hub holds this secret, so with the same value it could sign a room token for any user). |
 | `hub.token_ttl` | — | `3600` | Room JWT lifetime in seconds, between 1 and 3600 (anything else is an `InvalidConfigurationException`). Rights are re-checked on every hub call, so a token never outlives an hour. |
 | `hub.timestamp_tolerance` | — | `300` | Accepted clock skew of a signed hub call; also the replay window. |
 | `max_state_bytes` | — | `16777216` | Largest binary Yjs state one store may write (`413 document_state_too_large`). |
 
 ::: warning Collaboration is opt-in
 Enable `vaulter-documents.collaboration.enabled`, require `firebase/php-jwt`, and set both
-hub secrets — present and different. The replay cache of signed hub calls lives in the
+hub secrets — present and different (equal values refuse to boot). The replay cache of signed hub calls lives in the
 application's `Cache` store; use a store shared by every instance (Redis, database) in
 production, not `array` or `file`.
 :::
@@ -149,7 +149,7 @@ later feature).
 |---|---|---|---|
 | `POST collab/authenticate` | `onAuthenticate` | `{ room }` | `{ allowed, mode, userId, epoch }`; `allowed:false` when the user lost `View`; `409 collaboration_epoch_mismatch` for a past generation. |
 | `POST collab/load` | `onLoadDocument` | `{ room }` | `{ state, content, epoch, schemaVersion, stateVersion, type }` — `state` is the base64 Yjs working state, or `null` with the JSON `content` to seed from. |
-| `POST collab/store` | `onStoreDocument` | `{ room, state, content, seed? }` | `{ changed, epoch, state_version, yjs_state_size }`. |
+| `POST collab/store` | `onStoreDocument` | `{ room, state, content, seed?, state_version? }` | `{ changed, epoch, state_version, yjs_state_size }`. `state_version` is only sent with a seed (see below). |
 
 `collab/store` rules:
 
@@ -158,6 +158,13 @@ later feature).
 - the room's epoch is the fence: `409 collaboration_epoch_mismatch`;
 - `seed: true` writes only while the document has no Yjs state: `409
   collaboration_seed_conflict` otherwise, so two hub instances never both seed;
+- a seed also carries the `state_version` that `collab/load` returned and is written only
+  while the document is still at it. A REST `update()` of a document **without** Yjs state
+  does not move the epoch, so without this precondition the seed — built from the JSON the
+  hub read earlier — would overwrite the newer text. A moved version is the same `409
+  collaboration_seed_conflict` (with `context.expected_state_version` /
+  `actual_state_version`); the hub loads again and seeds from the current JSON. A malformed
+  `state_version` is `422`;
 - `content` is required for a type whose `projectFromState()` returns `null` (both built-in
   types): the hub sends `TiptapTransformer.fromYdoc(document, 'default')`. It is decoded by the
   type's codec with its size limit (`422 invalid_document_content`);
@@ -165,12 +172,47 @@ later feature).
 - content this installation cannot save back keeps its `409 document_type_unavailable` /
   `document_content_degraded`, as an autosave does.
 
+### When the backend refuses a store
+
+The hub never treats a refused store as saved. After the retries for network errors, `5xx` and
+`408`/`425`/`429`, the answers retrying cannot change are:
+
+| Answer | Meaning | What the hub does | Close code (client reaction) |
+|---|---|---|---|
+| `409 collaboration_epoch_mismatch` / `collaboration_seed_conflict` | The room's generation is over | Fences the room, drops its later stores | **4409** `epoch_changed` — new session, **new** `Y.Doc` |
+| `404` | The document was removed | Fences the room | **4404** `document_gone` |
+| `401` | The last writer's token expired | Closes the room, keeps the state in memory, throws | **4001** `Collaboration token expired` — new session, same `Y.Doc` |
+| `403` | The last writer lost `Edit` (or the drive is archived) | Closes the room, keeps the state in memory, throws | **4403** `forbidden` — new session (read-only now), same `Y.Doc` |
+| `413`, `422` | The state is too large / the projection is not valid content | Logs, closes the room, keeps the state in memory, throws | **4422** `store_refused` — the client does **not** reopen; `error` is set |
+
+"Keeps the state in memory and throws" means Hocuspocus does not consider the state persisted:
+the document stays loaded and is stored again on the next change or when a writer with a valid
+token reconnects (the client keeps its `Y.Doc` and re-syncs it). A room that is closed with
+`4001`/`4403` is not fenced, so the next store is attempted.
+
 ### Loading and seeding happen on the hub only
 
 The hub's `onLoadDocument` applies the stored Yjs state. A document without one (new, or
 just restored to a revision without state) is built from its JSON **once**, on the server,
 with `@hocuspocus/transformer` and the hub's TipTap schema (`hocuspocus-server/src/schema.js`),
 and stored with `seed: true` before any client sees it.
+
+The seed is built fail-closed:
+
+- **Nothing is cut silently.** The hub's TipTap schema only knows the extensions in
+  `hocuspocus-server/src/schema.js`; ProseMirror drops attributes it does not declare. A
+  document whose JSON the schema would not carry whole — typically a host attribute allowed by
+  `vaulter-documents.tiptap.extra_attributes` without the matching hub extension — is refused
+  (`seed refused`, naming the `node.attribute`, never its value) instead of being seeded and
+  saved back without it. Add the extension to the hub (see [Hocuspocus hub](/guide/hocuspocus-server)).
+- **A read-only first connection waits.** With Redis (several hub instances share one `Y.Doc`
+  per room) a read-only connection to a document that has no Yjs state yet is refused — the hub
+  must not cache an empty document that the first writer would then project over the saved JSON.
+  The viewer retries once a writer has opened the document. Without Redis the viewer sees its
+  own copy.
+- **A changed document is seeded again.** On `collaboration_seed_conflict` the hub loads again:
+  another instance's state wins; otherwise it seeds from the current JSON (at most three
+  attempts).
 
 ::: danger Never seed in the client
 In collaborative mode do **not** call the editor's `setContent()` (or insert the JSON into
@@ -184,7 +226,10 @@ collaborative mode for this reason.
 Read-only is enforced twice: the hub marks a `ro` connection read-only (Hocuspocus drops its
 updates) and never stores under a read-only context, and the backend refuses a store under a
 `ro` token. Once the token expires the hub refuses every further message and closes the
-connection with code `4001`; the client asks for a new session.
+connection with code `4001`; the client asks for a new session. A provider that reconnects
+with a token that has already expired (a laptop asleep past `token_ttl`) is refused at
+authentication with the same reason, `Collaboration token expired`, so the client renews its
+session instead of staying disconnected.
 
 ## Deploying `hocuspocus-server`
 
@@ -206,8 +251,12 @@ VAULTER_COLLAB_WEBHOOK_SECRET=<another random>     # shared with the hub, signs 
 - **4409 `epoch_changed`** — the provider and the old `Y.Doc` are destroyed, a new session is
   fetched and `doc` is **replaced** by a new `Y.Doc`. Rebind the editor; never copy the old
   document's content over.
-- **4001** (token expired) — a new session is fetched; the `Y.Doc` is kept while the room is
-  the same generation.
+- **4001** (token expired, also as the authentication refusal of an expired token) and
+  **4403** `forbidden` (the writer lost `Edit`; the new session comes back read-only) — a new
+  session is fetched; the `Y.Doc` is kept while the room is the same generation.
+- **4422** `store_refused` — the backend refused the document's state itself (`413`/`422`), so
+  a new session would be refused again: nothing is reopened, `error` is set and the editor
+  stays disconnected.
 
 ```ts
 import { watch } from 'vue'
@@ -259,6 +308,7 @@ path.
   :supported-schema-version="1"
   @collaborating="(readonly) => { /* a session opened */ }"
   @schema-outdated="(version) => { /* ask the user to update the application */ }"
+  @collaboration-failed="(error) => { /* the session could not be opened; the editor is read-only */ }"
 />
 ```
 
@@ -266,7 +316,12 @@ path.
 - `collaboration-providers` — `createHocuspocusProvider` override.
 - `supported-schema-version` — sent with the session request; a newer document schema opens
   read-only and emits `schema-outdated`.
-- If the session request fails (collaboration unavailable) it falls back to the autosave path.
+- It falls back to the autosave path **only** when the session request answers `409
+  collaboration_unavailable` (collaboration is off, or the type cannot collaborate — the
+  documented contract). Any other failure (network, `429`, `5xx`, `403`) leaves the editor
+  **read-only** on the loaded content and emits `collaboration-failed`: an autosave into a
+  document that has a Yjs state would move its epoch, drop the state and throw every other
+  participant out. Call `load()` (exposed) to retry; `sessionFailed` reports the state.
 
 ## Extending
 

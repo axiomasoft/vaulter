@@ -85,6 +85,66 @@ it('accepts exactly one seed per generation', function (): void {
     expect(Hub::aggregate($node)->yjs_state)->toBe('first-seed');
 });
 
+it('stores and seeds the projection the hub emits for a link, an image and a table', function (): void {
+    // Exactly what hocuspocus-server projects (TiptapTransformer.fromYdoc): the link mark
+    // carries every attribute @tiptap/extension-link declares, `title: null` included.
+    $projection = ['type' => 'doc', 'content' => [
+        ['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'see', 'marks' => [['type' => 'link', 'attrs' => [
+            'href' => 'https://example.com', 'target' => '_blank', 'rel' => 'noopener noreferrer nofollow', 'class' => null, 'title' => null,
+        ]]]]]],
+        ['type' => 'image', 'attrs' => ['src' => 'https://example.com/a.png', 'alt' => 'a']],
+        ['type' => 'table', 'content' => [['type' => 'tableRow', 'content' => [
+            ['type' => 'tableHeader', 'attrs' => ['colspan' => 1, 'rowspan' => 1], 'content' => [['type' => 'paragraph']]],
+            ['type' => 'tableCell', 'attrs' => ['colspan' => 1, 'rowspan' => 1], 'content' => [['type' => 'paragraph']]],
+        ]]]],
+    ]];
+    $node = Hub::document();
+
+    Hub::call('store', Hub::storeBody($node, 'seed-with-link', $projection, seed: true), Hub::token($node))->assertOk();
+    Hub::call('store', Hub::storeBody($node, 'edit-with-link', $projection), Hub::token($node))->assertOk();
+
+    expect(Hub::aggregate($node)->content['content'][0]['content'][0]['marks'][0]['attrs']['href'])->toBe('https://example.com');
+});
+
+it('refuses a seed built before a REST update and loses no text', function (): void {
+    $node = Hub::document(level: RoleRegistry::WRITER, actorId: 1);
+    $loaded = Hub::call('load', ['room' => Hub::room($node)], Hub::token($node))->assertOk();
+    $version = $loaded->json('stateVersion');
+
+    // The document has no Yjs state, so this update does not move the epoch.
+    $handle = Vaulter::drive($node->storage()->firstOrFail())->actingAs(AccessTestHelpers::user(1));
+    Documents::in($handle)->update($node->id, Hub::tiptap('Written over REST'));
+    expect(Hub::aggregate($node)->collab_epoch)->toBe(0);
+
+    // The hub still seeds from what it loaded ('Draft'): refused, 'Written over REST' survives.
+    Hub::call('store', Hub::storeBody($node, 'stale-seed', Hub::tiptap('Draft'), seed: true, stateVersion: $version), Hub::token($node))
+        ->assertStatus(409)
+        ->assertJsonPath('code', 'collaboration_seed_conflict')
+        ->assertJsonPath('context.expected_state_version', $version)
+        ->assertJsonPath('context.actual_state_version', Hub::aggregate($node)->state_version);
+    $after = Hub::aggregate($node);
+    expect($after->yjs_state)->toBeNull()
+        ->and($after->content['content'][0]['content'][0]['text'])->toBe('Written over REST');
+
+    // The hub loads again and seeds from the current content.
+    $reloaded = Hub::call('load', ['room' => Hub::room($node)], Hub::token($node))
+        ->assertOk()
+        ->assertJsonPath('content.content.0.content.0.text', 'Written over REST');
+    Hub::call('store', Hub::storeBody($node, 'fresh-seed', Hub::tiptap('Written over REST'), seed: true, stateVersion: $reloaded->json('stateVersion')), Hub::token($node))
+        ->assertOk();
+    expect(Hub::aggregate($node)->yjs_state)->toBe('fresh-seed');
+});
+
+it('rejects a malformed seed state_version', function (): void {
+    $node = Hub::document();
+
+    foreach (['3', -1, 1.5, true] as $bad) {
+        Hub::call('store', [...Hub::storeBody($node, 'seed', seed: true), 'state_version' => $bad], Hub::token($node))->assertStatus(422);
+    }
+
+    expect(Hub::aggregate($node)->yjs_state)->toBeNull();
+});
+
 // ── the epoch fence ─────────────────────────────────────────────────────────────────
 
 it('fences off a store from the room opened before a restore (V12)', function (): void {

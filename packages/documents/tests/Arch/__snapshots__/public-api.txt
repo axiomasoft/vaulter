@@ -43,6 +43,7 @@ Vaulter\Documents\Contracts\UpgradesSchema
 
 Vaulter\Documents\Configuration\DocumentsConfig
   __construct(\Illuminate\Contracts\Config\Repository $config)
+  assertDistinctHubSecrets(): void
   channelPrefix(): string
   checkpointIntervalSeconds(): int
   collaborationDriver(): string
@@ -238,7 +239,8 @@ Vaulter\Documents\Data\Collaboration\CollaborationSession
   readonly string $token
 
 Vaulter\Documents\ValueObjects\DocumentExport
-  __construct(string $bytes, string $filename, string $mimeType, string $format, int $sourceEpoch, int $sourceStateVersion, int|null|string $sourceRevisionId)
+  __construct(string $bytes, string $filename, string $mimeType, string $format, int $sourceEpoch, int $sourceStateVersion, int|null|string $sourceRevisionId, bool $lossy = false)
+  readonly bool $lossy
   readonly int $sourceEpoch
   readonly int $sourceStateVersion
   readonly int|null|string $sourceRevisionId
@@ -255,6 +257,14 @@ Vaulter\Documents\Types\DocumentTypeRegistry
   has(string $key): bool
   register(\Vaulter\Documents\Contracts\DocumentType|string $type): void
   replace(string $key, \Vaulter\Documents\Contracts\DocumentType|string $type): void
+
+Vaulter\Documents\Export\DocumentExporterRegistry
+  __construct(\Illuminate\Contracts\Container\Container $container)
+  all(): array
+  for(string $typeKey, string $format): \Vaulter\Documents\Contracts\DocumentExporter
+  formatsFor(string $typeKey): array
+  register(\Vaulter\Documents\Contracts\DocumentExporter|string $exporter): void
+  replace(string $key, \Vaulter\Documents\Contracts\DocumentExporter|string $exporter): void
 
 Vaulter\Documents\Types\RichTextDocumentType
   capabilities(): \Vaulter\ValueObjects\Handlers\ContentCapabilities

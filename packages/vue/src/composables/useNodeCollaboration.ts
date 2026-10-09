@@ -59,8 +59,11 @@ export interface UseNodeCollaborationReturn {
  *   - 4409 `epoch_changed` (the document was restored): the old provider and `Y.Doc` are
  *     destroyed, a new session is fetched and a NEW `Y.Doc` replaces `doc` — the old
  *     state is never merged into the restored document;
- *   - 4001 (token expired): a new session is fetched; the `Y.Doc` is kept while the
- *     room is the same generation, replaced otherwise.
+ *   - 4001 (token expired) and 4403 (the writer lost the right to write): a new session
+ *     is fetched (read-only after 4403); the `Y.Doc` is kept while the room is the same
+ *     generation, replaced otherwise;
+ *   - 4422 `store_refused` (the backend refused the state itself): NOT reopened — the
+ *     same state would be refused again; `error` is set and the editor stays disconnected.
  *
  * The content always comes from the hub; do not seed the editor in collaborative mode.
  * Mount a read-only editor while `readOnly` is true; call `disconnect()` on unmount.
@@ -133,6 +136,11 @@ export function useNodeCollaboration(
   async function reopen(end: NodeCollaborationEnd): Promise<void> {
     const previousRoom = session.value?.room
     teardown()
+
+    if (end === 'store_refused') {
+      error.value = new Error('The collaboration hub could not save this document (the backend refused its state).')
+      return
+    }
 
     try {
       const resolved = await fetchSession()

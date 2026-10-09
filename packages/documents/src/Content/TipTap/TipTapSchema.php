@@ -67,7 +67,10 @@ final readonly class TipTapSchema
      * outright. Two real cases from the shipped extensions (`@tiptap/extension-link ^3`,
      * `@tiptap/starter-kit ^3`): Link declares `class` alongside href/target/rel, so ANY
      * document containing a link could not be saved; OrderedList declares `start` and
-     * `type`.
+     * `type`. A later pass found the same gap on `link.title`, `image.width`/`height` and
+     * `tableCell`/`tableHeader` `align`: the hub's projection (hocuspocus-server) carries
+     * them as `null`s, so they are on the list, and the shared fixture pins the attribute
+     * sets of both sides (TipTapSchemaFixtureTest ↔ hub test/schema-parity.test.js).
      *
      * So: when a node/mark is added here, take its attribute set from the extension's
      * `addAttributes()`, not from the subset this package's renderer happens to read.
@@ -76,12 +79,12 @@ final readonly class TipTapSchema
      */
     private const array ATTRIBUTES = [
         'heading' => ['level'],
-        'link' => ['href', 'target', 'rel', 'class'],
-        'image' => ['src', 'alt', 'title'],
+        'link' => ['href', 'target', 'rel', 'class', 'title'],
+        'image' => ['src', 'alt', 'title', 'width', 'height'],
         'codeBlock' => ['language'],
         'orderedList' => ['start', 'type'],
-        'tableCell' => ['colspan', 'rowspan', 'colwidth'],
-        'tableHeader' => ['colspan', 'rowspan', 'colwidth'],
+        'tableCell' => ['colspan', 'rowspan', 'colwidth', 'align'],
+        'tableHeader' => ['colspan', 'rowspan', 'colwidth', 'align'],
     ];
 
     /**

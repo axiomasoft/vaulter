@@ -46,6 +46,8 @@ export class VaulterApiError extends Error {
     message: string,
     public readonly errors: Record<string, string[]> = {},
     public readonly response?: Response,
+    /** The machine-readable problem code of the body (`collaboration_unavailable`, …), when it has one. */
+    public readonly code: string | null = null,
   ) {
     super(message)
     this.name = 'VaulterApiError'
@@ -54,9 +56,13 @@ export class VaulterApiError extends Error {
   static async fromResponse(response: Response): Promise<VaulterApiError> {
     let message = `Vaulter API error (${response.status})`
     let errors: Record<string, string[]> = {}
+    let code: string | null = null
 
     try {
-      const body = (await response.json()) as { message?: string, errors?: Record<string, string[]> }
+      const body = (await response.json()) as { message?: string, code?: unknown, errors?: Record<string, string[]> }
+      if (typeof body.code === 'string') {
+        code = body.code
+      }
       if (typeof body.message === 'string') {
         message = body.message
       }
@@ -67,7 +73,7 @@ export class VaulterApiError extends Error {
       // Non-JSON error body — keep the default message.
     }
 
-    return new VaulterApiError(response.status, message, errors, response)
+    return new VaulterApiError(response.status, message, errors, response, code)
   }
 }
 

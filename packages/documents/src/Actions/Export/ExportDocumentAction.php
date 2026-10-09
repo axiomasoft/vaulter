@@ -34,6 +34,22 @@ final readonly class ExportDocumentAction
         private MetricsRecorder $metrics,
     ) {}
 
+    /**
+     * The metric label for a requested format: only a format some registered exporter
+     * renders, else the fixed `unknown`. The raw `?format=` is attacker-controlled and a
+     * label value is a time series — an arbitrary string would be unbounded cardinality.
+     */
+    private function formatLabel(string $format): string
+    {
+        foreach ($this->exporters->all() as $exporter) {
+            if ($exporter->format() === $format) {
+                return $format;
+            }
+        }
+
+        return 'unknown';
+    }
+
     public function execute(OperationContext $context, ExportDocumentInput $data): DocumentExport
     {
         return $this->metrics->timing(
@@ -45,21 +61,22 @@ final readonly class ExportDocumentAction
 
                 $revision = $data->revision;
                 $source = $revision ?? $document;
-                $content = $this->decoder->read($document->type, $source->content, $source->schema_version)->content;
+                $read = $this->decoder->read($document->type, $source->content, $source->schema_version);
 
                 return new DocumentExport(
-                    bytes: $exporter->export($content, $type),
+                    bytes: $exporter->export($read->content, $type),
                     filename: $this->filenames->resolve($data->node, $exporter->extension()),
                     mimeType: $exporter->mimeType(),
                     format: $exporter->format(),
-                    // Checkpoints carry no epoch of their own; the document's current one marks the room generation.
+                    // Checkpoints carry no epoch of their own: this is the document's epoch at export time (see DocumentExport).
                     sourceEpoch: $document->collab_epoch,
                     sourceStateVersion: $revision === null ? $document->state_version : $revision->state_version,
                     sourceRevisionId: $revision === null ? null : Identity::stringify($revision->getKey()),
+                    lossy: !$read->lossless,
                 );
             },
             labels: [
-                'format' => $data->format,
+                'format' => $this->formatLabel($data->format),
                 'tier' => LoadTier::label(),
             ],
         );
