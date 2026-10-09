@@ -102,6 +102,7 @@ describe('createNodeCollaborationSession', () => {
     expect(sessionEnd(4409, 'epoch_changed')).toBe('epoch_changed')
     expect(sessionEnd(undefined, 'epoch_changed')).toBe('epoch_changed')
     expect(sessionEnd(4001, 'Collaboration token expired')).toBe('token_expired')
+    expect(sessionEnd(1000, 'Collaboration token expired')).toBe('token_expired')
     expect(sessionEnd(1006, '')).toBeNull()
     expect(sessionEnd(undefined, 'permission-denied')).toBeNull()
   })

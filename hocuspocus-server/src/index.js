@@ -23,8 +23,8 @@ import * as backend from './webhook.js'
 //      clients converting the same JSON would merge into duplicated content.
 //   4. onStoreDocument (debounced) sends the binary state and its JSON projection to
 //      collab/store. The backend fences stores by epoch: a 409 means the room's
-//      generation is over (a restore happened). The hub does NOT throw then — Hocuspocus
-//      would retry the store forever — but closes the room's connections with 4409
+//      generation is over (a restore happened). The hub does NOT throw then — retrying
+//      cannot change the answer — but closes the room's connections with 4409
 //      `epoch_changed` and drops any later store of that room; clients reopen the
 //      document with a new Y.Doc.
 //
@@ -127,6 +127,24 @@ function decodeTokenExpiry(token) {
   }
 }
 
+/** Close code and reason of a connection whose token has expired. */
+export const TOKEN_EXPIRED = Object.freeze({ code: 4001, reason: 'Collaboration token expired' })
+
+/**
+ * Close one connection so the client sees BOTH the reason and the numeric code.
+ * Hocuspocus' Connection.close() only writes the reason into the protocol (the provider
+ * then reports code 1000), so the transport is closed with the code as well.
+ */
+function closeConnection(connection, { code, reason }) {
+  connection.close({ code, reason })
+
+  try {
+    connection.webSocket?.close?.(code, reason)
+  } catch {
+    // The socket is already closing; the protocol close message above was the best effort.
+  }
+}
+
 /**
  * Close the connection once its token expires (already expired → now). A read-only
  * viewer never sends a store, so without this its socket would outlive the token.
@@ -140,13 +158,13 @@ function armExpiryTimer(connection, exp) {
   const delayMs = exp * 1000 - Date.now()
 
   if (delayMs <= 0) {
-    connection.close({ code: 4001, reason: 'Collaboration token expired' })
+    closeConnection(connection, TOKEN_EXPIRED)
 
     return
   }
 
   const timer = setTimeout(() => {
-    connection.close({ code: 4001, reason: 'Collaboration token expired' })
+    closeConnection(connection, TOKEN_EXPIRED)
   }, delayMs)
 
   if (typeof timer.unref === 'function') {
@@ -164,7 +182,7 @@ function closeRoom(instance, documentName, { code, reason }) {
   const connections = typeof document?.getConnections === 'function' ? document.getConnections() : []
 
   for (const connection of connections) {
-    connection.close({ code, reason })
+    closeConnection(connection, { code, reason })
   }
 
   if (connections.length === 0 && typeof instance?.closeConnections === 'function') {
@@ -190,7 +208,18 @@ function base64(update) {
  * injectable so the hooks run in tests against a stub backend; `log` receives
  * token-free messages only.
  */
-export function createHooks({ webhook = backend, log = console } = {}) {
+export function createHooks({
+  webhook = backend,
+  log = console,
+  // Hosts of one room's Y.Doc beyond this process (Redis): a seed no backend has accepted
+  // must not enter such a doc, or two hubs' independent seeds merge into duplicated text.
+  shared = Boolean(config.redisUrl),
+  // Hocuspocus 4.7 does not reschedule a store whose hook threw, so a backend outage is
+  // retried here: this many extra attempts, waiting retryDelayMs × attempt between them.
+  storeRetries = 3,
+  retryDelayMs = 1000,
+  sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+} = {}) {
   // Rooms whose generation ended (409) or whose document is gone: their later stores
   // are dropped until Hocuspocus unloads them. Keyed by room name, which includes the
   // epoch, so a new generation is never affected.
@@ -244,9 +273,14 @@ export function createHooks({ webhook = backend, log = console } = {}) {
    * Refuse every message once the connection's token has expired: rights are only
    * re-checked on the backend calls, so an expired token must not keep editing.
    */
-  async function beforeHandleMessage({ context }) {
+  async function beforeHandleMessage({ context, connection }) {
     if (typeof context?.exp === 'number' && context.exp * 1000 <= Date.now()) {
-      throw new Error('Collaboration token expired')
+      // A bare throw would reach the client as "Reset Connection"; close with 4001 first.
+      if (typeof connection?.close === 'function') {
+        closeConnection(connection, TOKEN_EXPIRED)
+      }
+
+      throw new Error(TOKEN_EXPIRED.reason)
     }
   }
 
@@ -273,10 +307,15 @@ export function createHooks({ webhook = backend, log = console } = {}) {
     const seed = TiptapTransformer.toYdoc(loaded.content, FIELD, extensionsFor(loaded.type))
     const update = Y.encodeStateAsUpdate(seed)
 
-    // A read-only connection may show the seed but cannot store it; the first writer's
-    // room stores it through the ordinary path.
+    // A read-only connection cannot store the seed; the first writer's room stores it
+    // through the ordinary path. It may show its own copy only when nothing else holds
+    // this room's Y.Doc — with Redis the copy would merge into the writer's seed.
     if (context?.mode !== 'rw') {
-      Y.applyUpdate(document, update)
+      if (shared) {
+        log.warn?.(`Vaulter collab hub: ${documentName} has no stored state yet; a read-only viewer waits for a writer's seed`)
+      } else {
+        Y.applyUpdate(document, update)
+      }
 
       return
     }
@@ -310,15 +349,18 @@ export function createHooks({ webhook = backend, log = console } = {}) {
       throw epochChanged()
     }
 
+    // A seed the backend refused is not content of the room: loading it would let the
+    // clients edit text that was never stored (and, with Redis, replicate it).
     log.warn?.(`Vaulter collab hub: the seed of ${documentName} was refused (${stored.status} ${stored.code ?? ''})`)
-    Y.applyUpdate(document, update)
+    throw new Error(`Collaboration seed refused (${stored.status})`)
   }
 
   /**
    * The debounced persistence. Sends the binary state and its JSON projection with the
    * last writer's token. Answers retrying cannot change are terminal: a 409 closes the
    * room with 4409 epoch_changed, a 404 (document removed) with 4404; neither throws,
-   * because Hocuspocus retries a store that throws. Network errors and 5xx throw.
+   * because the answer would not change. Network errors and 5xx are retried a few times
+   * here (Hocuspocus 4.7 does not reschedule a failed store), then thrown.
    */
   async function onStoreDocument({ documentName, document, context, lastContext, instance }) {
     const ctx = lastContext ?? context ?? {}
@@ -327,12 +369,28 @@ export function createHooks({ webhook = backend, log = console } = {}) {
       return
     }
 
-    const stored = await webhook.storeDocument({
+    const payload = {
       room: documentName,
       state: base64(Y.encodeStateAsUpdate(document)),
       content: TiptapTransformer.fromYdoc(document, FIELD),
       token: ctx.token,
-    })
+    }
+    let stored
+
+    for (let attempt = 0; ; attempt++) {
+      try {
+        stored = await webhook.storeDocument(payload)
+        break
+      } catch (error) {
+        // Out of attempts: rethrow, Hocuspocus keeps the document in memory and stores it
+        // again on the next change.
+        if (attempt >= storeRetries) {
+          throw error
+        }
+
+        await sleep(retryDelayMs * (attempt + 1))
+      }
+    }
 
     if (stored.ok) {
       return

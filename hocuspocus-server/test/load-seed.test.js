@@ -95,16 +95,42 @@ test('takes the other instance\'s seed after a seed conflict instead of merging 
   assert.deepEqual(Y.encodeStateVector(document), Y.encodeStateVector(expected))
 })
 
-test('a read-only connection shows the seed but never stores it', async () => {
+test('a read-only connection shows the seed but never stores it (single instance)', async () => {
   const backend = stubBackend({ loads: [{ state: null, content: doc('Viewer'), type: 'vaulter/rich-text' }] })
   const document = new Y.Doc()
 
-  await createHooks({ webhook: backend.webhook }).onLoadDocument({
+  await createHooks({ webhook: backend.webhook, shared: false }).onLoadDocument({
     documentName: ROOM, document, context: { token: 'jwt-ro', mode: 'ro', readOnly: true },
   })
 
   assert.match(textOf(document), /Viewer/)
   assert.equal(backend.calls.store.length, 0)
+})
+
+test('with a shared Y.Doc (Redis) a read-only connection applies no seed of its own', async () => {
+  const backend = stubBackend({ loads: [{ state: null, content: doc('Viewer'), type: 'vaulter/rich-text' }] })
+  const document = new Y.Doc()
+
+  await createHooks({ webhook: backend.webhook, shared: true, log: { warn: () => {} } }).onLoadDocument({
+    documentName: ROOM, document, context: { token: 'jwt-ro', mode: 'ro', readOnly: true },
+  })
+
+  assert.equal(Y.encodeStateAsUpdate(document).length, Y.encodeStateAsUpdate(new Y.Doc()).length)
+  assert.equal(backend.calls.store.length, 0)
+})
+
+test('a seed the backend refused never enters the room', async () => {
+  const backend = stubBackend({
+    loads: [{ state: null, content: doc('Refused'), type: 'vaulter/rich-text' }],
+    store: async () => ({ ok: false, status: 422, code: 'invalid_document_content' }),
+  })
+  const document = new Y.Doc()
+
+  await assert.rejects(
+    createHooks({ webhook: backend.webhook, log: { warn: () => {} } }).onLoadDocument({ documentName: ROOM, document, context: rw }),
+    /seed refused/,
+  )
+  assert.equal(textOf(document).includes('Refused'), false)
 })
 
 test('refuses to load a room whose generation ended while seeding', async () => {

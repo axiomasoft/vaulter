@@ -85,3 +85,18 @@ test('armExpiryTimer force-closes the connection once exp passes (F-P1.6-03)', a
   assert.ok(closedWith, 'connection was force-closed once its token expired')
   assert.equal(closedWith.code, 4001)
 })
+
+// ── beforeHandleMessage ──────────────────────────────────────────────────────────────
+
+test('beforeHandleMessage closes an expired connection with 4001 before it throws', async () => {
+  const { createHooks } = await import('../src/index.js')
+  const closed = []
+  const transport = []
+  const connection = { close: (event) => closed.push(event), webSocket: { close: (code, reason) => transport.push({ code, reason }) } }
+  const context = { exp: Math.floor(Date.now() / 1000) - 5 }
+
+  await assert.rejects(createHooks().beforeHandleMessage({ context, connection }), /token expired/)
+
+  assert.equal(closed[0].code, 4001)
+  assert.deepEqual(transport, [{ code: 4001, reason: 'Collaboration token expired' }])
+})

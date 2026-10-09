@@ -52,3 +52,16 @@ Then NC3/NC4 per `negative-controls.md`, `plan.py finish … --check V1=0 V3=0 V
 concurrency + data-integrity + security boundary (hub) and public API (session JSON, driver
 contract, DocumentsConfig, hub endpoints). Recommend `task:review` over the P4.5 diff after the
 owner run is green.
+
+## Grok 4.7 review follow-up (2026-10-09, same session)
+
+Verdict was «request changes», 5 findings; all addressed in the working tree (uncommitted):
+
+1. 4409 reaches the client as 1000 — `closeConnection()` also calls `connection.webSocket.close(code, reason)` (room close, token expiry).
+2. 4001 / `Reset Connection` — expiry closes with 4001 before `beforeHandleMessage` throws; `@vaulter/vue` `sessionEnd` also accepts reason `Collaboration token expired`.
+3. Replay cache shorter than signature window — nonce TTL = `timestamp + tolerance - now + 1` (test «keeps the nonce until the signature itself expires»: red without the fix, green with it).
+4. Seed into shared Y.Doc — a refused seed throws; a read-only viewer applies no own seed when Redis is configured (`shared`).
+5. No store retry in Hocuspocus 4.7 — bounded in-hub retry (3 × growing delay), then throw.
+
+Verified here: documents V1 214 passed, Pint ok, vue 125 passed + typecheck, `node --check` on hub files.
+NOT run: hub node tests touching `@hocuspocus/transformer` (deps not installed), V5 — #1/#2/#4 rest on Grok's reading of @hocuspocus 4.7 (`Connection.close`, Redis `afterLoadDocument`); owner run must confirm (restore-epoch.e2e expects code 4409).

@@ -59,6 +59,7 @@ export {
   EPOCH_CHANGED_REASON,
   sessionEnd,
   TOKEN_EXPIRED_CODE,
+  TOKEN_EXPIRED_REASON,
 } from './nodeCollaboration'
 export type {
   AwarenessLike,

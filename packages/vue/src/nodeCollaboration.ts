@@ -21,6 +21,7 @@ export const EPOCH_CHANGED_REASON = 'epoch_changed'
 
 /** Close code the hub sends when the connection's token expired. */
 export const TOKEN_EXPIRED_CODE = 4001
+export const TOKEN_EXPIRED_REASON = 'Collaboration token expired'
 
 /** One remote participant lifted from the awareness states (best-effort shape). */
 export interface Collaborator {
@@ -87,7 +88,9 @@ export function sessionEnd(code: number | undefined, reason: string | undefined)
     return 'epoch_changed'
   }
 
-  return code === TOKEN_EXPIRED_CODE ? 'token_expired' : null
+  // Hocuspocus' provider can report a hub close as code 1000 with only the reason, so the
+  // reason identifies the expiry as well.
+  return code === TOKEN_EXPIRED_CODE || reason === TOKEN_EXPIRED_REASON ? 'token_expired' : null
 }
 
 function defaultHocuspocusProvider(args: {

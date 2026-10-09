@@ -131,6 +131,19 @@ it('rejects a replayed signature (same nonce twice)', function (): void {
     test()->postJson('api/vaulter/collab/store', $body, $headers)->assertStatus(401);
 });
 
+it('keeps the nonce until the signature itself expires, not just tolerance seconds from receipt', function (): void {
+    $node = Hub::document();
+    $body = Hub::storeBody($node, 'late-replay-bytes');
+    // Future-dated within tolerance: the signature stays valid for ~550s from now.
+    $headers = Hub::headers($body, Hub::token($node), timestamp: time() + 250);
+
+    test()->postJson('api/vaulter/collab/store', $body, $headers)->assertOk();
+
+    $this->travel(400)->seconds();
+
+    test()->postJson('api/vaulter/collab/store', $body, $headers)->assertStatus(401);
+});
+
 it('rejects a body other than the signed one, without burning the nonce of the genuine delivery', function (): void {
     $node = Hub::document();
     $signed = Hub::storeBody($node, 'original-bytes');

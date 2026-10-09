@@ -95,14 +95,42 @@ test('a removed document closes the room with 4404 and is not retried', async ()
   assert.deepEqual(closed, [DOCUMENT_GONE])
 })
 
-test('a backend outage throws so Hocuspocus retries the store', async () => {
+test('a backend outage is retried a bounded number of times, then thrown (Hocuspocus 4.7 does not reschedule)', async () => {
   const backend = backendAnswering(() => {
     throw new Error('collab/store failed (503)')
   })
-  const hooks = createHooks({ webhook: backend.webhook })
+  const waits = []
+  const hooks = createHooks({ webhook: backend.webhook, storeRetries: 2, retryDelayMs: 10, sleep: async (ms) => waits.push(ms) })
 
   await assert.rejects(hooks.onStoreDocument({ documentName: ROOM, document: editedDocument(), lastContext: writer }), /503/)
+  assert.equal(backend.stores.length, 3)
+  assert.deepEqual(waits, [10, 20])
   assert.equal(hooks.isFenced(ROOM), false)
+})
+
+test('a store that succeeds on a retry is not thrown', async () => {
+  let calls = 0
+  const backend = backendAnswering(() => {
+    if (++calls === 1) {
+      throw new Error('collab/store failed (503)')
+    }
+    return { ok: true, data: {} }
+  })
+  const hooks = createHooks({ webhook: backend.webhook, retryDelayMs: 0, sleep: async () => {} })
+
+  await hooks.onStoreDocument({ documentName: ROOM, document: editedDocument(), lastContext: writer })
+  assert.equal(backend.stores.length, 2)
+})
+
+test('closing a room also closes the transport with the numeric code', async () => {
+  const backend = backendAnswering({ ok: false, status: 409, code: 'collaboration_epoch_mismatch' })
+  const transport = []
+  const connection = { close: () => {}, webSocket: { close: (code, reason) => transport.push({ code, reason }) } }
+  const instance = { documents: new Map([[ROOM, { getConnections: () => [connection] }]]) }
+
+  await createHooks({ webhook: backend.webhook }).onStoreDocument({ documentName: ROOM, document: editedDocument(), lastContext: writer, instance })
+
+  assert.deepEqual(transport, [EPOCH_CHANGED])
 })
 
 test('another refusal is logged without the token and not retried', async () => {

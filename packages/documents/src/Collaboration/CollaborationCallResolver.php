@@ -110,9 +110,13 @@ final readonly class CollaborationCallResolver
             return false;
         }
 
-        if (Cache::add(self::NONCE_CACHE_PREFIX.$presentedSignature, true, $tolerance) === false) {
+        // The signature stays acceptable until $timestamp + $tolerance (a future timestamp
+        // stretches that to 2 × tolerance from now), so the nonce must live that long.
+        $remaining = max(1, $timestamp + $tolerance - time() + 1);
+
+        if (Cache::add(self::NONCE_CACHE_PREFIX.$presentedSignature, true, $remaining) === false) {
             // The exact same (now verified-valid) signature was already accepted
-            // within the tolerance window — a replayed request, not a fresh one.
+            // while it was still within its tolerance window — a replayed request.
             return false;
         }
 

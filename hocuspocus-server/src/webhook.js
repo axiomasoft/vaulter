@@ -133,7 +133,7 @@ export async function loadDocument({ token, room }, options = {}) {
  * onStoreDocument and the seed: POST {room, state, content, seed}. Returns
  * { ok: true, data } or, for an answer that retrying cannot change, { ok: false,
  * status, code } — a 409 epoch/seed conflict, a 4xx refusal. Throws on 5xx and
- * network errors so Hocuspocus retries the store (losing data is worse).
+ * network errors; the hub retries those a few times (losing data is worse).
  */
 export async function storeDocument({ room, state, content, seed = false, token }, options = {}) {
   const payload = { room, state }
