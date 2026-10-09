@@ -15,18 +15,19 @@ use Vaulter\Repositories\Webhooks\WebhookDeliveryStoreRepository;
 
 /**
  * Reclaim the reliability channel's audit history past its retention window (master
- * plan §2.11 / D14 / M3b). It deletes two kinds of SETTLED rows — they never change
+ * plan §2.11 / D14 / M3b). It deletes two kinds of FINISHED rows — they never change
  * again, so keeping them forever only grows the tables:
- *  - SETTLED outbox rows: status 'dispatched' with dispatched_at older than the
- *    window. A 'pending' row is in-flight / due — the relay still owns it — and is
- *    NEVER touched.
+ *  - COMPLETED outbox rows: status 'completed' with fanned_out_at older than the
+ *    window. A 'pending' row is still being fanned out — the relay owns it — and is
+ *    NEVER touched, however old.
  *  - TERMINAL deliveries: status 'delivered' or 'dead' (DLQ) whose updated_at (the
  *    terminalisation time) is older than the window. A 'pending'/'failed' row is
  *    in-flight / retryable — the due-retry sweep still owns it — and is NEVER touched.
  *
  * The window comes from configuration key vaulter.webhooks.retention_days (default 30, floored
- * at 0) unless --days overrides it. Because this deletes history, --dry-run reports the
- * exact counts it would remove without touching a row. Schedulable.
+ * at 0) unless --days overrides it. Deleted rows cannot be restored or replayed, so
+ * --dry-run reports the exact counts it would remove without touching a row.
+ * Schedulable.
  *
  * The whole reliability surface is feature-gated: when the 'reliability' feature is off
  * the v_outbox / v_webhook_* tables may not exist, so the command no-ops with a notice
@@ -40,7 +41,7 @@ final class PruneWebhooksCommand extends Command
         {--days= : Override the retention window in days (config vaulter.webhooks.retention_days)}
         {--dry-run : Report what would be pruned without deleting}';
 
-    protected $description = 'Delete settled outbox rows and terminal webhook deliveries past the retention window.';
+    protected $description = 'Delete completed outbox rows and terminal webhook deliveries past the retention window.';
 
     public function handle(
         OutboxStoreRepository $outbox,
@@ -72,7 +73,7 @@ final class PruneWebhooksCommand extends Command
         $metrics->timing(
             name: 'vaulter_prune_duration_seconds',
             operation: function () use ($outbox, $deliveries, $threshold, &$prunedOutbox, &$prunedDeliveries): void {
-                $prunedOutbox = $outbox->pruneDispatchedBefore(threshold: $threshold);
+                $prunedOutbox = $outbox->pruneCompletedBefore(threshold: $threshold);
                 $prunedDeliveries = $deliveries->pruneTerminalBefore(threshold: $threshold);
             },
         );
@@ -83,7 +84,7 @@ final class PruneWebhooksCommand extends Command
         );
 
         $this->components->info(sprintf(
-            'Pruned %d dispatched outbox row%s and %d terminal deliver%s older than %s (retention %d day%s).',
+            'Pruned %d completed outbox row%s and %d terminal deliver%s older than %s (retention %d day%s).',
             $prunedOutbox,
             $prunedOutbox === 1 ? '' : 's',
             $prunedDeliveries,
@@ -102,11 +103,11 @@ final class PruneWebhooksCommand extends Command
         Carbon $threshold,
         int $retentionDays,
     ): int {
-        $outboxCount = $outbox->countDispatchedBefore(threshold: $threshold);
+        $outboxCount = $outbox->countCompletedBefore(threshold: $threshold);
         $deliveryCount = $deliveries->countTerminalBefore(threshold: $threshold);
 
         $this->components->info(sprintf(
-            'Would prune %d dispatched outbox row%s and %d terminal deliver%s older than %s (retention %d day%s).',
+            'Would prune %d completed outbox row%s and %d terminal deliver%s older than %s (retention %d day%s).',
             $outboxCount,
             $outboxCount === 1 ? '' : 's',
             $deliveryCount,

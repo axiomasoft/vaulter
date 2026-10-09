@@ -34,7 +34,7 @@ beforeEach(function (): void {
 
 it('records vaulter_outbox_backlog from pending outbox rows', function (): void {
     WebhookTestHelpers::outbox(['status' => 'pending']);
-    WebhookTestHelpers::outbox(['status' => 'dispatched']);
+    WebhookTestHelpers::outbox(['status' => 'completed']);
 
     app(LoadStateMetrics::class)->observeOutboxBacklog();
 
@@ -139,8 +139,8 @@ it('records prune webhook metrics when rows are reclaimed', function (): void {
 
     $threshold = now()->subDay();
     WebhookTestHelpers::outbox([
-        'status' => 'dispatched',
-        'dispatched_at' => $threshold,
+        'status' => 'completed',
+        'fanned_out_at' => $threshold,
     ]);
 
     Artisan::call('vaulter:prune-webhooks');

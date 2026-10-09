@@ -12,8 +12,8 @@ use Vaulter\Http\Requests\VaulterFormRequest;
 /**
  * Validates an update-webhook-endpoint request (master plan §2.11 / D14 / M3b) and
  * assembles its UpdateWebhookEndpointInput command. Every field is optional (a PATCH
- * touches only what it sends); a present field must still be valid. signing_secret is
- * never updatable. The controller authorizes the manage ability first.
+ * touches only what it sends); a present field must still be valid. drive_id moves
+ * the drive filter to another drive. signing_secret is never updatable. The controller authorizes the manage ability first.
  */
 final class UpdateWebhookEndpointRequest extends VaulterFormRequest
 {
@@ -27,6 +27,7 @@ final class UpdateWebhookEndpointRequest extends VaulterFormRequest
             'events' => ['sometimes', 'array', 'min:1'],
             'events.*' => ['string', Rule::in(EventType::names())],
             'is_active' => ['sometimes', 'boolean'],
+            'drive_id' => ['sometimes', 'alpha_dash:ascii', 'max:64'],
         ];
     }
 
@@ -36,6 +37,7 @@ final class UpdateWebhookEndpointRequest extends VaulterFormRequest
             url: $this->has('url') ? $this->string('url')->toString() : null,
             events: $this->has('events') ? $this->eventNames() : null,
             isActive: $this->has('is_active') ? $this->boolean('is_active') : null,
+            driveId: $this->filled('drive_id') ? $this->string('drive_id')->toString() : null,
         );
     }
 

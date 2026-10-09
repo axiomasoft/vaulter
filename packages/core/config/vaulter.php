@@ -142,6 +142,13 @@ return [
         'event_header' => 'X-Vaulter-Event',
         'retention_days' => 30,
         'retry_claim_seconds' => 60,
+        // The outbox relay leases a row for claim_seconds while it materializes
+        // deliveries fanout_chunk endpoints at a time (1..1000); a crashed relay's
+        // row is picked up again once the lease lapses.
+        'relay' => [
+            'claim_seconds' => 60,
+            'fanout_chunk' => 100,
+        ],
         'manage_ability' => env('VAULTER_WEBHOOKS_MANAGE_ABILITY', 'vaulter.webhooks.manage'),
         'delivery' => [
             'url_guard' => DefaultOutboundUrlGuard::class,

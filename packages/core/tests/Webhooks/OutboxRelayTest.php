@@ -26,8 +26,8 @@ use Vaulter\Webhooks\WebhookSigner;
 /**
  * The transactional-outbox RELAY (§2.11 / D14 / M3b), ported from chatom: process()
  * fans pending outbox rows out into per-endpoint WebhookDelivery rows + DeliverWebhook
- * jobs; vaulter:relay-outbox ticks and re-arms due retries. Idempotency is row-state
- * driven (pending → dispatched), so overlapping ticks never double-deliver.
+ * jobs; vaulter:relay-outbox ticks and re-arms due retries. A row is 'completed' only
+ * together with its last deliveries, so overlapping ticks never double-deliver.
  *
  * Jobs are faked (Queue/Bus::fake) so dispatch is asserted without the HTTP job.
  */
@@ -89,19 +89,22 @@ it('fans a pending outbox row out to a subscribed active endpoint and dispatches
     expect($deliveries)->toHaveCount(1)
         ->and((string) $deliveries->first()->endpoint_id)->toBe((string) $endpoint->getKey())
         ->and($deliveries->first()->event)->toBe('folder.created')
+        ->and($deliveries->first()->event_id)->toBe($message->event_id)
         ->and($deliveries->first()->status)->toBe('pending')
         ->and($deliveries->first()->attempts)->toBe(0)
         ->and($deliveries->first()->payload['node_id'])->toBe('node-1');
 
     $message->refresh();
 
-    expect($message->status)->toBe('dispatched')
-        ->and($message->dispatched_at)->toBeInstanceOf(Carbon::class);
+    expect($message->status)->toBe('completed')
+        ->and($message->fanned_out_at)->toBeInstanceOf(Carbon::class)
+        ->and($message->delivery_count)->toBe(1)
+        ->and($message->claim_token)->toBeNull();
 
     Queue::assertPushed(DeliverWebhook::class, 1);
 });
 
-it('is idempotent: a second process() does not re-fan an already-dispatched row', function (): void {
+it('is idempotent: a second process() does not re-fan an already-completed row', function (): void {
     Queue::fake();
 
     WebhookTestHelpers::endpoint();
@@ -245,7 +248,7 @@ it('vaulter:relay-outbox drains a pending outbox row into a delivery and a job',
 
     $this->artisan('vaulter:relay-outbox')->assertSuccessful();
 
-    expect($message->refresh()->status)->toBe('dispatched')
+    expect($message->refresh()->status)->toBe('completed')
         ->and(WebhookDelivery::query()->where('status', 'pending')->count())->toBe(1);
 
     Bus::assertDispatched(DeliverWebhook::class, 1);
@@ -297,7 +300,7 @@ it('vaulter:relay-outbox honours the --limit option', function (): void {
     $this->artisan('vaulter:relay-outbox', ['--limit' => 1])->assertSuccessful();
 
     expect(Outbox::query()->where('status', 'pending')->count())->toBe(1)
-        ->and(Outbox::query()->where('status', 'dispatched')->count())->toBe(1);
+        ->and(Outbox::query()->where('status', 'completed')->count())->toBe(1);
 
     Bus::assertDispatched(DeliverWebhook::class, 1);
 });

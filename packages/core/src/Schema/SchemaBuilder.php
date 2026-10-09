@@ -876,9 +876,11 @@ final class SchemaBuilder
      *
      * The id honours the panel id strategy; panel is the discriminator (a row is
      * fanned out for its panel's endpoints); topic is an optional routing hint
-     * (e.g. the storage/node id). status defaults 'pending'; the relay flips it to
-     * 'dispatched' under a row lock. The (status, available_at) index is the relay's
-     * drain cursor.
+     * (e.g. the storage/node id). status is 'pending' until the relay has written
+     * the delivery of every eligible endpoint, then 'completed' in the same
+     * transaction as the last chunk. claim_* is the relay worker's fenced lease,
+     * fanout_cursor the last endpoint key already materialized. The
+     * (status, available_at) index is the relay's drain cursor.
      */
     private function defineOutbox(Blueprint $table, IdStrategy $ids): void
     {
@@ -898,24 +900,31 @@ final class SchemaBuilder
         $table->string('event');
         $table->json('payload');
         $table->timestamp('available_at');
-        $table->timestamp('dispatched_at')->nullable();
         $table->unsignedInteger('attempts')->default(0);
         $table->string('status')->default('pending');
         $table->timestamps();
+        $table->string('claim_token', 32)->nullable();
+        $table->bigInteger('claim_generation')->default(0);
+        $table->timestamp('claim_until')->nullable();
+        $table->string('fanout_cursor', 64)->nullable();
+        $table->timestamp('fanned_out_at')->nullable();
+        $table->unsignedInteger('delivery_count')->default(0);
+        $table->boolean('legacy_fanout')->default(false);
 
         $name = $table->getTable();
 
         $table->index(['status', 'available_at'], $name.'_drain_idx');
-        // The retention sweep (vaulter:prune-webhooks) deletes settled rows by
-        // (status='dispatched', dispatched_at <= threshold) — its own scan cursor.
-        $table->index(['status', 'dispatched_at'], $name.'_prune_idx');
+        // The retention sweep (vaulter:prune-webhooks) deletes finished rows by
+        // (status='completed', fanned_out_at <= threshold) — its own scan cursor.
+        $table->index(['status', 'fanned_out_at'], $name.'_prune_idx');
     }
 
     /**
      * v_webhook_endpoints — the subscriber endpoints (master plan §2.11 / D14 / M3b),
      * ported from chatom 1:1. Gated on 'reliability'. events is the JSON subscription
-     * list (matched in PHP for driver portability); signing_secret signs the
-     * deliveries (HMAC-SHA256); failure_count drives the circuit breaker.
+     * list (matched in SQL with whereJsonContains); signing_secret signs the
+     * deliveries (HMAC-SHA256); failure_count drives the circuit breaker. tenant_id
+     * and the optional drive_id narrow which events the endpoint receives.
      */
     private function defineWebhookEndpoints(Blueprint $table, IdStrategy $ids): void
     {
@@ -930,6 +939,17 @@ final class SchemaBuilder
         $table->timestamp('last_triggered_at')->nullable();
         $table->unsignedInteger('failure_count')->default(0);
         $table->timestamps();
+        $this->tenant(table: $table);
+        $ids->reference(table: $table, column: 'drive_id', nullable: true);
+
+        $name = $table->getTable();
+
+        // The relay's eligible-endpoint scan filters by both.
+        $table->index(['is_active', 'tenant_id'], $name.'_active_tenant_idx');
+        $table->foreign('drive_id')
+            ->references('id')
+            ->on($this->table('drives'))
+            ->cascadeOnDelete();
     }
 
     /**
@@ -937,7 +957,9 @@ final class SchemaBuilder
      * plan §2.11 / D14 / M3b), ported from chatom 1:1. Gated on 'reliability'.
      * endpoint_id is an explicit FK → v_webhook_endpoints (cascade on delete). The
      * (status, next_retry_at) index is the due-retry sweep cursor; (status, updated_at)
-     * backs the retention prune of terminal (delivered|dead) rows.
+     * backs the retention prune of terminal (delivered|dead) rows. (event_id,
+     * endpoint_id) is unique, so an occurrence reaches an endpoint through one row
+     * however often the relay retries its fan-out.
      */
     private function defineWebhookDeliveries(Blueprint $table, IdStrategy $ids): void
     {
@@ -953,9 +975,11 @@ final class SchemaBuilder
         $table->timestamp('claim_until')->nullable();
         $table->text('last_error')->nullable();
         $table->timestamps();
+        $table->string('event_id', 64)->nullable();
 
         $name = $table->getTable();
 
+        $table->unique(['event_id', 'endpoint_id'], $name.'_event_endpoint_unique');
         $table->index(['status', 'next_retry_at'], $name.'_retry_idx');
         // The retention sweep (vaulter:prune-webhooks) deletes terminal rows by
         // (status in delivered|dead, updated_at <= threshold) — its own scan cursor.

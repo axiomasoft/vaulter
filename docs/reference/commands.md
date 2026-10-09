@@ -22,7 +22,8 @@ outbox relay, webhook retry, webhook prune) are designed to be scheduled.
 | `vaulter:sweep-uploads` | Abort and clean up stale resumable-upload sessions |
 | `vaulter:relay-outbox` | Relay pending outbox events to webhook endpoints |
 | `vaulter:retry-webhooks` | Re-dispatch webhook deliveries whose backoff elapsed |
-| `vaulter:prune-webhooks` | Delete settled outbox rows and terminal webhook deliveries past retention |
+| `vaulter:prune-webhooks` | Delete completed outbox rows and terminal webhook deliveries past retention |
+| `vaulter:webhooks:legacy-fanout` | List or replay pre-1.0 outbox rows whose fan-out cannot be proven |
 | `vaulter:events:reference` | Regenerate (or `--check`) the event catalogue table in the reference docs |
 
 ---
@@ -201,9 +202,13 @@ See [Usage → Uploads](/guide/uploads).
 ## `vaulter:relay-outbox`
 
 Relay pending outbox events to webhook endpoints and re-dispatch due retries. Each
-pending `v_outbox` row fans out into one signed `v_webhook_deliveries` row per
-subscribed active endpoint, and the HTTP POST is queued. At-least-once with
-exponential backoff + DLQ. Gated by `features.webhooks`.
+pending `v_outbox` row fans out into one `v_webhook_deliveries` row per eligible
+endpoint, and the HTTP POST is queued after the rows commit. The relay leases a row
+for `webhooks.relay.claim_seconds` and writes `webhooks.relay.fanout_chunk` endpoints
+per transaction; the row becomes `completed` together with its last deliveries, so a
+relay that dies is resumed by the next run once the lease lapses. Several relays may
+run at once. At-least-once with exponential backoff + DLQ. Gated by
+`features.webhooks`. See [Webhooks → Delivery guarantees](/guide/webhooks#delivery-guarantees).
 
 ```
 vaulter:relay-outbox
@@ -218,8 +223,9 @@ See [Recipes → Reliability & webhooks](/guide/recipes).
 
 ## `vaulter:retry-webhooks`
 
-Re-dispatch webhook deliveries whose backoff window has elapsed. Gated by
-`features.webhooks`.
+Re-dispatch webhook deliveries whose backoff window has elapsed, and pending
+deliveries whose first job was lost (still unclaimed `webhooks.relay.claim_seconds`
+after they became due). Gated by `features.webhooks`.
 
 ```
 vaulter:retry-webhooks
@@ -248,12 +254,13 @@ php artisan vaulter:events:reference --check
 
 ## `vaulter:prune-webhooks`
 
-Delete SETTLED outbox rows (`dispatched`, older than the retention window) and
-TERMINAL webhook deliveries (`delivered`/`dead`, older than the retention window).
-An in-flight row (`pending`/`failed`) is never touched — the relay/retry sweep still
-owns it. Gated by `features.webhooks` (no-ops with a notice when off). The window
-comes from `config('vaulter.webhooks.retention_days')` (default 30) unless `--days`
-overrides it.
+Delete COMPLETED outbox rows (`completed`, `fanned_out_at` older than the retention
+window) and TERMINAL webhook deliveries (`delivered`/`dead`, older than the retention
+window). A `pending` outbox row — even one whose fan-out stopped half way — and a
+`pending`/`failed` delivery are never touched, however old. Gated by
+`features.webhooks` (no-ops with a notice when off). The window comes from
+`config('vaulter.webhooks.retention_days')` (default 30) unless `--days` overrides it.
+Pruned rows cannot be restored or replayed.
 
 ```
 vaulter:prune-webhooks
@@ -268,6 +275,32 @@ php artisan vaulter:prune-webhooks --days=7
 ```
 
 See [Recipes → Reliability & webhooks](/guide/recipes).
+
+## `vaulter:webhooks:legacy-fanout`
+
+The relay before 1.0 marked an outbox row `dispatched` before writing its deliveries,
+so a crash could lose them. The upgrade turns those rows into `completed` rows with
+`legacy_fanout = true`. A legacy row without any delivery is ambiguous: no endpoint
+was subscribed, or the fan-out was lost — the data cannot tell. This command lists
+those rows (`event_id`, `event`, `created_at`, `drive_id`); with `--replay` it returns
+them to the relay, which fans them out to the endpoints eligible **now** (an endpoint
+that was inactive when the event happened may receive it; one that already has the
+delivery does not get a second). Rows the prune already deleted are gone. Gated by
+`features.webhooks`.
+
+```
+vaulter:webhooks:legacy-fanout
+    {--since=}   Only rows created at or after this date/time
+    {--until=}   Only rows created at or before this date/time
+    {--replay}   Return the listed rows to the relay queue
+    {--dry-run}  With --replay, report what would be replayed without changing anything
+```
+
+```bash
+php artisan vaulter:webhooks:legacy-fanout --since=2026-09-01
+php artisan vaulter:webhooks:legacy-fanout --since=2026-09-01 --replay --dry-run
+php artisan vaulter:webhooks:legacy-fanout --since=2026-09-01 --replay
+```
 
 ---
 

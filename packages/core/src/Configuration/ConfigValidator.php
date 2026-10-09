@@ -46,6 +46,7 @@ final readonly class ConfigValidator
         }
         // These accessors validate the untrusted class strings before returning them.
         $config->webhooks()->urlGuard();
+        $config->webhooks()->relayFanoutChunk();
         $config->sharing()->tokenGenerator();
         foreach ([
             'drive',

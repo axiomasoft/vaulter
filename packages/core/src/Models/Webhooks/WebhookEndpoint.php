@@ -19,7 +19,9 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  * subscribed to (master plan §2.11 / D14 / M3b). signing_secret is generated at
  * registration and shown to the owner exactly once; the deliveries are HMAC-SHA256
  * signed with it. failure_count drives the circuit breaker (auto-disable past the
- * threshold).
+ * threshold). tenant_id is the tenant the endpoint was registered in; it receives
+ * only that tenant's events (null receives only events without a tenant). A set
+ * drive_id narrows it further to the events of that drive.
  *
  * Swappable — point configuration key vaulter.models.webhook_endpoint at a subclass.
  *
@@ -30,6 +32,8 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  * @property bool               $is_active
  * @property Carbon|null        $last_triggered_at
  * @property int                $failure_count
+ * @property int|string|null    $tenant_id
+ * @property int|string|null    $drive_id
  * @property Carbon|null        $created_at
  * @property Carbon|null        $updated_at
  *

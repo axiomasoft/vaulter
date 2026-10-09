@@ -72,7 +72,7 @@ it('rejects ANY fill() attribute on a fully-$guarded vaulter-core model with Mas
     'FileRevisionBlob.blob_id' => [FileRevisionBlob::class, 'blob_id', 999],
     'NodeGrant.permissions' => [NodeGrant::class, 'permissions', 65535],
     'Activity.verb' => [Activity::class, 'verb', 'fake.verb'],
-    'Outbox.status' => [Outbox::class, 'status', 'dispatched'],
+    'Outbox.status' => [Outbox::class, 'status', 'completed'],
     'WebhookDelivery.status' => [WebhookDelivery::class, 'status', 'delivered'],
 ]);
 

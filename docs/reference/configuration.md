@@ -308,7 +308,9 @@ DLQ).
 | `webhooks.signature_header` | — | `X-Vaulter-Signature` | The HMAC-SHA256 signature header |
 | `webhooks.timestamp_header` | — | `X-Vaulter-Timestamp` | The timestamp header (replay resistance) |
 | `webhooks.event_header` | — | `X-Vaulter-Event` | The event-name header |
-| `webhooks.retention_days` | — | `30` | Age past which dispatched outbox rows + terminal deliveries are prunable |
+| `webhooks.retention_days` | — | `30` | Age past which completed outbox rows + terminal deliveries are prunable (pending rows never are) |
+| `webhooks.relay.claim_seconds` | — | `60` | How long a relay worker leases an outbox row; a crashed worker's row is resumed after it. Also how long a pending delivery may wait for its job before the retry sweep re-queues it |
+| `webhooks.relay.fanout_chunk` | — | `100` | Endpoints written per fan-out transaction (integer 1..1000; anything else fails boot) |
 | `webhooks.manage_ability` | `VAULTER_WEBHOOKS_MANAGE_ABILITY` | `vaulter.webhooks.manage` | The Gate ability gating the endpoint-management surface; `null` allows any authenticated user |
 
 The `features.webhooks` flag gates the outbox subscriber and endpoint routes; tables always exist. See [Recipes → Reliability & webhooks](/guide/recipes).

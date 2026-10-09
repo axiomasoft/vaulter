@@ -282,7 +282,9 @@ php artisan vendor:publish --tag=vaulter-config
 | `webhooks.signature_header` | — | `X-Vaulter-Signature` | Заголовок подписи HMAC-SHA256 |
 | `webhooks.timestamp_header` | — | `X-Vaulter-Timestamp` | Заголовок метки времени (защита от повторов) |
 | `webhooks.event_header` | — | `X-Vaulter-Event` | Заголовок имени события |
-| `webhooks.retention_days` | — | `30` | Возраст, после которого отправленные строки outbox + терминальные доставки можно вычищать |
+| `webhooks.retention_days` | — | `30` | Возраст, после которого завершённые строки outbox + терминальные доставки можно вычищать (строки в `pending` — никогда) |
+| `webhooks.relay.claim_seconds` | — | `60` | Сколько relay-воркер держит аренду строки outbox; строку упавшего воркера продолжают после неё. Столько же ожидающая доставка ждёт свой job, прежде чем retry sweep поставит её заново |
+| `webhooks.relay.fanout_chunk` | — | `100` | Сколько эндпоинтов пишется за одну транзакцию раскрытия (целое 1..1000; иное значение валит загрузку) |
 | `webhooks.manage_ability` | `VAULTER_WEBHOOKS_MANAGE_ABILITY` | `vaulter.webhooks.manage` | Право (ability) Gate, охраняющее поверхность управления эндпойнтами; `null` разрешает любому аутентифицированному пользователю |
 
 Флаг `features.webhooks` включает подписчик outbox и маршруты эндпойнтов; таблицы существуют всегда. См. [Рецепты → Надёжность и вебхуки](/ru/guide/recipes).

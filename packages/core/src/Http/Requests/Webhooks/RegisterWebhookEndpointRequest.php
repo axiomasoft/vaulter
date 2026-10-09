@@ -16,8 +16,9 @@ use Vaulter\Http\Requests\VaulterFormRequest;
  * Validates a register-webhook-endpoint request (master plan §2.11 / D14 / M3b) and
  * assembles its RegisterWebhookEndpointInput command. The url must be a valid http(s)
  * URL; every subscribed event must be one of the closed EventType set; is_active
- * defaults true. The signing_secret is NOT accepted from the client — the Action mints
- * it. The controller authorizes the manage ability first.
+ * defaults true; drive_id optionally limits the endpoint to one drive's events. The
+ * signing_secret is NOT accepted from the client — the Action mints it. The
+ * controller authorizes the manage ability first.
  *
  * SSRF early-reject (§2.11 / F-P1.7-01): the OutboundUrlGuard resolves + range-checks
  * the URL at registration too, so a target inside the internal network is refused with
@@ -36,6 +37,7 @@ final class RegisterWebhookEndpointRequest extends VaulterFormRequest
             'events' => ['required', 'array', 'min:1'],
             'events.*' => ['string', Rule::in(EventType::names())],
             'is_active' => ['nullable', 'boolean'],
+            'drive_id' => ['nullable', 'alpha_dash:ascii', 'max:64'],
         ];
     }
 
@@ -70,6 +72,7 @@ final class RegisterWebhookEndpointRequest extends VaulterFormRequest
             url: $this->string('url')->toString(),
             events: $this->eventNames(),
             isActive: $this->has('is_active') ? $this->boolean('is_active') : true,
+            driveId: $this->filled('drive_id') ? $this->string('drive_id')->toString() : null,
         );
     }
 

@@ -103,6 +103,29 @@ it('reclaims a lost delivery only after its claim window and never claims termin
     Bus::assertDispatchedTimes(DeliverWebhook::class, 2);
 });
 
+it('recovers a pending delivery whose first job was lost, only after the relay claim window', function (): void {
+    Bus::fake();
+    config()->set('vaulter.webhooks.relay.claim_seconds', 60);
+
+    $endpoint = WebhookTestHelpers::endpoint();
+    // Just written by the relay, its job presumably still queued.
+    $fresh = WebhookTestHelpers::delivery($endpoint, ['event_id' => 'fresh', 'next_retry_at' => now()]);
+    // A worker holds it right now.
+    WebhookTestHelpers::delivery($endpoint, ['event_id' => 'held', 'next_retry_at' => now()->subMinutes(5), 'claim_token' => str_repeat('b', 32), 'claim_until' => now()->addMinutes(5)]);
+
+    $retry = app(WebhookRetryDispatcher::class);
+    expect($retry->redispatchDue())->toBe(0);
+
+    $this->travel(61)->seconds();
+
+    expect($retry->redispatchDue())->toBe(1)
+        ->and($retry->redispatchDue())->toBe(0)
+        ->and($fresh->refresh()->status)->toBe('pending')
+        ->and($fresh->attempts)->toBe(0);
+    Bus::assertDispatched(DeliverWebhook::class, fn (DeliverWebhook $job): bool => new ReflectionProperty($job, 'deliveryId')->getValue($job) === (string) $fresh->getKey());
+    Bus::assertDispatchedTimes(DeliverWebhook::class, 1);
+});
+
 it('rolls back the whole claim and dispatches no jobs when a row cannot be re-armed', function (): void {
     Bus::fake();
 

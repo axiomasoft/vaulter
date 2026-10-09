@@ -183,6 +183,35 @@ final readonly class WebhooksConfig
         return max($seconds, 1);
     }
 
+    /** How long a relay worker owns an outbox row before another may take it over. */
+    public function relayClaimSeconds(): int
+    {
+        $value = $this->config->get('vaulter.webhooks.relay.claim_seconds', 60);
+
+        $seconds = is_numeric($value) ? (int) $value : 60;
+
+        return max($seconds, 1);
+    }
+
+    /**
+     * How many endpoints one fan-out transaction materializes. Out-of-range values
+     * are refused rather than clamped: a silently clamped chunk would hide a typo
+     * that changes how long the outbox row stays locked.
+     */
+    public function relayFanoutChunk(): int
+    {
+        $value = $this->config->get('vaulter.webhooks.relay.fanout_chunk', 100);
+
+        $chunk = is_int($value) || is_string($value)
+            ? filter_var($value, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 1000]])
+            : false;
+        if ($chunk === false) {
+            throw new InvalidConfigurationException('[Vaulter] vaulter.webhooks.relay.fanout_chunk must be an integer between 1 and 1000.');
+        }
+
+        return $chunk;
+    }
+
     /**
      * @param  list<string> $default
      * @return list<string>

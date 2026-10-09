@@ -21,8 +21,8 @@ use Vaulter\Tests\Webhooks\WebhookTestHelpers;
  *    still owned by the relay (drain / due-retry sweep) and are NEVER pruned — not even
  *    at retention 0, not even when their timestamps are artificially ancient. The guard
  *    is STATUS, not age.
- *  - SETTLED/TERMINAL IS RECLAIMED BY THE WINDOW. A 'dispatched' outbox row keys off
- *    dispatched_at; a 'delivered'/'dead' delivery keys off updated_at (its
+ *  - SETTLED/TERMINAL IS RECLAIMED BY THE WINDOW. A 'completed' outbox row keys off
+ *    fanned_out_at; a 'delivered'/'dead' delivery keys off updated_at (its
  *    terminalisation time). The boundary is inclusive ('<='): a row exactly at the
  *    threshold is pruned, one strictly inside the window survives.
  *  - --dry-run reports the EXACT counts a real run would remove and deletes nothing.
@@ -81,31 +81,31 @@ function forceDeliveryTimestamps(WebhookDelivery $delivery, Carbon $updatedAt, ?
 
 // ─────────────────── 1–4. IN-FLIGHT IS NEVER PRUNED (adversarial) ───────────────────
 
-it('1) keeps a pending outbox row with NULL dispatched_at and an ancient created_at at --days=0', function (): void {
+it('1) keeps a pending outbox row with NULL fanned_out_at and an ancient created_at at --days=0', function (): void {
     $row = WebhookTestHelpers::outbox([
         'status' => 'pending',
-        'dispatched_at' => null,
+        'fanned_out_at' => null,
         'created_at' => Carbon::now()->subYears(5),
     ]);
 
     $this->artisan('vaulter:prune-webhooks', ['--days' => '0'])
-        ->expectsOutputToContain('Pruned 0 dispatched outbox rows')
+        ->expectsOutputToContain('Pruned 0 completed outbox rows')
         ->assertExitCode(Command::SUCCESS);
 
     expect(Outbox::query()->whereKey($row->getKey())->exists())->toBeTrue();
 });
 
-it('2) never deletes a pending outbox row even with an artificially old dispatched_at (guard is status, not time)', function (): void {
-    // Adversarial: a 'pending' row carrying a terminal-looking dispatched_at far in the
-    // past. The status guard must still exclude it — only 'dispatched' is reclaimable.
+it('2) never deletes a pending outbox row even with an artificially old fanned_out_at (guard is status, not time)', function (): void {
+    // Adversarial: a 'pending' row carrying a terminal-looking fanned_out_at far in the
+    // past. The status guard must still exclude it — only 'completed' is reclaimable.
     $row = WebhookTestHelpers::outbox([
         'status' => 'pending',
-        'dispatched_at' => Carbon::now()->subDays(100),
+        'fanned_out_at' => Carbon::now()->subDays(100),
         'created_at' => Carbon::now()->subDays(100),
     ]);
 
     $this->artisan('vaulter:prune-webhooks', ['--days' => '0'])
-        ->expectsOutputToContain('Pruned 0 dispatched outbox rows')
+        ->expectsOutputToContain('Pruned 0 completed outbox rows')
         ->assertExitCode(Command::SUCCESS);
 
     expect(Outbox::query()->whereKey($row->getKey())->exists())->toBeTrue();
@@ -142,22 +142,22 @@ it('4) never deletes a pending delivery with an ancient updated_at', function ()
 
 // ─────────────── 5–6. SETTLED / TERMINAL deleted exactly by the window ───────────────
 
-it('5) prunes a dispatched outbox row at the threshold but keeps one inside the window (inclusive <=)', function (): void {
-    // retention 30d ⇒ threshold = now - 30d. dispatched_at == threshold ⇒ pruned;
-    // dispatched_at = now - 29d (newer, inside the window) ⇒ survives.
+it('5) prunes a completed outbox row at the threshold but keeps one inside the window (inclusive <=)', function (): void {
+    // retention 30d ⇒ threshold = now - 30d. fanned_out_at == threshold ⇒ pruned;
+    // fanned_out_at = now - 29d (newer, inside the window) ⇒ survives.
     $atBoundary = WebhookTestHelpers::outbox([
-        'status' => 'dispatched',
-        'dispatched_at' => Carbon::now()->subDays(30),
+        'status' => 'completed',
+        'fanned_out_at' => Carbon::now()->subDays(30),
         'created_at' => Carbon::now()->subDays(40),
     ]);
     $insideWindow = WebhookTestHelpers::outbox([
-        'status' => 'dispatched',
-        'dispatched_at' => Carbon::now()->subDays(29),
+        'status' => 'completed',
+        'fanned_out_at' => Carbon::now()->subDays(29),
         'created_at' => Carbon::now()->subDays(40),
     ]);
 
     $this->artisan('vaulter:prune-webhooks')
-        ->expectsOutputToContain('Pruned 1 dispatched outbox row')
+        ->expectsOutputToContain('Pruned 1 completed outbox row')
         ->assertExitCode(Command::SUCCESS);
 
     expect(Outbox::query()->whereKey($atBoundary->getKey())->exists())->toBeFalse()
@@ -196,14 +196,14 @@ it('7) at --days=0 prunes only settled+terminal rows and leaves every in-flight 
     $endpoint = WebhookTestHelpers::endpoint();
 
     // Settled/terminal — all reclaimable at retention 0 (timestamps at/under now).
-    $dispatched = WebhookTestHelpers::outbox(['status' => 'dispatched', 'dispatched_at' => Carbon::now()->subMinute()]);
+    $completed = WebhookTestHelpers::outbox(['status' => 'completed', 'fanned_out_at' => Carbon::now()->subMinute()]);
     $delivered = WebhookTestHelpers::delivery($endpoint, ['status' => 'delivered', 'attempts' => 1]);
     forceDeliveryTimestamps($delivered, updatedAt: Carbon::now()->subMinute());
     $dead = WebhookTestHelpers::delivery($endpoint, ['status' => 'dead', 'attempts' => 5]);
     forceDeliveryTimestamps($dead, updatedAt: Carbon::now()->subMinute());
 
     // In-flight — must survive regardless of age.
-    $pendingOutbox = WebhookTestHelpers::outbox(['status' => 'pending', 'dispatched_at' => null, 'created_at' => Carbon::now()->subDays(99)]);
+    $pendingOutbox = WebhookTestHelpers::outbox(['status' => 'pending', 'fanned_out_at' => null, 'created_at' => Carbon::now()->subDays(99)]);
     $pendingDelivery = WebhookTestHelpers::delivery($endpoint, ['status' => 'pending']);
     forceDeliveryTimestamps($pendingDelivery, updatedAt: Carbon::now()->subDays(99));
     $failedDelivery = WebhookTestHelpers::delivery($endpoint, ['status' => 'failed', 'attempts' => 1, 'next_retry_at' => Carbon::now()->subMinute()]);
@@ -212,11 +212,11 @@ it('7) at --days=0 prunes only settled+terminal rows and leaves every in-flight 
     $output = runPrune(['--days' => '0']);
 
     // Both counts reported on the one summary line: 1 settled outbox + 2 terminal.
-    expect($output)->toContain('Pruned 1 dispatched outbox row')
+    expect($output)->toContain('Pruned 1 completed outbox row')
         ->and($output)->toContain('2 terminal');
 
     // Exact survivors: only the three in-flight rows.
-    expect(Outbox::query()->whereKey($dispatched->getKey())->exists())->toBeFalse()
+    expect(Outbox::query()->whereKey($completed->getKey())->exists())->toBeFalse()
         ->and(WebhookDelivery::query()->whereKey($delivered->getKey())->exists())->toBeFalse()
         ->and(WebhookDelivery::query()->whereKey($dead->getKey())->exists())->toBeFalse()
         ->and(Outbox::query()->whereKey($pendingOutbox->getKey())->exists())->toBeTrue()
@@ -231,8 +231,8 @@ it('7) at --days=0 prunes only settled+terminal rows and leaves every in-flight 
 
 it('8) --dry-run reports the would-prune counts and deletes nothing', function (): void {
     $endpoint = WebhookTestHelpers::endpoint();
-    WebhookTestHelpers::outbox(['status' => 'dispatched', 'dispatched_at' => Carbon::now()->subDays(40)]);
-    WebhookTestHelpers::outbox(['status' => 'dispatched', 'dispatched_at' => Carbon::now()->subDays(40)]);
+    WebhookTestHelpers::outbox(['status' => 'completed', 'fanned_out_at' => Carbon::now()->subDays(40)]);
+    WebhookTestHelpers::outbox(['status' => 'completed', 'fanned_out_at' => Carbon::now()->subDays(40)]);
     $delivered = WebhookTestHelpers::delivery($endpoint, ['status' => 'delivered', 'attempts' => 1]);
     forceDeliveryTimestamps($delivered, updatedAt: Carbon::now()->subDays(40));
 
@@ -242,7 +242,7 @@ it('8) --dry-run reports the would-prune counts and deletes nothing', function (
     $output = runPrune(['--dry-run' => true]);
 
     // The dry-run wording ("Would prune") with both counts.
-    expect($output)->toContain('Would prune 2 dispatched outbox rows')
+    expect($output)->toContain('Would prune 2 completed outbox rows')
         ->and($output)->toContain('1 terminal');
 
     // Row counts unchanged — a dry-run touches nothing.
@@ -253,7 +253,7 @@ it('8) --dry-run reports the would-prune counts and deletes nothing', function (
 it('9) the dry-run count equals the real deletion count over the same fixture (no drift)', function (): void {
     $endpoint = WebhookTestHelpers::endpoint();
     foreach (range(1, 3) as $i) {
-        WebhookTestHelpers::outbox(['status' => 'dispatched', 'dispatched_at' => Carbon::now()->subDays(40)]);
+        WebhookTestHelpers::outbox(['status' => 'completed', 'fanned_out_at' => Carbon::now()->subDays(40)]);
     }
     foreach (range(1, 4) as $i) {
         $d = WebhookTestHelpers::delivery($endpoint, ['status' => 'delivered', 'attempts' => 1]);
@@ -265,7 +265,7 @@ it('9) the dry-run count equals the real deletion count over the same fixture (n
     $deliveries = app(WebhookDeliveryStoreRepository::class);
     $threshold = Carbon::now()->subDays(30);
 
-    $outboxDryCount = $outbox->countDispatchedBefore(threshold: $threshold);
+    $outboxDryCount = $outbox->countCompletedBefore(threshold: $threshold);
     $deliveryDryCount = $deliveries->countTerminalBefore(threshold: $threshold);
 
     expect($outboxDryCount)->toBe(3)
@@ -285,12 +285,12 @@ it('10) prunes more settled rows than the chunk size across multiple rounds with
 
     // 7 settled outbox rows + 7 terminal deliveries, all past a 30d threshold.
     foreach (range(1, 7) as $i) {
-        WebhookTestHelpers::outbox(['status' => 'dispatched', 'dispatched_at' => Carbon::now()->subDays(40)]);
+        WebhookTestHelpers::outbox(['status' => 'completed', 'fanned_out_at' => Carbon::now()->subDays(40)]);
         $d = WebhookTestHelpers::delivery($endpoint, ['status' => 'delivered', 'attempts' => 1]);
         forceDeliveryTimestamps($d, updatedAt: Carbon::now()->subDays(40));
     }
     // Decoys that must NOT be counted/deleted: in-flight rows with ancient timestamps.
-    WebhookTestHelpers::outbox(['status' => 'pending', 'dispatched_at' => Carbon::now()->subDays(40)]);
+    WebhookTestHelpers::outbox(['status' => 'pending', 'fanned_out_at' => Carbon::now()->subDays(40)]);
     $failed = WebhookTestHelpers::delivery($endpoint, ['status' => 'failed', 'attempts' => 1, 'next_retry_at' => Carbon::now()->subHour()]);
     forceDeliveryTimestamps($failed, updatedAt: Carbon::now()->subDays(40));
 
@@ -299,7 +299,7 @@ it('10) prunes more settled rows than the chunk size across multiple rounds with
     $threshold = Carbon::now()->subDays(30);
 
     // chunk: 3 over 7 rows ⇒ rounds of 3 + 3 + 1; the returned count is the exact total.
-    $prunedOutbox = $outbox->pruneDispatchedBefore(threshold: $threshold, chunk: 3);
+    $prunedOutbox = $outbox->pruneCompletedBefore(threshold: $threshold, chunk: 3);
     $prunedDeliveries = $deliveries->pruneTerminalBefore(threshold: $threshold, chunk: 3);
 
     expect($prunedOutbox)->toBe(7)
@@ -315,7 +315,7 @@ it('11) terminates on exactly chunk-sized settled batches (full final batch boun
     // Exactly 3 settled rows of each kind with chunk: 3 ⇒ the first round is FULL, the
     // second round returns 0 keys and the loop must stop (not spin forever).
     foreach (range(1, 3) as $i) {
-        WebhookTestHelpers::outbox(['status' => 'dispatched', 'dispatched_at' => Carbon::now()->subDays(40)]);
+        WebhookTestHelpers::outbox(['status' => 'completed', 'fanned_out_at' => Carbon::now()->subDays(40)]);
         $d = WebhookTestHelpers::delivery($endpoint, ['status' => 'delivered', 'attempts' => 1]);
         forceDeliveryTimestamps($d, updatedAt: Carbon::now()->subDays(40));
     }
@@ -324,7 +324,7 @@ it('11) terminates on exactly chunk-sized settled batches (full final batch boun
     $deliveries = app(WebhookDeliveryStoreRepository::class);
     $threshold = Carbon::now()->subDays(30);
 
-    expect($outbox->pruneDispatchedBefore(threshold: $threshold, chunk: 3))->toBe(3)
+    expect($outbox->pruneCompletedBefore(threshold: $threshold, chunk: 3))->toBe(3)
         ->and($deliveries->pruneTerminalBefore(threshold: $threshold, chunk: 3))->toBe(3)
         ->and(Outbox::query()->count())->toBe(0)
         ->and(WebhookDelivery::query()->count())->toBe(0);
@@ -336,7 +336,7 @@ it('12) no-ops with a notice and SUCCESS when the reliability feature is off, to
     // Tables already exist (migrated with reliability ON); flip the runtime gate off.
     // The command must bail BEFORE querying, leaving every row intact.
     $endpoint = WebhookTestHelpers::endpoint();
-    $settled = WebhookTestHelpers::outbox(['status' => 'dispatched', 'dispatched_at' => Carbon::now()->subDays(99)]);
+    $settled = WebhookTestHelpers::outbox(['status' => 'completed', 'fanned_out_at' => Carbon::now()->subDays(99)]);
     $terminal = WebhookTestHelpers::delivery($endpoint, ['status' => 'delivered', 'attempts' => 1]);
     forceDeliveryTimestamps($terminal, updatedAt: Carbon::now()->subDays(99));
 
@@ -358,8 +358,8 @@ it('12b) does not error when reliability is off and there is nothing seeded', fu
 });
 
 it('13) treats --days=-5 as 0 — a row settled a minute ago IS pruned', function (): void {
-    // At retention 0 the threshold is now; a row dispatched a minute ago is past it.
-    $row = WebhookTestHelpers::outbox(['status' => 'dispatched', 'dispatched_at' => Carbon::now()->subMinute()]);
+    // At retention 0 the threshold is now; a row completed a minute ago is past it.
+    $row = WebhookTestHelpers::outbox(['status' => 'completed', 'fanned_out_at' => Carbon::now()->subMinute()]);
 
     // The summary echoes "retention 0 days", proving --days=-5 floored to 0.
     expect(runPrune(['--days' => '-5']))->toContain('retention 0 days')
@@ -369,9 +369,9 @@ it('13) treats --days=-5 as 0 — a row settled a minute ago IS pruned', functio
 it('13b) falls back to the config default retention when --days is non-numeric', function (): void {
     config()->set('vaulter.webhooks.retention_days', 30);
 
-    // With the 30d default: a row dispatched 40d ago is pruned; one 10d ago survives.
-    $old = WebhookTestHelpers::outbox(['status' => 'dispatched', 'dispatched_at' => Carbon::now()->subDays(40)]);
-    $recent = WebhookTestHelpers::outbox(['status' => 'dispatched', 'dispatched_at' => Carbon::now()->subDays(10)]);
+    // With the 30d default: a row completed 40d ago is pruned; one 10d ago survives.
+    $old = WebhookTestHelpers::outbox(['status' => 'completed', 'fanned_out_at' => Carbon::now()->subDays(40)]);
+    $recent = WebhookTestHelpers::outbox(['status' => 'completed', 'fanned_out_at' => Carbon::now()->subDays(10)]);
 
     // "retention 30 days" proves the non-numeric --days fell back to the config default.
     expect(runPrune(['--days' => 'abc']))->toContain('retention 30 days')
@@ -383,8 +383,8 @@ it('14) one run prunes BOTH settled outbox and terminal deliveries, reporting th
     $endpoint = WebhookTestHelpers::endpoint();
 
     // 2 settled outbox + 3 terminal deliveries, all 40d old (past the 30d default).
-    WebhookTestHelpers::outbox(['status' => 'dispatched', 'dispatched_at' => Carbon::now()->subDays(40)]);
-    WebhookTestHelpers::outbox(['status' => 'dispatched', 'dispatched_at' => Carbon::now()->subDays(40)]);
+    WebhookTestHelpers::outbox(['status' => 'completed', 'fanned_out_at' => Carbon::now()->subDays(40)]);
+    WebhookTestHelpers::outbox(['status' => 'completed', 'fanned_out_at' => Carbon::now()->subDays(40)]);
     foreach (['delivered', 'dead', 'delivered'] as $status) {
         $d = WebhookTestHelpers::delivery($endpoint, ['status' => $status, 'attempts' => 3]);
         forceDeliveryTimestamps($d, updatedAt: Carbon::now()->subDays(40));
@@ -393,7 +393,7 @@ it('14) one run prunes BOTH settled outbox and terminal deliveries, reporting th
     $output = runPrune();
 
     // One run, both counts on the summary line, each correct and separate.
-    expect($output)->toContain('Pruned 2 dispatched outbox rows')
+    expect($output)->toContain('Pruned 2 completed outbox rows')
         ->and($output)->toContain('3 terminal')
         ->and(Outbox::query()->count())->toBe(0)
         ->and(WebhookDelivery::query()->count())->toBe(0);

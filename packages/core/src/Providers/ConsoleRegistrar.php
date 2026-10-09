@@ -7,6 +7,7 @@ namespace Vaulter\Providers;
 use Illuminate\Console\Application as Artisan;
 use Illuminate\Contracts\Foundation\Application;
 use Vaulter\Console\EventsReferenceCommand;
+use Vaulter\Console\LegacyFanoutCommand;
 use Vaulter\Console\MakeProfileCommand;
 use Vaulter\Console\PruneWebhooksCommand;
 use Vaulter\Console\RelayWebhooksCommand;
@@ -23,6 +24,7 @@ final class ConsoleRegistrar
                 RelayWebhooksCommand::class,
                 RetryWebhooksCommand::class,
                 PruneWebhooksCommand::class,
+                LegacyFanoutCommand::class,
             ]);
         });
     }

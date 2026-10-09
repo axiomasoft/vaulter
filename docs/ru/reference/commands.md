@@ -22,6 +22,8 @@ spatie/laravel-package-tools) плюс восемь команд пакета, �
 | `vaulter:sweep-uploads` | Прервать и подчистить протухшие сессии резюмируемой загрузки |
 | `vaulter:relay-outbox` | Передать ожидающие события outbox на эндпоинты вебхуков |
 | `vaulter:retry-webhooks` | Повторно отправить доставки вебхуков, у которых истёк backoff |
+| `vaulter:prune-webhooks` | Удалить завершённые строки outbox и терминальные доставки старше срока хранения |
+| `vaulter:webhooks:legacy-fanout` | Показать или переиграть строки outbox до 1.0, у которых раскрытие нельзя доказать |
 | `vaulter:events:reference` | Перегенерировать (или проверить `--check`) таблицу каталога событий в справке |
 
 ---
@@ -202,10 +204,14 @@ lifecycle-правило `AbortIncompleteMultipartUpload` как страхов�
 ## `vaulter:relay-outbox`
 
 Передать ожидающие события outbox на эндпоинты вебхуков и повторно отправить назревшие
-повторы. Каждая ожидающая строка `v_outbox` разворачивается в одну подписанную строку
-`v_webhook_deliveries` на каждый подписанный активный эндпоинт, и HTTP POST ставится в
-очередь. Гарантия at-least-once с экспоненциальным backoff + DLQ. Управляется флагом
-`features.webhooks`.
+повторы. Каждая ожидающая строка `v_outbox` разворачивается в одну строку
+`v_webhook_deliveries` на каждый подходящий эндпоинт, и HTTP POST ставится в очередь
+после коммита этих строк. Relay берёт строку в аренду на `webhooks.relay.claim_seconds`
+и пишет по `webhooks.relay.fanout_chunk` эндпоинтов за транзакцию; строка становится
+`completed` вместе с последними доставками, поэтому упавший relay продолжает следующий
+запуск, когда аренда истечёт. Несколько relay могут работать одновременно. Гарантия
+at-least-once с экспоненциальным backoff + DLQ. Управляется флагом `features.webhooks`.
+См. [Webhooks → Delivery guarantees](/guide/webhooks#delivery-guarantees).
 
 ```
 vaulter:relay-outbox
@@ -220,8 +226,9 @@ php artisan vaulter:relay-outbox --limit=500
 
 ## `vaulter:retry-webhooks`
 
-Повторно отправить доставки вебхуков, у которых истекло окно backoff. Управляется флагом
-`features.webhooks`.
+Повторно отправить доставки вебхуков, у которых истекло окно backoff, и ожидающие
+доставки, чей первый job потерян (никем не взяты через `webhooks.relay.claim_seconds`
+после срока). Управляется флагом `features.webhooks`.
 
 ```
 vaulter:retry-webhooks
@@ -229,6 +236,45 @@ vaulter:retry-webhooks
 
 ```bash
 php artisan vaulter:retry-webhooks
+```
+
+## `vaulter:prune-webhooks`
+
+Удалить ЗАВЕРШЁННЫЕ строки outbox (`completed`, `fanned_out_at` старше срока хранения) и
+ТЕРМИНАЛЬНЫЕ доставки (`delivered`/`dead`, старше срока хранения). Строка outbox в
+`pending` — даже раскрытая наполовину — и доставка `pending`/`failed` не удаляются никогда,
+сколько бы им ни было. Управляется флагом `features.webhooks`. Срок берётся из
+`config('vaulter.webhooks.retention_days')` (по умолчанию 30), если не задан `--days`.
+Удалённые строки нельзя восстановить или переиграть.
+
+```
+vaulter:prune-webhooks
+    {--days=}    Переопределить срок хранения в днях
+    {--dry-run}  Показать, что будет удалено, ничего не удаляя
+```
+
+## `vaulter:webhooks:legacy-fanout`
+
+Relay до 1.0 помечал строку outbox `dispatched` до записи доставок, и падение могло их
+потерять. Апгрейд превращает такие строки в `completed` с `legacy_fanout = true`. Legacy-
+строка без единой доставки неоднозначна: подписчиков не было или раскрытие потеряно —
+по данным это не различить. Команда печатает такие строки (`event_id`, `event`,
+`created_at`, `drive_id`); с `--replay` возвращает их relay, который раскрывает их на
+эндпоинты, подходящие **сейчас** (эндпоинт, неактивный в момент события, может его
+получить; эндпоинт, у которого доставка уже есть, второй не получит). Строки, удалённые
+prune, не восстанавливаются. Управляется флагом `features.webhooks`.
+
+```
+vaulter:webhooks:legacy-fanout
+    {--since=}   Только строки, созданные не раньше этой даты/времени
+    {--until=}   Только строки, созданные не позже этой даты/времени
+    {--replay}   Вернуть показанные строки в очередь relay
+    {--dry-run}  С --replay — показать, что будет переиграно, ничего не меняя
+```
+
+```bash
+php artisan vaulter:webhooks:legacy-fanout --since=2026-09-01 --replay --dry-run
+php artisan vaulter:webhooks:legacy-fanout --since=2026-09-01 --replay
 ```
 
 ---

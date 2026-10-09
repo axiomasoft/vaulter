@@ -32,6 +32,10 @@ use Vaulter\Support\Identity;
  * on the next failure, or clears it on success. A new intermediate status was avoided
  * on purpose: it would strand a delivery (neither due nor terminal) if the job were
  * lost mid-flight.
+ *
+ * The sweep also recovers a 'pending' delivery whose first job never ran (lost
+ * after the relay committed it): once it has sat unclaimed for
+ * webhooks.relay.claim_seconds past its due time, it is claimed like a retry.
  */
 final class WebhookRetryDispatcher
 {
@@ -86,7 +90,7 @@ final class WebhookRetryDispatcher
         $deliveryClass = $this->vaulterConfig->model('webhook_delivery');
 
         return $this->database->transaction(function () use ($deliveryClass): Collection {
-            $query = $deliveryClass::query()->dueForRetry();
+            $query = $deliveryClass::query()->dueForRetry(pendingGraceSeconds: $this->webhooksConfig->relayClaimSeconds());
 
             /** @var Collection<int, WebhookDelivery> $deliveries */
             $deliveries = $query

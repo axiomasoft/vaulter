@@ -19,6 +19,55 @@ on, the recorder writes one `v_outbox` row for the occurrence **in that transact
 
 The `vaulter:relay-outbox` command then fans each pending row out into deliveries.
 
+## Delivery guarantees
+
+The relay turns each `pending` outbox row into one `v_webhook_deliveries` row per
+eligible endpoint and queues a job per delivery:
+
+- **Every eligible endpoint gets exactly one delivery row per event.** The relay leases
+  the outbox row (`webhooks.relay.claim_seconds`, default 60) and writes
+  `webhooks.relay.fanout_chunk` endpoints (default 100) per transaction, remembering the
+  last one in `fanout_cursor`. The row turns `completed` in the same transaction as its
+  last deliveries. If the relay dies, the next run takes the row over once the lease
+  lapses and continues after the cursor; a relay that lost its lease writes nothing, and
+  `UNIQUE(event_id, endpoint_id)` backs this up. You may run several relays at once.
+- **Jobs are queued after the rows commit.** A job lost after that is re-queued by the
+  retry sweep (`vaulter:retry-webhooks`, also run by `vaulter:relay-outbox`) once the
+  delivery has waited `webhooks.relay.claim_seconds` without being picked up.
+- **HTTP is at-least-once.** A delivery is retried on failure and can arrive twice if
+  your acknowledgement is lost: deduplicate on the envelope `id`. Deliveries are not
+  ordered.
+- **Prune deletes only finished work.** `vaulter:prune-webhooks` removes `completed`
+  outbox rows and `delivered`/`dead` deliveries older than `webhooks.retention_days`; a
+  `pending` row or a `pending`/`failed` delivery stays however old it is. Pruned rows are
+  gone for good — nothing can replay them.
+
+## Who receives an event
+
+An endpoint receives an event when, at the moment its chunk is written:
+
+- it is active and subscribed to the event type;
+- its tenant equals the event's tenant — an endpoint without a tenant receives only
+  events without one;
+- it has no `drive_id`, or the event happened in that drive;
+- it already existed when the event happened (its `created_at` is not later than the
+  event's). An endpoint registered afterwards never receives older events.
+
+An endpoint deactivated while an event is being fanned out misses the remaining part
+of it. Register and update endpoints in the tenant they belong to: under strict tenancy
+the endpoint takes the current tenant, and `drive_id` must name a drive of that tenant
+(any other id answers 404).
+
+## Rows from before 1.0
+
+The relay before 1.0 marked a row `dispatched` before writing its deliveries, so a crash
+could lose them. The upgrade marks those rows `completed` with `legacy_fanout = true`.
+A legacy row without any delivery is ambiguous — nobody was subscribed, or the fan-out
+was lost. `php artisan vaulter:webhooks:legacy-fanout` lists them;
+`--replay` (try `--dry-run` first) sends them through the relay again, to the endpoints
+eligible **now**. Nothing is replayed automatically, and no event is invented. See
+[Commands](/reference/commands#vaulter-webhooks-legacy-fanout).
+
 ## The envelope
 
 The outbox payload is the webhook body. It is built once per occurrence and copied

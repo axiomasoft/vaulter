@@ -6,6 +6,50 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Recoverable webhook fan-out (PLAN2.P5.3, D29/D50/D60)
+
+Run `php artisan migrate`: `2026_10_10_000002_webhook_fanout` changes three tables.
+
+- **Outbox statuses are `pending` and `completed` (breaking for code reading `v_outbox`).**
+  Before: the relay set `status = 'dispatched'` and `dispatched_at` *before* writing the
+  deliveries, so a crash lost them and `vaulter:prune-webhooks` treated the row as done. Now: a row
+  is `completed` only in the transaction that writes its last deliveries (`fanned_out_at`,
+  `delivery_count`); while a relay works on it, it holds a lease (`claim_token`,
+  `claim_generation`, `claim_until`) and records progress in `fanout_cursor`. A relay that dies
+  is resumed after `webhooks.relay.claim_seconds`. `dispatched_at` and the
+  `(status, dispatched_at)` index are dropped; `(status, fanned_out_at)` replaces it.
+- **Existing `dispatched` rows** become `completed` with `legacy_fanout = true` and
+  `fanned_out_at = dispatched_at`. Whether such a row reached every endpoint cannot be proven. Rows
+  that have no delivery at all are listed by `php artisan vaulter:webhooks:legacy-fanout
+  [--since=] [--until=]`; add `--replay` (try `--dry-run` first) to fan them out again to the
+  endpoints eligible now. A replay may deliver an old event to an endpoint that was inactive when
+  it happened; an endpoint that already has the delivery does not get a second one. Rows already
+  pruned cannot be replayed. Nothing is replayed automatically.
+- **Deliveries carry `event_id` with `UNIQUE(event_id, endpoint_id)`.** The migration fills it
+  from each payload (`event_id`, or `id` for envelopes). If a pair occurs twice (not expected),
+  the earliest delivery keeps the id, the others keep `event_id = null`, and the migration prints
+  their count.
+- **Endpoints are scoped (PLAN2.D50).** `v_webhook_endpoints` gets `tenant_id` and an optional
+  `drive_id` (FK to `v_drives`, cascade delete). An endpoint receives only events of its tenant
+  (`null` matches only `null`) and, with `drive_id` set, only that drive's events.
+  `RegisterWebhookEndpointAction` and `UpdateWebhookEndpointAction` write the current tenant under
+  strict tenancy (else `null`); `RegisterWebhookEndpointInput`/`UpdateWebhookEndpointInput` take
+  `?string $driveId`, the HTTP requests accept `drive_id`, the resource returns it. A drive that is
+  not visible in the current tenant is `NodeNotFoundException` (404). **Under strict tenancy,
+  existing endpoints have `tenant_id = null` and receive nothing** (fail-closed): register them
+  again, or update them once in their tenant — any update assigns the current tenant.
+- **An endpoint registered after an event never receives it** (eligible: `created_at <=` the
+  outbox row's `created_at`), and an endpoint deactivated during a fan-out misses the rest of it.
+- **Retry sweep.** `WebhookDelivery::scopeDueForRetry()` takes `int $pendingGraceSeconds = 0`: a
+  `pending` delivery is due only once unclaimed that long past `next_retry_at`
+  (`WebhookRetryDispatcher` passes `webhooks.relay.claim_seconds`), so a delivery whose first job
+  was lost is re-queued without racing the relay's own job.
+- **Prune.** `OutboxStoreRepository::pruneDispatchedBefore()`/`countDispatchedBefore()` are renamed
+  `pruneCompletedBefore()`/`countCompletedBefore()`; a `pending` outbox row is never deleted.
+- **Config.** New `webhooks.relay.claim_seconds` (60) and `webhooks.relay.fanout_chunk` (100,
+  integer 1..1000; anything else fails boot). Add them if you publish `config/vaulter.php`.
+- **Several relays may run at once** (`FOR UPDATE SKIP LOCKED` on PostgreSQL/MySQL 8).
+
 ### Closed event catalogue 1.0 (PLAN2.P5.2, D58–D60/D50/D35)
 
 No migration. New events appear for operations that were silent before; webhook endpoints

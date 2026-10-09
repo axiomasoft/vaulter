@@ -20,11 +20,12 @@ final readonly class WebhookEndpointStoreRepository
     ) {}
 
     /**
-     * Persist a new endpoint with its generated signing_secret.
+     * Persist a new endpoint with its generated signing_secret, in the given tenant
+     * and with the given drive filter (both already resolved by the Action).
      *
      * @param list<string> $events
      */
-    public function create(string $url, array $events, string $signingSecret, bool $isActive): WebhookEndpoint
+    public function create(string $url, array $events, string $signingSecret, bool $isActive, ?string $tenantId = null, int|string|null $driveId = null): WebhookEndpoint
     {
         /** @var class-string<WebhookEndpoint> $model */
         $model = $this->vaulterConfig->model('webhook_endpoint');
@@ -39,6 +40,8 @@ final readonly class WebhookEndpointStoreRepository
             'signing_secret' => $signingSecret,
             'is_active' => $isActive,
             'failure_count' => 0,
+            'tenant_id' => $tenantId,
+            'drive_id' => $driveId,
         ]);
         $endpoint->save();
 
@@ -47,14 +50,14 @@ final readonly class WebhookEndpointStoreRepository
 
     /**
      * Apply a partial attribute update — only the supplied (non-null) fields are
-     * written, so a PATCH that omits a field leaves it untouched. signing_secret is
-     * never updatable here.
+     * written, so a PATCH that omits a field leaves it untouched. The tenant is
+     * always written (the Action resolves it). signing_secret is never updatable here.
      *
      * @param list<string>|null $events
      */
-    public function update(WebhookEndpoint $endpoint, ?string $url, ?array $events, ?bool $isActive): WebhookEndpoint
+    public function update(WebhookEndpoint $endpoint, ?string $url, ?array $events, ?bool $isActive, ?string $tenantId = null, int|string|null $driveId = null): WebhookEndpoint
     {
-        $attributes = [];
+        $attributes = ['tenant_id' => $tenantId];
 
         if ($url !== null) {
             $attributes['url'] = $url;
@@ -68,9 +71,11 @@ final readonly class WebhookEndpointStoreRepository
             $attributes['is_active'] = $isActive;
         }
 
-        if ($attributes !== []) {
-            $endpoint->forceFill($attributes)->save();
+        if ($driveId !== null) {
+            $attributes['drive_id'] = $driveId;
         }
+
+        $endpoint->forceFill($attributes)->save();
 
         return $endpoint;
     }

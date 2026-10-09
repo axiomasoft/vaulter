@@ -311,6 +311,8 @@ Vaulter\Configuration\WebhooksConfig
   manageAbility(): ?string
   maxAttempts(): int
   maxResponseBytes(): int
+  relayClaimSeconds(): int
+  relayFanoutChunk(): int
   retentionDays(): int
   retryClaimSeconds(): int
   signatureHeader(): string

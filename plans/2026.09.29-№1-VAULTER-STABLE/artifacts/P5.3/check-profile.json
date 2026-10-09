@@ -1,0 +1,56 @@
+{
+ "item": "PLAN2.P5.3",
+ "prepared_at": "2026-10-09",
+ "runtime": {"provider": "claude-code", "model": "claude-opus-5-5", "effort": "high", "source": "session /model = Opus 5.5 with high effort; plan.py start --actor claude-code/claude-opus-5-5/high (route ok)"},
+ "runs_mode": "D51 L: V1, V80, V81 on SQLite/static. V2 (PG relay race), V3 (PG 0.2 upgrade + SchemaParity), V4 (MySQL schema + fan-out) are kind=impact -> barrier P5.4 (V90). No mutation tools. Review: none (self-check + acceptance).",
+ "risk_class": "concurrency + data-integrity + tenancy-boundary (C06); schema migration on consumer data; public API (inputs, config, command, model columns)",
+ "changed_paths": {
+  "core_src": [
+   "Webhooks/OutboxRelay.php (claim with token/generation/lease, fenced chunked fan-out, completion marker in the last chunk transaction, afterCommit dispatch)",
+   "Webhooks/WebhookRetryDispatcher.php (via WebhookDelivery::scopeDueForRetry: pending without live claim only after relay.claim_seconds grace)",
+   "Console/PruneWebhooksCommand.php + Repositories/Webhooks/OutboxStoreRepository.php (completed + fanned_out_at only)",
+   "Repositories/Webhooks/WebhookEndpointStoreRepository.php (tenant_id, drive_id)",
+   "Console/LegacyFanoutCommand.php (new) + Providers/ConsoleRegistrar.php",
+   "Models/Webhooks/{Outbox,WebhookDelivery,WebhookEndpoint}.php (columns, casts, scopes)",
+   "Actions/Webhooks/{Register,Update}WebhookEndpointAction.php (tenant from TenancyBoundary, drive must be visible in the current tenant -> NodeNotFoundException)",
+   "Data/Webhooks/{Register,Update}WebhookEndpointInput.php (?driveId)",
+   "Http/Requests/Webhooks/*.php (drive_id), Http/Resources/Webhooks/WebhookEndpointResource.php (drive_id)",
+   "Configuration/WebhooksConfig.php (relayClaimSeconds, relayFanoutChunk 1..1000), Configuration/ConfigValidator.php, config/vaulter.php (webhooks.relay)",
+   "Schema/SchemaBuilder.php (final fresh outbox/deliveries/endpoints shape)",
+   "database/migrations/2026_10_10_000002_webhook_fanout.php (new; hasColumn/hasIndex guards, dispatched->completed+legacy_fanout, event_id backfill, UNIQUE, endpoints tenant/drive)"
+  ],
+  "tests": [
+   "core/tests/Webhooks/{OutboxFanoutTest,WebhookEndpointScopeTest,WebhookPruneSafetyTest,LegacyFanoutCommandTest}.php (new, SQLite)",
+   "core/tests/Concurrency/OutboxFanoutRaceTest.php (new, PG ForkRace; skipped on SQLite) -> V2 barrier",
+   "core/tests/Upgrade/WebhookFanoutUpgradeTest.php (new, PG 0.2 fixture; skipped on SQLite) -> V3 barrier",
+   "core/tests/Webhooks/{OutboxRelayTest,WebhookRetryDispatcherTest,WebhookSchemaTest,WebhookEndpointCrudTest,ConcurrentDeliveryTest}.php (update to completed/fanned_out_at)",
+   "core/tests/Arch/PublicApiSnapshotTest golden (__snapshots__/public-api.txt regenerated)",
+   "extra impact outside V1 dirs (dispatched/dispatched_at pinned): core/tests/Feature/PruneWebhooksTest.php, core/tests/Observability/P85/P85Section53CoreMetricsTest.php"
+  ],
+  "docs": ["docs/guide/webhooks.md", "docs/reference/commands.md + ru", "docs/reference/configuration.md + ru", "UPGRADE.md", "CHANGELOG.md", "artifacts/P5.3/changelog-entry.md"]
+ },
+ "callers_checked": "OutboxRelay::process: RelayWebhooksCommand (vaulter:relay-outbox) + tests. WebhookRetryDispatcher::redispatchDue: RelayWebhooksCommand, RetryWebhooksCommand. OutboxStoreRepository prune/count: PruneWebhooksCommand only. Outbox 'dispatched'/dispatched_at: core src (relay, prune repo, SchemaBuilder) and tests Webhooks/OutboxRelayTest, Feature/PruneWebhooksTest, Observability/P85/P85Section53CoreMetricsTest, Schema/MassAssignmentHardeningTest (status value only). No drive/documents/filament/load caller reads outbox status. Register/Update endpoint inputs: WebhookEndpointsController via requests; tests.",
+ "behaviour": [
+  "A due outbox row is claimed (token, generation+1, claim_until) in its own committed transaction; FOR UPDATE SKIP LOCKED on pgsql/mysql.",
+  "Each chunk runs in its own transaction under lockForUpdate of the outbox row and commits only while claim_token is still ours and status pending; a superseded worker inserts nothing.",
+  "Eligible endpoints: active, tenant null-safe equal, drive filter null or equal, subscribed, created_at <= outbox.created_at, key > fanout_cursor, ordered by key, limit fanout_chunk.",
+  "Deliveries are inserted once per (event_id, endpoint_id) (UNIQUE + existence check); jobs dispatched after commit.",
+  "The chunk with fewer than fanout_chunk endpoints completes the row (status completed, fanned_out_at, claim cleared) in the same transaction; zero subscribers -> completed, delivery_count 0.",
+  "Retry sweep: failed rows due now; pending rows only when next_retry_at <= now - relay.claim_seconds and no live claim.",
+  "Prune: outbox only completed with fanned_out_at <= threshold; deliveries only delivered|dead with updated_at <= threshold.",
+  "Legacy: migration maps dispatched -> completed + legacy_fanout + fanned_out_at=dispatched_at; vaulter:webhooks:legacy-fanout lists ambiguous rows, --replay resets them to pending."
+ ],
+ "commands": {
+  "V1": "cwd . : env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Webhooks packages/core/tests/Schema packages/core/tests/Arch packages/core/tests/Configuration",
+  "extra_impact": "cwd . : env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Feature/PruneWebhooksTest.php packages/core/tests/Observability/P85/P85Section53CoreMetricsTest.php packages/core/tests/Upgrade packages/core/tests/Concurrency packages/core/tests/Console",
+  "V80": "cwd . : scripts/php84 vendor/bin/pint --test packages/core && scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress",
+  "V81": "cwd . : python3 plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-coverage.py check (known plan-level ledger-P5 gap, see P5.1/P5.2 deviations)"
+ },
+ "negative_controls": {
+  "a": "temporarily set status=completed inside the claim transaction -> OutboxFanoutTest crash-after-claim red -> exact restore",
+  "b": "temporarily drop the claim_token check in the chunk -> OutboxFanoutTest lost-lease red -> exact restore",
+  "c": "temporarily allow prune of pending outbox rows -> WebhookPruneSafetyTest red -> exact restore",
+  "record": "artifacts/P5.3/negative-controls.md"
+ },
+ "deferred_to_barrier": "P5.4 V90: V2 (OutboxFanoutRaceTest + Webhooks on PG), V3 (WebhookFanoutUpgradeTest + SchemaParityTest on PG 0.2 fixture), V4 (Schema + OutboxFanoutTest on MySQL 8)"
+}

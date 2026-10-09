@@ -49,6 +49,7 @@ final class WebhookEndpointResource extends JsonResource
             'url' => $endpoint->url,
             'events' => $endpoint->events,
             'is_active' => $endpoint->is_active,
+            'drive_id' => $endpoint->drive_id,
             'failure_count' => $endpoint->failure_count,
             'last_triggered_at' => $endpoint->last_triggered_at,
             'created_at' => $endpoint->created_at,

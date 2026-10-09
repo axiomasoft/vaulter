@@ -6,14 +6,23 @@ namespace Vaulter\Actions\Webhooks;
 
 use Vaulter\Data\Webhooks\UpdateWebhookEndpointInput;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
+use Vaulter\Repositories\Drive\DriveReadRepository;
 use Vaulter\Repositories\Webhooks\WebhookEndpointStoreRepository;
+use Vaulter\Support\Identity;
+use Vaulter\Tenancy\TenancyBoundary;
 
 /**
  * Update a webhook endpoint's mutable attributes — url, subscribed events, active
  * flag (master plan §2.11 / D14 / M3b). A partial command: a null field is left
  * unchanged. The signing_secret is NEVER touched here (it is shown once at
  * registration; rotation means re-registering).
+ *
+ * The endpoint is (re)assigned to the current tenant, as at registration, so a
+ * pre-tenancy endpoint (tenant null) is brought into its manager's tenant by any
+ * update. A new drive filter must name a drive visible in that tenant.
  *
  * Authorization is enforced by the caller before the Action runs.
  */
@@ -22,6 +31,8 @@ final readonly class UpdateWebhookEndpointAction
     public function __construct(
         private WebhookEndpointStoreRepository $endpoints,
         private VaulterDatabase $database,
+        private TenancyBoundary $tenancy,
+        private DriveReadRepository $drives,
     ) {}
 
     public function execute(WebhookEndpoint $endpoint, UpdateWebhookEndpointInput $data): WebhookEndpoint
@@ -31,6 +42,19 @@ final readonly class UpdateWebhookEndpointAction
             url: $data->url,
             events: $data->events,
             isActive: $data->isActive,
+            tenantId: $this->tenancy->enforced() ? $this->tenancy->current() : null,
+            driveId: $data->driveId === null ? null : $this->visibleDrive(driveId: $data->driveId),
         ));
+    }
+
+    private function visibleDrive(string $driveId): int|string
+    {
+        $intKeys = (new Drive)->getKeyType() === 'int';
+        $drive = $intKeys && !ctype_digit($driveId) ? null : $this->drives->find($intKeys ? (int) $driveId : $driveId);
+        if (!$drive instanceof Drive) {
+            throw NodeNotFoundException::forId('drive');
+        }
+
+        return Identity::key($drive->getKey()) ?? throw NodeNotFoundException::forId('drive');
     }
 }
