@@ -115,7 +115,7 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 | P1 | Исправления T0 на текущих именах | detailed | 11/11 | 🟠 Done with deviations |
 | P2 | Канон имён и конфигурации | detailed | 7/7 | 🟠 Done with deviations |
 | P3 | Прикладной слой: авторизованный публичный API | detailed | 8/8 | 🟢 Done |
-| P4 | Модель данных и документы | detailed | 11/14 | 🟡 In progress |
+| P4 | Модель данных и документы | detailed | 12/14 | 🟡 In progress |
 | P5 | Конвейер событий | skeleton | 0/0 | ⬜ Skeleton |
 | P6 | HTTP v1 и клиенты | skeleton | 0/0 | ⬜ Skeleton |
 | P7 | Эксплуатация и DX | skeleton | 0/0 | ⬜ Skeleton |
