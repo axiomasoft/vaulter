@@ -85,6 +85,7 @@ if (app(DocumentsConfig::class)->collaborationEnabled()) {
         ->middleware([...app(RoutesConfig::class)->hubMiddleware(), 'throttle:vaulter-public', ResolveCollaborationCall::class])
         ->group(static function (): void {
             Route::post('collab/authenticate', [NodeCollaborationController::class, 'authenticate']);
+            Route::post('collab/load', [NodeCollaborationController::class, 'load']);
             Route::post('collab/store', [NodeCollaborationController::class, 'store']);
         });
 }

@@ -10,24 +10,18 @@ use Vaulter\Documents\Contracts\CollaborationDriver;
 use Vaulter\Documents\Data\Collaboration\CollaborationSession;
 use Vaulter\Documents\Enums\Collaboration\CollaborationDriverType;
 use Vaulter\Documents\Exceptions\CollaborationConfigException;
-use Vaulter\Enums\Access\Ability;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Identity;
 
 /**
- * The optional node-collaboration transport (M4b) targeting an external Node
- * Hocuspocus hub (see hocuspocus-server/). The client connects to the hub URL with a
- * signed room JWT; the hub's onAuthenticate verifies the JWT (or calls the
- * collab/authenticate webhook) and its onStoreDocument debounces a snapshot back into
- * collab/store. Requires firebase/php-jwt to mint the room token.
+ * The collaboration transport targeting an external Node Hocuspocus hub (see
+ * hocuspocus-server/). The client connects with a signed room JWT; the hub forwards it
+ * on every authenticate/load/store call, where the backend re-checks it against the
+ * live document. Requires firebase/php-jwt.
  *
- * The JWT carries {room, sub, readOnly, iat, exp} signed HS256 with the shared secret:
- *   - room     — the room name (channel_prefix.nodeId), so the token is bound to
- *                exactly one node; a token for node A can never address node B.
- *   - sub      — the connecting host user's id.
- *   - readOnly — encoded from the actor's ability (View/Comment → true, Edit → false);
- *                the hub refuses writes from a read-only connection.
- *   - exp      — now + token_ttl.
+ * Claims (HS256, hub.jwt_secret): sub, node, drive, tenant, epoch, schema_version,
+ * mode ('rw'|'ro'), room, iat, exp. The room repeats drive, node and epoch, so a token
+ * is bound to exactly one generation of one document.
  */
 final readonly class HocuspocusCollaborationDriver implements CollaborationDriver
 {
@@ -40,7 +34,7 @@ final readonly class HocuspocusCollaborationDriver implements CollaborationDrive
         return CollaborationDriverType::Hocuspocus;
     }
 
-    public function issueSession(Node $node, Ability $ability, int|string $actorId): CollaborationSession
+    public function issueSession(Node $node, int $epoch, int $schemaVersion, bool $writable, int|string $actorId): CollaborationSession
     {
         if (!class_exists(JWT::class)) {
             throw CollaborationConfigException::missingJwt();
@@ -52,15 +46,23 @@ final readonly class HocuspocusCollaborationDriver implements CollaborationDrive
             throw CollaborationConfigException::missingSecret();
         }
 
-        $room = $this->documentsConfig->collaborationRoom($node->getKey());
-        $readOnly = $ability !== Ability::Edit;
+        $nodeId = Identity::stringify($node->getRawOriginal($node->getKeyName()));
+        $driveId = Identity::stringify($node->getRawOriginal('drive_id'));
+        $tenant = $node->getRawOriginal('tenant_id');
+        $room = $this->documentsConfig->collaborationRoom($driveId, $nodeId, $epoch);
+        $mode = $writable ? 'rw' : 'ro';
 
         $issuedAt = time();
         $token = JWT::encode(
             payload: [
-                'room' => $room,
                 'sub' => Identity::stringify($actorId),
-                'readOnly' => $readOnly,
+                'node' => $nodeId,
+                'drive' => $driveId,
+                'tenant' => $tenant === null ? null : Identity::stringify($tenant),
+                'epoch' => $epoch,
+                'schema_version' => $schemaVersion,
+                'mode' => $mode,
+                'room' => $room,
                 'iat' => $issuedAt,
                 'exp' => $issuedAt + $this->documentsConfig->hubTokenTtl(),
             ],
@@ -71,11 +73,13 @@ final readonly class HocuspocusCollaborationDriver implements CollaborationDrive
         return new CollaborationSession(
             driver: $this->type(),
             room: $room,
-            nodeId: Identity::key($node->getKey()) ?? Identity::stringify($node->getKey()),
-            readOnly: $readOnly,
+            nodeId: $nodeId,
+            driveId: $driveId,
+            epoch: $epoch,
+            schemaVersion: $schemaVersion,
+            readOnly: !$writable,
             token: $token,
             url: $this->documentsConfig->hubUrl(),
-            connection: null,
         );
     }
 }

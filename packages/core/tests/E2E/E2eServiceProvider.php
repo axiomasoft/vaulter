@@ -12,6 +12,7 @@ use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Contracts\HostUserResolver;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
+use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Operations\OperationContext;
@@ -139,12 +140,28 @@ final class E2eServiceProvider extends ServiceProvider
 
             AccessTestHelpers::grant($node, RoleRegistry::WRITER, subjectId: 1);
             AccessTestHelpers::grant($node, RoleRegistry::READER, subjectId: 2);
+            $document = Document::query()->where('node_id', $node->getKey())->firstOrFail();
 
             return response()->json([
                 'node_id' => $node->getKey(),
+                'drive_id' => $node->drive_id,
+                'first_revision_id' => $document->current_revision_id,
                 'writer_user' => 1,
                 'viewer_user' => 2,
-                'room' => app(DocumentsConfig::class)->collaborationRoom($node->getKey()),
+                'room' => app(DocumentsConfig::class)->collaborationRoom($node->drive_id, $node->getKey(), $document->collab_epoch),
+            ]);
+        });
+
+        // The working state as stored — what the restore-epoch e2e asserts against.
+        Route::get('/e2e/document/{node}', static function (int|string $node) {
+            $document = Document::query()->where('node_id', $node)->firstOrFail();
+
+            return response()->json([
+                'node_id' => $node,
+                'epoch' => $document->collab_epoch,
+                'state_version' => $document->state_version,
+                'yjs_state_size' => $document->yjs_state_size,
+                'content' => $document->content,
             ]);
         });
     }

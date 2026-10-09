@@ -21,6 +21,7 @@ use Vaulter\Documents\Collaboration\CollaborationSessionService;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Contracts\DocumentType;
+use Vaulter\Documents\Contracts\SupportsCollaboration;
 use Vaulter\Documents\Data\Collaboration\CollaborationSession;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
@@ -31,6 +32,7 @@ use Vaulter\Documents\Data\Revisions\UpdateRevisionRetentionInput;
 use Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot;
 use Vaulter\Documents\Data\Snapshots\DocumentSnapshot;
 use Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper;
+use Vaulter\Documents\Exceptions\CollaborationUnavailableException;
 use Vaulter\Documents\Exceptions\DocumentContentDegradedException;
 use Vaulter\Documents\Exceptions\DocumentTypeUnavailableException;
 use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
@@ -66,10 +68,10 @@ use Vaulter\Profiles\ProfilePolicy;
  *
  * Content is shaped by the document's type (Documents::types()). A document whose type
  * is not installed can still be read (as opaque JSON), listed, copied, trashed and
- * purged; editing, checkpointing, restoring, exporting and collaborating answer 409
- * document_type_unavailable until the type is registered again. Content that reads only
- * partly under its type (DocumentSnapshot::$editable = false) is not overwritten: 409
- * document_content_degraded.
+ * purged; editing, checkpointing, restoring and exporting answer 409
+ * document_type_unavailable until the type is registered again, and its collaboration
+ * room is read-only. Content that reads only partly under its type
+ * (DocumentSnapshot::$editable = false) is not overwritten: 409 document_content_degraded.
  */
 final readonly class DocumentOperations
 {
@@ -260,8 +262,12 @@ final readonly class DocumentOperations
     }
 
     /**
-     * A token for the collaboration hub: read-write when the actor may edit, read-only
-     * otherwise. Needs a user: the hub attributes every change to the token subject.
+     * A token for the collaboration hub, bound to the document's current generation
+     * (epoch): read-write when the actor may edit, read-only otherwise. Needs a user:
+     * the hub attributes every change to the token subject. Pass the schema version
+     * the client's editor speaks; a different one gets a read-only room.
+     *
+     * @throws CollaborationUnavailableException when collaboration is off or the type cannot collaborate
      */
     public function collaborationSession(NodeSnapshot|string|int $document, ?int $clientSchemaVersion = null): CollaborationSession
     {
@@ -270,16 +276,37 @@ final readonly class DocumentOperations
         if ($this->context->actor->isSystem() || $actor === null) {
             throw MissingActorException::required();
         }
-        $this->installedType($node);
+        if (!$this->config->collaborationEnabled()) {
+            throw CollaborationUnavailableException::disabled();
+        }
+        $aggregate = $this->query->document($node);
+        $type = $this->types->find($aggregate->type);
+        if ($type !== null && !$type instanceof SupportsCollaboration) {
+            throw CollaborationUnavailableException::unsupportedType($type->key());
+        }
         $flags = $this->guard->abilities($this->context, $node)->flags;
         $ability = match (true) {
-            // Content that cannot be saved back is shared read-only.
-            ($flags[Ability::Edit->value] ?? false) && $this->decoder->editable($this->query->document($node)) => Ability::Edit,
+            $flags[Ability::Edit->value] ?? false => Ability::Edit,
             $flags[Ability::Comment->value] ?? false => Ability::Comment,
             default => Ability::View,
         };
+        // The same rule the hub re-checks on every call: only an editor of content this
+        // installation can save back, on an active drive, with a client that speaks the
+        // type's schema, gets a room that writes; everyone else watches it.
+        $writable = $ability === Ability::Edit
+            && $type !== null
+            && $this->decoder->editable($aggregate)
+            && ($clientSchemaVersion === null || $clientSchemaVersion === $type->schemaVersion())
+            && $node->storage()->value('status') === 'active';
 
-        return $this->sessions->issue($node, $ability, $actor);
+        return $this->sessions->issue(
+            node: $node,
+            ability: $ability,
+            epoch: $aggregate->collab_epoch,
+            schemaVersion: $type?->schemaVersion() ?? $aggregate->schema_version,
+            writable: $writable,
+            actorId: $actor,
+        );
     }
 
     private function document(NodeSnapshot|string|int $key, Ability $ability, OperationKind $operation): Node

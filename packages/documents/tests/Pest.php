@@ -30,6 +30,10 @@ uses(DocumentTestCase::class, DatabaseMigrations::class)->in('Document/LegacyNod
 // path) so the DocumentTestCase binding above never also claims these files.
 uses(CollaborationEnabledTestCase::class, RefreshDatabase::class)->in('Collaboration');
 
+// PostgreSQL ForkRace scenarios: forked backends must see committed fixtures, so these
+// migrate per test instead of wrapping it in a transaction.
+uses(CollaborationEnabledTestCase::class, DatabaseMigrations::class)->in('Concurrency');
+
 // The node-comment suite boots with 'comments' ON (+ the database driver) so the
 // routes register and the real grant-based algorithm runs. Kept apart from Document
 // so the two feature-gated TestCases never both claim the same path.

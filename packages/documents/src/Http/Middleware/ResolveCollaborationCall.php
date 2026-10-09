@@ -12,21 +12,16 @@ use Vaulter\Documents\Collaboration\CollaborationCall;
 use Vaulter\Documents\Collaboration\CollaborationCallResolver;
 
 /**
- * Guards the server-to-server collaboration webhook endpoints (collab/authenticate,
- * collab/store — M4b) presented by the Node Hocuspocus hub. It authenticates the call
- * via the shared webhook secret OR a valid signed room JWT, AND (VLT-REMED P3.2 /
- * F-P1.6-02) verifies an HMAC signature of the raw body, through the
- * {@see CollaborationCallResolver}, stashes the resolved {@see CollaborationCall} on
- * the request, and 401s an unauthenticated/unsigned/replayed caller. The endpoints are
- * NEVER open — a call with no valid secret and no valid JWT, or one missing/failing the
- * body signature, is rejected.
+ * Guards the server-to-server endpoints the Node Hocuspocus hub calls
+ * (collab/authenticate, collab/load, collab/store). The room JWT AND an HMAC signature
+ * of the raw body are both required ({@see CollaborationCallResolver}); the resolved
+ * {@see CollaborationCall} is stashed on the request, anything else is a 401. The
+ * endpoints are never open.
  *
- * The shared secret is read from the X-Vaulter-Collab-Secret header (kept out of the
- * body/logs); the JWT from the Authorization: Bearer header, falling back to a `token`
- * body field for hubs that cannot set headers. The signature is read from
- * X-Vaulter-Collab-Timestamp + X-Vaulter-Collab-Signature; the raw body is read via
- * getContent() — the EXACT bytes the resolver's HMAC check re-derives, never the
- * parsed/re-encoded `$request->all()`.
+ * The JWT is read from the Authorization: Bearer header only, so it stays out of
+ * bodies and logs. The signature is read from X-Vaulter-Collab-Timestamp +
+ * X-Vaulter-Collab-Signature; the raw body via getContent() — the EXACT bytes the
+ * resolver's HMAC check re-derives, never the parsed/re-encoded `$request->all()`.
  */
 final class ResolveCollaborationCall
 {
@@ -35,11 +30,6 @@ final class ResolveCollaborationCall
      */
     public const string ATTRIBUTE = 'vaulter_collaboration_call';
 
-    /**
-     * The header the Node hub presents the shared webhook secret in.
-     */
-    public const string SECRET_HEADER = 'X-Vaulter-Collab-Secret';
-
     public function __construct(
         private readonly CollaborationCallResolver $resolver,
     ) {}
@@ -47,7 +37,6 @@ final class ResolveCollaborationCall
     public function handle(Request $request, Closure $next): Response
     {
         $call = $this->resolver->resolve(
-            presentedSecret: $this->secret($request),
             bearerToken: $this->bearer($request),
             presentedTimestamp: $request->header(CollaborationCallResolver::TIMESTAMP_HEADER),
             presentedSignature: $request->header(CollaborationCallResolver::SIGNATURE_HEADER),
@@ -84,27 +73,10 @@ final class ResolveCollaborationCall
         return $call;
     }
 
-    private function secret(Request $request): ?string
-    {
-        $header = $request->header(self::SECRET_HEADER);
-
-        return is_string($header) && $header !== '' ? $header : null;
-    }
-
-    /**
-     * The presented JWT: the Authorization: Bearer header first (so the token stays
-     * out of the body/logs), then a `token` body field as a fallback.
-     */
     private function bearer(Request $request): ?string
     {
         $bearer = $request->bearerToken();
 
-        if (is_string($bearer) && $bearer !== '') {
-            return $bearer;
-        }
-
-        $token = $request->input('token');
-
-        return is_string($token) && $token !== '' ? $token : null;
+        return is_string($bearer) && $bearer !== '' ? $bearer : null;
     }
 }

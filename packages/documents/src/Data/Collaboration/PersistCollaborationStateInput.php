@@ -4,21 +4,24 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Data\Collaboration;
 
+use Vaulter\Documents\Actions\Collaboration\PersistCollaborationStateAction;
 use Vaulter\Models\Drive\Node;
 
 /**
- * Command for {@see PersistCollaborationStateAction} (§7 / M4b) —
- * the Node Hocuspocus hub's debounced onStoreDocument snapshot. The Yjs binary CRDT
- * state is the SOURCE OF TRUTH and is always present; the TipTap projection is the
- * derived view the hub may also send (the Action NEVER reconstructs Yjs from JSON).
+ * Command for {@see PersistCollaborationStateAction} — a store from the collaboration
+ * hub. The binary Yjs state is the source of truth and is always present; the JSON
+ * projection is derived from it (by the hub, or by the type's projectFromState()).
  *
- *   - node     — the document node the snapshot belongs to (route/webhook resolved).
- *   - yjsState — the RAW DECODED binary Yjs state (bytea), already base64-decoded by
- *                the webhook controller. The source of truth.
- *   - content  — the optional JSON projection as the hub sent it, decoded by the
- *                document's type on the locked row; null leaves the projection as it
- *                was (the Yjs state still advances).
- *   - actorId  — the host user the hub attributes the snapshot to, when known.
+ *   - node          — the document node the state belongs to.
+ *   - yjsState      — the raw decoded binary Yjs state.
+ *   - content       — the JSON projection as the hub sent it, decoded by the document's
+ *                     type on the locked row; required when the type cannot project it.
+ *   - actorId       — the host user the hub attributes the store to.
+ *   - expectedEpoch — the room's generation; any other collab_epoch refuses the write
+ *                     (409 collaboration_epoch_mismatch). Null only for internal writers
+ *                     that are not a room.
+ *   - seed          — the first state built from the JSON: refused unless the document
+ *                     has no Yjs state yet (409 collaboration_seed_conflict).
  */
 final readonly class PersistCollaborationStateInput
 {
@@ -28,5 +31,7 @@ final readonly class PersistCollaborationStateInput
         /** @var array<string, mixed>|null */
         public ?array $content = null,
         public int|string|null $actorId = null,
+        public ?int $expectedEpoch = null,
+        public bool $seed = false,
     ) {}
 }

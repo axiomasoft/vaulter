@@ -12,23 +12,20 @@ use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Webhooks\WebhookSigner;
 
 /**
- * Authenticates a server-to-server collaboration webhook call (M4b) — the calls the
- * Node Hocuspocus hub's onAuthenticate / onStoreDocument make BACK into Vaulter. A
- * call's IDENTITY is accepted by EITHER:
- *   - the shared webhook secret (config(vaulter-documents.collaboration.hub.webhook_secret)),
- *     compared timing-safely; or
- *   - a valid signed room JWT (HS256 with the hocuspocus secret), signature + exp
- *     verified by firebase/php-jwt.
+ * Authenticates a server-to-server call the Node Hocuspocus hub makes back into
+ * Vaulter (collab/authenticate, collab/load, collab/store). Two independent barriers,
+ * both required:
  *
- * On top of identity, VLT-REMED P3.2 (F-P1.6-02, N2) requires EVERY call — regardless
- * of which identity path it took — to carry a valid HMAC-SHA256 body signature: this
- * closes the gap where a captured secret/JWT let an attacker replay or tamper with the
- * `yjs_state`/`node_id` payload indefinitely. The signature is an ADDITIONAL barrier,
- * never a substitute for identity: both must pass.
+ *   - the room JWT the client got from collaborationSession() and the hub relays
+ *     (HS256, hub.jwt_secret): it names the user, the room and the mode, so the hub can
+ *     never act for anyone, anywhere or with more rights than the token carries;
+ *   - an HMAC-SHA256 signature of "{timestamp}.{rawBody}" keyed by hub.webhook_secret,
+ *     with a bounded timestamp and a replay cache in the application's Cache store
+ *     (shared by every instance): a captured request cannot be replayed or altered.
+ *     The hub puts a random nonce in every body, so two genuine calls with the same
+ *     payload in the same second never share a signature.
  *
- * The endpoints are NEVER open: when neither secret is configured every call is
- * rejected (null) rather than waved through. A tampered/expired JWT, an unsigned body,
- * a stale timestamp or a replayed signature are all rejected.
+ * The endpoints are never open: without either secret every call is rejected.
  */
 final readonly class CollaborationCallResolver
 {
@@ -44,7 +41,7 @@ final readonly class CollaborationCallResolver
 
     /**
      * The cache-key prefix a presented signature is remembered under for the
-     * tolerance window, so a replayed signature is refused (F-P1.6-02 anti-replay).
+     * tolerance window, so a replayed signature is refused.
      */
     private const string NONCE_CACHE_PREFIX = 'vaulter:collaboration:webhook-nonce:';
 
@@ -54,20 +51,17 @@ final readonly class CollaborationCallResolver
     ) {}
 
     /**
-     * Resolve the call's authenticated identity, or null when it cannot be
-     * authenticated: missing/wrong secret AND missing/tampered/expired JWT, no
-     * verifier configured at all, OR the body's HMAC signature does not verify
-     * (missing, stale timestamp, replayed nonce, wrong signature). The caller turns
-     * null into a 401.
+     * The verified call, or null when the token is missing, tampered, expired or does
+     * not describe one room exactly, or the body signature does not verify (missing,
+     * stale, replayed, wrong). The caller turns null into a 401.
      */
     public function resolve(
-        ?string $presentedSecret,
         ?string $bearerToken,
         ?string $presentedTimestamp,
         ?string $presentedSignature,
         string $rawBody,
     ): ?CollaborationCall {
-        $call = $this->resolveIdentity($presentedSecret, $bearerToken);
+        $call = $this->resolveJwt($bearerToken);
 
         if (!$call instanceof CollaborationCall) {
             return null;
@@ -78,20 +72,6 @@ final readonly class CollaborationCallResolver
         }
 
         return $call;
-    }
-
-    private function resolveIdentity(?string $presentedSecret, ?string $bearerToken): ?CollaborationCall
-    {
-        $sharedSecret = $this->documentsConfig->hubWebhookSecret();
-
-        if ($sharedSecret !== null
-            && is_string($presentedSecret)
-            && hash_equals($sharedSecret, $presentedSecret)
-        ) {
-            return CollaborationCall::bySecret();
-        }
-
-        return $this->resolveJwt($bearerToken);
     }
 
     /**
@@ -140,9 +120,9 @@ final readonly class CollaborationCallResolver
     }
 
     /**
-     * Verify a presented JWT against the hocuspocus signing secret and lift its
-     * {room, sub, readOnly} claims. Null on any failure (no secret, no token, bad
-     * signature, expired, malformed). firebase/php-jwt enforces exp itself.
+     * Verify the room JWT (signature and exp, by firebase/php-jwt) and lift its claims.
+     * The room must parse, and its drive/node/epoch must repeat the token's own claims,
+     * so no claim can be read two ways. Null on any failure.
      */
     private function resolveJwt(?string $bearerToken): ?CollaborationCall
     {
@@ -157,20 +137,37 @@ final readonly class CollaborationCallResolver
         }
 
         try {
-            $decoded = JWT::decode($bearerToken, new Key($secret, 'HS256'));
+            $claims = (array) JWT::decode($bearerToken, new Key($secret, 'HS256'));
         } catch (Throwable) {
             return null;
         }
 
-        $room = $decoded->room ?? null;
+        $room = $claims['room'] ?? null;
+        $subject = $claims['sub'] ?? null;
+        $mode = $claims['mode'] ?? null;
+        $epoch = $claims['epoch'] ?? null;
+        $schemaVersion = $claims['schema_version'] ?? null;
+        $tenant = $claims['tenant'] ?? null;
 
-        if (!is_string($room) || $room === '') {
+        if (!is_string($room) || !is_string($subject) || $subject === '' || !in_array($mode, ['rw', 'ro'], true)
+            || !is_int($epoch) || !is_int($schemaVersion) || ($tenant !== null && !is_string($tenant))) {
             return null;
         }
 
-        $subject = isset($decoded->sub) && is_scalar($decoded->sub) ? (string) $decoded->sub : null;
-        $readOnly = isset($decoded->readOnly) && (bool) $decoded->readOnly;
+        $ref = $this->documentsConfig->parseRoom($room);
 
-        return CollaborationCall::byJwt(room: $room, subject: $subject, readOnly: $readOnly);
+        if ($ref === null || $ref->epoch !== $epoch
+            || ($claims['node'] ?? null) !== $ref->nodeId || ($claims['drive'] ?? null) !== $ref->driveId) {
+            return null;
+        }
+
+        return new CollaborationCall(
+            room: $room,
+            ref: $ref,
+            subject: $subject,
+            mode: $mode,
+            schemaVersion: $schemaVersion,
+            tenant: $tenant,
+        );
     }
 }

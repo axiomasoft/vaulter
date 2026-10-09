@@ -5,7 +5,7 @@
 
 > **Reverb — не транспорт для совместного редактирования.** Laravel Reverb — это шина
 > широковещания общего назначения (уведомления, presence, активность). Совместное редактирование
-> работает на Hocuspocus; драйвер совместного редактирования `reverb` считается устаревшим.
+> работает на Hocuspocus; драйвер совместного редактирования `reverb` удалён.
 > См. [Совместное редактирование в реальном времени](./collaboration).
 
 Он спроектирован как **внешний переиспользуемый образ** — один опубликованный образ обслуживает
@@ -31,28 +31,43 @@ services:
 
 ```
  browser (writer/viewer) ──ws(token = room JWT, doc = room name)──▶  hub
-        │                                                            │
         │                                  onConnect → Origin allowlist (CSWSH)
         │                                  onAuthenticate ─POST /collab/authenticate─┐
+        │                                  onLoadDocument ─POST /collab/load─────────┤
         │                                  onStoreDocument ─POST /collab/store───────┤
         └──── POST /api/vaulter/nodes/{node}/collab/token ──▶ Laravel ◀──────────────┘
-                                                              persists yjs_state (bytea)
+                                          рабочее состояние + ограждение по epoch (v_documents)
 ```
 
-1. Клиент вызывает `POST /api/vaulter/nodes/{node}/collab/token` на Laravel и получает
-   room JWT (`{room, sub, readOnly, exp}`, HS256) плюс `url` хаба.
-2. Он открывает WebSocket к хабу, передавая этот JWT как **token**, а имя комнаты
-   (`vaulter.documents.<nodeId>`) — как имя документа.
-3. Хаб проверяет `Origin`, затем пересылает JWT + комнату на
-   `POST {backend}/api/vaulter/collab/authenticate`. `{allowed:false}` (или любой не-2xx)
-   отклоняет сокет; `readOnly` понижает уровень соединения, так что сервер отбрасывает правки
-   зрителя.
-4. `onStoreDocument` (с debounce) кодирует **бинарное** состояние Yjs в base64 и отправляет его
-   на `POST {backend}/api/vaulter/collab/store`, который сохраняет его в
-   `v_documents.yjs_state` (рабочее состояние). Бинарник Yjs — источник истины.
+1. Клиент вызывает `POST /api/vaulter/nodes/{node}/collab/token` и получает сессию: комнату
+   `<prefix>.<driveId>.<nodeId>.<epoch>`, режим (`rw`|`ro`) и room JWT.
+2. Он открывает WebSocket к хабу, передавая JWT как **token**, а комнату — как имя документа.
+3. Хаб проверяет `Origin` и спрашивает `collab/authenticate`. Отказ закрывает сокет;
+   `mode: ro` делает соединение read-only (Hocuspocus отбрасывает его изменения).
+4. `onLoadDocument` запрашивает `collab/load`: бинарный Yjs-state или — для документа без
+   него — JSON. Хаб строит Y.Doc из JSON **один раз** через `@hocuspocus/transformer` и
+   `src/schema.js` и сохраняет его с `seed: true`. Клиенты никогда не сидируют.
+5. `onStoreDocument` (с debounce) отправляет бинарный state и JSON-проекцию в `collab/store`.
+   Бэкенд ограждает записи по epoch комнаты: после restore запись старой комнаты получает
+   `409 collaboration_epoch_mismatch`. Хаб её **не** повторяет: закрывает соединения комнаты
+   кодом **4409** `epoch_changed` и отбрасывает последующие записи этой комнаты; клиенты
+   открывают документ заново с новым Y.Doc. `404` (документ удалён) закрывает комнату кодом
+   `4404`; сетевые ошибки и `5xx` повторяются.
+6. Каждый вызов подписан (HMAC точного тела ключом `VAULTER_COLLAB_WEBHOOK_SECRET`, с меткой
+   времени и случайным nonce) и несёт room JWT; бэкенд требует оба.
 
-Хабу **не нужен** секрет для подписи JWT — Laravel выпускает токен, а клиент его пересылает; хаб
-лишь ретранслирует его в вебхук, который и проверяет подпись.
+Хабу **не нужен** секрет подписи JWT — Laravel выпускает токен и проверяет его при каждом
+вызове. Хаб не пишет токены в логи. После истечения токена хаб отвергает сообщения
+соединения и закрывает его кодом `4001`.
+
+### TipTap-схема хаба
+
+`src/schema.js` перечисляет расширения TipTap для сидирования и проекции: StarterKit, Link,
+Image и Table для `vaulter/rich-text`; подмножество Markdown для `vaulter/markdown`. Схема
+обязана совпадать с allow-list бэкенда — `test/schema-parity.test.js` сравнивает её с
+`packages/documents/tests/Fixtures/tiptap-schema.json`. Хост, добавляющий узлы через
+`vaulter-documents.tiptap.extra_*`, добавляет соответствующие расширения и в `src/schema.js`;
+иначе хаб выбросит эти узлы из сида, а бэкенд отвергнет проекции с ними.
 
 ## Контракт окружения
 
@@ -67,9 +82,9 @@ services:
 | `VAULTER_COLLAB_PORT` | `1234` | WebSocket-порт, к которому подключаются клиенты (`ws(s)://host:PORT`). |
 | `VAULTER_COLLAB_HEALTH_PORT` | `1235` | HTTP-порт health — `GET /health` → `200`. Отдельно от WS-порта. |
 | `VAULTER_BACKEND_URL` | `http://localhost` | Базовый URL вашего Laravel-приложения, к которому хаб обращается обратно. **Обязательно в production.** |
-| `VAULTER_API_PREFIX` | `api/vaulter` | Префикс маршрутов Vaulter. Вебхуки резолвятся в `{BACKEND}/{PREFIX}/collab/{authenticate,store}`. |
+| `VAULTER_API_PREFIX` | `api/vaulter` | Префикс маршрутов Vaulter. Вызовы резолвятся в `{BACKEND}/{PREFIX}/collab/{authenticate,load,store}`. |
 | `VAULTER_LARAVEL_WEBHOOK_URL` | *(производное)* | Явная полная база вебхуков; переопределяет две предыдущие переменные (reverse proxy / раздельный хост). |
-| `VAULTER_COLLAB_WEBHOOK_SECRET` | *(не задано)* | Общий секрет, передаваемый в `X-Vaulter-Collab-Secret`. Должен совпадать с `vaulter-documents.collaboration.hub.webhook_secret` в Laravel. Не задан ⇒ хаб аутентифицирует вебхуки только по пересланному room JWT (никогда не «нараспашку»). |
+| `VAULTER_COLLAB_WEBHOOK_SECRET` | *(не задано)* | Ключ HMAC-подписи каждого вызова бэкенда. Должен совпадать с `vaulter-documents.collaboration.hub.webhook_secret` в Laravel; сам секрет не передаётся. Обязателен: без него каждый вызов отвергается. |
 | `VAULTER_COLLAB_WEBHOOK_TIMEOUT_MS` | `10000` | Таймаут туда-обратно для вебхука. |
 
 ### Безопасность

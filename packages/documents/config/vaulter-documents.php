@@ -34,6 +34,8 @@ return [
             'token_ttl' => 3600,
             'timestamp_tolerance' => 300,
         ],
+        // The largest binary Yjs state one hub store may write (413 above it).
+        'max_state_bytes' => 16777216,
         'broadcast' => ['channel_prefix' => 'vaulter.documents'],
     ],
     'models' => [

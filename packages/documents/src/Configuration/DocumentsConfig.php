@@ -7,6 +7,7 @@ namespace Vaulter\Documents\Configuration;
 use Illuminate\Contracts\Config\Repository;
 use Vaulter\Configuration\ConfigValidator;
 use Vaulter\Contracts\Profiles\CommentsFeature;
+use Vaulter\Documents\Data\Collaboration\RoomRef;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
@@ -74,9 +75,19 @@ final readonly class DocumentsConfig implements CommentsFeature
         return is_string($value) && $value !== '' ? $value : 'vaulter/rich-text';
     }
 
+    /** @throws InvalidConfigurationException for the removed reverb driver */
     public function collaborationDriver(): string
     {
         $value = $this->config->get(key: 'vaulter-documents.collaboration.driver', default: 'hocuspocus');
+
+        // Reverb could not persist Yjs state server-side, so a room could never be
+        // fenced off after a restore; failing loudly beats silently switching transport.
+        if ($value === 'reverb') {
+            throw new InvalidConfigurationException(
+                '[Vaulter] The reverb collaboration driver was removed; set vaulter-documents.collaboration.driver to hocuspocus. '
+                .'Docs: https://github.com/axiomasoft/vaulter/blob/main/docs/guide/collaboration.md',
+            );
+        }
 
         return is_string($value) ? $value : 'hocuspocus';
     }
@@ -88,20 +99,45 @@ final readonly class DocumentsConfig implements CommentsFeature
         return is_string($value) ? $value : 'vaulter.documents';
     }
 
-    public function collaborationRoom(mixed $nodeId): string
+    /**
+     * The room of one generation of a document: "<prefix>.<driveId>.<nodeId>.<epoch>".
+     * The epoch is part of the name, so a room opened before a restore can never be
+     * confused with the one opened after it.
+     */
+    public function collaborationRoom(mixed $driveId, mixed $nodeId, int $epoch): string
     {
-        return $this->channelPrefix().'.'.Identity::stringify($nodeId);
+        return $this->channelPrefix().'.'.Identity::stringify($driveId).'.'.Identity::stringify($nodeId).'.'.$epoch;
     }
 
-    public function nodeIdFromRoom(string $room): string
+    /** The parts of a room name, or null when it is not exactly one this installation issues. */
+    public function parseRoom(string $room): ?RoomRef
     {
         $prefix = $this->channelPrefix().'.';
-
-        if (str_starts_with($room, $prefix)) {
-            return substr($room, strlen($prefix));
+        if (!str_starts_with($room, $prefix)) {
+            return null;
         }
 
-        return $room;
+        $parts = explode('.', substr($room, strlen($prefix)));
+        if (count($parts) !== 3) {
+            return null;
+        }
+
+        [$driveId, $nodeId, $epoch] = $parts;
+        if ($driveId === '' || $nodeId === '' || !ctype_digit($epoch) || ($epoch !== '0' && str_starts_with($epoch, '0'))) {
+            return null;
+        }
+
+        $generation = filter_var($epoch, FILTER_VALIDATE_INT);
+
+        return $generation === false ? null : new RoomRef(driveId: $driveId, nodeId: $nodeId, epoch: $generation);
+    }
+
+    /** The largest binary Yjs state a collaboration store may write. */
+    public function collaborationMaxStateBytes(): int
+    {
+        $value = $this->config->get(key: 'vaulter-documents.collaboration.max_state_bytes', default: 16777216);
+
+        return is_numeric($value) && (int) $value > 0 ? (int) $value : 16777216;
     }
 
     public function hubWebhookSecret(): ?string
@@ -127,11 +163,22 @@ final readonly class DocumentsConfig implements CommentsFeature
         return is_string($value) && $value !== '' ? $value : null;
     }
 
+    /**
+     * Rights are re-read only on the hub's next authenticate/load/store, so a token
+     * may not outlive an hour.
+     *
+     * @throws InvalidConfigurationException outside 1..3600 seconds
+     */
     public function hubTokenTtl(): int
     {
         $value = $this->config->get(key: 'vaulter-documents.collaboration.hub.token_ttl', default: 3600);
+        $seconds = is_numeric($value) ? (int) $value : 3600;
 
-        return is_numeric($value) ? (int) $value : 3600;
+        if ($seconds < 1 || $seconds > 3600) {
+            throw new InvalidConfigurationException('[Vaulter] vaulter-documents.collaboration.hub.token_ttl must be between 1 and 3600 seconds.');
+        }
+
+        return $seconds;
     }
 
     public function hubUrl(): ?string

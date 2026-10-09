@@ -36,6 +36,9 @@ Codes are a stable public contract (AD29).
 | `comment_not_found` | 404 | `Vaulter\Documents\Exceptions\CommentNotFoundException` |
 | `document_state_mismatch` | 412 | `Vaulter\Documents\Exceptions\StaleDocumentStateException` |
 | `collaboration_epoch_mismatch` | 409 | `Vaulter\Documents\Exceptions\CollaborationEpochMismatchException` |
+| `collaboration_seed_conflict` | 409 | `Vaulter\Documents\Exceptions\CollaborationSeedConflictException` |
+| `collaboration_unavailable` | 409 | `Vaulter\Documents\Exceptions\CollaborationUnavailableException` |
+| `document_state_too_large` | 413 | `Vaulter\Documents\Exceptions\DocumentStateTooLargeException` |
 | `unknown_export_format` | 422 | `Vaulter\Documents\Exceptions\UnknownExportFormatException` |
 | `invalid_document_content` | 422 | `Vaulter\Documents\Exceptions\UnsupportedDocumentContentException` |
 | `invalid_node_name` | 422 | `Vaulter\Exceptions\Nodes\InvalidNodeNameException` |
@@ -56,8 +59,11 @@ Codes are a stable public contract (AD29).
 The response also preserves `errors.name` for name conflicts and invalid names, `errors.url` for blocked
 outbound URLs and `errors.subject_type` for unenumerable grant subjects. Content errors
 include `reason`: `mime_mismatch`, `invalid_tiptap`, `invalid_json`, `too_large` or
-`unsupported_content`. `document_state_mismatch` and `collaboration_epoch_mismatch` include
-`context.expected` and `context.actual`; `document_type_unavailable` and
+`unsupported_content` (`missing_projection` for a collaboration store without the JSON its type
+needs). `document_state_mismatch` and `collaboration_epoch_mismatch` include
+`context.expected` and `context.actual`; `collaboration_unavailable` includes `context.reason`
+(`disabled`, `unsupported_type`); `document_state_too_large` includes `context.size_bytes` and
+`context.max_bytes`; `document_type_unavailable` and
 `document_content_degraded` include `context.type`.
 Offset mismatches include `Upload-Offset` and `Tus-Resumable: 1.0.0` headers.
 
@@ -195,7 +201,8 @@ received a list or a scalar. Send an object. A content above the type's `maxSize
 
 `VaulterException` from `CollaborationDriverManager` — `config('vaulter-documents.collaboration.driver')`
 is not one of the registered `CollaborationDriverType` cases (`hocuspocus`). Set it
-to a valid transport name.
+to a valid transport name. The removed `reverb` driver is an `InvalidConfigurationException`
+that says so.
 
 ## missing-jwt
 
@@ -209,9 +216,10 @@ environment.
 
 ## collab-webhook-unconfigured
 
-`CollaborationConfigException` — neither `VAULTER_COLLAB_WEBHOOK_SECRET` (shared secret) nor
-`VAULTER_COLLAB_SECRET` (JWT key) is configured, so the `collab/authenticate` +
-`collab/store` server-to-server webhooks cannot authenticate the Node hub. Set at least one.
+The hub endpoints (`collab/authenticate`, `collab/load`, `collab/store`) need both
+`VAULTER_COLLAB_SECRET` (the room JWT key) and `VAULTER_COLLAB_WEBHOOK_SECRET` (the body
+signature key); with either missing every hub call is `401`. Set both, different from each
+other, on Laravel, and the webhook secret on the hub too.
 
 ## cross-storage-move
 
@@ -369,7 +377,27 @@ the node and its content have separate validators.
 
 `collaboration_epoch_mismatch` (409) — a collaboration write came from a room of an older
 generation: the document was restored or its JSON replaced since the room opened. The write is
-refused so the abandoned history is not merged back; reopen the document in a new room.
+refused so the abandoned history is not merged back; reopen the document in a new room. The hub
+answers it by closing the room with close code 4409 `epoch_changed` and never retries the store.
+
+## collaboration-seed-conflict
+
+`collaboration_seed_conflict` (409) — a hub tried to seed the collaboration state of a document
+that already has one (another hub instance seeded it first). The second seed is refused: both
+would merge into duplicated content. The hub loads the stored state instead.
+
+## collaboration-unavailable
+
+`collaboration_unavailable` (409) — `collaborationSession()` or a hub call for a document that
+cannot be edited collaboratively: `vaulter-documents.collaboration.enabled` is off
+(`context.reason = disabled`), or the document's type does not implement
+`SupportsCollaboration` (`unsupported_type`). Edit it through `DocumentOperations::update()`.
+
+## document-state-too-large
+
+`document_state_too_large` (413) — a hub store carried a binary Yjs state above
+`vaulter-documents.collaboration.max_state_bytes` (default 16 MiB). Nothing was written. Raise the
+limit or split the document.
 
 ## write-outside-operation
 

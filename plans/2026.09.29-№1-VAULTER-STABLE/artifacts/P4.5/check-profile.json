@@ -1,0 +1,63 @@
+{
+  "item": "PLAN2.P4.5",
+  "prepared_at": "2026-10-09",
+  "runtime": {"provider": "anthropic", "model": "claude-opus-5-5", "effort": "high", "source": "/model output + CLAUDE_EFFORT=high; plan.py start --actor anthropic/claude-opus-5-5/high"},
+  "runs_mode": "D51 L+H-own: SQLite Pest (documents Collaboration/Operations/Arch + Document callers of collaboration/restore), hub node --test, vue typecheck+test, own V5 e2e (real hub + testbench serve). V2 PG fence race is kind=impact -> barrier P4.7.",
+  "owner_constraint": "Owner 2026-10-09: long runs are NOT executed in this session; the owner runs them separately (sonnet/medium) and fixes. This session runs only short focused checks; V1 full, V3 (npm ci), V4, V5, V80 are handed off with exact commands.",
+  "changed_paths": {
+    "documents_src": [
+      "Configuration/DocumentsConfig (collaborationRoom(drive,node,epoch), parseRoom, maxStateBytes, token_ttl validator, driver=reverb -> InvalidConfigurationException; nodeIdFromRoom removed)",
+      "Data/Collaboration/CollaborationSession (final readonly: room, nodeId, driveId, epoch, schemaVersion, mode)",
+      "Data/Collaboration/RoomRef (new)",
+      "Data/Collaboration/PersistCollaborationStateInput (expectedEpoch, seed)",
+      "Collaboration/CollaborationCall, CollaborationCallResolver (JWT room identity + HMAC, both required; shared-secret identity removed)",
+      "Collaboration/CollaborationHub (live checks: node/trash/tenant/drive status/epoch/ACL/mode; load; store)",
+      "Collaboration/CollaborationSessionService, HocuspocusCollaborationDriver (claims sub,node,drive,tenant,epoch,schema_version,mode,room,iat,exp)",
+      "Contracts/CollaborationDriver (issueSession signature)",
+      "Http/Controllers/Collaboration/NodeCollaborationController (authenticate/load/store)",
+      "Http/Middleware/ResolveCollaborationCall (no secret header)",
+      "routes/documents.php (POST collab/load)",
+      "Actions/Collaboration/PersistCollaborationStateAction (epoch fence, seed IS NULL, SupportsCollaboration, projection required, state size)",
+      "Actions/Revisions/RestoreDocumentRevisionAction (+ DocumentRestored)",
+      "Events/Revisions/DocumentRestored (new)",
+      "Exceptions/CollaborationSeedConflictException, CollaborationUnavailableException, DocumentStateTooLargeException (new)",
+      "Operations/DocumentOperations::collaborationSession (enabled, SupportsCollaboration, typeAvailable, editable, clientSchemaVersion)",
+      "config/vaulter-documents.php (collaboration.max_state_bytes)"
+    ],
+    "documents_tests": [
+      "tests/Collaboration/HubProtocolTest.php (new)",
+      "tests/Collaboration/CollaborationWebhookTest.php (JWT identity instead of shared secret)",
+      "tests/Collaboration/NodeCollaborationTokenTest.php (new session shape)",
+      "tests/Collaboration/TipTapSchemaFixtureTest.php (generates/compares tests/Fixtures/tiptap-schema.json)",
+      "tests/Concurrency/CollaborationFenceRaceTest.php (PG ForkRace; impact -> P4.7)",
+      "tests/Operations/DocumentOperationsTest.php, DocumentAbilityMatrixTest.php (callers of collaborationSession)",
+      "tests/Feature/MiddlewareStacksTest.php (caller of the resolver)",
+      "tests/Arch/__snapshots__/public-api.txt (golden)",
+      "tests/Pest.php (Concurrency binding) — extra path, logged",
+      "tests/Fixtures/E2E/* (e2e workbench provider) — extra path, logged"
+    ],
+    "hub": ["src/index.js", "src/webhook.js", "src/config.js", "src/schema.js (new)", "package.json", "test/load-seed|epoch-fence|readonly|schema-parity.test.js (new)", "test/webhook.test.js, collab-expiry.test.js (callers)", "test/e2e/restore-epoch.e2e.js (new)", "README.md"],
+    "vue": ["src/nodeCollaboration.ts", "src/composables/useNodeCollaboration.ts", "src/components/VaulterDocumentNode.vue", "src/types.ts", "tests/node-collaboration.test.ts, provider-contract.test.ts, drive-components.test.ts"],
+    "scripts": ["scripts/collab-e2e.sh (new)"],
+    "docs": ["docs/guide/collaboration.md (+ru)", "docs/guide/hocuspocus-server.md (+ru)", "docs/guide/errors.md (+ru) — extra path, logged", "UPGRADE.md", "CHANGELOG.md", "artifacts/P4.5/changelog-entry.md"]
+  },
+  "callers_checked": "grep collaborationRoom|nodeIdFromRoom|CollaborationSession|issueSession|bySecret|X-Vaulter-Collab-Secret|read_only across packages/*/src, packages/*/tests, packages/vue, hocuspocus-server, docs; core does not import documents collaboration classes (core/tests FakeHostUserResolver only).",
+  "commands": [
+    {"id": "V1", "cwd": "packages/documents", "env": "APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory:", "cmd": "../../scripts/php84 vendor/bin/pest --ci tests/Collaboration tests/Operations tests/Arch", "expect": "exit 0"},
+    {"id": "V1-callers", "cwd": "packages/documents", "env": "same as V1", "cmd": "../../scripts/php84 vendor/bin/pest --ci tests/Feature/MiddlewareStacksTest.php tests/Document/CollaborationFeatureGateTest.php tests/Document/DocumentStateVersionTest.php", "expect": "exit 0 (restore/collab callers outside V1 dirs)"},
+    {"id": "V2", "kind": "impact -> P4.7", "cwd": "packages/documents", "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret ../../scripts/php84 vendor/bin/pest --ci tests/Concurrency/CollaborationFenceRaceTest.php"},
+    {"id": "V3", "cwd": "hocuspocus-server", "cmd": "npm install (lockfile refresh for new deps; lockfile is read-denied for agents) && npm ci && npm run check && npm test", "expect": "exit 0"},
+    {"id": "V4", "cwd": "packages/vue", "cmd": "npm run typecheck && npm test", "expect": "exit 0"},
+    {"id": "V5", "cwd": ".", "cmd": "bash scripts/collab-e2e.sh", "expect": "exit 0; log at artifacts/P4.5/collab-e2e.log"},
+    {"id": "V80", "cwd": "packages/documents", "cmd": "../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress"},
+    {"id": "V81", "cwd": ".", "cmd": "python3 plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-coverage.py check"}
+  ],
+  "negative_controls": [
+    "HubProtocolTest epoch fence: temporarily drop the expectedEpoch argument in PersistCollaborationStateAction -> 'store with an old epoch' red -> restore bytes -> green",
+    "HubProtocolTest seed: drop the yjs_state IS NULL check -> 'second seed conflicts' red -> restore",
+    "hub epoch-fence.test.js: make onStoreDocument rethrow on 409 -> test red -> restore"
+  ],
+  "negative_controls_file": "artifacts/P4.5/negative-controls.md (executed by the owner's run; this session records the procedure)",
+  "invariants": ["P4-I5 storage fence", "P4-I6 seed once per epoch", "P4-I7 ro never writes", "P4-I8 no node sequence bump", "lock order T->N->D"],
+  "deferred": "V2 PG fence/seed race -> barrier P4.7 (D51); broad suites -> phase barrier"
+}

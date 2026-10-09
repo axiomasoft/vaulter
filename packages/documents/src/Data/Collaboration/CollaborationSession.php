@@ -7,43 +7,48 @@ namespace Vaulter\Documents\Data\Collaboration;
 use Vaulter\Documents\Enums\Collaboration\CollaborationDriverType;
 
 /**
- * The unified realtime-collaboration session descriptor (master plan §7 / ADR-0001 /
- * M4b) a {@see CollaborationDriver} issues for a document node
- * and the collab-token endpoint returns. It is the ONE shape the Vue Yjs binding and
- * the Node hub consume, regardless of transport:
+ * A realtime collaboration session for one generation of a document, as
+ * DocumentOperations::collaborationSession() issues it and the collab-token endpoint
+ * returns it:
  *
- *   - driver   — hocuspocus.
- *   - room     — channel_prefix.nodeId, bound to exactly one document node.
- *   - nodeId   — the document node id.
- *   - readOnly — View/Comment is read-only; Edit is writable.
- *   - url      — the Hocuspocus hub websocket URL.
- *   - token    — a signed JWT carrying room, sub, readOnly and exp.
- *   - connection — retained as null in the Hocuspocus JSON descriptor.
+ *   - room          — "<prefix>.<driveId>.<nodeId>.<epoch>": one document, one generation.
+ *   - epoch         — the generation; a restore moves it on and closes the old room.
+ *   - schemaVersion — the schema the hub seeds and stores in; a client that supports an
+ *                     older one must stay read-only.
+ *   - readOnly      — false only with Edit on content this installation can save back.
+ *   - token         — a signed JWT carrying the same claims; the hub re-checks them.
  */
 final readonly class CollaborationSession
 {
     public function __construct(
         public CollaborationDriverType $driver,
         public string $room,
-        public int|string $nodeId,
+        public string $nodeId,
+        public string $driveId,
+        public int $epoch,
+        public int $schemaVersion,
         public bool $readOnly,
         public string $token,
         public ?string $url = null,
-        public ?string $connection = null,
     ) {}
 
+    /** 'rw' or 'ro', as the token's mode claim. */
+    public function mode(): string
+    {
+        return $this->readOnly ? 'ro' : 'rw';
+    }
+
     /**
-     * The wire shape the collab-token endpoint returns and the Vue client binds
-     * against (a stable contract for the Node + Vue edge slices).
-     *
      * @return array{
      *     driver: string,
      *     room: string,
-     *     node_id: int|string,
-     *     read_only: bool,
+     *     node_id: string,
+     *     drive_id: string,
+     *     epoch: int,
+     *     schema_version: int,
+     *     mode: string,
      *     token: string,
      *     url: string|null,
-     *     connection: string|null,
      * }
      */
     public function toArray(): array
@@ -52,10 +57,12 @@ final readonly class CollaborationSession
             'driver' => $this->driver->value,
             'room' => $this->room,
             'node_id' => $this->nodeId,
-            'read_only' => $this->readOnly,
+            'drive_id' => $this->driveId,
+            'epoch' => $this->epoch,
+            'schema_version' => $this->schemaVersion,
+            'mode' => $this->mode(),
             'token' => $this->token,
             'url' => $this->url,
-            'connection' => $this->connection,
         ];
     }
 }

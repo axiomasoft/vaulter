@@ -1,28 +1,42 @@
 import 'dotenv/config'
 import { Server } from '@hocuspocus/server'
 import { Throttle } from '@hocuspocus/extension-throttle'
+import { TiptapTransformer } from '@hocuspocus/transformer'
 import { createServer } from 'node:http'
+import * as Y from 'yjs'
 import { config, isOriginAllowed, validateConfig } from './config.js'
-import { authenticate, storeDocument } from './webhook.js'
+import { extensionsFor, FIELD } from './schema.js'
+import * as backend from './webhook.js'
 
-// Vaulter collaboration hub (M4b-edge) — the external, env-configured Hocuspocus image.
+// Vaulter collaboration hub — the external, env-configured Hocuspocus process.
 //
-// Flow (vaulter-spec.md §10 / master plan §7 + Addendum A / ADR-0001):
-//   1. The Vue client requests a room JWT from Laravel
-//      (POST /api/vaulter/nodes/{node}/collab/token).
-//   2. VaulterEditor opens a WebSocket here with that JWT as the token and the
-//      ROOM NAME (vaulter.documents.<nodeId>) as the document name.
-//   3. onConnect enforces the Origin allowlist (CSWSH); onAuthenticate forwards the JWT +
-//      room to the Laravel collab/authenticate webhook; allowed:false rejects the socket,
-//      readOnly gates writes.
-//   4. Yjs syncs edits; onStoreDocument (debounced by the server) ships the binary Yjs
-//      snapshot back to collab/store, which persists it into
-//      v_node_document_versions.yjs_state — the binary is the source of truth.
+// Flow:
+//   1. The client asks Laravel for a session (POST …/nodes/{node}/collab/token) and gets a
+//      room JWT and the room name "<prefix>.<driveId>.<nodeId>.<epoch>". The epoch is the
+//      document's generation: a restore moves it on, so a room never outlives one.
+//   2. onConnect enforces the Origin allowlist (CSWSH); onAuthenticate asks
+//      collab/authenticate whether the connection is allowed and in which mode — a
+//      read-only connection's updates are dropped by Hocuspocus itself.
+//   3. onLoadDocument loads the room from collab/load: the binary Yjs working state, or,
+//      when the document has none yet, its JSON — the hub builds the Y.Doc from it ONCE
+//      and stores it as the seed (collab/store seed=true). Clients never seed: two
+//      clients converting the same JSON would merge into duplicated content.
+//   4. onStoreDocument (debounced) sends the binary state and its JSON projection to
+//      collab/store. The backend fences stores by epoch: a 409 means the room's
+//      generation is over (a restore happened). The hub does NOT throw then — Hocuspocus
+//      would retry the store forever — but closes the room's connections with 4409
+//      `epoch_changed` and drops any later store of that room; clients reopen the
+//      document with a new Y.Doc.
 //
-// Hardening (Addendum A.3): Origin allowlist, Throttle (per-IP), maxPayload,
-// perMessageDeflate off, prod liveness/debounce config, optional Redis (multi-instance)
-// + Logger, fail-fast config validation, non-root image, graceful shutdown (Hocuspocus
-// stopOnSignals=true).
+// Hardening: Origin allowlist, Throttle (per-IP), maxPayload, perMessageDeflate off,
+// token expiry enforced before every message, optional Redis (multi-instance) + Logger,
+// fail-fast config validation, graceful shutdown (stopOnSignals=true).
+
+/** Close code and reason a client sees when its room's generation is over. */
+export const EPOCH_CHANGED = Object.freeze({ code: 4409, reason: 'epoch_changed' })
+
+/** Close code for a document that was removed while its room was open. */
+export const DOCUMENT_GONE = Object.freeze({ code: 4404, reason: 'document_gone' })
 
 /**
  * Build the extension chain. Throttle is registered FIRST (the docs require it before
@@ -88,52 +102,10 @@ function readOrigin(requestHeaders) {
 }
 
 /**
- * onAuthenticate — the connect gate. The client presents its room JWT as `token` and the
- * room name as `documentName`. We delegate the decision to Laravel's collab/authenticate
- * webhook (JWT forwarded as Authorization: Bearer, room in the body). A rejected call
- * (allowed:false / non-2xx) throws → refused connection. readOnly downgrades the
- * connection so the server drops a viewer's updates; the token is stashed on the context
- * so onStoreDocument authenticates the snapshot write with the SAME room-bound JWT.
- *
- * F-P1.6-03 (periodic exp re-check): onStoreDocument only re-validates the token on a
- * WRITE — a long-lived read-only viewer session would otherwise never be disconnected
- * once its token expires (the connection just keeps syncing over the open socket). Arm
- * a timer here that force-closes the socket once the token's `exp` passes.
- */
-async function onAuthenticate({ token, documentName, connection }) {
-  if (!token) {
-    throw new Error('Missing collaboration token')
-  }
-
-  const result = await authenticate({ token, room: documentName })
-
-  if (!result.allowed) {
-    throw new Error('Collaboration connection rejected by the Vaulter backend')
-  }
-
-  if (connection) {
-    if (result.readOnly) {
-      connection.readOnly = true
-    }
-
-    armExpiryTimer(connection, decodeTokenExpiry(token))
-  }
-
-  return {
-    token,
-    room: documentName,
-    readOnly: result.readOnly,
-    userId: result.userId,
-  }
-}
-
-/**
  * The `exp` (unix seconds) claim of a JWT, read WITHOUT verifying its signature — the
- * hub never holds the signing secret (C9), and the token was ALREADY verified
- * server-side by the collab/authenticate webhook call above. This is purely local
- * bookkeeping so the hub knows when to proactively close a socket; it grants nothing on
- * its own. Malformed/missing/unparsable token or `exp` claim → null (no timer armed,
- * i.e. the pre-P3.2 behaviour: only exp'd JWTs on a future store call get caught).
+ * hub never holds the signing secret, and the backend verifies the token on every call.
+ * This is local bookkeeping so the hub knows when to stop accepting messages; it grants
+ * nothing on its own. Malformed/missing → null.
  */
 function decodeTokenExpiry(token) {
   if (typeof token !== 'string') {
@@ -156,14 +128,12 @@ function decodeTokenExpiry(token) {
 }
 
 /**
- * Arm (or immediately act on) the connection's expiry timer for the given `exp` (unix
- * seconds). Already-expired → close now. Otherwise a single setTimeout fires the close
- * at the exact expiry instant; unref() so a pending timer never keeps the Node process
- * alive on shutdown. No-op when `exp` is null (unparsable token) — same as before this
- * fix, degrading to store-time-only re-validation.
+ * Close the connection once its token expires (already expired → now). A read-only
+ * viewer never sends a store, so without this its socket would outlive the token.
+ * unref() so a pending timer never keeps the process alive on shutdown.
  */
 function armExpiryTimer(connection, exp) {
-  if (exp === null) {
+  if (exp === null || typeof connection?.close !== 'function') {
     return
   }
 
@@ -185,31 +155,217 @@ function armExpiryTimer(connection, exp) {
 }
 
 /**
- * onStoreDocument — the debounced persistence hook. Ships the BINARY Yjs state (base64)
- * to Laravel's collab/store webhook so it lands in v_node_document_versions.yjs_state
- * verbatim. Authenticated with the connection's room-bound JWT; a read-only connection
- * never reaches store.
+ * Close every local connection of a room with the given code. Hocuspocus' own
+ * closeConnections() takes no code, and the client needs one to tell "reopen with a new
+ * Y.Doc" from an ordinary disconnect.
  */
-async function onStoreDocument({ documentName, state, document, context, lastContext }) {
-  // v4 renames `context` → `lastContext`; support both.
-  const ctx = context ?? lastContext ?? {}
+function closeRoom(instance, documentName, { code, reason }) {
+  const document = instance?.documents?.get?.(documentName)
+  const connections = typeof document?.getConnections === 'function' ? document.getConnections() : []
 
-  if (ctx.readOnly) {
-    return
+  for (const connection of connections) {
+    connection.close({ code, reason })
   }
 
-  const binary = await encodeBinaryState({ state, document })
+  if (connections.length === 0 && typeof instance?.closeConnections === 'function') {
+    instance.closeConnections(documentName)
+  }
+}
 
-  if (binary.length === 0) {
-    return
+/**
+ * The refusal of a room whose generation is over. Hocuspocus sends an error's `reason`
+ * to the client as the authentication failure reason, so the client can tell it from a
+ * plain refusal and reopen the document with a new session.
+ */
+function epochChanged() {
+  return Object.assign(new Error(EPOCH_CHANGED.reason), { reason: EPOCH_CHANGED.reason })
+}
+
+function base64(update) {
+  return Buffer.from(update).toString('base64')
+}
+
+/**
+ * The hub's Hocuspocus hooks. `webhook` is the backend client (src/webhook.js) and is
+ * injectable so the hooks run in tests against a stub backend; `log` receives
+ * token-free messages only.
+ */
+export function createHooks({ webhook = backend, log = console } = {}) {
+  // Rooms whose generation ended (409) or whose document is gone: their later stores
+  // are dropped until Hocuspocus unloads them. Keyed by room name, which includes the
+  // epoch, so a new generation is never affected.
+  const fenced = new Set()
+
+  function fence(instance, documentName, close) {
+    fenced.add(documentName)
+    closeRoom(instance, documentName, close)
   }
 
-  await storeDocument({
-    room: documentName,
-    yjsState: Buffer.from(binary).toString('base64'),
-    token: ctx.token,
-    userId: ctx.userId,
-  })
+  /**
+   * The connect gate. allowed:false (or a 409 for a past epoch) refuses the socket; a
+   * read-only mode makes Hocuspocus drop the connection's updates (server-side), and
+   * the backend refuses a store under a read-only token anyway.
+   */
+  async function onAuthenticate({ token, documentName, connection, connectionConfig }) {
+    if (!token) {
+      throw new Error('Missing collaboration token')
+    }
+
+    const result = await webhook.authenticate({ token, room: documentName })
+
+    if (!result.allowed) {
+      if (result.conflict === 'collaboration_epoch_mismatch') {
+        throw epochChanged()
+      }
+      throw new Error('Collaboration connection rejected by the Vaulter backend')
+    }
+
+    const readOnly = result.mode !== 'rw'
+    const exp = decodeTokenExpiry(token)
+
+    // v4 hands the per-connection settings as connectionConfig; older payloads as
+    // connection. Set whichever is there.
+    for (const target of [connectionConfig, connection]) {
+      if (target && typeof target === 'object') {
+        target.readOnly = readOnly
+      }
+    }
+    armExpiryTimer(connection, exp)
+
+    return { token, room: documentName, mode: result.mode, readOnly, userId: result.userId, exp }
+  }
+
+  /** The live connection is known here: close it when its token expires. */
+  async function connected({ connection, context }) {
+    armExpiryTimer(connection, context?.exp ?? null)
+  }
+
+  /**
+   * Refuse every message once the connection's token has expired: rights are only
+   * re-checked on the backend calls, so an expired token must not keep editing.
+   */
+  async function beforeHandleMessage({ context }) {
+    if (typeof context?.exp === 'number' && context.exp * 1000 <= Date.now()) {
+      throw new Error('Collaboration token expired')
+    }
+  }
+
+  /**
+   * Load a room from the backend: apply the stored Yjs state, or build the Y.Doc from
+   * the JSON once and store it as the seed. The seed is built in a separate Y.Doc and
+   * only applied once the backend accepted it; if another hub instance seeded first
+   * (409 seed conflict), its state is loaded instead — never both, which would merge
+   * into duplicated content.
+   */
+  async function onLoadDocument({ documentName, document, context, instance }) {
+    const loaded = await webhook.loadDocument({ token: context?.token, room: documentName })
+
+    if (loaded.state) {
+      Y.applyUpdate(document, Buffer.from(loaded.state, 'base64'))
+
+      return
+    }
+
+    if (!loaded.content) {
+      return
+    }
+
+    const seed = TiptapTransformer.toYdoc(loaded.content, FIELD, extensionsFor(loaded.type))
+    const update = Y.encodeStateAsUpdate(seed)
+
+    // A read-only connection may show the seed but cannot store it; the first writer's
+    // room stores it through the ordinary path.
+    if (context?.mode !== 'rw') {
+      Y.applyUpdate(document, update)
+
+      return
+    }
+
+    const stored = await webhook.storeDocument({
+      room: documentName,
+      state: base64(update),
+      content: TiptapTransformer.fromYdoc(seed, FIELD),
+      seed: true,
+      token: context.token,
+    })
+
+    if (stored.ok) {
+      Y.applyUpdate(document, update)
+
+      return
+    }
+
+    if (stored.code === 'collaboration_seed_conflict') {
+      const reloaded = await webhook.loadDocument({ token: context.token, room: documentName })
+
+      if (reloaded.state) {
+        Y.applyUpdate(document, Buffer.from(reloaded.state, 'base64'))
+      }
+
+      return
+    }
+
+    if (stored.code === 'collaboration_epoch_mismatch') {
+      fence(instance, documentName, EPOCH_CHANGED)
+      throw epochChanged()
+    }
+
+    log.warn?.(`Vaulter collab hub: the seed of ${documentName} was refused (${stored.status} ${stored.code ?? ''})`)
+    Y.applyUpdate(document, update)
+  }
+
+  /**
+   * The debounced persistence. Sends the binary state and its JSON projection with the
+   * last writer's token. Answers retrying cannot change are terminal: a 409 closes the
+   * room with 4409 epoch_changed, a 404 (document removed) with 4404; neither throws,
+   * because Hocuspocus retries a store that throws. Network errors and 5xx throw.
+   */
+  async function onStoreDocument({ documentName, document, context, lastContext, instance }) {
+    const ctx = lastContext ?? context ?? {}
+
+    if (fenced.has(documentName) || ctx.mode !== 'rw' || ctx.readOnly) {
+      return
+    }
+
+    const stored = await webhook.storeDocument({
+      room: documentName,
+      state: base64(Y.encodeStateAsUpdate(document)),
+      content: TiptapTransformer.fromYdoc(document, FIELD),
+      token: ctx.token,
+    })
+
+    if (stored.ok) {
+      return
+    }
+
+    if (backend.TERMINAL_CONFLICTS.includes(stored.code)) {
+      fence(instance, documentName, EPOCH_CHANGED)
+
+      return
+    }
+
+    if (stored.status === 404) {
+      fence(instance, documentName, DOCUMENT_GONE)
+
+      return
+    }
+
+    log.error?.(`Vaulter collab hub: the store of ${documentName} was refused (${stored.status} ${stored.code ?? ''})`)
+  }
+
+  async function afterUnloadDocument({ documentName }) {
+    fenced.delete(documentName)
+  }
+
+  return {
+    onAuthenticate,
+    connected,
+    beforeHandleMessage,
+    onLoadDocument,
+    onStoreDocument,
+    afterUnloadDocument,
+    isFenced: (documentName) => fenced.has(documentName),
+  }
 }
 
 /**
@@ -218,10 +374,8 @@ async function onStoreDocument({ documentName, state, document, context, lastCon
  * trims attack surface and CPU. In @hocuspocus/server v4 the transport moved to `crossws`,
  * and these options are wired through the `websocketOptions` config KEY on the `Server`
  * constructor — the Server forwards them verbatim to `crossws({ serverOptions })`, i.e. to
- * the real ws.WebSocketServer. (In the retired v2 they had to be smuggled through the 3rd
- * argument of `Hocuspocus.listen()`; the config key was a silent no-op there. The bump makes
- * the config key the single, honoured path.) Keep this as the single source so buildServer()
- * and the hardening test exercise the exact same options.
+ * the real ws.WebSocketServer. Keep this as the single source so buildServer() and the
+ * hardening test exercise the exact same options.
  */
 export function websocketOptions() {
   return {
@@ -233,11 +387,10 @@ export function websocketOptions() {
 /**
  * Build the Hocuspocus `Server` with the hardened configuration. name/timeout/debounce/
  * maxDebounce/quiet are production-tuned via env. In v4 the WebSocket frame limits are wired
- * via the `websocketOptions` config key (forwarded to the crossws transport) — no longer via
- * listen()'s 3rd argument. `Server` owns the HTTP server + upgrade handling; the core
- * `Hocuspocus` class it wraps no longer exposes listen().
+ * via the `websocketOptions` config key (forwarded to the crossws transport). `Server` owns
+ * the HTTP server + upgrade handling.
  */
-async function buildServer() {
+async function buildServer({ hooks = createHooks() } = {}) {
   return new Server({
     name: config.instanceName,
     port: config.port,
@@ -248,27 +401,13 @@ async function buildServer() {
     websocketOptions: websocketOptions(),
     extensions: await buildExtensions(),
     onConnect,
-    onAuthenticate,
-    onStoreDocument,
+    onAuthenticate: hooks.onAuthenticate,
+    connected: hooks.connected,
+    beforeHandleMessage: hooks.beforeHandleMessage,
+    onLoadDocument: hooks.onLoadDocument,
+    onStoreDocument: hooks.onStoreDocument,
+    afterUnloadDocument: hooks.afterUnloadDocument,
   })
-}
-
-/**
- * The binary Yjs update for the document. Hocuspocus' Database extension hands a ready
- * `state: Uint8Array`; the core onStoreDocument hands the `document` (Y.Doc), from which
- * we encode the full update. Either way we ship raw bytes — the Yjs binary is truth.
- */
-async function encodeBinaryState({ state, document }) {
-  if (state instanceof Uint8Array) {
-    return state
-  }
-
-  if (document && typeof document.transact === 'function') {
-    const { encodeStateAsUpdate } = await import('yjs')
-    return encodeStateAsUpdate(document)
-  }
-
-  return new Uint8Array()
 }
 
 /**
@@ -338,9 +477,6 @@ async function boot() {
 
   const server = await buildServer()
   startHealthEndpoint(server)
-  // The ws frame limits (maxPayload / perMessageDeflate) are already wired via the
-  // `websocketOptions` config key in buildServer() — v4 forwards them to the crossws
-  // transport, so listen() no longer needs (or accepts) them as an argument.
   await server.listen()
   // eslint-disable-next-line no-console
   console.log(`Vaulter Hocuspocus hub "${config.instanceName}" listening on ws://0.0.0.0:${config.port}`)
@@ -353,10 +489,9 @@ async function boot() {
 if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
   boot().catch((error) => {
     // eslint-disable-next-line no-console
-    console.error('Vaulter collab hub failed to start:', error)
+    console.error('Vaulter collab hub failed to start:', error?.message ?? error)
     process.exit(1)
   })
 }
 
-export { buildServer, buildExtensions, onConnect, onAuthenticate, decodeTokenExpiry, armExpiryTimer, activeRoomStats }
-// websocketOptions is exported above (function declaration) for boot() + the hardening test.
+export { buildServer, buildExtensions, onConnect, decodeTokenExpiry, armExpiryTimer, closeRoom, activeRoomStats }

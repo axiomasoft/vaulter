@@ -1,0 +1,52 @@
+{
+    "vaulter/markdown": {
+        "nodes": [
+            "blockquote",
+            "bulletList",
+            "codeBlock",
+            "doc",
+            "hardBreak",
+            "heading",
+            "horizontalRule",
+            "listItem",
+            "orderedList",
+            "paragraph",
+            "text"
+        ],
+        "marks": [
+            "bold",
+            "code",
+            "italic",
+            "link",
+            "strike"
+        ]
+    },
+    "vaulter/rich-text": {
+        "nodes": [
+            "blockquote",
+            "bulletList",
+            "codeBlock",
+            "doc",
+            "hardBreak",
+            "heading",
+            "horizontalRule",
+            "image",
+            "listItem",
+            "orderedList",
+            "paragraph",
+            "table",
+            "tableCell",
+            "tableHeader",
+            "tableRow",
+            "text"
+        ],
+        "marks": [
+            "bold",
+            "code",
+            "italic",
+            "link",
+            "strike",
+            "underline"
+        ]
+    }
+}

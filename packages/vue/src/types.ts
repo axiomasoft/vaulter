@@ -31,32 +31,35 @@ export interface VaulterComment {
 }
 
 /** The collaboration transport a node session runs over (M4b). */
-export type CollaborationDriver = 'reverb' | 'hocuspocus'
+export type CollaborationDriver = 'hocuspocus'
+
+/** `rw` writes through the room; `ro` only follows it (the hub drops its updates). */
+export type CollaborationMode = 'rw' | 'ro'
 
 /**
- * The realtime-collaboration session descriptor the M4b node endpoint returns
- * (`POST nodes/{node}/collab/token` → `data`). It mirrors the backend
- * `CollaborationSession::toArray()` and is the ONE shape the Vue Yjs binding consumes
- * regardless of transport:
+ * A realtime-collaboration session for ONE generation of a document node
+ * (`POST nodes/{node}/collab/token` → `data`), mirroring the backend
+ * `CollaborationSession::toArray()`:
  *
- *   - driver     — the chosen transport (`reverb` | `hocuspocus`).
- *   - room       — the room/channel name, always `channel_prefix.nodeId`.
- *   - node_id    — the document node the room maps to.
- *   - read_only  — encoded from the actor's ability (view/comment → true, edit → false);
- *                  the client mounts a read-only editor when true.
- *   - token      — the room access handle: a signed JWT for Hocuspocus, the private
- *                  channel name for Reverb.
- *   - url        — the websocket URL for the Hocuspocus hub; null for Reverb.
- *   - connection — the Laravel broadcast connection name for Reverb; null for Hocuspocus.
+ *   - room           — `<prefix>.<driveId>.<nodeId>.<epoch>`.
+ *   - epoch          — the document generation; a restore moves it on and the hub closes
+ *                      the old room with code 4409 `epoch_changed`.
+ *   - schema_version — the schema the hub seeds and stores in; an editor that supports
+ *                      an older one must stay read-only.
+ *   - mode           — `rw` only for an editor of content the backend can save back.
+ *   - token          — the signed room JWT the hub forwards to the backend.
+ *   - url            — the hub's websocket URL.
  */
 export interface NodeCollaborationSession {
   driver: CollaborationDriver
   room: string
-  node_id: NodeId
-  read_only: boolean
+  node_id: string
+  drive_id: string
+  epoch: number
+  schema_version: number
+  mode: CollaborationMode
   token: string
   url: string | null
-  connection: string | null
 }
 
 // ─── Request payloads ────────────────────────────────────────────────────────

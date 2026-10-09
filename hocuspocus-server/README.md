@@ -7,7 +7,7 @@ configure it entirely through environment variables; you never copy its source i
 
 > **This is the collaboration backend.** Laravel Reverb is a general broadcast bus
 > (notifications, presence) and is **not** a collaboration transport — the `reverb`
-> collaboration driver is deprecated. Collaborative editing runs on this hub.
+> collaboration driver was removed. Collaborative editing runs on this hub.
 
 > **📖 The authoritative docs live in [`docs/guide/hocuspocus-server.md`](../docs/guide/hocuspocus-server.md):**
 > the full environment contract, security hardening (TLS/wss, Origin allowlist, throttle +
@@ -20,24 +20,31 @@ configure it entirely through environment variables; you never copy its source i
 Vue client ──ws(token=room JWT, doc=room name)──▶  this hub
                                                      │
    onConnect ── Origin allowlist (CSWSH) ───────────┤
-   onAuthenticate ─POST /collab/authenticate────────┤  (forwards the JWT)
-   onStoreDocument ─POST /collab/store──────────────▶  Laravel (api/vaulter)
-                                                        persists yjs_state (bytea)
+   onAuthenticate ─POST /collab/authenticate────────┤  every call: room JWT + HMAC signature
+   onLoadDocument ─POST /collab/load────────────────┤
+   onStoreDocument ─POST /collab/store──────────────▶  Laravel (api/vaulter), epoch fence
 ```
 
-1. The client calls `POST /api/vaulter/nodes/{node}/collab/token` on Laravel and gets a
-   room JWT (`{room, sub, readOnly, exp}` HS256) plus the hub `url`.
-2. It opens a WebSocket to this hub with that JWT as the **token** and the **room name**
-   (`vaulter.documents.<nodeId>`) as the document name.
-3. The hub validates the `Origin`, then `onAuthenticate` forwards the JWT + room to
-   `POST {laravel}/api/vaulter/collab/authenticate`. `{allowed:false}` (or any non-2xx)
-   refuses the socket; `readOnly` downgrades the connection so the server drops a viewer's edits.
-4. `onStoreDocument` (debounced) base64-encodes the **binary** Yjs state and POSTs it to
-   `POST {laravel}/api/vaulter/collab/store`, which persists it into
-   `v_node_document_versions.yjs_state`. The Yjs binary is the source of truth.
+1. The client gets a session from `POST /api/vaulter/nodes/{node}/collab/token`: the room
+   `<prefix>.<driveId>.<nodeId>.<epoch>`, the mode (`rw`|`ro`) and a room JWT.
+2. It connects with the JWT as the **token** and the room as the document name.
+3. `onAuthenticate` asks `collab/authenticate`; `mode: ro` makes the connection read-only.
+4. `onLoadDocument` loads the Yjs working state from `collab/load`, or — for a document
+   without one — builds the Y.Doc from its JSON **once** (`@hocuspocus/transformer` +
+   `src/schema.js`) and stores it with `seed: true`. **Clients never seed.**
+5. `onStoreDocument` (debounced) sends the binary state and its JSON projection to
+   `collab/store`. A `409` (the room's epoch is over after a restore, or a seed conflict) is
+   terminal: the hub closes the room with **4409 `epoch_changed`**, never retries, and drops
+   the room's later stores; clients reopen with a new Y.Doc. `404` closes with `4404`; `5xx`
+   and network errors are retried.
 
-The hub does **not** need the JWT signing secret — Laravel mints the token and the client
-forwards it; the hub only relays it to the webhooks, which verify the signature themselves.
+The hub never holds the JWT signing secret and never logs tokens. Expired tokens are refused
+before every message (close `4001`).
+
+**Document types and the TipTap schema.** `src/schema.js` mirrors the backend allow-list
+(`test/schema-parity.test.js` compares it with `packages/documents/tests/Fixtures/tiptap-schema.json`).
+Hosts that add TipTap nodes on the backend (`vaulter-documents.tiptap.extra_*`) add the
+extensions here too.
 
 ## Environment contract (quick reference)
 
@@ -49,7 +56,7 @@ a numeric value is malformed. The most common variables:
 | --- | --- | --- |
 | `VAULTER_BACKEND_URL` | `http://localhost` | Laravel base URL the hub calls back into. **Required in production.** |
 | `VAULTER_COLLAB_ALLOWED_ORIGINS` | *(empty)* | CSWSH allowlist — exact browser origins. **Required in production** (`*` = dev only). |
-| `VAULTER_COLLAB_WEBHOOK_SECRET` | *(unset)* | Optional shared secret (`X-Vaulter-Collab-Secret`); must match the Laravel config. |
+| `VAULTER_COLLAB_WEBHOOK_SECRET` | *(unset)* | Key of the HMAC signature of every backend call; must match the Laravel config. Required — without it the backend refuses every call. |
 | `VAULTER_COLLAB_PORT` / `_HEALTH_PORT` | `1234` / `1235` | WebSocket port / HTTP `GET /health` port. |
 | `NODE_ENV` | `production` | `production` enforces the allowlist + backend URL. The published image defaults to it. |
 
@@ -68,7 +75,8 @@ npm install
 npm start            # production
 npm run dev          # watch
 npm run check        # node --check on every source file (syntax gate)
-npm test             # node:test unit suite (mocks fetch; no running stack)
+npm test             # node:test unit suite (stub backend; no running stack)
+npm run test:e2e     # needs a running backend + hub — use ../scripts/collab-e2e.sh
 ```
 
 ## Docker
@@ -86,9 +94,11 @@ image is built and pushed to GHCR by `.github/workflows/hocuspocus-image.yml` on
 ## Verification
 
 - Syntax: `npm run check` (`node --check` per file).
-- Unit: `npm test` — `node:test` covers the webhook seam (bearer/secret headers, base64
-  `yjs_state`, allowed/readOnly parsing, fail-closed on non-2xx), the Origin allowlist + CSWSH
-  policy, fail-fast config validation, and that the `maxPayload`/`perMessageDeflate` hardening
-  actually reaches the underlying `ws` server — all with a mocked `fetch` / ephemeral ports.
-- A true end-to-end realtime check (two browsers through a live hub + Laravel + Postgres) lives
-  in the repo's `e2e/` stand (`make e2e-*`), not here.
+- Unit: `npm test` — `node:test` covers the backend client (bearer JWT + body signature with a
+  nonce, 409 as a terminal answer), server-side load and one-time seeding with seed conflicts,
+  the epoch fence (4409, no retry, fenced rooms), read-only and token expiry, the TipTap schema
+  parity with the backend, the Origin allowlist, config validation and the transport hardening.
+- End to end: `bash scripts/collab-e2e.sh` from the repo root starts `vendor/bin/testbench serve`
+  on a throwaway SQLite file and this hub, then runs `test/e2e/restore-epoch.e2e.js` (restore
+  during a live session → 4409 → the reopened room shows the restored document; read-only and
+  outdated-schema clients change nothing).

@@ -120,12 +120,11 @@ export interface VaulterClient {
   }
 
   /**
-   * The M4b node-collaboration handshake: mint a realtime session for a document
-   * NODE (the Drive surface). Returns the transport-agnostic
-   * {@link NodeCollaborationSession} the Yjs binding consumes.
+   * Mint a realtime collaboration session for a document node. Pass the schema version
+   * the editor supports: the backend answers a different one with a read-only session.
    */
   nodeCollaboration: {
-    token(nodeId: NodeId): Promise<NodeCollaborationSession>
+    token(nodeId: NodeId, options?: { schemaVersion?: number }): Promise<NodeCollaborationSession>
   }
 
   // ─── Drive (M1–M4) ───────────────────────────────────────────────────────
@@ -389,8 +388,10 @@ export function createVaulterClient(options: VaulterClientOptions = {}): Vaulter
       remove: (nodeId, commentId) => request<void>('DELETE', `/nodes/${nodeId}/comments/${commentId}`),
     },
     nodeCollaboration: {
-      token: (nodeId) =>
-        unwrap(request<Envelope<NodeCollaborationSession>>('POST', `/nodes/${nodeId}/collab/token`, { body: {} })),
+      token: (nodeId, options) =>
+        unwrap(request<Envelope<NodeCollaborationSession>>('POST', `/nodes/${nodeId}/collab/token`, {
+          body: options?.schemaVersion === undefined ? {} : { schema_version: options.schemaVersion },
+        })),
     },
 
     // ─── Drive (M1–M4) ─────────────────────────────────────────────────────

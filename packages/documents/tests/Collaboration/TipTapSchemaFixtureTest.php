@@ -1,0 +1,38 @@
+<?php
+
+declare(strict_types=1);
+
+use Vaulter\Documents\Content\TipTap\TipTapSchema;
+use Vaulter\Documents\Types\MarkdownDocumentType;
+use Vaulter\Documents\Types\RichTextDocumentType;
+
+/**
+ * The hub seeds rooms from JSON with its own TipTap extensions
+ * (hocuspocus-server/src/schema.js). A node or mark the hub does not know is dropped
+ * from the seed, and one the backend does not know makes every store fail, so both
+ * sides are pinned to one snapshot: this test owns tests/Fixtures/tiptap-schema.json,
+ * hocuspocus-server/test/schema-parity.test.js compares schema.js against it.
+ *
+ * After an intended schema change: VAULTER_REGENERATE_FIXTURES=1 regenerates the file.
+ */
+it('pins the TipTap nodes and marks of the collaborative types in the shared fixture', function (): void {
+    $snapshot = static function (TipTapSchema $schema): array {
+        $nodes = $schema->nodeTypes();
+        $marks = $schema->markTypes();
+        sort($nodes);
+        sort($marks);
+
+        return ['nodes' => $nodes, 'marks' => $marks];
+    };
+    $expected = json_encode([
+        MarkdownDocumentType::KEY => $snapshot(TipTapSchema::markdown()),
+        RichTextDocumentType::KEY => $snapshot(TipTapSchema::richText()),
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)."\n";
+    $path = __DIR__.'/../Fixtures/tiptap-schema.json';
+
+    if (getenv('VAULTER_REGENERATE_FIXTURES') === '1') {
+        file_put_contents($path, $expected);
+    }
+
+    expect(file_get_contents($path))->toBe($expected);
+});

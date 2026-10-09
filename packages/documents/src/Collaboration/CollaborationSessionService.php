@@ -14,9 +14,8 @@ use Vaulter\Models\Drive\Node;
 /**
  * Mints a {@see CollaborationSession} for an actor whose access was already decided.
  * It makes no access decision itself: DocumentOperations::collaborationSession()
- * authorizes View through the OperationGuard (scope, tenant, profile) and passes the
- * highest ability the actor holds — Edit gives a writable session, anything lower a
- * read-only one, so a token never grants more than the guard allowed.
+ * authorizes View through the OperationGuard and decides whether the session may
+ * write, so a token never grants more than the guard allowed.
  *
  * @internal
  */
@@ -28,7 +27,8 @@ final readonly class CollaborationSessionService
         private DocumentsConfig $documentsConfig,
     ) {}
 
-    public function issue(Node $node, Ability $ability, int|string $actorId): CollaborationSession
+    /** @param Ability $ability the highest ability the actor holds; only labels the metric */
+    public function issue(Node $node, Ability $ability, int $epoch, int $schemaVersion, bool $writable, int|string $actorId): CollaborationSession
     {
         if (!$node->kind->isDocument()) {
             throw NotADocumentException::forNode($node->getKey());
@@ -36,7 +36,9 @@ final readonly class CollaborationSessionService
 
         $session = $this->drivers->driver()->issueSession(
             node: $node,
-            ability: $ability,
+            epoch: $epoch,
+            schemaVersion: $schemaVersion,
+            writable: $writable,
             actorId: $actorId,
         );
 

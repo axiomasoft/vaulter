@@ -30,6 +30,56 @@ changes that require action from consumers of the package.
   enums and presentation DTO properties. Constructors of snapshots and pages are internal; hosts read these values.
 
 
+### Collaboration: epoch rooms, server-side loading, storage fence, read-only (PLAN2.D36, D44; PLAN2.P4.5)
+
+Collaboration keeps a restore from being overwritten by an open room and moves loading and
+seeding to the hub.
+
+- **Room names carry the document generation.** `vaulter.documents.<nodeId>` →
+  `<prefix>.<driveId>.<nodeId>.<epoch>`. A restore (or an API JSON replace of a document with Yjs
+  state) moves the epoch on; stores of a room opened before it are refused with `409
+  collaboration_epoch_mismatch` under the document lock, and the hub closes the room with close
+  code `4409` `epoch_changed`. Clients must open a new session and a **new** `Y.Doc`.
+- **`DocumentsConfig`:** `collaborationRoom($nodeId)` → `collaborationRoom($driveId, $nodeId,
+  $epoch)`; `nodeIdFromRoom()` → `parseRoom(string): ?RoomRef` (strict, `null` for anything this
+  installation does not issue); new `collaborationMaxStateBytes()` (key
+  `vaulter-documents.collaboration.max_state_bytes`, default 16 MiB). `hub.token_ttl` must be
+  1–3600 seconds and `driver = reverb` now throws `InvalidConfigurationException`.
+- **`CollaborationSession`** is a final readonly DTO: `nodeId` and `driveId` are strings, new
+  `epoch`, `schemaVersion` and `mode()`, `connection` is gone. The JSON (`POST
+  nodes/{node}/collab/token`) is `{driver, room, node_id, drive_id, epoch, schema_version, mode,
+  token, url}` — `read_only` → `mode` (`rw`|`ro`), `connection` removed. The token claims are
+  `sub, node, drive, tenant, epoch, schema_version, mode, room, iat, exp` (`readOnly` → `mode`).
+- **`DocumentOperations::collaborationSession($document, $clientSchemaVersion = null)`** checks
+  `collaboration.enabled` and `SupportsCollaboration` (`409 collaboration_unavailable`); the
+  session is `rw` only with Edit, an installed type, content saved back without loss, a matching
+  client schema version and an active drive. A document whose type is not installed now gets a
+  read-only session instead of `409 document_type_unavailable`. The token endpoint accepts
+  `schema_version`.
+- **`CollaborationDriver::issueSession()`** → `issueSession(Node $node, int $epoch, int
+  $schemaVersion, bool $writable, int|string $actorId)` for custom drivers.
+- **Hub endpoints.** Every call needs the room JWT (`Authorization: Bearer`) **and** the HMAC body
+  signature; the shared secret (`X-Vaulter-Collab-Secret`) is no longer an identity and the `token`
+  body field is no longer read. Bodies: `collab/authenticate {room}` → `{allowed, mode, userId,
+  epoch}`; new `collab/load {room}` → `{state, content, epoch, schemaVersion, stateVersion, type}`;
+  `collab/store {room, state, content, seed?}` (was `node_id`/`yjs_state`/`user_id`) →
+  `{changed, epoch, state_version, yjs_state_size}`. `content` is required for types whose
+  `projectFromState()` is `null` (both built-in types). New errors: `409
+  collaboration_seed_conflict`, `409 collaboration_unavailable`, `413 document_state_too_large`.
+  Every call re-checks trash, tenant, drive status (archived → read-only) and current rights.
+- **`hocuspocus-server`** must be upgraded together with the backend: it loads rooms through
+  `collab/load`, seeds once with `@hocuspocus/transformer` (new dependencies), stores with the room
+  epoch, signs every body with a nonce and never retries a `409`. `VAULTER_COLLAB_WEBHOOK_SECRET`
+  is required on the hub.
+- **`@vaulter/vue`:** `NodeCollaborationSession` follows the new JSON; `useNodeCollaboration()`
+  returns `doc` as a `ShallowRef<Y.Doc>` (replaced after `epoch_changed` — rebind the editor),
+  plus `schemaOutdated`; options `doc` → removed, new `supportedSchemaVersion`.
+  `createNodeCollaborationSession()` drops the Reverb bridge (`createReverbProvider`, `transport`).
+  `VaulterDocumentNode` passes `content: null` to the editor in collaborative mode (never
+  `setContent()` there — the hub seeds), and adds `supported-schema-version` and `schema-outdated`.
+- **Events.** A restore also dispatches `Documents\Events\Revisions\DocumentRestored` (`version`,
+  `restoredFrom`, `epoch`, `stateVersion`, `actorId`).
+
 ### Document export by type and format (PLAN2.D28, D34–D37; PLAN2.P4.4)
 
 Export belongs to `vaulter-documents` and answers a file.

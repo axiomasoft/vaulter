@@ -889,9 +889,9 @@ describe('VaulterDocumentNode', () => {
     }
   }
 
-  const hocuspocusSession = (readOnly: boolean): NodeCollaborationSession => ({
-    driver: 'hocuspocus', room: 'vaulter.documents.20', node_id: 20,
-    read_only: readOnly, token: 'jwt', url: 'ws://hub:1234', connection: null,
+  const hocuspocusSession = (readOnly: boolean, schemaVersion = 1): NodeCollaborationSession => ({
+    driver: 'hocuspocus', room: 'vaulter.documents.3.20.0', node_id: '20', drive_id: '3',
+    epoch: 0, schema_version: schemaVersion, mode: readOnly ? 'ro' : 'rw', token: 'jwt', url: 'ws://hub:1234',
   })
 
   // A stub Hocuspocus provider — no real socket. Lets the session build in a test.
@@ -917,11 +917,12 @@ describe('VaulterDocumentNode', () => {
       collaborative: { type: Boolean, default: false },
       ydoc: { type: Object, default: null },
     },
-    setup: (props) => () => h('div', {
+    setup: (props, { attrs }) => () => h('div', {
       class: 'stub-editor',
       'data-collaborative': props.collaborative ? 'true' : 'false',
       'data-readonly': props.readonly ? 'true' : 'false',
       'data-has-ydoc': props.ydoc ? 'true' : 'false',
+      'data-has-content': attrs.content ? 'true' : 'false',
     }, 'editor-mounted'),
   }))
 
@@ -959,8 +960,28 @@ describe('VaulterDocumentNode', () => {
     expect(editor.attributes('data-collaborative')).toBe('true')
     // The shared Y.Doc is handed to the editor and writes go through Yjs (no autosave).
     expect(editor.attributes('data-has-ydoc')).toBe('true')
+    // The hub seeds the room; the editor gets no JSON it could seed it with again.
+    expect(editor.attributes('data-has-content')).toBe('false')
     expect(wrapper.emitted('collaborating')?.[0]?.[0]).toBe(false)
     expect(updateContent).not.toHaveBeenCalled()
+  })
+
+  it('opens a document in a newer schema read-only and asks to update the application', async () => {
+    const { client } = docClient(tiptapHandler, hocuspocusSession(false, 2))
+    const wrapper = mount(VaulterDocumentNode, {
+      props: {
+        nodeId: 20,
+        componentMap: { VaulterEditor: StubEditor },
+        collaborationProviders: stubProviders(),
+        supportedSchemaVersion: 1,
+      },
+      ...withClient(client),
+    })
+
+    await flushAll()
+
+    expect(wrapper.find('.stub-editor').attributes('data-readonly')).toBe('true')
+    expect(wrapper.emitted('schema-outdated')?.[0]).toEqual([2])
   })
 
   it('respects a read-only collaboration session', async () => {

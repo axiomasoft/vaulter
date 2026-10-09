@@ -50,6 +50,20 @@ final class InvalidDocumentContentException extends VaulterException implements 
         return $exception;
     }
 
+    /** A collaboration store without the JSON projection a type cannot derive from its state. */
+    public static function missingProjection(string $type): self
+    {
+        $exception = new self(
+            sprintf('[Vaulter] The collaboration store for a "%s" document carries no JSON content. ', $type)
+            .'Why: this type does not project its JSON from the collaboration state, so the hub must send it. '
+            .'Fix: send `content` (TiptapTransformer.fromYdoc) with every store. '
+            .'Docs: '.self::docs('invalid-document-content'),
+        );
+        $exception->reason = 'missing_projection';
+
+        return $exception;
+    }
+
     public static function notAnObject(): self
     {
         $exception = new self(

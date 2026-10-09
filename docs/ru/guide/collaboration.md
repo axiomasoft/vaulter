@@ -1,31 +1,19 @@
 ---
 title: Совместное редактирование
-description: Совместное редактирование документов в реальном времени на Yjs и внешний хаб Hocuspocus; рукопожатие токена, права из ability и развёртывание hocuspocus-server.
+description: Совместное редактирование документов в реальном времени на Yjs и внешнем хабе Hocuspocus — сессия, ограждение по поколению (epoch), загрузка и сидирование на сервере, read-only и обвязка @vaulter/vue.
 outline: deep
 ---
 
 # Совместное редактирование
 
-Vaulter редактирует **узлы-документы** (`kind = document`, контент в
-`v_documents`) совместно в реальном времени. Бесконфликтное слияние
-обеспечивает **Yjs** — бинарное CRDT-состояние является **источником истины**; JSON TipTap
-это производная проекция. Транспорт скрыт за контрактом `CollaborationDriver`, с двумя
-реализациями на выбор через конфиг.
+Vaulter редактирует **узлы-документы** (`kind = document`, контент в агрегате `v_documents`)
+совместно в реальном времени. Бесконфликтное слияние обеспечивает **Yjs** — бинарное
+CRDT-состояние является **источником истины**, JSON TipTap — его проекция. Транспорт —
+внешний хаб **Hocuspocus** (`hocuspocus-server/`) за контрактом `CollaborationDriver`.
 
-::: warning Перевод в процессе
-На русском пока доступны разделы по выбору драйвера, конфигу и развёртыванию. Полное
-описание потока рукопожатия, контракта вебхуков и фронтенд-обвязки `@vaulter/vue` — на
-английской странице [Realtime Collaboration](/guide/collaboration).
-:::
-
-## Драйвер совместного редактирования
-
-Yjs остаётся источником истины. Драйвер `hocuspocus` подключает внешний Node-хаб
-(`hocuspocus-server/`) через подписанный room-JWT и вебхуки сервер-к-серверу.
-Настройте URL хаба и секрет JWT в `config('vaulter-documents.collaboration')`.
-
-Reverb для совместного редактирования Yjs удалён; используйте Hocuspocus.
-Broadcast-каналы комментариев и проверки доступа сохраняются.
+Reverb для совместного редактирования Yjs удалён: `vaulter-documents.collaboration.driver =
+reverb` теперь даёт `InvalidConfigurationException`. Broadcast-каналы комментариев и их
+проверки доступа сохраняются.
 
 ## Конфигурация
 
@@ -43,116 +31,137 @@ Broadcast-каналы комментариев и проверки доступ
         'token_ttl' => 3600,
         'timestamp_tolerance' => 300,
     ],
+    'max_state_bytes' => 16777216,
     'broadcast' => ['channel_prefix' => 'vaulter.documents'],
 ],
 ```
 
+| Ключ | Env | По умолчанию | Назначение |
+|---|---|---|---|
+| `enabled` | — | `false` | Opt-in. Выключено: маршруты не смонтированы, `collaborationSession()` отвечает `409 collaboration_unavailable`. |
+| `driver` | `VAULTER_COLLAB_DRIVER` | `hocuspocus` | Единственный транспорт; `reverb` отвергается. |
+| `broadcast.channel_prefix` | — | `vaulter.documents` | Пространство имён комнат: `<prefix>.<driveId>.<nodeId>.<epoch>`. |
+| `hub.url` | `VAULTER_COLLAB_URL` | `ws://localhost:1234` | WebSocket-URL хаба для клиента. |
+| `hub.jwt_secret` | `VAULTER_COLLAB_SECRET` | *(не задан)* | Ключ HS256 для выпуска и проверки room-JWT. Только на стороне Laravel. |
+| `hub.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | *(не задан)* | Ключ HMAC-подписи тела каждого вызова хаба. Общий с хабом; должен отличаться от `jwt_secret`. |
+| `hub.token_ttl` | — | `3600` | Срок жизни room-JWT в секундах, от 1 до 3600 (иначе `InvalidConfigurationException`). |
+| `hub.timestamp_tolerance` | — | `300` | Допустимый сдвиг часов подписанного вызова и окно защиты от повтора. |
+| `max_state_bytes` | — | `16777216` | Максимальный бинарный Yjs-state одной записи (`413 document_state_too_large`). |
+
 ::: warning Коллаборация включается отдельно
-Установите Documents и включите `vaulter-documents.collaboration.enabled`.
-Редактирование документов и ревизии доступны при установке пакета без дополнительного флага.
-Оба секрета хаба должны быть заданы и различаться.
+Включите `vaulter-documents.collaboration.enabled`, установите `firebase/php-jwt` и задайте
+оба секрета хаба — разные. Кэш защиты от повтора подписанных вызовов живёт в `Cache`-store
+приложения: в продакшне нужен общий для всех инстансов store (Redis, database), а не
+`array` или `file`.
 :::
 
-## Hocuspocus (внешний Node-хаб)
+## Поколения: epoch
 
-При `driver = hocuspocus` клиент подключается к WebSocket-URL хаба, предъявляя **room-JWT**
-в качестве токена. Хаб не доверяет JWT сам по себе — он вызывает Laravel **обратно**:
+У каждого документа есть **поколение коллаборации** (`v_documents.collab_epoch`). Оно растёт,
+когда рабочее состояние заменяется не из комнаты:
 
-- **`onAuthenticate`** → `POST {laravel}/api/vaulter/collab/authenticate` — Laravel
-  определяет ability пользователя на узле и отвечает `{allowed, readOnly, user}`.
-- **`onStoreDocument`** (с дебаунсом на хабе) → `POST {laravel}/api/vaulter/collab/store` —
-  бинарное состояние Yjs (base64) сохраняется в рабочее состояние `v_documents.yjs_state`.
+- `restore()` ревизии;
+- `update()` коллаборативного документа, у которого уже есть Yjs-state (замена JSON через
+  API/PHP — Yjs-state сбрасывается, следующая комната сидируется из нового JSON).
 
-Vaulter выпускает JWT через `firebase/php-jwt` (HS256, подпись ключом `VAULTER_COLLAB_SECRET`):
+Поколение входит в имя комнаты, токен и каждую запись. Это **storage fence**: запись несёт
+epoch комнаты и сравнивается с `collab_epoch` на строке документа под `FOR UPDATE`; restore
+меняет epoch под той же блокировкой. Поэтому запись комнаты, открытой до restore, либо
+коммитится до него (и заменяется им), либо отвергается `409 collaboration_epoch_mismatch` —
+как бы поздно ни сработал debounce хаба, она никогда не ляжет поверх восстановленного
+документа.
 
-```bash
-composer require firebase/php-jwt
-```
+Хаб узнаёт о restore при следующей записи этой комнаты и закрывает её кодом **4409**
+`epoch_changed`; клиенты открывают новую сессию и **новый** `Y.Doc`.
 
-Если пакет отсутствует или не задан `drivers.hocuspocus.secret`, драйвер бросает
-`CollaborationConfigException` на этапе выпуска токена, а не выдаёт непроверяемый токен.
+## Поток подключения
 
-::: danger Эндпоинты вебхуков никогда не открыты
-Маршруты `collab/authenticate` и `collab/store` идут **без** auth-middleware Laravel —
-только через `ResolveCollaborationCall`, который аутентифицирует хаб либо общим секретом в
-заголовке `X-Vaulter-Collab-Secret`, либо валидным подписанным room-JWT в `Authorization:
-Bearer`. Запрос без того и другого получает `401`. JWT-вызов может адресовать только свою
-комнату (токен узла A не сохранит в узел B), а read-only JWT-вызов не может писать.
+1. Клиент вызывает `POST nodes/{node}/collab/token`, при желании передавая `schema_version`
+   своего редактора.
+2. `DocumentOperations::collaborationSession($document, $clientSchemaVersion)` находит узел,
+   авторизует `View` (невидимый узел — `404 node_not_found`) и выбирает режим. Сессия
+   **read-write**, только если у актора есть `Edit`, тип документа установлен и контент
+   читается без потерь в схеме, которую эта установка пишет, версия схемы клиента не задана
+   или совпадает с типом, а диск активен (архивный — read-only). Выключенная коллаборация или
+   тип без `SupportsCollaboration` — `409 collaboration_unavailable`.
+3. Драйвер выпускает сессию: `room`, `node_id`, `drive_id`, `epoch`, `schema_version`, `mode`
+   (`rw`|`ro`), `token`, `url`. Токен — JWT HS256 с claims `sub`, `node`, `drive`, `tenant`,
+   `epoch`, `schema_version`, `mode`, `room`, `iat`, `exp`.
+
+## Протокол хаба (сервер-к-серверу)
+
+Эндпоинты хаба идут без auth-middleware Laravel — только через `ResolveCollaborationCall`,
+который требует **оба** барьера: room-JWT в `Authorization: Bearer` (подпись и `exp`;
+комната разбирается и совпадает с claims `node`/`drive`/`epoch`) и HMAC-SHA256 подпись
+`"{timestamp}.{rawBody}"` ключом `hub.webhook_secret` (`X-Vaulter-Collab-Timestamp` +
+`X-Vaulter-Collab-Signature`). Устаревшая метка времени и повтор подписи отвергаются; хаб
+кладёт в каждое тело случайный `nonce`. Иначе — `401`. Общий секрет сам по себе больше не
+является личностью.
+
+Каждый вызов перечитывает живое состояние: узел существует, не в корзине, принадлежит диску
+и тенанту токена, диск активен или в архиве, epoch комнаты текущий, права пользователя —
+на этот момент. Отзыв `Edit` действует на следующем вызове хаба.
+
+| Эндпоинт | Хук хаба | Тело | Ответ |
+|---|---|---|---|
+| `POST collab/authenticate` | `onAuthenticate` | `{ room }` | `{ allowed, mode, userId, epoch }`; `409 collaboration_epoch_mismatch` для прошлого поколения. |
+| `POST collab/load` | `onLoadDocument` | `{ room }` | `{ state, content, epoch, schemaVersion, stateVersion, type }` — base64 Yjs-state или `null` и JSON для однократного сидирования. |
+| `POST collab/store` | `onStoreDocument` | `{ room, state, content, seed? }` | `{ changed, epoch, state_version, yjs_state_size }`. |
+
+`collab/store`: read-only токен, пользователь без `Edit`, архивный диск или токен другой
+версии схемы — `403`; чужое поколение — `409 collaboration_epoch_mismatch`; `seed: true`
+пишется, только пока у документа нет Yjs-state (иначе `409 collaboration_seed_conflict`);
+`content` обязателен для типов, чей `projectFromState()` возвращает `null` (оба встроенных),
+и проверяется кодеком типа (`422 invalid_document_content`); state больше `max_state_bytes` —
+`413 document_state_too_large`.
+
+### Загрузка и сидирование — только на хабе
+
+`onLoadDocument` хаба применяет сохранённый Yjs-state. Документ без него строится из JSON
+**один раз** на сервере через `@hocuspocus/transformer` и схему хаба
+(`hocuspocus-server/src/schema.js`) и сохраняется с `seed: true`.
+
+::: danger Никогда не сидируйте на клиенте
+В коллаборативном режиме **не** вызывайте `setContent()` редактора и не вставляйте JSON в
+`Y.Doc`: два клиента, конвертирующие один JSON, создают разные Yjs-вставки, и слияние
+покажет контент дважды. `VaulterDocumentNode` поэтому передаёт редактору `content: null`.
 :::
 
-### Развёртывание `hocuspocus-server`
+### Read-only
 
-Хаб находится в каталоге `hocuspocus-server/` (`@hocuspocus/server` + `yjs`). Ему нужен
-URL бэкенда для вызова вебхуков; ключ подписи JWT ему **не нужен** (Laravel выпускает токен,
-клиент его пересылает, хаб лишь ретранслирует его в вебхуки, которые проверяют подпись).
+Read-only проверяется дважды: хаб помечает `ro`-соединение read-only (Hocuspocus отбрасывает
+его изменения) и не пишет в read-only контексте, а бэкенд отвергает запись с `ro`-токеном.
+После истечения токена хаб отвергает каждое сообщение и закрывает соединение кодом `4001`.
 
-::: code-group
+## Развёртывание
 
-```bash [Напрямую]
-cd hocuspocus-server
-npm install
-npm start            # продакшн
-npm run dev          # режим наблюдения
-```
-
-```yaml [docker-compose.yml]
-services:
-  vaulter-collab:
-    build: ./hocuspocus-server
-    image: vaulter/hocuspocus-server:dev
-    ports:
-      - "${VAULTER_COLLAB_PORT:-1234}:1234"
-    environment:
-      VAULTER_COLLAB_PORT: 1234
-      VAULTER_COLLAB_HEALTH_PORT: 1235
-      VAULTER_BACKEND_URL: ${VAULTER_BACKEND_URL:-http://host.docker.internal}
-      VAULTER_API_PREFIX: ${VAULTER_API_PREFIX:-api/vaulter}
-      # ДОЛЖЕН совпадать с vaulter-documents.collaboration.hub.webhook_secret на стороне Laravel.
-      VAULTER_COLLAB_WEBHOOK_SECRET: ${VAULTER_COLLAB_WEBHOOK_SECRET:-}
-    healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:1235/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-    restart: unless-stopped
-```
-
-:::
-
-Хаб поднимает небольшой health-эндпоинт на **отдельном** порту (чтобы не мешать апгрейду
-WebSocket на основном порту): `GET /health` → `200 {"status":"ok"}`. Нацельте на него
-healthcheck в compose/оркестраторе, прежде чем запускать зависимые сервисы.
-
-#### Контракт окружения
-
-| Переменная | По умолчанию | Назначение |
-|---|---|---|
-| `VAULTER_COLLAB_PORT` | `1234` | WebSocket-порт хаба (клиент подключается к `ws://host:PORT`). |
-| `VAULTER_COLLAB_HEALTH_PORT` | `1235` | HTTP-порт health-эндпоинта — `GET /health`. |
-| `VAULTER_BACKEND_URL` | `http://localhost` | Базовый URL приложения Laravel, куда хаб шлёт вебхуки (без завершающего слэша). В Docker — имя сервиса приложения или `host.docker.internal`. |
-| `VAULTER_API_PREFIX` | `api/vaulter` | Префикс API-маршрутов Vaulter. Вебхуки разрешаются в `{VAULTER_BACKEND_URL}/{VAULTER_API_PREFIX}/collab/{authenticate,store}`. |
-| `VAULTER_LARAVEL_WEBHOOK_URL` | *(производная)* | Явное переопределение полного базового URL вебхуков; перекрывает две переменные выше (reverse proxy / разделённый хост). |
-| `VAULTER_COLLAB_WEBHOOK_SECRET` | *(не задан)* | Общий секрет в заголовке `X-Vaulter-Collab-Secret`. **Должен совпадать** с `vaulter-documents.collaboration.hub.webhook_secret` на стороне Laravel. Если не задан — хаб аутентифицирует вебхуки только пересланным room-JWT. |
-| `VAULTER_COLLAB_WEBHOOK_TIMEOUT_MS` | `10000` | Таймаут round-trip вебхука в мс. |
-
-::: danger Согласуйте секреты
-`VAULTER_COLLAB_WEBHOOK_SECRET` на **хабе** должен совпадать с
-`vaulter-documents.collaboration.hub.webhook_secret` на **Laravel** (одно и то же имя переменной с обеих
-сторон). Ключ подписи JWT (`VAULTER_COLLAB_SECRET`) живёт **только** на стороне Laravel —
-хаб его никогда не видит.
-:::
-
-На стороне Laravel укажите клиенту на хаб:
+Контракт окружения, Docker и health-эндпоинты — на странице
+[Хаб Hocuspocus](/ru/guide/hocuspocus-server). На стороне Laravel:
 
 ```dotenv
 VAULTER_COLLAB_DRIVER=hocuspocus
-VAULTER_COLLAB_URL=ws://collab.example.com:1234
-VAULTER_COLLAB_SECRET=<32+ символов случайных>     # ключ подписи room-JWT (HS256)
-VAULTER_COLLAB_WEBHOOK_SECRET=<другой случайный>   # общий с хабом
+VAULTER_COLLAB_URL=wss://collab.example.com
+VAULTER_COLLAB_SECRET=<32+ символов случайных>     # ключ room-JWT, только Laravel
+VAULTER_COLLAB_WEBHOOK_SECRET=<другой случайный>   # общий с хабом, подписывает вызовы
 ```
+
+## Фронтенд (`@vaulter/vue`)
+
+`useNodeCollaboration` получает сессию, открывает `@hocuspocus/provider` на свежем `Y.Doc` и
+обрабатывает терминальные закрытия хаба: на **4409 `epoch_changed`** провайдер и старый
+`Y.Doc` уничтожаются, запрашивается новая сессия, и `doc` (`ShallowRef<Y.Doc>`) **заменяется**
+новым документом — перепривяжите редактор и не переносите старое содержимое; на **4001**
+запрашивается новая сессия, `Y.Doc` сохраняется в пределах того же поколения. Опция
+`supportedSchemaVersion` отправляется с запросом сессии; документ в более новой схеме
+открывается read-only, `schemaOutdated` = `true`.
+
+`VaulterDocumentNode` в коллаборативном режиме передаёт редактору `collaborative: true`,
+`content: null`, `ydoc` (заменяется после restore), присутствие и состояние соединения;
+проп `supported-schema-version` и событие `schema-outdated` сообщают о необходимости
+обновить приложение.
 
 ## Дальше
 
+- [Хаб Hocuspocus](/ru/guide/hocuspocus-server)
+- [Ошибки](/ru/guide/errors) — `collaboration_*` и `document_state_too_large`
 - [ADR-0001 — Транспорт совместного редактирования](/adr/0001-collaboration-transport)
-- Полная страница (поток токена, контракт вебхуков, обвязка `@vaulter/vue`):
-  [Realtime Collaboration](/guide/collaboration) (англ.)

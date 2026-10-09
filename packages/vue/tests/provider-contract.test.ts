@@ -14,14 +14,16 @@ import type { NodeCollaborationSession } from '../src/types'
 function hocuspocusSession(): NodeCollaborationSession {
   return {
     driver: 'hocuspocus',
-    room: 'vaulter.documents.42',
-    node_id: 42,
-    read_only: false,
+    room: 'vaulter.documents.7.42.0',
+    node_id: '42',
+    drive_id: '7',
+    epoch: 0,
+    schema_version: 1,
+    mode: 'rw',
     token: 'jwt-token',
     // Unroutable on purpose: the provider never establishes a live socket in the
     // sandbox; we only assert the synchronous construction/getter/awareness contract.
     url: 'ws://127.0.0.1:1',
-    connection: null,
   }
 }
 

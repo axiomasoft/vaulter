@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Config\Repository;
 use Vaulter\Contracts\Profiles\CommentsFeature;
 use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Documents\Data\Collaboration\RoomRef;
 use Vaulter\Documents\Export\HtmlExporter;
 use Vaulter\Documents\Export\MarkdownExporter;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
@@ -60,10 +61,39 @@ it('round trips room identities and filters unsafe extension metadata', function
         'tiptap' => ['extra_attributes' => ['paragraph' => ['title', false], 'text' => false]],
     ]]));
 
-    expect($config->collaborationRoom('01ABC'))->toBe('host.docs.01ABC')
-        ->and($config->nodeIdFromRoom('host.docs.01ABC'))->toBe('01ABC')
-        ->and($config->nodeIdFromRoom('foreign.room'))->toBe('foreign.room')
+    $room = $config->collaborationRoom('01DRIVE', '01ABC', 3);
+
+    expect($room)->toBe('host.docs.01DRIVE.01ABC.3')
+        ->and($config->parseRoom($room))->toEqual(new RoomRef(driveId: '01DRIVE', nodeId: '01ABC', epoch: 3))
         ->and($config->tiptapExtraAttributes())->toBe(['paragraph' => ['title']]);
+});
+
+it('parses only room names it issues', function (string $room): void {
+    $config = new DocumentsConfig(new Repository(['vaulter-documents' => [
+        'collaboration' => ['broadcast' => ['channel_prefix' => 'host.docs']],
+    ]]));
+
+    expect($config->parseRoom($room))->toBeNull();
+})->with([
+    'foreign prefix' => ['foreign.room.1.2.0'],
+    'no epoch (0.2 room)' => ['host.docs.42'],
+    'missing drive' => ['host.docs.42.0'],
+    'extra segment' => ['host.docs.1.2.3.4'],
+    'empty node' => ['host.docs.1..0'],
+    'negative epoch' => ['host.docs.1.2.-1'],
+    'padded epoch' => ['host.docs.1.2.01'],
+    'non-numeric epoch' => ['host.docs.1.2.x'],
+]);
+
+it('refuses the removed reverb driver and a token ttl above one hour', function (): void {
+    $reverb = new DocumentsConfig(new Repository(['vaulter-documents' => ['collaboration' => ['driver' => 'reverb']]]));
+    $ttl = static fn (int $seconds): DocumentsConfig => new DocumentsConfig(new Repository(['vaulter-documents' => ['collaboration' => ['hub' => ['token_ttl' => $seconds]]]]));
+
+    expect(fn () => $reverb->collaborationDriver())->toThrow(InvalidConfigurationException::class, 'reverb collaboration driver was removed')
+        ->and(fn () => $ttl(3601)->hubTokenTtl())->toThrow(InvalidConfigurationException::class)
+        ->and(fn () => $ttl(0)->hubTokenTtl())->toThrow(InvalidConfigurationException::class)
+        ->and($ttl(3600)->hubTokenTtl())->toBe(3600)
+        ->and((new DocumentsConfig(new Repository([])))->collaborationMaxStateBytes())->toBe(16777216);
 });
 
 it('rejects incompatible document model overrides', function (): void {

@@ -53,11 +53,18 @@ export {
 } from './engineRegistry'
 
 // Node collaboration transport (M4b)
-export { createNodeCollaborationSession } from './nodeCollaboration'
+export {
+  createNodeCollaborationSession,
+  EPOCH_CHANGED_CODE,
+  EPOCH_CHANGED_REASON,
+  sessionEnd,
+  TOKEN_EXPIRED_CODE,
+} from './nodeCollaboration'
 export type {
   AwarenessLike,
   Collaborator,
   CreateNodeCollaborationOptions,
+  NodeCollaborationEnd,
   NodeCollaborationProviderHandle,
   NodeCollaborationSessionHandle,
 } from './nodeCollaboration'

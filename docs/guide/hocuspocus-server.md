@@ -30,28 +30,47 @@ Vaulter.
 
 ```
  browser (writer/viewer) ──ws(token = room JWT, doc = room name)──▶  hub
-        │                                                            │
         │                                  onConnect → Origin allowlist (CSWSH)
         │                                  onAuthenticate ─POST /collab/authenticate─┐
+        │                                  onLoadDocument ─POST /collab/load─────────┤
         │                                  onStoreDocument ─POST /collab/store───────┤
         └──── POST /api/vaulter/nodes/{node}/collab/token ──▶ Laravel ◀──────────────┘
-                                                              persists yjs_state (bytea)
+                                                 working state + epoch fence (v_documents)
 ```
 
-1. The client calls `POST /api/vaulter/nodes/{node}/collab/token` on Laravel and gets a
-   room JWT (`{room, sub, readOnly, exp}`, HS256) plus the hub `url`.
-2. It opens a WebSocket to the hub with that JWT as the **token** and the **room name**
-   (`vaulter.documents.<nodeId>`) as the document name.
-3. The hub validates the `Origin`, then forwards the JWT + room to
-   `POST {backend}/api/vaulter/collab/authenticate`. `{allowed:false}` (or any non-2xx)
-   refuses the socket; `readOnly` downgrades the connection so the server drops a viewer's
-   edits.
-4. `onStoreDocument` (debounced) base64-encodes the **binary** Yjs state and POSTs it to
-   `POST {backend}/api/vaulter/collab/store`, which persists it into
-   `v_documents.yjs_state` (the working state). The Yjs binary is the source of truth.
+1. The client calls `POST /api/vaulter/nodes/{node}/collab/token` and gets a session: the
+   room `<prefix>.<driveId>.<nodeId>.<epoch>`, the mode (`rw`|`ro`) and a room JWT.
+2. It opens a WebSocket to the hub with the JWT as the **token** and the room as the
+   document name.
+3. The hub validates the `Origin`, then asks `collab/authenticate`. A refusal closes the
+   socket; `mode: ro` makes the connection read-only (Hocuspocus drops its updates).
+4. `onLoadDocument` asks `collab/load`: the binary Yjs working state, or — for a document
+   without one — its JSON. The hub builds the Y.Doc from the JSON **once** with
+   `@hocuspocus/transformer` and `src/schema.js` and stores it with `seed: true`. Clients
+   never seed.
+5. `onStoreDocument` (debounced) sends the binary state and its JSON projection to
+   `collab/store`. The backend fences stores by the room's epoch: after a restore, the old
+   room's store answers `409 collaboration_epoch_mismatch`. The hub does **not** retry then:
+   it closes the room's connections with close code **4409** `epoch_changed` and drops every
+   later store of that room; clients reopen the document with a new Y.Doc. A `404` (document
+   removed) closes the room with `4404`; network errors and `5xx` are retried.
+6. Every call is signed (HMAC of the exact body with `VAULTER_COLLAB_WEBHOOK_SECRET`, with a
+   timestamp and a random nonce) and carries the room JWT; the backend requires both.
 
-The hub does **not** need the JWT signing secret — Laravel mints the token and the client
-forwards it; the hub only relays it to the webhook, which verifies the signature.
+The hub does **not** need the JWT signing secret — Laravel mints the token and verifies it on
+every call. The hub never logs tokens. Once a token expires the hub refuses its connection's
+messages and closes it with code `4001`.
+
+### The TipTap schema of the hub
+
+`src/schema.js` lists the TipTap extensions the hub seeds and projects with: StarterKit,
+Link, Image and Table for `vaulter/rich-text`; the Markdown subset for `vaulter/markdown`.
+It must match the backend allow-list — `test/schema-parity.test.js` compares it with
+`packages/documents/tests/Fixtures/tiptap-schema.json`. A host that adds nodes through
+`vaulter-documents.tiptap.extra_*` adds the matching extensions to `src/schema.js` too;
+otherwise the hub drops those nodes from a seed and the backend refuses projections that
+contain them. A document type the hub has no schema for cannot be seeded (its connection is
+refused while it has no Yjs state).
 
 ## Environment contract
 
@@ -66,9 +85,9 @@ missing.
 | `VAULTER_COLLAB_PORT` | `1234` | WebSocket port clients connect to (`ws(s)://host:PORT`). |
 | `VAULTER_COLLAB_HEALTH_PORT` | `1235` | HTTP health port — `GET /health` → `200`. Separate from the WS port. |
 | `VAULTER_BACKEND_URL` | `http://localhost` | Your Laravel app base URL the hub calls back into. **Required in production.** |
-| `VAULTER_API_PREFIX` | `api/vaulter` | The Vaulter route prefix. Webhooks resolve to `{BACKEND}/{PREFIX}/collab/{authenticate,store}`. |
+| `VAULTER_API_PREFIX` | `api/vaulter` | The Vaulter route prefix. Calls resolve to `{BACKEND}/{PREFIX}/collab/{authenticate,load,store}`. |
 | `VAULTER_LARAVEL_WEBHOOK_URL` | *(derived)* | Explicit full webhook base; overrides the two above (reverse proxy / split host). |
-| `VAULTER_COLLAB_WEBHOOK_SECRET` | *(unset)* | Shared secret presented as `X-Vaulter-Collab-Secret`. Must equal the Laravel `vaulter-documents.collaboration.hub.webhook_secret`. Unset ⇒ the hub authenticates webhooks with the forwarded room JWT alone (never open). |
+| `VAULTER_COLLAB_WEBHOOK_SECRET` | *(unset)* | Key of the HMAC signature of every backend call. Must equal the Laravel `vaulter-documents.collaboration.hub.webhook_secret`; the secret itself is never sent. Required: without it every call is refused. |
 | `VAULTER_COLLAB_WEBHOOK_TIMEOUT_MS` | `10000` | Webhook round-trip timeout. |
 
 ### Security
@@ -87,7 +106,7 @@ missing.
 | --- | --- | --- |
 | `VAULTER_COLLAB_TIMEOUT_MS` | `30000` | Dead-peer heartbeat interval. Align with your load-balancer/proxy idle timeout. |
 | `VAULTER_COLLAB_DEBOUNCE_MS` | `5000` | `onStoreDocument` debounce — higher = fewer persistence writes during active editing. |
-| `VAULTER_COLLAB_MAX_DEBOUNCE_MS` | `30000` | Hard cap before a forced store (bounds the worst-case unsaved window). |
+| `VAULTER_COLLAB_MAX_DEBOUNCE_MS` | `30000` | Hard cap before a forced store (bounds the worst-case unsaved window, and how long an open room takes to learn about a restore). |
 
 ### Scaling / ops
 
@@ -110,8 +129,9 @@ missing.
 - **Keep `MAX_PAYLOAD` small** — Yjs updates are incremental and tiny; a low cap blunts
   oversized-message DoS. (The hub now applies this cap to the underlying `ws` server; the
   library default of ~100 MiB is never used.)
-- The **room JWT is short-lived** and bound to exactly one node; the webhook re-checks
-  access, so a viewer can never write (the server drops their updates).
+- The **room JWT is short-lived** (`token_ttl` ≤ 3600) and bound to one generation of one
+  document; every backend call re-checks access, so a viewer can never write (the hub drops
+  their updates, the backend refuses a read-only store).
 - **Never expose the WebSocket port (1234) directly to the internet.** Bind it to the host
   loopback / your private network and reach it only through the reverse proxy. The reference
   `docker-compose.yml` publishes it on `127.0.0.1` for exactly this reason.

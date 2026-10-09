@@ -1,5 +1,5 @@
 Vaulter\Documents\Contracts\CollaborationDriver
-  issueSession(\Vaulter\Models\Drive\Node $node, \Vaulter\Enums\Access\Ability $ability, int|string $actorId): \Vaulter\Documents\Data\Collaboration\CollaborationSession
+  issueSession(\Vaulter\Models\Drive\Node $node, int $epoch, int $schemaVersion, bool $writable, int|string $actorId): \Vaulter\Documents\Data\Collaboration\CollaborationSession
   type(): \Vaulter\Documents\Enums\Collaboration\CollaborationDriverType
 
 Vaulter\Documents\Contracts\DocumentCodec
@@ -47,7 +47,8 @@ Vaulter\Documents\Configuration\DocumentsConfig
   checkpointIntervalSeconds(): int
   collaborationDriver(): string
   collaborationEnabled(): bool
-  collaborationRoom(mixed $nodeId): string
+  collaborationMaxStateBytes(): int
+  collaborationRoom(mixed $driveId, mixed $nodeId, int $epoch): string
   commentsEnabled(): bool
   defaultType(): string
   enabled(): bool
@@ -59,7 +60,7 @@ Vaulter\Documents\Configuration\DocumentsConfig
   hubWebhookSecret(): ?string
   maxContentSizeKb(): int
   model(string $key): string
-  nodeIdFromRoom(string $room): string
+  parseRoom(string $room): ?\Vaulter\Documents\Data\Collaboration\RoomRef
   revisionLimit(): int
   tiptapExtraAttributes(): array
   tiptapExtraMarks(): array
@@ -105,6 +106,16 @@ Vaulter\Documents\Events\Documents\DocumentCreated
   __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Documents\Models\Revisions\DocumentRevision $version, int|null|string $actorId = null, ?string $eventId = null)
   readonly \Vaulter\Documents\Models\Revisions\DocumentRevision $version
   readonly \Vaulter\Models\Drive\Node $node
+  readonly int|null|string $actorId
+  readonly string $eventId
+
+Vaulter\Documents\Events\Revisions\DocumentRestored
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Documents\Models\Revisions\DocumentRevision $version, \Vaulter\Documents\Models\Revisions\DocumentRevision $restoredFrom, int $epoch, int $stateVersion, int|null|string $actorId = null, ?string $eventId = null)
+  readonly \Vaulter\Documents\Models\Revisions\DocumentRevision $restoredFrom
+  readonly \Vaulter\Documents\Models\Revisions\DocumentRevision $version
+  readonly \Vaulter\Models\Drive\Node $node
+  readonly int $epoch
+  readonly int $stateVersion
   readonly int|null|string $actorId
   readonly string $eventId
 
@@ -207,13 +218,16 @@ Vaulter\Documents\Data\Comments\AddCommentInput
   readonly string $body
 
 Vaulter\Documents\Data\Collaboration\CollaborationSession
-  __construct(\Vaulter\Documents\Enums\Collaboration\CollaborationDriverType $driver, string $room, int|string $nodeId, bool $readOnly, string $token, ?string $url = null, ?string $connection = null)
+  __construct(\Vaulter\Documents\Enums\Collaboration\CollaborationDriverType $driver, string $room, string $nodeId, string $driveId, int $epoch, int $schemaVersion, bool $readOnly, string $token, ?string $url = null)
+  mode(): string
   toArray(): array
-  readonly ?string $connection
   readonly ?string $url
   readonly \Vaulter\Documents\Enums\Collaboration\CollaborationDriverType $driver
   readonly bool $readOnly
-  readonly int|string $nodeId
+  readonly int $epoch
+  readonly int $schemaVersion
+  readonly string $driveId
+  readonly string $nodeId
   readonly string $room
   readonly string $token
 

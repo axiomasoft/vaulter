@@ -4,18 +4,23 @@ import type { Doc as YDoc } from 'yjs'
 import type { NodeCollaborationSession } from './types'
 
 /**
- * The M4b node-collaboration session factory (the Drive surface). It turns a backend
- * {@link NodeCollaborationSession} descriptor into a live Yjs session bound to a shared
- * `Y.Doc`, transport-agnostic:
+ * Turns a backend {@link NodeCollaborationSession} into a live Hocuspocus session bound
+ * to a `Y.Doc`. It exposes the reactive `connected` + `collaborators` (awareness) state,
+ * reports when the hub ends the room's generation, and a `destroy()` for teardown.
  *
- *   - `hocuspocus` — opens a `@hocuspocus/provider` against the hub url + room + JWT.
- *   - `reverb`     — bridges Laravel Echo/Reverb to Yjs via a host-supplied
- *                    `createReverbProvider` seam (Reverb is never hard-required).
- *
- * It exposes the reactive `connected` + `collaborators` (awareness) state and a
- * `destroy()` for teardown. `readOnly` is taken straight from the backend — a viewer/
- * commenter gets a read-only session.
+ * The room's content always comes from the hub: never seed the `Y.Doc` (or call the
+ * editor's `setContent`) in collaborative mode — the hub seeds a document once on the
+ * server, and a client-side seed merges into duplicated content.
  */
+
+/** Close code the hub sends when the room's generation is over (a restore happened). */
+export const EPOCH_CHANGED_CODE = 4409
+
+/** Close reason that accompanies {@link EPOCH_CHANGED_CODE}. */
+export const EPOCH_CHANGED_REASON = 'epoch_changed'
+
+/** Close code the hub sends when the connection's token expired. */
+export const TOKEN_EXPIRED_CODE = 4001
 
 /** One remote participant lifted from the awareness states (best-effort shape). */
 export interface Collaborator {
@@ -31,19 +36,24 @@ export interface AwarenessLike {
   off: (event: 'change' | 'update', handler: () => void) => void
 }
 
+/** Why the hub ended a session: its generation is over, or its token expired. */
+export type NodeCollaborationEnd = 'epoch_changed' | 'token_expired'
+
 /** The transport handle a provider factory returns. */
 export interface NodeCollaborationProviderHandle {
   /** The awareness instance, when the transport exposes presence. */
   awareness?: AwarenessLike | null
   /** Subscribe to connection-status changes; call the returned disposer to unsubscribe. */
   onConnectionChange?: (handler: (connected: boolean) => void) => () => void
+  /** Subscribe to the hub ending the session; call the returned disposer to unsubscribe. */
+  onEnd?: (handler: (end: NodeCollaborationEnd) => void) => () => void
   /** Whether the transport reports itself connected right now (best-effort). */
   isConnected?: () => boolean
   destroy: () => void
 }
 
 export interface CreateNodeCollaborationOptions {
-  /** The shared Yjs document the editor binds to. */
+  /** The Yjs document the editor binds to. Use a fresh one for every session. */
   doc: YDoc
   /** Override the Hocuspocus provider (defaults to `@hocuspocus/provider`). */
   createHocuspocusProvider?: (args: {
@@ -52,18 +62,12 @@ export interface CreateNodeCollaborationOptions {
     token: string
     document: YDoc
   }) => NodeCollaborationProviderHandle
-  /** Bridge Laravel Echo/Reverb to Yjs — required for the `reverb` driver. */
-  createReverbProvider?: (args: {
-    channel: string
-    connection: string | null
-    document: YDoc
-  }) => NodeCollaborationProviderHandle
 }
 
 export interface NodeCollaborationSessionHandle {
-  /** The transport (mirrors the session driver). */
-  transport: 'reverb' | 'hocuspocus'
-  /** Whether writes are disallowed (from the backend ability). */
+  /** The session this handle was built from. */
+  session: NodeCollaborationSession
+  /** Whether writes are disallowed (`mode: 'ro'`). */
   readOnly: boolean
   /** Reactive: a live first-handshake/connection flag. */
   connected: Ref<boolean>
@@ -71,8 +75,19 @@ export interface NodeCollaborationSessionHandle {
   collaborators: Ref<Collaborator[]>
   /** The raw provider handle (for advanced host wiring). */
   provider: NodeCollaborationProviderHandle
+  /** Call `handler` when the hub ends this session; returns a disposer. */
+  onEnd: (handler: (end: NodeCollaborationEnd) => void) => () => void
   /** Tear down the provider + listeners. */
   destroy: () => void
+}
+
+/** How a close or an authentication refusal from the hub ends the session, if it does. */
+export function sessionEnd(code: number | undefined, reason: string | undefined): NodeCollaborationEnd | null {
+  if (code === EPOCH_CHANGED_CODE || reason === EPOCH_CHANGED_REASON) {
+    return 'epoch_changed'
+  }
+
+  return code === TOKEN_EXPIRED_CODE ? 'token_expired' : null
 }
 
 function defaultHocuspocusProvider(args: {
@@ -101,6 +116,26 @@ function defaultHocuspocusProvider(args: {
         provider.off('disconnect', onDisconnect)
       }
     },
+    onEnd: (handler) => {
+      const onClose = (payload: { event?: { code?: number, reason?: string } }): void => {
+        const end = sessionEnd(payload?.event?.code, payload?.event?.reason)
+        if (end) {
+          handler(end)
+        }
+      }
+      const onAuthenticationFailed = (payload: { reason?: string }): void => {
+        const end = sessionEnd(undefined, payload?.reason)
+        if (end) {
+          handler(end)
+        }
+      }
+      provider.on('close', onClose)
+      provider.on('authenticationFailed', onAuthenticationFailed)
+      return () => {
+        provider.off('close', onClose)
+        provider.off('authenticationFailed', onAuthenticationFailed)
+      }
+    },
     destroy: () => provider.destroy(),
   }
 }
@@ -117,16 +152,18 @@ function collaboratorsFrom(awareness: AwarenessLike | null | undefined): Collabo
   return list
 }
 
-/**
- * Build a live node-collaboration session from a backend descriptor + a shared doc.
- * The Hocuspocus transport works out of the box; the Reverb transport needs a
- * host-supplied `createReverbProvider` bridge (it is never hard-required).
- */
+/** Build a live collaboration session from a backend descriptor and a fresh `Y.Doc`. */
 export function createNodeCollaborationSession(
   session: NodeCollaborationSession,
   options: CreateNodeCollaborationOptions,
 ): NodeCollaborationSessionHandle {
-  const handle = buildProvider(session, options)
+  const factory = options.createHocuspocusProvider ?? defaultHocuspocusProvider
+  const handle = factory({
+    url: session.url ?? '',
+    name: session.room,
+    token: session.token,
+    document: options.doc,
+  })
 
   const connected = ref(handle.isConnected?.() ?? false)
   const collaborators = ref<Collaborator[]>(collaboratorsFrom(handle.awareness))
@@ -141,46 +178,30 @@ export function createNodeCollaborationSession(
   }
   awareness?.on('change', onAwareness)
 
+  const endDisposers: Array<() => void> = []
+
+  function onEnd(handler: (end: NodeCollaborationEnd) => void): () => void {
+    const dispose = handle.onEnd?.(handler) ?? (() => {})
+    endDisposers.push(dispose)
+    return dispose
+  }
+
   function destroy(): void {
     disposeConnection?.()
+    for (const dispose of endDisposers.splice(0)) {
+      dispose()
+    }
     awareness?.off('change', onAwareness)
     handle.destroy()
   }
 
   return {
-    transport: session.driver,
-    readOnly: session.read_only,
+    session,
+    readOnly: session.mode !== 'rw',
     connected,
     collaborators,
     provider: handle,
+    onEnd,
     destroy,
   }
-}
-
-function buildProvider(
-  session: NodeCollaborationSession,
-  options: CreateNodeCollaborationOptions,
-): NodeCollaborationProviderHandle {
-  if (session.driver === 'hocuspocus') {
-    const factory = options.createHocuspocusProvider ?? defaultHocuspocusProvider
-    return factory({
-      url: session.url ?? '',
-      name: session.room,
-      token: session.token,
-      document: options.doc,
-    })
-  }
-
-  if (!options.createReverbProvider) {
-    throw new Error(
-      '[Vaulter] The reverb collaboration driver requires a `createReverbProvider` to bridge '
-      + 'Laravel Echo/Reverb to Yjs. See the collaboration guide.',
-    )
-  }
-
-  return options.createReverbProvider({
-    channel: session.token,
-    connection: session.connection,
-    document: options.doc,
-  })
 }

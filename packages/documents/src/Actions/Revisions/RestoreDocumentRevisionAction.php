@@ -11,6 +11,7 @@ use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
 use Vaulter\Documents\Data\Revisions\RestoreDocumentRevisionInput;
 use Vaulter\Documents\Enums\Documents\StateWriteCause;
+use Vaulter\Documents\Events\Revisions\DocumentRestored;
 use Vaulter\Documents\Events\Revisions\DocumentRevisionCreated;
 use Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException;
 use Vaulter\Documents\Exceptions\NotADocumentException;
@@ -29,8 +30,8 @@ use Vaulter\Support\TreeGuard;
  *
  * The source is resolved within the node's own aggregate, so a revision id of
  * another document (or a file revision with the same id) never restores here. One
- * outer transaction under T → N → D locks; a single after-commit event fires with
- * restored=true.
+ * outer transaction under T → N → D locks; after commit DocumentRevisionCreated fires
+ * with restored=true, then DocumentRestored with the new epoch.
  */
 final readonly class RestoreDocumentRevisionAction
 {
@@ -88,6 +89,14 @@ final readonly class RestoreDocumentRevisionAction
                 node: $node,
                 version: $revision,
                 restored: true,
+                actorId: $actorId,
+            ));
+            event(new DocumentRestored(
+                node: $node,
+                version: $revision,
+                restoredFrom: $source,
+                epoch: $result->document->collab_epoch,
+                stateVersion: $result->document->state_version,
                 actorId: $actorId,
             ));
 

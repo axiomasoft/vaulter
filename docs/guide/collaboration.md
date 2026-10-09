@@ -1,6 +1,6 @@
 ---
 title: Realtime Collaboration
-description: Realtime, conflict-free document editing in Vaulter with Yjs and an external Hocuspocus hub, the collab-token handshake, read-only-from-ability, deploying hocuspocus-server, and the @vaulter/vue wiring.
+description: Realtime, conflict-free document editing in Vaulter with Yjs and an external Hocuspocus hub — the session handshake, the epoch fence that keeps a restore from being overwritten, server-side loading and seeding, read-only enforcement and the @vaulter/vue wiring.
 outline: deep
 ---
 
@@ -8,29 +8,13 @@ outline: deep
 
 Vaulter edits **document nodes** (`kind = document`, content in the `v_documents` aggregate)
 collaboratively in realtime. The conflict-free merge is powered by **Yjs** — the binary
-CRDT state is the **source of truth**; the TipTap JSON is a derived projection. The
-transport sits behind the [`CollaborationDriver`](#drivers) contract, with two
-implementations you choose by config.
+CRDT state is the **source of truth**; the TipTap JSON is a projection of it. The transport
+is an external **Hocuspocus** hub (`hocuspocus-server/`) behind the
+[`CollaborationDriver`](#extending) contract.
 
-::: info This page covers the node-tree path (M4b)
-This is the **Drive** collaboration surface — `POST nodes/{node}/collab/token` and the
-[`CollaborationSession`](#the-session-descriptor) descriptor. The package also ships a
-legacy document-centric lane (`documents/{id}/collab/token`, `CollaborationDriver`) bound
-to the `v_documents` model; both coexist and a host picks the same transport for both via
-`config('vaulter-documents.collaboration.driver')`. New integrations should use the node path
-documented here. See [ADR-0001](/adr/0001-collaboration-transport).
-:::
-
-## The collaboration driver
-
-Yjs is the source of truth; Hocuspocus provides the collaboration transport.
-The default `hocuspocus` driver connects to an external Node hub
-(`hocuspocus-server/`) with a signed room JWT and server-to-server webhooks.
-`CollaborationDriverType` retains its `hocuspocus` case; unknown driver names
-produce an explicit configuration error.
-
-Reverb for Yjs collaboration has been removed. Use Hocuspocus for document editing.
-Laravel broadcast channels still carry comment events with their existing access checks.
+Reverb for Yjs collaboration has been removed: `vaulter-documents.collaboration.driver =
+reverb` now fails with an `InvalidConfigurationException`. Laravel broadcast channels still
+carry comment events with their existing access checks.
 
 ## Config
 
@@ -48,301 +32,251 @@ All keys live under `config('vaulter-documents.collaboration')`:
         'token_ttl' => 3600,
         'timestamp_tolerance' => 300,
     ],
+    'max_state_bytes' => 16777216,
     'broadcast' => ['channel_prefix' => 'vaulter.documents'],
 ],
 ```
 
 | Key | Env | Default | Purpose |
 |---|---|---|---|
-| `vaulter-documents.collaboration.driver` | `VAULTER_COLLAB_DRIVER` | `hocuspocus` | Active transport (`hocuspocus`). |
-| `vaulter-documents.collaboration.broadcast.channel_prefix` | — | `vaulter.documents` | Room namespace. A room is **always** `channel_prefix.nodeId`. |
-| `vaulter-documents.collaboration.hub.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | *(unset)* | Shared secret the Hocuspocus hub presents on the webhooks. Required to sign webhook bodies when collaboration is enabled. |
-| `vaulter-documents.collaboration.hub.url` | `VAULTER_COLLAB_URL` | `ws://localhost:1234` | The hub WebSocket URL the client connects to. |
-| `vaulter-documents.collaboration.hub.jwt_secret` | `VAULTER_COLLAB_SECRET` | *(unset)* | HS256 key Vaulter mints the room JWT with **and** verifies an incoming JWT against. Required for the Hocuspocus path. |
-| `vaulter-documents.collaboration.hub.token_ttl` | — | `3600` | Lifetime (seconds) of a minted room JWT. |
+| `enabled` | — | `false` | Opt-in. Off: the routes are not mounted and `collaborationSession()` answers `409 collaboration_unavailable`. |
+| `driver` | `VAULTER_COLLAB_DRIVER` | `hocuspocus` | The only transport. `reverb` is refused. |
+| `broadcast.channel_prefix` | — | `vaulter.documents` | Room namespace: a room is `<prefix>.<driveId>.<nodeId>.<epoch>`. |
+| `hub.url` | `VAULTER_COLLAB_URL` | `ws://localhost:1234` | The hub WebSocket URL the client connects to. |
+| `hub.jwt_secret` | `VAULTER_COLLAB_SECRET` | *(unset)* | HS256 key Vaulter mints and verifies the room JWT with. Lives only on Laravel. |
+| `hub.webhook_secret` | `VAULTER_COLLAB_WEBHOOK_SECRET` | *(unset)* | Key of the HMAC body signature of every hub call. Shared with the hub; must differ from `jwt_secret`. |
+| `hub.token_ttl` | — | `3600` | Room JWT lifetime in seconds, between 1 and 3600 (anything else is an `InvalidConfigurationException`). Rights are re-checked on every hub call, so a token never outlives an hour. |
+| `hub.timestamp_tolerance` | — | `300` | Accepted clock skew of a signed hub call; also the replay window. |
+| `max_state_bytes` | — | `16777216` | Largest binary Yjs state one store may write (`413 document_state_too_large`). |
 
 ::: warning Collaboration is opt-in
-Install Documents and enable `vaulter-documents.collaboration.enabled`.
-Document editing and revisions are enabled by installing the package.
-Both hub secrets must be present and distinct.
+Enable `vaulter-documents.collaboration.enabled`, require `firebase/php-jwt`, and set both
+hub secrets — present and different. The replay cache of signed hub calls lives in the
+application's `Cache` store; use a store shared by every instance (Redis, database) in
+production, not `array` or `file`.
 :::
+
+## Generations: the epoch
+
+Every document has a **collaboration epoch** (`v_documents.collab_epoch`). It moves on when
+the working state is replaced from outside the room:
+
+- `restore()` of a revision;
+- `update()` of a collaborative document that already has a Yjs state (an API/PHP JSON
+  replace — the Yjs state is dropped and the next room seeds from the new JSON).
+
+The epoch is part of the room name, the token and every store. That is the **storage fence**:
+a store carries the room's epoch and is compared with `collab_epoch` on the document row
+locked `FOR UPDATE`; the restore moves the epoch under the same lock. A store of a room
+opened before the restore therefore either commits before it (and is replaced by it) or is
+refused with `409 collaboration_epoch_mismatch` — however late the hub's debounce fires, it
+never lands on the restored document. Cancelling a debounce is not possible; the fence makes
+it unnecessary.
+
+The hub does not learn about a restore until its next store of that room (at most
+`VAULTER_COLLAB_MAX_DEBOUNCE_MS` after the next edit). It then closes the room with close
+code **4409** `epoch_changed`; clients open a new session and a **new** `Y.Doc`.
 
 ## The connect flow
 
-The client never holds a long-lived secret. It asks Laravel for a per-node session, then
-opens the transport with what it gets back.
-
 ```
-Vue client ──POST /api/vaulter/nodes/{node}/collab/token──▶ Laravel
-                                                            │ AccessResolver:
-                                                            │   ≥ View/Comment → connect (read-only)
-                                                            │   Edit           → writable
-            ◀────────── CollaborationSession ──────────────┘
+Vue client ──POST /api/vaulter/nodes/{node}/collab/token {schema_version?}──▶ Laravel
+            ◀──────────────── CollaborationSession (room, epoch, mode, token) ─┘
             │
             ▼
-  hocuspocus → open ws to hub url with the room JWT as the token
+      ws to the hub, document name = room, token = room JWT
+            │   onAuthenticate ──▶ POST collab/authenticate   (live mode)
+            │   onLoadDocument ──▶ POST collab/load           (Yjs state, or JSON to seed once)
+            │   onStoreDocument ─▶ POST collab/store          (behind the epoch fence)
 ```
 
-1. The client calls `POST nodes/{node}/collab/token`.
-2. `DocumentOperations::collaborationSession()` (also `Documents::in($drive)->collaborationSession($node)`
-   in PHP) locates the node and authorizes `View` through the `OperationGuard`, then takes the
-   actor's **highest** ability (`Edit` > `Comment` > `View`). A node the actor cannot see answers
-   `404 node_not_found` before a token is ever minted.
-3. `read_only` is **encoded from the ability** — `View`/`Comment` → `true`, `Edit` →
-   `false`. The client cannot request write; it is granted or it is not.
-4. The configured driver mints the [session descriptor](#the-session-descriptor) and the
-   client opens the transport with it.
+1. The client calls `POST nodes/{node}/collab/token`, optionally with the `schema_version`
+   its editor supports.
+2. `DocumentOperations::collaborationSession($document, $clientSchemaVersion)` locates the
+   node, authorizes `View` (a node the actor cannot see answers `404 node_not_found`) and
+   decides the mode. The session is **read-write** only when all of these hold:
+   - the actor holds `Edit`;
+   - the document's type is installed and its content reads without loss in a schema this
+     installation writes;
+   - the client's schema version is absent or equals the type's;
+   - the drive is active (an archived drive is read-only).
 
-::: tip Read-only is derived, never requested
-A token never over-grants relative to the actor's ability. The `read_only` flag rides the
-session, and the Hocuspocus hub drops a read-only connection's document updates server-side.
-:::
+   Collaboration switched off, or a type that does not implement `SupportsCollaboration`,
+   is `409 collaboration_unavailable`.
+3. The driver mints the [session](#the-session-descriptor).
 
 ### The session descriptor
-
-The driver returns (`Vaulter\Documents\Data\Collaboration\CollaborationSession::toArray()`):
 
 ```json
 {
   "driver": "hocuspocus",
-  "room": "vaulter.documents.01J...",
-  "node_id": "01J...",
-  "read_only": false,
+  "room": "vaulter.documents.01JDRIVE.01JNODE.3",
+  "node_id": "01JNODE",
+  "drive_id": "01JDRIVE",
+  "epoch": 3,
+  "schema_version": 1,
+  "mode": "rw",
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "url": "ws://collab.example.com:1234",
-  "connection": null
+  "url": "wss://collab.example.com"
 }
 ```
 
-| Field | Hocuspocus |
-|---|---|
-| `driver` | `hocuspocus` |
-| `room` | `channel_prefix.nodeId`, carried in the JWT `room` claim |
-| `node_id` | The document node id |
-| `read_only` | Derived from the actor's ability |
-| `token` | Signed HS256 JWT `{room, sub, readOnly, iat, exp}` |
-| `url` | The hub WebSocket URL |
-| `connection` | `null`, retained for JSON compatibility |
+The token is an HS256 JWT with the claims `sub` (the user), `node`, `drive`, `tenant`,
+`epoch`, `schema_version`, `mode` (`rw`|`ro`), `room`, `iat` and `exp`. The room repeats
+drive, node and epoch, so a token is bound to one generation of one document.
 
-A session is bound to exactly one node: its signed room claim is always
-`channel_prefix.nodeId`.
+## The hub protocol (server-to-server)
 
-## Hocuspocus (external Node hub)
+The hub endpoints carry no Laravel auth middleware — only `ResolveCollaborationCall`, which
+requires **both**:
 
-With `driver = hocuspocus` the client connects to the hub's WebSocket URL presenting the
-**room JWT** as the connection token. The hub does not trust the JWT on its own — it calls
-**back** into Laravel:
+- the room JWT in `Authorization: Bearer` (signature and `exp` verified; the room must parse
+  and agree with the `node`/`drive`/`epoch` claims);
+- an HMAC-SHA256 signature of `"{timestamp}.{rawBody}"` keyed by `hub.webhook_secret` in
+  `X-Vaulter-Collab-Timestamp` + `X-Vaulter-Collab-Signature`. A stale timestamp or a
+  signature seen before is refused. The hub puts a random `nonce` in every body so two
+  genuine calls with the same payload never share a signature.
 
-- **`onAuthenticate`** → `POST {laravel}/api/vaulter/collab/authenticate` — Laravel
-  resolves the user's ability on the node and answers `{allowed, readOnly, user}`.
-- **`onStoreDocument`** (debounced by the hub) → `POST {laravel}/api/vaulter/collab/store`
-  — the base64 binary Yjs state is persisted into the working state `v_documents.yjs_state`.
+Anything else is `401`. The shared secret is no longer an identity by itself.
 
-Vaulter mints the JWT with `firebase/php-jwt` (HS256, signed with `VAULTER_COLLAB_SECRET`).
-
-```bash
-composer require firebase/php-jwt
-```
-
-If the package is missing or `drivers.hocuspocus.secret` is unset, the driver throws a
-`CollaborationConfigException` at token time rather than minting an unverifiable token.
-
-### The webhook contract (server-to-server)
-
-The `collab/authenticate` and `collab/store` routes carry **no** Laravel auth middleware —
-only `ResolveCollaborationCall`, which authenticates the hub by **either** of:
-
-- the shared webhook secret in the **`X-Vaulter-Collab-Secret`** header (compared
-  timing-safely against `vaulter-documents.collaboration.hub.webhook_secret`), **or**
-- a valid signed room JWT in the **`Authorization: Bearer`** header (signature + `exp`
-  verified by `firebase/php-jwt`).
-
-These endpoints are **never open**: a call with neither a valid secret nor a valid JWT is
-`401`'d, and when no verifier is configured at all every call is rejected.
-
-Node binding is enforced on every call: a **JWT** call may only address the room it was
-minted for (a token for node A cannot store to node B), and a **read-only** JWT call may
-not drive a store. A shared-secret call is trusted server-to-server and may address any
-room and write.
+Every call re-reads what the token was issued for: the node exists, is not in the trash,
+belongs to the token's drive and tenant, the drive is active or archived, the room's epoch is
+the document's current one, and the token subject's rights **now**. A revoked `Edit`
+therefore takes effect on the hub's next call (instant disconnection on every instance is a
+later feature).
 
 | Endpoint | Hub hook | Body | Answers |
 |---|---|---|---|
-| `POST collab/authenticate` | `onAuthenticate` | `{ room, node_id }` | `{ allowed, readOnly, user }` — `allowed:false` (not a 403) when the user holds no view access, so the hub refuses the socket cleanly. |
-| `POST collab/store` | `onStoreDocument` | `{ room, node_id, yjs_state (base64), user_id? }` | `{ node_id, version_no, yjs_state_size }` |
+| `POST collab/authenticate` | `onAuthenticate` | `{ room }` | `{ allowed, mode, userId, epoch }`; `allowed:false` when the user lost `View`; `409 collaboration_epoch_mismatch` for a past generation. |
+| `POST collab/load` | `onLoadDocument` | `{ room }` | `{ state, content, epoch, schemaVersion, stateVersion, type }` — `state` is the base64 Yjs working state, or `null` with the JSON `content` to seed from. |
+| `POST collab/store` | `onStoreDocument` | `{ room, state, content, seed? }` | `{ changed, epoch, state_version, yjs_state_size }`. |
 
-The Yjs binary is the source of truth — `collab/store` rejects a missing/empty/invalid
-`yjs_state` with a `422` and never reconstructs it from the TipTap JSON. A `content` /
-`tiptap` body field, when present, updates the projection.
+`collab/store` rules:
 
-### Deploying `hocuspocus-server`
+- a read-only token, a user without `Edit` now, an archived drive or a token for another
+  schema version is `403`;
+- the room's epoch is the fence: `409 collaboration_epoch_mismatch`;
+- `seed: true` writes only while the document has no Yjs state: `409
+  collaboration_seed_conflict` otherwise, so two hub instances never both seed;
+- `content` is required for a type whose `projectFromState()` returns `null` (both built-in
+  types): the hub sends `TiptapTransformer.fromYdoc(document, 'default')`. It is decoded by the
+  type's codec with its size limit (`422 invalid_document_content`);
+- a state above `max_state_bytes` is `413 document_state_too_large`;
+- content this installation cannot save back keeps its `409 document_type_unavailable` /
+  `document_content_degraded`, as an autosave does.
 
-The hub lives under `hocuspocus-server/` (`@hocuspocus/server` + `yjs`). It needs the
-backend URL to call the webhooks; it does **not** need the JWT signing secret (Laravel
-mints the token and the client forwards it; the hub only relays it to the webhooks, which
-verify it).
+### Loading and seeding happen on the hub only
 
-::: code-group
+The hub's `onLoadDocument` applies the stored Yjs state. A document without one (new, or
+just restored to a revision without state) is built from its JSON **once**, on the server,
+with `@hocuspocus/transformer` and the hub's TipTap schema (`hocuspocus-server/src/schema.js`),
+and stored with `seed: true` before any client sees it.
 
-```bash [Run directly]
-cd hocuspocus-server
-npm install
-npm start            # production
-npm run dev          # watch
-```
-
-```yaml [docker-compose.yml]
-services:
-  vaulter-collab:
-    build: ./hocuspocus-server
-    image: vaulter/hocuspocus-server:dev
-    ports:
-      - "${VAULTER_COLLAB_PORT:-1234}:1234"
-    environment:
-      VAULTER_COLLAB_PORT: 1234
-      VAULTER_COLLAB_HEALTH_PORT: 1235
-      VAULTER_BACKEND_URL: ${VAULTER_BACKEND_URL:-http://host.docker.internal}
-      VAULTER_API_PREFIX: ${VAULTER_API_PREFIX:-api/vaulter}
-      # MUST equal the Laravel vaulter-documents.collaboration.hub.webhook_secret.
-      VAULTER_COLLAB_WEBHOOK_SECRET: ${VAULTER_COLLAB_WEBHOOK_SECRET:-}
-    healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:1235/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-    restart: unless-stopped
-```
-
-```dockerfile [Dockerfile]
-FROM node:22-alpine
-WORKDIR /app
-COPY package.json ./
-RUN npm install --omit=dev
-COPY src ./src
-ENV VAULTER_COLLAB_PORT=1234
-ENV VAULTER_COLLAB_HEALTH_PORT=1235
-EXPOSE 1234 1235
-HEALTHCHECK --interval=10s --timeout=3s --retries=3 \
-  CMD node -e "fetch('http://localhost:'+(process.env.VAULTER_COLLAB_HEALTH_PORT||1235)+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
-CMD ["node", "src/index.js"]
-```
-
+::: danger Never seed in the client
+In collaborative mode do **not** call the editor's `setContent()` (or insert the JSON into
+the `Y.Doc`). Two clients converting the same JSON create different Yjs insertions, and the
+merge shows the content twice. `VaulterDocumentNode` passes `content: null` to the editor in
+collaborative mode for this reason.
 :::
 
-The hub serves a tiny health endpoint on a **separate** port (so it never interferes with
-the WebSocket upgrade on the main port): `GET /health` → `200 {"status":"ok"}`. Point a
-compose/orchestrator healthcheck at it before letting dependents start.
+### Read-only
 
-#### Environment contract
+Read-only is enforced twice: the hub marks a `ro` connection read-only (Hocuspocus drops its
+updates) and never stores under a read-only context, and the backend refuses a store under a
+`ro` token. Once the token expires the hub refuses every further message and closes the
+connection with code `4001`; the client asks for a new session.
 
-| Variable | Default | Purpose |
-|---|---|---|
-| `VAULTER_COLLAB_PORT` | `1234` | WebSocket port the hub listens on (the client connects to `ws://host:PORT`). |
-| `VAULTER_COLLAB_HEALTH_PORT` | `1235` | HTTP health port — `GET /health`. |
-| `VAULTER_BACKEND_URL` | `http://localhost` | Laravel app base URL the hub calls back into (no trailing slash). In Docker, the app service name or `host.docker.internal`. |
-| `VAULTER_API_PREFIX` | `api/vaulter` | The Vaulter API route prefix. Webhooks resolve to `{VAULTER_BACKEND_URL}/{VAULTER_API_PREFIX}/collab/{authenticate,store}`. |
-| `VAULTER_LARAVEL_WEBHOOK_URL` | *(derived)* | Optional explicit full webhook base; overrides the two above (reverse proxy / split host). |
-| `VAULTER_COLLAB_WEBHOOK_SECRET` | *(unset)* | Shared secret presented as `X-Vaulter-Collab-Secret`. **Must equal** the Laravel `vaulter-documents.collaboration.hub.webhook_secret`. When unset, the hub authenticates the webhooks with the forwarded room JWT alone. |
-| `VAULTER_COLLAB_WEBHOOK_TIMEOUT_MS` | `10000` | Webhook round-trip timeout in ms. |
+## Deploying `hocuspocus-server`
 
-::: danger Keep the secrets aligned
-`VAULTER_COLLAB_WEBHOOK_SECRET` on the **hub** must equal `vaulter-documents.collaboration.hub.webhook_secret`
-on **Laravel** (same env name on both sides). The hub's JWT signing secret
-(`VAULTER_COLLAB_SECRET`) lives **only** on Laravel — the hub never sees it.
-:::
-
-On the Laravel side, point the client at the hub:
+See [Hocuspocus hub](/guide/hocuspocus-server) for the environment contract, Docker and
+health endpoints. On the Laravel side:
 
 ```dotenv
 VAULTER_COLLAB_DRIVER=hocuspocus
-VAULTER_COLLAB_URL=ws://collab.example.com:1234
-VAULTER_COLLAB_SECRET=<32+ char random>            # HS256 room-JWT signing key
-VAULTER_COLLAB_WEBHOOK_SECRET=<another random>     # shared with the hub
+VAULTER_COLLAB_URL=wss://collab.example.com
+VAULTER_COLLAB_SECRET=<32+ char random>            # room-JWT signing key, Laravel only
+VAULTER_COLLAB_WEBHOOK_SECRET=<another random>     # shared with the hub, signs every hub call
 ```
 
 ## Frontend wiring (`@vaulter/vue`)
 
-The `useNodeCollaboration` composable does the full handshake: it fetches the room token
-from the node collab endpoint, then builds a Yjs session over it — the Hocuspocus
-transport via `@hocuspocus/provider`.
+`useNodeCollaboration` fetches the session, opens `@hocuspocus/provider` over a fresh
+`Y.Doc` and handles the hub's terminal closes:
+
+- **4409 `epoch_changed`** — the provider and the old `Y.Doc` are destroyed, a new session is
+  fetched and `doc` is **replaced** by a new `Y.Doc`. Rebind the editor; never copy the old
+  document's content over.
+- **4001** (token expired) — a new session is fetched; the `Y.Doc` is kept while the room is
+  the same generation.
 
 ```ts
+import { watch } from 'vue'
 import { useNodeCollaboration } from '@vaulter/vue'
 import { Editor } from '@tiptap/vue-3'
 import Collaboration from '@tiptap/extension-collaboration'
 
-const collab = useNodeCollaboration(nodeId)
-
-// fetch the token AND open the Yjs session
+const collab = useNodeCollaboration(nodeId, { supportedSchemaVersion: 1 })
 await collab.connect()
 
-const editor = new Editor({
-  editable: !collab.readOnly.value,
-  extensions: [Collaboration.configure({ document: collab.doc })],
-})
+let editor = makeEditor()
+// A restore replaced the room: rebuild the editor on the new document.
+watch(collab.doc, () => { editor.destroy(); editor = makeEditor() })
+
+function makeEditor() {
+  return new Editor({
+    editable: !collab.readOnly.value,
+    extensions: [Collaboration.configure({ document: collab.doc.value, field: 'default' })],
+  })
+}
 
 // on unmount
 collab.disconnect()
 ```
 
-The composable returns a stable reactive surface:
-
 | Member | Type | Notes |
 |---|---|---|
-| `doc` | `Y.Doc` | The shared document to bind to TipTap's `Collaboration` extension. |
-| `session` | `Ref<NodeCollaborationSession \| null>` | The resolved backend descriptor (null until connected). |
-| `connecting` | `Ref<boolean>` | True while the token handshake is in flight. |
-| `connected` | `Ref<boolean>` | Live connection flag from the provider. |
-| `readOnly` | `Ref<boolean>` | Mirrors the backend ability — mount a read-only editor when `true`. |
-| `collaborators` | `Ref<Collaborator[]>` | Remote participants from awareness; empty when the transport has no presence. |
-| `error` | `Ref<unknown>` | Any error from the token fetch / session build. |
-| `fetchSession()` | `() => Promise<NodeCollaborationSession>` | Token only — for callers building their own provider. |
-| `connect()` | `() => Promise<...>` | Token **and** open the Yjs session. |
-| `disconnect()` | `() => void` | Tear down (idempotent). |
+| `doc` | `ShallowRef<Y.Doc>` | The document to bind; replaced on `epoch_changed`. |
+| `session` | `Ref<NodeCollaborationSession \| null>` | The current session (room, epoch, mode, schema version). |
+| `connecting` / `connected` | `Ref<boolean>` | Handshake in flight / live provider connection. |
+| `readOnly` | `Ref<boolean>` | `mode: 'ro'`, or the session's schema is newer than `supportedSchemaVersion`. |
+| `schemaOutdated` | `Ref<boolean>` | The document is in a newer schema than the editor supports — ask the user to update the application. |
+| `collaborators` | `Ref<Collaborator[]>` | Remote participants from awareness. |
+| `error` | `Ref<unknown>` | Any error from the session fetch. |
+| `fetchSession()` / `connect()` / `disconnect()` | | Session only / session and provider / teardown (idempotent). |
 
 ### `VaulterDocumentNode`
 
-`VaulterDocumentNode` wires this automatically. When the resolved handler declares the
-**collaborative** capability (`capabilities.collaborative === true`) and collaboration is
-enabled, it opens a Yjs session via `useNodeCollaboration`, binds the shared doc, and
-forwards presence/connection state. Otherwise it uses the non-collab autosave path.
+When the resolved handler is collaborative (`capabilities.collaborative === true`) and
+collaboration is enabled, `VaulterDocumentNode` opens a session via `useNodeCollaboration`
+and hands the editor `collaborative: true`, `content: null`, `ydoc` (replaced after a
+restore — rebind on change), presence and connection state. Otherwise it uses the autosave
+path.
 
 ```vue
-<script setup lang="ts">
-import { VaulterDocumentNode } from '@vaulter/vue'
-</script>
-
-<template>
-  <VaulterDocumentNode
-    :node-id="nodeId"
-    :component-map="componentMap"
-    :collaboration="true"
-    @collaborating="(readonly) => { /* a Yjs session opened */ }"
-  />
-</template>
+<VaulterDocumentNode
+  :node-id="nodeId"
+  :component-map="componentMap"
+  :supported-schema-version="1"
+  @collaborating="(readonly) => { /* a session opened */ }"
+  @schema-outdated="(version) => { /* ask the user to update the application */ }"
+/>
 ```
 
-- `collaboration` (default `true`) — set `false` to force the autosave path even for a
-  collaborative handler.
-- `collaboration-providers` — forwarded to `useNodeCollaboration`; supply
-  `createHocuspocusProvider` to override the default Hocuspocus provider.
-- It emits `collaborating(readonly: boolean)` once a Yjs session opens. If the token
-  handshake fails (collab unavailable / not configured) it **falls back** to the autosave
-  path rather than blocking the editor.
-
-Read-only is enforced end to end: `isReadonly` is `true` when the `readonly` prop is set
-**or** the session is read-only, and in collaborative mode the Yjs session drives
-persistence so the client autosave is inert.
+- `collaboration` (default `true`) — `false` forces the autosave path.
+- `collaboration-providers` — `createHocuspocusProvider` override.
+- `supported-schema-version` — sent with the session request; a newer document schema opens
+  read-only and emits `schema-outdated`.
+- If the session request fails (collaboration unavailable) it falls back to the autosave path.
 
 ## Extending
 
-The transport is a single seam. To add one, add a `CollaborationDriverType` case and a
-`CollaborationDriver` implementation — the manager resolves it by enum, no
-stringly-typed lookup. The driver's only job is to encode the AccessResolver's decision
-(the `Ability`) into the session descriptor's `read_only` flag (and, for a JWT transport,
-the room claim); it never makes the authorization decision itself.
+The transport is one seam: a `CollaborationDriverType` case and a `CollaborationDriver`
+implementation. `issueSession($node, $epoch, $schemaVersion, $writable, $actorId)` only
+encodes the decision `collaborationSession()` made; it never authorizes.
 
 ## See also
 
+- [Hocuspocus hub](/guide/hocuspocus-server)
+- [Errors](/guide/errors) — `collaboration_*` and `document_state_too_large`
 - [ADR-0001 — Collaboration transport](/adr/0001-collaboration-transport)
 - [Authorization](/guide/abilities) — how `View` / `Comment` / `Edit` map to read/write
-- [Configuration](/guide/configuration) — the full config key walkthrough

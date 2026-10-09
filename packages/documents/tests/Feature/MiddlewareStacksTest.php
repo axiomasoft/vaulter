@@ -68,11 +68,13 @@ it('accepts a signed hub JWT without a Sanctum token', function (): void {
     $node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive->model()), new CreateDocumentInput(
         storage: $drive->model(), name: 'Hub', content: DocumentTestHelpers::content(), parent: DriveTestHelpers::model($drive->root()),
     ));
-    $body = ['node_id' => $node->getKey()];
+    $room = app(DocumentsConfig::class)->collaborationRoom($node->drive_id, $node->getKey(), 0);
+    $body = ['room' => $room];
     $timestamp = time();
     $jwt = JWT::encode([
-        'room' => app(DocumentsConfig::class)->collaborationRoom($node->getKey()),
-        'sub' => '17', 'readOnly' => false, 'iat' => $timestamp, 'exp' => $timestamp + 3600,
+        'room' => $room, 'node' => (string) $node->getKey(), 'drive' => (string) $node->drive_id, 'tenant' => null,
+        'epoch' => 0, 'schema_version' => 1, 'mode' => 'rw',
+        'sub' => '17', 'iat' => $timestamp, 'exp' => $timestamp + 3600,
     ], 'middleware-stack-jwt-secret-at-least-32-bytes', 'HS256');
     $signature = (new WebhookSigner)->sign(json_encode($body), 'middleware-stack-webhook-secret', $timestamp);
     $response = $this->postJson('api/vaulter/collab/authenticate', $body, [
@@ -80,7 +82,7 @@ it('accepts a signed hub JWT without a Sanctum token', function (): void {
         CollaborationCallResolver::TIMESTAMP_HEADER => (string) $timestamp,
         CollaborationCallResolver::SIGNATURE_HEADER => $signature,
     ]);
-    $response->assertOk()->assertJsonPath('allowed', true)->assertJsonPath('user.id', '17');
+    $response->assertOk()->assertJsonPath('allowed', true)->assertJsonPath('userId', '17');
 });
 
 it('retains legacy authenticated middleware and appends metrics once in every stack', function (): void {

@@ -68,9 +68,12 @@ it('issues a read-only session for a commenter (no edit)', function (): void {
     test()->postJson('api/vaulter/nodes/'.$node->getKey().'/collab/token')
         ->assertOk()
         ->assertJsonPath('data.driver', 'hocuspocus')
-        ->assertJsonPath('data.read_only', true)
-        ->assertJsonPath('data.node_id', $node->getKey())
-        ->assertJsonPath('data.room', 'vaulter.documents.'.$node->getKey());
+        ->assertJsonPath('data.mode', 'ro')
+        ->assertJsonPath('data.node_id', (string) $node->getKey())
+        ->assertJsonPath('data.drive_id', (string) $node->drive_id)
+        ->assertJsonPath('data.epoch', 0)
+        ->assertJsonPath('data.schema_version', 1)
+        ->assertJsonPath('data.room', 'vaulter.documents.'.$node->drive_id.'.'.$node->getKey().'.0');
 });
 
 it('issues a read-only session for a bare reader', function (): void {
@@ -79,7 +82,7 @@ it('issues a read-only session for a bare reader', function (): void {
 
     test()->postJson('api/vaulter/nodes/'.$node->getKey().'/collab/token')
         ->assertOk()
-        ->assertJsonPath('data.read_only', true);
+        ->assertJsonPath('data.mode', 'ro');
 });
 
 it('issues a writable session for a writer (edit)', function (): void {
@@ -88,12 +91,33 @@ it('issues a writable session for a writer (edit)', function (): void {
 
     $response = test()->postJson('api/vaulter/nodes/'.$node->getKey().'/collab/token')
         ->assertOk()
-        ->assertJsonPath('data.read_only', false)
-        ->assertJsonPath('data.connection', null);
+        ->assertJsonPath('data.mode', 'rw');
 
-    $claims = JWT::decode($response->json('data.token'), new Key('shh-secret-at-least-32-bytes-long-for-hs256', 'HS256'));
-    expect($claims->room)->toBe('vaulter.documents.'.$node->getKey())
-        ->and($claims->readOnly)->toBeFalse();
+    $claims = (array) JWT::decode($response->json('data.token'), new Key('shh-secret-at-least-32-bytes-long-for-hs256', 'HS256'));
+    expect($claims)->toMatchArray([
+        'sub' => '1',
+        'node' => (string) $node->getKey(),
+        'drive' => (string) $node->drive_id,
+        'tenant' => null,
+        'epoch' => 0,
+        'schema_version' => 1,
+        'mode' => 'rw',
+        'room' => 'vaulter.documents.'.$node->drive_id.'.'.$node->getKey().'.0',
+    ])->and($claims['exp'] - $claims['iat'])->toBe(3600);
+});
+
+it('issues a read-only session to an editor whose client speaks another schema version', function (): void {
+    actAsCollaborator();
+    $node = grantedDocumentNode(level: RoleRegistry::WRITER);
+
+    test()->postJson('api/vaulter/nodes/'.$node->getKey().'/collab/token', ['schema_version' => 0])
+        ->assertOk()
+        ->assertJsonPath('data.mode', 'ro')
+        ->assertJsonPath('data.schema_version', 1);
+
+    test()->postJson('api/vaulter/nodes/'.$node->getKey().'/collab/token', ['schema_version' => 1])
+        ->assertOk()
+        ->assertJsonPath('data.mode', 'rw');
 });
 
 it('returns a hocuspocus descriptor with url + JWT when that driver is configured', function (): void {
@@ -108,8 +132,7 @@ it('returns a hocuspocus descriptor with url + JWT when that driver is configure
         ->assertOk()
         ->assertJsonPath('data.driver', 'hocuspocus')
         ->assertJsonPath('data.url', 'ws://hub:1234')
-        ->assertJsonPath('data.read_only', false)
-        ->assertJsonPath('data.connection', null);
+        ->assertJsonPath('data.mode', 'rw');
 });
 
 it('409s when the target node is a folder, not a document', function (): void {

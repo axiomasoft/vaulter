@@ -75,7 +75,8 @@
 ## unknown-collaboration-driver
 
 `VaulterException` из `CollaborationDriverManager`: выберите `hocuspocus` в
-`vaulter-documents.collaboration.driver`.
+`vaulter-documents.collaboration.driver`. Удалённый драйвер `reverb` даёт
+`InvalidConfigurationException` с явным сообщением.
 
 ## missing-jwt
 
@@ -103,7 +104,27 @@
 
 `collaboration_epoch_mismatch` (409) — запись коллаборации пришла из комнаты старого поколения:
 документ восстановили или заменили его JSON после открытия комнаты. Запись отвергнута, чтобы не
-влить брошенную историю обратно; откройте документ в новой комнате.
+влить брошенную историю обратно; откройте документ в новой комнате. Хаб закрывает такую комнату
+кодом 4409 `epoch_changed` и не повторяет запись.
+
+## collaboration-seed-conflict
+
+`collaboration_seed_conflict` (409) — хаб попытался сидировать состояние документа, у которого
+оно уже есть (другой инстанс хаба успел первым). Второй сид отвергнут: оба слились бы в
+задвоенный контент. Хаб загружает сохранённое состояние.
+
+## collaboration-unavailable
+
+`collaboration_unavailable` (409) — `collaborationSession()` или вызов хаба для документа, который
+нельзя редактировать совместно: выключен `vaulter-documents.collaboration.enabled`
+(`context.reason = disabled`) или тип документа не реализует `SupportsCollaboration`
+(`unsupported_type`). Редактируйте через `DocumentOperations::update()`.
+
+## document-state-too-large
+
+`document_state_too_large` (413) — запись хаба несла бинарный Yjs-state больше
+`vaulter-documents.collaboration.max_state_bytes` (по умолчанию 16 МиБ). Ничего не записано.
+Поднимите лимит или разделите документ.
 
 ## invalid-node-name
 

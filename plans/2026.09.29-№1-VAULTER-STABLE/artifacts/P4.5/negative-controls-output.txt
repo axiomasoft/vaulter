@@ -1,0 +1,27 @@
+## NC1 storage fence dropped from the locked write
+filter: fences a past epoch inside the locked write itself
+injected: [('if ($data->expectedEpoch !== null && $data->expectedEpoch !== $document->collab_epoch) {', 'if (false) {'), ('expectedEpoch: $data->expectedEpoch,\n                ));', 'expectedEpoch: null,\n                ));')]
+RED exit=1
+  ⨯ it fences a past epoch inside the locked write itself, not only at…  0.54s  
+   FAILED  Tests\Collaboration\HubProtocolTest > it fences a past epoch insi…   
+  Tests:    1 failed (1 assertions)
+restored sha256=26a7bb49fe31feb2711619a934a75408da2e6cd532a30996b44708adee115749
+GREEN exit=0
+   PASS  Tests\Collaboration\HubProtocolTest
+  ✓ it fences a past epoch inside the locked write itself, not only at…  0.55s  
+  Tests:    1 passed (2 assertions)
+
+## NC2 seed precondition (yjs_state IS NULL) dropped
+filter: accepts exactly one seed per generation
+injected: [('if ($data->seed && $document->yjs_state !== null) {', 'if (false) {')]
+RED exit=1
+  ⨯ it accepts exactly one seed per generation                           0.54s  
+   FAILED  Tests\Collaboration\HubProtocolTest > it accepts exactly one seed…   
+  Expected response status code [409] but received 200.
+Failed asserting that 200 is identical to 409.
+  Tests:    1 failed (2 assertions)
+restored sha256=26a7bb49fe31feb2711619a934a75408da2e6cd532a30996b44708adee115749
+GREEN exit=0
+   PASS  Tests\Collaboration\HubProtocolTest
+  ✓ it accepts exactly one seed per generation                           0.56s  
+  Tests:    1 passed (4 assertions)

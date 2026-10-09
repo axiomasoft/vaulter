@@ -18,20 +18,23 @@ import type { HandlerDescriptor, NodeId, TipTapDocument } from '../types'
 // either source. Anything unmapped falls back to a preview/download surface, and in
 // dev mode logs a console warning naming the unmapped `ui.component`/`id`.
 //
-// M4b: when the handler is COLLABORATIVE and collaboration is enabled, the editor is
-// mounted in collaborative mode — a Yjs session (useNodeCollaboration) is opened and
-// its shared `Y.Doc` is handed to the editor (bind it to TipTap via the Collaboration
-// extension); the debounced autosave path is bypassed (the Yjs binary is persisted
-// server-side via the hub). Otherwise the M4a non-collab autosave path is used. It is
-// a clean toggle: the host still supplies the actual editor via the componentMap.
+// When the handler is COLLABORATIVE and collaboration is enabled, the editor is mounted
+// in collaborative mode — a Yjs session (useNodeCollaboration) is opened and its `Y.Doc`
+// is handed to the editor (bind it to TipTap via the Collaboration extension); the
+// debounced autosave path is bypassed (the hub persists the Yjs state). The editor gets
+// NO `content` then: the hub seeds the room once on the server, and an editor that also
+// set the JSON would duplicate it. When the hub ends the room's generation (a restore),
+// `ydoc` is replaced by a new document — rebind to it. Otherwise the autosave path is
+// used. The host still supplies the actual editor via the componentMap.
 
 /**
  * A mountable editor for a document node. It receives the loaded `content`, the
  * `handler` descriptor and an `onChange` it calls with new content (the parent
- * schedules the debounced autosave). In COLLABORATIVE mode it additionally receives
- * `collaborative: true` plus the shared `ydoc` + presence/connection state; bind the
- * doc to TipTap via the Collaboration extension and treat `onChange` as a no-op (Yjs
- * drives persistence). Hosts may also bind via the default slot.
+ * schedules the debounced autosave). In COLLABORATIVE mode it receives
+ * `collaborative: true`, `content: null` and the `ydoc` + presence/connection state:
+ * bind the doc to TipTap via the Collaboration extension, never call `setContent`,
+ * and treat `onChange` as a no-op (Yjs drives persistence). Hosts may also bind via the
+ * default slot.
  */
 export interface DocumentNodeEditorProps {
   nodeId: NodeId
@@ -69,11 +72,13 @@ const props = withDefaults(
      * path even for a collaborative handler.
      */
     collaboration?: boolean
-    /**
-     * Provider factories for the collaboration session (Hocuspocus override / the
-     * Reverb Echo↔Yjs bridge). Forwarded to `useNodeCollaboration`.
-     */
+    /** Provider factory override for the collaboration session. */
     collaborationProviders?: Partial<Omit<CreateNodeCollaborationOptions, 'doc'>>
+    /**
+     * The document schema version the host's editor supports. A collaboration session
+     * in a newer schema opens read-only and emits `schema-outdated`.
+     */
+    supportedSchemaVersion?: number
   }>(),
   {
     componentMap: () => ({}),
@@ -92,6 +97,8 @@ const emit = defineEmits<{
   saved: [content: TipTapDocument]
   /** A collaborative session was opened (collaborative mode only). */
   collaborating: [readonly: boolean]
+  /** The document is in a newer schema than the editor supports: update the application. */
+  'schema-outdated': [schemaVersion: number]
 }>()
 
 /** The handler `ui.component` identifiers that mean "the TipTap rich-text editor". */
@@ -104,7 +111,10 @@ const {
 
 // The collaboration session is created lazily — only when the resolved handler is
 // collaborative AND collaboration is enabled. Until then everything behaves as M4a.
-const collab = useNodeCollaboration(props.nodeId, { providers: props.collaborationProviders })
+const collab = useNodeCollaboration(props.nodeId, {
+  providers: props.collaborationProviders,
+  supportedSchemaVersion: props.supportedSchemaVersion,
+})
 const collaborative = ref(false)
 
 /**
@@ -169,7 +179,8 @@ const editorProps = computed<DocumentNodeEditorProps | null>(() => {
   }
   const base: DocumentNodeEditorProps = {
     nodeId: props.nodeId,
-    content: content.value,
+    // The hub is the only source of a collaborative room's content.
+    content: collaborative.value ? null : content.value,
     handler: handler.value,
     readonly: isReadonly.value,
     onChange,
@@ -178,7 +189,7 @@ const editorProps = computed<DocumentNodeEditorProps | null>(() => {
     // Collaborative mode: hand the shared doc + presence; Yjs drives persistence so
     // onChange is inert (kept for prop-shape stability).
     base.collaborative = true
-    base.ydoc = collab.doc
+    base.ydoc = collab.doc.value
     base.connected = collab.connected.value
     base.collaborators = collab.collaborators.value
   }
@@ -220,6 +231,9 @@ async function loadAll(): Promise<void> {
       await collab.connect()
       collaborative.value = true
       emit('collaborating', collab.readOnly.value)
+      if (collab.schemaOutdated.value && collab.session.value) {
+        emit('schema-outdated', collab.session.value.schema_version)
+      }
     } catch {
       // The token handshake failed (collab unavailable / not configured) — fall back
       // to the M4a autosave path rather than blocking the editor.
@@ -276,12 +290,12 @@ defineExpose({
       <slot
         v-else
         :handler="handler"
-        :content="content"
+        :content="collaborative ? null : content"
         :readonly="isReadonly"
         :set-content="onChange"
         :flush="persist"
         :collaborative="collaborative"
-        :ydoc="collaborative ? collab.doc : null"
+        :ydoc="collaborative ? collab.doc.value : null"
         :connected="collab.connected.value"
         :collaborators="collab.collaborators.value"
       >
