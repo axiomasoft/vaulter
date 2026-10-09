@@ -1,0 +1,71 @@
+FINDINGS
+
+`packages/azgard` Pest is 48 passed, PHPStan reports no errors. `scripts/php84` could not refresh its shim here, so both runs used `/usr/bin/php8.4`. The suite stays green with the override bug below.
+
+```json
+[
+  {
+    "file": "packages/azgard/src/AzgardPermissionDriver.php",
+    "line": 100,
+    "severity": "high",
+    "axis": 1,
+    "summary": "override() drops AccessScope and calls isSuperAdmin() with no workspace. The adapter forwards that as AzGuard isSuperAdmin(guard:) with on: null, which is the tenant-wide scope. AccessResolver turns Effect::Allow into GrantSet::superAllowed() for the drive. Under AssignmentScopePolicy::isolated a tenant-wide super-admin is not a super-admin inside a workspace, so this grants every workspace. A super-admin role granted only inside one scope does not: a global check reads only the global scope. resolve() and canCreateIn() pass AssignmentScopeRef::of($type, $id), so ordinary grants stay in that scope; under inherit a tenant-wide grant correctly holds in every workspace.",
+    "reproduction_or_code_path": "AzgardPermissionDriver.php:96-101 ignores $scope and calls AzgardGuard::isSuperAdmin() (Contracts/AzgardGuard.php:52, no scope argument) -> AzgardGuardAdapter.php:58-60 -> HasAzGuard.php:92-94 -> SubjectAccess.php:224-228 readScope(null) -> AccessScope.php:19-21 context AssignmentScopeRef::global() -> Authorizer.php:75-98. BoundaryStage.php:156-159 denies a global context only when scope mode is required; isolated allows it. EvaluationFrame.php:84-86 then reads only the global scope, so the tenant-wide super-admin grant qualifies. AccessResolver.php:81-83 returns GrantSet::superAllowed(). AzGuard's own table is the opposite for a workspace: tests/Feature/Authorization/SuperAdminTest.php:57 ['isolated', null, 'A', 1, false] because the same sourceScopes() for a non-global context under isolated is only that context. Vaulter's real panel is inherit (tests/RealAzgard/Stubs/DocumentsPanel.php:30) and the super-admin test (RealAzgardIntegrationTest.php:44-51) only asserts the global question, so it stays green.",
+    "verdict": "CONFIRMED"
+  },
+  {
+    "file": "packages/azgard/src/AzgardGuardAdapter.php",
+    "line": 53,
+    "severity": "medium",
+    "axis": 2,
+    "summary": "A drive-owner type that is not a lowercase alias throws InvalidAssignmentScopeException before AzGuard can deny it. A class-name morph (Laravel's default without a morph map) is that case. The adapter docblock, UPGRADE, and both guides say a type the panel does not declare is denied; that deny happens only after of() accepts the alias (the 'team' test). isSuperAdmin() also throws TenantRequiredException when the panel has tenants and no current tenant, while hasPermission() would deny for the same missing tenant. Panel selection throws PanelNotResolvedException, AmbiguousPanelException, SubjectNotAcceptedException, or ConflictingPanelException, uncaught. NullAzgardGuard denies only when the user is not an AzgardBackedUser; the 'never a fatal' docblocks cover that path and an unbound guard.",
+    "reproduction_or_code_path": "hasPermissionIn: AzgardGuardAdapter.php:49-55 AssignmentScopeRef::of() -> AssignmentScopeRef.php:26-29 -> IdentityCodec.php:40-44 (pattern [a-z0-9][a-z0-9_.-]*, InvalidAssignmentScopeException). Class App\\Models\\Team fails that pattern. A valid undeclared alias reaches BoundaryStage.php:162-164 and is denied (RealAzgardIntegrationTest.php:96-100, type 'team'). isSuperAdmin: SubjectAccess.php:224-228 readScope() -> requiredTenant() SubjectAccess.php:429-441 throws TenantRequiredException unless tenants()->mode() is none. hasPermission does not call requiredTenant(); BoundaryStage.php:144-146 returns DecisionReason::TenantRequired. Panel throws: HasAzGuard.php:184-186 PanelResolver::select() -> PanelResolver.php:150-174 and implicit() 325-339. Null path: VaulterAzgardServiceProvider.php:45-49, covered by ProviderBindingTest.php:31-41.",
+    "verdict": "CONFIRMED"
+  },
+  {
+    "file": "packages/azgard/config/vaulter-azgard.php",
+    "line": 11,
+    "severity": "medium",
+    "axis": 3,
+    "summary": "The panel_id null comment matches PanelResolver: full name, then a registered prefix, then the request panel, then the user model's panel. The default documents.* keys are local keys only while no panel prefix is documents. AzGuard's default resource prefix is the panel id, so a panel id of documents makes the prefix documents. That either refuses to boot, because a catalog permission may not start with its prefix, or strips documents.view to the one-segment key view and throws InvalidPermissionKeyException on every check. The config comment and both guides do not say this. The published example id app is safe: its default prefix is app, which does not strip documents.view (the real suite's panel).",
+    "reproduction_or_code_path": "Default prefix: PanelSettings.php:37 RESOURCE_PREFIX true, PanelCompiler.php:614-617 true becomes the panel id. Boot collision: PanelCompiler.php:737-746 PrefixConflictException when any static permission's first segment equals a prefix. Runtime strip: PanelResolver.php:241-243 signals() treats the first segment as a panel prefix; local() 411-415 removes that prefix; PermissionKey.php:27-30 and PermissionGrammar.php:140-141 reject a one-segment local key. documents.view becomes view. The throw leaves SubjectAccess.php:364-367 Authorizer::resolve() uncaught. Docs claiming local keys and prefix selection: vaulter-azgard.php:11-17, docs/guide/permission-drivers.md:332-337, docs/ru/guide/permission-drivers.md:335-340.",
+    "verdict": "CONFIRMED"
+  },
+  {
+    "file": "packages/azgard/tests/RealAzgard/RealAzgardIntegrationTest.php",
+    "line": 44,
+    "severity": "low",
+    "axis": 4,
+    "summary": "The real suite proves an inherit panel: workspace A does not satisfy workspace B, a tenant-wide grant holds in a workspace, alias team is denied, and a global super-admin becomes an override. It never builds an isolated panel, so the override bug stays green. SpyAzgardUser::isSuperAdmin records only the guard argument, so AdapterTest stays green if on: is passed. PermissionDriverContractTest does run the core pass-through fixture for the azgard driver and passed.",
+    "reproduction_or_code_path": "Pest from packages/azgard: 48 passed (138 assertions), including RealAzgardIntegrationTest.php:44-125 and tests/Access/PermissionDriverContractTest.php:79-87. DocumentsPanel.php:30 is AssignmentScopePolicy::inherit only. SpyAzgardUser.php:99-103 appends $guard and ignores $on; AdapterTest.php:56-65 asserts superAdminCalls === ['app'].",
+    "verdict": "CONFIRMED"
+  },
+  {
+    "file": ".github/workflows/azgard.yml",
+    "line": 47,
+    "severity": "medium",
+    "axis": 5,
+    "summary": "The workflow fetches https://github.com/axiomasoft/azguard-private.git with no token, secret, or credential step. The package README says this job clones the latest public AzGuard HEAD and needs no private-repository token. A fresh ubuntu-latest runner has no credentials for that remote, so checkout stops before composer update unless the URL is anonymously readable. The ^1.0 constraint is resolvable from the path repo when the checkout is on local main: the sibling package aliases dev-main to 1.0.x-dev, and the local lock already installed that alias. No azguard-core or azguard-context requirement remains. UPGRADE and CHANGELOG name those packages only as the removed baseline.",
+    "reproduction_or_code_path": "azgard.yml:44-51 git init ../azguard, remote axiomasoft/azguard-private.git, fetch origin main, checkout -B main, and no secrets. packages/azgard/README.md:110-112 claims a public tokenless clone. packages/azgard/composer.json:21 require axiomasoft/azguard ^1.0, repositories path ../../../azguard/packages/core, minimum-stability dev, prefer-stable true. ../azguard/packages/core/composer.json extra.branch-alias dev-main 1.0.x-dev. packages/azgard/composer.lock records axiomasoft/azguard version dev-main with that alias. Fetch was not attempted (no network).",
+    "verdict": "CONFIRMED"
+  },
+  {
+    "file": "packages/azgard/tests/Access/AzgardDriverTest.php",
+    "line": 22,
+    "severity": "low",
+    "axis": 5,
+    "summary": "The driver-test docblock still says the real integration is a host step onto Corex ContextGuard::hasPermissionIn and that azguard/corex is not installed. composer.json keywords still include corex. Nothing in the package still requires azguard-core, azguard-context, HasScopedRoles, or a 0.3 pin.",
+    "reproduction_or_code_path": "AzgardDriverTest.php:22-25. packages/azgard/composer.json:6 keywords include corex. grep of packages/azgard/src, composer.json require, and the workflow finds no azguard-core, azguard-context, legacy/0.3, or HasScopedRoles. UPGRADE.md:11-16 and CHANGELOG.md:13 name the old packages in the Was/Changed migration record.",
+    "verdict": "CONFIRMED"
+  },
+  {
+    "file": "packages/azgard/README.md",
+    "line": 45,
+    "severity": "low",
+    "axis": 6,
+    "summary": "The README selects the driver with config drivers.permission = azgard. The key Vaulter reads is access.permission_driver. The English and Russian guides both use that key and agree with each other on the v1 panel, the assignment-scope lane, panel_id null, and the adapter override. The panel example and the override example match v1 signatures (PanelBuilder::for/permissions/roles/scopes, DatabaseSource::make, hasPermission(on:), isSuperAdmin()). UPGRADE covers the dependency swap, AzGuardSubject, the workspace lane, and panel_id, and still says an undeclared workspace type is denied.",
+    "reproduction_or_code_path": "README.md:42-46. packages/core/config/vaulter.php:64 access.permission_driver. Guides: docs/guide/permission-drivers.md:265-302 and 363-394, docs/ru/guide/permission-drivers.md:268-305 and 366-397. v1 signatures: PanelBuilder.php:109 for(), 198 permissions(), 211 roles(), 431 scopes(); DatabaseSource.php:91 make(); AzGuardSubject.php:28 and 53. UPGRADE.md:9-33.",
+    "verdict": "CONFIRMED"
+  }
+]
+```
