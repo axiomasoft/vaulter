@@ -167,8 +167,10 @@ it('exports the working state or a chosen revision', function (): void {
     $then = $documents->export($node->id, 'html', $original);
 
     expect($now)->toBeInstanceOf(DocumentExport::class)
-        ->and($now->content)->toContain('exported now')
-        ->and($then->content)->toContain('exported original');
+        ->and($now->bytes)->toContain('exported now')
+        ->and($now->sourceRevisionId)->toBeNull()
+        ->and($then->bytes)->toContain('exported original')
+        ->and($then->sourceRevisionId)->toBe($original->id);
 });
 
 it('refuses a type that is not registered on create, and uses the configured default type', function (): void {

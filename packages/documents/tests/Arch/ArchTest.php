@@ -34,6 +34,7 @@ test('non-test src never references the host App namespace (E5.1, F-P4.3-01)', f
     // generated host code), never as a real import/dependency of the package itself.
     $allowlist = [
         'Console/MakeDocumentTypeCommand.php',
+        'Console/MakeExporterCommand.php',
     ];
 
     /** @var Iterator<SplFileInfo> $files */

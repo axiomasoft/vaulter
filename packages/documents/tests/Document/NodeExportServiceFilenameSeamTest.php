@@ -3,23 +3,20 @@
 declare(strict_types=1);
 
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
+use Vaulter\Documents\Actions\Export\ExportDocumentAction;
 use Vaulter\Documents\Contracts\ExportFilenameResolver;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
+use Vaulter\Documents\Data\Export\ExportDocumentInput;
 use Vaulter\Documents\Export\DefaultExportFilenameResolver;
-use Vaulter\Documents\Export\NodeExportService;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /*
- * P4.5 / F-P3.1-04: the export filename scheme becomes a container-bound
- * extension point ({@see ExportFilenameResolver}) instead of a `private` method
- * on a class a host could not touch — `NodeExportService` stays `final` (the H.5
- * arch gate from P4.1 forbids un-finalising anything in
- * `Vaulter\Documents\Documents`), so the seam is DI-based, not inheritance-based.
- * Before the fix, there was no contract to rebind at all — a different naming
- * scheme required forking `NodeExportService::filenameFor()`.
+ * The export filename scheme is a container-bound extension point
+ * ({@see ExportFilenameResolver}): ExportDocumentAction stays final, so a host
+ * rebinds the contract instead of forking the action.
  */
 beforeEach(function (): void {
     $this->drive = DocumentTestHelpers::drive();
@@ -32,15 +29,15 @@ beforeEach(function (): void {
     ));
 });
 
-it('binds ExportFilenameResolver to the default scheme unchanged, characterisation guard', function (): void {
+it('binds ExportFilenameResolver to the default scheme', function (): void {
     expect(app(ExportFilenameResolver::class))->toBeInstanceOf(DefaultExportFilenameResolver::class);
 
-    $export = app(NodeExportService::class)->export(OperationContext::system($this->node->storage()->firstOrFail(), 'export fixture'), $this->node, 'html');
+    $export = app(ExportDocumentAction::class)->execute(OperationContext::system($this->node->storage()->firstOrFail(), 'export fixture'), new ExportDocumentInput($this->node, 'html'));
 
     expect($export->filename)->toBe('Report.html');
 });
 
-it('lets a host rebind ExportFilenameResolver to override the export filename scheme, F-P3.1-04', function (): void {
+it('lets a host rebind ExportFilenameResolver to override the export filename scheme', function (): void {
     $custom = new class implements ExportFilenameResolver
     {
         public function resolve(Node $node, string $extension): string
@@ -50,18 +47,17 @@ it('lets a host rebind ExportFilenameResolver to override the export filename sc
     };
 
     app()->bind(ExportFilenameResolver::class, fn (): ExportFilenameResolver => $custom);
-    // NodeExportService itself is not rebound — a fresh resolve must pick up the
-    // NEW filename resolver, proving the seam is read from the container, not
-    // memoised/hardcoded inside the service.
-    app()->forgetInstance(NodeExportService::class);
+    // The action itself is not rebound — a fresh resolve must pick up the new
+    // resolver, proving the seam is read from the container, not hardcoded.
+    app()->forgetInstance(ExportDocumentAction::class);
 
-    $export = app(NodeExportService::class)->export(OperationContext::system($this->node->storage()->firstOrFail(), 'export fixture'), $this->node, 'html');
+    $export = app(ExportDocumentAction::class)->execute(OperationContext::system($this->node->storage()->firstOrFail(), 'export fixture'), new ExportDocumentInput($this->node, 'html'));
 
     expect($export->filename)->toBe('custom-Report.html');
 });
 
-it('keeps NodeExportService final — the seam is DI-based, not inheritance-based (H.5)', function (): void {
-    $class = new ReflectionClass(NodeExportService::class);
+it('keeps ExportDocumentAction final — the seam is DI-based, not inheritance-based', function (): void {
+    $class = new ReflectionClass(ExportDocumentAction::class);
 
     expect($class->isFinal())->toBeTrue();
 });

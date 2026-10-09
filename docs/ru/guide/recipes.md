@@ -420,55 +420,59 @@ CAS-бакет должен быть **без версионирования**. 
 
 ## Свой формат экспорта {#custom-export}
 
-Встроенные экспортёры `html` и `markdown` рендерят TipTap-содержимое документа. Добавьте свой
-(PDF, DOCX, …), реализовав `Vaulter\Contracts\Handlers\DocumentExporter`:
+Встроенные экспортёры `html` и `markdown` отдают документы rich-text и Markdown. Добавьте свой
+(PDF, DOCX, …), реализовав `Vaulter\Documents\Contracts\DocumentExporter` — заготовка:
+`php artisan vaulter:make:exporter Pdf`:
 
 ```php
-namespace App\Vaulter;
+namespace App\Vaulter\Exporters;
 
-use Vaulter\Contracts\Handlers\DocumentContent;
-use Vaulter\Contracts\Handlers\DocumentExporter;
-use Vaulter\Documents\Exceptions\UnsupportedDocumentContentException;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
+use Vaulter\Documents\Contracts\DocumentContent;
+use Vaulter\Documents\Contracts\DocumentExporter;
+use Vaulter\Documents\Contracts\DocumentType;
+use Vaulter\Documents\Exceptions\UnsupportedDocumentContentException;
 
 final class PdfExporter implements DocumentExporter
 {
+    public function key(): string { return 'acme/pdf'; }
     public function format(): string { return 'pdf'; }
     public function mimeType(): string { return 'application/pdf'; }
     public function extension(): string { return 'pdf'; }
+    public function documentTypes(): array { return ['vaulter/rich-text']; }
 
-    public function export(DocumentContent $content): string
+    public function export(DocumentContent $content, DocumentType $type): string
     {
-        // Контракт опаковый — сужаем до того, что понимает этот экспортёр.
+        // Контракт непрозрачен — сузьте до того, что экспортёр понимает.
         if (!$content instanceof TipTapContent) {
             throw UnsupportedDocumentContentException::forExporter(
                 $this->format(), TipTapContent::class, $content::class,
             );
         }
 
-        // Binary formats return an encoded string (e.g. base64) + the matching mime.
+        // Байты файла, отрисованные только из декодированного содержимого.
         return MyPdfLibrary::fromTiptap($content->toArray())->toBytes();
     }
 }
 ```
 
-Зарегистрируйте его через конфиг или в рантайме:
+Зарегистрируйте по имени класса в конфиге или из провайдера до завершения загрузки приложения:
 
 ::: code-group
 
 ```php [config]
 // config/vaulter-documents.php
 'exporters' => [
-    'html'     => \Vaulter\Export\HtmlExporter::class,
-    'markdown' => \Vaulter\Export\MarkdownExporter::class,
-    'pdf'      => \App\Vaulter\PdfExporter::class,
+    \Vaulter\Documents\Export\HtmlExporter::class,
+    \Vaulter\Documents\Export\MarkdownExporter::class,
+    \App\Vaulter\Exporters\PdfExporter::class,
 ],
 ```
 
-```php [runtime]
-use Vaulter\Facades\Vaulter;
+```php [provider]
+use Vaulter\Documents\Facades\Documents;
 
-Vaulter::registerExporter(new \App\Vaulter\PdfExporter());
+Documents::exporters()->register(\App\Vaulter\Exporters\PdfExporter::class);
 ```
 
 :::

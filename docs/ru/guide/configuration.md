@@ -193,10 +193,7 @@ CAS-бакет должен быть без версионирования: уд
 'content' => ['max_size_kb' => 5120],
 'revisions' => ['limit' => 50, 'checkpoint_interval_seconds' => 300],
 'comments' => ['enabled' => true],
-'exporters' => [
-    'html' => \Vaulter\Documents\Export\HtmlExporter::class,
-    'markdown' => \Vaulter\Documents\Export\MarkdownExporter::class,
-],
+'exporters' => [\Vaulter\Documents\Export\HtmlExporter::class, \Vaulter\Documents\Export\MarkdownExporter::class],
 'collaboration' => [
     'enabled' => false,
     'driver' => 'hocuspocus',
@@ -224,7 +221,7 @@ CAS-бакет должен быть без версионирования: уд
 Коллаборация остаётся опциональной. При её включении оба секрета хаба должны быть заданы
 и различаться: иначе production boot завершается исключением, а другие окружения пишут warning.
 
-`exporters` остаётся **картой формат → FQCN**. Расширения allow-list TipTap переезжают в
+`exporters` — список имён классов экспортёров (карта формат → FQCN из 0.2 ещё читается, с предупреждением об устаревании). Расширения allow-list TipTap переезжают в
 `vaulter-documents.tiptap.*`. `vaulter.enabled_document_types` и
 `vaulter.features.spreadsheets` превращаются в список классов
 [типов документов](/ru/guide/document-types) `vaulter-documents.types`

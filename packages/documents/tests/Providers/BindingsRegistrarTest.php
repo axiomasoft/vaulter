@@ -22,7 +22,7 @@ it('normalizes module defaults in a fresh container while retaining host overrid
         'vaulter' => ['handlers' => ['Host\\Handler']],
         'vaulter-documents' => [
             'models' => ['node_comment' => 'Host\\Comment'],
-            'exporters' => ['html' => 'Host\\Exporter'],
+            'exporters' => ['Host\\Exporter'],
         ],
     ]);
     $app->instance('config', $config);
@@ -36,8 +36,7 @@ it('normalizes module defaults in a fresh container while retaining host overrid
         ->and($config->get('vaulter-documents.models.document_revision'))->toBe(DocumentRevision::class)
         ->and($config->get('vaulter.handlers'))->toBe(['Host\\Handler'])
         ->and($app->tagged('vaulter.file_handlers'))->toBeIterable()
-        ->and($config->get('vaulter-documents.exporters.html'))->toBe('Host\\Exporter')
-        ->and($config->get('vaulter-documents.exporters.markdown'))->toBe(MarkdownExporter::class);
+        ->and($config->get('vaulter-documents.exporters'))->toContain('Host\\Exporter', MarkdownExporter::class);
 });
 
 it('preserves cached configuration without adding defaults', function (): void {

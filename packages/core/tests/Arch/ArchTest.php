@@ -136,12 +136,12 @@ arch('no debug helpers leak into the package')
  * interface; the built-in handlers are final; the registry is final. The ENGINE
  * (registry/resolver/baseline handlers) is core-owned since VLT-CANON P0.4 (D10,
  * superseding H.5/T5); the documents-only additions (TipTap/Univer drivers under
- * `Vaulter\Documents\Engines\Handlers`, `NodeExportService` under
- * `Vaulter\Documents\Export`) moved out of the tautological `Documents\Documents`
+ * `Vaulter\Documents\Engines\Handlers`, `ExportDocumentAction` under
+ * `Vaulter\Documents\Actions\Export`) moved out of the tautological `Documents\Documents`
  * folder in P2.3 — both remain covered by this finality gate.
  */
 arch('the document handler registry and its handlers are final')
-    ->expect(['Vaulter\Documents\Engines\Handlers', 'Vaulter\Documents\Export\NodeExportService'])
+    ->expect(['Vaulter\Documents\Engines\Handlers', 'Vaulter\Documents\Actions\Export\ExportDocumentAction'])
     ->toBeFinal();
 
 /**

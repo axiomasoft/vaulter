@@ -3,8 +3,10 @@
 declare(strict_types=1);
 
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
+use Vaulter\Documents\Actions\Export\ExportDocumentAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
-use Vaulter\Documents\Export\NodeExportService;
+use Vaulter\Documents\Data\Export\ExportDocumentInput;
+use Vaulter\Documents\Export\DocumentExporterRegistry;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -25,24 +27,24 @@ beforeEach(function (): void {
 });
 
 it('exports a document node to HTML through the registered exporter', function (): void {
-    $export = app(NodeExportService::class)->export(OperationContext::system($this->node->storage()->firstOrFail(), 'export fixture'), $this->node, 'html');
+    $export = app(ExportDocumentAction::class)->execute(OperationContext::system($this->node->storage()->firstOrFail(), 'export fixture'), new ExportDocumentInput($this->node, 'html'));
 
     expect($export->format)->toBe('html')
         ->and($export->mimeType)->toBe('text/html')
-        ->and($export->content)->toContain('Exportable body')
+        ->and($export->bytes)->toContain('Exportable body')
         ->and($export->filename)->toBe('Report.html');
 });
 
 it('exports a document node to Markdown through the registered exporter', function (): void {
-    $export = app(NodeExportService::class)->export(OperationContext::system($this->node->storage()->firstOrFail(), 'export fixture'), $this->node, 'markdown');
+    $export = app(ExportDocumentAction::class)->execute(OperationContext::system($this->node->storage()->firstOrFail(), 'export fixture'), new ExportDocumentInput($this->node, 'markdown'));
 
     expect($export->format)->toBe('markdown')
-        ->and($export->content)->toContain('Exportable body')
+        ->and($export->bytes)->toContain('Exportable body')
         ->and($export->filename)->toBe('Report.md');
 });
 
 it('advertises the registered export formats for an editable document node', function (): void {
-    $formats = app(NodeExportService::class)->availableFormats($this->node);
+    $formats = app(DocumentExporterRegistry::class)->formatsFor('vaulter/rich-text');
 
     expect($formats)->toContain('html')->toContain('markdown');
 });

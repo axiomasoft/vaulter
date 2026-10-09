@@ -392,13 +392,13 @@ editor/preview surface to mount. → `handler`
 
 #### `GET nodes/{node}/export`
 
-Export the document node's head content in the requested format. → `export`
+Export the document node as a file in the requested format. → `export`
 
 | Param | In | Notes |
 |---|---|---|
 | `format` | query | `html` (default), `markdown`, or any registered exporter format |
 
-**Gate:** `Ability::View`. **Response:** `{ "data": { … } }`. See [Export](/guide/export).
+**Gate:** `Ability::Download` + content egress. **Response:** the exporter's bytes with `Content-Type`, `Content-Disposition: attachment; filename*`, `Cache-Control: private, no-store` and `X-Content-Type-Options: nosniff` (not JSON). A format the document's type lacks answers `422 unknown_export_format` with `allowed`. See [Export](/guide/export).
 
 ---
 

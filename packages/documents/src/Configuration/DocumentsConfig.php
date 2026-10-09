@@ -6,7 +6,6 @@ namespace Vaulter\Documents\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
 use Vaulter\Configuration\ConfigValidator;
-use Vaulter\Contracts\Handlers\DocumentExporter;
 use Vaulter\Contracts\Profiles\CommentsFeature;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
@@ -142,25 +141,34 @@ final readonly class DocumentsConfig implements CommentsFeature
         return is_string($value) && $value !== '' ? $value : null;
     }
 
-    /** @return array<string, class-string<DocumentExporter>> */
+    /**
+     * The document exporter classes registered from config. The 0.2 map of
+     * format => class is still read (its classes, in order) with a deprecation.
+     *
+     * @return list<string>
+     */
     public function exporters(): array
     {
         $value = $this->config->get(key: 'vaulter-documents.exporters', default: []);
 
         if (!is_array($value)) {
-            return [];
+            throw new InvalidConfigurationException('[Vaulter] vaulter-documents.exporters must be a list of document exporter classes.');
         }
 
-        $exporters = [];
-
-        foreach ($value as $format => $class) {
-            if (is_string($format) && is_string($class) && is_a($class, DocumentExporter::class, allow_string: true)) {
-                $exporters[$format] = $class;
+        $classes = [];
+        $legacyMap = false;
+        foreach ($value as $key => $class) {
+            if (!is_string($class)) {
+                throw new InvalidConfigurationException('[Vaulter] vaulter-documents.exporters must contain class names only (closures cannot be cached).');
             }
+            $legacyMap = $legacyMap || is_string($key);
+            $classes[] = $class;
+        }
+        if ($legacyMap) {
+            trigger_error('[Vaulter] vaulter-documents.exporters as a map of format => class is deprecated; list the exporter classes instead.', E_USER_DEPRECATED);
         }
 
-        /** @var array<string, class-string<DocumentExporter>> $exporters */
-        return $exporters;
+        return array_values(array_unique($classes));
     }
 
     /** @return list<string> */

@@ -174,7 +174,7 @@ only a pre-resolved storage and upload-source normalisation (a PSR stream, `SplF
 
 ::: details VaulterManager
 `for()`, `forStorage()`, `profiles()`,
-`handlers()`, `registerExporter()`, `exporter()`, `exporterFormats()`.
+`handlers()`.
 [Facade and manager](/reference/facade).
 :::
 
@@ -312,7 +312,7 @@ Every seam a host plugs into, and where it is documented:
 | `Contracts\Cas\StorageDriver` / `ContentStore` / `BlobStore` | `config('vaulter-media.*')` | [Recipes — swap to S3](/guide/recipes#s3-disk) |
 | `Contracts\Collaboration\CollaborationDriver` | `config('vaulter-documents.collaboration.driver')` | [ADR-0001](/adr/0001-collaboration-transport) |
 | `Contracts\Handlers\FileHandler` | `config('vaulter.handlers')` / `Vaulter::handlers()->register()` | [Recipes — custom format handler](/guide/recipes#format-handler) |
-| `Contracts\Handlers\DocumentExporter` | `config('vaulter-documents.exporters')` / `Vaulter::registerExporter()` | [ADR-0004](/adr/0004-content-format) |
+| `Documents\Contracts\DocumentExporter` | `config('vaulter-documents.exporters')` / `Documents::exporters()->register()` | [ADR-0004](/adr/0004-content-format) |
 | `Contracts\Sharing\ShareTokenGenerator` | `config('vaulter.sharing.token_generator')` | [ADR-0013](/adr/0013-two-sharing-channels) |
 | `Contracts\Uploads\UploadProtocolHandler` | container tag | [ADR-0006](/adr/0006-content-addressed-blobs-gc) |
 | `Contracts\IdStrategy` | `config('vaulter.ids.strategies')` | [ADR-0011](/adr/0011-id-strategy) |

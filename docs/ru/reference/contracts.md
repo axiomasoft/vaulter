@@ -27,7 +27,7 @@ outline: deep
 | Collaboration | `CollaborationDriver` | привязка в контейнере (путь узлов) |
 | Collaboration | `HostUserResolver` | привязка в контейнере |
 | Handlers | `FileHandler` | `config('vaulter.handlers')` / `Vaulter::handlers()->register()` |
-| Handlers | `DocumentExporter` | `config('vaulter-documents.exporters')` / `Vaulter::registerExporter()` |
+| Handlers | `DocumentExporter` | `config('vaulter-documents.exporters')` / `Documents::exporters()->register()` |
 | Sharing | `ShareTokenGenerator` | `config('vaulter.sharing.token_generator')` / `config('vaulter.sharing.token_generator')` |
 | Uploads | `UploadProtocolHandler` | в комплекте (tus / S3-multipart) |
 | — | `IdStrategy` | `config('vaulter.ids.strategies')` |
@@ -375,32 +375,29 @@ interface FileHandler
 
 См. [Рецепты → Свой обработчик](/ru/guide/recipes).
 
-### `Vaulter\Contracts\Handlers\DocumentExporter`
+### `Vaulter\Documents\Contracts\DocumentExporter`
 
-Рендерит содержимое документа (`DocumentContent` — тот же опаковый payload, что хранит
-write-путь) в формат экспорта — контракт не завязан на TipTap. В комплекте поставляются
-экспортёры HTML и Markdown; зарегистрируйте свой (PDF, DOCX, …) через
-`config('vaulter-documents.exporters')` или `Vaulter::registerExporter()`. Бинарные форматы должны
-возвращать закодированную строку (например, base64) и объявлять соответствующий mime-тип.
+Рендерит декодированное содержимое документа (`DocumentContent`) в формат файла. Регистрируется в
+`Documents::exporters()` и разрешается по паре (тип документа, формат). Видит только декодированное
+inline-содержимое — никогда storage, blob'ы и URL. В комплекте экспортёры HTML и Markdown;
+зарегистрируйте свой (PDF, DOCX, …) через `config('vaulter-documents.exporters')` или
+`Documents::exporters()->register()`. Бинарные форматы возвращают закодированные байты файла и
+объявляют соответствующий mime-тип.
 
 ```php
 interface DocumentExporter
 {
-    /** The format key (e.g. 'html', 'pdf'); also echoed in the API. */
-    public function format(): string;
-
+    public function key(): string;          // 'vaulter/html'
+    public function format(): string;       // значение ?format=
     public function mimeType(): string;
-
-    /** File extension, without the dot. */
-    public function extension(): string;
-
-    public function export(DocumentContent $content): string;
+    public function extension(): string;    // без точки
+    /** @return list<string> ключи типов документов, которые он умеет отдавать */
+    public function documentTypes(): array;
+    public function export(DocumentContent $content, DocumentType $type): string;
 }
 ```
 
 См. [Рецепты → Свой экспорт](/ru/guide/recipes).
-
----
 
 ### `Vaulter\Contracts\Handlers\FileHandlerRegistry`
 

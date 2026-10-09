@@ -485,10 +485,9 @@ export interface UpdateDocumentContentOptions {
   yjsState?: string
 }
 
-/** The export response a document node yields (`DocumentExport` — adds `mime_type`). */
+/** The file an export yields: the exporter's bytes plus the name and type the server sent. */
 export interface NodeDocumentExport {
-  format: string
-  content: string
-  mime_type: string
+  blob: Blob
   filename: string
+  mimeType: string
 }

@@ -285,8 +285,9 @@ append the role/team `Subject`s.
 
 ## unknown-export-format
 
-`UnknownExportFormatException` — no exporter is registered for the requested format.
-Register one via `config('vaulter-documents.exporters')` or `Vaulter::registerExporter()`.
+`UnknownExportFormatException` — no exporter renders the requested format for the document's
+type. The response lists the formats the type does have in `allowed`. Register an exporter via
+`config('vaulter-documents.exporters')` or `Documents::exporters()->register()`.
 
 ## unsupported-document-content
 
@@ -296,10 +297,9 @@ exporter that only renders one shape (the built-in HTML/Markdown exporters rende
 `TipTapContent`) narrows with an `instanceof` and throws this when the narrowing fails.
 Throw it from your own exporter's guard; catch it if you call an exporter directly.
 
-Note: the package's own node-export path (`NodeExportService`) does not currently produce
-a non-TipTap `DocumentContent` — it resolves every version through `TipTapContent`, so a
-non-TipTap snapshot decays to an empty TipTap doc rather than reaching this guard. This
-error therefore surfaces on **direct exporter calls and custom exporters** today.
+The registry only routes a document to exporters that list its type in `documentTypes()`, so
+this error surfaces on **direct exporter calls and exporters that list a type whose content they
+cannot render**.
 
 ## upload-conflict
 

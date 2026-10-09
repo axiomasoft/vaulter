@@ -8,11 +8,8 @@ use Vaulter\Documents\Contracts\ExportFilenameResolver;
 use Vaulter\Models\Drive\Node;
 
 /**
- * The default {@see ExportFilenameResolver}: the node's basename plus the
- * exporter's extension (e.g. `Report.html`) — the pre-P4.5 hardcoded scheme,
- * unchanged. Bound by {@see VaulterDocumentsServiceProvider};
- * a host rebinds {@see ExportFilenameResolver} to its own class for a different
- * naming scheme (P4.5 / F-P3.1-04).
+ * The default {@see ExportFilenameResolver}: the node's basename plus the exporter's
+ * extension (e.g. `Report.html`). A host rebinds the contract for another scheme.
  */
 final class DefaultExportFilenameResolver implements ExportFilenameResolver
 {

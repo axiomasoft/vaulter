@@ -17,10 +17,10 @@ use Vaulter\Documents\Content\DocumentContentLifecycle;
 use Vaulter\Documents\Contracts\ExportFilenameResolver;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Export\DefaultExportFilenameResolver;
+use Vaulter\Documents\Export\DocumentExporterRegistry;
 use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
 use Vaulter\Documents\Presentation\DocumentPresenter;
-use Vaulter\Documents\Registries\DocumentExporterRegistry;
 use Vaulter\Documents\Support\DocumentHeads;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 
@@ -48,11 +48,9 @@ final class BindingsRegistrar extends ServiceProvider
         // Core presents document nodes through this tag; files keep the file handlers.
         $this->app->tag([DocumentPresenter::class], 'vaulter.kind_presenters');
 
-        // The export filename seam (P4.5 / F-P3.1-04): NodeExportService stays
-        // `final` (H.5 arch gate), so a host wanting a different export filename
-        // scheme rebinds this contract to its own class instead of forking the
-        // service. Bound to the pre-P4.5 hardcoded scheme (node basename + exporter
-        // extension) — default behaviour is unchanged.
+        // The export filename seam: ExportDocumentAction is final, so a host wanting a
+        // different scheme rebinds this contract instead of forking the action. The
+        // default is the node's basename plus the exporter's extension.
         $this->app->bind(ExportFilenameResolver::class, DefaultExportFilenameResolver::class);
 
         // Second echelon of the F-P1.11-01 stored-XSS fix (D4): TipTapRenderer takes

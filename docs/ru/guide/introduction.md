@@ -101,7 +101,7 @@ Vaulter::profiles();                                // ProfileRegistry
 
 // Расширение пакета в рантайме.
 Vaulter::handlers()->register(MyPdfHandler::class);    // новый формат документа
-Vaulter::registerExporter(new PdfExporter());     // новый формат экспорта
+Documents::exporters()->register(PdfExporter::class); // новый формат экспорта
 Vaulter::resolvePermissionsWith($resolver);       // легаси-резолвер на документном пути
 
 // Резолв драйвера совместного редактирования.

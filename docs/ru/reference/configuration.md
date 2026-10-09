@@ -311,14 +311,14 @@ rich text (`['markdown']`) тип `vaulter/rich-text` не зарегистри�
 
 ## Форматы экспорта — `vaulter-documents.exporters`
 
-Карта ключ формата → FQCN `DocumentExporter`.
+Список имён классов `DocumentExporter`, разрешаемых по паре (тип документа, формат). Два
+экспортёра на одну пару падают при загрузке; набор замораживается после загрузки.
 
 | Ключ | По умолчанию |
 |---|---|
-| `vaulter-documents.exporters.html` | `Vaulter\Documents\Export\HtmlExporter` |
-| `vaulter-documents.exporters.markdown` | `Vaulter\Documents\Export\MarkdownExporter` |
+| `vaulter-documents.exporters` | `[HtmlExporter::class, MarkdownExporter::class]` (`Vaulter\Documents\Export\*`) |
 
-Добавьте свой (PDF, DOCX, …) здесь или через `Vaulter::registerExporter()`. См. [Рецепты → Свой экспорт](/ru/guide/recipes).
+Добавьте свой (PDF, DOCX, …) здесь или через `Documents::exporters()->register()`. См. [Рецепты → Свой экспорт](/ru/guide/recipes).
 
 ## Совместное редактирование — `vaulter-documents.collaboration.*`
 

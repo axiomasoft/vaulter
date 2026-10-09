@@ -13,6 +13,7 @@ use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
+use Vaulter\Documents\Actions\Export\ExportDocumentAction;
 use Vaulter\Documents\Actions\Revisions\CreateNamedRevisionAction;
 use Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction;
 use Vaulter\Documents\Actions\Revisions\UpdateRevisionRetentionAction;
@@ -23,6 +24,7 @@ use Vaulter\Documents\Contracts\DocumentType;
 use Vaulter\Documents\Data\Collaboration\CollaborationSession;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
+use Vaulter\Documents\Data\Export\ExportDocumentInput;
 use Vaulter\Documents\Data\Revisions\CreateNamedRevisionInput;
 use Vaulter\Documents\Data\Revisions\RestoreDocumentRevisionInput;
 use Vaulter\Documents\Data\Revisions\UpdateRevisionRetentionInput;
@@ -34,7 +36,7 @@ use Vaulter\Documents\Exceptions\DocumentTypeUnavailableException;
 use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Exceptions\UnknownDocumentTypeException;
-use Vaulter\Documents\Export\NodeExportService;
+use Vaulter\Documents\Exceptions\UnknownExportFormatException;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Queries\DocumentQuery;
 use Vaulter\Documents\Queries\MappedCursorPaginator;
@@ -84,7 +86,7 @@ final readonly class DocumentOperations
         private CreateNamedRevisionAction $snapshot,
         private RestoreDocumentRevisionAction $restore,
         private UpdateRevisionRetentionAction $retention,
-        private NodeExportService $exports,
+        private ExportDocumentAction $export,
         private CollaborationSessionService $sessions,
         private DocumentQuery $query,
         private DocumentSnapshotMapper $mapper,
@@ -242,8 +244,11 @@ final readonly class DocumentOperations
 
     /**
      * Render the working state (or one checkpoint) with the exporter registered for
-     * $format. Needs Download: an export is a copy of the content, which View alone
-     * does not allow.
+     * $format and the document's type. Needs Download: an export is a copy of the
+     * content, which View alone does not allow. Never creates a revision.
+     *
+     * @throws DocumentTypeUnavailableException when the document's type is not installed
+     * @throws UnknownExportFormatException     when the type has no exporter for $format (422, with the allowed formats)
      */
     public function export(NodeSnapshot|string|int $document, string $format, DocumentRevisionSnapshot|string|int|null $revision = null): DocumentExport
     {
@@ -251,7 +256,7 @@ final readonly class DocumentOperations
         $this->installedType($node);
         $selected = $revision === null ? null : $this->query->revision($node, $this->query->document($node), $revision);
 
-        return $this->exports->export($this->context, $node, $format, $selected);
+        return $this->export->execute($this->context, new ExportDocumentInput(node: $node, format: $format, revision: $selected));
     }
 
     /**

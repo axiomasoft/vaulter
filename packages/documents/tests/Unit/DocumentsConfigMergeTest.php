@@ -29,8 +29,7 @@ it('loads document defaults under their owner and contributes a kind presenter, 
         ->and(config('vaulter-documents.types'))->toBe([RichTextDocumentType::class, MarkdownDocumentType::class])
         ->and(config('vaulter-documents.default_type'))->toBe('vaulter/rich-text')
         ->and(config('vaulter.handlers'))->toBe([])
-        ->and(config('vaulter-documents.exporters.html'))->toBe(HtmlExporter::class)
-        ->and(config('vaulter-documents.exporters.markdown'))->toBe(MarkdownExporter::class);
+        ->and(config('vaulter-documents.exporters'))->toBe([HtmlExporter::class, MarkdownExporter::class]);
 
     $tagged = array_map(static fn (object $handler): string => $handler::class, iterator_to_array(app()->tagged('vaulter.file_handlers')));
     expect($tagged)->toEqualCanonicalizing([PreviewHandler::class, DownloadOnlyHandler::class]);
@@ -53,7 +52,7 @@ it('preserves cached module configuration during registration and adds no file h
     $app->shouldReceive('configurationIsCached')->once()->andReturn(true);
     $values = ['vaulter-documents' => [
         'models' => ['node_comment' => ConfigMergeHostNodeComment::class],
-        'exporters' => ['html' => HtmlExporter::class],
+        'exporters' => [HtmlExporter::class],
     ]];
     $config = new Repository($values);
     $app->instance('config', $config);

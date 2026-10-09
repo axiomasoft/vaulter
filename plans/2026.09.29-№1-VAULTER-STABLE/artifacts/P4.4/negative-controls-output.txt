@@ -1,0 +1,41 @@
+### NC1-pair-collision RED
+  ⨯ it refuses two exporters for one (type, format) pair and the same k… 0.17s  
+  Exception "Vaulter\Documents\Exceptions\DuplicateDocumentExporterException" not thrown.
+  ➜  91▕     expect(fn () => $registry->register(stubExporter('acme/two', 'txt')))->toThrow(DuplicateDocumentExporterException::class, 'both render format "txt"')
+     92▕         ->and(fn () => $registry->register(stubExporter('acme/one', 'other')))->toThrow(DuplicateDocumentExporterException::class, 'registered twice');
+  Tests:    1 failed, 5 passed (24 assertions)
+### NC1-pair-collision GREEN
+  Tests:    6 passed (28 assertions)
+### NC2-download-gate RED
+  ⨯ it refuses a viewer without Download                                 0.52s  
+  Exception "Vaulter\Exceptions\Access\PermissionDeniedException" not thrown.
+  ➜  35▕     expect(fn () => Documents::in($handle->actingAs($user))->export($document->id, 'html'))->toThrow(PermissionDeniedException::class);
+  Tests:    1 failed, 5 passed (12 assertions)
+### NC2-download-gate GREEN
+  Tests:    6 passed (12 assertions)
+(file differs from HEAD — expected only if edited by this item)
+### NC3-no-store RED
+  ⨯ it answers the exporter bytes as an attachment that is never cached… 0.53s  
+  Tests:    1 failed, 2 passed (12 assertions)
+### NC3-no-store GREEN
+  Tests:    3 passed (15 assertions)
+(file differs from HEAD — expected only if edited by this item)
+### NC4-working-source RED
+  ⨯ it exports a chosen checkpoint with its own id and state version     0.23s  
+  Tests:    1 failed, 3 passed (11 assertions)
+### NC4-working-source GREEN
+  Tests:    4 passed (15 assertions)
+### NC5-exporter-allowlist RED
+  ⨯ it answers unknown_export_format with the allowed formats for a for… 0.27s  
+  Failed asserting that an instance of class Vaulter\Documents\Exceptions\UnsupportedDocumentContentException is an instance of class Vaulter\Documents\Exceptions\UnknownExportFormatException.
+  ➜  75▕     expect(fn () => Documents::in($handle->actingAs($user))->export($sheet->id, 'html'))->toThrow(UnknownExportFormatException::class);
+  Tests:    1 failed, 5 passed (12 assertions)
+### NC5-exporter-allowlist GREEN
+  Tests:    6 passed (12 assertions)
+### NC6-arch-storage RED
+  ⨯ exporters never read storage, blobs or the HTTP layer                0.74s  
+  Expecting 'Vaulter\Documents\Export' not to use 'Illuminate\Support\Facades\Storage'.
+  Tests:    1 failed, 2 passed (16 assertions)
+### NC6-arch-storage GREEN
+  Tests:    3 passed (17 assertions)
+(file differs from HEAD — expected only if edited by this item)

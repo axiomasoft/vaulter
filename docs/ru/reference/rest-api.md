@@ -346,13 +346,13 @@ editLink: false
 
 #### `GET nodes/{node}/export`
 
-Экспортировать head-содержимое документного узла в запрошенном формате. → `export`
+Экспортировать документный узел файлом в запрошенном формате. → `export`
 
 | Параметр | Где | Примечания |
 |---|---|---|
 | `format` | query | `html` (по умолчанию), `markdown` или любой зарегистрированный формат экспортёра |
 
-**Гейт:** `Ability::View`. **Ответ:** `{ "data": { … } }`. См. [Экспорт](/ru/guide/export).
+**Гейт:** `Ability::Download` + выдача содержимого. **Ответ:** байты экспортёра с `Content-Type`, `Content-Disposition: attachment; filename*`, `Cache-Control: private, no-store` и `X-Content-Type-Options: nosniff` (не JSON). Формат, которого нет у типа документа, даёт `422 unknown_export_format` со списком `allowed`. См. [Экспорт](/ru/guide/export).
 
 ---
 

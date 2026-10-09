@@ -12,7 +12,10 @@ use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Console\MakeDocumentTypeCommand;
+use Vaulter\Documents\Console\MakeExporterCommand;
+use Vaulter\Documents\Contracts\DocumentExporter;
 use Vaulter\Documents\Contracts\DocumentType;
+use Vaulter\Documents\Export\DocumentExporterRegistry;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Providers\BindingsRegistrar;
 use Vaulter\Documents\Providers\CollaborationRegistrar;
@@ -30,7 +33,7 @@ final class VaulterDocumentsServiceProvider extends PackageServiceProvider
 {
     public function configurePackage(Package $package): void
     {
-        $package->name('vaulter-documents')->hasConfigFile()->hasCommand(MakeDocumentTypeCommand::class);
+        $package->name('vaulter-documents')->hasConfigFile()->hasCommand(MakeDocumentTypeCommand::class)->hasCommand(MakeExporterCommand::class);
 
         (new HttpRegistrar)->configure($package);
     }
@@ -59,6 +62,7 @@ final class VaulterDocumentsServiceProvider extends PackageServiceProvider
 
         (new CollaborationRegistrar($this->app))->boot();
         $this->bootDocumentTypes($config);
+        $this->bootDocumentExporters($config);
     }
 
     /**
@@ -84,6 +88,25 @@ final class VaulterDocumentsServiceProvider extends PackageServiceProvider
             if (!$types->has($config->defaultType())) {
                 throw new InvalidConfigurationException(sprintf('[Vaulter] vaulter-documents.default_type "%s" is not a registered document type.', $config->defaultType()));
             }
+        });
+    }
+
+    /** Config and tagged exporters join the ones providers registered; the set freezes after boot. */
+    private function bootDocumentExporters(DocumentsConfig $config): void
+    {
+        $exporters = $this->app->make(DocumentExporterRegistry::class);
+        foreach ($config->exporters() as $class) {
+            $exporters->register($class);
+        }
+        foreach ($this->app->tagged('vaulter.exporters') as $exporter) {
+            if (!$exporter instanceof DocumentExporter && !is_string($exporter)) {
+                throw new InvalidConfigurationException(sprintf('[Vaulter] Document exporter "%s" did not resolve to a %s.', get_debug_type($exporter), DocumentExporter::class));
+            }
+            $exporters->register($exporter);
+        }
+
+        $this->app->booted(static function () use ($exporters): void {
+            $exporters->freeze();
         });
     }
 }

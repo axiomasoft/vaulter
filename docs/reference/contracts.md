@@ -29,7 +29,7 @@ signatures and the binding point you swap it through.
 | Collaboration | `HostUserResolver` | container binding |
 | Handlers | `DocumentContent` | returned by a `FileHandler`'s content parser |
 | Handlers | `FileHandler` | `config('vaulter.handlers')` / `Vaulter::handlers()->register()` |
-| Handlers | `DocumentExporter` | `config('vaulter-documents.exporters')` / `Vaulter::registerExporter()` |
+| Handlers | `DocumentExporter` | `config('vaulter-documents.exporters')` / `Documents::exporters()->register()` |
 | Handlers | `FileHandlerRegistry` | `Vaulter::handlers()` / `Vaulter::handlers()->register()` |
 | Handlers | `NodePresenter` | container binding (core) |
 | Sharing | `ShareTokenGenerator` | `config('vaulter.sharing.token_generator')` / `config('vaulter.sharing.token_generator')` |
@@ -413,32 +413,30 @@ handler-specific. Implementing `FileHandler` directly is always enough; the base
 saves nothing beyond that one line. The built-in handlers do not extend it — they stay
 `final` with zero inheritance (H.5).
 
-### `Vaulter\Contracts\Handlers\DocumentExporter`
+### `Vaulter\Documents\Contracts\DocumentExporter`
 
-Renders a document's content (`DocumentContent`, the same opaque payload the write path
-stores) into an export format — the contract does not assume TipTap. Built-in HTML and
-Markdown exporters ship; register your own (PDF, DOCX, …) via `config('vaulter-documents.exporters')`
-or `Vaulter::registerExporter()`. Binary formats should return an encoded string (e.g.
-base64) and advertise the matching mime type.
+Renders the decoded content of a document (`DocumentContent`) into a file format. Registered in
+`Documents::exporters()` and resolved by (document type, format). It sees decoded inline content
+only — never storage, blobs or URLs. Built-in HTML and Markdown exporters ship; register your own
+(PDF, DOCX, …) via `config('vaulter-documents.exporters')` or `Documents::exporters()->register()`.
+Binary formats return the encoded bytes of the file and advertise the matching mime type.
 
 ```php
 interface DocumentExporter
 {
-    /** The format key (e.g. 'html', 'pdf'); also echoed in the API. */
-    public function format(): string;
-
+    public function key(): string;          // 'vaulter/html'
+    public function format(): string;       // the ?format= value
     public function mimeType(): string;
-
-    /** File extension, without the dot. */
-    public function extension(): string;
-
-    public function export(DocumentContent $content): string;
+    public function extension(): string;    // without the dot
+    /** @return list<string> keys of the document types it can render */
+    public function documentTypes(): array;
+    public function export(DocumentContent $content, DocumentType $type): string;
 }
 ```
 
 See [Recipes → Custom export](/guide/recipes).
 
-### `Vaulter\Contracts\Handlers\DocumentContent`
+### `Vaulter\Documents\Contracts\DocumentContent`
 
 The content payload a document version stores. A handler decides the shape: a
 rich-text handler produces a validated TipTap doc (`TipTapContent`); a non-rich-text

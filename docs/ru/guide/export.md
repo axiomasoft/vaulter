@@ -1,259 +1,160 @@
 ---
 title: Экспорт
-description: Рендер TipTap-содержимого документа в HTML или Markdown, а также регистрация собственного экспортёра (PDF, DOCX, …) без изменения ядра.
+description: Экспорт документа в файл и регистрация своего экспортёра (PDF, DOCX, …) по типу документа и формату.
 outline: deep
 ---
 
 # Экспорт
 
-Рендерите TipTap-содержимое узла-документа в **HTML** или **Markdown** — для скачивания, отправки
-по почте или показа за пределами редактора — и подключайте собственный экспортёр (PDF, DOCX, …), не
-трогая ядро. Экспорт работает по [документному пути на узлах](./documents.md).
+Экспорт документа в **файл** — HTML и Markdown из коробки — и подключение своего экспортёра
+(PDF, DOCX, …) без правок ядра. Экспорт принадлежит `vaulter-documents` и идёт по
+[пути документа](./documents.md).
 
 ## Контракт экспортёра
 
-Экспортёр реализует `Vaulter\Contracts\Handlers\DocumentExporter`:
+Экспортёр превращает один тип документа в один формат. Реестр находит его по паре
+**(тип документа, формат)**:
 
 ```php
-namespace Vaulter\Contracts\Handlers;
+namespace Vaulter\Documents\Contracts;
 
 interface DocumentExporter
 {
-    /** The format key (e.g. 'html', 'pdf') — also echoed in the API response. */
-    public function format(): string;
-
+    public function key(): string;          // 'vaulter/html'
+    public function format(): string;       // 'html' — значение ?format=
     public function mimeType(): string;
-
-    /** File extension, without the dot. */
-    public function extension(): string;
-
-    public function export(DocumentContent $content): string;
+    public function extension(): string;    // без точки
+    /** @return list<string> ключи типов документов, которые он умеет отдавать */
+    public function documentTypes(): array;
+    public function export(DocumentContent $content, DocumentType $type): string;
 }
 ```
 
-`DocumentContent` — тот же опаковый интерфейс payload'а, что хранит write-путь;
-контракт не завязан на TipTap. Экспортёр сужает содержимое до конкретной формы,
-которую понимает (например, `TipTapContent`), внутри `export()` — так же, как
-`FileHandler` сужает дескриптор.
+Экспортёр получает **только декодированное inline-содержимое**. Ему нельзя читать storage, blob'ы
+и URL (архитектурный тест проверяет это для встроенных экспортёров), поэтому экспорт не достанет
+байты, которые шлюз выдачи не разрешил. Картинки и вложения остаются ссылками. Внутри `export()`
+сузьте содержимое до понятного класса, иначе бросайте `UnsupportedDocumentContentException`.
 
-Бинарные форматы возвращают закодированную строку (например, base64) и объявляют
-соответствующий mime-тип.
+Бинарные форматы возвращают закодированные байты файла и объявляют соответствующий mime-тип.
 
 ## Встроенные экспортёры
 
-Два поставляются вместе с пакетом и зарегистрированы в конфиге:
+| Ключ | Формат | mime | расширение | Типы документов |
+|---|---|---|---|---|
+| `vaulter/html` | `html` | `text/html` | `html` | `vaulter/rich-text`, `vaulter/markdown` |
+| `vaulter/markdown` | `markdown` | `text/markdown` | `md` | `vaulter/rich-text`, `vaulter/markdown` |
 
 ```php
 // config/vaulter-documents.php
-'exporters' => [
-    'html'     => Vaulter\Export\HtmlExporter::class,
-    'markdown' => Vaulter\Export\MarkdownExporter::class,
-],
+'exporters' => [HtmlExporter::class, MarkdownExporter::class],
 ```
 
-| Формат | Класс | mime | расширение |
-|---|---|---|---|
-| `html` | `HtmlExporter` | `text/html` | `html` |
-| `markdown` | `MarkdownExporter` | `text/markdown` | `md` |
+Оба используют `TipTapRenderer`: HTML проходит через `symfony/html-sanitizer`, Markdown
+экранируется как Markdown. У типа, который не указан ни в одном экспортёре (например, таблица),
+форматов экспорта нет.
 
-Оба делегируют в `Vaulter\Documents\Content\TipTap\TipTapRenderer`, который обрабатывает общий набор узлов и
-меток — заголовки, абзацы, маркированные/нумерованные списки, элементы списков, цитаты, блоки
-кода, горизонтальные линии и жёсткие переносы, плюс метки **bold / italic / strike / code /
-link** — с экранированием HTML-вывода (`htmlspecialchars`). Неизвестные узлы откатываются к
-рендеру своих детей, поэтому нераспознанный узел никогда не ломает экспорт.
+## Экспорт документа
 
-::: tip Формат по умолчанию
-Если query-параметр `format` не задан, оба эндпоинта экспорта по умолчанию используют `html`.
-:::
+`GET {prefix}/nodes/{node}/export?format=html|markdown` отвечает **файлом** (формат по умолчанию
+`html`):
 
-## Экспорт документного узла
-
-`GET {prefix}/nodes/{node}/export` рендерит head-содержимое [документного узла](./documents.md).
-Требует право (ability) `Download` на узле — экспорт это копия контента, одного `View` для неё
-мало (previewer получает `403 permission_denied`), — и узел должен быть `kind=document`. В PHP:
-`Documents::in($drive)->export($node, 'html')`. Этот маршрут —
-часть поверхности, доступной при установленном `vaulter-documents`.
-
-::: code-group
-
-```ts [Vue — composable]
-import { useDocumentNode } from '@vaulter/vue'
-
-const { exportAs } = useDocumentNode(nodeId)
-
-const result = await exportAs('markdown')
-// → { format: 'markdown', content: '# …', mime_type: 'text/markdown', filename: 'notes.md' }
+```http
+HTTP/1.1 200 OK
+Content-Type: text/markdown
+Content-Disposition: attachment; filename="notes.md"; filename*=utf-8''notes.md
+Cache-Control: no-cache, private, no-store
+X-Content-Type-Options: nosniff
 ```
 
-```bash [HTTP]
-# GET {prefix}/nodes/{node}/export?format=html|markdown
-curl 'https://app.test/api/vaulter/nodes/77/export?format=markdown'
-# → { "data": { "format": "markdown", "content": "# …",
-#               "mime_type": "text/markdown", "filename": "notes.md" } }
-```
+Тело — байты экспортёра. Имя — имя узла плюс расширение экспортёра; схему задаёт привязка
+`ExportFilenameResolver`. Нужна абилити **`Download`** и прохождение шлюза выдачи содержимого —
+previewer получит `403 permission_denied`.
 
-```ts [Vue — client directly]
-import { useVaulterClient } from '@vaulter/vue'
-
-const client = useVaulterClient()
-const result = await client.documentNodes.export(nodeId, 'html')
-```
-
-:::
-
-Ответ на экспорт узла — это `NodeDocumentExport` (`Vaulter\Documents\ValueObjects\DocumentExport`),
-который **включает `mime_type`**:
-
-```ts
-interface NodeDocumentExport {
-  format: string        // the exporter's format key
-  content: string       // the rendered output
-  mime_type: string     // the exporter's mime type
-  filename: string      // derived from the node name + the exporter extension
-}
-```
-
-::: info Экспорт ограничен возможностями обработчика
-Узел отдаёт форматы экспорта только тогда, когда его разрешённый обработчик **редактируемый или
-поддерживает превью** (`NodeExportService::availableFormats`). Узел только-на-скачивание (архив,
-неизвестный бинарник) не отдаёт ни одного формата экспорта. См.
-[Обработчики документов](./document-handlers.md).
-:::
-
-## Регистрация собственного экспортёра (PDF / DOCX)
-
-Тяжёлые конвертеры (PDF, DOCX) намеренно **не** входят в поставку — им нужны большие рендереры.
-Они представляют собой чистый шов для регистрации: реализуйте `DocumentExporter` и
-зарегистрируйте его. Ядро менять не нужно.
-
-### 1. Реализуйте экспортёр
+В PHP:
 
 ```php
-<?php
+$export = Documents::in($drive)->export($node, 'html');           // рабочее состояние
+$export = Documents::in($drive)->export($node, 'html', $revision); // одна ревизия
 
-declare(strict_types=1);
+$export->bytes; $export->filename; $export->mimeType; $export->format;
+$export->sourceEpoch; $export->sourceStateVersion; $export->sourceRevisionId;
+```
 
-namespace App\Vaulter\Exporters;
+Без ревизии экспорт рендерит **рабочее состояние** на `(sourceEpoch, sourceStateVersion)`, а
+`sourceRevisionId` равен `null`; с ревизией — эту неизменяемую ревизию. Экспорт никогда не создаёт
+ревизий и не меняет версию состояния.
 
-use Vaulter\Contracts\Handlers\DocumentContent;
-use Vaulter\Contracts\Handlers\DocumentExporter;
-use Vaulter\Documents\Content\TipTap\TipTapRenderer;
-use Vaulter\Documents\Exceptions\UnsupportedDocumentContentException;
-use Vaulter\Documents\Content\TipTap\TipTapContent;
+Если вы кэшируете рендеры, ключ — `(documentId, sourceEpoch, sourceStateVersion | sourceRevisionId,
+ключ экспортёра, формат)`, а доступ проверяйте заново при каждом попадании.
 
+```ts
+import { useVaulterClient } from '@vaulter/vue'
+
+const file = await useVaulterClient().documentNodes.export(nodeId, 'markdown')
+// → { blob: Blob, filename: 'notes.md', mimeType: 'text/markdown' }
+```
+
+## Свой экспортёр
+
+Заготовка: `php artisan vaulter:make:exporter Pdf` (создаёт
+`app/Vaulter/Exporters/PdfExporter.php` и печатает строку для конфига). Или вручную:
+
+```php
 final class PdfExporter implements DocumentExporter
 {
-    public function __construct(
-        private readonly TipTapRenderer $renderer,   // reuse the built-in HTML renderer
-    ) {}
+    public function __construct(private readonly TipTapRenderer $renderer) {}
 
-    public function format(): string
-    {
-        return 'pdf';
-    }
+    public function key(): string { return 'acme/pdf'; }
+    public function format(): string { return 'pdf'; }
+    public function mimeType(): string { return 'application/pdf'; }
+    public function extension(): string { return 'pdf'; }
+    public function documentTypes(): array { return ['vaulter/rich-text']; }
 
-    public function mimeType(): string
+    public function export(DocumentContent $content, DocumentType $type): string
     {
-        return 'application/pdf';
-    }
-
-    public function extension(): string
-    {
-        return 'pdf';
-    }
-
-    public function export(DocumentContent $content): string
-    {
-        // Контракт опаковый — этот экспортёр понимает только TipTap-документы,
-        // поэтому сужаем перед рендером. Бросаем исключение пакета, чтобы хост,
-        // ловящий VaulterException, поймал и это.
         if (!$content instanceof TipTapContent) {
-            throw UnsupportedDocumentContentException::forExporter(
-                $this->format(), TipTapContent::class, $content::class,
-            );
+            throw UnsupportedDocumentContentException::forExporter($this->format(), TipTapContent::class, $content::class);
         }
 
-        // Render the TipTap doc to HTML, then to a PDF with your library of choice
-        // (e.g. dompdf / wkhtmltopdf / a service). A BINARY format returns an
-        // ENCODED string (base64 here) and advertises its mime above.
-        $html = $this->renderer->toHtml($content);
-
-        $pdfBytes = MyPdfLibrary::fromHtml($html);   // your renderer
-
-        return base64_encode($pdfBytes);
+        return MyPdfLibrary::fromHtml($this->renderer->toHtml($content));
     }
 }
 ```
 
-::: tip Бинарные форматы
-Для бинарного вывода (PDF, DOCX) возвращайте **закодированную** строку (выше — base64) и объявляйте
-настоящий mime-тип. Клиент декодирует её обратно в байты для скачивания.
-:::
+Регистрируйте по имени класса в конфиге (безопасно для config:cache), тегом контейнера
+`vaulter.exporters` или из провайдера:
 
-### 2. Зарегистрируйте его
+```php
+// config/vaulter-documents.php
+'exporters' => [HtmlExporter::class, MarkdownExporter::class, App\Vaulter\Exporters\PdfExporter::class],
 
-::: code-group
-
-```php [config — cache-safe FQCN map]
-// config/vaulter-documents.php — add to the exporters map (format => FQCN)
-'exporters' => [
-    'html'     => Vaulter\Export\HtmlExporter::class,
-    'markdown' => Vaulter\Export\MarkdownExporter::class,
-    'pdf'      => App\Vaulter\Exporters\PdfExporter::class,   // [!code ++]
-],
+// register()/boot() провайдера, до завершения загрузки приложения
+Documents::exporters()->register(PdfExporter::class);
+Documents::exporters()->replace('vaulter/html', MyHtmlExporter::class); // заменить встроенный
 ```
 
-```php [runtime — Vaulter::registerExporter]
-// In a service provider's boot() — pass an INSTANCE
-use Vaulter\Facades\Vaulter;
-use App\Vaulter\Exporters\PdfExporter;
-
-Vaulter::registerExporter(app(PdfExporter::class));
-```
-
-:::
-
-::: tip Конфиг против рантайма
-`config('vaulter-documents.exporters')` — это карта FQCN (безопасная для config-cache, резолвится через
-контейнер при первом использовании). `Vaulter::registerExporter()` принимает уже собранный
-экземпляр — рантайм-шов. Экспортёр, зарегистрированный в рантайме, побеждает конфиговый с тем же
-ключом.
-:::
-
-### 3. Используйте его
-
-`?format=pdf` теперь резолвится в ваш экспортёр на обоих эндпоинтах экспорта и появляется в
-`availableFormats` узла (когда обработчик поддерживает экспорт):
-
-```bash
-curl 'https://app.test/api/vaulter/nodes/77/export?format=pdf'
-# → { "data": { "format": "pdf", "content": "<base64…>",
-#               "mime_type": "application/pdf", "filename": "notes.pdf" } }
-```
-
-`Vaulter::exporterFormats()` возвращает каждый зарегистрированный формат (конфиг + рантайм, без
-дубликатов) — список, из которого берут данные валидация запроса и `availableFormats`.
+Два экспортёра на одну пару (тип, формат) падают при загрузке с
+`DuplicateDocumentExporterException`; заменяйте через `replace()`. После загрузки приложения
+реестр замораживается.
 
 ## Ошибки
 
-| Исключение / статус | Когда |
-|---|---|
-| `Exceptions\Documents\UnknownExportFormatException` | Экспорт запрашивает формат без зарегистрированного экспортёра (в сообщении перечислены доступные). |
-| `422 Unprocessable` | Query-параметр `format` у легаси `documents/{id}/export` не является зарегистрированным форматом экспортёра (правило валидации). |
-| `Exceptions\NotADocumentException` | Экспорт узла нацелен на узел, который не `kind=document`. |
+| Код | Статус | Когда |
+|---|---|---|
+| `permission_denied` | 403 | Актор может смотреть, но не скачивать. |
+| `node_not_found` | 404 | Нет доступа, узел в корзине или чужой tenant. |
+| `document_type_unavailable` | 409 | Тип документа не установлен. |
+| `unknown_export_format` | 422 | У типа нет экспортёра для формата; `allowed` перечисляет доступные. |
+| `invalid_document_content` | 422 | Экспортёру передали содержимое, которое он не умеет отдавать. |
 
 ## Справочник
 
-- Контракт — `Vaulter\Contracts\Handlers\DocumentExporter`
-- Встроенные — `Vaulter\Export\HtmlExporter`, `Vaulter\Export\MarkdownExporter`
-- Рендерер — `Vaulter\Documents\Content\TipTap\TipTapRenderer` (`toHtml`, `toMarkdown`)
-- Экспорт узла — `Vaulter\Documents\NodeExportService` (`export`, `availableFormats`)
-- Шов менеджера — `Vaulter\VaulterManager::registerExporter()` / `::exporter()` / `::exporterFormats()`
-- Enum — `Vaulter\Enums\Documents\ExportFormat`
+- Контракт — `Vaulter\Documents\Contracts\DocumentExporter`
+- Реестр — `Vaulter\Documents\Export\DocumentExporterRegistry` (`register`, `replace`, `for`, `formatsFor`)
+- Действие — `Vaulter\Documents\Actions\Export\ExportDocumentAction`; результат `Vaulter\Documents\ValueObjects\DocumentExport`
+- Встроенные — `HtmlExporter`, `MarkdownExporter`; рендерер `TipTapRenderer` (`toHtml`, `toMarkdown`)
 
 ## Дальше
 
-- [Документные узлы](./documents.md) — создавайте, редактируйте и версионируйте содержимое, которое
-  экспортируете.
-- [Обработчики документов](./document-handlers.md) — в какой поверхности открывается узел и как
-  добавить новый формат без миграции.
+- [Документы-узлы](./documents.md) — создание, редактирование и версии экспортируемого содержимого.
+- [Типы документов](./document-types.md) — какие типы есть и как добавить свой.

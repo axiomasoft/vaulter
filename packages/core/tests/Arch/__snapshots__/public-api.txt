@@ -129,17 +129,6 @@ Vaulter\Contracts\Drive\TrashOperations
   purge(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): void
   restore(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, ?\Vaulter\Data\Drive\RestoreOptions $options = null): \Vaulter\Data\Snapshots\NodeSnapshot
 
-Vaulter\Contracts\Handlers\DocumentContent
-  contentHash(): string
-  sizeInBytes(): int
-  toArray(): array
-
-Vaulter\Contracts\Handlers\DocumentExporter
-  export(\Vaulter\Contracts\Handlers\DocumentContent $content): string
-  extension(): string
-  format(): string
-  mimeType(): string
-
 Vaulter\Contracts\Handlers\FileHandler
   capabilities(\Vaulter\ValueObjects\Handlers\FileDescriptor $file): \Vaulter\ValueObjects\Handlers\ContentCapabilities
   extensions(): array

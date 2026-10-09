@@ -16,7 +16,8 @@ return [
     'content' => ['max_size_kb' => 5120],
     'revisions' => ['limit' => 50, 'checkpoint_interval_seconds' => 300],
     'comments' => ['enabled' => true],
-    'exporters' => ['html' => HtmlExporter::class, 'markdown' => MarkdownExporter::class],
+    // Document exporter classes, resolved by (document type, format).
+    'exporters' => [HtmlExporter::class, MarkdownExporter::class],
     'tiptap' => [
         'extra_nodes' => [],
         'extra_marks' => [],

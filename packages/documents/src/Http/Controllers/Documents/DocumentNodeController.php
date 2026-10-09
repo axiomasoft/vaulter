@@ -8,6 +8,9 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
+use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\HeaderUtils;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Contracts\Handlers\NodePresenter;
 use Vaulter\Data\Drive\ListOptions;
@@ -148,15 +151,23 @@ final class DocumentNodeController extends Controller
 
     /**
      * Export a document node's working state in the requested format (?format=html|
-     * markdown|…) through the exporter registry.
+     * markdown|…) as a file. The bytes are the exporter's own and are never cached.
      */
-    public function export(Request $request, Node $node): JsonResponse
+    public function export(Request $request, Node $node): Response
     {
         $format = $request->string('format')->toString();
         $format = $format !== '' ? $format : 'html';
         $export = $this->operationsFor($request, $node)->export($this->key($node), $format);
 
-        return new JsonResponse(['data' => $export->toArray()], headers: ['Cache-Control' => 'private, no-store']);
+        // An ASCII fallback beside the RFC 6266 filename* keeps old clients on a safe name.
+        $fallback = str_replace(['%', '/', '\\', '"'], '_', Str::ascii($export->filename));
+
+        return new Response($export->bytes, 200, [
+            'Content-Type' => $export->mimeType,
+            'Content-Disposition' => HeaderUtils::makeDisposition(HeaderUtils::DISPOSITION_ATTACHMENT, $export->filename, $fallback),
+            'Cache-Control' => 'private, no-store',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 
     private function operations(Request $request, Drive $drive): DocumentOperations

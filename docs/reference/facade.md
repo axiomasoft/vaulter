@@ -32,9 +32,6 @@ over the facade.
 | `forStorage(Drive $storage)` | `DriveHandle` | Open a Drive handle bound to an already-resolved storage row |
 | `profiles()` | `ProfileRegistry` | Named drive profiles (`get`, `register`, `registerProvider`) |
 | `handlers()` | `FileHandlerRegistry` | The document-handler registry |
-| `registerExporter(DocumentExporter $exporter)` | `void` | Register a custom export format |
-| `exporter(string $format)` | `DocumentExporter` | Resolve an exporter by format key |
-| `exporterFormats()` | `list<string>` | All registered export format keys |
 
 The facade annotates all public manager methods. Use `profiles()` and `handlers()` for registrations.
 
@@ -100,31 +97,6 @@ Vaulter::handlers()->register(\App\Vaulter\CadHandler::class);
 You can also list handler FQCNs in `config('vaulter.handlers')` or bind them to the
 tagged container binding `'vaulter.file_handlers'`. See
 [Recipes → Custom handler](/guide/recipes).
-
-## Exporters
-
-### `registerExporter(DocumentExporter $exporter): void`
-
-Register a custom export format. The exporter is keyed by its own `format()`.
-
-### `exporter(string $format): DocumentExporter`
-
-Resolve an exporter by format key. Looks first at runtime-registered exporters, then
-at `config('vaulter-documents.exporters')` (resolving the FQCN through the container).
-Throws `Vaulter\Exceptions\Documents\UnknownExportFormatException` for an unknown
-format.
-
-### `exporterFormats(): list<string>`
-
-All known export format keys — the union of configured and runtime-registered
-exporters. Built-ins are `html` and `markdown`.
-
-```php
-Vaulter::registerExporter(new \App\Vaulter\PdfExporter());
-Vaulter::exporterFormats(); // ['html', 'markdown', 'pdf']
-```
-
-See [Recipes → Custom export](/guide/recipes).
 
 ## See also
 

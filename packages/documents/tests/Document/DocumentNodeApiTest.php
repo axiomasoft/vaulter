@@ -84,12 +84,12 @@ it('runs the document node cycle: create → content → autosave → version �
     // export to html + markdown
     $this->getJson($nodeBase.'/export?format=html')
         ->assertOk()
-        ->assertJsonPath('data.format', 'html')
-        ->assertJsonPath('data.mime_type', 'text/html');
+        ->assertHeader('Content-Type', 'text/html; charset=utf-8')
+        ->assertHeader('Content-Disposition', 'attachment; filename=Spec.html');
 
     $this->getJson($nodeBase.'/export?format=markdown')
         ->assertOk()
-        ->assertJsonPath('data.format', 'markdown');
+        ->assertHeader('Content-Type', 'text/markdown; charset=utf-8');
 });
 
 it('rejects a content write on a non-document node', function (): void {

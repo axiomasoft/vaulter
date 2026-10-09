@@ -92,11 +92,8 @@ it('owns the document type registry and exporter registrations in the documents 
     expect(array_keys(Documents::types()->all()))->toBe(['vaulter/markdown', 'vaulter/rich-text'])
         ->and(fn () => Documents::types()->register(new KeyedType('acme/sheet')))->toThrow(RegistryFrozenException::class);
 
-    Documents::exporters()->register(FakeExporter::class);
-    expect(Documents::exporters()->get('fake'))->toBeInstanceOf(FakeExporter::class)
-        ->and(Documents::exporters()->formats())->toContain('fake', 'html', 'markdown');
-
-    $exporter = new FakeExporter;
-    Documents::exporters()->register($exporter);
-    expect(Documents::exporters()->get('fake'))->toBe($exporter);
+    // Exporters are frozen with the registry once the application has booted.
+    expect(Documents::exporters()->formatsFor('vaulter/rich-text'))->toBe(['html', 'markdown'])
+        ->and(Documents::exporters()->for('vaulter/markdown', 'html')->key())->toBe('vaulter/html')
+        ->and(fn () => Documents::exporters()->register(FakeExporter::class))->toThrow(RegistryFrozenException::class);
 });

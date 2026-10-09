@@ -101,7 +101,7 @@ Vaulter::profiles();                                // ProfileRegistry
 
 // Extend the package at runtime.
 Vaulter::handlers()->register(MyPdfHandler::class);    // a new document format
-Vaulter::registerExporter(new PdfExporter());     // a new export format
+Documents::exporters()->register(PdfExporter::class); // a new export format
 Vaulter::resolvePermissionsWith($resolver);       // the legacy document-path resolver
 
 // Resolve the collaboration driver.

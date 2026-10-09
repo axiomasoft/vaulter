@@ -30,6 +30,43 @@ changes that require action from consumers of the package.
   enums and presentation DTO properties. Constructors of snapshots and pages are internal; hosts read these values.
 
 
+### Document export by type and format (PLAN2.D28, D34–D37; PLAN2.P4.4)
+
+Export belongs to `vaulter-documents` and answers a file.
+
+- **Contract moved and widened.** `Vaulter\Contracts\Handlers\DocumentExporter` is gone; implement
+  `Vaulter\Documents\Contracts\DocumentExporter`: add `key()` (`vendor/name`) and
+  `documentTypes()` (the type keys it renders) and change `export(DocumentContent $content)` to
+  `export(DocumentContent $content, DocumentType $type)`. Core `Contracts\Handlers\DocumentContent`
+  is removed with it; use `Vaulter\Documents\Contracts\DocumentContent`.
+- **Registry by (type, format).** `Registries\DocumentExporterRegistry` → `Export\DocumentExporterRegistry`:
+
+  | Was | Now |
+  |---|---|
+  | `register($exporter)` (last one wins per format) | `register($exporter)`; a second exporter for one (type, format) pair or key throws `DuplicateDocumentExporterException` at boot |
+  | — | `replace($key, $exporter)` swaps an exporter under its own key |
+  | `get($format)` | `for($typeKey, $format)` |
+  | `formats()` | `formatsFor($typeKey)` |
+
+  The registry is frozen after boot, like the type registry. A tag `vaulter.exporters` is read too.
+- **Config.** `vaulter-documents.exporters` is a list of class names. The 0.2 map `format => class`
+  is still read (its classes, in order) with a deprecation; a host class that overrides a built-in
+  format now collides with it, so list it instead of the built-in or `replace()` the built-in.
+- **Removed:** `Export\NodeExportService` (use `Documents::in($drive)->export()`),
+  `Enums\Export\ExportFormat` (a format is declared by its exporter), and
+  `TipTapRenderer::render()` (call `toHtml()` / `toMarkdown()`).
+- **`DocumentOperations::export($node, $format, $revision = null)`** returns `DocumentExport`
+  (`bytes`, `filename`, `mimeType`, `format`, `sourceEpoch`, `sourceStateVersion`,
+  `sourceRevisionId`); `content` and `toArray()` are gone. Needs Download and content egress. The
+  type must be installed (`document_type_unavailable`) and list the format (`422
+  unknown_export_format` with `allowed`). Exporting never creates a revision.
+- **HTTP.** `GET nodes/{node}/export?format=` answers the file (`Content-Disposition: attachment`
+  with `filename*`, `Cache-Control: private, no-store`, `X-Content-Type-Options: nosniff`) instead
+  of `{ "data": … }` JSON. `@vaulter/vue` `documentNodes.export()` (and `useDocumentNode().exportAs()`)
+  now resolves `{ blob, filename, mimeType }`.
+- **Generator.** `php artisan vaulter:make:exporter {name}` scaffolds an exporter.
+- Exporters may not use `Vaulter\Content\*`, `Storage` or the HTTP layer (architecture test).
+
 ### Document type registry, codecs and a safe fallback (PLAN2.D14, D15, D34, D44; PLAN2.P4.3)
 
 No schema change: documents already store their type key (`vaulter/rich-text`, …) and schema
@@ -62,8 +99,7 @@ version. What a type is moved from an enum and file handlers to registered class
   `Support\DocumentContentHasher` → `Content\ContentHasher` (now hashes any array), and core
   `Vaulter\Exceptions\Documents\{UnknownExportFormatException,UnsupportedDocumentContentException}`
   → `Vaulter\Documents\Exceptions\*`. Implement `Vaulter\Documents\Contracts\DocumentContent`
-  instead of core `Vaulter\Contracts\Handlers\DocumentContent` (kept only as its parent while core's
-  exporter contract names it).
+  instead of core `Vaulter\Contracts\Handlers\DocumentContent` (removed with the exporter move in P4.4).
 - **Files are not documents.** `.docx`, `.doc`, `.md` and `.xlsx` files are no longer declared
   editable or collaborative: they are previewed or downloaded like any file. If you listed
   `TipTapHandler` in `vaulter.handlers`, remove it.
@@ -596,11 +632,11 @@ Move document registry calls to `Vaulter\Documents\Facades\Documents`:
 | `Vaulter::registerDocumentType($key, $definition)` | `Documents::types()->register($key, $definition)` |
 | `Vaulter::documentTypes()` | `Documents::types()->all()` |
 | `Vaulter::registerExporter($exporter)` | `Documents::exporters()->register($exporter)` |
-| `Vaulter::exporter($format)` | `Documents::exporters()->get($format)` |
-| `Vaulter::exporterFormats()` | `Documents::exporters()->formats()` |
+| `Vaulter::exporter($format)` | `Documents::exporters()->for($typeKey, $format)` |
+| `Vaulter::exporterFormats()` | `Documents::exporters()->formatsFor($typeKey)` |
 
 Definitions remain arrays, exporters remain instances or container-resolved
-FQCNs, and configured formats remain under `vaulter-documents.exporters`.
+FQCNs, and configured exporters remain under `vaulter-documents.exporters`.
 
 Run core migration `2026_10_06_000001_add_node_operation_sequence.php` when
 upgrading an existing database. It adds `v_nodes.sequence` as signed BIGINT with

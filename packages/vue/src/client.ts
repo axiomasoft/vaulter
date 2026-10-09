@@ -275,6 +275,24 @@ export interface ResumableUpload {
   abort(): Promise<void>
 }
 
+/**
+ * The file name of a `Content-Disposition` header: the RFC 6266 `filename*` when present,
+ * else the plain `filename`. Null when the header names none.
+ */
+export function filenameFromDisposition(header: string | null): string | null {
+  if (!header) return null
+  const extended = /filename\*\s*=\s*[^']*'[^']*'([^;]+)/i.exec(header)
+  if (extended) {
+    try {
+      return decodeURIComponent(extended[1].trim())
+    } catch {
+      // fall through to the plain filename
+    }
+  }
+  const plain = /filename\s*=\s*(?:"((?:[^"\\]|\\.)*)"|([^;]+))/i.exec(header)
+  return plain ? (plain[1] ?? plain[2]).trim().replace(/\\(.)/g, '$1') : null
+}
+
 export function createVaulterClient(options: VaulterClientOptions = {}): VaulterClient {
   const baseUrl = (options.baseUrl ?? '/api/vaulter').replace(/\/+$/, '')
   const fetchImpl = options.fetch ?? globalThis.fetch
@@ -572,8 +590,12 @@ export function createVaulterClient(options: VaulterClientOptions = {}): Vaulter
       restoreVersion: (nodeId, versionId) =>
         unwrap(request<Envelope<DocumentVersion>>('POST', `/nodes/${nodeId}/document-versions/${versionId}/restore`)),
       export: (nodeId, format) =>
-        unwrap(request<Envelope<NodeDocumentExport>>('GET', `/nodes/${nodeId}/export`, {
+        rawRequest('GET', `/nodes/${nodeId}/export`, {
           query: format ? { format } : undefined,
+        }).then(async (response) => ({
+          blob: await response.blob(),
+          filename: filenameFromDisposition(response.headers.get('Content-Disposition')) ?? `export-${nodeId}`,
+          mimeType: response.headers.get('Content-Type') ?? 'application/octet-stream',
         })),
       handler: (nodeId) =>
         unwrap(request<Envelope<HandlerDescriptor>>('GET', `/nodes/${nodeId}/handler`)),

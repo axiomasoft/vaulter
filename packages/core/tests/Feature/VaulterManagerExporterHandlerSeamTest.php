@@ -5,9 +5,8 @@ declare(strict_types=1);
 use Illuminate\Container\Container;
 use Vaulter\Contracts\Handlers\FileHandler;
 use Vaulter\Contracts\Handlers\FileHandlerRegistry;
-use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\DocumentsManager;
-use Vaulter\Documents\Registries\DocumentExporterRegistry;
+use Vaulter\Documents\Export\DocumentExporterRegistry;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Exceptions\Support\MissingPackageException;
 use Vaulter\Handlers\Builtin\DownloadOnlyHandler;
@@ -19,27 +18,25 @@ use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
 use Vaulter\VaulterManager;
 
 /*
- * F-P3.3-01 — VaulterManager::registerExporter() now accepts an FQCN, symmetric to
- * registerHandler(). Red-before-fix (D7): the prior signature was
- * `registerExporter(DocumentExporter $exporter)` — passing a class-string was a
- * strict_types=1 TypeError, not a resolved instance.
+ * The exporter registry takes a class name (resolved through the container) or a
+ * ready instance, like the handler and type registries.
  */
-it('registerExporter accepts a class-string exporter and resolves it through the container, F-P3.3-01', function (): void {
-    $manager = new DocumentsManager(new DocumentTypeRegistry(app()), new DocumentExporterRegistry(app(), app(DocumentsConfig::class)));
+it('the exporter registry accepts a class-string exporter and resolves it through the container', function (): void {
+    $manager = new DocumentsManager(new DocumentTypeRegistry(app()), new DocumentExporterRegistry(app()));
 
     $manager->exporters()->register(FakeExporter::class);
 
-    expect($manager->exporters()->formats())->toContain('fake')
-        ->and($manager->exporters()->get('fake'))->toBeInstanceOf(FakeExporter::class);
+    expect($manager->exporters()->formatsFor('vaulter/rich-text'))->toBe(['fake'])
+        ->and($manager->exporters()->for('vaulter/rich-text', 'fake'))->toBeInstanceOf(FakeExporter::class);
 });
 
-it('registerExporter still accepts a ready instance (unchanged path), F-P3.3-01', function (): void {
-    $manager = new DocumentsManager(new DocumentTypeRegistry(app()), new DocumentExporterRegistry(app(), app(DocumentsConfig::class)));
+it('the exporter registry still accepts a ready instance', function (): void {
+    $manager = new DocumentsManager(new DocumentTypeRegistry(app()), new DocumentExporterRegistry(app()));
     $exporter = new FakeExporter;
 
     $manager->exporters()->register($exporter);
 
-    expect($manager->exporters()->get('fake'))->toBe($exporter);
+    expect($manager->exporters()->for('vaulter/rich-text', 'fake'))->toBe($exporter);
 });
 
 /*

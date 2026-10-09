@@ -62,3 +62,37 @@ describe('createVaulterClient — node comments (ADR-0014)', () => {
     await expect(client.comments.create(1, { body: '' })).rejects.toBeInstanceOf(VaulterApiError)
   })
 })
+
+describe('createVaulterClient — document export', () => {
+  it('reads the exported file as a blob with the name and type the server sent', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response('<p>Hi</p>', {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Content-Disposition': `attachment; filename="Report.html"; filename*=utf-8''%D0%9E%D1%82%D1%87%D1%91%D1%82.html`,
+      },
+    }))
+    const client = createVaulterClient({ baseUrl: '/api/vaulter', fetch: fetchMock })
+
+    const file = await client.documentNodes.export(5, 'html')
+
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/vaulter/nodes/5/export?format=html')
+    expect(file.filename).toBe('Отчёт.html')
+    expect(file.mimeType).toBe('text/html; charset=utf-8')
+    expect(await file.blob.text()).toBe('<p>Hi</p>')
+  })
+
+  it('falls back to the plain filename, then to a generated one', async () => {
+    const plain = vi.fn().mockResolvedValue(new Response('x', { headers: { 'Content-Disposition': 'attachment; filename="a b.md"' } }))
+    expect((await createVaulterClient({ fetch: plain }).documentNodes.export(1)).filename).toBe('a b.md')
+
+    const none = vi.fn().mockResolvedValue(new Response('x'))
+    expect((await createVaulterClient({ fetch: none }).documentNodes.export(2)).filename).toBe('export-2')
+  })
+
+  it('throws the API problem for a refused export', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ code: 'unknown_export_format', message: 'no' }, 422))
+
+    await expect(createVaulterClient({ fetch: fetchMock }).documentNodes.export(1, 'docx')).rejects.toBeInstanceOf(VaulterApiError)
+  })
+})

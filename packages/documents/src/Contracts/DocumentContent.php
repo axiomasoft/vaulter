@@ -4,16 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Contracts;
 
-use Vaulter\Contracts\Handlers\DocumentContent as KernelDocumentContent;
-
 /**
  * The decoded, immutable content of a document: what a codec returns and what the
  * working state and every checkpoint store.
- *
- * It extends the kernel interface only while core's exporter contract still names
- * that one; implementations target this interface.
  */
-interface DocumentContent extends KernelDocumentContent
+interface DocumentContent
 {
     /**
      * The JSON payload to store.
@@ -22,8 +17,9 @@ interface DocumentContent extends KernelDocumentContent
      */
     public function toArray(): array;
 
-    /** sha256 of the canonical serialization. */
+    /** sha256 of the canonical serialization; lets an autosave skip a write that changed nothing. */
     public function contentHash(): string;
 
+    /** The byte size of the canonical JSON payload; the node's size_bytes and quota follow it. */
     public function sizeInBytes(): int;
 }

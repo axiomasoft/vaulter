@@ -8,7 +8,8 @@ use Vaulter\Documents\Actions\Collaboration\PersistCollaborationStateAction;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Data\Collaboration\PersistCollaborationStateInput;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
-use Vaulter\Documents\Export\NodeExportService;
+use Vaulter\Documents\Actions\Export\ExportDocumentAction;
+use Vaulter\Documents\Data\Export\ExportDocumentInput;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Enums\Access\Ability;
@@ -43,7 +44,7 @@ it('records vaulter_export_duration_seconds', function (): void {
     LoadTier::set('L');
 
     $node = p83DocumentNode();
-    app(NodeExportService::class)->export(OperationContext::system($node->storage()->firstOrFail(), 'metrics fixture'), $node, 'html');
+    app(ExportDocumentAction::class)->execute(OperationContext::system($node->storage()->firstOrFail(), 'metrics fixture'), new ExportDocumentInput($node, 'html'));
 
     app(MetricsRecorder::class)->assertHistogram(
         name: 'vaulter_export_duration_seconds',

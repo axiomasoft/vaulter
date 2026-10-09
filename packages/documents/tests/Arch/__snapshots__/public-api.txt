@@ -11,6 +11,14 @@ Vaulter\Documents\Contracts\DocumentContent
   sizeInBytes(): int
   toArray(): array
 
+Vaulter\Documents\Contracts\DocumentExporter
+  documentTypes(): array
+  export(\Vaulter\Documents\Contracts\DocumentContent $content, \Vaulter\Documents\Contracts\DocumentType $type): string
+  extension(): string
+  format(): string
+  key(): string
+  mimeType(): string
+
 Vaulter\Documents\Contracts\DocumentType
   capabilities(): \Vaulter\ValueObjects\Handlers\ContentCapabilities
   codec(): \Vaulter\Documents\Contracts\DocumentCodec
@@ -115,14 +123,14 @@ FACADE Vaulter\Documents\Facades\Documents
   static DocumentTypeRegistry types()
 
 Vaulter\Documents\DocumentsManager
-  __construct(\Vaulter\Documents\Types\DocumentTypeRegistry $types, \Vaulter\Documents\Registries\DocumentExporterRegistry $exporters)
+  __construct(\Vaulter\Documents\Types\DocumentTypeRegistry $types, \Vaulter\Documents\Export\DocumentExporterRegistry $exporters)
   comments(\Vaulter\Contracts\Drive\DriveHandle $drive): \Vaulter\Documents\Operations\CommentOperations
-  exporters(): \Vaulter\Documents\Registries\DocumentExporterRegistry
+  exporters(): \Vaulter\Documents\Export\DocumentExporterRegistry
   in(\Vaulter\Contracts\Drive\DriveHandle $drive): \Vaulter\Documents\Operations\DocumentOperations
   types(): \Vaulter\Documents\Types\DocumentTypeRegistry
 
 Vaulter\Documents\Operations\DocumentOperations
-  __construct(\Vaulter\Operations\OperationContext $context, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Access\OperationGuard $guard, \Vaulter\Profiles\ProfilePolicy $profiles, \Vaulter\Documents\Configuration\DocumentsConfig $config, \Vaulter\Documents\Types\DocumentTypeRegistry $types, \Vaulter\Documents\Content\ContentDecoder $decoder, \Vaulter\Documents\Actions\Documents\CreateDocumentAction $create, \Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction $update, \Vaulter\Documents\Actions\Revisions\CreateNamedRevisionAction $snapshot, \Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction $restore, \Vaulter\Documents\Actions\Revisions\UpdateRevisionRetentionAction $retention, \Vaulter\Documents\Export\NodeExportService $exports, \Vaulter\Documents\Collaboration\CollaborationSessionService $sessions, \Vaulter\Documents\Queries\DocumentQuery $query, \Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper $mapper, \Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper $nodes)
+  __construct(\Vaulter\Operations\OperationContext $context, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Access\OperationGuard $guard, \Vaulter\Profiles\ProfilePolicy $profiles, \Vaulter\Documents\Configuration\DocumentsConfig $config, \Vaulter\Documents\Types\DocumentTypeRegistry $types, \Vaulter\Documents\Content\ContentDecoder $decoder, \Vaulter\Documents\Actions\Documents\CreateDocumentAction $create, \Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction $update, \Vaulter\Documents\Actions\Revisions\CreateNamedRevisionAction $snapshot, \Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction $restore, \Vaulter\Documents\Actions\Revisions\UpdateRevisionRetentionAction $retention, \Vaulter\Documents\Actions\Export\ExportDocumentAction $export, \Vaulter\Documents\Collaboration\CollaborationSessionService $sessions, \Vaulter\Documents\Queries\DocumentQuery $query, \Vaulter\Documents\Data\Snapshots\Mapping\DocumentSnapshotMapper $mapper, \Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper $nodes)
   collaborationSession(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $document, ?int $clientSchemaVersion = null): \Vaulter\Documents\Data\Collaboration\CollaborationSession
   content(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $document, \Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot|int|null|string $revision = null): \Vaulter\Documents\Data\Snapshots\DocumentSnapshot
   create(string $name, ?string $type = null, ?array $content = null, \Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $parent = null, ?\Vaulter\Data\Drive\CreateFolderOptions $options = null): \Vaulter\Data\Snapshots\NodeSnapshot
@@ -210,9 +218,11 @@ Vaulter\Documents\Data\Collaboration\CollaborationSession
   readonly string $token
 
 Vaulter\Documents\ValueObjects\DocumentExport
-  __construct(string $format, string $content, string $mimeType, string $filename)
-  toArray(): array
-  readonly string $content
+  __construct(string $bytes, string $filename, string $mimeType, string $format, int $sourceEpoch, int $sourceStateVersion, int|null|string $sourceRevisionId)
+  readonly int $sourceEpoch
+  readonly int $sourceStateVersion
+  readonly int|null|string $sourceRevisionId
+  readonly string $bytes
   readonly string $filename
   readonly string $format
   readonly string $mimeType

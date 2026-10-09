@@ -5,28 +5,20 @@ declare(strict_types=1);
 namespace Vaulter\Documents\ValueObjects;
 
 /**
- * The rendered result of exporting a document node (§7 / M4a) — the payload the
- * export controller serialises. Immutable.
+ * The rendered file of one document export, with the source it was rendered from:
+ * a chosen checkpoint (sourceRevisionId set) or the working state at
+ * (sourceEpoch, sourceStateVersion). A host that caches renders keys them on that
+ * source, never on the document id alone. Immutable.
  */
 final readonly class DocumentExport
 {
     public function __construct(
-        public string $format,
-        public string $content,
-        public string $mimeType,
+        public string $bytes,
         public string $filename,
+        public string $mimeType,
+        public string $format,
+        public int $sourceEpoch,
+        public int $sourceStateVersion,
+        public int|string|null $sourceRevisionId,
     ) {}
-
-    /**
-     * @return array<string, string>
-     */
-    public function toArray(): array
-    {
-        return [
-            'format' => $this->format,
-            'content' => $this->content,
-            'mime_type' => $this->mimeType,
-            'filename' => $this->filename,
-        ];
-    }
 }

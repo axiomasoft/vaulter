@@ -11,7 +11,7 @@ it('SEC-R17 inventory keeps descriptors metadata-only and installed delivery med
         'packages/core/src/Http/Resources/Drive/NodeResource.php',
         'packages/drive/src/Http/Controllers/DownloadController.php',
         'packages/core/src/Http/Controllers/Sharing/PublicShareController.php',
-        'packages/documents/src/Export/NodeExportService.php',
+        'packages/documents/src/Actions/Export/ExportDocumentAction.php',
         'packages/documents/src/Presentation/DocumentPresenter.php',
     ];
     foreach ($paths as $path) {

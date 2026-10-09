@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Export;
 
-use Vaulter\Contracts\Handlers\DocumentContent;
-use Vaulter\Contracts\Handlers\DocumentExporter;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Content\TipTap\TipTapRenderer;
-use Vaulter\Documents\Enums\Export\ExportFormat;
+use Vaulter\Documents\Contracts\DocumentContent;
+use Vaulter\Documents\Contracts\DocumentExporter;
+use Vaulter\Documents\Contracts\DocumentType;
 use Vaulter\Documents\Exceptions\UnsupportedDocumentContentException;
 
 final class HtmlExporter implements DocumentExporter
@@ -16,6 +16,11 @@ final class HtmlExporter implements DocumentExporter
     public function __construct(
         private readonly TipTapRenderer $renderer,
     ) {}
+
+    public function key(): string
+    {
+        return 'vaulter/html';
+    }
 
     public function format(): string
     {
@@ -32,12 +37,17 @@ final class HtmlExporter implements DocumentExporter
         return 'html';
     }
 
-    public function export(DocumentContent $content): string
+    public function documentTypes(): array
+    {
+        return ['vaulter/rich-text', 'vaulter/markdown'];
+    }
+
+    public function export(DocumentContent $content, DocumentType $type): string
     {
         if (!$content instanceof TipTapContent) {
             throw UnsupportedDocumentContentException::forExporter('html', TipTapContent::class, $content::class);
         }
 
-        return $this->renderer->render($content, ExportFormat::Html);
+        return $this->renderer->toHtml($content);
     }
 }

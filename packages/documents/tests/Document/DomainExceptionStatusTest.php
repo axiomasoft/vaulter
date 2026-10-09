@@ -86,7 +86,7 @@ it('renders each domain exception with its stable code and HTTP status', functio
     'document content degraded' => [new DocumentContentDegradedException('vaulter/rich-text'), 'document_content_degraded', 409, ['context' => ['type' => 'vaulter/rich-text']]],
     'document revision missing' => [DocumentRevisionNotFoundException::forNode(1, 2), 'document_revision_not_found', 404],
     'comment missing' => [CommentNotFoundException::forNode(1, 2), 'comment_not_found', 404],
-    'unknown export format' => [UnknownExportFormatException::forFormat('unknown', ['html']), 'unknown_export_format', 422],
+    'unknown export format' => [UnknownExportFormatException::forFormat('unknown', ['html']), 'unknown_export_format', 422, ['allowed' => ['html']]],
     'unsupported content' => [UnsupportedDocumentContentException::forExporter('html', 'tiptap', 'other'), 'invalid_document_content', 422, ['reason' => 'unsupported_content']],
     'blocked outbound URL' => [$blockedUrl = BlockedOutboundUrlException::scheme('file'), 'validation_failed', 422, ['errors' => ['url' => [$blockedUrl->getMessage()]]]],
     'unenumerable subject' => [$subject = UnenumerableGrantSubjectException::for(Subject::make('role', 1), NullPermissionDriver::class), 'validation_failed', 422, ['errors' => ['subject_type' => [$subject->getMessage()]]]],

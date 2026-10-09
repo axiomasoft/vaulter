@@ -1,0 +1,44 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use Vaulter\Documents\Contracts\DocumentContent;
+use Vaulter\Documents\Contracts\DocumentExporter;
+use Vaulter\Documents\Contracts\DocumentType;
+
+/** Register this class in config('vaulter-documents.exporters'). */
+final class {{ class }} implements DocumentExporter
+{
+    public function key(): string
+    {
+        return '{{ key }}';
+    }
+
+    public function format(): string
+    {
+        return '{{ format }}';
+    }
+
+    public function mimeType(): string
+    {
+        return 'text/plain';
+    }
+
+    public function extension(): string
+    {
+        return 'txt';
+    }
+
+    public function documentTypes(): array
+    {
+        return ['vaulter/rich-text'];
+    }
+
+    public function export(DocumentContent $content, DocumentType $type): string
+    {
+        // Render from $content->toArray() only; an exporter must not read storage or URLs.
+        return json_encode($content->toArray(), JSON_THROW_ON_ERROR);
+    }
+}

@@ -337,14 +337,14 @@ until `vaulter-documents.default_type` names a registered type (`vaulter/markdow
 
 ## Export formats — `vaulter-documents.exporters`
 
-Map of format key → `DocumentExporter` FQCN.
+List of `DocumentExporter` class names, resolved by (document type, format). Two exporters for one
+pair fail at boot; the set freezes after boot.
 
 | Key | Default |
 |---|---|
-| `vaulter-documents.exporters.html` | `Vaulter\Documents\Export\HtmlExporter` |
-| `vaulter-documents.exporters.markdown` | `Vaulter\Documents\Export\MarkdownExporter` |
+| `vaulter-documents.exporters` | `[HtmlExporter::class, MarkdownExporter::class]` (`Vaulter\Documents\Export\*`) |
 
-Add your own (PDF, DOCX, …) here or via `Vaulter::registerExporter()`. See
+Add your own (PDF, DOCX, …) here or via `Documents::exporters()->register()`. See
 [Recipes → Custom export](/guide/recipes).
 
 ## Collaboration — `vaulter-documents.collaboration.*`

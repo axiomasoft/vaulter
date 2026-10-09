@@ -6,6 +6,7 @@ use Illuminate\Config\Repository;
 use Vaulter\Contracts\Profiles\CommentsFeature;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Export\HtmlExporter;
+use Vaulter\Documents\Export\MarkdownExporter;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
@@ -17,7 +18,7 @@ it('enables installed documents and comments while leaving collaboration opt in'
         ->and($config->collaborationEnabled())->toBeFalse()
         ->and($config->revisionLimit())->toBe(50)
         ->and($config->model('document_revision'))->toBe(DocumentRevision::class)
-        ->and($config->exporters()['html'])->toBe(HtmlExporter::class);
+        ->and($config->exporters())->toBe([HtmlExporter::class, MarkdownExporter::class]);
 
     $repository->set('vaulter-documents.revisions.limit', 7);
     $repository->set('vaulter-documents.comments.enabled', false);
@@ -79,4 +80,29 @@ it('answers core\'s comments feature question from its own config instead of cor
     config()->set('vaulter-documents.comments.enabled', false);
 
     expect(app(CommentsFeature::class)->enabled())->toBeFalse();
+});
+
+it('reads the 0.2 exporter map as a list of its classes with a deprecation', function (): void {
+    $repository = new Repository(['vaulter-documents' => ['exporters' => ['html' => HtmlExporter::class, 'pdf' => 'Host\\PdfExporter']]]);
+    $messages = [];
+    set_error_handler(static function (int $level, string $message) use (&$messages): bool {
+        $messages[] = $message;
+
+        return true;
+    }, E_USER_DEPRECATED);
+
+    try {
+        $exporters = (new DocumentsConfig($repository))->exporters();
+    } finally {
+        restore_error_handler();
+    }
+
+    expect($exporters)->toBe([HtmlExporter::class, 'Host\\PdfExporter'])
+        ->and($messages)->toHaveCount(1)->and($messages[0])->toContain('map of format => class is deprecated');
+});
+
+it('refuses an exporter list that is not class names', function (): void {
+    $repository = new Repository(['vaulter-documents' => ['exporters' => [static fn () => null]]]);
+
+    expect(fn () => (new DocumentsConfig($repository))->exporters())->toThrow(InvalidConfigurationException::class, 'class names only');
 });

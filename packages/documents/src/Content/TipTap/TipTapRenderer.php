@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Content\TipTap;
 
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
-use Vaulter\Documents\Enums\Export\ExportFormat;
 
 /**
  * Renders a TipTap JSON document to HTML or Markdown. Covers the node/mark set the package
@@ -35,14 +34,6 @@ final class TipTapRenderer
     public function __construct(
         private readonly HtmlSanitizerInterface $sanitizer,
     ) {}
-
-    public function render(TipTapContent $content, ExportFormat $format): string
-    {
-        return match ($format) {
-            ExportFormat::Html => $this->toHtml($content),
-            ExportFormat::Markdown => $this->toMarkdown($content),
-        };
-    }
 
     public function toHtml(TipTapContent $content): string
     {

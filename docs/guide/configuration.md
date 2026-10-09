@@ -192,10 +192,7 @@ ignored (`E_USER_DEPRECATED`). See [Uploads](/guide/uploads) and [Trash](/guide/
 'content' => ['max_size_kb' => 5120],
 'revisions' => ['limit' => 50, 'checkpoint_interval_seconds' => 300],
 'comments' => ['enabled' => true],
-'exporters' => [
-    'html' => \Vaulter\Documents\Export\HtmlExporter::class,
-    'markdown' => \Vaulter\Documents\Export\MarkdownExporter::class,
-],
+'exporters' => [\Vaulter\Documents\Export\HtmlExporter::class, \Vaulter\Documents\Export\MarkdownExporter::class],
 'collaboration' => [
     'enabled' => false,
     'driver' => 'hocuspocus',
@@ -222,7 +219,7 @@ to disable them. A published old `features.comments = false` is migrated and sta
 Collaboration remains opt-in. When enabled, both hub secrets must be present and distinct:
 production boot fails otherwise; development and testing log a warning.
 
-`exporters` remains a **format → FQCN map**. Custom TipTap allow-lists move to
+`exporters` is a list of exporter class names (the 0.2 format → FQCN map is still read, with a deprecation). Custom TipTap allow-lists move to
 `vaulter-documents.tiptap.*`. `vaulter.enabled_document_types` and
 `vaulter.features.spreadsheets` become the list of [document type](/guide/document-types)
 classes `vaulter-documents.types` (`richtext`/`table`/`template` → `RichTextDocumentType`,

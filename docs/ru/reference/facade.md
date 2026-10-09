@@ -32,9 +32,6 @@ $panel = Vaulter::profiles()->get('project_drive'); // резолв Storage Pane
 | `forStorage(Drive $storage)` | `DriveHandle` | Открыть Drive-хэндл, привязанный к уже разрешённой строке-хранилищу |
 | `profiles()` | `ProfileRegistry` | Именованные профили Drive (`get`, `register`, `registerProvider`) |
 | `handlers()` | `FileHandlerRegistry` | Реестр document handler'ов |
-| `registerExporter(DocumentExporter $exporter)` | `void` | Зарегистрировать пользовательский формат экспорта |
-| `exporter(string $format)` | `DocumentExporter` | Резолв экспортёра по ключу формата |
-| `exporterFormats()` | `list<string>` | Все зарегистрированные ключи форматов экспорта |
 
 Фасад аннотирует все публичные методы менеджера. Для регистрации используйте `profiles()` и `handlers()`.
 
@@ -97,32 +94,6 @@ Vaulter::handlers()->register(\App\Vaulter\CadHandler::class);
 Также можно перечислить FQCN handler'ов в `config('vaulter.handlers')` или привязать
 их к тегированной привязке контейнера `'vaulter.file_handlers'`. См.
 [Recipes → Custom handler](/ru/guide/recipes).
-
-## Экспортёры
-
-### `registerExporter(DocumentExporter $exporter): void`
-
-Зарегистрировать пользовательский формат экспорта. Экспортёр ключуется по
-собственному `format()`.
-
-### `exporter(string $format): DocumentExporter`
-
-Резолв экспортёра по ключу формата. Сначала смотрит на экспортёры, зарегистрированные
-в рантайме, затем на `config('vaulter-documents.exporters')` (резолвя FQCN через контейнер).
-Бросает `Vaulter\Exceptions\Documents\UnknownExportFormatException` для неизвестного
-формата.
-
-### `exporterFormats(): list<string>`
-
-Все известные ключи форматов экспорта — объединение настроенных и
-зарегистрированных в рантайме экспортёров. Встроенные — `html` и `markdown`.
-
-```php
-Vaulter::registerExporter(new \App\Vaulter\PdfExporter());
-Vaulter::exporterFormats(); // ['html', 'markdown', 'pdf']
-```
-
-См. [Recipes → Custom export](/ru/guide/recipes).
 
 ## Совместное редактирование
 

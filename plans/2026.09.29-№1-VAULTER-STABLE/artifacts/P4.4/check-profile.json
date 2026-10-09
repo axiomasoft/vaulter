@@ -1,0 +1,23 @@
+{
+  "item": "PLAN2.P4.4",
+  "prepared_at": "2026-10-09",
+  "runtime": {"provider": "anthropic", "model": "claude-sonnet-5-5", "effort": "medium", "source": "/model output; plan.py start --actor anthropic/claude-sonnet-5-5/medium"},
+  "runs_mode": "D51 L: SQLite Pest (documents Export/Document/Operations/Arch + core files that name removed classes), vue typecheck+test, Pint, PHPStan, opus-coverage. Broad barrier deferred to P4.6.",
+  "changed_paths": {
+    "documents_src": ["Contracts/DocumentExporter", "Export/*", "Actions/Export/ExportDocumentAction", "Data/Export/ExportDocumentInput", "ValueObjects/DocumentExport", "Operations/DocumentOperations", "DocumentsManager", "Http/Controllers/Documents/DocumentNodeController", "Configuration/DocumentsConfig", "config/vaulter-documents.php", "Console/MakeExporterCommand", "stubs/exporter.stub", "Content/TipTap/TipTapRenderer", "Exceptions/DuplicateDocumentExporterException"],
+    "documents_src_delete": ["Enums/Export/ExportFormat", "Registries/DocumentExporterRegistry", "Export/NodeExportService"],
+    "core_delete": ["Contracts/Handlers/DocumentExporter", "Contracts/Handlers/DocumentContent"],
+    "core_tests_touched": ["Fixtures/Documents/FakeExporter", "Feature/VaulterManagerExporterHandlerSeamTest", "Content/EgressInventoryTest", "ObservabilityDocuments/P83DocumentsMetricsTest", "Arch snapshots/ArchTest mentions"],
+    "vue": ["src/client.ts", "src/types.ts", "src/composables/useDocumentNode.ts", "tests"],
+    "docs": ["docs/guide/export.md (+ru)", "UPGRADE.md", "CHANGELOG.md", "golden public-api.txt"]
+  },
+  "commands": [
+    {"id": "V1", "cwd": "packages/documents", "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Export tests/Document tests/Operations tests/Arch"},
+    {"id": "V1-core", "cwd": "repo root", "cmd": "scripts/php84 vendor/bin/pest --ci <touched core tests>"},
+    {"id": "V2", "cwd": "packages/vue", "cmd": "npm run typecheck && npm test"},
+    {"id": "V80", "cwd": "packages/documents", "cmd": "pint --test && phpstan analyse --memory-limit=512M --no-progress"},
+    {"id": "V81", "cwd": ".", "cmd": "python3 plans/.../artifacts/coverage/opus-coverage.py check"}
+  ],
+  "negative_controls": "artifacts/P4.4/negative-controls.md",
+  "deferred": "broad suite + PG/MySQL lanes: P4.6"
+}

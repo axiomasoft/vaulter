@@ -1,0 +1,43 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Vaulter\Documents\Exceptions;
+
+use Vaulter\Exceptions\Contracts\ProblemException;
+use Vaulter\Exceptions\VaulterException;
+
+/** Raised while the application boots, so it is never rendered for a request. */
+final class DuplicateDocumentExporterException extends VaulterException implements ProblemException
+{
+    public static function forKey(string $key): self
+    {
+        return new self(sprintf(
+            '[Vaulter] Document exporter "%s" is registered twice. Fix: register it once, or override it with Documents::exporters()->replace(). Docs: %s',
+            $key,
+            self::docs('duplicate-registration'),
+        ));
+    }
+
+    public static function forPair(string $type, string $format, string $existing, string $incoming): self
+    {
+        return new self(sprintf(
+            '[Vaulter] Exporters "%s" and "%s" both render format "%s" for document type "%s". Fix: keep one, or swap it with Documents::exporters()->replace(). Docs: %s',
+            $existing,
+            $incoming,
+            $format,
+            $type,
+            self::docs('duplicate-registration'),
+        ));
+    }
+
+    public function problemCode(): string
+    {
+        return 'duplicate_registration';
+    }
+
+    public function httpStatus(): int
+    {
+        return 500;
+    }
+}

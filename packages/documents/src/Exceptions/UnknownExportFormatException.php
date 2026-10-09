@@ -20,13 +20,19 @@ final class UnknownExportFormatException extends VaulterException implements Pro
     {
         $list = implode(', ', $allowed);
 
-        return new self(
+        $exception = new self(
             sprintf('[Vaulter] Unknown export format [%s]. ', $format)
-            .sprintf('Why: no exporter is registered for it (available: [%s]). ', $list)
+            .sprintf('Why: no exporter renders it for this document type (available: [%s]). ', $list)
             .'Fix: register one via config(vaulter-documents.exporters) or Documents::exporters()->register(). '
             .'Docs: '.self::docs('unknown-export-format'),
         );
+        $exception->allowed = $allowed;
+
+        return $exception;
     }
+
+    /** @var list<string> */
+    private array $allowed = [];
 
     public function problemCode(): string
     {
@@ -36,5 +42,14 @@ final class UnknownExportFormatException extends VaulterException implements Pro
     public function httpStatus(): int
     {
         return self::HTTP_STATUS;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    #[\Override]
+    protected function renderExtras(): array
+    {
+        return ['allowed' => $this->allowed];
     }
 }

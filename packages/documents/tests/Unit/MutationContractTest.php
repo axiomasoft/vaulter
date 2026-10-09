@@ -3,19 +3,19 @@
 declare(strict_types=1);
 
 use Vaulter\Documents\Configuration\DocumentsConfig;
-use Vaulter\Documents\Enums\Export\ExportFormat;
+use Vaulter\Documents\Export\HtmlExporter;
+use Vaulter\Documents\Export\MarkdownExporter;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
-it('maps every export format to its public value, mime type and extension', function (): void {
-    expect(ExportFormat::values())->toBe(['html', 'markdown'])
-        ->and(ExportFormat::Html->label())->toBe('HTML')
-        ->and(ExportFormat::Html->mimeType())->toBe('text/html')
-        ->and(ExportFormat::Html->extension())->toBe('html')
-        ->and(ExportFormat::Markdown->label())->toBe('Markdown')
-        ->and(ExportFormat::Markdown->mimeType())->toBe('text/markdown')
-        ->and(ExportFormat::Markdown->extension())->toBe('md');
+it('declares each built-in exporter format, mime type and extension', function (): void {
+    $html = app(HtmlExporter::class);
+    $markdown = app(MarkdownExporter::class);
+
+    expect([$html->key(), $html->format(), $html->mimeType(), $html->extension()])->toBe(['vaulter/html', 'html', 'text/html', 'html'])
+        ->and([$markdown->key(), $markdown->format(), $markdown->mimeType(), $markdown->extension()])->toBe(['vaulter/markdown', 'markdown', 'text/markdown', 'md'])
+        ->and($html->documentTypes())->toBe(['vaulter/rich-text', 'vaulter/markdown']);
 });
 
 it('returns the configured document-owned model classes', function (): void {

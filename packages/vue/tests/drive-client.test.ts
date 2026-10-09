@@ -407,7 +407,7 @@ describe('createVaulterClient — Drive (M1–M4)', () => {
         .mockResolvedValueOnce(jsonResponse({ data: { id: 20, kind: 'document' } }, 201))
         .mockResolvedValueOnce(jsonResponse({ data: { id: 30, node_id: 20, content: doc, version_no: 1 } }))
         .mockResolvedValueOnce(jsonResponse({ data: { id: 31, node_id: 20, is_autosave: true, version_no: 2 } }))
-        .mockResolvedValueOnce(jsonResponse({ data: { format: 'html', content: '<p></p>', mime_type: 'text/html', filename: 'd.html' } }))
+        .mockResolvedValueOnce(new Response('<p></p>', { headers: { 'Content-Type': 'text/html', 'Content-Disposition': 'attachment; filename="d.html"' } }))
         .mockResolvedValueOnce(jsonResponse({ data: { id: 'tiptap', capabilities: { editable: true }, ui: { component: 'VaulterEditor' } } }))
       const client = createVaulterClient({ fetch: fetchMock })
 
@@ -426,7 +426,8 @@ describe('createVaulterClient — Drive (M1–M4)', () => {
       expect(JSON.parse(fetchMock.mock.calls[2][1].body)).toMatchObject({ content: doc })
 
       const exported = await client.documentNodes.export(20, 'html')
-      expect(exported.mime_type).toBe('text/html')
+      expect(exported.mimeType).toBe('text/html')
+      expect(exported.filename).toBe('d.html')
       expect(fetchMock.mock.calls[3][0]).toContain('/nodes/20/export?format=html')
 
       const handler = await client.documentNodes.handler(20)

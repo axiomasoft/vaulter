@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.4",
   "title": "Экспорт документов: реестр (тип, формат) и выдача файла",
-  "status": "todo",
+  "status": "done",
   "summary": "Экспорт принадлежит documents: DocumentExporterRegistry резолвит по (тип, формат), ExportDocumentAction читает ревизию или рабочее состояние без создания ревизии, HTTP отдаёт файл с Content-Disposition и no-store; доступ — Download + ContentEgress.",
   "why": "D28/C08: экспорт был JSON под View; формат определялся enum. Исследование: экспорт — отдельная абилити, источник должен быть привязан к неизменяемой версии, кэш только по ней.",
   "scope": {
@@ -335,6 +335,38 @@
     "status": "not_needed",
     "notes": "Внешние факты проверены при дизайне: @plan/knowledge/P4-industry-research-2026-10-07.json; исполнителю повторный поиск не нужен"
   },
-  "result": null,
-  "updated_at": "2026-10-08T18:28:31Z"
+  "result": {
+    "started_at": "2026-10-09T02:20:21Z",
+    "finished_at": "2026-10-09T02:42:20Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "91709ca8-c566-4b46-b140-916c7065dc35"
+    },
+    "notes": "Exporter registry by (type, format), ExportDocumentAction, file HTTP response, vue blob client, docs en/ru, UPGRADE/CHANGELOG, goldens. Full documents Pest 571 passed; core 476 passed; vue 122 passed. Hard risk: content egress + public contract — recommend task:review. See artifacts/P4.4/completion-notes.md",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-09T02:42:20Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-09T02:42:20Z"
+      },
+      {
+        "id": "V80",
+        "exit": 0,
+        "at": "2026-10-09T02:42:20Z"
+      },
+      {
+        "id": "V81",
+        "exit": 0,
+        "at": "2026-10-09T02:42:20Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-09T02:42:20Z"
 }

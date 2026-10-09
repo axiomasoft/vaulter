@@ -7,9 +7,9 @@ namespace Vaulter\Documents\Facades;
 use Illuminate\Support\Facades\Facade;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Documents\DocumentsManager;
+use Vaulter\Documents\Export\DocumentExporterRegistry;
 use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
-use Vaulter\Documents\Registries\DocumentExporterRegistry;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 
 /**

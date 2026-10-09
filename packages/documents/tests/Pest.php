@@ -7,6 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vaulter\Documents\Tests\Collaboration\CollaborationEnabledTestCase;
 use Vaulter\Documents\Tests\Comment\CommentsTestCase;
 use Vaulter\Documents\Tests\Document\DocumentTestCase;
+use Vaulter\Documents\Tests\Export\ExportTestCase;
 use Vaulter\Documents\Tests\Operations\OperationsTestCase;
 use Vaulter\Documents\Tests\TestCase;
 use Vaulter\Documents\Tests\Types\TypesTestCase;
@@ -37,6 +38,9 @@ uses(CommentsTestCase::class, RefreshDatabase::class)->in('Comment');
 // The Documents API (DocumentOperations/CommentOperations) with every guard live:
 // database grants, comments and collaboration ON.
 uses(OperationsTestCase::class, RefreshDatabase::class)->in('Operations');
+
+// Document export: registry, authorization, source selection and the file response.
+uses(ExportTestCase::class, RefreshDatabase::class)->in('Export');
 
 // Document types: the registry, the built-in types, a third-party type that is
 // installed, removed and installed again, and content that reads only partly.
