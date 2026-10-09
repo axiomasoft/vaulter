@@ -11,7 +11,6 @@ use Vaulter\Access\AccessResolver;
 use Vaulter\Documents\Collaboration\CollaborationCall;
 use Vaulter\Documents\Collaboration\CollaborationHub;
 use Vaulter\Documents\Configuration\DocumentsConfig;
-use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Contracts\HostUserResolver;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Http\Middleware\ResolveCollaborationCall;
@@ -35,7 +34,8 @@ use Vaulter\VaulterManager;
  *   - authenticate() — the server-to-server hook the Node hub's onAuthenticate calls.
  *                      The call is already authenticated by ResolveCollaborationCall;
  *                      this resolves the user's ability on the node and answers
- *                      {allowed, readOnly, user}.
+ *                      {allowed, readOnly, user}; content that cannot be saved back
+ *                      is read-only whatever the ability.
  *   - store()        — the server-to-server hook the hub's onStoreDocument calls. The
  *                      call is authenticated AND bound to the node (a JWT call may only
  *                      store to its own room); the Yjs snapshot is persisted through
@@ -99,7 +99,9 @@ final class NodeCollaborationController extends Controller
 
         return new JsonResponse([
             'allowed' => true,
-            'readOnly' => $ability !== Ability::Edit,
+            // Content this installation cannot save back is shared read-only, as by
+            // DocumentOperations::collaborationSession().
+            'readOnly' => $ability !== Ability::Edit || !$this->hub->writable($node),
             'user' => ['id' => $userId],
         ]);
     }
@@ -107,8 +109,8 @@ final class NodeCollaborationController extends Controller
     /**
      * The Node hub's onStoreDocument hook: persist the debounced Yjs snapshot. The
      * call must be authenticated, bound to the node (a JWT for node A may not store to
-     * node B), and not read-only. The Yjs binary is the source of truth; the TipTap
-     * JSON, when present, updates the projection.
+     * node B), and not read-only. The Yjs binary is the source of truth; the JSON, when
+     * present, updates the projection.
      */
     public function store(Request $request): JsonResponse
     {
@@ -184,19 +186,18 @@ final class NodeCollaborationController extends Controller
     }
 
     /**
-     * The optional TipTap projection from a `content`/`tiptap` body field. Null leaves
-     * the prior projection intact (the Yjs state still advances).
+     * The optional JSON projection from a `content`/`tiptap` body field, decoded later by
+     * the document's type. Null leaves the prior projection intact (the Yjs state still
+     * advances).
+     *
+     * @return array<string, mixed>|null
      */
-    private function projection(Request $request): ?TipTapContent
+    private function projection(Request $request): ?array
     {
         $content = $request->input('content', $request->input('tiptap'));
 
-        if (!is_array($content) || ($content['type'] ?? null) !== 'doc') {
-            return null;
-        }
-
-        /** @var array<string, mixed> $content */
-        return TipTapContent::fromArray($content);
+        /** @var array<string, mixed>|null */
+        return is_array($content) ? $content : null;
     }
 
     /**

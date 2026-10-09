@@ -259,6 +259,6 @@ it('PersistCollaborationStateAction rejects a projection over max_document_size_
     app(PersistCollaborationStateAction::class)->execute(new PersistCollaborationStateInput(
         node: $node->refresh(),
         yjsState: 'small-yjs-state',
-        content: oversizedContent(),
+        content: oversizedContent()->toArray(),
     ));
 })->throws(InvalidDocumentContentException::class);

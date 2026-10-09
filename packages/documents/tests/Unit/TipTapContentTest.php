@@ -479,3 +479,56 @@ it('fail-closed по значению: безобидные атрибуты х�
     expect($content->withSanitizedUrls()->toArray()['content'][0]['attrs'])
         ->toBe(['source' => 'https://a.example/v', 'caption' => 'подпись']);
 });
+
+// ─── Strict and lenient read agree on what a TipTap node is (Grok 4.7 review) ──
+//
+// A node is {type, attrs, content | text, marks}. Whatever fromArray() accepts must read
+// back without loss, or the next save of the read drops it; whatever it rejects reads as
+// lossy. Marks sit on any node, as in ProseMirror JSON (an inline image or hard break
+// inherits the marks around it), and are checked against the same allow-list.
+
+it('round-trips everything fromArray() accepts without loss', function (array $doc): void {
+    config()->set('vaulter-documents.tiptap.extra_attributes', ['doc' => ['lang']]);
+    TipTapContent::fromArray($doc);
+    [$read, $lossless] = TipTapContent::decayReporting($doc);
+
+    expect($lossless)->toBeTrue()
+        ->and($read->toArray())->toBe($doc);
+})->with([
+    'marks on a hard break' => [['type' => 'doc', 'content' => [['type' => 'paragraph', 'content' => [
+        ['type' => 'text', 'text' => 'a', 'marks' => [['type' => 'bold']]],
+        ['type' => 'hardBreak', 'marks' => [['type' => 'bold']]],
+    ]]]]],
+    'link mark on an image' => [['type' => 'doc', 'content' => [
+        ['type' => 'image', 'attrs' => ['src' => 'https://example.com/a.png'], 'marks' => [['type' => 'link', 'attrs' => ['href' => 'https://example.com']]]],
+    ]]],
+    'root attrs the host allows' => [['type' => 'doc', 'attrs' => ['lang' => 'ru'], 'content' => []]],
+]);
+
+it('rejects at store what a read would drop', function (array $doc): void {
+    expect(fn () => TipTapContent::fromArray($doc))->toThrow(InvalidDocumentContentException::class);
+    expect(TipTapContent::decayReporting($doc)[1])->toBeFalse();
+})->with([
+    'root attrs outside the allow-list' => [['type' => 'doc', 'attrs' => ['meta' => 'x'], 'content' => []]],
+    'unknown root field' => [['type' => 'doc', 'content' => [], 'meta' => ['keep' => 'me']]],
+    'unknown node field' => [['type' => 'doc', 'content' => [['type' => 'paragraph', 'id' => 'p1']]]],
+    'non-string text' => [['type' => 'doc', 'content' => [['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => ['keep' => 'me']]]]]]],
+    'content on a text node' => [['type' => 'doc', 'content' => [['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'a', 'content' => [['type' => 'text', 'text' => 'b']]]]]]]],
+    'scalar attrs' => [['type' => 'doc', 'content' => [['type' => 'paragraph', 'attrs' => 'x']]]],
+    'unknown mark on a non-text node' => [['type' => 'doc', 'content' => [['type' => 'paragraph', 'marks' => [['type' => 'blink']]]]]],
+]);
+
+it('checks the URL of a mark on a non-text node at store time, as on text', function (): void {
+    TipTapContent::fromArray(['type' => 'doc', 'content' => [
+        ['type' => 'hardBreak', 'marks' => [['type' => 'link', 'attrs' => ['href' => 'javascript:alert(1)']]]],
+    ]]);
+})->throws(InvalidDocumentContentException::class);
+
+it('keeps lossless the normalisations that drop nothing', function (array $doc): void {
+    expect(fn () => TipTapContent::fromArray($doc))->not->toThrow(InvalidDocumentContentException::class);
+    expect(TipTapContent::decayReporting($doc)[1])->toBeTrue();
+})->with([
+    'empty root attrs' => [['type' => 'doc', 'attrs' => [], 'content' => []]],
+    'text without text' => [['type' => 'doc', 'content' => [['type' => 'paragraph', 'content' => [['type' => 'text']]]]]],
+    'null marks and content' => [['type' => 'doc', 'content' => [['type' => 'paragraph', 'marks' => null, 'content' => null]]]],
+]);

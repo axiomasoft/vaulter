@@ -354,9 +354,11 @@ Autosave the document content (the debounce path). → `update`
 |---|---|
 | `content` | required, array (TipTap doc) |
 | `yjs_state` | nullable, string (base64 Yjs binary) |
+| `state_version` | nullable, integer ≥ 0 — the `state_version` the client last read; a save that lost the race answers `412 document_state_mismatch` |
 
 **Gate:** `Ability::Edit`. **Response:** `200` `DocumentRevisionResource`
-(autosave is semantically an update even when a new version row was appended).
+(autosave is semantically an update even when a new version row was appended). The resource
+carries `state_version`; content that cannot be saved back answers `409 document_content_degraded`.
 
 #### `GET nodes/{node}/document-versions`
 
@@ -733,7 +735,8 @@ The hub's `onAuthenticate` hook. → `authenticate`
 
 **Response:** `{ "allowed": bool, "readOnly": bool, "user": { "id": … } | null }`.
 `allowed=false` (not a 403) when the user holds no view access, so the hub can
-refuse the socket cleanly. `readOnly` is `false` only for an `Edit` ability.
+refuse the socket cleanly. `readOnly` is `false` only for an `Edit` ability on content that can be
+saved back: an uninstalled type, a newer schema or a degraded read is read-only.
 
 #### `POST collab/store`
 
@@ -743,10 +746,13 @@ The hub's `onStoreDocument` hook — persist the debounced Yjs snapshot. → `st
 |---|---|---|
 | `node_id` *or* `room` | body | the target node (room normalised back through the channel prefix) |
 | `yjs_state` | body | required, base64 Yjs binary (the source of truth) |
-| `content` / `tiptap` | body | optional TipTap projection |
+| `content` / `tiptap` | body | optional JSON projection, decoded by the document's type (`422 invalid_document_content` when it rejects it) |
 | `user_id` | body | attribution (for a shared-secret call; a JWT call uses its `sub`) |
 
-The call must be allowed to store (`mayStore()`), else `403`. **Response:**
+The call must be allowed to store (`mayStore()`), else `403`. On the locked document an uninstalled
+type answers `409 document_type_unavailable` and content that cannot be saved back
+`409 document_content_degraded`; neither the Yjs state nor the projection changes. Without a
+projection the JSON keeps its schema version. **Response:**
 `{ "data": { "node_id": …, "version_no": …, "yjs_state_size": … } }`.
 
 ---

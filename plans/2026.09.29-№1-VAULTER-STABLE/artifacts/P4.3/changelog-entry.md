@@ -28,3 +28,23 @@
   longer declared editable. `vaulter.enabled_document_types` and `vaulter.features.spreadsheets` are
   deprecated (normalized into `vaulter-documents.types`).
 
+#### Round 2 (Grok 4.7 review) — not yet in CHANGELOG.md, for the owner to transfer
+
+- Fixed: the collaboration hub could write over content the installation cannot save back.
+  `collab/authenticate` answers `readOnly: true` and `collab/store` answers 409
+  (`document_type_unavailable` / `document_content_degraded`, checked on the locked row) for an
+  uninstalled type, a newer schema or a degraded read; neither Yjs nor JSON changes.
+- Fixed: a Yjs-only `collab/store` no longer resets `schema_version` to 1; a projection is
+  decoded by the document's type (its schema, codec and size limit) and written in its schema
+  version. A projection the type rejects answers 422 (was: ignored unless a TipTap doc).
+- Fixed: the autosave re-checks editability on the locked row, so a racing restore of degraded
+  content is not overwritten.
+- Changed: TipTap JSON is one shape for write and read. `TipTapContent::fromArray()` rejects
+  fields a node does not carry, non-object `attrs` and non-string `text`
+  (`InvalidDocumentContentException::malformedNode()`, reason `invalid_tiptap`), and checks marks
+  on every node; the lenient read keeps marks on any node and reports the rest as lossy.
+- Added: `PATCH nodes/{node}/content` takes an optional `state_version` (412
+  `document_state_mismatch` on a lost update); `DocumentRevisionResource` carries `state_version`.
+- Fixed: an item of the `vaulter.document_types` tag that is neither a type nor a class name fails
+  boot with `InvalidConfigurationException` (was: skipped).
+

@@ -339,50 +339,50 @@
     "notes": "Внешние факты проверены при дизайне: @plan/knowledge/P4-industry-research-2026-10-07.json; исполнителю повторный поиск не нужен"
   },
   "result": {
-    "started_at": "2026-10-08T16:06:41Z",
-    "finished_at": "2026-10-08T18:54:26Z",
+    "started_at": "2026-10-09T02:16:13Z",
+    "finished_at": "2026-10-09T02:16:22Z",
     "executor": {
       "provider": "anthropic",
       "model": "claude-opus-5-5",
-      "effort": "high",
-      "session": "417b340b-409b-4255-bd7a-fc19ac290cc1"
+      "effort": "high"
     },
-    "notes": "Type registry (config/tag/provider, frozen, vendor/name, vaulter/ reserved), built-ins rich-text/markdown/spreadsheet, TipTapCodec lossless read, unknown-type fallback (V10), degraded presented by type (V34), default_type boot check (V82), generator and contract trait. V81 closed by D57 (P4.14 OPUS input rendered). Receipts: artifacts/P4-midaudit/receipts/.",
+    "notes": "Grok 4.7 review closed (8/8 confirmed): 1 collab authenticate/store refuse non-editable content via ContentDecoder::editable() under the lock; 2 collab keeps schema_version without projection; 3 one TipTap node shape for strict/lenient, marks on any node; 4 projection decoded by type; 5 bad tag item fails boot; 6 locked re-check in UpdateDocumentContentAction + HTTP state_version; 7 UPGRADE/docs default_type case; 8 ContentSizeLimitTest. NC6–NC10 red→green. Receipts: artifacts/P4-midaudit/receipts/*-r2.txt.",
     "deviations": [
-      "D55 (EV320–EV329): core DocumentContent stays parent until P4.4; create(?type) defaults to default_type; export via document type; kind presenter tag; vaulter/ first-party rule; degraded/newer-schema content refused for update; size limits for all types; service-locator baseline moved; HTTP type field; files beyond task_files. D56/D57: AzGuard lane moved to P4.14."
+      "D55 (EV320–EV329): core DocumentContent stays parent until P4.4; create(?type) defaults to default_type; export via document type; kind presenter tag; vaulter/ first-party rule; degraded/newer-schema content refused for update; size limits for all types; service-locator baseline moved; HTTP type field; files beyond task_files. D56/D57: AzGuard lane moved to P4.14.",
+      "Round 2 (Grok 4.7): EV326 refined — collab store projection decoded by the document type (size limit, 422 on reject; was ignored unless a TipTap doc); HTTP additive state_version on PATCH content and DocumentRevisionResource (vue client not changed, P6); InvalidDocumentContentException::malformedNode() (reason invalid_tiptap, no new code); internal DocumentStateChange.schemaVersion required, UpdateDocumentContentInput.schemaVersion removed, PersistCollaborationStateInput.content raw array; CHANGELOG lines in changelog-entry.md for the owner."
     ],
     "checks": [
       {
         "id": "V1",
         "exit": 0,
-        "at": "2026-10-08T18:54:26Z"
+        "at": "2026-10-09T02:16:22Z"
       },
       {
         "id": "V2",
         "exit": 0,
-        "at": "2026-10-08T18:54:26Z"
+        "at": "2026-10-09T02:16:22Z"
       },
       {
         "id": "V3",
         "exit": 0,
-        "at": "2026-10-08T18:54:26Z"
+        "at": "2026-10-09T02:16:22Z"
       },
       {
         "id": "V80",
         "exit": 0,
-        "at": "2026-10-08T18:54:26Z"
+        "at": "2026-10-09T02:16:22Z"
       },
       {
         "id": "V81",
         "exit": 0,
-        "at": "2026-10-08T18:54:26Z"
+        "at": "2026-10-09T02:16:22Z"
       },
       {
         "id": "V82",
         "exit": 0,
-        "at": "2026-10-08T18:54:26Z"
+        "at": "2026-10-09T02:16:22Z"
       }
     ]
   },
-  "updated_at": "2026-10-08T18:54:26Z"
+  "updated_at": "2026-10-09T02:16:22Z"
 }

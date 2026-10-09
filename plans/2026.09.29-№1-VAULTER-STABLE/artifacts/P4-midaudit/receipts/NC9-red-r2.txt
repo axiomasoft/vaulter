@@ -1,0 +1,28 @@
+# NC9 RED
+# break: src/Actions/Documents/UpdateDocumentContentAction.php: '$type = $this->decoder->editableType($document);' -> '$type = $this->decoder->writable($document->type);'
+# cmd (cwd packages/documents): env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Types/DegradedContentTest.php --filter=racing restore
+# exit 1
+
+   FAIL  Tests\Types\DegradedContentTest
+  ⨯ it re-checks the working state on the locked row, so a racing resto… 0.52s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Types\DegradedContentTest > it re-checks the working state…    
+  Exception "Vaulter\Documents\Exceptions\DocumentContentDegradedException" not thrown.
+
+  at tests/Types/DegradedContentTest.php:127
+    123▕ 
+    124▕     expect(fn () => app(UpdateDocumentContentAction::class)->execute(DocumentTestHelpers::context($node), new UpdateDocumentContentInput(
+    125▕         node: $node,
+    126▕         content: TipTapContent::fromArray(['type' => 'doc', 'content' => []]),
+  ➜ 127▕     )))->toThrow(DocumentContentDegradedException::class);
+    128▕ 
+    129▕     expect(Document::query()->where('node_id', $created->id)->firstOrFail()->content)->toBe(widgetDocument());
+    130▕ });
+    131▕
+
+  1   tests/Types/DegradedContentTest.php:127
+
+
+  Tests:    1 failed (2 assertions)
+  Duration: 0.62s
+

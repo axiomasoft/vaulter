@@ -12,7 +12,8 @@ use Vaulter\Models\Drive\Node;
  * the document's working state. An autosave checkpoint follows on its own interval.
  * expectedStateVersion is the content precondition (412 document_state_mismatch).
  * yjsState carries the optional binary Yjs CRDT update (the M4b realtime source of
- * truth). content is already decoded by the document's type, in $schemaVersion.
+ * truth). content is already decoded by the document's type; it is written in that
+ * type's schema version.
  */
 final readonly class UpdateDocumentContentInput
 {
@@ -21,6 +22,5 @@ final readonly class UpdateDocumentContentInput
         public DocumentContent $content,
         public ?string $yjsState = null,
         public ?int $expectedStateVersion = null,
-        public int $schemaVersion = 1,
     ) {}
 }

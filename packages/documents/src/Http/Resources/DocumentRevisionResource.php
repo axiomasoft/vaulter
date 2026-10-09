@@ -71,6 +71,7 @@ final class DocumentRevisionResource extends JsonResource
             // Checkpoints are written whole in one transaction; there is no other state.
             'status' => 'committed',
             'content_hash' => $revision->contentHash,
+            'state_version' => $revision->stateVersion,
             'yjs_state_size' => $revision->yjsStateSize,
             'created_by' => $revision->createdBy,
             'created_at' => SnapshotValue::iso($revision->createdAt),
@@ -96,6 +97,8 @@ final class DocumentRevisionResource extends JsonResource
             'keep_forever' => !$ahead && $head !== null && $head->keepForever,
             'status' => 'committed',
             'content_hash' => $document->contentHash,
+            // Sent back as the autosave's state_version, it refuses a lost update (412).
+            'state_version' => $document->stateVersion,
             'yjs_state_size' => $document->yjsStateSize,
             'created_by' => $document->updatedBy,
             'created_at' => SnapshotValue::iso($document->updatedAt),

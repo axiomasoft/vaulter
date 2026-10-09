@@ -42,7 +42,11 @@ version. What a type is moved from an enum and file handlers to registered class
   application has booted. A published 0.2 config is normalized with a deprecation (`richtext`,
   `table`, `template` → `RichTextDocumentType`; `markdown` → `MarkdownDocumentType`;
   `spreadsheets = true` → `SpreadsheetDocumentType`). New `vaulter-documents.default_type`
-  (`vaulter/rich-text`) must be a registered key. The registry freezes once the application has
+  (`vaulter/rich-text`) must be a registered key. A legacy list without a rich-text format (say
+  `enabled_document_types => ['markdown']`) normalizes to `[MarkdownDocumentType::class]` only, and
+  boot then fails with `vaulter-documents.default_type "vaulter/rich-text" is not a registered
+  document type`: set `default_type` to a registered key (`vaulter/markdown`) or add `richtext` back
+  to the list. The registry freezes once the application has
   booted (`RegistryFrozenException`), a duplicate key throws `DuplicateDocumentTypeException`
   (override with `replace()`), and the `vaulter/` prefix is reserved.
 - **Removed** `Vaulter\Documents\Enums\Documents\DocumentType`, `Engines\Handlers\TipTapHandler`,

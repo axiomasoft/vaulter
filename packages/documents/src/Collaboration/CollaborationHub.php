@@ -6,10 +6,11 @@ namespace Vaulter\Documents\Collaboration;
 
 use Vaulter\Documents\Actions\Collaboration\PersistCollaborationStateAction;
 use Vaulter\Documents\Configuration\DocumentsConfig;
-use Vaulter\Documents\Content\TipTap\TipTapContent;
+use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Data\Collaboration\PersistCollaborationStateInput;
 use Vaulter\Documents\Data\Documents\DocumentStateResult;
 use Vaulter\Documents\Exceptions\NotADocumentException;
+use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
@@ -31,6 +32,8 @@ final readonly class CollaborationHub
         private NodeReadRepository $nodes,
         private DocumentsConfig $documentsConfig,
         private PersistCollaborationStateAction $persist,
+        private DocumentReadRepository $documents,
+        private ContentDecoder $decoder,
     ) {}
 
     /**
@@ -56,7 +59,20 @@ final readonly class CollaborationHub
         return $node;
     }
 
-    public function store(Node $node, string $yjsState, ?TipTapContent $content, int|string|null $actorId): DocumentStateResult
+    /**
+     * Whether a room on the node may write: the same rule as an autosave, so content
+     * this installation cannot save back is shared read-only. The store re-checks it on
+     * the locked row.
+     */
+    public function writable(Node $node): bool
+    {
+        $document = $this->documents->forNode($node);
+
+        return $document !== null && $this->decoder->editable($document);
+    }
+
+    /** @param array<string, mixed>|null $content the projection, decoded by the document's type */
+    public function store(Node $node, string $yjsState, ?array $content, int|string|null $actorId): DocumentStateResult
     {
         return $this->persist->execute(new PersistCollaborationStateInput(
             node: $node,

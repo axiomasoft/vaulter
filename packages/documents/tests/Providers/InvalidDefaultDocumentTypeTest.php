@@ -25,6 +25,15 @@ final class AcmeKanbanBootProvider extends ServiceProvider
     }
 }
 
+final class NotADocumentTypeTagProvider extends ServiceProvider
+{
+    public function register(): void
+    {
+        $this->app->bind('acme.not-a-document-type', static fn (): stdClass => new stdClass);
+        $this->app->tag(['acme.not-a-document-type'], 'vaulter.document_types');
+    }
+}
+
 /**
  * @param array<string, mixed> $config
  * @param list<class-string>   $before providers listed before the Vaulter providers
@@ -95,3 +104,8 @@ it('accepts a default type a provider registers in boot(), on either side of the
 
     expect($app->make(DocumentTypeRegistry::class)->get('acme/kanban'))->toBeInstanceOf(AcmeKanbanType::class);
 })->with(['before', 'after']);
+
+it('refuses to boot when the vaulter.document_types tag resolves to something that is not a type', function (): void {
+    expect(fn () => bootFreshDocumentsApplication([], before: [NotADocumentTypeTagProvider::class]))
+        ->toThrow(InvalidConfigurationException::class, 'Document type "stdClass" did not resolve to a');
+});

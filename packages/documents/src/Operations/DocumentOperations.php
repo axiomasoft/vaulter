@@ -154,14 +154,15 @@ final readonly class DocumentOperations
     public function updateContent(NodeSnapshot|string|int $document, array $content, ?string $yjsState = null, ?int $expectedStateVersion = null): DocumentSnapshot
     {
         $node = $this->document($document, Ability::Edit, OperationKind::Mutation);
-        $type = $this->editableType($node);
+        // Checked here so a degraded document answers before its payload is validated,
+        // and again on the locked row, where a racing restore can no longer slip in.
+        $type = $this->decoder->editableType($this->query->document($node));
 
         $this->update->execute($this->context, new UpdateDocumentContentInput(
             node: $node,
             content: $this->decoder->decode($type, $content),
             yjsState: $yjsState,
             expectedStateVersion: $expectedStateVersion,
-            schemaVersion: $type->schemaVersion(),
         ));
 
         return $this->current($node);
@@ -268,7 +269,7 @@ final readonly class DocumentOperations
         $flags = $this->guard->abilities($this->context, $node)->flags;
         $ability = match (true) {
             // Content that cannot be saved back is shared read-only.
-            ($flags[Ability::Edit->value] ?? false) && $this->contentWritable($node) => Ability::Edit,
+            ($flags[Ability::Edit->value] ?? false) && $this->decoder->editable($this->query->document($node)) => Ability::Edit,
             $flags[Ability::Comment->value] ?? false => Ability::Comment,
             default => Ability::View,
         };
@@ -300,31 +301,5 @@ final readonly class DocumentOperations
     private function installedType(Node $node): DocumentType
     {
         return $this->decoder->writable($this->query->document($node)->type);
-    }
-
-    /**
-     * The type of a document whose content may be replaced: installed, and the stored
-     * content reads without loss in a schema this installation writes.
-     *
-     * @throws DocumentTypeUnavailableException
-     * @throws DocumentContentDegradedException
-     */
-    private function editableType(Node $node): DocumentType
-    {
-        $type = $this->installedType($node);
-        if (!$this->contentWritable($node)) {
-            throw new DocumentContentDegradedException($type->key());
-        }
-
-        return $type;
-    }
-
-    private function contentWritable(Node $node): bool
-    {
-        $aggregate = $this->query->document($node);
-        $type = $this->decoder->type($aggregate->type);
-
-        return $this->decoder->schemaWritable($type, $aggregate->schema_version)
-            && $this->decoder->read($aggregate->type, $aggregate->content, $aggregate->schema_version)->lossless;
     }
 }

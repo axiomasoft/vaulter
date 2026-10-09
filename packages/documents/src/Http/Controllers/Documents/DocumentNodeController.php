@@ -91,6 +91,7 @@ final class DocumentNodeController extends Controller
             $this->key($node),
             $request->content(),
             $request->yjsState(),
+            $request->expectedStateVersion(),
         );
 
         // Autosave is an UPDATE of the working state (200) even when it also took a

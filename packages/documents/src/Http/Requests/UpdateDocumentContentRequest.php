@@ -15,7 +15,7 @@ use Vaulter\Models\Drive\Node;
  * document's type in DocumentOperations; this request only pins the TipTap
  * {"type":"doc"} root for a TipTap-based type, so the 0.x validation error keeps its
  * field. yjs_state is the optional base64-encoded binary Yjs update — decoded back to
- * raw bytes here.
+ * raw bytes here. state_version is the optional lost-update precondition.
  */
 final class UpdateDocumentContentRequest extends VaulterFormRequest
 {
@@ -29,6 +29,7 @@ final class UpdateDocumentContentRequest extends VaulterFormRequest
         $rules = [
             'content' => ['required', 'array'],
             'yjs_state' => ['nullable', 'string'],
+            'state_version' => ['nullable', 'integer', 'min:0'],
         ];
 
         if ($this->isTipTap()) {
@@ -46,6 +47,17 @@ final class UpdateDocumentContentRequest extends VaulterFormRequest
     public function content(): array
     {
         return $this->arrayInput('content');
+    }
+
+    /**
+     * The state_version the client last read, or null to save without the precondition.
+     */
+    public function expectedStateVersion(): ?int
+    {
+        $version = $this->input('state_version');
+
+        // Validated as a nonnegative integer: JSON sends an int, a form a digit string.
+        return is_int($version) || (is_string($version) && ctype_digit($version)) ? (int) $version : null;
     }
 
     /**

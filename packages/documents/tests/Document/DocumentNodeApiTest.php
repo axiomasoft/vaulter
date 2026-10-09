@@ -178,3 +178,30 @@ it('gates document creation through the profile driver', function (bool $allow):
     $this->postJson('api/vaulter/storages/'.$drive->id.'/documents', ['name' => 'profile-doc'])
         ->assertStatus($allow ? 201 : 403);
 })->with([true, false]);
+
+it('refuses a lost autosave when the client sends the state_version it read', function (): void {
+    $storage = documentStorage();
+    $nodeId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/documents', ['name' => 'Spec'])
+        ->assertCreated()
+        ->json('data.id');
+    $url = 'api/vaulter/nodes/'.$nodeId.'/content';
+    $read = $this->getJson($url)->assertOk()->json('data.state_version');
+    $doc = fn (string $text): array => ['type' => 'doc', 'content' => [['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => $text]]]]];
+
+    // Another tab saves first.
+    $this->patchJson($url, ['content' => $doc('other tab'), 'state_version' => $read])
+        ->assertOk()
+        ->assertJsonPath('data.state_version', $read + 1);
+
+    // The stale save is refused and changes nothing.
+    $this->patchJson($url, ['content' => $doc('stale tab'), 'state_version' => $read])
+        ->assertStatus(412)
+        ->assertJsonPath('code', 'document_state_mismatch');
+    $this->getJson($url)
+        ->assertJsonPath('data.state_version', $read + 1)
+        ->assertJsonPath('data.content.content.0.content.0.text', 'other tab');
+
+    // Without the field the autosave keeps its 0.x behaviour.
+    $this->patchJson($url, ['content' => $doc('no precondition')])->assertOk();
+    $this->patchJson($url, ['content' => $doc('negative'), 'state_version' => -1])->assertUnprocessable();
+});

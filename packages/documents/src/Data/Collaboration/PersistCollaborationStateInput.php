@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Data\Collaboration;
 
-use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Models\Drive\Node;
 
 /**
@@ -16,7 +15,8 @@ use Vaulter\Models\Drive\Node;
  *   - node     — the document node the snapshot belongs to (route/webhook resolved).
  *   - yjsState — the RAW DECODED binary Yjs state (bytea), already base64-decoded by
  *                the webhook controller. The source of truth.
- *   - content  — the optional TipTap JSON projection; null leaves the projection as it
+ *   - content  — the optional JSON projection as the hub sent it, decoded by the
+ *                document's type on the locked row; null leaves the projection as it
  *                was (the Yjs state still advances).
  *   - actorId  — the host user the hub attributes the snapshot to, when known.
  */
@@ -25,7 +25,8 @@ final readonly class PersistCollaborationStateInput
     public function __construct(
         public Node $node,
         public string $yjsState,
-        public ?TipTapContent $content = null,
+        /** @var array<string, mixed>|null */
+        public ?array $content = null,
         public int|string|null $actorId = null,
     ) {}
 }

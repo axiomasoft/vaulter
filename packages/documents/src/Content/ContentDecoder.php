@@ -9,8 +9,10 @@ use Vaulter\Documents\Content\TipTap\TipTapCodec;
 use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Documents\Contracts\DocumentType;
 use Vaulter\Documents\Contracts\UpgradesSchema;
+use Vaulter\Documents\Exceptions\DocumentContentDegradedException;
 use Vaulter\Documents\Exceptions\DocumentTypeUnavailableException;
 use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
+use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Documents\Types\UnknownDocumentType;
 
@@ -107,5 +109,36 @@ final readonly class ContentDecoder
     public function schemaWritable(DocumentType $type, int $schemaVersion): bool
     {
         return $schemaVersion <= $type->schemaVersion();
+    }
+
+    /**
+     * Whether the working state of $document may be replaced — by an autosave, the API
+     * or a collaboration room alike: its type is installed, it was written in a schema
+     * this installation writes, and it reads without loss. Saving anything else back
+     * would drop what this installation cannot represent.
+     */
+    public function editable(Document $document): bool
+    {
+        $type = $this->types->find($document->type);
+
+        return $type !== null
+            && $this->schemaWritable($type, $document->schema_version)
+            && $this->read($document->type, $document->content, $document->schema_version)->lossless;
+    }
+
+    /**
+     * The type of a document whose working state may be replaced (see editable()).
+     *
+     * @throws DocumentTypeUnavailableException
+     * @throws DocumentContentDegradedException
+     */
+    public function editableType(Document $document): DocumentType
+    {
+        $type = $this->writable($document->type);
+        if (!$this->editable($document)) {
+            throw new DocumentContentDegradedException($type->key());
+        }
+
+        return $type;
     }
 }

@@ -7,10 +7,18 @@ use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Collaboration\CollaborationCallResolver;
 use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Documents\Content\OpaqueContent;
+use Vaulter\Documents\Content\TipTap\TipTapContent;
+use Vaulter\Documents\Content\TipTap\TipTapSchema;
+use Vaulter\Documents\Contracts\DocumentContent;
 use Vaulter\Documents\Contracts\HostUserResolver;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Documents\Tests\Fixtures\Types\AcmeKanbanV2Type;
+use Vaulter\Documents\Tests\Types\TypesTestCase;
+use Vaulter\Documents\Types\MarkdownDocumentType;
+use Vaulter\Documents\Types\RichTextDocumentType;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -64,15 +72,22 @@ function signedHeaders(array $body, array $identityHeaders = [], ?int $timestamp
     ]);
 }
 
-function webhookDocumentNode(?string $level = RoleRegistry::WRITER, int $actorId = 1): Node
-{
+function webhookDocumentNode(
+    ?string $level = RoleRegistry::WRITER,
+    int $actorId = 1,
+    ?DocumentContent $content = null,
+    string $type = 'vaulter/rich-text',
+    int $schemaVersion = 1,
+): Node {
     $drive = DocumentTestHelpers::drive();
 
     $node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive->model()), new CreateDocumentInput(
         storage: $drive->model(),
         name: 'Spec',
-        content: DocumentTestHelpers::content('Draft'),
+        content: $content ?? DocumentTestHelpers::content('Draft'),
         parent: DriveTestHelpers::model($drive->root()),
+        type: $type,
+        schemaVersion: $schemaVersion,
     ));
 
     if ($level !== null) {
@@ -407,4 +422,106 @@ it('rejects an authenticate call with valid JWT identity but no signature (F-P1.
         'node_id' => $node->getKey(),
     ], ['Authorization' => 'Bearer '.roomJwt($node, readOnly: false, actorId: 1)])
         ->assertStatus(401);
+});
+
+// ── content this installation cannot save back (PLAN2.P4.3, Grok 4.7 review) ─────
+//
+// The hub takes readOnly from collab/authenticate and stores whatever the room holds,
+// so both hooks answer from the same rule as DocumentOperations::update(): a type that
+// is not installed, content written in a newer schema, or content the type reads only
+// partly is shown, never overwritten — not by the Yjs state, not by a projection.
+
+/** @return array<string, mixed> */
+function collabWidgetDocument(): array
+{
+    return ['type' => 'doc', 'content' => [
+        ['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'before']]],
+        ['type' => 'acmeWidget'],
+    ]];
+}
+
+function degradedWebhookNode(): Node
+{
+    config()->set('vaulter-documents.tiptap.extra_nodes', ['acmeWidget']);
+    $node = webhookDocumentNode(content: TipTapContent::fromArray(collabWidgetDocument()));
+    // The host switches the extension off: the widget no longer reads.
+    config()->set('vaulter-documents.tiptap.extra_nodes', []);
+
+    return $node;
+}
+
+dataset('unwritable collaboration documents', [
+    'degraded read' => [fn (): Node => degradedWebhookNode(), 'document_content_degraded'],
+    'newer schema' => [fn (): Node => webhookDocumentNode(schemaVersion: 2), 'document_content_degraded'],
+    'type not installed' => [fn (): Node => webhookDocumentNode(content: OpaqueContent::fromArray(['cells' => []]), type: 'acme/gone'), 'document_type_unavailable'],
+]);
+
+it('authenticates an editor read-only on content that cannot be saved back', function (Closure $node): void {
+    $node = $node();
+    $body = ['node_id' => $node->getKey(), 'user_id' => 1];
+
+    test()->postJson('api/vaulter/collab/authenticate', $body, signedHeaders($body, ['X-Vaulter-Collab-Secret' => WEBHOOK_SECRET]))
+        ->assertOk()
+        ->assertJsonPath('allowed', true)
+        ->assertJsonPath('readOnly', true);
+})->with('unwritable collaboration documents');
+
+it('refuses a store over content that cannot be saved back, with or without a projection', function (Closure $node, string $code): void {
+    $node = $node();
+    $before = Document::query()->where('node_id', $node->getKey())->firstOrFail();
+
+    $yjsOnly = ['node_id' => $node->getKey(), 'yjs_state' => base64_encode('room-without-widget')];
+    $withProjection = [...$yjsOnly, 'content' => ['type' => 'doc', 'content' => [
+        ['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'From hub']]],
+    ]]];
+
+    foreach ([$yjsOnly, $withProjection] as $body) {
+        test()->postJson('api/vaulter/collab/store', $body, signedHeaders($body, ['X-Vaulter-Collab-Secret' => WEBHOOK_SECRET]))
+            ->assertStatus(409)
+            ->assertJsonPath('code', $code);
+    }
+
+    $after = Document::query()->where('node_id', $node->getKey())->firstOrFail();
+    expect($after->content)->toBe($before->content)
+        ->and($after->yjs_state)->toBeNull()
+        ->and($after->schema_version)->toBe($before->schema_version)
+        ->and($after->state_version)->toBe($before->state_version);
+})->with('unwritable collaboration documents');
+
+it('keeps the stored schema version on a Yjs-only store and writes the type\'s with a projection', function (int $stored): void {
+    TypesTestCase::installTypes([RichTextDocumentType::class, MarkdownDocumentType::class, AcmeKanbanV2Type::class]);
+    $node = webhookDocumentNode(content: OpaqueContent::fromArray(['columns' => []]), type: 'acme/kanban', schemaVersion: $stored);
+    $schema = fn (): int => Document::query()->where('node_id', $node->getKey())->firstOrFail()->schema_version;
+
+    // The JSON is untouched, so it stays in the schema it was written in.
+    $yjsOnly = ['node_id' => $node->getKey(), 'yjs_state' => base64_encode('board-room')];
+    test()->postJson('api/vaulter/collab/store', $yjsOnly, signedHeaders($yjsOnly, ['X-Vaulter-Collab-Secret' => WEBHOOK_SECRET]))
+        ->assertOk();
+    expect($schema())->toBe($stored);
+
+    // A projection is decoded by the installed type and written in its schema.
+    $projected = [...$yjsOnly, 'yjs_state' => base64_encode('board-room-2'), 'content' => ['columns' => [['title' => 'Todo', 'items' => []]]]];
+    test()->postJson('api/vaulter/collab/store', $projected, signedHeaders($projected, ['X-Vaulter-Collab-Secret' => WEBHOOK_SECRET]))
+        ->assertOk();
+    expect($schema())->toBe(2)
+        ->and(Document::query()->where('node_id', $node->getKey())->firstOrFail()->content)
+        ->toBe(['columns' => [['title' => 'Todo', 'items' => []]]]);
+})->with(['older schema' => 1, 'current schema' => 2]);
+
+it('decodes a store projection with the document type\'s own schema', function (): void {
+    $empty = ['type' => 'doc', 'content' => []];
+    $node = webhookDocumentNode(content: TipTapContent::fromArray($empty, TipTapSchema::markdown()), type: 'vaulter/markdown');
+
+    // A table is rich text, not markdown: storing it would leave the document degraded.
+    $body = ['node_id' => $node->getKey(), 'yjs_state' => base64_encode('markdown-room'), 'content' => ['type' => 'doc', 'content' => [
+        ['type' => 'table', 'content' => [['type' => 'tableRow', 'content' => [['type' => 'tableCell']]]]],
+    ]]];
+
+    test()->postJson('api/vaulter/collab/store', $body, signedHeaders($body, ['X-Vaulter-Collab-Secret' => WEBHOOK_SECRET]))
+        ->assertStatus(422)
+        ->assertJsonPath('code', 'invalid_document_content');
+
+    $state = Document::query()->where('node_id', $node->getKey())->firstOrFail();
+    expect($state->content)->toBe($empty)
+        ->and($state->yjs_state)->toBeNull();
 });

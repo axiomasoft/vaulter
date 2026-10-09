@@ -93,6 +93,16 @@ final class InvalidDocumentContentException extends VaulterException implements 
         );
     }
 
+    public static function malformedNode(string $nodeType, string $field): self
+    {
+        return new self(
+            sprintf('[Vaulter] Invalid TipTap content: field "%s" of node "%s" is not TipTap JSON. ', $field, $nodeType)
+            .'Why: a node carries only type, attrs (an object), marks and content, or a string text on a text node; anything else would be lost on the next read. '
+            .'Fix: send the editor\'s getJSON() output unchanged. '
+            .'Docs: '.self::docs('invalid-tiptap-content'),
+        );
+    }
+
     public static function disallowedUrlScheme(string $href): self
     {
         return new self(

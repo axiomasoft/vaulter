@@ -72,9 +72,11 @@ final class VaulterDocumentsServiceProvider extends PackageServiceProvider
             $types->register($class);
         }
         foreach ($this->app->tagged('vaulter.document_types') as $type) {
-            if ($type instanceof DocumentType || is_string($type)) {
-                $types->register($type);
+            // Refused like a class name that does not resolve to a type, never skipped.
+            if (!$type instanceof DocumentType && !is_string($type)) {
+                throw new InvalidConfigurationException(sprintf('[Vaulter] Document type "%s" did not resolve to a %s.', get_debug_type($type), DocumentType::class));
             }
+            $types->register($type);
         }
 
         $this->app->booted(static function () use ($types, $config): void {

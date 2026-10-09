@@ -81,9 +81,9 @@ it('checkpoints by interval: none inside it, an autosave one after it', function
     config()->set('vaulter-documents.revisions.checkpoint_interval_seconds', 60);
     $node = writerDocument();
 
-    $inside = writeState($node, new DocumentStateChange(cause: StateWriteCause::Update, content: DocumentTestHelpers::content('inside')));
+    $inside = writeState($node, new DocumentStateChange(cause: StateWriteCause::Update, schemaVersion: 1, content: DocumentTestHelpers::content('inside')));
     $this->travel(61)->seconds();
-    $after = writeState($node, new DocumentStateChange(cause: StateWriteCause::Update, content: DocumentTestHelpers::content('after')));
+    $after = writeState($node, new DocumentStateChange(cause: StateWriteCause::Update, schemaVersion: 1, content: DocumentTestHelpers::content('after')));
 
     expect($inside->checkpoint)->toBeNull()
         ->and($after->checkpoint?->is_autosave)->toBeTrue()
@@ -113,9 +113,10 @@ it('moves the epoch for restore and for a JSON replace of Yjs state, never for c
     $node = writerDocument();
     $source = DocumentTestHelpers::head($node);
 
-    $collab = writeState($node, new DocumentStateChange(cause: StateWriteCause::Collaboration, content: null, yjsState: "room\0state"));
+    $collab = writeState($node, new DocumentStateChange(cause: StateWriteCause::Collaboration, schemaVersion: 1, content: null, yjsState: "room\0state"));
     $restore = writeState($node, new DocumentStateChange(
         cause: StateWriteCause::Restore,
+        schemaVersion: 1,
         content: DocumentTestHelpers::content('v1'),
         yjsState: null,
         forceCheckpoint: true,
@@ -133,10 +134,10 @@ it('moves the epoch for restore and for a JSON replace of Yjs state, never for c
 it('prunes after a checkpoint with the head and pinned checkpoints kept', function (): void {
     config()->set('vaulter-documents.revisions.limit', 1);
     $node = writerDocument();
-    $pinned = writeState($node, new DocumentStateChange(cause: StateWriteCause::Update, content: DocumentTestHelpers::content('pin'), forceCheckpoint: true, keepForever: true))->checkpoint;
+    $pinned = writeState($node, new DocumentStateChange(cause: StateWriteCause::Update, schemaVersion: 1, content: DocumentTestHelpers::content('pin'), forceCheckpoint: true, keepForever: true))->checkpoint;
 
     foreach (['a', 'b', 'c'] as $text) {
-        writeState($node, new DocumentStateChange(cause: StateWriteCause::Update, content: DocumentTestHelpers::content($text), forceCheckpoint: true));
+        writeState($node, new DocumentStateChange(cause: StateWriteCause::Update, schemaVersion: 1, content: DocumentTestHelpers::content($text), forceCheckpoint: true));
     }
 
     $numbers = DocumentTestHelpers::revisions($node)->pluck('number')->all();
@@ -148,7 +149,7 @@ it('stamps the node change but never its sequence', function (): void {
     $node = writerDocument();
     $sequence = $node->refresh()->sequence;
 
-    writeState($node, new DocumentStateChange(cause: StateWriteCause::Update, content: DocumentTestHelpers::content('touch'), actorId: 9));
+    writeState($node, new DocumentStateChange(cause: StateWriteCause::Update, schemaVersion: 1, content: DocumentTestHelpers::content('touch'), actorId: 9));
 
     expect($node->refresh()->sequence)->toBe($sequence)
         ->and((string) $node->updated_by)->toBe('9');
@@ -158,7 +159,7 @@ it('copies the tenant of the aggregate onto its checkpoints', function (): void 
     $node = writerDocument();
     Document::query()->where('node_id', $node->id)->update(['tenant_id' => 'tenant-a']);
 
-    $checkpoint = writeState($node, new DocumentStateChange(cause: StateWriteCause::Update, content: DocumentTestHelpers::content('t'), forceCheckpoint: true))->checkpoint;
+    $checkpoint = writeState($node, new DocumentStateChange(cause: StateWriteCause::Update, schemaVersion: 1, content: DocumentTestHelpers::content('t'), forceCheckpoint: true))->checkpoint;
 
     expect((string) $checkpoint?->tenant_id)->toBe('tenant-a');
 });

@@ -331,7 +331,9 @@ See [Usage → Versions](/guide/documents).
 The 0.2 keys are normalized with a deprecation: `vaulter.enabled_document_types`
 (`richtext`/`table`/`template` → `RichTextDocumentType`, `markdown` → `MarkdownDocumentType`)
 and `vaulter.features.spreadsheets = true` (adds `SpreadsheetDocumentType`) become
-`vaulter-documents.types`.
+`vaulter-documents.types`. The mapped list replaces the default one, so a list without a rich-text
+format (`['markdown']`) leaves `vaulter/rich-text` unregistered and the application refuses to boot
+until `vaulter-documents.default_type` names a registered type (`vaulter/markdown`).
 
 ## Export formats — `vaulter-documents.exporters`
 

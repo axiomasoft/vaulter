@@ -143,7 +143,7 @@ it('counts Yjs and projection changes while an identical Yjs state is a no-op', 
     $action->execute(new PersistCollaborationStateInput(
         node: $node,
         yjsState: "second\0state",
-        content: DocumentTestHelpers::content('projection changed'),
+        content: DocumentTestHelpers::content('projection changed')->toArray(),
     ));
     $document = DocumentTestHelpers::document($node);
     expect($document->state_version)->toBe(4)
@@ -175,6 +175,7 @@ it('fences a write from an old collaboration epoch before anything is written', 
         $document = Document::query()->where('node_id', $node->id)->lockForUpdate()->firstOrFail();
         app(DocumentStateWriter::class)->write($document, new DocumentStateChange(
             cause: StateWriteCause::Collaboration,
+            schemaVersion: 1,
             content: null,
             yjsState: "stale\0room",
             expectedEpoch: 5,

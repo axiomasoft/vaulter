@@ -305,7 +305,9 @@ php artisan vendor:publish --tag=vaulter-config
 Ключи 0.2 нормализуются с предупреждением об устаревании: `vaulter.enabled_document_types`
 (`richtext`/`table`/`template` → `RichTextDocumentType`, `markdown` → `MarkdownDocumentType`)
 и `vaulter.features.spreadsheets = true` (добавляет `SpreadsheetDocumentType`) превращаются в
-`vaulter-documents.types`.
+`vaulter-documents.types`. Перенесённый список заменяет список по умолчанию, поэтому без формата
+rich text (`['markdown']`) тип `vaulter/rich-text` не зарегистрирован, и приложение не загрузится,
+пока `vaulter-documents.default_type` не назовёт зарегистрированный тип (`vaulter/markdown`).
 
 ## Форматы экспорта — `vaulter-documents.exporters`
 

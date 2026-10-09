@@ -3,6 +3,9 @@
 declare(strict_types=1);
 
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
+use Vaulter\Documents\Content\TipTap\TipTapContent;
+use Vaulter\Documents\Data\Documents\UpdateDocumentContentInput;
 use Vaulter\Documents\Exceptions\DocumentContentDegradedException;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Documents\Document;
@@ -11,6 +14,7 @@ use Vaulter\Documents\Tests\Fixtures\Types\AcmeKanbanV2Type;
 use Vaulter\Documents\Tests\Types\TypesTestCase;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
+use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Fixtures\TestUser;
 
 /**
@@ -100,4 +104,48 @@ it('upgrades an older schema on read without rewriting the stored content', func
     $saved = $documents->update($node->id, $read->content->toArray());
     expect($saved->schemaVersion)->toBe(2)
         ->and(Document::query()->where('node_id', $node->id)->firstOrFail()->schema_version)->toBe(2);
+});
+
+it('re-checks the working state on the locked row, so a racing restore of degraded content survives the save', function (): void {
+    config()->set('vaulter-documents.tiptap.extra_nodes', ['acmeWidget']);
+    $handle = DocumentTestHelpers::drive();
+    $documents = Documents::in($handle);
+    $created = $documents->create('Spec', content: widgetDocument());
+    $withWidget = $documents->revisions($created->id)->items[0];
+    $documents->update($created->id, ['type' => 'doc', 'content' => []]);
+    config()->set('vaulter-documents.tiptap.extra_nodes', []);
+
+    // An autosave checks the plain working state and is admitted; before it locks the
+    // row, a restore of the checkpoint holding the widget commits.
+    expect($documents->content($created->id)->editable)->toBeTrue();
+    $documents->restore($created->id, $withWidget);
+    $node = Node::query()->findOrFail($created->id);
+
+    expect(fn () => app(UpdateDocumentContentAction::class)->execute(DocumentTestHelpers::context($node), new UpdateDocumentContentInput(
+        node: $node,
+        content: TipTapContent::fromArray(['type' => 'doc', 'content' => []]),
+    )))->toThrow(DocumentContentDegradedException::class);
+
+    expect(Document::query()->where('node_id', $created->id)->firstOrFail()->content)->toBe(widgetDocument());
+});
+
+it('reads fields a TipTap node does not carry as degraded, and keeps marks on any node', function (): void {
+    $handle = DocumentTestHelpers::drive();
+    $documents = Documents::in($handle);
+    $node = $documents->create('Spec');
+    $stored = ['type' => 'doc', 'attrs' => ['meta' => 'x'], 'content' => [
+        ['type' => 'paragraph', 'marks' => [['type' => 'bold']], 'content' => [['type' => 'text', 'text' => ['keep' => 'me']]]],
+    ]];
+    app(VaulterDatabase::class)->write(fn () => Document::query()->where('node_id', $node->id)->update(['content' => json_encode($stored)]));
+
+    expect($documents->content($node->id)->editable)->toBeFalse();
+    expect(fn () => $documents->update($node->id, ['type' => 'doc', 'content' => []]))->toThrow(DocumentContentDegradedException::class);
+    expect(Document::query()->where('node_id', $node->id)->firstOrFail()->content)->toBe($stored);
+
+    // Marks on a block node are TipTap JSON: they survive the read→save circle.
+    $marked = ['type' => 'doc', 'content' => [['type' => 'paragraph', 'marks' => [['type' => 'bold']], 'content' => [['type' => 'text', 'text' => 'kept']]]]];
+    app(VaulterDatabase::class)->write(fn () => Document::query()->where('node_id', $node->id)->update(['content' => json_encode($marked)]));
+    $read = $documents->content($node->id);
+    expect($read->editable)->toBeTrue()
+        ->and($documents->update($node->id, $read->content->toArray())->content->toArray())->toBe($marked);
 });

@@ -227,7 +227,9 @@ production boot fails otherwise; development and testing log a warning.
 `vaulter.features.spreadsheets` become the list of [document type](/guide/document-types)
 classes `vaulter-documents.types` (`richtext`/`table`/`template` → `RichTextDocumentType`,
 `markdown` → `MarkdownDocumentType`, `spreadsheets = true` → `SpreadsheetDocumentType`), with a
-deprecation.
+deprecation. A list without a rich-text format (`['markdown']`) leaves the default
+`vaulter-documents.default_type` (`vaulter/rich-text`) unregistered, and boot fails until you set it
+to a registered key such as `vaulter/markdown`.
 See [Collaboration](/guide/collaboration) and [Export](/guide/export).
 
 ## Typed access

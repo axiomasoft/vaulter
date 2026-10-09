@@ -1,0 +1,38 @@
+# NC6 GREEN after byte-exact restore (md5 3e027cd0ce39c4a6c53f4e0d2cafdcb8)
+# exit 0
+
+   PASS  Tests\Collaboration\CollaborationWebhookTest
+  ✓ it persists the yjs snapshot with the shared secret (bytea round-tr… 0.53s  
+  ✓ it persists a yjs snapshot WITHOUT a projection, leaving Yjs the so… 0.21s  
+  ✓ it rejects a store call with no secret and no JWT                    0.20s  
+  ✓ it rejects a store call with the wrong secret                        0.20s  
+  ✓ it accepts a store call authenticated by a writable room JWT         0.21s  
+  ✓ it rejects a store call driven by a READ-ONLY room JWT               0.22s  
+  ✓ it forbids a JWT minted for node A from storing to node B (room bou… 0.25s  
+  ✓ it rejects a store call with a tampered JWT                          0.20s  
+  ✓ it resolves the node when the hub sends node_id EQUAL to the room n… 0.21s  
+  ✓ it rejects a store call with valid secret identity but NO signature… 0.20s  
+  ✓ it rejects a store call with a signature whose timestamp is outside… 0.21s  
+  ✓ it rejects a replayed signature (same nonce twice)                   0.22s  
+  ✓ it rejects a store call whose signature was computed over a DIFFERE… 0.20s  
+  ✓ it does not burn the nonce for a REJECTED tampered delivery, so the… 0.22s  
+  ✓ it authenticates a good room JWT and answers allowed + readOnly fro… 0.21s  
+  ✓ it authenticates when the hub sends node_id EQUAL to the room name…  0.21s  
+  ✓ it answers readOnly=true when the user is only a commenter           0.21s  
+  ✓ it answers allowed=false when the user has no access to the node     0.22s  
+  ✓ it rejects an expired JWT on authenticate                            0.21s  
+  ✓ it authenticates a shared-secret call carrying the user out of band  0.21s  
+  ✓ it rejects an authenticate call with valid JWT identity but no sign… 0.21s  
+  ✓ it authenticates an editor read-only on content that cannot be save… 0.21s  
+  ✓ it authenticates an editor read-only on content that cannot be save… 0.21s  
+  ✓ it authenticates an editor read-only on content that cannot be save… 0.21s  
+  ✓ it refuses a store over content that cannot be saved back, with or…  0.22s  
+  ✓ it refuses a store over content that cannot be saved back, with or…  0.23s  
+  ✓ it refuses a store over content that cannot be saved back, with or…  0.21s  
+  ✓ it keeps the stored schema version on a Yjs-only store and writes t… 0.23s  
+  ✓ it keeps the stored schema version on a Yjs-only store and writes t… 0.22s  
+  ✓ it decodes a store projection with the document type's own schema    0.22s  
+
+  Tests:    30 passed (92 assertions)
+  Duration: 6.87s
+

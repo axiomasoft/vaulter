@@ -6,13 +6,16 @@ namespace Vaulter\Documents\Actions\Collaboration;
 
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Content\DocumentStateWriter;
 use Vaulter\Documents\Data\Collaboration\PersistCollaborationStateInput;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
 use Vaulter\Documents\Data\Documents\DocumentStateResult;
 use Vaulter\Documents\Enums\Documents\StateWriteCause;
 use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
+use Vaulter\Documents\Exceptions\DocumentContentDegradedException;
+use Vaulter\Documents\Exceptions\DocumentTypeUnavailableException;
+use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
@@ -26,6 +29,12 @@ use Vaulter\Support\TreeGuard;
  * the DERIVED projection (we never reconstruct Yjs from JSON — when the hub omits the
  * projection, the current projection stays and only the Yjs state advances).
  *
+ * A room may only write what the autosave path may: on the locked row, a type that is
+ * not installed, content written in a newer schema, or content its type reads only
+ * partly refuses the whole store (neither Yjs nor JSON changes). The projection is
+ * decoded by the document's type, with its size limit; without one, the JSON keeps
+ * the schema version it was written in.
+ *
  * An identical snapshot is a no-op. Checkpoints follow the same interval as the
  * autosave path. One outer transaction under T → N → D locks; a single after-commit
  * DocumentContentUpdated event integrates with the activity/outbox subscribers.
@@ -37,18 +46,18 @@ final readonly class PersistCollaborationStateAction
         private DocumentStateWriter $writer,
         private MetricsRecorder $metrics,
         private VaulterDatabase $database,
-        private DocumentsConfig $documentsConfig,
         private TreeGuard $tree,
+        private ContentDecoder $decoder,
     ) {}
 
+    /**
+     * @throws DocumentTypeUnavailableException
+     * @throws DocumentContentDegradedException
+     * @throws InvalidDocumentContentException  when the type rejects the projection or it is too large
+     */
     public function execute(PersistCollaborationStateInput $data): DocumentStateResult
     {
         $node = $data->node;
-
-        // F-P1.11-05: the ADR-0004 size limit was defined but never enforced at save
-        // time. The Yjs binary state is the source of truth and is unbounded here by
-        // design (§7); only the optional TipTap JSON projection is size-checked.
-        $data->content?->ensureWithin($this->documentsConfig->maxContentSizeKb());
 
         return $this->metrics->timing(
             name: 'vaulter_collab_snapshot_duration_seconds',
@@ -70,10 +79,15 @@ final readonly class PersistCollaborationStateAction
                 $node = $this->tree->sync($node, $current);
                 $document = $this->documents->lockForNode($node) ?? throw NotADocumentException::forNode($nodeId);
                 $document->setRelation('node', $node);
+                $type = $this->decoder->editableType($document);
+                // The Yjs state is the source of truth and is unbounded here by design
+                // (§7); only the projection is decoded and size-checked.
+                $content = $data->content === null ? null : $this->decoder->decode($type, $data->content);
 
                 $result = $this->writer->write($document, new DocumentStateChange(
                     cause: StateWriteCause::Collaboration,
-                    content: $data->content,
+                    content: $content,
+                    schemaVersion: $content === null ? $document->schema_version : $type->schemaVersion(),
                     yjsState: $data->yjsState,
                     actorId: $data->actorId,
                 ));

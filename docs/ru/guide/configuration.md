@@ -229,7 +229,10 @@ CAS-бакет должен быть без версионирования: уд
 `vaulter.features.spreadsheets` превращаются в список классов
 [типов документов](/ru/guide/document-types) `vaulter-documents.types`
 (`richtext`/`table`/`template` → `RichTextDocumentType`, `markdown` → `MarkdownDocumentType`,
-`spreadsheets = true` → `SpreadsheetDocumentType`) с предупреждением об устаревании.
+`spreadsheets = true` → `SpreadsheetDocumentType`) с предупреждением об устаревании. Если в
+списке нет формата rich text (`['markdown']`), значение по умолчанию
+`vaulter-documents.default_type` (`vaulter/rich-text`) не зарегистрировано, и загрузка падает, пока
+не задан зарегистрированный ключ, например `vaulter/markdown`.
 См. [Совместное редактирование](/ru/guide/collaboration) и [Экспорт](/ru/guide/export).
 
 ## Типизированный доступ

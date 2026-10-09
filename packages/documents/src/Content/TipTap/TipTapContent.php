@@ -16,8 +16,9 @@ use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
  * WRITE and READ are deliberately DIFFERENT contracts:
  *
  *  - {@see fromArray()} — STORE time. Strict, fail-closed: an unknown node/mark, an
- *    attribute outside the allow-list, or a disallowed `href`/`src` scheme REJECTS the
- *    whole document. Garbage never enters the store.
+ *    attribute outside the allow-list, a field that is not part of a TipTap node, or a
+ *    disallowed `href`/`src` scheme REJECTS the whole document. Garbage never enters the
+ *    store, and whatever it accepts reads back without loss.
  *  - {@see decayFrom()} / {@see decayReporting()} — READ time. Lenient: unknown
  *    nodes/marks/attribute KEYS are STRIPPED and a valid doc always comes back (never
  *    throws). One legacy snapshot must not take down preview, export and the whole
@@ -52,7 +53,7 @@ final readonly class TipTapContent implements DocumentContent
             throw InvalidDocumentContentException::missingDocNode();
         }
 
-        self::validateChildren($schema ?? TipTapSchema::richText(), $doc['content'] ?? null);
+        self::validateNode($schema ?? TipTapSchema::richText(), $doc);
 
         return new self($doc);
     }
@@ -83,9 +84,10 @@ final readonly class TipTapContent implements DocumentContent
 
     /**
      * {@see decayFrom()}, plus whether the result kept everything the stored document
-     * meant: false as soon as a node, a mark, an attribute key or a malformed entry was
-     * dropped (or the root was not a doc at all). Normalisations that lose nothing —
-     * an empty attrs bag, a text node without text — do not count.
+     * meant: false as soon as a node, a mark, an attribute key, a field that is not part
+     * of a TipTap node or a malformed entry was dropped (or the root was not a doc at
+     * all). Normalisations that lose nothing — an empty attrs bag, a text node without
+     * text — do not count.
      *
      * @param  array<string, mixed>    $doc
      * @return array{0: self, 1: bool}
@@ -97,12 +99,10 @@ final readonly class TipTapContent implements DocumentContent
         }
 
         $lossless = true;
-        $decayed = new self([
-            'type' => 'doc',
-            'content' => self::decayChildren($schema ?? TipTapSchema::richText(), $doc['content'] ?? null, $lossless),
-        ]);
+        $root = self::decayNode($schema ?? TipTapSchema::richText(), $doc, $lossless) ?? ['type' => 'doc'];
+        $root['content'] ??= [];
 
-        return [$decayed, $lossless];
+        return [new self($root), $lossless];
     }
 
     public static function empty(): self
@@ -205,6 +205,25 @@ final readonly class TipTapContent implements DocumentContent
         return $this;
     }
 
+    // ─── The shape of a node, shared by both paths ───────────────────────────
+
+    /**
+     * The fields a TipTap node of $type carries. Marks may sit on any node, as in
+     * ProseMirror JSON: an inline node inherits the marks around it.
+     *
+     * @return list<string>
+     */
+    private static function nodeFields(string $type): array
+    {
+        return $type === 'text' ? ['type', 'attrs', 'marks', 'text'] : ['type', 'attrs', 'marks', 'content'];
+    }
+
+    /** A value that means nothing (null, [] or ''), so dropping it loses nothing. */
+    private static function blank(mixed $value): bool
+    {
+        return $value === null || $value === [] || $value === '';
+    }
+
     // ─── Store time: strict ──────────────────────────────────────────────────
 
     /**
@@ -243,10 +262,19 @@ final readonly class TipTapContent implements DocumentContent
             throw InvalidDocumentContentException::unknownNodeType(is_string($type) ? $type : '(missing)');
         }
 
+        foreach ($node as $field => $value) {
+            if (!in_array($field, self::nodeFields($type), true) && !self::blank($value)) {
+                throw InvalidDocumentContentException::malformedNode($type, (string) $field);
+            }
+        }
+
         self::validateAttributes($schema, $type, $node['attrs'] ?? null);
+        self::validateMarks($schema, $node['marks'] ?? null);
 
         if ($type === 'text') {
-            self::validateMarks($schema, $node['marks'] ?? null);
+            if (!is_string($node['text'] ?? '')) {
+                throw InvalidDocumentContentException::malformedNode($type, 'text');
+            }
 
             return;
         }
@@ -300,6 +328,10 @@ final readonly class TipTapContent implements DocumentContent
      */
     private static function validateAttributes(TipTapSchema $schema, string $type, mixed $attrs): void
     {
+        if (!is_array($attrs) && !self::blank($attrs)) {
+            throw InvalidDocumentContentException::malformedNode($type, 'attrs');
+        }
+
         $attributes = is_array($attrs) ? $attrs : [];
         $allowed = $schema->attributes($type);
 
@@ -409,6 +441,12 @@ final readonly class TipTapContent implements DocumentContent
             return null;
         }
 
+        foreach ($node as $field => $value) {
+            if (!in_array($field, self::nodeFields($type), true) && !self::blank($value)) {
+                $lossless = false;
+            }
+        }
+
         $decayed = ['type' => $type];
 
         $attrs = self::decayAttributes($schema, $type, $node['attrs'] ?? null, $lossless);
@@ -418,18 +456,20 @@ final readonly class TipTapContent implements DocumentContent
         }
 
         if ($type === 'text') {
-            $decayed['text'] = is_string($node['text'] ?? null) ? $node['text'] : '';
-
-            $marks = self::decayMarks($schema, $node['marks'] ?? null, $lossless);
-
-            if ($marks !== []) {
-                $decayed['marks'] = $marks;
+            $text = $node['text'] ?? null;
+            if (!is_string($text) && $text !== null) {
+                $lossless = false;
             }
-
-            return $decayed;
+            $decayed['text'] = is_string($text) ? $text : '';
         }
 
-        if (array_key_exists('content', $node)) {
+        $marks = self::decayMarks($schema, $node['marks'] ?? null, $lossless);
+
+        if ($marks !== []) {
+            $decayed['marks'] = $marks;
+        }
+
+        if ($type !== 'text' && array_key_exists('content', $node)) {
             $decayed['content'] = self::decayChildren($schema, $node['content'], $lossless);
         }
 
@@ -609,6 +649,10 @@ final readonly class TipTapContent implements DocumentContent
     private static function decayAttributes(TipTapSchema $schema, string $type, mixed $attrs, bool &$lossless): array
     {
         if (!is_array($attrs)) {
+            if (!self::blank($attrs)) {
+                $lossless = false;
+            }
+
             return [];
         }
 

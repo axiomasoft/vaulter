@@ -1,0 +1,46 @@
+# NC7 RED
+# break: src/Actions/Collaboration/PersistCollaborationStateAction.php: 'schemaVersion: $content === null ? $document->schema_version : $type->schemaVersion(),' -> 'schemaVersion: 1,'
+# cmd (cwd packages/documents): env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Collaboration/CollaborationWebhookTest.php --filter=schema version
+# exit 1
+
+   FAIL  Tests\Collaboration\CollaborationWebhookTest
+  ⨯ it keeps the stored schema version on a Yjs-only store and writes t… 0.52s  
+  ⨯ it keeps the stored schema version on a Yjs-only store and writes t… 0.21s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Collaboration\CollaborationWebhookTest > it keeps the store…   
+  Failed asserting that 1 is identical to 2.
+
+  at tests/Collaboration/CollaborationWebhookTest.php:506
+    502▕     // A projection is decoded by the installed type and written in its schema.
+    503▕     $projected = [...$yjsOnly, 'yjs_state' => base64_encode('board-room-2'), 'content' => ['columns' => [['title' => 'Todo', 'items' => []]]]];
+    504▕     test()->postJson('api/vaulter/collab/store', $projected, signedHeaders($projected, ['X-Vaulter-Collab-Secret' => WEBHOOK_SECRET]))
+    505▕         ->assertOk();
+  ➜ 506▕     expect($schema())->toBe(2)
+    507▕         ->and(Document::query()->where('node_id', $node->getKey())->firstOrFail()->content)
+    508▕         ->toBe(['columns' => [['title' => 'Todo', 'items' => []]]]);
+    509▕ })->with(['older schema' => 1, 'current schema' => 2]);
+    510▕
+
+  1   tests/Collaboration/CollaborationWebhookTest.php:506
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Collaboration\CollaborationWebhookTest > it keeps the store…   
+  Failed asserting that 1 is identical to 2.
+
+  at tests/Collaboration/CollaborationWebhookTest.php:500
+    496▕     // The JSON is untouched, so it stays in the schema it was written in.
+    497▕     $yjsOnly = ['node_id' => $node->getKey(), 'yjs_state' => base64_encode('board-room')];
+    498▕     test()->postJson('api/vaulter/collab/store', $yjsOnly, signedHeaders($yjsOnly, ['X-Vaulter-Collab-Secret' => WEBHOOK_SECRET]))
+    499▕         ->assertOk();
+  ➜ 500▕     expect($schema())->toBe($stored);
+    501▕ 
+    502▕     // A projection is decoded by the installed type and written in its schema.
+    503▕     $projected = [...$yjsOnly, 'yjs_state' => base64_encode('board-room-2'), 'content' => ['columns' => [['title' => 'Todo', 'items' => []]]]];
+    504▕     test()->postJson('api/vaulter/collab/store', $projected, signedHeaders($projected, ['X-Vaulter-Collab-Secret' => WEBHOOK_SECRET]))
+
+  1   tests/Collaboration/CollaborationWebhookTest.php:500
+
+
+  Tests:    2 failed (6 assertions)
+  Duration: 0.85s
+
