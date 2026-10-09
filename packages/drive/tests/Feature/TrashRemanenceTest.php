@@ -10,6 +10,8 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
+beforeEach(fn () => DriveTestHelpers::insideOperation());
+
 /**
  * Item-safety (P2.2 / F-P1.12-01): a node sitting in the drive trash (`trashed_at`)
  * must be unreadable through the identity download surface too, symmetric with the

@@ -14,6 +14,7 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Profiles\DrivePolicyEnforcer;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
+use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\TreeGuard;
 
 /**
@@ -36,6 +37,7 @@ final readonly class CreateFolderAction
         private TreeGuard $tree,
         private DrivePolicyEnforcer $policy,
         private NameConflictResolver $names,
+        private DriveLifecycle $lifecycle,
     ) {}
 
     public function execute(OperationContext $context, CreateFolderInput $data): Node
@@ -45,6 +47,7 @@ final readonly class CreateFolderAction
 
         return $this->database->transaction(function () use ($context, $data, $name, $parentId): Node {
             $this->database->lockTreeShared($data->storage->id);
+            $this->lifecycle->assertWritable($context);
 
             $parent = $this->tree->locked($this->tree->lock([$parentId]), $parentId);
             if (!$this->tree->sameStorage($parent, $data->storage->id)) {

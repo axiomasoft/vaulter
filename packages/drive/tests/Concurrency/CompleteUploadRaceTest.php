@@ -19,6 +19,9 @@ use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Tests\Concurrency\ForkRace;
+use Vaulter\Tests\Drive\DriveTestHelpers;
+
+beforeEach(fn () => DriveTestHelpers::insideOperation());
 
 beforeEach(function (): void {
     ForkRace::skipUnlessSupported($this);

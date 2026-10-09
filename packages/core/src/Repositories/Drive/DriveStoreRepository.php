@@ -6,6 +6,7 @@ namespace Vaulter\Repositories\Drive;
 
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Enums\Drive\DriveStatus;
 use Vaulter\Exceptions\Drive\QuotaExceededException;
 use Vaulter\Models\Drive\Drive;
 
@@ -51,6 +52,22 @@ final class DriveStoreRepository
                 incomingBytes: $delta,
             );
         }
+    }
+
+    /** The drive row, locked for the rest of the caller's transaction. */
+    public function lock(int|string $id): Drive
+    {
+        $model = $this->vaulterConfig->model('drive');
+
+        return $model::query()->whereKey($id)->lockForUpdate()->firstOrFail();
+    }
+
+    /** Lifecycle transition; the caller holds the row lock and has checked the source status. */
+    public function setStatus(Drive $drive, DriveStatus $status): Drive
+    {
+        $drive->forceFill(['status' => $status])->save();
+
+        return $drive;
     }
 
     /**

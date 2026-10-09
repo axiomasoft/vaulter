@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Access\Roles\RoleRegistry;
@@ -25,6 +26,7 @@ use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Content\ContentQuarantinedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Exceptions\Nodes\RestoreDestinationRequiredException;
 use Vaulter\Exceptions\Nodes\UnsupportedNodeKindException;
 use Vaulter\Exceptions\Registry\DuplicateNodeContentLifecycleException;
 use Vaulter\Facades\Vaulter;
@@ -227,8 +229,8 @@ it('empty completes later roots then rethrows the first original failure with fa
     $this->system->nodes()->trash($failed);
     $this->system->nodes()->trash($later);
     // Distinct timestamps guarantee the failed root is processed first.
-    app(VaulterDatabase::class)->write(fn () => DriveTestHelpers::model($failed)->forceFill(['trashed_at' => Carbon::now()->subDays(2)])->save());
-    app(VaulterDatabase::class)->write(fn () => DriveTestHelpers::model($later)->forceFill(['trashed_at' => Carbon::now()->subDay()])->save());
+    app(VaulterDatabase::class)->write(fn () => DriveTestHelpers::model($failed)->forceFill(['trashed_at' => Carbon::now()->subDays(2), 'trash_root_id' => $failed->id])->save());
+    app(VaulterDatabase::class)->write(fn () => DriveTestHelpers::model($later)->forceFill(['trashed_at' => Carbon::now()->subDay(), 'trash_root_id' => $later->id])->save());
     $failedRevision = DriveTestHelpers::model($failed)->file()->firstOrFail()->currentRevision()->firstOrFail();
     $failedEdges = lifecycleBoundaryEdges($failedRevision);
     $failure = new RuntimeException('first original failure');
@@ -266,8 +268,8 @@ it('retention purge reports a failed root exits one and still physically commits
     foreach ([$failed, $later] as $root) {
         $this->system->nodes()->trash($root);
     }
-    app(VaulterDatabase::class)->write(fn () => DriveTestHelpers::model($failed)->forceFill(['trashed_at' => Carbon::now()->subDays(42)])->save());
-    app(VaulterDatabase::class)->write(fn () => DriveTestHelpers::model($later)->forceFill(['trashed_at' => Carbon::now()->subDays(41)])->save());
+    app(VaulterDatabase::class)->write(fn () => DriveTestHelpers::model($failed)->forceFill(['trashed_at' => Carbon::now()->subDays(42), 'trash_root_id' => $failed->id])->save());
+    app(VaulterDatabase::class)->write(fn () => DriveTestHelpers::model($later)->forceFill(['trashed_at' => Carbon::now()->subDays(41), 'trash_root_id' => $later->id])->save());
     $failedRevision = DriveTestHelpers::model($failed)->file()->firstOrFail()->currentRevision()->firstOrFail();
     $edges = lifecycleBoundaryEdges($failedRevision);
     lifecycleBoundaryInjectFailure($failed, new RuntimeException('controlled retention failure'));
@@ -285,18 +287,17 @@ it('retention purge reports a failed root exits one and still physically commits
     ));
 });
 
-it('restores to the active original parent without Create and ignores an unused explicit destination', function (): void {
+it('restores to the active original parent without Create when no destination is given', function (): void {
     config()->set('vaulter.access.permission_driver', 'database');
     $user = AccessTestHelpers::user(83);
     $parent = $this->system->folders()->create('original');
     $source = $this->system->folders()->create('source', $parent);
-    $unused = $this->system->folders()->create('hidden unused destination');
     AccessTestHelpers::grant($parent, RoleRegistry::READER, scope: GrantScope::Item, subjectId: 83);
     AccessTestHelpers::grant($source, RoleRegistry::WRITER, scope: GrantScope::Item, subjectId: 83);
     $this->system->nodes()->trash($source);
     $actor = Vaulter::drive($this->system->model())->actingAs($user);
 
-    $restored = $actor->trash()->restore($source, new RestoreOptions(destination: $unused));
+    $restored = $actor->trash()->restore($source);
     expect($restored->parentId)->toBe($parent->id)->and($restored->sequence)->toBe(2);
 });
 
@@ -348,18 +349,14 @@ it('repeats public destination authorization when the original parent changes af
         }
         if ((string) $model->id === (string) $source->id && $parentReads >= 2) {
             $raced = true;
-            app(VaulterDatabase::class)->write(fn () => Node::query()->whereKey($parent->id)->update(['trashed_at' => Carbon::now()]));
+            app(VaulterDatabase::class)->write(fn () => Node::query()->whereKey($parent->id)->update(['trashed_at' => Carbon::now(), 'trash_root_id' => DB::raw('id')]));
         }
     });
     $actor = Vaulter::drive($this->system->model())->actingAs($user);
-    if ($allowFallback) {
-        expect($actor->trash()->restore($source)->parentId)->toBe((string) $root->id)
-            ->and(DriveTestHelpers::model($source)->sequence)->toBe(2);
-    } else {
-        expect(fn () => $actor->trash()->restore($source))->toThrow(PermissionDeniedException::class)
-            ->and(DriveTestHelpers::model($source)->trashed_at)->not->toBeNull()
-            ->and(DriveTestHelpers::model($source)->sequence)->toBe(1)
-            ->and(DriveTestHelpers::model($source)->parent_id)->toEqual($parent->id);
-    }
+    // The original parent was trashed after the precheck: the restore never falls back to the root.
+    expect(fn () => $actor->trash()->restore($source))->toThrow(RestoreDestinationRequiredException::class)
+        ->and(DriveTestHelpers::model($source)->trashed_at)->not->toBeNull()
+        ->and(DriveTestHelpers::model($source)->sequence)->toBe(1)
+        ->and(DriveTestHelpers::model($source)->parent_id)->toEqual($parent->id);
     expect($raced)->toBeTrue()->and(DriveTestHelpers::model($parent)->trashed_at)->not->toBeNull();
 })->with([false, true]);

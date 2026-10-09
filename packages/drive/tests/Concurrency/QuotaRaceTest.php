@@ -21,7 +21,7 @@ it('V02 admits exactly one 8 MiB upload into 10 MiB of free quota', function ():
     // Different parents prevent the destination lock from hiding a broken quota UPDATE.
     $parents = [$drive->folders()->create('A'), $drive->folders()->create('B')];
     $outcomes = ForkRace::run(array_map(
-        static fn (int $i): Closure => static fn (): string => (string) $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor(str_repeat((string) $i, 8 * 1024 * 1024)), $i.'.bin'), new UploadOptions(parent: $parents[$i]))->getKey(),
+        static fn (int $i): Closure => static fn (): string => (string) $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor(str_repeat((string) $i, 8 * 1024 * 1024)), $i.'.bin'), new UploadOptions(parent: $parents[$i]))->id,
         [0, 1],
     ));
     $won = array_values(array_filter($outcomes, static fn (RaceOutcome $o): bool => $o->ok));

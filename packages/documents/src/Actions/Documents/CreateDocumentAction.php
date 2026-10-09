@@ -25,6 +25,7 @@ use Vaulter\Operations\OperationContext;
 use Vaulter\Profiles\DrivePolicyEnforcer;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
+use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\Identity;
 use Vaulter\Support\NodeName;
 use Vaulter\Support\TreeGuard;
@@ -56,6 +57,7 @@ final readonly class CreateDocumentAction
         private TreeGuard $tree,
         private DocumentsConfig $documentsConfig,
         private DrivePolicyEnforcer $policy,
+        private DriveLifecycle $lifecycle,
     ) {}
 
     public function execute(OperationContext $context, CreateDocumentInput $data): Node
@@ -74,8 +76,9 @@ final readonly class CreateDocumentAction
             $data->content->ensureWithin($this->documentsConfig->maxContentSizeKb());
         }
 
-        return $this->database->transaction(function () use ($data, $name, $parentId, $actorId): Node {
+        return $this->database->transaction(function () use ($context, $data, $name, $parentId, $actorId): Node {
             $this->database->lockTreeShared($data->storage->id);
+            $this->lifecycle->assertWritable($context);
 
             $parent = $this->tree->locked($this->tree->lock([$parentId]), $parentId);
             if (!$this->tree->sameStorage($parent, $data->storage->id)) {

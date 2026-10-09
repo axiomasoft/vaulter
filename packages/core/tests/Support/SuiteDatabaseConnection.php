@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Tests\Support;
 
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Foundation\Application;
 use RuntimeException;
 
 /**
@@ -16,6 +18,30 @@ use RuntimeException;
  */
 final class SuiteDatabaseConnection
 {
+    /**
+     * Parallel workers share the Testbench skeleton, whose `storage/framework/testing/disks` is wiped by every
+     * `Storage::fake()`; a worker (TEST_TOKEN set) gets a storage directory of its own, removed with the run's
+     * temporary files. A serial run keeps the skeleton's storage.
+     */
+    public static function isolateStorage(Application $app): void
+    {
+        $token = (string) env('TEST_TOKEN', '');
+        if (preg_match('/^[0-9]+$/', $token) !== 1) {
+            return;
+        }
+
+        $storage = sys_get_temp_dir().'/vaulter-storage-'.getmypid();
+        foreach (['app', 'framework/cache', 'framework/sessions', 'framework/views', 'framework/testing', 'logs'] as $directory) {
+            if (!is_dir($storage.'/'.$directory)) {
+                mkdir($storage.'/'.$directory, 0o775, true);
+            }
+        }
+        $app->useStoragePath($storage);
+        register_shutdown_function(static function () use ($storage): void {
+            (new Filesystem)->deleteDirectory($storage);
+        });
+    }
+
     /** @return array<string, string|bool|null> */
     public static function resolve(): array
     {
@@ -33,6 +59,13 @@ final class SuiteDatabaseConnection
 
         if (!str_ends_with($database, '_test')) {
             throw new RuntimeException('Test database must end with _test: '.$database);
+        }
+
+        // A parallel run (scripts/test-db.sh) gives every worker its own database, `<base>_w<token>_test`,
+        // created by the script; the `_test` suffix stays part of every name.
+        $token = (string) env('TEST_TOKEN', '');
+        if (env('VAULTER_TEST_DB_PER_PROCESS') === '1' && preg_match('/^[0-9]+$/', $token) === 1) {
+            $database = substr($database, 0, -strlen('_test')).'_w'.$token.'_test';
         }
 
         if ($driver !== 'pgsql') {

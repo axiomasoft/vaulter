@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Storage;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Tests\Drive\DriveTestHelpers;
+
+beforeEach(fn () => DriveTestHelpers::insideOperation());
 
 beforeEach(function (): void {
     Storage::fake('local');
@@ -37,7 +40,7 @@ it('applies the maintenance retention override and reports the actual subtree co
     $this->travelTo(Carbon::parse('2026-01-31 12:00:00'));
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'old');
-    $node->forceFill(['trashed_at' => Carbon::now()->subDays(2)])->save();
+    $node->forceFill(['trashed_at' => Carbon::now()->subDays(2), 'trash_root_id' => $node->getKey()])->save();
 
     Artisan::call('vaulter:purge-trash', ['--days' => '1']);
     $output = Artisan::output();

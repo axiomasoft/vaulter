@@ -15,6 +15,8 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
+beforeEach(fn () => DriveTestHelpers::insideOperation());
+
 beforeEach(function (): void {
     StorageFacade::fake('local');
     $this->actingAs((new TestUser)->forceFill(['id' => 17]));

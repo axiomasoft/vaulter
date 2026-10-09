@@ -251,9 +251,16 @@ Trash (soft-delete) a node and its subtree. → `NodeController::trash`
 
 #### `POST nodes/{node}/restore`
 
-Restore a trashed node. → `NodeController::restore`
+Restore a trash root (and the members trashed with it). → `NodeController::restore`
 
-**Gate:** `Ability::Restore`. **Response:** `NodeResource`.
+| Name | In | Notes |
+|---|---|---|
+| `destination_id` | body | Optional. Folder to restore into; needs `Create` on it. Without it the node returns to the folder it was trashed from. |
+
+**Gate:** `Ability::Restore`. **Response:** `NodeResource`. A member trashed with a folder answers
+`409 node_trashed_by_ancestor` (`context.trash_root_id`); a missing or trashed original folder
+without `destination_id` answers `409 restore_destination_required`; an archived drive answers
+`409 drive_archived`.
 
 #### `DELETE nodes/{node}/force`
 
@@ -398,7 +405,7 @@ Export the document node as a file in the requested format. → `export`
 |---|---|---|
 | `format` | query | `html` (default), `markdown`, or any registered exporter format |
 
-**Gate:** `Ability::Download` + content egress. **Response:** the exporter's bytes with `Content-Type`, `Content-Disposition: attachment; filename*`, `Cache-Control: private, no-store` and `X-Content-Type-Options: nosniff` (not JSON). A format the document's type lacks answers `422 unknown_export_format` with `allowed`. See [Export](/guide/export).
+**Gate:** `Ability::Download` + content egress. **Response:** the exporter's bytes with `Content-Type`, `Content-Disposition: attachment; filename*`, `Cache-Control: private, no-store` and `X-Content-Type-Options: nosniff` (not JSON); `X-Vaulter-Export-Lossy: 1` marks content its type could only read partly. A format the document's type lacks answers `422 unknown_export_format` with `allowed`. See [Export](/guide/export).
 
 ---
 

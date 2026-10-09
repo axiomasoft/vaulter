@@ -23,6 +23,8 @@ use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
+beforeEach(fn () => DriveTestHelpers::insideOperation());
+
 /**
  * The tree invariants (D13): every parent is a live folder of the same drive, the
  * root is never an operand, only the root has no parent, and deletion goes through
@@ -103,7 +105,7 @@ it('rejects copying a node into a non-folder or trashed destination', function (
         ->assertJsonPath('code', $kind === 'trashed folder' ? 'node_not_found' : 'invalid_destination');
 })->with($destinations);
 
-it('re-homes a restore to the root when the original parent is no longer a live folder', function (): void {
+it('refuses a restore whose original parent is no longer a live folder and restores to an explicit destination', function (): void {
     $drive = DriveTestHelpers::drive();
     $parent = $drive->folders()->create('Parent');
     $child = $drive->folders()->create('Child', $parent);
@@ -112,6 +114,11 @@ it('re-homes a restore to the root when the original parent is no longer a live 
     $drive->nodes()->trash($parent);
 
     $this->postJson('api/vaulter/nodes/'.$child->id.'/restore')
+        ->assertStatus(409)
+        ->assertJsonPath('code', 'restore_destination_required');
+    expect(DriveTestHelpers::model($child)->trashed_at)->not->toBeNull();
+
+    $this->postJson('api/vaulter/nodes/'.$child->id.'/restore', ['destination_id' => $drive->model()->root_node_id])
         ->assertOk()
         ->assertJsonPath('data.parent_id', (string) $drive->model()->root_node_id);
 });

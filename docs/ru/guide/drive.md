@@ -324,7 +324,9 @@ $drive->trash($node);
 
 ### `restore()`
 
-Вернуть узел из корзины (и его поддерево):
+Вернуть корень корзины (и удалённые вместе с ним узлы) в исходного родителя. Если родитель исчез
+или сам в корзине, без явного назначения (`RestoreOptions`) будет `RestoreDestinationRequiredException`;
+узел, удалённый вместе с папкой, даёт `NodeTrashedByAncestorException`. См. [Корзина](/ru/guide/trash):
 
 ```php
 public function restore(Node $node, int|string|null $actorId = null): Node
@@ -378,6 +380,52 @@ $children = $drive->list($folder);          // содержимое папки
 [REST-эндпоинты](/ru/reference/rest-api#drive)
 (`storages/{storage}/nodes`, `…/search`, `…/trash`), которые пагинируют курсором.
 :::
+
+## Жизненный цикл диска
+
+У диска есть `status` — `Vaulter\Enums\Drive\DriveStatus`: `active`, `archived` или `deleting`
+(закрытый enum: клиент обязан считать неизвестное значение недоступным). Меняет его handle:
+
+```php
+$snapshot = $drive->archive();     // active → archived: только чтение
+$snapshot = $drive->unarchive();   // archived → active
+$snapshot = $drive->delete();      // active|archived → deleting, затем асинхронная чистка
+```
+
+Все три требуют `Manage` на корне (или system-актора) и возвращают `DriveSnapshot` с новым
+`status`; переход из неверного состояния даёт `InvalidDriveStateException`.
+
+- **archived** — любое изменение, чистка и создание от не-system актора дают
+  `DriveArchivedException` (409 `drive_archived`), включая правки грантов и share-ссылок и
+  удаление собственного комментария. Чтение и скачивание работают, существующие share-ссылки
+  отдают только чтение. Проверка повторяется под tree-lock, поэтому запись, гонящаяся с
+  архивацией, либо успевает до неё, либо отклоняется.
+- **deleting** — диска для всех уже нет: `drive_not_found` / `node_not_found`; видит его только
+  system-актор `drive-purge`. `PurgeDriveJob` (unique, пять попыток) чистит по 100 детей корня за
+  шаг, каждого в своей транзакции через тот же путь жизненного цикла, CAS и квоты, что и
+  `forceDelete`, затем удаляет корень и строку диска. Activity и outbox остаются историей, байты
+  освобождает GC блобов. Прерванную чистку продолжает `vaulter:drives:purge`.
+
+`DriveArchived`, `DriveUnarchived` и `DriveDeleted` диспатчатся после коммита (`DriveDeleted`
+несёт только идентификаторы — строки уже нет).
+
+### Удаление вместе с владельцем — `HasDrives`
+
+```php
+use Vaulter\Concerns\HasDrives;
+
+class Project extends Model
+{
+    use HasDrives;
+}
+
+$project->drive();          // DriveHandle (как Vaulter::drive($project))
+$project->drives;           // диски, смонтированные на нём (morphMany)
+```
+
+При `vaulter.drives.delete_with_owner = true` (по умолчанию `false`) удаление владельца удаляет его
+диски от system-актора `owner-deleted`. Модель с `SoftDeletes` реагирует на `forceDeleted`, а не на
+`deleted`, поэтому мягко удалённый владелец сохраняет диски.
 
 ## События
 

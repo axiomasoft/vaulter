@@ -40,6 +40,8 @@ use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
+beforeEach(fn () => DriveTestHelpers::insideOperation());
+
 /**
  * Role lane whose allow-mask is the only reason a guard passes or fails.
  * NullPermissionDriver allows every ability, so removing one guard stays invisible.
@@ -374,7 +376,7 @@ it('counts one purged trash root from zero', function (): void {
     $this->travelTo(Carbon::parse('2026-09-20 12:00:00'));
     $storage = r07dStorage();
     $node = AccessTestHelpers::folder($storage, null, 'r07d-one');
-    $node->forceFill(['trashed_at' => Carbon::now()->subDays(2)])->save();
+    $node->forceFill(['trashed_at' => Carbon::now()->subDays(2), 'trash_root_id' => $node->getKey()])->save();
 
     Artisan::call('vaulter:purge-trash', ['--days' => '1']);
 
@@ -385,7 +387,7 @@ it('does not count a trash root that is restored before the lock', function (): 
     $this->travelTo(Carbon::parse('2026-09-20 12:00:00'));
     $storage = r07dStorage();
     $node = AccessTestHelpers::folder($storage, null, 'r07d-restored');
-    $node->forceFill(['trashed_at' => Carbon::now()->subDays(2)])->save();
+    $node->forceFill(['trashed_at' => Carbon::now()->subDays(2), 'trash_root_id' => $node->getKey()])->save();
     $id = $node->getKey();
     $armed = true;
 
@@ -417,7 +419,7 @@ it('floors negative retention at zero and purges a root trashed now', function (
     $storage = r07dStorage();
     $trashed = AccessTestHelpers::folder($storage, null, 'negative-days');
     $live = AccessTestHelpers::folder($storage, null, 'still-live');
-    $trashed->forceFill(['trashed_at' => Carbon::now()])->save();
+    $trashed->forceFill(['trashed_at' => Carbon::now(), 'trash_root_id' => $trashed->getKey()])->save();
 
     expect(Artisan::call('vaulter:purge-trash', ['--days' => '-3']))->toBe(0)
         ->and(Artisan::output())->toContain('Purged 1 trashed subtree.')

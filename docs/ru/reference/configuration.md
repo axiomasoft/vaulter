@@ -247,6 +247,14 @@ php artisan vendor:publish --tag=vaulter-config
 
 Окно хранения, по истечении которого поддерево узла из корзины окончательно принудительно удаляется командой `php artisan vaulter:purge-trash`.
 
+## Диски — `vaulter.drives.*`
+
+| Ключ | Env | По умолчанию | Управляет |
+|---|---|---|---|
+| `vaulter.drives.delete_with_owner` | `VAULTER_DRIVES_DELETE_WITH_OWNER` | `false` | `HasDrives`: удаление модели-владельца удаляет её диски (system-актор `owner-deleted`); при `SoftDeletes` считается только `forceDeleted` |
+
+См. [Drive · жизненный цикл](/ru/guide/drive).
+
 ## Загрузки — `vaulter-drive.uploads.*`
 
 | Ключ | По умолчанию | Env |

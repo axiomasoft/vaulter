@@ -18,8 +18,11 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\Access\ProfileDenyDriver;
 use Vaulter\ValueObjects\Access\Actor;
+
+beforeEach(fn () => DriveTestHelpers::insideOperation());
 
 beforeEach(function (): void {
     config()->set('vaulter.access.permission_driver', 'database');
@@ -58,7 +61,7 @@ it('V09 reaches the 301st candidate across empty pages and hides walled-off node
     $this->getJson('api/vaulter/nodes/'.$this->folder->id)->assertOk()->assertJsonCount(1, 'data.children')->assertJsonPath('data.children.0.id', (string) $visible->id);
     config()->set('vaulter.listing.scan_budget', 1000);
     $this->getJson($this->base.'/search?q=candidate')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', (string) $visible->id)->assertJsonMissingPath('meta.total');
-    Node::query()->whereIn('id', [...$hidden, $visible->id])->update(['trashed_at' => now()]);
+    Node::query()->whereIn('id', [...$hidden, $visible->id])->update(['trashed_at' => now(), 'trash_root_id' => DB::raw('id')]);
     $this->getJson($this->base.'/trash')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', (string) $visible->id)->assertJsonMissingPath('meta.total');
 });
 
@@ -136,7 +139,7 @@ it('paginates trash in canonical default position name and id order without skip
     for ($i = 0; $i < 5; $i++) {
         $ids[] = AccessTestHelpers::folder($this->storage, $this->folder, 'trash-'.$i)->id;
     }
-    Node::query()->whereIn('id', $ids)->update(['trashed_at' => '2026-10-04 00:00:00']);
+    Node::query()->whereIn('id', $ids)->update(['trashed_at' => '2026-10-04 00:00:00', 'trash_root_id' => DB::raw('id')]);
     $cursor = null;
     $found = [];
     do {

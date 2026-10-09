@@ -18,6 +18,7 @@ use Vaulter\Operations\OperationContext;
 use Vaulter\Profiles\DrivePolicyEnforcer;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
+use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\Identity;
 use Vaulter\Support\TreeGuard;
 
@@ -48,6 +49,7 @@ final readonly class MoveNodeAction
         private TreeGuard $tree,
         private DrivePolicyEnforcer $policy,
         private NameConflictResolver $names,
+        private DriveLifecycle $lifecycle,
     ) {}
 
     public function execute(OperationContext $context, MoveNodeInput $data): Node
@@ -57,6 +59,7 @@ final readonly class MoveNodeAction
 
         return $this->database->transaction(function () use ($node, $intoId, $data, $context): Node {
             $this->database->lockTree($node->drive_id);
+            $this->lifecycle->assertWritable($context);
 
             $locked = $this->tree->lock([$node->id, $intoId]);
             $current = $this->tree->sync($node, $this->tree->locked($locked, $node->id));

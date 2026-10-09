@@ -12,6 +12,8 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
+beforeEach(fn () => DriveTestHelpers::insideOperation());
+
 /**
  * vaulter:purge-trash (D17 / §2.10 / F-P1.12-02): nodes trashed past the retention
  * window are PHYSICALLY purged — the stage-2 force-delete detaches version↔blob
@@ -29,7 +31,7 @@ it('physically purges a node trashed past the retention window, F-P1.12-02', fun
     $node = AccessTestHelpers::folder($storage, null, 'old');
 
     // Trashed 40 days ago — past the 30-day retention.
-    $node->forceFill(['trashed_at' => Carbon::now()->subDays(40)])->save();
+    $node->forceFill(['trashed_at' => Carbon::now()->subDays(40), 'trash_root_id' => $node->getKey()])->save();
 
     $this->artisan('vaulter:purge-trash')->assertSuccessful();
 
@@ -43,7 +45,7 @@ it('leaves a node still inside the retention window untouched', function (): voi
     $node = AccessTestHelpers::folder($storage, null, 'recent');
 
     // Trashed 5 days ago — well inside the 30-day retention.
-    $node->forceFill(['trashed_at' => Carbon::now()->subDays(5)])->save();
+    $node->forceFill(['trashed_at' => Carbon::now()->subDays(5), 'trash_root_id' => $node->getKey()])->save();
 
     $this->artisan('vaulter:purge-trash')->assertSuccessful();
 
@@ -58,7 +60,7 @@ it('frees the blob edges of a purged file subtree (GC-eligible)', function (): v
     $blob = Blob::query()->firstOrFail();
     expect($blob->versions()->count())->toBe(1);
 
-    DriveTestHelpers::model($fileNode)->forceFill(['trashed_at' => Carbon::now()->subDays(40)])->save();
+    DriveTestHelpers::model($fileNode)->forceFill(['trashed_at' => Carbon::now()->subDays(40), 'trash_root_id' => $fileNode->id])->save();
 
     $this->artisan('vaulter:purge-trash')->assertSuccessful();
 
@@ -75,7 +77,7 @@ it('cascades the physical purge to file/version rows on PostgreSQL, F-P1.12-02',
     $fileNode = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('purge me too'), 'p2.txt'));
     $fileId = DriveTestHelpers::model($fileNode)->file()->first()->getKey();
 
-    DriveTestHelpers::model($fileNode)->forceFill(['trashed_at' => Carbon::now()->subDays(40)])->save();
+    DriveTestHelpers::model($fileNode)->forceFill(['trashed_at' => Carbon::now()->subDays(40), 'trash_root_id' => $fileNode->id])->save();
 
     $this->artisan('vaulter:purge-trash')->assertSuccessful();
 
@@ -93,7 +95,7 @@ it('does not physically purge a node restored between candidate materialisation 
 
     $drive->nodes()->trash($node);
     // Backdate past the retention window so it becomes a purge candidate.
-    DriveTestHelpers::model($node)->forceFill(['trashed_at' => Carbon::now()->subDays(40)])->save();
+    DriveTestHelpers::model($node)->forceFill(['trashed_at' => Carbon::now()->subDays(40), 'trash_root_id' => $node->id])->save();
 
     $targetId = $node->id;
     $restoredOnce = false;
@@ -125,7 +127,7 @@ it('does not physically purge a node restored between candidate materialisation 
 it('honours the --days override', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'tenday');
-    $node->forceFill(['trashed_at' => Carbon::now()->subDays(10)])->save();
+    $node->forceFill(['trashed_at' => Carbon::now()->subDays(10), 'trash_root_id' => $node->getKey()])->save();
 
     // With a 7-day override, a 10-day-old trashed node IS purged.
     $this->artisan('vaulter:purge-trash', ['--days' => '7'])->assertSuccessful();

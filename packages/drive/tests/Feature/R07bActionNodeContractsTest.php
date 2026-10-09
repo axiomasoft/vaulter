@@ -24,6 +24,8 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
+beforeEach(fn () => DriveTestHelpers::insideOperation());
+
 /**
  * Streaming-only StorageDriver stub (no presigned URLs) — scoped to this file
  * to avoid colliding with R07StreamingOnlyStorageDriver or StreamingOnlyStorageDriver

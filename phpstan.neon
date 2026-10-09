@@ -34,3 +34,10 @@ parameters:
         -
             identifier: if.alwaysTrue
             path: packages/core/src/Drive/Uploads/Actions/CommitUploadAction.php
+
+        # HasDrives is the opt-in trait a HOST puts on its own model (the same way it uses
+        # Laravel's own traits); the package never applies it, so the analysis of
+        # "a trait used zero times" does not apply. Scoped to this one file.
+        -
+            identifier: trait.unused
+            path: packages/core/src/Concerns/HasDrives.php

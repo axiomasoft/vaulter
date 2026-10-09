@@ -173,6 +173,39 @@ NFC, если установлен ext-intl.
 (`maxPropertyCount` / `maxPropertiesBytes` политики диска) или `reserved_namespace` (`vaulter` и
 `vaulter.*` пишет только система).
 
+## node-trashed-by-ancestor
+
+`NodeTrashedByAncestorException` — узел, удалённый в корзину вместе с папкой, восстанавливается
+через эту папку, а не сам по себе. В ответе `context.trash_root_id` — корень, который нужно
+восстановить (или удалить безвозвратно). Восстановить можно только корень корзины
+(`trash_root_id = id`).
+
+## restore-destination-required
+
+`RestoreDestinationRequiredException` — папка, из которой узел попал в корзину, исчезла или сама
+в корзине, а восстановление больше не переносит узел молча (раньше оно откатывалось в корень
+диска). Передайте явное назначение: `RestoreOptions(destination: $folder)` или `destination_id` в
+`POST nodes/{node}/restore`. На этой папке нужен `Create`.
+
+## tree-traversal-incomplete
+
+`TreeTraversalIncompleteException` — дерево папок под узлом глубже, чем может прочитать
+ограниченный обход (наибольший `maxFolderDepth` среди профилей, но не меньше 64 уровней), поэтому
+копирование, удаление в корзину или чистка не могут доказать, что видят всех потомков. Операция
+останавливается до любой записи, а не действует на часть дерева. Сначала работайте с более
+мелкой папкой.
+
+## drive-archived
+
+`DriveArchivedException` — архивный диск доступен только для чтения: любое изменение, чистка и
+создание от не-system актора отклоняются, чтение и скачивание работают. Сначала разархивируйте
+диск (`$drive->unarchive()`, нужен `Manage` на корне).
+
+## invalid-drive-state
+
+`InvalidDriveStateException` — жизненный цикл диска допускает только `active → archived → active`
+и `active|archived → deleting`. `archive()` требует активный диск, `unarchive()` — архивный.
+
 ## write-outside-operation
 
 `write_outside_operation` (500, ошибка интеграции) — код вне операций Vaulter сохранил, обновил или

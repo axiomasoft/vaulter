@@ -20,6 +20,8 @@ use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
+beforeEach(fn () => DriveTestHelpers::insideOperation());
+
 beforeEach(function (): void {
     StorageFacade::fake('local');
     config()->set('vaulter-drive.uploads.allowed_mime_types', []);
@@ -212,8 +214,8 @@ it('R07b: one-day retention purges an old root and preserves one inside the wind
     $storage = AccessTestHelpers::storage();
     $old = AccessTestHelpers::folder($storage, null, 'one-day-old');
     $recent = AccessTestHelpers::folder($storage, null, 'one-day-recent');
-    $old->forceFill(['trashed_at' => Carbon::now()->subDays(2)])->save();
-    $recent->forceFill(['trashed_at' => Carbon::now()->subDay()->addSecond()])->save();
+    $old->forceFill(['trashed_at' => Carbon::now()->subDays(2), 'trash_root_id' => $old->getKey()])->save();
+    $recent->forceFill(['trashed_at' => Carbon::now()->subDay()->addSecond(), 'trash_root_id' => $recent->getKey()])->save();
 
     expect(Artisan::call('vaulter:purge-trash', ['--days' => '1']))->toBe(0)
         ->and(Artisan::output())->toContain('Purged 1 trashed subtree.')
@@ -227,9 +229,9 @@ it('R07b: two-day retention includes the exact cutoff and reports two purged roo
     $old = AccessTestHelpers::folder($storage, null, 'two-day-old');
     $boundary = AccessTestHelpers::folder($storage, null, 'two-day-boundary');
     $recent = AccessTestHelpers::folder($storage, null, 'two-day-recent');
-    $old->forceFill(['trashed_at' => Carbon::now()->subDays(3)])->save();
-    $boundary->forceFill(['trashed_at' => Carbon::now()->subDays(2)])->save();
-    $recent->forceFill(['trashed_at' => Carbon::now()->subDays(2)->addSecond()])->save();
+    $old->forceFill(['trashed_at' => Carbon::now()->subDays(3), 'trash_root_id' => $old->getKey()])->save();
+    $boundary->forceFill(['trashed_at' => Carbon::now()->subDays(2), 'trash_root_id' => $boundary->getKey()])->save();
+    $recent->forceFill(['trashed_at' => Carbon::now()->subDays(2)->addSecond(), 'trash_root_id' => $recent->getKey()])->save();
 
     expect(Artisan::call('vaulter:purge-trash', ['--days' => '2']))->toBe(0)
         ->and(Artisan::output())->toContain('Purged 2 trashed subtrees.')
@@ -243,7 +245,7 @@ it('R07b: zero retention purges a root trashed now while leaving live nodes', fu
     $storage = AccessTestHelpers::storage();
     $trashed = AccessTestHelpers::folder($storage, null, 'just-trashed');
     $live = AccessTestHelpers::folder($storage, null, 'live');
-    $trashed->forceFill(['trashed_at' => Carbon::now()])->save();
+    $trashed->forceFill(['trashed_at' => Carbon::now(), 'trash_root_id' => $trashed->getKey()])->save();
 
     expect(Artisan::call('vaulter:purge-trash', ['--days' => '0']))->toBe(0)
         ->and(Artisan::output())->toContain('Purged 1 trashed subtree.')
@@ -257,8 +259,8 @@ it('R07b: non-numeric days uses configured retention rather than zero', function
     $storage = AccessTestHelpers::storage();
     $old = AccessTestHelpers::folder($storage, null, 'default-old');
     $recent = AccessTestHelpers::folder($storage, null, 'default-recent');
-    $old->forceFill(['trashed_at' => Carbon::now()->subDays(15)])->save();
-    $recent->forceFill(['trashed_at' => Carbon::now()->subDays(7)])->save();
+    $old->forceFill(['trashed_at' => Carbon::now()->subDays(15), 'trash_root_id' => $old->getKey()])->save();
+    $recent->forceFill(['trashed_at' => Carbon::now()->subDays(7), 'trash_root_id' => $recent->getKey()])->save();
 
     expect(Artisan::call('vaulter:purge-trash', ['--days' => 'not-a-number']))->toBe(0)
         ->and(Artisan::output())->toContain('Purged 1 trashed subtree.')
@@ -276,7 +278,7 @@ it('R07b: purge-trash decrements storage used_bytes — ForceDeleteNodeAction mu
     $usedAfterUpload = $storage->refresh()->used_bytes;
     expect($usedAfterUpload)->toBeGreaterThan(0);
 
-    DriveTestHelpers::model($file)->forceFill(['trashed_at' => Carbon::now()->subDay()])->save();
+    DriveTestHelpers::model($file)->forceFill(['trashed_at' => Carbon::now()->subDay(), 'trash_root_id' => $file->id])->save();
 
     Artisan::call('vaulter:purge-trash', ['--days' => '0']);
 
@@ -290,7 +292,7 @@ it('R07b: purge-trash physically removes rows — no query finds them afterwards
     $this->travelTo(Carbon::parse('2026-09-23 12:00:00'));
     $storage = AccessTestHelpers::storage();
     $n = AccessTestHelpers::folder($storage, null, 'r07b-physical');
-    $n->forceFill(['trashed_at' => Carbon::now()->subDays(2)])->save();
+    $n->forceFill(['trashed_at' => Carbon::now()->subDays(2), 'trash_root_id' => $n->getKey()])->save();
     $nodeId = $n->getKey();
 
     Artisan::call('vaulter:purge-trash', ['--days' => '1']);
@@ -307,7 +309,7 @@ it('R07b: purge-trash increments purgedRoots correctly for multiple subtrees (L1
 
     foreach (['root-p', 'root-q', 'root-r'] as $name) {
         $n = AccessTestHelpers::folder($storage, null, $name);
-        $n->forceFill(['trashed_at' => Carbon::now()->subDays(2)])->save();
+        $n->forceFill(['trashed_at' => Carbon::now()->subDays(2), 'trash_root_id' => $n->getKey()])->save();
     }
 
     Artisan::call('vaulter:purge-trash', ['--days' => '1']);
@@ -326,7 +328,7 @@ it('R07b: purge-trash emits vaulter_purge_nodes_total when nodes are purged (L11
     $this->travelTo(Carbon::parse('2026-09-25 12:00:00'));
     $storage = AccessTestHelpers::storage();
     $n = AccessTestHelpers::folder($storage, null, 'r07b-counter');
-    $n->forceFill(['trashed_at' => Carbon::now()->subDays(2)])->save();
+    $n->forceFill(['trashed_at' => Carbon::now()->subDays(2), 'trash_root_id' => $n->getKey()])->save();
 
     Artisan::call('vaulter:purge-trash', ['--days' => '1']);
 

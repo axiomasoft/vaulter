@@ -46,6 +46,7 @@ final readonly class AccessOperations implements Contract
     {
         $node = $this->located($node);
         $this->guard->authorizeGrants(context: $this->context, node: $node);
+        $this->guard->assertMutable($this->context, $node);
 
         return $this->grantMapper->grant($this->create->execute(context: $this->context, input: new GrantNodeAccessInput(node: $node, grant: $grant)));
     }
@@ -54,6 +55,7 @@ final readonly class AccessOperations implements Contract
     {
         $node = $this->located($node);
         $this->guard->authorizeGrants(context: $this->context, node: $node);
+        $this->guard->assertMutable($this->context, $node);
         $class = $this->config->model('grant');
         $key = $grant instanceof GrantSnapshot ? $grant->id : $grant;
         $row = $class::query()->where('node_id', $node->id)->whereKey($key)->first() ?? throw NodeNotFoundException::forId($node->id);

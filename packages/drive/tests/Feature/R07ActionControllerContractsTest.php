@@ -20,6 +20,8 @@ use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
+beforeEach(fn () => DriveTestHelpers::insideOperation());
+
 /**
  * Forces the download controller down the PHP streaming branch (same helper as DriveApiTest).
  */

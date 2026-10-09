@@ -155,7 +155,7 @@ it('SEC-R05 trash restoration preserves admission while current scan policy bloc
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
     $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
-    app(VaulterDatabase::class)->write(fn () => $node->forceFill(['trashed_at' => now(), 'trashed_from_parent_id' => $drive->root_node_id])->save());
+    app(VaulterDatabase::class)->write(fn () => $node->forceFill(['trashed_at' => now(), 'trashed_from_parent_id' => $drive->root_node_id, 'trash_root_id' => $node->getKey()])->save());
     config()->set('vaulter.scan.mode', 'all_content');
     config()->set('vaulter.scan.scanner_key', 'fixture');
     config()->set('vaulter.scan.scanner_version', '1');

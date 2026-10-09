@@ -121,7 +121,7 @@ it('SEC-CLEANUP-sniff-throw closes the acquired protocol reader and its own prep
         ->and($session->refresh()->status)->toBe(UploadStatus::Assembled)->and(FileRevision::query()->count())->toBe(0);
     Storage::set('local', $disk);
     expect(app(StagedUpload::class)->size($session))->toBe(4);
-});
+})->group('serial');
 
 it('backfills only provable legacy revision pointers and never guesses the newer head', function (): void {
     $session = assembledIdempotencyUpload();
@@ -146,7 +146,7 @@ it('SEC-CLEANUP-revoked-result requires fresh View and rejects another actor and
     config()->set('vaulter.access.permission_driver', 'database');
     expect(fn () => app(CompleteUploadAction::class)->execute(context: $context, session: $session->refresh()))->toThrow(NodeNotFoundException::class);
     config()->set('vaulter.access.permission_driver', 'null');
-    $node->forceFill(['trashed_at' => now()])->save();
+    $node->forceFill(['trashed_at' => now(), 'trash_root_id' => $node->getKey()])->save();
     expect(fn () => app(CompleteUploadAction::class)->execute(context: $context, session: $session->refresh()))->toThrow(NodeNotFoundException::class);
     expect(FileRevision::query()->count())->toBe(1);
 });

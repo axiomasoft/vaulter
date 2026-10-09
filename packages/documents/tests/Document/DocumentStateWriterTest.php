@@ -60,7 +60,7 @@ it('captures the working state verbatim into a checkpoint', function (): void {
 
     expect($checkpoint)->toBeInstanceOf(DocumentRevision::class)
         ->and($checkpoint?->number)->toBe(2)
-        ->and($checkpoint?->content)->toBe(DocumentTestHelpers::content('captured')->toArray())
+        ->and($checkpoint?->content)->toEqual(DocumentTestHelpers::content('captured')->toArray())
         ->and($checkpoint?->content_hash)->toBe(DocumentTestHelpers::content('captured')->contentHash())
         ->and($checkpoint?->content_size)->toBe(DocumentTestHelpers::content('captured')->sizeInBytes())
         ->and($checkpoint?->yjs_state)->toBe("yjs\0bytes")
@@ -88,7 +88,7 @@ it('checkpoints by interval: none inside it, an autosave one after it', function
     expect($inside->checkpoint)->toBeNull()
         ->and($after->checkpoint?->is_autosave)->toBeTrue()
         ->and($after->checkpoint?->state_version)->toBe(3)
-        ->and($after->checkpoint?->content)->toBe(DocumentTestHelpers::content('after')->toArray());
+        ->and($after->checkpoint?->content)->toEqual(DocumentTestHelpers::content('after')->toArray());
 });
 
 it('takes a named checkpoint of an unchanged state without moving its validators', function (): void {
@@ -125,7 +125,7 @@ it('moves the epoch for restore and for a JSON replace of Yjs state, never for c
 
     expect($collab->epochChanged)->toBeFalse()
         ->and($collab->document->collab_epoch)->toBe(0)
-        ->and($collab->document->content)->toBe(DocumentTestHelpers::content('v1')->toArray())
+        ->and($collab->document->content)->toEqual(DocumentTestHelpers::content('v1')->toArray())
         ->and($restore->epochChanged)->toBeTrue()
         ->and($restore->document->collab_epoch)->toBe(1)
         ->and($restore->checkpoint?->restored_from_revision_id)->toEqual($source->id);

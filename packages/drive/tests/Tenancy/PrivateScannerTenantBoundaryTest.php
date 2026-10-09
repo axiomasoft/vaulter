@@ -28,6 +28,8 @@ use Vaulter\Repositories\Content\ScanObligationRepository;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Tenancy\MutableTenantResolver;
 
+beforeEach(fn () => DriveTestHelpers::insideOperation());
+
 uses(TestCase::class, RefreshDatabase::class);
 
 beforeEach(function (): void {

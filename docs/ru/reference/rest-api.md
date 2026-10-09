@@ -223,9 +223,16 @@ editLink: false
 
 #### `POST nodes/{node}/restore`
 
-Восстановить узел из корзины. → `NodeController::restore`
+Восстановить корень корзины (и удалённые вместе с ним узлы). → `NodeController::restore`
 
-**Гейт:** `Ability::Restore`. **Ответ:** `NodeResource`.
+| Имя | Где | Примечания |
+|---|---|---|
+| `destination_id` | body | Необязательно. Папка назначения; нужен `Create` на ней. Без него узел возвращается в папку, из которой был удалён. |
+
+**Гейт:** `Ability::Restore`. **Ответ:** `NodeResource`. Узел, удалённый вместе с папкой, даёт
+`409 node_trashed_by_ancestor` (`context.trash_root_id`); исчезнувшая или удалённая исходная
+папка без `destination_id` даёт `409 restore_destination_required`; архивный диск —
+`409 drive_archived`.
 
 #### `DELETE nodes/{node}/force`
 
@@ -352,7 +359,7 @@ editLink: false
 |---|---|---|
 | `format` | query | `html` (по умолчанию), `markdown` или любой зарегистрированный формат экспортёра |
 
-**Гейт:** `Ability::Download` + выдача содержимого. **Ответ:** байты экспортёра с `Content-Type`, `Content-Disposition: attachment; filename*`, `Cache-Control: private, no-store` и `X-Content-Type-Options: nosniff` (не JSON). Формат, которого нет у типа документа, даёт `422 unknown_export_format` со списком `allowed`. См. [Экспорт](/ru/guide/export).
+**Гейт:** `Ability::Download` + выдача содержимого. **Ответ:** байты экспортёра с `Content-Type`, `Content-Disposition: attachment; filename*`, `Cache-Control: private, no-store` и `X-Content-Type-Options: nosniff` (не JSON); `X-Vaulter-Export-Lossy: 1` помечает содержимое, которое тип смог прочитать лишь частично. Формат, которого нет у типа документа, даёт `422 unknown_export_format` со списком `allowed`. См. [Экспорт](/ru/guide/export).
 
 ---
 

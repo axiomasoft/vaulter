@@ -12,6 +12,7 @@ use Illuminate\Http\Response;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Data\Drive\CopyOptions;
 use Vaulter\Data\Drive\ListOptions;
+use Vaulter\Data\Drive\RestoreOptions;
 use Vaulter\Data\Drive\SearchOptions;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
@@ -139,7 +140,12 @@ final class NodeController extends Controller
 
     public function restore(Request $request, Node $node): NodeResource
     {
-        return NodeResource::make($this->driveFor($request, $this->browser->driveForNode($node))->trash()->restore(Identity::stringify($node->getKey())));
+        $request->validate(['destination_id' => ['nullable', 'max:191']]);
+        $destination = $request->input('destination_id');
+
+        return NodeResource::make($this->driveFor($request, $this->browser->driveForNode($node))->trash()->restore(
+            Identity::stringify($node->getKey()), $destination === null ? null : new RestoreOptions(destination: is_scalar($destination) ? (string) $destination : null),
+        ));
     }
 
     public function forceDelete(Request $request, Node $node): Response

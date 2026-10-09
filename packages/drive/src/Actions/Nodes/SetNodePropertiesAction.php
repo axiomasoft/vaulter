@@ -13,6 +13,7 @@ use Vaulter\Operations\NodeSequence;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Profiles\DrivePolicyEnforcer;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
+use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\TreeGuard;
 
 /**
@@ -32,6 +33,7 @@ final readonly class SetNodePropertiesAction
         private NodeSequence $sequence,
         private NodeStoreRepository $store,
         private DrivePolicyEnforcer $policy,
+        private DriveLifecycle $lifecycle,
     ) {}
 
     public function execute(OperationContext $context, SetNodePropertiesInput $data): Node
@@ -40,6 +42,7 @@ final readonly class SetNodePropertiesAction
 
         return $this->database->transaction(function () use ($context, $data, $node): Node {
             $this->database->lockTreeShared($node->drive_id);
+            $this->lifecycle->assertWritable($context);
             $current = $this->tree->sync($node, $this->tree->locked($this->tree->lock([$node->id]), $node->id));
             $this->sequence->assertExpected(locked: $current, expected: $data->expectedSequence);
             if ($current->trashed_at !== null) {

@@ -25,7 +25,7 @@ it('V03 serializes revisions and accounts for every retained revision', function
     $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('old'), 'a.txt'));
     // Both children inherit revision 1, even after the winner commits revision 2.
     $outcomes = ForkRace::run(array_map(
-        static fn (string $bytes): Closure => static fn (): string => (string) $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor($bytes), 'a.txt'))->getKey(),
+        static fn (string $bytes): Closure => static fn (): string => (string) $drive->files()->addRevision($node, UploadSource::fromStream(DriveTestHelpers::streamFor($bytes), 'a.txt'))->id,
         ['short', 'a much longer head'],
     ));
     foreach ($outcomes as $outcome) {
@@ -40,7 +40,7 @@ it('V03 serializes revisions and accounts for every retained revision', function
         ->and(DriveTestHelpers::model($node)->file()->value('current_revision_id'))->toBe($head->id)
         // Every retained revision counts (PLAN2.D48).
         ->and($drive->model()->refresh()->used_bytes)->toBe(strlen('old') + strlen('short') + strlen('a much longer head'))
-        ->and($node->sizeBytes)->toBe($head->size_bytes);
+        ->and(DriveTestHelpers::model($node)->size_bytes)->toBe($head->size_bytes);
 });
 
 // Upload's node lock ALSO serializes revisions. Exercise the aggregate repository
@@ -48,7 +48,7 @@ it('V03 serializes revisions and accounts for every retained revision', function
 it('V03 aggregate lock protects counter allocation even without a caller node lock', function (): void {
     $drive = DriveTestHelpers::drive();
     $node = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('head'), 'a.txt'));
-    $file = $node->file;
+    $file = DriveTestHelpers::model($node)->file()->firstOrFail();
     $outcomes = ForkRace::run(array_map(
         static fn (int $i): Closure => static fn (): int => app(VaulterDatabase::class)->transaction(function () use ($file): int {
             $files = app(FileStoreRepository::class);
@@ -108,4 +108,4 @@ it('reuses prepared bytes on a serialization retry and discards the temp file', 
         ->and(Blob::query()->count())->toBe(1)
         ->and(Blob::query()->sole()->sha256)->toBe(hash('sha256', 'retry the same bytes'))
         ->and(glob(sys_get_temp_dir().'/vaulter_cas_*') ?: [])->toBe($before);
-});
+})->group('serial');

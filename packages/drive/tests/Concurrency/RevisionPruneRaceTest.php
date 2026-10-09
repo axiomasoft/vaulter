@@ -58,7 +58,7 @@ it('honours a pin and a new head committed between the prune choice and its dele
         static function () use ($drive, $node, $ids): bool {
             usleep(100_000);
 
-            return $drive->files()->setRevisionRetention($node, $ids[1], keepForever: true)->keep_forever;
+            return $drive->files()->setRevisionRetention($node, $ids[1], keepForever: true)->keepForever;
         },
         static function () use ($drive, $node): int {
             usleep(100_000);

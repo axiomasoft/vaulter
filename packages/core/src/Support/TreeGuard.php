@@ -88,6 +88,17 @@ final readonly class TreeGuard
         return $node;
     }
 
+    /**
+     * A locked node that a concurrent trash took since the caller looked: a writer that
+     * holds the node lock must not write into the trash (PLAN2.F05).
+     */
+    public function assertLive(Node $locked): void
+    {
+        if ($locked->trashed_at !== null) {
+            throw NodeNotFoundException::forId($locked->id);
+        }
+    }
+
     public function sameStorage(Node $destination, int|string $storageId): bool
     {
         return Identity::stringify($destination->drive_id) === Identity::stringify($storageId);

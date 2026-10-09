@@ -52,6 +52,7 @@ abstract class TestCase extends OrchestraTestCase
         $app['config']->set('vaulter.database.write_guard', (bool) env('VAULTER_TEST_WRITE_GUARD', false));
         $app['config']->set('database.default', 'testing');
         $app['config']->set('database.connections.testing', $this->suiteDatabaseConnection());
+        SuiteDatabaseConnection::isolateStorage($app);
 
         // The package's `vaulter-public`/`vaulter-uploads` named rate limiters
         // (P1.3 / F-P1.8-01) are backed by the Laravel cache. Testbench's own

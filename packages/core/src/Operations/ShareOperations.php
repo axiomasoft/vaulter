@@ -34,7 +34,7 @@ final readonly class ShareOperations implements Contract
     /** @return list<ShareLinkSnapshot> */
     public function list(NodeSnapshot|string|int $node): array
     {
-        $node = $this->authorized($node);
+        $node = $this->authorized($node, mutation: false);
         $class = $this->config->model('node_share');
 
         return array_values($class::query()->where('node_id', $node->id)->orderByDesc('created_at')->orderByDesc('id')->get()->map(fn (NodeShare $share): ShareLinkSnapshot => $this->mapper->share($share))->all());
@@ -74,7 +74,7 @@ final readonly class ShareOperations implements Contract
      */
     public function paginate(NodeSnapshot|string|int $node, int $perPage = 50): CursorPaginator
     {
-        $node = $this->authorized($node);
+        $node = $this->authorized($node, mutation: false);
         $class = $this->config->model('node_share');
 
         return $class::query()->where('node_id', $node->id)->orderByDesc('created_at')->orderByDesc('id')->cursorPaginate(perPage: $perPage)->through(fn (NodeShare $share): ShareLinkSnapshot => $this->mapper->share($share));
@@ -89,13 +89,16 @@ final readonly class ShareOperations implements Contract
         return $class::query()->where('node_id', $node->id)->whereKey($key)->first() ?? throw NodeNotFoundException::forId($node->id);
     }
 
-    private function authorized(NodeSnapshot|string|int $node): Node
+    private function authorized(NodeSnapshot|string|int $node, bool $mutation = true): Node
     {
         $node = $this->locator->find(context: $this->context, key: $node);
         if ($node->trashed_at !== null) {
             throw NodeNotFoundException::forId($node->id);
         }
         $this->guard->authorize(context: $this->context, ability: Ability::Share, node: $node);
+        if ($mutation) {
+            $this->guard->assertMutable($this->context, $node);
+        }
 
         return $node;
     }

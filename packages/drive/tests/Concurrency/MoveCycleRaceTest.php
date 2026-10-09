@@ -67,8 +67,8 @@ function assertOneMoveWins(array $outcomes): void
 it('lets exactly one of move(A→B) and move(B→A) win and leaves no cycle', function (): void {
     $drive = DriveTestHelpers::drive();
     $rootId = $drive->root()->id;
-    $a = $drive->folders()->create('A')->getKey();
-    $b = $drive->folders()->create('B')->getKey();
+    $a = $drive->folders()->create('A')->id;
+    $b = $drive->folders()->create('B')->id;
 
     assertOneMoveWins(ForkRace::run([raceMove($a, $b), raceMove($b, $a)]));
 
@@ -84,8 +84,8 @@ it('lets exactly one of move(A→B/B1) and move(B→A/A1) win and leaves no cycl
     $rootId = $drive->root()->id;
     $a = $drive->folders()->create('A');
     $b = $drive->folders()->create('B');
-    $a1 = $drive->folders()->create('A1', $a)->getKey();
-    $b1 = $drive->folders()->create('B1', $b)->getKey();
+    $a1 = $drive->folders()->create('A1', $a)->id;
+    $b1 = $drive->folders()->create('B1', $b)->id;
 
     assertOneMoveWins(ForkRace::run([raceMove($a->id, $b1), raceMove($b->id, $a1)]));
 

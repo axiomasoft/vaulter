@@ -16,6 +16,7 @@ use Vaulter\Operations\OperationContext;
 use Vaulter\Profiles\DrivePolicyEnforcer;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
+use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\TreeGuard;
 
 /**
@@ -34,6 +35,7 @@ final readonly class RenameNodeAction
         private VaulterDatabase $database,
         private TreeGuard $tree,
         private DrivePolicyEnforcer $policy,
+        private DriveLifecycle $lifecycle,
     ) {}
 
     public function execute(OperationContext $context, RenameNodeInput $data): Node
@@ -44,6 +46,7 @@ final readonly class RenameNodeAction
 
         return $this->database->transaction(function () use ($node, $name, $data, $context): Node {
             $this->database->lockTreeShared($node->drive_id);
+            $this->lifecycle->assertWritable($context);
             // A move may have completed before the tree lock was acquired. Locate
             // its current parent now and lock the full set in primary-key order.
             $fresh = app(NodeLocator::class)->find(context: $context, key: $node->id);

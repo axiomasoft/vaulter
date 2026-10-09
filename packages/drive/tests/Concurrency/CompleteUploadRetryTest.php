@@ -15,6 +15,9 @@ use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\Database\ConcurrentUpdateException;
 use Vaulter\Models\Drive\FileRevision;
+use Vaulter\Tests\Drive\DriveTestHelpers;
+
+beforeEach(fn () => DriveTestHelpers::insideOperation());
 
 // Runs on COMMITTED rows (DatabaseMigrations, see tests/Pest.php): the retry is only
 // honest at transaction level 0, which RefreshDatabase's wrapping transaction hides.

@@ -60,6 +60,10 @@ return [
         'share_links' => false,
         'public_listing' => false,
     ],
+    'drives' => [
+        // HasDrives: delete the drives of an owner when the owner is deleted.
+        'delete_with_owner' => env('VAULTER_DRIVES_DELETE_WITH_OWNER', false),
+    ],
     'access' => [
         'permission_driver' => env('VAULTER_PERMISSION_DRIVER', 'database'),
         'permission_drivers' => [

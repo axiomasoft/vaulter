@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Actions\Content\ClaimScanWorkAction;
 use Vaulter\Actions\Content\FenceScanAttemptAction;
@@ -205,7 +206,7 @@ it('SEC-R12 purge and settlement serialize without resurrecting a head or work',
     $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     $row = $revision->scanObligations()->firstOrFail();
     $attempt = app(ClaimScanWorkAction::class)->execute($row->id, $row->generation, new DateTimeImmutable('now'));
-    $node->newQuery()->whereKey($node->id)->update(['trashed_at' => now()]);
+    $node->newQuery()->whereKey($node->id)->update(['trashed_at' => now(), 'trash_root_id' => DB::raw('id')]);
     $outcomes = ForkRace::run([
         function () use ($node, $context): bool {
             app(PurgeNodeAction::class)->execute($context, new PurgeNodeInput($node));

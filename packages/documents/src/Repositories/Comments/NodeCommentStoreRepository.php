@@ -34,6 +34,14 @@ final class NodeCommentStoreRepository
         return $comment;
     }
 
+    /** The comment row, locked for the rest of the caller's transaction; null when it is gone. */
+    public function lock(NodeComment $comment): ?NodeComment
+    {
+        $model = $this->documentsConfig->model('node_comment');
+
+        return $model::query()->whereKey($comment->getKey())->lockForUpdate()->first();
+    }
+
     public function resolve(NodeComment $comment, int|string|null $resolvedBy = null): NodeComment
     {
         $comment->forceFill([

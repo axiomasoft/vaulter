@@ -10,6 +10,9 @@ use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Testing\FakeMetricsRecorder;
 use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Tests\Drive\DriveTestHelpers;
+
+beforeEach(fn () => DriveTestHelpers::insideOperation());
 
 beforeEach(function (): void {
     Storage::fake('local');
@@ -38,7 +41,7 @@ it('records purge trash metrics when a subtree is purged', function (): void {
 
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'old');
-    $node->forceFill(['trashed_at' => Carbon::now()->subDays(40)])->save();
+    $node->forceFill(['trashed_at' => Carbon::now()->subDays(40), 'trash_root_id' => $node->getKey()])->save();
 
     Artisan::call('vaulter:purge-trash');
 

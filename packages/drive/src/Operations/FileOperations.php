@@ -114,7 +114,7 @@ final readonly class FileOperations implements Contract
     {
         $node = $this->file($file, Ability::Edit);
 
-        return $this->revisions->map($this->retention->execute($node, $this->revision($node, $revision), $keepForever), $node->file()->firstOrFail());
+        return $this->revisions->map($this->retention->execute($this->context, $node, $this->revision($node, $revision), $keepForever), $node->file()->firstOrFail());
     }
 
     public function read(NodeSnapshot|string|int $file, FileRevisionSnapshot|string|int|null $revision = null): FileStream

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Data\Drive\RestoreOptions;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
@@ -39,10 +40,10 @@ it('purge-trash purges on the cutoff day but spares one day newer', function ():
     $storage = AccessTestHelpers::storage();
 
     $onCutoff = AccessTestHelpers::folder($storage, null, 'on-cutoff');
-    app(VaulterDatabase::class)->write(fn () => $onCutoff->forceFill(['trashed_at' => Carbon::parse('2026-02-09 12:00:00')])->save());
+    app(VaulterDatabase::class)->write(fn () => $onCutoff->forceFill(['trashed_at' => Carbon::parse('2026-02-09 12:00:00'), 'trash_root_id' => $onCutoff->getKey()])->save());
 
     $newer = AccessTestHelpers::folder($storage, null, 'newer');
-    app(VaulterDatabase::class)->write(fn () => $newer->forceFill(['trashed_at' => Carbon::parse('2026-02-10 00:00:01')])->save());
+    app(VaulterDatabase::class)->write(fn () => $newer->forceFill(['trashed_at' => Carbon::parse('2026-02-10 00:00:01'), 'trash_root_id' => $newer->getKey()])->save());
 
     Artisan::call('vaulter:purge-trash', ['--days' => '1']);
     $output = Artisan::output();
@@ -58,7 +59,7 @@ it('purge-trash pluralizes multiple purged roots', function (): void {
 
     foreach (['a', 'b'] as $name) {
         $node = AccessTestHelpers::folder($storage, null, $name);
-        app(VaulterDatabase::class)->write(fn () => $node->forceFill(['trashed_at' => Carbon::now()->subDays(3)])->save());
+        app(VaulterDatabase::class)->write(fn () => $node->forceFill(['trashed_at' => Carbon::now()->subDays(3), 'trash_root_id' => $node->getKey()])->save());
     }
 
     Artisan::call('vaulter:purge-trash', ['--days' => '1']);
@@ -133,7 +134,7 @@ it('forceDelete on a folder subtree records zero freed bytes and skips quota adj
         ]);
 });
 
-it('restore re-homes to the storage root when the original parent was trashed', function (): void {
+it('restore to an explicit root destination is audited when the original parent was trashed', function (): void {
     $drive = DriveTestHelpers::drive();
     $parent = $drive->folders()->create('Parent');
     $child = $drive->folders()->create('Child', $parent);
@@ -141,7 +142,7 @@ it('restore re-homes to the storage root when the original parent was trashed', 
     $drive->nodes()->trash($child);
     $drive->nodes()->trash($parent);
 
-    $restored = $drive->actingAs(DriveTestHelpers::actor($drive, 17))->withCorrelationId('audited-restore')->trash()->restore($child);
+    $restored = $drive->actingAs(DriveTestHelpers::actor($drive, 17))->withCorrelationId('audited-restore')->trash()->restore($child, new RestoreOptions(destination: $drive->root()));
 
     expect($restored->parentId)->toEqual($drive->model()->root_node_id)
         ->and(Activity::query()->where('verb', EventType::NodeRestored->value)->orderByDesc('id')->firstOrFail()->context)->toEqual([

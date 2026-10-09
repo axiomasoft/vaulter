@@ -34,6 +34,7 @@ abstract class TestCase extends OrchestraTestCase
         $app['config']->set('vaulter.database.write_guard', (bool) env('VAULTER_TEST_WRITE_GUARD', false));
         $app['config']->set('database.default', 'testing');
         $app['config']->set('database.connections.testing', $this->suiteDatabaseConnection());
+        SuiteDatabaseConnection::isolateStorage($app);
 
         // The CAS slice is ACL-agnostic: run OPEN under the env-gated null driver so
         // the tests exercise pure blob mechanics without an access-control lane.

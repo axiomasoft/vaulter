@@ -45,6 +45,7 @@ use Vaulter\Documents\Queries\MappedCursorPaginator;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Documents\ValueObjects\DocumentExport;
 use Vaulter\Enums\Access\Ability;
+use Vaulter\Enums\Drive\DriveStatus;
 use Vaulter\Enums\Operations\OperationKind;
 use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
@@ -297,7 +298,7 @@ final readonly class DocumentOperations
             && $type !== null
             && $this->decoder->editable($aggregate)
             && ($clientSchemaVersion === null || $clientSchemaVersion === $type->schemaVersion())
-            && $node->storage()->value('status') === 'active';
+            && $node->storage()->value('status') === DriveStatus::Active;
 
         return $this->sessions->issue(
             node: $node,

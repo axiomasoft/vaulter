@@ -31,7 +31,7 @@ it('V21 completes ten overlapping move/upload races with an acyclic tree and exa
                         $attempts++;
                     }
                 });
-                $node = app(MoveNodeAction::class)->execute(OperationContext::system($drive->model(), 'test fixture'), new MoveNodeInput(node: $moving, into: $folder));
+                $node = app(MoveNodeAction::class)->execute(OperationContext::system($drive->model(), 'test fixture'), new MoveNodeInput(node: DriveTestHelpers::model($moving), into: DriveTestHelpers::model($folder)));
 
                 return ['id' => $node->id, 'attempts' => $attempts];
             },
@@ -58,7 +58,7 @@ it('V21 completes ten overlapping move/upload races with an acyclic tree and exa
                 $seen[] = $node->id;
                 $node = Node::query()->findOrFail($node->parent_id);
             }
-            expect($node->id)->toBe($drive->root()->id);
+            expect((string) $node->id)->toBe($drive->root()->id);
         }
         expect($drive->model()->refresh()->used_bytes)->toBe((int) File::query()->sum('size_bytes'));
     }

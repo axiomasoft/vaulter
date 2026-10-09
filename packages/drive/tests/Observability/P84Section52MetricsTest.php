@@ -21,6 +21,8 @@ use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\Actor;
 
+beforeEach(fn () => DriveTestHelpers::insideOperation());
+
 beforeEach(function (): void {
     Storage::fake('local');
     config()->set('vaulter-media.dedup.scope', 'tenant');
