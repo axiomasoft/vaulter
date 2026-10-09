@@ -10,6 +10,7 @@ use Psr\Http\Message\StreamInterface;
 use Vaulter\Data\Drive\RevisionOptions;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Data\Snapshots\FileRevisionSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\Files\FileRevisionAdded;
 use Vaulter\Enums\Drive\OnNameConflict;
@@ -73,8 +74,10 @@ it('SEC-R18 forks expected 7 rename against content with one sequence 8 winner a
         ->and(DriveTestHelpers::model($node)->sequence)->toBe(8);
     $contentWon = $winner[0]['operation'] === 'content';
     $expectedSize = $contentWon ? strlen('new longer bytes') : strlen('old');
-    expect($node->name)->toBe($contentWon ? 'race.txt' : 'winner.txt')
-        ->and($node->sizeBytes)->toBe($expectedSize)
+    // The upload snapshot is a value from before the race; read the stored node.
+    $stored = DriveTestHelpers::model($node);
+    expect($stored->name)->toBe($contentWon ? 'race.txt' : 'winner.txt')
+        ->and($stored->size_bytes)->toBe($expectedSize)
         // Every retained revision counts (PLAN2.D48).
         ->and($drive->model()->refresh()->used_bytes)->toBe($contentWon ? strlen('old') + strlen('new longer bytes') : strlen('old'))
         ->and(DriveTestHelpers::model($node)->file()->firstOrFail()->revision_count)->toBe($contentWon ? 2 : 1);
@@ -134,14 +137,14 @@ it('SEC-REV-RECEIPT returns its own committed revision when a later writer chang
 
     $receipt = $handle->files()->addRevision($fileId, UploadSource::fromString('my bytes', 'receipt.txt'), new RevisionOptions(expectedSequence: 0));
 
-    expect($later)->toBeInstanceOf(FileRevision::class)
+    expect($later)->toBeInstanceOf(FileRevisionSnapshot::class)
         ->and($receipt->number)->toBe(2)
         ->and($receipt->sha256)->toBe(hash('sha256', 'my bytes'))
         ->and($later->number)->toBe(3)
         ->and($later->sha256)->toBe(hash('sha256', 'later bytes'))
         ->and($receipt->id)->not->toBe($later->id)
-        ->and(DriveTestHelpers::model($node)->file()->value('current_revision_id'))->toBe($later->id)
-        ->and($node->sequence)->toBe(2)
+        ->and((string) DriveTestHelpers::model($node)->file()->value('current_revision_id'))->toBe($later->id)
+        ->and(DriveTestHelpers::model($node)->sequence)->toBe(2)
         ->and(FileRevision::query()->count())->toBe(3);
 });
 
@@ -194,7 +197,7 @@ it('SEC-CONFLICT-RACE turns two locked same-name uploads into one node and two r
                     new UploadOptions(onConflict: OnNameConflict::AddRevision),
                 );
 
-                return ['id' => $node->id, 'sha' => $node->file->currentRevision->sha256, 'expected_sha' => hash('sha256', $bytes), 'source_open' => $stream->isReadable(), 'nonseekable' => !$stream->isSeekable(), 'pid' => getmypid(), 'backend' => app(VaulterDatabase::class)->connection()->selectOne('select pg_backend_pid() as pid')->pid];
+                return ['id' => $node->id, 'sha' => $node->file?->sha256, 'expected_sha' => hash('sha256', $bytes), 'source_open' => $stream->isReadable(), 'nonseekable' => !$stream->isSeekable(), 'pid' => getmypid(), 'backend' => app(VaulterDatabase::class)->connection()->selectOne('select pg_backend_pid() as pid')->pid];
             } finally {
                 $stream->close();
             }

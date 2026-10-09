@@ -20,8 +20,7 @@ uses(TestCase::class, RefreshDatabase::class)->in('Schema', 'Unit');
 // The document-node suite boots with 'document_versions' ON so the routes register.
 // 'collaboration' stays OFF (the true default) — CollaborationFeatureGateTest (VLT-
 // REMED P3.1 / F-P1.6-01) lives here and asserts exactly that combination.
-uses(DocumentTestCase::class, RefreshDatabase::class)->in(...array_values(array_filter(glob(__DIR__.'/Document/*Test.php'), static fn (string $file): bool => basename($file) !== 'LegacyNodeSequenceRaceTest.php')));
-uses(DocumentTestCase::class, DatabaseMigrations::class)->in('Document/LegacyNodeSequenceRaceTest.php');
+uses(DocumentTestCase::class, RefreshDatabase::class)->in('Document');
 
 // These exercise the realtime-collab routes themselves (collab/token,
 // collab/authenticate, collab/store) — VLT-REMED P3.1 (F-P1.6-01, D13/D20) gates

@@ -52,12 +52,17 @@ Event::listen(function (FileUploaded $event): void {
 
 | Событие | Транслируется? | Payload конструктора |
 |---|---|---|
-| `DocumentCreated` | После коммита | `Node $node, DocumentRevision $version, int\|string\|null $actorId = null` |
-| `DocumentContentUpdated` | После коммита | `Node $node, DocumentRevision $version, bool $created, int\|string\|null $actorId = null` |
-| `DocumentRevisionCreated` | После коммита | `Node $node, DocumentRevision $version, bool $restored = false, int\|string\|null $actorId = null` |
+| `DocumentCreated` | После коммита | `Node $node, DocumentRevision $version, int $stateVersion, int $epoch, int\|string\|null $actorId = null` |
+| `DocumentContentUpdated` | После коммита | `Node $node, DocumentRevision $version, bool $created, int $stateVersion, int $epoch, int\|string\|null $actorId = null` |
+| `DocumentRevisionCreated` | После коммита | `Node $node, DocumentRevision $version, int $stateVersion, int $epoch, bool $restored = false, int\|string\|null $actorId = null` |
+| `DocumentRestored` | После коммита | `Node $node, DocumentRevision $version, DocumentRevision $restoredFrom, int $epoch, int $stateVersion, int\|string\|null $actorId = null` |
 | `CommentAdded` | **Да** (`ShouldBroadcast`) | `NodeComment $comment` |
 | `CommentResolved` | **Да** (`ShouldBroadcast`) | `NodeComment $comment, int\|string\|null $actorId = null` |
 | `CommentDeleted` | **Да** (`ShouldBroadcast`) | `NodeComment $comment, int\|string\|null $actorId = null` |
+
+`$stateVersion` и `$epoch` — валидаторы содержимого документа **после** записи; берутся из
+результата writer под блокировкой документа, а не перечитываются из чекпоинта-головы. Именованный
+снимок несёт неизменённые значения. См. [Конкурентность](./concurrency.md).
 
 ::: info Путь, привязанный к узлу
 `DocumentCreated`, `DocumentContentUpdated`, `DocumentRevisionCreated` работают на

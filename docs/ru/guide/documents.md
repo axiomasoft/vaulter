@@ -72,6 +72,7 @@ v_document_revisions(id, document_id)` с `ON DELETE RESTRICT` гарантир�
 Валидатор контента **не зависит от узла**: `v_nodes.sequence` растёт при переименовании,
 перемещении и корзине, `state_version` — при записи контента. Переименование документа не
 инвалидирует открытый редактор, а сохранение не инвалидирует переименование (PLAN2.D35).
+Полная матрица писателей и форматы ETag — в [Конкурентности](../reference/concurrency.md).
 
 ## PHP API
 
@@ -477,9 +478,9 @@ Purge документа из корзины удаляет его чекпои�
 
 | Событие | Кем выбрасывается | Полезная нагрузка |
 |---|---|---|
-| `Vaulter\Documents\Events\Documents\DocumentCreated` | создание | `node`, `version` (чекпоинт #1), `actorId` |
-| `Vaulter\Documents\Events\Documents\DocumentContentUpdated` | автосохранение / store коллаборации (только при изменении) | `node`, `version` (чекпоинт-голова после сохранения), `created` (bool — снят ли чекпоинт этим сохранением), `actorId` |
-| `Vaulter\Documents\Events\Revisions\DocumentRevisionCreated` | именование / восстановление | `node`, `version`, `restored` (bool), `actorId` |
+| `Vaulter\Documents\Events\Documents\DocumentCreated` | создание | `node`, `version` (чекпоинт #1), `stateVersion`, `epoch`, `actorId` |
+| `Vaulter\Documents\Events\Documents\DocumentContentUpdated` | автосохранение / store коллаборации (только при изменении) | `node`, `version` (чекпоинт-голова после сохранения), `created` (bool — снят ли чекпоинт этим сохранением), `stateVersion`, `epoch` (после сохранения), `actorId` |
+| `Vaulter\Documents\Events\Revisions\DocumentRevisionCreated` | именование / восстановление | `node`, `version`, `stateVersion`, `epoch`, `restored` (bool), `actorId` |
 
 ## Ошибки
 

@@ -52,12 +52,17 @@ All `ShouldDispatchAfterCommit`.
 
 | Event | Broadcasts? | Constructor payload |
 |---|---|---|
-| `DocumentCreated` | After commit | `Node $node, DocumentRevision $version, int\|string\|null $actorId = null` |
-| `DocumentContentUpdated` | After commit | `Node $node, DocumentRevision $version, bool $created, int\|string\|null $actorId = null` |
-| `DocumentRevisionCreated` | After commit | `Node $node, DocumentRevision $version, bool $restored = false, int\|string\|null $actorId = null` |
+| `DocumentCreated` | After commit | `Node $node, DocumentRevision $version, int $stateVersion, int $epoch, int\|string\|null $actorId = null` |
+| `DocumentContentUpdated` | After commit | `Node $node, DocumentRevision $version, bool $created, int $stateVersion, int $epoch, int\|string\|null $actorId = null` |
+| `DocumentRevisionCreated` | After commit | `Node $node, DocumentRevision $version, int $stateVersion, int $epoch, bool $restored = false, int\|string\|null $actorId = null` |
+| `DocumentRestored` | After commit | `Node $node, DocumentRevision $version, DocumentRevision $restoredFrom, int $epoch, int $stateVersion, int\|string\|null $actorId = null` |
 | `CommentAdded` | **Yes** (`ShouldBroadcast`) | `NodeComment $comment` |
 | `CommentResolved` | **Yes** (`ShouldBroadcast`) | `NodeComment $comment, int\|string\|null $actorId = null` |
 | `CommentDeleted` | **Yes** (`ShouldBroadcast`) | `NodeComment $comment, int\|string\|null $actorId = null` |
+
+`$stateVersion` and `$epoch` are the document's content validators **after** the write, taken from
+the writer's result under the document lock — not read back from the head checkpoint. A named
+snapshot carries the unchanged values. See [Concurrency](./concurrency.md).
 
 ::: info Node-attached path
 `DocumentCreated`, `DocumentContentUpdated`, `DocumentRevisionCreated` operate on the

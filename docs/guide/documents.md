@@ -71,6 +71,7 @@ deleting it (SQLite: see [Database compatibility](./database-compatibility.md)).
 The content validator is **independent of the node**: `v_nodes.sequence` moves on rename, move
 and trash, `state_version` on content writes. Renaming a document never invalidates an open
 editor, and saving it never invalidates a rename (PLAN2.D35).
+The full writer matrix and the ETag formats are in [Concurrency](../reference/concurrency.md).
 
 ## The PHP API
 
@@ -475,9 +476,9 @@ listeners, the activity feed or [webhooks](./recipes.md#webhooks) to them:
 
 | Event | Fired by | Payload |
 |---|---|---|
-| `Vaulter\Documents\Events\Documents\DocumentCreated` | create | `node`, `version` (checkpoint #1), `actorId` |
-| `Vaulter\Documents\Events\Documents\DocumentContentUpdated` | autosave / collaboration store (only when something changed) | `node`, `version` (the head checkpoint after the save), `created` (bool — this save took a checkpoint), `actorId` |
-| `Vaulter\Documents\Events\Revisions\DocumentRevisionCreated` | named / restore | `node`, `version`, `restored` (bool), `actorId` |
+| `Vaulter\Documents\Events\Documents\DocumentCreated` | create | `node`, `version` (checkpoint #1), `stateVersion`, `epoch`, `actorId` |
+| `Vaulter\Documents\Events\Documents\DocumentContentUpdated` | autosave / collaboration store (only when something changed) | `node`, `version` (the head checkpoint after the save), `created` (bool — this save took a checkpoint), `stateVersion`, `epoch` (after the save), `actorId` |
+| `Vaulter\Documents\Events\Revisions\DocumentRevisionCreated` | named / restore | `node`, `version`, `stateVersion`, `epoch`, `restored` (bool), `actorId` |
 
 ## Errors
 

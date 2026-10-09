@@ -11,17 +11,21 @@ use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Enums\Collaboration\CollaborationDriverType;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
-use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /**
- * Драйверный слой M4b (мастер-план §7 / ADR-0001): issueSession кодирует readOnly из
- * способности (Edit → writable, иначе read-only), Hocuspocus подписывает JWT с
- * правильными claim'ами/exp, а комната всегда привязана к одному узлу. Это «сердце»
- * выдачи токена — проверяем форму дескриптора для Hocuspocus отдельно от HTTP.
+ * Драйверный слой M4b (мастер-план §7 / ADR-0001): issueSession кодирует режим (rw/ro) из
+ * writable, Hocuspocus подписывает JWT с правильными claim'ами/exp, а комната всегда
+ * привязана к одному узлу и поколению. Это «сердце» выдачи токена — проверяем форму
+ * дескриптора для Hocuspocus отдельно от HTTP.
  */
+function roomOf(Node $node, int $epoch = 0): string
+{
+    return app(DocumentsConfig::class)->collaborationRoom((string) $node->drive_id, (string) $node->getKey(), $epoch);
+}
+
 function documentNode(): Node
 {
     $drive = DocumentTestHelpers::drive();
@@ -34,7 +38,7 @@ function documentNode(): Node
     ));
 }
 
-it('mints a hocuspocus room JWT with the room/sub/readOnly/exp claims', function (): void {
+it('mints a hocuspocus room JWT with the room/sub/mode/epoch/exp claims', function (): void {
     config()->set('vaulter-documents.collaboration.driver', 'hocuspocus');
     config()->set('vaulter-documents.collaboration.hub.jwt_secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
     config()->set('vaulter-documents.collaboration.hub.url', 'ws://hub:1234');
@@ -42,33 +46,34 @@ it('mints a hocuspocus room JWT with the room/sub/readOnly/exp claims', function
 
     $node = documentNode();
     $before = time();
-    $session = app(HocuspocusCollaborationDriver::class)->issueSession($node, Ability::Edit, actorId: 42);
+    $session = app(HocuspocusCollaborationDriver::class)->issueSession($node, epoch: 3, schemaVersion: 1, writable: true, actorId: 42);
 
     expect($session->driver)->toBe(CollaborationDriverType::Hocuspocus)
         ->and($session->url)->toBe('ws://hub:1234')
-        ->and($session->connection)->toBeNull()
         ->and($session->readOnly)->toBeFalse()
         ->and($session->token)->toBeString()->not->toBe('');
 
     $claims = JWT::decode($session->token, new Key('shh-secret-at-least-32-bytes-long-for-hs256', 'HS256'));
 
-    expect($claims->room)->toBe(app(DocumentsConfig::class)->collaborationRoom($node->getKey()))
+    expect($claims->room)->toBe(roomOf($node, 3))
         ->and($claims->sub)->toBe('42')
-        ->and($claims->readOnly)->toBeFalse()
+        ->and($claims->node)->toBe((string) $node->getKey())
+        ->and($claims->epoch)->toBe(3)
+        ->and($claims->mode)->toBe('rw')
         ->and($claims->exp)->toBeGreaterThanOrEqual($before + 900)
         ->and($claims->exp)->toBeLessThanOrEqual(time() + 900);
 });
 
-it('encodes readOnly=true into the hocuspocus JWT for a comment ability', function (): void {
+it('encodes the ro mode into the hocuspocus JWT of a read-only session', function (): void {
     config()->set('vaulter-documents.collaboration.hub.jwt_secret', 'shh-secret-at-least-32-bytes-long-for-hs256');
 
     $node = documentNode();
-    $session = app(HocuspocusCollaborationDriver::class)->issueSession($node, Ability::Comment, actorId: 1);
+    $session = app(HocuspocusCollaborationDriver::class)->issueSession($node, epoch: 0, schemaVersion: 1, writable: false, actorId: 1);
 
     $claims = JWT::decode($session->token, new Key('shh-secret-at-least-32-bytes-long-for-hs256', 'HS256'));
 
     expect($session->readOnly)->toBeTrue()
-        ->and($claims->readOnly)->toBeTrue();
+        ->and($claims->mode)->toBe('ro');
 });
 
 it('binds the hocuspocus room JWT to a single node', function (): void {
@@ -77,12 +82,12 @@ it('binds the hocuspocus room JWT to a single node', function (): void {
     $nodeA = documentNode();
     $nodeB = documentNode();
 
-    $sessionA = app(HocuspocusCollaborationDriver::class)->issueSession($nodeA, Ability::Edit, actorId: 1);
+    $sessionA = app(HocuspocusCollaborationDriver::class)->issueSession($nodeA, epoch: 0, schemaVersion: 1, writable: true, actorId: 1);
     $claimsA = JWT::decode($sessionA->token, new Key('shh-secret-at-least-32-bytes-long-for-hs256', 'HS256'));
 
     // The token for node A carries node A's room — never node B's.
-    expect($claimsA->room)->toBe(app(DocumentsConfig::class)->collaborationRoom($nodeA->getKey()))
-        ->and($claimsA->room)->not->toBe(app(DocumentsConfig::class)->collaborationRoom($nodeB->getKey()));
+    expect($claimsA->room)->toBe(roomOf($nodeA))
+        ->and($claimsA->room)->not->toBe(roomOf($nodeB));
 });
 
 it('resolves the node-collaboration driver from config', function (): void {

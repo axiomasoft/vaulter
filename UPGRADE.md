@@ -6,6 +6,24 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Document events carry the content validators (PLAN2.D35; PLAN2.P4.7)
+
+- **Event payload.** Was: `DocumentCreated(node, version, actorId)`,
+  `DocumentContentUpdated(node, version, created, actorId)` and
+  `DocumentRevisionCreated(node, version, restored, actorId)` carried no validators. Now: each takes
+  `int $stateVersion, int $epoch` right after `version` (after `created` for `DocumentContentUpdated`),
+  before the optional arguments, and `DocumentRestored` already had them. The values are the document's
+  `state_version` and `collab_epoch` after the write, taken from the writer's result. Hosts that construct
+  these events themselves (tests, fakes) pass the two integers; listeners only gain properties.
+- **Content hash.** Was: `content_hash` was the sha256 of the JSON in the order the keys were
+  written, so on PostgreSQL (`jsonb` returns keys in its own order) a copy or a restore stored a hash
+  different from its source's. Now: object keys are sorted before hashing on every driver. A document
+  written before the upgrade keeps its stored hash; the first save of identical content writes once
+  and stores the new hash.
+- **Writer matrix.** The validators of every drive and document writer are fixed in
+  [Concurrency](docs/reference/concurrency.md): `v_nodes.sequence` moves only on node changes,
+  `state_version` and `collab_epoch` only on content writes (see PLAN2.D35).
+
 ### Admission and write guard corrections (PLAN2.D54)
 
 - **File copies and revision restores.** Was: `maxFileBytes` was enforced on uploads,

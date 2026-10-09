@@ -95,17 +95,21 @@ Vaulter\Documents\Events\Comments\CommentResolved
   readonly string $eventId
 
 Vaulter\Documents\Events\Documents\DocumentContentUpdated
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Documents\Models\Revisions\DocumentRevision $version, bool $created, int|null|string $actorId = null, ?string $eventId = null)
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Documents\Models\Revisions\DocumentRevision $version, bool $created, int $stateVersion, int $epoch, int|null|string $actorId = null, ?string $eventId = null)
   readonly \Vaulter\Documents\Models\Revisions\DocumentRevision $version
   readonly \Vaulter\Models\Drive\Node $node
   readonly bool $created
+  readonly int $epoch
+  readonly int $stateVersion
   readonly int|null|string $actorId
   readonly string $eventId
 
 Vaulter\Documents\Events\Documents\DocumentCreated
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Documents\Models\Revisions\DocumentRevision $version, int|null|string $actorId = null, ?string $eventId = null)
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Documents\Models\Revisions\DocumentRevision $version, int $stateVersion, int $epoch, int|null|string $actorId = null, ?string $eventId = null)
   readonly \Vaulter\Documents\Models\Revisions\DocumentRevision $version
   readonly \Vaulter\Models\Drive\Node $node
+  readonly int $epoch
+  readonly int $stateVersion
   readonly int|null|string $actorId
   readonly string $eventId
 
@@ -120,10 +124,12 @@ Vaulter\Documents\Events\Revisions\DocumentRestored
   readonly string $eventId
 
 Vaulter\Documents\Events\Revisions\DocumentRevisionCreated
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Documents\Models\Revisions\DocumentRevision $version, bool $restored = false, int|null|string $actorId = null, ?string $eventId = null)
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Documents\Models\Revisions\DocumentRevision $version, int $stateVersion, int $epoch, bool $restored = false, int|null|string $actorId = null, ?string $eventId = null)
   readonly \Vaulter\Documents\Models\Revisions\DocumentRevision $version
   readonly \Vaulter\Models\Drive\Node $node
   readonly bool $restored
+  readonly int $epoch
+  readonly int $stateVersion
   readonly int|null|string $actorId
   readonly string $eventId
 
