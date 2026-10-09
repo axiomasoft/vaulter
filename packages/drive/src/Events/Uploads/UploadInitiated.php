@@ -4,25 +4,59 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Events\Uploads;
 
-use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
-use Illuminate\Support\Str;
+use Carbon\CarbonImmutable;
 use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Enums\Events\EventType;
+use Vaulter\Events\DomainEvent;
+use Vaulter\ValueObjects\Access\ActorRef;
+use Vaulter\ValueObjects\Events\EventScope;
+use Vaulter\ValueObjects\Events\EventSubject;
 
 /**
- * A resumable-upload session was opened (§2.8 / F-P1.4-13): the create/initiate
- * side of the upload-session lifecycle audit gap — commit already lands
- * FileUploaded/NodeVersionCommitted, but create/abort/expire had no activity trace
- * at all before this.
+ * A resumable-upload session was opened (§2.8 / F-P1.4-13). Audited only: upload
+ * sessions are not a webhook type.
  */
-final readonly class UploadInitiated implements ShouldDispatchAfterCommit
+final readonly class UploadInitiated extends DomainEvent
 {
-    public string $eventId;
-
     public function __construct(
         public UploadSession $session,
-        public int|string|null $actorId = null,
+        ActorRef $actor,
+        string $correlationId,
         ?string $eventId = null,
+        ?CarbonImmutable $occurredAt = null,
     ) {
-        $this->eventId = $eventId ?? (string) Str::ulid();
+        parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
+    }
+
+    public function type(): EventType
+    {
+        return EventType::UploadInitiated;
+    }
+
+    public function scope(): EventScope
+    {
+        return new EventScope(tenantId: $this->session->tenant_id, driveId: $this->session->drive_id, profile: $this->session->storage->profile ?? 'default');
+    }
+
+    public function subject(): EventSubject
+    {
+        return new EventSubject(type: 'upload', id: $this->session->upload_id);
+    }
+
+    public function data(): array
+    {
+        return [
+            'upload_id' => $this->session->upload_id,
+            'size' => $this->session->total_size_bytes,
+        ];
+    }
+
+    public function activityContext(): array
+    {
+        return [
+            'upload_id' => $this->session->upload_id,
+            'protocol' => $this->session->protocol->value,
+            'target_name' => $this->session->target_name,
+        ];
     }
 }

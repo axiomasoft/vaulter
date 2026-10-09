@@ -7,17 +7,19 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Str;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Configuration\WebhooksConfig;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\Nodes\FolderCreated;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Jobs\Webhooks\DeliverWebhook;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Models\Webhooks\WebhookDelivery;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
-use Vaulter\Webhooks\OutboxRecorder;
+use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\Webhooks\OutboxRelay;
 use Vaulter\Webhooks\WebhookSigner;
 
@@ -43,15 +45,9 @@ it('sends the same occurrence id on the original delivery and a relay retry', fu
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'Retry');
     Outbox::query()->delete();
-    $event = new FolderCreated(node: $node, actorId: 7);
-    $message = app(OutboxRecorder::class)->stage(
-        event: EventType::FolderCreated,
-        eventId: $event->eventId,
-        panel: $node->profile,
-        topic: (string) $node->getKey(),
-        payload: ['node_id' => (string) $node->getKey()],
-        actorId: 7,
-    );
+    $event = new FolderCreated(node: $node, actor: new ActorRef(type: 'user', id: 7), correlationId: (string) Str::ulid());
+    app(VaulterDatabase::class)->transaction(fn () => app(EventRecorder::class)->record($event));
+    $message = Outbox::query()->where('event_id', $event->eventId)->sole();
 
     expect(relay()->process())->toBe(1);
     $delivery = WebhookDelivery::query()->sole();
@@ -72,7 +68,7 @@ it('sends the same occurrence id on the original delivery and a relay retry', fu
         ->and(WebhookDelivery::query()->count())->toBe(1);
     Http::assertSentCount(2);
     foreach (Http::recorded() as [$request]) {
-        expect($request->data()['event_id'])->toBe($event->eventId);
+        expect($request->data()['id'])->toBe($event->eventId);
     }
 });
 

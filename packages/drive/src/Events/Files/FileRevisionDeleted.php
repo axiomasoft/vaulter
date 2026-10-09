@@ -4,32 +4,77 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Events\Files;
 
-use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
-use Illuminate\Support\Str;
+use Carbon\CarbonImmutable;
+use Vaulter\Enums\Events\EventType;
+use Vaulter\Events\DomainEvent;
 use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
+use Vaulter\ValueObjects\Events\ActivityTarget;
+use Vaulter\ValueObjects\Events\EventScope;
+use Vaulter\ValueObjects\Events\EventSubject;
 
 /**
  * A non-current revision was deleted, by the API or by the retention pruning
  * (PLAN2.D48): its blob edges are gone and its bytes left the drive's quota. The
  * revision row no longer exists, so the event carries its id, number and size.
  */
-final readonly class FileRevisionDeleted implements ShouldDispatchAfterCommit
+final readonly class FileRevisionDeleted extends DomainEvent
 {
-    public string $eventId;
-
     public function __construct(
         public Node $node,
         public File $file,
         public int|string $revisionId,
         public int $revisionNo,
         public int $sizeBytes,
-        public int|string|null $actorId = null,
+        ActorRef $actor,
+        string $correlationId,
         ?string $eventId = null,
-        public ?ActorRef $actor = null,
-        public ?string $correlationId = null,
+        ?CarbonImmutable $occurredAt = null,
     ) {
-        $this->eventId = $eventId ?? (string) Str::ulid();
+        parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
+    }
+
+    public function type(): EventType
+    {
+        return EventType::FileRevisionDeleted;
+    }
+
+    public function scope(): EventScope
+    {
+        return self::nodeScope($this->node);
+    }
+
+    public function subject(): EventSubject
+    {
+        return self::nodeSubject($this->node);
+    }
+
+    public function sequence(): int
+    {
+        return $this->node->sequence;
+    }
+
+    public function data(): array
+    {
+        return [
+            'revision_id' => self::id($this->revisionId),
+            'number' => $this->revisionNo,
+        ];
+    }
+
+    public function activityContext(): array
+    {
+        return [
+            'revision_id' => Identity::stringify($this->revisionId),
+            'number' => $this->revisionNo,
+            'size_bytes' => $this->sizeBytes,
+        ];
+    }
+
+    public function activityTarget(): ActivityTarget
+    {
+        return ActivityTarget::of($this->node);
     }
 }

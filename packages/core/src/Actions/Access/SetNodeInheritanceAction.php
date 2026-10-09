@@ -10,6 +10,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Access\InheritanceRestriction;
 use Vaulter\Events\Access\NodeGrantCreated;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Node;
@@ -41,6 +42,7 @@ final readonly class SetNodeInheritanceAction
         private NodeStoreRepository $store,
         private GrantReadRepository $grants,
         private GrantStoreRepository $writer,
+        private EventRecorder $recorder,
     ) {}
 
     public function execute(OperationContext $context, Node $node, bool $inherit, InheritanceRestriction $mode = InheritanceRestriction::Empty): Node
@@ -52,18 +54,24 @@ final readonly class SetNodeInheritanceAction
             if ((bool) $locked->inherit_grants === $inherit) {
                 return $locked;
             }
-            if (!$inherit && $mode === InheritanceRestriction::CopyCurrent) {
-                $this->copyInherited(context: $context, node: $locked);
+            $copies = !$inherit && $mode === InheritanceRestriction::CopyCurrent
+                ? $this->copyInherited(context: $context, node: $locked)
+                : [];
+            $updated = $this->store->update($locked, ['inherit_grants' => $inherit]);
+            // Recorded after every row of the change is written and locked.
+            foreach ($copies as $copy) {
+                $this->recorder->record(new NodeGrantCreated(grant: $copy, actor: $context->actor->ref(), correlationId: $context->correlationId));
             }
 
-            return $this->store->update($locked, ['inherit_grants' => $inherit]);
+            return $updated;
         });
     }
 
-    private function copyInherited(OperationContext $context, Node $node): void
+    /** @return list<NodeGrant> the grants written on the node */
+    private function copyInherited(OperationContext $context, Node $node): array
     {
         if ($node->parent_id === null) {
-            return;
+            return [];
         }
         $chain = $this->nodes->ancestorChains([$node->parent_id])[Identity::stringify($node->parent_id)] ?? [];
         $ids = [];
@@ -74,6 +82,7 @@ final readonly class SetNodeInheritanceAction
         }
         $now = Carbon::now();
         $bySubject = [];
+        $copies = [];
         foreach ($this->grants->subtreeGrantsOn($ids, $now) as $grant) {
             $bySubject[$grant->subject()->signature()][] = $grant;
         }
@@ -85,9 +94,10 @@ final readonly class SetNodeInheritanceAction
             if ($direct instanceof NodeGrant && $this->keepsDirect($direct, $role, $expiresAt)) {
                 continue;
             }
-            $copy = $this->writer->put(node: $node, subject: $subject, scope: GrantScope::Subtree, role: $role, expiresAt: $expiresAt, grantedBy: $context->actor->ref()->id);
-            event(new NodeGrantCreated(grant: $copy, actorId: $context->actor->ref()->id, actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $copies[] = $this->writer->put(node: $node, subject: $subject, scope: GrantScope::Subtree, role: $role, expiresAt: $expiresAt, grantedBy: $context->actor->ref()->id);
         }
+
+        return $copies;
     }
 
     /**

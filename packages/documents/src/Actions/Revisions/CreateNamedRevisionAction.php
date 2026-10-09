@@ -11,6 +11,7 @@ use Vaulter\Documents\Events\Revisions\DocumentRevisionCreated;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Support\DriveLifecycle;
@@ -32,6 +33,7 @@ final readonly class CreateNamedRevisionAction
         private VaulterDatabase $database,
         private TreeGuard $tree,
         private DriveLifecycle $lifecycle,
+        private EventRecorder $recorder,
     ) {}
 
     public function execute(OperationContext $context, CreateNamedRevisionInput $data): DocumentRevision
@@ -66,13 +68,14 @@ final readonly class CreateNamedRevisionAction
                 actorId: $context->actor->ref()->id,
             );
 
-            event(new DocumentRevisionCreated(
+            $this->recorder->record(new DocumentRevisionCreated(
                 node: $node,
                 version: $revision,
                 stateVersion: $document->state_version,
                 epoch: $document->collab_epoch,
                 restored: false,
-                actorId: $context->actor->ref()->id,
+                actor: $context->actor->ref(),
+                correlationId: $context->correlationId,
             ));
 
             return $revision;

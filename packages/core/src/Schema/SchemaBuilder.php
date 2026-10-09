@@ -829,7 +829,8 @@ final class SchemaBuilder
         $table->string('actor_type')->nullable();
 
         $table->string('verb')->index();
-        $table->string('event_id', 26)->nullable()->index();
+        // One row per occurrence: recording an event again inserts nothing.
+        $table->string('event_id', 26)->nullable()->unique();
 
         // Target morph — the subject of the verb (nullable: e.g. nothing for a
         // storage-level row). No DB FK: the target may be any model, swappable.
@@ -888,6 +889,7 @@ final class SchemaBuilder
         // of the panel id strategy.
         $table->string('event_id')->unique();
         $this->panelDiscriminator(table: $table);
+        $this->tenant(table: $table);
         $ids->reference(table: $table, column: 'drive_id', nullable: true);
         $table->string('aggregate_type', 32)->nullable();
         $table->string('aggregate_id', 64)->nullable();

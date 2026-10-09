@@ -25,11 +25,15 @@ use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
+use Vaulter\Events\DomainEvent;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Tenancy\TenancyBoundary;
+use Vaulter\ValueObjects\Access\Actor;
+use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
  * The resumable-upload lifecycle coordinator (§2.8 / D16 / M3a). It owns:
@@ -55,6 +59,7 @@ final readonly class UploadSessionManager
         private StagedUpload $staged,
         private VaulterDatabase $database,
         private DriveConfig $driveConfig,
+        private EventRecorder $recorder,
     ) {}
 
     /**
@@ -69,7 +74,8 @@ final readonly class UploadSessionManager
         $this->assertWithinMaxBytes($data->totalSizeBytes);
         $this->assertWithinActiveSessionCap($context->actor->ref()->id);
 
-        $session = $this->database->write(function () use ($context, $data): UploadSession {
+        // The session row and its audit row commit together.
+        return $this->database->transaction(function () use ($context, $data): UploadSession {
             $session = $this->sessions->create([
                 'tenant_id' => $context->drive->tenant_id,
                 'drive_id' => $context->driveId(),
@@ -90,14 +96,11 @@ final readonly class UploadSessionManager
             ]);
 
             $this->handlerFor($session)->initialise($session);
+            $session = $session->refresh();
+            $this->recorder->record(new UploadInitiated(session: $session, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
-            return $session->refresh();
+            return $session;
         });
-
-        // F-P1.4-13: the lifecycle audit gap — create had no activity trace at all.
-        event(new UploadInitiated($session, $context->actor->ref()->id));
-
-        return $session;
     }
 
     /**
@@ -210,16 +213,18 @@ final readonly class UploadSessionManager
      *
      * Runs inside the SAME critical section as a tus PATCH (VLT-REMED P5.2 / R-02) —
      * see {@see reclaim()}. Throws UploadConflictException when a PATCH holds the lock.
+     * Without an actor the abort is recorded as a system reclaim.
      */
-    public function abort(UploadSession $session, int|string|null $actorId = null): UploadSession
+    public function abort(UploadSession $session, ?ActorRef $actor = null, ?string $correlationId = null): UploadSession
     {
         return $this->reclaim(
             session: $session,
             terminal: UploadStatus::Aborted,
-            // F-P1.4-13: the lifecycle audit gap — abort had no activity trace at all.
-            audit: static function (UploadSession $aborted) use ($actorId): void {
-                event(new UploadAborted($aborted, $actorId));
-            },
+            audit: fn (UploadSession $aborted): UploadAborted => new UploadAborted(
+                session: $aborted,
+                actor: $actor ?? Actor::system('upload abort')->ref(),
+                correlationId: $correlationId ?? (string) Str::ulid(),
+            ),
         );
     }
 
@@ -238,10 +243,11 @@ final readonly class UploadSessionManager
         return $this->reclaim(
             session: $session,
             terminal: UploadStatus::Expired,
-            // F-P1.4-13: the lifecycle audit gap — expire had no activity trace at all.
-            audit: static function (UploadSession $expired): void {
-                event(new UploadExpired($expired));
-            },
+            audit: static fn (UploadSession $expired): UploadExpired => new UploadExpired(
+                session: $expired,
+                actor: Actor::system('upload expiry')->ref(),
+                correlationId: (string) Str::ulid(),
+            ),
         );
     }
 
@@ -264,7 +270,7 @@ final readonly class UploadSessionManager
      *      returned untouched, and nothing is discarded;
      *   3. only then are the protocol state and the staged bytes released.
      *
-     * @param callable(UploadSession): void $audit
+     * @param callable(UploadSession): DomainEvent $audit the event of the reclaim, recorded last
      */
     private function reclaim(UploadSession $session, UploadStatus $terminal, callable $audit): UploadSession
     {
@@ -284,7 +290,7 @@ final readonly class UploadSessionManager
 
             $reclaimed = $this->sessions->transition($locked, $terminal);
 
-            $audit($reclaimed);
+            $this->recorder->record($audit($reclaimed));
 
             return $reclaimed;
         });

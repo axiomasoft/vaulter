@@ -70,68 +70,139 @@ Vaulter\Documents\Configuration\DocumentsConfig
   types(): array
 
 Vaulter\Documents\Events\Comments\CommentAdded
-  __construct(\Vaulter\Documents\Models\Comments\NodeComment $comment, ?string $eventId = null)
+  __construct(\Vaulter\Documents\Models\Comments\NodeComment $comment, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   broadcastAs(): string
   broadcastOn(): array
   broadcastWith(): array
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Documents\Models\Comments\NodeComment $comment
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
   readonly string $eventId
 
 Vaulter\Documents\Events\Comments\CommentDeleted
-  __construct(\Vaulter\Documents\Models\Comments\NodeComment $comment, int|null|string $actorId = null, ?string $eventId = null)
+  __construct(\Vaulter\Documents\Models\Comments\NodeComment $comment, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   broadcastAs(): string
   broadcastOn(): array
   broadcastWith(): array
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Documents\Models\Comments\NodeComment $comment
-  readonly int|null|string $actorId
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
   readonly string $eventId
 
 Vaulter\Documents\Events\Comments\CommentResolved
-  __construct(\Vaulter\Documents\Models\Comments\NodeComment $comment, int|null|string $actorId = null, ?string $eventId = null)
+  __construct(\Vaulter\Documents\Models\Comments\NodeComment $comment, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   broadcastAs(): string
   broadcastOn(): array
   broadcastWith(): array
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Documents\Models\Comments\NodeComment $comment
-  readonly int|null|string $actorId
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
   readonly string $eventId
 
 Vaulter\Documents\Events\Documents\DocumentContentUpdated
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Documents\Models\Revisions\DocumentRevision $version, bool $created, int $stateVersion, int $epoch, int|null|string $actorId = null, ?string $eventId = null)
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Documents\Models\Revisions\DocumentRevision $version, bool $created, int $stateVersion, int $epoch, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Documents\Models\Revisions\DocumentRevision $version
   readonly \Vaulter\Models\Drive\Node $node
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly bool $created
   readonly int $epoch
   readonly int $stateVersion
-  readonly int|null|string $actorId
+  readonly string $correlationId
   readonly string $eventId
 
 Vaulter\Documents\Events\Documents\DocumentCreated
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Documents\Models\Revisions\DocumentRevision $version, int $stateVersion, int $epoch, int|null|string $actorId = null, ?string $eventId = null)
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Documents\Models\Revisions\DocumentRevision $version, int $stateVersion, int $epoch, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Documents\Models\Revisions\DocumentRevision $version
   readonly \Vaulter\Models\Drive\Node $node
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly int $epoch
   readonly int $stateVersion
-  readonly int|null|string $actorId
+  readonly string $correlationId
   readonly string $eventId
 
 Vaulter\Documents\Events\Revisions\DocumentRestored
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Documents\Models\Revisions\DocumentRevision $version, \Vaulter\Documents\Models\Revisions\DocumentRevision $restoredFrom, int $epoch, int $stateVersion, int|null|string $actorId = null, ?string $eventId = null)
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Documents\Models\Revisions\DocumentRevision $version, \Vaulter\Documents\Models\Revisions\DocumentRevision $restoredFrom, int $epoch, int $stateVersion, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Documents\Models\Revisions\DocumentRevision $restoredFrom
   readonly \Vaulter\Documents\Models\Revisions\DocumentRevision $version
   readonly \Vaulter\Models\Drive\Node $node
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly int $epoch
   readonly int $stateVersion
-  readonly int|null|string $actorId
+  readonly string $correlationId
   readonly string $eventId
 
 Vaulter\Documents\Events\Revisions\DocumentRevisionCreated
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Documents\Models\Revisions\DocumentRevision $version, int $stateVersion, int $epoch, bool $restored = false, int|null|string $actorId = null, ?string $eventId = null)
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Documents\Models\Revisions\DocumentRevision $version, int $stateVersion, int $epoch, bool $restored, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Documents\Models\Revisions\DocumentRevision $version
   readonly \Vaulter\Models\Drive\Node $node
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly bool $restored
   readonly int $epoch
   readonly int $stateVersion
-  readonly int|null|string $actorId
+  readonly string $correlationId
   readonly string $eventId
 
 FACADE Vaulter\Documents\Facades\Documents

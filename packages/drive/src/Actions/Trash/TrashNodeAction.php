@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Actions\Trash;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\Trash\TrashNodeInput;
 use Vaulter\Drive\Events\Nodes\NodeTrashed;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\NodeLocator;
@@ -26,6 +27,7 @@ final readonly class TrashNodeAction
         private TreeGuard $tree,
         private NodeSequence $sequence,
         private DriveLifecycle $lifecycle,
+        private EventRecorder $recorder,
     ) {}
 
     public function execute(OperationContext $context, TrashNodeInput $data): Node
@@ -54,8 +56,7 @@ final readonly class TrashNodeAction
                 $this->sequence->bump($member);
             }
             $fresh = $current->refresh();
-            event(new NodeTrashed(node: $fresh, actorId: $context->actor->ref()->id,
-                actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $this->recorder->record(new NodeTrashed(node: $fresh, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return $fresh;
         });

@@ -14,9 +14,9 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 
 /**
  * A transactional-outbox row (master plan §2.11 / D14 / M3b): a domain event
- * durably staged for reliable webhook fan-out. event_id is UNIQUE — the SYNCHRONOUS
- * half (the OutboxRecorder) is idempotent by it, so the same event never stages a
- * duplicate row, and the relay drains each row exactly once.
+ * durably staged for reliable webhook fan-out, its payload the webhook envelope.
+ * event_id is UNIQUE — the OutboxRecorder writes one row per occurrence, so the same
+ * event never stages a duplicate row, and the relay drains each row exactly once.
  *
  * Swappable — point configuration key vaulter.models.outbox at a subclass for tenant
  * scoping or extra behaviour.
@@ -24,6 +24,11 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  * @property int|string           $id
  * @property string               $event_id
  * @property string               $profile
+ * @property int|string|null      $tenant_id
+ * @property int|string|null      $drive_id
+ * @property string|null          $aggregate_type
+ * @property string|null          $aggregate_id
+ * @property int|null             $sequence
  * @property string|null          $topic
  * @property string               $event
  * @property array<string, mixed> $payload
@@ -45,8 +50,7 @@ class Outbox extends Model
     /**
      * Fully guarded (F-P1.8-02): the transactional-outbox staging row — every
      * column is system-computed (event_id, payload, status, retry bookkeeping).
-     * The sole writer, OutboxRecorder::stage(), already uses forceFill()
-     * exclusively.
+     * The sole writer, OutboxRecorder::stage(), fills it with forceFill().
      *
      * @var list<string>
      */

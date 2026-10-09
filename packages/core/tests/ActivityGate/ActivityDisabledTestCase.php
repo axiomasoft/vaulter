@@ -8,9 +8,8 @@ use Illuminate\Foundation\Application;
 use Vaulter\Tests\TestCase;
 
 /**
- * Boots the package with the 'activity' feature turned OFF before the provider
- * boots, so the RecordsActivity subscriber is never registered. Exercises the gate:
- * with auditing disabled the Drive events fire unobserved and no rows are written.
+ * Boots the package with the 'activity' feature turned OFF. Exercises the gate: with
+ * auditing disabled the EventRecorder skips the activity sink and no rows are written.
  */
 abstract class ActivityDisabledTestCase extends TestCase
 {

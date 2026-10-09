@@ -8,13 +8,12 @@ use Vaulter\Attributes\Label;
 use Vaulter\Support\Concerns\HasLabel;
 
 /**
- * The audit verb vocabulary written to v_activity (master plan §2.9 /
- * M2c-activity). Each domain event maps to EXACTLY one verb; the verb is the
- * (verb, created_at desc) feed-filter axis. Dotted, namespaced values
+ * The closed catalogue of Vaulter event types: the activity verb, the outbox event
+ * name and the webhook "type" are the same value. Dotted, namespaced values
  * (folder.created, file.uploaded, …) keep the feed legible and stable for hosts.
  *
- * The map event → verb is owned by the ActivityRecorder; this enum is the closed
- * set of values it may write.
+ * activityTypes() and webhookTypes() say which sink records a type; a disabled
+ * feature still turns its whole sink off.
  */
 enum EventType: string
 {
@@ -71,7 +70,56 @@ enum EventType: string
     #[Label('Share revoked')]
     case ShareRevoked = 'share.revoked';
 
-    /** @return list<self> */
+    #[Label('Drive archived')]
+    case DriveArchived = 'drive.archived';
+
+    #[Label('Drive unarchived')]
+    case DriveUnarchived = 'drive.unarchived';
+
+    #[Label('Drive deleted')]
+    case DriveDeleted = 'drive.deleted';
+
+    #[Label('File revision deleted')]
+    case FileRevisionDeleted = 'file.revision_deleted';
+
+    #[Label('Document created')]
+    case DocumentCreated = 'document.created';
+
+    #[Label('Document updated')]
+    case DocumentUpdated = 'document.updated';
+
+    #[Label('Document revision created')]
+    case DocumentRevisionCreated = 'document.revision_created';
+
+    #[Label('Document restored')]
+    case DocumentRestored = 'document.restored';
+
+    #[Label('Comment added')]
+    case CommentAdded = 'comment.added';
+
+    #[Label('Comment resolved')]
+    case CommentResolved = 'comment.resolved';
+
+    #[Label('Comment deleted')]
+    case CommentDeleted = 'comment.deleted';
+
+    /**
+     * Types written to the activity feed. Every content save of a document would
+     * flood it, so document.updated is left out.
+     *
+     * @return list<self>
+     */
+    public static function activityTypes(): array
+    {
+        return array_values(array_filter(self::cases(), static fn (self $type): bool => $type !== self::DocumentUpdated));
+    }
+
+    /**
+     * Types a webhook endpoint may subscribe to. Upload sessions are an internal
+     * lifecycle and are only audited.
+     *
+     * @return list<self>
+     */
     public static function webhookTypes(): array
     {
         return array_values(array_filter(self::cases(), static fn (self $type): bool => !in_array(
@@ -79,6 +127,16 @@ enum EventType: string
             [self::UploadInitiated, self::UploadAborted, self::UploadExpired],
             true,
         )));
+    }
+
+    public function isActivity(): bool
+    {
+        return in_array($this, self::activityTypes(), true);
+    }
+
+    public function isWebhook(): bool
+    {
+        return in_array($this, self::webhookTypes(), true);
     }
 
     /** @return list<string> */

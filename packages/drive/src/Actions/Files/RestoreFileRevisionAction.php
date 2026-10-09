@@ -10,6 +10,7 @@ use Vaulter\Drive\Content\CopyDestinationAdmission;
 use Vaulter\Drive\Content\ScanAdmission;
 use Vaulter\Drive\Data\Files\RestoreFileRevisionInput;
 use Vaulter\Drive\Events\Files\FileRevisionAdded;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Content\ContentQuarantinedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\FileRevision;
@@ -27,7 +28,7 @@ use Vaulter\Support\TreeGuard;
 
 final readonly class RestoreFileRevisionAction
 {
-    public function __construct(private VaulterDatabase $database, private TreeGuard $tree, private NodeLocator $locator, private NodeSequence $sequence, private FileStoreRepository $files, private FileRevisionStoreRepository $revisions, private NodeStoreRepository $nodes, private DriveStoreRepository $drives, private BlobStore $blobs, private CopyDestinationAdmission $admission, private DrivePolicyEnforcer $policy, private DriveLifecycle $lifecycle) {}
+    public function __construct(private VaulterDatabase $database, private TreeGuard $tree, private NodeLocator $locator, private NodeSequence $sequence, private FileStoreRepository $files, private FileRevisionStoreRepository $revisions, private NodeStoreRepository $nodes, private DriveStoreRepository $drives, private BlobStore $blobs, private CopyDestinationAdmission $admission, private DrivePolicyEnforcer $policy, private DriveLifecycle $lifecycle, private EventRecorder $recorder) {}
 
     public function execute(OperationContext $context, RestoreFileRevisionInput $data): FileRevision
     {
@@ -72,7 +73,7 @@ final readonly class RestoreFileRevisionAction
             $this->files->repointHead($file, $revision->id, $revision->mime_type, $revision->size_bytes, $revision->number);
             $this->nodes->cacheHead($node, $revision->mime_type, $node->extension, $revision->size_bytes, $context->actor->ref()->id);
             $this->sequence->bump($node);
-            event(new FileRevisionAdded(node: $node, file: $file, version: $revision, versionNo: $revision->number, actorId: $context->actor->ref()->id, actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $this->recorder->record(new FileRevisionAdded(node: $node, file: $file, version: $revision, versionNo: $revision->number, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return $revision;
         });

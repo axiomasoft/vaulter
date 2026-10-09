@@ -1089,6 +1089,17 @@ Vaulter\Enums\Events\EventType
   GrantRevoked = grant.revoked
   ShareCreated = share.created
   ShareRevoked = share.revoked
+  DriveArchived = drive.archived
+  DriveUnarchived = drive.unarchived
+  DriveDeleted = drive.deleted
+  FileRevisionDeleted = file.revision_deleted
+  DocumentCreated = document.created
+  DocumentUpdated = document.updated
+  DocumentRevisionCreated = document.revision_created
+  DocumentRestored = document.restored
+  CommentAdded = comment.added
+  CommentResolved = comment.resolved
+  CommentDeleted = comment.deleted
 
 FACADE Vaulter\Facades\Vaulter
   static DriveHandle drive(Model $ownerOrDrive, ?string $profile = null)
@@ -1099,35 +1110,87 @@ FACADE Vaulter\Facades\Vaulter
   static mixed withoutTenancy(Closure $callback)
 
 Vaulter\Events\Access\NodeGrantCreated
-  __construct(\Vaulter\Models\Access\NodeGrant $grant, int|null|string $actorId = null, ?string $eventId = null, ?\Vaulter\ValueObjects\Access\ActorRef $actor = null, ?string $correlationId = null)
-  readonly ?\Vaulter\ValueObjects\Access\ActorRef $actor
-  readonly ?string $correlationId
+  __construct(\Vaulter\Models\Access\NodeGrant $grant, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Access\NodeGrant $grant
-  readonly int|null|string $actorId
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
   readonly string $eventId
 
 Vaulter\Events\Access\NodeGrantRevoked
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Access\ValueObjects\Subject $subject, int $revoked, int|null|string $actorId = null, ?string $eventId = null, ?\Vaulter\ValueObjects\Access\ActorRef $actor = null, ?string $correlationId = null)
-  readonly ?\Vaulter\ValueObjects\Access\ActorRef $actor
-  readonly ?string $correlationId
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Access\ValueObjects\Subject $subject, int $revoked, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Access\ValueObjects\Subject $subject
   readonly \Vaulter\Models\Drive\Node $node
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly int $revoked
-  readonly int|null|string $actorId
+  readonly string $correlationId
   readonly string $eventId
 
+Vaulter\Events\DomainEvent
+  __construct(\Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): ?\Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
+  readonly string $eventId
+
+Vaulter\Events\EventRecorder
+  __construct(\Vaulter\Database\VaulterDatabase $database, \Vaulter\Configuration\VaulterConfig $config, \Illuminate\Contracts\Container\Container $container, \Vaulter\Contracts\Observability\MetricsRecorder $metrics)
+  record(\Vaulter\Events\DomainEvent $event): void
+
+
 Vaulter\Events\Sharing\NodeShareCreated
-  __construct(\Vaulter\Models\Sharing\NodeShare $share, int|null|string $actorId = null, ?string $eventId = null, ?\Vaulter\ValueObjects\Access\ActorRef $actor = null, ?string $correlationId = null)
-  readonly ?\Vaulter\ValueObjects\Access\ActorRef $actor
-  readonly ?string $correlationId
+  __construct(\Vaulter\Models\Sharing\NodeShare $share, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Sharing\NodeShare $share
-  readonly int|null|string $actorId
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
   readonly string $eventId
 
 Vaulter\Events\Sharing\NodeShareRevoked
-  __construct(\Vaulter\Models\Sharing\NodeShare $share, int|null|string $actorId = null, ?string $eventId = null, ?\Vaulter\ValueObjects\Access\ActorRef $actor = null, ?string $correlationId = null)
-  readonly ?\Vaulter\ValueObjects\Access\ActorRef $actor
-  readonly ?string $correlationId
+  __construct(\Vaulter\Models\Sharing\NodeShare $share, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Sharing\NodeShare $share
-  readonly int|null|string $actorId
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
   readonly string $eventId

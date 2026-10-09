@@ -9,13 +9,11 @@ use Illuminate\Queue\Jobs\SyncJob;
 use Illuminate\Support\Facades\Http;
 use Symfony\Component\HttpFoundation\Response;
 use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Activity\ActivityRecorder;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Drive\Actions\Nodes\MoveNodeAction;
 use Vaulter\Drive\Data\Nodes\MoveNodeInput;
 use Vaulter\Drive\Exceptions\Nodes\NodeCycleException;
 use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Events\EventType;
 use Vaulter\Http\Middleware\RecordVaulterRequestMetrics;
 use Vaulter\Load\Listeners\RecordBroadcastQueueWait;
 use Vaulter\Load\Observability\CollaborationRoomMetrics;
@@ -99,12 +97,8 @@ it('records vaulter_tree_cte_anchors when grant filtering resolves subtree ancho
 });
 
 it('records vaulter_activity_write_total when activity is persisted', function (): void {
-    $storage = DriveTestHelpers::drive()->model();
-
-    app(ActivityRecorder::class)->record(
-        verb: EventType::DriveCreated,
-        storageId: $storage->getKey(),
-    );
+    // Provisioning records drive.created through the EventRecorder.
+    DriveTestHelpers::drive()->model();
 
     app(MetricsRecorder::class)->assertCounter(
         name: 'vaulter_activity_write_total',

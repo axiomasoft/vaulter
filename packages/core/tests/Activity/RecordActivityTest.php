@@ -2,41 +2,57 @@
 
 declare(strict_types=1);
 
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Activity\ActivityRecorder;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Data\Activity\RecordActivityCommand;
 use Vaulter\Data\Drive\CopyOptions;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Events\Nodes\FolderCreated;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Events\Access\NodeGrantCreated;
 use Vaulter\Events\Access\NodeGrantRevoked;
+use Vaulter\Events\DomainEvent;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Events\Sharing\NodeShareCreated;
 use Vaulter\Events\Sharing\NodeShareRevoked;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Repositories\Activity\ActivityStoreRepository;
+use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Activity\ActivityTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 use Vaulter\Tests\Sharing\ShareTestHelpers;
+use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
  * The append-only activity feed (§2.9 / M2c-activity). Each Drive domain event must
  * produce EXACTLY ONE activity row with the right verb/actor/target/context —
  * recipients resolved at READ, never a per-affected-user fan-out (§1.5). Recording
- * is gated on the 'activity' feature and is resilient: a recorder failure never
- * breaks the originating action.
+ * is gated on the 'activity' feature and atomic: a failed write rolls the
+ * originating action back.
  */
 beforeEach(function (): void {
     // The recorder runs; the base suite is open (null driver) so Drive ops succeed.
     config()->set('vaulter.features.share_links', true);
     $this->actingAs((new TestUser)->forceFill(['id' => 7]));
 });
+
+/** Record an event the way an Action does: inside a Vaulter transaction. */
+function recordActivityEvent(DomainEvent $event): void
+{
+    app(VaulterDatabase::class)->transaction(fn () => app(EventRecorder::class)->record($event));
+}
+
+function recordActivityActor(): ActorRef
+{
+    return new ActorRef(type: (new TestUser)->getMorphClass(), id: 7);
+}
 
 // ─────────────────────────────── one event ⇒ one row ──────────────────────────
 
@@ -160,7 +176,7 @@ it('writes one grant.created row from the grant event', function (): void {
     $node = AccessTestHelpers::folder($storage, null, 'shared');
     $grant = AccessTestHelpers::grant($node, RoleRegistry::WRITER, scope: GrantScope::Subtree);
 
-    event(new NodeGrantCreated(grant: $grant, actorId: 7));
+    recordActivityEvent(new NodeGrantCreated(grant: $grant, actor: recordActivityActor(), correlationId: (string) Str::ulid()));
 
     $row = ActivityTestHelpers::only(EventType::GrantCreated->value);
 
@@ -175,7 +191,7 @@ it('writes one grant.revoked row from the revoke event', function (): void {
     $node = AccessTestHelpers::folder($storage, null, 'locked');
     $subject = new Subject(type: (new TestUser)->getMorphClass(), id: 42);
 
-    event(new NodeGrantRevoked(node: $node, subject: $subject, revoked: 3, actorId: 7));
+    recordActivityEvent(new NodeGrantRevoked(node: $node, subject: $subject, revoked: 3, actor: recordActivityActor(), correlationId: (string) Str::ulid()));
 
     $row = ActivityTestHelpers::only(EventType::GrantRevoked->value);
 
@@ -189,8 +205,8 @@ it('writes one share.created and one share.revoked row from the share events', f
     $node = AccessTestHelpers::folder($storage, null, 'public');
     $share = ShareTestHelpers::share($node, token: 'tok-activity');
 
-    event(new NodeShareCreated(share: $share, actorId: 7));
-    event(new NodeShareRevoked(share: $share, actorId: 7));
+    recordActivityEvent(new NodeShareCreated(share: $share, actor: recordActivityActor(), correlationId: (string) Str::ulid()));
+    recordActivityEvent(new NodeShareRevoked(share: $share, actor: recordActivityActor(), correlationId: (string) Str::ulid()));
 
     expect(ActivityTestHelpers::only(EventType::ShareCreated->value)->target_id)->toEqual($node->id)
         ->and(ActivityTestHelpers::only(EventType::ShareRevoked->value)->context['token_prefix'])
@@ -215,28 +231,23 @@ it('writes exactly ONE row even when a folder has a deep subtree (no per-node fa
 
 // ─────────────────────────────── resilience ───────────────────────────────────
 
-it('does NOT break the originating action when the recorder throws', function (): void {
+it('rolls the originating action back when the activity write fails', function (): void {
+    $drive = DriveTestHelpers::drive();
+    $actor = DriveTestHelpers::actor($drive, 7);
+
     // A store repository that always fails simulates a broken audit sink.
-    $this->app->bind(ActivityStoreRepository::class, fn (): ActivityStoreRepository => new class(app(VaulterConfig::class)) extends ActivityStoreRepository
+    $this->app->bind(ActivityStoreRepository::class, fn (): ActivityStoreRepository => new class(app(VaulterConfig::class), app(VaulterDatabase::class), app(IdStrategyResolver::class)) extends ActivityStoreRepository
     {
         #[Override]
-        public function record(RecordActivityCommand $command): Activity
+        public function record(RecordActivityCommand $command): bool
         {
             throw new RuntimeException('audit sink is down');
         }
     });
 
-    Log::spy();
-
-    $drive = DriveTestHelpers::drive();
-
-    // The folder is created and returned even though recording failed.
-    $folder = $drive->actingAs(DriveTestHelpers::actor($drive, 7))->folders()->create('survives');
-
-    expect($folder->id)->toBeString()
-        ->and(Activity::query()->count())->toBe(0);
-
-    Log::shouldHaveReceived('warning')->atLeast()->once();
+    expect(fn () => $drive->actingAs($actor)->folders()->create('lost'))->toThrow(RuntimeException::class, 'audit sink is down')
+        ->and(DriveTestHelpers::model($drive->root()->id)->children()->where('name', 'lost')->exists())->toBeFalse()
+        ->and(Activity::query()->where('verb', EventType::FolderCreated->value)->exists())->toBeFalse();
 });
 
 // ─────────────────────────────── console/queue degrade ────────────────────────
@@ -250,10 +261,8 @@ it('degrades to null ip/user-agent/request-id off the HTTP lifecycle', function 
     app()->forgetInstance('request');
     app()->offsetUnset('request');
 
-    $recorder = app(ActivityRecorder::class);
-
     Activity::query()->delete();
-    $recorder->recordForNode(verb: EventType::FolderCreated, node: $node, actorId: 7);
+    recordActivityEvent(new FolderCreated(node: $node, actor: recordActivityActor(), correlationId: (string) Str::ulid()));
 
     $row = Activity::query()->firstOrFail();
 

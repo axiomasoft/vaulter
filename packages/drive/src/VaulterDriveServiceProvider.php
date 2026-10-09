@@ -29,7 +29,5 @@ final class VaulterDriveServiceProvider extends PackageServiceProvider
         $config = $this->app->make(DriveConfig::class);
         $config->model('upload_session');
         $config->model('upload_part');
-
-        (new HttpRegistrar)->boot($this->app);
     }
 }

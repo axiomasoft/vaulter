@@ -4,14 +4,25 @@ declare(strict_types=1);
 
 use Vaulter\Enums\Events\EventType;
 
-it('keeps the 0.2 stored vocabulary while excluding upload lifecycle events from webhook subscriptions', function (): void {
+it('keeps the 0.2 stored vocabulary and appends the 1.0 lifecycle, document and comment types', function (): void {
     expect(array_map(static fn (EventType $type): string => $type->value, EventType::cases()))->toBe([
         'drive.created', 'folder.created', 'file.uploaded', 'file.revision_added',
         'upload.initiated', 'upload.aborted', 'upload.expired',
         'node.moved', 'node.renamed', 'node.copied', 'node.trashed', 'node.restored',
         'node.purged', 'grant.created', 'grant.revoked', 'share.created', 'share.revoked',
+        'drive.archived', 'drive.unarchived', 'drive.deleted', 'file.revision_deleted',
+        'document.created', 'document.updated', 'document.revision_created', 'document.restored',
+        'comment.added', 'comment.resolved', 'comment.deleted',
     ]);
-    expect(EventType::webhookTypes())->toHaveCount(14)
+});
+
+it('keeps upload sessions out of webhooks and document saves out of the activity feed', function (): void {
+    expect(EventType::webhookTypes())->toHaveCount(25)
         ->not->toContain(EventType::UploadInitiated, EventType::UploadAborted, EventType::UploadExpired)
-        ->and(EventType::names())->toContain('drive.created', 'folder.created', 'file.revision_added');
+        ->and(EventType::names())->toContain('drive.created', 'folder.created', 'file.revision_added', 'document.updated')
+        ->and(EventType::activityTypes())->toHaveCount(27)
+        ->not->toContain(EventType::DocumentUpdated)
+        ->and(EventType::UploadInitiated->isActivity())->toBeTrue()
+        ->and(EventType::UploadInitiated->isWebhook())->toBeFalse()
+        ->and(EventType::DocumentUpdated->isActivity())->toBeFalse();
 });

@@ -9,6 +9,7 @@ use Vaulter\Documents\Data\Comments\AddCommentInput;
 use Vaulter\Documents\Events\Comments\CommentAdded;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Repositories\Comments\NodeCommentStoreRepository;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\Node;
@@ -36,6 +37,7 @@ final readonly class AddCommentAction
         private VaulterDatabase $database,
         private TreeGuard $tree,
         private DriveLifecycle $lifecycle,
+        private EventRecorder $recorder,
     ) {}
 
     public function execute(OperationContext $context, Node $node, AddCommentInput $data): NodeComment
@@ -63,7 +65,8 @@ final readonly class AddCommentAction
                 'body' => $data->body,
                 'anchor' => $data->anchor,
             ]);
-            event(new CommentAdded($comment));
+            $comment->setRelation('node', $current);
+            $this->recorder->record(new CommentAdded(comment: $comment, actor: $author, correlationId: $context->correlationId));
 
             return $comment;
         });

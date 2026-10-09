@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\Subject;
@@ -11,85 +10,88 @@ use Vaulter\Drive\Events\Nodes\FolderCreated;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Events\Access\NodeGrantCreated;
 use Vaulter\Events\Access\NodeGrantRevoked;
-use Vaulter\Models\Access\NodeGrant;
+use Vaulter\Events\DomainEvent;
+use Vaulter\Events\EventRecorder;
+use Vaulter\Events\Sharing\NodeShareCreated;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Tests\Sharing\ShareTestHelpers;
+use Vaulter\ValueObjects\Access\ActorRef;
+use Vaulter\Webhooks\EventEnvelope;
 use Vaulter\Webhooks\OutboxRecorder;
-use Vaulter\Webhooks\RecordsOutbox;
 
 /**
- * The SYNCHRONOUS half of the transactional outbox (§2.11 / D14 / M3b): each fanned-out
- * Drive domain event stages EXACTLY ONE v_outbox row, idempotent by event_id, with a
- * slim payload (no secrets/blob bytes). Staging is gated on the 'reliability' feature
- * and is resilient — a recorder failure never breaks the originating action.
+ * The SYNCHRONOUS half of the transactional outbox (§2.11 / D14 / M3b): each recorded
+ * domain event stages EXACTLY ONE v_outbox row, idempotent by event_id, whose payload is
+ * the thin webhook envelope (ids, enums, counters — no names, secrets or blob bytes).
  */
 beforeEach(function (): void {
-    // The base suite is open (null driver), so the Drive ops succeed and fire events.
+    // The base suite is open (null driver), so the Drive ops succeed and record events.
+    config()->set('vaulter.features.share_links', true);
     $this->actingAs((new TestUser)->forceFill(['id' => 7]));
 });
+
+function outboxStagingRecord(DomainEvent $event): void
+{
+    app(VaulterDatabase::class)->transaction(fn () => app(EventRecorder::class)->record($event));
+}
+
+function outboxStagingActor(): ActorRef
+{
+    return new ActorRef(type: (new TestUser)->getMorphClass(), id: 7);
+}
 
 // ─────────────────────────── one event ⇒ one outbox row ───────────────────────────
 
 it('stages exactly one outbox row when a storage is provisioned', function (): void {
-    DriveTestHelpers::drive()->model();
+    $storage = DriveTestHelpers::drive()->model();
 
     $rows = Outbox::query()->where('event', EventType::DriveCreated->value)->get();
 
     expect($rows)->toHaveCount(1)
         ->and($rows->first()->status)->toBe('pending')
-        ->and($rows->first()->payload['name'])->not->toBeNull();
+        ->and($rows->first()->payload['subject'])->toBe(['type' => 'drive', 'id' => (string) $storage->getKey()])
+        ->and($rows->first()->payload['data']['root_node_id'])->toBe((string) $storage->root_node_id)
+        ->and($rows->first()->payload['actor']['type'])->toBe(ActorRef::SYSTEM_TYPE);
 });
 
-it('stages a folder.created row carrying the actor and a slim payload', function (): void {
+it('stages a folder.created row carrying the actor and a thin payload', function (): void {
     $storage = AccessTestHelpers::storage();
 
     // Clear the provisioning rows so we assert the one we cause below.
     Outbox::query()->delete();
 
     $folder = AccessTestHelpers::folder($storage, null, 'reports');
-    event(new FolderCreated(node: $folder, actorId: 7));
+    outboxStagingRecord(new FolderCreated(node: $folder, actor: outboxStagingActor(), correlationId: (string) Str::ulid()));
 
-    $rows = Outbox::query()->where('event', EventType::FolderCreated->value)->get();
+    $row = Outbox::query()->where('event', EventType::FolderCreated->value)->sole();
 
-    expect($rows)->toHaveCount(1)
-        ->and($rows->first()->payload['node_id'])->toEqual($folder->getKey())
-        ->and($rows->first()->payload['name'])->toBe('reports')
-        ->and($rows->first()->payload['actor_id'])->toEqual(7)
-        // The event_id is mirrored into the payload so consumers dedupe on it.
-        ->and($rows->first()->payload['event_id'])->toBe($rows->first()->event_id);
+    expect($row->payload['subject'])->toBe(['type' => 'node', 'id' => (string) $folder->getKey()])
+        ->and($row->payload['data'])->toBe(['parent_id' => $folder->parent_id === null ? null : (string) $folder->parent_id])
+        ->and($row->payload['actor'])->toBe(['type' => (new TestUser)->getMorphClass(), 'id' => '7'])
+        ->and($row->payload)->not->toHaveKey('name')
+        // The envelope id is the occurrence id consumers dedupe on.
+        ->and($row->payload['id'])->toBe($row->event_id);
 });
 
 // ─────────────────────────── idempotency (event_id) ───────────────────────────
 
-it('is idempotent by event_id: re-staging the same occurrence stages no duplicate', function (): void {
+it('is idempotent by event_id: staging the same occurrence again inserts nothing', function (): void {
     $storage = AccessTestHelpers::storage();
     Outbox::query()->delete();
-
     $folder = AccessTestHelpers::folder($storage, null, 'dup');
-
-    // Two stagings under the SAME event_id key → the second is a no-op → one row. This
-    // exercises the core OutboxRecorder::stage() idempotency seam directly (the seam the
-    // vaulter-drive subscriber maps its node events through).
+    $event = new FolderCreated(node: $folder, actor: outboxStagingActor(), correlationId: (string) Str::ulid());
     $recorder = app(OutboxRecorder::class);
-    $eventId = (string) Str::ulid();
 
-    $stage = fn (): ?Outbox => $recorder->stage(
-        event: EventType::FolderCreated,
-        eventId: $eventId,
-        panel: $folder->profile,
-        topic: (string) $folder->getKey(),
-        payload: ['node_id' => $folder->getKey(), 'name' => 'dup'],
-        actorId: 7,
-    );
+    [$first, $second] = app(VaulterDatabase::class)->transaction(fn (): array => [
+        $recorder->stage($event, EventEnvelope::fromEvent($event)),
+        $recorder->stage($event, EventEnvelope::fromEvent($event)),
+    ]);
 
-    $first = $stage();
-    $second = $stage();
-
-    expect($first)->toBeInstanceOf(Outbox::class)
-        // The second staging is a no-op (returns null) — idempotent by event_id.
-        ->and($second)->toBeNull()
+    expect($first)->toBeTrue()
+        ->and($second)->toBeFalse()
         ->and(Outbox::query()->where('event', EventType::FolderCreated->value)->count())->toBe(1);
 });
 
@@ -100,18 +102,18 @@ it('keeps distinct grant occurrences with identical parameters and deduplicates 
     $subject = new Subject(type: $grant->subject_type, id: $grant->subject_id);
     Outbox::query()->delete();
 
-    foreach ([
-        new NodeGrantCreated(grant: $grant, actorId: 7),
-        new NodeGrantCreated(grant: $grant, actorId: 7),
-        new NodeGrantRevoked(node: $node, subject: $subject, revoked: 1, actorId: 7),
-        new NodeGrantRevoked(node: $node, subject: $subject, revoked: 1, actorId: 7),
-    ] as $event) {
-        event($event);
-        event($event);
+    $created = static fn (?string $eventId = null): NodeGrantCreated => new NodeGrantCreated(grant: $grant, actor: outboxStagingActor(), correlationId: 'c', eventId: $eventId);
+    $revoked = static fn (?string $eventId = null): NodeGrantRevoked => new NodeGrantRevoked(node: $node, subject: $subject, revoked: 1, actor: outboxStagingActor(), correlationId: 'c', eventId: $eventId);
+
+    foreach ([$created, $created, $revoked, $revoked] as $make) {
+        $event = $make();
+        outboxStagingRecord($event);
+        // A rebuilt event of the same occurrence is a replay, not a new row.
+        outboxStagingRecord($make($event->eventId));
 
         $row = Outbox::query()->where('event_id', $event->eventId)->sole();
         expect(Str::isUlid($row->event_id))->toBeTrue()
-            ->and($row->payload['event_id'])->toBe($event->eventId);
+            ->and($row->payload['id'])->toBe($event->eventId);
     }
 
     expect(Outbox::query()->where('event', EventType::GrantCreated->value)->count())->toBe(2)
@@ -119,51 +121,17 @@ it('keeps distinct grant occurrences with identical parameters and deduplicates 
         ->and(Outbox::query()->distinct()->count('event_id'))->toBe(4);
 });
 
-it('retains an explicit occurrence id across reconstructed events', function (): void {
+it('never serializes a share secret, token or token prefix', function (): void {
     $storage = AccessTestHelpers::storage();
-    $node = AccessTestHelpers::folder($storage, null, 'Replay');
-    Outbox::query()->delete();
-    $eventId = (string) Str::ulid();
-
-    event(new FolderCreated(node: $node, actorId: 7, eventId: $eventId));
-    event(new FolderCreated(node: $node, actorId: 7, eventId: $eventId));
-
-    $row = Outbox::query()->sole();
-    expect($row->event_id)->toBe($eventId)
-        ->and($row->payload['event_id'])->toBe($eventId);
-});
-
-it('never serializes a share secret — only the non-secret token_prefix travels', function (): void {
-    // This is a payload-shape guard: the recorder must not leak token_hash/secret.
-    $storage = AccessTestHelpers::storage();
+    $node = AccessTestHelpers::folder($storage, null, 'public');
+    $share = ShareTestHelpers::share($node, token: 'tok-outbox');
     Outbox::query()->delete();
 
-    // Drive a node and assert the staged payload has no secret-shaped keys anywhere.
-    $folder = AccessTestHelpers::folder($storage, null, 'safe');
-    event(new FolderCreated(node: $folder, actorId: 7));
+    outboxStagingRecord(new NodeShareCreated(share: $share, actor: outboxStagingActor(), correlationId: (string) Str::ulid()));
 
-    $payload = Outbox::query()->where('event', EventType::FolderCreated->value)->firstOrFail()->payload;
+    $payload = Outbox::query()->where('event', EventType::ShareCreated->value)->sole()->payload;
 
-    expect(array_keys($payload))->not->toContain('signing_secret')
-        ->and(array_keys($payload))->not->toContain('token_hash')
-        ->and(array_keys($payload))->not->toContain('password');
-});
-
-// ─────────────────────────── resilience ───────────────────────────
-
-it('swallows + logs a staging failure so the originating action is unaffected', function (): void {
-    Log::spy();
-
-    // A recorder whose recording blows up; the subscriber must swallow + log it. The
-    // core RecordsOutbox handles the kernel (grant/share) events; the grant is never
-    // inspected because the mocked recorder throws before touching it.
-    $recorder = Mockery::mock(OutboxRecorder::class);
-    $recorder->shouldReceive('recordGrantCreated')->andThrow(new RuntimeException('boom'));
-
-    $subscriber = new RecordsOutbox($recorder, app(VaulterDatabase::class));
-
-    // Must NOT throw — the failure is logged and swallowed.
-    $subscriber->handleGrantCreated(new NodeGrantCreated(grant: new NodeGrant, actorId: 7));
-
-    Log::shouldHaveReceived('warning')->once();
+    expect(array_keys($payload['data']))->toBe(['node_id', 'role', 'role_version', 'audience', 'scope', 'expires_at'])
+        ->and(json_encode($payload, JSON_THROW_ON_ERROR))->not->toContain('tok-outbox')
+        ->and(json_encode($payload, JSON_THROW_ON_ERROR))->not->toContain((string) $share->token_prefix);
 });

@@ -6,6 +6,56 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### One event pipeline: DomainEvent and EventRecorder (PLAN2.P5.1, D22/D35/D58)
+
+Run `php artisan migrate`: `2026_10_10_000001_event_pipeline` makes `v_activity.event_id`
+unique (replacing its plain index) and adds `v_outbox.tenant_id`. If `v_activity` already holds
+the same non-null `event_id` twice, the migration stops before any change with the count and the
+query that lists them; remove or re-key those rows and migrate again.
+
+- **A failed activity or outbox write now fails the operation (behaviour change).** Before, the
+  subscribers wrote these rows in a savepoint (kernel events) or after the commit (drive events)
+  and only logged a failure, so a change could commit without its outbox row. Now the change, its
+  activity row and its outbox row commit or roll back together: if a row cannot be written, the
+  Action's transaction is rolled back and the exception reaches the caller.
+- **Events extend `Vaulter\Events\DomainEvent`; every constructor changed.** Before:
+  `new NodeRenamed(node: $n, fromName: 'a', toName: 'b', actorId: 7, eventId: null, actor: null, correlationId: null)`.
+  After: `new NodeRenamed(node: $n, fromName: 'a', toName: 'b', actor: $actorRef, correlationId: $id, eventId: null, occurredAt: null)`.
+  `$actorId` is gone (read `$event->actor->id`; `$event->actor->type` is the morph type), `actor`
+  and `correlationId` are required, and each event gained `occurredAt`. `DriveDeleted` and
+  `NodePurged` also take `tenantId` and `profile`; the upload, document and comment events take an
+  actor where they had only an id or nothing. The full list is in
+  [the events reference](docs/reference/events.md#constructors).
+- **Events are no longer `ShouldDispatchAfterCommit`, and dispatching them yourself records
+  nothing.** Vaulter's Actions hand events to `EventRecorder::record()` inside their transaction;
+  the recorder writes the rows and dispatches the event to your listeners after the commit.
+  Listeners still run after the commit, exactly once per occurrence. A listener that throws is
+  reported with `report()` (metric `vaulter_event_listener_failures_total`) and no longer surfaces
+  as an operation error. Code that called `event(new …)` for a Vaulter event to get an activity or
+  outbox row must call the matching operation instead.
+- **Subscribers removed.** `Vaulter\Activity\RecordsActivity`, `Vaulter\Webhooks\RecordsOutbox`,
+  `Vaulter\Drive\Activity\RecordsDriveActivity` and `Vaulter\Drive\Webhooks\RecordsDriveOutbox`
+  no longer exist, and `EventsRegistrar`/the drive `HttpRegistrar` subscribe nothing. The internal
+  `ActivityRecorder::recordGrantCreated()/…/recordForNode()` and `OutboxRecorder::recordGrantCreated()/…/stage(EventType, …)`
+  are replaced by `ActivityRecorder::record(DomainEvent): bool` and
+  `OutboxRecorder::stage(DomainEvent, array $envelope): bool`; `ActivityStoreRepository::record()`
+  returns `bool`, and `RecordActivityCommand` starts with the occurrence `eventId`.
+- **The outbox payload is the thin webhook envelope (PLAN2.D58).** Before: a flat payload with
+  `event_id`, `actor_id`, names, sizes and `token_prefix`. After:
+  `{id, type, version, source, time, tenant_id, drive_id, subject, sequence, actor, correlation_id, changes, data}`
+  with ids, enums and counters only — deduplicate on `id`; read names through the API. Rows staged
+  before the upgrade keep their old payload. Document and comment events now reach the activity
+  feed and webhooks, and the drive lifecycle events (`drive.archived`, `drive.unarchived`,
+  `drive.deleted`) and `file.revision_deleted` are recorded too: endpoints subscribed to `*` start
+  receiving them. Document content events carry `state_version`/`epoch` and a `null` `sequence`
+  (PLAN2.D35).
+- **`EventType` has eleven new cases** and `activityTypes()`, `isActivity()`, `isWebhook()`; code
+  that matches exhaustively over `EventType` must handle them. Feature flags `features.activity` and
+  `features.webhooks` are read when an event is recorded, not at boot.
+- **`UploadSessionManager::abort()` takes `?ActorRef $actor, ?string $correlationId`** instead of
+  `int|string|null $actorId`; without an actor the abort is recorded as the system. `initiate()`
+  now writes the session and its audit row in one transaction.
+
 ### One deletion model, trash roots and the drive lifecycle (PLAN2.P4.6, D27/D37)
 
 Run `php artisan migrate`: `2026_10_07_000003_node_trash_roots` adds `v_nodes.trash_root_id`

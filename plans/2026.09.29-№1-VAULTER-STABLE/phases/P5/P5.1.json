@@ -1,0 +1,544 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P5.1",
+  "title": "DomainEvent и EventRecorder: атомарная запись activity/outbox и слушатели после commit (C05)",
+  "status": "done_with_deviations",
+  "summary": "Все события становятся подклассами DomainEvent и записываются только через EventRecorder внутри транзакции Action: activity, outbox (конверт) и Laravel-событие хоста после commit; ошибка записи откатывает мутацию; четыре подписчика и ShouldDispatchAfterCommit удалены; события документов и комментариев впервые попадают в activity/outbox.",
+  "why": "E7/E8/N18 и D22: два режима событий, outbox теряется, документы вне каталога. C05: RecordsOutbox/RecordsActivity::safely проглатывают ошибку записи в savepoint — мутация коммитится без outbox (OutboxTransactionTest это закрепляет). Жёсткие риски: data-integrity (атомарность мутации и outbox), PG-специфика отравленной транзакции, порядок блокировок (запись последней), смена публичных сигнатур 28 событий.",
+  "scope": {
+    "include": [
+      "Ровно P5-design-events#DomainEvent и #Recorder: core/src/Events/DomainEvent.php, EventRecorder.php, ValueObjects/Events/{EventScope,EventSubject,ActivityTarget}.php; VaulterDatabase::insertOnce (PG/SQLite ON CONFLICT DO NOTHING, MySQL ON DUPLICATE KEY UPDATE col=col).",
+      "EventEnvelope::fromEvent (P5-design-events#Envelope) — outbox payload = конверт; changes.seq = null до P5.5.",
+      "Все 28 существующих событий (P5-design-events#Catalog, кроме НОВЫХ) → подклассы DomainEvent: обязательные ActorRef и correlationId, без $actorId и ShouldDispatchAfterCommit; type(), scope(), subject(), sequence(), data() по таблице Catalog, activityContext() переносит ровно текущие ключи контекста из ActivityRecorder/RecordsDriveActivity.",
+      "EventType: новые case document.created, document.updated, document.revision_created, document.restored, comment.added, comment.resolved, comment.deleted, drive.archived, drive.unarchived, drive.deleted, file.revision_deleted; статические матрицы activityTypes()/webhookTypes() по таблице Catalog (P5.2 переносит в атрибут).",
+      "Все места dispatch (core Actions Access/Sharing, drive Actions Nodes/Files/Trash/Drives/Uploads, DriveProvisioner, UploadSessionManager, documents Actions Documents/Revisions/Comments/Collaboration) → $recorder->record(...) последним шагом транзакции; там, где dispatch шёл вне транзакции Vaulter (DriveProvisioner, UploadSessionManager, PurgeDriveStepAction), обернуть мутацию и запись в VaulterDatabase::transaction.",
+      "Удалить RecordsOutbox, RecordsActivity, RecordsDriveOutbox, RecordsDriveActivity и их регистрацию; ActivityRecorder::record(DomainEvent): bool и OutboxRecorder::stage(DomainEvent, array): bool через insertOnce; per-event методы удалить.",
+      "Миграция 2026_10_10_000001_event_pipeline + SchemaBuilder: v_outbox.tenant_id, UNIQUE v_activity.event_id с preflight дублей (P5-design-events#Outbox).",
+      "Тесты: EventRecorderTest, EventPipelineArchTest, EventRecorderRollbackPgTest, EventPipelineMigrationTest, DriveEventsRecordedTest (V06), DocumentEventsRecordedTest; переписать ожидания OutboxTransactionTest/OutboxStagingTest/RecordActivityTest/FeatureGateTest/HttpRegistrarTest/UploadSessionActivityTest/R07bSessionContractsTest/CommentAfterCommitTest и метрик-тестов P83/P85, ссылающихся на удалённые классы — с записью «было → стало» в Completion Notes.",
+      "Docs: docs/reference/events.md + docs/ru/reference/events.md (раздел «как записываются события», таблица пока вручную — генератор P5.2), docs/guide/webhooks.md (атомарность, after-commit), docs/adr/0023-event-pipeline.md раздел Amendments (D35, D58), UPGRADE.md, CHANGELOG.md."
+    ],
+    "exclude": [
+      "Новые события node.updated, access.inheritance_changed, share.updated, share.rotated и атрибут EventSpec, генератор docs (P5.2)",
+      "Fan-out/lease/доставки (P5.3), подпись и заголовки (P5.4)",
+      "Журнал изменений и journal() (P5.5)",
+      "REST v1 (P6)"
+    ]
+  },
+  "depends_on": [],
+  "decisions": [
+    "D29",
+    "D31",
+    "D35",
+    "D51",
+    "D58"
+  ],
+  "skills": [
+    "laravel-testing:test-isolation-guard",
+    "devops:db-test-preflight",
+    "php:production-readiness-checklist"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/artifacts-P5-design-opus#F5",
+      "why": "Первый read (D06): дословная задача OPUS F5; остальные разделы документа — в пакете",
+      "required": true
+    },
+    {
+      "ref": "knowledge/P5-design#Order",
+      "why": "Порядок items и барьеры блока A",
+      "required": true
+    },
+    {
+      "ref": "knowledge/P5-invariants#LockOrder",
+      "why": "J — последняя блокировка: где ставить record()",
+      "required": true
+    },
+    {
+      "ref": "knowledge/security-correction-contract#Durability",
+      "why": "C05/C06 — точная формулировка обязательств",
+      "required": true
+    },
+    {
+      "ref": "knowledge/P5-industry-research-2026-10-09#Adoption",
+      "why": "Что принято/отложено — не расширять scope",
+      "required": true
+    },
+    {
+      "ref": "knowledge/validation-and-execution-policy#D51-Policy",
+      "why": "D51: режимы L / L+H-own / BARRIER, H только барьерами",
+      "required": true
+    },
+    {
+      "ref": "knowledge/validation-and-execution-policy#Before-Work",
+      "why": "check-profile.json до первой продуктовой правки",
+      "required": true
+    },
+    {
+      "ref": "knowledge/validation-and-execution-policy#Per-Item",
+      "why": "Affected-проверки после каждой правки, не чинить будущие items",
+      "required": true
+    },
+    {
+      "ref": "knowledge/validation-and-execution-policy#No-Mutators",
+      "why": "Запрет mutation tools; negative controls разрешены",
+      "required": true
+    },
+    {
+      "why": "Текущий savepoint-swallow (C05) — удаляется",
+      "required": true,
+      "path": "packages/core/src/Webhooks/RecordsOutbox.php"
+    },
+    {
+      "why": "Текущий stage() и payload — переписывается на конверт",
+      "required": true,
+      "path": "packages/core/src/Webhooks/OutboxRecorder.php"
+    },
+    {
+      "why": "Контексты activity ядра, переносимые в activityContext()",
+      "required": true,
+      "path": "packages/core/src/Activity/ActivityRecorder.php"
+    },
+    {
+      "why": "Контексты activity drive, переносимые в события",
+      "required": true,
+      "path": "packages/drive/src/Activity/RecordsDriveActivity.php"
+    },
+    {
+      "why": "Текущие payload drive (для сверки с тонкими data)",
+      "required": true,
+      "path": "packages/drive/src/Webhooks/RecordsDriveOutbox.php"
+    },
+    {
+      "why": "transaction/afterCommit/retryingOutermost — куда добавить insertOnce",
+      "required": true,
+      "path": "packages/core/src/Database/VaulterDatabase.php"
+    },
+    {
+      "why": "Регистрация подписчиков — удаляется",
+      "required": true,
+      "path": "packages/core/src/Providers/EventsRegistrar.php"
+    },
+    {
+      "why": "Регистрация drive-подписчиков — удаляется",
+      "required": true,
+      "path": "packages/drive/src/Providers/HttpRegistrar.php"
+    },
+    {
+      "why": "Ожидание C05-нарушения — переписать на откат",
+      "required": true,
+      "path": "packages/core/tests/Webhooks/OutboxTransactionTest.php"
+    },
+    {
+      "why": "Харнесс PG процессов для V07 «краш после commit»",
+      "required": true,
+      "path": "packages/core/tests/Concurrency/ForkRace.php"
+    },
+    {
+      "why": "Регрессия after-commit (V88 P4.6) — должна остаться зелёной на новом механизме",
+      "required": true,
+      "path": "packages/documents/tests/AfterCommit/CommentAfterCommitTest.php"
+    },
+    {
+      "ref": "knowledge/P5-midaudit-obligations",
+      "why": "Owning обязательства мид-аудита EV227/EV273/EV286 (выжимка ledger)",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/core/src/Events/DomainEvent.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Events/EventRecorder.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/ValueObjects/Events/EventScope.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/ValueObjects/Events/EventSubject.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/ValueObjects/Events/ActivityTarget.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Webhooks/EventEnvelope.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Database/VaulterDatabase.php",
+      "change": "modify",
+      "note": "insertOnce"
+    },
+    {
+      "path": "packages/core/src/Enums/Events/EventType.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Events/Access/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Events/Sharing/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Actions/Access/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Actions/Sharing/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Activity/ActivityRecorder.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Activity/RecordsActivity.php",
+      "change": "delete"
+    },
+    {
+      "path": "packages/core/src/Data/Activity/RecordActivityCommand.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Repositories/Activity/ActivityStoreRepository.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Webhooks/OutboxRecorder.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Webhooks/RecordsOutbox.php",
+      "change": "delete"
+    },
+    {
+      "path": "packages/core/src/Repositories/Webhooks/OutboxStoreRepository.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Models/Webhooks/Outbox.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Providers/EventsRegistrar.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Support/RequestContext.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Schema/SchemaBuilder.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/database/migrations/2026_10_10_000001_event_pipeline.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/src/Events/**/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/src/Actions/**/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/src/DriveProvisioner.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/src/Uploads/UploadSessionManager.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/src/Activity/RecordsDriveActivity.php",
+      "change": "delete"
+    },
+    {
+      "path": "packages/drive/src/Webhooks/RecordsDriveOutbox.php",
+      "change": "delete"
+    },
+    {
+      "path": "packages/drive/src/Providers/HttpRegistrar.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/documents/src/Events/**/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/documents/src/Actions/**/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/filament/src/Resources/ActivityResource.php",
+      "change": "modify",
+      "note": "только если ссылается на удалённые классы/verbs"
+    },
+    {
+      "path": "packages/core/tests/Events/EventRecorderTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Events/EventPipelineArchTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Concurrency/EventRecorderRollbackPgTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Upgrade/EventPipelineMigrationTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Webhooks/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/Activity/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/ActivityGate/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/Observability/P83/P83Section51MetricsTest.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/Observability/P85/P85Section53CoreMetricsTest.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/Arch/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/Fixtures/config/vaulter-0.2.php",
+      "change": "any",
+      "note": "только если фикстура ссылается на удалённые классы"
+    },
+    {
+      "path": "packages/drive/tests/Events/DriveEventsRecordedTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/tests/Providers/HttpRegistrarTest.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/tests/Uploads/UploadSessionActivityTest.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/tests/Uploads/R07bSessionContractsTest.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/tests/**/*.php",
+      "change": "modify",
+      "note": "конструкторы событий в существующих тестах"
+    },
+    {
+      "path": "packages/documents/tests/Events/DocumentEventsRecordedTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/documents/tests/AfterCommit/CommentAfterCommitTest.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/documents/tests/**/*.php",
+      "change": "modify",
+      "note": "конструкторы событий в существующих тестах"
+    },
+    {
+      "path": "packages/core/tests/Arch/PublicApiSnapshotTest.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/documents/tests/Arch/PublicApiSnapshotTest.php",
+      "change": "modify"
+    },
+    {
+      "path": "docs/reference/events.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/ru/reference/events.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/guide/webhooks.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/adr/0023-event-pipeline.md",
+      "change": "modify"
+    },
+    {
+      "path": "UPGRADE.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Обязательный контекст из документов, привязанных к item (доставляются в пакет целиком; reads указывают стартовые разделы): @plan/knowledge/artifacts-P5-design-opus.json — читать первым (D06); нормативный контракт @plan/knowledge/P5-design-events.json и общий @plan/knowledge/P5-design.json (Scope/Order/Errors/Stability/Seams); @plan/knowledge/P5-invariants.json; @plan/knowledge/P5-industry-research-2026-10-09.json (обоснование, scope не расширять); @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json (D29).",
+    "До первого product edit создать plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P5.1/check-profile.json: фактические изменяемые пути/вызывающие/фикстуры, точные cwd/env/команды, негативные контроли и адрес отложенного барьера (D51).",
+    "Только перечисленные пакеты и файлы-потребители; чужие dirty-правки, применённые миграции (2026_06_13_*, 2026_07_*, 2026_09_28_*, 2026_10_01_*, 2026_10_06_*, 2026_10_07_*) и OPUS не менять. Расхождение кода с P5-design → стоп и описание в Completion Notes/новый D#, не импровизация (D01).",
+    "Перед PG/MySQL-тестами: native laravel-testing:test-isolation-guard + devops:db-test-preflight и scripts/db-preflight.sh; только БД vaulter_test.",
+    "Публичная поверхность изменилась → golden PublicApiSnapshotTest пакета (core/documents/azgard, где есть), UPGRADE.md (было → стало, ссылки PLAN2.D58–D60/D50/D35), запись CHANGELOG.md [Unreleased] и тот же текст в plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P5.1/changelog-entry.md.",
+    "Комментарии в коде объясняют «почему», без кодов задач плана; docs/guide и docs/reference меняются в том же item; если у страницы есть зеркало docs/ru/…, обновить его тем же смыслом.",
+    "Нет push/PR/hosted CI/публикации и mutation tools (Infection, pest --mutate). Review: none (D51) — self-check + acceptance; risk-class и invariant-model: @plan/knowledge/P5-invariants.json, перед finish — self-check применимых P5-I* и интерферирующих пар в Completion Notes.",
+    "Новые каталоги тестов (packages/core/tests/Events, packages/core/tests/Changes, packages/<pkg>/tests/Events|Changes) должны попадать в существующие testsuites phpunit.xml (core — корневой phpunit.xml с directory packages/core/tests; пакеты — свой phpunit.xml с directory tests); не создавать отдельных конфигов.",
+    "SchemaBuilder описывает итоговую свежую схему; новая миграция апгрейдит существующие БД с hasColumn/hasIndex-гардами по образцу 2026_10_01_000009 и 2026_10_07_*; SchemaParityTest (fresh == upgraded) не ослаблять.",
+    "Risk-class: data-integrity + concurrency (C05). EventRecorder::record — единственный путь записи activity/outbox; ни одного try/catch вокруг синков, ни одного savepoint-swallow, ни одного Log::warning-пути.",
+    "record() вызывается последним шагом транзакции Action после всех блокировок T/N/D/F/R/Q/C (P5-invariants#LockOrder); Action, где dispatch сейчас стоит в середине транзакции, переносит запись в конец без изменения бизнес-логики.",
+    "insertOnce на MySQL — только ON DUPLICATE KEY UPDATE col = col; INSERT IGNORE и Laravel insertOrIgnore на MySQL запрещены (глотают ошибки усечения/FK).",
+    "Слушатели хоста: исключение после commit → report() и метрика, операция возвращает результат; не превращать это в повтор операции.",
+    "Документные события берут stateVersion/epoch из результата DocumentStateWriter (D35, EV227); sequence() у событий содержимого документа — null.",
+    "Прогоны (D51): L — V1–V3, V80, V81; H-проверки V4 (PG rollback/краш после commit, upgrade) и V5 (MySQL insertOnce) — kind=impact, исполняются барьером P5.2 (V90)."
+  ],
+  "guidance": "EventRecorderTest (SQLite): (1) успешная мутация → ровно одна строка activity и одна outbox с одинаковым event_id = envelope.id, слушатель хоста вызван 1 раз после commit; (2) fault injection: подменить OutboxRecorder в контейнере реализацией, бросающей RuntimeException → исключение пробрасывается из Operations-вызова, узел не переименован, activity пусто, слушатель не вызван; (3) record() вне транзакции → LogicException; (4) повторный record() события с тем же eventId (новый экземпляр, тот же id) в новой транзакции → no-op, второй dispatch нет; (5) матрица фич activity/webhooks on/off; (6) слушатель бросает → операция вернула результат, строки закоммичены, report() вызван (Exceptions::fake). EventRecorderRollbackPgTest (PG, ForkRace): ребёнок A выполняет rename с failing outbox на PG — родитель видит откат и отсутствие отравленной транзакции; ребёнок B коммитит rename и завершается posix_kill(SIGKILL) сразу после commit до after-commit — родитель видит строки activity и outbox (V07). EventPipelineArchTest: arch()->expect('Vaulter')->not->toImplement(ShouldDispatchAfterCommit::class); исходники packages/*/src не содержат `event(new` и `Event::dispatch(` (кроме EventRecorder) — проверка чтением файлов; классы Records* отсутствуют. DriveEventsRecordedTest V06: A→B→A→B rename → 3 события rename с разными event_id; trash→restore→trash → 3 строки lifecycle.\n\nОбразец Action после правки (RenameNodeAction):\nreturn $this->database->transaction(function () use (...): Node {\n    // … блокировки и запись как раньше …\n    $this->recorder->record(new NodeRenamed(node: $node->refresh(), fromName: $from, toName: $name, actor: $context->actor->ref(), correlationId: $context->correlationId));\n    return $node;\n});",
+  "examples": [
+    {
+      "path": "packages/drive/src/Actions/Nodes/RenameNodeAction.php"
+    },
+    {
+      "path": "packages/core/src/Webhooks/RecordsOutbox.php"
+    }
+  ],
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Events packages/core/tests/Webhooks packages/core/tests/Activity packages/core/tests/ActivityGate packages/core/tests/Arch packages/core/tests/Access packages/core/tests/Sharing packages/core/tests/Observability",
+      "expect": "exit0; EventRecorderTest (атомарность, fault injection, вне транзакции, duplicate, фичи, слушатель после commit), EventPipelineArchTest, переписанные Outbox*/Activity*/FeatureGate, golden core",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Events tests/Drive tests/Uploads tests/Providers tests/Arch",
+      "expect": "exit0; DriveEventsRecordedTest (каждое drive-событие: activity+outbox один event_id, V06), uploads activity-only",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V3",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Events tests/AfterCommit tests/Comment tests/Document tests/Collaboration tests/Operations tests/Arch",
+      "expect": "exit0; DocumentEventsRecordedTest (document.*/comment.* в activity/outbox, document.updated outbox только checkpoint), CommentAfterCommitTest, golden documents",
+      "kind": "acceptance",
+      "cwd": "packages/documents"
+    },
+    {
+      "id": "V4",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Concurrency/EventRecorderRollbackPgTest.php packages/core/tests/Upgrade/EventPipelineMigrationTest.php",
+      "expect": "Отложено (D51) → барьер P5.2 (V90): exit0; V07 откат на PG и строки после kill после commit; миграция на фикстуре 0.2 (UNIQUE activity.event_id, preflight дублей, outbox.tenant_id). Обязательный receipt: числовые executed_tests>=1 и skipped=0, discovered/matched test names и output; exit0 без тестов/с skip НЕ pass.",
+      "kind": "impact",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=mysql DB_HOST=127.0.0.1 DB_PORT=3306 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Events/EventRecorderTest.php packages/core/tests/Schema",
+      "expect": "Отложено (D51) → барьер P5.2 (V90): exit0; insertOnce ON DUPLICATE KEY на MySQL 8, свежая схема с UNIQUE activity.event_id. Обязательный receipt: числовые executed_tests>=1 и skipped=0, discovered/matched test names и output; exit0 без тестов/с skip НЕ pass.",
+      "kind": "impact",
+      "cwd": "."
+    },
+    {
+      "id": "V80",
+      "procedure": "На own candidate по check-profile: scripts/php84 vendor/bin/pint --test packages/core && scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress (cwd .); cd packages/drive && ../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress; то же в packages/documents и packages/filament. Negative controls в artifacts/P5.1/negative-controls.md: (a) временно обернуть outbox-синк в try/catch → EventRecorderTest fault-injection красный → точное восстановление; (b) временно вернуть implements ShouldDispatchAfterCommit одному событию → EventPipelineArchTest красный → восстановление.",
+      "expect": "все команды exit 0; negative controls записаны с фактическим красным выводом и восстановлением",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V81",
+      "cmd": "python3 plans/2026.09.29-№1-VAULTER-STABLE/artifacts/coverage/opus-coverage.py check",
+      "expect": "exit0; покрытие OPUS не регрессировало",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "DomainEvent/EventRecorder/EventEnvelope и insertOnce",
+    "28 событий на базе DomainEvent, все dispatch через рекордер",
+    "Удалённые четыре подписчика",
+    "Миграция event_pipeline",
+    "check-profile.json, negative-controls.md, changelog-entry.md в artifacts/P5.1"
+  ],
+  "route": {
+    "class": "frontier",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed",
+    "notes": "Внешние факты проверены при дизайне: @plan/knowledge/P5-industry-research-2026-10-09.json"
+  },
+  "result": {
+    "started_at": "2026-10-09T17:19:13Z",
+    "finished_at": "2026-10-09T18:14:02Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "session": "67c18f11-7dda-4a7c-88b3-26e5c60d910e"
+    },
+    "notes": "EventRecorder (activity->outbox via VaulterDatabase::insertOnce, first-sink rule, after-commit dispatch with report()+metric), DomainEvent + EventScope/EventSubject/ActivityTarget, EventEnvelope (thin, D58), 28 events migrated, 11 EventType cases, 4 subscribers removed, migration event_pipeline (UNIQUE activity.event_id with preflight, outbox.tenant_id), docs/UPGRADE/CHANGELOG. Checks: V1 421 passed/3 skipped/14 risky (risky pre-existing), V2 418/1 skip, V3 443/1 skip, V80 pint+phpstan core/drive/documents/filament green, extra-impact drive Feature etc 402 passed. Negative controls (a),(b) red->restore(sha equal)->green; (b) exposed an arch blind spot (expect('Vaulter') saw only core) fixed with per-namespace rule + token scan. Tests было->стало: OutboxTransactionTest savepoint-swallow -> failure rolls back; OutboxStagingTest flat payload -> envelope, swallow+log test removed (contradicts C05); RecordActivityTest 'does not break' -> 'rolls back'; event() in tests -> EventRecorder in a transaction; HttpRegistrarTest subscribers -> none; R07b handler calls -> recorder; R07Command upload context +correlation_id/system_reason; P83/P85 metrics via provisioning; OutboxRelay payload event_id -> id; CommentAfterCommitTest + atomic activity/outbox rows; NodeCommentActionTest actorId -> actor->id; goldens core/drive/documents. Self-check: P5-I1 (fault injection, NC a; PG at V90), P5-I2 (shared eventId, UNIQUE), P5-I3 (replay no-op, partial -> LogicException; MySQL at V90), P5-I4 (listener after commit once, failure reported; arch), P5-I5 (forbidden-key scan; P5.2 completes catalog), P5-I19 (document events from writer result), LockOrder: record() last in every Action (SetNodeInheritance moved after update; uploads after transition). Hard risk: data-integrity/concurrency/public API — task:review recommended.",
+    "deviations": [
+      "V81=1: missing ledger-P5.tsv from the uncommitted P5 design (clean HEAD passes); owner/plan-design must add it — not fabricated.",
+      "Design paths Events/DomainEvent.php, Events/EventRecorder.php, ValueObjects/Events/* allow-listed in core ArchTest (ADR-0017 Law 1/2).",
+      "Out-of-task_files paths: core/src/VaulterServiceProvider.php, drive/src/VaulterDriveServiceProvider.php, core/tests/Providers/EventsRegistrarTest.php, core/tests/Feature/EventTypeTest.php; drive/tests/Feature/{MutationContractsTest,OutboxEventIdentityTest} rewritten (outside V2 dirs, run in extra-impact).",
+      "Collaboration store: PersistCollaborationStateAction builds the ActorRef via HostUserResolver from the hub's actorId (system actor when null); hub and PersistCollaborationStateInput unchanged."
+    ],
+    "pending": [
+      "V4 (PG EventRecorderRollbackPgTest + EventPipelineMigrationTest) and V5 (MySQL EventRecorderTest + Schema) deferred to barrier P5.2 V90 (D51); tests written, skip on SQLite."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-09T18:14:02Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-09T18:14:02Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-09T18:14:02Z"
+      },
+      {
+        "id": "V80",
+        "exit": 0,
+        "at": "2026-10-09T18:14:02Z"
+      },
+      {
+        "id": "V81",
+        "exit": 1,
+        "at": "2026-10-09T18:14:02Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-09T18:14:02Z"
+}

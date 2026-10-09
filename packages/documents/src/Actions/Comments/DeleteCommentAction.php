@@ -9,6 +9,7 @@ use Vaulter\Documents\Data\Comments\DeleteCommentInput;
 use Vaulter\Documents\Events\Comments\CommentDeleted;
 use Vaulter\Documents\Exceptions\CommentNotFoundException;
 use Vaulter\Documents\Repositories\Comments\NodeCommentStoreRepository;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Support\DriveLifecycle;
@@ -28,6 +29,7 @@ final readonly class DeleteCommentAction
         private VaulterDatabase $database,
         private TreeGuard $tree,
         private DriveLifecycle $lifecycle,
+        private EventRecorder $recorder,
     ) {}
 
     public function execute(OperationContext $context, DeleteCommentInput $data): void
@@ -45,7 +47,8 @@ final readonly class DeleteCommentAction
             $row = $this->comments->lock($data->comment) ?? throw CommentNotFoundException::forNode($nodeId, $data->comment->getKey());
 
             $this->comments->delete($row);
-            event(new CommentDeleted($row, $context->actor->ref()->id));
+            $row->setRelation('node', $current);
+            $this->recorder->record(new CommentDeleted(comment: $row, actor: $context->actor->ref(), correlationId: $context->correlationId));
         });
     }
 }

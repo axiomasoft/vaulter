@@ -18,6 +18,7 @@ use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Support\DriveLifecycle;
@@ -43,6 +44,7 @@ final readonly class RestoreDocumentRevisionAction
         private VaulterDatabase $database,
         private TreeGuard $tree,
         private DriveLifecycle $lifecycle,
+        private EventRecorder $recorder,
     ) {}
 
     public function execute(OperationContext $context, RestoreDocumentRevisionInput $data): DocumentRevision
@@ -90,21 +92,23 @@ final readonly class RestoreDocumentRevisionAction
             ));
             $revision = $result->checkpoint ?? throw new LogicException('[Vaulter] A restore must create a checkpoint.');
 
-            event(new DocumentRevisionCreated(
+            $this->recorder->record(new DocumentRevisionCreated(
                 node: $node,
                 version: $revision,
                 stateVersion: $result->document->state_version,
                 epoch: $result->document->collab_epoch,
                 restored: true,
-                actorId: $actorId,
+                actor: $context->actor->ref(),
+                correlationId: $context->correlationId,
             ));
-            event(new DocumentRestored(
+            $this->recorder->record(new DocumentRestored(
                 node: $node,
                 version: $revision,
                 restoredFrom: $source,
                 epoch: $result->document->collab_epoch,
                 stateVersion: $result->document->state_version,
-                actorId: $actorId,
+                actor: $context->actor->ref(),
+                correlationId: $context->correlationId,
             ));
 
             return $revision;

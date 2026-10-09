@@ -12,6 +12,7 @@ use Vaulter\Drive\Events\Nodes\NodeCopied;
 use Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException;
 use Vaulter\Drive\Exceptions\Quota\QuotaExceededException;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Drive\QuotaExceededException as CoreQuotaExceededException;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
@@ -37,6 +38,7 @@ final readonly class CopyNodeAction
         private NodeContentLifecycleRegistry $lifecycles,
         private NameConflictResolver $names,
         private DriveLifecycle $lifecycle,
+        private EventRecorder $recorder,
     ) {}
 
     public function execute(OperationContext $context, CopyNodeInput $data): Node
@@ -107,8 +109,7 @@ final readonly class CopyNodeAction
                 if ($copiedBytes !== $addedBytes) {
                     throw new \LogicException('Copy lifecycle byte accounting is inconsistent.');
                 }
-                event(new NodeCopied(source: $current, copy: $copy, actorId: $context->actor->ref()->id,
-                    actor: $context->actor->ref(), correlationId: $context->correlationId));
+                $this->recorder->record(new NodeCopied(source: $current, copy: $copy, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
                 return $copy;
             }, 3);

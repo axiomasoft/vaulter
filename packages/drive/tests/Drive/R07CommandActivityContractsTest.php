@@ -156,7 +156,8 @@ it('upload session initiated activity carries the exact lifecycle context', func
     $drive = DriveTestHelpers::drive();
     app(VaulterDatabase::class)->write(fn () => Activity::query()->delete());
 
-    $session = app(UploadSessionManager::class)->initiate(context: OperationContext::system($drive->model(), 'test fixture'), data: new InitiateUploadInput(
+    $context = OperationContext::system($drive->model(), 'test fixture');
+    $session = app(UploadSessionManager::class)->initiate(context: $context, data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
         targetParent: $drive->root(),
         targetName: 'ctx.bin',
@@ -166,10 +167,14 @@ it('upload session initiated activity carries the exact lifecycle context', func
 
     $row = Activity::query()->where('verb', EventType::UploadInitiated->value)->sole();
 
+    // The recorder adds the operation's correlation id and the system actor's reason,
+    // as it does for every event.
     expect($row->context)->toEqual([
         'upload_id' => $session->upload_id,
         'protocol' => 'tus',
         'target_name' => 'ctx.bin',
+        'correlation_id' => $context->correlationId,
+        'system_reason' => 'test fixture',
     ]);
 });
 

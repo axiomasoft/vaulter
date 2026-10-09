@@ -7,7 +7,6 @@ use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Spatie\LaravelPackageTools\Package;
-use Vaulter\Drive\Activity\RecordsDriveActivity;
 use Vaulter\Drive\Console\PruneRevisionsCommand;
 use Vaulter\Drive\Console\PurgeDrivesCommand;
 use Vaulter\Drive\Console\PurgeTrashCommand;
@@ -19,40 +18,16 @@ use Vaulter\Drive\Http\Controllers\Drives\ShowDriveController;
 use Vaulter\Drive\Http\Controllers\Uploads\S3MultipartProtocolController;
 use Vaulter\Drive\Http\Controllers\Uploads\TusProtocolController;
 use Vaulter\Drive\Providers\HttpRegistrar;
-use Vaulter\Drive\Webhooks\RecordsDriveOutbox;
 use Vaulter\Http\Middleware\ResolveVaulterRouteParameters;
 
-it('registers each subscriber only when its own feature is enabled', function (bool $activity, bool $reliability): void {
+it('registers no event subscriber: events are recorded by the EventRecorder', function (bool $activity, bool $webhooks): void {
     config()->set('vaulter.features.activity', $activity);
-    config()->set('vaulter.features.webhooks', $reliability);
-    $original = Event::getFacadeRoot();
-    $events = new Dispatcher($this->app);
-    Event::swap($events);
+    config()->set('vaulter.features.webhooks', $webhooks);
 
-    try {
-        (new HttpRegistrar)->boot($this->app);
-
-        $listeners = [];
-
-        if ($activity) {
-            $listeners[] = [RecordsDriveActivity::class, 'handleNodeCreated'];
-        }
-
-        if ($reliability) {
-            $listeners[] = [RecordsDriveOutbox::class, 'handleNodeCreated'];
-        }
-
-        expect($events->getRawListeners()[FolderCreated::class] ?? [])->toBe($listeners)
-            ->and($events->getRawListeners()[UploadInitiated::class] ?? [])->toBe(
-                $activity ? [[RecordsDriveActivity::class, 'handleUploadSessionInitiated']] : [],
-            );
-    } finally {
-        Event::swap($original);
-    }
+    expect(Event::hasListeners(FolderCreated::class))->toBeFalse()
+        ->and(Event::hasListeners(UploadInitiated::class))->toBeFalse();
 })->with([
     'both disabled' => [false, false],
-    'activity only' => [true, false],
-    'reliability only' => [false, true],
     'both enabled' => [true, true],
 ]);
 

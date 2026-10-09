@@ -276,7 +276,8 @@ test('split technical roots keep classes in domain subfolders', function (): voi
     // root => list of bare class names allowed to remain at the flat root.
     $rootsWithAllowed = [
         'Enums' => [],
-        'Events' => [],
+        // The event pipeline's base class and its single recorder are cross-domain (PLAN2.D22).
+        'Events' => ['DomainEvent', 'EventRecorder'],
         'Models' => [], // Concerns/ is a subdir, not a depth-0 file.
         'Exceptions' => ['VaulterException'],
         'Repositories' => [],
@@ -336,11 +337,13 @@ test('split technical roots keep classes in domain subfolders', function (): voi
 test('technical layers are never nested under a domain module (ADR-0017 Law 1)', function (): void {
     $nested = layersNestedUnderDomain(__DIR__.'/../../src');
 
-    // Public error and test contracts live with their respective families.
-    expect(array_values(array_diff($nested, ['Exceptions/Contracts', 'Enums/Events', 'Testing/Contracts'])))->toBe([])
+    // Public error and test contracts live with their respective families; the event
+    // value objects are the ValueObjects domain "Events", like Enums/Events.
+    expect(array_values(array_diff($nested, ['Exceptions/Contracts', 'Enums/Events', 'Testing/Contracts', 'ValueObjects/Events'])))->toBe([])
         ->and(scandir(__DIR__.'/../../src/Exceptions/Contracts'))->toBe(['.', '..', 'ProblemException.php'])
         ->and(scandir(__DIR__.'/../../src/Testing/Contracts'))->toBe(['.', '..', 'PermissionDriverContractTests.php'])
-        ->and(scandir(__DIR__.'/../../src/Enums/Events'))->toBe(['.', '..', 'EventType.php']);
+        ->and(scandir(__DIR__.'/../../src/Enums/Events'))->toBe(['.', '..', 'EventType.php'])
+        ->and(scandir(__DIR__.'/../../src/ValueObjects/Events'))->toBe(['.', '..', 'ActivityTarget.php', 'EventScope.php', 'EventSubject.php']);
 });
 
 /**

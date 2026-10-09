@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drive\Activity\RecordsDriveActivity;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
@@ -23,6 +22,8 @@ use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Enums\Events\EventType;
+use Vaulter\Events\DomainEvent;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
@@ -30,6 +31,7 @@ use Vaulter\Operations\OperationContext;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\Actor;
+use Vaulter\ValueObjects\Access\ActorRef;
 
 // These tests drive handlers and repositories directly; Vaulter's entry points open the write scope, these calls do not.
 beforeEach(fn () => DriveTestHelpers::insideOperation());
@@ -342,19 +344,26 @@ it('R07b: UploadPart received_at casts to Carbon (L57/L61 received_at cast)', fu
     expect($part->received_at)->toBeInstanceOf(Carbon::class);
 });
 
-// ── RecordsDriveActivity: handleUploadSessionAborted context (L237/238) ───────
+// ── EventRecorder: upload.aborted activity context ───────
 
-it('R07b: handleUploadSessionAborted records all three context keys (L237/238 RemoveArrayItem)', function (): void {
+function r07bRecord(DomainEvent $event): void
+{
+    app(VaulterDatabase::class)->transaction(fn () => app(EventRecorder::class)->record($event));
+}
+
+function r07bActor(): ActorRef
+{
+    return new ActorRef(type: 'user', id: 42);
+}
+
+it('R07b: upload.aborted records all three context keys', function (): void {
     app(VaulterDatabase::class)->write(fn () => Activity::query()->delete());
 
     $session = UploadTestHelpers::session(UploadTestHelpers::storage(), totalSizeBytes: 8);
     app(VaulterDatabase::class)->write(fn () => $session->forceFill(['received_bytes' => 5])->save());
     $session->refresh();
 
-    // Call handler directly (synchronous, no ShouldDispatchAfterCommit delay in test context)
-    app(RecordsDriveActivity::class)->handleUploadSessionAborted(
-        new UploadAborted($session, actorId: 42),
-    );
+    r07bRecord(new UploadAborted(session: $session, actor: r07bActor(), correlationId: (string) Str::ulid()));
 
     $row = Activity::query()->where('verb', EventType::UploadAborted->value)->sole();
 
@@ -364,30 +373,26 @@ it('R07b: handleUploadSessionAborted records all three context keys (L237/238 Re
         ->and($row->context['received_bytes'])->toBe(5);
 });
 
-it('R07b: handleUploadSessionAborted upload_id context is the session upload_id (L237 exact value)', function (): void {
+it('R07b: upload.aborted upload_id context is the session upload_id', function (): void {
     app(VaulterDatabase::class)->write(fn () => Activity::query()->delete());
 
     $session = UploadTestHelpers::session(UploadTestHelpers::storage(), totalSizeBytes: 4);
-    app(RecordsDriveActivity::class)->handleUploadSessionAborted(
-        new UploadAborted($session->refresh()),
-    );
+    r07bRecord(new UploadAborted(session: $session->refresh(), actor: r07bActor(), correlationId: (string) Str::ulid()));
 
     $row = Activity::query()->where('verb', EventType::UploadAborted->value)->sole();
     expect($row->context['upload_id'])->toBe($session->upload_id);
 });
 
-// ── RecordsDriveActivity: handleUploadSessionExpired context (L252/253) ───────
+// ── EventRecorder: upload.expired activity context ───────
 
-it('R07b: handleUploadSessionExpired records all three context keys (L252/253 RemoveArrayItem)', function (): void {
+it('R07b: upload.expired records all three context keys', function (): void {
     app(VaulterDatabase::class)->write(fn () => Activity::query()->delete());
 
     $session = UploadTestHelpers::session(UploadTestHelpers::storage(), totalSizeBytes: 8);
     app(VaulterDatabase::class)->write(fn () => $session->forceFill(['received_bytes' => 3])->save());
     $session->refresh();
 
-    app(RecordsDriveActivity::class)->handleUploadSessionExpired(
-        new UploadExpired($session),
-    );
+    r07bRecord(new UploadExpired(session: $session, actor: Actor::system('upload expiry')->ref(), correlationId: (string) Str::ulid()));
 
     $row = Activity::query()->where('verb', EventType::UploadExpired->value)->sole();
 
@@ -396,7 +401,7 @@ it('R07b: handleUploadSessionExpired records all three context keys (L252/253 Re
         ->and($row->context['received_bytes'])->toBe(3);
 });
 
-it('R07b: handleUploadSessionExpired protocol is the tus protocol value (L253 exact value)', function (): void {
+it('R07b: upload.expired protocol is the tus protocol value', function (): void {
     app(VaulterDatabase::class)->write(fn () => Activity::query()->delete());
 
     $session = UploadTestHelpers::session(
@@ -405,23 +410,21 @@ it('R07b: handleUploadSessionExpired protocol is the tus protocol value (L253 ex
         totalSizeBytes: 4,
     );
 
-    app(RecordsDriveActivity::class)->handleUploadSessionExpired(
-        new UploadExpired($session->refresh()),
-    );
+    r07bRecord(new UploadExpired(session: $session->refresh(), actor: Actor::system('upload expiry')->ref(), correlationId: (string) Str::ulid()));
 
     $row = Activity::query()->where('verb', EventType::UploadExpired->value)->sole();
     expect($row->context['protocol'])->toBe('tus');
 });
 
-// ── RecordsDriveActivity: handleNodeForceDeleted node_ids are strings (L200 UnwrapArrayMap) ──
+// ── EventRecorder: node.purged node_ids are strings ──
 
-it('R07b: handleNodeForceDeleted node_ids are string-typed after Identity::stringify (L200 UnwrapArrayMap)', function (): void {
+it('R07b: node.purged node_ids are string-typed after Identity::stringify', function (): void {
     app(VaulterDatabase::class)->write(fn () => Activity::query()->delete());
 
     $storage = UploadTestHelpers::storage();
     $root = $storage->rootNode()->first();
 
-    // Use integer node ids (SQLite auto-increment) so UnwrapArrayMap would leave ints
+    // Use integer node ids (SQLite auto-increment) so a missing stringify would leave ints
     $node1 = new Node;
     $node1->forceFill([
         'drive_id' => $storage->getKey(),
@@ -432,11 +435,14 @@ it('R07b: handleNodeForceDeleted node_ids are string-typed after Identity::strin
     ]);
     app(VaulterDatabase::class)->write(fn () => $node1->save());
 
-    app(RecordsDriveActivity::class)->handleNodeForceDeleted(new NodePurged(
+    r07bRecord(new NodePurged(
         storageId: $storage->getKey(),
         nodeIds: [$node1->getKey()],
         freedBytes: 0,
-        actorId: 7,
+        tenantId: $storage->tenant_id,
+        profile: $storage->profile,
+        actor: r07bActor(),
+        correlationId: (string) Str::ulid(),
     ));
 
     $row = Activity::query()->where('verb', EventType::NodePurged->value)->sole();
@@ -445,8 +451,7 @@ it('R07b: handleNodeForceDeleted node_ids are string-typed after Identity::strin
     expect($nodeIds)->toBeArray()->not->toBeEmpty();
 
     foreach ($nodeIds as $id) {
-        // UnwrapArrayMap removes Identity::stringify() → raw int stored in JSON as number → retrieved as int
-        // Original → Identity::stringify() converts to string → stored as JSON string → retrieved as string
+        // Identity::stringify() stores the ids as JSON strings, not numbers.
         expect($id)->toBeString();
     }
 });

@@ -4,30 +4,63 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Events\Comments;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
-use Illuminate\Support\Str;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Models\Comments\NodeComment;
+use Vaulter\Enums\Events\EventType;
+use Vaulter\Events\DomainEvent;
 use Vaulter\Support\Identity;
+use Vaulter\ValueObjects\Access\ActorRef;
+use Vaulter\ValueObjects\Events\ActivityTarget;
+use Vaulter\ValueObjects\Events\EventScope;
+use Vaulter\ValueObjects\Events\EventSubject;
 
 /**
  * A node comment thread was marked resolved (ADR-0014 шаг 1). Broadcast on the node's
- * private collaboration channel so open editors reflect the resolution live. Carries
- * the actor who resolved it (also stamped as resolved_by on the row).
+ * private collaboration channel so open editors reflect the resolution live. The
+ * actor who resolved it is also stamped as resolved_by on the row.
  */
-final readonly class CommentResolved implements ShouldBroadcast, ShouldDispatchAfterCommit
+final readonly class CommentResolved extends DomainEvent implements ShouldBroadcast
 {
-    public string $eventId;
-
     public function __construct(
         public NodeComment $comment,
-        public int|string|null $actorId = null,
+        ActorRef $actor,
+        string $correlationId,
         ?string $eventId = null,
+        ?CarbonImmutable $occurredAt = null,
     ) {
-        $this->eventId = $eventId ?? (string) Str::ulid();
+        parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
+    }
+
+    public function type(): EventType
+    {
+        return EventType::CommentResolved;
+    }
+
+    public function scope(): EventScope
+    {
+        return self::nodeScope($this->comment->node);
+    }
+
+    public function subject(): EventSubject
+    {
+        return new EventSubject(type: 'comment', id: $this->comment->getKey());
+    }
+
+    public function data(): array
+    {
+        return [
+            'comment_id' => self::id($this->comment->getKey()),
+            'node_id' => self::id($this->comment->node_id),
+        ];
+    }
+
+    public function activityTarget(): ActivityTarget
+    {
+        return ActivityTarget::of($this->comment->node);
     }
 
     /**

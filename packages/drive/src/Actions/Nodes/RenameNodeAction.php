@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Actions\Nodes;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Data\Nodes\RenameNodeInput;
 use Vaulter\Drive\Events\Nodes\NodeRenamed;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Models\Drive\Node;
@@ -36,6 +37,7 @@ final readonly class RenameNodeAction
         private TreeGuard $tree,
         private DrivePolicyEnforcer $policy,
         private DriveLifecycle $lifecycle,
+        private EventRecorder $recorder,
     ) {}
 
     public function execute(OperationContext $context, RenameNodeInput $data): Node
@@ -80,11 +82,11 @@ final readonly class RenameNodeAction
 
             app(NodeSequence::class)->bump($renamed);
 
-            event(new NodeRenamed(
+            $this->recorder->record(new NodeRenamed(
                 node: $renamed,
                 fromName: $fromName,
                 toName: $name,
-                actorId: $context->actor->ref()->id, actor: $context->actor->ref(), correlationId: $context->correlationId,
+                actor: $context->actor->ref(), correlationId: $context->correlationId,
             ));
 
             return $renamed;

@@ -13,6 +13,7 @@ use Vaulter\Data\Sharing\CreateShareLinkInput;
 use Vaulter\Data\Sharing\MintedShareLink;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Sharing\ShareAudience;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Events\Sharing\NodeShareCreated;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
@@ -49,6 +50,7 @@ final readonly class CreateShareLinkAction
         private NodeLocator $locator,
         private ShareLinkRules $rules,
         private TenancyConfig $tenancy,
+        private EventRecorder $recorder,
     ) {}
 
     public function execute(OperationContext $context, CreateShareLinkInput $input): MintedShareLink
@@ -90,7 +92,7 @@ final readonly class CreateShareLinkAction
             ));
             $minted = new MintedShareLink(share: $share, token: $token);
 
-            event(new NodeShareCreated(share: $minted->share, actorId: $context->actor->ref()->id, actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $this->recorder->record(new NodeShareCreated(share: $minted->share, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return $minted;
         });

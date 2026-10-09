@@ -10,6 +10,7 @@ use Vaulter\Drive\Data\Nodes\MoveNodeInput;
 use Vaulter\Drive\Events\Nodes\NodeMoved;
 use Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException;
 use Vaulter\Drive\Exceptions\Nodes\NodeCycleException;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\NodeLocator;
@@ -50,6 +51,7 @@ final readonly class MoveNodeAction
         private DrivePolicyEnforcer $policy,
         private NameConflictResolver $names,
         private DriveLifecycle $lifecycle,
+        private EventRecorder $recorder,
     ) {}
 
     public function execute(OperationContext $context, MoveNodeInput $data): Node
@@ -100,11 +102,11 @@ final readonly class MoveNodeAction
 
             app(NodeSequence::class)->bump($moved);
 
-            event(new NodeMoved(
+            $this->recorder->record(new NodeMoved(
                 node: $moved,
                 fromParentId: $fromParentId,
                 toParentId: $toParentId,
-                actorId: $context->actor->ref()->id, actor: $context->actor->ref(), correlationId: $context->correlationId,
+                actor: $context->actor->ref(), correlationId: $context->correlationId,
             ));
 
             return $moved;

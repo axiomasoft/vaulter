@@ -16,7 +16,7 @@ final readonly class AbortUploadAction
     {
         $this->manager->withSession($session, function (UploadSession $locked) use ($context): void {
             $this->complete->authorizeSession(context: $context, session: $locked);
-            $this->manager->abort(session: $locked, actorId: $context->actor->ref()->id);
+            $this->manager->abort(session: $locked, actor: $context->actor->ref(), correlationId: $context->correlationId);
         });
     }
 }

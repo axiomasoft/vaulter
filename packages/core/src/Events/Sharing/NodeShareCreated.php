@@ -4,33 +4,74 @@ declare(strict_types=1);
 
 namespace Vaulter\Events\Sharing;
 
-use Illuminate\Support\Str;
+use Carbon\CarbonImmutable;
+use Vaulter\Enums\Events\EventType;
+use Vaulter\Events\DomainEvent;
 use Vaulter\Models\Sharing\NodeShare;
+use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
+use Vaulter\ValueObjects\Events\ActivityTarget;
+use Vaulter\ValueObjects\Events\EventScope;
+use Vaulter\ValueObjects\Events\EventSubject;
 
 /**
  * A bearer share-link was minted on a node (§2.7 / M2c). Carries the persisted
- * NodeShare (token_hash only — never the raw token) and the actor who created it.
- *
- * BREAKING CONTRACT (intentional, MAJOR — review P0.2 / F-P1.7-03): no longer
- * ShouldDispatchAfterCommit; dispatched SYNCHRONOUSLY INSIDE the mint transaction so
- * the outbox/activity rows stage atomically with the share — the listener sees the row
- * the same transaction wrote. Listeners MUST be synchronous and idempotent — never a
- * queued/after-commit side-effect off this event directly (drive that off the durable
- * outbox relay). See NodeGrantCreated for the full rationale and the Pending-Work note
- * on an additive after-commit signal.
+ * NodeShare (token_hash only — never the raw token); the token prefix is recorded in
+ * the activity feed only.
  */
-final readonly class NodeShareCreated
+final readonly class NodeShareCreated extends DomainEvent
 {
-    public string $eventId;
-
     public function __construct(
         public NodeShare $share,
-        public int|string|null $actorId = null,
+        ActorRef $actor,
+        string $correlationId,
         ?string $eventId = null,
-        public ?ActorRef $actor = null,
-        public ?string $correlationId = null,
+        ?CarbonImmutable $occurredAt = null,
     ) {
-        $this->eventId = $eventId ?? (string) Str::ulid();
+        parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
+    }
+
+    public function type(): EventType
+    {
+        return EventType::ShareCreated;
+    }
+
+    public function scope(): EventScope
+    {
+        return self::nodeScope($this->share->node);
+    }
+
+    public function subject(): EventSubject
+    {
+        return new EventSubject(type: 'share', id: $this->share->getKey());
+    }
+
+    public function data(): array
+    {
+        return [
+            'node_id' => self::id($this->share->node_id),
+            'role' => $this->share->role_key,
+            'role_version' => $this->share->role_version,
+            'audience' => $this->share->audience->value,
+            'scope' => $this->share->scope->value,
+            'expires_at' => $this->share->expires_at?->clone()->utc()->format('Y-m-d\TH:i:s\Z'),
+        ];
+    }
+
+    public function activityContext(): array
+    {
+        return [
+            'share_id' => Identity::stringify($this->share->getKey()),
+            'token_prefix' => $this->share->token_prefix,
+            'role' => $this->share->role_key,
+            'role_version' => $this->share->role_version,
+            'audience' => $this->share->audience->value,
+            'scope' => $this->share->scope->value,
+        ];
+    }
+
+    public function activityTarget(): ActivityTarget
+    {
+        return ActivityTarget::of($this->share->node);
     }
 }

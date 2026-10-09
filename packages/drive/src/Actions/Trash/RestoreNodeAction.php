@@ -9,6 +9,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Nodes\NameConflictResolver;
 use Vaulter\Drive\Data\Trash\RestoreNodeInput;
 use Vaulter\Drive\Events\Nodes\NodeRestored;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Nodes\NodeNotTrashedException;
@@ -38,6 +39,7 @@ final readonly class RestoreNodeAction
         private NameConflictResolver $names,
         private DrivePolicyEnforcer $policy,
         private DriveLifecycle $lifecycle,
+        private EventRecorder $recorder,
     ) {}
 
     /**
@@ -130,8 +132,7 @@ final readonly class RestoreNodeAction
                 $this->sequence->bump($member);
             }
             $fresh = $current->refresh();
-            event(new NodeRestored(node: $fresh, actorId: $context->actor->ref()->id,
-                actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $this->recorder->record(new NodeRestored(node: $fresh, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return $fresh;
         });

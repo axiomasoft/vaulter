@@ -172,6 +172,38 @@ final class VaulterDatabase
         $this->connection()->afterCommit($callback);
     }
 
+    /**
+     * Insert $row unless a row with the same $uniqueColumn value exists; true when this
+     * call inserted it. The conflict is resolved by the database, so two writers of
+     * the same occurrence cannot both insert, and any other failure (truncation, a
+     * foreign key, a lost connection) still throws. INSERT IGNORE is not used on
+     * MySQL because it downgrades exactly those errors to warnings.
+     *
+     * @internal
+     *
+     * @param array<string, mixed> $row column => database-ready value
+     */
+    public function insertOnce(string $table, array $row, string $uniqueColumn): bool
+    {
+        if (!array_key_exists($uniqueColumn, $row)) {
+            throw new LogicException('[Vaulter] insertOnce() needs a value for the unique column '.$uniqueColumn.'.');
+        }
+
+        $connection = $this->connection();
+        $query = $connection->table($table);
+        $grammar = $query->getGrammar();
+        $column = $grammar->wrap($uniqueColumn);
+        $sql = $grammar->compileInsert($query, [$row]).match ($connection->getDriverName()) {
+            'pgsql', 'sqlite' => ' on conflict ('.$column.') do nothing',
+            // With an unchanged row MySQL reports 0 affected rows, so the count still
+            // tells an insert (1) from a duplicate (0).
+            'mysql', 'mariadb' => ' on duplicate key update '.$column.' = '.$column,
+            default => throw new LogicException('[Vaulter] insertOnce() does not support the '.$connection->getDriverName().' driver.'),
+        };
+
+        return $connection->affectingStatement($sql, $query->cleanBindings(array_values($row))) === 1;
+    }
+
     private function requireTransaction(string $method): void
     {
         if ($this->connection()->transactionLevel() === 0) {

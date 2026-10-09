@@ -12,6 +12,7 @@ use Vaulter\Data\Access\GrantInput;
 use Vaulter\Data\Access\GrantNodeAccessInput;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Events\Access\NodeGrantCreated;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Access\UnenumerableGrantSubjectException;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Node;
@@ -36,6 +37,7 @@ final readonly class GrantNodeAccessAction
         private PermissionDriverManager $drivers,
         private VaulterDatabase $database,
         private NodeLocator $locator,
+        private EventRecorder $recorder,
     ) {}
 
     public function execute(OperationContext $context, GrantNodeAccessInput $input): NodeGrant
@@ -46,14 +48,11 @@ final readonly class GrantNodeAccessAction
         // a driver that cannot enumerate role subjects would be silently inert.
         $this->guardEnumerableSubject($node, $data);
 
-        // The event fires INSIDE the transaction (F-P1.7-03): the outbox/activity rows
-        // stage in the SAME commit as the grant — no crash window between commit and
-        // staging. The subscribers swallow their own failures, so staging still never
-        // rolls the grant back.
+        // The activity and outbox rows commit with the grant; a failed write rolls it back.
         return $this->database->transaction(function () use ($context, $node, $data): NodeGrant {
             $grant = $this->grants->grant(node: $node, data: $data, grantedBy: $context->actor->ref()->id);
 
-            event(new NodeGrantCreated(grant: $grant, actorId: $context->actor->ref()->id, actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $this->recorder->record(new NodeGrantCreated(grant: $grant, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return $grant;
         });

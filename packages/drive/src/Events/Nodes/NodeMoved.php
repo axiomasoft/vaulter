@@ -4,28 +4,72 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Events\Nodes;
 
-use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
-use Illuminate\Support\Str;
+use Carbon\CarbonImmutable;
+use Vaulter\Enums\Events\EventType;
+use Vaulter\Events\DomainEvent;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
+use Vaulter\ValueObjects\Events\ActivityTarget;
+use Vaulter\ValueObjects\Events\EventScope;
+use Vaulter\ValueObjects\Events\EventSubject;
 
 /**
  * A node was re-parented within its storage tree — a single parent_id UPDATE
  * (§2.2 / H.4). Carries the old parent so listeners can reconstruct the move.
  */
-final readonly class NodeMoved implements ShouldDispatchAfterCommit
+final readonly class NodeMoved extends DomainEvent
 {
-    public string $eventId;
-
     public function __construct(
         public Node $node,
         public int|string|null $fromParentId,
         public int|string|null $toParentId,
-        public int|string|null $actorId = null,
+        ActorRef $actor,
+        string $correlationId,
         ?string $eventId = null,
-        public ?ActorRef $actor = null,
-        public ?string $correlationId = null,
+        ?CarbonImmutable $occurredAt = null,
     ) {
-        $this->eventId = $eventId ?? (string) Str::ulid();
+        parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
+    }
+
+    public function type(): EventType
+    {
+        return EventType::NodeMoved;
+    }
+
+    public function scope(): EventScope
+    {
+        return self::nodeScope($this->node);
+    }
+
+    public function subject(): EventSubject
+    {
+        return self::nodeSubject($this->node);
+    }
+
+    public function sequence(): int
+    {
+        return $this->node->sequence;
+    }
+
+    public function data(): array
+    {
+        return [
+            'from_parent_id' => self::id($this->fromParentId),
+            'to_parent_id' => self::id($this->toParentId),
+        ];
+    }
+
+    public function activityContext(): array
+    {
+        return [
+            'from_parent_id' => Identity::stringify($this->fromParentId),
+            'to_parent_id' => Identity::stringify($this->toParentId),
+        ];
+    }
+
+    public function activityTarget(): ActivityTarget
+    {
+        return ActivityTarget::of($this->node);
     }
 }

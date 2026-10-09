@@ -2,12 +2,11 @@
 
 declare(strict_types=1);
 
-use Illuminate\Support\Facades\Event;
-use Vaulter\Events\Sharing\NodeShareCreated;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Providers\EventsRegistrar;
 
-it('subscribes activity and outbox listeners for kernel events', function (): void {
-    (new EventsRegistrar)->boot($this->app);
+it('binds one event recorder for the application', function (): void {
+    (new EventsRegistrar)->register($this->app);
 
-    expect(Event::hasListeners(NodeShareCreated::class))->toBeTrue();
+    expect($this->app->make(EventRecorder::class))->toBe($this->app->make(EventRecorder::class));
 });

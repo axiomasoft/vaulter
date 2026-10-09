@@ -22,6 +22,7 @@ use Vaulter\Drive\Uploads\Inspection\UploadInspection;
 use Vaulter\Drive\Uploads\PreparedUpload;
 use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Drive\QuotaExceededException as CoreQuotaExceededException;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Media\Configuration\MediaConfig;
@@ -81,6 +82,7 @@ final readonly class IngestFileAction
         private NodeSequence $sequence,
         private ScanAdmission $scans,
         private DriveLifecycle $lifecycle,
+        private EventRecorder $recorder,
     ) {}
 
     public function execute(OperationContext $context, IngestFileInput $data): Node
@@ -242,7 +244,7 @@ final readonly class IngestFileAction
 
         $this->scans->admit($context, $version);
 
-        event(new FileUploaded(node: $node->refresh(), file: $file, version: $version, actorId: $context->actor->ref()->id, actor: $context->actor->ref(), correlationId: $context->correlationId));
+        $this->recorder->record(new FileUploaded(node: $node->refresh(), file: $file, version: $version, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
         return new IngestReceipt($node, $version);
     }
@@ -295,12 +297,12 @@ final readonly class IngestFileAction
 
         $this->scans->admit($context, $version);
 
-        event(new FileRevisionAdded(
+        $this->recorder->record(new FileRevisionAdded(
             node: $node->refresh(),
             file: $file,
             version: $version,
             versionNo: $version->number,
-            actorId: $context->actor->ref()->id, actor: $context->actor->ref(), correlationId: $context->correlationId,
+            actor: $context->actor->ref(), correlationId: $context->correlationId,
         ));
 
         return new IngestReceipt($node, $version);

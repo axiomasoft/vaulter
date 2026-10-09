@@ -10,6 +10,7 @@ use Vaulter\Documents\Events\Comments\CommentResolved;
 use Vaulter\Documents\Exceptions\CommentNotFoundException;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Repositories\Comments\NodeCommentStoreRepository;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Support\DriveLifecycle;
@@ -28,6 +29,7 @@ final readonly class ResolveCommentAction
         private VaulterDatabase $database,
         private TreeGuard $tree,
         private DriveLifecycle $lifecycle,
+        private EventRecorder $recorder,
     ) {}
 
     public function execute(OperationContext $context, ResolveCommentInput $data): NodeComment
@@ -47,7 +49,8 @@ final readonly class ResolveCommentAction
             $row = $this->comments->lock($data->comment) ?? throw CommentNotFoundException::forNode($nodeId, $data->comment->getKey());
 
             $resolved = $this->comments->resolve($row, $resolvedBy);
-            event(new CommentResolved($resolved, $resolvedBy));
+            $resolved->setRelation('node', $current);
+            $this->recorder->record(new CommentResolved(comment: $resolved, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return $resolved;
         });

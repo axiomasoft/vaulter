@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Actions\Collaboration;
 
+use Illuminate\Support\Str;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Content\ContentDecoder;
 use Vaulter\Documents\Content\DocumentStateWriter;
+use Vaulter\Documents\Contracts\HostUserResolver;
 use Vaulter\Documents\Contracts\SupportsCollaboration;
 use Vaulter\Documents\Data\Collaboration\PersistCollaborationStateInput;
 use Vaulter\Documents\Data\Documents\DocumentStateChange;
@@ -25,6 +27,7 @@ use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Enums\Access\Ability;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Drive\DriveArchivedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
@@ -32,6 +35,8 @@ use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\Identity;
 use Vaulter\Support\LoadTier;
 use Vaulter\Support\TreeGuard;
+use Vaulter\ValueObjects\Access\Actor;
+use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
  * Persist a collaboration state — the write the hub's onStoreDocument (and its
@@ -64,6 +69,8 @@ final readonly class PersistCollaborationStateAction
         private ContentDecoder $decoder,
         private DocumentsConfig $documentsConfig,
         private DriveLifecycle $lifecycle,
+        private EventRecorder $recorder,
+        private HostUserResolver $users,
     ) {}
 
     /**
@@ -152,13 +159,14 @@ final readonly class PersistCollaborationStateAction
                 ));
 
                 if ($result->changed) {
-                    event(new DocumentContentUpdated(
+                    $this->recorder->record(new DocumentContentUpdated(
                         node: $node,
                         version: $result->checkpoint ?? $document->currentRevision()->firstOrFail(),
                         created: $result->checkpoint !== null,
                         stateVersion: $result->document->state_version,
                         epoch: $result->document->collab_epoch,
-                        actorId: $data->actorId,
+                        actor: $this->actor($data->actorId),
+                        correlationId: (string) Str::ulid(),
                     ));
                 }
 
@@ -166,5 +174,19 @@ final readonly class PersistCollaborationStateAction
             }),
             labels: ['tier' => LoadTier::label()],
         );
+    }
+
+    /**
+     * The hub knows the writer only by id; the host user gives the event its morph
+     * type. A store without a user is the hub's own.
+     */
+    private function actor(int|string|null $actorId): ActorRef
+    {
+        if ($actorId === null) {
+            return Actor::system('collaboration')->ref();
+        }
+        $user = $this->users->find($actorId);
+
+        return $user === null ? new ActorRef(type: null, id: null) : Actor::user($user)->ref();
     }
 }

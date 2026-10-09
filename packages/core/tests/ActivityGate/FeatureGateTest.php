@@ -9,8 +9,8 @@ use Vaulter\Tests\Fixtures\TestUser;
 
 /**
  * The 'activity' feature gate (§2.9). Booted with the feature OFF
- * (ActivityDisabledTestCase), the RecordsActivity subscriber is never registered,
- * so the Drive events fire unobserved and the feed stays empty.
+ * (ActivityDisabledTestCase), the EventRecorder skips the activity sink, so the
+ * feed stays empty while the Drive operations still succeed.
  */
 beforeEach(function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 7]));

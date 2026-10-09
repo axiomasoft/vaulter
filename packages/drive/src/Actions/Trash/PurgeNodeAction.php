@@ -12,6 +12,7 @@ use Vaulter\Drive\Content\FileContentLifecycle;
 use Vaulter\Drive\Data\Trash\PurgeNodeInput;
 use Vaulter\Drive\Events\Nodes\NodePurged;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Exceptions\Nodes\NodeNotTrashedException;
 use Vaulter\Operations\NodeLocator;
@@ -34,6 +35,7 @@ final readonly class PurgeNodeAction
         private NodeContentLifecycleRegistry $lifecycles,
         private NodeSequence $sequence,
         private DriveLifecycle $lifecycle,
+        private EventRecorder $recorder,
     ) {}
 
     public function execute(OperationContext $context, PurgeNodeInput $data): void
@@ -73,8 +75,8 @@ final readonly class PurgeNodeAction
             }
             // Physical deletion in this same transaction preserves all payload FK cascades.
             $this->store->purgeSubtree(collect($ids));
-            event(new NodePurged(storageId: $context->driveId(), nodeIds: $ids, freedBytes: $freedBytes,
-                actorId: $context->actor->ref()->id, actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $this->recorder->record(new NodePurged(storageId: $context->driveId(), nodeIds: $ids, freedBytes: $freedBytes,
+                tenantId: $context->drive->tenant_id, profile: $context->drive->profile, actor: $context->actor->ref(), correlationId: $context->correlationId));
         });
     }
 }

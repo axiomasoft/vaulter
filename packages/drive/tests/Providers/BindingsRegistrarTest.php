@@ -16,6 +16,7 @@ use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Providers\BindingsRegistrar;
 use Vaulter\Drive\Uploads\UploadSessionManager;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Profiles\DisabledCommentsFeature;
 
 it('fills upload model defaults during normalization without replacing host overrides', function (): void {
@@ -44,6 +45,7 @@ it('registers the factory and preserves singleton service lifetimes in a fresh c
     $config = new Repository;
     $app->instance('config', $config);
     $app->instance(VaulterDatabase::class, $this->app->make(VaulterDatabase::class));
+    $app->instance(EventRecorder::class, $this->app->make(EventRecorder::class));
     $app->instance(StorageDriver::class, $this->app->make(StorageDriver::class));
     $app->instance(CommentsFeature::class, new DisabledCommentsFeature);
 

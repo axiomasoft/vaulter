@@ -32,147 +32,296 @@ Vaulter\Drive\Configuration\DriveConfig
   validateScanWork(bool $requireBroker = false): void
 
 Vaulter\Drive\Events\Drives\DriveArchived
-  __construct(\Vaulter\Models\Drive\Drive $drive, \Vaulter\ValueObjects\Access\ActorRef $actor, ?string $correlationId = null, ?string $eventId = null)
-  readonly ?string $correlationId
+  __construct(\Vaulter\Models\Drive\Drive $drive, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Drive\Drive $drive
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
   readonly string $eventId
 
 Vaulter\Drive\Events\Drives\DriveCreated
-  __construct(\Vaulter\Models\Drive\Drive $storage, \Vaulter\Models\Drive\Node $root, int|null|string $actorId = null, ?string $eventId = null, ?\Vaulter\ValueObjects\Access\ActorRef $actor = null, ?string $correlationId = null)
-  readonly ?\Vaulter\ValueObjects\Access\ActorRef $actor
-  readonly ?string $correlationId
+  __construct(\Vaulter\Models\Drive\Drive $storage, \Vaulter\Models\Drive\Node $root, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Drive\Drive $storage
   readonly \Vaulter\Models\Drive\Node $root
-  readonly int|null|string $actorId
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
   readonly string $eventId
 
 Vaulter\Drive\Events\Drives\DriveDeleted
-  __construct(string $driveId, string $ownerType, string $ownerId, \Vaulter\ValueObjects\Access\ActorRef $actor, ?string $correlationId = null, ?string $eventId = null)
-  readonly ?string $correlationId
+  __construct(string $driveId, string $ownerType, string $ownerId, int|null|string $tenantId, string $profile, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): ?\Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly int|null|string $tenantId
+  readonly string $correlationId
   readonly string $driveId
   readonly string $eventId
   readonly string $ownerId
   readonly string $ownerType
+  readonly string $profile
 
 Vaulter\Drive\Events\Drives\DriveUnarchived
-  __construct(\Vaulter\Models\Drive\Drive $drive, \Vaulter\ValueObjects\Access\ActorRef $actor, ?string $correlationId = null, ?string $eventId = null)
-  readonly ?string $correlationId
+  __construct(\Vaulter\Models\Drive\Drive $drive, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Drive\Drive $drive
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
   readonly string $eventId
 
 Vaulter\Drive\Events\Files\FileRevisionAdded
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Models\Drive\File $file, \Vaulter\Models\Drive\FileRevision $version, int $versionNo, int|null|string $actorId = null, ?string $eventId = null, ?\Vaulter\ValueObjects\Access\ActorRef $actor = null, ?string $correlationId = null)
-  readonly ?\Vaulter\ValueObjects\Access\ActorRef $actor
-  readonly ?string $correlationId
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Models\Drive\File $file, \Vaulter\Models\Drive\FileRevision $version, int $versionNo, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Drive\File $file
   readonly \Vaulter\Models\Drive\FileRevision $version
   readonly \Vaulter\Models\Drive\Node $node
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly int $versionNo
-  readonly int|null|string $actorId
+  readonly string $correlationId
   readonly string $eventId
 
 Vaulter\Drive\Events\Files\FileRevisionDeleted
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Models\Drive\File $file, int|string $revisionId, int $revisionNo, int $sizeBytes, int|null|string $actorId = null, ?string $eventId = null, ?\Vaulter\ValueObjects\Access\ActorRef $actor = null, ?string $correlationId = null)
-  readonly ?\Vaulter\ValueObjects\Access\ActorRef $actor
-  readonly ?string $correlationId
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Models\Drive\File $file, int|string $revisionId, int $revisionNo, int $sizeBytes, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Drive\File $file
   readonly \Vaulter\Models\Drive\Node $node
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly int $revisionNo
   readonly int $sizeBytes
-  readonly int|null|string $actorId
   readonly int|string $revisionId
+  readonly string $correlationId
   readonly string $eventId
 
 Vaulter\Drive\Events\Files\FileUploaded
-  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Models\Drive\File $file, \Vaulter\Models\Drive\FileRevision $version, int|null|string $actorId = null, ?string $eventId = null, ?\Vaulter\ValueObjects\Access\ActorRef $actor = null, ?string $correlationId = null)
-  readonly ?\Vaulter\ValueObjects\Access\ActorRef $actor
-  readonly ?string $correlationId
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\Models\Drive\File $file, \Vaulter\Models\Drive\FileRevision $version, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Drive\File $file
   readonly \Vaulter\Models\Drive\FileRevision $version
   readonly \Vaulter\Models\Drive\Node $node
-  readonly int|null|string $actorId
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
   readonly string $eventId
 
 Vaulter\Drive\Events\Nodes\FolderCreated
-  __construct(\Vaulter\Models\Drive\Node $node, int|null|string $actorId = null, ?string $eventId = null, ?\Vaulter\ValueObjects\Access\ActorRef $actor = null, ?string $correlationId = null)
-  readonly ?\Vaulter\ValueObjects\Access\ActorRef $actor
-  readonly ?string $correlationId
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Drive\Node $node
-  readonly int|null|string $actorId
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
   readonly string $eventId
 
 Vaulter\Drive\Events\Nodes\NodeCopied
-  __construct(\Vaulter\Models\Drive\Node $source, \Vaulter\Models\Drive\Node $copy, int|null|string $actorId = null, ?string $eventId = null, ?\Vaulter\ValueObjects\Access\ActorRef $actor = null, ?string $correlationId = null)
-  readonly ?\Vaulter\ValueObjects\Access\ActorRef $actor
-  readonly ?string $correlationId
+  __construct(\Vaulter\Models\Drive\Node $source, \Vaulter\Models\Drive\Node $copy, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Drive\Node $copy
   readonly \Vaulter\Models\Drive\Node $source
-  readonly int|null|string $actorId
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
   readonly string $eventId
 
 Vaulter\Drive\Events\Nodes\NodeMoved
-  __construct(\Vaulter\Models\Drive\Node $node, int|null|string $fromParentId, int|null|string $toParentId, int|null|string $actorId = null, ?string $eventId = null, ?\Vaulter\ValueObjects\Access\ActorRef $actor = null, ?string $correlationId = null)
-  readonly ?\Vaulter\ValueObjects\Access\ActorRef $actor
-  readonly ?string $correlationId
+  __construct(\Vaulter\Models\Drive\Node $node, int|null|string $fromParentId, int|null|string $toParentId, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Drive\Node $node
-  readonly int|null|string $actorId
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly int|null|string $fromParentId
   readonly int|null|string $toParentId
+  readonly string $correlationId
   readonly string $eventId
 
 Vaulter\Drive\Events\Nodes\NodePurged
-  __construct(int|string $storageId, array $nodeIds, int $freedBytes, int|null|string $actorId = null, ?string $eventId = null, ?\Vaulter\ValueObjects\Access\ActorRef $actor = null, ?string $correlationId = null)
-  readonly ?\Vaulter\ValueObjects\Access\ActorRef $actor
-  readonly ?string $correlationId
+  __construct(int|string $storageId, array $nodeIds, int $freedBytes, int|null|string $tenantId, string $profile, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): ?\Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly array $nodeIds
   readonly int $freedBytes
-  readonly int|null|string $actorId
+  readonly int|null|string $tenantId
   readonly int|string $storageId
+  readonly string $correlationId
   readonly string $eventId
+  readonly string $profile
 
 Vaulter\Drive\Events\Nodes\NodeRenamed
-  __construct(\Vaulter\Models\Drive\Node $node, string $fromName, string $toName, int|null|string $actorId = null, ?string $eventId = null, ?\Vaulter\ValueObjects\Access\ActorRef $actor = null, ?string $correlationId = null)
-  readonly ?\Vaulter\ValueObjects\Access\ActorRef $actor
-  readonly ?string $correlationId
+  __construct(\Vaulter\Models\Drive\Node $node, string $fromName, string $toName, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Drive\Node $node
-  readonly int|null|string $actorId
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
   readonly string $eventId
   readonly string $fromName
   readonly string $toName
 
 Vaulter\Drive\Events\Nodes\NodeRestored
-  __construct(\Vaulter\Models\Drive\Node $node, int|null|string $actorId = null, ?string $eventId = null, ?\Vaulter\ValueObjects\Access\ActorRef $actor = null, ?string $correlationId = null)
-  readonly ?\Vaulter\ValueObjects\Access\ActorRef $actor
-  readonly ?string $correlationId
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Drive\Node $node
-  readonly int|null|string $actorId
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
   readonly string $eventId
 
 Vaulter\Drive\Events\Nodes\NodeTrashed
-  __construct(\Vaulter\Models\Drive\Node $node, int|null|string $actorId = null, ?string $eventId = null, ?\Vaulter\ValueObjects\Access\ActorRef $actor = null, ?string $correlationId = null)
-  readonly ?\Vaulter\ValueObjects\Access\ActorRef $actor
-  readonly ?string $correlationId
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Drive\Node $node
-  readonly int|null|string $actorId
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
   readonly string $eventId
 
 Vaulter\Drive\Events\Uploads\UploadAborted
-  __construct(\Vaulter\Drive\Models\Uploads\UploadSession $session, int|null|string $actorId = null, ?string $eventId = null)
+  __construct(\Vaulter\Drive\Models\Uploads\UploadSession $session, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): ?\Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\Uploads\UploadSession $session
-  readonly int|null|string $actorId
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
   readonly string $eventId
 
 Vaulter\Drive\Events\Uploads\UploadExpired
-  __construct(\Vaulter\Drive\Models\Uploads\UploadSession $session, int|null|string $actorId = null, ?string $eventId = null)
+  __construct(\Vaulter\Drive\Models\Uploads\UploadSession $session, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): ?\Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\Uploads\UploadSession $session
-  readonly int|null|string $actorId
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
   readonly string $eventId
 
 Vaulter\Drive\Events\Uploads\UploadInitiated
-  __construct(\Vaulter\Drive\Models\Uploads\UploadSession $session, int|null|string $actorId = null, ?string $eventId = null)
+  __construct(\Vaulter\Drive\Models\Uploads\UploadSession $session, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): ?\Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\Uploads\UploadSession $session
-  readonly int|null|string $actorId
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
   readonly string $eventId

@@ -80,7 +80,7 @@ it('resolves a comment, stamping resolved_at + resolved_by and dispatching the e
     expect($resolved->isResolved())->toBeTrue()
         ->and($resolved->resolved_by)->toBe(42);
 
-    Event::assertDispatched(CommentResolved::class, fn (CommentResolved $e): bool => $e->actorId === 42);
+    Event::assertDispatched(CommentResolved::class, fn (CommentResolved $e): bool => $e->actor->id === 42);
 });
 
 it('permanently deletes a comment and dispatches CommentDeleted', function (): void {
@@ -96,6 +96,6 @@ it('permanently deletes a comment and dispatches CommentDeleted', function (): v
     expect(NodeComment::query()->whereKey($id)->exists())->toBeFalse();
 
     Event::assertDispatched(CommentDeleted::class, function (CommentDeleted $e) use ($id): bool {
-        return $e->comment->getKey() === $id && $e->actorId === 5;
+        return $e->comment->getKey() === $id && $e->actor->id === 5;
     });
 });

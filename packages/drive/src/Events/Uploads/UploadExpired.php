@@ -4,26 +4,60 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Events\Uploads;
 
-use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
-use Illuminate\Support\Str;
+use Carbon\CarbonImmutable;
 use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Enums\Events\EventType;
+use Vaulter\Events\DomainEvent;
+use Vaulter\ValueObjects\Access\ActorRef;
+use Vaulter\ValueObjects\Events\EventScope;
+use Vaulter\ValueObjects\Events\EventSubject;
 
 /**
- * A stale resumable-upload session was reclaimed by the sweeper (§2.8 / F-P1.4-13):
- * dispatched by {@see UploadSessionManager::expire()} after
- * the staged temp + protocol-side state were released. The sweeper runs outside an
- * HTTP request (console/schedule), so actorId is null here — a system reclaim, not
- * an actor action.
+ * A stale resumable-upload session was reclaimed by the sweeper (§2.8 / F-P1.4-13)
+ * after its staged temp and protocol-side state were released. The sweeper is a
+ * system actor.
  */
-final readonly class UploadExpired implements ShouldDispatchAfterCommit
+final readonly class UploadExpired extends DomainEvent
 {
-    public string $eventId;
-
     public function __construct(
         public UploadSession $session,
-        public int|string|null $actorId = null,
+        ActorRef $actor,
+        string $correlationId,
         ?string $eventId = null,
+        ?CarbonImmutable $occurredAt = null,
     ) {
-        $this->eventId = $eventId ?? (string) Str::ulid();
+        parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
+    }
+
+    public function type(): EventType
+    {
+        return EventType::UploadExpired;
+    }
+
+    public function scope(): EventScope
+    {
+        return new EventScope(tenantId: $this->session->tenant_id, driveId: $this->session->drive_id, profile: $this->session->storage->profile ?? 'default');
+    }
+
+    public function subject(): EventSubject
+    {
+        return new EventSubject(type: 'upload', id: $this->session->upload_id);
+    }
+
+    public function data(): array
+    {
+        return [
+            'upload_id' => $this->session->upload_id,
+            'size' => $this->session->total_size_bytes,
+        ];
+    }
+
+    public function activityContext(): array
+    {
+        return [
+            'upload_id' => $this->session->upload_id,
+            'protocol' => $this->session->protocol->value,
+            'received_bytes' => $this->session->received_bytes,
+        ];
     }
 }

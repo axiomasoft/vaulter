@@ -46,6 +46,7 @@ final class VaulterServiceProvider extends PackageServiceProvider
             $normalizer->normalize($this->app->make('config'), $normalizer->packageDefaults());
         });
         (new AccessRegistrar)->register($this->app);
+        (new EventsRegistrar)->register($this->app);
         (new ConsoleRegistrar)->register($this->app);
     }
 
@@ -54,7 +55,6 @@ final class VaulterServiceProvider extends PackageServiceProvider
         $this->app->make(ConfigValidator::class)->validate($this->app->make(VaulterConfig::class), $this->app);
         (new HttpRegistrar)->boot($this->app);
         (new AccessRegistrar)->boot($this->app);
-        (new EventsRegistrar)->boot($this->app);
         (new BindingsRegistrar)->boot($this->app);
     }
 }

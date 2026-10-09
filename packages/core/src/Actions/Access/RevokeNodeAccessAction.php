@@ -7,6 +7,7 @@ namespace Vaulter\Actions\Access;
 use Vaulter\Data\Access\RevokeGrantInput;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Events\Access\NodeGrantRevoked;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\OperationContext;
@@ -14,7 +15,7 @@ use Vaulter\Operations\OperationContext;
 /** @internal Authorization belongs to AccessOperations; membership is also enforced here. */
 final readonly class RevokeNodeAccessAction
 {
-    public function __construct(private VaulterDatabase $database, private NodeLocator $locator) {}
+    public function __construct(private VaulterDatabase $database, private NodeLocator $locator, private EventRecorder $recorder) {}
 
     public function execute(OperationContext $context, RevokeGrantInput $input): int
     {
@@ -26,7 +27,7 @@ final readonly class RevokeNodeAccessAction
             }
             $subject = $grant->subject();
             $grant->delete();
-            event(new NodeGrantRevoked(node: $node, subject: $subject, revoked: 1, actorId: $context->actor->ref()->id, actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $this->recorder->record(new NodeGrantRevoked(node: $node, subject: $subject, revoked: 1, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return 1;
         });

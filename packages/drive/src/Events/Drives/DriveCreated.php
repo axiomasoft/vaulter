@@ -4,28 +4,69 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Events\Drives;
 
-use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
-use Illuminate\Support\Str;
+use Carbon\CarbonImmutable;
+use Vaulter\Enums\Events\EventType;
+use Vaulter\Events\DomainEvent;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
+use Vaulter\ValueObjects\Events\ActivityTarget;
+use Vaulter\ValueObjects\Events\EventScope;
+use Vaulter\ValueObjects\Events\EventSubject;
 
 /**
  * A storage container was provisioned for a host entity, together with its
  * auto-created root folder node (§2.1).
  */
-final readonly class DriveCreated implements ShouldDispatchAfterCommit
+final readonly class DriveCreated extends DomainEvent
 {
-    public string $eventId;
-
     public function __construct(
         public Drive $storage,
         public Node $root,
-        public int|string|null $actorId = null,
+        ActorRef $actor,
+        string $correlationId,
         ?string $eventId = null,
-        public ?ActorRef $actor = null,
-        public ?string $correlationId = null,
+        ?CarbonImmutable $occurredAt = null,
     ) {
-        $this->eventId = $eventId ?? (string) Str::ulid();
+        parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
+    }
+
+    public function type(): EventType
+    {
+        return EventType::DriveCreated;
+    }
+
+    public function scope(): EventScope
+    {
+        return new EventScope(tenantId: $this->storage->tenant_id, driveId: $this->storage->getKey(), profile: $this->storage->profile);
+    }
+
+    public function subject(): EventSubject
+    {
+        return new EventSubject(type: 'drive', id: $this->storage->getKey());
+    }
+
+    public function data(): array
+    {
+        return [
+            'root_node_id' => self::id($this->root->getKey()),
+            'profile' => $this->storage->profile,
+        ];
+    }
+
+    public function activityContext(): array
+    {
+        return [
+            'drive_id' => Identity::stringify($this->storage->getKey()),
+            'owner_type' => $this->storage->owner_type,
+            'owner_id' => Identity::stringify($this->storage->owner_id),
+            'name' => $this->storage->name,
+        ];
+    }
+
+    public function activityTarget(): ActivityTarget
+    {
+        return ActivityTarget::of($this->root);
     }
 }

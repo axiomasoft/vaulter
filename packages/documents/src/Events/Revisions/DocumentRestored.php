@@ -4,10 +4,16 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Events\Revisions;
 
-use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
-use Illuminate\Support\Str;
+use Carbon\CarbonImmutable;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
+use Vaulter\Enums\Events\EventType;
+use Vaulter\Events\DomainEvent;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Support\Identity;
+use Vaulter\ValueObjects\Access\ActorRef;
+use Vaulter\ValueObjects\Events\ActivityTarget;
+use Vaulter\ValueObjects\Events\EventScope;
+use Vaulter\ValueObjects\Events\EventSubject;
 
 /**
  * A document was restored to an earlier checkpoint. Its working state is now a copy
@@ -16,19 +22,58 @@ use Vaulter\Models\Drive\Node;
  * their clients must reopen the document. $epoch and $stateVersion are the values
  * after the restore.
  */
-final readonly class DocumentRestored implements ShouldDispatchAfterCommit
+final readonly class DocumentRestored extends DomainEvent
 {
-    public string $eventId;
-
     public function __construct(
         public Node $node,
         public DocumentRevision $version,
         public DocumentRevision $restoredFrom,
         public int $epoch,
         public int $stateVersion,
-        public int|string|null $actorId = null,
+        ActorRef $actor,
+        string $correlationId,
         ?string $eventId = null,
+        ?CarbonImmutable $occurredAt = null,
     ) {
-        $this->eventId = $eventId ?? (string) Str::ulid();
+        parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
+    }
+
+    public function type(): EventType
+    {
+        return EventType::DocumentRestored;
+    }
+
+    public function scope(): EventScope
+    {
+        return self::nodeScope($this->node);
+    }
+
+    public function subject(): EventSubject
+    {
+        return self::nodeSubject($this->node);
+    }
+
+    public function data(): array
+    {
+        return [
+            'from_revision_id' => self::id($this->restoredFrom->getKey()),
+            'revision_id' => self::id($this->version->getKey()),
+            'state_version' => $this->stateVersion,
+            'epoch' => $this->epoch,
+        ];
+    }
+
+    public function activityContext(): array
+    {
+        return [
+            'from_revision_id' => Identity::stringify($this->restoredFrom->getKey()),
+            'from_number' => $this->restoredFrom->number,
+            'revision_id' => Identity::stringify($this->version->getKey()),
+        ];
+    }
+
+    public function activityTarget(): ActivityTarget
+    {
+        return ActivityTarget::of($this->node);
     }
 }

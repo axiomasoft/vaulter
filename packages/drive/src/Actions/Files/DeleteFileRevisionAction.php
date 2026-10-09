@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Actions\Files;
 use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\Files\FileRevisionDeleted;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Drive\CannotDeleteHeadRevisionException;
 use Vaulter\Exceptions\Drive\RevisionPinnedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
@@ -45,6 +46,7 @@ final readonly class DeleteFileRevisionAction
         private DriveStoreRepository $drives,
         private BlobStore $blobs,
         private DriveLifecycle $lifecycle,
+        private EventRecorder $recorder,
     ) {}
 
     public function execute(OperationContext $context, Node $node, FileRevision|int|string $revision): void
@@ -88,13 +90,12 @@ final readonly class DeleteFileRevisionAction
 
             $this->revisions->delete($locked);
 
-            event(new FileRevisionDeleted(
+            $this->recorder->record(new FileRevisionDeleted(
                 node: $node,
                 file: $file,
                 revisionId: $locked->id,
                 revisionNo: $locked->number,
                 sizeBytes: $locked->size_bytes,
-                actorId: $context->actor->ref()->id,
                 actor: $context->actor->ref(),
                 correlationId: $context->correlationId,
             ));

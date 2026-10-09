@@ -13,6 +13,7 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Activity\ActivityTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
  * F-P1.4-13: initiate/abort/expire had NO activity trace at all before this fix —
@@ -69,10 +70,8 @@ it('sweep-expire пишет activity-строку upload.expired без акто
         ->where('upload_id', $uploadId)
         ->update(['expires_at' => now()->subHour()]));
 
-    // The sweeper is a console/schedule path with no HTTP actor: log out the
-    // request-scoped actingAs user so ActivityRecorder's auth()->user() fallback
-    // (used only when the event carries no actorId) has nothing to fall back to —
-    // the same as a real `schedule:run` process.
+    // The sweeper is a console/schedule path with no HTTP actor: the expiry is recorded
+    // as the system actor, whoever is logged in.
     Auth::logout();
 
     $this->artisan('vaulter:sweep-uploads')->assertSuccessful();
@@ -80,6 +79,7 @@ it('sweep-expire пишет activity-строку upload.expired без акто
     $row = ActivityTestHelpers::only(EventType::UploadExpired->value);
 
     expect($row->actor_id)->toBeNull()
+        ->and($row->actor_type)->toBe(ActorRef::SYSTEM_TYPE)
         ->and($row->context['upload_id'])->toBe($uploadId);
 });
 
@@ -89,10 +89,10 @@ it('sweep-expire пишет activity-строку upload.expired без акто
  * `*_type` column would silently break in production while a fresh-DB test stays green.
  * This guards the invariant that makes the move safe WITHOUT any DB migration: the moved
  * upload models are never persisted as a morph-type string. The upload lifecycle records
- * activity with `target = null` (only node-attached events use `recordForNode`), so no
- * `v_activity` row ever holds `UploadSession`'s FQCN — the move cannot orphan a row. The
- * ONE Vaulter model that IS persisted as `target_type` is `Node` (via recordForNode), and
- * Node did NOT move, so historical rows stay resolvable. A future regression that made an
+ * activity without an activity target, so no `v_activity` row ever holds
+ * `UploadSession`'s FQCN — the move cannot orphan a row. The Vaulter models persisted as
+ * `target_type` are `Node` and `Drive`, and neither moved, so historical rows stay
+ * resolvable. A future regression that made an
  * upload a morph target (or moved `Node`) trips this.
  */
 it('переезд Uploads morph-безопасен: upload-session activity не пишет target_type/target_id, единственный morph-таргет Node не переезжал (P4.10)', function (): void {

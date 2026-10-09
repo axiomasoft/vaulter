@@ -4,35 +4,72 @@ declare(strict_types=1);
 
 namespace Vaulter\Events\Access;
 
-use Illuminate\Support\Str;
+use Carbon\CarbonImmutable;
+use Vaulter\Enums\Events\EventType;
+use Vaulter\Events\DomainEvent;
 use Vaulter\Models\Access\NodeGrant;
+use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
+use Vaulter\ValueObjects\Events\ActivityTarget;
+use Vaulter\ValueObjects\Events\EventScope;
+use Vaulter\ValueObjects\Events\EventSubject;
 
 /**
- * A per-node ACL grant was created or updated (§2.6 / H.2).
- *
- * BREAKING CONTRACT (intentional, MAJOR — review P0.2 / F-P1.7-03): this event no
- * longer implements ShouldDispatchAfterCommit. It is dispatched SYNCHRONOUSLY INSIDE
- * the grant transaction so the outbox/activity rows stage ATOMICALLY with the grant —
- * closing the crash window between commit and staging that the transactional-outbox
- * fix removes. Consequence for listeners: a listener on this event runs inside the open
- * transaction and MUST be synchronous and idempotent. Do NOT hang a queued
- * (ShouldQueue) or after-commit side-effect off this event directly — it would race or
- * outlive a rolled-back grant; drive such work off the durable outbox relay instead.
- * (An additive after-commit PUBLIC signal for external consumers is tracked as Pending
- * Work in phases/P0.md P0.2.)
+ * A per-node ACL grant was created or updated (§2.6 / H.2). Host listeners receive it
+ * after the grant transaction commits.
  */
-final readonly class NodeGrantCreated
+final readonly class NodeGrantCreated extends DomainEvent
 {
-    public string $eventId;
-
     public function __construct(
         public NodeGrant $grant,
-        public int|string|null $actorId = null,
+        ActorRef $actor,
+        string $correlationId,
         ?string $eventId = null,
-        public ?ActorRef $actor = null,
-        public ?string $correlationId = null,
+        ?CarbonImmutable $occurredAt = null,
     ) {
-        $this->eventId = $eventId ?? (string) Str::ulid();
+        parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
+    }
+
+    public function type(): EventType
+    {
+        return EventType::GrantCreated;
+    }
+
+    public function scope(): EventScope
+    {
+        return self::nodeScope($this->grant->node);
+    }
+
+    public function subject(): EventSubject
+    {
+        return self::nodeSubject($this->grant->node);
+    }
+
+    public function data(): array
+    {
+        return [
+            'grant_id' => self::id($this->grant->getKey()),
+            'subject' => ['type' => $this->grant->subject_type, 'id' => self::id($this->grant->subject_id)],
+            'role' => $this->grant->role_key,
+            'role_version' => $this->grant->role_version,
+            'scope' => $this->grant->scope->value,
+        ];
+    }
+
+    public function activityContext(): array
+    {
+        return [
+            'grant_id' => Identity::stringify($this->grant->getKey()),
+            'subject_type' => $this->grant->subject_type,
+            'subject_id' => Identity::stringify($this->grant->subject_id),
+            'role' => $this->grant->role_key,
+            'role_version' => $this->grant->role_version,
+            'scope' => $this->grant->scope->value,
+        ];
+    }
+
+    public function activityTarget(): ActivityTarget
+    {
+        return ActivityTarget::of($this->grant->node);
     }
 }

@@ -9,21 +9,19 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
-use Illuminate\Support\Str;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Configuration\WebhooksConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
-use Vaulter\Enums\Events\EventType;
 use Vaulter\Jobs\Webhooks\DeliverWebhook;
 use Vaulter\Load\Listeners\RecordCommandPeakMemory;
 use Vaulter\Load\Listeners\RecordFailedJob;
 use Vaulter\Load\Observability\LoadStateMetrics;
 use Vaulter\Testing\FakeMetricsRecorder;
+use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
-use Vaulter\Webhooks\OutboxRecorder;
 use Vaulter\Webhooks\OutboxRelay;
 use Vaulter\Webhooks\WebhookRetryDispatcher;
 use Vaulter\Webhooks\WebhookSigner;
@@ -44,14 +42,8 @@ it('records vaulter_outbox_backlog from pending outbox rows', function (): void 
 });
 
 it('records vaulter_outbox_stage_duration_seconds when staging a new row', function (): void {
-    app(OutboxRecorder::class)->stage(
-        event: EventType::GrantCreated,
-        eventId: (string) Str::ulid(),
-        panel: 'default',
-        topic: 'node-1',
-        payload: ['grant_id' => 'g-1'],
-        actorId: 1,
-    );
+    // Provisioning records drive.created through the EventRecorder.
+    DriveTestHelpers::drive()->model();
 
     app(MetricsRecorder::class)->assertHistogram(name: 'vaulter_outbox_stage_duration_seconds');
 });

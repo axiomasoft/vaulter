@@ -16,6 +16,7 @@ use Vaulter\Documents\Events\Documents\DocumentCreated;
 use Vaulter\Documents\Repositories\Documents\DocumentStoreRepository;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Enums\Drive\OnNameConflict;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
@@ -58,6 +59,7 @@ final readonly class CreateDocumentAction
         private DocumentsConfig $documentsConfig,
         private DrivePolicyEnforcer $policy,
         private DriveLifecycle $lifecycle,
+        private EventRecorder $recorder,
     ) {}
 
     public function execute(OperationContext $context, CreateDocumentInput $data): Node
@@ -121,12 +123,13 @@ final readonly class CreateDocumentAction
 
             $node = $node->refresh();
 
-            event(new DocumentCreated(
+            $this->recorder->record(new DocumentCreated(
                 node: $node,
                 version: $checkpoint,
                 stateVersion: $result->document->state_version,
                 epoch: $result->document->collab_epoch,
-                actorId: $actorId,
+                actor: $context->actor->ref(),
+                correlationId: $context->correlationId,
             ));
 
             return $node;

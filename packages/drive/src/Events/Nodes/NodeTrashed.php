@@ -4,27 +4,64 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Events\Nodes;
 
-use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
-use Illuminate\Support\Str;
+use Carbon\CarbonImmutable;
+use Vaulter\Enums\Events\EventType;
+use Vaulter\Events\DomainEvent;
 use Vaulter\Models\Drive\Node;
 use Vaulter\ValueObjects\Access\ActorRef;
+use Vaulter\ValueObjects\Events\ActivityTarget;
+use Vaulter\ValueObjects\Events\EventScope;
+use Vaulter\ValueObjects\Events\EventSubject;
 
 /**
  * A node and its whole subtree were soft-trashed (§2.10 / D17): the trashed
  * triplet is set atomically. used_bytes is NOT decremented — trashed bytes still
  * occupy storage until forceDelete.
  */
-final readonly class NodeTrashed implements ShouldDispatchAfterCommit
+final readonly class NodeTrashed extends DomainEvent
 {
-    public string $eventId;
-
     public function __construct(
         public Node $node,
-        public int|string|null $actorId = null,
+        ActorRef $actor,
+        string $correlationId,
         ?string $eventId = null,
-        public ?ActorRef $actor = null,
-        public ?string $correlationId = null,
+        ?CarbonImmutable $occurredAt = null,
     ) {
-        $this->eventId = $eventId ?? (string) Str::ulid();
+        parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
+    }
+
+    public function type(): EventType
+    {
+        return EventType::NodeTrashed;
+    }
+
+    public function scope(): EventScope
+    {
+        return self::nodeScope($this->node);
+    }
+
+    public function subject(): EventSubject
+    {
+        return self::nodeSubject($this->node);
+    }
+
+    public function sequence(): int
+    {
+        return $this->node->sequence;
+    }
+
+    public function data(): array
+    {
+        return [];
+    }
+
+    public function activityContext(): array
+    {
+        return ['name' => $this->node->name];
+    }
+
+    public function activityTarget(): ActivityTarget
+    {
+        return ActivityTarget::of($this->node);
     }
 }

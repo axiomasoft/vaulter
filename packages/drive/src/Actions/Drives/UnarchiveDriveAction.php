@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Actions\Drives;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\Drives\DriveUnarchived;
 use Vaulter\Enums\Drive\DriveStatus;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Drive\InvalidDriveStateException;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Operations\OperationContext;
@@ -15,7 +16,7 @@ use Vaulter\Repositories\Drive\DriveStoreRepository;
 /** archived → active (PLAN2.D37). */
 final readonly class UnarchiveDriveAction
 {
-    public function __construct(private VaulterDatabase $database, private DriveStoreRepository $drives) {}
+    public function __construct(private VaulterDatabase $database, private DriveStoreRepository $drives, private EventRecorder $recorder) {}
 
     public function execute(OperationContext $context): Drive
     {
@@ -26,7 +27,7 @@ final readonly class UnarchiveDriveAction
                 throw InvalidDriveStateException::for($drive->id, 'unarchive', $drive->status);
             }
             $drive = $this->drives->setStatus($drive, DriveStatus::Active);
-            event(new DriveUnarchived(drive: $drive, actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $this->recorder->record(new DriveUnarchived(drive: $drive, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return $drive;
         });

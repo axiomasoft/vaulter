@@ -13,6 +13,7 @@ use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Events\Drives\DriveCreated;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Models\Drive\Drive;
@@ -49,6 +50,7 @@ final readonly class DriveProvisioner
         private ProfileRegistry $profiles,
         private ProfilePolicy $policy,
         private DriveConfig $config,
+        private EventRecorder $recorder,
     ) {}
 
     /**
@@ -114,7 +116,7 @@ final readonly class DriveProvisioner
 
             $this->store->setRootNode(storage: $storage, rootNodeId: $root->id);
 
-            event(new DriveCreated(storage: $storage->refresh(), root: $root, actor: Actor::system('drive provisioning')->ref(), correlationId: (string) Str::ulid()));
+            $this->recorder->record(new DriveCreated(storage: $storage->refresh(), root: $root, actor: Actor::system('drive provisioning')->ref(), correlationId: (string) Str::ulid()));
 
             return $storage;
         });

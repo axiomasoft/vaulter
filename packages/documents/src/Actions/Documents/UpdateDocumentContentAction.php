@@ -18,6 +18,7 @@ use Vaulter\Documents\Exceptions\DocumentContentDegradedException;
 use Vaulter\Documents\Exceptions\DocumentTypeUnavailableException;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Support\DriveLifecycle;
@@ -45,6 +46,7 @@ final readonly class UpdateDocumentContentAction
         private TreeGuard $tree,
         private ContentDecoder $decoder,
         private DriveLifecycle $lifecycle,
+        private EventRecorder $recorder,
     ) {}
 
     /**
@@ -96,13 +98,14 @@ final readonly class UpdateDocumentContentAction
             ));
 
             if ($result->changed) {
-                event(new DocumentContentUpdated(
+                $this->recorder->record(new DocumentContentUpdated(
                     node: $node,
                     version: $result->checkpoint ?? $document->currentRevision()->firstOrFail(),
                     created: $result->checkpoint !== null,
                     stateVersion: $result->document->state_version,
                     epoch: $result->document->collab_epoch,
-                    actorId: $context->actor->ref()->id,
+                    actor: $context->actor->ref(),
+                    correlationId: $context->correlationId,
                 ));
             }
 

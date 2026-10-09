@@ -13,6 +13,7 @@ use Vaulter\Drive\Data\Trash\PurgeNodeInput;
 use Vaulter\Drive\Events\Drives\DriveDeleted;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Drive\DriveStatus;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
@@ -41,6 +42,7 @@ final readonly class PurgeDriveStepAction
         private UploadSessionManager $uploads,
         private DriveConfig $driveConfig,
         private NodeStoreRepository $nodes,
+        private EventRecorder $recorder,
     ) {}
 
     /** @return bool true when the drive is gone (or was never being deleted), false while children remain */
@@ -52,7 +54,7 @@ final readonly class PurgeDriveStepAction
                 return true;
             }
             $context = OperationContext::system(drive: $drive, reason: OperationGuard::PURGE_REASON);
-            $this->abortUploads($drive);
+            $this->abortUploads($context, $drive);
 
             $nodeClass = $this->config->model('node');
             $root = $drive->root_node_id === null ? null : $nodeClass::query()->whereKey($drive->root_node_id)->first();
@@ -75,11 +77,11 @@ final readonly class PurgeDriveStepAction
         });
     }
 
-    private function abortUploads(Drive $drive): void
+    private function abortUploads(OperationContext $context, Drive $drive): void
     {
         $class = $this->driveConfig->model('upload_session');
         foreach ($class::query()->where('drive_id', $drive->getKey())->whereIn('status', ['initiated', 'uploading', 'assembled'])->cursor() as $session) {
-            $this->uploads->abort($session);
+            $this->uploads->abort(session: $session, actor: $context->actor->ref(), correlationId: $context->correlationId);
         }
     }
 
@@ -105,8 +107,9 @@ final readonly class PurgeDriveStepAction
                 $this->nodes->purgeSubtree(collect([$root->id]));
             }
             $drive->delete();
-            event(new DriveDeleted(driveId: Identity::stringify($drive->getKey()), ownerType: $drive->owner_type,
-                ownerId: Identity::stringify($drive->owner_id), actor: $context->actor->ref(), correlationId: $context->correlationId));
+            $this->recorder->record(new DriveDeleted(driveId: Identity::stringify($drive->getKey()), ownerType: $drive->owner_type,
+                ownerId: Identity::stringify($drive->owner_id), tenantId: $drive->tenant_id,
+                profile: $drive->profile, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return true;
         });

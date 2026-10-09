@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 use Illuminate\Support\Str;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\Nodes\NodeRenamed;
 use Vaulter\Enums\Events\EventType;
+use Vaulter\Events\EventRecorder;
+use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\ValueObjects\Access\Actor;
 
 beforeEach(function (): void {
     expect(app(VaulterConfig::class)->featureEnabled('webhooks'))->toBeTrue();
@@ -24,14 +28,17 @@ it('stages three distinct occurrences for rename A to B to A to B', function ():
     $rows = Outbox::query()->where('topic', (string) $node->id)
         ->where('event', EventType::NodeRenamed->value)->orderBy('id')->get();
 
+    $names = Activity::query()->whereIn('event_id', $rows->pluck('event_id'))->orderBy('id')->get()->pluck('context.to')->all();
+
     expect($rows)->toHaveCount(3)
         ->and($rows->pluck('event_id')->unique())->toHaveCount(3)
-        ->and($rows->pluck('payload.to')->all())->toBe(['B', 'A', 'B']);
+        // Names stay in the activity feed; the webhook envelope carries ids only.
+        ->and($names)->toBe(['B', 'A', 'B']);
 
     foreach ($rows as $row) {
         expect(Str::isUlid($row->event_id))->toBeTrue()
             ->and(strlen($row->event_id))->toBe(26)
-            ->and($row->payload['event_id'])->toBe($row->event_id);
+            ->and($row->payload['id'])->toBe($row->event_id);
     }
 });
 
@@ -57,19 +64,20 @@ it('stages three distinct occurrences for trash restore trash', function (): voi
 
     foreach ($rows as $row) {
         expect(Str::isUlid($row->event_id))->toBeTrue()
-            ->and($row->payload['event_id'])->toBe($row->event_id);
+            ->and($row->payload['id'])->toBe($row->event_id);
     }
 });
 
-it('stages one row when the same event occurrence is dispatched twice', function (): void {
-    $node = DriveTestHelpers::drive()->folders()->create('A');
-    $event = new NodeRenamed(node: DriveTestHelpers::model($node), fromName: 'A', toName: 'B');
+it('stages one row when the same event occurrence is recorded twice', function (): void {
+    $node = DriveTestHelpers::model(DriveTestHelpers::drive()->folders()->create('A'));
+    $eventId = (string) Str::ulid();
+    $make = static fn (): NodeRenamed => new NodeRenamed(node: $node, fromName: 'A', toName: 'B', actor: Actor::system('replay')->ref(), correlationId: 'c', eventId: $eventId);
 
-    event($event);
-    event($event);
+    app(VaulterDatabase::class)->transaction(fn () => app(EventRecorder::class)->record($make()));
+    app(VaulterDatabase::class)->transaction(fn () => app(EventRecorder::class)->record($make()));
 
     $row = Outbox::query()->where('event', EventType::NodeRenamed->value)->sole();
 
-    expect($row->event_id)->toBe($event->eventId)
-        ->and($row->payload['event_id'])->toBe($event->eventId);
+    expect($row->event_id)->toBe($eventId)
+        ->and($row->payload['id'])->toBe($eventId);
 });
