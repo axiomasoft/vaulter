@@ -28,17 +28,34 @@ final readonly class DriveLifecycle
     /** Call right after lockTree()/lockTreeShared(), inside the Action's transaction. */
     public function assertWritable(OperationContext $context): void
     {
+        $system = $context->actor->isSystem();
+        $this->assertState(
+            driveId: $context->driveId(),
+            system: $system,
+            purge: $system && $context->actor->ref()->reason === OperationGuard::PURGE_REASON,
+        );
+    }
+
+    /** A hub writes for a user; its service transport grants no maintenance exemption. */
+    public function assertUserWritable(int|string $driveId): void
+    {
+        $this->assertState(driveId: $driveId, system: false, purge: false);
+    }
+
+    private function assertState(int|string $driveId, bool $system, bool $purge): void
+    {
         $class = $this->config->model('drive');
-        $drive = $class::query()->whereKey($context->driveId())->first(['id', 'status']);
+        $drive = $class::query()->whereKey($driveId)->first(['id', 'status']);
         if (!$drive instanceof Drive) {
             throw NodeNotFoundException::forId('drive');
         }
-        $system = $context->actor->isSystem();
-        if ($drive->status === DriveStatus::Deleting && !($system && $context->actor->ref()->reason === OperationGuard::PURGE_REASON)) {
+
+        if ($drive->status === DriveStatus::Deleting && !$purge) {
             throw NodeNotFoundException::forId('drive');
         }
+
         if ($drive->status === DriveStatus::Archived && !$system) {
-            throw DriveArchivedException::forDrive($context->driveId());
+            throw DriveArchivedException::forDrive($driveId);
         }
     }
 }

@@ -7,6 +7,7 @@ use Vaulter\Data\Drive\CreateFolderOptions;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Page;
 use Vaulter\Data\Snapshots\NodeSnapshot;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot;
@@ -279,7 +280,7 @@ it('gives an editor a read-only session when the room could not write', function
     'client speaks another schema' => [static fn (): array => [HubTestHelpers::document(level: RoleRegistry::WRITER, actorId: 5), 2]],
     'archived drive' => [static function (): array {
         $node = HubTestHelpers::document(level: RoleRegistry::WRITER, actorId: 5);
-        $node->storage()->update(['status' => 'archived']);
+        app(VaulterDatabase::class)->write(fn () => $node->storage()->update(['status' => 'archived']));
 
         return [$node, null];
     }],

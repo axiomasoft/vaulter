@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Event;
 use Vaulter\Access\Roles\RoleRegistry;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Actions\Collaboration\PersistCollaborationStateAction;
 use Vaulter\Documents\Actions\Revisions\RestoreDocumentRevisionAction;
 use Vaulter\Documents\Data\Collaboration\PersistCollaborationStateInput;
@@ -223,7 +224,7 @@ it('takes a revoked Edit into account on the next call (OPUS D24)', function ():
     Hub::call('authenticate', ['room' => Hub::room($node)], $token)->assertJsonPath('mode', 'rw');
 
     $grants = config('vaulter.models.grant');
-    $grants::query()->where('node_id', $node->id)->delete();
+    app(VaulterDatabase::class)->write(fn () => $grants::query()->where('node_id', $node->id)->delete());
     AccessTestHelpers::grant($node, RoleRegistry::READER, subjectId: 1);
 
     Hub::call('authenticate', ['room' => Hub::room($node)], $token)->assertOk()->assertJsonPath('mode', 'ro');
@@ -232,7 +233,7 @@ it('takes a revoked Edit into account on the next call (OPUS D24)', function ():
 
 it('shares an archived drive read-only', function (): void {
     $node = Hub::document();
-    $node->storage()->update(['status' => 'archived']);
+    app(VaulterDatabase::class)->write(fn () => $node->storage()->update(['status' => 'archived']));
 
     Hub::call('authenticate', ['room' => Hub::room($node)], Hub::token($node))
         ->assertOk()
@@ -255,8 +256,8 @@ it('answers node_not_found for a trashed document, another tenant or a drive bei
     Hub::call('store', Hub::storeBody($node, 'gone', epoch: 0), $token)->assertNotFound();
 })->with([
     'trashed' => [static fn (Node $node) => Vaulter::drive($node->storage()->firstOrFail())->asSystem('hub test')->nodes()->trash($node->id)],
-    'drive deleting' => [static fn (Node $node) => $node->storage()->update(['status' => 'deleting'])],
-    'token of another tenant' => [static fn (Node $node) => Node::query()->whereKey($node->id)->update(['tenant_id' => 'tenant-b'])],
+    'drive deleting' => [static fn (Node $node) => app(VaulterDatabase::class)->write(fn () => $node->storage()->update(['status' => 'deleting']))],
+    'token of another tenant' => [static fn (Node $node) => app(VaulterDatabase::class)->write(fn () => Node::query()->whereKey($node->id)->update(['tenant_id' => 'tenant-b']))],
 ]);
 
 it('refuses a body that names another room than the token', function (): void {

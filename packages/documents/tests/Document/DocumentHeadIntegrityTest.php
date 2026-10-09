@@ -85,7 +85,7 @@ it('enforces the head foreign key in the database where the driver supports it',
     $node = headIntegrityDocument('Guarded');
     $other = headIntegrityDocument('Other');
     $head = DocumentTestHelpers::head($node);
-    $db = app(VaulterDatabase::class)->connection();
+    $db = app(VaulterDatabase::class);
 
     // Each violation runs in its own savepoint so the surrounding test transaction survives.
     expect(fn () => $db->transaction(fn () => DocumentRevision::query()->whereKey($head->id)->delete()))->toThrow(QueryException::class)

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Models\Documents\Document;
@@ -41,7 +42,7 @@ it('physically deletes a trashed document node\'s inline version content on purg
     $document = DocumentTestHelpers::document($node);
     expect(DocumentRevision::query()->where('document_id', $document->id)->count())->toBe(1);
 
-    $node->refresh()->forceFill(['trashed_at' => Carbon::now()->subDays(40), 'trash_root_id' => $node->getKey()])->save();
+    app(VaulterDatabase::class)->write(fn () => $node->refresh()->forceFill(['trashed_at' => Carbon::now()->subDays(40), 'trash_root_id' => $node->getKey()])->save());
 
     $this->artisan('vaulter:purge-trash')->assertSuccessful();
 

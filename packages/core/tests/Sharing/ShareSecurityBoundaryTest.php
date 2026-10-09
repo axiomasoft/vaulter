@@ -74,7 +74,7 @@ it('denies every new resolution after revoke commit on independent connections',
         try {
             $outcomes = ForkRace::run([
                 function () use ($drive, $node, $minted, $marker): array {
-                    app()->makeWith(ShareOperations::class, ['context' => OperationContext::system($drive, 'race revoke')])->revoke($node, $minted->link->id);
+                    app()->makeWith(ShareOperations::class, ['context' => OperationContext::system($drive, 'race revoke')])->revoke($node->id, $minted->link->id);
                     file_put_contents($marker, 'committed');
 
                     return ['pid' => getmypid(), 'backend' => DB::selectOne('select pg_backend_pid() as pid')->pid];
@@ -92,7 +92,7 @@ it('denies every new resolution after revoke commit on independent connections',
                     return ['pid' => getmypid(), 'backend' => DB::selectOne('select pg_backend_pid() as pid')->pid, 'visible' => $response->isOk()];
                 },
             ]);
-            expect($outcomes[0]->ok)->toBeTrue()->and($outcomes[1]->ok)->toBeTrue()
+            expect($outcomes[0]->ok)->toBeTrue($outcomes[0]->message ?? '')->and($outcomes[1]->ok)->toBeTrue($outcomes[1]->message ?? '')
                 ->and($outcomes[0]->value['backend'])->not->toBe($outcomes[1]->value['backend'])
                 ->and($outcomes[1]->value['visible'])->toBeFalse();
         } finally {

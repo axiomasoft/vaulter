@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Http\Request;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Actions\Documents\UpdateDocumentContentAction;
 use Vaulter\Documents\Actions\Revisions\CreateNamedRevisionAction;
@@ -93,7 +94,7 @@ it('takes a checkpoint for a document whose head is missing, without dereferenci
         type: 'vaulter/markdown',
     ));
     // SQLite has no head FK; a missing head must still lead to a fresh checkpoint.
-    Document::query()->where('node_id', $node->getKey())->update(['current_revision_id' => null]);
+    app(VaulterDatabase::class)->write(fn () => Document::query()->where('node_id', $node->getKey())->update(['current_revision_id' => null]));
     expect(app(DocumentRevisionReadRepository::class)->head($node))->toBeNull();
 
     $result = app(UpdateDocumentContentAction::class)->execute(DocumentTestHelpers::context($node), new UpdateDocumentContentInput(

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Vaulter\Access\Roles\RoleRegistry;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Facades\Documents;
@@ -23,7 +24,7 @@ it('SEC-R17-inline rechecks visibility on every PHP export with a retained handl
     $grant = AccessTestHelpers::grant($this->node, RoleRegistry::READER, subjectId: 97);
     $documents = Documents::in($this->handle->actingAs($user));
     expect($documents->export($this->node->id, 'html')->bytes)->toContain('secret body');
-    $grant->delete();
+    app(VaulterDatabase::class)->write(fn () => $grant->delete());
     expect(fn () => $documents->export($this->node->id, 'html'))->toThrow(NodeNotFoundException::class);
 });
 
@@ -33,6 +34,6 @@ it('SEC-R17-inline hides a document of another drive from an export', function (
 });
 
 it('SEC-R17-inline refuses trash on PHP export', function (): void {
-    Node::query()->whereKey($this->node->id)->update(['trashed_at' => now()]);
+    app(VaulterDatabase::class)->write(fn () => Node::query()->whereKey($this->node->id)->update(['trashed_at' => now()]));
     expect(fn () => Documents::in($this->handle)->export($this->node->id, 'html'))->toThrow(NodeNotFoundException::class);
 });

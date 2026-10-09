@@ -256,9 +256,6 @@ function base64(update) {
 export function createHooks({
   webhook = backend,
   log = console,
-  // Hosts of one room's Y.Doc beyond this process (Redis): a seed no backend has accepted
-  // must not enter such a doc, or two hubs' independent seeds merge into duplicated text.
-  shared = Boolean(config.redisUrl),
   // Hocuspocus 4.7 does not reschedule a store whose hook threw, so a backend outage is
   // retried here: this many extra attempts, waiting retryDelayMs × attempt between them.
   storeRetries = 3,
@@ -365,22 +362,14 @@ export function createHooks({
       const { seed, projection } = buildSeed(loaded)
       const update = Y.encodeStateAsUpdate(seed)
 
-      // A read-only connection cannot store the seed. Without Redis the room is its own, so
-      // it may show its copy; with Redis the Y.Doc outlives this connection and is shared, so
-      // it must stay unloaded: an empty cached Y.Doc would reach the first writer (Hocuspocus
-      // does not call onLoadDocument again for a loaded room), whose store would then send
-      // the projection of an EMPTY document over the saved JSON. Refuse instead — Hocuspocus
-      // drops the document it failed to load — and the viewer retries after a writer's seed.
+      // Hocuspocus caches rooms even without Redis and skips subsequent loads. A viewer
+      // cannot persist the seed, so caching its JSON would let a later writer overwrite
+      // a newer REST update without the seed's state-version check. Only an accepted seed
+      // may enter the cache; the viewer retries once a writer has initialised the room.
       if (context?.mode !== 'rw') {
-        if (shared) {
-          log.warn?.(`Vaulter collab hub: ${documentName} has no stored state yet; a read-only viewer waits for a writer's seed`)
+        log.warn?.(`Vaulter collab hub: ${documentName} has no stored state yet; a read-only viewer waits for a writer's seed`)
 
-          throw new Error('Collaboration document is not initialised yet; retry once a writer has opened it')
-        }
-
-        Y.applyUpdate(document, update)
-
-        return
+        throw new Error('Collaboration document is not initialised yet; retry once a writer has opened it')
       }
 
       const stored = await webhook.storeDocument({

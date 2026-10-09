@@ -5,12 +5,18 @@ declare(strict_types=1);
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Data\Sharing\ShareLinkUpdate;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Actions\Drives\ArchiveDriveAction;
+use Vaulter\Drive\Actions\Drives\DeleteDriveAction;
+use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Sharing\ShareAudience;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Sharing\ShareLinkTtlExceededException;
@@ -69,6 +75,35 @@ it('counts the redemption once per link session however many preview requests fo
     // Without the session every request is a new visit.
     $this->getJson('api/vaulter/share/'.$minted->token)->assertOk();
     expect(AccessTestHelpers::shareRow($minted)->use_count)->toBe(2);
+});
+
+it('keeps archived shares readable but hides deleting drives from new and existing visits', function (): void {
+    Storage::fake('local');
+    Queue::fake();
+    $handle = Vaulter::drive($this->drive)->asSystem('lifecycle fixture');
+    $file = $handle->files()->upload(UploadSource::fromStream(stream: DriveTestHelpers::streamFor('shared'), name: 'shared.txt'));
+    $folderLink = ($this->shares)()->create($this->node->id, new ShareLinkInput(scope: GrantScope::Subtree));
+    $fileLink = ($this->shares)()->create($file->id, new ShareLinkInput);
+    $folderSession = $this->getJson('api/vaulter/share/'.$folderLink->token)->assertOk()->headers->get(ShareSession::HEADER);
+    $fileSession = $this->getJson('api/vaulter/share/'.$fileLink->token)->assertOk()->headers->get(ShareSession::HEADER);
+    $resolver = app(ShareResolver::class);
+    $resolved = $resolver->resolve($fileLink->token, session: $fileSession)->context;
+    $context = OperationContext::system($this->drive, 'lifecycle fixture');
+
+    app(ArchiveDriveAction::class)->execute($context);
+    $this->getJson('api/vaulter/share/'.$folderLink->token.'/nodes', [ShareSession::HEADER => $folderSession])->assertOk();
+    expect($this->get('api/vaulter/share/'.$fileLink->token.'/download', [ShareSession::HEADER => $fileSession])->getStatusCode())->toBeIn([200, 302]);
+    expect((string) $resolver->refresh($resolved)->node->id)->toBe($file->id);
+
+    app(DeleteDriveAction::class)->execute($context);
+    foreach ([[$folderLink, $folderSession], [$fileLink, $fileSession]] as [$link, $session]) {
+        foreach ([[], [ShareSession::HEADER => $session]] as $headers) {
+            $this->getJson('api/vaulter/share/'.$link->token, $headers)->assertNotFound();
+            $this->getJson('api/vaulter/share/'.$link->token.'/nodes', $headers)->assertNotFound();
+            $this->getJson('api/vaulter/share/'.$link->token.'/download', $headers)->assertNotFound();
+        }
+    }
+    expect(fn () => $resolver->refresh($resolved))->toThrow(NotFoundHttpException::class);
 });
 
 it('lets a visit that already redeemed keep working once max_uses is reached, and refuses new visits', function (): void {

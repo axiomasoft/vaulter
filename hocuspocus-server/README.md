@@ -33,8 +33,8 @@ Vue client ──ws(token=room JWT, doc=room name)──▶  this hub
    without one — builds the Y.Doc from its JSON **once** (`@hocuspocus/transformer` +
    `src/schema.js`) and stores it with `seed: true` and the `state_version` it loaded (a
    document that changed in between is refused with `409` and loaded again). **Clients never
-   seed.** A seed that would lose anything (see the schema note below) is refused, and with
-   Redis a read-only first connection to an unseeded document is refused until a writer has
+   seed.** A seed that would lose anything (see the schema note below) is refused. In every
+   deployment a read-only first connection to an unseeded document is refused until a writer has
    seeded it.
 5. `onStoreDocument` (debounced) sends the binary state and its JSON projection to
    `collab/store`. A `409` (the room's epoch is over after a restore, or a seed conflict) is

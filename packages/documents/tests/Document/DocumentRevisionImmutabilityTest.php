@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Eloquent\MassAssignmentException;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Actions\Revisions\UpdateRevisionRetentionAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
@@ -50,7 +51,7 @@ it('refuses to change any payload or provenance column of a stored checkpoint', 
 it('changes keep_forever through setRetention, the one allowed mutation', function (): void {
     $revision = immutableCheckpoint();
 
-    app(DocumentRevisionStoreRepository::class)->setRetention($revision, keepForever: true);
+    app(VaulterDatabase::class)->write(fn () => app(DocumentRevisionStoreRepository::class)->setRetention($revision, keepForever: true));
     expect($revision->refresh()->keep_forever)->toBeTrue();
 
     app(UpdateRevisionRetentionAction::class)->execute(DocumentTestHelpers::context($revision->document->node), new UpdateRevisionRetentionInput(node: $revision->document->node, revision: $revision->id, keepForever: false));

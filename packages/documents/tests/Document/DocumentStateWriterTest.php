@@ -157,7 +157,7 @@ it('stamps the node change but never its sequence', function (): void {
 
 it('copies the tenant of the aggregate onto its checkpoints', function (): void {
     $node = writerDocument();
-    Document::query()->where('node_id', $node->id)->update(['tenant_id' => 'tenant-a']);
+    app(VaulterDatabase::class)->write(fn () => Document::query()->where('node_id', $node->id)->update(['tenant_id' => 'tenant-a']));
 
     $checkpoint = writeState($node, new DocumentStateChange(cause: StateWriteCause::Update, schemaVersion: 1, content: DocumentTestHelpers::content('t'), forceCheckpoint: true))->checkpoint;
 

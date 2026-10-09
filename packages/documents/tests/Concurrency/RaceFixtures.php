@@ -39,7 +39,7 @@ final class RaceFixtures
             parent: DriveTestHelpers::model($drive->root()),
         ));
         if ($sequence !== 0) {
-            Node::query()->whereKey($node->getKey())->update(['sequence' => $sequence]);
+            app(VaulterDatabase::class)->write(fn () => Node::query()->whereKey($node->getKey())->update(['sequence' => $sequence]));
         }
 
         return $node->refresh();

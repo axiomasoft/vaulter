@@ -18,6 +18,7 @@ use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Content\ContentAvailabilityGuard;
 use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Enums\Access\Ability;
+use Vaulter\Enums\Drive\DriveStatus;
 use Vaulter\Enums\Sharing\ShareAudience;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\FileRevision;
@@ -58,19 +59,19 @@ use Vaulter\Tenancy\TenancyBoundary;
  * nothing (the redemption is owned by RedeemShareLinkAction, called by
  * ResolveShareToken) and never accepts a Request.
  */
-final class ShareResolver
+final readonly class ShareResolver
 {
     public function __construct(
-        private readonly Repository $configuration,
-        private readonly NodeShareReadRepository $shares,
-        private readonly AccessResolver $access,
-        private readonly ProfilePolicy $profiles,
-        private readonly ProfileRegistry $registry,
-        private readonly ShareContentGuard $content,
-        private readonly ShareLinkRules $rules,
-        private readonly ShareSession $sessions,
-        private readonly TenancyConfig $tenancy,
-        private readonly Container $container,
+        private Repository $configuration,
+        private NodeShareReadRepository $shares,
+        private AccessResolver $access,
+        private ProfilePolicy $profiles,
+        private ProfileRegistry $registry,
+        private ShareContentGuard $content,
+        private ShareLinkRules $rules,
+        private ShareSession $sessions,
+        private TenancyConfig $tenancy,
+        private Container $container,
     ) {}
 
     /**
@@ -150,6 +151,7 @@ final class ShareResolver
             || !$share->role()->is($context->role)) {
             throw new NotFoundHttpException('Share link not found or no longer available.');
         }
+
         $node = $this->safeTargetNode($share);
         $fresh = $node === null ? null : new ShareContext($share, $node, $share->role());
         if ($node === null || $fresh === null || !$fresh->allows(Ability::View) || !$fresh->allows(Ability::Download) || !$this->issuerStillAuthorized($share, $node)) {
@@ -166,6 +168,7 @@ final class ShareResolver
 
             return;
         }
+
         $this->content->assertAvailable(node: $node, revision: $revision);
     }
 
@@ -193,6 +196,10 @@ final class ShareResolver
         // The storage must exist (tenant/storage boundary) — a detached node is a
         // corrupt state, never a public surface.
         $drive = $node->storage()->first();
+        if ($drive instanceof Drive && !in_array($drive->status, [DriveStatus::Active, DriveStatus::Archived], true)) {
+            return null;
+        }
+
         if (!$drive instanceof Drive || ($this->tenancy->enabled() && ($drive->tenant_id === null || TenancyBoundary::normalize($node->tenant_id) !== TenancyBoundary::normalize($drive->tenant_id))) || !$this->profiles->featureEnabled($this->registry->get($drive->profile), 'share_links') || (string) $share->tenant_id !== (string) $drive->tenant_id
             || !$this->rules->holds($drive, $share, Carbon::now())) {
             return null;
@@ -276,11 +283,13 @@ final class ShareResolver
         if ($share->audience !== ShareAudience::Tenant) {
             return true;
         }
+
         $drive = $node->storage()->first();
         // Without strict tenancy there is no host tenant to compare with.
         if (!$drive instanceof Drive || $drive->tenant_id === null || !$this->tenancy->enabled()) {
             return false;
         }
+
         $current = TenancyBoundary::normalize($this->container->make(TenantResolver::class)->current());
 
         return $current !== null

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Drive;
@@ -41,7 +42,7 @@ function readPathStorage(): Drive
 function seedLegacyHeadContent(int|string $nodeId, array $content): void
 {
     // The content endpoint reads the working state; seed it as old code stored it.
-    Document::query()->where('node_id', $nodeId)->update(['content' => json_encode($content)]);
+    app(VaulterDatabase::class)->write(fn () => Document::query()->where('node_id', $nodeId)->update(['content' => json_encode($content)]));
 }
 
 it('отдаёт легаси-контент с javascript:-ссылкой обеззараженным, а не сырым, R-12', function (): void {

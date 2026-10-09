@@ -24,7 +24,11 @@ use Vaulter\Documents\Exceptions\DocumentTypeUnavailableException;
 use Vaulter\Documents\Exceptions\InvalidDocumentContentException;
 use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
+use Vaulter\Enums\Access\Ability;
+use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Exceptions\Drive\DriveArchivedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\Identity;
 use Vaulter\Support\LoadTier;
 use Vaulter\Support\TreeGuard;
@@ -59,6 +63,7 @@ final readonly class PersistCollaborationStateAction
         private TreeGuard $tree,
         private ContentDecoder $decoder,
         private DocumentsConfig $documentsConfig,
+        private DriveLifecycle $lifecycle,
     ) {}
 
     /**
@@ -88,15 +93,25 @@ final readonly class PersistCollaborationStateAction
                     || (!is_int($driveId) && !is_string($driveId)) || $driveId === '') {
                     throw NodeNotFoundException::forId('unpersisted');
                 }
+
                 $this->database->lockTreeShared($driveId);
+                try {
+                    $this->lifecycle->assertUserWritable($driveId);
+                } catch (DriveArchivedException) {
+                    // The hub protocol closes a room whose writer lost access on 403.
+                    throw PermissionDeniedException::forAbility(Ability::Edit->value);
+                }
+
                 $current = $this->tree->locked($this->tree->lock([$nodeId]), $nodeId);
                 // A node trashed or purged while the room was open takes no more writes.
                 if (!$this->tree->sameStorage($current, $driveId) || $current->trashed_at !== null) {
                     throw NodeNotFoundException::forId($nodeId);
                 }
+
                 if (!$current->kind->isDocument()) {
                     throw NotADocumentException::forNode($nodeId);
                 }
+
                 $node = $this->tree->sync($node, $current);
                 $document = $this->documents->lockForNode($node) ?? throw NotADocumentException::forNode($nodeId);
                 $document->setRelation('node', $node);
@@ -106,19 +121,23 @@ final readonly class PersistCollaborationStateAction
                 if ($data->expectedEpoch !== null && $data->expectedEpoch !== $document->collab_epoch) {
                     throw new CollaborationEpochMismatchException(expected: $data->expectedEpoch, actual: $document->collab_epoch);
                 }
+
                 $type = $this->decoder->editableType($document);
                 if (!$type instanceof SupportsCollaboration) {
                     throw CollaborationUnavailableException::unsupportedType($type->key());
                 }
+
                 if ($data->seed && $document->yjs_state !== null) {
                     throw new CollaborationSeedConflictException(Identity::stringify($nodeId));
                 }
+
                 // The epoch does not move on a JSON update of a document without Yjs state, so
                 // a seed built from what the hub loaded earlier is only valid while the state
                 // version is still the one it read.
                 if ($data->seed && $data->expectedStateVersion !== null && $data->expectedStateVersion !== $document->state_version) {
                     throw new CollaborationSeedConflictException(Identity::stringify($nodeId), $data->expectedStateVersion, $document->state_version);
                 }
+
                 $content = $data->content === null
                     ? $type->projectFromState($data->yjsState)
                     : $this->decoder->decode($type, $data->content);

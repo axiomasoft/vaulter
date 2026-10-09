@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
@@ -38,7 +39,7 @@ it('404s on reading the content of a trashed document node, F-P1.12-01', functio
     // Control: live document reads fine.
     $this->getJson($nodeBase.'/content')->assertOk();
 
-    Node::query()->find($nodeId)->forceFill(['trashed_at' => now()])->save();
+    app(VaulterDatabase::class)->write(fn () => Node::query()->find($nodeId)->forceFill(['trashed_at' => now()])->save());
 
     // Same actor, same still-live grant — trashed content is unreachable.
     $this->getJson($nodeBase.'/content')->assertNotFound();
@@ -58,7 +59,7 @@ it('404s on exporting a trashed document node, F-P1.12-01', function (): void {
 
     $this->getJson($nodeBase.'/export?format=html')->assertOk();
 
-    Node::query()->find($nodeId)->forceFill(['trashed_at' => now()])->save();
+    app(VaulterDatabase::class)->write(fn () => Node::query()->find($nodeId)->forceFill(['trashed_at' => now()])->save());
 
     $this->getJson($nodeBase.'/export?format=html')->assertNotFound();
 });
@@ -71,7 +72,7 @@ it('404s on listing document-version history of a trashed node, F-P1.12-01', fun
         'content' => ['type' => 'doc', 'content' => []],
     ])->assertCreated()->json('data.id');
 
-    Node::query()->find($nodeId)->forceFill(['trashed_at' => now()])->save();
+    app(VaulterDatabase::class)->write(fn () => Node::query()->find($nodeId)->forceFill(['trashed_at' => now()])->save());
 
     $this->getJson('api/vaulter/nodes/'.$nodeId.'/document-versions')->assertNotFound();
 });

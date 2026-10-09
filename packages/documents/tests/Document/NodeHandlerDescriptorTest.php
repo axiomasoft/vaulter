@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Vaulter\Contracts\Handlers\NodePresenter;
 use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
@@ -78,7 +79,7 @@ it('describes a file node by its server-trusted mime (never a claimed one)', fun
     $model = config('vaulter.models.node');
     /** @var Node $node */
     $node = new $model;
-    $node->forceFill([
+    app(VaulterDatabase::class)->write(fn () => $node->forceFill([
         'drive_id' => $drive->model()->id,
         'parent_id' => $drive->root()->id,
         'kind' => NodeKind::File,
@@ -86,7 +87,7 @@ it('describes a file node by its server-trusted mime (never a claimed one)', fun
         'extension' => 'pdf',
         'mime_type' => 'application/pdf',
         'size_bytes' => 10,
-    ])->save();
+    ])->save());
 
     $descriptor = app(NodePresenter::class)->present($node);
 
@@ -101,7 +102,7 @@ it('presents docx, md and xlsx FILES as preview/download, never editable (V34)',
     $model = config('vaulter.models.node');
     /** @var Node $node */
     $node = new $model;
-    $node->forceFill([
+    app(VaulterDatabase::class)->write(fn () => $node->forceFill([
         'drive_id' => $drive->model()->id,
         'parent_id' => $drive->root()->id,
         'kind' => NodeKind::File,
@@ -109,7 +110,7 @@ it('presents docx, md and xlsx FILES as preview/download, never editable (V34)',
         'extension' => pathinfo($name, PATHINFO_EXTENSION),
         'mime_type' => $mime,
         'size_bytes' => 10,
-    ])->save();
+    ])->save());
 
     $presentation = app(NodePresenter::class)->present($node);
 

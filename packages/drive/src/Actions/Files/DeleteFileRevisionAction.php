@@ -35,6 +35,8 @@ use Vaulter\Support\TreeGuard;
  */
 final readonly class DeleteFileRevisionAction
 {
+    public const string RETENTION_REASON = 'revision-retention';
+
     public function __construct(
         private VaulterDatabase $database,
         private TreeGuard $tree,
@@ -50,15 +52,26 @@ final readonly class DeleteFileRevisionAction
         $revisionId = $revision instanceof FileRevision ? $revision->getRawOriginal($revision->getKeyName()) : $revision;
 
         $this->database->transaction(function () use ($context, $node, $revisionId): void {
-            $this->database->lockTreeShared($node->drive_id);
+            $this->database->lockTreeShared($context->driveId());
             $this->lifecycle->assertWritable($context);
             $node = $this->tree->locked($this->tree->lock([$node->id]), $node->id);
+            if (!$this->tree->sameStorage($node, $context->driveId())) {
+                throw NodeNotFoundException::forId($node->id);
+            }
+
+            // Retention explicitly includes trash. User deletes and other maintenance
+            // callers must still find a live file after acquiring the node lock.
+            if (!$context->actor->isSystem() || $context->actor->ref()->reason !== self::RETENTION_REASON) {
+                $this->tree->assertLive($node);
+            }
+
             $file = $this->files->lockForUpdate($node->file()->firstOrFail());
             $locked = $file->versions()->whereKey($revisionId)->lockForUpdate()->first()
                 ?? throw NodeNotFoundException::forId(Identity::stringify($revisionId));
             if (Identity::stringify($file->current_revision_id) === Identity::stringify($locked->id)) {
                 throw CannotDeleteHeadRevisionException::forRevision($locked->id);
             }
+
             if ($locked->keep_forever) {
                 throw RevisionPinnedException::forRevision($locked->id);
             }
@@ -66,11 +79,13 @@ final readonly class DeleteFileRevisionAction
             if ($locked->size_bytes > 0) {
                 $this->drives->adjustUsedBytes(storage: $context->drive, delta: -$locked->size_bytes);
             }
+
             foreach ($locked->blobs as $blob) {
                 /** @var FileRevisionBlob $edge */
                 $edge = $blob->getRelationValue('pivot');
                 $this->blobs->detach(version: $locked, blob: $blob, role: $edge->role, ordinal: $edge->ordinal);
             }
+
             $this->revisions->delete($locked);
 
             event(new FileRevisionDeleted(

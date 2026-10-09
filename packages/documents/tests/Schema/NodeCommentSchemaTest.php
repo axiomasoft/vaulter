@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Schema;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -16,7 +17,7 @@ use Vaulter\Tests\Fixtures\TestUser;
 function makeNodeComment(Node $node, ?NodeComment $parent = null, ?int $tenantId = null): NodeComment
 {
     $comment = new NodeComment;
-    $comment->forceFill([
+    app(VaulterDatabase::class)->write(fn () => $comment->forceFill([
         'tenant_id' => $tenantId,
         'node_id' => $node->getKey(),
         'parent_id' => $parent?->getKey(),
@@ -24,7 +25,7 @@ function makeNodeComment(Node $node, ?NodeComment $parent = null, ?int $tenantId
         'author_id' => 1,
         'body' => 'hello',
         'anchor' => ['from' => 3, 'to' => 9],
-    ])->save();
+    ])->save());
 
     return $comment->refresh();
 }
@@ -81,7 +82,7 @@ it('carries a resolution tombstone (resolved_at + resolved_by)', function (): vo
     $node = AccessTestHelpers::folder($storage, null, 'resolvable');
 
     $comment = makeNodeComment($node);
-    $comment->forceFill(['resolved_at' => now(), 'resolved_by' => 7])->save();
+    app(VaulterDatabase::class)->write(fn () => $comment->forceFill(['resolved_at' => now(), 'resolved_by' => 7])->save());
 
     $fresh = $comment->fresh();
     expect($fresh->isResolved())->toBeTrue()

@@ -45,7 +45,7 @@ final class PruneFileRevisionsJob implements ShouldBeUnique, ShouldQueue
     use InteractsWithQueue;
     use Queueable;
 
-    public const string ACTOR = 'revision-retention';
+    public const string ACTOR = DeleteFileRevisionAction::RETENTION_REASON;
 
     private const int BATCH = 500;
 
@@ -72,6 +72,7 @@ final class PruneFileRevisionsJob implements ShouldBeUnique, ShouldQueue
             if (!$drive instanceof Drive) {
                 return $report;
             }
+
             $policy = $profiles->get($drive->profile)->getDrivePolicy()->revisionRetention;
             if (!$policy->prunes()) {
                 return $report;
@@ -89,11 +90,13 @@ final class PruneFileRevisionsJob implements ShouldBeUnique, ShouldQueue
                     ->get(['f.id', 'f.node_id', 'f.current_revision_id']);
                 $files = [];
                 foreach ($rows as $row) {
-                    $files[] = ['id' => self::key($row->id), 'node_id' => self::key($row->node_id), 'head' => Identity::key($row->current_revision_id)];
+                    $files[] = ['id' => $this->key($row->id), 'node_id' => $this->key($row->node_id), 'head' => Identity::key($row->current_revision_id)];
                 }
+
                 if ($files === []) {
                     break;
                 }
+
                 $after = $files[array_key_last($files)]['id'];
 
                 $candidates = $this->candidates($database, $tables, $files, $policy, $now);
@@ -113,6 +116,7 @@ final class PruneFileRevisionsJob implements ShouldBeUnique, ShouldQueue
 
                         continue;
                     }
+
                     try {
                         $delete->execute($context, $node, $candidate['id']);
                         $report['deleted']++;
@@ -142,6 +146,7 @@ final class PruneFileRevisionsJob implements ShouldBeUnique, ShouldQueue
             $heads[Identity::stringify($file['id'])] = $file['head'] === null ? null : Identity::stringify($file['head']);
             $nodes[Identity::stringify($file['id'])] = $file['node_id'];
         }
+
         $youngest = $now->subDays($policy->minNoncurrentAgeDays);
         $oldest = $policy->maxNoncurrentAgeDays === null ? null : $now->subDays($policy->maxNoncurrentAgeDays);
 
@@ -158,26 +163,29 @@ final class PruneFileRevisionsJob implements ShouldBeUnique, ShouldQueue
             if (Identity::stringify($row->id) === $heads[$fileId]) {
                 continue;
             }
+
             // The newest unpinned non-current revisions come first; pinned ones do not count.
             $position = $rank[$fileId] = ($rank[$fileId] ?? -1) + 1;
             if (!is_string($row->superseded_at) && !$row->superseded_at instanceof \DateTimeInterface) {
                 continue;
             }
+
             $superseded = CarbonImmutable::parse($row->superseded_at);
             if ($superseded->greaterThan($youngest)) {
                 continue;
             }
+
             $overCount = $policy->maxNoncurrentRevisions !== null && $position >= $policy->maxNoncurrentRevisions;
             $overAge = $oldest !== null && $superseded->lessThanOrEqualTo($oldest);
             if ($overCount || $overAge) {
-                $chosen[] = ['id' => self::key($row->id), 'node_id' => $nodes[$fileId], 'size_bytes' => is_numeric($row->size_bytes) ? (int) $row->size_bytes : 0];
+                $chosen[] = ['id' => $this->key($row->id), 'node_id' => $nodes[$fileId], 'size_bytes' => is_numeric($row->size_bytes) ? (int) $row->size_bytes : 0];
             }
         }
 
         return $chosen;
     }
 
-    private static function key(mixed $value): int|string
+    private function key(mixed $value): int|string
     {
         return Identity::key($value) ?? throw new LogicException('A persisted row has no identifier.');
     }

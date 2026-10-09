@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import assert from 'node:assert/strict'
 import * as Y from 'yjs'
 import { TiptapTransformer } from '@hocuspocus/transformer'
+import { Hocuspocus } from '@hocuspocus/server'
 import { createHooks } from '../src/index.js'
 import { FIELD, extensionsFor } from '../src/schema.js'
 
@@ -96,16 +97,45 @@ test('takes the other instance\'s seed after a seed conflict instead of merging 
   assert.deepEqual(Y.encodeStateVector(document), Y.encodeStateVector(expected))
 })
 
-test('a read-only connection shows the seed but never stores it (single instance)', async () => {
-  const backend = stubBackend({ loads: [{ state: null, content: doc('Viewer'), type: 'vaulter/rich-text' }] })
-  const document = new Y.Doc()
+test('a single instance never caches a viewer seed that overwrites a later REST update', async () => {
+  const backend = stubBackend({ loads: [
+    { state: null, content: doc('Draft'), type: 'vaulter/rich-text', stateVersion: 1 },
+    { state: null, content: doc('Newer REST content'), type: 'vaulter/rich-text', stateVersion: 2 },
+  ] })
+  const hooks = createHooks({ webhook: backend.webhook, log: { warn: () => {} } })
+  const loadedDocuments = []
+  const server = new Hocuspocus({ onLoadDocument: async (payload) => {
+    loadedDocuments.push(payload.document)
+    await hooks.onLoadDocument(payload)
+  } })
+  const request = new Request('http://localhost')
+  const connection = { readOnly: true, isAuthenticated: true }
 
-  await createHooks({ webhook: backend.webhook, shared: false }).onLoadDocument({
-    documentName: ROOM, document, context: { token: 'jwt-ro', mode: 'ro', readOnly: true },
-  })
+  try {
+    await assert.rejects(server.createDocument(ROOM, request, 'viewer', connection, {
+      token: 'jwt-ro', mode: 'ro', readOnly: true,
+    }), /not initialised/)
+    assert.equal(server.documents.has(ROOM), false)
+    assert.equal(backend.calls.store.length, 0)
 
-  assert.match(textOf(document), /Viewer/)
-  assert.equal(backend.calls.store.length, 0)
+    // Hocuspocus must load again after REST changed the unseeded document.
+    const writer = await server.createDocument(ROOM, request, 'writer', { ...connection, readOnly: false }, rw)
+    assert.equal(backend.calls.load.length, 2)
+    assert.equal(backend.calls.store[0].seed, true)
+    assert.equal(backend.calls.store[0].stateVersion, 2)
+    assert.deepEqual(backend.calls.store[0].content, doc('Newer REST content'))
+    await hooks.onStoreDocument({ documentName: ROOM, document: writer, lastContext: rw })
+    assert.deepEqual(backend.calls.store[1].content, doc('Newer REST content'))
+
+    // A viewer may reuse a room only after the backend accepted its seed.
+    const viewer = await server.createDocument(ROOM, request, 'viewer', connection, { token: 'jwt-ro', mode: 'ro' })
+    assert.equal(viewer, writer)
+    assert.match(textOf(viewer), /Newer REST content/)
+    assert.equal(textOf(viewer).includes('Draft'), false)
+  } finally {
+    for (const document of loadedDocuments) document.destroy()
+    server.documents.clear()
+  }
 })
 
 test('with a shared Y.Doc (Redis) a read-only connection to an unseeded document is refused, not cached empty', async () => {

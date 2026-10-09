@@ -52,7 +52,7 @@ it('reads content of a switched-off editor extension degraded and refuses to sav
         ->toThrow(DocumentContentDegradedException::class);
 
     // Nothing was lost.
-    expect(Document::query()->where('node_id', $node->id)->firstOrFail()->content)->toBe(widgetDocument());
+    expect(Document::query()->where('node_id', $node->id)->firstOrFail()->content)->toEqual(widgetDocument());
 
     // Switched back on, the document is editable again.
     config()->set('vaulter-documents.tiptap.extra_nodes', ['acmeWidget']);
@@ -98,7 +98,7 @@ it('upgrades an older schema on read without rewriting the stored content', func
         ->and($read->editable)->toBeTrue();
 
     $stored = Document::query()->where('node_id', $node->id)->firstOrFail();
-    expect($stored->content)->toBe(['columns' => [['title' => 'Todo', 'cards' => ['a']]]])
+    expect($stored->content)->toEqual(['columns' => [['title' => 'Todo', 'cards' => ['a']]]])
         ->and($stored->schema_version)->toBe(1);
 
     $saved = $documents->update($node->id, $read->content->toArray());
@@ -126,7 +126,7 @@ it('re-checks the working state on the locked row, so a racing restore of degrad
         content: TipTapContent::fromArray(['type' => 'doc', 'content' => []]),
     )))->toThrow(DocumentContentDegradedException::class);
 
-    expect(Document::query()->where('node_id', $created->id)->firstOrFail()->content)->toBe(widgetDocument());
+    expect(Document::query()->where('node_id', $created->id)->firstOrFail()->content)->toEqual(widgetDocument());
 });
 
 it('reads fields a TipTap node does not carry as degraded, and keeps marks on any node', function (): void {
@@ -140,12 +140,12 @@ it('reads fields a TipTap node does not carry as degraded, and keeps marks on an
 
     expect($documents->content($node->id)->editable)->toBeFalse();
     expect(fn () => $documents->update($node->id, ['type' => 'doc', 'content' => []]))->toThrow(DocumentContentDegradedException::class);
-    expect(Document::query()->where('node_id', $node->id)->firstOrFail()->content)->toBe($stored);
+    expect(Document::query()->where('node_id', $node->id)->firstOrFail()->content)->toEqual($stored);
 
     // Marks on a block node are TipTap JSON: they survive the read→save circle.
     $marked = ['type' => 'doc', 'content' => [['type' => 'paragraph', 'marks' => [['type' => 'bold']], 'content' => [['type' => 'text', 'text' => 'kept']]]]];
     app(VaulterDatabase::class)->write(fn () => Document::query()->where('node_id', $node->id)->update(['content' => json_encode($marked)]));
     $read = $documents->content($node->id);
     expect($read->editable)->toBeTrue()
-        ->and($documents->update($node->id, $read->content->toArray())->content->toArray())->toBe($marked);
+        ->and($documents->update($node->id, $read->content->toArray())->content->toArray())->toEqual($marked);
 });

@@ -44,7 +44,8 @@ it('keeps a document of a removed type readable, read-only and movable, then wor
 
     expect($node->document?->type)->toBe('acme/kanban')
         ->and($node->document?->typeAvailable)->toBeTrue()
-        ->and($stored->content)->toBe(kanbanBoard());
+        // JSON object key order is not preserved by PostgreSQL/MySQL.
+        ->and($stored->content)->toEqual(kanbanBoard());
 
     // The extension is removed.
     TypesTestCase::installTypes(typesWithoutKanban());
@@ -55,7 +56,7 @@ it('keeps a document of a removed type readable, read-only and movable, then wor
         ->and($read->editable)->toBeFalse()
         ->and($read->type)->toBe('acme/kanban')
         ->and($read->content)->toBeInstanceOf(OpaqueContent::class)
-        ->and($read->content->toArray())->toBe(kanbanBoard())
+        ->and($read->content->toArray())->toEqual(kanbanBoard())
         ->and($handle->nodes()->find($node->id)->document?->typeAvailable)->toBeFalse();
 
     expect(fn () => $documents->update($node->id, ['columns' => []]))->toThrow(DocumentTypeUnavailableException::class)
@@ -67,7 +68,7 @@ it('keeps a document of a removed type readable, read-only and movable, then wor
     // History, copy and trash still work.
     expect($documents->revisions($node->id)->items)->toHaveCount(1);
     $copy = $handle->nodes()->copy($node->id, options: new CopyOptions(name: 'Board copy'));
-    expect(Document::query()->where('node_id', $copy->id)->firstOrFail()->content)->toBe(kanbanBoard());
+    expect(Document::query()->where('node_id', $copy->id)->firstOrFail()->content)->toEqual(kanbanBoard());
     $handle->nodes()->trash($copy->id);
     $handle->trash()->purge($copy->id);
     expect(Document::query()->where('node_id', $copy->id)->exists())->toBeFalse();
@@ -79,7 +80,7 @@ it('keeps a document of a removed type readable, read-only and movable, then wor
     $back = $documents->content($node->id);
     expect($back->typeAvailable)->toBeTrue()
         ->and($back->editable)->toBeTrue()
-        ->and($back->content->toArray())->toBe(kanbanBoard());
+        ->and($back->content->toArray())->toEqual(kanbanBoard());
 
     $updated = $documents->update($node->id, ['columns' => []], expectedStateVersion: $back->stateVersion);
     expect($updated->content->toArray())->toBe(['columns' => []])
@@ -95,7 +96,7 @@ it('answers 409 document_type_unavailable over HTTP and still serves the JSON co
 
     $this->getJson('api/vaulter/nodes/'.$node->id.'/content')
         ->assertOk()
-        ->assertJsonPath('data.content', kanbanBoard());
+        ->assertJsonPath('data.content', static fn (array $content): bool => $content == kanbanBoard());
 
     $this->patchJson('api/vaulter/nodes/'.$node->id.'/content', ['content' => ['columns' => []]])
         ->assertStatus(409)

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
 use Vaulter\Documents\Content\TipTap\TipTapRenderer;
@@ -37,7 +38,7 @@ function legacyVersion(array $content): DocumentRevision
 
     // Перезаписываем снапшот «как он лежал до P0.1» прямо в БД (ревизии неизменяемы
     // через модель) — миграции данных нет, версия остаётся такой, какой её записал старый код.
-    DocumentRevision::query()->whereKey($headId)->update(['content' => json_encode($content)]);
+    app(VaulterDatabase::class)->write(fn () => DocumentRevision::query()->whereKey($headId)->update(['content' => json_encode($content)]));
 
     return DocumentRevision::query()->whereKey($headId)->firstOrFail();
 }

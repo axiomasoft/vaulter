@@ -11,7 +11,6 @@ use Vaulter\Documents\Tests\Export\ExportTestCase;
 use Vaulter\Documents\Tests\Operations\OperationsTestCase;
 use Vaulter\Documents\Tests\TestCase;
 use Vaulter\Documents\Tests\Types\TypesTestCase;
-use Vaulter\Tests\Drive\DriveTestHelpers;
 
 // The v_node_comments/v_documents/v_document_revisions schema is always migrated (core owns
 // it unconditionally); only the ROUTES are feature-gated. Schema + Unit run on the
@@ -58,8 +57,3 @@ uses(TypesTestCase::class, RefreshDatabase::class)->in('Types');
 uses(TestCase::class)->in('Providers');
 
 uses(TestCase::class)->in('Configuration');
-
-// Fixtures write rows directly. Under VAULTER_TEST_WRITE_GUARD=1 (the write-guard lane) those
-// writes must pass the guard like the suite's other builders do, so the fixture opens the
-// scope the way an operation would; the code under test still opens its own.
-pest()->beforeEach(fn () => DriveTestHelpers::insideOperation())->in('Collaboration', 'Document', 'Export', 'Operations', 'Schema', 'Comment', 'Types');

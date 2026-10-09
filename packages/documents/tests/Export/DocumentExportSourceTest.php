@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException;
 use Vaulter\Documents\Exceptions\UnknownExportFormatException;
 use Vaulter\Documents\Facades\Documents;
@@ -76,10 +77,10 @@ it('flags an export of content its type could only read partly as lossy', functi
     $model = DriveTestHelpers::model($node);
     // A node type the schema does not know: the read path drops it and reports the loss.
     $stored = DocumentTestHelpers::document($model);
-    $stored->forceFill(['content' => ['type' => 'doc', 'content' => [
+    app(VaulterDatabase::class)->write(fn () => $stored->forceFill(['content' => ['type' => 'doc', 'content' => [
         ['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'kept']]],
         ['type' => 'hostWidgetNode', 'attrs' => ['x' => 1]],
-    ]]])->save();
+    ]]])->save());
 
     expect($documents->export($node->id, 'html')->lossy)->toBeTrue();
 

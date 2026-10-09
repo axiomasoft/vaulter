@@ -198,7 +198,7 @@ it('refuses a negative expectation', function (): void {
 it('rolls back content and checkpoint writes when the state version is exhausted', function (): void {
     config()->set('vaulter-documents.revisions.checkpoint_interval_seconds', 0);
     $node = stateVersionDocument();
-    Document::query()->where('node_id', $node->id)->update(['state_version' => PHP_INT_MAX]);
+    app(VaulterDatabase::class)->write(fn () => Document::query()->where('node_id', $node->id)->update(['state_version' => PHP_INT_MAX]));
     $before = DocumentTestHelpers::document($node);
     Event::fake([DocumentContentUpdated::class]);
 
