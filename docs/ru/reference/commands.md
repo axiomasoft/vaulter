@@ -22,6 +22,7 @@ spatie/laravel-package-tools) плюс восемь команд пакета, �
 | `vaulter:sweep-uploads` | Прервать и подчистить протухшие сессии резюмируемой загрузки |
 | `vaulter:relay-outbox` | Передать ожидающие события outbox на эндпоинты вебхуков |
 | `vaulter:retry-webhooks` | Повторно отправить доставки вебхуков, у которых истёк backoff |
+| `vaulter:events:reference` | Перегенерировать (или проверить `--check`) таблицу каталога событий в справке |
 
 ---
 
@@ -228,6 +229,21 @@ vaulter:retry-webhooks
 
 ```bash
 php artisan vaulter:retry-webhooks
+```
+
+---
+
+## `vaulter:events:reference`
+
+Перегенерирует таблицу каталога событий между маркерами `<!-- events:start -->` и
+`<!-- events:end -->` в `docs/reference/events.md` и `docs/ru/reference/events.md` из
+`EventSpec` каждого `EventType`. С `--check` ничего не пишет, а код выхода 1 означает,
+что страница расходится с кодом (для CI). Это служебная команда репозитория Vaulter, а
+не приложений-хостов.
+
+```bash
+php artisan vaulter:events:reference
+php artisan vaulter:events:reference --check
 ```
 
 ---

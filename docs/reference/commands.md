@@ -23,6 +23,7 @@ outbox relay, webhook retry, webhook prune) are designed to be scheduled.
 | `vaulter:relay-outbox` | Relay pending outbox events to webhook endpoints |
 | `vaulter:retry-webhooks` | Re-dispatch webhook deliveries whose backoff elapsed |
 | `vaulter:prune-webhooks` | Delete settled outbox rows and terminal webhook deliveries past retention |
+| `vaulter:events:reference` | Regenerate (or `--check`) the event catalogue table in the reference docs |
 
 ---
 
@@ -226,6 +227,21 @@ vaulter:retry-webhooks
 
 ```bash
 php artisan vaulter:retry-webhooks
+```
+
+---
+
+## `vaulter:events:reference`
+
+Regenerate the event catalogue table between the `<!-- events:start -->` and
+`<!-- events:end -->` markers of `docs/reference/events.md` and
+`docs/ru/reference/events.md` from the `EventSpec` of every `EventType`. With `--check`
+nothing is written and the exit code is 1 when a page differs (for CI). It is a
+maintenance command for the Vaulter repository, not for host applications.
+
+```bash
+php artisan vaulter:events:reference
+php artisan vaulter:events:reference --check
 ```
 
 ---

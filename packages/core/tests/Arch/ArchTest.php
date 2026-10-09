@@ -276,8 +276,8 @@ test('split technical roots keep classes in domain subfolders', function (): voi
     // root => list of bare class names allowed to remain at the flat root.
     $rootsWithAllowed = [
         'Enums' => [],
-        // The event pipeline's base class and its single recorder are cross-domain (PLAN2.D22).
-        'Events' => ['DomainEvent', 'EventRecorder'],
+        // The event pipeline's base class, its single recorder and the catalogue reference renderer are cross-domain (PLAN2.D22).
+        'Events' => ['DomainEvent', 'EventRecorder', 'EventsReference'],
         'Models' => [], // Concerns/ is a subdir, not a depth-0 file.
         'Exceptions' => ['VaulterException'],
         'Repositories' => [],

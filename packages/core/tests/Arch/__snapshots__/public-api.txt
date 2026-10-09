@@ -1082,12 +1082,16 @@ Vaulter\Enums\Events\EventType
   NodeMoved = node.moved
   NodeRenamed = node.renamed
   NodeCopied = node.copied
+  NodeUpdated = node.updated
   NodeTrashed = node.trashed
   NodeRestored = node.restored
   NodePurged = node.purged
   GrantCreated = grant.created
   GrantRevoked = grant.revoked
+  InheritanceChanged = access.inheritance_changed
   ShareCreated = share.created
+  ShareUpdated = share.updated
+  ShareRotated = share.rotated
   ShareRevoked = share.revoked
   DriveArchived = drive.archived
   DriveUnarchived = drive.unarchived
@@ -1143,6 +1147,23 @@ Vaulter\Events\Access\NodeGrantRevoked
   readonly string $correlationId
   readonly string $eventId
 
+Vaulter\Events\Access\NodeInheritanceChanged
+  __construct(\Vaulter\Models\Drive\Node $node, bool $inherits, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
+  readonly \Vaulter\Models\Drive\Node $node
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly bool $inherits
+  readonly string $correlationId
+  readonly string $eventId
+
 Vaulter\Events\DomainEvent
   __construct(\Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array
@@ -1161,6 +1182,12 @@ Vaulter\Events\DomainEvent
 Vaulter\Events\EventRecorder
   __construct(\Vaulter\Database\VaulterDatabase $database, \Vaulter\Configuration\VaulterConfig $config, \Illuminate\Contracts\Container\Container $container, \Vaulter\Contracts\Observability\MetricsRecorder $metrics)
   record(\Vaulter\Events\DomainEvent $event): void
+
+
+Vaulter\Events\EventsReference
+  apply(string $page): ?string
+  block(): string
+  render(): string
 
 
 Vaulter\Events\Sharing\NodeShareCreated
@@ -1192,5 +1219,38 @@ Vaulter\Events\Sharing\NodeShareRevoked
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Sharing\NodeShare $share
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
+  readonly string $eventId
+
+Vaulter\Events\Sharing\NodeShareRotated
+  __construct(\Vaulter\Models\Sharing\NodeShare $share, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
+  readonly \Vaulter\Models\Sharing\NodeShare $share
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
+  readonly string $eventId
+
+Vaulter\Events\Sharing\NodeShareUpdated
+  __construct(\Vaulter\Models\Sharing\NodeShare $share, array $changed, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): ?int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
+  readonly \Vaulter\Models\Sharing\NodeShare $share
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly array $changed
   readonly string $correlationId
   readonly string $eventId

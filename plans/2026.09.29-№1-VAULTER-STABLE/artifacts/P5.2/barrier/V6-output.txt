@@ -1,0 +1,4 @@
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Events\DriveEventCatalogConformanceTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit records every drive event with the data its spec declares[39m[90m        [39m [90m3.31s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit records drive.deleted and the upload sessions with their specs[39m[90m   [39m [90m1.86s[39m  

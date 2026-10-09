@@ -6,6 +6,7 @@ namespace Vaulter\Providers;
 
 use Illuminate\Console\Application as Artisan;
 use Illuminate\Contracts\Foundation\Application;
+use Vaulter\Console\EventsReferenceCommand;
 use Vaulter\Console\MakeProfileCommand;
 use Vaulter\Console\PruneWebhooksCommand;
 use Vaulter\Console\RelayWebhooksCommand;
@@ -18,6 +19,7 @@ final class ConsoleRegistrar
         Artisan::starting(static function (Artisan $artisan): void {
             $artisan->resolveCommands([
                 MakeProfileCommand::class,
+                EventsReferenceCommand::class,
                 RelayWebhooksCommand::class,
                 RetryWebhooksCommand::class,
                 PruneWebhooksCommand::class,

@@ -7,6 +7,8 @@ namespace Vaulter\Actions\Sharing;
 use Vaulter\Data\Sharing\MintedShareLink;
 use Vaulter\Data\Sharing\RotateShareLinkInput;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Events\EventRecorder;
+use Vaulter\Events\Sharing\NodeShareRotated;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Operations\NodeLocator;
@@ -29,6 +31,7 @@ final readonly class RotateShareLinkAction
         private NodeShareStoreRepository $shares,
         private VaulterDatabase $database,
         private NodeLocator $locator,
+        private EventRecorder $recorder,
     ) {}
 
     public function execute(OperationContext $context, RotateShareLinkInput $input): MintedShareLink
@@ -42,6 +45,7 @@ final readonly class RotateShareLinkAction
             }
 
             [$rotated, $token] = $this->minter->mint(fn (string $tokenHash, string $tokenPrefix): NodeShare => $this->shares->rotate($share, $tokenHash, $tokenPrefix));
+            $this->recorder->record(new NodeShareRotated(share: $rotated, actor: $context->actor->ref(), correlationId: $context->correlationId));
 
             return new MintedShareLink(share: $rotated, token: $token);
         });

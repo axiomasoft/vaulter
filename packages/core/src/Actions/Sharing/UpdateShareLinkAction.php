@@ -12,6 +12,8 @@ use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Data\Sharing\UpdateShareLinkInput;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Sharing\ShareAudience;
+use Vaulter\Events\EventRecorder;
+use Vaulter\Events\Sharing\NodeShareUpdated;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Sharing\ShareRoleNotAllowedException;
 use Vaulter\Models\Sharing\NodeShare;
@@ -37,6 +39,7 @@ final readonly class UpdateShareLinkAction
         private NodeLocator $locator,
         private ShareLinkRules $rules,
         private TenancyConfig $tenancy,
+        private EventRecorder $recorder,
     ) {}
 
     public function execute(OperationContext $context, UpdateShareLinkInput $input): NodeShare
@@ -88,7 +91,14 @@ final readonly class UpdateShareLinkAction
                 $attributes['password_hash'] = Hash::make($changes->password);
             }
 
-            return $this->shares->update($share, $attributes);
+            $updated = $this->shares->update($share, $attributes);
+            if ($attributes !== []) {
+                // Field names only: the new password must never leave the row.
+                $changed = array_map(static fn (string $column): string => $column === 'password_hash' ? 'password' : $column, array_keys($attributes));
+                $this->recorder->record(new NodeShareUpdated(share: $updated, changed: $changed, actor: $context->actor->ref(), correlationId: $context->correlationId));
+            }
+
+            return $updated;
         });
     }
 }

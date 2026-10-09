@@ -278,6 +278,22 @@ Vaulter\Drive\Events\Nodes\NodeTrashed
   readonly string $correlationId
   readonly string $eventId
 
+Vaulter\Drive\Events\Nodes\NodeUpdated
+  __construct(\Vaulter\Models\Drive\Node $node, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
+  activityContext(): array
+  activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
+  data(): array
+  isWebhookEligible(): bool
+  scope(): \Vaulter\ValueObjects\Events\EventScope
+  sequence(): int
+  subject(): \Vaulter\ValueObjects\Events\EventSubject
+  type(): \Vaulter\Enums\Events\EventType
+  readonly \Carbon\CarbonImmutable $occurredAt
+  readonly \Vaulter\Models\Drive\Node $node
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $correlationId
+  readonly string $eventId
+
 Vaulter\Drive\Events\Uploads\UploadAborted
   __construct(\Vaulter\Drive\Models\Uploads\UploadSession $session, \Vaulter\ValueObjects\Access\ActorRef $actor, string $correlationId, ?string $eventId = null, ?\Carbon\CarbonImmutable $occurredAt = null)
   activityContext(): array

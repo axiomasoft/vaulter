@@ -1,0 +1,22 @@
+{
+ "item": "PLAN2.P5.2",
+ "prepared_at": "2026-10-09",
+ "runtime": {"provider": "anthropic", "model": "claude-sonnet-5-5", "effort": "medium", "source": "session /model = Sonnet 5.5, /effort medium; plan.py start --actor anthropic/sonnet-5.5/medium"},
+ "runs_mode": "D51 BARRIER (block A): own V1-V3, V80, V81 + V90 (deferred P5.1 V4/V5 and own V5-V7). No mutation tools (owner instruction: mutators are not run). Review: none.",
+ "changed_paths": {
+  "core_src": ["Attributes/EventSpec.php (new)", "Enums/Events/EventType.php (EventSpec on every case, +4 cases, matrices removed)", "Events/EventsReference.php (new)", "Console/EventsReferenceCommand.php (new)", "Providers/ConsoleRegistrar.php", "Events/Access/NodeInheritanceChanged.php, Events/Sharing/NodeShare{Updated,Rotated}.php (new)", "Actions/Access/SetNodeInheritanceAction.php, Actions/Sharing/{Update,Rotate}ShareLinkAction.php"],
+  "drive_src": ["Events/Nodes/NodeUpdated.php (new)", "Actions/Nodes/SetNodePropertiesAction.php"],
+  "documents_src": [],
+  "tests": ["core/tests/Events/{EventCatalogTest,EventsReferenceTest,CoreEventCatalogConformanceTest}.php", "core/tests/Sharing/ShareLinkLifecycleEventsTest.php", "core/tests/Access/InheritanceChangedEventTest.php", "drive/tests/Events/{DriveEventCatalogConformanceTest,FileRevisionDeletedEventTest,NodeUpdatedEventTest}.php", "documents/tests/Events/{DocumentEventCatalogConformanceTest,DocumentEventValidatorsTest}.php", "core Arch PublicApiSnapshot golden"],
+  "docs": ["docs/reference/events.md + docs/ru/reference/events.md (generated block)", "docs/guide/webhooks.md", "docs/reference/commands.md + ru", "UPGRADE.md", "CHANGELOG.md", "artifacts/P5.2/changelog-entry.md"]
+ },
+ "callers_checked": "EventType::isActivity/isWebhook/activityTypes/webhookTypes/names callers: EventRecorder, DomainEvent::isWebhookEligible, webhook endpoint requests. Share update/rotate callers: ShareOperations only via the Actions.",
+ "behaviour": [
+  "EventSpec is the only source of the activity/webhook/journal matrix and data shape.",
+  "share.updated data.changed lists field names only; token fields never enter the envelope.",
+  "vaulter:events:reference --check exits 1 when the generated block differs."
+ ],
+ "commands": "see plan item validation V1-V3, V5-V7, V80, V81, V90",
+ "negative_controls": "artifacts/P5.2/negative-controls.md (manual temporary edits, restored)",
+ "barrier": "artifacts/P5.2/barrier/"
+}

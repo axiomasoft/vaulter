@@ -6,6 +6,26 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Closed event catalogue 1.0 (PLAN2.P5.2, D58–D60/D50/D35)
+
+No migration. New events appear for operations that were silent before; webhook endpoints
+subscribed to `*` start receiving them, and endpoints with an explicit `events` list may add them.
+
+- **Four new `EventType` cases.** Before: setting node properties, changing a node's inheritance,
+  updating a share link and rotating its token recorded nothing. Now: `node.updated`
+  (`Vaulter\Drive\Events\Nodes\NodeUpdated`, `data.changed = ["properties"]`),
+  `access.inheritance_changed` (`Vaulter\Events\Access\NodeInheritanceChanged`, `data.inherits`;
+  `copy_current` still produces one `grant.created` per copied grant), `share.updated`
+  (`Vaulter\Events\Sharing\NodeShareUpdated`, `data.node_id` and `data.changed`, the names of the
+  changed fields) and `share.rotated` (`NodeShareRotated`, `data.node_id`). Their activity rows
+  carry `token_prefix` (shares), which the feed hides from readers without Share.
+- **`EventType` reads its matrix from `#[EventSpec]`.** Before: `activityTypes()` and
+  `webhookTypes()` were hand-kept lists. Now: each case declares its `EventSpec`;
+  `EventType::spec()` and `journalOperation()` are new, the existing methods keep their signatures.
+- **`file.revision_deleted`** is in the activity feed and the outbox (it was only a Laravel event).
+- **Reference docs are generated.** `php artisan vaulter:events:reference --check` fails when
+  `docs/reference/events.md` or its `ru` mirror differs from the specs.
+
 ### One event pipeline: DomainEvent and EventRecorder (PLAN2.P5.1, D22/D35/D58)
 
 Run `php artisan migrate`: `2026_10_10_000001_event_pipeline` makes `v_activity.event_id`

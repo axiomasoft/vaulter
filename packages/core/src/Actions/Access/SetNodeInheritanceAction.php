@@ -10,6 +10,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Access\InheritanceRestriction;
 use Vaulter\Events\Access\NodeGrantCreated;
+use Vaulter\Events\Access\NodeInheritanceChanged;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Access\NodeGrant;
@@ -58,6 +59,7 @@ final readonly class SetNodeInheritanceAction
                 ? $this->copyInherited(context: $context, node: $locked)
                 : [];
             $updated = $this->store->update($locked, ['inherit_grants' => $inherit]);
+            $this->recorder->record(new NodeInheritanceChanged(node: $updated, inherits: $inherit, actor: $context->actor->ref(), correlationId: $context->correlationId));
             // Recorded after every row of the change is written and locked.
             foreach ($copies as $copy) {
                 $this->recorder->record(new NodeGrantCreated(grant: $copy, actor: $context->actor->ref(), correlationId: $context->correlationId));

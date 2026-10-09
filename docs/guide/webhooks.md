@@ -78,6 +78,14 @@ consumers when deploying the schema/code upgrade. The activity occurrence ID and
 outbox aggregate fields are filled for every event recorded since the event pipeline
 (the 1.0 event types are listed in the [catalogue](/reference/events#catalogue)).
 
+The catalogue is closed: each type declares an `EventSpec` (subject, the keys and types
+of `data`, which sinks record it) and the table in the [events reference](/reference/events#catalogue)
+is generated from it, so the reference cannot drift from the code. The 1.0 catalogue adds
+`node.updated` (properties changed), `access.inheritance_changed`, `share.updated` and
+`share.rotated`; `share.updated` reports only the *names* of the changed fields in
+`data.changed`, and no envelope ever carries a share token, its hash or prefix, a
+password, a name, a path or request details.
+
 REST resource JSON keys stay unchanged until P6.1. See
 [UPGRADE.md](https://github.com/axiomasoft/vaulter/blob/main/UPGRADE.md) for safety
 checks, backups and the irreversible parts of rollback.
