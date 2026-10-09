@@ -1,0 +1,4 @@
+$ cd packages/documents && ../../scripts/php84 vendor/bin/pint --test   env={}
+exit=0 duration_s=1.2
+
+{"tool":"pint","result":"passed"}

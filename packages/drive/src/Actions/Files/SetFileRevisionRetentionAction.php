@@ -8,8 +8,10 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Drive\FileRevisionStoreRepository;
 use Vaulter\Repositories\Drive\FileStoreRepository;
+use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\Identity;
 use Vaulter\Support\TreeGuard;
 
@@ -28,15 +30,18 @@ final readonly class SetFileRevisionRetentionAction
         private TreeGuard $tree,
         private FileStoreRepository $files,
         private FileRevisionStoreRepository $revisions,
+        private DriveLifecycle $lifecycle,
     ) {}
 
-    public function execute(Node $node, FileRevision|int|string $revision, bool $keepForever): FileRevision
+    public function execute(OperationContext $context, Node $node, FileRevision|int|string $revision, bool $keepForever): FileRevision
     {
         $revisionId = $revision instanceof FileRevision ? $revision->getRawOriginal($revision->getKeyName()) : $revision;
 
-        return $this->database->transaction(function () use ($node, $revisionId, $keepForever): FileRevision {
+        return $this->database->transaction(function () use ($context, $node, $revisionId, $keepForever): FileRevision {
             $this->database->lockTreeShared($node->drive_id);
+            $this->lifecycle->assertWritable($context);
             $node = $this->tree->locked($this->tree->lock([$node->id]), $node->id);
+            $this->tree->assertLive($node);
             $file = $this->files->lockForUpdate($node->file()->firstOrFail());
             $locked = $file->versions()->whereKey($revisionId)->whereIn('status', ['committed', 'superseded'])->lockForUpdate()->first()
                 ?? throw NodeNotFoundException::forId(Identity::stringify($revisionId));

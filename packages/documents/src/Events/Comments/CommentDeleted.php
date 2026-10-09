@@ -7,6 +7,7 @@ namespace Vaulter\Documents\Events\Comments;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Support\Str;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Models\Comments\NodeComment;
@@ -17,7 +18,7 @@ use Vaulter\Support\Identity;
  * on the node's private collaboration channel so open editors drop it live. The model
  * still carries its id/node_id in memory after the delete, so the payload is complete.
  */
-final readonly class CommentDeleted implements ShouldBroadcast
+final readonly class CommentDeleted implements ShouldBroadcast, ShouldDispatchAfterCommit
 {
     public string $eventId;
 

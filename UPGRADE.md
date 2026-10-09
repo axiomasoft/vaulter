@@ -6,6 +6,106 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### One deletion model, trash roots and the drive lifecycle (PLAN2.P4.6, D27/D37)
+
+Run `php artisan migrate`: `2026_10_07_000003_node_trash_roots` adds `v_nodes.trash_root_id`
+(index `(drive_id, trash_root_id)`) and backfills it in batches, deterministically and repeatably —
+a trashed node that remembers its parent, has none or hangs under a live parent is its own root,
+every other trashed node takes the root of its trashed parent; live nodes stay `null`.
+`2026_10_07_000008_blob_scope_rollback_guard` changes no table; on a **rollback** it refuses, before
+any DDL, when equal-byte blobs (dedup scope `off`) could not be held by the old unique index of
+`2026_10_01_000007_blob_scope_key`, and lists them.
+
+- **Restore never moves a node silently (behaviour change).** A restore used to fall back to the
+  drive root when the original folder was gone or trashed. It now raises
+  `RestoreDestinationRequiredException` (`409 restore_destination_required`); pass
+  `RestoreOptions(destination: …)` (REST: `destination_id`) — the destination is authorized like a
+  create. Only a trash root can be restored: a member trashed with a folder raises
+  `NodeTrashedByAncestorException` (`409 node_trashed_by_ancestor`, `context.trash_root_id`).
+  Restoring a root brings back **only the members trashed with it**; a descendant trashed earlier
+  on its own stays in the trash with its own root (it used to come back with the folder).
+- **The trash lists roots only; retention counts from the root.** `TrashOperations::list()`,
+  `vaulter:purge-trash` and `empty()` use `trash_root_id = id`. Purging a root deletes its whole
+  subtree, including earlier-trashed descendants inside it. `NodeSnapshot::$trashRoot` is now
+  `trash_root_id === id`.
+- **`DriveSnapshot::$status` is a `DriveStatus` enum** (`active`, `archived`, `deleting`; closed —
+  treat an unknown value as unavailable), no longer a string, and `Drive::$status` is cast to it.
+  Compare with `DriveStatus::Active`, not `'active'`. The enum value is still the stored string.
+- **New `DriveHandle` methods** `archive()`, `unarchive()`, `delete()` (each returns a
+  `DriveSnapshot`; `Manage` on the root or the system actor). An archived drive refuses every
+  mutation, purge and creation by a non-system actor with `DriveArchivedException`
+  (`409 drive_archived`) — also grants, share links and deleting your own comment; a drive being
+  deleted is absent (`drive_not_found` / `node_not_found`) except for the system purge. Writers
+  re-check the status under the tree lock. Implementers of `Contracts\Drive\DriveHandle` (the
+  package ships the only one) must add the three methods.
+- **Delete with the owner.** `Vaulter\Concerns\HasDrives` on a host model adds `drive()` and
+  `drives()`; set `vaulter.drives.delete_with_owner` (default `false`) to delete the drives of a
+  deleted owner (`SoftDeletes` hosts: `forceDeleted`). New commands `vaulter:drives:purge
+  {--drive=*} {--dry-run} {--sync}` (resume an interrupted purge — schedule a worker for
+  `PurgeDriveJob`) and `vaulter:drives:recount {--drive=*} {--dry-run}` (recount `used_bytes` under
+  the tree lock). `PurgeNodeInput` gains `bypassTrashRequirement`, accepted only for the system
+  actor `drive-purge`.
+- **Deep trees fail closed.** Copy, trash, restore and purge read the subtree with a bound of the
+  deepest `maxFolderDepth` of any profile (at least 64). A tree deeper than that raises
+  `TreeTraversalIncompleteException` (`409 tree_traversal_incomplete`) before any write instead of
+  acting on part of it; depths 65–100 now work in full.
+- **Writers re-check under the locks.** Document update/snapshot/restore/retention, file revision
+  restore/retention and comment add/resolve/delete take the tree lock, then the node lock, and
+  refuse a node trashed — or a drive archived — since the caller looked (`node_not_found` /
+  `drive_archived`, nothing written). Comment events are `ShouldDispatchAfterCommit`: they are
+  delivered after the **outermost** commit and not at all on rollback.
+  `SetFileRevisionRetentionAction::execute()` takes the `OperationContext` first (internal).
+
+### Closing the P4 review (PLAN2.P4, review 2026-10-09)
+
+Deploy the Laravel side and `hocuspocus-server` together: the hub sends `state_version` with a seed
+(the backend treats it as optional, so an old hub keeps working but loses the protection) and uses
+the new close codes (an old client treats `4403`/`4422` as an ordinary disconnect).
+
+- **TipTap allow-list (R1).** `link` now allows `title`, `image` allows `width` and `height`,
+  `tableCell`/`tableHeader` allow `align` — the attributes `@tiptap/extension-link`,
+  `-image` and `-table` serialize (the hub's projection carries `title: null` on every link
+  mark, which used to be a `422` on every store and seed of a document with a link). Nothing to do
+  unless you pinned the old list. `tests/Fixtures/tiptap-schema.json` now also pins the attribute
+  sets, and `hocuspocus-server/test/schema-parity.test.js` compares them with the hub's extensions.
+- **Seed precondition (R5).** `collab/store` accepts `state_version` with `seed: true`; a document
+  that changed since `collab/load` answers `409 collaboration_seed_conflict` (with
+  `context.expected_state_version` / `actual_state_version`) and the hub loads again.
+  `PersistCollaborationStateInput` gains `?int $expectedStateVersion = null` and
+  `CollaborationSeedConflictException` gains two optional constructor arguments.
+- **Hub behaviour (R2, R4, R6, R7).** With Redis, a read-only first connection to a document without
+  Yjs state is refused until a writer has seeded it (it used to cache an empty `Y.Doc`). A store
+  answered `401`/`403`/`413`/`422` is no longer treated as saved: the room closes with `4001` /
+  `4403` `forbidden` / `4422` `store_refused` and the unsaved state stays in memory; `408`/`425`/`429`
+  are retried. A seed whose JSON the hub schema would cut (an allowed host attribute without its
+  extension in `hocuspocus-server/src/schema.js`) is **refused** instead of saved back without
+  it — if your `tiptap.extra_attributes`/`extra_nodes` are not mirrored in the hub, rooms of
+  documents that use them stop opening until you add the extensions. A reconnect with an expired
+  token is refused with the reason `Collaboration token expired`.
+- **`@vaulter/vue` (R4, R7, R8).** `NodeCollaborationEnd` gains `'forbidden'` and `'store_refused'`
+  (`sessionEnd()` maps `4403` and `4422`; a `store_refused` end does not reopen and sets `error`).
+  `VaulterApiError` gains `code: string | null`. `VaulterDocumentNode` falls back to autosave **only**
+  on `409 collaboration_unavailable`; any other session failure leaves the editor read-only and
+  emits `collaboration-failed` (exposes `sessionFailed`). If you relied on autosave after a
+  transient session error, retry with the exposed `load()` instead.
+- **AzGuard bridge (R3).** `AzgardPermissionDriver` now answers for the decision's **actor**: the
+  actor itself if it implements `AzgardGuard`, else a guard the host bound, else an
+  `AzgardGuardAdapter` over the actor when it is an `AzgardBackedUser`. The bridge's own
+  request-bound `AzgardGuard` binding is no longer used for another actor, so a check on behalf of
+  user B no longer inherits the request user's (e.g. super-admin) rights, and a call without a
+  request user (the collaboration hub) works. A host-bound `AzgardGuard` override must answer for the
+  actor it is asked about.
+- **Secrets (R9).** `jwt_secret` equal to `webhook_secret` with collaboration enabled is an
+  `InvalidConfigurationException` at boot in every environment (core only warned outside
+  production). `hocuspocus-server/.env.example` should not list `VAULTER_COLLAB_SECRET`: the hub
+  never uses the JWT key — give it `VAULTER_COLLAB_WEBHOOK_SECRET` only.
+- **Export (R10–R12).** `DocumentExport` gains `bool $lossy = false`; the HTTP export adds
+  `X-Vaulter-Export-Lossy: 1` for content read only partly. `sourceEpoch` is documented as the
+  document's epoch at export time, also for a checkpoint. The `format` label of
+  `vaulter_export_duration_seconds` is now one of the registered formats or `unknown`.
+  `DocumentExporterRegistry` and `DocumentsConfig::assertDistinctHubSecrets()` join the frozen public
+  API snapshot (additive).
+
 ### AzGuard bridge on AzGuard v1 (PLAN2.D56, D57; PLAN2.P4.14)
 
 - **Dependency.** Was: `vaulter-azgard` required `axioma-studio/azguard-core: dev-main` and, for
@@ -173,7 +273,9 @@ Export belongs to `vaulter-documents` and answers a file.
   of `{ "data": … }` JSON. `@vaulter/vue` `documentNodes.export()` (and `useDocumentNode().exportAs()`)
   now resolves `{ blob, filename, mimeType }`.
 - **Generator.** `php artisan vaulter:make:exporter {name}` scaffolds an exporter.
-- Exporters may not use `Vaulter\Content\*`, `Storage` or the HTTP layer (architecture test).
+- Exporters may not use `Vaulter\Content\*`, `Storage` or the HTTP layer. The architecture test enforces
+  this for the package's **built-in** exporters only; for exporter classes in your application it is a
+  requirement you keep yourself.
 
 ### Document type registry, codecs and a safe fallback (PLAN2.D14, D15, D34, D44; PLAN2.P4.3)
 

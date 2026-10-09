@@ -1,0 +1,7 @@
+$ cd packages/documents && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress   env={}
+exit=0 duration_s=7.4
+
+
+ [OK] No errors                                                                 
+
+Note: Using configuration file /home/vostrikov/projects/packages/vaulter/packages/documents/phpstan.neon.

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Trash;
 
+use InvalidArgumentException;
+use Vaulter\Access\OperationGuard;
 use Vaulter\Content\NodeContentLifecycleRegistry;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Content\FileContentLifecycle;
@@ -18,6 +20,7 @@ use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Drive\DriveStoreRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
+use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\TreeGuard;
 
 final readonly class PurgeNodeAction
@@ -30,19 +33,24 @@ final readonly class PurgeNodeAction
         private TreeGuard $tree,
         private NodeContentLifecycleRegistry $lifecycles,
         private NodeSequence $sequence,
+        private DriveLifecycle $lifecycle,
     ) {}
 
     public function execute(OperationContext $context, PurgeNodeInput $data): void
     {
+        if ($data->bypassTrashRequirement && (!$context->actor->isSystem() || $context->actor->ref()->reason !== OperationGuard::PURGE_REASON)) {
+            throw new InvalidArgumentException('[Vaulter] Only the system actor "'.OperationGuard::PURGE_REASON.'" may purge a node that is not in the trash.');
+        }
         $node = app(NodeLocator::class)->find(context: $context, key: $data->node, includeTrashed: true);
         $this->database->transaction(function () use ($node, $context, $data): void {
             $this->database->lockTree($context->driveId());
+            $this->lifecycle->assertWritable($context);
             $ids = array_values($this->nodes->subtree($node)->modelKeys());
             $locked = $this->tree->lock($ids);
             $current = $this->tree->locked($locked, $node->id);
             $this->sequence->assertExpected(locked: $current, expected: $data->expectedSequence);
             $this->tree->assertNotRoot(node: $current, operation: 'delete');
-            if ($current->trashed_at === null) {
+            if ($current->trashed_at === null && !$data->bypassTrashRequirement) {
                 throw NodeNotTrashedException::forNode($current);
             }
             foreach ($locked as $member) {

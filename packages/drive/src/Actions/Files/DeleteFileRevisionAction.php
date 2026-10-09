@@ -17,6 +17,7 @@ use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Drive\DriveStoreRepository;
 use Vaulter\Repositories\Drive\FileRevisionStoreRepository;
 use Vaulter\Repositories\Drive\FileStoreRepository;
+use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\Identity;
 use Vaulter\Support\TreeGuard;
 
@@ -41,6 +42,7 @@ final readonly class DeleteFileRevisionAction
         private FileRevisionStoreRepository $revisions,
         private DriveStoreRepository $drives,
         private BlobStore $blobs,
+        private DriveLifecycle $lifecycle,
     ) {}
 
     public function execute(OperationContext $context, Node $node, FileRevision|int|string $revision): void
@@ -49,6 +51,7 @@ final readonly class DeleteFileRevisionAction
 
         $this->database->transaction(function () use ($context, $node, $revisionId): void {
             $this->database->lockTreeShared($node->drive_id);
+            $this->lifecycle->assertWritable($context);
             $node = $this->tree->locked($this->tree->lock([$node->id]), $node->id);
             $file = $this->files->lockForUpdate($node->file()->firstOrFail());
             $locked = $file->versions()->whereKey($revisionId)->lockForUpdate()->first()

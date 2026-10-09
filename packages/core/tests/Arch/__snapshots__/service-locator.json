@@ -3,6 +3,7 @@
     "core/src/Access/Drivers/SpatiePermissionDriver.php": 2,
     "core/src/Access/ExactListing.php": 1,
     "core/src/Actions/Access/GrantNodeAccessAction.php": 1,
+    "core/src/Concerns/HasDrives.php": 1,
     "core/src/Configuration/VaulterConfig.php": 2,
     "core/src/Console/PruneWebhooksCommand.php": 2,
     "core/src/Content/ContentAvailabilityGuard.php": 1,

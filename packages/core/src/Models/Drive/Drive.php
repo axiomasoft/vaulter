@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Enums\Drive\DriveStatus;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
@@ -32,7 +33,7 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  * @property string          $disk
  * @property int|null        $quota_bytes
  * @property int             $used_bytes
- * @property string          $status
+ * @property DriveStatus     $status
  * @property int|string|null $created_by
  * @property Carbon|null     $created_at
  * @property Carbon|null     $updated_at
@@ -99,6 +100,7 @@ class Drive extends Model
             'scan_admission_sequence' => PHP_INT_SIZE === 8 ? 'integer' : 'string',
             'quota_bytes' => 'integer',
             'used_bytes' => 'integer',
+            'status' => DriveStatus::class,
         ];
     }
 }

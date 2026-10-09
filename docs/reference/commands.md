@@ -113,7 +113,8 @@ php artisan vaulter:blobs:reconcile
 Permanently purge trashed nodes past their retention window. Finds the trash **roots**
 whose `trashed_at` is older than `now() - retention_days` and force-deletes each
 subtree, so the version↔blob edges detach (the bytes become GC-eligible) and the quota
-is released. A trashed node whose parent is also trashed is skipped (no double-purge).
+is released. Only roots (`trash_root_id = id`) are eligible: purging a root removes its whole subtree,
+including descendants trashed earlier on their own, so nothing is purged twice.
 
 ```
 vaulter:purge-trash
@@ -126,6 +127,33 @@ php artisan vaulter:purge-trash --days=7  # custom retention
 ```
 
 See [Usage → Search & trash](/guide/search-trash).
+
+## `vaulter:drives:purge`
+
+Start or resume the purge of drives with status `deleting` (PLAN2.D27). The purge is idempotent, so
+running it again after a crash finishes the job: it aborts open uploads, purges the children of the
+root in batches of 100 through `PurgeNodeAction` as the system actor `drive-purge`, then removes the
+root and the drive row. Activity and outbox rows stay.
+
+```
+vaulter:drives:purge
+    {--drive=*}   Only these drive ids
+    {--dry-run}   Print the node count per drive and change nothing
+    {--sync}      Purge in this process instead of queueing PurgeDriveJob
+```
+
+## `vaulter:drives:recount`
+
+Recompute `used_bytes` of drives from their retained file revisions, trash included (PLAN2.D48),
+under the exclusive tree lock of each drive, so a concurrent upload or revision delete is never
+overwritten by a stale sum. Reports and logs every drift it finds; running it again changes nothing.
+Runs as maintenance outside any tenant, scoped to the drives it names.
+
+```
+vaulter:drives:recount
+    {--drive=*}   Only these drive ids
+    {--dry-run}   Report the drift without correcting it
+```
 
 ## `vaulter:revisions:prune`
 

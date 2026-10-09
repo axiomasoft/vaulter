@@ -240,6 +240,8 @@ final class SchemaBuilder
         $table->timestamp('trashed_at')->nullable();
         HostKeyColumns::add(table: $table, column: 'trashed_by', nullable: true, index: false);
         $ids->reference(table: $table, column: 'trashed_from_parent_id', nullable: true);
+        // The explicit trash root a trashed node belongs to (PLAN2.D37); the root points at itself.
+        $ids->reference(table: $table, column: 'trash_root_id', nullable: true);
 
         HostKeyColumns::add(table: $table, column: 'created_by', nullable: true, index: false);
         HostKeyColumns::add(table: $table, column: 'updated_by', nullable: true, index: false);
@@ -249,6 +251,7 @@ final class SchemaBuilder
         // (trashed_at, driver-aware partial) is emitted in afterCreate() — F-P4.1-01.
         $table->index(['drive_id', 'parent_id']);
         $table->index(['drive_id', 'kind', 'trashed_at']);
+        $table->index(['drive_id', 'trash_root_id']);
 
         $table->foreign('drive_id')
             ->references('id')

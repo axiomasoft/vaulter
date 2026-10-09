@@ -7,6 +7,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### One deletion model, trash roots and the drive lifecycle (PLAN2.P4.6)
+
+- Added: `v_nodes.trash_root_id` (migration `2026_10_07_000003_node_trash_roots`, deterministic
+  backfill); the trash lists only roots, retention counts from the root, and a restore brings back
+  only the members trashed with its root.
+- Changed (breaking): a restore no longer moves a node silently to the root —
+  `RestoreDestinationRequiredException` (`restore_destination_required`) unless a destination is
+  passed (`RestoreOptions`, REST `destination_id`); a member of a trashed folder raises
+  `NodeTrashedByAncestorException` (`node_trashed_by_ancestor`).
+- Added: `DriveStatus` (`active|archived|deleting`), `DriveHandle::archive()/unarchive()/delete()`,
+  `DriveArchivedException`, `InvalidDriveStateException`, the events `DriveArchived`,
+  `DriveUnarchived`, `DriveDeleted`, `PurgeDriveJob`, `vaulter:drives:purge`,
+  `vaulter:drives:recount`, `Vaulter\Concerns\HasDrives` and `vaulter.drives.delete_with_owner`.
+  `DriveSnapshot::$status` is now a `DriveStatus`.
+- Added: `NoSoftDeletesTest` — no package source uses `SoftDeletes`, `withTrashed`, `onlyTrashed`
+  or `forceDelete`.
+- Fixed (F13): subtree traversal is bounded by the deepest profile `maxFolderDepth` (at least 64)
+  and fails closed (`TreeTraversalIncompleteException`) instead of silently dropping deep
+  descendants of a copy, trash or purge.
+- Fixed (F05/F06): document, file-revision and comment writers re-check node liveness and drive
+  status under the tree and node locks; comment writers take `T → N → comment row`.
+- Fixed (F15): comment events are delivered after the outermost commit and never on rollback.
+- Fixed (F08): `vaulter:drives:recount` recounts `used_bytes` under the tree lock.
+- Fixed (F09): rolling back `blob_scope_key` over equal-byte blobs is refused before any DDL
+  (`2026_10_07_000008_blob_scope_rollback_guard`), with the list of conflicts.
+
+### Closing the P4 review (PLAN2.P4, review 2026-10-09: R1–R13)
+
+- Fixed (R1, blocker): the hub's projection of a link mark (`title: null`) was refused by the
+  TipTap allow-list, so every store and seed of a document with a link answered `422`. `link.title`,
+  `image.width`/`height` and `tableCell`/`tableHeader` `align` are allowed; the shared
+  `tiptap-schema.json` fixture and the hub's `schema-parity` test now cover attributes, and a
+  test stores and seeds the hub-shaped projection of a link, an image and a table.
+- Fixed (R2, blocker): with Redis a read-only first connection to a document without Yjs state
+  cached an empty `Y.Doc` that the first writer then projected over the saved JSON. The hub now
+  refuses that connection until a writer has seeded the document.
+- Fixed (R3): `AzgardPermissionDriver` built its guard from the request's user, so an actor other
+  than the request user inherited the request user's rights and a hub call (no request user) was
+  denied. The guard is now built over the actor (host-bound guards are still honoured).
+- Fixed (R4): a store refused with `401`/`403`/`413`/`422` was logged and treated as saved. The
+  hub closes the room with `4001` / `4403` / `4422` and throws so the state stays in memory;
+  `408`/`425`/`429` are retried. Tests per status.
+- Fixed (R5): a seed could overwrite a REST update made between `collab/load` and the seed. The
+  seed carries `state_version`; a moved version is `409 collaboration_seed_conflict` and the hub
+  loads again.
+- Fixed (R6): the hub silently cut attributes its schema does not declare from a seed. A seed that
+  would lose anything is refused, naming the `node.attribute`.
+- Fixed (R7): a reconnect with an expired token is refused with `Collaboration token expired`, so
+  the client renews its session.
+- Fixed (R8): `VaulterDocumentNode` autosaved into a document with Yjs state on any session error;
+  it now falls back only on `409 collaboration_unavailable` and otherwise stays read-only
+  (`collaboration-failed`). `VaulterApiError` exposes `code`.
+- Fixed (R9): equal `jwt_secret` and `webhook_secret` refuse to boot in every environment.
+- Changed (R10–R12): `DocumentExporterRegistry` joins the public API snapshot; the export metric
+  label `format` is a registered format or `unknown`; `DocumentExport::$lossy` and the
+  `X-Vaulter-Export-Lossy` header mark content read only partly; `sourceEpoch` is documented.
+- Removed (R13): the unused `CollaborationConfigException::noVerifier()`.
+- Docs (en, ru): collaboration (the ru page now mirrors the en structure, with the refused-store
+  table), concurrency (seed precondition), Hocuspocus hub (fail-closed seed, attribute parity),
+  export, permission-drivers; the exporter architecture rule is documented as covering built-in
+  exporters only.
+
 ### AzGuard bridge on AzGuard v1 (PLAN2.D56, D57; PLAN2.P4.14)
 
 - Changed: `vaulter-azgard` requires AzGuard v1 `axiomasoft/azguard` pinned to commit

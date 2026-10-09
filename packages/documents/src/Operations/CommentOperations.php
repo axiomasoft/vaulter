@@ -84,7 +84,8 @@ final readonly class CommentOperations
 
     public function delete(NodeSnapshot|string|int $node, CommentSnapshot|string|int $comment): void
     {
-        $node = $this->node($node, Ability::View, OperationKind::Metadata);
+        // Deleting is a mutation even for the author, so an archived drive refuses it.
+        $node = $this->node($node, Ability::View, OperationKind::Mutation);
         $row = $this->query->comment($node, $comment);
         if (!$this->isAuthor($row)) {
             $this->guard->authorize($this->context, Ability::Manage, $node, OperationKind::Mutation);

@@ -97,6 +97,7 @@ final class NodeStoreRepository
             ->update([
                 'trashed_at' => $at,
                 'trashed_by' => $actorId,
+                'trash_root_id' => $root->getKey(),
             ]);
 
         // The root remembers where it hung so restore can detect a vanished
@@ -125,6 +126,7 @@ final class NodeStoreRepository
                 'trashed_at' => null,
                 'trashed_by' => null,
                 'trashed_from_parent_id' => null,
+                'trash_root_id' => null,
             ]);
     }
 
@@ -178,6 +180,7 @@ final class NodeStoreRepository
         $node = $model::query()
             ->whereKey($id)
             ->whereNotNull('trashed_at')
+            ->whereColumn('trash_root_id', 'id')
             ->where('trashed_at', '<=', $threshold)
             ->lockForUpdate()
             ->first();

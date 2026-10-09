@@ -14,6 +14,7 @@ use Vaulter\Operations\NodeSequence;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
+use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\TreeGuard;
 
 final readonly class TrashNodeAction
@@ -24,6 +25,7 @@ final readonly class TrashNodeAction
         private VaulterDatabase $database,
         private TreeGuard $tree,
         private NodeSequence $sequence,
+        private DriveLifecycle $lifecycle,
     ) {}
 
     public function execute(OperationContext $context, TrashNodeInput $data): Node
@@ -32,6 +34,7 @@ final readonly class TrashNodeAction
 
         return $this->database->transaction(function () use ($node, $data, $context): Node {
             $this->database->lockTree($context->driveId());
+            $this->lifecycle->assertWritable($context);
             $locked = $this->tree->lock(array_values($this->nodes->subtree($node)->modelKeys()));
             $current = $this->tree->locked($locked, $node->id);
             $this->sequence->assertExpected(locked: $current, expected: $data->expectedSequence);

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.6",
   "title": "Одна модель удаления, корни корзины, жизненный цикл drive и фазовый барьер P4",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Корзина различает явные корни (trash_root_id): restore возвращает только своё поддерево и не переносит молча в корень; drive имеет статусы active|archived|deleting с read-only архивом и асинхронным идемпотентным удалением; HasDrives с delete_with_owner; SoftDeletes нигде нет. Последний item несёт полный барьер P4 (D25).",
   "why": "N13/N22/D27: две модели удаления, нет жизненного цикла drive. D37: restore папки воскрешает независимо удалённых потомков (RestoreNodeAction.php:85) и тихо переносит в корень — расходится с Drive/Box. Риски: потеря/воскрешение данных, утечка через перенос, незавершённое удаление drive.",
   "scope": {
@@ -606,6 +606,96 @@
     "status": "not_needed",
     "notes": "Внешние факты проверены при дизайне: @plan/knowledge/P4-industry-research-2026-10-07.json; исполнителю повторный поиск не нужен"
   },
-  "result": null,
-  "updated_at": "2026-10-08T18:24:54Z"
+  "result": {
+    "started_at": "2026-10-09T09:48:45Z",
+    "finished_at": "2026-10-09T14:29:28Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "sonnet-5.5",
+      "effort": "high",
+      "session": "e2d6614f-675a-43f7-9117-3fa2b6d549eb"
+    },
+    "notes": "trash_root_id + D37 restore (no silent root move, roots-only listing/retention), DriveStatus lifecycle (archive/unarchive/delete, PurgeDriveStepAction/Job, drives:purge, drives:recount, HasDrives), NoSoftDeletes arch, F05/F06 in-lock re-checks (drive status + node liveness; comments T->N->row), F13 fail-closed deep traversal, F15 comment events after outermost commit, F09 rollback guard migration 000008. Barrier V901-V931 receipts in artifacts/P4.6/phase-barrier (PG/MySQL executed>0 skipped=0); negative controls in artifacts/P4.6/negative-controls.md. Hard risk: schema/public API/data/concurrency - recommend task:review.",
+    "deviations": [
+      "Context pack 894KB over budget; harness added at owner request (scripts/test-db.sh, db-test-env.sh, receipts via private DB servers); pre-existing red PG/write-guard tests fixed; owner-dirty files touched by hunk (CollaborationHub, DocumentOperations, UPGRADE, CHANGELOG, rest-api); REST restore destination_id added; npm ci not run; e2e on alternate ports. See log."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-09T14:29:28Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-09T14:29:28Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-09T14:29:28Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-09T14:29:28Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-09T14:29:28Z"
+      },
+      {
+        "id": "V80",
+        "exit": 0,
+        "at": "2026-10-09T14:29:28Z"
+      },
+      {
+        "id": "V81",
+        "exit": 0,
+        "at": "2026-10-09T14:29:28Z"
+      },
+      {
+        "id": "V82",
+        "exit": 0,
+        "at": "2026-10-09T14:29:28Z"
+      },
+      {
+        "id": "V83",
+        "exit": 0,
+        "at": "2026-10-09T14:29:28Z"
+      },
+      {
+        "id": "V84",
+        "exit": 0,
+        "at": "2026-10-09T14:29:28Z"
+      },
+      {
+        "id": "V85",
+        "exit": 0,
+        "at": "2026-10-09T14:29:28Z"
+      },
+      {
+        "id": "V86",
+        "exit": 0,
+        "at": "2026-10-09T14:29:28Z"
+      },
+      {
+        "id": "V87",
+        "exit": 0,
+        "at": "2026-10-09T14:29:28Z"
+      },
+      {
+        "id": "V88",
+        "exit": 0,
+        "at": "2026-10-09T14:29:28Z"
+      },
+      {
+        "id": "V90",
+        "exit": 0,
+        "at": "2026-10-09T14:29:28Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-09T14:29:28Z"
 }

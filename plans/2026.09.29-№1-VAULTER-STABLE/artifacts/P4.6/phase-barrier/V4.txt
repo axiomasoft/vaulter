@@ -1,0 +1,27 @@
+$ cd . && scripts/test-db.sh -C packages/drive pgsql tests/Concurrency/DriveArchiveRaceTest.php tests/Drive/DrivePurgeTest.php   env={'DB_PARALLEL': '0'}
+exit=0 duration_s=23.2
+
+engine=pgsql workers=0 cwd=packages/drive output=/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P4.6/phase-barrier/logs/V4/pgsql-output.log
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":839180,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":839181}]},{"process_pid":839182,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":839183}]}],"timed_out":[]}
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":839487,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":839488}]},{"process_pid":839489,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":839490}]}],"timed_out":[]}
+P38_FORK_PROOF {"barrier":"all ready files before task execution","participants":[{"process_pid":839766,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":839767}]},{"process_pid":839768,"backends":[{"connection":"testing","database":"vaulter_test","backend_pid":839769}]}],"timed_out":[]}
+
+   PASS  Tests\Concurrency\DriveArchiveRaceTest
+  ✓ it an archive does not hold back a system create racing it: both la… 2.80s  
+  ✓ it a user rename racing an archive lands before it or is refused af… 2.64s  
+  ✓ it a user rename racing a delete lands before it or finds the drive… 2.50s  
+
+   PASS  Tests\Drive\DrivePurgeTest
+  ✓ it delete marks the drive deleting once and queues one purge         1.30s  
+  ✓ it purges every node, revision edge and the drive row, keeping acti… 0.97s  
+  ✓ it a finished or unknown drive purge does nothing                    1.34s  
+  ✓ it purges in chunks and resumes after an interruption                5.79s  
+  ✓ it aborts open upload sessions of the drive                          1.11s  
+  ✓ it bypassing the trash requirement is reserved for the system drive… 0.83s  
+  ✓ it vaulter:drives:purge prints counts on --dry-run and purges with…  1.60s  
+  ✓ it purges a quarantined revision through the same path: edges, rows… 0.81s  
+
+  Tests:    11 passed (45 assertions)
+  Duration: 21.81s
+
+engine=pgsql exit=0 seconds=22

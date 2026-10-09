@@ -20,6 +20,7 @@ use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\TreeGuard;
 
 /**
@@ -43,6 +44,7 @@ final readonly class UpdateDocumentContentAction
         private DocumentsConfig $documentsConfig,
         private TreeGuard $tree,
         private ContentDecoder $decoder,
+        private DriveLifecycle $lifecycle,
     ) {}
 
     /**
@@ -68,10 +70,13 @@ final readonly class UpdateDocumentContentAction
                 throw NodeNotFoundException::forId('unpersisted');
             }
             $this->database->lockTreeShared($driveId);
+            $this->lifecycle->assertWritable($context);
             $current = $this->tree->locked($this->tree->lock([$nodeId]), $nodeId);
             if (!$this->tree->sameStorage($current, $driveId)) {
                 throw NodeNotFoundException::forId($nodeId);
             }
+            // A trash that committed before this lock leaves nothing to write to (PLAN2.F05).
+            $this->tree->assertLive($current);
             if (!$current->kind->isDocument()) {
                 throw NotADocumentException::forNode($nodeId);
             }

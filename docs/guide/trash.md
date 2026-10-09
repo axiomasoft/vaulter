@@ -28,6 +28,15 @@ live node ──trash()──▶ trashed (trashed_at set) ──restore()──�
 A trashed node keeps its row (and subtree) until either it is restored or its
 retention window passes and the purge command force-deletes it.
 
+### Trash roots
+
+Every trashed node carries `trash_root_id`: the node the trash operation started from. The root
+points at itself, the members trashed with it point at the root. The trash lists **only roots**,
+retention counts from the root, and a restore brings back **only the members trashed with that
+root** — a descendant that was trashed on its own earlier stays in the trash with its own root.
+Purging a root deletes its whole subtree, including such earlier-trashed descendants that still
+sit inside it (the same as permanently deleting a folder in Drive or Box).
+
 ### Trashing
 
 ```php
@@ -49,11 +58,21 @@ node that is already in the trash raises `InvalidDestinationException`
 $drive->restore($node);        // back to live — dispatches NodeRestored
 ```
 
-The node returns to the folder it was trashed from when that folder is still a live
-folder of the drive; otherwise it is restored under the root. If a live sibling already
-uses its name there, `NodeNameConflictException` is raised — rename and retry. Only a
-trashed node can be restored: anything else raises `NodeNotTrashedException`
-(409 `node_not_trashed`).
+The node returns to the folder it was trashed from. When that folder is gone or is itself in the
+trash, the restore **does not move the node silently**: it raises
+`RestoreDestinationRequiredException` (409 `restore_destination_required`). Pass the destination
+explicitly and it is checked like any create (`Create` on the folder, an active folder of the
+drive):
+
+```php
+$drive->trash()->restore($node, new RestoreOptions(destination: $folder));
+```
+
+Only a trash root can be restored: a member trashed with a folder raises
+`NodeTrashedByAncestorException` (409 `node_trashed_by_ancestor`, `context.trash_root_id`) —
+restore the root instead. If a live sibling already uses the name there, `OnNameConflict` decides
+(`Rename` by default). Only a trashed node can be restored: anything else raises
+`NodeNotTrashedException` (409 `node_not_trashed`).
 
 ### Force-deleting
 
@@ -99,8 +118,9 @@ It finds the trash **roots** whose `trashed_at` is older than
 `now() - retention_days` and force-deletes each subtree.
 
 ::: info Only trash roots are processed
-A trashed node whose parent is *also* trashed is skipped — purging the ancestor's
-subtree already covers it (no double-purge).
+Eligible are the roots (`trash_root_id = id`) whose `trashed_at` is past the window. A root's
+purge removes its whole subtree, so a member is never purged twice, and a descendant trashed
+earlier on its own has its own root and its own clock.
 :::
 
 ### Overriding the window per run
@@ -143,7 +163,7 @@ objects are reclaimed by the separate **blob GC** pass. Schedule both — see
 
 ## The trash view (REST)
 
-The trashed nodes for a storage are listed (cursor-paginated) over REST. Only nodes
+The trash roots of a storage are listed (cursor-paginated) over REST. Only roots
 the actor may **restore** are returned:
 
 ```http

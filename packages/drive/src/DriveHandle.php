@@ -22,9 +22,14 @@ use Vaulter\Data\Snapshots\Mapping\DriveSnapshotMapper;
 use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Data\Snapshots\QuotaSnapshot;
+use Vaulter\Drive\Actions\Drives\ArchiveDriveAction;
+use Vaulter\Drive\Actions\Drives\DeleteDriveAction;
+use Vaulter\Drive\Actions\Drives\UnarchiveDriveAction;
 use Vaulter\Enums\Access\Ability;
+use Vaulter\Enums\Drive\DriveStatus;
 use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Exceptions\Nodes\StorageNotFoundException;
 use Vaulter\Exceptions\Support\MissingPackageException;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Operations\NodeLocator;
@@ -41,7 +46,14 @@ final readonly class DriveHandle implements Contract
     /** @internal The Eloquent row, for Vaulter packages and tests; hosts use snapshot(). */
     public function model(): Drive
     {
-        return $this->container->make(TenancyBoundary::class)->assertDrive($this->drive);
+        $drive = $this->container->make(TenancyBoundary::class)->assertDrive($this->drive);
+        // A drive being deleted is absent for everyone but its own purge (PLAN2.D37).
+        $purging = $this->explicitActor?->isSystem() === true && $this->explicitActor->ref()->reason === OperationGuard::PURGE_REASON;
+        if ($drive->status === DriveStatus::Deleting && !$purging) {
+            throw StorageNotFoundException::forId($drive->id);
+        }
+
+        return $drive;
     }
 
     public function snapshot(): DriveSnapshot
@@ -52,6 +64,38 @@ final readonly class DriveHandle implements Contract
     public function quota(): QuotaSnapshot
     {
         return $this->container->make(DriveSnapshotMapper::class)->quota($this->model());
+    }
+
+    public function archive(): DriveSnapshot
+    {
+        $context = $this->authorizedLifecycle();
+
+        return $this->container->make(DriveSnapshotMapper::class)->map($this->container->make(ArchiveDriveAction::class)->execute($context));
+    }
+
+    public function unarchive(): DriveSnapshot
+    {
+        $context = $this->authorizedLifecycle();
+
+        return $this->container->make(DriveSnapshotMapper::class)->map($this->container->make(UnarchiveDriveAction::class)->execute($context));
+    }
+
+    public function delete(): DriveSnapshot
+    {
+        $context = $this->authorizedLifecycle();
+
+        return $this->container->make(DriveSnapshotMapper::class)->map($this->container->make(DeleteDriveAction::class)->execute($context));
+    }
+
+    /** Manage on the root, or the system actor; an archived drive still allows its own lifecycle. */
+    private function authorizedLifecycle(): OperationContext
+    {
+        $context = $this->context();
+        $rootId = $context->drive->root_node_id ?? throw NodeNotFoundException::forId('root');
+        $root = $this->container->make(NodeLocator::class)->find($context, $rootId);
+        $this->container->make(OperationGuard::class)->authorize($context, Ability::Manage, $root);
+
+        return $context;
     }
 
     public function profile(): Profile

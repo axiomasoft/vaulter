@@ -8,11 +8,14 @@ use Vaulter\Access\ValueObjects\GrantSet;
 use Vaulter\Access\ValueObjects\NodeAbilities;
 use Vaulter\Configuration\TenancyConfig;
 use Vaulter\Enums\Access\Ability;
+use Vaulter\Enums\Drive\DriveStatus;
 use Vaulter\Enums\Operations\OperationKind;
 use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
+use Vaulter\Exceptions\Drive\DriveArchivedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
+use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\OperationContext;
@@ -21,6 +24,9 @@ use Vaulter\Tenancy\TenancyBoundary;
 
 final readonly class OperationGuard
 {
+    /** The only system reason allowed to touch a drive being deleted. */
+    public const string PURGE_REASON = 'drive-purge';
+
     public function __construct(
         private AccessResolver $resolver,
         private NodeLocator $locator,
@@ -32,6 +38,7 @@ final readonly class OperationGuard
     public function authorize(OperationContext $context, Ability $ability, Node $node, OperationKind $operation = OperationKind::Metadata): void
     {
         $node = $this->scoped(context: $context, node: $node);
+        $drive = $this->assertDriveLifecycle(context: $context, node: $node, operation: $operation);
         if (!$context->actor->isSystem()) {
             $grants = $this->grants(context: $context, node: $node);
             $this->requireView(grants: $grants, node: $node);
@@ -39,7 +46,7 @@ final readonly class OperationGuard
                 throw PermissionDeniedException::forAbility($ability->value);
             }
         }
-        if (!$this->profileAllows(context: $context, node: $node, ability: $ability, operation: $operation)) {
+        if (!$this->profileAllows(context: $context, node: $node, ability: $ability, operation: $operation, drive: $drive)) {
             throw ProfileRestrictionException::forOperation($operation->value);
         }
     }
@@ -48,6 +55,7 @@ final readonly class OperationGuard
     public function authorizeGrants(OperationContext $context, Node $node): void
     {
         $node = $this->scoped(context: $context, node: $node);
+        $drive = $this->assertDriveLifecycle(context: $context, node: $node, operation: OperationKind::Metadata);
         if (!$context->actor->isSystem()) {
             $grants = $this->grants(context: $context, node: $node);
             $this->requireView(grants: $grants, node: $node);
@@ -55,14 +63,21 @@ final readonly class OperationGuard
                 throw PermissionDeniedException::forAbility(Ability::Manage->value);
             }
         }
-        if (!$this->profileAllows(context: $context, node: $node, ability: Ability::Manage, operation: OperationKind::Metadata)) {
+        if (!$this->profileAllows(context: $context, node: $node, ability: Ability::Manage, operation: OperationKind::Metadata, drive: $drive)) {
             throw ProfileRestrictionException::forOperation('grants');
         }
+    }
+
+    /** Grant and share-link changes are mutations: an archived drive refuses them (PLAN2.D37). */
+    public function assertMutable(OperationContext $context, Node $node): void
+    {
+        $this->assertDriveLifecycle(context: $context, node: $this->scoped(context: $context, node: $node), operation: OperationKind::Mutation);
     }
 
     public function authorizeCreate(OperationContext $context, Node $parent): void
     {
         $parent = $this->scoped(context: $context, node: $parent);
+        $drive = $this->assertDriveLifecycle(context: $context, node: $parent, operation: OperationKind::Mutation);
         if (!$context->actor->isSystem()) {
             $grants = $this->grants(context: $context, node: $parent);
             $this->requireView(grants: $grants, node: $parent);
@@ -72,7 +87,7 @@ final readonly class OperationGuard
                 throw PermissionDeniedException::forAbility(Ability::Create->value);
             }
         }
-        if (!$this->profileAllows(context: $context, node: $parent, ability: Ability::Create, operation: OperationKind::Mutation)) {
+        if (!$this->profileAllows(context: $context, node: $parent, ability: Ability::Create, operation: OperationKind::Mutation, drive: $drive)) {
             throw ProfileRestrictionException::forOperation(OperationKind::Mutation->value);
         }
     }
@@ -192,6 +207,25 @@ final readonly class OperationGuard
         return new NodeAbilities(flags: $flags);
     }
 
+    /**
+     * The drive lifecycle (PLAN2.D37): a drive being deleted does not exist for anyone
+     * but the system purge; an archived drive refuses every non-system mutation.
+     */
+    private function assertDriveLifecycle(OperationContext $context, Node $node, OperationKind $operation): Drive
+    {
+        $drive = $node->storage()->first() ?? throw NodeNotFoundException::forId($node->id);
+        $purging = $context->actor->isSystem() && $context->actor->ref()->reason === self::PURGE_REASON;
+        if ($drive->status === DriveStatus::Deleting && !$purging) {
+            throw NodeNotFoundException::forId($node->id);
+        }
+        if ($drive->status === DriveStatus::Archived && !$context->actor->isSystem()
+            && ($operation === OperationKind::Mutation || $operation === OperationKind::Purge)) {
+            throw DriveArchivedException::forDrive($drive->id);
+        }
+
+        return $drive;
+    }
+
     private function scoped(OperationContext $context, Node $node): Node
     {
         // Trash operations pass an explicitly located trashed node to the guard.
@@ -227,9 +261,9 @@ final readonly class OperationGuard
         }
     }
 
-    private function profileAllows(OperationContext $context, Node $node, Ability $ability, OperationKind $operation): bool
+    private function profileAllows(OperationContext $context, Node $node, Ability $ability, OperationKind $operation, ?Drive $drive = null): bool
     {
-        $drive = $node->storage()->first() ?? throw NodeNotFoundException::forId($node->id);
+        $drive ??= $node->storage()->first() ?? throw NodeNotFoundException::forId($node->id);
 
         return $this->profiles->allows(drive: $drive, node: $node, ability: $ability, operation: $operation);
     }

@@ -345,9 +345,11 @@ $drive->trash($node);
 
 ### `restore()`
 
-Bring a trashed node (and its subtree) back — to its original parent when that is
-still a live folder, otherwise to the root. A node that is not in the trash raises
-`NodeNotTrashedException` (409 `node_not_trashed`):
+Bring a trash root (and the members trashed with it) back — to its original parent. When that
+parent is gone or trashed the restore raises `RestoreDestinationRequiredException` unless a
+destination is passed (`RestoreOptions`); a member trashed with a folder raises
+`NodeTrashedByAncestorException`. A node that is not in the trash raises
+`NodeNotTrashedException` (409 `node_not_trashed`). See [Trash](/guide/trash#restoring):
 
 ```php
 public function restore(Node $node, int|string|null $actorId = null): Node
@@ -400,6 +402,53 @@ $children = $drive->list($folder);          // a folder's contents
 search and the trash view, use the [REST endpoints](/reference/rest-api#drive)
 (`storages/{storage}/nodes`, `…/search`, `…/trash`) which cursor-paginate.
 :::
+
+## Drive lifecycle
+
+A drive has a `status` — `Vaulter\Enums\Drive\DriveStatus`: `active`, `archived` or `deleting`
+(a closed enum: a client must treat an unknown value as unavailable). The handle moves it:
+
+```php
+$snapshot = $drive->archive();     // active → archived: read-only
+$snapshot = $drive->unarchive();   // archived → active
+$snapshot = $drive->delete();      // active|archived → deleting, then an asynchronous purge
+```
+
+All three need `Manage` on the root (or the system actor) and return a `DriveSnapshot` whose
+`status` is the new state; a transition from the wrong state raises `InvalidDriveStateException`.
+
+- **archived** — every mutation, purge and creation by a non-system actor raises
+  `DriveArchivedException` (409 `drive_archived`), including grant and share-link changes and
+  deleting your own comment. Reads and downloads work, and existing share links keep serving
+  reads. The check runs again under the tree lock, so a write racing the archive either lands
+  before it or is refused.
+- **deleting** — the drive no longer exists for anyone: `drive_not_found` / `node_not_found`.
+  Only the system actor `drive-purge` sees it. `PurgeDriveJob` (unique, retried five times) purges
+  100 children of the root per step, each in its own transaction through the same lifecycle, CAS
+  and quota path as `forceDelete`, then removes the root and the drive row. Activity and outbox
+  rows stay as history; the bytes are reclaimed by the blob GC. `vaulter:drives:purge` resumes an
+  interrupted purge.
+
+`DriveArchived`, `DriveUnarchived` and `DriveDeleted` are dispatched after commit (`DriveDeleted`
+carries ids only; the row is gone).
+
+### Deleting with the owner — `HasDrives`
+
+```php
+use Vaulter\Concerns\HasDrives;
+
+class Project extends Model
+{
+    use HasDrives;
+}
+
+$project->drive();          // DriveHandle (as Vaulter::drive($project))
+$project->drives;           // the drives mounted on it (morphMany)
+```
+
+With `vaulter.drives.delete_with_owner = true` (default `false`) deleting the owner deletes its
+drives as the system actor `owner-deleted`. A model with `SoftDeletes` reacts to `forceDeleted`,
+not to `deleted`, so a soft-deleted owner keeps its drives.
 
 ## Events
 

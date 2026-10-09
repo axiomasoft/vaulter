@@ -73,7 +73,9 @@ Vaulter\Contracts\Drive\DriveHandle
   actingAs(\Illuminate\Contracts\Auth\Access\Authorizable $user): \static
   activity(): \Vaulter\Contracts\Activity\ActivityOperations
   actor(): \Vaulter\ValueObjects\Access\Actor
+  archive(): \Vaulter\Data\Snapshots\DriveSnapshot
   asSystem(string $reason): \static
+  delete(): \Vaulter\Data\Snapshots\DriveSnapshot
   extension(string $operations): object
   files(): \Vaulter\Contracts\Drive\FileOperations
   folders(): \Vaulter\Contracts\Drive\FolderOperations
@@ -84,6 +86,7 @@ Vaulter\Contracts\Drive\DriveHandle
   shares(): \Vaulter\Contracts\Sharing\ShareOperations
   snapshot(): \Vaulter\Data\Snapshots\DriveSnapshot
   trash(): \Vaulter\Contracts\Drive\TrashOperations
+  unarchive(): \Vaulter\Data\Snapshots\DriveSnapshot
   withCorrelationId(string $correlationId): \static
 
 Vaulter\Contracts\Drive\DriveHandleFactory
@@ -282,6 +285,7 @@ Vaulter\Configuration\VaulterConfig
   database(): \Vaulter\Configuration\DatabaseConfig
   defaultProfile(): string
   downloads(): \Vaulter\Configuration\DownloadsConfig
+  drivesDeleteWithOwner(): bool
   featureEnabled(string $feature, ?string $profile = null): bool
   handlers(): array
   ids(): \Vaulter\Configuration\IdsConfig
@@ -591,6 +595,7 @@ Vaulter\Operations\NodeLocator
 Vaulter\Access\OperationGuard
   __construct(\Vaulter\Access\AccessResolver $resolver, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Profiles\ProfilePolicy $profiles, \Vaulter\Configuration\TenancyConfig $tenancy, \Vaulter\Tenancy\TenancyBoundary $boundary)
   abilities(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node $node): \Vaulter\Access\ValueObjects\NodeAbilities
+  assertMutable(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node $node): void
   authorize(\Vaulter\Operations\OperationContext $context, \Vaulter\Enums\Access\Ability $ability, \Vaulter\Models\Drive\Node $node, \Vaulter\Enums\Operations\OperationKind $operation = Vaulter\Enums\Operations\OperationKind::Metadata): void
   authorizeCreate(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node $parent): void
   authorizeGrants(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node $node): void
@@ -773,12 +778,12 @@ Vaulter\Data\Snapshots\DriveSnapshot
 
   readonly ?string $tenantId
   readonly \DateTimeImmutable $createdAt
+  readonly \Vaulter\Enums\Drive\DriveStatus $status
   readonly string $id
   readonly string $name
   readonly string $ownerId
   readonly string $ownerType
   readonly string $profile
-  readonly string $status
 
 Vaulter\Data\Snapshots\FileHeadSnapshot
 

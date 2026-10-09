@@ -31,6 +31,13 @@ Vaulter\Drive\Configuration\DriveConfig
   trashRetentionDays(): int
   validateScanWork(bool $requireBroker = false): void
 
+Vaulter\Drive\Events\Drives\DriveArchived
+  __construct(\Vaulter\Models\Drive\Drive $drive, \Vaulter\ValueObjects\Access\ActorRef $actor, ?string $correlationId = null, ?string $eventId = null)
+  readonly ?string $correlationId
+  readonly \Vaulter\Models\Drive\Drive $drive
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $eventId
+
 Vaulter\Drive\Events\Drives\DriveCreated
   __construct(\Vaulter\Models\Drive\Drive $storage, \Vaulter\Models\Drive\Node $root, int|null|string $actorId = null, ?string $eventId = null, ?\Vaulter\ValueObjects\Access\ActorRef $actor = null, ?string $correlationId = null)
   readonly ?\Vaulter\ValueObjects\Access\ActorRef $actor
@@ -38,6 +45,22 @@ Vaulter\Drive\Events\Drives\DriveCreated
   readonly \Vaulter\Models\Drive\Drive $storage
   readonly \Vaulter\Models\Drive\Node $root
   readonly int|null|string $actorId
+  readonly string $eventId
+
+Vaulter\Drive\Events\Drives\DriveDeleted
+  __construct(string $driveId, string $ownerType, string $ownerId, \Vaulter\ValueObjects\Access\ActorRef $actor, ?string $correlationId = null, ?string $eventId = null)
+  readonly ?string $correlationId
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
+  readonly string $driveId
+  readonly string $eventId
+  readonly string $ownerId
+  readonly string $ownerType
+
+Vaulter\Drive\Events\Drives\DriveUnarchived
+  __construct(\Vaulter\Models\Drive\Drive $drive, \Vaulter\ValueObjects\Access\ActorRef $actor, ?string $correlationId = null, ?string $eventId = null)
+  readonly ?string $correlationId
+  readonly \Vaulter\Models\Drive\Drive $drive
+  readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $eventId
 
 Vaulter\Drive\Events\Files\FileRevisionAdded

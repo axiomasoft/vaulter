@@ -14,6 +14,7 @@ use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionStoreRepository;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\TreeGuard;
 
 /**
@@ -33,6 +34,7 @@ final readonly class UpdateRevisionRetentionAction
         private DocumentRevisionStoreRepository $store,
         private VaulterDatabase $database,
         private TreeGuard $tree,
+        private DriveLifecycle $lifecycle,
     ) {}
 
     public function execute(OperationContext $context, UpdateRevisionRetentionInput $data): DocumentRevision
@@ -47,10 +49,13 @@ final readonly class UpdateRevisionRetentionAction
                 throw NodeNotFoundException::forId('unpersisted');
             }
             $this->database->lockTreeShared($driveId);
+            $this->lifecycle->assertWritable($context);
             $current = $this->tree->locked($this->tree->lock([$nodeId]), $nodeId);
             if (!$this->tree->sameStorage($current, $driveId)) {
                 throw NodeNotFoundException::forId($nodeId);
             }
+            // A trash that committed before this lock leaves nothing to write to (PLAN2.F05).
+            $this->tree->assertLive($current);
             if (!$current->kind->isDocument()) {
                 throw NotADocumentException::forNode($nodeId);
             }

@@ -11,6 +11,7 @@ use Vaulter\Contracts\Sharing\ShareOperations;
 use Vaulter\Data\Snapshots\DriveSnapshot;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Data\Snapshots\QuotaSnapshot;
+use Vaulter\Exceptions\Drive\InvalidDriveStateException;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Profiles\Profile;
 use Vaulter\ValueObjects\Access\Actor;
@@ -23,6 +24,24 @@ interface DriveHandle
     public function snapshot(): DriveSnapshot;
 
     public function quota(): QuotaSnapshot;
+
+    /**
+     * active → archived: the drive becomes read-only (PLAN2.D37). Needs Manage on the
+     * root, or the system actor.
+     *
+     * @throws InvalidDriveStateException
+     */
+    public function archive(): DriveSnapshot;
+
+    /** archived → active. Needs Manage on the root, or the system actor. */
+    public function unarchive(): DriveSnapshot;
+
+    /**
+     * Start the asynchronous, idempotent purge of the whole drive (PLAN2.D27): the drive
+     * is gone for everyone at once, its nodes, revisions and blob references follow, the
+     * drive row last. Needs Manage on the root, or the system actor.
+     */
+    public function delete(): DriveSnapshot;
 
     public function profile(): Profile;
 

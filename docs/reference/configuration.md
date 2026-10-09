@@ -272,6 +272,14 @@ See [Usage → Sharing](/guide/sharing).
 The retention window before a trashed node's subtree is permanently force-deleted by
 `php artisan vaulter:purge-trash`.
 
+## Drives — `vaulter.drives.*`
+
+| Key | Env | Default | Controls |
+|---|---|---|---|
+| `vaulter.drives.delete_with_owner` | `VAULTER_DRIVES_DELETE_WITH_OWNER` | `false` | `HasDrives`: deleting the owner model deletes its drives (system actor `owner-deleted`); with `SoftDeletes` only `forceDeleted` counts |
+
+See [Drive · lifecycle](/guide/drive#drive-lifecycle).
+
 ## Uploads — `vaulter-drive.uploads.*`
 
 | Key | Default | Env |

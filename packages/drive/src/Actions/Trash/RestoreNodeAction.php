@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Actions\Trash;
 
-use Illuminate\Support\Collection;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Nodes\NameConflictResolver;
@@ -13,7 +12,9 @@ use Vaulter\Drive\Events\Nodes\NodeRestored;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Nodes\NodeNotTrashedException;
+use Vaulter\Exceptions\Nodes\NodeTrashedByAncestorException;
 use Vaulter\Exceptions\Nodes\RestoreDestinationChangedException;
+use Vaulter\Exceptions\Nodes\RestoreDestinationRequiredException;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\NodeSequence;
@@ -21,6 +22,7 @@ use Vaulter\Operations\OperationContext;
 use Vaulter\Profiles\DrivePolicyEnforcer;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
+use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\Identity;
 use Vaulter\Support\TreeGuard;
 
@@ -35,57 +37,77 @@ final readonly class RestoreNodeAction
         private NodeSequence $sequence,
         private NameConflictResolver $names,
         private DrivePolicyEnforcer $policy,
+        private DriveLifecycle $lifecycle,
     ) {}
 
-    /** Public authorization must use the destination this resolution actually chooses. */
+    /**
+     * Public authorization must use the destination this resolution actually chooses
+     * (PLAN2.D37): the explicit one, else the original parent. A restore never moves a
+     * node silently to the root.
+     */
     public function resolveDestination(OperationContext $context, Node $node, Node|NodeSnapshot|int|string|null $explicit = null): Node
     {
         $node = $this->locator->find(context: $context, key: $node, includeTrashed: true);
-        $originalId = $node->trashed_from_parent_id ?? $node->parent_id;
-        if ($originalId !== null) {
-            try {
-                $original = $this->locator->find(context: $context, key: $originalId);
-                $this->tree->assertActiveFolder($original);
-
-                return $original;
-            } catch (NodeNotFoundException|InvalidDestinationException) {
-                // A missing/inactive original parent falls through to the requested destination.
-            }
+        if ($node->trashed_at === null) {
+            throw NodeNotTrashedException::forNode($node);
         }
-        $destination = $this->locator->find(context: $context,
-            key: $explicit ?? $this->tree->destinationId(storage: $context->drive, into: null));
-        $this->tree->assertActiveFolder($destination);
+        $this->assertTrashRoot($node);
+        if ($explicit !== null) {
+            $destination = $this->locator->find(context: $context, key: $explicit);
+            $this->tree->assertActiveFolder($destination);
 
-        return $destination;
+            return $destination;
+        }
+        $originalId = $node->trashed_from_parent_id;
+        if ($originalId === null) {
+            throw RestoreDestinationRequiredException::forNode($node);
+        }
+        try {
+            $original = $this->locator->find(context: $context, key: $originalId);
+            $this->tree->assertActiveFolder($original);
+        } catch (NodeNotFoundException|InvalidDestinationException) {
+            throw RestoreDestinationRequiredException::forNode($node);
+        }
+
+        return $original;
     }
 
     public function execute(OperationContext $context, RestoreNodeInput $data): Node
     {
         $node = $this->locator->find(context: $context, key: $data->node, includeTrashed: true);
-        $rootId = $this->tree->destinationId(storage: $context->drive, into: null);
 
-        return $this->database->transaction(function () use ($node, $rootId, $data, $context): Node {
+        return $this->database->transaction(function () use ($node, $data, $context): Node {
             $this->database->lockTree($context->driveId());
+            $this->lifecycle->assertWritable($context);
             $fresh = $this->locator->find(context: $context, key: $node, includeTrashed: true);
             $ids = $this->nodes->subtree($fresh)->modelKeys();
-            $originalId = $fresh->trashed_from_parent_id ?? $fresh->parent_id;
-            $locked = $this->tree->lock([...$ids, $originalId, $rootId, $data->destination->id]);
+            $locked = $this->tree->lock([...$ids, $data->destination->id]);
             $current = $this->tree->locked($locked, $node->id);
             $this->tree->assertNotRoot(node: $current, operation: 'restore');
             if ($current->trashed_at === null) {
                 throw NodeNotTrashedException::forNode($current);
             }
-            $destination = $this->chosenLockedDestination(current: $current, locked: $locked,
-                precheckedId: $data->destination->id, rootId: $rootId);
-            if (Identity::stringify($destination->id) !== Identity::stringify($data->destination->id)) {
+            $this->assertTrashRoot($current);
+            // The destination was authorized before the locks; it must still be a live folder.
+            $destination = $locked->get(Identity::stringify($data->destination->id));
+            if (!$destination instanceof Node || !$this->tree->sameStorage($destination, $current->drive_id)) {
                 throw new RestoreDestinationChangedException;
             }
-            $this->tree->assertActiveFolder($destination);
-            // A fallback must not attach a root inside the subtree being restored.
+            try {
+                $this->tree->assertActiveFolder($destination);
+            } catch (InvalidDestinationException) {
+                throw new RestoreDestinationChangedException;
+            }
+            // A destination inside the subtree being restored would detach it.
             if (in_array($destination->id, $ids, true)) {
                 throw InvalidDestinationException::trashed($destination);
             }
-            $changed = $locked->filter(fn (Node $member): bool => in_array($member->id, $ids, true) && $member->trashed_at !== null);
+            // Only the members trashed together with this root come back; descendants
+            // trashed earlier on their own stay in the trash under their own roots.
+            $changed = $locked->filter(fn (Node $member): bool => in_array($member->id, $ids, true)
+                && $member->trashed_at !== null
+                && $member->trash_root_id !== null
+                && Identity::stringify($member->trash_root_id) === Identity::stringify($current->id));
             foreach ($changed as $member) {
                 if (!$this->tree->sameStorage($member, $context->driveId())) {
                     throw InvalidDestinationException::otherDrive($member, $context->driveId());
@@ -115,31 +137,14 @@ final readonly class RestoreNodeAction
         });
     }
 
-    /** @param Collection<string, Node> $locked */
-    private function chosenLockedDestination(Node $current, Collection $locked, int|string $precheckedId, int|string $rootId): Node
+    /** A member comes back with its trash root, never on its own (PLAN2.D37). */
+    private function assertTrashRoot(Node $node): void
     {
-        $originalId = $current->trashed_from_parent_id ?? $current->parent_id;
-        if ($originalId !== null) {
-            $original = $locked->get(Identity::stringify($originalId));
-            if ($original instanceof Node && $this->tree->sameStorage($original, $current->drive_id)) {
-                try {
-                    $this->tree->assertActiveFolder($original);
-
-                    return $original;
-                } catch (InvalidDestinationException) {
-                }
-            }
+        if ($node->trashed_at === null || $node->trash_root_id === null) {
+            return;
         }
-        $prechecked = $locked->get(Identity::stringify($precheckedId));
-        if ($prechecked instanceof Node && $this->tree->sameStorage($prechecked, $current->drive_id)) {
-            try {
-                $this->tree->assertActiveFolder($prechecked);
-
-                return $prechecked;
-            } catch (InvalidDestinationException) {
-            }
+        if (Identity::stringify($node->trash_root_id) !== Identity::stringify($node->id)) {
+            throw NodeTrashedByAncestorException::forNode($node, $node->trash_root_id);
         }
-
-        return $this->tree->locked($locked, $rootId);
     }
 }

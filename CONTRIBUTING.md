@@ -97,6 +97,28 @@ All quality tooling is wired through the `Makefile`:
 
 Run `make ci` before opening a PR.
 
+### Running the suites quickly
+
+A PostgreSQL or MySQL run is slow because of repeated DDL (every schema build is dozens of `CREATE`/`ALTER`
+statements, each one a durable commit), not because of test logic. Use the harness; it changes no test:
+
+```bash
+scripts/test-db.sh pgsql packages/core/tests/Schema            # repo root
+scripts/test-db.sh -C packages/drive mysql tests/Drive          # one package
+scripts/test-db.sh sqlite packages/core/tests                   # in-memory, parallel
+```
+
+- **A private server per run.** `pgsql` and `mysql` start a disposable server as your own user
+  (`scripts/db-test-env.sh`: fsync off, no binlog, a temporary directory removed afterwards; no Docker or root) and
+  stop it at the end. The shared local server is not touched, so lanes cannot collide on one database.
+- **One database per worker.** `DB_PARALLEL` (default: half the CPUs, at most 8; `0` runs serially) sets the
+  `pest --parallel` workers; each gets `vaulter_w<N>_test` (`SuiteDatabaseConnection` reads `TEST_TOKEN`).
+- **Follow progress** with `tail -f var/quality/test-db/<engine>-output.log`.
+- **Run a full suite only on frozen code.** Between full runs use the affected scope (the changed package, the
+  touched paths on a real database). When a run fails, rerun only the failing files, not the whole suite.
+- **Racing tests need their own database.** Never point two lanes at the same `*_test` database (`DatabaseMigrations`
+  and `ForkRace` suites drop and rebuild it); the harness gives each run a server of its own.
+
 ## Development workflow (JS)
 
 ```bash

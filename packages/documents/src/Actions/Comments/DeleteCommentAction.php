@@ -7,25 +7,45 @@ namespace Vaulter\Documents\Actions\Comments;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Data\Comments\DeleteCommentInput;
 use Vaulter\Documents\Events\Comments\CommentDeleted;
+use Vaulter\Documents\Exceptions\CommentNotFoundException;
 use Vaulter\Documents\Repositories\Comments\NodeCommentStoreRepository;
+use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Support\DriveLifecycle;
+use Vaulter\Support\TreeGuard;
 
 /**
- * Permanently delete a node comment (ADR-0014 шаг 1 — no soft-delete). Deletes in a
- * transaction, then dispatches {@see CommentDeleted} after commit (the in-memory
- * model still carries its id/node_id for the broadcast payload).
+ * Permanently delete a node comment (ADR-0014 шаг 1 — no soft-delete), under T
+ * (shared) → N → the comment row with the drive writable and the node live
+ * ({@see AddCommentAction}): deleting a comment is a mutation, whoever wrote it.
+ * {@see CommentDeleted} is delivered after the outermost commit; the in-memory model
+ * still carries its id/node_id for the broadcast payload.
  */
 final readonly class DeleteCommentAction
 {
     public function __construct(
         private NodeCommentStoreRepository $comments,
         private VaulterDatabase $database,
+        private TreeGuard $tree,
+        private DriveLifecycle $lifecycle,
     ) {}
 
     public function execute(OperationContext $context, DeleteCommentInput $data): void
     {
-        $this->database->transaction(fn () => $this->comments->delete($data->comment));
+        $this->database->transaction(function () use ($context, $data): void {
+            $driveId = $context->driveId();
+            $nodeId = $data->comment->node_id;
+            $this->database->lockTreeShared($driveId);
+            $this->lifecycle->assertWritable($context);
+            $current = $this->tree->locked($this->tree->lock([$nodeId]), $nodeId);
+            if (!$this->tree->sameStorage($current, $driveId)) {
+                throw NodeNotFoundException::forId($nodeId);
+            }
+            $this->tree->assertLive($current);
+            $row = $this->comments->lock($data->comment) ?? throw CommentNotFoundException::forNode($nodeId, $data->comment->getKey());
 
-        event(new CommentDeleted($data->comment, $context->actor->ref()->id));
+            $this->comments->delete($row);
+            event(new CommentDeleted($row, $context->actor->ref()->id));
+        });
     }
 }

@@ -1,0 +1,38 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Vaulter\Drive\Actions\Drives;
+
+use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Jobs\PurgeDriveJob;
+use Vaulter\Enums\Drive\DriveStatus;
+use Vaulter\Models\Drive\Drive;
+use Vaulter\Operations\OperationContext;
+use Vaulter\Repositories\Drive\DriveStoreRepository;
+
+/**
+ * active|archived → deleting, then an asynchronous, idempotent purge of the whole
+ * drive (PLAN2.D27): nodes, revisions and blob references first, the drive row last.
+ * A drive already being deleted is left alone and its purge is queued again, which
+ * is how an interrupted purge resumes.
+ */
+final readonly class DeleteDriveAction
+{
+    public function __construct(private VaulterDatabase $database, private DriveStoreRepository $drives) {}
+
+    public function execute(OperationContext $context): Drive
+    {
+        return $this->database->transaction(function () use ($context): Drive {
+            $this->database->lockTree($context->driveId());
+            $drive = $this->drives->lock($context->driveId());
+            if ($drive->status !== DriveStatus::Deleting) {
+                $drive = $this->drives->setStatus($drive, DriveStatus::Deleting);
+            }
+            $driveId = $drive->id;
+            $this->database->afterCommit(static fn () => PurgeDriveJob::dispatch($driveId));
+
+            return $drive;
+        });
+    }
+}

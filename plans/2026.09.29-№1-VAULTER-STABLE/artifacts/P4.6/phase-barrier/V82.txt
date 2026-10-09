@@ -1,0 +1,21 @@
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Operations\MutationLivenessTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit refuses a writer whose node was trashed before its lock with nod[39m[90m…[39m [90m0.56s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses a writer whose node was trashed before its lock with nod[39m[90m…[39m [90m0.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses a writer whose node was trashed before its lock with nod[39m[90m…[39m [90m0.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses a writer whose node was trashed before its lock with nod[39m[90m…[39m [90m0.26s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses a writer whose node was trashed before its lock with nod[39m[90m…[39m [90m0.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses a writer whose node was trashed before its lock with nod[39m[90m…[39m [90m0.26s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses a writer whose node was trashed before its lock with nod[39m[90m…[39m [90m0.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses a user writer on an archived drive with drive_archived a[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses a user writer on an archived drive with drive_archived a[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses a user writer on an archived drive with drive_archived a[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses a user writer on an archived drive with drive_archived a[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses a user writer on an archived drive with drive_archived a[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses a user writer on an archived drive with drive_archived a[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses a user writer on an archived drive with drive_archived a[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit a comment author cannot delete their comment in an archived driv[39m[90m…[39m [90m0.23s[39m  
+
+  [90mTests:[39m    [32;1m15 passed[39;22m[90m (30 assertions)[39m
+  [90mDuration:[39m [39m4.08s[39m
+

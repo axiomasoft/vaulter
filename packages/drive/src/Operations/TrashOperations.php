@@ -58,8 +58,8 @@ final readonly class TrashOperations implements Contract
             $this->guard->authorize(context: $this->context, ability: Ability::Restore, node: $source, operation: OperationKind::Mutation);
             $destination = $this->restoreAction->resolveDestination(context: $this->context, node: $source, explicit: $options->destination);
             $this->guard->authorize(context: $this->context, ability: Ability::View, node: $destination);
-            $originalId = $source->trashed_from_parent_id ?? $source->parent_id;
-            if ((string) $destination->id !== (string) $originalId) {
+            $originalId = $source->trashed_from_parent_id;
+            if ($originalId === null || (string) $destination->id !== (string) $originalId) {
                 $this->guard->authorizeCreate(context: $this->context, parent: $destination);
             }
             try {

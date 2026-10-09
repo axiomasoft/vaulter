@@ -68,7 +68,7 @@ final class PurgeTrashCommand extends Command
                     $purged = $this->database->transaction(function () use ($node, $context, $threshold, $nodes, $store, $purge): int {
                         $this->database->lockTree($context->driveId());
                         $locked = $store->lockTrashedRoot(Identity::key($node->getKey()), $threshold);
-                        if ($locked === null || $locked->parent()->whereNotNull('trashed_at')->exists()) {
+                        if ($locked === null) {
                             return 0;
                         }
                         $count = $nodes->subtree($locked)->count();

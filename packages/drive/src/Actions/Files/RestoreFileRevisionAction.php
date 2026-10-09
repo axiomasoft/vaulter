@@ -22,11 +22,12 @@ use Vaulter\Repositories\Drive\DriveStoreRepository;
 use Vaulter\Repositories\Drive\FileRevisionStoreRepository;
 use Vaulter\Repositories\Drive\FileStoreRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
+use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\TreeGuard;
 
 final readonly class RestoreFileRevisionAction
 {
-    public function __construct(private VaulterDatabase $database, private TreeGuard $tree, private NodeLocator $locator, private NodeSequence $sequence, private FileStoreRepository $files, private FileRevisionStoreRepository $revisions, private NodeStoreRepository $nodes, private DriveStoreRepository $drives, private BlobStore $blobs, private CopyDestinationAdmission $admission, private DrivePolicyEnforcer $policy) {}
+    public function __construct(private VaulterDatabase $database, private TreeGuard $tree, private NodeLocator $locator, private NodeSequence $sequence, private FileStoreRepository $files, private FileRevisionStoreRepository $revisions, private NodeStoreRepository $nodes, private DriveStoreRepository $drives, private BlobStore $blobs, private CopyDestinationAdmission $admission, private DrivePolicyEnforcer $policy, private DriveLifecycle $lifecycle) {}
 
     public function execute(OperationContext $context, RestoreFileRevisionInput $data): FileRevision
     {
@@ -34,7 +35,9 @@ final readonly class RestoreFileRevisionAction
 
         return $this->database->transaction(function () use ($context, $data, $node): FileRevision {
             $this->database->lockTreeShared($node->drive_id);
+            $this->lifecycle->assertWritable($context);
             $node = $this->tree->locked($this->tree->lock([$node->id]), $node->id);
+            $this->tree->assertLive($node);
             $this->sequence->assertExpected($node, $data->expectedSequence);
             $file = $this->files->lockForUpdate($node->file()->firstOrFail());
             $source = $file->versions()->whereKey($data->revision->getRawOriginal($data->revision->getKeyName()))->whereIn('status', ['committed', 'superseded'])->lockForUpdate()->first() ?? throw NodeNotFoundException::forId($node->id);

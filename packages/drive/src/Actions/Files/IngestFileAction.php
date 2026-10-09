@@ -37,6 +37,7 @@ use Vaulter\Repositories\Drive\DriveStoreRepository;
 use Vaulter\Repositories\Drive\FileRevisionStoreRepository;
 use Vaulter\Repositories\Drive\FileStoreRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
+use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\LoadTier;
 use Vaulter\Support\TreeGuard;
 use Vaulter\ValueObjects\Cas\BlobScope;
@@ -79,6 +80,7 @@ final readonly class IngestFileAction
         private NodeLocator $locator,
         private NodeSequence $sequence,
         private ScanAdmission $scans,
+        private DriveLifecycle $lifecycle,
     ) {}
 
     public function execute(OperationContext $context, IngestFileInput $data): Node
@@ -134,6 +136,7 @@ final readonly class IngestFileAction
             $receipt = $this->database->transaction(function () use ($context, $data, $staged, $name, $parentId): IngestReceipt {
                 // Lock order: drive → nodes → file → quota → CAS, so concurrent writers never deadlock.
                 $this->database->lockTreeShared($data->storage->id);
+                $this->lifecycle->assertWritable($context);
 
                 if ($name !== null && $parentId !== null) {
                     $this->assertDestination(context: $context, data: $data, parentId: $parentId);

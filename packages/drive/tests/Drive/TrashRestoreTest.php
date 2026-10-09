@@ -6,9 +6,10 @@ use Illuminate\Support\Facades\Storage;
 use Vaulter\Data\Drive\RestoreOptions;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
-use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Drive\OnNameConflict;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
+use Vaulter\Exceptions\Nodes\NodeTrashedByAncestorException;
+use Vaulter\Exceptions\Nodes\RestoreDestinationRequiredException;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
 beforeEach(function (): void {
@@ -72,19 +73,41 @@ it('restore при живом сиблинге с тем же именем → �
         ->toThrow(NodeNameConflictException::class);
 });
 
-it('restore возвращает к корню, если исходный родитель пропал', function (): void {
+it('restore без назначения отказывает, если исходный родитель пропал, и не переносит в корень', function (): void {
     $drive = DriveTestHelpers::drive();
 
     $parent = $drive->folders()->create('Parent');
     $child = $drive->folders()->create('Child', $parent);
 
-    // Trash the child (records trashed_from_parent_id = Parent), then make the
-    // original home vanish by soft-deleting the parent directly.
+    // Trash the child (records trashed_from_parent_id = Parent), then trash the
+    // original home too: it is no longer a live folder.
     $drive->nodes()->trash($child);
-    app(VaulterDatabase::class)->write(fn () => DriveTestHelpers::model($parent)->delete());
+    $drive->nodes()->trash($parent);
 
-    $restored = $drive->trash()->restore($child);
+    expect(fn () => $drive->trash()->restore($child))->toThrow(RestoreDestinationRequiredException::class)
+        ->and(DriveTestHelpers::model($child)->trashed_at)->not->toBeNull();
 
-    // Re-homed to the storage root node, deterministically.
+    $restored = $drive->trash()->restore($child, new RestoreOptions(destination: $drive->root()));
     expect($restored->parentId)->toEqual($drive->root()->id);
+});
+
+it('restore возвращает только своё поддерево: ранее удалённый потомок остаётся в корзине своим корнем', function (): void {
+    $drive = DriveTestHelpers::drive();
+    $folder = $drive->folders()->create('Project');
+    $early = $drive->folders()->create('Early', $folder);
+    $member = $drive->folders()->create('Member', $folder);
+
+    $drive->nodes()->trash($early);
+    $drive->nodes()->trash($folder);
+
+    expect(fn () => $drive->trash()->restore($member))->toThrow(NodeTrashedByAncestorException::class);
+
+    $drive->trash()->restore($folder);
+
+    expect(DriveTestHelpers::model($folder)->trashed_at)->toBeNull()
+        ->and(DriveTestHelpers::model($member)->trashed_at)->toBeNull()
+        ->and(DriveTestHelpers::model($member)->trash_root_id)->toBeNull()
+        ->and(DriveTestHelpers::model($early)->trashed_at)->not->toBeNull()
+        ->and((string) DriveTestHelpers::model($early)->trash_root_id)->toBe((string) $early->id);
+    expect(array_map(static fn ($node) => $node->id, $drive->trash()->list()->items))->toBe([$early->id]);
 });

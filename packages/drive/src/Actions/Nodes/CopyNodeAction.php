@@ -22,6 +22,7 @@ use Vaulter\Profiles\DrivePolicyEnforcer;
 use Vaulter\Repositories\Drive\DriveStoreRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
+use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\TreeGuard;
 
 final readonly class CopyNodeAction
@@ -35,6 +36,7 @@ final readonly class CopyNodeAction
         private DrivePolicyEnforcer $policy,
         private NodeContentLifecycleRegistry $lifecycles,
         private NameConflictResolver $names,
+        private DriveLifecycle $lifecycle,
     ) {}
 
     public function execute(OperationContext $context, CopyNodeInput $data): Node
@@ -47,6 +49,7 @@ final readonly class CopyNodeAction
         try {
             return $this->database->transaction(function () use ($source, $parentId, $name, $data, $context): Node {
                 $this->database->lockTreeShared($context->driveId());
+                $this->lifecycle->assertWritable($context);
                 $sourceIds = array_values($this->nodes->subtree($source)->modelKeys());
                 $locked = $this->tree->lock([...$sourceIds, $parentId]);
                 $current = $this->tree->locked($locked, $source->id);
@@ -68,17 +71,16 @@ final readonly class CopyNodeAction
                     throw InvalidDestinationException::trashed($current);
                 }
                 $included = [(string) $current->id => true];
-                for ($depth = 0; $depth < NodeReadRepository::DEFAULT_MAX_DEPTH; $depth++) {
+                // Each pass adds at least one member or stops, so the loop is bounded by the
+                // member count and never by a depth that could drop deep descendants.
+                do {
                     $before = count($included);
                     foreach ($sources as $member) {
                         if ($member->trashed_at === null && isset($included[(string) $member->parent_id])) {
                             $included[(string) $member->id] = true;
                         }
                     }
-                    if (count($included) === $before) {
-                        break;
-                    }
-                }
+                } while (count($included) > $before);
                 $sources = $sources->filter(fn (Node $member): bool => isset($included[(string) $member->id]));
                 if ($data->authorizedNodeIds !== null
                     && array_diff($sources->map(fn (Node $member): string => (string) $member->id)->all(), $data->authorizedNodeIds) !== []) {

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Vaulter\Repositories\Drive;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
-use Illuminate\Contracts\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -19,6 +18,7 @@ use Vaulter\Contracts\Access\GrantAuthoritativeDriver;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Exceptions\Nodes\TreeTraversalIncompleteException;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Profiles\ProfileRegistry;
@@ -130,14 +130,63 @@ final class NodeReadRepository
     {
         $node = $this->scopedNode($node);
         $model = $this->vaulterConfig->model('node');
+        $bound = $maxDepth ?? $this->treeBound();
 
         /** @var Collection<int, Node> $result */
         $result = $model::withMaxDepth(
-            $maxDepth ?? self::DEFAULT_MAX_DEPTH,
+            $bound,
             static fn (): Collection => $node->descendants()->get(),
         );
+        $this->assertComplete($result, $bound);
 
         return $this->checkedTree($result, $node);
+    }
+
+    /**
+     * How deep a mutation traversal reads: the deepest tree any profile allows, never
+     * less than DEFAULT_MAX_DEPTH. A tree that is still deeper (a policy lowered after
+     * the fact, or legacy data) is detected by assertComplete(), not silently cut.
+     */
+    public function treeBound(): int
+    {
+        $bound = self::DEFAULT_MAX_DEPTH;
+        foreach ($this->profiles()->all() as $profile) {
+            $bound = max($bound, $profile->getDrivePolicy()->maxFolderDepth + 1);
+        }
+
+        return $bound;
+    }
+
+    /** Resolved per call: a registry swapped after boot must be the one these limits are read from. */
+    private function profiles(): ProfileRegistry
+    {
+        return app(ProfileRegistry::class);
+    }
+
+    /**
+     * Fail closed when the traversal stopped at its bound with rows still below: the
+     * deepest level read must have no children (fixed probe by parent in chunks).
+     *
+     * @param Collection<int, Node> $nodes
+     */
+    private function assertComplete(Collection $nodes, int $bound): void
+    {
+        $edge = [];
+        foreach ($nodes as $node) {
+            $depth = $node->getAttribute('depth');
+            if (is_numeric($depth) && (int) $depth >= $bound - 1) {
+                $edge[] = $node->getKey();
+            }
+        }
+        if ($edge === []) {
+            return;
+        }
+        $model = $this->vaulterConfig->model('node');
+        foreach (array_chunk($edge, self::WHERE_IN_BIND_LIMIT) as $chunk) {
+            if ($model::query()->whereIn('parent_id', $chunk)->exists()) {
+                throw TreeTraversalIncompleteException::forBound($bound);
+            }
+        }
     }
 
     /**
@@ -155,11 +204,14 @@ final class NodeReadRepository
             operation: function () use ($node, $maxDepth): Collection {
                 $model = $this->vaulterConfig->model('node');
 
+                $bound = $maxDepth ?? $this->treeBound();
+
                 /** @var Collection<int, Node> $result */
                 $result = $model::withMaxDepth(
-                    $maxDepth ?? self::DEFAULT_MAX_DEPTH,
+                    $bound,
                     static fn (): Collection => $node->descendantsAndSelf()->get(),
                 );
+                $this->assertComplete($result, $bound);
 
                 return $this->checkedTree($result, $node);
             },
@@ -378,31 +430,35 @@ final class NodeReadRepository
     }
 
     /**
-     * The trashed nodes whose trashed_at is at or before $threshold — the
-     * purge-trash candidates past their retention window (§2.10). Only ROOTS of a
-     * trash operation are returned: a node whose own parent is itself trashed is
-     * skipped, because force-deleting an ancestor's subtree already reclaims it (so
-     * a child is never purged twice). Returns a Builder so the command chunks it.
+     * The trash roots whose trashed_at is at or before $threshold — the purge-trash
+     * candidates past their retention window (§2.10, PLAN2.D37). Only explicit
+     * roots (trash_root_id = id) are returned: purging a root deletes its whole
+     * subtree, including descendants trashed earlier on their own, so a member is
+     * never purged twice. Returns a Builder so the command chunks it.
      *
      * @return Builder<Node>
      */
     public function trashedBefore(Carbon $threshold): Builder
+    {
+        return $this->trashRoots()
+            ->where('trashed_at', '<=', $threshold)
+            ->orderBy('trashed_at');
+    }
+
+    /**
+     * Only the explicit roots of the trash: a node trashed with its folder is
+     * listed, restored and purged through that folder.
+     *
+     * @return Builder<Node>
+     */
+    public function trashRoots(): Builder
     {
         $model = $this->vaulterConfig->model('node');
         $table = (new $model)->getTable();
 
         return $this->query()
             ->whereNotNull('trashed_at')
-            ->where('trashed_at', '<=', $threshold)
-            // Skip descendants whose own parent is also trashed — the trashed
-            // ancestor is the purge root and its subtree force-delete covers them.
-            ->whereNotExists(static function (QueryBuilder $sub) use ($table): void {
-                $sub->selectRaw('1')
-                    ->from($table.' as parent_node')
-                    ->whereColumn('parent_node.id', $table.'.parent_id')
-                    ->whereNotNull('parent_node.trashed_at');
-            })
-            ->orderBy('trashed_at');
+            ->whereColumn($table.'.trash_root_id', $table.'.id');
     }
 
     /**
@@ -567,7 +623,7 @@ final class NodeReadRepository
      */
     public function grantFilteringApplies(): bool
     {
-        foreach (app(ProfileRegistry::class)->all() as $profile) {
+        foreach ($this->profiles()->all() as $profile) {
             $driver = $this->drivers->forProfile($profile->getKey());
             if ($this->vaulterConfig->featureEnabled('grants', $profile->getKey())
                 && $driver instanceof GrantAuthoritativeDriver
@@ -695,7 +751,7 @@ final class NodeReadRepository
 
             /** @var list<int|string> $descendantKeys */
             $descendantKeys = $model::withMaxDepth(
-                self::DEFAULT_MAX_DEPTH,
+                $this->treeBound(),
                 static fn (): array => $anchor->descendants()->pluck($keyName)->all(),
             );
 

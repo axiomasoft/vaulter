@@ -1,0 +1,52 @@
+$ cd . && scripts/test-db.sh -C packages/drive pgsql tests/Concurrency tests/Uploads tests/Tenancy tests/Drive   env={'DB_PARALLEL': '6'}
+exit=0 duration_s=127.4
+
+engine=pgsql workers=6 cwd=packages/drive output=/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P4.6/phase-barrier/logs/V920/pgsql-output.log
+
+  .........................................
+
+  Tests:    41 passed (720 assertions)
+  Duration: 30.82s
+
+[1A  Parallel: 6 processes
+
+
+  ............................................................................
+  ............................................................................
+  ............................................................................
+  ..
+
+  Tests:    230 passed (688 assertions)
+  Duration: 44.97s
+
+[1A  Parallel: 6 processes
+
+
+  ....
+
+  Tests:    4 passed (40 assertions)
+  Duration: 4.87s
+
+[1A  Parallel: 6 processes
+
+
+  ............................................................................
+  ............................................................................
+  .
+
+  Tests:    153 passed (523 assertions)
+  Duration: 37.11s
+
+[1A  Parallel: 6 processes
+
+
+   PASS  Tests\Concurrency\RevisionNumberRaceTest
+  ✓ it reuses prepared bytes on a serialization retry and discards the…  3.16s  
+
+   PASS  Tests\Uploads\P3\CompleteUploadIdempotencyTest
+  ✓ it SEC-CLEANUP-sniff-throw closes the acquired protocol reader and…  1.10s  
+
+  Tests:    2 passed (16 assertions)
+  Duration: 4.62s
+
+engine=pgsql exit=0 seconds=123

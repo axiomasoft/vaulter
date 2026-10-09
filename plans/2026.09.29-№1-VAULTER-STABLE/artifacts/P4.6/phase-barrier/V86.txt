@@ -1,0 +1,6 @@
+$ cd . && scripts/test-db.sh pgsql packages/core/tests/Upgrade/OffDedupRollbackSafetyTest.php   env={'DB_PARALLEL': '0'}
+exit=0 duration_s=6.0
+
+engine=pgsql workers=0 cwd=/home/vostrikov/projects/packages/vaulter output=/home/vostrikov/projects/packages/vaulter/plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P4.6/phase-barrier/logs/V86/pgsql-output.log
+{"tool":"pest","result":"passed","tests":4,"passed":4,"assertions":20,"duration_ms":4516}
+engine=pgsql exit=0 seconds=5

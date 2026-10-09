@@ -7,6 +7,7 @@ namespace Vaulter\Documents\Events\Comments;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Support\Str;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Models\Comments\NodeComment;
@@ -17,7 +18,7 @@ use Vaulter\Support\Identity;
  * private collaboration channel so open editors reflect the resolution live. Carries
  * the actor who resolved it (also stamped as resolved_by on the row).
  */
-final readonly class CommentResolved implements ShouldBroadcast
+final readonly class CommentResolved implements ShouldBroadcast, ShouldDispatchAfterCommit
 {
     public string $eventId;
 

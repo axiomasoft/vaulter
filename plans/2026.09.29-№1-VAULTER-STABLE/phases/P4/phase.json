@@ -418,6 +418,11 @@
       "mode": "recommended"
     }
   ],
+  "closed": {
+    "at": "2026-10-09T14:29:28Z",
+    "result": "done_with_deviations",
+    "summary": "14 item(s): 2 done, 12 done_with_deviations"
+  },
   "orchestration": {
     "strategy": "sequential"
   },

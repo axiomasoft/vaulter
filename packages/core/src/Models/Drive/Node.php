@@ -50,6 +50,7 @@ use Vaulter\Support\NodeName;
  * @property Carbon|null                               $trashed_at
  * @property int|string|null                           $trashed_by
  * @property int|string|null                           $trashed_from_parent_id
+ * @property int|string|null                           $trash_root_id
  * @property Carbon|null                               $content_modified_at
  * @property int|string|null                           $content_modified_by
  * @property Carbon|null                               $created_at

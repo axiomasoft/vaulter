@@ -1,0 +1,33 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Vaulter\Exceptions\Nodes;
+
+use Vaulter\Exceptions\Contracts\ProblemException;
+use Vaulter\Exceptions\VaulterException;
+use Vaulter\Models\Drive\Node;
+
+/** The original parent is gone or trashed and no destination was given (PLAN2.D37). */
+final class RestoreDestinationRequiredException extends VaulterException implements ProblemException
+{
+    public static function forNode(Node $node): self
+    {
+        return new self(
+            "[Vaulter] Node [{$node->id}] cannot return to its original parent. "
+            .'Why: the parent no longer exists or is in the trash, and a restore never moves a node silently. '
+            .'Fix: pass an explicit destination folder in the restore options. '
+            .'Docs: '.self::docs('restore-destination-required'),
+        );
+    }
+
+    public function problemCode(): string
+    {
+        return 'restore_destination_required';
+    }
+
+    public function httpStatus(): int
+    {
+        return 409;
+    }
+}

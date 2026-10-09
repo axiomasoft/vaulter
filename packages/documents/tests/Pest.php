@@ -11,6 +11,7 @@ use Vaulter\Documents\Tests\Export\ExportTestCase;
 use Vaulter\Documents\Tests\Operations\OperationsTestCase;
 use Vaulter\Documents\Tests\TestCase;
 use Vaulter\Documents\Tests\Types\TypesTestCase;
+use Vaulter\Tests\Drive\DriveTestHelpers;
 
 // The v_node_comments/v_documents/v_document_revisions schema is always migrated (core owns
 // it unconditionally); only the ROUTES are feature-gated. Schema + Unit run on the
@@ -33,6 +34,10 @@ uses(CollaborationEnabledTestCase::class, RefreshDatabase::class)->in('Collabora
 // migrate per test instead of wrapping it in a transaction.
 uses(CollaborationEnabledTestCase::class, DatabaseMigrations::class)->in('Concurrency');
 
+// Events that must wait for the OUTERMOST commit are proved without the fixture's wrapping
+// transaction, which would stand in for the commit: this suite migrates per test.
+uses(OperationsTestCase::class, DatabaseMigrations::class)->in('AfterCommit');
+
 // The node-comment suite boots with 'comments' ON (+ the database driver) so the
 // routes register and the real grant-based algorithm runs. Kept apart from Document
 // so the two feature-gated TestCases never both claim the same path.
@@ -53,3 +58,8 @@ uses(TypesTestCase::class, RefreshDatabase::class)->in('Types');
 uses(TestCase::class)->in('Providers');
 
 uses(TestCase::class)->in('Configuration');
+
+// Fixtures write rows directly. Under VAULTER_TEST_WRITE_GUARD=1 (the write-guard lane) those
+// writes must pass the guard like the suite's other builders do, so the fixture opens the
+// scope the way an operation would; the code under test still opens its own.
+pest()->beforeEach(fn () => DriveTestHelpers::insideOperation())->in('Collaboration', 'Document', 'Export', 'Operations', 'Schema', 'Comment', 'Types');

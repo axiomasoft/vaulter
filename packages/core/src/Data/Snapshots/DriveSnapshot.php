@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Data\Snapshots;
 
 use DateTimeImmutable;
+use Vaulter\Enums\Drive\DriveStatus;
 
 /**
  * Read-only view of a drive. Built by Vaulter; the constructor is not part of the
@@ -19,7 +20,7 @@ final readonly class DriveSnapshot
         public string $ownerId,
         public string $profile,
         public string $name,
-        public string $status,
+        public DriveStatus $status,
         public ?string $tenantId,
         public DateTimeImmutable $createdAt,
     ) {}

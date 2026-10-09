@@ -20,6 +20,11 @@ Codes are a stable public contract (AD29).
 | `cross_drive_operation` | 409 | `Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException` |
 | `invalid_destination` | 409 | `Vaulter\Exceptions\Nodes\InvalidDestinationException` |
 | `node_not_trashed` | 409 | `Vaulter\Exceptions\Nodes\NodeNotTrashedException` |
+| `node_trashed_by_ancestor` | 409 | `Vaulter\Exceptions\Nodes\NodeTrashedByAncestorException` |
+| `restore_destination_required` | 409 | `Vaulter\Exceptions\Nodes\RestoreDestinationRequiredException` |
+| `tree_traversal_incomplete` | 409 | `Vaulter\Exceptions\Nodes\TreeTraversalIncompleteException` |
+| `drive_archived` | 409 | `Vaulter\Exceptions\Drive\DriveArchivedException` |
+| `invalid_drive_state` | 409 | `Vaulter\Exceptions\Drive\InvalidDriveStateException` |
 | `quota_exceeded` | 413 | `Vaulter\Drive\Exceptions\Quota\QuotaExceededException` |
 | `upload_conflict` | 409 | `Vaulter\Drive\Exceptions\Uploads\UploadConflictException` |
 | `upload_conflict` | 409 | `Vaulter\Drive\Exceptions\Uploads\StagedUploadMissingException` |
@@ -272,6 +277,37 @@ must answer as `node_not_found` (404), exactly like any other node without `View
 
 `NodeNotTrashedException` — restore and permanent delete only apply to a node in the
 trash. Trash the node first; a live node is never purged directly.
+
+## node-trashed-by-ancestor
+
+`NodeTrashedByAncestorException` — a node that was trashed together with a folder is restored
+through that folder, not on its own. The response carries `context.trash_root_id`, the root to
+restore (or purge). Only a trash root (`trash_root_id = id`) can be restored.
+
+## restore-destination-required
+
+`RestoreDestinationRequiredException` — the folder the node was trashed from is gone or is in
+the trash, and a restore never moves a node silently (it used to fall back to the drive root).
+Pass an explicit destination: `RestoreOptions(destination: $folder)` or `destination_id` on
+`POST nodes/{node}/restore`. The caller needs `Create` on that folder.
+
+## tree-traversal-incomplete
+
+`TreeTraversalIncompleteException` — the folder tree under the node is deeper than a bounded
+traversal can read (the deepest `maxFolderDepth` of any profile, at least 64 levels), so the copy,
+trash or purge cannot prove it sees every descendant. It stops before any write instead of acting
+on part of the tree. Act on a shallower folder first.
+
+## drive-archived
+
+`DriveArchivedException` — an archived drive is read-only: every mutation, purge and creation by
+a non-system actor is refused, reads and downloads still work. Unarchive the drive first
+(`$drive->unarchive()`, needs `Manage` on the root).
+
+## invalid-drive-state
+
+`InvalidDriveStateException` — the drive lifecycle only allows `active → archived → active` and
+`active|archived → deleting`. `archive()` needs an active drive, `unarchive()` an archived one.
 
 ## not-a-document-node
 

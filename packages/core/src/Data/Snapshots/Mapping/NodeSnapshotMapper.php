@@ -76,7 +76,8 @@ final readonly class NodeSnapshotMapper
                 contentModifiedBy: SnapshotValue::nullableId($node->content_modified_by),
                 trashedAt: SnapshotValue::time($node->trashed_at),
                 trashedBy: SnapshotValue::nullableId($node->trashed_by),
-                trashRoot: $node->trashed_at !== null && $node->trashed_from_parent_id !== null,
+                trashRoot: $node->trashed_at !== null && $node->trash_root_id !== null
+                    && SnapshotValue::id($node->trash_root_id) === $id,
                 file: $node->kind === NodeKind::File ? $this->fileHead($node) : null,
                 document: $documents[$id] ?? null,
                 viewer: $stars === null ? null : new ViewerStateSnapshot(starred: isset($stars[$id])),
