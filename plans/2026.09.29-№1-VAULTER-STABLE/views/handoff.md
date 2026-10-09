@@ -8,7 +8,7 @@
 
 ## Recently finished
 
-- P4.3 🟠 Done with deviations — Type registry (config/tag/provider, frozen, vendor/name, vaulter/ reserved), built-ins rich-text/markdown/spreadsheet, TipTapCodec lossless read, unknown-type fallback (V10), degraded presented by type (V34), default_type boot check (V82), generator and contract trait. V81 closed by D57 (P4.14 OPUS input rendered). Receipts: artifacts/P4-midaudit/receipts/.
+- P4.3 🟠 Done with deviations — Grok 4.7 review closed (8/8 confirmed): 1 collab authenticate/store refuse non-editable content via ContentDecoder::editable() under the lock; 2 collab keeps schema_version without projection; 3 one TipTap node shape for strict/lenient, marks on any node; 4 projection decoded by type; 5 bad tag item fails boot; 6 locked re-check in UpdateDocumentContentAction + HTTP state_version; 7 UPGRADE/docs default_type case; 8 ContentSizeLimitTest. NC6–NC10 red→green. Receipts: artifacts/P4-midaudit/receipts/*-r2.txt.
 - P4.8 🟠 Done with deviations — Documents::in/comments operations on snapshots; controllers via Operations; TrashGuard removed; matrix + HTTP parity; review: grok-4.7 no high/medium, 1 low deferred
 - P4.2 🟠 Done with deviations — Document copy/purge lifecycle, registry fallback + PurgeOnly marker, tag collection; docs, UPGRADE, changelog-entry, negative controls in artifacts/P4.2
 - P4.13 🟠 Done with deviations — See artifacts/P4.13/completion-notes.md, negative-controls.md, review-verdict.md. Guard lanes V3/V4 green on SQLite; full suites with the guard on were not run.

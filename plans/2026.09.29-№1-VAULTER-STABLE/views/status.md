@@ -73,7 +73,7 @@ Closed 2026-10-07T10:05:54Z (🟢 Done): 8 item(s): 8 done
 | P4.13 | Публичный API на snapshot-DTO и Page<T>; Eloquent внутренний; WriteScope | 🟠 Done with deviations | frontier/high | 2026-10-08T13:50:16Z |
 | P4.2 | Содержимое по kind: copy и purge документа | 🟠 Done with deviations | implementation/high | 2026-10-08T14:38:38Z |
 | P4.8 | Documents Operations: авторизованный публичный API документов и комментариев | 🟠 Done with deviations | frontier/high | 2026-10-08T15:57:33Z |
-| P4.3 | Реестр типов документов, кодеки и безопасный fallback | 🟠 Done with deviations | frontier/high | 2026-10-08T18:54:26Z |
+| P4.3 | Реестр типов документов, кодеки и безопасный fallback | 🟠 Done with deviations | frontier/high | 2026-10-09T02:16:22Z |
 | P4.4 | Экспорт документов: реестр (тип, формат) и выдача файла | ⬜ Not started | implementation/medium | 2026-10-08T18:28:31Z |
 | P4.5 | Коллаборация: серверная загрузка, поколение комнаты, storage fence и read-only | ⬜ Not started | frontier/high | 2026-10-08T18:32:07Z |
 | P4.7 | Валидаторы: writer-матрица sequence/state_version/epoch и V36 | ⬜ Not started | implementation/high | 2026-10-08T18:45:43Z |
