@@ -1,19 +1,19 @@
 # P4.5 completion notes (executor anthropic/claude-opus-5-5/high, session 049e8860)
 
-Status: implementation complete; **owner run pending** for the long checks (owner instruction
+Status: complete; long checks run 2026-10-09 (all green, see table). Earlier: owner run pending for the long checks (owner instruction
 2026-10-09: «длинные прогоны в этой сессии не выполняй… Я сам запущу»).
 
 ## Checks
 
 | Id | Where | Result |
 |---|---|---|
-| V1 | `packages/documents`: `env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Collaboration tests/Operations tests/Arch` | **exit 0, 213 passed** (`V1-output.txt`) |
+| V1 | `packages/documents`: `env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Collaboration tests/Operations tests/Arch` | **exit 0, 214 passed** (`V1-output.txt`) |
 | V1-callers | `tests/Feature/MiddlewareStacksTest.php tests/Configuration/DocumentsConfigTest.php tests/Document/CollaborationFeatureGateTest.php tests/Document/DocumentStateVersionTest.php` | exit 0 (focused runs in session) |
 | V2 | PG `tests/Concurrency/CollaborationFenceRaceTest.php` | kind=impact → barrier P4.7 (not run) |
-| V3 | `hocuspocus-server`: `npm install && npm ci && npm run check && npm test` | **owner run** — new deps not installed here; lockfile is agent-denied. In session: `npm run check` equivalents (`node --check`) ok; dependency-free tests `webhook/security/config` 30/30 pass |
+| V3 | `hocuspocus-server`: `npm install && npm ci && npm run check && npm test` | **exit 0, 74 passed** (2026-10-09) |
 | V4 | `packages/vue`: `npm run typecheck && npm test` | **exit 0, 125 passed** (`V4-output.txt`) |
-| V5 | `bash scripts/collab-e2e.sh` | **owner run** (real processes); log to `artifacts/P4.5/collab-e2e.log` |
-| V80 | `packages/documents`: `pint --test` (changed files: passed) and `phpstan analyse --memory-limit=512M --no-progress` | Pint passed on every changed PHP file; **PHPStan: owner run**. Negative controls NC1/NC2 executed (`negative-controls.md`), NC3/NC4 handed off |
+| V5 | `bash scripts/collab-e2e.sh` | **exit 0, 3/3 passed** (real processes; `collab-e2e.log`) |
+| V80 | `packages/documents`: `pint --test` (changed files: passed) and `phpstan analyse --memory-limit=512M --no-progress` | Pint passed; PHPStan: No errors (2026-10-09). Negative controls NC1/NC2 executed (`negative-controls.md`), NC3/NC4 handed off |
 | V81 | `python3 plans/…/artifacts/coverage/opus-coverage.py check` | **exit 0**, 1438 units, 0 violations (`V81-output.txt`) |
 
 ## Invariant self-check (P4-invariants)
