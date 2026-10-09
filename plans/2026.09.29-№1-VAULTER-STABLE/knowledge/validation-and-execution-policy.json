@@ -52,11 +52,23 @@
       "id": "P2-Concrete",
       "title": "P2 concrete commands and final item",
       "text": "P2.6 — последний item по D16; это phase-end barrier. Его PG KeyColumnTypesTest+Canon03UpgradeTest, MySQL KeyColumnTypesTest и negative control outbox.drive_id не откладываются и не заменяются SQLite. В phase.validation P2 находятся V901–V926 с точными cwd/commands: full core+5 packages, исходные P1 PG matrices, phase Upgrade+Schema PG, CanonicalSchema MySQL, coverage, поддерживаемые native plan check/render freshness и hosted safe non-mutation CI under O-3. P2.6 V2 требует результаты всех этих phase checks. APP_ENV=testing, безопасные $SQ/$PG/$MY и доступность required runtime берутся из phase context/D04; DB preflight перед DB-mutating checks. Не выполнять эти команды при редактировании этой политики.\nСтарый plan-lint.py отсутствует в actual native v3. Его structural closure заменён поддерживаемыми plan.py check и plan.py render --check; никакие retired plan-work receipts не создаются. Existing MySQL baseline/deviation rules сохраняются в точной прежней области; пропуск не выдаётся за green.\nV919 исполняет единый PG набор Concurrency+Database+Upgrade+Schema. V921 проверяет покрытие Upgrade+Schema по тому же receipt: отдельный повтор этих каталогов не назначается. P2.6 V1 PG scenarios также могут ссылаться на покрывающий итоговый PG run при доказанно идентичных входах; negative control выполняется отдельно и не заменяется обычным green run."
+    },
+    {
+      "id": "Owner-Fast-Only",
+      "title": "Поправка владельца 2026-10-09: в items только быстрые прогоны",
+      "text": "Указание владельца (сообщение в сессии P5.2): в plan-run исполняются ТОЛЬКО быстрые проверки — затронутые Pest на SQLite, Arch/golden, Pint по затронутым файлам, PHPStan, plan check. Полные сьюты, PostgreSQL/MySQL, SchemaParity, upgrade-фикстуры и любые прогоны дольше нескольких минут в items НЕ запускаются, в том числе в барьерных V90. Они исполняются один раз после завершения фазы отдельным промтом владельца (фазовый прогон); item при этом закрывается с записью «не исполнено, фазовый прогон» (kind=impact) вместо ложного успеха. Это сужает D51: барьер блока и фазовый барьер переносятся из plan-run в отдельный фазовый прогон. Механизм: плановые V5-V7/V90 остаются в плане как перечень для фазового прогона. Накопленные к P5.2: P5.1 V4 (PG, выполнен, exit 0), P5.1 V5 (MySQL EventRecorderTest + Schema, сузить Schema), P5.2 V5-V7 (PG)."
     }
   ],
   "applies_to": [
+    "P0",
+    "P1",
+    "P2",
     "P3",
-    "P4"
+    "P4",
+    "P5",
+    "P6",
+    "P7",
+    "P8"
   ],
   "provenance": {
     "note": "Owner instruction recorded in D25; factual audit of P2.5 receipts; installed native SKM plan-protocol execution mode."
