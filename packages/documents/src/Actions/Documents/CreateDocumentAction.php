@@ -118,7 +118,13 @@ final readonly class CreateDocumentAction
 
             $node = $node->refresh();
 
-            event(new DocumentCreated(node: $node, version: $checkpoint, actorId: $actorId));
+            event(new DocumentCreated(
+                node: $node,
+                version: $checkpoint,
+                stateVersion: $result->document->state_version,
+                epoch: $result->document->collab_epoch,
+                actorId: $actorId,
+            ));
 
             return $node;
         });

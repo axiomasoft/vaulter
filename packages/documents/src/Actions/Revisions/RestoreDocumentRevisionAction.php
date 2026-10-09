@@ -88,6 +88,8 @@ final readonly class RestoreDocumentRevisionAction
             event(new DocumentRevisionCreated(
                 node: $node,
                 version: $revision,
+                stateVersion: $result->document->state_version,
+                epoch: $result->document->collab_epoch,
                 restored: true,
                 actorId: $actorId,
             ));

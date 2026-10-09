@@ -11,8 +11,10 @@ use Vaulter\Models\Drive\Node;
 
 /**
  * A document node's content was written (§2.5 / M4a) — the autosave path. $created
- * is true when a NEW autosave version was appended, false when the head autosave
- * version was updated in place within the debounce window.
+ * is true when this write took a new checkpoint; false when the head checkpoint stayed
+ * as it was (the checkpoint interval had not passed), so $version then predates the
+ * write. $stateVersion and $epoch are the content validators after this write, taken
+ * from the writer's result — use them, not $version, for the state of the document.
  */
 final readonly class DocumentContentUpdated implements ShouldDispatchAfterCommit
 {
@@ -22,6 +24,8 @@ final readonly class DocumentContentUpdated implements ShouldDispatchAfterCommit
         public Node $node,
         public DocumentRevision $version,
         public bool $created,
+        public int $stateVersion,
+        public int $epoch,
         public int|string|null $actorId = null,
         ?string $eventId = null,
     ) {

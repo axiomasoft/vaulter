@@ -129,6 +129,8 @@ final readonly class PersistCollaborationStateAction
                         node: $node,
                         version: $result->checkpoint ?? $document->currentRevision()->firstOrFail(),
                         created: $result->checkpoint !== null,
+                        stateVersion: $result->document->state_version,
+                        epoch: $result->document->collab_epoch,
                         actorId: $data->actorId,
                     ));
                 }

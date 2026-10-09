@@ -64,6 +64,8 @@ final readonly class CreateNamedRevisionAction
             event(new DocumentRevisionCreated(
                 node: $node,
                 version: $revision,
+                stateVersion: $document->state_version,
+                epoch: $document->collab_epoch,
                 restored: false,
                 actorId: $context->actor->ref()->id,
             ));

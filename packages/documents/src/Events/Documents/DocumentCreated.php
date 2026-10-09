@@ -11,7 +11,8 @@ use Vaulter\Models\Drive\Node;
 
 /**
  * A kind=document node was created with its initial v1 version (§2.5 / M4a). Carries
- * both the node and the v1 version so a listener/webhook need not re-read either.
+ * both the node and the v1 version so a listener/webhook need not re-read either, and
+ * the content validators the write produced (state_version, collab_epoch).
  */
 final readonly class DocumentCreated implements ShouldDispatchAfterCommit
 {
@@ -20,6 +21,8 @@ final readonly class DocumentCreated implements ShouldDispatchAfterCommit
     public function __construct(
         public Node $node,
         public DocumentRevision $version,
+        public int $stateVersion,
+        public int $epoch,
         public int|string|null $actorId = null,
         ?string $eventId = null,
     ) {

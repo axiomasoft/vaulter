@@ -95,6 +95,8 @@ final readonly class UpdateDocumentContentAction
                     node: $node,
                     version: $result->checkpoint ?? $document->currentRevision()->firstOrFail(),
                     created: $result->checkpoint !== null,
+                    stateVersion: $result->document->state_version,
+                    epoch: $result->document->collab_epoch,
                     actorId: $context->actor->ref()->id,
                 ));
             }
