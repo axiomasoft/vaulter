@@ -9,9 +9,10 @@ changes that require action from consumers of the package.
 ### AzGuard bridge on AzGuard v1 (PLAN2.D56, D57; PLAN2.P4.14)
 
 - **Dependency.** Was: `vaulter-azgard` required `axioma-studio/azguard-core: dev-main` and, for
-  the workspace lane, `axioma-studio/azguard-context` (AzGuard 0.3). Now: it requires
-  `axiomasoft/azguard: ^1.0`; AzGuard 0.3 and `azguard-context` are not supported. Remove both
-  0.3 packages from the host and install AzGuard v1.
+  the workspace lane, `axioma-studio/azguard-context` (AzGuard 0.3). Now: it requires AzGuard v1
+  `axiomasoft/azguard` pinned to one commit (`dev-main#9a6dc0e00c82e48d587d7763baeb2b5aa28c08ba`), because
+  AzGuard publishes no tagged release; AzGuard 0.3 and `azguard-context` are not supported.
+  Remove both 0.3 packages from the host and install AzGuard v1 at that commit.
 - **User contract.** Was: `Vaulter\Azgard\Contracts\AzgardBackedUser` extended AzGuard 0.3
   `HasPermissions` + `HasScopedRoles`, satisfied by the `HasAzGuard` + `HasScopedRoles` traits.
   Now: it extends AzGuard v1 `AzGuard\Contracts\AzGuardSubject`; the user model keeps
@@ -21,16 +22,28 @@ changes that require action from consumers of the package.
   `azguard-context`. Now: the adapter asks `hasPermission($permission, on:
   AssignmentScopeRef::of($type, $id))`. Declare every drive-owner morph alias (`team`, `project`,
   …) as an assignment scope type of the panel (`PanelBuilder::scopes(...)`) and move contextual
-  grants to grants in that scope; a type the panel does not declare is denied. Morph aliases must
-  match `[a-z0-9][a-z0-9_.-]*` (AzGuard identities are never class names).
-- **Entity lane and super-admin.** Was: `hasScopedPermission($permission, $entity)` read 0.3
-  scoped roles; `isSuperAdmin()` read the `*` wildcard. Now: `hasPermission($permission, on:
-  $entity)` and AzGuard v1 `isSuperAdmin()` (the super-admin role of the panel).
+  grants to grants in that scope; a valid alias the panel does not declare is denied. Morph
+  aliases must match `[a-z0-9][a-z0-9_.-]*` (AzGuard identities are never class names); a
+  drive-owner type that is not an alias throws `InvalidAssignmentScopeException`.
+- **Entity lane.** Was: `hasScopedPermission($permission, $entity)` read 0.3 scoped roles.
+  Now: `hasPermission($permission, on: $entity)`.
+- **No super-admin override.** Was: `AzgardGuard::isSuperAdmin()` (the `*` wildcard) made
+  `AzgardPermissionDriver::override()` return `Effect::Allow` for every node of every drive.
+  Now: `isSuperAdmin()` is removed from `Vaulter\Azgard\Contracts\AzgardGuard` (and from
+  `AzgardGuardAdapter`, `NullAzgardGuard`, `Testing\FakeAzgardGuard`), and `override()` returns
+  `null`. AzGuard's own decisions allow a super-admin every grant-based permission, so the
+  driver gives the **owner** role in the workspace — under AzGuard's scope policy (an
+  `isolated` panel keeps a tenant-wide super-admin out of a workspace), restrictions and
+  tenant rules. Host adapters drop their `isSuperAdmin()` method; code that expected
+  `Effect::Allow` from the azgard driver now sees the owner role. `FakeAzgardGuard::superAdmin()`
+  allows every check.
 - **Configuration.** `vaulter-azgard.panel_id` is passed to AzGuard as `guard:`. With `null`,
   AzGuard selects the panel by a full name or panel prefix in the permission, else the panel of
   the request, else the panel of the user model. The default `vaulter-azgard.permissions` map
-  (`documents.view`, …) names local keys of that panel; a panel with tenants needs its current
-  tenant. The `Vaulter\Azgard\*` class names and config keys are unchanged.
+  (`documents.view`, …) names local keys of that panel, so its resource prefix must not be
+  `documents` (map full names `<panel>:documents.view` otherwise); a panel with tenants needs
+  its current tenant, and AzGuard denies without one. The `Vaulter\Azgard\*` class names and
+  config keys are unchanged.
 
 ### Document events carry the content validators (PLAN2.D35; PLAN2.P4.7)
 

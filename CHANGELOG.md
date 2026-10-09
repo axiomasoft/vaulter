@@ -9,14 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### AzGuard bridge on AzGuard v1 (PLAN2.D56, D57; PLAN2.P4.14)
 
-- Changed: `vaulter-azgard` requires `axiomasoft/azguard: ^1.0` instead of
-  `axioma-studio/azguard-core: dev-main` and drops `axioma-studio/azguard-context`.
+- Changed: `vaulter-azgard` requires AzGuard v1 `axiomasoft/azguard` pinned to commit
+  `9a6dc0e` (`dev-main#<sha>`; AzGuard has no tagged release) instead of
+  `axioma-studio/azguard-core: dev-main`, and drops `axioma-studio/azguard-context`. The AzGuard
+  CI workflow checks out the same commit.
 - Changed: `AzgardBackedUser` extends AzGuard v1 `AzGuardSubject`; `AzgardGuardAdapter` checks
-  resources with `hasPermission(on: $entity)`, workspaces with `hasPermission(on:
-  AssignmentScopeRef::of($type, $id))` and super-admin with AzGuard's `isSuperAdmin()`, passing
-  `vaulter-azgard.panel_id` as `guard:`.
-- Changed: the real-engine tests of the bridge run on an AzGuard v1 panel (stored grants,
-  assignment scopes, super-admin role) through AzGuard's `InteractsWithAzGuard` helpers.
+  resources with `hasPermission(on: $entity)` and workspaces with `hasPermission(on:
+  AssignmentScopeRef::of($type, $id))`, passing `vaulter-azgard.panel_id` as `guard:`.
+- Removed: `AzgardGuard::isSuperAdmin()` and the azgard super-admin override. An AzGuard
+  super-admin reaches the owner role through AzGuard's workspace decisions, so an `isolated`
+  scope policy and AzGuard restrictions are no longer bypassed (review finding P4.14 F1).
+- Changed: the real-engine tests of the bridge run on AzGuard v1 panels (stored grants,
+  assignment scopes, super-admin role; an `isolated` panel with a lock restriction) through
+  AzGuard's `InteractsWithAzGuard` helpers.
 - Docs: `permission-drivers` (en, ru) describes the AzGuard v1 panel the host declares.
 
 ### Document validators: writer matrix and event payloads (PLAN2.D35; PLAN2.P4.7)

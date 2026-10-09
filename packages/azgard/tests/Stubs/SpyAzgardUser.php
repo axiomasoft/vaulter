@@ -18,9 +18,10 @@ use Vaulter\Azgard\Contracts\AzgardBackedUser;
  * real Vaulter resolver through the adapter and assert exactly what the adapter forwarded
  * (permission keys, the `on:` resource or assignment scope, the panel).
  *
- * The AzGuard v1 `HasAzGuard` trait supplies the `AzGuardSubject` surface; only the two
- * checks the adapter uses (`hasPermission`, `isSuperAdmin`) are overridden with
- * behaviour — the rest are never reached without a panel. This substitutes ONLY the leaf
+ * The AzGuard v1 `HasAzGuard` trait supplies the `AzGuardSubject` surface; only the
+ * decision the adapter uses (`hasPermission`) is overridden with behaviour — the rest
+ * are never reached without a panel. A super-admin is modelled as AzGuard decides it:
+ * every check is allowed. This substitutes ONLY the leaf
  * User (a host concern); the adapter and the Vaulter AzgardPermissionDriver above it are
  * the real code.
  */
@@ -34,9 +35,6 @@ final class SpyAzgardUser extends User implements AzgardBackedUser
 
     /** @var list<array{permission: string|UnitEnum, on: Model|AssignmentScopeRef|null, guard: string|null}> */
     public array $permissionCalls = [];
-
-    /** @var list<string|null> */
-    public array $superAdminCalls = [];
 
     /** @var list<string> Permission keys the user holds on any resource entity. */
     private array $entityGrants = [];
@@ -82,7 +80,7 @@ final class SpyAzgardUser extends User implements AzgardBackedUser
         return $this;
     }
 
-    // ─── The two checks the adapter actually forwards ────────────────────────
+    // ─── The decision the adapter actually forwards ──────────────────────────
 
     public function hasPermission(string|UnitEnum $permission, Model|AssignmentScopeRef|null $on = null, ?string $guard = null): bool
     {
@@ -90,16 +88,10 @@ final class SpyAzgardUser extends User implements AzgardBackedUser
         $key = $permission instanceof UnitEnum ? $permission->name : $permission;
 
         return match (true) {
+            $this->superAdmin => true,
             $on instanceof Model => in_array($key, $this->entityGrants, strict: true),
             $on instanceof AssignmentScopeRef => in_array($key, $this->scopeGrants[$on->key()] ?? [], strict: true),
             default => false,
         };
-    }
-
-    public function isSuperAdmin(Model|AssignmentScopeRef|null $on = null, ?string $guard = null): bool
-    {
-        $this->superAdminCalls[] = $guard;
-
-        return $this->superAdmin;
     }
 }

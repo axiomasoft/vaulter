@@ -36,12 +36,17 @@ use Vaulter\Enums\Access\Effect;
  *      hasScopedPermission lane is reachable through the same seam for a host adapter
  *      that has the node entity, but the contract hands the driver only the workspace
  *      coordinates (H.2 / ADR-0007 node-blind boundary);
- *   3. global — folded inside AzGuard (its super-admin role surfaces as the override
- *      below, and a tenant-wide grant satisfies hasPermissionIn in an inheriting scope).
+ *   3. global — folded inside AzGuard: a tenant-wide grant satisfies hasPermissionIn in an
+ *      inheriting scope, and AzGuard's super-admin is not a separate lane — AzGuard's own
+ *      decision allows a super-admin every grant-based permission in the workspace (under
+ *      its scope policy, restrictions and tenant rules), so the probes below yield the
+ *      owner role.
  * The driver only ever RAISES access (a role or null); its roles are unioned with the
  * node grants by the AccessResolver.
  *
- *   - override(actor, scope) = isSuperAdmin → Effect::Allow, else null (never a block);
+ *   - override(actor, scope) = null: AzGuard answers only decisions (its `isSuperAdmin()`
+ *     is not one), so the bridge never turns AzGuard state into an absolute Vaulter
+ *     override that would bypass AzGuard's restrictions, policies or scope isolation;
  *   - resolve(subject, actor, scope) = per role, the role's defining Ability is mapped
  *     to a permission and checked via hasPermissionIn against the workspace; the
  *     roles that pass are unioned into the Decision;
@@ -90,17 +95,11 @@ final class AzgardPermissionDriver implements NonEnumeratingPermissionDriver, Pe
     }
 
     /**
-     * The super-admin override: Effect::Allow when the actor is an AzGuard super-admin,
-     * else null (never a block).
+     * No override: every AzGuard answer is a decision in the workspace, and a super-admin
+     * reaches the owner role through those decisions in {@see resolve()}.
      */
     public function override(Authorizable $actor, AccessScope $scope): ?Effect
     {
-        $guard = $this->guardFor($actor);
-
-        if ($guard !== null && $guard->isSuperAdmin()) {
-            return Effect::Allow;
-        }
-
         return null;
     }
 

@@ -12,14 +12,14 @@ use Vaulter\Azgard\Contracts\AzgardGuard;
  * WITHOUT installing AzGuard (master plan §6 / H.5 — the src/Testing seam). It
  * lives in src/Testing/ (not tests/) so hosts can reference it from their own suites.
  *
- * It models the three AzGuard answers as plain data:
- *   - a super-admin flag (AzGuard's super-admin role);
+ * It models the two AzGuard answers as plain data:
+ *   - a super-admin flag (AzGuard's super-admin role: every check is allowed);
  *   - a set of (entity-key, permission) scoped grants (the per-resource lane);
  *   - a set of (contextType, contextId, permission) workspace grants (the
  *     hasPermissionIn lane the resolver actually drives, since AccessScope is node-blind).
  *
  * Grant a permission "globally" by passing it to a workspace check the resolver runs;
- * grant SuperAdmin to short-circuit everything.
+ * grant SuperAdmin to allow every check.
  */
 final class FakeAzgardGuard implements AzgardGuard
 {
@@ -68,11 +68,6 @@ final class FakeAzgardGuard implements AzgardGuard
         }
 
         return false;
-    }
-
-    public function isSuperAdmin(): bool
-    {
-        return $this->superAdmin;
     }
 
     /**

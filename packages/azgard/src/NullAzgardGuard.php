@@ -24,9 +24,4 @@ final class NullAzgardGuard implements AzgardGuard
     {
         return false;
     }
-
-    public function isSuperAdmin(): bool
-    {
-        return false;
-    }
 }

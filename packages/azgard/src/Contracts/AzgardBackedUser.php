@@ -9,8 +9,8 @@ use AzGuard\Contracts\AzGuardSubject;
 /**
  * The host user the {@see AzgardGuardAdapter} bridges into
  * Vaulter — AzGuard v1's OWN public subject contract, so there is no re-declared
- * signature to drift out of sync: `AzGuardSubject` supplies `hasPermission(…, on:, guard:)`
- * (resources and assignment scopes) and `isSuperAdmin(…, guard:)`.
+ * signature to drift out of sync: `AzGuardSubject` supplies the decision
+ * `hasPermission(…, on:, guard:)` on resources and assignment scopes.
  *
  * A host User satisfies it with NO extra method bodies — AzGuard's trait already
  * implements every method:

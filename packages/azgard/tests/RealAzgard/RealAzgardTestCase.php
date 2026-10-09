@@ -63,6 +63,7 @@ abstract class RealAzgardTestCase extends Orchestra
         Schema::create('users', function (Blueprint $table): void {
             $table->id();
             $table->string('name')->nullable();
+            $table->timestamp('locked_at')->nullable();
         });
 
         Schema::create('workspaces', function (Blueprint $table): void {

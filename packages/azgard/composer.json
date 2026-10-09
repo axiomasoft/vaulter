@@ -3,7 +3,7 @@
     "description": "AzGuard permission bridge for Vaulter — a real AzgardGuard adapter delegating to AzGuard v1 panel checks on resources and assignment scopes, so a host wires its ecosystem authorization into Vaulter's composite ACL with one binding.",
     "type": "library",
     "license": "MIT",
-    "keywords": ["laravel", "authorization", "permissions", "azguard", "corex", "vaulter"],
+    "keywords": ["laravel", "authorization", "permissions", "azguard", "vaulter"],
     "homepage": "https://github.com/axiomasoft/vaulter",
     "authors": [
         {
@@ -18,7 +18,7 @@
     "require": {
         "php": "^8.4",
         "axioma-studio/vaulter-core": "self.version",
-        "axiomasoft/azguard": "^1.0",
+        "axiomasoft/azguard": "dev-main#9a6dc0e00c82e48d587d7763baeb2b5aa28c08ba",
         "illuminate/contracts": "^12.0|^13.0",
         "illuminate/support": "^12.0|^13.0"
     },

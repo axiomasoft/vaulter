@@ -12,9 +12,12 @@ return [
     | (the default) lets AzGuard select the panel — by a full name
     | (`app:documents.view`) or a panel prefix in the permission, else the
     | panel of the request, else the panel of the user model. The default map
-    | below names local keys (`documents.view`) of that panel. Set an explicit
-    | panel id when the user model belongs to several panels or the checks
-    | must not depend on the request panel.
+    | below names local keys (`documents.view`) of that panel, so the panel's
+    | resource prefix must not be `documents` (AzGuard would read `documents.`
+    | as the prefix); otherwise map full names (`<panel>:documents.view`). Set
+    | an explicit panel id when the user model belongs to several panels or the
+    | checks must not depend on the request panel; AzGuard throws when no
+    | panel can be selected.
     |
     */
     'panel_id' => env('VAULTER_AZGARD_PANEL'),

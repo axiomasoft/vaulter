@@ -24,8 +24,8 @@ it('binds an adapter over the authenticated AzGuard-backed user', function (): v
     $guard = app(AzgardGuard::class);
 
     expect($guard)->toBeInstanceOf(AzgardGuardAdapter::class)
-        // The adapter really wraps THIS user — its super-admin grant surfaces.
-        ->and($guard->isSuperAdmin())->toBeTrue();
+        // The adapter really wraps THIS user — its super-admin decisions surface.
+        ->and($guard->hasPermissionIn('project', 1, 'documents.manage'))->toBeTrue();
 });
 
 it('binds the deny-all null guard for a guest', function (): void {

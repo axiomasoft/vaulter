@@ -9,13 +9,12 @@ use Vaulter\Azgard\AzgardGuardAdapter;
 use Vaulter\Azgard\AzgardPermissionDriver;
 use Vaulter\Azgard\Contracts\AzgardGuard;
 use Vaulter\Azgard\Tests\Stubs\SpyAzgardUser;
-use Vaulter\Enums\Access\Effect;
 use Vaulter\ValueObjects\Access\OwnerRef;
 
 /**
  * The bridge driving the REAL Vaulter AzgardPermissionDriver: the adapter is bound as
- * the host's AzgardGuard, and the driver's every lane (super-admin override, the
- * workspace-role → role fold, the create gate) is exercised end-to-end. Only the
+ * the host's AzgardGuard, and the driver's every lane (the workspace-role → role fold,
+ * a super-admin through the same decisions, the create gate) is exercised end-to-end. Only the
  * leaf user is a controllable double; the adapter and the resolver are production code.
  */
 function bindAdapterFor(SpyAzgardUser $user): void
@@ -28,16 +27,17 @@ function azgardDriver(): AzgardPermissionDriver
     return app(AzgardPermissionDriver::class);
 }
 
-it('grants an absolute override from an AzGuard super-admin', function (): void {
+it('folds an AzGuard super-admin into the owner role through the workspace decisions, never an override', function (): void {
     $user = SpyAzgardUser::make()->makeSuperAdmin();
     bindAdapterFor($user);
 
     $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 9), driveId: 1);
 
-    expect(azgardDriver()->override($user, $scope))->toBe(Effect::Allow);
+    expect(azgardDriver()->override($user, $scope))->toBeNull()
+        ->and(azgardDriver()->resolve(Subject::ofModel($user), $user, $scope)?->role->key)->toBe(RoleRegistry::OWNER);
 });
 
-it('defers (no override) for a non super-admin', function (): void {
+it('never overrides for a non super-admin', function (): void {
     $user = SpyAzgardUser::make()->grantOnEntities(['documents.view']);
     bindAdapterFor($user);
 

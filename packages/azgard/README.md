@@ -22,10 +22,10 @@ Vaulter AccessResolver ─▶ AzgardPermissionDriver ─▶ AzgardGuard (seam)
 ```
 
 - **`AzgardGuardAdapter`** implements the Vaulter seam and delegates to the host's
-  AzGuard v1 subject, translating the three checks: `hasScopedPermission` →
-  `hasPermission(on: $entity)` (narrowing the entity to an Eloquent model),
-  `hasPermissionIn` → `hasPermission(on: AssignmentScopeRef::of($type, $id))` (the
-  workspace lane), and `isSuperAdmin` → AzGuard's super-admin role of the panel.
+  AzGuard v1 subject, translating the two checks into AzGuard decisions:
+  `hasScopedPermission` → `hasPermission(on: $entity)` (narrowing the entity to an
+  Eloquent model) and `hasPermissionIn` → `hasPermission(on: AssignmentScopeRef::of($type, $id))`
+  (the workspace lane).
 - **`AzgardPermissionMap`** maps abilities to permission keys through the live
   `Configuration\AzgardConfig` repository.
 - **`VaulterAzgardServiceProvider`** registers the `azgard` driver key while preserving
@@ -39,15 +39,16 @@ Vaulter AccessResolver ─▶ AzgardPermissionDriver ─▶ AzgardGuard (seam)
 composer require axioma-studio/vaulter-azgard
 ```
 
-Select the driver in `config/vaulter.php`:
+Select the driver (`vaulter.access.permission_driver`):
 
-```php
-'drivers' => ['permission' => 'azgard'],
+```dotenv
+VAULTER_PERMISSION_DRIVER=azgard
 ```
 
 ## Host integration (the alignment this package cannot do for you)
 
-Requires AzGuard v1 (`axiomasoft/azguard: ^1.0`).
+Requires AzGuard v1 (`axiomasoft/azguard`). AzGuard publishes no tagged release, so the
+bridge pins one commit: `dev-main#9a6dc0e00c82e48d587d7763baeb2b5aa28c08ba`.
 
 1. **Mark your User** as AzGuard-backed for Vaulter — free if it already uses AzGuard:
 
@@ -87,8 +88,14 @@ Requires AzGuard v1 (`axiomasoft/azguard: ^1.0`).
 | `permissions` | `documents.*` ability map | Ability value → permission key, read live by `AzgardPermissionMap`. |
 | `create_permission` | `documents.create` | Workspace creation permission; override through `VAULTER_AZGARD_CREATE_PERMISSION`. |
 
-Super-admin is AzGuard's own `isSuperAdmin()` — the adapter forwards to it, so the
-super-admin role convention lives in AzGuard, not here.
+There is no super-admin override: AzGuard's `isSuperAdmin()` is not a decision. An AzGuard
+super-admin gets the **owner** role through the same workspace decisions, so AzGuard's scope
+policy (`isolated` keeps a tenant-wide super-admin out of a workspace), restrictions,
+policies and tenant rules all hold.
+
+Misconfiguration fails loud rather than deny: a drive-owner type that is not an AzGuard
+alias throws `InvalidAssignmentScopeException`, and an unselectable panel throws AzGuard's
+panel exception. With the default map the panel's resource prefix must not be `documents`.
 
 ## Tests
 
@@ -97,20 +104,25 @@ Three tiers:
 - **Driver / shared ACL contract** — the moved driver tests use `Testing\FakeAzgardGuard`
   and retain the parent Writer subtree allow / child deny fixture and its resolver decisions.
 - **Adapter / provider / Vaulter-resolver** — the adapter's translation and its integration
-  with the **real** Vaulter `AzgardPermissionDriver` across every lane (super-admin
-  override, workspace-role → grant-level, create gate), plus the provider binding, driven by
+  with the **real** Vaulter `AzgardPermissionDriver` across every lane (workspace-role →
+  grant-level, super-admin → owner, create gate), plus the provider binding, driven by
   a controllable user double.
 - **`tests/RealAzgard/` — full real-ecosystem e2e** — a real Eloquent AzGuard v1 subject on
   a real panel (stored grants, `project` assignment scopes, the super-admin role) granted
   through AzGuard's `InteractsWithAzGuard` helpers, and the real adapter → real Vaulter
   resolver. Proves the adapter's calls actually resolve through AzGuard's own engine
-  (super-admin, assignment-scope permission → Writer, tenant-wide inheritance, create gate,
-  scope-precise entity check, undeclared scope type denied).
+  (super-admin → owner, assignment-scope permission → Writer, tenant-wide inheritance,
+  create gate, scope-precise entity check, undeclared scope type denied).
+- **`tests/RealAzgardIsolated/`** — the same engine on an `isolated` panel with a lock
+  restriction: a tenant-wide super-admin gets nothing inside a workspace, a workspace
+  super-admin gets owner there only, and a locked account is denied despite super-admin.
 
-Both use `axiomasoft/azguard` from a sibling `../azguard` checkout through a path repository. The dedicated
-[AzGuard workflow](../../.github/workflows/azgard.yml) clones the latest public AzGuard
-HEAD without a private repository token and tests Laravel 12 and 13 independently.
-Local checks use the existing sibling checkout and installed dependencies.
+Both use `axiomasoft/azguard` from a sibling `../azguard` checkout through a path repository
+(the AzGuard monorepo keeps the package in `packages/core`, which a Composer VCS repository
+cannot address). The path repository installs whatever the sibling checkout holds, so keep
+it at the pinned commit locally; the dedicated
+[AzGuard workflow](../../.github/workflows/azgard.yml) checks out exactly that commit of the
+public AzGuard repository and tests Laravel 12 and 13 independently.
 
 ```bash
 composer install && composer test

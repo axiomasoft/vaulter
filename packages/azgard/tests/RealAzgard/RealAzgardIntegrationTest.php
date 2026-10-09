@@ -11,13 +11,12 @@ use Vaulter\Azgard\AzgardPermissionDriver;
 use Vaulter\Azgard\Contracts\AzgardGuard;
 use Vaulter\Azgard\Tests\RealAzgard\Stubs\AzgardUser;
 use Vaulter\Azgard\Tests\RealAzgard\Stubs\WorkspaceModel;
-use Vaulter\Enums\Access\Effect;
 use Vaulter\ValueObjects\Access\OwnerRef;
 
 /**
  * END-TO-END against the REAL AzGuard v1 stack (no doubles): a real Eloquent AzGuard
  * subject with grants stored through AzGuard's change pipeline (the v1 Testing helpers),
- * assignment scopes and the super-admin role, the real AzgardGuardAdapter and the real
+ * assignment scopes and the super-admin role decided by AzGuard, the real AzgardGuardAdapter and the real
  * Vaulter AzgardPermissionDriver. This is the proof the FakeAzgardGuard unit tests cannot
  * give — that the adapter's calls actually resolve through AzGuard's own engine.
  */
@@ -41,22 +40,16 @@ function projectScope(int $id): AccessScope
     return new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: $id), driveId: 1);
 }
 
-it('resolves a real AzGuard super-admin to a Vaulter absolute-allow override', function (): void {
+it('resolves a real AzGuard super-admin to the owner role through AzGuard decisions, never an override', function (): void {
     $user = realUser();
     $this->actingAsSuperAdmin($user);
     bindRealAdapter($user);
 
-    // Real chain: Vaulter override → adapter.isSuperAdmin → AzGuard's super-admin role.
-    expect($user->isSuperAdmin())->toBeTrue()
-        ->and(driver()->override($user, projectScope(7)))->toBe(Effect::Allow);
-});
-
-it('defers when the real user is not a super-admin', function (): void {
-    $user = realUser();
-    bindRealAdapter($user);
-
-    expect($user->isSuperAdmin())->toBeFalse()
-        ->and(driver()->override($user, projectScope(7)))->toBeNull();
+    // Real chain: driver probes → adapter.hasPermission in project:7 → AzGuard decides
+    // every permission for the super-admin role (inherit panel).
+    expect(driver()->override($user, projectScope(7)))->toBeNull()
+        ->and(driver()->resolve(Subject::ofModel($user), $user, projectScope(7))?->role->key)->toBe(RoleRegistry::OWNER)
+        ->and(driver()->canCreateIn($user, projectScope(7)))->toBeTrue();
 });
 
 it('folds a real assignment-scope permission into the matching Vaulter role, only in that workspace', function (): void {

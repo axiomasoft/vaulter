@@ -53,22 +53,9 @@ it('forwards a workspace check as hasPermission in the assignment scope', functi
         ->and($call['guard'])->toBe('app');
 });
 
-it('delegates super-admin to AzGuard\'s own check in the configured panel', function (): void {
-    // isSuperAdmin() is AzGuard's own: the adapter does not probe a role or key itself
-    // — it just forwards, so the super-admin convention lives in AzGuard.
-    $superAdmin = SpyAzgardUser::make()->makeSuperAdmin();
-    $plainUser = SpyAzgardUser::make()->grantOnEntities(['documents.view']);
-
-    expect((new AzgardGuardAdapter($superAdmin, panelId: 'app'))->isSuperAdmin())->toBeTrue()
-        ->and($superAdmin->superAdminCalls)->toBe(['app'])
-        ->and((new AzgardGuardAdapter($plainUser))->isSuperAdmin())->toBeFalse()
-        ->and($plainUser->superAdminCalls)->toBe([null]);
-});
-
 it('the null guard denies every probe (safe pass-through)', function (): void {
     $guard = new NullAzgardGuard;
 
     expect($guard->hasScopedPermission('documents.view', new WorkspaceStub))->toBeFalse()
-        ->and($guard->hasPermissionIn('project', 1, 'documents.update'))->toBeFalse()
-        ->and($guard->isSuperAdmin())->toBeFalse();
+        ->and($guard->hasPermissionIn('project', 1, 'documents.update'))->toBeFalse();
 });

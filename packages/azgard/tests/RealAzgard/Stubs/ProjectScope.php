@@ -27,6 +27,10 @@ final class ProjectScope implements AssignmentScopeDefinition
 
     public function resolve(AssignmentScopeRef $ref): ?ResolvedAssignmentScope
     {
-        return $ref->type() === 'project' ? new ResolvedAssignmentScope($ref, TenantRef::global()) : null;
+        if ($ref->type() !== 'project') {
+            return null;
+        }
+
+        return new ResolvedAssignmentScope($ref, TenantRef::global(), WorkspaceModel::query()->find($ref->id()));
     }
 }

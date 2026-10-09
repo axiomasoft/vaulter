@@ -13,16 +13,14 @@ use Vaulter\Azgard\Contracts\AzgardGuard;
 use Vaulter\Azgard\Testing\FakeAzgardGuard;
 use Vaulter\Azgard\Tests\Access\AccessTestHelpers;
 use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Access\Effect;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\ValueObjects\Access\OwnerRef;
 
 /**
  * The AzGuard host-role driver (§6 / H.2 / ADR-0007). It talks ONLY to the Vaulter-
- * owned AzgardGuard seam, so these tests bind a FakeAzgardGuard — NO azguard/corex is
- * installed. Real-ecosystem integration (binding a real AzgardGuard adapter delegating
- * to AzGuard hasScopedPermission / Corex ContextGuard hasPermissionIn, plus ulid morph
- * alignment) is a HOST step; this slice proves the driver logic against the seam.
+ * owned AzgardGuard seam, so these tests bind a FakeAzgardGuard instead of the real
+ * AzGuard engine (that end-to-end lives in tests/RealAzgard); this slice proves the
+ * driver logic against the seam.
  *
  * Covered: the Ability→permission map; hasPermissionIn gating the workspace-scoped role
  * lane; hasPermissionIn gating create; the SuperAdmin override; the composite order
@@ -62,13 +60,15 @@ it('honours a host override of the ability map', function (): void {
     expect(app(AzgardPermissionMap::class)->permissionFor(Ability::Edit))->toBe('host.docs.write');
 });
 
-it('grants an absolute override from an AzGuard super-admin', function (): void {
+it('never overrides: an AzGuard super-admin resolves to the owner role through decisions', function (): void {
     bindAzgardGuard(FakeAzgardGuard::superAdmin());
 
     $driver = app(AzgardPermissionDriver::class);
+    $actor = AccessTestHelpers::user();
     $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 9), driveId: 1);
 
-    expect($driver->override(AccessTestHelpers::user(), $scope))->toBe(Effect::Allow);
+    expect($driver->override($actor, $scope))->toBeNull()
+        ->and($driver->resolve(Subject::ofModel($actor), $actor, $scope)?->role->key)->toBe(RoleRegistry::OWNER);
 });
 
 it('defers (no override) when the actor is not a super-admin', function (): void {
@@ -86,7 +86,7 @@ it('lets a super-admin see every node through the AccessResolver', function (): 
     $storage = AccessTestHelpers::storage();
     $folder = AccessTestHelpers::folder($storage, null, 'azgard-super');
 
-    // No ACL grant at all, yet the super override short-circuits to full access.
+    // No ACL grant at all, yet every AzGuard decision allows the super-admin: owner role.
     expect(app(AccessResolver::class)->can(AccessTestHelpers::user(), Ability::Manage, $folder))->toBeTrue();
 });
 
@@ -192,7 +192,7 @@ it('exposes only the actor in its subject-set (AzGuard enumerates no role subjec
 
 it('uses the actor itself as the guard when the actor implements the AzgardGuard seam', function (): void {
     // The cleaner duck-typed path: an actor that IS an AzgardGuard is used directly,
-    // with no container binding. A super-admin actor short-circuits the override.
+    // with no container binding.
     $actor = new class extends User implements AzgardGuard
     {
         public $timestamps = false;
@@ -208,11 +208,6 @@ it('uses the actor itself as the guard when the actor implements the AzgardGuard
         {
             return $permission === 'documents.create';
         }
-
-        public function isSuperAdmin(): bool
-        {
-            return true;
-        }
     };
     $actor->forceFill(['id' => 7]);
     $actor->exists = true;
@@ -220,6 +215,6 @@ it('uses the actor itself as the guard when the actor implements the AzgardGuard
     $driver = app(AzgardPermissionDriver::class);
     $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 1), driveId: 1);
 
-    expect($driver->override($actor, $scope))->toBe(Effect::Allow)
+    expect($driver->override($actor, $scope))->toBeNull()
         ->and($driver->canCreateIn($actor, new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 1), driveId: 1)))->toBeTrue();
 });

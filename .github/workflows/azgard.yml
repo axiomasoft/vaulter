@@ -39,15 +39,16 @@ jobs:
         uses: actions/checkout@v4
 
       # The Composer path repo expects axiomasoft/azguard (AzGuard v1) at
-      # ../azguard/packages/core. No pin to the 0.x tree (PLAN2.D56): the bridge
-      # follows the current AzGuard main.
-      - name: Checkout AzGuard v1
+      # ../azguard/packages/core. AzGuard has no tagged release: the bridge pins the
+      # commit required in packages/azgard/composer.json (dev-main#<sha>, PLAN2.D56).
+      - name: Checkout pinned AzGuard v1
         run: |
+          sha=$(jq -r '.require["axiomasoft/azguard"] | split("#")[1]' packages/azgard/composer.json)
           git init ../azguard
           git -C ../azguard remote add origin https://github.com/axiomasoft/azguard-private.git
-          git -C ../azguard fetch --depth=1 origin main
-          # Path packages version themselves as dev-<branch>; main aliases to 1.0.x-dev,
-          # which satisfies the ^1.0 require, so the fetched head sits on a local main branch.
+          git -C ../azguard fetch --depth=1 origin "$sha"
+          # Path packages version themselves as dev-<branch>; the require is dev-main,
+          # so the pinned commit sits on a local main branch.
           git -C ../azguard checkout -B main FETCH_HEAD
 
       - name: Setup PHP 8.4
