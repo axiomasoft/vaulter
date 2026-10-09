@@ -19,3 +19,18 @@
 ## Correction
 
 Pending owner decision on F1: the fix needs the workspace in the super-admin question, i.e. a change of the public seam `Vaulter\Azgard\Contracts\AzgardGuard::isSuperAdmin()` (signature) or another shape. F2–F4, F6 are folded into the same single owning correction once F1's shape is decided.
+
+# Round 2 — re-review of correction `0dafc5a9` (grok/grok-4.7/high)
+
+- Launch: same bridge argv (`review-launch.json`), brief `re-review-brief.md`, stream `re-review-grok-stream.jsonl`, result `re-review-grok-result.txt`.
+- Reviewer session `01a11f6c-21ba-78f2-9e62-d016829bf3f3`: `model_id grok-4.7-build`, `reasoning_effort high` (53 calls), `contextWindowTokens 500000`, 1734 s.
+- Reviewer runs: azgard Pest 49 passed (142 assertions), PHPStan no errors (`/usr/bin/php8.4`, Testbench skeleton copied to a writable `APP_BASE_PATH`).
+- Round-1 status: F1 resolved, F2 resolved, F3 resolved, F4 resolved (the tenant-wide isolated test fails on `e9a3c54b`), F5 rejected-confirmed, F6 resolved. Check 1 confirms by AzGuard code that `decide()` is the only decision API, owner ≡ `Permission::all()`, and that `superAllow` adds no ability.
+- Reviewer verdict: **FINDINGS** (2 low).
+
+| # | Sev | Finding | Executor verdict | Evidence |
+|---|---|---|---|---|
+| R2-1 | low | `docs/reference/contracts.md:96-103` (+ru `:112-119`) still list `AzgardGuard::isSuperAdmin()`; `docs/guide/troubleshooting.md:99-102` (+ru) say the seam mirrors it. | **CONFIRMED**, wider: the whole AzGuard block of `troubleshooting.md` (en/ru, lines ~70-103) still describes 0.x — Corex morph aliases, `AZ_GUARD_MORPH_TYPE`, "an unregistered alias silently never matches" (v1 throws `InvalidAssignmentScopeException` for a non-alias). | grep; files outside P4.14 task_files |
+| R2-2 | low | The documented workaround "map full names `<panel>:documents.view`" for a panel with prefix `documents` cannot work: AzGuard refuses a catalog permission whose first segment is a panel prefix. | **CONFIRMED** (by reading `../azguard/packages/core/src/Panels/PanelCompiler.php:737-745` — `PrefixConflictException: give the panel another resourcePrefix() or rename the permission`) | `docs/guide/permission-drivers.md:343-345`, ru `:345-347`, `UPGRADE.md:42-44`, `config/vaulter-azgard.php` comment |
+
+Review budget: 2 completed rounds and the one owning correction are used. R2-1/R2-2 are docs-only; a further correction needs an owner request.
