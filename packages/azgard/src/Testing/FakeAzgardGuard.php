@@ -9,11 +9,11 @@ use Vaulter\Azgard\Contracts\AzgardGuard;
 /**
  * A configurable in-memory {@see AzgardGuard} so consumers (and this package's own
  * tests) can exercise the {@see AzgardPermissionDriver}
- * WITHOUT installing azguard/corex (master plan §6 / H.5 — the src/Testing seam). It
+ * WITHOUT installing AzGuard (master plan §6 / H.5 — the src/Testing seam). It
  * lives in src/Testing/ (not tests/) so hosts can reference it from their own suites.
  *
  * It models the three AzGuard answers as plain data:
- *   - a super-admin flag (the SuperAdmin wildcard);
+ *   - a super-admin flag (AzGuard's super-admin role);
  *   - a set of (entity-key, permission) scoped grants (the per-resource lane);
  *   - a set of (contextType, contextId, permission) workspace grants (the
  *     hasPermissionIn lane the resolver actually drives, since AccessScope is node-blind).
@@ -24,7 +24,7 @@ use Vaulter\Azgard\Contracts\AzgardGuard;
 final class FakeAzgardGuard implements AzgardGuard
 {
     /**
-     * @param bool                                    $superAdmin      the SuperAdmin wildcard
+     * @param bool                                    $superAdmin      the super-admin role
      * @param list<array{string, string}>             $scopedGrants    [entityKey, permission] pairs for the per-resource lane
      * @param list<array{string, int|string, string}> $workspaceGrants [contextType, contextId, permission] triples
      */

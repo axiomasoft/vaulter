@@ -36,8 +36,8 @@ use Vaulter\Enums\Access\Effect;
  *      hasScopedPermission lane is reachable through the same seam for a host adapter
  *      that has the node entity, but the contract hands the driver only the workspace
  *      coordinates (H.2 / ADR-0007 node-blind boundary);
- *   3. global — folded inside AzGuard (its SuperAdmin wildcard surfaces as the
- *      override below, and a globally-granted permission satisfies hasPermissionIn).
+ *   3. global — folded inside AzGuard (its super-admin role surfaces as the override
+ *      below, and a tenant-wide grant satisfies hasPermissionIn in an inheriting scope).
  * The driver only ever RAISES access (a role or null); its roles are unioned with the
  * node grants by the AccessResolver.
  *
@@ -55,17 +55,15 @@ use Vaulter\Enums\Access\Effect;
  * The actor's AzgardGuard is obtained leniently: if the actor itself implements the
  * seam (the host's User uses an AzGuard-backed adapter directly — the cleaner path,
  * since the AzGuard methods naturally live on the user), it is used as-is; otherwise
- * a host-bound AzgardGuard is resolved from the container (the adapter path, e.g. a
- * Corex TenantContextGuard-backed binding). When neither is available the lane is a
- * safe pass-through (null / false), never a fatal — so selecting 'azgard' without a
- * real binding degrades gracefully, exactly like the optional spatie lane.
+ * a host-bound AzgardGuard is resolved from the container (the adapter path — the
+ * provider binds {@see AzgardGuardAdapter} over the request's AzGuard v1 subject). When
+ * neither is available the lane is a safe pass-through (null / false), never a fatal — so
+ * selecting 'azgard' without a real binding degrades gracefully, exactly like the
+ * optional spatie lane.
  *
- * REAL-ECOSYSTEM INTEGRATION IS A HOST STEP: this slice proves the driver logic
- * against the {@see AzgardGuard} seam (a FakeAzgardGuard in tests). A production host
- * must bind a real AzgardGuard adapter delegating to AzGuard's hasScopedPermission /
- * Corex ContextGuard hasPermissionIn, AND align ulid morphs
- * (vaulter.ids.default=ulid + corex.ids.strategy=Ulid + AZ_GUARD_MORPH_TYPE=ulid) and
- * register workspace/owner types as Corex morph aliases.
+ * The host owns the AzGuard v1 panel: its User is a subject model of the panel, the
+ * workspace (drive owner) morph alias is an assignment scope type of the panel, and the
+ * mapped permissions are permissions of the panel.
  */
 final class AzgardPermissionDriver implements NonEnumeratingPermissionDriver, PermissionDriver
 {
@@ -92,8 +90,8 @@ final class AzgardPermissionDriver implements NonEnumeratingPermissionDriver, Pe
     }
 
     /**
-     * The super-admin override: Effect::Allow when AzGuard's SuperAdmin wildcard is
-     * held, else null (never a block).
+     * The super-admin override: Effect::Allow when the actor is an AzGuard super-admin,
+     * else null (never a block).
      */
     public function override(Authorizable $actor, AccessScope $scope): ?Effect
     {
@@ -191,8 +189,8 @@ final class AzgardPermissionDriver implements NonEnumeratingPermissionDriver, Pe
      * Resolve the actor's AzgardGuard: the actor itself when it implements the seam
      * (the cleaner duck-typed path), else a host-bound AzgardGuard from the container,
      * else null (the lane is then a safe pass-through, never a fatal). The container
-     * binding lets a host wire an adapter that closes over the resolved actor (e.g. a
-     * Corex ContextGuard-backed adapter).
+     * binding lets a host wire an adapter that closes over the resolved actor (the
+     * provider's {@see AzgardGuardAdapter} binding).
      */
     private function guardFor(Authorizable $actor): ?AzgardGuard
     {

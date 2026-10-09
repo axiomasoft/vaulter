@@ -236,7 +236,8 @@ SpatiePermissionDriver::forgetCachedPermissions($actor);
 ## AzGuard — шов на уровне ресурса
 
 `Vaulter\Azgard\AzgardPermissionDriver` находится в отдельном пакете
-`axioma-studio/vaulter-azgard`; ядро не зависит от AzGuard/Corex.
+`axioma-studio/vaulter-azgard`; ядро не зависит от AzGuard. Мост требует AzGuard v1
+(`axiomasoft/azguard: ^1.0`).
 
 ```bash
 composer require axioma-studio/vaulter-azgard
@@ -264,6 +265,46 @@ composer require axioma-studio/vaulter-azgard
 Пробы «роль → определяющее право» таковы: `Previewer → View`, `Reader → Download`,
 `Commenter → Comment`, `Writer → Edit`, `Organizer → Share`, `Owner → Manage`.
 
+### Панель AzGuard (хост)
+
+Хост объявляет панель AzGuard v1, которой принадлежат разрешения Vaulter:
+
+- модель пользователя — субъект панели и реализует
+  `Vaulter\Azgard\Contracts\AzgardBackedUser` — собственный `AzGuardSubject` AzGuard,
+  который трейт `AzGuard\Concerns\HasAzGuard` закрывает без дополнительных методов;
+- разрешения из карты (`documents.view`, …) — разрешения панели;
+- каждый morph-алиас владельца диска, в котором проверяет драйвер (`team`, `project`, …), —
+  **тип assignment scope** панели. Полоса workspace —
+  `hasPermission($permission, on: AssignmentScopeRef::of($type, $id))`; тип, не объявленный
+  панелью, получает отказ (fail-closed). С `AssignmentScopePolicy::inherit(...)` грант на весь
+  тенант действует в каждом workspace;
+- идентичности AzGuard — алиасы типов, а не имена классов: зарегистрируйте модели
+  пользователя и workspace в morph map.
+
+```php
+use AzGuard\Panels\PanelBuilder;
+use AzGuard\Panels\PanelProvider;
+use AzGuard\Roles\SuperAdminRole;
+use AzGuard\Scopes\AssignmentScopePolicy;
+use AzGuard\Sources\Database\DatabaseSource;
+
+final class AppPanel extends PanelProvider
+{
+    public static function getId(): string
+    {
+        return 'app';
+    }
+
+    public function panel(PanelBuilder $panel): PanelBuilder
+    {
+        return $panel->for(User::class)
+            ->permissions([DocumentsPermission::class, DatabaseSource::make()])
+            ->roles([SuperAdminRole::class])
+            ->scopes(AssignmentScopePolicy::inherit(new TeamScope)); // type 'team'
+    }
+}
+```
+
 ### Конфигурация
 
 В отличие от Gate/Spatie (с ключами по ключу роли), карта AzGuard **центрирована на действиях** —
@@ -272,7 +313,7 @@ composer require axioma-studio/vaulter-azgard
 ```php
 // config/vaulter-azgard.php — used only when access.permission_driver = 'azgard'
 return [
-    'panel_id' => null, // null resolves the panel from the permission key
+    'panel_id' => null, // AzGuard `guard:`; null lets AzGuard select the panel
     'permissions' => [
         'view'     => 'documents.view',
         'download' => 'documents.download',
@@ -291,6 +332,13 @@ return [
 ];
 ```
 
+`panel_id` передаётся в AzGuard как `guard:`. При `null` AzGuard выбирает панель по полному
+имени (`app:documents.view`) или префиксу панели в разрешении, иначе по панели запроса,
+иначе по панели модели пользователя; карта по умолчанию называет локальные ключи этой панели.
+Задайте `VAULTER_AZGARD_PANEL`, если модель пользователя входит в несколько панелей или
+проверки не должны зависеть от панели запроса. Панели с тенантами нужен текущий тенант —
+как для любой проверки AzGuard.
+
 ### Адаптер AzgardGuard
 
 `Vaulter\Azgard\Contracts\AzgardGuard` — это узкий шов, с которым говорит драйвер. Он выставляет
@@ -299,13 +347,13 @@ return [
 ```php
 interface AzgardGuard
 {
-    // Per-resource scoped permission (the per-node lane).
+    // Per-resource permission (the per-node lane).
     public function hasScopedPermission(string $permission, object $entity): bool;
 
     // Workspace-scoped permission (the lane resolve()/create actually drive).
     public function hasPermissionIn(string $contextType, int|string $contextId, string $permission): bool;
 
-    // The global SuperAdmin wildcard.
+    // AzGuard's super-admin in the selected panel.
     public function isSuperAdmin(): bool;
 }
 ```
@@ -314,29 +362,30 @@ interface AzgardGuard
 Иначе provider моста даёт `AzgardGuardAdapter` для текущего пользователя,
 реализующего `Vaulter\Azgard\Contracts\AzgardBackedUser`. Для гостя или другого
 пользователя он возвращает `NullAzgardGuard`, который не даёт разрешений.
-Хосту нужно добавить `AzgardBackedUser` на модель пользователя и согласовать morph-типы.
 
 ::: details Необязательное переопределение адаптера
-Мост уже привязывает настоящий адаптер. Хост может переопределить `AzgardGuard`, делегируя на `hasScopedPermission`
-AzGuard / `hasPermissionIn` Corex `ContextGuard` и wildcard SuperAdmin. Формы методов повторяют
-AzGuard 1:1, поэтому адаптер — тонкий сквозной проход:
+Мост уже привязывает настоящий адаптер. Хост может переопределить `AzgardGuard`; поставляемый
+адаптер — тонкий сквозной проход на AzGuard v1:
 
 ```php
+use AzGuard\Kernel\Identity\AssignmentScopeRef;
+use Illuminate\Database\Eloquent\Model;
+
 // In a host service provider
 $this->app->bind(\Vaulter\Azgard\Contracts\AzgardGuard::class, function ($app) {
-    $actor = $app['auth']->user();
+    $actor = $app['auth']->user(); // implements AzgardBackedUser
 
     return new class ($actor) implements \Vaulter\Azgard\Contracts\AzgardGuard {
-        public function __construct(private object $actor) {}
+        public function __construct(private \Vaulter\Azgard\Contracts\AzgardBackedUser $actor) {}
 
         public function hasScopedPermission(string $permission, object $entity): bool
         {
-            return $this->actor->hasScopedPermission($permission, $entity);
+            return $entity instanceof Model && $this->actor->hasPermission($permission, on: $entity);
         }
 
         public function hasPermissionIn(string $contextType, int|string $contextId, string $permission): bool
         {
-            return $this->actor->hasPermissionIn($contextType, $contextId, $permission);
+            return $this->actor->hasPermission($permission, on: AssignmentScopeRef::of($contextType, $contextId));
         }
 
         public function isSuperAdmin(): bool
@@ -347,10 +396,8 @@ $this->app->bind(\Vaulter\Azgard\Contracts\AzgardGuard::class, function ($app) {
 });
 ```
 
-**Согласование morph-типов (ответственность хоста):** morph-типы workspace/владельца должны быть
-зарегистрированными morph-алиасами Corex, согласованными с `vaulter.ids.strategy=ulid` +
-`corex.ids.strategy=Ulid` + `AZ_GUARD_MORPH_TYPE=ulid`. Драйвер передаёт строку типа workspace
-насквозь без изменений — он никогда не резолвит алиас сам.
+Драйвер передаёт строку типа workspace насквозь без изменений — он никогда не резолвит
+алиас сам.
 :::
 
 ### Тестирование полосы AzGuard
@@ -371,6 +418,11 @@ app()->bind(\Vaulter\Azgard\Contracts\AzgardGuard::class,
     fn () => FakeAzgardGuard::superAdmin());
 ```
 
+Для end-to-end тестов на настоящем движке используйте собственные хелперы AzGuard
+(`AzGuard\Testing\InteractsWithAzGuard`): `actingAsWithPermissions($user, ['documents.update'],
+on: AssignmentScopeRef::of('team', $teamId))` и `actingAsSuperAdmin($user)` сохраняют настоящие
+гранты через конвейер изменений AzGuard.
+
 ## Сравнение драйверов
 
 | | Database | Gate | Spatie | AzGuard |
@@ -378,7 +430,7 @@ app()->bind(\Vaulter\Azgard\Contracts\AzgardGuard::class,
 | Дополнительная зависимость | нет | нет (встроенный) | опциональная `spatie/laravel-permission` | `axioma-studio/vaulter-azgard` + его зависимости |
 | Карта с ключами по | — | ключ роли | ключ роли | `Ability` |
 | Перечисляет субъектов-роли/команды | через наследование | нет | да | нет |
-| Обход для супер-админа | нет | право `vaulter.super` | супер-разрешение | wildcard SuperAdmin |
+| Обход для супер-админа | нет | право `vaulter.super` | супер-разрешение | роль super-admin AzGuard |
 | Область workspace | гранты на уровне узла | node-blind контекст | в области команды | `hasPermissionIn` |
 | Безопасно, когда не настроен | н/д | да | да (запрет) | только с установленным мостом |
 

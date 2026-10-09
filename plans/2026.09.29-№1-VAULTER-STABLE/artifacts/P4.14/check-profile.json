@@ -1,0 +1,47 @@
+{
+  "item": "PLAN2.P4.14",
+  "prepared_at": "2026-10-09T00:00:00Z",
+  "runtime": {
+    "provider": "claude",
+    "model": "claude-opus-5-5",
+    "effort": "high",
+    "session": "9a33771c-3293-4703-8eb5-c3a5bf0e3edb",
+    "source": "observed /model output 'Set model to Opus 5.5 … with high effort' and env CLAUDE_EFFORT=high; plan.py start --actor claude/claude-opus-5-5/high"
+  },
+  "base_head": "c06279114981abd7d61a21c88648175da2f29200",
+  "azguard_source": {
+    "path": "../azguard/packages/core",
+    "package": "axiomasoft/azguard",
+    "head": "d49d0c4687da5dff55f6841ba0a6603eb58c5a34",
+    "branch_alias": "dev-main → 1.0.x-dev",
+    "note": "Owner 2026-10-09 in session: «azguard надо брать текущую версию, которая лежит в соседней папке» — path repository to the sibling checkout, require ^1.0 (D57)."
+  },
+  "runs_mode": "D51 L: SQLite Pest of packages/azgard, Pint, PHPStan of packages/azgard, grep V3. No PG/MySQL; no other package suites (consumer closure of azgard = azgard only).",
+  "impact": {
+    "paths": [
+      "packages/azgard/composer.json (dependency swap azguard-core/azguard-context 0.3 → axiomasoft/azguard v1)",
+      "packages/azgard/src/Contracts/AzgardBackedUser.php (composes AzGuard\\Contracts\\AzGuardSubject instead of 0.3 HasPermissions+HasScopedRoles)",
+      "packages/azgard/src/AzgardGuardAdapter.php (hasPermission(on: Model|AssignmentScopeRef, guard: panel), isSuperAdmin(guard: panel))",
+      "packages/azgard/src/AzgardPermissionDriver.php, VaulterAzgardServiceProvider.php, Contracts/AzgardGuard.php (docblocks only unless v1 requires otherwise)",
+      "packages/azgard/config/vaulter-azgard.php (panel semantics comment)",
+      "packages/azgard/tests/Stubs/SpyAzgardUser.php, AdapterTest.php, RealAzgard/* (v1 panel/roles/assignment scope fixtures), Arch/__snapshots__/public-api.txt if surface changes",
+      "docs/guide/permission-drivers.md, docs/ru/guide/permission-drivers.md, UPGRADE.md, CHANGELOG.md"
+    ],
+    "behaviour": "Bridge semantics preserved: workspace lane = AzGuard v1 assignment scope (former azguard-context context), entity lane = hasPermission on a Model resource, super-admin = AzGuard v1 isSuperAdmin in the selected panel. Driver logic (role probes, override, canCreateIn, subjectsFor) unchanged; PermissionDriverContractTests of core run for driver 'azgard'."
+  },
+  "tests": [
+    {"path": "packages/azgard/tests/AdapterTest.php", "why": "adapter translation onto v1 AzGuardSubject"},
+    {"path": "packages/azgard/tests/RealAzgard/RealAzgardIntegrationTest.php", "why": "end-to-end with real AzGuard v1 engine (panel, SuperAdminRole, assignment scope, DatabaseSource grants)"},
+    {"path": "packages/azgard/tests/Access/PermissionDriverContractTest.php", "why": "core PermissionDriverContractTests for driver 'azgard'"},
+    {"path": "packages/azgard/tests/Access/AzgardDriverTest.php, VaulterResolverIntegrationTest.php, ProviderBindingTest.php, ConfigurationTest.php", "why": "driver/provider wiring over the seam (unchanged inputs except autoload/dependency closure)"},
+    {"path": "packages/azgard/tests/ArchTest.php, Arch/*", "why": "public API snapshot and config boundary of the bridge"}
+  ],
+  "input_closure": "packages/azgard/{composer.json,src,config,tests}, packages/core (path repo, unchanged), ../azguard/packages/core@d49d0c4 (path repo, read-only).",
+  "acceptance": [
+    {"id": "V1", "cwd": "packages/azgard", "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests", "expect": "exit0; executed>0"},
+    {"id": "V2", "cwd": "packages/azgard", "cmd": "../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress", "expect": "exit0"},
+    {"id": "V3", "cwd": ".", "cmd": "grep -rn 'legacy/0.3\\|azguard-context\\|azguard-core' packages/azgard/composer.json packages/azgard/src packages/azgard/tests", "expect": "no matches (exit 1)"}
+  ],
+  "negative_controls": "One bounded control on the real lane: assignment-scope grant in workspace A must not resolve in workspace B (asserted in RealAzgardIntegrationTest).",
+  "deferred_broad_checks": "Phase barrier P4.6 (V901–V931) owns the azgard lane in the cumulative run; nothing H in this item."
+}

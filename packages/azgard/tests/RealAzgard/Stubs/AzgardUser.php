@@ -5,19 +5,17 @@ declare(strict_types=1);
 namespace Vaulter\Azgard\Tests\RealAzgard\Stubs;
 
 use AzGuard\Concerns\HasAzGuard;
-use AzGuard\Concerns\HasScopedRoles;
 use Illuminate\Foundation\Auth\User;
 use Vaulter\Azgard\Contracts\AzgardBackedUser;
 
 /**
- * A REAL AzGuard-backed user — the exact shape a host declares: the AzGuard traits
- * supply every method, and `implements AzgardBackedUser` (which composes AzGuard's own
- * contracts) is the only bridge-specific line. Proves the "free implementation" claim.
+ * A REAL AzGuard v1 subject — the exact shape a host declares: the AzGuard trait
+ * supplies every method, and `implements AzgardBackedUser` (which is AzGuard's own
+ * `AzGuardSubject`) is the only bridge-specific line. Proves the "free implementation" claim.
  */
 final class AzgardUser extends User implements AzgardBackedUser
 {
     use HasAzGuard;
-    use HasScopedRoles;
 
     public $timestamps = false;
 

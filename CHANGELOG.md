@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### AzGuard bridge on AzGuard v1 (PLAN2.D56, D57; PLAN2.P4.14)
+
+- Changed: `vaulter-azgard` requires `axiomasoft/azguard: ^1.0` instead of
+  `axioma-studio/azguard-core: dev-main` and drops `axioma-studio/azguard-context`.
+- Changed: `AzgardBackedUser` extends AzGuard v1 `AzGuardSubject`; `AzgardGuardAdapter` checks
+  resources with `hasPermission(on: $entity)`, workspaces with `hasPermission(on:
+  AssignmentScopeRef::of($type, $id))` and super-admin with AzGuard's `isSuperAdmin()`, passing
+  `vaulter-azgard.panel_id` as `guard:`.
+- Changed: the real-engine tests of the bridge run on an AzGuard v1 panel (stored grants,
+  assignment scopes, super-admin role) through AzGuard's `InteractsWithAzGuard` helpers.
+- Docs: `permission-drivers` (en, ru) describes the AzGuard v1 panel the host declares.
+
 ### Document validators: writer matrix and event payloads (PLAN2.D35; PLAN2.P4.7)
 
 - Changed `DocumentCreated`, `DocumentContentUpdated` and `DocumentRevisionCreated` to carry

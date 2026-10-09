@@ -5,14 +5,16 @@ declare(strict_types=1);
 return [
     /*
     |--------------------------------------------------------------------------
-    | AzGuard panel context
+    | AzGuard panel
     |--------------------------------------------------------------------------
     |
-    | The AzGuard panel the adapter threads through every check. null (the
-    | default) lets AzGuard resolve the panel from each permission key's first
-    | segment — e.g. `documents.view` resolves the `documents` panel — which
-    | matches Vaulter's `documents.*` ability→permission map. Set an explicit
-    | panel id only when the host groups Vaulter permissions under one.
+    | The AzGuard v1 panel the adapter passes as `guard:` to every check. null
+    | (the default) lets AzGuard select the panel — by a full name
+    | (`app:documents.view`) or a panel prefix in the permission, else the
+    | panel of the request, else the panel of the user model. The default map
+    | below names local keys (`documents.view`) of that panel. Set an explicit
+    | panel id when the user model belongs to several panels or the checks
+    | must not depend on the request panel.
     |
     */
     'panel_id' => env('VAULTER_AZGARD_PANEL'),

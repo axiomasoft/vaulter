@@ -13,7 +13,7 @@ use Vaulter\Azgard\Contracts\AzgardGuard;
 use Vaulter\Configuration\ConfigNormalizer;
 
 /**
- * Wires the AzGuard/Corex permission bridge (master plan P1 #2). It binds the Vaulter
+ * Wires the AzGuard v1 permission bridge (master plan P1 #2). It binds the Vaulter
  * {@see AzgardGuard} seam to an {@see AzgardGuardAdapter} built from the CURRENT
  * request's AzGuard-backed user, so that once the host selects the `azgard` permission
  * driver (`vaulter.access.permission_driver = 'azgard'`) the driver resolves real
@@ -23,11 +23,10 @@ use Vaulter\Configuration\ConfigNormalizer;
  * implement {@see AzgardBackedUser}) the bound guard is the deny-all
  * {@see NullAzgardGuard} — a safe pass-through that raises no access, never a fatal.
  *
- * The host still owns the ecosystem alignment this bridge cannot do for it: ulid morphs
- * (`vaulter.ids.default=ulid` + `corex.ids.strategy=Ulid` + `AZ_GUARD_MORPH_TYPE=ulid`),
- * registering workspace/owner types as Corex morph aliases, and adding
- * `implements AzgardBackedUser` (satisfied for free by AzGuard's HasAzGuard +
- * HasScopedRoles traits) to its User model.
+ * The host still owns the AzGuard panel this bridge cannot declare for it: the User is a
+ * subject model of the panel, the workspace (drive owner) morph aliases are assignment
+ * scope types of the panel, and the User adds `implements AzgardBackedUser` (satisfied
+ * for free by AzGuard's HasAzGuard trait).
  */
 final class VaulterAzgardServiceProvider extends ServiceProvider
 {

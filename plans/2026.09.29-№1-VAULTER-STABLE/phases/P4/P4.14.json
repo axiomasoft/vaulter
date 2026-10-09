@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.14",
   "title": "AzGuard v1 для vaulter-azgard без legacy",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "vaulter-azgard работает поверх AzGuard v1 (axiomasoft/azguard): path-репозитории legacy/0.3 и azguard-context удалены, мост (AzgardPermissionDriver, guard seam, конфиг vaulter-azgard.*) переписан на v1 API, полоса packages/azgard (tests, phpstan) зелёная.",
   "why": "D56: AzGuard 0.3 удалён (azguard@904d3e5); без порта фазовый барьер P4.6 (полоса azgard в validation) недостижим, а legacy запрещён владельцем.",
   "scope": {
@@ -135,6 +135,36 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-08T18:53:26Z"
+  "result": {
+    "started_at": "2026-10-09T05:51:03Z",
+    "finished_at": "2026-10-09T06:02:30Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "session": "9a33771c-3293-4703-8eb5-c3a5bf0e3edb"
+    },
+    "notes": "vaulter-azgard on AzGuard v1 (axiomasoft/azguard ^1.0, path ../../../azguard/packages/core per owner 2026-10-09). AzgardBackedUser extends AzGuardSubject; adapter: hasPermission(on: Model) / hasPermission(on: AssignmentScopeRef) / isSuperAdmin(guard: panel). Real e2e on a v1 panel via InteractsWithAzGuard (scope isolation negative control, undeclared scope type denied). Public API golden regenerated (BREAKING inherited surface, UPGRADE entry). V1 48 passed/0 skipped, V2 pint+phpstan OK, V3 no matches. Receipts: artifacts/P4.14/receipts. Deferred: phase barrier P4.6.",
+    "deviations": [
+      "Scope +packages/azgard/README.md and .github/workflows/azgard.yml (legacy AzGuard pin de09959e removed per D56); no hosted CI run (O-3)."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-09T06:02:30Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-09T06:02:30Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-09T06:02:30Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-09T06:02:30Z"
 }

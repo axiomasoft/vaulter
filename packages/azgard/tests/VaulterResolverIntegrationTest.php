@@ -28,8 +28,8 @@ function azgardDriver(): AzgardPermissionDriver
     return app(AzgardPermissionDriver::class);
 }
 
-it('grants an absolute override from an AzGuard super-admin (wildcard)', function (): void {
-    $user = SpyAzgardUser::make()->grantGlobal(['*']);
+it('grants an absolute override from an AzGuard super-admin', function (): void {
+    $user = SpyAzgardUser::make()->makeSuperAdmin();
     bindAdapterFor($user);
 
     $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 9), driveId: 1);
@@ -38,7 +38,7 @@ it('grants an absolute override from an AzGuard super-admin (wildcard)', functio
 });
 
 it('defers (no override) for a non super-admin', function (): void {
-    $user = SpyAzgardUser::make()->grantGlobal(['documents.view']);
+    $user = SpyAzgardUser::make()->grantOnEntities(['documents.view']);
     bindAdapterFor($user);
 
     $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 9), driveId: 1);

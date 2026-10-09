@@ -6,6 +6,32 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### AzGuard bridge on AzGuard v1 (PLAN2.D56, D57; PLAN2.P4.14)
+
+- **Dependency.** Was: `vaulter-azgard` required `axioma-studio/azguard-core: dev-main` and, for
+  the workspace lane, `axioma-studio/azguard-context` (AzGuard 0.3). Now: it requires
+  `axiomasoft/azguard: ^1.0`; AzGuard 0.3 and `azguard-context` are not supported. Remove both
+  0.3 packages from the host and install AzGuard v1.
+- **User contract.** Was: `Vaulter\Azgard\Contracts\AzgardBackedUser` extended AzGuard 0.3
+  `HasPermissions` + `HasScopedRoles`, satisfied by the `HasAzGuard` + `HasScopedRoles` traits.
+  Now: it extends AzGuard v1 `AzGuard\Contracts\AzGuardSubject`; the user model keeps
+  `implements AzgardBackedUser`, uses only `AzGuard\Concerns\HasAzGuard`, and is a subject
+  model of the AzGuard panel that owns the Vaulter permissions.
+- **Workspace lane.** Was: `hasPermissionIn($type, $id, $permission)` read the request context of
+  `azguard-context`. Now: the adapter asks `hasPermission($permission, on:
+  AssignmentScopeRef::of($type, $id))`. Declare every drive-owner morph alias (`team`, `project`,
+  …) as an assignment scope type of the panel (`PanelBuilder::scopes(...)`) and move contextual
+  grants to grants in that scope; a type the panel does not declare is denied. Morph aliases must
+  match `[a-z0-9][a-z0-9_.-]*` (AzGuard identities are never class names).
+- **Entity lane and super-admin.** Was: `hasScopedPermission($permission, $entity)` read 0.3
+  scoped roles; `isSuperAdmin()` read the `*` wildcard. Now: `hasPermission($permission, on:
+  $entity)` and AzGuard v1 `isSuperAdmin()` (the super-admin role of the panel).
+- **Configuration.** `vaulter-azgard.panel_id` is passed to AzGuard as `guard:`. With `null`,
+  AzGuard selects the panel by a full name or panel prefix in the permission, else the panel of
+  the request, else the panel of the user model. The default `vaulter-azgard.permissions` map
+  (`documents.view`, …) names local keys of that panel; a panel with tenants needs its current
+  tenant. The `Vaulter\Azgard\*` class names and config keys are unchanged.
+
 ### Document events carry the content validators (PLAN2.D35; PLAN2.P4.7)
 
 - **Event payload.** Was: `DocumentCreated(node, version, actorId)`,

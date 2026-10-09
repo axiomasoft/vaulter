@@ -1,7 +1,7 @@
 name: AzGuard
 
-# The vaulter-azgard package (real AzgardGuard adapter delegating to AzGuard's
-# scoped roles / workspace-context checks) is tested in isolation on the fast
+# The vaulter-azgard package (real AzgardGuard adapter delegating to AzGuard v1
+# resource and assignment-scope checks) is tested in isolation on the fast
 # SQLite lane. It has no Postgres-specific critical-section tests, so a single
 # lane is enough. It requires vaulter-core (path-repo), so a change to either package
 # retriggers it.
@@ -38,17 +38,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Composer path repos expect axioma-studio/azguard-core and azguard-context
-      # at packages/{core,context}. Current azguard main moved that tree under
-      # legacy/0.3. de09959e is the last commit that still matches those paths.
-      # Qualifying the renamed dev-main API stays with plan item P2.4.
-      - name: Checkout qualified AzGuard
+      # The Composer path repo expects axiomasoft/azguard (AzGuard v1) at
+      # ../azguard/packages/core. No pin to the 0.x tree (PLAN2.D56): the bridge
+      # follows the current AzGuard main.
+      - name: Checkout AzGuard v1
         run: |
           git init ../azguard
           git -C ../azguard remote add origin https://github.com/axiomasoft/azguard-private.git
-          git -C ../azguard fetch --depth=1 origin de09959e238c92c1f5fdf974cfbc3202a69fbd8e
-          # Path packages version themselves as dev-<branch>. The require is
-          # dev-main, so the qualified commit has to sit on a local main branch.
+          git -C ../azguard fetch --depth=1 origin main
+          # Path packages version themselves as dev-<branch>; main aliases to 1.0.x-dev,
+          # which satisfies the ^1.0 require, so the fetched head sits on a local main branch.
           git -C ../azguard checkout -B main FETCH_HEAD
 
       - name: Setup PHP 8.4

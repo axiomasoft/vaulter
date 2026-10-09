@@ -4,13 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Azgard\Tests\Stubs;
 
-use AzGuard\Contracts\PermissionContext;
-use AzGuard\Models\Role;
-use AzGuard\Registry\Values\PermissionSet;
-use BackedEnum;
+use AzGuard\Concerns\HasAzGuard;
+use AzGuard\Kernel\Identity\AssignmentScopeRef;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User;
-use Illuminate\Support\Collection;
 use UnitEnum;
 use Vaulter\Azgard\Contracts\AzgardBackedUser;
 
@@ -19,34 +16,35 @@ use Vaulter\Azgard\Contracts\AzgardBackedUser;
  * (so it can be the Vaulter actor / Subject) AND an {@see AzgardBackedUser} whose checks
  * return configured results and RECORD their arguments — so a test can both drive the
  * real Vaulter resolver through the adapter and assert exactly what the adapter forwarded
- * (permission keys, panel id, the narrowed entity).
+ * (permission keys, the `on:` resource or assignment scope, the panel).
  *
- * It implements AzGuard's full `HasPermissions` + `HasScopedRoles` contracts (0.2+);
- * only the three the adapter uses (`hasScopedPermission`, `hasPermissionIn`,
- * `isSuperAdmin`) carry behaviour — the rest are inert stubs. This substitutes ONLY the
- * leaf User (a host concern); the adapter and the Vaulter AzgardPermissionDriver above
- * it are the real code.
+ * The AzGuard v1 `HasAzGuard` trait supplies the `AzGuardSubject` surface; only the two
+ * checks the adapter uses (`hasPermission`, `isSuperAdmin`) are overridden with
+ * behaviour — the rest are never reached without a panel. This substitutes ONLY the leaf
+ * User (a host concern); the adapter and the Vaulter AzgardPermissionDriver above it are
+ * the real code.
  */
 final class SpyAzgardUser extends User implements AzgardBackedUser
 {
+    use HasAzGuard;
+
     public $timestamps = false;
 
     protected $guarded = [];
 
-    /** @var list<array{permission: string|UnitEnum, entity: Model, panelId: string|BackedEnum|null}> */
-    public array $scopedCalls = [];
+    /** @var list<array{permission: string|UnitEnum, on: Model|AssignmentScopeRef|null, guard: string|null}> */
+    public array $permissionCalls = [];
 
-    /** @var list<array{contextType: string, contextId: int|string, permission: string|UnitEnum, panelId: string|BackedEnum|null}> */
-    public array $contextCalls = [];
+    /** @var list<string|null> */
+    public array $superAdminCalls = [];
 
-    /** @var list<string> Permission keys the user holds scoped to an entity (any entity). */
-    private array $scopedGrants = [];
+    /** @var list<string> Permission keys the user holds on any resource entity. */
+    private array $entityGrants = [];
 
-    /** @var array<string, list<string>> "$type:$id" => granted permission keys in that workspace. */
-    private array $workspaceGrants = [];
+    /** @var array<string, list<string>> "$type:$id" => granted permission keys in that assignment scope. */
+    private array $scopeGrants = [];
 
-    /** @var list<string> Permission keys the user holds globally ('*' for super-admin). */
-    private array $globalGrants = [];
+    private bool $superAdmin = false;
 
     public static function make(int|string $id = 1): self
     {
@@ -60,9 +58,9 @@ final class SpyAzgardUser extends User implements AzgardBackedUser
     /**
      * @param list<string> $permissions
      */
-    public function grantScoped(array $permissions): self
+    public function grantOnEntities(array $permissions): self
     {
-        $this->scopedGrants = array_merge($this->scopedGrants, $permissions);
+        $this->entityGrants = array_merge($this->entityGrants, $permissions);
 
         return $this;
     }
@@ -72,103 +70,36 @@ final class SpyAzgardUser extends User implements AzgardBackedUser
      */
     public function grantInWorkspace(string $type, int|string $id, array $permissions): self
     {
-        $this->workspaceGrants[$type.':'.$id] = array_merge(
-            $this->workspaceGrants[$type.':'.$id] ?? [],
-            $permissions,
-        );
+        $this->scopeGrants[$type.':'.$id] = array_merge($this->scopeGrants[$type.':'.$id] ?? [], $permissions);
 
         return $this;
     }
 
-    /**
-     * @param list<string> $permissions
-     */
-    public function grantGlobal(array $permissions): self
+    public function makeSuperAdmin(): self
     {
-        $this->globalGrants = array_merge($this->globalGrants, $permissions);
+        $this->superAdmin = true;
 
         return $this;
     }
 
-    // ─── The three checks the adapter actually forwards ──────────────────────
+    // ─── The two checks the adapter actually forwards ────────────────────────
 
-    public function hasScopedPermission(string|UnitEnum $permission, Model $entity, string|BackedEnum|null $panelId = null): bool
+    public function hasPermission(string|UnitEnum $permission, Model|AssignmentScopeRef|null $on = null, ?string $guard = null): bool
     {
-        $this->scopedCalls[] = ['permission' => $permission, 'entity' => $entity, 'panelId' => $panelId];
+        $this->permissionCalls[] = ['permission' => $permission, 'on' => $on, 'guard' => $guard];
+        $key = $permission instanceof UnitEnum ? $permission->name : $permission;
 
-        return in_array($this->key($permission), $this->scopedGrants, strict: true);
+        return match (true) {
+            $on instanceof Model => in_array($key, $this->entityGrants, strict: true),
+            $on instanceof AssignmentScopeRef => in_array($key, $this->scopeGrants[$on->key()] ?? [], strict: true),
+            default => false,
+        };
     }
 
-    public function hasPermissionIn(
-        string $contextType,
-        int|string $contextId,
-        string|UnitEnum $permission,
-        string|BackedEnum|null $panelId = null,
-    ): bool {
-        $this->contextCalls[] = [
-            'contextType' => $contextType,
-            'contextId' => $contextId,
-            'permission' => $permission,
-            'panelId' => $panelId,
-        ];
-
-        return in_array($this->key($permission), $this->workspaceGrants[$contextType.':'.$contextId] ?? [], strict: true);
-    }
-
-    public function isSuperAdmin(string|BackedEnum|null $panelId = null): bool
+    public function isSuperAdmin(Model|AssignmentScopeRef|null $on = null, ?string $guard = null): bool
     {
-        return in_array('*', $this->globalGrants, strict: true);
-    }
+        $this->superAdminCalls[] = $guard;
 
-    // ─── Remaining HasPermissions / HasScopedRoles surface (inert stubs) ─────
-
-    public function hasPermission(string|UnitEnum $permission, string|BackedEnum|null $panelId = null, ?PermissionContext $context = null): bool
-    {
-        return in_array($this->key($permission), $this->globalGrants, strict: true);
-    }
-
-    public function checkPermission(string|UnitEnum $permission, string|BackedEnum|null $panelId = null, ?PermissionContext $context = null): bool
-    {
-        return $this->hasPermission($permission, $panelId, $context);
-    }
-
-    public function permissionSet(string|BackedEnum|null $panelId = null): PermissionSet
-    {
-        return PermissionSet::fromRawKeys($this->globalGrants);
-    }
-
-    /**
-     * @return Collection<int, string>
-     */
-    public function permissions(string|BackedEnum|null $panelId = null): Collection
-    {
-        return new Collection($this->globalGrants);
-    }
-
-    public function flushPermissions(string|BackedEnum|null $panelId = null): void {}
-
-    public function hasContextGuard(): bool
-    {
-        return true;
-    }
-
-    public function assignScopedRole(string|BackedEnum|Role $role, Model $entity, string|BackedEnum|null $panelId = null): static
-    {
-        return $this;
-    }
-
-    public function removeScopedRole(string|BackedEnum|Role $role, Model $entity, string|BackedEnum|null $panelId = null): static
-    {
-        return $this;
-    }
-
-    public function hasScopedRole(string|BackedEnum|Role $role, Model $entity, string|BackedEnum|null $panelId = null): bool
-    {
-        return false;
-    }
-
-    private function key(string|UnitEnum $permission): string
-    {
-        return $permission instanceof UnitEnum ? $permission->name : $permission;
+        return $this->superAdmin;
     }
 }

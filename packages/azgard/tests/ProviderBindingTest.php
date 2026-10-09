@@ -18,7 +18,7 @@ use Vaulter\Azgard\VaulterAzgardServiceProvider;
  * host wires nothing beyond selecting the driver and adding the trait to its User.
  */
 it('binds an adapter over the authenticated AzGuard-backed user', function (): void {
-    $user = SpyAzgardUser::make()->grantGlobal(['*']);
+    $user = SpyAzgardUser::make()->makeSuperAdmin();
     $this->actingAs($user);
 
     $guard = app(AzgardGuard::class);

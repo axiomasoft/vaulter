@@ -2,9 +2,7 @@
 
 declare(strict_types=1);
 
-use AzGuard\Facades\AzGuard;
-use AzGuard\Models\Role;
-use AzGuard\Testing\FakeGrantSource;
+use AzGuard\Kernel\Identity\AssignmentScopeRef;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Subject;
@@ -12,17 +10,16 @@ use Vaulter\Azgard\AzgardGuardAdapter;
 use Vaulter\Azgard\AzgardPermissionDriver;
 use Vaulter\Azgard\Contracts\AzgardGuard;
 use Vaulter\Azgard\Tests\RealAzgard\Stubs\AzgardUser;
-use Vaulter\Azgard\Tests\RealAzgard\Stubs\Roles\DocsViewerRole;
 use Vaulter\Azgard\Tests\RealAzgard\Stubs\WorkspaceModel;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\ValueObjects\Access\OwnerRef;
 
 /**
- * END-TO-END against the REAL AzGuard stack (no doubles): a real Eloquent AzGuard user
- * with real roles / scoped roles / grant sources, the real azguard-context ContextGuard,
- * the real AzgardGuardAdapter and the real Vaulter AzgardPermissionDriver. This is the
- * proof the FakeAzgardGuard unit tests cannot give — that the adapter's calls actually
- * resolve through AzGuard's own engine.
+ * END-TO-END against the REAL AzGuard v1 stack (no doubles): a real Eloquent AzGuard
+ * subject with grants stored through AzGuard's change pipeline (the v1 Testing helpers),
+ * assignment scopes and the super-admin role, the real AzgardGuardAdapter and the real
+ * Vaulter AzgardPermissionDriver. This is the proof the FakeAzgardGuard unit tests cannot
+ * give — that the adapter's calls actually resolve through AzGuard's own engine.
  */
 function realUser(int $id = 1): AzgardUser
 {
@@ -39,83 +36,90 @@ function driver(): AzgardPermissionDriver
     return app(AzgardPermissionDriver::class);
 }
 
-/** Register a fake grant source (a REAL GrantSource in AzGuard's pipeline) for this test. */
-function registerGrants(callable $configure): void
+function projectScope(int $id): AccessScope
 {
-    $fake = new FakeGrantSource;
-    $configure($fake);
-    app()->instance(FakeGrantSource::class, $fake);
-    AzGuard::registerGrantSource(FakeGrantSource::class);
+    return new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: $id), driveId: 1);
 }
 
 it('resolves a real AzGuard super-admin to a Vaulter absolute-allow override', function (): void {
     $user = realUser();
-    registerGrants(fn (FakeGrantSource $f) => $f->wildcard());
+    $this->actingAsSuperAdmin($user);
     bindRealAdapter($user);
 
-    $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 7), driveId: 1);
-
-    // Real chain: Vaulter override → adapter.isSuperAdmin → AzGuard permissionSet->isWildcard.
+    // Real chain: Vaulter override → adapter.isSuperAdmin → AzGuard's super-admin role.
     expect($user->isSuperAdmin())->toBeTrue()
-        ->and(driver()->override($user, $scope))->toBe(Effect::Allow);
+        ->and(driver()->override($user, projectScope(7)))->toBe(Effect::Allow);
 });
 
 it('defers when the real user is not a super-admin', function (): void {
     $user = realUser();
     bindRealAdapter($user);
 
-    $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 7), driveId: 1);
-
     expect($user->isSuperAdmin())->toBeFalse()
-        ->and(driver()->override($user, $scope))->toBeNull();
+        ->and(driver()->override($user, projectScope(7)))->toBeNull();
 });
 
-it('folds a real workspace-context permission into the matching Vaulter role', function (): void {
-    // A real GrantSource grants documents.update; the real azguard-context ContextGuard
-    // answers hasPermissionIn, which the Vaulter driver maps to the writer role.
+it('folds a real assignment-scope permission into the matching Vaulter role, only in that workspace', function (): void {
+    // A grant stored in the project:1 assignment scope; the adapter asks hasPermission
+    // on that scope, which the Vaulter driver maps to the writer role.
     $user = realUser();
-    registerGrants(fn (FakeGrantSource $f) => $f->grant('app', 'documents.update'));
+    $this->actingAsWithPermissions($user, ['documents.update'], on: AssignmentScopeRef::of('project', 1));
     bindRealAdapter($user);
 
-    $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 1), driveId: 1);
-    $decision = driver()->resolve(Subject::ofModel($user), $user, $scope);
+    $decision = driver()->resolve(Subject::ofModel($user), $user, projectScope(1));
 
     expect($decision)->not->toBeNull()
-        ->and($decision->role->key)->toBe(RoleRegistry::WRITER);
+        ->and($decision?->role->key)->toBe(RoleRegistry::WRITER)
+        // Negative control: the same grant does not leak into another workspace.
+        ->and(driver()->resolve(Subject::ofModel($user), $user, projectScope(2)))->toBeNull();
+});
+
+it('lets a tenant-wide grant hold in every inheriting workspace', function (): void {
+    $user = realUser();
+    $this->actingAsWithPermissions($user, ['documents.view']);
+    bindRealAdapter($user);
+
+    $decision = driver()->resolve(Subject::ofModel($user), $user, projectScope(3));
+
+    expect($decision?->role->key)->toBe(RoleRegistry::PREVIEWER);
 });
 
 it('gates real workspace creation through the create permission', function (): void {
     $user = realUser();
-    registerGrants(fn (FakeGrantSource $f) => $f->grant('app', 'documents.create'));
+    $this->actingAsWithPermissions($user, ['documents.create'], on: AssignmentScopeRef::of('project', 5));
     bindRealAdapter($user);
 
-    expect(driver()->canCreateIn($user, new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 5), driveId: 1)))->toBeTrue();
+    expect(driver()->canCreateIn($user, projectScope(5)))->toBeTrue()
+        ->and(driver()->canCreateIn($user, projectScope(6)))->toBeFalse();
+});
+
+it('denies a workspace whose type is not an assignment scope type of the panel (fail-closed)', function (): void {
+    $user = realUser();
+    $this->actingAsWithPermissions($user, ['documents.update']);
+
+    expect((new AzgardGuardAdapter($user))->hasPermissionIn('team', 1, 'documents.update'))->toBeFalse();
 });
 
 it('yields no decision when the real user holds nothing in the workspace', function (): void {
     $user = realUser();
     bindRealAdapter($user);
 
-    $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 1), driveId: 1);
-
-    expect(driver()->resolve(Subject::ofModel($user), $user, $scope))->toBeNull()
-        ->and(driver()->canCreateIn($user, new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 1), driveId: 1)))->toBeFalse();
+    expect(driver()->resolve(Subject::ofModel($user), $user, projectScope(1)))->toBeNull()
+        ->and(driver()->canCreateIn($user, projectScope(1)))->toBeFalse();
 });
 
-it('resolves a real DB-backed scoped role through the adapter (entity lane)', function (): void {
-    // A real role attached to a real workspace entity — scope-precise, DB-backed.
+it('resolves a real entity check through the adapter (entity lane)', function (): void {
+    // The workspace model is an assignment scope type of the panel, so the entity is
+    // that scope: scope-precise and stored.
     $user = realUser();
     $workspace = WorkspaceModel::query()->create(['id' => 1, 'name' => 'Alpha']);
     $other = WorkspaceModel::query()->create(['id' => 2, 'name' => 'Beta']);
-
-    $role = new Role;
-    $role->forceFill(['name' => 'docs-viewer', 'class_name' => DocsViewerRole::class, 'level' => 10])->save();
-    $user->assignScopedRole($role, $workspace);
+    $this->actingAsWithPermissions($user, ['documents.view'], on: $workspace);
 
     $adapter = new AzgardGuardAdapter($user);
 
     expect($adapter->hasScopedPermission('documents.view', $workspace))->toBeTrue()
-        // A permission the role does not grant, and the same role on a different entity.
+        // A permission not granted, and the same grant on a different entity.
         ->and($adapter->hasScopedPermission('documents.update', $workspace))->toBeFalse()
         ->and($adapter->hasScopedPermission('documents.view', $other))->toBeFalse();
 });
