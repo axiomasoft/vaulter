@@ -94,3 +94,16 @@ it('hides the token prefix of share events from a reader without Share', functio
         expect($row->context)->toHaveKey('token_prefix');
     }
 });
+
+it('records no share.updated when the requested values are the stored ones', function (): void {
+    $this->shares->update($this->node->id, $this->minted->link->id, new ShareLinkUpdate(maxUses: 3));
+    Outbox::query()->where('event', EventType::ShareUpdated->value)->delete();
+
+    $this->shares->update($this->node->id, $this->minted->link->id, new ShareLinkUpdate(maxUses: 3));
+    $this->shares->update($this->node->id, $this->minted->link->id, new ShareLinkUpdate(removePassword: true));
+
+    expect(Outbox::query()->where('event', EventType::ShareUpdated->value)->exists())->toBeFalse();
+
+    $this->shares->update($this->node->id, $this->minted->link->id, new ShareLinkUpdate(removeMaxUses: true));
+    expect(Outbox::query()->where('event', EventType::ShareUpdated->value)->sole()->payload['data']['changed'])->toBe(['max_uses']);
+});

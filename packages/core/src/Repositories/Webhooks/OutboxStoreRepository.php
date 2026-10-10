@@ -76,11 +76,13 @@ final readonly class OutboxStoreRepository
                 break;
             }
 
+            // A row a replay turned back to pending after the select is no longer completed
+            // and must survive, so the delete repeats the completion predicate.
             // Delete the just-selected ids via the base query builder: its delete()
             // returns a typed int row count, and these models are hard-deletable (no
             // SoftDeletes scope to route around), so the base delete is the real
             // physical delete, not a soft-delete.
-            $deleted += $this->newQuery()->whereKey($ids)->toBase()->delete();
+            $deleted += $this->completedBefore(query: $this->newQuery(), threshold: $threshold)->whereKey($ids)->toBase()->delete();
         } while (count($ids) === $batch);
 
         return $deleted;

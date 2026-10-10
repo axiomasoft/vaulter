@@ -45,11 +45,6 @@ final readonly class NodeInheritanceChanged extends DomainEvent
         return self::nodeSubject($this->node);
     }
 
-    public function sequence(): int
-    {
-        return $this->node->sequence;
-    }
-
     public function data(): array
     {
         return ['inherits' => $this->inherits];

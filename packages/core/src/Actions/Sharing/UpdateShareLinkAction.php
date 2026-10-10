@@ -77,16 +77,20 @@ final readonly class UpdateShareLinkAction
                 }
                 $attributes['audience'] = $changes->audience;
             }
-            if ($changes->expiresAt !== null) {
+            if ($changes->expiresAt !== null && $share->expires_at?->equalTo($changes->expiresAt) !== true) {
                 $attributes['expires_at'] = $changes->expiresAt;
             }
             if ($changes->removeMaxUses) {
-                $attributes['max_uses'] = null;
-            } elseif ($changes->maxUses !== null) {
+                if ($share->max_uses !== null) {
+                    $attributes['max_uses'] = null;
+                }
+            } elseif ($changes->maxUses !== null && $share->max_uses !== $changes->maxUses) {
                 $attributes['max_uses'] = $changes->maxUses;
             }
             if ($changes->removePassword) {
-                $attributes['password_hash'] = null;
+                if ($share->password_hash !== null) {
+                    $attributes['password_hash'] = null;
+                }
             } elseif ($changes->password !== null && $changes->password !== '') {
                 $attributes['password_hash'] = Hash::make($changes->password);
             }

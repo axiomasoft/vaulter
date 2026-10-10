@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Events\TransactionCommitting;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Exceptions;
@@ -148,6 +149,23 @@ it('rolls back an occurrence that only part of the sinks would store', function 
         ->toThrow(LogicException::class, 'stored only partially')
         ->and(Activity::query()->where('event_id', $eventId)->exists())->toBeFalse()
         ->and(count($this->seen))->toBe(0);
+});
+
+it('does not notify listeners of an attempt whose commit failed and was retried', function (): void {
+    $failed = false;
+    Event::listen(TransactionCommitting::class, function () use (&$failed): void {
+        if (!$failed) {
+            $failed = true;
+
+            throw new PDOException('database is locked');
+        }
+    });
+
+    eventRecorderRename($this, 'beta');
+
+    $outbox = Outbox::query()->where('event', EventType::NodeRenamed->value)->sole();
+    expect($failed)->toBeTrue()
+        ->and(array_column(iterator_to_array($this->seen), 0))->toBe([$outbox->event_id]);
 });
 
 it('writes only the sinks whose feature is enabled', function (bool $activity, bool $webhooks): void {

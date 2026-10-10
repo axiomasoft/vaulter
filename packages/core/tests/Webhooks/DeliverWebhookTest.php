@@ -8,11 +8,13 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Vaulter\Actions\Webhooks\RotateWebhookSecretAction;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Configuration\WebhooksConfig;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
 use Vaulter\Jobs\Webhooks\DeliverWebhook;
 use Vaulter\Models\Webhooks\WebhookDelivery;
+use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Profiles\Profile;
 use Vaulter\Schema\SchemaBuilder;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
@@ -354,3 +356,53 @@ final class FailingSettlementWebhookDelivery extends WebhookDelivery
         throw new RuntimeException('settlement failed');
     }
 }
+
+it('sends an empty data as an object, signed over the exact bytes', function (): void {
+    Http::fake(['https://hooks.test/*' => Http::response('', 200)]);
+    $delivery = WebhookTestHelpers::delivery(WebhookTestHelpers::endpoint(), ['payload' => ['id' => 'evt-empty', 'type' => 'node.renamed', 'data' => []]]);
+
+    runDeliver($delivery);
+
+    Http::assertSent(fn (Request $request): bool => str_contains($request->body(), '"data":{}'));
+});
+
+it('signs with the secret stored when the request is built, not the one read before the claim', function (): void {
+    Http::fake(['https://hooks.test/*' => Http::response('', 200)]);
+    $endpoint = WebhookTestHelpers::endpoint();
+    $delivery = WebhookTestHelpers::delivery($endpoint, ['payload' => ['id' => 'evt-rot', 'type' => 'node.renamed']]);
+    $rotated = false;
+    WebhookEndpoint::retrieved(function (WebhookEndpoint $row) use (&$rotated): void {
+        if (!$rotated) {
+            $rotated = true;
+            app(RotateWebhookSecretAction::class)->execute($row->newQuery()->findOrFail($row->getKey()), overlapSeconds: 0);
+        }
+    });
+
+    runDeliver($delivery);
+
+    $new = $endpoint->refresh()->signing_secret;
+    Http::assertSent(function (Request $request) use ($new): bool {
+        $timestamp = $request->header('webhook-timestamp')[0];
+        $expected = 'v1,'.base64_encode(hash_hmac('sha256', "evt-rot.{$timestamp}.{$request->body()}", WebhookSecret::keyBytes($new), true));
+
+        return $request->header('webhook-signature')[0] === $expected;
+    });
+});
+
+it('delivers when the endpoint is switched back on between the read and the kill', function (): void {
+    Http::fake(['https://hooks.test/*' => Http::response('', 200)]);
+    $endpoint = WebhookTestHelpers::endpoint(['is_active' => false, 'disabled_reason' => 'manual', 'disabled_at' => now()]);
+    $delivery = WebhookTestHelpers::delivery($endpoint, ['payload' => ['id' => 'evt-on', 'type' => 'node.renamed']]);
+    $enabled = false;
+    WebhookEndpoint::retrieved(function (WebhookEndpoint $row) use (&$enabled): void {
+        if (!$enabled && !$row->is_active) {
+            $enabled = true;
+            WebhookEndpoint::query()->whereKey($row->getKey())->toBase()->update(['is_active' => true, 'disabled_reason' => null, 'disabled_at' => null]);
+        }
+    });
+
+    runDeliver($delivery);
+
+    expect($delivery->refresh()->status)->toBe('delivered');
+    Http::assertSentCount(1);
+});

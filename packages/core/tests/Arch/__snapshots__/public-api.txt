@@ -1155,7 +1155,7 @@ Vaulter\Events\Access\NodeInheritanceChanged
   data(): array
   isWebhookEligible(): bool
   scope(): \Vaulter\ValueObjects\Events\EventScope
-  sequence(): int
+  sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
   type(): \Vaulter\Enums\Events\EventType
   readonly \Carbon\CarbonImmutable $occurredAt

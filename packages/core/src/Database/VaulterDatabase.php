@@ -9,12 +9,16 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Connection;
 use Illuminate\Database\DatabaseManager;
 use LogicException;
+use stdClass;
 use Throwable;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Exceptions\Database\ConcurrentUpdateException;
 
 final class VaulterDatabase
 {
+    /** The outermost transaction attempt now running; `aborted` once its commit failed and it was retried. */
+    private ?stdClass $attempt = null;
+
     public function __construct(
         private readonly DatabaseConfig $databaseConfig,
         private readonly DatabaseManager $db,
@@ -40,7 +44,33 @@ final class VaulterDatabase
      */
     public function transaction(Closure $callback, int $attempts = 3): mixed
     {
-        return $this->connection()->transaction(fn (Connection $connection): mixed => $this->scope()->run(static fn (): mixed => $callback($connection)), $attempts);
+        $attempt = null;
+
+        try {
+            return $this->connection()->transaction(function (Connection $connection) use ($callback, &$attempt): mixed {
+                // Laravel repeats the callback when the commit itself fails on a concurrency
+                // error, rolling back without telling its after-commit queue: the callbacks
+                // of the abandoned attempt would still run after the next commit.
+                if ($attempt !== null) {
+                    $attempt->aborted = true;
+                }
+                if ($connection->transactionLevel() === 1) {
+                    $attempt = $this->attempt = (object) ['aborted' => false];
+                }
+
+                return $this->scope()->run(static fn (): mixed => $callback($connection));
+            }, $attempts);
+        } catch (Throwable $exception) {
+            if ($attempt !== null) {
+                $attempt->aborted = true;
+            }
+
+            throw $exception;
+        } finally {
+            if ($this->connection()->transactionLevel() === 0) {
+                $this->attempt = null;
+            }
+        }
     }
 
     /**
@@ -167,9 +197,16 @@ final class VaulterDatabase
         }
     }
 
+    /** Runs $callback once the outermost transaction has committed, never for a rolled-back attempt. */
     public function afterCommit(Closure $callback): void
     {
-        $this->connection()->afterCommit($callback);
+        $attempt = $this->connection()->transactionLevel() > 0 ? $this->attempt : null;
+
+        $this->connection()->afterCommit(static function () use ($callback, $attempt): void {
+            if ($attempt === null || !$attempt->aborted) {
+                $callback();
+            }
+        });
     }
 
     /**

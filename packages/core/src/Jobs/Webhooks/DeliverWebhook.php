@@ -15,6 +15,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Psr\Http\Message\ResponseInterface;
+use stdClass;
 use Throwable;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Configuration\WebhooksConfig;
@@ -104,12 +105,11 @@ final class DeliverWebhook implements ShouldQueue
                 // switch-off lands here. The row dies instead of waiting for a sweep that would
                 // keep re-queueing it.
                 if (!$endpoint->is_active) {
-                    $delivery->newQuery()->whereKey($delivery->getKey())->whereIn('status', ['pending', 'failed'])->toBase()->update([
-                        'status' => 'dead', 'next_retry_at' => null, 'claim_token' => null, 'claim_until' => null,
-                        'last_error' => 'endpoint_disabled', 'updated_at' => now(),
-                    ]);
+                    $endpoint = $this->killWhileInactive(delivery: $delivery, endpoint: $endpoint);
 
-                    return;
+                    if ($endpoint === null) {
+                        return;
+                    }
                 }
 
                 if (!$this->claim(delivery: $delivery)) {
@@ -207,9 +207,17 @@ final class DeliverWebhook implements ShouldQueue
      */
     private function post(WebhookSigner $signer, OutboundUrlGuard $urlGuard, WebhookDelivery $delivery, WebhookEndpoint $endpoint): Response
     {
+        // Read again here: the secrets (and the url) are those of signing time, so a
+        // rotation committed while the job was claiming does not sign with a revoked key.
+        $endpoint->refresh();
         $pinned = $urlGuard->pin($endpoint->url);
 
-        $body = (string) json_encode($delivery->payload);
+        $payload = $delivery->payload;
+        // The array cast turns a stored empty object into [], but receivers get `data` as an object.
+        if (($payload['data'] ?? null) === []) {
+            $payload['data'] = new stdClass;
+        }
+        $body = (string) json_encode($payload);
         $timestamp = now()->getTimestamp();
         $payloadId = $delivery->payload['id'] ?? null;
         $webhookId = is_string($payloadId) && $payloadId !== '' ? $payloadId : (string) $delivery->event_id;
@@ -369,9 +377,11 @@ final class DeliverWebhook implements ShouldQueue
                 'updated_at' => now(),
             ]);
 
+        $endpointId = $delivery->endpoint_id;
+
         // Hosts hear about it only once the disabling is durable.
-        $endpoint->getConnection()->afterCommit(static function () use ($endpoint, $failingSince): void {
-            Event::dispatch(new WebhookEndpointDisabled(endpointId: $endpoint->getKey(), reason: 'failing', failingSince: $failingSince));
+        $endpoint->getConnection()->afterCommit(static function () use ($endpointId, $failingSince): void {
+            Event::dispatch(new WebhookEndpointDisabled(endpointId: $endpointId, reason: 'failing', failingSince: $failingSince));
         });
     }
 
@@ -390,6 +400,34 @@ final class DeliverWebhook implements ShouldQueue
     private function isTerminal(WebhookDelivery $delivery): bool
     {
         return in_array($delivery->status, ['delivered', 'dead'], true);
+    }
+
+    /**
+     * Kills the delivery of an endpoint that is off, deciding on the endpoint row locked
+     * first (the order of settlement and of the endpoint actions), not on the copy read
+     * earlier: a re-enable that committed in between must not leave a dead delivery
+     * behind an active endpoint. Returns the locked endpoint when it is active after all.
+     */
+    private function killWhileInactive(WebhookDelivery $delivery, WebhookEndpoint $endpoint): ?WebhookEndpoint
+    {
+        return $delivery->getConnection()->transaction(function () use ($delivery, $endpoint): ?WebhookEndpoint {
+            $locked = $endpoint->newQuery()->whereKey($endpoint->getKey())->lockForUpdate()->first();
+
+            if (!$locked instanceof WebhookEndpoint) {
+                return null;
+            }
+
+            if ($locked->is_active) {
+                return $locked;
+            }
+
+            $delivery->newQuery()->whereKey($delivery->getKey())->whereIn('status', ['pending', 'failed'])->toBase()->update([
+                'status' => 'dead', 'next_retry_at' => null, 'claim_token' => null, 'claim_until' => null,
+                'last_error' => 'endpoint_disabled', 'updated_at' => now(),
+            ]);
+
+            return null;
+        });
     }
 
     private function claim(WebhookDelivery $delivery): bool

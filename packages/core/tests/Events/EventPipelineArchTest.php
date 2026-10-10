@@ -50,7 +50,8 @@ function eventPipelineDirectDispatches(): array
                 continue;
             }
             foreach (file($path) ?: [] as $number => $line) {
-                if (preg_match('/\bevent\(\s*new\b|Event::dispatch\(/', $line) === 1) {
+                // An operational notice (an endpoint switched itself off) is not a domain event: it has no activity or outbox row.
+                if (preg_match('/\bevent\(\s*new\b|Event::dispatch\(/', $line) === 1 && !str_contains($line, 'WebhookEndpointDisabled')) {
                     $offenders[] = substr($path, strlen($root) + 1).':'.($number + 1);
                 }
             }

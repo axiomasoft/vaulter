@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Models\Webhooks\WebhookDelivery;
+use Vaulter\Repositories\Webhooks\OutboxStoreRepository;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 
 /**
@@ -76,4 +77,21 @@ it('keeps a completed row inside the retention window', function (): void {
 
     expect(Outbox::query()->whereKey($recent->getKey())->exists())->toBeTrue()
         ->and(Outbox::query()->whereKey($old->getKey())->exists())->toBeFalse();
+});
+
+it('keeps a completed outbox row that a replay turned pending between the select and the delete', function (): void {
+    $row = WebhookTestHelpers::outbox(['status' => 'completed', 'fanned_out_at' => Carbon::now()->subDays(40), 'legacy_fanout' => true]);
+    $replayed = false;
+    DB::beforeExecuting(function (string $sql) use ($row, &$replayed): void {
+        if (!$replayed && str_starts_with($sql, 'delete from')) {
+            $replayed = true;
+            DB::table($row->getTable())->where('id', $row->getKey())->update(['status' => 'pending', 'fanned_out_at' => null]);
+        }
+    });
+
+    $deleted = app(OutboxStoreRepository::class)->pruneCompletedBefore(Carbon::now()->subDays(30));
+
+    expect($replayed)->toBeTrue()
+        ->and($deleted)->toBe(0)
+        ->and(Outbox::query()->whereKey($row->getKey())->value('status'))->toBe('pending');
 });

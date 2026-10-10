@@ -33,7 +33,8 @@ it('records access.inheritance_changed for a restriction and its restoration', f
 
     expect($events->map(fn (Outbox $row): array => $row->payload['data'])->all())->toBe([['inherits' => false], ['inherits' => true]])
         ->and($events[0]->payload['subject'])->toBe(['type' => 'node', 'id' => (string) $this->child->id])
-        ->and($events[0]->payload['sequence'])->toBeInt()
+        // Access changes are not node versions: a sequence here would look stale next to the node's last mutation.
+        ->and($events[0]->payload['sequence'])->toBeNull()
         ->and(Activity::query()->where('verb', EventType::InheritanceChanged->value)->count())->toBe(2)
         ->and(Activity::query()->where('verb', EventType::InheritanceChanged->value)->orderBy('id')->first()->event_id)->toBe($events[0]->event_id);
 });
