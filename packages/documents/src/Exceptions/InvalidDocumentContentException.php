@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Exceptions;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 final class InvalidDocumentContentException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     private const string PROBLEM_CODE = 'invalid_document_content';
 
     private const int HTTP_STATUS = 422;
@@ -140,7 +143,7 @@ final class InvalidDocumentContentException extends VaulterException implements 
     /**
      * @return array<string, mixed>
      */
-    protected function renderExtras(): array
+    public function problemDetails(): array
     {
         return ['reason' => $this->reason];
     }

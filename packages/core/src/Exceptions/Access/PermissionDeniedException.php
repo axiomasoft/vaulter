@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Access;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 final class PermissionDeniedException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     private const string PROBLEM_CODE = 'permission_denied';
 
     private const int HTTP_STATUS = 403;

@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Policy;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /** The operation would place a node deeper below the root than the drive policy's maxFolderDepth. */
 final class TreeDepthLimitExceededException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     private function __construct(string $message, public readonly int $limit)
     {
         parent::__construct($message);
@@ -35,7 +38,7 @@ final class TreeDepthLimitExceededException extends VaulterException implements 
     /**
      * @return array<string, mixed>
      */
-    protected function renderExtras(): array
+    public function problemDetails(): array
     {
         return ['limit' => $this->limit];
     }

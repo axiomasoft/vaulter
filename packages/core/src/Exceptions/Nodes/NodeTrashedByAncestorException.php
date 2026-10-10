@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Nodes;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Models\Drive\Node;
@@ -11,6 +12,8 @@ use Vaulter\Models\Drive\Node;
 /** A node trashed together with a folder is restored through that folder (PLAN2.D37). */
 final class NodeTrashedByAncestorException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     private function __construct(string $message, private readonly int|string $trashRootId)
     {
         parent::__construct($message);
@@ -43,8 +46,7 @@ final class NodeTrashedByAncestorException extends VaulterException implements P
     }
 
     /** @return array<string, mixed> */
-    #[\Override]
-    protected function renderExtras(): array
+    public function problemDetails(): array
     {
         return ['context' => ['trash_root_id' => (string) $this->trashRootId]];
     }

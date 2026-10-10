@@ -16,12 +16,14 @@ use Vaulter\Documents\Console\MakeExporterCommand;
 use Vaulter\Documents\Contracts\DocumentExporter;
 use Vaulter\Documents\Contracts\DocumentType;
 use Vaulter\Documents\Export\DocumentExporterRegistry;
+use Vaulter\Documents\Http\Problems\DocumentsProblemCodes;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Providers\BindingsRegistrar;
 use Vaulter\Documents\Providers\CollaborationRegistrar;
 use Vaulter\Documents\Providers\HttpRegistrar;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Vaulter\Http\Problems\ProblemCatalog;
 use Vaulter\Models\Drive\Node;
 
 /**
@@ -33,7 +35,7 @@ final class VaulterDocumentsServiceProvider extends PackageServiceProvider
 {
     public function configurePackage(Package $package): void
     {
-        $package->name('vaulter-documents')->hasConfigFile()->hasCommand(MakeDocumentTypeCommand::class)->hasCommand(MakeExporterCommand::class);
+        $package->name('vaulter-documents')->hasConfigFile()->hasTranslations()->hasCommand(MakeDocumentTypeCommand::class)->hasCommand(MakeExporterCommand::class);
 
         (new HttpRegistrar)->configure($package);
     }
@@ -42,6 +44,8 @@ final class VaulterDocumentsServiceProvider extends PackageServiceProvider
     {
         (new BindingsRegistrar($this->app))->register();
         (new CollaborationRegistrar($this->app))->register();
+        $this->app->singleton(DocumentsProblemCodes::class);
+        $this->app->tag(DocumentsProblemCodes::class, ProblemCatalog::TAG);
     }
 
     public function packageBooted(): void

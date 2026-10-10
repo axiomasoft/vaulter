@@ -30,7 +30,9 @@ use Vaulter\Exceptions\Nodes\StorageNotFoundException;
 use Vaulter\Exceptions\Profiles\UnknownProfileException;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Exceptions\Webhooks\BlockedOutboundUrlException;
+use Vaulter\Http\Problems\ProblemCatalog;
 use Vaulter\Testing\NullPermissionDriver;
+use Vaulter\Tests\Support\ProblemProbeRoutes;
 
 it('renders each domain exception with its stable code and HTTP status', function (
     VaulterException $exception,
@@ -66,6 +68,24 @@ it('renders each domain exception with its stable code and HTTP status', functio
 
     if ($exception instanceof OffsetMismatchException) {
         $response->assertHeader('Upload-Offset', '7')->assertHeader('Tus-Resumable', '1.0.0');
+    }
+
+    // The same exception through the versioned surface: problem+json with the catalogue
+    // status, and the machine-readable extras as `errors`/`meta`, never a 500.
+    ProblemProbeRoutes::register(['case' => $exception]);
+    $problem = $this->getJson(ProblemProbeRoutes::path('case'))
+        ->assertStatus($status)
+        ->assertHeader('Content-Type', 'application/problem+json')
+        ->assertJsonPath('code', $code)
+        ->assertJsonPath('status', $status);
+
+    expect($problem->status())->not->toBe(500)
+        ->and($problem->json())->not->toHaveKey('message')
+        ->and($problem->getContent())->not->toContain('[Vaulter]')
+        ->and(app(ProblemCatalog::class)->all())->toHaveKey($code)
+        ->and($problem->json('meta'))->toBe(array_diff_key($extras, ['errors' => true]) ?: []);
+    if ($exception instanceof OffsetMismatchException) {
+        $problem->assertHeader('Upload-Offset', '7')->assertHeader('Tus-Resumable', '1.0.0');
     }
 })->with([
     'permission denied' => [PermissionDeniedException::forAbility('update'), 'permission_denied', 403],

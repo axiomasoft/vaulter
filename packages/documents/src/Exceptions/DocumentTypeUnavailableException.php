@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Exceptions;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
@@ -14,6 +15,8 @@ use Vaulter\Exceptions\VaulterException;
  */
 final class DocumentTypeUnavailableException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     public function __construct(public readonly string $type)
     {
         parent::__construct(sprintf(
@@ -36,8 +39,7 @@ final class DocumentTypeUnavailableException extends VaulterException implements
     /**
      * @return array<string, mixed>
      */
-    #[\Override]
-    protected function renderExtras(): array
+    public function problemDetails(): array
     {
         return ['context' => ['type' => $this->type]];
     }

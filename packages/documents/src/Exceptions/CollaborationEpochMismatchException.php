@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Exceptions;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
@@ -15,6 +16,8 @@ use Vaulter\Exceptions\VaulterException;
  */
 final class CollaborationEpochMismatchException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     public function __construct(
         public readonly int $expected,
         public readonly int $actual,
@@ -40,8 +43,7 @@ final class CollaborationEpochMismatchException extends VaulterException impleme
     /**
      * @return array<string, mixed>
      */
-    #[\Override]
-    protected function renderExtras(): array
+    public function problemDetails(): array
     {
         return ['context' => ['expected' => $this->expected, 'actual' => $this->actual]];
     }

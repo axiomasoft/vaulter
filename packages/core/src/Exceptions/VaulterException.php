@@ -9,34 +9,39 @@ use Illuminate\Http\Request;
 use RuntimeException;
 use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Exceptions\Contracts\ProblemException;
+use Vaulter\Http\Problems\ProblemRenderer;
 
 /**
  * Base for every Vaulter error — catch this to handle all package failures.
  */
 class VaulterException extends RuntimeException
 {
+    /**
+     * The `{message, code}` body of the unversioned routes; the versioned routes render
+     * problem+json through {@see ProblemRenderer} instead.
+     */
     public function render(Request $request): JsonResponse|false
     {
         if (!$this instanceof ProblemException) {
             return false;
         }
 
-        if (!$request->expectsJson() && !$request->is(trim(app(RoutesConfig::class)->prefix(), '/').'/*')) {
+        // The versioned routes answer problem+json; Laravel renders an exception's own
+        // render() before the registered renderables, so step aside for them here.
+        $routes = app(RoutesConfig::class);
+        if (ProblemRenderer::isVersioned($request, $routes)) {
+            return false;
+        }
+
+        if (!$request->expectsJson() && !$request->is(trim($routes->prefix(), '/').'/*')) {
             return false;
         }
 
         return new JsonResponse(
-            ['message' => $this->getMessage(), 'code' => $this->problemCode()] + $this->renderExtras(),
+            ['message' => $this->getMessage(), 'code' => $this->problemCode()] + $this->problemDetails(),
             $this->httpStatus(),
+            ProblemRenderer::headersOf($this),
         );
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    protected function renderExtras(): array
-    {
-        return [];
     }
 
     protected static function docs(string $anchor): string

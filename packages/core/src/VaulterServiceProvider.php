@@ -48,6 +48,7 @@ final class VaulterServiceProvider extends PackageServiceProvider
         (new AccessRegistrar)->register($this->app);
         (new EventsRegistrar)->register($this->app);
         (new ConsoleRegistrar)->register($this->app);
+        (new HttpRegistrar)->register($this->app);
     }
 
     public function packageBooted(): void

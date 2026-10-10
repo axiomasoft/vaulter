@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Nodes;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 final class StaleNodeException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     public function __construct()
     {
         parent::__construct('[Vaulter] The node changed; reload it before retrying.');

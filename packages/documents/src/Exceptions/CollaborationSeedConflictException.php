@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Exceptions;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
@@ -17,6 +18,8 @@ use Vaulter\Exceptions\VaulterException;
  */
 final class CollaborationSeedConflictException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     public function __construct(
         public readonly string $nodeId,
         public readonly ?int $expectedStateVersion = null,
@@ -50,8 +53,7 @@ final class CollaborationSeedConflictException extends VaulterException implemen
     /**
      * @return array<string, mixed>
      */
-    #[\Override]
-    protected function renderExtras(): array
+    public function problemDetails(): array
     {
         return ['context' => array_filter([
             'node_id' => $this->nodeId,

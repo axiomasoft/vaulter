@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Policy;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
@@ -14,6 +15,8 @@ use Vaulter\Exceptions\VaulterException;
  */
 final class FileSizeLimitExceededException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     private function __construct(string $message, public readonly int $limit)
     {
         parent::__construct($message);
@@ -39,7 +42,7 @@ final class FileSizeLimitExceededException extends VaulterException implements P
     /**
      * @return array<string, mixed>
      */
-    protected function renderExtras(): array
+    public function problemDetails(): array
     {
         return ['limit' => $this->limit];
     }

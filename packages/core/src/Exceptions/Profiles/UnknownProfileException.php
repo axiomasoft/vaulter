@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Profiles;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
@@ -13,6 +14,8 @@ use Vaulter\Exceptions\VaulterException;
  */
 final class UnknownProfileException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     private const string PROBLEM_CODE = 'unknown_profile';
 
     private const int HTTP_STATUS = 422;

@@ -21,6 +21,8 @@ use Vaulter\Exceptions\Registry\RegistryFrozenException;
 use Vaulter\Exceptions\Sharing\ShareLinkTtlExceededException;
 use Vaulter\Exceptions\Sharing\ShareRoleNotAllowedException;
 use Vaulter\Exceptions\VaulterException;
+use Vaulter\Http\Problems\ProblemCatalog;
+use Vaulter\Tests\Support\ProblemProbeRoutes;
 
 it('renders the documented domain code and HTTP status', function (VaulterException $exception, string $code, int $status): void {
     $path = trim(app(RoutesConfig::class)->prefix(), '/').'/__domain_status';
@@ -30,6 +32,22 @@ it('renders the documented domain code and HTTP status', function (VaulterExcept
 
     $this->getJson($path)->assertStatus($status)->assertJsonPath('code', $code);
     $this->get($path, ['Accept' => 'text/html'])->assertStatus($status)->assertJsonPath('code', $code);
+
+    // The same exception through the versioned surface: problem+json with the catalogue
+    // status, never the legacy body and never a 500 for a domain exception.
+    ProblemProbeRoutes::register(['case' => $exception]);
+    $problem = $this->getJson(ProblemProbeRoutes::path('case'))
+        ->assertStatus($status)
+        ->assertHeader('Content-Type', 'application/problem+json')
+        ->assertJsonPath('code', $code)
+        ->assertJsonPath('status', $status);
+
+    expect($problem->json())->not->toHaveKey('message')
+        ->and($problem->getContent())->not->toContain('[Vaulter]')
+        ->and(app(ProblemCatalog::class)->all())->toHaveKey($code);
+    if ($status < 500) {
+        expect($problem->status())->not->toBe(500);
+    }
 })->with([
     'unsupported kind' => [new UnsupportedNodeKindException, 'unsupported_node_kind', 409],
     'invalid name' => [InvalidNodeNameException::forName('', InvalidNodeNameException::EMPTY), 'invalid_node_name', 422],

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Webhooks;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
@@ -14,6 +15,8 @@ use Vaulter\Exceptions\VaulterException;
  */
 final class InvalidWebhookSignatureException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     public static function missingHeaders(): self
     {
         return new self('[Vaulter] Webhook verification failed: webhook-id, webhook-timestamp or webhook-signature header is missing. '

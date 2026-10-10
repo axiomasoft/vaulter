@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Sharing;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /** The share link would outlive the drive policy's maxShareLinkTtlDays (PLAN2.D47). */
 final class ShareLinkTtlExceededException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     private function __construct(string $message, public readonly int $limitDays)
     {
         parent::__construct($message);
@@ -36,7 +39,7 @@ final class ShareLinkTtlExceededException extends VaulterException implements Pr
     /**
      * @return array<string, mixed>
      */
-    protected function renderExtras(): array
+    public function problemDetails(): array
     {
         return ['limit_days' => $this->limitDays];
     }

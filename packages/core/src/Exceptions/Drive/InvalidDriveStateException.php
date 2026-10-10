@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace Vaulter\Exceptions\Drive;
 
 use Vaulter\Enums\Drive\DriveStatus;
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 final class InvalidDriveStateException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     public static function for(int|string $driveId, string $operation, DriveStatus|string $status): self
     {
         $status = $status instanceof DriveStatus ? $status->value : $status;

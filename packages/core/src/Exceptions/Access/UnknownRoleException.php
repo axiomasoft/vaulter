@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Access;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 final class UnknownRoleException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     public static function for(string $key, ?int $version = null): self
     {
         return new self(sprintf('[Vaulter] Unknown role [%s]. ', $version === null ? $key : $key.' v'.$version)

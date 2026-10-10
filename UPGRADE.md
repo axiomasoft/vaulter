@@ -6,6 +6,24 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Problem Details for the versioned API (PLAN2.P6.2, D62–D65)
+
+| Was | Now |
+|---|---|
+| Errors of every route: `{"message": "[Vaulter] … Docs: …", "code": "…"}` | Versioned routes (`vaulter.v1.*`, `{routes.prefix}/v1/…`): `application/problem+json` with `type`, `title`, `status`, `code`, `detail`, `request_id`, `errors`, `meta`. The unversioned routes keep `{message, code}` until they are removed |
+| `renderExtras(): array` (`protected`) on an exception | `problemDetails(): array` (public, part of `ProblemException`); an `errors` key is the field map, the rest is `meta` |
+| `ConcurrentUpdateException::render()` / `OffsetMismatchException::render()` set `Retry-After` / `Upload-Offset` | `problemHeaders(): array` of `ProvidesProblemDetails`; both renderings send the same headers |
+| An implementation of `ProblemException` had two methods | Add `problemDetails()`: `use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;` gives `[]` |
+| No 428 | `PreconditionRequiredException` (`precondition_required`) |
+| Error codes listed by hand in `docs/guide/errors.md` | `ProblemCatalog` is the single list; `docs/reference/errors.md` is generated (`php artisan vaulter:errors:reference --check` in CI) |
+
+- A code you add must be in a `ProblemCodeSource` (tag `vaulter.problem_codes` from your provider), in
+  `lang/{en,ru}/problems.php` and in the reference page together.
+- `title` and `detail` are localized and may change; branch on `code`.
+- The exception message never reaches a versioned response; read it in the log.
+- The `Docs:` links inside exception messages still point at `docs/guide/errors.md`; the `type` URI of a
+  problem points at `docs/reference/errors.md#<code>`.
+
 ### Drive change journal (PLAN2.P5.5, D50/D59/D61, D58–D60/D35)
 
 Run `php artisan migrate`: `2026_10_10_000004_drive_changes` creates `v_drive_change_heads` and

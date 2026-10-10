@@ -23,6 +23,7 @@ $core = dirname(__DIR__).'/packages/core/tests';
 // they run under that package's own Pest suite. The shared DriveTestHelpers stays in
 // core/tests/Drive (a plain builder used by many kernel suites), it is not a test case.
 uses(TestCase::class)->in(
+    $core.'/Http',
     $core.'/Observability/Binding',
     $core.'/Observability/Tracing',
 );

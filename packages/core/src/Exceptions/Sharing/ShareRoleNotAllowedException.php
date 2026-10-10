@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Vaulter\Exceptions\Sharing;
 
 use Vaulter\Enums\Sharing\ShareAudience;
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /** A share link cannot carry this role for this audience (PLAN2.D47). */
 final class ShareRoleNotAllowedException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     public static function for(string $role, ShareAudience $audience): self
     {
         return new self(sprintf('[Vaulter] A share link cannot carry the role [%s] for the audience [%s]. ', $role, $audience->value)

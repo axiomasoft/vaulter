@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Drive;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /** An archived drive is read-only (PLAN2.D37). */
 final class DriveArchivedException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     public static function forDrive(int|string $driveId): self
     {
         return new self(

@@ -4,6 +4,15 @@ Every Vaulter exception extends `Vaulter\Exceptions\VaulterException` and carrie
 message in the form `[Vaulter] {what}. Why: {…}. Fix: {…}. Docs: {url}` where the URL
 points at the matching anchor below.
 
+## problem+json
+
+Every failure of a versioned `/v1` route answers `application/problem+json` (RFC 9457) with
+`type`, `title`, `status`, `code`, `detail`, `request_id`, `errors` and `meta`. Branch on `code`, a
+stable SemVer contract; `title` and `detail` are localized text from `lang/` and may change, and
+the exception message of the log never reaches the body. The full list of codes, generated from
+the code catalogue, is the [error code reference](/reference/errors). The table below describes
+the `{message, code}` body of the unversioned routes, which the versioned routes replace.
+
 ## domain-http-errors
 
 Domain exceptions implement `Vaulter\Exceptions\Contracts\ProblemException`.
@@ -75,6 +84,13 @@ needs). `document_state_mismatch` and `collaboration_epoch_mismatch` include
 `context.max_bytes`; `document_type_unavailable` and
 `document_content_degraded` include `context.type`.
 Offset mismatches include `Upload-Offset` and `Tus-Resumable: 1.0.0` headers.
+
+## precondition-required
+
+`PreconditionRequiredException` (428 `precondition_required`, `meta.header`, `meta.reason`) — a
+request that changes state against a representation did not say which one it saw: the `If-Match`
+header is missing (`reason: missing`) or is `*`, which matches any representation and so cannot
+detect a lost update (`reason: wildcard`). Read the resource and send its `ETag` back in `If-Match`.
 
 ## node-not-found
 

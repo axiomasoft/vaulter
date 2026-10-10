@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Exceptions;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
@@ -13,6 +14,8 @@ use Vaulter\Exceptions\VaulterException;
  */
 final class DocumentStateTooLargeException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     public function __construct(
         public readonly int $sizeBytes,
         public readonly int $maxBytes,
@@ -38,8 +41,7 @@ final class DocumentStateTooLargeException extends VaulterException implements P
     /**
      * @return array<string, mixed>
      */
-    #[\Override]
-    protected function renderExtras(): array
+    public function problemDetails(): array
     {
         return ['context' => ['size_bytes' => $this->sizeBytes, 'max_bytes' => $this->maxBytes]];
     }

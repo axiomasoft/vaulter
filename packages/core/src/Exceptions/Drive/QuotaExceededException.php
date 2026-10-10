@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Drive;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
@@ -14,6 +15,8 @@ use Vaulter\Exceptions\VaulterException;
  */
 class QuotaExceededException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     private const string PROBLEM_CODE = 'quota_exceeded';
 
     private const int HTTP_STATUS = 413;

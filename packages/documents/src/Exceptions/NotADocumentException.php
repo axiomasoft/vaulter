@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Exceptions;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Support\Identity;
@@ -15,6 +16,8 @@ use Vaulter\Support\Identity;
  */
 final class NotADocumentException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     private const string PROBLEM_CODE = 'not_a_document';
 
     private const int HTTP_STATUS = 409;

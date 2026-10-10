@@ -22,6 +22,12 @@ final readonly class RoutesConfig
         return is_string($value) ? $value : 'api/vaulter';
     }
 
+    /** The prefix of the versioned REST surface, without leading or trailing slash. */
+    public function versionedPrefix(): string
+    {
+        return trim($this->prefix(), '/').'/v1';
+    }
+
     /** @return list<string> */
     public function authenticatedMiddleware(): array
     {

@@ -26,6 +26,7 @@ outbox relay, webhook retry, webhook prune) are designed to be scheduled.
 | `vaulter:webhooks:legacy-fanout` | List or replay pre-1.0 outbox rows whose fan-out cannot be proven |
 | `vaulter:webhooks:redeliver` | Send finished webhook deliveries again with the same `webhook-id` |
 | `vaulter:events:reference` | Regenerate (or `--check`) the event catalogue table in the reference docs |
+| `vaulter:errors:reference` | Regenerate (or `--check`) the problem-code reference in the docs |
 | `vaulter:changes:prune` | Delete drive change-journal entries past `changes.retention_days` |
 | `vaulter:changes:reset` | Expire every change cursor of a drive, forcing its clients to resynchronize |
 
@@ -251,6 +252,21 @@ maintenance command for the Vaulter repository, not for host applications.
 ```bash
 php artisan vaulter:events:reference
 php artisan vaulter:events:reference --check
+```
+
+---
+
+## `vaulter:errors:reference`
+
+Regenerate the problem-code reference between the `<!-- vaulter:errors:start -->` and
+`<!-- vaulter:errors:end -->` markers of `docs/reference/errors.md` and
+`docs/ru/reference/errors.md` from the problem-code catalogue. With `--check` nothing is
+written and the exit code is 1 when a page differs (for CI). It is a maintenance command for the
+Vaulter repository, not for host applications.
+
+```bash
+php artisan vaulter:errors:reference
+php artisan vaulter:errors:reference --check
 ```
 
 ---

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Nodes;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
@@ -13,6 +14,8 @@ use Vaulter\Exceptions\VaulterException;
  */
 final class InvalidPropertiesException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     public const string NAMESPACE = 'namespace';
 
     public const string KEY = 'key';
@@ -62,7 +65,7 @@ final class InvalidPropertiesException extends VaulterException implements Probl
     /**
      * @return array<string, mixed>
      */
-    protected function renderExtras(): array
+    public function problemDetails(): array
     {
         return ['reason' => $this->reason];
     }

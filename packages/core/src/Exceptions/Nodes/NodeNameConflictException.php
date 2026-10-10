@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Nodes;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
@@ -14,6 +15,8 @@ use Vaulter\Exceptions\VaulterException;
  */
 final class NodeNameConflictException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     private const string PROBLEM_CODE = 'node_name_conflict';
 
     private const int HTTP_STATUS = 409;
@@ -42,7 +45,7 @@ final class NodeNameConflictException extends VaulterException implements Proble
     /**
      * @return array<string, mixed>
      */
-    protected function renderExtras(): array
+    public function problemDetails(): array
     {
         return ['errors' => ['name' => [$this->getMessage()]]];
     }

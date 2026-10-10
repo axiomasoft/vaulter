@@ -4,11 +4,28 @@
 сообщение в формате `[Vaulter] {what}. Why: {…}. Fix: {…}. Docs: {url}`, где URL
 указывает на соответствующий якорь ниже.
 
+## problem+json
+
+Любая ошибка версионированного маршрута `/v1` отвечает `application/problem+json` (RFC 9457) с
+полями `type`, `title`, `status`, `code`, `detail`, `request_id`, `errors` и `meta`. Ветвитесь по
+`code` — стабильному контракту SemVer; `title` и `detail` — локализованный текст из `lang/` и
+могут меняться, а сообщение исключения из лога в тело не попадает. Полный список кодов,
+сгенерированный из каталога, — [справочник кодов ошибок](/ru/reference/errors). Разделы ниже
+описывают исключения PHP; неверсионированные маршруты по-прежнему отвечают `{message, code}`.
+
 ## document-not-found
 
 `DocumentNotFoundException` — запрошенный id документа не существует, был мягко удалён
 или лежит вне текущего workspace. Проверьте id и фильтр по workspace. API отображает
 это на `404`.
+
+## precondition-required
+
+`PreconditionRequiredException` (428 `precondition_required`, `meta.header`, `meta.reason`) —
+запрос, меняющий состояние относительно представления, не сказал, какое именно он видел:
+заголовок `If-Match` отсутствует (`reason: missing`) или равен `*`, который совпадает с любым
+представлением и потому не ловит потерянное обновление (`reason: wildcard`). Прочитайте ресурс и
+верните его `ETag` в `If-Match`.
 
 ## permission-denied
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Nodes;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
@@ -15,6 +16,8 @@ use Vaulter\Exceptions\VaulterException;
  */
 final class InvalidNodeNameException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     public const string EMPTY = 'empty';
 
     public const string PATH_ALIAS = 'path_alias';
@@ -76,7 +79,7 @@ final class InvalidNodeNameException extends VaulterException implements Problem
     /**
      * @return array<string, mixed>
      */
-    protected function renderExtras(): array
+    public function problemDetails(): array
     {
         return ['reason' => $this->reason, 'errors' => ['name' => [$this->getMessage()]]];
     }

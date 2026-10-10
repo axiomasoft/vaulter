@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Exceptions;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /** Raised while the application boots, so it is never rendered for a request. */
 final class DuplicateDocumentTypeException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     public static function forKey(string $key): self
     {
         return new self(sprintf(

@@ -265,6 +265,7 @@ Vaulter\Configuration\RoutesConfig
   publicMiddleware(): array
   publicRateLimit(): int
   uploadsRateLimit(): int
+  versionedPrefix(): string
 
 Vaulter\Configuration\ScanConfig
   __construct(\Illuminate\Contracts\Config\Repository $config)
@@ -522,6 +523,8 @@ Vaulter\Exceptions\Access\UnknownRoleException
   getTraceAsString(): string
   httpStatus(): int
   problemCode(): string
+  problemDetails(): array
+  problemHeaders(): array
   render(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse|false
 
 Vaulter\Data\Sharing\ShareLinkInput
@@ -624,6 +627,8 @@ Vaulter\Exceptions\Access\MissingActorException
   getTraceAsString(): string
   httpStatus(): int
   problemCode(): string
+  problemDetails(): array
+  problemHeaders(): array
   render(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse|false
   required(): \self
 
@@ -641,6 +646,8 @@ Vaulter\Exceptions\Profiles\ProfileRestrictionException
   getTraceAsString(): string
   httpStatus(): int
   problemCode(): string
+  problemDetails(): array
+  problemHeaders(): array
   render(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse|false
 
 Vaulter\Profiles\Profile
@@ -1054,6 +1061,7 @@ Vaulter\Http\Support\HttpResourceResolver
 Vaulter\Exceptions\Contracts\ProblemException
   httpStatus(): int
   problemCode(): string
+  problemDetails(): array
 
 Vaulter\Exceptions\Nodes\NodeNotFoundException
   forId(int|string $id): \self
@@ -1077,6 +1085,8 @@ Vaulter\Exceptions\Schema\UpgradePreflightException
   getTraceAsString(): string
   httpStatus(): int
   problemCode(): string
+  problemDetails(): array
+  problemHeaders(): array
   render(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse|false
 
 Vaulter\Enums\Events\EventType

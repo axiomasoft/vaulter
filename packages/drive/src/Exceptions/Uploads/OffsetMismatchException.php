@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Exceptions\Uploads;
 
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
@@ -23,6 +22,8 @@ use Vaulter\Exceptions\VaulterException;
  */
 final class OffsetMismatchException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     private const string PROBLEM_CODE = 'upload_offset_mismatch';
 
     private const int HTTP_STATUS = 409;
@@ -47,18 +48,13 @@ final class OffsetMismatchException extends VaulterException implements ProblemE
         return self::HTTP_STATUS;
     }
 
-    public function render(Request $request): JsonResponse|false
+    /**
+     * A tus client needs the authoritative offset and protocol version to resume.
+     *
+     * @return array<string, string>
+     */
+    public function problemHeaders(): array
     {
-        $response = parent::render($request);
-
-        if ($response === false) {
-            return false;
-        }
-
-        // A tus client needs the authoritative offset and protocol version to resume.
-        $response->headers->set('Upload-Offset', (string) $this->serverOffset);
-        $response->headers->set('Tus-Resumable', '1.0.0');
-
-        return $response;
+        return ['Upload-Offset' => (string) $this->serverOffset, 'Tus-Resumable' => '1.0.0'];
     }
 }

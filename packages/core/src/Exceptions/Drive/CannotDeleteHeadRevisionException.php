@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Drive;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Support\Identity;
@@ -11,6 +12,8 @@ use Vaulter\Support\Identity;
 /** The current revision of a file is its content; it goes only with the file (PLAN2.D48, P4-I19). */
 final class CannotDeleteHeadRevisionException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     public static function forRevision(int|string $revisionId): self
     {
         return new self('[Vaulter] Revision ['.Identity::stringify($revisionId).'] is the current revision of its file and cannot be deleted. '

@@ -1,0 +1,23 @@
+{
+  "item": "P6.2",
+  "policy": "D66: only light checks; no PG/MySQL, full suites, mutators, negative controls, long runs",
+  "changed_paths": [
+    "packages/core/src/Exceptions/** (ProblemException::problemDetails, trait ProvidesProblemDetails, PreconditionRequiredException, renderExtras -> problemDetails)",
+    "packages/drive/src/Exceptions/**, packages/documents/src/Exceptions/**",
+    "packages/core/src/Http/Problems/{ProblemRenderer,ProblemCatalog,ErrorsReference}.php",
+    "packages/core/src/Console/ErrorsReferenceCommand.php, Providers/ConsoleRegistrar.php, VaulterServiceProvider.php, Configuration/RoutesConfig.php (versionedPrefix, forced by renderer)",
+    "packages/{drive,documents}/src/*ServiceProvider.php (problem codes + hasTranslations)",
+    "packages/{core,drive,documents}/resources/lang/{en,ru}/problems.php",
+    "docs/reference/errors.md, docs/ru/reference/errors.md, docs/guide/errors.md, docs/ru/guide/errors.md, docs/.vitepress/config.ts",
+    "tests: core Http/Problems/*, Support/ProblemProbeRoutes.php, Support/DomainExceptionStatusTest, documents DomainExceptionStatusTest, drive Http/DriveProblemCodesTest, Arch snapshots",
+    "UPGRADE.md, CHANGELOG.md"
+  ],
+  "callers": ["VaulterException::render (legacy {message, code})", "Operations/Actions throwing ProblemException", "Console commands catching ProblemException"],
+  "checks": [
+    {"id": "V1", "cwd": ".", "env": "APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory:", "cmd": "scripts/php84 vendor/bin/pest --ci packages/core/tests/Http packages/core/tests/Support/DomainExceptionStatusTest.php packages/core/tests/Exceptions packages/core/tests/Arch packages/core/tests/Feature"},
+    {"id": "V2", "cwd": "packages/drive", "env": "APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory:", "cmd": "../../scripts/php84 vendor/bin/pest --ci tests/Http tests/Feature tests/Uploads"},
+    {"id": "V3", "cwd": "packages/documents", "env": "APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory:", "cmd": "../../scripts/php84 vendor/bin/pest --ci tests/Document tests/Feature"},
+    {"id": "V80", "cwd": ". and packages/drive and packages/documents", "cmd": "pint --test + phpstan analyse per package (see item validation)"}
+  ],
+  "fixtures": "none (SQLite in-memory only)"
+}

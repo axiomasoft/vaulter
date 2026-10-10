@@ -6,21 +6,56 @@ namespace Vaulter\Providers;
 
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Auth\Access\Authorizable;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Contracts\Translation\Translator;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Support\Facades\RateLimiter;
+use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Http\Middleware\ResolveVaulterRouteParameters;
+use Vaulter\Http\Problems\CoreProblemCodes;
+use Vaulter\Http\Problems\ProblemCatalog;
+use Vaulter\Http\Problems\ProblemRenderer;
 use Vaulter\Support\Identity;
 
 final class HttpRegistrar
 {
+    public function register(Application $app): void
+    {
+        $app->singleton(ProblemCatalog::class, static fn (Application $app): ProblemCatalog => new ProblemCatalog(
+            static fn (): iterable => $app->tagged(ProblemCatalog::TAG),
+            $app->make(Translator::class),
+        ));
+        $app->singleton(ProblemRenderer::class);
+        $app->singleton(CoreProblemCodes::class);
+        $app->tag(CoreProblemCodes::class, ProblemCatalog::TAG);
+    }
+
     public function boot(Application $app): void
     {
         $this->registerResourceMiddlewarePriority($app->make(Kernel::class));
         $this->registerRateLimiters();
+        $this->registerProblemRenderer($app);
+    }
+
+    /**
+     * Only a handler with renderables (the Foundation one) takes the renderer; a host's
+     * own handler keeps the answers it already had.
+     */
+    private function registerProblemRenderer(Application $app): void
+    {
+        $this->attachProblemRenderer($app->make(ExceptionHandler::class), $app);
+    }
+
+    private function attachProblemRenderer(object $handler, Application $app): void
+    {
+        if (method_exists($handler, 'renderable')) {
+            $handler->renderable(static fn (Throwable $e, Request $request): ?Response => $app->make(ProblemRenderer::class)->render($e, $request));
+        }
     }
 
     private function registerResourceMiddlewarePriority(Kernel $kernel): void

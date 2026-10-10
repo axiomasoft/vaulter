@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Nodes;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
@@ -14,6 +15,8 @@ use Vaulter\Exceptions\VaulterException;
  */
 final class TreeTraversalIncompleteException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     public static function forBound(int $bound): self
     {
         return new self('[Vaulter] The folder tree is deeper than '.$bound.' levels below the node. '

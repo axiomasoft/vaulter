@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Changes;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /** A change-journal cursor that Vaulter did not issue for this drive. */
 final class InvalidCursorException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     public static function malformed(): self
     {
         return new self(

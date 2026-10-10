@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Exceptions\Files;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 final class UploadRejectedException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     public function __construct(public readonly string $reason)
     {
         parent::__construct('[Vaulter] Upload rejected: '.$reason.'.');
@@ -24,7 +27,7 @@ final class UploadRejectedException extends VaulterException implements ProblemE
         return 422;
     }
 
-    protected function renderExtras(): array
+    public function problemDetails(): array
     {
         return ['reason' => $this->reason];
     }

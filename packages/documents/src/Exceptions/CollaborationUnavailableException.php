@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Exceptions;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
@@ -14,6 +15,8 @@ use Vaulter\Exceptions\VaulterException;
  */
 final class CollaborationUnavailableException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     public function __construct(
         public readonly string $reason,
         public readonly ?string $type = null,
@@ -51,8 +54,7 @@ final class CollaborationUnavailableException extends VaulterException implement
     /**
      * @return array<string, mixed>
      */
-    #[\Override]
-    protected function renderExtras(): array
+    public function problemDetails(): array
     {
         return ['context' => array_filter(['reason' => $this->reason, 'type' => $this->type], static fn (?string $value): bool => $value !== null)];
     }

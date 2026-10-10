@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Changes;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
@@ -13,6 +14,8 @@ use Vaulter\Exceptions\VaulterException;
  */
 final class CursorExpiredException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     public static function pruned(): self
     {
         return new self(

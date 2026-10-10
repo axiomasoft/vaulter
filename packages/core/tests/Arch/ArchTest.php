@@ -341,7 +341,8 @@ test('technical layers are never nested under a domain module (ADR-0017 Law 1)',
     // value objects are the ValueObjects domain "Events", like Enums/Events. Webhooks/Events
     // holds the operational Laravel events hosts listen to (WebhookEndpointDisabled); its
     // FQCN is documented, so it stays beside the webhook delivery it reports on.
-    expect(array_values(array_diff($nested, ['Exceptions/Contracts', 'Enums/Events', 'Testing/Contracts', 'ValueObjects/Events', 'Webhooks/Events'])))->toBe([])
+    // Exceptions/Http holds the exceptions of the HTTP protocol itself (428 precondition).
+    expect(array_values(array_diff($nested, ['Exceptions/Contracts', 'Exceptions/Http', 'Enums/Events', 'Testing/Contracts', 'ValueObjects/Events', 'Webhooks/Events'])))->toBe([])
         ->and(scandir(__DIR__.'/../../src/Exceptions/Contracts'))->toBe(['.', '..', 'ProblemException.php'])
         ->and(scandir(__DIR__.'/../../src/Testing/Contracts'))->toBe(['.', '..', 'PermissionDriverContractTests.php'])
         ->and(scandir(__DIR__.'/../../src/Enums/Events'))->toBe(['.', '..', 'EventType.php'])

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.2",
   "title": "Problem Details: RFC 9457 рендерер, каталог кодов, lang и reference/errors.md",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Все ответы-ошибки маршрутов vaulter.v1.* — application/problem+json по RFC 9457 с полями type/title/status/code/detail/request_id/errors/meta, локализованными title/detail из lang, allowlist meta и маппингом фреймворк-исключений; реестр кодов ProblemCatalog генерирует docs/reference/errors.md (en/ru); добавлен 428 precondition_required; V24 доказан через тестовый маршрут-зонд.",
   "why": "D29/OPUS 10 §6: стабильные коды — контракт SemVer, внутренности не утекают клиенту; рендерер должен существовать до первых v1-маршрутов с 428/412 (D63). Риски: info-disclosure (detail из сообщения исключения, meta с путями/токенами), public-contract (коды и формат замораживаются в 1.0), регрессия хостовых маршрутов (рендерер не должен трогать чужие ответы).",
   "scope": {
@@ -310,6 +310,44 @@
     "status": "not_needed",
     "notes": "@plan/knowledge/P6-industry-research-2026-10-10.json#R5-Problems"
   },
-  "result": null,
-  "updated_at": "2026-10-10T10:26:46Z"
+  "result": {
+    "started_at": "2026-10-10T10:32:08Z",
+    "finished_at": "2026-10-10T11:43:00Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "c0f1c9d4-1f84-443e-93ca-c7e9aac6a517"
+    },
+    "notes": "Done: problemDetails()+ProvidesProblemDetails on all 67 ProblemException implementors (renderExtras removed), PreconditionRequiredException 428, ProblemRenderer (+registration in HttpRegistrar, VaulterException::render steps aside on v1), ProblemCatalog/ProblemCodeSource tag vaulter.problem_codes (core/drive/documents), lang en/ru, ErrorsReference + vaulter:errors:reference, generated docs/reference/errors.md (+ru), guide/commands docs, UPGRADE/CHANGELOG, core golden. Review grok/grok-4.7/high: round 1 RED (3 findings, confirmed, one correction + regression tests), round 2 GREEN. V2/V3 ran before the review correction; after it core tests/Http+Arch+Support, Pint and PHPStan (core) reran green; drive/documents Http/Arch/Providers reran after the renderer refactor. Self-check P6-I7 (detail from lang, meta allowlist+message leaf drop, 500 internal_error without detail; ProblemMetaRedactionTest, ProblemRendererTest) and P6-I8 (HostRouteUntouchedTest, v10 prefix); interfering pair I7/I8: renderer returns null outside vaulter.v1.* so no headers leak to host routes. Not executed per D66/Owner-Fast-Only: PG/MySQL, full suites, docs build.",
+    "deviations": [
+      "V1 exit 1 only from 2 pre-existing failures in packages/core/tests/Feature/EventTypeTest.php (stale vs EventType 1.0 of P5.2; not touched by P6.2); all other 316/318 core tests pass incl. Http, Arch, golden",
+      "VaulterException::docs() unchanged (guide anchors guarded by DocsDriftGuardTest/R07/ShareLinkLifecycle); type URI -> docs/reference/errors.md#<code> via ProblemCatalog",
+      "No second report(): Kernel reports before render",
+      "Forced adjacent edits: RoutesConfig::versionedPrefix, tests/Pest.php, packages/drive/tests/Pest.php, core ArchTest allowlist Exceptions/Http, ProblemCodeSource in Http/Problems, problemHeaders() outside the interface; drive/documents goldens unchanged (Contracts only)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 1,
+        "at": "2026-10-10T11:43:00Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-10T11:43:00Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-10T11:43:00Z"
+      },
+      {
+        "id": "V80",
+        "exit": 0,
+        "at": "2026-10-10T11:43:00Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-10T11:43:00Z"
 }

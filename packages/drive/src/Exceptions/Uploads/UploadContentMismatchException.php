@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Exceptions\Uploads;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
@@ -15,6 +16,8 @@ use Vaulter\Exceptions\VaulterException;
  */
 final class UploadContentMismatchException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     private const string PROBLEM_CODE = 'upload_rejected';
 
     private const int HTTP_STATUS = 422;
@@ -42,7 +45,7 @@ final class UploadContentMismatchException extends VaulterException implements P
     /**
      * @return array<string, mixed>
      */
-    protected function renderExtras(): array
+    public function problemDetails(): array
     {
         return ['reason' => 'mime_mismatch'];
     }

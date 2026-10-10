@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Database;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
@@ -13,6 +14,8 @@ use Vaulter\Exceptions\VaulterException;
  */
 final class WriteOutsideOperationException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     public function __construct(string $target, ?string $caller = null)
     {
         parent::__construct('[Vaulter] '.$target.' was written outside a Vaulter operation'.($caller === null ? '' : ' (issued at '.$caller.')').'. Use the DriveHandle operations (or disable vaulter.database.write_guard knowingly). Docs: '.self::docs('write-outside-operation'));

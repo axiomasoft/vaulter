@@ -6,6 +6,7 @@ namespace Vaulter\Providers;
 
 use Illuminate\Console\Application as Artisan;
 use Illuminate\Contracts\Foundation\Application;
+use Vaulter\Console\ErrorsReferenceCommand;
 use Vaulter\Console\EventsReferenceCommand;
 use Vaulter\Console\LegacyFanoutCommand;
 use Vaulter\Console\MakeProfileCommand;
@@ -24,6 +25,7 @@ final class ConsoleRegistrar
             $artisan->resolveCommands([
                 MakeProfileCommand::class,
                 EventsReferenceCommand::class,
+                ErrorsReferenceCommand::class,
                 RelayWebhooksCommand::class,
                 RetryWebhooksCommand::class,
                 PruneWebhooksCommand::class,

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Webhooks;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
@@ -18,6 +19,8 @@ use Vaulter\Exceptions\VaulterException;
  */
 final class BlockedOutboundUrlException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     private const string PROBLEM_CODE = 'validation_failed';
 
     private const int HTTP_STATUS = 422;
@@ -75,7 +78,7 @@ final class BlockedOutboundUrlException extends VaulterException implements Prob
     /**
      * @return array<string, mixed>
      */
-    protected function renderExtras(): array
+    public function problemDetails(): array
     {
         return ['errors' => ['url' => [$this->getMessage()]]];
     }

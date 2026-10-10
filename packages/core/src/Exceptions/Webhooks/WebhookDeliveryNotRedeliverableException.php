@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Webhooks;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /** A manual re-delivery was asked for a delivery that cannot be sent again right now. */
 final class WebhookDeliveryNotRedeliverableException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     public static function notTerminal(int|string $deliveryId, string $status): self
     {
         return new self(

@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Database;
 
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Throwable;
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
@@ -16,6 +15,8 @@ use Vaulter\Exceptions\VaulterException;
  */
 final class ConcurrentUpdateException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     public function __construct(?Throwable $previous = null)
     {
         parent::__construct('[Vaulter] The request conflicted with a concurrent update; retry it. Docs: '.self::docs('concurrent-update'), 0, $previous);
@@ -31,14 +32,11 @@ final class ConcurrentUpdateException extends VaulterException implements Proble
         return 409;
     }
 
-    #[\Override]
-    public function render(Request $request): JsonResponse|false
+    /**
+     * @return array<string, string>
+     */
+    public function problemHeaders(): array
     {
-        $response = parent::render($request);
-        if ($response instanceof JsonResponse) {
-            $response->headers->set('Retry-After', '1');
-        }
-
-        return $response;
+        return ['Retry-After' => '1'];
     }
 }

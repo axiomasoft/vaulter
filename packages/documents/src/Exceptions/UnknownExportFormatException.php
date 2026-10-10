@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Exceptions;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 final class UnknownExportFormatException extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     private const string PROBLEM_CODE = 'unknown_export_format';
 
     private const int HTTP_STATUS = 422;
@@ -47,8 +50,7 @@ final class UnknownExportFormatException extends VaulterException implements Pro
     /**
      * @return array<string, mixed>
      */
-    #[\Override]
-    protected function renderExtras(): array
+    public function problemDetails(): array
     {
         return ['allowed' => $this->allowed];
     }

@@ -26,6 +26,7 @@ spatie/laravel-package-tools) плюс восемь команд пакета, �
 | `vaulter:webhooks:legacy-fanout` | Показать или переиграть строки outbox до 1.0, у которых раскрытие нельзя доказать |
 | `vaulter:webhooks:redeliver` | Повторно отправить завершённые доставки вебхуков с тем же `webhook-id` |
 | `vaulter:events:reference` | Перегенерировать (или проверить `--check`) таблицу каталога событий в справке |
+| `vaulter:errors:reference` | Перегенерировать (или проверить `--check`) справку по кодам проблем в документации |
 | `vaulter:changes:prune` | Удалить записи журнала изменений drive старше `changes.retention_days` |
 | `vaulter:changes:reset` | Сделать недействительными все курсоры изменений drive — клиенты пересинхронизируются |
 
@@ -317,6 +318,20 @@ php artisan vaulter:webhooks:redeliver --endpoint=7 --since=2026-10-01
 ```bash
 php artisan vaulter:events:reference
 php artisan vaulter:events:reference --check
+```
+
+---
+
+## `vaulter:errors:reference`
+
+Перегенерирует справку по кодам проблем между маркерами `<!-- vaulter:errors:start -->` и
+`<!-- vaulter:errors:end -->` в `docs/reference/errors.md` и `docs/ru/reference/errors.md` из
+каталога кодов. С `--check` ничего не пишет, а код выхода 1 означает, что страница расходится с
+кодом (для CI). Это служебная команда репозитория Vaulter, а не приложений-хостов.
+
+```bash
+php artisan vaulter:errors:reference
+php artisan vaulter:errors:reference --check
 ```
 
 ---
