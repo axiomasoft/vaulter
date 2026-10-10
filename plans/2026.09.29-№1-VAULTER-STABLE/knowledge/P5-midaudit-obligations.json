@@ -1,0 +1,29 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "P5-midaudit-obligations",
+  "title": "P5 — обязательства мид-аудита P4 (выжимка ledger EV227/EV273/EV286)",
+  "sections": [
+    {
+      "id": "EV227",
+      "title": "EV227 (P4.1, assumption, MOVE)",
+      "text": "Источник: artifacts/P4-midaudit/ledger.json log.jsonl:227.\nSummary: Until P4.8/P4.4 replace the read paths, the document content GET/PATCH responses and NodeExportService read the working state (not the possibly older head checkpoint) so a write is visible immediately; JSON keys of DocumentRevisionResource stay unchanged (version_no/format/snapshot_label computed from the aggregate). Events keep their signatures: $version is the head checkpoint after the write, $created says whether this write created it (P4.7 adds stateVersion/epoch).\nRationale: Working-state read принят, final export source/event stateVersion остаются future owners\nAction: P4.4 export snapshot source; P4.7 события результата writer, не stale checkpoint\nTarget: PLAN2.P4.4/P4.7; status: scheduled.\nВладелец в P5: P5.1 правило (stateVersion/epoch из результата writer) + P5.2 DocumentEventValidatorsTest."
+    },
+    {
+      "id": "EV273",
+      "title": "EV273 (P4.10, deviation, ACCEPT)",
+      "text": "Источник: artifacts/P4-midaudit/ledger.json log.jsonl:273.\nSummary: Applied migration 2026_10_07_000005 gets hasColumn guards on share-mask steps (fresh node_shares no longer has permissions); no change for upgraded DBs. Also: update() returns NodeShare and list() Collection<NodeShare> (ShareLinkSnapshot is P4.13); no new share events for update/rotate (event pipeline is P5); legacy view-only mask 1 (v1) converts to previewer, not reader (P4-I21: never widen).\nRationale: Sharing/ShareSession fingerprint+generation, ShareResolver live audience/issuer checks; P4.13 заменил model signatures\nAction: Model/Collection seam закрыт P4.13; share update/rotate event obligations закреплены в P5.\nTarget: PLAN2.D54; status: accepted.\nВладелец в P5: P5.2 share.updated/share.rotated + ShareLinkLifecycleEventsTest (скрытые token-поля, D31)."
+    },
+    {
+      "id": "EV286",
+      "title": "EV286 (P4.12, assumption, MOVE)",
+      "text": "Источник: artifacts/P4-midaudit/ledger.json log.jsonl:286.\nSummary: activity file.revision_deleted: P4.12 dispatches the Laravel event FileRevisionDeleted (after commit) only; the EventType case and activity/outbox rows come with P5.2 as the design says.\nRationale: P4-design#Revisions: Laravel FileRevisionDeleted есть, EventType/activity/outbox P5.2\nAction: P5 skeleton exact event/projection obligations\nTarget: PLAN2.P5; status: scheduled.\nВладелец в P5: P5.2 file.revision_deleted в activity/outbox + FileRevisionDeletedEventTest."
+    }
+  ],
+  "applies_to": [
+    "P5.1",
+    "P5.2"
+  ],
+  "provenance": {
+    "note": "Verbatim fields copied 2026-10-09 from artifacts/P4-midaudit/ledger.json (144 entries; only these three target P5) to keep P5 context packs within budget."
+  }
+}

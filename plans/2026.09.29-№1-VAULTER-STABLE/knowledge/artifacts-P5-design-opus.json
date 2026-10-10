@@ -1,0 +1,43 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "artifacts-P5-design-opus",
+  "title": "P5 — дословные OPUS-единицы входа фазы (D06) и действующие поправки",
+  "sections": [
+    {
+      "id": "F5",
+      "title": "13-workstreams.md:298-312 — F5 Конвейер событий",
+      "text": "## F5 — Конвейер событий (T1)\n\n#### P5.1 — DomainEvent и EventRecorder\n- Решения: D22 · Находки: E7, E8, N18 · Сценарии: V06, V07.\n- Сделать: база `DomainEvent`, `EventRecorder` (activity + outbox в транзакции на соединении Vaulter; after-commit\n  dispatch), удалить четыре подписчика и `ShouldDispatchAfterCommit`; `ActorRef`, `correlation_id`, `sequence` в событиях.\n- Готово: V07 (сбой записи outbox откатывает мутацию; краш после commit не теряет событие), V06.\n- Исполнитель: opus/high.\n\n#### P5.2 — Полный каталог и конверт webhooks\n- Сделать: события documents/comments/uploads/drive lifecycle (08 §6); конверт `id,type,source,time,drive_id,subject,sequence,actor,data`;\n  заголовок `X-Vaulter-Event-Id`; `reference/events.md` генерируется.\n- Исполнитель: sonnet/medium.\n\n---"
+    },
+    {
+      "id": "D22",
+      "title": "02-decisions.md:426-444 — D22 Единый конвейер событий",
+      "text": "<a id=\"d22\"></a>\n### D22 — Единый конвейер событий · T0 (идентичность) / T1 (конвейер)\n\n**Решение.**\n\n- База `Vaulter\\Events\\DomainEvent` (abstract readonly): `eventId` (ULID, создаётся в\n  конструкторе), `occurredAt`, `actor` (`ActorRef`), `driveId`, `correlationId`,\n  `aggregateType`, `aggregateId`, `sequence` (D23), `type()` → `EventType`.\n- `EventRecorder::record(DomainEvent)` вызывается **внутри** транзакции Action на соединении\n  Vaulter: пишет activity (если фича `activity`) и outbox (если `webhooks`) с\n  `event_id = eventId`; затем `afterCommit` диспатчит Laravel-событие для слушателей хоста.\n  Ошибка записи outbox/activity откатывает операцию (durable-контракт).\n- Дедупликация outbox — только по occurrence id (повтор доставки), команды различаются всегда\n  (E8). Идемпотентность команд — отдельный механизм (T2, `Idempotency-Key`).\n- `WebhookEvent` и `ActivityVerb` сливаются в `Vaulter\\Enums\\Events\\EventType`; каталог\n  дополнен документами, ревизиями, комментариями и загрузками ([08-data-model-and-migration.md](08-data-model-and-migration.md) §6).\n- Подписчики `RecordsOutbox`, `RecordsDriveOutbox`, `RecordsActivity`, `RecordsDriveActivity`\n  удаляются; события больше не реализуют `ShouldDispatchAfterCommit` (after-commit даёт recorder).\n- Webhook payload — конверт в стиле CloudEvents: `id, type, source, time, drive_id, subject,"
+    },
+    {
+      "id": "Catalog-08-6",
+      "title": "08-data-model-and-migration.md:182-213 — §6 Каталог событий",
+      "text": "## 6. Каталог событий (`Vaulter\\Enums\\Events\\EventType`)\n\nОбщие поля всех событий (конверт webhook и колонки activity): `id` (occurrence ULID), `type`, `source = \"vaulter\"`,\n`time`, `drive_id`, `subject` (id узла или ресурса), `sequence` (узла, если применимо), `actor {type, id}`,\n`correlation_id`, `data`.\n\n| `EventType` | Класс | `data` | activity | webhook |\n|---|---|---|---|---|\n| `drive.created` | `Drive\\Events\\Drives\\DriveCreated` | owner, profile, root_node_id | ✓ | ✓ |\n| `drive.archived` / `drive.deleted` | `Drive\\Events\\Drives\\Drive{Archived,Deleted}` | — | ✓ | ✓ |\n| `folder.created` | `Drive\\Events\\Nodes\\FolderCreated` | parent_id, name | ✓ | ✓ |\n| `file.uploaded` | `Drive\\Events\\Files\\FileUploaded` | parent_id, name, mime, size, revision_id | ✓ | ✓ |\n| `file.revision_added` | `Drive\\Events\\Files\\FileRevisionAdded` | revision_id, number, size, previous_size | ✓ | ✓ |\n| `node.renamed` | `Drive\\Events\\Nodes\\NodeRenamed` | from, to | ✓ | ✓ |\n| `node.moved` | `Drive\\Events\\Nodes\\NodeMoved` | from_parent_id, to_parent_id | ✓ | ✓ |\n| `node.copied` | `Drive\\Events\\Nodes\\NodeCopied` | source_id, copy_id, destination_id | ✓ | ✓ |\n| `node.updated` | `Drive\\Events\\Nodes\\NodeUpdated` | changed: pinned/position | ✓ | — |\n| `node.trashed` | `Drive\\Events\\Nodes\\NodeTrashed` | descendant_count | ✓ | ✓ |\n| `node.restored` | `Drive\\Events\\Nodes\\NodeRestored` | destination_id, renamed_to | ✓ | ✓ |\n| `node.purged` | `Drive\\Events\\Nodes\\NodePurged` | node_ids (≤ 1000, иначе count) | ✓ | ✓ |\n| `upload.initiated` / `upload.aborted` / `upload.expired` | `Drive\\Events\\Uploads\\*` | upload_id, protocol, size | ✓ | — |\n| `document.created` | `Documents\\Events\\Documents\\DocumentCreated` | type, revision_id | ✓ | ✓ |\n| `document.updated` | `Documents\\Events\\Documents\\DocumentContentUpdated` | revision_id, autosave | — (шум) | ✓ (debounced: только новая ревизия) |\n| `document.revision_created` | `Documents\\Events\\Revisions\\DocumentRevisionCreated` | revision_id, label, keep_forever | ✓ | ✓ |\n| `document.restored` | `Documents\\Events\\Revisions\\DocumentRestored` | from_revision_id, new_revision_id, collab_epoch | ✓ | ✓ |\n| `comment.added` / `comment.resolved` / `comment.deleted` | `Documents\\Events\\Comments\\*` | comment_id | ✓ | ✓ |\n| `grant.created` / `grant.revoked` | `Vaulter\\Events\\Access\\NodeGrant{Created,Revoked}` | subject, level, effect, scope | ✓ | ✓ |\n| `share.created` / `share.revoked` | `Vaulter\\Events\\Sharing\\NodeShare{Created,Revoked}` | share_id, level, expires_at (без токена) | ✓ | ✓ |\n\nПравила: payload не содержит сырых токенов, паролей, содержимого документов и путей объектного хранилища;\n`EventType` — закрытый enum для first-party событий; сторонние события в 1.0 не участвуют в webhooks\n(T2: реестр пользовательских типов)."
+    },
+    {
+      "id": "V06-V07",
+      "title": "14-verification.md:16-17 — сценарии V06, V07",
+      "text": "| V06 | `A→B→A→B` rename; `trash→restore→trash`; повтор доставки webhook | 3 события rename, 3 lifecycle-события; повторная доставка — тот же `event_id` | любая | P1.4, P5.1 |\n| V07 | Исключение при записи outbox; «краш» после commit (kill процесса в тесте после `commit`) | Ошибка outbox откатывает мутацию; после commit событие уже в outbox (запись в той же транзакции) | PG | P5.1 |"
+    },
+    {
+      "id": "Findings",
+      "title": "01-review.md:37,52,53,185-188 — E7, E8, N18",
+      "text": "| События dispatch до commit | **Факт неверен** (E7 Codex) | Но реальная проблема глубже: два разных режима событий в kernel и drive. Единый конвейер ([D22](02-decisions.md#d22)) |\n| E7 after-commit есть; outbox может потеряться | Согласен. Решение — запись outbox и activity в той же транзакции **и на том же соединении**; последнее сейчас невозможно из-за N01 |\n| E8 дедупликация по состоянию схлопывает легитимные события | Согласен, подтверждено в `RecordsDriveOutbox` (ключи `node.trashed:{id}`, `node.renamed:{id}:{name}`) |\n### N18 (S3). Каталог событий неполон и продублирован\n\n`WebhookEvent` и `ActivityVerb` — два почти одинаковых enum; в каталоге нет событий документов, комментариев,\nревизий документов и загрузок (последние — только в activity)."
+    },
+    {
+      "id": "Amendments",
+      "title": "Действующие поправки к дословному входу",
+      "text": "D35 заменяет «sequence на каждый node mutation, включая content change» для документов: события содержимого несут state_version/epoch, node.sequence не растёт. D58 заменяет форму конверта и data (тонкие данные, Standard Webhooks webhook-id вместо X-Vaulter-Event-Id, имена только в activity) и дополняет каталог (drive.unarchived D37, file.revision_deleted EV286, node.updated как properties D41, access.inheritance_changed, share.updated/rotated EV273). D59 — журнал (уточнение D50). D60 — политика доставки. Номера P5.1/P5.2 сохраняются (D01 п.3), P5.3 — новый corrective item C06 (D29), P5.4/P5.5 — новые items D50/D60. Строки «Исполнитель: opus/high, sonnet/medium» заменены маршрутами P5-design#Order."
+    }
+  ],
+  "applies_to": [
+    "P5"
+  ],
+  "provenance": {
+    "note": "Verbatim excerpts copied 2026-10-09 from audits/2026-09-29-stable-audit/opus/* at HEAD 57d6164e for P5 design; ledger-P5/opus-coverage artifacts were not regenerated in this session (artifacts/coverage is outside the designer's permitted paths)."
+  }
+}

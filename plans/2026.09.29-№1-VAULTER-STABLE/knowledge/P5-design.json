@@ -1,0 +1,38 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "P5-design",
+  "title": "P5 — нормативный контракт конвейера событий, webhooks 1.0 и журнала изменений",
+  "sections": [
+    {
+      "id": "Scope",
+      "title": "Назначение и нормативы",
+      "text": "Самодостаточный контракт фазы P5 по фактическому коду HEAD 57d6164e (2026-10-09). Нормативы: дословный OPUS-вход @plan/knowledge/artifacts-P5-design-opus.json (13 F5, 02 D22, 08 §6, 14 V06/V07, 01 E7/E8/N18), ADR-0023, принятые D22 (OPUS), D28, D31, D35, D37, D50, D51, D54 и новые D58 (конверт/каталог), D59 (журнал), D60 (доставка). D29: C05 → P5.1, C06 → P5.3 (+ identity P5.2/P5.4). Поправки к OPUS действуют только в дельте D35 (sequence документов) и D58–D60. Исследование практики — @plan/knowledge/P5-industry-research-2026-10-09.json.\nФакты кода на HEAD (подтверждено чтением): активность и outbox пишут подписчики RecordsActivity/RecordsOutbox (core) и RecordsDriveActivity/RecordsDriveOutbox (drive), зарегистрированные EventsRegistrar/HttpRegistrar по фичам activity/webhooks; RecordsOutbox::safely оборачивает запись в savepoint и проглатывает ошибку (C05 нарушен, OutboxTransactionTest это ожидает); 29 Laravel-событий реализуют ShouldDispatchAfterCommit; события документов/комментариев не пишут activity/outbox вовсе; OutboxRelay::claimPending ставит status=dispatched ДО создания доставок (C06: окно потери); v_webhook_deliveries без event_id и без UNIQUE(event,endpoint); v_webhook_endpoints без tenant_id/drive-фильтра; подпись — hex HMAC над \"{ts}.{body}\" в X-Vaulter-*; отключение endpoint по счётчику disable_after_failures; журнала изменений нет.\nВне P5: REST v1 маршруты changes/webhooks/redeliver и Problem Details (P6.1/P6.2), OpenAPI (P6.3), Vue (P6.4), doctor-проверки зависших обязательств и расписание (P7.1/P7.2, C09), квалификация C05/C06 на реальных данных (P8.1/P8.2, C10).\nКарта контракта: события/рекордер/конверт/каталог/outbox — @plan/knowledge/P5-design-events.json (P5.1, P5.2); fan-out/legacy/endpoints/подпись/доставка — @plan/knowledge/P5-design-webhooks.json (P5.3, P5.4); журнал — @plan/knowledge/P5-design-journal.json (P5.5)."
+    },
+    {
+      "id": "Order",
+      "title": "Порядок, маршруты и барьеры D51",
+      "text": "P5.1 → P5.2 → P5.3 → P5.4 → P5.5, строго последовательно, review none.\nБлок A: P5.1 (миграция event_pipeline, C05) + P5.2 (каталог) — барьер P5.2 (V90: отложенные PG/MySQL P5.1 и P5.2).\nБлок B: P5.3 (миграция webhook_fanout, C06) + P5.4 (миграция webhook_endpoints_v1) — барьер P5.4.\nP5.5 (миграция drive_changes) — фазовый барьер: свои H + phase.validation V901–V928.\nМаршруты: P5.1 frontier/high; P5.2 implementation/medium; P5.3 frontier/high; P5.4 implementation/high; P5.5 frontier/high."
+    },
+    {
+      "id": "Errors",
+      "title": "Новые ошибки",
+      "text": "Vaulter\\Exceptions\\Changes\\InvalidCursorException — invalid_cursor, 400. Vaulter\\Exceptions\\Changes\\CursorExpiredException — cursor_expired, 410. Vaulter\\Exceptions\\Webhooks\\WebhookDeliveryNotRedeliverableException — webhook_delivery_not_redeliverable, 409. Vaulter\\Exceptions\\Webhooks\\InvalidWebhookSignatureException — для StandardWebhookVerifier (не HTTP-ошибка Vaulter, наследник VaulterException без HTTP-маппинга или с 400 invalid_webhook_signature — по существующему шаблону DomainException маппинга). Все — в DomainExceptionStatusTest (если тест маппинга существует в пакете) и docs/guide/errors.md + docs/ru/guide/errors.md."
+    },
+    {
+      "id": "Stability",
+      "title": "Публичная поверхность, документы, CHANGELOG",
+      "text": "Изменяется публичное: классы событий (база DomainEvent, обязательные actor/correlationId), EventType (новые case, атрибут EventSpec), удаление подписчиков и OutboxRecorder::stage-сигнатуры, DriveHandle::changes(), DTO ChangePage/NodeChange, enums ChangeOperation/ChangeReason, исключения, Actions/inputs webhooks, конфиг webhooks/changes/features.changes, wire-формат webhooks. Каждое затронутое — golden PublicApiSnapshotTest пакета (если он есть в пакете), UPGRADE.md (было → стало, ссылки PLAN2.D58–D60/D50), запись CHANGELOG.md [Unreleased] самим исполнителем и текст в artifacts/<item>/changelog-entry.md.\nДокументы: docs/guide/webhooks.md (конверт, подпись, ротация, повтор/отключение, redelivery, верификация получателем, dedup по webhook-id, at-least-once, порядок не гарантирован — использовать sequence/state_version и журнал), docs/guide/changes.md (новая страница: курсор, subtree/remove, 410, ретеншн, пример синхронизации), docs/reference/events.md + docs/ru/reference/events.md (генерируемая таблица между маркерами `<!-- events:start -->`/`<!-- events:end -->`), docs/reference/configuration.md + ru, docs/reference/commands.md + ru, docs/guide/errors.md + ru, docs/adr/0023-event-pipeline.md — дополнение «Amendments» (D35 sequence документов, D58–D60), без переписывания исходного решения.\nГенератор: `vaulter:events:reference {--check}` (Vaulter\\Console\\EventsReferenceCommand; генерация в Vaulter\\Events\\EventsReference::render(): string из атрибутов EventSpec) переписывает блок между маркерами в обоих файлах; --check → exit 1 при расхождении; EventsReferenceTest сравнивает с закоммиченными файлами."
+    },
+    {
+      "id": "Seams",
+      "title": "Швы в следующие фазы",
+      "text": "P6.1/P6.2: REST v1 GET /drives/{drive}/changes?cursor=&limit= (+ /changes/start), 410 cursor_expired/400 invalid_cursor как Problem Details; webhooks endpoints v1 (drive_id, rotate-secret, redeliver) поверх P5.3/P5.4 Actions. P6.3: OpenAPI схема конверта из EventSpec. P6.4: Vue клиент журнала — опционально. P7.1 doctor (C09): pending outbox старше N×claim_seconds, доставки pending без claim, endpoints disabled, головы журнала без drive, legacy_fanout неоднозначные строки. P7.2: расписание relay/retry/prune/changes:prune в документации scheduler. P8.1/P8.2 (C10): квалификация C05/C06 на реальной фикстуре 0.2 (legacy dispatched, конвертация секретов)."
+    }
+  ],
+  "applies_to": [
+    "P5"
+  ],
+  "provenance": {
+    "note": "Authored 2026-10-09 in task:plan-design P5 by claude-opus-5-5/high from code at HEAD 57d6164e, OPUS F5/D22/08§6, D50 and Perplexity research 2026-10-09; design only, no product commands executed."
+  }
+}

@@ -1,1 +1,35 @@
-NOT EXECUTED: aborted by owner request.
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Events\DocumentEventCatalogConformanceTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit records the document and comment events with the data their spec[39m[90m…[39m [90m5.27s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Events\DocumentEventValidatorsTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit takes state_version and epoch of every save from the writer, not[39m[90m…[39m [90m4.47s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit puts the writer validators of a checkpointed save into the envel[39m[90m…[39m [90m4.38s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Events\DocumentEventsRecordedTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit records the document lifecycle with the writer validators[39m[90m        [39m [90m4.41s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit stages document.updated for a save only when it took a checkpoin[39m[90m…[39m [90m4.53s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit records comment events in both sinks[39m[90m                             [39m [90m3.92s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\AfterCommit\CommentAfterCommitTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit delivers nothing before the outer commit and exactly one event a[39m[90m…[39m [90m8.67s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit a rolled back outer transaction broadcasts nothing and leaves n[39m[90m…[39m [90m11.91s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit outside any outer transaction one add raises exactly one event[39m[90m  [39m [90m10.27s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit queues the broadcast only after the outer commit and never afte[39m[90m…[39m [90m10.87s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit raises exactly one event per mutation through a faked dispatche[39m[90m…[39m [90m10.64s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Comment\NodeCommentApiTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit lists the node comment thread for a viewer[39m[90m                       [39m [90m4.32s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit V29 denies Reader comment creation and Commenter editing[39m[90m         [39m [90m4.14s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses comment creation once an inheritance boundary cuts the i[39m[90m…[39m [90m4.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit hides the thread of a node the user cannot see behind node_not_f[39m[90m…[39m [90m4.36s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit creates a comment with the REGISTERED morph alias, not a raw FQC[39m[90m…[39m [90m5.50s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses creating a comment on a node the user cannot see with no[39m[90m…[39m [90m6.18s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit threads a reply and rejects a cross-node parent[39m[90m                  [39m [90m5.68s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit lets the AUTHOR resolve and delete their own comment[39m[90m             [39m [90m5.63s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit 403s a non-author WITHOUT Manage on resolve and delete[39m[90m           [39m [90m4.69s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit lets a MANAGER who is not the author resolve and delete[39m[90m          [39m [90m5.09s[39m  
+
+  [90mTests:[39m    [32;1m21 passed[39;22m[90m (312 assertions)[39m
+  [90mDuration:[39m [39m129.32s[39m
+
