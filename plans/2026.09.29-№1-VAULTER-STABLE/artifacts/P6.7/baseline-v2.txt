@@ -1,0 +1,5 @@
+V2 baseline (tree 3e62c6be, before edits): tests 659 passed 655 failed 3 skipped 1
+ FAIL OperationsContractTest it_matches_all_seven_Operations_signatures_against_the_literal_normative_PHP_API - Failed asserting that actual size 14 matches expected size 13.
+ FAIL EventTypeTest it_keeps_the_0_2_stored_vocabulary_and_appends_the_1_0_lifecycle__document_and_comment_typ - Failed asserting that two arrays are identical. --- Expected +++ Actual @@ @@   
+ FAIL EventTypeTest it_keeps_upload_sessions_out_of_webhooks_and_document_saves_out_of_the_activity_feed - Failed asserting that actual size 29 matches expected size 25.
+exit 1

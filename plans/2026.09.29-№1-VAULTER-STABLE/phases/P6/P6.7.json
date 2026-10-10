@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.7",
   "title": "Маршруты drive v1: drives, nodes, files, revisions, trash, uploads; If-Match и PHP-ожидания purge/restore",
-  "status": "todo",
+  "status": "in_progress",
   "summary": "Все drive-маршруты переведены на vaulter.v1.* с invokable-контроллерами (drives, nodes, star/properties, files/revisions, trash, search, starred, shared, uploads), If-Match обязателен на rename/properties/move/trash/restore/purge/addRevision/restoreRevision и при создании resumable-сессии с node_id; PHP API получил ожидания purge/restore/restoreRevision; скачивания идут через ContentResponder; drive feature-тесты переписаны на v1.",
   "why": "OPUS 10 §4 (drive) + D65 + V36/C07: основной поток клиента — дерево и файлы; lost update и утечка байтов здесь критичны. Риски: concurrency (V36, CAS purge/restore), access-boundary (download/preview без Download, карантин), public-contract (крупнейшая часть маршрутов и ресурсов), регрессия загрузок tus/S3.",
   "scope": {
@@ -297,6 +297,14 @@
     "status": "not_needed",
     "notes": "@plan/knowledge/P6-industry-research-2026-10-10.json#R2-Validators"
   },
-  "result": null,
-  "updated_at": "2026-10-10T10:26:46Z"
+  "result": {
+    "started_at": "2026-10-10T18:29:05Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "session": "ee7793c8-8692-46e1-9d3f-700d877256f1"
+    }
+  },
+  "updated_at": "2026-10-10T18:29:05Z"
 }
