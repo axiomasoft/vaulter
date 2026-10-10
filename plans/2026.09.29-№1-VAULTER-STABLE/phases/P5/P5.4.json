@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.4",
   "title": "Доставка webhooks 1.0: Standard Webhooks подпись и ротация, расписание повторов, автоотключение, ручная доставка",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "Доставки подписываются по Standard Webhooks (webhook-id = event id, v1 base64 HMAC, whsec_-секреты, две подписи в окне ротации), повторяются по расписанию ~3 дня с jitter, endpoint отключается после 5 дней непрерывных сбоев с операционным событием, terminal-доставку можно повторить с тем же webhook-id; получатели получают StandardWebhookVerifier. Барьер блока B.",
   "why": "D50/D60: нестандартные X-Vaulter-* заголовки и hex-подпись, нет ротации, отключение по счётчику 10 сбоев, нет ручной доставки; R3/R4 исследования. Риски: security (подпись/секреты/replay-допуск), data-migration (конвертация зашифрованных секретов), concurrency (settlement ‖ auto-disable). Барьер исполняет PG/MySQL-доказательства C06 из P5.3.",
   "scope": {
@@ -310,22 +310,22 @@
     {
       "id": "V2",
       "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Upgrade/WebhookEndpointsV1UpgradeTest.php packages/core/tests/Upgrade/SchemaParityTest.php",
-      "expect": "Барьер блока B: exit0; секреты 0.2 → whsec_ с прежними байтами ключа, down обратим, fresh == upgraded. Обязательный receipt: числовые executed_tests>=1 и skipped=0, discovered/matched test names и output; exit0 без тестов/с skip НЕ pass.",
-      "kind": "acceptance",
+      "expect": "Отложено (фазовый прогон, указание владельца 2026-10-09): Барьер блока B: exit0; секреты 0.2 → whsec_ с прежними байтами ключа, down обратим, fresh == upgraded. Обязательный receipt: числовые executed_tests>=1 и skipped=0, discovered/matched test names и output; exit0 без тестов/с skip НЕ pass.",
+      "kind": "impact",
       "cwd": "."
     },
     {
       "id": "V3",
       "cmd": "env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Concurrency/WebhookAutoDisableRaceTest.php packages/core/tests/Webhooks/ConcurrentDeliveryTest.php",
-      "expect": "Барьер блока B: exit0; одно отключение на пороге, lease доставок. Обязательный receipt: числовые executed_tests>=1 и skipped=0, discovered/matched test names и output; exit0 без тестов/с skip НЕ pass.",
-      "kind": "acceptance",
+      "expect": "Отложено (фазовый прогон, указание владельца 2026-10-09): Барьер блока B: exit0; одно отключение на пороге, lease доставок. Обязательный receipt: числовые executed_tests>=1 и skipped=0, discovered/matched test names и output; exit0 без тестов/с skip НЕ pass.",
+      "kind": "impact",
       "cwd": "."
     },
     {
       "id": "V4",
       "cmd": "env APP_ENV=testing DB_CONNECTION=mysql DB_HOST=127.0.0.1 DB_PORT=3306 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Webhooks packages/core/tests/Schema",
-      "expect": "Барьер блока B: exit0; webhook-контур на MySQL 8. Обязательный receipt: числовые executed_tests>=1 и skipped=0, discovered/matched test names и output; exit0 без тестов/с skip НЕ pass.",
-      "kind": "acceptance",
+      "expect": "Отложено (фазовый прогон, указание владельца 2026-10-09): Барьер блока B: exit0; webhook-контур на MySQL 8. Обязательный receipt: числовые executed_tests>=1 и skipped=0, discovered/matched test names и output; exit0 без тестов/с skip НЕ pass.",
+      "kind": "impact",
       "cwd": "."
     },
     {
@@ -344,8 +344,8 @@
     {
       "id": "V90",
       "procedure": "Барьер D51 блока B (P5.3+P5.4) на текущем дереве после V1: исполнить отложенные P5.3 V2 (env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Concurrency/OutboxFanoutRaceTest.php packages/core/tests/Webhooks), P5.3 V3 (env APP_ENV=testing DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=5432 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Upgrade/WebhookFanoutUpgradeTest.php packages/core/tests/Upgrade/SchemaParityTest.php), P5.3 V4 (env APP_ENV=testing DB_CONNECTION=mysql DB_HOST=127.0.0.1 DB_PORT=3306 DB_DATABASE=vaulter_test DB_USERNAME=vaulter DB_PASSWORD=secret scripts/php84 vendor/bin/pest --ci packages/core/tests/Schema packages/core/tests/Webhooks/OutboxFanoutTest.php) — все cwd . — и собственные V2–V4; receipts в plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P5.4/barrier/. Повтор одинаковых каталогов в одном прогоне не дублировать: при совпадающих входах receipt V4 покрывает P5.3 V4 Webhooks-часть с записью об этом.",
-      "expect": "все команды exit0; PG/MySQL receipts executed_tests>=1 и skipped=0",
-      "kind": "acceptance"
+      "expect": "Отложено (фазовый прогон, указание владельца 2026-10-09): все команды exit0; PG/MySQL receipts executed_tests>=1 и skipped=0",
+      "kind": "impact"
     }
   ],
   "deliverables": [
@@ -372,12 +372,37 @@
   },
   "result": {
     "started_at": "2026-10-09T20:02:02Z",
+    "finished_at": "2026-10-10T04:33:52Z",
     "executor": {
       "provider": "anthropic",
       "model": "claude-sonnet-5-5",
       "effort": "high",
       "session": "417de63b-571e-4cdd-8690-0b432e18165d"
-    }
+    },
+    "notes": "Standard Webhooks signing/rotation/verifier, retry schedule, auto-disable, redelivery, migration webhook_endpoints_v1. grok-4.7 reviews: round 1 (3 major) and round 2 over P5.1–P5.4 (7 confirmed) corrected, commits e21f51bf and 5f83f84c. SQLite affected suites 940 tests (10 pre-existing skips) green, PHPStan 0. Hard risk security/data-migration/concurrency: task:review recommended for PG race paths in the phase run.",
+    "deviations": [
+      "V2–V4, V90 (PG/MySQL, SchemaParity, upgrade, race, block B barrier) not executed — phase run per owner rule; re-kinded to impact. V81 exit 1: ledger-P5.tsv missing (plan-level gap, as P5.1–P5.3). V80: Pint + PHPStan green, negative controls in negative-controls.md. EventPipelineArchTest allowlists the operational WebhookEndpointDisabled dispatch; golden snapshot updated."
+    ],
+    "pending": [
+      "Phase run: P5.3 V2–V4 and P5.4 V2–V4/V90 (PG race, 0.2 upgrade, MySQL); ledger-P5.tsv for V81"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-10T04:33:52Z"
+      },
+      {
+        "id": "V80",
+        "exit": 0,
+        "at": "2026-10-10T04:33:52Z"
+      },
+      {
+        "id": "V81",
+        "exit": 1,
+        "at": "2026-10-10T04:33:52Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-09T20:02:02Z"
+  "updated_at": "2026-10-10T04:33:52Z"
 }
