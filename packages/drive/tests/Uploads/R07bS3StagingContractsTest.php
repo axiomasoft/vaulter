@@ -54,7 +54,7 @@ function r07bS3CtlStorage(): Drive
 function r07bS3CreateSession(Drive $storage, array $overrides = []): string
 {
     return test()->postJson(
-        'api/vaulter/storages/'.$storage->getKey().'/resumable-uploads',
+        'api/vaulter/v1/drives/'.$storage->getKey().'/uploads',
         ['protocol' => 's3-multipart', 'name' => 'r07b.bin', 'total_size_bytes' => 8, ...$overrides],
     )->assertCreated()->json('data.upload_id');
 }
@@ -68,7 +68,7 @@ function r07bS3PutPart(string $uploadId, string $body, array $extraServer = []):
 {
     return test()->call(
         'POST',
-        'api/vaulter/resumable-uploads/'.$uploadId.'/parts?byte_offset=0',
+        'api/vaulter/v1/uploads/'.$uploadId.'/parts?byte_offset=0',
         [], [], [],
         array_merge(
             ['CONTENT_TYPE' => 'application/octet-stream', 'HTTP_X_PART_NUMBER' => '1'],

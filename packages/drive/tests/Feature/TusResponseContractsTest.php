@@ -16,12 +16,12 @@ beforeEach(function (): void {
 
 it('returns all resume headers from creation through commit', function (): void {
     $storage = Vaulter::drive(DriveTestHelpers::host())->model();
-    $create = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+    $create = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'name' => 'headers.bin',
         'total_size_bytes' => 4,
     ])->assertCreated()->assertHeader('Upload-Offset', '0');
     $uploadId = $create->json('data.upload_id');
-    $uri = 'api/vaulter/resumable-uploads/'.$uploadId;
+    $uri = 'api/vaulter/v1/uploads/'.$uploadId;
 
     $this->call('HEAD', $uri, server: ['HTTP_TUS_RESUMABLE' => '1.0.0'])
         ->assertNoContent()
@@ -43,17 +43,17 @@ it('returns all resume headers from creation through commit', function (): void 
 
 it('omits Upload-Length when the upload size is deferred', function (): void {
     $storage = Vaulter::drive(DriveTestHelpers::host())->model();
-    $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+    $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'name' => 'deferred.bin',
     ])->assertCreated()->json('data.upload_id');
 
-    $this->call('HEAD', 'api/vaulter/resumable-uploads/'.$uploadId, server: ['HTTP_TUS_RESUMABLE' => '1.0.0'])
+    $this->call('HEAD', 'api/vaulter/v1/uploads/'.$uploadId, server: ['HTTP_TUS_RESUMABLE' => '1.0.0'])
         ->assertNoContent()->assertHeaderMissing('Upload-Length');
 });
 
 it('omits Tus-Max-Size for unlimited uploads and advertises a one-byte ceiling', function (int $max): void {
     config()->set('vaulter-drive.uploads.max_file_size', $max);
-    $response = $this->call('OPTIONS', 'api/vaulter/resumable-uploads/discovery')->assertNoContent();
+    $response = $this->call('OPTIONS', 'api/vaulter/v1/uploads/discovery')->assertNoContent();
 
     if ($max === 0) {
         $response->assertHeaderMissing('Tus-Max-Size');
@@ -65,12 +65,12 @@ it('omits Tus-Max-Size for unlimited uploads and advertises a one-byte ceiling',
 it('accepts Content-Length exactly at the chunk ceiling', function (): void {
     config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 4);
     $storage = Vaulter::drive(DriveTestHelpers::host())->model();
-    $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+    $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'name' => 'boundary.bin',
         'total_size_bytes' => 8,
     ])->assertCreated()->json('data.upload_id');
 
-    $this->call('PATCH', 'api/vaulter/resumable-uploads/'.$uploadId, server: [
+    $this->call('PATCH', 'api/vaulter/v1/uploads/'.$uploadId, server: [
         'HTTP_TUS_RESUMABLE' => '1.0.0',
         'CONTENT_TYPE' => 'application/offset+octet-stream',
         'CONTENT_LENGTH' => '4',
@@ -80,7 +80,7 @@ it('accepts Content-Length exactly at the chunk ceiling', function (): void {
 
 it('continues metadata whitelisting after an unknown key and lets headers override JSON', function (): void {
     $storage = Vaulter::drive(DriveTestHelpers::host())->model();
-    $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+    $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'name' => 'metadata.bin',
         'metadata' => ['filename' => 'json.bin'],
     ], ['Upload-Metadata' => 'unknown '.base64_encode('ignored').',filename '.base64_encode('header.bin')])

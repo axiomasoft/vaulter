@@ -101,13 +101,15 @@ Route::get('/projects/{project}/drive', function (App\Models\Project $project) {
 The mounted Drive endpoints the frontend talks to include:
 
 ```
-GET    api/vaulter/storages/{storage}/nodes      list a folder
-POST   api/vaulter/storages/{storage}/folders    create a folder
-POST   api/vaulter/storages/{storage}/uploads    upload a file
-PATCH  api/vaulter/nodes/{node}                   rename
-POST   api/vaulter/nodes/{node}/move             move
-DELETE api/vaulter/nodes/{node}                   trash
+GET    api/vaulter/v1/drives/{drive}/nodes       list a folder
+POST   api/vaulter/v1/drives/{drive}/folders     create a folder
+POST   api/vaulter/v1/drives/{drive}/files       upload a file
+PATCH  api/vaulter/v1/nodes/{node}               rename (If-Match)
+POST   api/vaulter/v1/nodes/{node}/move          move (If-Match)
+POST   api/vaulter/v1/nodes/{node}/trash         trash (If-Match)
 ```
+
+Changing an existing node needs its current `ETag` in `If-Match`.
 
 See the full list in the [API routes reference](/reference/rest-api).
 

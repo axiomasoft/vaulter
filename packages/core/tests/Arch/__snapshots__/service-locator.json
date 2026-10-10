@@ -81,7 +81,6 @@
     "drive/src/Content/UploadCleanupReconciler.php": 1,
     "drive/src/DriveProvisioner.php": 7,
     "drive/src/Http/Controllers/Uploads/TusProtocolController.php": 1,
-    "drive/src/Http/Resources/DriveResource.php": 2,
     "drive/src/Jobs/PruneFileRevisionsJob.php": 1,
     "drive/src/Jobs/Uploads/ScanFileRevision.php": 4,
     "drive/src/Models/Uploads/UploadPart.php": 1,

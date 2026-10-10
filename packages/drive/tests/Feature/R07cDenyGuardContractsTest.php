@@ -11,6 +11,7 @@ use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Contracts\Access\PermissionDriver;
+use Vaulter\Drive\Tests\Http\DriveV1;
 use Vaulter\Enums\Access\Effect;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Drive;
@@ -70,46 +71,46 @@ function r07cDeny(): void
 
 function r07cNode(Drive $storage): string
 {
-    return (string) test()->postJson('api/vaulter/storages/'.$storage->getKey().'/uploads', [
+    return (string) test()->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/files', [
         'file' => UploadedFile::fake()->createWithContent('guard.txt', 'guard'),
     ])->assertCreated()->json('data.id');
 }
 
 it('refuses every node guard when the host role driver denies the actor', function (): void {
     $storage = r07cStorage();
-    $base = 'api/vaulter/storages/'.$storage->getKey();
+    $base = 'api/vaulter/v1/drives/'.$storage->getKey();
     $nodeId = r07cNode($storage);
     $folderId = (string) $this->postJson($base.'/folders', ['name' => 'Hold'])->assertCreated()->json('data.id');
 
     r07cDeny();
 
     $this->getJson($base.'/nodes')->assertNotFound();
-    $this->getJson('api/vaulter/nodes/'.$nodeId)->assertNotFound();
+    $this->getJson('api/vaulter/v1/nodes/'.$nodeId)->assertNotFound();
     $this->postJson($base.'/folders', ['name' => 'Nope'])->assertNotFound();
-    $this->postJson($base.'/uploads', [
+    $this->postJson($base.'/files', [
         'file' => UploadedFile::fake()->createWithContent('nope.txt', 'nope'),
     ])->assertNotFound();
-    $this->patchJson('api/vaulter/nodes/'.$nodeId, ['name' => 'renamed.txt'])->assertNotFound();
-    $this->postJson('api/vaulter/nodes/'.$nodeId.'/move', ['parent_id' => $folderId])->assertNotFound();
-    $this->postJson('api/vaulter/nodes/'.$nodeId.'/copy', ['name' => 'copy.txt'])->assertNotFound();
-    $this->deleteJson('api/vaulter/nodes/'.$nodeId)->assertNotFound();
-    $this->deleteJson('api/vaulter/nodes/'.$nodeId.'/force')->assertNotFound();
+    $this->patchJson('api/vaulter/v1/nodes/'.$nodeId, ['name' => 'renamed.txt'], DriveV1::ifMatch($nodeId))->assertNotFound();
+    $this->postJson('api/vaulter/v1/nodes/'.$nodeId.'/move', ['destination_id' => $folderId], DriveV1::ifMatch($nodeId))->assertNotFound();
+    $this->postJson('api/vaulter/v1/nodes/'.$nodeId.'/copy', ['name' => 'copy.txt'])->assertNotFound();
+    $this->postJson('api/vaulter/v1/nodes/'.$nodeId.'/trash', [], DriveV1::ifMatch($nodeId))->assertNotFound();
+    $this->deleteJson('api/vaulter/v1/nodes/'.$nodeId, [], DriveV1::ifMatch($nodeId))->assertNotFound();
 });
 
 it('refuses restore of a trashed node when the host role driver denies the actor', function (): void {
     $storage = r07cStorage();
     $nodeId = r07cNode($storage);
 
-    $this->deleteJson('api/vaulter/nodes/'.$nodeId)->assertOk();
+    $this->postJson('api/vaulter/v1/nodes/'.$nodeId.'/trash', [], DriveV1::ifMatch($nodeId))->assertOk();
 
     r07cDeny();
 
-    $this->postJson('api/vaulter/nodes/'.$nodeId.'/restore')->assertNotFound();
+    $this->postJson('api/vaulter/v1/nodes/'.$nodeId.'/restore', [], DriveV1::ifMatch($nodeId))->assertNotFound();
 });
 
 it('places a folder under the requested parent, not the storage root', function (): void {
     $storage = r07cStorage();
-    $base = 'api/vaulter/storages/'.$storage->getKey();
+    $base = 'api/vaulter/v1/drives/'.$storage->getKey();
     $parentId = (string) $this->postJson($base.'/folders', ['name' => 'Parent'])->assertCreated()->json('data.id');
 
     $childId = (string) $this->postJson($base.'/folders', [
@@ -117,7 +118,7 @@ it('places a folder under the requested parent, not the storage root', function 
         'parent_id' => $parentId,
     ])->assertCreated()->json('data.id');
 
-    $this->getJson('api/vaulter/nodes/'.$childId)
+    $this->getJson('api/vaulter/v1/nodes/'.$childId)
         ->assertOk()
         ->assertJsonPath('data.parent_id', (string) $parentId);
 });
@@ -125,20 +126,20 @@ it('places a folder under the requested parent, not the storage root', function 
 it('uses the default page size of 50 when per_page is omitted', function (): void {
     $storage = r07cStorage();
 
-    $this->getJson('api/vaulter/storages/'.$storage->getKey().'/nodes')
+    $this->getJson('api/vaulter/v1/drives/'.$storage->getKey().'/nodes')
         ->assertOk()
         ->assertJsonPath('meta.per_page', 50);
 });
 
 it('refuses a tus abort when the host role driver denies the actor', function (): void {
     $storage = r07cStorage();
-    $uploadId = (string) $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+    $uploadId = (string) $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'filename' => 'guard.bin',
         'size' => 4,
     ])->assertCreated()->json('data.upload_id');
 
     r07cDeny();
 
-    $this->delete('api/vaulter/resumable-uploads/'.$uploadId, [], ['Tus-Resumable' => '1.0.0'])
+    $this->delete('api/vaulter/v1/uploads/'.$uploadId, [], ['Tus-Resumable' => '1.0.0'])
         ->assertNotFound();
 });

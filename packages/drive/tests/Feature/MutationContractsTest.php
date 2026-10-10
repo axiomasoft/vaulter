@@ -88,36 +88,29 @@ it('keeps the complete storage and folder event contracts', function (): void {
         ]);
 });
 
-it('returns the complete storage API shape including toolbar abilities', function (): void {
+it('returns the complete v1 drive shape with string ids and nothing internal', function (): void {
     $storage = Vaulter::drive(DriveTestHelpers::host())->model();
 
-    $data = $this->getJson('api/vaulter/storages/'.$storage->getKey())->assertOk()->json('data');
+    $data = $this->getJson('api/vaulter/v1/drives/'.$storage->getKey())->assertOk()->json('data');
     $keys = array_keys($data);
     sort($keys);
 
     expect($keys)->toBe([
-        'abilities', 'created_at', 'disk', 'id', 'name', 'owner', 'panel', 'quota_bytes',
-        'root_node_id', 'slug', 'status', 'storage_type', 'updated_at', 'used_bytes',
+        'created_at', 'id', 'name', 'owner', 'profile', 'quota_bytes', 'root_node_id', 'status', 'used_bytes',
     ])
-        ->and($data['id'])->toEqual($storage->getKey())
-        ->and($data['owner'])->toEqual([
+        ->and($data['id'])->toBe((string) $storage->getKey())
+        ->and($data['owner'])->toBe([
             'type' => $storage->owner_type,
-            'id' => $storage->owner_id,
+            'id' => (string) $storage->owner_id,
         ])
-        ->and($data['root_node_id'])->toEqual($storage->root_node_id)
-        ->and($data['used_bytes'])->toBe(0)
-        ->and($data['abilities'])->toEqual([
-            'view' => true,
-            'create_folder' => true,
-            'upload' => true,
-            'manage' => true,
-        ]);
+        ->and($data['root_node_id'])->toBe((string) $storage->root_node_id)
+        ->and($data['used_bytes'])->toBe(0);
 });
 
 it('rejects each malformed resumable upload field', function (array $overrides, string $field): void {
     $storage = Vaulter::drive(DriveTestHelpers::host())->model();
 
-    $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', array_merge([
+    $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', array_merge([
         'protocol' => 'tus',
         'name' => 'valid.bin',
         'total_size_bytes' => 4,

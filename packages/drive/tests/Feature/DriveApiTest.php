@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Contracts\Cas\StorageDriver;
+use Vaulter\Drive\Tests\Http\DriveV1;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\Drive;
@@ -38,7 +39,7 @@ function driveStorage(): Drive
 
 it('runs the full CRUD cycle: folder → upload → list → show → rename → move → copy → trash → restore → force', function (): void {
     $storage = driveStorage();
-    $base = 'api/vaulter/storages/'.$storage->getKey();
+    $base = 'api/vaulter/v1/drives/'.$storage->getKey();
 
     // create folder
     $folder = $this->postJson($base.'/folders', ['name' => 'Docs'])
@@ -48,7 +49,7 @@ it('runs the full CRUD cycle: folder → upload → list → show → rename →
         ->json('data.id');
 
     // upload a file into the folder
-    $node = $this->postJson($base.'/uploads', [
+    $node = $this->postJson($base.'/files', [
         'parent_id' => $folder,
         'file' => UploadedFile::fake()->createWithContent('report.txt', 'hello drive'),
     ])
@@ -59,31 +60,31 @@ it('runs the full CRUD cycle: folder → upload → list → show → rename →
         ->json('data.id');
 
     // list children of the folder
-    $this->getJson($base.'/nodes?parent_id='.$folder)
+    $this->getJson($base.'/nodes?parent='.$folder)
         ->assertOk()
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.id', $node);
 
     // show the file node with its breadcrumb
     // breadcrumb is root → Docs → file (the root node is the first crumb).
-    $this->getJson('api/vaulter/nodes/'.$node)
+    $this->getJson('api/vaulter/v1/nodes/'.$node.'?include=breadcrumb')
         ->assertOk()
         ->assertJsonPath('data.id', $node)
         ->assertJsonPath('data.abilities.download', true)
         ->assertJsonCount(3, 'data.breadcrumb');
 
     // rename
-    $this->patchJson('api/vaulter/nodes/'.$node, ['name' => 'renamed.txt'])
+    $this->patchJson('api/vaulter/v1/nodes/'.$node, ['name' => 'renamed.txt'], DriveV1::ifMatch($node))
         ->assertOk()
         ->assertJsonPath('data.name', 'renamed.txt');
 
     // move to the storage root
-    $this->postJson('api/vaulter/nodes/'.$node.'/move', ['parent_id' => null])
+    $this->postJson('api/vaulter/v1/nodes/'.$node.'/move', ['destination_id' => null], DriveV1::ifMatch($node))
         ->assertOk()
         ->assertJsonPath('data.parent_id', (string) $storage->refresh()->root_node_id);
 
     // copy (shares the same blob via dedup)
-    $copy = $this->postJson('api/vaulter/nodes/'.$node.'/copy', ['name' => 'copy.txt'])
+    $copy = $this->postJson('api/vaulter/v1/nodes/'.$node.'/copy', ['name' => 'copy.txt'])
         ->assertCreated()
         ->assertJsonPath('data.name', 'copy.txt')
         ->json('data.id');
@@ -91,27 +92,27 @@ it('runs the full CRUD cycle: folder → upload → list → show → rename →
     expect(Blob::query()->count())->toBe(1);
 
     // trash → restore → force-delete
-    $this->deleteJson('api/vaulter/nodes/'.$copy)->assertOk();
+    $this->postJson('api/vaulter/v1/nodes/'.$copy.'/trash', [], DriveV1::ifMatch($copy))->assertOk();
     expect(Node::query()->find($copy)->trashed_at)->not->toBeNull();
 
-    $this->postJson('api/vaulter/nodes/'.$copy.'/restore')->assertOk();
+    $this->postJson('api/vaulter/v1/nodes/'.$copy.'/restore', [], DriveV1::ifMatch($copy))->assertOk();
     expect(Node::query()->find($copy)->trashed_at)->toBeNull();
 
     // forceDelete only purges from the trash: a live node is refused, a trashed one
     // is physically deleted and frees the bytes; the physical blob is
     // reclaimed later by GC (§2.10).
-    $this->deleteJson('api/vaulter/nodes/'.$copy.'/force')
+    $this->deleteJson('api/vaulter/v1/nodes/'.$copy, [], DriveV1::ifMatch($copy))
         ->assertStatus(409)
         ->assertJsonPath('code', 'node_not_trashed');
-    $this->deleteJson('api/vaulter/nodes/'.$copy)->assertOk();
-    $this->deleteJson('api/vaulter/nodes/'.$copy.'/force')->assertNoContent();
+    $this->postJson('api/vaulter/v1/nodes/'.$copy.'/trash', [], DriveV1::ifMatch($copy))->assertOk();
+    $this->deleteJson('api/vaulter/v1/nodes/'.$copy, [], DriveV1::ifMatch($copy))->assertNoContent();
     expect(Node::query()->find($copy))->toBeNull()
         ->and(Node::query()->find($copy))->toBeNull();
 });
 
 it('dedups two identical uploads onto a shared blob', function (): void {
     $storage = driveStorage();
-    $base = 'api/vaulter/storages/'.$storage->getKey().'/uploads';
+    $base = 'api/vaulter/v1/drives/'.$storage->getKey().'/files';
 
     $this->postJson($base, ['file' => UploadedFile::fake()->createWithContent('a.bin', 'same bytes')])
         ->assertCreated();
@@ -124,7 +125,7 @@ it('dedups two identical uploads onto a shared blob', function (): void {
 
 it('uploads a new version onto an existing file node', function (): void {
     $storage = driveStorage();
-    $base = 'api/vaulter/storages/'.$storage->getKey().'/uploads';
+    $base = 'api/vaulter/v1/drives/'.$storage->getKey().'/files';
 
     $node = $this->postJson($base, ['file' => UploadedFile::fake()->createWithContent('v.txt', 'v1')])
         ->assertCreated()
@@ -132,12 +133,11 @@ it('uploads a new version onto an existing file node', function (): void {
 
     $firstVersion = Node::query()->find($node)->file()->value('current_revision_id');
 
-    $this->postJson($base, [
-        'node_id' => $node,
+    $this->postJson('api/vaulter/v1/files/'.$node.'/revisions', [
         'file' => UploadedFile::fake()->createWithContent('v.txt', 'v2 longer'),
-    ])
+    ], DriveV1::ifMatch($node))
         ->assertCreated()
-        ->assertJsonPath('data.id', $node);
+        ->assertJsonPath('data.number', 2);
 
     $reloaded = Node::query()->find($node);
 
@@ -148,18 +148,18 @@ it('uploads a new version onto an existing file node', function (): void {
 it('rejects an invalid name with 422', function (): void {
     $storage = driveStorage();
 
-    $this->postJson('api/vaulter/storages/'.$storage->getKey().'/folders', ['name' => 'a/b'])
+    $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/folders', ['name' => 'a/b'])
         ->assertStatus(422)
         ->assertJsonValidationErrors('name');
 
-    $this->postJson('api/vaulter/storages/'.$storage->getKey().'/folders', ['name' => ''])
+    $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/folders', ['name' => ''])
         ->assertStatus(422)
         ->assertJsonValidationErrors('name');
 });
 
 it('surfaces a sibling-name conflict as a clean 409', function (): void {
     $storage = driveStorage();
-    $base = 'api/vaulter/storages/'.$storage->getKey().'/folders';
+    $base = 'api/vaulter/v1/drives/'.$storage->getKey().'/folders';
 
     $this->postJson($base, ['name' => 'Twin'])->assertCreated();
 
@@ -175,11 +175,11 @@ it('streams the current version with the right bytes and headers (no temp-url di
 
     $storage = driveStorage();
 
-    $node = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/uploads', [
+    $node = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/files', [
         'file' => UploadedFile::fake()->createWithContent('greeting.txt', 'hello bytes'),
     ])->json('data.id');
 
-    $response = $this->get('api/vaulter/nodes/'.$node.'/download');
+    $response = $this->get('api/vaulter/v1/files/'.$node.'/download');
 
     $response->assertOk();
 
@@ -195,11 +195,11 @@ it('streams the bytes through PHP even on a disk that provides a temporary url, 
     // response is always a streamed 200, never a 302.
     $storage = driveStorage();
 
-    $node = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/uploads', [
+    $node = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/files', [
         'file' => UploadedFile::fake()->createWithContent('signed.txt', 'never redirected bytes'),
     ])->json('data.id');
 
-    $response = $this->get('api/vaulter/nodes/'.$node.'/download');
+    $response = $this->get('api/vaulter/v1/files/'.$node.'/download');
 
     $response->assertOk();
     expect($response->streamedContent())->toBe('never redirected bytes');
@@ -209,17 +209,17 @@ it('streams a specific historical version', function (): void {
     app()->instance(StorageDriver::class, new StreamingOnlyStorageDriver(app(StorageDriver::class)));
 
     $storage = driveStorage();
-    $base = 'api/vaulter/storages/'.$storage->getKey().'/uploads';
+    $base = 'api/vaulter/v1/drives/'.$storage->getKey().'/files';
 
     $node = $this->postJson($base, ['file' => UploadedFile::fake()->createWithContent('h.txt', 'first')])
         ->json('data.id');
 
     $firstVersionId = Node::query()->find($node)->file()->value('current_revision_id');
 
-    $this->postJson($base, ['node_id' => $node, 'file' => UploadedFile::fake()->createWithContent('h.txt', 'second')])
+    $this->postJson('api/vaulter/v1/files/'.$node.'/revisions', ['file' => UploadedFile::fake()->createWithContent('h.txt', 'second')], DriveV1::ifMatch($node))
         ->assertCreated();
 
-    $response = $this->get(sprintf('api/vaulter/nodes/%s/versions/%s/download', $node, $firstVersionId));
+    $response = $this->get(sprintf('api/vaulter/v1/files/%s/revisions/%s/download', $node, $firstVersionId));
 
     $response->assertOk();
     expect($response->streamedContent())->toBe('first');
@@ -232,11 +232,11 @@ it('serves a text/html declared mime as octet-stream with nosniff, never the raw
 
     $storage = driveStorage();
 
-    $node = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/uploads', [
+    $node = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/files', [
         'file' => UploadedFile::fake()->createWithContent('evil.html', '<html><body>dangerous HTML</body></html>'),
     ])->json('data.id');
 
-    $response = $this->get('api/vaulter/nodes/'.$node.'/download');
+    $response = $this->get('api/vaulter/v1/files/'.$node.'/download');
 
     $response->assertOk();
     expect($response->headers->get('content-type'))->toBe('application/octet-stream')
@@ -248,11 +248,11 @@ it('serves a whitelisted image/png declared mime as-is, with nosniff still set (
 
     $storage = driveStorage();
 
-    $node = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/uploads', [
+    $node = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/files', [
         'file' => UploadedFile::fake()->image('photo.png', 1, 1),
     ])->json('data.id');
 
-    $response = $this->get('api/vaulter/nodes/'.$node.'/download');
+    $response = $this->get('api/vaulter/v1/files/'.$node.'/download');
 
     $response->assertOk();
     expect($response->headers->get('content-type'))->toBe('image/png')
@@ -262,14 +262,14 @@ it('serves a whitelisted image/png declared mime as-is, with nosniff still set (
 it('shows storage meta with root node id and quota accounting', function (): void {
     $storage = driveStorage();
 
-    $this->getJson('api/vaulter/storages/'.$storage->getKey())
+    $this->getJson('api/vaulter/v1/drives/'.$storage->getKey())
         ->assertOk()
-        ->assertJsonPath('data.id', $storage->getKey())
-        ->assertJsonPath('data.root_node_id', $storage->root_node_id)
+        ->assertJsonPath('data.id', (string) $storage->getKey())
+        ->assertJsonPath('data.root_node_id', (string) $storage->root_node_id)
         ->assertJsonPath('data.used_bytes', 0);
 });
 
-it('resolves the swapped Node/Storage models through route-model binding', function (): void {
+it('resolves the swapped Node/Storage models through the scalar route ids', function (): void {
     config()->set('vaulter.models.node', SwappedNode::class);
     config()->set('vaulter.models.drive', SwappedStorage::class);
 
@@ -277,20 +277,20 @@ it('resolves the swapped Node/Storage models through route-model binding', funct
 
     expect($storage)->toBeInstanceOf(SwappedStorage::class);
 
-    $node = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/folders', ['name' => 'Bound'])
+    $node = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/folders', ['name' => 'Bound'])
         ->assertCreated()
         ->json('data.id');
 
-    // The bound parameter resolves through the swapped model — a successful show
-    // proves the Route::bind honoured config('vaulter.models.*').
-    $this->getJson('api/vaulter/nodes/'.$node)
+    // The id resolves through the swapped model — a successful show proves the
+    // resolver honoured config('vaulter.models.*').
+    $this->getJson('api/vaulter/v1/nodes/'.$node)
         ->assertOk()
         ->assertJsonPath('data.name', 'Bound');
 });
 
 it('cursor-paginates the folder listing', function (): void {
     $storage = driveStorage();
-    $base = 'api/vaulter/storages/'.$storage->getKey();
+    $base = 'api/vaulter/v1/drives/'.$storage->getKey();
 
     for ($i = 0; $i < 5; $i++) {
         $this->postJson($base.'/folders', ['name' => 'F'.$i])->assertCreated();
@@ -299,20 +299,20 @@ it('cursor-paginates the folder listing', function (): void {
     $first = $this->getJson($base.'/nodes?per_page=2')
         ->assertOk()
         ->assertJsonCount(2, 'data')
-        ->assertJsonPath('meta.path', fn (mixed $path): bool => is_string($path));
+        ->assertJsonPath('meta.per_page', 2);
 
     $nextCursor = $first->json('meta.next_cursor');
 
     expect($nextCursor)->not->toBeNull();
 
-    $this->getJson($base.'/nodes?per_page=2&cursor='.$nextCursor)
+    $this->getJson($base.'/nodes?per_page=2&cursor='.urlencode($nextCursor))
         ->assertOk()
         ->assertJsonCount(2, 'data');
 });
 
 it('resolves a listing page of sibling nodes with O(1) storage queries, not O(N) (F-P4.2-03)', function (): void {
     $storage = driveStorage();
-    $base = 'api/vaulter/storages/'.$storage->getKey();
+    $base = 'api/vaulter/v1/drives/'.$storage->getKey();
     $siblingCount = 5;
 
     for ($i = 0; $i < $siblingCount; $i++) {

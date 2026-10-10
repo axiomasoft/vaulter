@@ -26,9 +26,9 @@ it('resolves a host node parameter with the host model', function (): void {
 });
 
 it('returns the problem code for a missing Vaulter storage', function (): void {
-    $this->getJson('api/vaulter/storages/999999/nodes')->assertNotFound()->assertJsonPath('code', 'drive_not_found');
+    $this->getJson('api/vaulter/v1/drives/999999/nodes')->assertNotFound()->assertJsonPath('code', 'drive_not_found');
 });
 
 it('returns the problem code for a missing Vaulter node', function (): void {
-    $this->getJson('api/vaulter/nodes/999999')->assertNotFound()->assertJsonPath('code', 'node_not_found');
+    $this->getJson('api/vaulter/v1/nodes/999999')->assertNotFound()->assertJsonPath('code', 'node_not_found');
 });

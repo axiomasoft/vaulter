@@ -52,12 +52,12 @@ function r07bReqBuildFile(array $data): UploadFileRequest
 
 function r07bReqStorageBase(): string
 {
-    return 'api/vaulter/storages/'.Vaulter::drive(DriveTestHelpers::host())->model()->getKey();
+    return 'api/vaulter/v1/drives/'.Vaulter::drive(DriveTestHelpers::host())->model()->getKey();
 }
 
 function r07bReqUploadId(string $storageId, array $extra = []): string
 {
-    return test()->postJson('api/vaulter/storages/'.$storageId.'/resumable-uploads', [
+    return test()->postJson('api/vaulter/v1/drives/'.$storageId.'/uploads', [
         'name' => 'r07b.bin',
         'total_size_bytes' => 8,
         ...$extra,
@@ -132,7 +132,7 @@ it('R07b: name() returns the string for a non-empty string (L80 sanity)', functi
 // ── CreateUploadSessionRequest: rules() RemoveArrayItem (L29-35) ─────────────
 
 it('R07b: resumable session rules() enforces protocol, name, sha256, mime and metadata (L29-35 RemoveArrayItem)', function (): void {
-    $base = r07bReqStorageBase().'/resumable-uploads';
+    $base = r07bReqStorageBase().'/uploads';
 
     // L29: protocol in:... rule
     $this->postJson($base, ['protocol' => 'unknown-proto', 'name' => 'f.bin', 'total_size_bytes' => 1])
@@ -186,7 +186,7 @@ it('R07b: UploadFileRequest name() returns the string for a non-empty value (L91
 // ── UploadFileRequest: rules() RemoveArrayItem (L29/41/42/43) ────────────────
 
 it('R07b: UploadFileRequest rules() has file required, name max and name regex (L29/41/42/43)', function (): void {
-    $base = r07bReqStorageBase().'/uploads';
+    $base = r07bReqStorageBase().'/files';
 
     // L29: file required
     $this->postJson($base, [])->assertUnprocessable()
@@ -346,9 +346,9 @@ it('R07b: purge-trash emits vaulter_purge_nodes_total when nodes are purged (L11
 it('R07b: max_chunk_bytes=1 blocks a 2-byte declared chunk with 413 (L390 IncrementInteger)', function (): void {
     config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 1);
     $storageId = r07bReqStorageBase();
-    $uploadId = r07bReqUploadId(explode('/', $storageId)[3], ['total_size_bytes' => 16]);
+    $uploadId = r07bReqUploadId(explode('/', $storageId)[4], ['total_size_bytes' => 16]);
 
-    $response = $this->call('PATCH', 'api/vaulter/resumable-uploads/'.$uploadId, server: [
+    $response = $this->call('PATCH', 'api/vaulter/v1/uploads/'.$uploadId, server: [
         'HTTP_TUS_RESUMABLE' => '1.0.0',
         'CONTENT_TYPE' => 'application/offset+octet-stream',
         'CONTENT_LENGTH' => '2',
@@ -364,9 +364,9 @@ it('R07b: max_chunk_bytes=1 blocks a 2-byte declared chunk with 413 (L390 Increm
 it('R07b: max_chunk_bytes=1 allows an exactly 1-byte chunk (L390 boundary)', function (): void {
     config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 1);
     $storageId = r07bReqStorageBase();
-    $uploadId = r07bReqUploadId(explode('/', $storageId)[3], ['total_size_bytes' => 16]);
+    $uploadId = r07bReqUploadId(explode('/', $storageId)[4], ['total_size_bytes' => 16]);
 
-    $this->call('PATCH', 'api/vaulter/resumable-uploads/'.$uploadId, server: [
+    $this->call('PATCH', 'api/vaulter/v1/uploads/'.$uploadId, server: [
         'HTTP_TUS_RESUMABLE' => '1.0.0',
         'CONTENT_TYPE' => 'application/offset+octet-stream',
         'CONTENT_LENGTH' => '1',
@@ -378,12 +378,12 @@ it('R07b: max_chunk_bytes=1 allows an exactly 1-byte chunk (L390 boundary)', fun
 
 it('R07b: sanitizeMetadata continues after unknown key and still includes known keys that follow (L433 ContinueToBreak)', function (): void {
     config()->set('vaulter-drive.uploads.resumable.metadata.allowed_keys', ['filename']);
-    $storageId = explode('/', r07bReqStorageBase())[3];
+    $storageId = explode('/', r07bReqStorageBase())[4];
 
     // JSON body metadata: 'unknown_first' key comes before 'filename'
     // ContinueToBreak: break stops the foreach at 'unknown_first' → 'filename' never processed → empty result
     // Original: continue skips 'unknown_first' → 'filename' is included
-    $uploadId = $this->postJson('api/vaulter/storages/'.$storageId.'/resumable-uploads', [
+    $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storageId.'/uploads', [
         'name' => 'meta.bin',
         'total_size_bytes' => 4,
     ], [
@@ -398,10 +398,10 @@ it('R07b: sanitizeMetadata continues after unknown key and still includes known 
 
 it('R07b: decodeUploadMetadata skips segments with an empty key (L462 EmptyStringToNotEmpty)', function (): void {
     config()->set('vaulter-drive.uploads.resumable.metadata.allowed_keys', ['filename']);
-    $storageId = explode('/', r07bReqStorageBase())[3];
+    $storageId = explode('/', r07bReqStorageBase())[4];
 
     // Double-comma creates an empty segment: ', ,' splits into ' ' which trims to ''
-    $uploadId = $this->postJson('api/vaulter/storages/'.$storageId.'/resumable-uploads', [
+    $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storageId.'/uploads', [
         'name' => 'empty-key.bin',
         'total_size_bytes' => 4,
     ], [
@@ -417,10 +417,10 @@ it('R07b: decodeUploadMetadata skips segments with an empty key (L462 EmptyStrin
 // ── TusUploadController: abort manager call (L186 RemoveMethodCall) ───────────
 
 it('R07b: DELETE abort transitions session to Aborted status (L186 RemoveMethodCall)', function (): void {
-    $storageId = explode('/', r07bReqStorageBase())[3];
+    $storageId = explode('/', r07bReqStorageBase())[4];
     $uploadId = r07bReqUploadId($storageId);
 
-    $this->delete('api/vaulter/resumable-uploads/'.$uploadId, [], ['Tus-Resumable' => '1.0.0'])
+    $this->delete('api/vaulter/v1/uploads/'.$uploadId, [], ['Tus-Resumable' => '1.0.0'])
         ->assertNoContent()
         ->assertHeader('Tus-Resumable', '1.0.0');
 

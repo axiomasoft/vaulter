@@ -95,11 +95,11 @@ final readonly class FileOperations implements Contract
         );
     }
 
-    public function restoreRevision(NodeSnapshot|string|int $file, FileRevisionSnapshot|string|int $revision): FileRevisionSnapshot
+    public function restoreRevision(NodeSnapshot|string|int $file, FileRevisionSnapshot|string|int $revision, ?int $expectedSequence = null): FileRevisionSnapshot
     {
         $node = $this->file($file, Ability::Edit);
 
-        return $this->revisions->map($this->restore->execute($this->context, new RestoreFileRevisionInput($node, $this->revision($node, $revision))), $node->file()->firstOrFail());
+        return $this->revisions->map($this->restore->execute($this->context, new RestoreFileRevisionInput($node, $this->revision($node, $revision), $expectedSequence)), $node->file()->firstOrFail());
     }
 
     public function deleteRevision(NodeSnapshot|string|int $file, FileRevisionSnapshot|string|int $revision): void

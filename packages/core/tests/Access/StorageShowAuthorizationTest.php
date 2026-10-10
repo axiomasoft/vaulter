@@ -14,16 +14,16 @@ use Vaulter\Tests\Fixtures\Access\ProfileDenyDriver;
 use Vaulter\Tests\Fixtures\TestUser;
 
 /**
- * Storage SHOW authorization (M2a / H.2) — `GET storages/{storage}` now guards
- * Ability::View on the storage ROOT node through the AccessResolver before exposing
- * the meta, exactly as NodeController guards a per-node show. This file pins the
- * EXACT gate at the storage seam:
+ * Drive show authorization — `GET v1/drives/{drive}` reads the meta only after View on
+ * the drive ROOT node, through the same operations as a PHP caller. This file pins the
+ * EXACT gate at the drive seam:
  *
- *   - a rooted storage opens ONLY when the actor holds a View-implying grant on the
- *     root; a missing grant, an administrative block, and a guest all 403;
- *   - an un-ROOTED storage (root_node_id null) has no node to gate on and is a
- *     corrupt/transient state (provisioning is transactional) — it 404s for EVERYONE,
- *     authenticated or not, so the meta never leaks to a grantless actor;
+ *   - a rooted drive opens ONLY when the actor holds a View-implying grant on the root;
+ *     a missing grant or an administrative block answers 404 drive_not_found, exactly
+ *     like an unknown drive (D38), and a guest 401 actor_required;
+ *   - an un-ROOTED drive (root_node_id null) has no node to gate on and is a
+ *     corrupt/transient state (provisioning is transactional) — it 404s for every
+ *     authenticated caller, so the meta never leaks to a grantless actor;
  *   - on an OPEN (null) driver `$access->can` delegates to the driver, so the show is
  *     open for any authenticated actor regardless of grants.
  *
@@ -68,24 +68,24 @@ it('shows a rooted storage for an actor holding a view grant on the root', funct
     // Reader on the root carries the READ bit ⇒ View is allowed ⇒ the show opens.
     AccessTestHelpers::grant($root, RoleRegistry::READER, scope: GrantScope::Subtree);
 
-    $this->getJson('api/vaulter/storages/'.$storage->getKey())
+    $this->getJson('api/vaulter/v1/drives/'.$storage->getKey())
         ->assertOk()
-        ->assertJsonPath('data.id', $storage->getKey())
-        ->assertJsonPath('data.root_node_id', $storage->root_node_id)
-        ->assertJsonPath('data.abilities.view', true);
+        ->assertJsonPath('data.id', (string) $storage->getKey())
+        ->assertJsonPath('data.root_node_id', (string) $storage->root_node_id);
 });
 
-// ── (b) Rooted storage, authenticated actor with NO grant on the root → 403.
+// ── (b) Rooted drive, authenticated actor with NO grant on the root → 404, like an unknown drive.
 it('refuses a rooted storage show for an actor with no grant on the root', function (): void {
     $storage = AccessTestHelpers::storage();
 
-    // No grant anywhere ⇒ the View-guard on the root denies the actor (no grant).
-    $this->getJson('api/vaulter/storages/'.$storage->getKey())
-        ->assertStatus(403);
+    // No grant anywhere ⇒ the View-guard on the root hides the drive.
+    $this->getJson('api/vaulter/v1/drives/'.$storage->getKey())
+        ->assertNotFound()
+        ->assertJsonPath('code', 'drive_not_found');
 });
 
 // ── (c) An administrative block reaches the storage endpoint: an owner grant on the
-//        root overridden by the permission driver's Deny → 403 (the EXACT gate, not
+//        root overridden by the permission driver's Deny → 404 (the EXACT gate, not
 //        just "a grant exists").
 it('refuses a rooted storage show when an administrative block overrides the root grant (exact gate)', function (): void {
     $storage = AccessTestHelpers::storage();
@@ -99,11 +99,12 @@ it('refuses a rooted storage show when an administrative block overrides the roo
     app()->forgetInstance(PermissionDriverManager::class);
     app()->forgetInstance(AccessResolver::class);
 
-    $this->getJson('api/vaulter/storages/'.$storage->getKey())
-        ->assertStatus(403);
+    $this->getJson('api/vaulter/v1/drives/'.$storage->getKey())
+        ->assertNotFound()
+        ->assertJsonPath('code', 'drive_not_found');
 });
 
-// ── (d) Rooted storage, UNAUTHENTICATED guest → 403 (no actor ⇒ no grant on the root).
+// ── (d) Rooted drive, UNAUTHENTICATED guest → 401 before anything is looked up.
 it('refuses a rooted storage show for an unauthenticated guest', function (): void {
     $storage = AccessTestHelpers::storage();
     // Even an Owner grant for user 1 is irrelevant — THIS request has no actor, so the
@@ -112,8 +113,9 @@ it('refuses a rooted storage show for an unauthenticated guest', function (): vo
 
     actAsStorageGuest();
 
-    $this->getJson('api/vaulter/storages/'.$storage->getKey())
-        ->assertStatus(403);
+    $this->getJson('api/vaulter/v1/drives/'.$storage->getKey())
+        ->assertUnauthorized()
+        ->assertJsonPath('code', 'actor_required');
 });
 
 // ── (e) No-root storage (root_node_id null): 404 for EVERYONE. Provisioning is
@@ -129,21 +131,21 @@ it('404s a no-root storage show for an authenticated grantless actor (no meta le
     // the storage owner/name/quota to any authenticated caller.
     app(VaulterDatabase::class)->write(fn () => $storage->forceFill(['root_node_id' => null])->save());
 
-    $this->getJson('api/vaulter/storages/'.$storage->getKey())
+    $this->getJson('api/vaulter/v1/drives/'.$storage->getKey())
         ->assertStatus(404);
 });
 
-it('404s a no-root storage show for an unauthenticated guest', function (): void {
+it('asks a guest to authenticate before revealing anything about a no-root storage', function (): void {
     $storage = AccessTestHelpers::storage();
 
-    // No root AND no actor: still 404 — the corrupt-state miss fires before any meta is
-    // shaped, so the name/owner/quota never reach an actor-less caller either.
+    // No root AND no actor: 401 — the meta never reaches an actor-less caller.
     app(VaulterDatabase::class)->write(fn () => $storage->forceFill(['root_node_id' => null])->save());
 
     actAsStorageGuest();
 
-    $this->getJson('api/vaulter/storages/'.$storage->getKey())
-        ->assertStatus(404);
+    $this->getJson('api/vaulter/v1/drives/'.$storage->getKey())
+        ->assertUnauthorized()
+        ->assertJsonMissingPath('data');
 });
 
 // ── open-driver passthrough: on the OPEN null driver $access->can delegates to the
@@ -155,7 +157,7 @@ it('opens a rooted storage show on the null driver regardless of grants', functi
     // which opens for any actor, so the show must still 200 (the database lane would 403).
     useNullPermissionDriver();
 
-    $this->getJson('api/vaulter/storages/'.$storage->getKey())
+    $this->getJson('api/vaulter/v1/drives/'.$storage->getKey())
         ->assertOk()
-        ->assertJsonPath('data.id', $storage->getKey());
+        ->assertJsonPath('data.id', (string) $storage->getKey());
 });

@@ -4,15 +4,21 @@ declare(strict_types=1);
 
 namespace Vaulter\Tests\Http;
 
+use Illuminate\Contracts\Auth\Access\Authorizable;
+use Illuminate\Http\Request;
+use Throwable;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Data\Snapshots\NodeSnapshot;
+use Vaulter\Drive\Http\Resources\NodeResponses;
 use Vaulter\Enums\Access\GrantScope;
+use Vaulter\Http\Support\HttpResourceResolver;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\VaulterManager;
 
 /** Fixtures of the REST v1 suite: a drive under real grants and its URLs. */
 final class V1
@@ -48,5 +54,36 @@ final class V1
     public static function folder(DriveHandle $drive, string $name, ?string $parent = null): NodeSnapshot
     {
         return $drive->folders()->create(name: $name, parent: $parent);
+    }
+
+    /**
+     * The tag $drive's actor would see for a node, trashed members included — for nodes a
+     * client has no listing to read the tag from (a member inside a trashed folder).
+     */
+    public static function tagFor(DriveHandle $drive, string $nodeId): string
+    {
+        return app(NodeResponses::class)->current(Request::create('/'), $drive, $nodeId, includeTrashed: true)->etag();
+    }
+
+    /**
+     * The If-Match header the authenticated user would send for a node (live or trashed).
+     *
+     * @return array{If-Match: string}
+     */
+    public static function ifMatch(int|string $nodeId): array
+    {
+        $user = auth()->user();
+        try {
+            if (!$user instanceof Authorizable) {
+                throw new \RuntimeException('ifMatch() needs an authenticated user');
+            }
+            $drive = app(VaulterManager::class)->drive(app(HttpResourceResolver::class)->driveOfNode((string) $nodeId))->actingAs($user);
+
+            return ['If-Match' => self::tagFor($drive, (string) $nodeId)];
+        } catch (Throwable) {
+            // A node the user cannot see has no tag for it; the request then answers
+            // whatever hides the node, before any precondition.
+            return ['If-Match' => '"unseen"'];
+        }
     }
 }

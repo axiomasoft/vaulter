@@ -21,9 +21,10 @@ it('registers the API routes', function (): void {
         ->map(fn ($route): string => $route->uri());
 
     expect($uris)
-        ->toContain('api/vaulter/storages/{storage}')
-        ->toContain('api/vaulter/storages/{storage}/nodes')
-        ->toContain('api/vaulter/nodes/{node}');
+        ->toContain('api/vaulter/v1/drives/{drive}')
+        ->toContain('api/vaulter/v1/drives/{drive}/nodes')
+        ->toContain('api/vaulter/v1/nodes/{node}')
+        ->not->toContain('api/vaulter/storages/{storage}');
 });
 
 it('exposes the Vaulter facade', function (): void {

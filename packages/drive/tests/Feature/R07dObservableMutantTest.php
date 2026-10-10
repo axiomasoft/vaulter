@@ -23,6 +23,7 @@ use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Models\Uploads\UploadPart;
+use Vaulter\Drive\Tests\Http\DriveV1;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Drive\Uploads\StagedUpload;
@@ -271,7 +272,7 @@ it('counts a 10-byte download as one 10-byte chunk', function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
     $file = DriveTestHelpers::drive()->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('0123456789'), 'ten.bin'));
 
-    $response = $this->get('api/vaulter/nodes/'.$file->id.'/download');
+    $response = $this->get('api/vaulter/v1/files/'.$file->id.'/download');
     $response->assertOk();
     expect($response->streamedContent())->toBe('0123456789');
 
@@ -287,7 +288,7 @@ it('records download ttfb once for a body larger than one read', function (): vo
     $bytes = str_repeat('x', (1024 * 256) + 1);
     $file = DriveTestHelpers::drive()->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor($bytes), 'wide.bin'));
 
-    $response = $this->get('api/vaulter/nodes/'.$file->id.'/download');
+    $response = $this->get('api/vaulter/v1/files/'.$file->id.'/download');
     $response->assertOk();
     expect(strlen($response->streamedContent()))->toBe(strlen($bytes));
 
@@ -308,44 +309,43 @@ it('keeps the source original name on a copied version', function (): void {
 
 it('hides move copy and revision sources when Create is present but Read is absent', function (): void {
     $storage = r07dStorage();
-    $base = 'api/vaulter/storages/'.$storage->getKey();
-    $nodeId = (string) $this->postJson($base.'/uploads', [
+    $base = 'api/vaulter/v1/drives/'.$storage->getKey();
+    $nodeId = (string) $this->postJson($base.'/files', [
         'file' => UploadedFile::fake()->createWithContent('src.txt', 'src'),
     ])->assertCreated()->json('data.id');
     $folderId = (string) $this->postJson($base.'/folders', ['name' => 'Dest'])->assertCreated()->json('data.id');
 
     r07dInstall(bits: Permission::Create->value, workspaceCreate: true);
 
-    $this->postJson('api/vaulter/nodes/'.$nodeId.'/move', ['parent_id' => $folderId])->assertNotFound()->assertJsonPath('code', 'node_not_found');
-    $this->postJson('api/vaulter/nodes/'.$nodeId.'/copy', ['name' => 'copy.txt'])->assertNotFound()->assertJsonPath('code', 'node_not_found');
-    $this->postJson($base.'/uploads', [
-        'node_id' => $nodeId,
+    $this->postJson('api/vaulter/v1/nodes/'.$nodeId.'/move', ['destination_id' => $folderId], DriveV1::ifMatch($nodeId))->assertNotFound()->assertJsonPath('code', 'node_not_found');
+    $this->postJson('api/vaulter/v1/nodes/'.$nodeId.'/copy', ['name' => 'copy.txt'])->assertNotFound()->assertJsonPath('code', 'node_not_found');
+    $this->postJson('api/vaulter/v1/files/'.$nodeId.'/revisions', [
         'file' => UploadedFile::fake()->createWithContent('next.txt', 'next'),
-    ])->assertNotFound()->assertJsonPath('code', 'node_not_found');
+    ], DriveV1::ifMatch($nodeId))->assertNotFound()->assertJsonPath('code', 'node_not_found');
 });
 
 it('refuses move and copy when workspace create is closed even if the node bits allow them', function (): void {
     $storage = r07dStorage();
-    $base = 'api/vaulter/storages/'.$storage->getKey();
-    $nodeId = (string) $this->postJson($base.'/uploads', [
+    $base = 'api/vaulter/v1/drives/'.$storage->getKey();
+    $nodeId = (string) $this->postJson($base.'/files', [
         'file' => UploadedFile::fake()->createWithContent('src.txt', 'src'),
     ])->assertCreated()->json('data.id');
     $folderId = (string) $this->postJson($base.'/folders', ['name' => 'Dest'])->assertCreated()->json('data.id');
 
     r07dInstall(bits: (new RoleRegistry)->latest(RoleRegistry::WRITER)->bits, workspaceCreate: false);
 
-    $this->postJson('api/vaulter/nodes/'.$nodeId.'/move', ['parent_id' => $folderId])->assertForbidden();
-    $this->postJson('api/vaulter/nodes/'.$nodeId.'/copy', [
+    $this->postJson('api/vaulter/v1/nodes/'.$nodeId.'/move', ['destination_id' => $folderId], DriveV1::ifMatch($nodeId))->assertForbidden();
+    $this->postJson('api/vaulter/v1/nodes/'.$nodeId.'/copy', [
         'name' => 'copy.txt',
-        'parent_id' => $folderId,
+        'destination_id' => $folderId,
     ])->assertForbidden();
 });
 
 it('authorizes the requested parent, not the storage root', function (): void {
     $storage = r07dStorage();
-    $base = 'api/vaulter/storages/'.$storage->getKey();
+    $base = 'api/vaulter/v1/drives/'.$storage->getKey();
     $folderId = (string) $this->postJson($base.'/folders', ['name' => 'Owned'])->assertCreated()->json('data.id');
-    $nodeId = (string) $this->postJson($base.'/uploads', [
+    $nodeId = (string) $this->postJson($base.'/files', [
         'file' => UploadedFile::fake()->createWithContent('src.txt', 'src'),
     ])->assertCreated()->json('data.id');
 
@@ -361,14 +361,14 @@ it('authorizes the requested parent, not the storage root', function (): void {
         'name' => 'Child',
         'parent_id' => $folderId,
     ])->assertCreated();
-    $this->postJson($base.'/uploads', [
+    $this->postJson($base.'/files', [
         'parent_id' => $folderId,
         'file' => UploadedFile::fake()->createWithContent('in.txt', 'in'),
     ])->assertCreated();
-    $this->postJson('api/vaulter/nodes/'.$nodeId.'/move', ['parent_id' => $folderId])->assertOk();
-    $this->postJson('api/vaulter/nodes/'.$nodeId.'/copy', [
+    $this->postJson('api/vaulter/v1/nodes/'.$nodeId.'/move', ['destination_id' => $folderId], DriveV1::ifMatch($nodeId))->assertOk();
+    $this->postJson('api/vaulter/v1/nodes/'.$nodeId.'/copy', [
         'name' => 'copy.txt',
-        'parent_id' => $folderId,
+        'destination_id' => $folderId,
     ])->assertCreated();
 });
 

@@ -24,8 +24,12 @@ interface FileOperations
     /** @return Page<FileRevisionSnapshot> */
     public function revisions(NodeSnapshot|string|int $file, ?ListOptions $options = null): Page;
 
-    /** Copies the revision forward as the new head (restored_from_revision_id); its bytes count against the quota again. */
-    public function restoreRevision(NodeSnapshot|string|int $file, FileRevisionSnapshot|string|int $revision): FileRevisionSnapshot;
+    /**
+     * Copies the revision forward as the new head (restored_from_revision_id); its bytes
+     * count against the quota again. With $expectedSequence the file must still be at
+     * that sequence, checked before the copy is made.
+     */
+    public function restoreRevision(NodeSnapshot|string|int $file, FileRevisionSnapshot|string|int $revision, ?int $expectedSequence = null): FileRevisionSnapshot;
 
     /**
      * Delete a non-current revision and release its bytes (Manage). The head and pinned

@@ -98,13 +98,15 @@ Route::get('/projects/{project}/drive', function (App\Models\Project $project) {
 Смонтированные Drive-эндпоинты, с которыми общается фронтенд, среди прочего:
 
 ```
-GET    api/vaulter/storages/{storage}/nodes      список папки
-POST   api/vaulter/storages/{storage}/folders    создать папку
-POST   api/vaulter/storages/{storage}/uploads    загрузить файл
-PATCH  api/vaulter/nodes/{node}                   переименовать
-POST   api/vaulter/nodes/{node}/move             переместить
-DELETE api/vaulter/nodes/{node}                   в корзину
+GET    api/vaulter/v1/drives/{drive}/nodes       список папки
+POST   api/vaulter/v1/drives/{drive}/folders     создать папку
+POST   api/vaulter/v1/drives/{drive}/files       загрузить файл
+PATCH  api/vaulter/v1/nodes/{node}               переименовать (If-Match)
+POST   api/vaulter/v1/nodes/{node}/move          переместить (If-Match)
+POST   api/vaulter/v1/nodes/{node}/trash         в корзину (If-Match)
 ```
+
+Изменение существующего узла требует его текущий `ETag` в `If-Match`.
 
 ## 4. Встроить Vue-UI
 

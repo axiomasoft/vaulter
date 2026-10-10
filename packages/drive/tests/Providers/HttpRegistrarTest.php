@@ -15,8 +15,8 @@ use Vaulter\Drive\Console\SweepUploadsCommand;
 use Vaulter\Drive\Events\Nodes\FolderCreated;
 use Vaulter\Drive\Events\Uploads\UploadInitiated;
 use Vaulter\Drive\Http\Controllers\Drives\ShowDriveController;
+use Vaulter\Drive\Http\Controllers\Uploads\CreateUploadController;
 use Vaulter\Drive\Http\Controllers\Uploads\S3MultipartProtocolController;
-use Vaulter\Drive\Http\Controllers\Uploads\TusProtocolController;
 use Vaulter\Drive\Providers\HttpRegistrar;
 use Vaulter\Http\Middleware\ResolveVaulterRouteParameters;
 
@@ -31,7 +31,7 @@ it('registers no event subscriber: events are recorded by the EventRecorder', fu
     'both enabled' => [true, true],
 ]);
 
-it('declares the existing routes and commands and preserves route feature gates', function (bool $uploads, bool $grants): void {
+it('declares the v1 routes and commands, registered whatever the feature flags say', function (bool $uploads, bool $grants): void {
     config()->set('vaulter.routes.prefix', 'host/drive');
     config()->set('vaulter.routes.middleware.authenticated', ['host.auth']);
     config()->set('vaulter-drive.uploads.resumable.enabled', $uploads);
@@ -52,28 +52,23 @@ it('declares the existing routes and commands and preserves route feature gates'
         }
 
         $routes = collect($router->getRoutes()->getRoutes());
-        $show = $routes->first(fn ($route): bool => $route->uri() === 'host/drive/storages/{storage}');
+        $show = $routes->first(fn ($route): bool => $route->uri() === 'host/drive/v1/drives/{drive}');
 
         expect($show)->not->toBeNull()
             ->and($show->getAction('uses'))->toBe(ShowDriveController::class.'@__invoke')
-            ->and($show->getControllerClass())->toBe(ShowDriveController::class)
             ->and($show->methods())->toBe(['GET', 'HEAD'])
-            ->and($show->middleware())->toContain('host.auth', ResolveVaulterRouteParameters::class)
-            ->and($show->getName())->toBeNull()
-            ->and($routes->contains(fn ($route): bool => $route->uri() === 'host/drive/shared'))->toBe($grants);
+            ->and($show->middleware())->toContain('host.auth')->not->toContain(ResolveVaulterRouteParameters::class)
+            ->and($show->getName())->toBe('vaulter.v1.drives.show')
+            // A feature flag is the operations' decision, so route:cache never freezes it.
+            ->and($routes->contains(fn ($route): bool => $route->uri() === 'host/drive/v1/shared'))->toBeTrue();
 
-        $tus = $routes->first(fn ($route): bool => $route->uri() === 'host/drive/storages/{storage}/resumable-uploads');
-        $multipart = $routes->first(fn ($route): bool => $route->uri() === 'host/drive/resumable-uploads/{upload_id}/complete');
+        $create = $routes->first(fn ($route): bool => $route->uri() === 'host/drive/v1/drives/{drive}/uploads');
+        $multipart = $routes->first(fn ($route): bool => $route->uri() === 'host/drive/v1/uploads/{upload}/complete');
 
-        if (!$uploads) {
-            expect($tus)->toBeNull()->and($multipart)->toBeNull();
-
-            return;
-        }
-
-        expect($tus)->not->toBeNull()
-            ->and($tus->getActionName())->toBe(TusProtocolController::class.'@create')
-            ->and($tus->middleware())->toContain('host.auth', 'throttle:vaulter-uploads')
+        expect($create)->not->toBeNull()
+            ->and($create->getActionName())->toBe(CreateUploadController::class)
+            ->and($create->getName())->toBe('vaulter.v1.uploads.store')
+            ->and($create->middleware())->toContain('host.auth', 'throttle:vaulter-uploads')
             ->and($multipart)->not->toBeNull()
             ->and($multipart->getActionName())->toBe(S3MultipartProtocolController::class.'@complete');
     } finally {

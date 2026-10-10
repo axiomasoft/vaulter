@@ -7,6 +7,7 @@ use Illuminate\Support\Carbon as IlluminateCarbon;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Drive\Tests\Http\DriveV1;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
@@ -140,16 +141,17 @@ it('answers the REST restore of a member and of a node without a home with the s
     $member = $drive->folders()->create('Member', $folder);
     $drive->nodes()->trash($folder);
 
-    $this->postJson('api/vaulter/nodes/'.$member->id.'/restore')
+    $actor = $drive->actingAs((new TestUser)->forceFill(['id' => 1]));
+    $this->postJson('api/vaulter/v1/nodes/'.$member->id.'/restore', [], ['If-Match' => DriveV1::tagFor($actor, $member->id)])
         ->assertStatus(409)
         ->assertJsonPath('code', 'node_trashed_by_ancestor')
-        ->assertJsonPath('context.trash_root_id', (string) $folder->id);
+        ->assertJsonPath('meta.context.trash_root_id', (string) $folder->id);
 
     $parent = $drive->folders()->create('Parent');
     $child = $drive->folders()->create('Child', $parent);
     $drive->nodes()->trash($child);
     $drive->nodes()->trash($parent);
-    $this->postJson('api/vaulter/nodes/'.$child->id.'/restore')
+    $this->postJson('api/vaulter/v1/nodes/'.$child->id.'/restore', [], ['If-Match' => DriveV1::tagFor($actor, $child->id)])
         ->assertStatus(409)
         ->assertJsonPath('code', 'restore_destination_required');
 });

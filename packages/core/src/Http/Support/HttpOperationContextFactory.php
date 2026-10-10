@@ -44,9 +44,10 @@ final readonly class HttpOperationContextFactory
      */
     public function onDrive(Request $request, string $driveId, Closure $call): mixed
     {
-        $handle = $this->forDrive($request, $this->resolver->drive($driveId));
         try {
-            return $call($handle);
+            // Opening the handle re-reads the drive's state, so a drive that started
+            // being deleted since it was resolved is not found here either.
+            return $call($this->forDrive($request, $this->resolver->drive($driveId)));
         } catch (NodeNotFoundException) {
             throw StorageNotFoundException::forId($driveId);
         }

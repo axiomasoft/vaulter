@@ -48,8 +48,11 @@ function forbiddenBoundaryDependencies(string $source): array
 it('keeps migrated HTTP and Filament boundaries on Operations including aliases and literal class calls', function (): void {
     $root = dirname(__DIR__, 3);
     $paths = [
-        'drive/src/Http/Controllers/NodeController.php',
-        'drive/src/Http/Controllers/DownloadController.php',
+        'drive/src/Http/Controllers/Nodes/UpdateNodeController.php',
+        'drive/src/Http/Controllers/Trash/PurgeNodeController.php',
+        'drive/src/Http/Controllers/Files/DownloadFileController.php',
+        'drive/src/Http/Controllers/Uploads/CreateUploadController.php',
+        'drive/src/Http/Resources/NodeResponses.php',
         'core/src/Http/Controllers/Access/ListGrantsController.php',
         'core/src/Http/Controllers/Access/CreateGrantController.php',
         'core/src/Http/Controllers/Access/RevokeGrantController.php',
@@ -108,10 +111,10 @@ it('keeps every HTTP and Filament boundary on Operations except the shrinking ex
         'core/src/Http/Support/ContentResponder.php',
         'core/src/Http/Support/HttpResourceResolver.php',
         'core/src/Http/Support/SharedNodeResolver.php',
-        'drive/src/Http/Controllers/Drives/ShowDriveController.php',
+        // The protocol controllers look a session up by its upload id only to learn its
+        // drive; the upload operations then authorize every act on it.
         'drive/src/Http/Controllers/Uploads/S3MultipartProtocolController.php',
         'drive/src/Http/Controllers/Uploads/TusProtocolController.php',
-        'drive/src/Http/Resources/DriveResource.php',
         'filament/src/Support/PanelAccessScope.php',
     ];
     $offenders = [];

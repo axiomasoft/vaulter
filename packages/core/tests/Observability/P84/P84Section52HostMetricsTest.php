@@ -51,7 +51,7 @@ function p84LastValue(FakeMetricsRecorder $recorder, string $type, string $name,
 
 it('records vaulter_request_peak_memory_bytes on mapped download operations in terminate', function (): void {
     $middleware = app(RecordRequestPeakMemory::class);
-    $request = Request::create('/api/vaulter/nodes/1/download', 'GET');
+    $request = Request::create('/api/vaulter/v1/files/1/download', 'GET');
     $request->attributes->set(LoadTier::REQUEST_ATTRIBUTE, 'M');
 
     $response = $middleware->handle($request, static fn (): Response => new Response('', 200));
@@ -73,7 +73,7 @@ it('records vaulter_request_peak_memory_bytes on mapped download operations in t
 
 it('records vaulter_request_peak_memory_bytes on mapped upload operations in terminate', function (): void {
     $middleware = app(RecordRequestPeakMemory::class);
-    $request = Request::create('/api/vaulter/storages/1/uploads', 'POST');
+    $request = Request::create('/api/vaulter/v1/drives/1/files', 'POST');
     $request->attributes->set(LoadTier::REQUEST_ATTRIBUTE, 'M');
 
     $response = $middleware->handle($request, static fn (): Response => new Response('', 201));
@@ -116,11 +116,11 @@ it('records vaulter_download_stream_active from php-fpm status snapshot', functi
             'processes' => [
                 [
                     'state' => 'Running',
-                    'request uri' => '/index.php/api/vaulter/nodes/42/download',
+                    'request uri' => '/index.php/api/vaulter/v1/files/42/download',
                 ],
                 [
                     'state' => 'Running',
-                    'request uri' => '/index.php/api/vaulter/storages/1/nodes',
+                    'request uri' => '/index.php/api/vaulter/v1/drives/1/nodes',
                 ],
             ],
         ]),
@@ -141,7 +141,7 @@ it('caps vaulter_download_stream_active at php-fpm max children', function (): v
             'processes' => [
                 [
                     'state' => 'Running',
-                    'request uri' => '/index.php/api/vaulter/nodes/42/download',
+                    'request uri' => '/index.php/api/vaulter/v1/files/42/download',
                 ],
                 [
                     'state' => 'Running',

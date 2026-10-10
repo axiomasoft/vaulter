@@ -153,7 +153,7 @@ it('records download ttfb and bytes for the current file stream', function (): v
     $drive = DriveTestHelpers::drive();
     $file = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('file-bytes'), 'current.bin'));
 
-    $response = $this->get('api/vaulter/nodes/'.$file->id.'/download');
+    $response = $this->get('api/vaulter/v1/files/'.$file->id.'/download');
     $response->assertOk();
     expect($response->streamedContent())->toBe('file-bytes');
 
@@ -179,7 +179,7 @@ it('records download ttfb and bytes for a historical version stream', function (
     $drive->files()->addRevision($file, UploadSource::fromStream(DriveTestHelpers::streamFor('second-ver'), 'ver.bin'));
 
     $response = $this->get(sprintf(
-        'api/vaulter/nodes/%s/versions/%s/download',
+        'api/vaulter/v1/files/%s/revisions/%s/download',
         $file->id,
         $firstVersionId,
     ));

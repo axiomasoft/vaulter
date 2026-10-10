@@ -50,13 +50,30 @@ seeds from the current JSON.
 
 ## Representation validators (REST)
 
-The HTTP layer exposes these as strong ETags; the headers themselves arrive with REST v1.
+REST v1 exposes these as strong ETags (see the [REST reference](/reference/rest-api#validators-and-preconditions)).
 
-- Node: `"{nodeId}.{sequence}"`, checked as `If-Match`; a mismatch is `412 node_sequence_mismatch`.
-- Document content: `"{documentId}.{epoch}.{stateVersion}"`; a mismatch is
-  `412 document_state_mismatch`.
+- Node: `"{id}.{sequence}.{digest}"` — a validator of the representation **the caller**
+  receives. The digest is the first 16 hex characters of a SHA-256 over that caller's node
+  JSON without its `etag` (keys sorted at every depth), so it moves with anything the caller
+  sees change: abilities after a grant, `viewer.starred`, the head's scan state, the
+  presentation, properties, the content head — not only with `sequence`. Clients treat it as
+  opaque.
+- Document content: `"{documentId}.{epoch}.{stateVersion}"`; its body depends on no caller,
+  so the generation is enough. A mismatch is `412 document_state_mismatch`.
 - A CRDT room has no `If-Match`. Merging concurrent edits is the room's job; the hub is fenced by
   the epoch alone, and a store of a past generation is answered with `409`.
+
+A conditional route runs in this order: authenticate → resolve the drive/node (tenant-scoped)
+→ find the node as the caller (no `view` → `404`; no ability for the mutation → `403`) → build
+the caller's current representation → compare `If-Match` → call the operation with that representation's `sequence` as the
+expectation. No `If-Match`, or `If-Match: *`, is `428 precondition_required`; a weak or stale
+tag is `412 node_sequence_mismatch` (`meta.node_id`, never the current tag). The comparison is
+not the lost-update guard by itself: the operation checks the expected sequence again on the
+locked row inside its transaction, so a write that slipped in between still ends in the same
+`412`. Purge, restore and restore-revision take the expectation through the PHP API as well
+(`TrashOperations::purge($node, $expectedSequence)`, `RestoreOptions::$expectedSequence`,
+`FileOperations::restoreRevision($file, $revision, $expectedSequence)`) and check it before
+removing rows or bytes, moving a node or reserving quota; the parameter stays optional in PHP.
 
 ## Checks on the locked row
 

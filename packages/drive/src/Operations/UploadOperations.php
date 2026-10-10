@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Operations;
 
+use Vaulter\Access\OperationGuard;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Drive\Actions\Uploads\AbortUploadAction;
 use Vaulter\Drive\Actions\Uploads\CompleteUploadAction;
 use Vaulter\Drive\Actions\Uploads\InitiateUploadAction;
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
@@ -17,8 +19,11 @@ use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
+use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\OperationContext;
 
 final readonly class UploadOperations
@@ -33,6 +38,9 @@ final readonly class UploadOperations
         private UploadSessionReadRepository $sessions,
         private TusUploadHandler $tus,
         private S3MultipartHandler $s3,
+        private DriveConfig $config,
+        private NodeLocator $locator,
+        private OperationGuard $guard,
     ) {
         $drive = $handle->model();
         $key = $drive->getRawOriginal($drive->getKeyName());
@@ -43,6 +51,15 @@ final readonly class UploadOperations
 
     public function initiate(InitiateUploadInput $input): UploadSession
     {
+        if (!$this->config->resumableEnabled()) {
+            // The target is looked up first, so a disabled feature does not tell a
+            // caller which ids exist: invisible → 404, visible → 403.
+            $target = $this->locator->find(context: $this->context, key: $input->targetNode ?? $input->targetParent ?? $this->context->drive->root_node_id ?? throw NodeNotFoundException::forId('root'));
+            $this->guard->authorize(context: $this->context, ability: Ability::View, node: $target);
+
+            throw ProfileRestrictionException::forOperation('resumable_upload');
+        }
+
         return $this->initiation->execute(context: $this->context, input: $input);
     }
 
@@ -57,6 +74,7 @@ final readonly class UploadOperations
                 return $this->completion->execute(context: $this->context, session: $locked);
             }
             $this->completion->authorizeSession(context: $this->context, session: $locked);
+            $this->assertResumable();
             if ($locked->protocol === UploadProtocol::S3Multipart && $locked->status !== UploadStatus::Assembled) {
                 $this->s3->complete($locked);
                 $locked = $locked->refresh();
@@ -71,7 +89,10 @@ final readonly class UploadOperations
 
     public function abort(UploadSession|int|string $session): void
     {
-        $this->abortion->execute(context: $this->context, session: $this->find($session));
+        $session = $this->find($session);
+        $this->completion->authorizeSession(context: $this->context, session: $session);
+        $this->assertResumable();
+        $this->abortion->execute(context: $this->context, session: $session);
     }
 
     /** @internal Protocol adapters use the same current ownership/ACL boundary. */
@@ -91,6 +112,7 @@ final readonly class UploadOperations
     {
         return $this->manager->withSession($this->find($session), function (UploadSession $locked) use ($chunk, $offset): array {
             $this->completion->authorizeSession(context: $this->context, session: $locked);
+            $this->assertResumable();
 
             if (!in_array($locked->protocol, [UploadProtocol::Tus, UploadProtocol::Direct], true)) {
                 throw UploadConflictException::forClosedSession($locked->upload_id);
@@ -108,6 +130,7 @@ final readonly class UploadOperations
     {
         return $this->manager->withSession($this->find($session), function (UploadSession $locked) use ($partNo, $byteOffset, $chunk): array {
             $this->completion->authorizeSession(context: $this->context, session: $locked);
+            $this->assertResumable();
 
             if ($locked->protocol !== UploadProtocol::S3Multipart) {
                 throw UploadConflictException::forClosedSession($locked->upload_id);
@@ -115,6 +138,18 @@ final readonly class UploadOperations
 
             return $this->s3->putPart(session: $locked, partNo: $partNo, byteOffset: $byteOffset, chunk: $chunk);
         });
+    }
+
+    /**
+     * Resumable uploads are a deployment-wide feature checked here rather than by route
+     * registration, so a cached route table never freezes it. A session the caller
+     * cannot see has already failed as not found.
+     */
+    private function assertResumable(): void
+    {
+        if (!$this->config->resumableEnabled()) {
+            throw ProfileRestrictionException::forOperation('resumable_upload');
+        }
     }
 
     private function find(UploadSession|int|string $session): UploadSession

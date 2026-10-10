@@ -4,16 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Http\Requests\Nodes;
 
-use Vaulter\Drive\Data\Nodes\RenameNodeInput;
 use Vaulter\Http\Requests\VaulterFormRequest;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Support\DriveNameRules;
 
-/**
- * Validates a rename request (§2.2) and builds its RenameNodeData command. The
- * node being renamed is route-model resolved by the controller; toData() takes it
- * already-resolved.
- */
+/** PATCH nodes/{node}: the only field a node update changes is its name. */
 final class RenameNodeRequest extends VaulterFormRequest
 {
     /**
@@ -37,13 +31,5 @@ final class RenameNodeRequest extends VaulterFormRequest
     public function name(): string
     {
         return $this->string('name')->toString();
-    }
-
-    public function toData(Node $node): RenameNodeInput
-    {
-        return new RenameNodeInput(
-            node: $node,
-            name: $this->name(),
-        );
     }
 }

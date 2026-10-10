@@ -2,12 +2,16 @@
 
 ## Поиск
 
-Дерево узлов storage принимает терм `q`, который сопоставляется (без учёта регистра) с именем
-узла, ограничен рамками storage и отфильтрован по праву (ability) `view`:
+Дерево узлов drive принимает терм `q`, который сопоставляется (без учёта регистра) с именем
+узла, ограничен рамками drive и отфильтрован по праву (ability) `view`:
 
 ```
-GET /api/vaulter/storages/{storage}/search?q=roadmap
+GET /api/vaulter/v1/drives/{drive}/search?q=roadmap
 ```
+
+Страницы несут `meta.next_cursor` и `meta.per_page` (1–200, по умолчанию 50; вне диапазона —
+`422`), без `total` и номеров страниц: передавайте `cursor` из предыдущего ответа, пока
+`next_cursor` не станет `null`.
 
 ```ts
 import { useVaulterClient } from '@vaulter/vue'
@@ -25,15 +29,18 @@ read-репозиторий.
 
 ## Корзина
 
-Удаление узла переводит его (и его поддерево) в мягкое удаление (soft-delete). Корзину можно
-просмотреть, восстановить из неё узел или окончательно вычистить.
+Перенос узла в корзину переводит его (и его поддерево) в мягкое удаление (soft-delete).
+Корзину можно просмотреть, восстановить из неё узел или окончательно вычистить. Маршрутам с
+пометкой If-Match нужен текущий `ETag` узла (`428` без него, `412` при устаревшем); для узла в
+корзине это `etag` из списка корзины.
 
-| Метод | URL | Право (ability) |
-|---|---|---|
-| GET | `/storages/{storage}/trash` | `view` |
-| DELETE | `/nodes/{node}` | `edit` |
-| POST | `/nodes/{node}/restore` | `edit` |
-| DELETE | `/nodes/{node}/force` | `manage` |
+| Метод | URL (под `/api/vaulter/v1`) | Право (ability) | If-Match |
+|---|---|---|---|
+| GET | `/drives/{drive}/trash` | `view` | — |
+| POST | `/nodes/{node}/trash` | `trash` | да |
+| POST | `/nodes/{node}/restore` | `restore` | да |
+| DELETE | `/nodes/{node}` | `delete` (только узлы в корзине) | да |
+| DELETE | `/drives/{drive}/trash` | `delete` на каждом корне | — |
 
 ```ts
 const client = useVaulterClient()
@@ -50,14 +57,15 @@ await client.nodes.forceDelete(nodeId)  // окончательно
 
 ## Перемещение и копирование
 
-| Метод | URL | Право (ability) |
-|---|---|---|
-| POST | `/nodes/{node}/move` | `edit` |
-| POST | `/nodes/{node}/copy` | `edit` (источник) + `create` (назначение) |
+| Метод | URL (под `/api/vaulter/v1`) | Право (ability) | If-Match |
+|---|---|---|---|
+| POST | `/nodes/{node}/move` | `move` + `create` (назначение) | да |
+| POST | `/nodes/{node}/copy` | `copy` (источник) + `create` (назначение) | — |
 
-`move` и `copy` принимают `{ parent_id: id \| null }` (null — корень storage). Перемещение узла в
-собственное поддерево отклоняется с `422`; `copy` клонирует узел (а для папки — её поддерево) в
-назначение.
+`move` и `copy` принимают `{ destination_id: id \| null }` (null — корень drive); `move` ещё
+принимает `on_conflict` (`fail` или `rename`). Перемещение узла в собственное поддерево
+отклоняется; `copy` клонирует узел (а для папки — её поддерево) в назначение и при совпадении
+имени берёт свободное.
 
 ```ts
 const client = useVaulterClient()

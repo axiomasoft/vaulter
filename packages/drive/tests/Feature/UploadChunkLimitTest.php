@@ -42,7 +42,7 @@ it('tus PATCH с Content-Length больше max_chunk_bytes отбиваетс�
     config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 8);
 
     $storage = chunkLimitStorage();
-    $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+    $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'name' => 'big.bin',
         'total_size_bytes' => 100,
     ])->json('data.upload_id');
@@ -51,7 +51,7 @@ it('tus PATCH с Content-Length больше max_chunk_bytes отбиваетс�
 
     $this->call(
         'PATCH',
-        'api/vaulter/resumable-uploads/'.$uploadId,
+        'api/vaulter/v1/uploads/'.$uploadId,
         [], [], [],
         [
             'HTTP_UPLOAD_OFFSET' => '0',
@@ -70,7 +70,7 @@ it('S3 part с Content-Length больше max_chunk_bytes отбивается 
     config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 8);
 
     $storage = chunkLimitStorage();
-    $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+    $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'protocol' => 's3-multipart',
         'name' => 'big.bin',
         'total_size_bytes' => 100,
@@ -80,7 +80,7 @@ it('S3 part с Content-Length больше max_chunk_bytes отбивается 
 
     $this->call(
         'POST',
-        'api/vaulter/resumable-uploads/'.$uploadId.'/parts?part_no=1&byte_offset=0',
+        'api/vaulter/v1/uploads/'.$uploadId.'/parts?part_no=1&byte_offset=0',
         [], [], [],
         ['CONTENT_TYPE' => 'application/octet-stream', 'CONTENT_LENGTH' => (string) strlen($body)],
         $body,

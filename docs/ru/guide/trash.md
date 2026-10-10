@@ -157,12 +157,21 @@ protected function schedule(Schedule $schedule): void
 
 ## Представление корзины (REST)
 
-Узлы в корзине для хранилища выводятся списком (курсорная пагинация) через REST.
-Возвращаются только те узлы, которые актор вправе **восстановить**:
+Корни корзины drive выводятся списком (курсорная пагинация) через REST v1 в пределах видимых
+вызывающему. `etag` каждого элемента — тег, который ждут восстановление и окончательное
+удаление: удалённый в корзину узел не читается через `GET v1/nodes/{node}`:
 
 ```http
-GET /api/vaulter/storages/{storage}/trash
+GET /api/vaulter/v1/drives/{drive}/trash
+POST /api/vaulter/v1/nodes/{node}/restore      If-Match: <etag из списка>
+DELETE /api/vaulter/v1/nodes/{node}            If-Match: <etag из списка>
 ```
+
+Восстановление или окончательное удаление с устаревшим тегом отвечает
+`412 node_sequence_mismatch` и ничего не меняет — окончательное удаление, в частности, не
+удаляет ни строк, ни квоты, ни сохранённых байтов. То же ожидание есть в PHP:
+`$drive->trash()->purge($node, expectedSequence: $snapshot->sequence)` и
+`new RestoreOptions(expectedSequence: $snapshot->sequence)`.
 
 В браузере `useNodes` даёт представление корзины и восстановление:
 

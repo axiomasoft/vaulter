@@ -2,12 +2,10 @@
 
 declare(strict_types=1);
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Access\Roles\RoleRegistry;
-use Vaulter\Drive\Http\Resources\DriveResource;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeReadRepository;
@@ -75,13 +73,13 @@ it('index lists the subtree-anchor descendants and hides an un-granted sibling',
 
     // Listing the anchor's children surfaces the descendant (reached via the ancestor
     // subtree anchor, no direct grant of its own).
-    $this->getJson('api/vaulter/storages/'.$storage->getKey().'/nodes?parent_id='.$anchor->getKey())
+    $this->getJson('api/vaulter/v1/drives/'.$storage->getKey().'/nodes?parent='.$anchor->getKey())
         ->assertOk()
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.id', (string) $child->getKey());
 
     // Listing the ROOT surfaces the anchor (a candidate), but NOT the un-granted sibling.
-    $rootIds = collect($this->getJson('api/vaulter/storages/'.$storage->getKey().'/nodes')->assertOk()->json('data'))
+    $rootIds = collect($this->getJson('api/vaulter/v1/drives/'.$storage->getKey().'/nodes')->assertOk()->json('data'))
         ->pluck('id')->all();
 
     expect($rootIds)->toContain((string) $anchor->getKey())
@@ -98,12 +96,12 @@ it('lists zero children for an item-scoped folder grant while the folder itself 
     AccessTestHelpers::grant($folder, RoleRegistry::READER, scope: GrantScope::Item);
 
     // The folder's children listing is EMPTY (the child is no candidate)…
-    $this->getJson('api/vaulter/storages/'.$storage->getKey().'/nodes?parent_id='.$folder->getKey())
+    $this->getJson('api/vaulter/v1/drives/'.$storage->getKey().'/nodes?parent='.$folder->getKey())
         ->assertOk()
         ->assertJsonCount(0, 'data');
 
     // …yet View/show of the folder ITSELF works (it is the item-scoped candidate).
-    $this->getJson('api/vaulter/nodes/'.$folder->getKey())
+    $this->getJson('api/vaulter/v1/nodes/'.$folder->getKey())
         ->assertOk()
         ->assertJsonPath('data.id', (string) $folder->getKey());
 
@@ -120,7 +118,7 @@ it('returns cross-storage allow-grants in the shared view', function (): void {
     $folderB = AccessTestHelpers::folder($storageB, null, 'in-b');
     AccessTestHelpers::grant($folderB, RoleRegistry::READER, scope: GrantScope::Item);
 
-    $ids = collect($this->getJson('api/vaulter/shared')->assertOk()->json('data'))->pluck('id')->all();
+    $ids = collect($this->getJson('api/vaulter/v1/shared')->assertOk()->json('data'))->pluck('id')->all();
 
     expect($ids)->toContain((string) $folderA->getKey())
         ->and($ids)->toContain((string) $folderB->getKey());
@@ -145,7 +143,7 @@ it('excludes an expired grant and keeps a direct grant behind a boundary in the 
         expiresAt: Carbon::now()->subHour(),
     );
 
-    $ids = collect($this->getJson('api/vaulter/shared')->assertOk()->json('data'))->pluck('id')->all();
+    $ids = collect($this->getJson('api/vaulter/v1/shared')->assertOk()->json('data'))->pluck('id')->all();
 
     expect($ids)->toContain((string) $parent->getKey())
         ->and($ids)->toContain((string) $child->getKey())
@@ -165,7 +163,7 @@ it('requires an actor for an unauthenticated shared request without leaking a gr
 
     actAsGuest();
 
-    $this->getJson('api/vaulter/shared')->assertUnauthorized()->assertJsonMissingPath('data');
+    $this->getJson('api/vaulter/v1/shared')->assertUnauthorized()->assertJsonMissingPath('data');
 });
 
 it('wraps the shared view in an exact cursor envelope', function (): void {
@@ -173,7 +171,7 @@ it('wraps the shared view in an exact cursor envelope', function (): void {
     $folder = AccessTestHelpers::folder($storage, null, 'shared-one');
     AccessTestHelpers::grant($folder, RoleRegistry::READER, scope: GrantScope::Item);
 
-    $this->getJson('api/vaulter/shared')
+    $this->getJson('api/vaulter/v1/shared')
         ->assertOk()
         ->assertJsonPath('meta.next_cursor', null)
         ->assertJsonMissingPath('meta.total')
@@ -185,10 +183,10 @@ it('GET shared advertises a cursor envelope without offset totals', function ():
     $folder = AccessTestHelpers::folder($storage, null, 'offset-contract');
     AccessTestHelpers::grant($folder, RoleRegistry::READER, scope: GrantScope::Item);
 
-    $response = $this->getJson('api/vaulter/shared')->assertOk();
+    $response = $this->getJson('api/vaulter/v1/shared')->assertOk();
 
     expect($response->json('meta'))
-        ->toHaveKeys(['next_cursor', 'prev_cursor', 'per_page', 'scanned'])
+        ->toBe(['next_cursor' => null, 'per_page' => 50])
         ->not->toHaveKey('total')
         ->not->toHaveKey('current_page');
 });
@@ -273,64 +271,39 @@ it('refuses the action on a node behind an inheritance boundary that still appea
     expect($listed)->toContain($child->getKey());
 
     // …but the per-ACTION gate is EXACT: show on the walled child is a 404.
-    $this->getJson('api/vaulter/nodes/'.$child->getKey())->assertNotFound();
+    $this->getJson('api/vaulter/v1/nodes/'.$child->getKey())->assertNotFound();
 
     // The parent still shows (sanity — only the walled node is gated).
-    $this->getJson('api/vaulter/nodes/'.$parent->getKey())->assertOk();
+    $this->getJson('api/vaulter/v1/nodes/'.$parent->getKey())->assertOk();
 });
 
-// ── 10. DriveResource.abilities mirror the resolver (view-only, create gate, null actor).
-it('exposes view-only storage abilities for a reader on the root', function (): void {
+// ── 10. What a reader may do in a drive is its root node's abilities; a guest gets 401.
+it('exposes view-only root abilities for a reader on the root', function (): void {
     $storage = AccessTestHelpers::storage();
     $root = $storage->rootNode()->first();
 
-    // Reader on the root: view true, create_folder/upload/manage false.
+    // Reader on the root: view true, create/manage false — on the root node itself.
     AccessTestHelpers::grant($root, RoleRegistry::READER, scope: GrantScope::Subtree);
 
-    $this->getJson('api/vaulter/storages/'.$storage->getKey())
+    $this->getJson('api/vaulter/v1/drives/'.$storage->getKey())->assertOk()->assertJsonMissingPath('data.abilities');
+    $this->getJson('api/vaulter/v1/nodes/'.$root->getKey())
         ->assertOk()
         ->assertJsonPath('data.abilities.view', true)
-        ->assertJsonPath('data.abilities.create_folder', false)
-        ->assertJsonPath('data.abilities.upload', false)
+        ->assertJsonPath('data.abilities.create', false)
         ->assertJsonPath('data.abilities.manage', false);
 });
 
-it('refuses the storage show for an unauthenticated request on a rooted storage', function (): void {
+it('refuses the drive show for an unauthenticated request on a rooted storage', function (): void {
     $storage = AccessTestHelpers::storage();
-    // An Owner grant for user 1 WOULD flip every flag true — but THIS request has no
-    // actor, so the controller's View-guard on the rooted storage's root refuses it
-    // (no actor ⇒ no grant ⇒ 403). The storage meta must never reach a guest, so there
-    // is no `data` body to inspect — the all-false-abilities CONTRACT for a null actor
-    // is pinned at the Resource layer below (it can no longer be reached through the
-    // guarded controller on a rooted storage).
+    // An Owner grant for user 1 is irrelevant: THIS request has no actor, so it is
+    // refused before anything about the drive is read.
     AccessTestHelpers::grant($storage->rootNode()->first(), RoleRegistry::OWNER, scope: GrantScope::Subtree);
 
     actAsGuest();
 
-    $this->getJson('api/vaulter/storages/'.$storage->getKey())
-        ->assertStatus(403);
-});
-
-// ── 10b. The all-false-abilities CONTRACT for a NULL actor, re-expressed at the layer
-// that still reaches it: DriveResource resolves every flag false when the request has
-// no acting user, regardless of an Owner grant on the root. (The controller guard now
-// 403s a guest on a rooted storage BEFORE the Resource renders — see the test above —
-// so this contract lives at the Resource seam, not behind the controller.)
-it('renders all-false storage abilities for a null actor at the Resource layer', function (): void {
-    $storage = AccessTestHelpers::storage();
-    // An Owner grant for user 1 WOULD flip every flag true for THAT actor — but a request
-    // with no user must yield the read-only-shell default (all false), the SAFE default.
-    AccessTestHelpers::grant($storage->rootNode()->first(), RoleRegistry::OWNER, scope: GrantScope::Subtree);
-
-    // A bare request resolves $request->user() === null — the no-actor path.
-    $abilities = DriveResource::make($storage->refresh())->toArray(Request::create('/'))['abilities'];
-
-    expect($abilities)->toBe([
-        'view' => false,
-        'create_folder' => false,
-        'upload' => false,
-        'manage' => false,
-    ]);
+    $this->getJson('api/vaulter/v1/drives/'.$storage->getKey())
+        ->assertUnauthorized()
+        ->assertJsonPath('code', 'actor_required');
 });
 
 // ── 11. Driver-aware gate: a non-GrantAuthoritativeDriver keeps the listing OPEN.
@@ -364,7 +337,7 @@ it('keeps the listing OPEN (every node) on the null driver', function (): void {
 
     // The HTTP children listing is also open — both root folders list with no grant.
     $rootIds = collect(
-        $this->getJson('api/vaulter/storages/'.$storage->getKey().'/nodes')->assertOk()->json('data'),
+        $this->getJson('api/vaulter/v1/drives/'.$storage->getKey().'/nodes')->assertOk()->json('data'),
     )->pluck('id')->all();
 
     expect($rootIds)->toContain((string) $a->getKey(), (string) $b->getKey());
@@ -402,7 +375,7 @@ it('returns the shared view as a paginated envelope from the controller', functi
         scope: GrantScope::Item,
     );
 
-    $this->getJson('api/vaulter/shared')
+    $this->getJson('api/vaulter/v1/shared')
         ->assertOk()
-        ->assertJsonStructure(['data', 'meta' => ['next_cursor', 'per_page', 'scanned']]);
+        ->assertJsonStructure(['data', 'meta' => ['next_cursor', 'per_page']]);
 });

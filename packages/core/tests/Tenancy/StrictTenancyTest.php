@@ -75,8 +75,8 @@ it('V31 constrains HTTP lookup search shared and trash reads to the owning drive
         ->and($read->sharedWith(AccessTestHelpers::user())->pluck('id')->all())->not->toContain($nodeA->id)
         ->and(fn () => app(HttpResourceResolver::class)->node($nodeA->id))->toThrow(NodeNotFoundException::class);
     $this->actingAs(AccessTestHelpers::user());
-    $this->getJson('api/vaulter/nodes/'.$nodeA->id)->assertNotFound();
-    $this->getJson('api/vaulter/nodes/'.$nodeB->id)->assertOk();
+    $this->getJson('api/vaulter/v1/nodes/'.$nodeA->id)->assertNotFound();
+    $this->getJson('api/vaulter/v1/nodes/'.$nodeB->id)->assertOk();
 });
 
 it('V31 refuses a foreign existing owner profile winner without creating another drive', function (): void {

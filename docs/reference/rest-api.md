@@ -13,10 +13,10 @@ base rules first, then each route. Errors are described in the
 [error reference](/reference/errors).
 
 ::: info Migration in progress
-The access, sharing, activity, change journal and webhook routes are on v1. The drive,
-upload, document, comment and collaboration routes further down are still served
+The access, sharing, activity, change journal, webhook, drive and upload routes are on
+v1. The document, comment and collaboration routes further down are still served
 unversioned under `/{routes.prefix}` and move to `/v1` with the next 1.0 development
-releases; their sections say so.
+release; their sections say so.
 :::
 
 ## Base rules
@@ -32,7 +32,7 @@ releases; their sections say so.
 | Lists | cursor pages: `?cursor=&per_page=` (`per_page` 1–200, default 50; outside that range `422 validation_failed`) → `{ "data": [ … ], "meta": { "next_cursor": "…" \| null, "per_page": 50 } }`; there is no `total` |
 | Correlation | an incoming `X-Request-Id` matching `^[A-Za-z0-9._:-]{1,64}$` is kept, otherwise a new ULID is assigned; it is echoed on every response, passed to the operation and recorded with its activity and events |
 | Errors | `application/problem+json` with a stable `code` — see the [error reference](/reference/errors) |
-| Parameters | `{node}`, `{drive}`, `{grant}`, `{share}`, `{endpoint}`, `{delivery}`, `{token}` are plain ids (`[A-Za-z0-9_-]+`); there is no route-model binding |
+| Parameters | `{node}`, `{drive}`, `{revision}`, `{upload}`, `{grant}`, `{share}`, `{endpoint}`, `{delivery}`, `{token}` are plain ids (`[A-Za-z0-9_-]+`); there is no route-model binding |
 
 ### Middleware stacks
 
@@ -75,6 +75,8 @@ the same operation.
 - A node you can view but an ability you lack → `403 permission_denied`; a feature the
   drive's profile switches off → `403 profile_restriction`.
 - A grant or share id that belongs to another node is unknown (`404`).
+- Drive-wide lists (search, starred, trash) are filtered down to what you can see rather
+  than refused: a caller granted only a folder deep inside finds what is in it.
 
 ### Validators and preconditions
 
@@ -150,268 +152,367 @@ Public share downloads always stream.
 
 ## Unversioned routes
 
-The [Drive](#drive), [Document nodes](#document-nodes-documents),
-[Resumable uploads](#resumable-uploads), [Realtime collaboration](#realtime-collaboration)
-and [Legacy document API](#legacy-document-api) routes are still served under
-`/{routes.prefix}` without `/v1` and keep their pre-v1 conventions:
-`{storage}` and `{node}` are resolved into models before the controller runs, errors
-are `{ "message", "code" }`, and node bodies use the pre-v1 shape (`storage_id`,
-`handler`, …). They move to `/v1` — with the base rules above — in the next 1.0
-development releases.
+The [Document nodes](#document-nodes-documents), [Comments](#comments),
+[Realtime collaboration](#realtime-collaboration) and
+[Legacy document API](#legacy-document-api) routes are still served under
+`/{routes.prefix}` without `/v1` and keep their pre-v1 conventions: `{node}` is resolved
+into a model before the controller runs, errors are `{ "message", "code" }`, and node
+bodies use the pre-v1 shape (`storage_id`, `handler`, …). They move to `/v1` — with the
+base rules above — in the next 1.0 development release. The old drive paths
+(`storages/*`, `nodes/{node}` without `/v1`, `resumable-uploads/*`) are gone: under the
+v1 prefix an unknown path answers `404 route_not_found`, outside it the host's plain 404.
 
 ## Drive
 
-The unified `v_nodes` file/folder tree (`ShowDriveController`, `NodeController`,
-`DownloadController`). Storage-collection endpoints carry `{storage}` in the path;
-node-scoped endpoints derive the storage from the bound `{node}`.
+Drives, the node tree, file content and the trash (package `vaulter-drive`). The routes
+are always registered while the package is installed; a feature switched off globally or
+by the drive's profile is refused by the operation — `403 profile_restriction` on
+something you can see — so `route:cache` never freezes a flag.
 
-### Storages
+Operations that apply to every node kind live under `nodes/{node}`; operations on file
+content under `files/{node}` (and on document content under `documents/{node}`). A node of
+the wrong kind on a content route answers `422 not_a_file`.
 
-#### `GET storages/{storage}`
-
-Read a storage container's metadata, root node and usage. → `ShowDriveController::__invoke`
-
-**Response** (`DriveResource`):
+### Drive resource
 
 ```json
 {
   "data": {
     "id": "01J…",
-    "panel": "default",
-    "owner": { "type": "App\\Models\\Project", "id": 1 },
-    "name": "Project storage",
-    "slug": null,
+    "owner": { "type": "App\\Models\\Project", "id": "42" },
+    "profile": "default",
+    "name": "Project files",
     "root_node_id": "01J…",
-    "disk": "local",
-    "storage_type": "default",
-    "used_bytes": 10485760,
-    "quota_bytes": null,
     "status": "active",
-    "created_at": "…",
-    "updated_at": "…",
-    "abilities": { "view": true, "create_folder": true, "upload": true, "manage": true }
+    "quota_bytes": null,
+    "used_bytes": 10485760,
+    "created_at": "2026-10-10T12:00:00.000000Z"
   }
 }
 ```
 
-### Listing & navigation
+`status` is `active`, `archived` or `deleting`. What you may do in the drive is the
+`abilities` of its root node (`GET v1/nodes/{root_node_id}`).
 
-#### `GET storages/{storage}/nodes`
+#### `GET v1/drives/{drive}` — `drives.show`
 
-List the direct children of a folder (or the storage root). → `NodeController::index`
+Needs `view` on the root. A drive you cannot see, of another tenant, being deleted or
+unknown → `404 drive_not_found`.
 
-| Param | In | Notes |
-|---|---|---|
-| `parent_id` | query | optional; omit for the root |
-| `per_page`, `cursor` | query | pagination |
+#### `POST v1/drives/{drive}/archive` — `drives.archive`
 
-**Gate:** `Ability::View` on the parent. **Response:** a paginated collection of
-`NodeResource`.
+#### `POST v1/drives/{drive}/unarchive` — `drives.unarchive`
 
-#### `GET nodes/{node}`
+#### `DELETE v1/drives/{drive}` — `drives.destroy`
 
-A single node plus its `breadcrumb`; a folder also embeds its direct `children`.
-→ `NodeController::show`
+Lifecycle, `manage` on the root. An archived drive is read-only: every mutation answers
+`409 drive_archived` until it is unarchived. Delete starts the asynchronous purge and
+answers the drive with `status: "deleting"`; from then on it is `404` for everyone.
+**Response:** `200` Drive.
 
-**Gate:** `Ability::View`. **Response** (`NodeResource`):
+### Node resource
 
 ```json
 {
   "data": {
     "id": "01J…",
+    "drive_id": "01J…",
+    "parent_id": "01J…",
     "kind": "file",
-    "name": "report.pdf",
+    "name": "contract.pdf",
     "mime": "application/pdf",
     "extension": "pdf",
-    "size_bytes": 524288,
-    "storage_id": "01J…",
-    "parent_id": "01J…",
-    "file_id": "01J…",
-    "current_version_id": "01J…",
-    "trashed_at": null,
-    "created_at": "…",
-    "updated_at": "…",
-    "content_modified_at": "…",
+    "size_bytes": 1024,
+    "sequence": 7,
+    "etag": "\"01J….7.3f2a9c1d0b4e5a67\"",
+    "inherits_access": true,
+    "properties": {},
+    "created_at": "…", "created_by": "1",
+    "updated_at": "…", "updated_by": "1",
+    "content_modified_at": "…", "content_modified_by": "1",
+    "trashed_at": null, "trashed_by": null, "trash_root": false,
+    "presentation": {
+      "handler": "vaulter/preview",
+      "document_type": null,
+      "type_available": true,
+      "viewer": { "key": "vaulter/pdf-preview", "props": {} },
+      "capabilities": { "editable": false, "previewable": true, "downloadable": true, "thumbnailable": false, "collaborative": false }
+    },
+    "abilities": { "view": true, "download": true, "comment": true, "edit": true, "create": false, "move": true, "copy": true, "trash": true, "restore": true, "share": false, "manage": false, "delete": false },
     "viewer": { "starred": false },
-    "children": null,
-    "breadcrumb": [ /* root → this node */ ],
-    "abilities": { "view": true, "edit": true, "trash": true, "…": true },
-    "handler": { "id": "…", "capabilities": { "…": true }, "ui": { "…": "…" } }
+    "scan_status": "clean",
+    "file": { "revision_id": "01J…", "revision_number": 3, "size_bytes": 1024, "sha256": "…", "mime": "application/pdf", "scan_status": "clean" },
+    "document": null
   }
 }
 ```
 
-The `abilities` map is filled by the `AccessResolver` for the request's actor (an
-unauthenticated request gets an all-false read-only shell). `handler` is the
-resolved [format handler](/guide/document-handlers) descriptor for a leaf node
-(null for a folder).
+- `presentation` is `null` for a folder; a document carries `presentation.document_type`
+  and `handler: null`, and its head in `document`.
+- `abilities` are yours, evaluated for the whole page at once; `etag` is the tag of
+  exactly this representation (see [Validators](#validators-and-preconditions)).
+- Gone compared with 0.x: `storage_id`, `file_id`, `current_version_id`, `handler`
+  (→ `presentation`), `is_pinned`/`pinned`/`position` (→ `viewer.starred`), `owned_by`.
 
-### Shared with me
+### Listing and reading
 
-#### `GET shared`
+#### `GET v1/drives/{drive}/nodes?parent=` — `nodes.index`
 
-The cross-storage "shared with me" feed — nodes the actor holds a live
-allow-grant on, re-resolved EXACTLY through the `AccessResolver` (a nearer deny
-still excludes a row). → `NodeController::shared`
+The visible children of `parent`, or of the drive root without it. A cursor page of Node.
+On this and the other drive-scoped routes that name a node inside the drive (`folders.store`,
+`files.store`, `uploads.store`), a miss in a drive whose root you cannot see answers
+`404 drive_not_found` — like an unknown drive — and only a miss in a drive you can see answers
+`404 node_not_found`.
 
-> **This endpoint is OFFSET-paginated (`page`/`total`), NOT cursor-paginated**
-> (P1.3 / F-P4.2-04) — the one exception to the "Listings are cursor-paginated"
-> convention above. The feed is cross-storage and its visibility is decided by an
-> exact, in-memory re-resolution per candidate (`AccessResolver::filterSharedWith`)
-> that cannot honestly back a DB cursor — a fake cursor over that in-memory
-> filtering would not carry the stability guarantees a real keyset cursor implies
-> (D16 of `plans/archive/VLT-REMED/plan.md`). Concurrent grant inserts/revocations between
-> page requests can therefore drift the offset window (skip/duplicate a row) —
-> the same trade-off offset pagination always carries. A host that needs
-> drift-free enumeration of this feed should not rely on paging past the first
-> page under concurrent writes.
+#### `GET v1/drives/{drive}/search?q=` — `nodes.search`
 
-| Param | In | Notes |
-|---|---|---|
-| `page`, `per_page` | query | offset pagination (NOT `cursor`) |
+Live nodes whose name matches `q` (required), limited to what you can see. A cursor page.
 
-**Gate:** none (feature-gated on `grants`); an unauthenticated request returns an
-empty bounded page. **Response:** a `LengthAwarePaginator` envelope
-(`meta.current_page`, `meta.last_page`, `meta.total`, …) of `NodeResource`.
+#### `GET v1/drives/{drive}/starred` — `nodes.starred`
 
-### Write operations
+Your starred nodes of the drive that you can still see, newest star first. A cursor page.
 
-#### `POST storages/{storage}/folders`
+#### `GET v1/shared` — `shared.index`
 
-Create a folder. → `NodeController::storeFolder`
+Nodes other people granted you, across drives — a cursor page like any other list (the
+0.x offset pagination with `total` is gone). Needs the `grants` feature, otherwise
+`403 profile_restriction`.
 
-| Param | Rule |
+#### `GET v1/nodes/{node}?include=breadcrumb,children` — `nodes.show`
+
+One node with its `ETag`; `If-None-Match` answers `304` after authorization. `include`
+adds `breadcrumb` — `[{ "id", "name" }]` of the visible ancestors, root first, the node
+last — and `children`, the **first page** of a folder's children
+(`{ "data": [Node…], "meta": { "next_cursor", "per_page" } }`, `null` for a file); it is
+not a full walk. A response with `include` is another variant: it carries no `ETag` header
+and is never `304`.
+
+#### `GET v1/nodes/{node}/abilities?explain=` — `nodes.abilities`
+
+`{ "data": { "abilities": { …12… }, "explain": null } }`. `explain=<ability>` adds
+`{ "ability", "allowed", "reasons": [ … ] }`; explaining reveals the grants behind the
+answer, so it needs `manage` (`403 permission_denied` otherwise).
+
+### Changing nodes
+
+Routes marked **If-Match** require the node's current tag (`428` without it, `412` when
+it is stale — see [Validators](#validators-and-preconditions)). The ability a route needs is
+checked first: a caller who sees the node but lacks it gets `403 permission_denied`, never a
+`428` or `412`. Each answers the changed Node with its new `ETag`.
+
+#### `POST v1/drives/{drive}/folders` — `folders.store`
+
+| Field | Rule |
 |---|---|
-| `name` | required, string, max 255, no path separators (`/` `\`) |
-| `parent_id` | nullable (omit = root) |
+| `name` | required, a valid node name |
+| `parent_id` | optional string; the drive root when absent |
 
-**Gate:** `canCreateInWorkspace` + `Ability::Create` on the destination.
-**Response:** `201` `NodeResource`.
+Needs `create` in the parent. **Response:** `201` Node.
 
-#### `POST storages/{storage}/uploads`
+#### `PATCH v1/nodes/{node}` — `nodes.update` · **If-Match**
 
-Commit a binary upload (multipart). A new-version upload targets an existing file
-node via `node_id`; otherwise a brand-new file is created under the parent.
-→ `NodeController::upload`
+`name` (required). Needs `edit`. Only the name changes here; properties have their own route.
 
-| Param | Rule |
+#### `PATCH v1/nodes/{node}/properties` — `nodes.properties.update` · **If-Match**
+
+| Field | Rule |
 |---|---|
-| `file` | required, file, `max:` `config('vaulter-drive.uploads.max_file_size')`; if `config('vaulter-drive.uploads.allowed_mime_types')` is non-empty, restricted to that `mimetypes` set |
-| `parent_id` | nullable (omit = root) |
-| `node_id` | nullable — the existing file node to commit a **new version** onto |
-| `name` | nullable, max 255, no path separators — overrides the stored name |
+| `namespace` | required, e.g. `acme`; `vaulter` and `vaulter.*` are reserved (`422 invalid_properties`) |
+| `set` | object of string values to write |
+| `unset` | list of keys to remove |
 
-**Gate:** new file → `canCreateInWorkspace` + `Create` on the destination;
-new version → `Ability::Edit` on the target node. **Response:** `201` `NodeResource`.
+One namespace changes atomically. Needs `edit`.
 
-::: tip Large files
-This endpoint reads the multipart body in one request. For resumable, chunked
-uploads use the [resumable-upload routes](#resumable-uploads).
-:::
+#### `PUT v1/nodes/{node}/star` — `nodes.star` · `DELETE v1/nodes/{node}/star` — `nodes.unstar`
 
-#### `PATCH nodes/{node}`
+Your personal star (needs `view`). Idempotent, no If-Match: it changes only your
+`viewer.starred` — and so your tag — never the node's `sequence`.
 
-Rename a node. → `NodeController::rename`
+#### `POST v1/nodes/{node}/move` — `nodes.move` · **If-Match**
 
-| Param | Rule |
+| Field | Rule |
 |---|---|
-| `name` | required, string, max 255, no path separators |
+| `destination_id` | string or `null` (the drive root); must be a live folder of the same drive |
+| `on_conflict` | `fail` (default, `409 node_name_conflict`) or `rename` |
 
-**Gate:** `Ability::Edit`. **Response:** `NodeResource`.
+Needs `move` on the node and `create` in the destination.
 
-#### `POST nodes/{node}/move`
+#### `POST v1/nodes/{node}/copy` — `nodes.copy`
 
-Move a node under a new parent. → `NodeController::move`
+`destination_id` (the drive root when absent), `name` (optional). The source does not
+change, so there is no If-Match; a taken name gets a free one (`name (2)`). Needs `copy`
+on the source and `create` in the destination. **Response:** `201` Node.
 
-| Param | Rule |
+### Trash
+
+#### `POST v1/nodes/{node}/trash` — `nodes.trash` · **If-Match**
+
+Moves the node and its subtree to the trash; the node becomes a trash root. Needs `trash`.
+
+#### `GET v1/drives/{drive}/trash` — `trash.index`
+
+The trash roots you can see, a cursor page. Each item's `etag` is what restore and purge
+expect — a trashed node cannot be read through `nodes.show`.
+
+#### `POST v1/nodes/{node}/restore` — `nodes.restore` · **If-Match**
+
+| Field | Rule |
 |---|---|
-| `parent_id` | nullable (omit = root) |
+| `destination_id` | optional folder; without it the folder the node was trashed from |
+| `on_conflict` | `rename` (default) or `fail` |
 
-**Gate:** `Ability::Move` on the node **and** `Create` on the destination.
-**Response:** `NodeResource`.
+Needs `restore` (and `create` when it lands elsewhere). A member trashed with a folder →
+`409 node_trashed_by_ancestor` (`meta.context.trash_root_id`); a gone original folder
+without `destination_id` → `409 restore_destination_required`.
 
-#### `POST nodes/{node}/copy`
+#### `DELETE v1/nodes/{node}` — `nodes.purge` · **If-Match**
 
-Deep-copy a node (and a folder's subtree). → `NodeController::copy`
+Deletes a trashed node and its subtree for good. Only from the trash (`409
+node_not_trashed` otherwise); needs `delete`. The tag is checked before anything is
+removed, so a stale one leaves rows, quota and stored bytes untouched. **Response:** `204`.
 
-| Param | Rule |
+#### `DELETE v1/drives/{drive}/trash` — `trash.empty`
+
+Purges every trash root you may delete; the others stay.
+**Response:** `200 { "data": { "purged_count": 2 } }`.
+
+### Files and revisions
+
+#### `POST v1/drives/{drive}/files` — `files.store`
+
+Multipart, one request: `file` (size cap `vaulter-drive.uploads.max_file_size`, optional
+mime allow-list), `parent_id`, `name`. Needs `create` in the parent. **Response:** `201`
+Node. For large files use the [resumable uploads](#resumable-uploads).
+
+#### `GET v1/files/{node}/revisions` — `files.revisions.index`
+
+The retained revisions, newest first, a cursor page of FileRevision:
+
+```json
+{
+  "id": "01J…", "number": 3, "size_bytes": 1024, "mime": "application/pdf",
+  "declared_mime": "application/pdf", "sha256": "…", "scan_status": "clean",
+  "keep_forever": false, "is_head": true, "created_by": "1", "created_at": "…"
+}
+```
+
+#### `POST v1/files/{node}/revisions` — `files.revisions.store` · **If-Match**
+
+Multipart `file`: the next revision. Needs `edit`. **Response:** `201` FileRevision.
+
+#### `POST v1/files/{node}/revisions/{revision}/restore` — `files.revisions.restore` · **If-Match**
+
+Copies an older revision forward as the new head (its bytes count against the quota
+again). Needs `edit`. **Response:** `200` FileRevision.
+
+#### `PATCH v1/files/{node}/revisions/{revision}` — `files.revisions.update`
+
+`keep_forever` (required boolean): pin a revision or hand it back to the retention policy.
+Needs `edit`.
+
+#### `DELETE v1/files/{node}/revisions/{revision}` — `files.revisions.destroy`
+
+Deletes a revision and releases its bytes; needs `manage`. The head →
+`409 cannot_delete_head_revision`; a pinned one → `409 revision_pinned`. **Response:** `204`.
+
+#### `GET v1/files/{node}/download` — `files.download`
+
+#### `GET v1/files/{node}/revisions/{revision}/download` — `files.revisions.download`
+
+The bytes of the head or of one exact revision, through the
+[file delivery](#file-delivery) rules: a stream in `strict` mode, a `302` to a signed URL
+in `direct_signed` mode; `403 permission_denied` for a caller who may only view;
+`423 content_unavailable` for a revision that is not clean — both before any byte.
+
+---
+
+## Resumable uploads
+
+Chunked uploads (`tus` 1.0.0 core or S3-style multipart) that end in the same race-free
+commit as a single-shot upload; the assembled bytes are hashed again, a client checksum or
+part ETag is never the content address. Throttled by `throttle:vaulter-uploads`. See
+[Uploads](/guide/uploads).
+
+`vaulter-drive.uploads.resumable.enabled = false` keeps the routes registered and refuses
+creating, appending, completing, aborting, `HEAD` and `OPTIONS` with
+`403 profile_restriction` (a target you cannot see is still `404`); the status poll keeps
+working.
+
+#### `POST v1/drives/{drive}/uploads` — `uploads.store`
+
+| Field | Rule |
 |---|---|
-| `parent_id` | nullable (omit = root) |
-| `name` | nullable, max 255, no path separators — overrides the copy's name |
+| `protocol` | `tus` (default) or `s3-multipart` |
+| `parent_id` | optional string — the folder of a new file (the drive root when absent) |
+| `node_id` | optional string — an existing file to upload a new revision of; **needs If-Match** with that file's tag |
+| `name` | optional, max 255, no path separators |
+| `total_size_bytes` | optional integer ≥ 0, checked against the drive policy up front |
+| `expected_sha256` | optional, 64 hex chars (declared, never trusted) |
+| `mime_type` | optional, max 191 |
+| `metadata` | optional object; keys outside `vaulter-drive.uploads.resumable.metadata.allowed_keys` are dropped |
 
-**Gate:** `Ability::View` on the source **and** `Create` on the destination.
-**Response:** `201` `NodeResource`.
+Needs `create` in the folder, or `edit` on the file. The If-Match of `node_id` is checked
+when the session is created; the commit at the end does not compare it again (a persisted
+expectation is planned after 1.0). **Response:** `201` UploadSession; for tus also
+`Tus-Resumable`, `Location: …/v1/uploads/{upload}` and `Upload-Offset: 0`.
 
-#### `DELETE nodes/{node}`
+```json
+{
+  "data": {
+    "upload_id": "…", "drive_id": "01J…", "protocol": "tus", "status": "uploading",
+    "received_bytes": 8388608, "total_size_bytes": 52428800, "chunk_size": 8388608,
+    "mime_type": "application/pdf", "node_id": null, "target_parent_id": "01J…",
+    "target_name": "report.pdf", "expires_at": "…"
+  }
+}
+```
 
-Trash (soft-delete) a node and its subtree. → `NodeController::trash`
+Only the session's creator may act on it afterwards (`403 permission_denied` for another
+user); an unknown or foreign-tenant `{upload}` is `404`.
 
-**Gate:** `Ability::Trash`. **Response:** `NodeResource` (with `trashed_at` set).
+#### `GET v1/uploads/{upload}` — `uploads.show`
 
-#### `POST nodes/{node}/restore`
+The session status (not part of tus core). **Response:** `200` UploadSession.
 
-Restore a trash root (and the members trashed with it). → `NodeController::restore`
+#### `HEAD v1/uploads/{upload}` — `uploads.tus.head`
 
-| Name | In | Notes |
-|---|---|---|
-| `destination_id` | body | Optional. Folder to restore into; needs `Create` on it. Without it the node returns to the folder it was trashed from. |
+`204` with `Tus-Resumable`, `Upload-Offset` (the server's resume point — resume from this,
+never from your own guess) and `Upload-Length` when known.
 
-**Gate:** `Ability::Restore`. **Response:** `NodeResource`. A member trashed with a folder answers
-`409 node_trashed_by_ancestor` (`context.trash_root_id`); a missing or trashed original folder
-without `destination_id` answers `409 restore_destination_required`; an archived drive answers
-`409 drive_archived`.
+#### `PATCH v1/uploads/{upload}` — `uploads.tus.patch`
 
-#### `DELETE nodes/{node}/force`
+An `application/offset+octet-stream` chunk at `Upload-Offset`. While incomplete `204` with
+the advanced `Upload-Offset`; the last chunk commits the file and answers `201` Node (with
+its `ETag`). Protocol refusals keep their tus headers inside `application/problem+json`:
+a missing or other `Tus-Resumable` → `412` with `Tus-Version`; a wrong content type →
+`415`; a chunk over `max_chunk_size` → `413`; an offset that does not match →
+`409 upload_offset_mismatch` with `Upload-Offset`.
 
-Permanently delete a node and its subtree (detaches blobs, releases quota).
-→ `NodeController::forceDelete`
+#### `DELETE v1/uploads/{upload}` — `uploads.tus.destroy`
 
-**Gate:** `Ability::Delete`. **Response:** `204 No Content`.
+Abort; staged bytes are reclaimed. `204` with `Tus-Resumable`.
 
-### Search & trash
+#### `OPTIONS v1/uploads/{upload}` — `uploads.tus.options`
 
-#### `GET storages/{storage}/search`
+Discovery, without resolving a session: `Tus-Version`, `Tus-Extension: creation,termination`
+and `Tus-Max-Size` when there is a cap.
 
-Name search within the storage tree (live nodes only). → `NodeController::search`
+#### `POST v1/uploads/{upload}/parts` — `uploads.parts.store`
 
-| Param | In | Notes |
-|---|---|---|
-| `q` | query | the search term |
-| `per_page`, `cursor` | query | pagination |
+The body is the part's bytes; `part_no` (query/body or `X-Part-Number`, default 1) and
+`byte_offset`. A re-upload of a part replaces it. **Response:** `201
+{ "part_no", "size", "etag" }`.
 
-**Gate:** per-row `Ability::View` (matches the actor cannot view are dropped from
-the page). **Response:** paginated `NodeResource` collection.
+#### `POST v1/uploads/{upload}/complete` — `uploads.complete`
 
-#### `GET storages/{storage}/trash`
+Stitches the parts and commits. **Response:** `201` Node.
 
-The trash view: trashed (not yet purged) nodes for the storage.
-→ `NodeController::trashed`
+---
 
-**Gate:** per-row `Ability::Restore`. **Response:** paginated `NodeResource`
-collection. See [Trash & restore](/guide/trash).
+## Comments
 
-### Download
-
-#### `GET nodes/{node}/download`
-
-Stream the node's current head version. → `DownloadController::current`
-
-#### `GET nodes/{node}/versions/{version}/download`
-
-Stream a specific historical file version. → `DownloadController::version`
-
-**Gate:** `Ability::Download`. **Response:** on a disk that can mint a signed URL
-(S3-style) a `302` redirect to a short-lived (`5 min`) temporary URL; otherwise the
-bytes are streamed straight off the storage driver (never buffered in memory) with
-`Content-Type` and `Content-Length` headers.
-
-### Comments
-
-Node-attached comments (`NodeCommentController`, vaulter-documents), the additive
-Drive-native twin of the [legacy document-path comments](#comments-1). Feature-gated
-on `comments`. `{comment}` is a plain scalar (the model is swappable, not
-route-model bound) — the controller resolves it and asserts it belongs to the bound
-node.
+Node comments (`vaulter-documents`, `vaulter.features.comments`) — still unversioned until
+the documents routes move to v1. `{comment}` is a plain id that must belong to `{node}`.
 
 | Route | Action | Notes |
 |---|---|---|
@@ -420,8 +521,7 @@ node.
 | `POST nodes/{node}/comments/{comment}/resolve` | `resolve` | |
 | `DELETE nodes/{node}/comments/{comment}` | `destroy` | |
 
-**Gate:** read ≥ `Ability::View`, create = `Ability::Comment`, resolve/delete = the
-comment's author or `Ability::Manage`.
+Read needs `view`, create `comment`, resolve/delete the comment's author or `manage`.
 
 ---
 
@@ -505,117 +605,6 @@ Export the document node as a file in the requested format. → `export`
 | `format` | query | `html` (default), `markdown`, or any registered exporter format |
 
 **Gate:** `Ability::Download` + content egress. **Response:** the exporter's bytes with `Content-Type`, `Content-Disposition: attachment; filename*`, `Cache-Control: private, no-store` and `X-Content-Type-Options: nosniff` (not JSON); `X-Vaulter-Export-Lossy: 1` marks content its type could only read partly. A format the document's type lacks answers `422 unknown_export_format` with `allowed`. See [Export](/guide/export).
-
----
-
-## Resumable uploads
-
-Chunked, resumable uploads that assemble through the *same* race-free CAS commit
-(`TusProtocolController`, `S3MultipartProtocolController`). **Gated on the `uploads`
-feature.** See [Uploads](/guide/uploads).
-
-The `{upload_id}` is the client's UNIQUE session handle — a plain scalar, resolved
-by the controller (which asserts it belongs to an authorized target).
-
-### tus.io
-
-#### `POST storages/{storage}/resumable-uploads`
-
-Create a resumable session (tus Creation). → `TusProtocolController::create`
-
-| Param | Rule |
-|---|---|
-| `protocol` | nullable, one of the `UploadProtocol` values (default `tus`) |
-| `parent_id` | nullable (omit = root) — new-file destination |
-| `node_id` | nullable — the existing file node for a **new version** |
-| `name` | nullable, max 255, no path separators |
-| `total_size_bytes` | nullable, integer ≥ 0 |
-| `expected_sha256` | nullable, exactly 64 chars (declared, never trusted as the address) |
-| `mime_type` | nullable, max 191 |
-| `metadata` | nullable, array (merged over the decoded tus `Upload-Metadata` header) |
-
-**Gate:** new file → `canCreateInWorkspace` + `Create` under the folder; new
-version → `Ability::Edit` on the node. **Response:** `201` `UploadSessionResource`
-with headers `Tus-Resumable`, `Location` (the `upload_id` URL) and `Upload-Offset: 0`.
-
-#### `HEAD resumable-uploads/{upload_id}`
-
-The authoritative server-side resume point. → `head`
-
-**Response:** `204` with `Tus-Resumable`, `Upload-Offset` (the resume point) and
-`Upload-Length` (when the total size is known). The client resumes from **this**
-offset, never its own guess.
-
-#### `PATCH resumable-uploads/{upload_id}`
-
-Append an `application/offset+octet-stream` chunk at the declared offset. → `patch`
-
-| Header | Notes |
-|---|---|
-| `Upload-Offset` | where this chunk starts |
-
-**Response:** while incomplete, `204` with the advanced `Upload-Offset`; on the
-final chunk the bytes are assembled and committed and the response is `201`
-`NodeResource` (the created/updated node).
-
-#### `DELETE resumable-uploads/{upload_id}`
-
-Abort the session (staged temp + any multipart reclaimed). → `abort`
-
-**Response:** `204` with `Tus-Resumable`.
-
-#### `GET resumable-uploads/{upload_id}`
-
-Poll the session status. → `status`
-
-**Response** (`UploadSessionResource`):
-
-```json
-{
-  "data": {
-    "upload_id": "…",
-    "protocol": "tus",
-    "status": "uploading",
-    "received_bytes": 8388608,
-    "total_size_bytes": 52428800,
-    "chunk_size": 8388608,
-    "mime_type": "application/pdf",
-    "node_id": null,
-    "target_parent_id": "01J…",
-    "target_name": "report.pdf",
-    "assembled_blob_id": null,
-    "expires_at": "…"
-  }
-}
-```
-
-::: warning tus can be disabled independently
-If `config('vaulter-drive.uploads.resumable.enabled')` is `false`, the tus routes still mount
-but every tus action returns **403** — the `uploads` feature flag (the schema) and
-the tus toggle are separate.
-:::
-
-### S3-style multipart
-
-#### `POST resumable-uploads/{upload_id}/parts`
-
-Record (sign/proxy) a numbered part; the body is the part bytes. A re-upload of the
-same `part_no` replaces it. → `S3MultipartProtocolController::parts`
-
-| Param | In | Notes |
-|---|---|---|
-| `part_no` | body / `X-Part-Number` header | defaults to `1` |
-| `byte_offset` | body | where the part starts |
-
-**Gate:** new version → `Ability::Edit`; new file → `canCreateInWorkspace` +
-`Create`. **Response:** `201` `{ "part_no": …, "size": …, "etag": "…" }`.
-
-#### `POST resumable-uploads/{upload_id}/complete`
-
-Complete-multipart → assemble → commit (server recomputes the sha256 — the ETag is
-never the content address). → `complete`
-
-**Response:** `201` `NodeResource`.
 
 ---
 

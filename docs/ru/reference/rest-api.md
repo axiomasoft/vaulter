@@ -12,10 +12,10 @@ editLink: false
 базовые правила, затем маршруты. Ошибки описаны в [справочнике ошибок](/ru/reference/errors).
 
 ::: info Миграция идёт
-Маршруты доступа, ссылок, активности, журнала изменений и вебхуков уже на v1. Маршруты
-drive, загрузок, документов, комментариев и совместного редактирования ниже пока
-обслуживаются без версии под `/{routes.prefix}` и переедут на `/v1` в ближайших
-выпусках разработки 1.0; их разделы это отмечают.
+Маршруты доступа, ссылок, активности, журнала изменений, вебхуков, drive и загрузок уже на
+v1. Маршруты документов, комментариев и совместного редактирования ниже пока обслуживаются
+без версии под `/{routes.prefix}` и переедут на `/v1` в ближайшем выпуске разработки 1.0;
+их разделы это отмечают.
 :::
 
 ## Базовые правила
@@ -31,7 +31,7 @@ drive, загрузок, документов, комментариев и со�
 | Списки | курсорные страницы: `?cursor=&per_page=` (`per_page` 1–200, по умолчанию 50; вне диапазона — `422 validation_failed`) → `{ "data": [ … ], "meta": { "next_cursor": "…" \| null, "per_page": 50 } }`; `total` нет |
 | Корреляция | входящий `X-Request-Id`, подходящий под `^[A-Za-z0-9._:-]{1,64}$`, сохраняется, иначе назначается новый ULID; он возвращается в каждом ответе, передаётся операции и записывается с её активностью и событиями |
 | Ошибки | `application/problem+json` со стабильным `code` — см. [справочник ошибок](/ru/reference/errors) |
-| Параметры | `{node}`, `{drive}`, `{grant}`, `{share}`, `{endpoint}`, `{delivery}`, `{token}` — простые id (`[A-Za-z0-9_-]+`); привязки моделей к маршрутам нет |
+| Параметры | `{node}`, `{drive}`, `{revision}`, `{upload}`, `{grant}`, `{share}`, `{endpoint}`, `{delivery}`, `{token}` — простые id (`[A-Za-z0-9_-]+`); привязки моделей к маршрутам нет |
 
 ### Стеки middleware
 
@@ -74,6 +74,8 @@ drive, загрузок, документов, комментариев и со�
 - Узел виден, но нет нужной способности → `403 permission_denied`; функция, выключенная
   профилем drive → `403 profile_restriction`.
 - id гранта или ссылки другого узла считается неизвестным (`404`).
+- Списки уровня drive (поиск, звёздочки, корзина) не отклоняются, а фильтруются до видимого
+  вам: тот, кому дали доступ только к папке глубоко внутри, находит то, что в ней.
 
 ### Валидаторы и предусловия
 
@@ -144,231 +146,377 @@ drive, загрузок, документов, комментариев и со�
 
 ## Маршруты без версии
 
-Маршруты [Drive](#drive), [документных узлов](#документные-узлы-documents),
-[резюмируемых загрузок](#резюмируемые-загрузки),
+Маршруты [документных узлов](#документные-узлы-documents), [комментариев](#комментарии),
 [совместного редактирования](#совместное-редактирование-в-реальном-времени) и
 [легаси-API документов](#легаси-api-документов) пока обслуживаются под `/{routes.prefix}`
-без `/v1` и сохраняют прежние соглашения: `{storage}` и `{node}` превращаются в модели до
-контроллера, ошибки — `{ "message", "code" }`, узлы — в прежней форме (`storage_id`,
-`handler`, …). Они переедут на `/v1` — с базовыми правилами выше — в ближайших выпусках
-разработки 1.0.
+без `/v1` и сохраняют прежние соглашения: `{node}` превращается в модель до контроллера,
+ошибки — `{ "message", "code" }`, узлы — в прежней форме (`storage_id`, `handler`, …). Они
+переедут на `/v1` — с базовыми правилами выше — в ближайшем выпуске разработки 1.0.
+Прежних путей drive (`storages/*`, `nodes/{node}` без `/v1`, `resumable-uploads/*`) больше
+нет: под префиксом v1 неизвестный путь отвечает `404 route_not_found`, вне его — обычным
+404 хоста.
 
 ## Drive
 
-Единое дерево файлов/папок `v_nodes` (`ShowDriveController`, `NodeController`,
-`DownloadController`). Эндпоинты уровня коллекции хранилища несут `{storage}` в пути;
-эндпоинты уровня узла выводят хранилище из привязанного `{node}`.
+Drive, дерево узлов, содержимое файлов и корзина (пакет `vaulter-drive`). Маршруты
+регистрируются всегда, пока пакет установлен; функцию, выключенную глобально или профилем
+drive, отклоняет операция — `403 profile_restriction` на том, что вам видно, — поэтому
+`route:cache` никогда не замораживает флаг.
 
-### Хранилища
+Операции над любым видом узла живут под `nodes/{node}`, операции над содержимым файла — под
+`files/{node}` (над содержимым документа — под `documents/{node}`). Узел другого вида на
+маршруте содержимого отвечает `422 not_a_file`.
 
-#### `GET storages/{storage}`
-
-Прочитать метаданные контейнера хранилища, корневой узел и использование. → `ShowDriveController::__invoke`
-
-**Ответ** (`DriveResource`):
+### Ресурс Drive
 
 ```json
 {
   "data": {
     "id": "01J…",
-    "panel": "default",
-    "owner": { "type": "App\\Models\\Project", "id": 1 },
-    "name": "Project storage",
-    "slug": null,
+    "owner": { "type": "App\\Models\\Project", "id": "42" },
+    "profile": "default",
+    "name": "Project files",
     "root_node_id": "01J…",
-    "disk": "local",
-    "storage_type": "default",
-    "used_bytes": 10485760,
-    "quota_bytes": null,
     "status": "active",
-    "created_at": "…",
-    "updated_at": "…",
-    "abilities": { "view": true, "create_folder": true, "upload": true, "manage": true }
+    "quota_bytes": null,
+    "used_bytes": 10485760,
+    "created_at": "2026-10-10T12:00:00.000000Z"
   }
 }
 ```
 
-### Список и навигация
+`status` — `active`, `archived` или `deleting`. Что вам можно делать в drive — это
+`abilities` его корневого узла (`GET v1/nodes/{root_node_id}`).
 
-#### `GET storages/{storage}/nodes`
+#### `GET v1/drives/{drive}` — `drives.show`
 
-Получить прямых потомков папки (или корня хранилища). → `NodeController::index`
+Нужен `view` на корне. Drive, который вам не виден, чужого арендатора, удаляемый или
+неизвестный → `404 drive_not_found`.
 
-| Параметр | Где | Примечания |
-|---|---|---|
-| `parent_id` | query | опционально; опустите для корня |
-| `per_page`, `cursor` | query | пагинация |
+#### `POST v1/drives/{drive}/archive` — `drives.archive`
 
-**Гейт:** `Ability::View` на родителе. **Ответ:** пагинированная коллекция
-`NodeResource`.
+#### `POST v1/drives/{drive}/unarchive` — `drives.unarchive`
 
-#### `GET nodes/{node}`
+#### `DELETE v1/drives/{drive}` — `drives.destroy`
 
-Один узел плюс его `breadcrumb`; папка также встраивает своих прямых `children`.
-→ `NodeController::show`
+Жизненный цикл, `manage` на корне. Архивный drive только для чтения: каждая мутация
+отвечает `409 drive_archived`, пока его не вернут из архива. Удаление запускает
+асинхронную очистку и отвечает drive со `status: "deleting"`; с этого момента он `404` для
+всех. **Ответ:** `200` Drive.
 
-**Гейт:** `Ability::View`. **Ответ** (`NodeResource`):
+### Ресурс узла
 
 ```json
 {
   "data": {
     "id": "01J…",
+    "drive_id": "01J…",
+    "parent_id": "01J…",
     "kind": "file",
-    "name": "report.pdf",
+    "name": "contract.pdf",
     "mime": "application/pdf",
     "extension": "pdf",
-    "size_bytes": 524288,
-    "storage_id": "01J…",
-    "parent_id": "01J…",
-    "file_id": "01J…",
-    "current_version_id": "01J…",
-    "trashed_at": null,
-    "created_at": "…",
-    "updated_at": "…",
-    "content_modified_at": "…",
+    "size_bytes": 1024,
+    "sequence": 7,
+    "etag": "\"01J….7.3f2a9c1d0b4e5a67\"",
+    "inherits_access": true,
+    "properties": {},
+    "created_at": "…", "created_by": "1",
+    "updated_at": "…", "updated_by": "1",
+    "content_modified_at": "…", "content_modified_by": "1",
+    "trashed_at": null, "trashed_by": null, "trash_root": false,
+    "presentation": {
+      "handler": "vaulter/preview",
+      "document_type": null,
+      "type_available": true,
+      "viewer": { "key": "vaulter/pdf-preview", "props": {} },
+      "capabilities": { "editable": false, "previewable": true, "downloadable": true, "thumbnailable": false, "collaborative": false }
+    },
+    "abilities": { "view": true, "download": true, "comment": true, "edit": true, "create": false, "move": true, "copy": true, "trash": true, "restore": true, "share": false, "manage": false, "delete": false },
     "viewer": { "starred": false },
-    "children": null,
-    "breadcrumb": [ /* корень → этот узел */ ],
-    "abilities": { "view": true, "edit": true, "trash": true, "…": true },
-    "handler": { "id": "…", "capabilities": { "…": true }, "ui": { "…": "…" } }
+    "scan_status": "clean",
+    "file": { "revision_id": "01J…", "revision_number": 3, "size_bytes": 1024, "sha256": "…", "mime": "application/pdf", "scan_status": "clean" },
+    "document": null
   }
 }
 ```
 
-Карта `abilities` заполняется `AccessResolver` для актора запроса (неаутентифицированный
-запрос получает read-only оболочку со всеми `false`). `handler` — это резолвнутый
-дескриптор [обработчика формата](/ru/guide/document-handlers) для листового узла
-(null для папки).
+- `presentation` — `null` у папки; документ несёт `presentation.document_type` и
+  `handler: null`, а свою голову — в `document`.
+- `abilities` — ваши, вычисленные для всей страницы разом; `etag` — тег ровно этого
+  представления (см. [Валидаторы](#валидаторы-и-предусловия)).
+- Убраны относительно 0.x: `storage_id`, `file_id`, `current_version_id`, `handler`
+  (→ `presentation`), `is_pinned`/`pinned`/`position` (→ `viewer.starred`), `owned_by`.
 
-### Операции записи
+### Списки и чтение
 
-#### `POST storages/{storage}/folders`
+#### `GET v1/drives/{drive}/nodes?parent=` — `nodes.index`
 
-Создать папку. → `NodeController::storeFolder`
+Видимые дети `parent`, а без него — корня drive. Курсорная страница Node. На этом и других
+маршрутах уровня drive, называющих узел внутри него (`folders.store`, `files.store`,
+`uploads.store`), промах в drive, чей корень вам не виден, отвечает `404 drive_not_found` — как
+неизвестный drive, — и лишь промах в видимом вам drive отвечает `404 node_not_found`.
 
-| Параметр | Правило |
+#### `GET v1/drives/{drive}/search?q=` — `nodes.search`
+
+Живые узлы, чьё имя совпадает с `q` (обязателен), в пределах видимого вам. Курсорная страница.
+
+#### `GET v1/drives/{drive}/starred` — `nodes.starred`
+
+Ваши помеченные звёздочкой узлы drive, которые вам всё ещё видны, новые звёзды первыми.
+Курсорная страница.
+
+#### `GET v1/shared` — `shared.index`
+
+Узлы, к которым вам дали доступ другие, по всем drive — курсорная страница, как любой
+список (offset-пагинации 0.x с `total` больше нет). Нужна функция `grants`, иначе
+`403 profile_restriction`.
+
+#### `GET v1/nodes/{node}?include=breadcrumb,children` — `nodes.show`
+
+Один узел со своим `ETag`; `If-None-Match` отвечает `304` после авторизации. `include`
+добавляет `breadcrumb` — `[{ "id", "name" }]` видимых предков, корень первым, сам узел
+последним, — и `children`, **первую страницу** детей папки
+(`{ "data": [Node…], "meta": { "next_cursor", "per_page" } }`, `null` у файла); это не полный
+обход. Ответ с `include` — другой вариант: без заголовка `ETag` и никогда не `304`.
+
+#### `GET v1/nodes/{node}/abilities?explain=` — `nodes.abilities`
+
+`{ "data": { "abilities": { …12… }, "explain": null } }`. `explain=<способность>` добавляет
+`{ "ability", "allowed", "reasons": [ … ] }`; объяснение раскрывает гранты за ответом,
+поэтому нужен `manage` (иначе `403 permission_denied`).
+
+### Изменение узлов
+
+Маршруты с пометкой **If-Match** требуют текущий тег узла (`428` без него, `412` при
+устаревшем — см. [Валидаторы](#валидаторы-и-предусловия)). Нужная маршруту способность
+проверяется первой: тот, кто видит узел, но не имеет её, получает `403 permission_denied`,
+а не `428` или `412`. Каждый отвечает изменённым Node с новым `ETag`.
+
+#### `POST v1/drives/{drive}/folders` — `folders.store`
+
+| Поле | Правило |
 |---|---|
-| `name` | required, string, max 255, без разделителей пути (`/` `\`) |
-| `parent_id` | nullable (опустить = корень) |
+| `name` | обязательно, допустимое имя узла |
+| `parent_id` | необязательная строка; без неё — корень drive |
 
-**Гейт:** `canCreateInWorkspace` + `Ability::Create` на цели назначения.
-**Ответ:** `201` `NodeResource`.
+Нужен `create` в родителе. **Ответ:** `201` Node.
 
-#### `POST storages/{storage}/uploads`
+#### `PATCH v1/nodes/{node}` — `nodes.update` · **If-Match**
 
-Закоммитить бинарную загрузку (multipart). Загрузка новой версии нацеливается на
-существующий файловый узел через `node_id`; иначе под родителем создаётся совершенно
-новый файл. → `NodeController::upload`
+`name` (обязательно). Нужен `edit`. Здесь меняется только имя; у свойств свой маршрут.
 
-| Параметр | Правило |
+#### `PATCH v1/nodes/{node}/properties` — `nodes.properties.update` · **If-Match**
+
+| Поле | Правило |
 |---|---|
-| `file` | required, file, `max:` `config('vaulter-drive.uploads.max_file_size')`; если `config('vaulter-drive.uploads.allowed_mime_types')` непуст, ограничен этим набором `mimetypes` |
-| `parent_id` | nullable (опустить = корень) |
-| `node_id` | nullable — существующий файловый узел, на который коммитится **новая версия** |
-| `name` | nullable, max 255, без разделителей пути — переопределяет сохранённое имя |
+| `namespace` | обязательно, например `acme`; `vaulter` и `vaulter.*` зарезервированы (`422 invalid_properties`) |
+| `set` | объект строковых значений для записи |
+| `unset` | список ключей для удаления |
 
-**Гейт:** новый файл → `canCreateInWorkspace` + `Create` на цели назначения;
-новая версия → `Ability::Edit` на целевом узле. **Ответ:** `201` `NodeResource`.
+Одно пространство имён меняется атомарно. Нужен `edit`.
 
-::: tip Большие файлы
-Этот эндпоинт читает multipart-тело за один запрос. Для резюмируемых, порезанных на чанки
-загрузок используйте [маршруты резюмируемых загрузок](#резюмируемые-загрузки).
-:::
+#### `PUT v1/nodes/{node}/star` — `nodes.star` · `DELETE v1/nodes/{node}/star` — `nodes.unstar`
 
-#### `PATCH nodes/{node}`
+Ваша личная звёздочка (нужен `view`). Идемпотентно, без If-Match: меняется только ваш
+`viewer.starred` — а значит, ваш тег, — но никогда `sequence` узла.
 
-Переименовать узел. → `NodeController::rename`
+#### `POST v1/nodes/{node}/move` — `nodes.move` · **If-Match**
 
-| Параметр | Правило |
+| Поле | Правило |
 |---|---|
-| `name` | required, string, max 255, без разделителей пути |
+| `destination_id` | строка или `null` (корень drive); живая папка того же drive |
+| `on_conflict` | `fail` (по умолчанию, `409 node_name_conflict`) или `rename` |
 
-**Гейт:** `Ability::Edit`. **Ответ:** `NodeResource`.
+Нужен `move` на узле и `create` в назначении.
 
-#### `POST nodes/{node}/move`
+#### `POST v1/nodes/{node}/copy` — `nodes.copy`
 
-Переместить узел под нового родителя. → `NodeController::move`
+`destination_id` (без него — корень drive), `name` (необязательно). Источник не меняется,
+поэтому If-Match не нужен; занятое имя получает свободное (`name (2)`). Нужен `copy` на
+источнике и `create` в назначении. **Ответ:** `201` Node.
 
-| Параметр | Правило |
+### Корзина
+
+#### `POST v1/nodes/{node}/trash` — `nodes.trash` · **If-Match**
+
+Переносит узел с поддеревом в корзину; узел становится корнем корзины. Нужен `trash`.
+
+#### `GET v1/drives/{drive}/trash` — `trash.index`
+
+Видимые вам корни корзины, курсорная страница. `etag` каждого элемента — то, что ждут
+восстановление и окончательное удаление: удалённый в корзину узел не читается через
+`nodes.show`.
+
+#### `POST v1/nodes/{node}/restore` — `nodes.restore` · **If-Match**
+
+| Поле | Правило |
 |---|---|
-| `parent_id` | nullable (опустить = корень) |
+| `destination_id` | необязательная папка; без неё — папка, из которой узел удалили |
+| `on_conflict` | `rename` (по умолчанию) или `fail` |
 
-**Гейт:** `Ability::Move` на узле **и** `Create` на цели назначения.
-**Ответ:** `NodeResource`.
+Нужен `restore` (и `create`, если узел возвращается в другое место). Член, удалённый вместе
+с папкой, → `409 node_trashed_by_ancestor` (`meta.context.trash_root_id`); исчезнувшая
+исходная папка без `destination_id` → `409 restore_destination_required`.
 
-#### `POST nodes/{node}/copy`
+#### `DELETE v1/nodes/{node}` — `nodes.purge` · **If-Match**
 
-Глубоко скопировать узел (и поддерево папки). → `NodeController::copy`
+Окончательно удаляет узел с поддеревом. Только из корзины (иначе `409 node_not_trashed`);
+нужен `delete`. Тег проверяется до любого удаления, поэтому с устаревшим тегом строки,
+квота и сохранённые байты остаются нетронутыми. **Ответ:** `204`.
 
-| Параметр | Правило |
+#### `DELETE v1/drives/{drive}/trash` — `trash.empty`
+
+Окончательно удаляет все корни корзины, на которые у вас есть `delete`; остальные
+остаются. **Ответ:** `200 { "data": { "purged_count": 2 } }`.
+
+### Файлы и ревизии
+
+#### `POST v1/drives/{drive}/files` — `files.store`
+
+Multipart, одним запросом: `file` (лимит `vaulter-drive.uploads.max_file_size`,
+необязательный список MIME), `parent_id`, `name`. Нужен `create` в родителе. **Ответ:**
+`201` Node. Для больших файлов — [резюмируемые загрузки](#резюмируемые-загрузки).
+
+#### `GET v1/files/{node}/revisions` — `files.revisions.index`
+
+Хранимые ревизии, новые первыми, курсорная страница FileRevision:
+
+```json
+{
+  "id": "01J…", "number": 3, "size_bytes": 1024, "mime": "application/pdf",
+  "declared_mime": "application/pdf", "sha256": "…", "scan_status": "clean",
+  "keep_forever": false, "is_head": true, "created_by": "1", "created_at": "…"
+}
+```
+
+#### `POST v1/files/{node}/revisions` — `files.revisions.store` · **If-Match**
+
+Multipart `file`: следующая ревизия. Нужен `edit`. **Ответ:** `201` FileRevision.
+
+#### `POST v1/files/{node}/revisions/{revision}/restore` — `files.revisions.restore` · **If-Match**
+
+Копирует старую ревизию вперёд как новую голову (её байты снова учитываются в квоте). Нужен
+`edit`. **Ответ:** `200` FileRevision.
+
+#### `PATCH v1/files/{node}/revisions/{revision}` — `files.revisions.update`
+
+`keep_forever` (обязательный boolean): закрепить ревизию или вернуть её политике хранения.
+Нужен `edit`.
+
+#### `DELETE v1/files/{node}/revisions/{revision}` — `files.revisions.destroy`
+
+Удаляет ревизию и освобождает её байты; нужен `manage`. Голова →
+`409 cannot_delete_head_revision`; закреплённая → `409 revision_pinned`. **Ответ:** `204`.
+
+#### `GET v1/files/{node}/download` — `files.download`
+
+#### `GET v1/files/{node}/revisions/{revision}/download` — `files.revisions.download`
+
+Байты головы или одной точной ревизии по правилам [выдачи файлов](#выдача-файлов): поток в
+режиме `strict`, `302` на подписанный URL в режиме `direct_signed`; `403 permission_denied`
+тому, кому можно только смотреть; `423 content_unavailable` для ревизии, не проверенной
+чистой, — оба до первого байта.
+
+---
+
+## Резюмируемые загрузки
+
+Загрузки частями (ядро `tus` 1.0.0 или S3-style multipart), завершающиеся тем же
+безгоночным коммитом, что и загрузка одним запросом; собранные байты хешируются заново,
+контрольная сумма клиента или ETag части никогда не становятся адресом содержимого.
+Ограничиваются `throttle:vaulter-uploads`. См. [Загрузки](/ru/guide/uploads).
+
+`vaulter-drive.uploads.resumable.enabled = false` оставляет маршруты зарегистрированными и
+отклоняет создание, дозапись, завершение, отмену, `HEAD` и `OPTIONS` с
+`403 profile_restriction` (невидимая цель по-прежнему `404`); опрос статуса продолжает
+работать.
+
+#### `POST v1/drives/{drive}/uploads` — `uploads.store`
+
+| Поле | Правило |
 |---|---|
-| `parent_id` | nullable (опустить = корень) |
-| `name` | nullable, max 255, без разделителей пути — переопределяет имя копии |
+| `protocol` | `tus` (по умолчанию) или `s3-multipart` |
+| `parent_id` | необязательная строка — папка нового файла (без неё — корень drive) |
+| `node_id` | необязательная строка — существующий файл, чью новую ревизию загружают; **нужен If-Match** с тегом этого файла |
+| `name` | необязательно, до 255, без разделителей пути |
+| `total_size_bytes` | необязательное целое ≥ 0, сразу проверяется политикой drive |
+| `expected_sha256` | необязательно, 64 hex-символа (заявленное, не доверяется) |
+| `mime_type` | необязательно, до 191 |
+| `metadata` | необязательный объект; ключи вне `vaulter-drive.uploads.resumable.metadata.allowed_keys` отбрасываются |
 
-**Гейт:** `Ability::View` на источнике **и** `Create` на цели назначения.
-**Ответ:** `201` `NodeResource`.
+Нужен `create` в папке или `edit` на файле. If-Match для `node_id` проверяется при создании
+сессии; коммит в конце его повторно не сравнивает (сохранение ожидания в сессии
+запланировано после 1.0). **Ответ:** `201` UploadSession; для tus ещё `Tus-Resumable`,
+`Location: …/v1/uploads/{upload}` и `Upload-Offset: 0`.
 
-#### `DELETE nodes/{node}`
+```json
+{
+  "data": {
+    "upload_id": "…", "drive_id": "01J…", "protocol": "tus", "status": "uploading",
+    "received_bytes": 8388608, "total_size_bytes": 52428800, "chunk_size": 8388608,
+    "mime_type": "application/pdf", "node_id": null, "target_parent_id": "01J…",
+    "target_name": "report.pdf", "expires_at": "…"
+  }
+}
+```
 
-Отправить в корзину (мягкое удаление) узел и его поддерево. → `NodeController::trash`
+Дальше с сессией может работать только её создатель (другому пользователю —
+`403 permission_denied`); неизвестный `{upload}` или `{upload}` чужого арендатора — `404`.
 
-**Гейт:** `Ability::Trash`. **Ответ:** `NodeResource` (с установленным `trashed_at`).
+#### `GET v1/uploads/{upload}` — `uploads.show`
 
-#### `POST nodes/{node}/restore`
+Статус сессии (не часть ядра tus). **Ответ:** `200` UploadSession.
 
-Восстановить корень корзины (и удалённые вместе с ним узлы). → `NodeController::restore`
+#### `HEAD v1/uploads/{upload}` — `uploads.tus.head`
 
-| Имя | Где | Примечания |
+`204` с `Tus-Resumable`, `Upload-Offset` (точка возобновления на сервере — продолжайте с
+неё, а не со своей догадки) и `Upload-Length`, если известен.
+
+#### `PATCH v1/uploads/{upload}` — `uploads.tus.patch`
+
+Чанк `application/offset+octet-stream` по `Upload-Offset`. Пока загрузка не завершена —
+`204` с продвинутым `Upload-Offset`; последний чанк коммитит файл и отвечает `201` Node (с
+его `ETag`). Протокольные отказы сохраняют заголовки tus внутри `application/problem+json`:
+нет или другой `Tus-Resumable` → `412` с `Tus-Version`; неверный тип содержимого → `415`;
+чанк больше `max_chunk_size` → `413`; несовпадающее смещение →
+`409 upload_offset_mismatch` с `Upload-Offset`.
+
+#### `DELETE v1/uploads/{upload}` — `uploads.tus.destroy`
+
+Отмена; промежуточные байты освобождаются. `204` с `Tus-Resumable`.
+
+#### `OPTIONS v1/uploads/{upload}` — `uploads.tus.options`
+
+Обнаружение без поиска сессии: `Tus-Version`, `Tus-Extension: creation,termination` и
+`Tus-Max-Size`, если лимит задан.
+
+#### `POST v1/uploads/{upload}/parts` — `uploads.parts.store`
+
+Тело — байты части; `part_no` (query/тело или `X-Part-Number`, по умолчанию 1) и
+`byte_offset`. Повторная загрузка части заменяет её. **Ответ:** `201
+{ "part_no", "size", "etag" }`.
+
+#### `POST v1/uploads/{upload}/complete` — `uploads.complete`
+
+Сшивает части и коммитит. **Ответ:** `201` Node.
+
+---
+
+## Комментарии
+
+Комментарии к узлам (`vaulter-documents`, `vaulter.features.comments`) — пока без версии,
+до переезда маршрутов документов на v1. `{comment}` — простой id, который должен
+принадлежать `{node}`.
+
+| Маршрут | Действие | Заметки |
 |---|---|---|
-| `destination_id` | body | Необязательно. Папка назначения; нужен `Create` на ней. Без него узел возвращается в папку, из которой был удалён. |
+| `GET nodes/{node}/comments` | `index` | |
+| `POST nodes/{node}/comments` | `store` | `body`, `parent_id?`, `anchor?` |
+| `POST nodes/{node}/comments/{comment}/resolve` | `resolve` | |
+| `DELETE nodes/{node}/comments/{comment}` | `destroy` | |
 
-**Гейт:** `Ability::Restore`. **Ответ:** `NodeResource`. Узел, удалённый вместе с папкой, даёт
-`409 node_trashed_by_ancestor` (`context.trash_root_id`); исчезнувшая или удалённая исходная
-папка без `destination_id` даёт `409 restore_destination_required`; архивный диск —
-`409 drive_archived`.
-
-#### `DELETE nodes/{node}/force`
-
-Навсегда удалить узел и его поддерево (отвязывает блобы, освобождает квоту).
-→ `NodeController::forceDelete`
-
-**Гейт:** `Ability::Delete`. **Ответ:** `204 No Content`.
-
-### Поиск и корзина
-
-#### `GET storages/{storage}/search`
-
-Поиск по имени внутри дерева хранилища (только живые узлы). → `NodeController::search`
-
-| Параметр | Где | Примечания |
-|---|---|---|
-| `q` | query | поисковый запрос |
-| `per_page`, `cursor` | query | пагинация |
-
-**Гейт:** построчный `Ability::View` (совпадения, которые актор не может видеть,
-выбрасываются со страницы). **Ответ:** пагинированная коллекция `NodeResource`.
-
-#### `GET storages/{storage}/trash`
-
-Вид корзины: узлы хранилища в корзине (ещё не вычищенные). → `NodeController::trashed`
-
-**Гейт:** построчный `Ability::Restore`. **Ответ:** пагинированная коллекция
-`NodeResource`. См. [Корзина и восстановление](/ru/guide/trash).
-
-### Скачивание
-
-#### `GET nodes/{node}/download`
-
-Стримить текущую head-версию узла. → `DownloadController::current`
-
-#### `GET nodes/{node}/versions/{version}/download`
-
-Стримить конкретную историческую версию файла. → `DownloadController::version`
-
-**Гейт:** `Ability::Download`. **Ответ:** на диске, который умеет выпускать подписанный URL
-(S3-стиль), — `302`-редирект на короткоживущий (`5 min`) временный URL; иначе байты
-стримятся прямо с драйвера хранилища (никогда не буферизуются в память) с заголовками
-`Content-Type` и `Content-Length`.
+Чтение — `view`, создание — `comment`, решение/удаление — автор комментария или `manage`.
 
 ---
 
@@ -453,116 +601,6 @@ drive, загрузок, документов, комментариев и со�
 | `format` | query | `html` (по умолчанию), `markdown` или любой зарегистрированный формат экспортёра |
 
 **Гейт:** `Ability::Download` + выдача содержимого. **Ответ:** байты экспортёра с `Content-Type`, `Content-Disposition: attachment; filename*`, `Cache-Control: private, no-store` и `X-Content-Type-Options: nosniff` (не JSON); `X-Vaulter-Export-Lossy: 1` помечает содержимое, которое тип смог прочитать лишь частично. Формат, которого нет у типа документа, даёт `422 unknown_export_format` со списком `allowed`. См. [Экспорт](/ru/guide/export).
-
----
-
-## Резюмируемые загрузки
-
-Порезанные на чанки, резюмируемые загрузки, которые собираются через *тот же* безгоночный
-CAS-коммит (`TusProtocolController`, `S3MultipartProtocolController`). **Гейтится фичей `uploads`.**
-См. [Загрузки](/ru/guide/uploads).
-
-`{upload_id}` — это УНИКАЛЬНый хэндл сессии на стороне клиента: обычный скаляр, который
-резолвит контроллер (и убеждается, что он принадлежит авторизованной цели).
-
-### tus.io
-
-#### `POST storages/{storage}/resumable-uploads`
-
-Создать резюмируемую сессию (tus Creation). → `TusProtocolController::create`
-
-| Параметр | Правило |
-|---|---|
-| `protocol` | nullable, одно из значений `UploadProtocol` (по умолчанию `tus`) |
-| `parent_id` | nullable (опустить = корень) — цель нового файла |
-| `node_id` | nullable — существующий файловый узел для **новой версии** |
-| `name` | nullable, max 255, без разделителей пути |
-| `total_size_bytes` | nullable, integer ≥ 0 |
-| `expected_sha256` | nullable, ровно 64 символа (заявляется, но никогда не доверяется как адрес) |
-| `mime_type` | nullable, max 191 |
-| `metadata` | nullable, array (мержится поверх декодированного заголовка tus `Upload-Metadata`) |
-
-**Гейт:** новый файл → `canCreateInWorkspace` + `Create` под папкой; новая версия →
-`Ability::Edit` на узле. **Ответ:** `201` `UploadSessionResource` с заголовками
-`Tus-Resumable`, `Location` (URL с `upload_id`) и `Upload-Offset: 0`.
-
-#### `HEAD resumable-uploads/{upload_id}`
-
-Авторитетная точка возобновления на стороне сервера. → `head`
-
-**Ответ:** `204` с `Tus-Resumable`, `Upload-Offset` (точка возобновления) и
-`Upload-Length` (когда общий размер известен). Клиент возобновляет от **этого**
-смещения, никогда — от собственной догадки.
-
-#### `PATCH resumable-uploads/{upload_id}`
-
-Дописать чанк `application/offset+octet-stream` по заявленному смещению. → `patch`
-
-| Заголовок | Примечания |
-|---|---|
-| `Upload-Offset` | где начинается этот чанк |
-
-**Ответ:** пока не завершено — `204` с продвинутым `Upload-Offset`; на финальном чанке
-байты собираются и коммитятся, а ответ — `201` `NodeResource` (созданный/обновлённый узел).
-
-#### `DELETE resumable-uploads/{upload_id}`
-
-Прервать сессию (staged temp + любой multipart высвобождаются). → `abort`
-
-**Ответ:** `204` с `Tus-Resumable`.
-
-#### `GET resumable-uploads/{upload_id}`
-
-Опросить статус сессии. → `status`
-
-**Ответ** (`UploadSessionResource`):
-
-```json
-{
-  "data": {
-    "upload_id": "…",
-    "protocol": "tus",
-    "status": "uploading",
-    "received_bytes": 8388608,
-    "total_size_bytes": 52428800,
-    "chunk_size": 8388608,
-    "mime_type": "application/pdf",
-    "node_id": null,
-    "target_parent_id": "01J…",
-    "target_name": "report.pdf",
-    "assembled_blob_id": null,
-    "expires_at": "…"
-  }
-}
-```
-
-::: warning tus можно отключить отдельно
-Если `config('vaulter-drive.uploads.resumable.enabled')` равно `false`, tus-маршруты всё равно
-монтируются, но каждое tus-действие возвращает **403** — фиче-флаг `uploads` (схема) и
-переключатель tus разделены.
-:::
-
-### S3-style multipart
-
-#### `POST resumable-uploads/{upload_id}/parts`
-
-Записать (подписать/проксировать) пронумерованную часть; тело — это байты части. Повторная
-загрузка того же `part_no` заменяет её. → `S3MultipartProtocolController::parts`
-
-| Параметр | Где | Примечания |
-|---|---|---|
-| `part_no` | body / заголовок `X-Part-Number` | по умолчанию `1` |
-| `byte_offset` | body | где начинается часть |
-
-**Гейт:** новая версия → `Ability::Edit`; новый файл → `canCreateInWorkspace` +
-`Create`. **Ответ:** `201` `{ "part_no": …, "size": …, "etag": "…" }`.
-
-#### `POST resumable-uploads/{upload_id}/complete`
-
-Complete-multipart → сборка → коммит (сервер пересчитывает sha256 — ETag никогда не
-является контент-адресом). → `complete`
-
-**Ответ:** `201` `NodeResource`.
 
 ---
 

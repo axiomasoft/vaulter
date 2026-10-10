@@ -10,6 +10,7 @@ use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Http\Requests\Uploads\CreateUploadSessionRequest;
 use Vaulter\Drive\Models\Uploads\UploadSession;
+use Vaulter\Drive\Tests\Http\DriveV1;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -33,7 +34,7 @@ function r07ResumableBaseline(): array
 
 function r07ResumableUrl(string|int $storageId): string
 {
-    return 'api/vaulter/storages/'.$storageId.'/resumable-uploads';
+    return 'api/vaulter/v1/drives/'.$storageId.'/uploads';
 }
 
 function r07StorageId(): string|int
@@ -151,7 +152,7 @@ it('R07Request keeps only scalar metadata values in CreateUploadSessionRequest',
 it('R07Request validates multipart upload file parent and name rules', function (): void {
     $drive = DriveTestHelpers::drive();
     $storage = $drive->model();
-    $base = 'api/vaulter/storages/'.$storage->getKey().'/uploads';
+    $base = 'api/vaulter/v1/drives/'.$storage->getKey().'/files';
 
     $this->postJson($base, [
         'file' => UploadedFile::fake()->createWithContent('a.txt', 'bytes'),
@@ -187,7 +188,7 @@ it('R07Request validates multipart upload file parent and name rules', function 
 });
 
 it('R07Request requires the multipart upload file field alone when missing', function (): void {
-    $response = $this->postJson('api/vaulter/storages/'.r07StorageId().'/uploads', [
+    $response = $this->postJson('api/vaulter/v1/drives/'.r07StorageId().'/files', [
         'parent_id' => null,
     ])->assertUnprocessable();
 
@@ -198,7 +199,7 @@ it('R07Request validates copy name boundaries and separator message in isolation
     $drive = DriveTestHelpers::drive();
     $dest = $drive->folders()->create('CopyDest');
     $file = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('copy'), 'source.bin'), new UploadOptions(parent: $dest));
-    $uri = 'api/vaulter/nodes/'.$file->id.'/copy';
+    $uri = 'api/vaulter/v1/nodes/'.$file->id.'/copy';
 
     $response = $this->postJson($uri, ['parent_id' => $dest->id, 'name' => str_repeat('c', 256)])->assertUnprocessable();
     expect(array_keys($response->json('errors')))->toBe(['name']);
@@ -213,7 +214,7 @@ it('R07Request accepts nullable copy parent_id and empty name override as null',
     $drive = DriveTestHelpers::drive();
     $folder = $drive->folders()->create('Holder');
     $file = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('x'), 'keep-name.bin'), new UploadOptions(parent: $folder));
-    $uri = 'api/vaulter/nodes/'.$file->id.'/copy';
+    $uri = 'api/vaulter/v1/nodes/'.$file->id.'/copy';
 
     $copy = $this->postJson($uri, ['parent_id' => null, 'name' => ''])->assertCreated()->json('data');
 
@@ -225,7 +226,7 @@ it('R07Request accepts nullable move parent_id only', function (): void {
     $folder = $drive->folders()->create('Hold');
     $node = $drive->folders()->create('Movable', $folder);
 
-    $this->postJson('api/vaulter/nodes/'.$node->id.'/move', ['parent_id' => null])
+    $this->postJson('api/vaulter/v1/nodes/'.$node->id.'/move', ['destination_id' => null], DriveV1::ifMatch($node->id))
         ->assertOk()
         ->assertJsonPath('data.parent_id', (string) $drive->model()->root_node_id);
 });
@@ -233,7 +234,7 @@ it('R07Request accepts nullable move parent_id only', function (): void {
 it('R07Request validates rename name rules and custom separator message', function (): void {
     $drive = DriveTestHelpers::drive();
     $node = $drive->folders()->create('Before');
-    $uri = 'api/vaulter/nodes/'.$node->id;
+    $uri = 'api/vaulter/v1/nodes/'.$node->id;
 
     $response = $this->patchJson($uri, ['name' => ''])->assertUnprocessable();
     expect(array_keys($response->json('errors')))->toBe(['name']);
@@ -244,14 +245,14 @@ it('R07Request validates rename name rules and custom separator message', functi
     $response = $this->patchJson($uri, ['name' => 'a\\b'])->assertUnprocessable();
     expect($response->json('errors.name.0'))->toBe(r07NameSeparatorMessage());
 
-    $this->patchJson($uri, ['name' => str_repeat('r', 255)])->assertOk()
+    $this->patchJson($uri, ['name' => str_repeat('r', 255)], DriveV1::ifMatch($node->id))->assertOk()
         ->assertJsonPath('data.name', str_repeat('r', 255));
 });
 
 it('R07Request validates create-folder name and nullable parent_id', function (): void {
     $drive = DriveTestHelpers::drive();
     $storage = $drive->model();
-    $base = 'api/vaulter/storages/'.$storage->getKey().'/folders';
+    $base = 'api/vaulter/v1/drives/'.$storage->getKey().'/folders';
     $child = $drive->folders()->create('Parent');
 
     $response = $this->postJson($base, ['name' => 'a/b'])->assertUnprocessable();
@@ -271,7 +272,7 @@ it('R07Request validates create-folder name and nullable parent_id', function ()
 
 it('R07Request enforces the dedicated upload size ceiling on the file rule only', function (): void {
     config()->set('vaulter-drive.uploads.max_file_size', 1 * 1024);
-    $base = 'api/vaulter/storages/'.r07StorageId().'/uploads';
+    $base = 'api/vaulter/v1/drives/'.r07StorageId().'/files';
 
     $response = $this->postJson($base, [
         'file' => UploadedFile::fake()->create('big.bin', 4),
@@ -283,7 +284,7 @@ it('R07Request enforces the dedicated upload size ceiling on the file rule only'
 
 it('R07Request adds mimetypes to the file rule only when an allowlist is configured', function (): void {
     config()->set('vaulter-drive.uploads.allowed_mime_types', ['application/pdf']);
-    $base = 'api/vaulter/storages/'.r07StorageId().'/uploads';
+    $base = 'api/vaulter/v1/drives/'.r07StorageId().'/files';
 
     $response = $this->postJson($base, [
         'file' => UploadedFile::fake()->create('note.txt', 1, 'text/plain'),

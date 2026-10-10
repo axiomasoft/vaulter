@@ -37,7 +37,9 @@ it('records vaulter_http_request_duration_seconds for mapped routes', function (
     LoadTier::set('S');
 
     $middleware = app(RecordVaulterRequestMetrics::class);
-    $request = Request::create('/api/vaulter/storages/1/nodes', 'GET');
+    $request = Request::create('/api/vaulter/v1/drives/1/nodes', 'GET');
+    // A versioned request is labelled by its matched route name.
+    $request->setRouteResolver(static fn () => app('router')->getRoutes()->getByName('vaulter.v1.nodes.index'));
     $request->attributes->set(LoadTier::REQUEST_ATTRIBUTE, 'S');
 
     $middleware->handle($request, static fn (): Response => new Response('', 200));

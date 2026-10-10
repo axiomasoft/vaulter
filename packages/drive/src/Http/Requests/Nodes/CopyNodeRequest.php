@@ -4,16 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Http\Requests\Nodes;
 
-use Vaulter\Drive\Data\Nodes\CopyNodeInput;
 use Vaulter\Http\Requests\VaulterFormRequest;
-use Vaulter\Models\Drive\Node;
+use Vaulter\Support\DriveNameRules;
 
-/**
- * Validates a copy request (§2.4): the source node is route-model resolved, the
- * destination parent (null = storage root) and an optional new name come from the
- * body. toData() takes the already-resolved nodes; an empty name override is
- * normalised to null so the Action keeps the source's name.
- */
+/** POST nodes/{node}/copy: the destination folder (the drive root when absent) and an optional new name. */
 final class CopyNodeRequest extends VaulterFormRequest
 {
     /**
@@ -22,8 +16,8 @@ final class CopyNodeRequest extends VaulterFormRequest
     public function rules(): array
     {
         return [
-            'parent_id' => ['nullable'],
-            'name' => ['nullable', 'string', 'max:255', 'regex:/^[^\/\\\\]+$/'],
+            'destination_id' => ['nullable', 'string', 'max:191'],
+            'name' => ['nullable', ...array_values(array_diff(DriveNameRules::rules(), ['required']))],
         ];
     }
 
@@ -32,14 +26,14 @@ final class CopyNodeRequest extends VaulterFormRequest
      */
     public function messages(): array
     {
-        return [
-            'name.regex' => 'The name must not contain path separators (/ or \\).',
-        ];
+        return DriveNameRules::messages();
     }
 
-    public function parentId(): int|string|null
+    public function destinationId(): ?string
     {
-        return $this->nullableScalarId('parent_id');
+        $value = $this->input('destination_id');
+
+        return is_string($value) ? $value : null;
     }
 
     public function name(): ?string
@@ -47,14 +41,5 @@ final class CopyNodeRequest extends VaulterFormRequest
         $name = $this->input('name');
 
         return is_string($name) && $name !== '' ? $name : null;
-    }
-
-    public function toData(Node $node, ?Node $into): CopyNodeInput
-    {
-        return new CopyNodeInput(
-            node: $node,
-            into: $into,
-            name: $this->name(),
-        );
     }
 }

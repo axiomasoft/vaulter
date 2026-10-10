@@ -34,16 +34,16 @@ function actingAsActor(int $id): void
 it('владелец сессии продвигает её PATCH-чанком (F-P1.4-12, контроль)', function (): void {
     actingAsActor(1);
     $storage = ownershipStorage();
-    $base = 'api/vaulter/storages/'.$storage->getKey();
+    $base = 'api/vaulter/v1/drives/'.$storage->getKey();
 
-    $uploadId = $this->postJson($base.'/resumable-uploads', [
+    $uploadId = $this->postJson($base.'/uploads', [
         'name' => 'owner.bin',
         'total_size_bytes' => 4,
     ])->json('data.upload_id');
 
     $this->call(
         'PATCH',
-        'api/vaulter/resumable-uploads/'.$uploadId,
+        'api/vaulter/v1/uploads/'.$uploadId,
         [], [], [],
         ['HTTP_UPLOAD_OFFSET' => '0', 'CONTENT_TYPE' => 'application/offset+octet-stream', 'HTTP_TUS_RESUMABLE' => '1.0.0'],
         'abcd',
@@ -53,9 +53,9 @@ it('владелец сессии продвигает её PATCH-чанком (
 it('чужой актор с правом Create в той же папке НЕ может PATCH чужую сессию (F-P1.4-12, red-before: проходит)', function (): void {
     actingAsActor(1);
     $storage = ownershipStorage();
-    $base = 'api/vaulter/storages/'.$storage->getKey();
+    $base = 'api/vaulter/v1/drives/'.$storage->getKey();
 
-    $uploadId = $this->postJson($base.'/resumable-uploads', [
+    $uploadId = $this->postJson($base.'/uploads', [
         'name' => 'victim.bin',
         'total_size_bytes' => 4,
     ])->json('data.upload_id');
@@ -65,7 +65,7 @@ it('чужой актор с правом Create в той же папке НЕ 
 
     $this->call(
         'PATCH',
-        'api/vaulter/resumable-uploads/'.$uploadId,
+        'api/vaulter/v1/uploads/'.$uploadId,
         [], [], [],
         ['HTTP_UPLOAD_OFFSET' => '0', 'CONTENT_TYPE' => 'application/offset+octet-stream'],
         'abcd',
@@ -75,44 +75,44 @@ it('чужой актор с правом Create в той же папке НЕ 
 it('чужой актор НЕ может DELETE (abort) чужую сессию (F-P1.4-12)', function (): void {
     actingAsActor(1);
     $storage = ownershipStorage();
-    $base = 'api/vaulter/storages/'.$storage->getKey();
+    $base = 'api/vaulter/v1/drives/'.$storage->getKey();
 
-    $uploadId = $this->postJson($base.'/resumable-uploads', [
+    $uploadId = $this->postJson($base.'/uploads', [
         'name' => 'victim2.bin',
         'total_size_bytes' => 4,
     ])->json('data.upload_id');
 
     actingAsActor(2);
 
-    $this->delete('api/vaulter/resumable-uploads/'.$uploadId)->assertForbidden();
+    $this->delete('api/vaulter/v1/uploads/'.$uploadId)->assertForbidden();
 
     // The session survives — the abort never happened.
     actingAsActor(1);
-    $this->getJson('api/vaulter/resumable-uploads/'.$uploadId)
+    $this->getJson('api/vaulter/v1/uploads/'.$uploadId)
         ->assertJsonPath('data.status', 'initiated');
 });
 
 it('чужой актор НЕ может HEAD чужую сессию (F-P1.4-12)', function (): void {
     actingAsActor(1);
     $storage = ownershipStorage();
-    $base = 'api/vaulter/storages/'.$storage->getKey();
+    $base = 'api/vaulter/v1/drives/'.$storage->getKey();
 
-    $uploadId = $this->postJson($base.'/resumable-uploads', [
+    $uploadId = $this->postJson($base.'/uploads', [
         'name' => 'victim3.bin',
         'total_size_bytes' => 4,
     ])->json('data.upload_id');
 
     actingAsActor(2);
 
-    $this->call('HEAD', 'api/vaulter/resumable-uploads/'.$uploadId)->assertForbidden();
+    $this->call('HEAD', 'api/vaulter/v1/uploads/'.$uploadId)->assertForbidden();
 });
 
 it('S3-multipart: чужой актор НЕ может POST parts на чужую сессию (F-P1.4-12)', function (): void {
     actingAsActor(1);
     $storage = ownershipStorage();
-    $base = 'api/vaulter/storages/'.$storage->getKey();
+    $base = 'api/vaulter/v1/drives/'.$storage->getKey();
 
-    $uploadId = $this->postJson($base.'/resumable-uploads', [
+    $uploadId = $this->postJson($base.'/uploads', [
         'protocol' => 's3-multipart',
         'name' => 'victim-multi.bin',
         'total_size_bytes' => 10,
@@ -122,7 +122,7 @@ it('S3-multipart: чужой актор НЕ может POST parts на чужу
 
     $this->call(
         'POST',
-        'api/vaulter/resumable-uploads/'.$uploadId.'/parts?part_no=1&byte_offset=0',
+        'api/vaulter/v1/uploads/'.$uploadId.'/parts?part_no=1&byte_offset=0',
         [], [], [], ['CONTENT_TYPE' => 'application/octet-stream'], str_repeat('X', 10),
     )->assertForbidden();
 });

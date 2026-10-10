@@ -6,6 +6,54 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### REST v1: drive routes (PLAN2.P6.7, D62–D65)
+
+The drive, tree, trash, file and upload routes moved to `/{routes.prefix}/v1` and are named `vaulter.v1.*`.
+The unversioned routes are removed without aliases; under the v1 prefix an unknown path answers
+`404 route_not_found`. Document, comment and collaboration routes stay unversioned until the next item.
+
+| Was | Now |
+|---|---|
+| `GET storages/{storage}` (`panel`, `slug`, `disk`, `storage_type`, `updated_at`, `abilities{view,create_folder,upload,manage}`) | `GET v1/drives/{drive}` → Drive `{id, owner{type,id}, profile, name, root_node_id, status, quota_bytes, used_bytes, created_at}` (`drives.show`); what you may do is the root node's `abilities` |
+| — | `POST v1/drives/{drive}/archive`, `POST v1/drives/{drive}/unarchive`, `DELETE v1/drives/{drive}` (`drives.archive/unarchive/destroy`) |
+| `GET storages/{storage}/nodes?parent_id=` | `GET v1/drives/{drive}/nodes?parent=` (`nodes.index`) |
+| `GET storages/{storage}/search?q=` | `GET v1/drives/{drive}/search?q=` (`nodes.search`; `q` required) |
+| — | `GET v1/drives/{drive}/starred` (`nodes.starred`) |
+| `GET storages/{storage}/trash` | `GET v1/drives/{drive}/trash` (`trash.index`); `DELETE v1/drives/{drive}/trash` empties it (`trash.empty`, `{data:{purged_count}}`) |
+| `POST storages/{storage}/folders` | `POST v1/drives/{drive}/folders` (`folders.store`) |
+| `POST storages/{storage}/uploads` (new file, or `node_id` for a new version) | `POST v1/drives/{drive}/files` for a new file (`files.store`); a new revision is `POST v1/files/{node}/revisions` with **If-Match** → `201` FileRevision |
+| `GET shared` (offset `page`/`total`) | `GET v1/shared` — a cursor page (`shared.index`); `403 profile_restriction` when `grants` is off (the route is always registered) |
+| `GET nodes/{node}` (breadcrumb and all children always embedded) | `GET v1/nodes/{node}` with `ETag`/`304` (`nodes.show`); `?include=breadcrumb,children` adds `breadcrumb [{id,name}]` and the **first page** of children, without `ETag` |
+| `PATCH nodes/{node}` `{name}` | `PATCH v1/nodes/{node}` `{name}` + **If-Match** (`nodes.update`) |
+| — | `PATCH v1/nodes/{node}/properties` `{namespace, set, unset}` + **If-Match**; `PUT`/`DELETE v1/nodes/{node}/star` |
+| `POST nodes/{node}/move` `{parent_id}` | `POST v1/nodes/{node}/move` `{destination_id, on_conflict?}` + **If-Match** (`nodes.move`) |
+| `POST nodes/{node}/copy` `{parent_id, name}` | `POST v1/nodes/{node}/copy` `{destination_id, name}` (`nodes.copy`) |
+| `DELETE nodes/{node}` (to the trash) | `POST v1/nodes/{node}/trash` + **If-Match** (`nodes.trash`) |
+| `POST nodes/{node}/restore` `{destination_id?}` | `POST v1/nodes/{node}/restore` `{destination_id?, on_conflict?}` + **If-Match** with the tag from the trash listing (`nodes.restore`) |
+| `DELETE nodes/{node}/force` | `DELETE v1/nodes/{node}` + **If-Match** — trashed nodes only, `409 node_not_trashed` otherwise (`nodes.purge`) |
+| — | `GET v1/nodes/{node}/abilities?explain=` (`nodes.abilities`; explain needs `manage`) |
+| `GET nodes/{node}/download`, `GET nodes/{node}/versions/{version}/download` | `GET v1/files/{node}/download`, `GET v1/files/{node}/revisions/{revision}/download` through `ContentResponder` (`strict` stream / `direct_signed` 302; `403` previewer, `423` not clean) |
+| — | `GET v1/files/{node}/revisions`, `POST …/revisions/{revision}/restore` (+ **If-Match**), `PATCH …/revisions/{revision}` `{keep_forever}`, `DELETE …/revisions/{revision}` |
+| `POST storages/{storage}/resumable-uploads` | `POST v1/drives/{drive}/uploads` (`uploads.store`; `protocol: tus\|s3-multipart`; `node_id` needs **If-Match**); tus `Location` is `…/v1/uploads/{upload}` |
+| `GET/HEAD/PATCH/DELETE/OPTIONS resumable-uploads/{upload_id}`, `POST …/parts`, `POST …/complete` | the same acts under `v1/uploads/{upload}` (`uploads.show`, `uploads.tus.head/patch/destroy/options`, `uploads.parts.store`, `uploads.complete`) |
+| tus disabled → routes not registered | routes always registered; the operations answer `403 profile_restriction` (status poll still works) |
+| `FileRevisionResource` `{file_id, version_no, content_sha256, mime_type, status, committed_at}` | FileRevision `{id, number, size_bytes, mime, declared_mime, sha256, scan_status, keep_forever, is_head, created_by, created_at}` |
+| `UploadSessionResource` with `assembled_blob_id`, integer ids | adds `drive_id`; drops `assembled_blob_id`; ids are strings; `expires_at` RFC 3339 UTC |
+| Request ids as integers (`parent_id: 5`) | ids are JSON strings everywhere (`"parent_id": "5"`); an integer is `422 validation_failed` |
+| `per_page` clamped to 1..200 | outside 1..200 → `422 validation_failed` |
+| `TrashOperations::purge($node)`, `RestoreOptions(destination, onConflict)`, `FileOperations::restoreRevision($file, $revision)` | optional `?int $expectedSequence` on all three (`RestoreOptions::$expectedSequence`, `->expectedSequence()`); checked before any side effect, `StaleNodeException` (`412`) on mismatch — additive, existing calls keep working |
+
+- Send the node's current `ETag` (from `nodes.show`, a list item's `etag`, or a mutation's `ETag` header) as
+  `If-Match` on every route marked **If-Match**. For a trashed node use the `etag` of its trash listing entry.
+- A session for a new revision is checked against `If-Match` when it is created; the commit does not compare
+  it again (a persisted expectation is planned after 1.0).
+- Drive-wide lists (search, starred, trash) stay filtered by visibility: a caller granted a deep folder
+  still searches the drive; a drive whose root is invisible answers `404 drive_not_found` on `drives.*` and,
+  when the named node misses, on `nodes.index`, `folders.store`, `files.store` and `uploads.store`.
+- On an If-Match route the ability is checked first: View without the needed ability is `403`, before `428`/`412`.
+- Host code that called `NodeController`, `DownloadController` or relied on the old `DriveResource` shape must
+  move to the v1 routes. `@vaulter/vue` moves to v1 in a later item.
+
 ### REST v1: HTTP kernel and core routes (PLAN2.P6.1, D62–D65)
 
 The access, sharing, activity, change journal and webhook routes moved to `/{routes.prefix}/v1` and are

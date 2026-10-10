@@ -226,32 +226,25 @@ it('UploadFile L129-130: created_by is set to actorId on new-file commit and no 
 // NodeController
 // ---------------------------------------------------------------------------
 
-// L151 IfNegated / IdenticalToNotIdentical / L152 RemoveMethodCall:
-// the show() handler adds children only to Folder nodes, never to File nodes.
-it('NodeController L151/L152: show folder response includes children; show file does not', function (): void {
+// include=children adds the first page of children to a folder only.
+it('NodeController L151/L152: include=children lists a folder page and is null for a file', function (): void {
     $storage = r07bActStorage();
-    $base = 'api/vaulter/storages/'.$storage->getKey();
+    $base = 'api/vaulter/v1/drives/'.$storage->getKey();
 
     $folderId = $this->postJson($base.'/folders', ['name' => 'Parent'])->assertCreated()->json('data.id');
-    $childId = $this->postJson($base.'/folders', ['name' => 'Child', 'parent_id' => $folderId])
-        ->assertCreated()->json('data.id');
+    $this->postJson($base.'/folders', ['name' => 'Child', 'parent_id' => $folderId])->assertCreated();
 
-    // Folder show: children must be present.
-    // L152 RemoveMethodCall mutant: withChildren() skipped → key absent.
-    $folderResponse = $this->getJson('api/vaulter/nodes/'.$folderId)->assertOk();
-    expect($folderResponse->json('data.children'))->not->toBeNull()
-        ->and($folderResponse->json('data.children'))->toBeArray()
-        ->and(count($folderResponse->json('data.children')))->toBe(1);
+    $folderResponse = $this->getJson('api/vaulter/v1/nodes/'.$folderId.'?include=children')->assertOk();
+    expect($folderResponse->json('data.children.data'))->toBeArray()->toHaveCount(1);
+    $this->getJson('api/vaulter/v1/nodes/'.$folderId)->assertOk()->assertJsonMissingPath('data.children');
 
-    // File show: children must NOT appear.
-    // L151 IfNegated mutant: attaches children to files too.
-    $fileId = $this->postJson($base.'/uploads', [
+    $fileId = $this->postJson($base.'/files', [
         'parent_id' => $folderId,
         'file' => UploadedFile::fake()->createWithContent('f.txt', 'hi'),
     ])->assertCreated()->json('data.id');
 
-    $fileResponse = $this->getJson('api/vaulter/nodes/'.$fileId)->assertOk();
-    expect($fileResponse->json('data.children'))->toBeNull();
+    $fileResponse = $this->getJson('api/vaulter/v1/nodes/'.$fileId.'?include=children')->assertOk();
+    expect($fileResponse->json())->toHaveKey('data.children')->and($fileResponse->json('data.children'))->toBeNull();
 });
 
 // L374 BooleanOrToBooleanAnd: findNodeInStorage must 404 when the node exists
@@ -260,43 +253,22 @@ it('NodeController L374: cross-storage node lookup 404s', function (): void {
     $storageA = r07bActStorage();
     $storageB = r07bActStorage();
 
-    $folderId = $this->postJson('api/vaulter/storages/'.$storageA->getKey().'/folders', ['name' => 'Secret'])
+    $folderId = $this->postJson('api/vaulter/v1/drives/'.$storageA->getKey().'/folders', ['name' => 'Secret'])
         ->assertCreated()->json('data.id');
 
     // Try to list children of storageA's folder through storageB's route.
     // BooleanOrToBooleanAnd mutant: only checks !$node instanceof Node, ignores storage mismatch.
-    $this->getJson('api/vaulter/storages/'.$storageB->getKey().'/nodes?parent_id='.$folderId)
+    $this->getJson('api/vaulter/v1/drives/'.$storageB->getKey().'/nodes?parent='.$folderId)
         ->assertNotFound();
 });
 
-// L383/L385 RemoveIntegerCast / Decrement / Increment:
-// The shared endpoint uses LengthAwarePaginator and exposes meta.per_page, letting
-// us assert the EXACT clamped value rather than a result-count proxy.
-// Route: GET api/vaulter/shared (fixed segment, gated on features.grants = true by default).
-it('NodeController L383/L385: per_page is clamped to exactly 1 at the lower bound and 200 at the upper bound', function (): void {
-    // Ensure the grants feature is enabled so the shared route is registered.
-    config()->set('vaulter.features.grants', true);
-
-    // per_page=0 → max(1, ...) → 1 exactly.
-    // Decrement on 1: max(0, ...) → 0 stored; Increment: max(2, ...) → 2.
-    $this->getJson('api/vaulter/shared?per_page=0')
-        ->assertOk()
-        ->assertJsonPath('meta.per_page', 1);
-
-    $this->getJson('api/vaulter/shared?per_page=1')
-        ->assertOk()
-        ->assertJsonPath('meta.per_page', 1);
-
-    // per_page=200 → min(..., 200) → 200 exactly.
-    // Decrement on 200: min(..., 199) → 199 — caught here.
-    $this->getJson('api/vaulter/shared?per_page=200')
-        ->assertOk()
-        ->assertJsonPath('meta.per_page', 200);
-
-    // Requesting over the cap: must be clamped to 200, not 201.
-    $this->getJson('api/vaulter/shared?per_page=201')
-        ->assertOk()
-        ->assertJsonPath('meta.per_page', 200);
+// The shared listing echoes meta.per_page, so the exact bound is asserted rather than a
+// result-count proxy.
+it('NodeController L383/L385: per_page outside 1..200 is refused and both bounds are echoed exactly', function (): void {
+    $this->getJson('api/vaulter/v1/shared?per_page=0')->assertUnprocessable()->assertJsonPath('code', 'validation_failed');
+    $this->getJson('api/vaulter/v1/shared?per_page=1')->assertOk()->assertJsonPath('meta.per_page', 1);
+    $this->getJson('api/vaulter/v1/shared?per_page=200')->assertOk()->assertJsonPath('meta.per_page', 200);
+    $this->getJson('api/vaulter/v1/shared?per_page=201')->assertUnprocessable();
 });
 
 // ---------------------------------------------------------------------------
@@ -371,14 +343,14 @@ it('DownloadController L114: non-empty original_name is used as filename, not no
     $storage = r07bActStorage();
 
     // Upload so the original file name ('original.txt') differs from the stored name ('stored.txt').
-    $nodeId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/uploads', [
+    $nodeId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/files', [
         'file' => UploadedFile::fake()->createWithContent('original.txt', 'payload'),
         'name' => 'stored.txt',
     ])->assertCreated()->json('data.id');
 
     app()->instance(StorageDriver::class, new R07bStreamingDriver(app(StorageDriver::class)));
 
-    $response = $this->get('api/vaulter/nodes/'.$nodeId.'/download');
+    $response = $this->get('api/vaulter/v1/files/'.$nodeId.'/download');
     $response->assertOk();
 
     // TernaryNegated mutant: condition is reversed → node name 'stored.txt' used instead.
@@ -389,7 +361,7 @@ it('DownloadController L114: non-empty original_name is used as filename, not no
 it('DownloadController L114: empty original_name falls back to node name in the filename', function (): void {
     $storage = r07bActStorage();
 
-    $nodeId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/uploads', [
+    $nodeId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/files', [
         'file' => UploadedFile::fake()->createWithContent('report.txt', 'data'),
     ])->assertCreated()->json('data.id');
 
@@ -399,7 +371,7 @@ it('DownloadController L114: empty original_name falls back to node name in the 
 
     app()->instance(StorageDriver::class, new R07bStreamingDriver(app(StorageDriver::class)));
 
-    $response = $this->get('api/vaulter/nodes/'.$nodeId.'/download');
+    $response = $this->get('api/vaulter/v1/files/'.$nodeId.'/download');
     $response->assertOk();
 
     // EmptyStringToNotEmpty mutant: '' === ' ' is false → '' returned as filename.
@@ -413,7 +385,7 @@ it('DownloadController L115 first CoalesceRemoveLeft: version mime_type wins ove
     $storage = r07bActStorage();
 
     // Upload with image/png (whitelisted, served as-is).
-    $nodeId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/uploads', [
+    $nodeId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/files', [
         'file' => UploadedFile::fake()->image('photo.png', 1, 1),
     ])->assertCreated()->json('data.id');
 
@@ -422,7 +394,7 @@ it('DownloadController L115 first CoalesceRemoveLeft: version mime_type wins ove
 
     app()->instance(StorageDriver::class, new R07bStreamingDriver(app(StorageDriver::class)));
 
-    $response = $this->get('api/vaulter/nodes/'.$nodeId.'/download');
+    $response = $this->get('api/vaulter/v1/files/'.$nodeId.'/download');
     $response->assertOk();
 
     // First CoalesceRemoveLeft mutant: node.mime_type used → 'application/octet-stream'.
@@ -432,7 +404,7 @@ it('DownloadController L115 first CoalesceRemoveLeft: version mime_type wins ove
 // Delivery takes MIME from the committed immutable revision, with a safe null fallback.
 it('DownloadController uses octet-stream when revision MIME is null despite node MIME', function (): void {
     $storage = r07bActStorage();
-    $nodeId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/uploads', [
+    $nodeId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/files', [
         'file' => UploadedFile::fake()->image('photo.png', 1, 1),
     ])->assertCreated()->json('data.id');
     $version = Node::find($nodeId)->file()->firstOrFail()->currentRevision()->first();
@@ -440,7 +412,7 @@ it('DownloadController uses octet-stream when revision MIME is null despite node
     Node::find($nodeId)->forceFill(['mime_type' => 'image/png'])->save();
     app()->instance(StorageDriver::class, new R07bStreamingDriver(app(StorageDriver::class)));
 
-    $response = $this->get('api/vaulter/nodes/'.$nodeId.'/download');
+    $response = $this->get('api/vaulter/v1/files/'.$nodeId.'/download');
     $response->assertOk();
     expect($response->headers->get('content-type'))->toBe('application/octet-stream');
 });

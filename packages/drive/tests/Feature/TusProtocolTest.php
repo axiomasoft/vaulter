@@ -31,7 +31,7 @@ function protocolStorage(): Drive
 
 it('offset-mismatch PATCH → 409 + Upload-Offset, НЕ 302/422 (F-P1.4-02, red-before: 302/422)', function (): void {
     $storage = protocolStorage();
-    $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+    $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'name' => 'conflict.bin',
         'total_size_bytes' => 20,
     ])->json('data.upload_id');
@@ -39,7 +39,7 @@ it('offset-mismatch PATCH → 409 + Upload-Offset, НЕ 302/422 (F-P1.4-02, red-
     // First chunk lands at [0,5); the server is now at offset 5.
     $this->call(
         'PATCH',
-        'api/vaulter/resumable-uploads/'.$uploadId,
+        'api/vaulter/v1/uploads/'.$uploadId,
         [], [], [],
         ['HTTP_UPLOAD_OFFSET' => '0', 'CONTENT_TYPE' => 'application/offset+octet-stream', 'HTTP_TUS_RESUMABLE' => '1.0.0'],
         '12345',
@@ -49,7 +49,7 @@ it('offset-mismatch PATCH → 409 + Upload-Offset, НЕ 302/422 (F-P1.4-02, red-
     // staged there is a genuine desync — 409, carrying the authoritative offset.
     $this->call(
         'PATCH',
-        'api/vaulter/resumable-uploads/'.$uploadId,
+        'api/vaulter/v1/uploads/'.$uploadId,
         [], [], [],
         ['HTTP_UPLOAD_OFFSET' => '0', 'CONTENT_TYPE' => 'application/offset+octet-stream', 'HTTP_TUS_RESUMABLE' => '1.0.0'],
         'xxxxx',
@@ -61,14 +61,14 @@ it('offset-mismatch PATCH → 409 + Upload-Offset, НЕ 302/422 (F-P1.4-02, red-
 
 it('идемпотентный повтор совпадающего диапазона → 204, не 409 (F-P1.4-02)', function (): void {
     $storage = protocolStorage();
-    $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+    $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'name' => 'retry.bin',
         'total_size_bytes' => 20,
     ])->json('data.upload_id');
 
     $this->call(
         'PATCH',
-        'api/vaulter/resumable-uploads/'.$uploadId,
+        'api/vaulter/v1/uploads/'.$uploadId,
         [], [], [],
         ['HTTP_UPLOAD_OFFSET' => '0', 'CONTENT_TYPE' => 'application/offset+octet-stream', 'HTTP_TUS_RESUMABLE' => '1.0.0'],
         '12345',
@@ -78,7 +78,7 @@ it('идемпотентный повтор совпадающего диапа�
     // bytes at the same range is an idempotent retransmit, not a conflict.
     $this->call(
         'PATCH',
-        'api/vaulter/resumable-uploads/'.$uploadId,
+        'api/vaulter/v1/uploads/'.$uploadId,
         [], [], [],
         ['HTTP_UPLOAD_OFFSET' => '0', 'CONTENT_TYPE' => 'application/offset+octet-stream', 'HTTP_TUS_RESUMABLE' => '1.0.0'],
         '12345',
@@ -89,14 +89,14 @@ it('идемпотентный повтор совпадающего диапа�
 
 it('PATCH с неверным Content-Type → 415, НЕ 204 (F-P1.4-05, red-before: 204)', function (): void {
     $storage = protocolStorage();
-    $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+    $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'name' => 'badtype.bin',
         'total_size_bytes' => 5,
     ])->json('data.upload_id');
 
     $this->call(
         'PATCH',
-        'api/vaulter/resumable-uploads/'.$uploadId,
+        'api/vaulter/v1/uploads/'.$uploadId,
         [], [], [],
         ['HTTP_UPLOAD_OFFSET' => '0', 'CONTENT_TYPE' => 'text/plain', 'HTTP_TUS_RESUMABLE' => '1.0.0'],
         'abcde',
@@ -105,18 +105,18 @@ it('PATCH с неверным Content-Type → 415, НЕ 204 (F-P1.4-05, red-bef
 
 it('HEAD/PATCH без Tus-Resumable → 412 (F-P1.4-06, red-before: проходит)', function (): void {
     $storage = protocolStorage();
-    $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+    $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'name' => 'noversion.bin',
         'total_size_bytes' => 5,
     ])->json('data.upload_id');
 
-    $this->call('HEAD', 'api/vaulter/resumable-uploads/'.$uploadId)
+    $this->call('HEAD', 'api/vaulter/v1/uploads/'.$uploadId)
         ->assertStatus(412)
         ->assertHeader('Tus-Version', '1.0.0');
 
     $this->call(
         'PATCH',
-        'api/vaulter/resumable-uploads/'.$uploadId,
+        'api/vaulter/v1/uploads/'.$uploadId,
         [], [], [],
         ['HTTP_UPLOAD_OFFSET' => '0', 'CONTENT_TYPE' => 'application/offset+octet-stream'],
         'abcde',
@@ -125,19 +125,19 @@ it('HEAD/PATCH без Tus-Resumable → 412 (F-P1.4-06, red-before: проход
 
 it('HEAD/PATCH с чужой версией Tus-Resumable → 412 (F-P1.4-06)', function (): void {
     $storage = protocolStorage();
-    $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+    $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'name' => 'wrongversion.bin',
         'total_size_bytes' => 5,
     ])->json('data.upload_id');
 
-    $this->call('HEAD', 'api/vaulter/resumable-uploads/'.$uploadId, server: ['HTTP_TUS_RESUMABLE' => '0.2.2'])
+    $this->call('HEAD', 'api/vaulter/v1/uploads/'.$uploadId, server: ['HTTP_TUS_RESUMABLE' => '0.2.2'])
         ->assertStatus(412);
 });
 
 it('OPTIONS анонсирует Tus-Version/Tus-Extension/Tus-Max-Size (F-P1.4-07, red-before: нет роута)', function (): void {
     config()->set('vaulter-drive.uploads.max_file_size', 1_000_000);
 
-    $this->call('OPTIONS', 'api/vaulter/resumable-uploads/any-literal-handle')
+    $this->call('OPTIONS', 'api/vaulter/v1/uploads/any-literal-handle')
         ->assertNoContent()
         ->assertHeader('Tus-Resumable', '1.0.0')
         ->assertHeader('Tus-Version', '1.0.0')
@@ -146,14 +146,14 @@ it('OPTIONS анонсирует Tus-Version/Tus-Extension/Tus-Max-Size (F-P1.4-
 });
 
 it('OPTIONS не анонсирует checksum-расширение (не реализовано, U1.5/U1.6)', function (): void {
-    $this->call('OPTIONS', 'api/vaulter/resumable-uploads/any-literal-handle')
+    $this->call('OPTIONS', 'api/vaulter/v1/uploads/any-literal-handle')
         ->assertHeader('Tus-Extension', 'creation,termination');
 });
 
 it('метаданные с неизвестным ключом → отброшены, с известным — сохранены (F-P1.4-08, red-before: принимаются)', function (): void {
     $storage = protocolStorage();
 
-    $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+    $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'name' => 'meta.bin',
         'total_size_bytes' => 5,
         'metadata' => [
@@ -173,7 +173,7 @@ it('значение метаданных сверх лимита длины —
     config()->set('vaulter-drive.uploads.resumable.metadata.max_value_length', 8);
     $storage = protocolStorage();
 
-    $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+    $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'name' => 'meta-long.bin',
         'total_size_bytes' => 5,
         'metadata' => ['filename' => 'a-very-long-filename-indeed.bin'],
@@ -190,6 +190,6 @@ it('значение метаданных сверх лимита длины —
 it('gates tus initiation through the profile driver', function (bool $allow): void {
     $drive = protocolStorage();
     ProfileCreateGate::install($allow);
-    $this->postJson('api/vaulter/storages/'.$drive->id.'/resumable-uploads', ['name' => 'profile.bin', 'total_size_bytes' => 5])
+    $this->postJson('api/vaulter/v1/drives/'.$drive->id.'/uploads', ['name' => 'profile.bin', 'total_size_bytes' => 5])
         ->assertStatus($allow ? 201 : 403);
 })->with([true, false]);

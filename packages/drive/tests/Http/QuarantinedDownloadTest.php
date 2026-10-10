@@ -1,0 +1,49 @@
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
+use Vaulter\Content\ImmutableContentIdentity;
+use Vaulter\Content\SignedContentUrl;
+use Vaulter\Contracts\Cas\DirectContentUrlSigner;
+use Vaulter\Database\VaulterDatabase;
+use Vaulter\Tests\Drive\DriveTestHelpers;
+use Vaulter\Tests\Http\V1;
+
+/** A revision that is not scanned clean answers 423 content_unavailable before any byte or URL. */
+uses(RefreshDatabase::class);
+
+beforeEach(function (): void {
+    Storage::fake('local');
+});
+
+it('answers 423 for an infected head, in both delivery modes', function (string $mode): void {
+    config()->set('vaulter.downloads.delivery_mode', $mode);
+    $signer = new class implements DirectContentUrlSigner
+    {
+        public int $calls = 0;
+
+        public function sign(ImmutableContentIdentity $content, DateTimeImmutable $expiresAt): SignedContentUrl
+        {
+            $this->calls++;
+
+            return new SignedContentUrl('https://storage.test/x', $expiresAt, $content->fingerprint(), $content->storageVersion);
+        }
+    };
+    app()->instance(DirectContentUrlSigner::class, $signer);
+    $drive = V1::drive(userId: 1);
+    $file = V1::file($drive, 'q.txt', 'quarantined');
+    $revision = DriveTestHelpers::model($file)->file()->firstOrFail()->currentRevision()->firstOrFail();
+    app(VaulterDatabase::class)->write(static fn () => $revision->forceFill(['scan_status' => 'infected'])->save());
+    $this->actingAs(V1::user(1));
+
+    $this->get(V1::url('files/'.$file->id.'/download'), ['Accept' => 'application/json'])
+        ->assertStatus(423)
+        ->assertHeader('Content-Type', 'application/problem+json')
+        ->assertJsonPath('code', 'content_unavailable');
+    $this->get(V1::url('files/'.$file->id.'/revisions/'.$revision->getKey().'/download'), ['Accept' => 'application/json'])
+        ->assertStatus(423);
+
+    expect($signer->calls)->toBe(0);
+})->with(['strict', 'direct_signed']);

@@ -400,7 +400,7 @@ $children = $drive->list($folder);          // a folder's contents
 ::: info Listing live nodes only
 `list()` returns live (non-trashed) direct children. For paginated listings,
 search and the trash view, use the [REST endpoints](/reference/rest-api#drive)
-(`storages/{storage}/nodes`, `…/search`, `…/trash`) which cursor-paginate.
+(`v1/drives/{drive}/nodes`, `…/search`, `…/trash`) which cursor-paginate.
 :::
 
 ## Drive lifecycle

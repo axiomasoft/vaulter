@@ -16,7 +16,11 @@ interface TrashOperations
 
     public function restore(NodeSnapshot|string|int $node, ?RestoreOptions $options = null): NodeSnapshot;
 
-    public function purge(NodeSnapshot|string|int $node): void;
+    /**
+     * Delete a trashed node and its subtree for good (Delete). With $expectedSequence
+     * the node must still be at that sequence, checked before anything is removed.
+     */
+    public function purge(NodeSnapshot|string|int $node, ?int $expectedSequence = null): void;
 
     public function empty(): int;
 }

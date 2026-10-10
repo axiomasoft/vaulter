@@ -163,7 +163,7 @@ it('HTTP parts echo the handler etag map and default part_no from X-Part-Number'
     $storage = Vaulter::drive(DriveTestHelpers::host())->model();
     $body = 'api-part';
 
-    $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+    $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'protocol' => 's3-multipart',
         'name' => 'api-contract.bin',
         'total_size_bytes' => strlen($body),
@@ -171,7 +171,7 @@ it('HTTP parts echo the handler etag map and default part_no from X-Part-Number'
 
     $response = $this->call(
         'POST',
-        'api/vaulter/resumable-uploads/'.$uploadId.'/parts?byte_offset=0',
+        'api/vaulter/v1/uploads/'.$uploadId.'/parts?byte_offset=0',
         [], [], [],
         ['CONTENT_TYPE' => 'application/octet-stream', 'HTTP_X_PART_NUMBER' => '1'],
         $body,
@@ -189,7 +189,7 @@ it('HTTP parts 404 an unknown upload_id', function (): void {
 
     $this->call(
         'POST',
-        'api/vaulter/resumable-uploads/0193a5f0-9a3b-7c2d-8e4f-000000000099/parts?part_no=1&byte_offset=0',
+        'api/vaulter/v1/uploads/0193a5f0-9a3b-7c2d-8e4f-000000000099/parts?part_no=1&byte_offset=0',
         [], [], [],
         ['CONTENT_TYPE' => 'application/octet-stream'],
         'x',

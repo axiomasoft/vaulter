@@ -43,10 +43,12 @@ when you extend a seam or debug a layer.
   Models (swappable via config) ─► Database (v_* tables, one id-strategy)
 ```
 
-A typical write — say `POST storages/{storage}/uploads` — flows top to bottom:
+A typical write — say `POST v1/drives/{drive}/files` — flows top to bottom:
 
-1. The **controller** route-model-binds the `{storage}` (or `{node}`) through the swappable
-   model, then authorizes the action against the [`AccessResolver`](#authorization).
+1. A single-action **controller** resolves the `{drive}` (or `{node}`) id through the
+   tenant-scoped `HttpResourceResolver` — there is no route-model binding — and calls the
+   operations as the request's user (`Vaulter::drive($drive)->actingAs($user)`), which
+   authorize against the [`AccessResolver`](#authorization).
 2. A **FormRequest** validates and a **DTO** (`Vaulter\Data\*`) carries the typed payload.
 3. An **Action** (`final readonly`, e.g. `IngestFileAction`) opens the transaction, calls the
    **CAS** to stage + dedup the bytes, writes the `v_nodes` / `v_files` rows through **store

@@ -42,10 +42,12 @@ Vaulter — это строго типизированный слоистый La
   Models (swappable via config) ─► Database (v_* tables, one id-strategy)
 ```
 
-Типичная запись — скажем, `POST storages/{storage}/uploads` — течёт сверху вниз:
+Типичная запись — скажем, `POST v1/drives/{drive}/files` — течёт сверху вниз:
 
-1. **Контроллер** через route-model-binding связывает `{storage}` (или `{node}`) через сменяемую
-   модель, затем авторизует действие против [`AccessResolver`](#authorization).
+1. Однодейственный **контроллер** находит `{drive}` (или `{node}`) по id через
+   `HttpResourceResolver` с фильтром арендатора — привязки моделей к маршрутам нет — и вызывает
+   операции от имени пользователя запроса (`Vaulter::drive($drive)->actingAs($user)`), а те
+   авторизуют действие против [`AccessResolver`](#authorization).
 2. **FormRequest** валидирует, а **DTO** (`Vaulter\Data\*`) несёт типизированный payload.
 3. **Action** (`final readonly`, например `IngestFileAction`) открывает транзакцию, вызывает
    **CAS** для staging + дедупликации байтов, пишет строки `v_nodes` / `v_files` через

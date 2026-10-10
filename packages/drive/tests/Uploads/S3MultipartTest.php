@@ -191,7 +191,7 @@ it('gates S3 initiation through the profile driver', function (bool $allow): voi
     $drive = UploadTestHelpers::storage();
     $this->actingAs(AccessTestHelpers::user());
     ProfileCreateGate::install($allow);
-    $this->postJson('api/vaulter/storages/'.$drive->id.'/resumable-uploads', [
+    $this->postJson('api/vaulter/v1/drives/'.$drive->id.'/uploads', [
         'name' => 'profile-s3.bin', 'total_size_bytes' => 5, 'protocol' => UploadProtocol::S3Multipart->value,
     ])->assertStatus($allow ? 201 : 403);
 })->with([true, false]);
@@ -202,7 +202,7 @@ it('gates the S3 parts controller through the profile driver', function (bool $a
     app(VaulterDatabase::class)->write(fn () => $session->forceFill(['created_by' => $actor->getKey(), 'metadata' => ['actor_type' => $actor->getMorphClass()]])->save());
     $this->actingAs($actor);
     ProfileCreateGate::install($allow);
-    $this->call('POST', 'api/vaulter/resumable-uploads/'.$session->upload_id.'/parts',
+    $this->call('POST', 'api/vaulter/v1/uploads/'.$session->upload_id.'/parts',
         ['part_no' => 1, 'byte_offset' => 0], [], [], ['CONTENT_TYPE' => 'application/octet-stream'], 'hello')
         ->assertStatus($allow ? 201 : 403);
 })->with([true, false]);

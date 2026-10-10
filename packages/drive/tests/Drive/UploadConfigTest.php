@@ -53,9 +53,9 @@ it('allowedUploadMimes is empty (permissive) by default and lists configured mim
 it('rejects an upload above the dedicated uploads.max_file_size ceiling', function (): void {
     config()->set('vaulter-drive.uploads.max_file_size', 1 * 1024); // 1 KB ceiling
 
-    $base = 'api/vaulter/storages/'.uploadConfigStorage();
+    $base = 'api/vaulter/v1/drives/'.uploadConfigStorage();
 
-    $this->postJson($base.'/uploads', [
+    $this->postJson($base.'/files', [
         'file' => UploadedFile::fake()->create('big.bin', 4), // 4 KB
     ])
         ->assertStatus(422)
@@ -68,9 +68,9 @@ it('accepts an upload within the dedicated ceiling regardless of the document li
     config()->set('vaulter-documents.content.max_size_kb', 1); // would reject under the OLD borrowed limit
     config()->set('vaulter-drive.uploads.max_file_size', 5120 * 1024);
 
-    $base = 'api/vaulter/storages/'.uploadConfigStorage();
+    $base = 'api/vaulter/v1/drives/'.uploadConfigStorage();
 
-    $this->postJson($base.'/uploads', [
+    $this->postJson($base.'/files', [
         'file' => UploadedFile::fake()->createWithContent('ok.txt', 'within the drive ceiling'),
     ])
         ->assertCreated()
@@ -80,9 +80,9 @@ it('accepts an upload within the dedicated ceiling regardless of the document li
 it('rejects a mime outside a configured allowlist', function (): void {
     config()->set('vaulter-drive.uploads.allowed_mime_types', ['application/pdf']);
 
-    $base = 'api/vaulter/storages/'.uploadConfigStorage();
+    $base = 'api/vaulter/v1/drives/'.uploadConfigStorage();
 
-    $this->postJson($base.'/uploads', [
+    $this->postJson($base.'/files', [
         'file' => UploadedFile::fake()->createWithContent('note.txt', 'actual plain text'),
     ])
         ->assertStatus(422)
@@ -94,9 +94,9 @@ it('rejects a mime outside a configured allowlist', function (): void {
 it('accepts a mime inside a configured allowlist', function (): void {
     config()->set('vaulter-drive.uploads.allowed_mime_types', ['application/pdf', 'text/plain']);
 
-    $base = 'api/vaulter/storages/'.uploadConfigStorage();
+    $base = 'api/vaulter/v1/drives/'.uploadConfigStorage();
 
-    $this->postJson($base.'/uploads', [
+    $this->postJson($base.'/files', [
         'file' => UploadedFile::fake()->createWithContent('note.txt', 'actual plain text'),
     ])
         ->assertCreated()
@@ -106,9 +106,9 @@ it('accepts a mime inside a configured allowlist', function (): void {
 it('stays permissive when no allowlist is configured', function (): void {
     config()->set('vaulter-drive.uploads.allowed_mime_types', []);
 
-    $base = 'api/vaulter/storages/'.uploadConfigStorage();
+    $base = 'api/vaulter/v1/drives/'.uploadConfigStorage();
 
-    $this->postJson($base.'/uploads', [
+    $this->postJson($base.'/files', [
         'file' => UploadedFile::fake()->createWithContent('anything.xyz', 'unrestricted content'),
     ])
         ->assertCreated()

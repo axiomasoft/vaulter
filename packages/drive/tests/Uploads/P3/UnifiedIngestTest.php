@@ -90,22 +90,22 @@ it('V05 HTTP single tus and S3 reject the same executable PDF bytes before CAS',
         file_put_contents($path, $bytes);
         try {
             $file = new UploadedFile($path, 'report.pdf', 'application/pdf', test: true);
-            $this->postJson('api/vaulter/storages/'.$drive->id.'/uploads', ['file' => $file])->assertStatus(422);
+            $this->postJson('api/vaulter/v1/drives/'.$drive->id.'/files', ['file' => $file])->assertStatus(422);
         } finally {
             unlink($path);
         }
     } else {
-        $create = $this->postJson('api/vaulter/storages/'.$drive->id.'/resumable-uploads', [
+        $create = $this->postJson('api/vaulter/v1/drives/'.$drive->id.'/uploads', [
             'protocol' => $protocol, 'name' => 'report.pdf', 'mime_type' => 'application/pdf', 'total_size_bytes' => strlen($bytes),
         ])->assertCreated();
         $id = $create->json('data.upload_id');
         if ($protocol === 'tus') {
-            $this->call('PATCH', 'api/vaulter/resumable-uploads/'.$id, [], [], [], [
+            $this->call('PATCH', 'api/vaulter/v1/uploads/'.$id, [], [], [], [
                 'HTTP_UPLOAD_OFFSET' => '0', 'CONTENT_TYPE' => 'application/offset+octet-stream', 'HTTP_TUS_RESUMABLE' => '1.0.0',
             ], $bytes)->assertStatus(422);
         } else {
-            $this->call('POST', 'api/vaulter/resumable-uploads/'.$id.'/parts?part_no=1&byte_offset=0', [], [], [], ['CONTENT_TYPE' => 'application/octet-stream'], $bytes)->assertCreated();
-            $this->postJson('api/vaulter/resumable-uploads/'.$id.'/complete')->assertStatus(422);
+            $this->call('POST', 'api/vaulter/v1/uploads/'.$id.'/parts?part_no=1&byte_offset=0', [], [], [], ['CONTENT_TYPE' => 'application/octet-stream'], $bytes)->assertCreated();
+            $this->postJson('api/vaulter/v1/uploads/'.$id.'/complete')->assertStatus(422);
         }
     }
     expect(Blob::query()->count())->toBe(0)->and(FileRevision::query()->count())->toBe(0);

@@ -4,19 +4,15 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Http\Requests\Uploads;
 
+use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /**
- * Validate a resumable-upload session create (§2.8 / D16 / M3a): the protocol, the
- * optional targets (a new-file destination parent + stored name, OR a new-version
- * node id) and the declared total size / mime / metadata. The client-DECLARED
- * sha256 is accepted but never trusted as the content address — BlobStore.commit
- * re-hashes the assembled bytes (H.3).
- *
- * The Action command (UploadInitData) is assembled by the controller (it resolves the
- * route-bound storage / target node and decodes the tus Upload-Metadata header), so
- * this Request only validates + exposes the scalar inputs.
+ * POST drives/{drive}/uploads: the protocol, the target (a parent folder and stored
+ * name for a new file, or node_id for a new revision of an existing one) and the
+ * declared size, mime and metadata. A declared sha256 is accepted but never trusted as
+ * the content address: the assembled bytes are hashed again when they are committed.
  */
 final class CreateUploadSessionRequest extends VaulterFormRequest
 {
@@ -27,8 +23,8 @@ final class CreateUploadSessionRequest extends VaulterFormRequest
     {
         return [
             'protocol' => ['nullable', 'string', 'in:'.implode(',', UploadProtocol::values())],
-            'parent_id' => ['nullable'],
-            'node_id' => ['nullable'],
+            'parent_id' => ['nullable', 'string', 'max:191'],
+            'node_id' => ['nullable', 'string', 'max:191'],
             'name' => ['nullable', 'string', 'max:255', 'regex:/^[^\/\\\\]+$/'],
             'total_size_bytes' => ['nullable', 'integer', 'min:0'],
             'expected_sha256' => ['nullable', 'string', 'size:64'],
@@ -59,18 +55,22 @@ final class CreateUploadSessionRequest extends VaulterFormRequest
             : UploadProtocol::Tus;
     }
 
-    public function parentId(): int|string|null
+    public function parentId(): ?string
     {
-        return $this->nullableScalarId('parent_id');
+        $value = $this->input('parent_id');
+
+        return is_string($value) ? $value : null;
     }
 
     /**
      * The existing file node to commit a NEW VERSION onto (§2.8); null = a brand-new
      * file upload.
      */
-    public function targetNodeId(): int|string|null
+    public function targetNodeId(): ?string
     {
-        return $this->nullableScalarId('node_id');
+        $value = $this->input('node_id');
+
+        return is_string($value) ? $value : null;
     }
 
     public function name(): ?string
@@ -125,5 +125,28 @@ final class CreateUploadSessionRequest extends VaulterFormRequest
         }
 
         return $metadata;
+    }
+
+    /**
+     * The metadata stored on the session: the body's map with $overrides (the decoded
+     * tus Upload-Metadata header) on top, keys outside the configured allowlist dropped
+     * and long values cut, so the stored map stays bounded. An unknown key is dropped,
+     * not refused: a tus client sending one vendor key must not fail its upload.
+     *
+     * @param  array<string, string> $overrides
+     * @return array<string, string>
+     */
+    public function allowedMetadata(DriveConfig $config, array $overrides = []): array
+    {
+        $allowedKeys = $config->metadataAllowedKeys();
+        $maxLength = $config->metadataMaxValueLength();
+        $allowed = [];
+        foreach ([...$this->metadata(), ...$overrides] as $key => $value) {
+            if (in_array($key, $allowedKeys, true)) {
+                $allowed[$key] = mb_substr($value, 0, $maxLength);
+            }
+        }
+
+        return $allowed;
     }
 }

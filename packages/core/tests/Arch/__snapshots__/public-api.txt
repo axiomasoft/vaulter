@@ -99,7 +99,7 @@ Vaulter\Contracts\Drive\FileOperations
   addRevision(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, \Vaulter\Data\Drive\UploadSource $source, ?\Vaulter\Data\Drive\RevisionOptions $options = null): \Vaulter\Data\Snapshots\FileRevisionSnapshot
   deleteRevision(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, \Vaulter\Data\Snapshots\FileRevisionSnapshot|int|string $revision): void
   read(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, \Vaulter\Data\Snapshots\FileRevisionSnapshot|int|null|string $revision = null): \Vaulter\Data\Drive\FileStream
-  restoreRevision(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, \Vaulter\Data\Snapshots\FileRevisionSnapshot|int|string $revision): \Vaulter\Data\Snapshots\FileRevisionSnapshot
+  restoreRevision(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, \Vaulter\Data\Snapshots\FileRevisionSnapshot|int|string $revision, ?int $expectedSequence = null): \Vaulter\Data\Snapshots\FileRevisionSnapshot
   revisions(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, ?\Vaulter\Data\Drive\ListOptions $options = null): \Vaulter\Data\Page
   setRevisionRetention(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $file, \Vaulter\Data\Snapshots\FileRevisionSnapshot|int|string $revision, bool $keepForever): \Vaulter\Data\Snapshots\FileRevisionSnapshot
   upload(\Vaulter\Data\Drive\UploadSource $source, ?\Vaulter\Data\Drive\UploadOptions $options = null): \Vaulter\Data\Snapshots\NodeSnapshot
@@ -131,7 +131,7 @@ Vaulter\Contracts\Drive\NodeOperations
 Vaulter\Contracts\Drive\TrashOperations
   empty(): int
   list(?\Vaulter\Data\Drive\ListOptions $options = null): \Vaulter\Data\Page
-  purge(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): void
+  purge(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, ?int $expectedSequence = null): void
   restore(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, ?\Vaulter\Data\Drive\RestoreOptions $options = null): \Vaulter\Data\Snapshots\NodeSnapshot
 
 Vaulter\Contracts\Handlers\FileHandler
@@ -409,10 +409,12 @@ Vaulter\Data\Drive\MoveOptions
   readonly \Vaulter\Enums\Drive\OnNameConflict $onConflict
 
 Vaulter\Data\Drive\RestoreOptions
-  __construct(\Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $destination = null, \Vaulter\Enums\Drive\OnNameConflict $onConflict = Vaulter\Enums\Drive\OnNameConflict::Rename)
+  __construct(\Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $destination = null, \Vaulter\Enums\Drive\OnNameConflict $onConflict = Vaulter\Enums\Drive\OnNameConflict::Rename, ?int $expectedSequence = null)
   destination(\Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $destination): \self
+  expectedSequence(?int $expectedSequence): \self
   make(): \self
   onConflict(\Vaulter\Enums\Drive\OnNameConflict $onConflict): \self
+  readonly ?int $expectedSequence
   readonly \Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $destination
   readonly \Vaulter\Enums\Drive\OnNameConflict $onConflict
 

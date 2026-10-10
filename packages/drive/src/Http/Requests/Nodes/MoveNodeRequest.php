@@ -4,15 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Http\Requests\Nodes;
 
-use Vaulter\Drive\Data\Nodes\MoveNodeInput;
+use Illuminate\Validation\Rule;
+use Vaulter\Enums\Drive\OnNameConflict;
 use Vaulter\Http\Requests\VaulterFormRequest;
-use Vaulter\Models\Drive\Node;
 
-/**
- * Validates a move request (§2.2): the node being moved is route-model resolved,
- * the destination parent comes from the body (null = storage root, resolved by
- * the controller). toData() takes both already-resolved nodes.
- */
+/** POST nodes/{node}/move: the destination folder (the drive root when null) and what a name clash does. */
 final class MoveNodeRequest extends VaulterFormRequest
 {
     /**
@@ -21,20 +17,20 @@ final class MoveNodeRequest extends VaulterFormRequest
     public function rules(): array
     {
         return [
-            'parent_id' => ['nullable'],
+            'destination_id' => ['present', 'nullable', 'string', 'max:191'],
+            'on_conflict' => ['sometimes', Rule::in([OnNameConflict::Fail->value, OnNameConflict::Rename->value])],
         ];
     }
 
-    public function parentId(): int|string|null
+    public function destinationId(): ?string
     {
-        return $this->nullableScalarId('parent_id');
+        $value = $this->input('destination_id');
+
+        return is_string($value) ? $value : null;
     }
 
-    public function toData(Node $node, ?Node $into): MoveNodeInput
+    public function onConflict(): OnNameConflict
     {
-        return new MoveNodeInput(
-            node: $node,
-            into: $into,
-        );
+        return OnNameConflict::tryFrom($this->string('on_conflict')->toString()) ?? OnNameConflict::Fail;
     }
 }

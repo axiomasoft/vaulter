@@ -150,30 +150,42 @@ A denial is a `403` via `PermissionDeniedException`.
 
 ## Routes
 
-All routes are mounted under the configured prefix (default `api/vaulter`) and require the
-`uploads` feature. `{upload_id}` is the client UNIQUE handle (a plain scalar, **not**
-route-model bound — the controller resolves the session and re-authorizes its target).
+All routes are mounted under `/{routes.prefix}/v1` (default `api/vaulter/v1`), named
+`vaulter.v1.uploads.*`, throttled by `throttle:vaulter-uploads` and always registered:
+with `vaulter-drive.uploads.resumable.enabled = false` the operations refuse every act but
+the status poll with `403 profile_restriction`. `{upload}` is the session's `upload_id` — a
+plain id the controller looks up and the upload operations authorize again on every act.
+Full request and response shapes: [REST reference](/reference/rest-api#resumable-uploads).
 
-| Method   | Route                                        | Controller / action          | Purpose |
-| -------- | -------------------------------------------- | ---------------------------- | ------- |
-| `POST`   | `/storages/{storage}/resumable-uploads`      | `TusProtocolController@create` | Open a session (returns `Location` + `upload_id`). |
-| `GET`    | `/resumable-uploads/{upload_id}`             | `TusProtocolController@status` | Poll the session status. |
-| `HEAD`   | `/resumable-uploads/{upload_id}`             | `TusProtocolController@head`   | The authoritative `Upload-Offset` (resume point). |
-| `PATCH`  | `/resumable-uploads/{upload_id}`             | `TusProtocolController@patch`  | Append a chunk; on completion assemble→commit. |
-| `DELETE` | `/resumable-uploads/{upload_id}`             | `TusProtocolController@abort`  | Abort (staged temp + multipart reclaimed). |
-| `POST`   | `/resumable-uploads/{upload_id}/parts`       | `S3MultipartProtocolController@parts`| Record (sign/proxy) a numbered part. |
-| `POST`   | `/resumable-uploads/{upload_id}/complete`    | `S3MultipartProtocolController@complete` | Complete-multipart → assemble → commit. |
+| Method   | Route                              | Name                    | Purpose |
+| -------- | ---------------------------------- | ----------------------- | ------- |
+| `POST`   | `/drives/{drive}/uploads`          | `uploads.store`         | Open a session (`protocol`: `tus` or `s3-multipart`); tus answers `Location` + `upload_id`. |
+| `GET`    | `/uploads/{upload}`                | `uploads.show`          | Poll the session status. |
+| `HEAD`   | `/uploads/{upload}`                | `uploads.tus.head`      | The authoritative `Upload-Offset` (resume point). |
+| `PATCH`  | `/uploads/{upload}`                | `uploads.tus.patch`     | Append a chunk; the last one commits. |
+| `DELETE` | `/uploads/{upload}`                | `uploads.tus.destroy`   | Abort (staged temp + multipart reclaimed). |
+| `OPTIONS`| `/uploads/{upload}`                | `uploads.tus.options`   | tus discovery. |
+| `POST`   | `/uploads/{upload}/parts`          | `uploads.parts.store`   | Store a numbered part. |
+| `POST`   | `/uploads/{upload}/complete`       | `uploads.complete`      | Complete-multipart → assemble → commit. |
 
-The direct one-shot path is the Drive upload endpoint
-`POST /storages/{storage}/uploads` (a multipart form `file` + optional `parent_id` / `node_id`
-/ `name`).
+The one-shot path is `POST /drives/{drive}/files` (a multipart form `file` + optional
+`parent_id` / `name`); a new revision of an existing file in one request is
+`POST /files/{node}/revisions` with `If-Match`.
+
+::: warning A new revision needs the file's tag
+A session with `node_id` (a new revision of an existing file) is created only with
+`If-Match` carrying that file's current `ETag` — `428` without it, `412` when it is stale — so
+a client does not start sending bytes onto a file that changed under it. The tag is checked
+when the session is created; the commit at the end does not compare it again (a persisted
+expectation in the session is planned after 1.0).
+:::
 
 ## tus core flow
 
 The tus handler implements the three CORE operations directly (no heavy tus framework —
 self-contained over Flysystem + the session table) and works on **any disk**.
 
-1. **Create** — `POST /storages/{storage}/resumable-uploads`. The manager mints the session +
+1. **Create** — `POST /drives/{drive}/uploads`. The manager mints the session +
    `upload_id` (the tus `Location`) and stamps the TTL. The handler's `initialise()` is a no-op
    (the staged temp is created lazily on the first `PATCH`). Response `201` with
    `Tus-Resumable`, `Location`, `Upload-Offset: 0`.
@@ -191,19 +203,19 @@ self-contained over Flysystem + the session table) and works on **any disk**.
 
 ```bash [curl]
 # 1. Create the session (1 GiB file, into the storage root).
-curl -i -X POST https://app.test/api/vaulter/storages/01J.../resumable-uploads \
+curl -i -X POST https://app.test/api/vaulter/v1/drives/01J.../uploads \
   -H 'Authorization: Bearer <user-token>' \
   -H 'Content-Type: application/json' \
   -d '{"protocol":"tus","total_size_bytes":1073741824,"name":"video.mp4"}'
-# → 201, Location: .../resumable-uploads/<upload_id>, Upload-Offset: 0
+# → 201, Location: .../v1/uploads/<upload_id>, Upload-Offset: 0
 
 # 2. Ask the server where to resume from.
-curl -I https://app.test/api/vaulter/resumable-uploads/<upload_id> \
+curl -I https://app.test/api/vaulter/v1/uploads/<upload_id> \
   -H 'Tus-Resumable: 1.0.0' -H 'Authorization: Bearer <user-token>'
 # → Upload-Offset: <server offset>
 
 # 3. Send a chunk at that offset.
-curl -X PATCH https://app.test/api/vaulter/resumable-uploads/<upload_id> \
+curl -X PATCH https://app.test/api/vaulter/v1/uploads/<upload_id> \
   -H 'Tus-Resumable: 1.0.0' \
   -H 'Content-Type: application/offset+octet-stream' \
   -H 'Upload-Offset: 0' \
@@ -253,13 +265,13 @@ by `part_no`) into the assembled staged temp.
 
 ```bash
 # Record part 1 (the body is the part bytes).
-curl -X POST 'https://app.test/api/vaulter/resumable-uploads/<upload_id>/parts?part_no=1&byte_offset=0' \
+curl -X POST 'https://app.test/api/vaulter/v1/uploads/<upload_id>/parts?part_no=1&byte_offset=0' \
   -H 'Authorization: Bearer <user-token>' \
   --data-binary @part-1.bin
 # → 201 { "part_no": 1, "size": ..., "etag": "\"...\"" }
 
 # Complete → stitch → assemble → commit → returns the created node.
-curl -X POST https://app.test/api/vaulter/resumable-uploads/<upload_id>/complete \
+curl -X POST https://app.test/api/vaulter/v1/uploads/<upload_id>/complete \
   -H 'Authorization: Bearer <user-token>'
 ```
 
@@ -326,7 +338,7 @@ reports every byte received.
 Two paths reclaim a session — both release the protocol-side state (S3
 `AbortMultipartUpload` / per-part objects) and discard the staged temp:
 
-- **Abort** (`DELETE /resumable-uploads/{upload_id}`) → terminal state `Aborted` (the client
+- **Abort** (`DELETE /v1/uploads/{upload}`) → terminal state `Aborted` (the client
   cancelled). Idempotent — a terminal session is returned untouched.
 - **Sweep** (`php artisan vaulter:sweep-uploads`) → terminal state `Expired`. The command scans
   the **open** sessions (`initiated` | `uploading`) whose `expires_at` has elapsed and reclaims

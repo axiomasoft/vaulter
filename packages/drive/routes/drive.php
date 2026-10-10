@@ -2,102 +2,115 @@
 
 declare(strict_types=1);
 
-use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Support\Facades\Route;
 use Vaulter\Configuration\RoutesConfig;
-use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Drive\Configuration\DriveConfig;
-use Vaulter\Drive\Http\Controllers\DownloadController;
+use Vaulter\Drive\Http\Controllers\Drives\ArchiveDriveController;
+use Vaulter\Drive\Http\Controllers\Drives\DeleteDriveController;
 use Vaulter\Drive\Http\Controllers\Drives\ShowDriveController;
-use Vaulter\Drive\Http\Controllers\NodeController;
+use Vaulter\Drive\Http\Controllers\Drives\UnarchiveDriveController;
+use Vaulter\Drive\Http\Controllers\Files\AddFileRevisionController;
+use Vaulter\Drive\Http\Controllers\Files\DeleteFileRevisionController;
+use Vaulter\Drive\Http\Controllers\Files\DownloadFileController;
+use Vaulter\Drive\Http\Controllers\Files\DownloadFileRevisionController;
+use Vaulter\Drive\Http\Controllers\Files\ListFileRevisionsController;
+use Vaulter\Drive\Http\Controllers\Files\RestoreFileRevisionController;
+use Vaulter\Drive\Http\Controllers\Files\UpdateFileRevisionController;
+use Vaulter\Drive\Http\Controllers\Files\UploadFileController;
+use Vaulter\Drive\Http\Controllers\Folders\CreateFolderController;
+use Vaulter\Drive\Http\Controllers\Nodes\CopyNodeController;
+use Vaulter\Drive\Http\Controllers\Nodes\ListChildrenController;
+use Vaulter\Drive\Http\Controllers\Nodes\ListStarredController;
+use Vaulter\Drive\Http\Controllers\Nodes\MoveNodeController;
+use Vaulter\Drive\Http\Controllers\Nodes\ShowAbilitiesController;
+use Vaulter\Drive\Http\Controllers\Nodes\ShowNodeController;
+use Vaulter\Drive\Http\Controllers\Nodes\StarNodeController;
+use Vaulter\Drive\Http\Controllers\Nodes\UnstarNodeController;
+use Vaulter\Drive\Http\Controllers\Nodes\UpdateNodeController;
+use Vaulter\Drive\Http\Controllers\Nodes\UpdateNodePropertiesController;
+use Vaulter\Drive\Http\Controllers\Search\SearchNodesController;
+use Vaulter\Drive\Http\Controllers\Shared\ListSharedWithMeController;
+use Vaulter\Drive\Http\Controllers\Trash\EmptyTrashController;
+use Vaulter\Drive\Http\Controllers\Trash\ListTrashController;
+use Vaulter\Drive\Http\Controllers\Trash\PurgeNodeController;
+use Vaulter\Drive\Http\Controllers\Trash\RestoreNodeController;
+use Vaulter\Drive\Http\Controllers\Trash\TrashNodeController;
+use Vaulter\Drive\Http\Controllers\Uploads\CreateUploadController;
 use Vaulter\Drive\Http\Controllers\Uploads\S3MultipartProtocolController;
 use Vaulter\Drive\Http\Controllers\Uploads\TusProtocolController;
-use Vaulter\Http\Middleware\ResolveVaulterRouteParameters;
 
 /*
 |--------------------------------------------------------------------------
-| Vaulter Drive API routes (P2 #5 / ADR-0015, D1)
+| Vaulter REST v1 — drive routes
 |--------------------------------------------------------------------------
-| The file/folder tree + resumable-upload surface, extracted from core's
-| routes/api.php into the vaulter-drive package. Mounted under the SAME configured
-| prefix (default: api/vaulter) and middleware as the kernel routes — Laravel merges
-| the two group registrations. The local resource middleware resolves {storage}
-| and {node} through swappable core repositories before SubstituteBindings. All paths are distinct literals / differ in segment count from the
-| kernel + documents routes, so cross-file registration order never shadows them.
+| Mounted under {routes.prefix}/v1 and named vaulter.v1.*, on the authenticated stack.
+| Route parameters are plain ids: each controller resolves the drive through
+| HttpResourceResolver (tenant-scoped) and calls the operations, which authorize. The
+| routes are always registered while the package is installed; a disabled feature is
+| refused by the operations (403 profile_restriction on something the caller can see),
+| so `route:cache` never freezes a feature flag.
+|
+| Operations shared by every node kind live under nodes/{node}; operations on file
+| content live under files/{node}, so the documents package never shares a URL with
+| this one.
 */
 
-Route::prefix(app(RoutesConfig::class)->prefix())
-    ->middleware(app(RoutesConfig::class)->authenticatedMiddleware())
+$routes = app(RoutesConfig::class);
+$id = '[A-Za-z0-9_-]+';
+
+Route::prefix($routes->versionedPrefix())
+    ->name('vaulter.v1.')
+    ->middleware($routes->authenticatedMiddleware())
+    ->where(['drive' => $id, 'node' => $id, 'revision' => $id, 'upload' => $id])
     ->group(static function (): void {
-        Route::middleware([ResolveVaulterRouteParameters::class, SubstituteBindings::class])->group(static function (): void {
-            // "Shared with me" (§2.6 / H.2) — CROSS-STORAGE: not storage-bound, so it
-            // sits at the top level. Gated on the 'grants' feature; the fixed segment
-            // sits before the catch-all /{node} routes so it never shadows them.
-            if (app(VaulterConfig::class)->featureEnabled('grants')) {
-                Route::get('shared', [NodeController::class, 'shared']);
-            }
+        Route::get('drives/{drive}', ShowDriveController::class)->name('drives.show');
+        Route::post('drives/{drive}/archive', ArchiveDriveController::class)->name('drives.archive');
+        Route::post('drives/{drive}/unarchive', UnarchiveDriveController::class)->name('drives.unarchive');
+        Route::delete('drives/{drive}', DeleteDriveController::class)->name('drives.destroy');
 
-            Route::get('storages/{storage}', ShowDriveController::class);
+        Route::get('drives/{drive}/nodes', ListChildrenController::class)->name('nodes.index');
+        Route::get('drives/{drive}/search', SearchNodesController::class)->name('nodes.search');
+        Route::get('drives/{drive}/starred', ListStarredController::class)->name('nodes.starred');
+        Route::get('drives/{drive}/trash', ListTrashController::class)->name('trash.index');
+        Route::delete('drives/{drive}/trash', EmptyTrashController::class)->name('trash.empty');
+        Route::post('drives/{drive}/folders', CreateFolderController::class)->name('folders.store');
+        Route::post('drives/{drive}/files', UploadFileController::class)->name('files.store');
 
-            Route::get('storages/{storage}/nodes', [NodeController::class, 'index']);
-            Route::get('storages/{storage}/search', [NodeController::class, 'search']);
-            Route::get('storages/{storage}/trash', [NodeController::class, 'trashed']);
-            Route::post('storages/{storage}/folders', [NodeController::class, 'storeFolder']);
-            Route::post('storages/{storage}/uploads', [NodeController::class, 'upload']);
+        Route::get('shared', ListSharedWithMeController::class)->name('shared.index');
 
-            /*
-            |------------------------------------------------------------------
-            | Resumable uploads (§2.8 / D16 / M3a)
-            |------------------------------------------------------------------
-            | Large files upload resumably, then the assembled staged bytes go
-            | through the SAME race-free BlobStore.commit (H.3). Gated on the
-            | 'uploads' feature. {upload_id} is the client UNIQUE handle (a plain
-            | scalar, NOT route-model bound — the controller resolves the session
-            | and asserts it belongs to an authorized target). tus group: create
-            | (POST), HEAD (Upload-Offset), PATCH (chunk), DELETE (abort), status
-            | (GET), OPTIONS (discovery, F-P1.4-07 — unauthorized/unauthenticated
-            | per the CORE protocol). S3 group: parts (POST), complete (POST).
-            | Authorized via AccessResolver — Create in the target folder / Edit
-            | for a new version.
-            |
-            | Rate-limited (P1.3 / F-P1.8-01) by the package's own `vaulter-uploads`
-            | named limiter (the configuration key ('vaulter.rate_limits.uploads'), keyed by actor id —
-            | falling back to IP when unauthenticated) — a DoS lever distinct from the
-            | max-active-sessions cap (F-P1.4-09, enforced in UploadSessionManager).
-            */
-            if (app(DriveConfig::class)->resumableEnabled()) {
-                Route::middleware('throttle:vaulter-uploads')->group(static function (): void {
-                    // tus.io CORE — create lives under the storage; the resumable ops
-                    // address the session by its upload_id handle.
-                    Route::post('storages/{storage}/resumable-uploads', [TusProtocolController::class, 'create']);
+        Route::get('nodes/{node}', ShowNodeController::class)->name('nodes.show');
+        Route::patch('nodes/{node}', UpdateNodeController::class)->name('nodes.update');
+        Route::patch('nodes/{node}/properties', UpdateNodePropertiesController::class)->name('nodes.properties.update');
+        Route::put('nodes/{node}/star', StarNodeController::class)->name('nodes.star');
+        Route::delete('nodes/{node}/star', UnstarNodeController::class)->name('nodes.unstar');
+        Route::post('nodes/{node}/move', MoveNodeController::class)->name('nodes.move');
+        Route::post('nodes/{node}/copy', CopyNodeController::class)->name('nodes.copy');
+        Route::post('nodes/{node}/trash', TrashNodeController::class)->name('nodes.trash');
+        Route::post('nodes/{node}/restore', RestoreNodeController::class)->name('nodes.restore');
+        Route::delete('nodes/{node}', PurgeNodeController::class)->name('nodes.purge');
+        Route::get('nodes/{node}/abilities', ShowAbilitiesController::class)->name('nodes.abilities');
 
-                    Route::get('resumable-uploads/{upload_id}', [TusProtocolController::class, 'status']);
-                    Route::match(['head'], 'resumable-uploads/{upload_id}', [TusProtocolController::class, 'head']);
-                    Route::patch('resumable-uploads/{upload_id}', [TusProtocolController::class, 'patch']);
-                    Route::delete('resumable-uploads/{upload_id}', [TusProtocolController::class, 'abort']);
-                    // tus OPTIONS discovery (F-P1.4-07) — answerable for ANY {upload_id}
-                    // literal, resolved or not: the CORE protocol requires this endpoint
-                    // to advertise capabilities WITHOUT resolving a session.
-                    Route::options('resumable-uploads/{upload_id}', [TusProtocolController::class, 'options']);
+        Route::get('files/{node}/download', DownloadFileController::class)->name('files.download');
+        Route::get('files/{node}/revisions', ListFileRevisionsController::class)->name('files.revisions.index');
+        Route::post('files/{node}/revisions', AddFileRevisionController::class)->name('files.revisions.store');
+        Route::get('files/{node}/revisions/{revision}/download', DownloadFileRevisionController::class)->name('files.revisions.download');
+        Route::post('files/{node}/revisions/{revision}/restore', RestoreFileRevisionController::class)->name('files.revisions.restore');
+        Route::patch('files/{node}/revisions/{revision}', UpdateFileRevisionController::class)->name('files.revisions.update');
+        Route::delete('files/{node}/revisions/{revision}', DeleteFileRevisionController::class)->name('files.revisions.destroy');
 
-                    // S3-style multipart — parts + complete on the same session handle.
-                    Route::post('resumable-uploads/{upload_id}/parts', [S3MultipartProtocolController::class, 'parts']);
-                    Route::post('resumable-uploads/{upload_id}/complete', [S3MultipartProtocolController::class, 'complete']);
-                });
-            }
-
-            // The unified node tree (§2.2). The catch-all /{node} routes sit AFTER the
-            // fixed sub-segments above (and after the kernel/documents fixed segments in
-            // routes/api.php — different segment counts, so order across files is safe).
-            Route::get('nodes/{node}', [NodeController::class, 'show']);
-            Route::patch('nodes/{node}', [NodeController::class, 'rename']);
-            Route::post('nodes/{node}/move', [NodeController::class, 'move']);
-            Route::post('nodes/{node}/copy', [NodeController::class, 'copy']);
-            Route::post('nodes/{node}/restore', [NodeController::class, 'restore']);
-            Route::delete('nodes/{node}/force', [NodeController::class, 'forceDelete']);
-            Route::delete('nodes/{node}', [NodeController::class, 'trash']);
-
-            Route::get('nodes/{node}/download', [DownloadController::class, 'current']);
-            Route::get('nodes/{node}/versions/{version}/download', [DownloadController::class, 'version']);
+        /*
+        | Resumable uploads. The tus and S3-multipart protocols keep their own acts and
+        | headers (Tus-Resumable, Upload-Offset, part ETags); errors still answer as
+        | problem+json. Throttled by the package's vaulter-uploads limiter, keyed by actor.
+        */
+        Route::middleware('throttle:vaulter-uploads')->group(static function (): void {
+            Route::post('drives/{drive}/uploads', CreateUploadController::class)->name('uploads.store');
+            Route::get('uploads/{upload}', [TusProtocolController::class, 'status'])->name('uploads.show');
+            Route::match(['HEAD'], 'uploads/{upload}', [TusProtocolController::class, 'head'])->name('uploads.tus.head');
+            Route::patch('uploads/{upload}', [TusProtocolController::class, 'patch'])->name('uploads.tus.patch');
+            Route::delete('uploads/{upload}', [TusProtocolController::class, 'abort'])->name('uploads.tus.destroy');
+            // tus discovery answers for any upload id without resolving a session.
+            Route::options('uploads/{upload}', [TusProtocolController::class, 'options'])->name('uploads.tus.options');
+            Route::post('uploads/{upload}/parts', [S3MultipartProtocolController::class, 'parts'])->name('uploads.parts.store');
+            Route::post('uploads/{upload}/complete', [S3MultipartProtocolController::class, 'complete'])->name('uploads.complete');
         });
     });

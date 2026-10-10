@@ -64,7 +64,7 @@ final readonly class TrashOperations implements Contract
             }
             try {
                 return $this->mapper->map($this->restoreAction->execute(context: $this->context,
-                    data: new RestoreNodeInput(node: $source, destination: $destination, onConflict: $options->onConflict)), $this->context->actor->ref());
+                    data: new RestoreNodeInput(node: $source, destination: $destination, onConflict: $options->onConflict, expectedSequence: $options->expectedSequence)), $this->context->actor->ref());
             } catch (RestoreDestinationChangedException $exception) {
                 if ($attempt === 2) {
                     throw $exception;
@@ -74,12 +74,12 @@ final readonly class TrashOperations implements Contract
         throw new RestoreDestinationChangedException;
     }
 
-    public function purge(NodeSnapshot|string|int $node): void
+    public function purge(NodeSnapshot|string|int $node, ?int $expectedSequence = null): void
     {
         $source = $this->locator->find(context: $this->context, key: $node, includeTrashed: true);
         $this->guard->authorize(context: $this->context, ability: Ability::Delete, node: $source, operation: OperationKind::Purge);
         try {
-            $this->purgeAction->execute(context: $this->context, data: new PurgeNodeInput(node: $source));
+            $this->purgeAction->execute(context: $this->context, data: new PurgeNodeInput(node: $source, expectedSequence: $expectedSequence));
         } catch (Throwable $exception) {
             $this->reportFailure($source, $exception);
             throw $exception;

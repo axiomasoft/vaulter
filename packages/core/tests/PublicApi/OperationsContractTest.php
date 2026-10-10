@@ -139,18 +139,23 @@ function p32AssertSignature(ReflectionMethod $method, string $parameters, string
 
 it('matches all seven Operations signatures against the literal normative PHP API', function (): void {
     $literal = file_get_contents(dirname(__DIR__, 4).'/audits/2026-09-29-stable-audit/opus/05-php-api.md');
-    // Plan amendments of the literal 05 interfaces (PLAN2.D40, D41, D45, D47, D48). PLAN2.D44 turns the
-    // model, pagination and collection types of every operation into snapshots and Page.
-    $removed = ['NodeOperations::update'];
+    // Plan amendments of the literal 05 interfaces (PLAN2.D40, D41, D45, D47, D48, D62). PLAN2.D44 turns the
+    // model, pagination and collection types of every operation into snapshots and Page. PLAN2.D62 (C07)
+    // gives purge and restoreRevision an optional expected sequence: the literal method is replaced.
+    $removed = ['NodeOperations::update', 'TrashOperations::purge', 'FileOperations::restoreRevision'];
     $amendments = ['NodeOperations' => '
         public function star(NodeKey $node): Node;
         public function unstar(NodeKey $node): Node;
         public function starred(?ListOptions $options = null): NodePage;
         public function properties(NodeKey $node): array;
         public function setProperties(NodeKey $node, string $namespace, array $set, array $unset = [], ?int $expectedSequence = null): Node;
+        public function abilitiesMany(array $nodes): array;
     ', 'FileOperations' => '
         public function deleteRevision(NodeKey $file, FileRevision|int|string $revision): void;
         public function setRevisionRetention(NodeKey $file, FileRevision|int|string $revision, bool $keepForever): FileRevision;
+        public function restoreRevision(NodeKey $file, FileRevision|int|string $revision, ?int $expectedSequence = null): FileRevision;
+    ', 'TrashOperations' => '
+        public function purge(NodeKey $node, ?int $expectedSequence = null): void;
     ', 'AccessOperations' => '
         public function restrictInheritance(NodeKey $node, InheritanceRestriction $mode = InheritanceRestriction::Empty): Node;
         public function restoreInheritance(NodeKey $node): Node;
@@ -162,9 +167,11 @@ it('matches all seven Operations signatures against the literal normative PHP AP
     foreach (['Drive' => ['NodeOperations', 'FolderOperations', 'FileOperations', 'TrashOperations'], 'Access' => ['AccessOperations'], 'Sharing' => ['ShareOperations'], 'Activity' => ['ActivityOperations']] as $domain => $names) {
         foreach ($names as $name) {
             preg_match('/interface '.$name.'\s*\{(.*?)\n\}/s', $literal, $body);
-            preg_match_all('/public function (\w+)\((.*?)\): (\S+);/s', $body[1].($amendments[$name] ?? ''), $methods, PREG_SET_ORDER);
-            // PLAN2.D40 removes the shared pinned/position update in favour of personal stars.
-            $methods = array_values(array_filter($methods, static fn (array $method): bool => !in_array($name.'::'.$method[1], $removed, true)));
+            preg_match_all('/public function (\w+)\((.*?)\): (\S+);/s', $body[1], $methods, PREG_SET_ORDER);
+            preg_match_all('/public function (\w+)\((.*?)\): (\S+);/s', $amendments[$name] ?? '', $amended, PREG_SET_ORDER);
+            // PLAN2.D40 removes the shared pinned/position update in favour of personal stars;
+            // a replaced literal method is dropped here and comes back from the amendments.
+            $methods = [...array_values(array_filter($methods, static fn (array $method): bool => !in_array($name.'::'.$method[1], $removed, true))), ...$amended];
             $ref = new ReflectionClass('Vaulter\\Contracts\\'.$domain.'\\'.$name);
             expect($ref->isInterface())->toBeTrue()->and($ref->getMethods())->toHaveCount(count($methods));
             foreach ($methods as $method) {
@@ -173,7 +180,7 @@ it('matches all seven Operations signatures against the literal normative PHP AP
             }
         }
     }
-    expect($count)->toBe(38);
+    expect($count)->toBe(39);
 });
 
 it('matches immutable value constructors and UploadSource factory signatures against literal 05', function (): void {
@@ -185,6 +192,10 @@ it('matches immutable value constructors and UploadSource factory signatures aga
         expect($ref->isFinal())->toBeTrue()->and($ref->isReadOnly())->toBeTrue();
         if (in_array($name, ['UploadOptions', 'RevisionOptions'], true) && !str_contains($matches[1], 'declaredMimeType')) {
             $matches[1] = rtrim($matches[1], " \n\r\t,").', public ?string $declaredMimeType = null';
+        }
+        if ($name === 'RestoreOptions') {
+            // PLAN2.D62 (C07): the trashed node's sequence the caller last saw.
+            $matches[1] = rtrim($matches[1], " \n\r\t,").', public ?int $expectedSequence = null';
         }
         if ($name === 'UploadOptions') {
             // PLAN2.D42: the uploader's own modification time, informational only.

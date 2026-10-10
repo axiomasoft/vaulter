@@ -4,133 +4,110 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Http\Controllers\Uploads;
 
-use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Vaulter\Contracts\Drive\DriveHandleFactory;
+use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
-use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Configuration\DriveConfig;
+use Vaulter\Drive\Data\Uploads\InitiateUploadInput;
+use Vaulter\Drive\Enums\Uploads\UploadProtocol;
+use Vaulter\Drive\Http\Requests\Uploads\CreateUploadSessionRequest;
+use Vaulter\Drive\Http\Resources\NodeResponses;
+use Vaulter\Drive\Http\Resources\Uploads\UploadSessionResource;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Operations\UploadOperations;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
-use Vaulter\Exceptions\Access\MissingActorException;
-use Vaulter\Http\Controllers\Controller;
-use Vaulter\Http\Resources\Drive\LegacyNodeResource as NodeResource;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
-use Vaulter\Repositories\Drive\DriveReadRepository;
-use Vaulter\ValueObjects\Access\Actor;
+use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Exceptions\Nodes\StorageNotFoundException;
+use Vaulter\Http\Support\HttpOperationContextFactory;
+use Vaulter\Http\Support\HttpResourceResolver;
 
 /**
- * The S3-multipart resumable-upload surface (§2.8 / D16 / M3a). Thin HTTP: it
- * resolves the route-bound session, AUTHORIZES through the AccessResolver (Edit on
- * the node for a new version, Create under the folder for a new file), records each
- * part and, on complete, assembles → BlobStore.commit (server-recompute sha256, H.3 —
- * the multipart ETag is never the content address).
+ * The S3-multipart resumable-upload protocol over the upload operations:
  *
- *   POST uploads/{upload_id}/parts    → record (sign/proxy) a numbered part;
- *   POST uploads/{upload_id}/complete → complete-multipart → assemble → commit.
+ *   POST drives/{drive}/uploads     → create a session (through CreateUploadController);
+ *   POST uploads/{upload}/parts     → store a numbered part (a re-upload replaces it);
+ *   POST uploads/{upload}/complete  → stitch the parts and commit the file.
  *
- * A part re-upload REPLACES (the (session, part_no) composite primary key — S3
- * semantics).
+ * The committed content address is recomputed from the assembled bytes; a part's ETag
+ * is only the protocol's receipt. Sessions are resolved like the tus ones: by upload id
+ * to their drive, tenant-scoped, then authorized by the operations.
  */
-final class S3MultipartProtocolController extends Controller
+final class S3MultipartProtocolController
 {
     public function __construct(
         private readonly UploadSessionReadRepository $sessions,
-        private readonly DriveReadRepository $storages,
-        private readonly DriveHandleFactory $handles,
-        private readonly DriveConfig $driveConfig,
+        private readonly HttpResourceResolver $resolver,
+        private readonly HttpOperationContextFactory $contexts,
+        private readonly NodeResponses $nodes,
         private readonly NodeSnapshotMapper $snapshots,
+        private readonly DriveConfig $driveConfig,
     ) {}
 
-    /**
-     * Record one multipart part. The body is the part bytes; part_no / byte_offset
-     * come from the query/body. A re-upload of the same part_no replaces it.
-     */
-    public function parts(Request $request, string $uploadId): JsonResponse
+    public function create(CreateUploadSessionRequest $request, DriveHandle $drive): JsonResponse
     {
-        $session = $this->findSession($uploadId);
-        $this->authorizeSession($request, $session);
+        $session = $drive->extension(UploadOperations::class)->initiate(new InitiateUploadInput(
+            protocol: UploadProtocol::S3Multipart, targetParent: $request->parentId(), targetName: $request->name(),
+            targetNode: $request->targetNodeId(), expectedSha256: $request->expectedSha256(),
+            totalSizeBytes: $request->totalSizeBytes(), mimeType: $request->mimeType(), metadata: $request->allowedMetadata($this->driveConfig),
+        ));
+
+        return (new UploadSessionResource($session))->response()->setStatusCode(201);
+    }
+
+    /**
+     * Store one part. The body is the part bytes; part_no comes from the query or body,
+     * or the X-Part-Number header.
+     */
+    public function parts(Request $request, string $upload): JsonResponse
+    {
+        [$drive, $session] = $this->session($request, $upload);
         $this->assertContentLengthWithinLimit($request);
 
         $partNo = $request->has('part_no')
             ? $request->integer('part_no')
             : (int) $request->header('X-Part-Number', '1');
-        $byteOffset = $request->integer('byte_offset');
 
-        $result = $this->uploads(request: $request, storage: $this->storageOf($session))->putPart(
+        $result = $drive->extension(UploadOperations::class)->putPart(
             session: $session,
             partNo: $partNo,
-            byteOffset: $byteOffset,
+            byteOffset: $request->integer('byte_offset'),
             chunk: $this->chunkStream($request),
         );
 
-        return response()->json([
+        return new JsonResponse([
             'part_no' => $result['part_no'],
             'size' => $result['size'],
             'etag' => $result['etag'],
         ], 201);
     }
 
-    /**
-     * Complete-multipart: stitch the recorded parts into the assembled staged temp,
-     * then assemble → BlobStore.commit (H.3) and return the created node.
-     */
-    public function complete(Request $request, string $uploadId): JsonResponse
+    /** Complete the multipart upload: stitch the parts, commit, answer with the node. */
+    public function complete(Request $request, string $upload): JsonResponse
     {
-        $session = $this->findSession($uploadId);
-        $this->authorizeSession($request, $session);
+        [$drive, $session] = $this->session($request, $upload);
+        $node = $this->snapshots->map($drive->extension(UploadOperations::class)->complete($session), $drive->actor()->ref());
 
-        $node = $this->uploads(request: $request, storage: $this->storageOf($session))->complete($session);
-
-        return NodeResource::make($this->snapshotOf($node, $request))->response()->setStatusCode(201);
+        return $this->nodes->respond($drive, $node, 201);
     }
 
-    private function findSession(string $uploadId): UploadSession
+    /** @return array{DriveHandle, UploadSession} */
+    private function session(Request $request, string $upload): array
     {
-        $session = $this->sessions->findByUploadId($uploadId);
-
-        if (!$session instanceof UploadSession) {
-            abort(404);
+        $found = $this->sessions->findByUploadId($upload) ?? throw NodeNotFoundException::forId('upload');
+        try {
+            $drive = $this->contexts->forDrive($request, $this->resolver->drive((string) $found->drive_id));
+        } catch (StorageNotFoundException) {
+            throw NodeNotFoundException::forId('upload');
         }
 
-        return $session;
-    }
-
-    /**
-     * Authorize a request acting on an EXISTING session by its target shape: Edit on
-     * the node for a new version, else Create under the destination folder — THEN
-     * (F-P1.4-12) confirm the acting actor is the session's OWNER (see
-     * TusUploadController::authorizeSession for the full rationale — the two
-     * controllers share the identical guard).
-     */
-    private function authorizeSession(Request $request, UploadSession $session): void
-    {
-        $this->uploads(request: $request, storage: $this->storageOf($session))->status($session);
-    }
-
-    private function uploads(Request $request, Drive $storage): UploadOperations
-    {
-        return $this->handles->forDrive($storage)->actingAs($this->authorizable($request) ?? throw MissingActorException::required())->extension(UploadOperations::class);
-    }
-
-    private function storageOf(UploadSession $session): Drive
-    {
-        $storage = $this->storages->find($session->drive_id);
-
-        if (!$storage instanceof Drive) {
-            abort(404);
-        }
-
-        return $storage;
+        return [$drive, $drive->extension(UploadOperations::class)->status($found)];
     }
 
     /**
      * The raw part body as a STREAM, never a PHP string — see
-     * TusUploadController::chunkStream() for the full rationale (VLT-REMED P5.2 review /
+     * TusProtocolController::chunkStream() for the full rationale (VLT-REMED P5.2 review /
      * F-P1.4-04): the per-chunk ceiling used to sit BEHIND a `getContent()` that had
      * already materialised the whole body in memory.
      *
@@ -149,7 +126,7 @@ final class S3MultipartProtocolController extends Controller
 
     /**
      * Refuse an over-cap part on its DECLARED length, before the body is touched — the
-     * S3-multipart twin of TusUploadController::assertContentLengthWithinLimit(). The cap
+     * S3-multipart twin of TusProtocolController::assertContentLengthWithinLimit(). The cap
      * (`uploads.max_chunk_bytes`) covers BOTH protocols: a part body is exactly as
      * unbounded as a PATCH body.
      */
@@ -163,19 +140,5 @@ final class S3MultipartProtocolController extends Controller
         }
 
         abort(Response::HTTP_REQUEST_ENTITY_TOO_LARGE, "The upload part exceeds the maximum chunk size of {$max} bytes.");
-    }
-
-    private function snapshotOf(Node $node, Request $request): NodeSnapshot
-    {
-        $user = $this->authorizable($request);
-
-        return $this->snapshots->map($node, $user === null ? null : Actor::user($user)->ref());
-    }
-
-    private function authorizable(Request $request): ?Authorizable
-    {
-        $user = $request->user();
-
-        return $user instanceof Authorizable ? $user : null;
     }
 }

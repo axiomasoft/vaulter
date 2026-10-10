@@ -29,16 +29,16 @@ it('V31 actual HTTP node revision and upload session routes cannot cross tenant'
     $file = $handle->files()->upload(UploadSource::fromString('bytes', 'private.txt'));
     $revision = DriveTestHelpers::model($file)->file()->firstOrFail()->currentRevision()->firstOrFail();
     $this->actingAs(AccessTestHelpers::user(10));
-    $session = $this->postJson('api/vaulter/storages/'.$handle->model()->id.'/resumable-uploads', ['protocol' => 'tus', 'name' => 'resumed.txt', 'total_size_bytes' => 4])->assertCreated()->json('data.upload_id');
+    $session = $this->postJson('api/vaulter/v1/drives/'.$handle->model()->id.'/uploads', ['protocol' => 'tus', 'name' => 'resumed.txt', 'total_size_bytes' => 4])->assertCreated()->json('data.upload_id');
     expect(DriveTestHelpers::model($file)->tenant_id)->toBe('A')->and($revision->tenant_id)->toBe('A');
     $driveId = $handle->model()->id;
     $resolver->tenant = 'B';
-    $this->getJson('api/vaulter/storages/'.$driveId)->assertNotFound()->assertJsonPath('code', 'node_not_found');
-    $this->getJson('api/vaulter/nodes/'.$file->id)->assertNotFound();
-    $this->getJson('api/vaulter/nodes/'.$file->id.'/revisions')->assertNotFound();
-    $this->call('HEAD', 'api/vaulter/resumable-uploads/'.$session, [], [], [], ['HTTP_TUS_RESUMABLE' => '1.0.0'])->assertNotFound();
+    $this->getJson('api/vaulter/v1/drives/'.$driveId)->assertNotFound()->assertJsonPath('code', 'drive_not_found');
+    $this->getJson('api/vaulter/v1/nodes/'.$file->id)->assertNotFound();
+    $this->getJson('api/vaulter/v1/files/'.$file->id.'/revisions')->assertNotFound();
+    $this->call('HEAD', 'api/vaulter/v1/uploads/'.$session, [], [], [], ['HTTP_TUS_RESUMABLE' => '1.0.0'])->assertNotFound();
     expect(app(UploadSessionReadRepository::class)->findByUploadId($session))->toBeNull()
         ->and(fn () => app(FileRevisionReadRepository::class)->head(DriveTestHelpers::model($file)))->toThrow(NodeNotFoundException::class);
     $resolver->tenant = 'A';
-    $this->getJson('api/vaulter/nodes/'.$file->id)->assertOk();
+    $this->getJson('api/vaulter/v1/nodes/'.$file->id)->assertOk();
 });

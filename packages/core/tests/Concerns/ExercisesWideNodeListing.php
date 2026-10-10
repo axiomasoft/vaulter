@@ -72,7 +72,7 @@ trait ExercisesWideNodeListing
             ->and(collect($page2->items())->pluck('id')->all())->toBe([$this->wideNodeKey(3), $this->wideNodeKey(4)])
             ->and(collect($back->items())->pluck('id')->all())->toBe([$this->wideNodeKey(1), $this->wideNodeKey(2)]);
 
-        $this->getJson('api/vaulter/storages/'.$storage->getKey().'/nodes?parent_id='.$anchor->getKey().'&per_page=2')
+        $this->getJson('api/vaulter/v1/drives/'.$storage->getKey().'/nodes?parent='.$anchor->getKey().'&per_page=2')
             ->assertOk()->assertJsonCount(2, 'data')
             ->assertJsonPath('data.0.id', (string) $this->wideNodeKey(1));
 
@@ -81,7 +81,7 @@ trait ExercisesWideNodeListing
         $denied = Node::findOrFail($this->wideNodeKey(1));
         app(VaulterDatabase::class)->write(fn () => $denied->forceFill(['inherit_grants' => false])->save());
         expect($repository->queryForUser($actor)->whereKey($denied->getKey())->exists())->toBeTrue();
-        $this->getJson('api/vaulter/nodes/'.$denied->getKey())->assertNotFound();
+        $this->getJson('api/vaulter/v1/nodes/'.$denied->getKey())->assertNotFound();
         expect($repository->queryForUser(AccessTestHelpers::user(2))->count())->toBe(0);
     }
 

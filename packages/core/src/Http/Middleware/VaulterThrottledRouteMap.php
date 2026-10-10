@@ -11,7 +11,7 @@ use Vaulter\Configuration\RoutesConfig;
  * §9 logical `route` ids for `vaulter_throttled_total` (throttle:vaulter-public / uploads).
  *
  * Versioned routes are resolved by route name; the path rules serve only the unversioned
- * drive and documents routes until those packages move to v1.
+ * documents routes until that package moves to v1.
  */
 final class VaulterThrottledRouteMap
 {
@@ -20,6 +20,13 @@ final class VaulterThrottledRouteMap
         'vaulter.v1.public-shares.show' => 'share.show',
         'vaulter.v1.public-shares.nodes' => 'share.nodes',
         'vaulter.v1.public-shares.download' => 'share.download',
+        'vaulter.v1.uploads.store' => 'uploads.tus_create',
+        'vaulter.v1.uploads.tus.patch' => 'uploads.tus_patch',
+        'vaulter.v1.uploads.show' => 'uploads.tus_status',
+        'vaulter.v1.uploads.tus.head' => 'uploads.tus_status',
+        'vaulter.v1.uploads.parts.store' => 'uploads.s3_parts',
+        'vaulter.v1.uploads.complete' => 'uploads.s3_complete',
+        'vaulter.v1.files.store' => 'uploads.single',
     ];
 
     public static function routeFor(string $routeName): ?string
@@ -35,12 +42,6 @@ final class VaulterThrottledRouteMap
         return [
             ['methods' => ['POST'], 'pattern' => 'collab/authenticate', 'route' => 'collab.authenticate'],
             ['methods' => ['POST'], 'pattern' => 'collab/store', 'route' => 'collab.store'],
-            ['methods' => ['POST'], 'pattern' => 'storages/{id}/resumable-uploads', 'route' => 'uploads.tus_create'],
-            ['methods' => ['PATCH'], 'pattern' => 'resumable-uploads/{id}', 'route' => 'uploads.tus_patch'],
-            ['methods' => ['GET', 'HEAD'], 'pattern' => 'resumable-uploads/{id}', 'route' => 'uploads.tus_status'],
-            ['methods' => ['POST'], 'pattern' => 'resumable-uploads/{id}/parts', 'route' => 'uploads.s3_parts'],
-            ['methods' => ['POST'], 'pattern' => 'resumable-uploads/{id}/complete', 'route' => 'uploads.s3_complete'],
-            ['methods' => ['POST'], 'pattern' => 'storages/{id}/uploads', 'route' => 'uploads.single'],
         ];
     }
 

@@ -163,12 +163,20 @@ objects are reclaimed by the separate **blob GC** pass. Schedule both — see
 
 ## The trash view (REST)
 
-The trash roots of a storage are listed (cursor-paginated) over REST. Only roots
-the actor may **restore** are returned:
+The trash roots of a drive are listed (cursor-paginated) over REST v1, limited to the
+roots the caller may see. Each item's `etag` is the tag restore and purge expect — a
+trashed node cannot be read through `GET v1/nodes/{node}`:
 
 ```http
-GET /api/vaulter/storages/{storage}/trash
+GET /api/vaulter/v1/drives/{drive}/trash
+POST /api/vaulter/v1/nodes/{node}/restore      If-Match: <etag from the listing>
+DELETE /api/vaulter/v1/nodes/{node}            If-Match: <etag from the listing>
 ```
+
+A restore or purge with a stale tag answers `412 node_sequence_mismatch` and changes
+nothing — a purge in particular removes no row, quota or stored byte. The same expectation
+is available in PHP: `$drive->trash()->purge($node, expectedSequence: $snapshot->sequence)` and
+`new RestoreOptions(expectedSequence: $snapshot->sequence)`.
 
 In the browser, `useNodes` exposes the trash view and restore:
 
@@ -181,7 +189,7 @@ await trashed()             // the trash listing
 await restore(nodeId)       // bring a node back
 ```
 
-See the full route contract — params, response shape and the `Restore`/`Delete`
+See the full route contract — params, response shape and the `restore`/`delete`
 ability gates — in the [REST API reference](/reference/rest-api#trash).
 
 ## See also

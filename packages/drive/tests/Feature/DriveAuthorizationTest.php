@@ -35,7 +35,7 @@ it('hides an unauthorised show with 404', function (): void {
     $storage = authStorage();
     $folder = AccessTestHelpers::folder($storage, null, 'secret');
 
-    $this->getJson('api/vaulter/nodes/'.$folder->getKey())
+    $this->getJson('api/vaulter/v1/nodes/'.$folder->getKey())
         ->assertStatus(404);
 });
 
@@ -46,7 +46,7 @@ it('allows an authorised show when the actor holds a grant', function (): void {
     // The acting user (id 1) is granted Reader on the node.
     AccessTestHelpers::grant($folder, RoleRegistry::READER, scope: GrantScope::Item);
 
-    $this->getJson('api/vaulter/nodes/'.$folder->getKey())
+    $this->getJson('api/vaulter/v1/nodes/'.$folder->getKey())
         ->assertOk()
         ->assertJsonPath('data.id', (string) $folder->getKey());
 });
@@ -55,7 +55,7 @@ it('hides an unauthorised folder-create destination with 404', function (): void
     $storage = authStorage();
 
     // The root is hidden without a View grant.
-    $this->postJson('api/vaulter/storages/'.$storage->getKey().'/folders', ['name' => 'Nope'])
+    $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/folders', ['name' => 'Nope'])
         ->assertStatus(404);
 });
 
@@ -66,7 +66,7 @@ it('allows a folder create when the actor may create at the destination', functi
     // Writer (CREATE bit) on the root, inherited subtree.
     AccessTestHelpers::grant($root, RoleRegistry::WRITER, scope: GrantScope::Subtree);
 
-    $this->postJson('api/vaulter/storages/'.$storage->getKey().'/folders', ['name' => 'Allowed'])
+    $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/folders', ['name' => 'Allowed'])
         ->assertCreated()
         ->assertJsonPath('data.name', 'Allowed');
 });
@@ -78,7 +78,7 @@ it('fills the node abilities object from the resolver', function (): void {
     // Reader only: view true, edit/trash false.
     AccessTestHelpers::grant($folder, RoleRegistry::READER, scope: GrantScope::Item);
 
-    $this->getJson('api/vaulter/nodes/'.$folder->getKey())
+    $this->getJson('api/vaulter/v1/nodes/'.$folder->getKey())
         ->assertOk()
         ->assertJsonPath('data.abilities.view', true)
         ->assertJsonPath('data.abilities.edit', false)
@@ -161,30 +161,30 @@ it('blocks the grant API for an actor without SHARE', function (): void {
 
 it('denies a download without a grant and allows it with one', function (): void {
     $storage = authStorage();
-    $base = 'api/vaulter/storages/'.$storage->getKey();
+    $base = 'api/vaulter/v1/drives/'.$storage->getKey();
 
     // Grant create on root so the actor can upload, then a file appears.
     $root = $storage->rootNode()->first();
     AccessTestHelpers::grant($root, RoleRegistry::WRITER, scope: GrantScope::Subtree);
 
-    $nodeId = $this->postJson($base.'/uploads', [
+    $nodeId = $this->postJson($base.'/files', [
         'file' => UploadedFile::fake()->createWithContent('d.txt', 'bytes'),
     ])->assertCreated()->json('data.id');
 
     // A second actor (id 99) with no grant cannot download.
     $this->actingAs((new TestUser)->forceFill(['id' => 99]));
-    $this->get('api/vaulter/nodes/'.$nodeId.'/download')->assertStatus(404);
+    $this->get('api/vaulter/v1/files/'.$nodeId.'/download')->assertStatus(404);
 
     // The uploader (Writer ⇒ READ bit) can — streamed through PHP (P1.2 /
     // F-P1.3-01 removed the presign-redirect branch: even a disk that can mint a
     // signed URL now always streams a 200, never a 302).
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
-    $this->get('api/vaulter/nodes/'.$nodeId.'/download')->assertOk();
+    $this->get('api/vaulter/v1/files/'.$nodeId.'/download')->assertOk();
 });
 
 it('gates folder creation through the profile driver', function (bool $allow): void {
     $drive = authStorage();
     ProfileCreateGate::install($allow);
-    $this->postJson('api/vaulter/storages/'.$drive->id.'/folders', ['name' => 'profile-folder'])
+    $this->postJson('api/vaulter/v1/drives/'.$drive->id.'/folders', ['name' => 'profile-folder'])
         ->assertStatus($allow ? 201 : 403);
 })->with([true, false]);

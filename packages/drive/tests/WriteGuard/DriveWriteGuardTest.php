@@ -43,7 +43,7 @@ it('runs folder, upload, revision, move, copy, trash, restore and purge under th
 
 it('completes uploads and shares through their own scopes', function (): void {
     $this->actingAs(DriveTestHelpers::actor($this->drive, 1));
-    $this->postJson('api/vaulter/storages/'.$this->drive->model()->getKey().'/uploads', [
+    $this->postJson('api/vaulter/v1/drives/'.$this->drive->model()->getKey().'/files', [
         'file' => UploadedFile::fake()->createWithContent('x.txt', 'x'),
     ])->assertCreated();
 });

@@ -74,7 +74,7 @@ function r07ActionStorage(): Drive
 it('accepts an upload that fills the quota exactly and rejects one byte over', function (): void {
     $storage = r07ActionStorage();
     $storage->forceFill(['quota_bytes' => 5, 'used_bytes' => 4])->save();
-    $base = 'api/vaulter/storages/'.$storage->getKey().'/uploads';
+    $base = 'api/vaulter/v1/drives/'.$storage->getKey().'/files';
 
     $this->postJson($base, [
         'file' => UploadedFile::fake()->createWithContent('fits.bin', 'x'),
@@ -104,24 +104,24 @@ it('stores detected MIME separately when the upload source provides no declared 
 
 it('returns not_a_file 422 for a visible folder before streaming', function (): void {
     $storage = r07ActionStorage();
-    $folderId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/folders', ['name' => 'NoDownload'])
+    $folderId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/folders', ['name' => 'NoDownload'])
         ->assertCreated()
         ->json('data.id');
 
-    $this->getJson('api/vaulter/nodes/'.$folderId.'/download')->assertStatus(422)->assertJsonPath('code', 'not_a_file');
+    $this->getJson('api/vaulter/v1/files/'.$folderId.'/download')->assertStatus(422)->assertJsonPath('code', 'not_a_file');
 });
 
 it('sets Content-Length to the blob size and streams the exact bytes', function (): void {
     $storage = r07ActionStorage();
     $payload = '0123456789';
 
-    $nodeId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/uploads', [
+    $nodeId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/files', [
         'file' => UploadedFile::fake()->createWithContent('len.bin', $payload),
     ])->json('data.id');
 
     app()->instance(StorageDriver::class, new R07StreamingOnlyStorageDriver(app(StorageDriver::class)));
 
-    $response = $this->get('api/vaulter/nodes/'.$nodeId.'/download');
+    $response = $this->get('api/vaulter/v1/files/'.$nodeId.'/download');
 
     $response->assertOk();
     expect($response->headers->get('Content-Length'))->toBe((string) strlen($payload))
@@ -130,12 +130,12 @@ it('sets Content-Length to the blob size and streams the exact bytes', function 
 
 it('rejects explicit Fail copy conflicts atomically and renames default HTTP conflicts', function (): void {
     $storage = r07ActionStorage();
-    $base = 'api/vaulter/storages/'.$storage->getKey();
+    $base = 'api/vaulter/v1/drives/'.$storage->getKey();
 
     $folder = $this->postJson($base.'/folders', ['name' => 'Dest'])->json('data.id');
     $this->postJson($base.'/folders', ['name' => 'Twin', 'parent_id' => $folder])->assertCreated();
 
-    $source = $this->postJson($base.'/uploads', [
+    $source = $this->postJson($base.'/files', [
         'file' => UploadedFile::fake()->createWithContent('a.txt', 'a'),
         'parent_id' => $folder,
         'name' => 'source.txt',
@@ -149,8 +149,8 @@ it('rejects explicit Fail copy conflicts atomically and renames default HTTP con
         ->and(Node::query()->count())->toBe($beforeCount)
         ->and($storage->refresh()->used_bytes)->toBe($beforeBytes);
 
-    $this->postJson('api/vaulter/nodes/'.$source.'/copy', [
-        'parent_id' => $folder,
+    $this->postJson('api/vaulter/v1/nodes/'.$source.'/copy', [
+        'destination_id' => $folder,
         'name' => 'Twin',
     ])->assertCreated()->assertJsonPath('data.name', 'Twin (2)');
 });
@@ -187,19 +187,16 @@ it('rename to the same name emits no rename activity or outbox row', function ()
         ->and(Outbox::query()->where('event', EventType::NodeRenamed->value)->count())->toBe(1);
 });
 
-it('clamps per_page to 1 at the lower bound and 200 at the upper bound', function (): void {
+it('refuses per_page outside 1..200 and serves both bounds', function (): void {
     $storage = r07ActionStorage();
-    $base = 'api/vaulter/storages/'.$storage->getKey();
+    $base = 'api/vaulter/v1/drives/'.$storage->getKey();
 
     for ($i = 0; $i < 3; $i++) {
         $this->postJson($base.'/folders', ['name' => 'P'.$i])->assertCreated();
     }
 
-    $this->getJson($base.'/nodes?per_page=0')
-        ->assertOk()
-        ->assertJsonCount(1, 'data');
-
-    $this->getJson($base.'/nodes?per_page=999')
-        ->assertOk()
-        ->assertJsonCount(3, 'data');
+    $this->getJson($base.'/nodes?per_page=0')->assertUnprocessable()->assertJsonPath('code', 'validation_failed');
+    $this->getJson($base.'/nodes?per_page=201')->assertUnprocessable();
+    $this->getJson($base.'/nodes?per_page=1')->assertOk()->assertJsonCount(1, 'data');
+    $this->getJson($base.'/nodes?per_page=200')->assertOk()->assertJsonCount(3, 'data');
 });

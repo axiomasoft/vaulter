@@ -83,30 +83,43 @@ Initiated → Uploading → Assembled → Committed
 
 ## Маршруты
 
-Все маршруты монтируются под настроенным префиксом (по умолчанию `api/vaulter`) и требуют фичи
-`uploads`. `{upload_id}` — UNIQUE-хэндл клиента (простой скаляр, **не** route-model-bound —
-контроллер сам резолвит сессию и заново авторизует её цель).
+Все маршруты монтируются под `/{routes.prefix}/v1` (по умолчанию `api/vaulter/v1`),
+называются `vaulter.v1.uploads.*`, ограничиваются `throttle:vaulter-uploads` и регистрируются
+всегда: при `vaulter-drive.uploads.resumable.enabled = false` операции отклоняют каждое
+действие, кроме опроса статуса, с `403 profile_restriction`. `{upload}` — `upload_id` сессии:
+простой id, который контроллер находит, а операции загрузки заново авторизуют на каждом
+действии. Полные формы запросов и ответов —
+[справочник REST](/ru/reference/rest-api#резюмируемые-загрузки).
 
-| Метод    | Маршрут                                      | Контроллер / действие        | Назначение |
-| -------- | -------------------------------------------- | ---------------------------- | ------- |
-| `POST`   | `/storages/{storage}/resumable-uploads`      | `TusProtocolController@create` | Открыть сессию (возвращает `Location` + `upload_id`). |
-| `GET`    | `/resumable-uploads/{upload_id}`             | `TusProtocolController@status` | Опросить статус сессии. |
-| `HEAD`   | `/resumable-uploads/{upload_id}`             | `TusProtocolController@head`   | Авторитетный `Upload-Offset` (точка возобновления). |
-| `PATCH`  | `/resumable-uploads/{upload_id}`             | `TusProtocolController@patch`  | Дописать чанк; по завершении собрать→закоммитить. |
-| `DELETE` | `/resumable-uploads/{upload_id}`             | `TusProtocolController@abort`  | Прервать (staged-temp + multipart освобождаются). |
-| `POST`   | `/resumable-uploads/{upload_id}/parts`       | `S3MultipartProtocolController@parts`| Записать (подписать/проксировать) нумерованную часть. |
-| `POST`   | `/resumable-uploads/{upload_id}/complete`    | `S3MultipartProtocolController@complete` | Complete-multipart → собрать → закоммитить. |
+| Метод    | Маршрут                            | Имя                     | Назначение |
+| -------- | ---------------------------------- | ----------------------- | ------- |
+| `POST`   | `/drives/{drive}/uploads`          | `uploads.store`         | Открыть сессию (`protocol`: `tus` или `s3-multipart`); tus отвечает `Location` + `upload_id`. |
+| `GET`    | `/uploads/{upload}`                | `uploads.show`          | Опросить статус сессии. |
+| `HEAD`   | `/uploads/{upload}`                | `uploads.tus.head`      | Авторитетный `Upload-Offset` (точка возобновления). |
+| `PATCH`  | `/uploads/{upload}`                | `uploads.tus.patch`     | Дописать чанк; последний коммитит. |
+| `DELETE` | `/uploads/{upload}`                | `uploads.tus.destroy`   | Прервать (staged-temp + multipart освобождаются). |
+| `OPTIONS`| `/uploads/{upload}`                | `uploads.tus.options`   | Обнаружение tus. |
+| `POST`   | `/uploads/{upload}/parts`          | `uploads.parts.store`   | Сохранить нумерованную часть. |
+| `POST`   | `/uploads/{upload}/complete`       | `uploads.complete`      | Complete-multipart → собрать → закоммитить. |
 
-Прямой one-shot-путь — это эндпоинт загрузки Drive
-`POST /storages/{storage}/uploads` (multipart-форма `file` + опциональные `parent_id` / `node_id`
-/ `name`).
+One-shot-путь — `POST /drives/{drive}/files` (multipart-форма `file` + опциональные
+`parent_id` / `name`); новая ревизия существующего файла одним запросом —
+`POST /files/{node}/revisions` с `If-Match`.
+
+::: warning Новой ревизии нужен тег файла
+Сессия с `node_id` (новая ревизия существующего файла) создаётся только с `If-Match`, несущим
+текущий `ETag` этого файла, — `428` без него, `412` при устаревшем, — чтобы клиент не начал
+слать байты в файл, изменившийся у него за спиной. Тег проверяется при создании сессии;
+коммит в конце его повторно не сравнивает (сохранение ожидания в сессии запланировано после
+1.0).
+:::
 
 ## Поток tus core
 
 tus-обработчик реализует три операции CORE напрямую (без тяжёлого tus-фреймворка —
 самодостаточно поверх Flysystem + таблицы сессий) и работает на **любом диске**.
 
-1. **Create** — `POST /storages/{storage}/resumable-uploads`. Менеджер выдаёт сессию +
+1. **Create** — `POST /drives/{drive}/uploads`. Менеджер выдаёт сессию +
    `upload_id` (tus-`Location`) и штампует TTL. Метод `initialise()` обработчика — no-op
    (staged-temp создаётся лениво при первом `PATCH`). Ответ `201` с
    `Tus-Resumable`, `Location`, `Upload-Offset: 0`.
@@ -124,19 +137,19 @@ tus-обработчик реализует три операции CORE нап�
 
 ```bash [curl]
 # 1. Создать сессию (файл 1 ГиБ, в корень хранилища).
-curl -i -X POST https://app.test/api/vaulter/storages/01J.../resumable-uploads \
+curl -i -X POST https://app.test/api/vaulter/v1/drives/01J.../uploads \
   -H 'Authorization: Bearer <user-token>' \
   -H 'Content-Type: application/json' \
   -d '{"protocol":"tus","total_size_bytes":1073741824,"name":"video.mp4"}'
-# → 201, Location: .../resumable-uploads/<upload_id>, Upload-Offset: 0
+# → 201, Location: .../v1/uploads/<upload_id>, Upload-Offset: 0
 
 # 2. Спросить у сервера, с какого места возобновлять.
-curl -I https://app.test/api/vaulter/resumable-uploads/<upload_id> \
+curl -I https://app.test/api/vaulter/v1/uploads/<upload_id> \
   -H 'Tus-Resumable: 1.0.0' -H 'Authorization: Bearer <user-token>'
 # → Upload-Offset: <server offset>
 
 # 3. Отправить чанк по этому смещению.
-curl -X PATCH https://app.test/api/vaulter/resumable-uploads/<upload_id> \
+curl -X PATCH https://app.test/api/vaulter/v1/uploads/<upload_id> \
   -H 'Tus-Resumable: 1.0.0' \
   -H 'Content-Type: application/offset+octet-stream' \
   -H 'Upload-Offset: 0' \
@@ -186,13 +199,13 @@ async function onPick(file: File) {
 
 ```bash
 # Записать часть 1 (тело — байты части).
-curl -X POST 'https://app.test/api/vaulter/resumable-uploads/<upload_id>/parts?part_no=1&byte_offset=0' \
+curl -X POST 'https://app.test/api/vaulter/v1/uploads/<upload_id>/parts?part_no=1&byte_offset=0' \
   -H 'Authorization: Bearer <user-token>' \
   --data-binary @part-1.bin
 # → 201 { "part_no": 1, "size": ..., "etag": "\"...\"" }
 
 # Complete → сшить → собрать → закоммитить → вернуть созданный узел.
-curl -X POST https://app.test/api/vaulter/resumable-uploads/<upload_id>/complete \
+curl -X POST https://app.test/api/vaulter/v1/uploads/<upload_id>/complete \
   -H 'Authorization: Bearer <user-token>'
 ```
 
@@ -314,7 +327,7 @@ $drive->files()->deleteRevision($file, $revision);                          // M
 Освобождают сессию два пути — оба отпускают состояние на стороне протокола (S3
 `AbortMultipartUpload` / объекты по частям) и выбрасывают staged-temp:
 
-- **Abort** (`DELETE /resumable-uploads/{upload_id}`) → терминальное состояние `Aborted` (клиент
+- **Abort** (`DELETE /v1/uploads/{upload}`) → терминальное состояние `Aborted` (клиент
   отменил). Идемпотентно — терминальная сессия возвращается нетронутой.
 - **Sweep** (`php artisan vaulter:sweep-uploads`) → терминальное состояние `Expired`. Команда
   сканирует **открытые** сессии (`initiated` | `uploading`), у которых истёк `expires_at`, и

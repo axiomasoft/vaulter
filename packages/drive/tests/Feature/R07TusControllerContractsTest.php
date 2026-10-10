@@ -29,7 +29,7 @@ function r07Storage(): Drive
 
 function r07SessionId(Drive $storage, array $overrides = []): string
 {
-    $create = test()->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+    $create = test()->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'name' => 'seed.bin',
         'total_size_bytes' => 8,
         ...$overrides,
@@ -42,7 +42,7 @@ it('returns 403 on HEAD PATCH DELETE and OPTIONS when tus is disabled', function
     config()->set('vaulter-drive.uploads.resumable.enabled', false);
     $storage = r07Storage();
     $session = UploadTestHelpers::session($storage, totalSizeBytes: 4, createdBy: 17);
-    $uri = 'api/vaulter/resumable-uploads/'.$session->upload_id;
+    $uri = 'api/vaulter/v1/uploads/'.$session->upload_id;
 
     $this->call('HEAD', $uri, server: ['HTTP_TUS_RESUMABLE' => '1.0.0'])->assertForbidden();
     $this->call('PATCH', $uri, server: [
@@ -51,13 +51,13 @@ it('returns 403 on HEAD PATCH DELETE and OPTIONS when tus is disabled', function
         'HTTP_UPLOAD_OFFSET' => '0',
     ], content: 'abcd')->assertForbidden();
     $this->delete($uri, [], ['Tus-Resumable' => '1.0.0'])->assertForbidden();
-    $this->call('OPTIONS', 'api/vaulter/resumable-uploads/discovery')->assertForbidden();
+    $this->call('OPTIONS', 'api/vaulter/v1/uploads/discovery')->assertForbidden();
 });
 
 it('412 on missing Tus-Resumable includes both Tus-Resumable and Tus-Version headers', function (): void {
     $uploadId = r07SessionId(r07Storage());
 
-    $this->call('HEAD', 'api/vaulter/resumable-uploads/'.$uploadId)
+    $this->call('HEAD', 'api/vaulter/v1/uploads/'.$uploadId)
         ->assertStatus(412)
         ->assertHeader('Tus-Resumable', '1.0.0')
         ->assertHeader('Tus-Version', '1.0.0');
@@ -65,7 +65,7 @@ it('412 on missing Tus-Resumable includes both Tus-Resumable and Tus-Version hea
 
 it('415 on PATCH abort includes Tus-Resumable and rejects empty or text/plain content types', function (): void {
     $uploadId = r07SessionId(r07Storage());
-    $uri = 'api/vaulter/resumable-uploads/'.$uploadId;
+    $uri = 'api/vaulter/v1/uploads/'.$uploadId;
 
     foreach (['', 'text/plain'] as $contentType) {
         $this->call('PATCH', $uri, server: [
@@ -81,7 +81,7 @@ it('415 on PATCH abort includes Tus-Resumable and rejects empty or text/plain co
 it('accepts PATCH content-type with parameters after application/offset+octet-stream', function (): void {
     $uploadId = r07SessionId(r07Storage());
 
-    $this->call('PATCH', 'api/vaulter/resumable-uploads/'.$uploadId, server: [
+    $this->call('PATCH', 'api/vaulter/v1/uploads/'.$uploadId, server: [
         'HTTP_TUS_RESUMABLE' => '1.0.0',
         'CONTENT_TYPE' => 'application/offset+octet-stream; charset=binary',
         'HTTP_UPLOAD_OFFSET' => '0',
@@ -91,7 +91,7 @@ it('accepts PATCH content-type with parameters after application/offset+octet-st
 it('OPTIONS advertises Tus-Max-Size as the decimal max_bytes when capped at ten', function (): void {
     config()->set('vaulter-drive.uploads.max_file_size', 10);
 
-    $this->call('OPTIONS', 'api/vaulter/resumable-uploads/discovery')
+    $this->call('OPTIONS', 'api/vaulter/v1/uploads/discovery')
         ->assertNoContent()
         ->assertHeader('Tus-Extension', 'creation,termination')
         ->assertHeader('Tus-Max-Size', '10');
@@ -100,7 +100,7 @@ it('OPTIONS advertises Tus-Max-Size as the decimal max_bytes when capped at ten'
 it('DELETE abort returns 204 with Tus-Resumable and marks the session aborted', function (): void {
     $uploadId = r07SessionId(r07Storage());
 
-    $this->delete('api/vaulter/resumable-uploads/'.$uploadId, [], ['Tus-Resumable' => '1.0.0'])
+    $this->delete('api/vaulter/v1/uploads/'.$uploadId, [], ['Tus-Resumable' => '1.0.0'])
         ->assertNoContent()
         ->assertHeader('Tus-Resumable', '1.0.0');
 
@@ -114,7 +114,7 @@ it('status poll returns 403 for a different authenticated actor', function (): v
 
     $this->actingAs((new TestUser)->forceFill(['id' => 99]));
 
-    $this->getJson('api/vaulter/resumable-uploads/'.$uploadId)->assertForbidden();
+    $this->getJson('api/vaulter/v1/uploads/'.$uploadId)->assertForbidden();
 });
 
 it('create into a non-root folder stores that folder as target_parent_id', function (): void {
@@ -130,10 +130,10 @@ it('create into a non-root folder stores that folder as target_parent_id', funct
     ]);
     $folder->save();
 
-    $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+    $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'name' => 'nested.bin',
         'total_size_bytes' => 4,
-        'parent_id' => $folder->getKey(),
+        'parent_id' => (string) $folder->getKey(),
     ])->assertCreated()->json('data.upload_id');
 
     $session = UploadSession::query()->where('upload_id', $uploadId)->sole();
@@ -144,7 +144,7 @@ it('create into a non-root folder stores that folder as target_parent_id', funct
 
 it('create with parent omitted resolves the storage root folder as target_parent_id', function (): void {
     $storage = r07Storage();
-    $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+    $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'name' => 'root.bin',
         'total_size_bytes' => 4,
     ])->assertCreated()->json('data.upload_id');
@@ -157,7 +157,7 @@ it('metadata whitelisting continues after an unknown key and trims header pairs'
     $storage = r07Storage();
     $encoded = base64_encode(' kept.bin ');
 
-    $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+    $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'name' => 'meta.bin',
         'total_size_bytes' => 4,
         'metadata' => ['filename' => 'json-should-lose.bin'],
@@ -173,7 +173,7 @@ it('metadata skips empty keys and round-trips base64 values from Upload-Metadata
     $value = 'raw-value';
     $header = 'filename '.base64_encode($value).', ,filetype '.base64_encode('text/plain');
 
-    $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+    $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'name' => 'meta2.bin',
         'total_size_bytes' => 4,
     ], ['Upload-Metadata' => $header])->assertCreated()->json('data.upload_id');
@@ -186,7 +186,7 @@ it('metadata values longer than max_value_length are truncated', function (): vo
     config()->set('vaulter-drive.uploads.resumable.metadata.max_value_length', 6);
     $storage = r07Storage();
 
-    $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+    $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'name' => 'meta3.bin',
         'total_size_bytes' => 4,
         'metadata' => ['filename' => '123456789'],
@@ -199,7 +199,7 @@ it('413 on CONTENT_LENGTH max plus one includes Tus-Resumable and names the ceil
     config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 4);
     $uploadId = r07SessionId(r07Storage());
 
-    $response = $this->call('PATCH', 'api/vaulter/resumable-uploads/'.$uploadId, server: [
+    $response = $this->call('PATCH', 'api/vaulter/v1/uploads/'.$uploadId, server: [
         'HTTP_TUS_RESUMABLE' => '1.0.0',
         'CONTENT_TYPE' => 'application/offset+octet-stream',
         'CONTENT_LENGTH' => '5',
@@ -207,18 +207,18 @@ it('413 on CONTENT_LENGTH max plus one includes Tus-Resumable and names the ceil
         'HTTP_ACCEPT' => 'application/json',
     ], content: 'abcde');
 
+    // The ceiling is in the log message only: a problem detail comes from the
+    // translation catalog, never from an exception message.
     $response->assertStatus(413)
-        ->assertHeader('Tus-Resumable', '1.0.0');
-
-    expect($response->json('message') ?? $response->getContent())
-        ->toContain('maximum chunk size of 4 bytes');
+        ->assertHeader('Tus-Resumable', '1.0.0')
+        ->assertJsonPath('code', 'http_413');
 });
 
 it('accepts CONTENT_LENGTH exactly at max_chunk_bytes', function (): void {
     config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 4);
     $uploadId = r07SessionId(r07Storage(), ['total_size_bytes' => 16]);
 
-    $this->call('PATCH', 'api/vaulter/resumable-uploads/'.$uploadId, server: [
+    $this->call('PATCH', 'api/vaulter/v1/uploads/'.$uploadId, server: [
         'HTTP_TUS_RESUMABLE' => '1.0.0',
         'CONTENT_TYPE' => 'application/offset+octet-stream',
         'CONTENT_LENGTH' => '4',
@@ -230,7 +230,7 @@ it('treats max_chunk_bytes zero as unlimited for declared CONTENT_LENGTH', funct
     config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 0);
     $uploadId = r07SessionId(r07Storage(), ['total_size_bytes' => 128]);
 
-    $this->call('PATCH', 'api/vaulter/resumable-uploads/'.$uploadId, server: [
+    $this->call('PATCH', 'api/vaulter/v1/uploads/'.$uploadId, server: [
         'HTTP_TUS_RESUMABLE' => '1.0.0',
         'CONTENT_TYPE' => 'application/offset+octet-stream',
         'CONTENT_LENGTH' => '64',
@@ -239,7 +239,7 @@ it('treats max_chunk_bytes zero as unlimited for declared CONTENT_LENGTH', funct
 });
 
 it('404s unknown upload_id on status', function (): void {
-    $this->getJson('api/vaulter/resumable-uploads/0193a5f0-9a3b-7c2d-8e4f-0000000000ff')->assertNotFound();
+    $this->getJson('api/vaulter/v1/uploads/0193a5f0-9a3b-7c2d-8e4f-0000000000ff')->assertNotFound();
 });
 
 it('404s when the session storage row is missing on HEAD', function (): void {
@@ -252,7 +252,7 @@ it('404s when the session storage row is missing on HEAD', function (): void {
 
     UploadSession::query()->whereKey($session->getKey())->update(['drive_id' => 9_999_999]);
 
-    $this->call('HEAD', 'api/vaulter/resumable-uploads/'.$session->upload_id, server: ['HTTP_TUS_RESUMABLE' => '1.0.0'])
+    $this->call('HEAD', 'api/vaulter/v1/uploads/'.$session->upload_id, server: ['HTTP_TUS_RESUMABLE' => '1.0.0'])
         ->assertNotFound();
 });
 
@@ -269,10 +269,10 @@ it('404s when parent_id belongs to another storage on create', function (): void
     ]);
     $foreignFolder->save();
 
-    $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+    $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'name' => 'bad-parent.bin',
         'total_size_bytes' => 4,
-        'parent_id' => $foreignFolder->getKey(),
+        'parent_id' => (string) $foreignFolder->getKey(),
     ])->assertNotFound();
 });
 
@@ -280,7 +280,7 @@ it('401s PATCH when no authenticated actor is present', function (): void {
     $uploadId = r07SessionId(r07Storage());
     Auth::logout();
 
-    $this->call('PATCH', 'api/vaulter/resumable-uploads/'.$uploadId, server: [
+    $this->call('PATCH', 'api/vaulter/v1/uploads/'.$uploadId, server: [
         'HTTP_TUS_RESUMABLE' => '1.0.0',
         'CONTENT_TYPE' => 'application/offset+octet-stream',
         'HTTP_UPLOAD_OFFSET' => '0',
@@ -291,7 +291,7 @@ it('Location header normalizes a trailing slash on the route prefix', function (
     config()->set('vaulter.routes.prefix', 'api/vaulter/');
     $storage = r07Storage();
 
-    $response = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+    $response = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'name' => 'loc.bin',
         'total_size_bytes' => 4,
     ])->assertCreated();
@@ -299,7 +299,7 @@ it('Location header normalizes a trailing slash on the route prefix', function (
     $location = (string) $response->headers->get('Location');
     $uploadId = $response->json('data.upload_id');
 
-    expect($location)->toBe('http://localhost/api/vaulter/uploads/'.$uploadId)
+    expect($location)->toBe('http://localhost/api/vaulter/v1/uploads/'.$uploadId)
         ->and($location)->not->toContain('//uploads');
 });
 

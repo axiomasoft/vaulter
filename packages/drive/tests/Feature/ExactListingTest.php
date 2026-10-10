@@ -31,7 +31,7 @@ beforeEach(function (): void {
     $this->storage = AccessTestHelpers::storage();
     $this->folder = AccessTestHelpers::folder($this->storage, null, 'parent');
     AccessTestHelpers::grant($this->folder, RoleRegistry::READER, scope: GrantScope::Subtree);
-    $this->base = 'api/vaulter/storages/'.$this->storage->id;
+    $this->base = 'api/vaulter/v1/drives/'.$this->storage->id;
 });
 
 it('V09 reaches the 301st candidate across empty pages and hides walled-off nodes everywhere', function (): void {
@@ -47,7 +47,7 @@ it('V09 reaches the 301st candidate across empty pages and hides walled-off node
     $found = [];
     $emptyPages = 0;
     do {
-        $url = $this->base.'/nodes?'.http_build_query(['parent_id' => $this->folder->id, 'per_page' => 50, 'cursor' => $cursor]);
+        $url = $this->base.'/nodes?'.http_build_query(['parent' => (string) $this->folder->id, 'per_page' => 50, 'cursor' => $cursor]);
         $response = $this->getJson($url)->assertOk()->assertJsonMissingPath('meta.total');
         $data = $response->json('data');
         $cursor = $response->json('meta.next_cursor');
@@ -58,7 +58,11 @@ it('V09 reaches the 301st candidate across empty pages and hides walled-off node
         expect($emptyPages)->toBeLessThan(10);
     } while ($cursor !== null);
     expect($emptyPages)->toBe(3)->and($found)->toBe([(string) $visible->id]);
-    $this->getJson('api/vaulter/nodes/'.$this->folder->id)->assertOk()->assertJsonCount(1, 'data.children')->assertJsonPath('data.children.0.id', (string) $visible->id);
+    // include=children is the first page only (no full walk): here an empty page that
+    // still carries a cursor, and never a walled-off child.
+    $children = $this->getJson('api/vaulter/v1/nodes/'.$this->folder->id.'?include=children')->assertOk()->json('data.children');
+    expect(array_intersect(array_column($children['data'], 'id'), array_map('strval', $hidden)))->toBe([])
+        ->and($children['meta']['next_cursor'])->not->toBeNull();
     config()->set('vaulter.listing.scan_budget', 1000);
     $this->getJson($this->base.'/search?q=candidate')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', (string) $visible->id)->assertJsonMissingPath('meta.total');
     Node::query()->whereIn('id', [...$hidden, $visible->id])->update(['trashed_at' => now(), 'trash_root_id' => DB::raw('id')]);
@@ -70,18 +74,18 @@ it('V22 keeps a drive-wide Gate role through an inheritance boundary, which only
     // node-blind and still applies; only an override Deny closes a drive to a role.
     $walled = AccessTestHelpers::folder($this->storage, $this->folder, 'walled', inheritGrants: false);
     $visible = AccessTestHelpers::folder($this->storage, $this->folder, 'visible');
-    $this->getJson($this->base.'/nodes?parent_id='.$this->folder->id)->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', (string) $visible->id);
+    $this->getJson($this->base.'/nodes?parent='.$this->folder->id)->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', (string) $visible->id);
 
     config()->set('vaulter.access.permission_driver', 'gate');
     Gate::define('vaulter.view', fn (): bool => true);
-    $ids = array_column($this->getJson($this->base.'/nodes?parent_id='.$this->folder->id)->assertOk()->json('data'), 'id');
+    $ids = array_column($this->getJson($this->base.'/nodes?parent='.$this->folder->id)->assertOk()->json('data'), 'id');
     expect($ids)->toContain((string) $walled->id)->toContain((string) $visible->id);
 
     Gate::define('vaulter.super', fn (): bool => false);
     config()->set('vaulter.access.permission_drivers.blocked', ProfileDenyDriver::class);
     config()->set('vaulter.access.permission_driver', 'blocked');
     app()->forgetInstance(PermissionDriverManager::class);
-    $this->getJson('api/vaulter/nodes/'.$walled->id)->assertNotFound();
+    $this->getJson('api/vaulter/v1/nodes/'.$walled->id)->assertNotFound();
 });
 
 it('uses at most five Vaulter queries for 50 visible nodes including resource abilities', function (): void {
@@ -112,12 +116,12 @@ it('uses at most five Vaulter queries for 50 visible nodes including resource ab
 it('rejects forged signatures and a cursor from another parent', function (): void {
     AccessTestHelpers::folder($this->storage, $this->folder, 'a');
     AccessTestHelpers::folder($this->storage, $this->folder, 'b');
-    $url = $this->base.'/nodes?parent_id='.$this->folder->id.'&per_page=1';
+    $url = $this->base.'/nodes?parent='.$this->folder->id.'&per_page=1';
     $cursor = $this->getJson($url)->assertOk()->json('meta.next_cursor');
     $this->getJson($url.'&cursor='.urlencode($cursor.'x'))->assertStatus(422)->assertJsonPath('code', 'validation_failed')->assertJsonStructure(['errors' => ['cursor']]);
     $other = AccessTestHelpers::folder($this->storage, null, 'other');
     AccessTestHelpers::grant($other, RoleRegistry::READER);
-    $this->getJson($this->base.'/nodes?parent_id='.$other->id.'&cursor='.urlencode($cursor))->assertStatus(422)->assertJsonPath('code', 'validation_failed');
+    $this->getJson($this->base.'/nodes?parent='.$other->id.'&cursor='.urlencode($cursor))->assertStatus(422)->assertJsonPath('code', 'validation_failed');
 });
 
 it('keeps the last inspected key when a full page ends inside an overfetch batch', function (): void {
@@ -127,7 +131,7 @@ it('keeps the last inspected key when a full page ends inside an overfetch batch
     $cursor = null;
     $names = [];
     do {
-        $response = $this->getJson($this->base.'/nodes?'.http_build_query(['parent_id' => $this->folder->id, 'per_page' => 2, 'cursor' => $cursor]))->assertOk();
+        $response = $this->getJson($this->base.'/nodes?'.http_build_query(['parent' => (string) $this->folder->id, 'per_page' => 2, 'cursor' => $cursor]))->assertOk();
         $names = array_merge($names, array_column($response->json('data'), 'name'));
         $cursor = $response->json('meta.next_cursor');
     } while ($cursor !== null);
@@ -170,7 +174,7 @@ it('scans shared candidates across storages without totals or blocked rows', fun
     $cursor = null;
     $ids = [];
     do {
-        $response = $this->getJson('api/vaulter/shared?'.http_build_query(['cursor' => $cursor]))->assertOk()->assertJsonMissingPath('meta.total');
+        $response = $this->getJson('api/vaulter/v1/shared?'.http_build_query(['cursor' => $cursor]))->assertOk()->assertJsonMissingPath('meta.total');
         $ids = array_merge($ids, array_column($response->json('data'), 'id'));
         $cursor = $response->json('meta.next_cursor');
     } while ($cursor !== null);

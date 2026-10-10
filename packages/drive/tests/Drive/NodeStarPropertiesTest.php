@@ -114,14 +114,14 @@ it('answers viewer.starred for the request user on a node and its listed childre
     $drive->actingAs($user)->nodes()->star($folder);
     $this->actingAs($user);
 
-    $response = $this->getJson('api/vaulter/nodes/'.$folder->id)->assertOk()
+    $response = $this->getJson('api/vaulter/v1/nodes/'.$folder->id.'?include=children')->assertOk()
         ->assertJsonPath('data.viewer.starred', true)
         ->assertJsonMissingPath('data.is_pinned')
         ->assertJsonMissingPath('data.position');
-    $children = collect($response->json('data.children'))->mapWithKeys(fn (array $child): array => [$child['name'] => $child['viewer']['starred']]);
+    $children = collect($response->json('data.children.data'))->mapWithKeys(fn (array $child): array => [$child['name'] => $child['viewer']['starred']]);
     expect($children->all())->toBe(['plain' => false, 'starred' => true]);
 
-    $this->getJson('api/vaulter/storages/'.$drive->model()->getKey().'/nodes?parent_id='.$folder->id)->assertOk()
+    $this->getJson('api/vaulter/v1/drives/'.$drive->model()->getKey().'/nodes?parent='.$folder->id)->assertOk()
         ->assertJsonPath('data.0.name', 'plain')->assertJsonPath('data.0.viewer.starred', false)
         ->assertJsonPath('data.1.name', 'starred')->assertJsonPath('data.1.viewer.starred', true);
 });

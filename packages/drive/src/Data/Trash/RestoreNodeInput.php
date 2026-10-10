@@ -9,5 +9,5 @@ use Vaulter\Models\Drive\Node;
 
 final readonly class RestoreNodeInput
 {
-    public function __construct(public Node $node, public Node $destination, public OnNameConflict $onConflict = OnNameConflict::Rename) {}
+    public function __construct(public Node $node, public Node $destination, public OnNameConflict $onConflict = OnNameConflict::Rename, public ?int $expectedSequence = null) {}
 }

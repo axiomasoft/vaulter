@@ -150,16 +150,16 @@ it('R07Exception keeps OffsetMismatchException message render headers and JSON a
         ->and($response->headers->get('Tus-Resumable'))->toBe('1.0.0');
 });
 
-it('R07Exception surfaces offset mismatch over HTTP with the full message and tus headers', function (): void {
+it('R07Exception surfaces offset mismatch over HTTP as a problem with the tus headers, never the log message', function (): void {
     $storage = Vaulter::drive(DriveTestHelpers::host())->model();
-    $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+    $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'name' => 'r07-offset.bin',
         'total_size_bytes' => 20,
     ])->json('data.upload_id');
 
     $this->call(
         'PATCH',
-        'api/vaulter/resumable-uploads/'.$uploadId,
+        'api/vaulter/v1/uploads/'.$uploadId,
         [], [], [],
         ['HTTP_UPLOAD_OFFSET' => '0', 'CONTENT_TYPE' => 'application/offset+octet-stream', 'HTTP_TUS_RESUMABLE' => '1.0.0'],
         '12345',
@@ -167,18 +167,16 @@ it('R07Exception surfaces offset mismatch over HTTP with the full message and tu
 
     $response = $this->call(
         'PATCH',
-        'api/vaulter/resumable-uploads/'.$uploadId,
+        'api/vaulter/v1/uploads/'.$uploadId,
         [], [], [],
         ['HTTP_UPLOAD_OFFSET' => '0', 'CONTENT_TYPE' => 'application/offset+octet-stream', 'HTTP_TUS_RESUMABLE' => '1.0.0'],
         'xxxxx',
     );
 
-    $expectedMessage = '[Vaulter] Upload-Offset does not match the server offset 5. '.
-        'Fix: re-read the session HEAD to learn the authoritative Upload-Offset and resume. '.
-        'Docs: '.r07ErrorDocs('upload-conflict');
-
     $response->assertStatus(409)
         ->assertHeader('Upload-Offset', '5')
         ->assertHeader('Tus-Resumable', '1.0.0')
-        ->assertJson(['message' => $expectedMessage]);
+        ->assertHeader('Content-Type', 'application/problem+json')
+        ->assertJsonPath('code', 'upload_offset_mismatch')
+        ->assertJsonMissingPath('message');
 });

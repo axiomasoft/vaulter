@@ -4,19 +4,10 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Http\Requests\Folders;
 
-use Vaulter\Drive\Data\Nodes\CreateFolderInput;
 use Vaulter\Http\Requests\VaulterFormRequest;
-use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Support\DriveNameRules;
 
-/**
- * Validates a create-folder request (§2.2) and builds its CreateDriveFolderData
- * command. The destination parent and target storage are route/repository
- * resolved by the controller (the swappable Node/Storage models bind there), so
- * toData() receives them already-resolved — the Request owns the name validation
- * and the command shape.
- */
+/** POST drives/{drive}/folders: the folder name and its parent (the drive root when absent). */
 final class CreateFolderRequest extends VaulterFormRequest
 {
     /**
@@ -26,7 +17,7 @@ final class CreateFolderRequest extends VaulterFormRequest
     {
         return [
             'name' => DriveNameRules::rules(),
-            'parent_id' => ['nullable'],
+            'parent_id' => ['nullable', 'string', 'max:191'],
         ];
     }
 
@@ -43,21 +34,10 @@ final class CreateFolderRequest extends VaulterFormRequest
         return $this->string('name')->toString();
     }
 
-    public function parentId(): int|string|null
+    public function parentId(): ?string
     {
-        return $this->nullableScalarId('parent_id');
-    }
+        $value = $this->input('parent_id');
 
-    /**
-     * Assemble the command once the controller has resolved the storage and the
-     * destination parent node (null = storage root).
-     */
-    public function toData(Drive $storage, ?Node $parent): CreateFolderInput
-    {
-        return new CreateFolderInput(
-            storage: $storage,
-            name: $this->name(),
-            parent: $parent,
-        );
+        return is_string($value) ? $value : null;
     }
 }

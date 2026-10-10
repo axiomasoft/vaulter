@@ -28,7 +28,7 @@ beforeEach(function (): void {
 it('initiate пишет activity-строку upload.initiated с актором и upload_id (F-P1.4-13, red-before: нет строки)', function (): void {
     $storage = Vaulter::drive(DriveTestHelpers::host())->model();
 
-    $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+    $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'name' => 'activity-init.bin',
         'total_size_bytes' => 4,
     ])->json('data.upload_id');
@@ -43,13 +43,13 @@ it('initiate пишет activity-строку upload.initiated с актором
 it('abort пишет activity-строку upload.aborted (F-P1.4-13, red-before: нет строки)', function (): void {
     $storage = Vaulter::drive(DriveTestHelpers::host())->model();
 
-    $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+    $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'name' => 'activity-abort.bin',
         'total_size_bytes' => 4,
     ])->json('data.upload_id');
     app(VaulterDatabase::class)->write(fn () => Activity::query()->delete());
 
-    $this->delete('api/vaulter/resumable-uploads/'.$uploadId, [], ['Tus-Resumable' => '1.0.0'])->assertNoContent();
+    $this->delete('api/vaulter/v1/uploads/'.$uploadId, [], ['Tus-Resumable' => '1.0.0'])->assertNoContent();
 
     $row = ActivityTestHelpers::only(EventType::UploadAborted->value);
 
@@ -60,7 +60,7 @@ it('abort пишет activity-строку upload.aborted (F-P1.4-13, red-before
 it('sweep-expire пишет activity-строку upload.expired без актора (F-P1.4-13, red-before: нет строки)', function (): void {
     $storage = Vaulter::drive(DriveTestHelpers::host())->model();
 
-    $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+    $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'name' => 'activity-expire.bin',
         'total_size_bytes' => 4,
     ])->json('data.upload_id');
@@ -98,7 +98,7 @@ it('sweep-expire пишет activity-строку upload.expired без акто
 it('переезд Uploads morph-безопасен: upload-session activity не пишет target_type/target_id, единственный morph-таргет Node не переезжал (P4.10)', function (): void {
     $storage = Vaulter::drive(DriveTestHelpers::host())->model();
 
-    $uploadId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/resumable-uploads', [
+    $uploadId = $this->postJson('api/vaulter/v1/drives/'.$storage->getKey().'/uploads', [
         'name' => 'morph-invariant.bin',
         'total_size_bytes' => 4,
     ])->json('data.upload_id');

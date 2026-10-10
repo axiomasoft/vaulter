@@ -85,6 +85,8 @@ final readonly class RestoreNodeAction
             $ids = $this->nodes->subtree($fresh)->modelKeys();
             $locked = $this->tree->lock([...$ids, $data->destination->id]);
             $current = $this->tree->locked($locked, $node->id);
+            // On the locked row and before anything moves, so a stale caller changes nothing.
+            $this->sequence->assertExpected(locked: $current, expected: $data->expectedSequence);
             $this->tree->assertNotRoot(node: $current, operation: 'restore');
             if ($current->trashed_at === null) {
                 throw NodeNotTrashedException::forNode($current);

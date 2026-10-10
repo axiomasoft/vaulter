@@ -2,11 +2,11 @@
 
 ## Search
 
-A storage's node tree accepts a `q` term, matched (case-insensitively) against the node name,
-scoped to the storage and filtered by the `view` ability:
+A drive's node tree accepts a `q` term, matched (case-insensitively) against the node name,
+scoped to the drive and filtered by the `view` ability:
 
 ```
-GET /api/vaulter/storages/{storage}/search?q=roadmap
+GET /api/vaulter/v1/drives/{drive}/search?q=roadmap
 ```
 
 ```ts
@@ -28,9 +28,9 @@ Search and trash only return nodes with effective `View`, including when the hos
 uses Gate, Spatie or AzGuard. Explicit denies and inheritance cut-offs hide the node
 and its metadata. Listing `abilities` come from the same batch evaluation.
 
-Pages expose `meta.next_cursor`, `per_page`, `scanned`, `path` and a null
-`prev_cursor`. They have no `total` or numbered page links. Send `cursor` from the
-previous response until `next_cursor` is null. An empty page may still have a cursor:
+Pages expose `meta.next_cursor` and `meta.per_page` (1–200, default 50; outside that range
+`422`). They have no `total` or numbered page links. Send `cursor` from the previous response
+until `next_cursor` is null. An empty page may still have a cursor:
 `vaulter.listing.scan_budget` (default 1000) limits inspected candidates per request.
 Cursors are signed with the application key and bound to the listing query; reuse
 with another storage, parent or search term returns 422 `validation_failed` and
@@ -38,15 +38,17 @@ with another storage, parent or search term returns 422 `validation_failed` and
 
 ## Trash
 
-Deleting a node soft-deletes it (and its subtree). The trash can be listed, restored, or
-permanently purged.
+Trashing a node soft-deletes it (and its subtree). The trash can be listed, restored, or
+permanently purged. Routes marked If-Match need the node's current `ETag` (`428` without it,
+`412` when stale); for a trashed node it is the `etag` the trash listing shows.
 
-| Method | URL | Ability |
-|---|---|---|
-| GET | `/storages/{storage}/trash` | `view` |
-| DELETE | `/nodes/{node}` | `edit` |
-| POST | `/nodes/{node}/restore` | `edit` |
-| DELETE | `/nodes/{node}/force` | `manage` |
+| Method | URL (under `/api/vaulter/v1`) | Ability | If-Match |
+|---|---|---|---|
+| GET | `/drives/{drive}/trash` | `view` | — |
+| POST | `/nodes/{node}/trash` | `trash` | yes |
+| POST | `/nodes/{node}/restore` | `restore` | yes |
+| DELETE | `/nodes/{node}` | `delete` (trashed nodes only) | yes |
+| DELETE | `/drives/{drive}/trash` | `delete` per root | — |
 
 ```ts
 const client = useVaulterClient()
@@ -62,14 +64,15 @@ Both the reversible delete and the permanent purge are recorded in the
 
 ## Move & copy
 
-| Method | URL | Ability |
-|---|---|---|
-| POST | `/nodes/{node}/move` | `edit` |
-| POST | `/nodes/{node}/copy` | `edit` (source) + `create` (destination) |
+| Method | URL (under `/api/vaulter/v1`) | Ability | If-Match |
+|---|---|---|---|
+| POST | `/nodes/{node}/move` | `move` + `create` (destination) | yes |
+| POST | `/nodes/{node}/copy` | `copy` (source) + `create` (destination) | — |
 
-`move` and `copy` accept `{ parent_id: id \| null }` (null targets the storage root). Moving a node
-into its own subtree is rejected with `422`; `copy` clones the node (and, for a folder, its subtree)
-into the destination.
+`move` and `copy` accept `{ destination_id: id \| null }` (null targets the drive root); `move`
+also takes `on_conflict` (`fail` or `rename`). Moving a node into its own subtree is rejected;
+`copy` clones the node (and, for a folder, its subtree) into the destination and takes a free
+name on a clash.
 
 ```ts
 const client = useVaulterClient()
