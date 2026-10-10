@@ -45,3 +45,8 @@ Execution sheet: run the batches in order. Route is the maximum class/effort of 
 | 38 | P4 | B412 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.7` | implementation/high | done |
 | 39 | P4 | B413 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.6` | implementation/high | done |
 | 40 | P4 | BP4-14 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P4.14` | frontier/high | done |
+| 41 | P5 | B501 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P5.1` | frontier/high | done |
+| 42 | P5 | B502 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P5.2` | implementation/medium | done |
+| 43 | P5 | B503 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P5.3` | frontier/high | done |
+| 44 | P5 | B504 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P5.4` | implementation/high | done |
+| 45 | P5 | B505 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P5.5` | frontier/high | done |

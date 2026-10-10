@@ -106,6 +106,7 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 - **Mutation tools исключены (D51, сохранено из D25).** Infection/Pest --mutate/Composer mutation aliases/wrappers/mutation workflow dispatch/score remediation не входят в PLAN2. Общие full-CI gates трактуются без mutation lanes; регрессии с Mutation в имени и ограниченные negative controls сохранены. Не dispatch workflows с активирующимися mutation jobs.
 - **Экономика и контекст (D51, сохранено из D25).** Canonical context хранить в файле; в основном контексте — текущие нормы/decisions/короткие итоги. Свежие агенты — independent research/detailed QA. Единый evidence writer; generation заканчивается до lint. Повтор проверки — по изменившимся inputs, не по одному global SHA; reuse явно с original receipt и dependency proof. Phase/block boundary заранее объявлена, future issues отдельно.
 - **Research corrections (D26=C, D27=A, D28=A, D29).** Обязательный нормативный вход всех remaining designs P3–P8: @plan/knowledge/security-correction-contract.json; repository assessment: @plan/knowledge/implementation-security-assessment-2026-10-06.json. Каждая применимая C01–C10 строка получает owning item scope/files/Required Read/acceptance при детализации; отчёт исследования сам по себе не закрывает correction. P3 supplemental contracts завершены в @plan/knowledge/P3-security-contracts.json; design audit repaired closure GREEN (F12/F13) в @plan/knowledge/audit-design-2026-10-06-p3-green.json. Historical RED сохранён. Это не phase audit и не product qualification; runtime run-items не запускает исполнение. P5 добавляет P5.3 recoverable fan-out. P8.1 собирает actual qualification matrix, P8.3 не freeze с essential unresolved correction. Closed P0/P1/P2 не переписываются; исправления прежнего кода выполняются будущими owning items. Explicit accepted amendments имеют приоритет над literal OPUS только в описанной delta; OPUS bytes/owners неизменны.
+- **Прогоны — указание владельца 2026-10-09 (до конца плана):** внутри items только тесты и быстрые операции (затронутые Pest на SQLite, Arch/golden, Pint, PHPStan, plan check). PostgreSQL/MySQL, полные сьюты, SchemaParity, upgrade-фикстуры, e2e и любые долгие прогоны, включая V90 барьеры, в items НЕ запускать; они идут только после фазы отдельным промтом владельца. Item закрывать с пометкой «не исполнено, фазовый прогон». См. knowledge/validation-and-execution-policy#Owner-Fast-Only.
 
 ## Phases
 
@@ -116,7 +117,7 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 | P2 | Канон имён и конфигурации | detailed | 7/7 | 🟠 Done with deviations |
 | P3 | Прикладной слой: авторизованный публичный API | detailed | 8/8 | 🟢 Done |
 | P4 | Модель данных и документы | detailed | 14/14 | 🟠 Done with deviations |
-| P5 | Конвейер событий | skeleton | 0/0 | ⬜ Skeleton |
+| P5 | Конвейер событий | detailed | 5/5 | 🟠 Done with deviations |
 | P6 | HTTP v1 и клиенты | skeleton | 0/0 | ⬜ Skeleton |
 | P7 | Эксплуатация и DX | skeleton | 0/0 | ⬜ Skeleton |
 | P8 | Готовность 1.0 | skeleton | 0/0 | ⬜ Skeleton |
@@ -182,3 +183,7 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 | D55 | P4.3: исполнимый контракт реестра типов (EV320–EV329) | accepted | 2026-10-08 |
 | D56 | AzGuard v1 без legacy для vaulter-azgard | accepted | 2026-10-08 |
 | D57 | OPUS-вход P4.14: handoff единиц моста AzGuard и прочтение 0.x как AzGuard v1 | accepted | 2026-10-08 |
+| D58 | P5: тонкий конверт webhook и каталог EventType 1.0 (поправка OPUS 08 §6/D22) | accepted | 2026-10-09 |
+| D59 | P5: журнал изменений drive — subtree, компакция, блокировка J и проекция видимости (уточнение D50) | accepted | 2026-10-09 |
+| D60 | P5: доставка webhooks 1.0 — Standard Webhooks, повторы, автоотключение, ротация, redelivery | accepted | 2026-10-09 |
+| D61 | P5.5: компакция журнала не удаляет upsert, несущий причину невидимости, обычным upsert (уточнение D59) | accepted | 2026-10-10 |
