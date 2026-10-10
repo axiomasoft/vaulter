@@ -69,14 +69,16 @@ final class DeliverWebhook implements ShouldQueue
 
     private WebhooksConfig $webhooksConfig;
 
+    private VaulterDatabase $database;
+
     public function __construct(
         private readonly string $deliveryId,
     ) {}
 
-    public function handle(WebhookSigner $signer, OutboundUrlGuard $urlGuard, VaulterConfig $vaulterConfig, WebhooksConfig $webhooksConfig, ?VaulterDatabase $database = null): void
+    public function handle(WebhookSigner $signer, OutboundUrlGuard $urlGuard, VaulterConfig $vaulterConfig, WebhooksConfig $webhooksConfig, VaulterDatabase $database): void
     {
-        // The container always injects the database; a direct call without one runs unscoped.
-        $database === null ? $this->deliver($signer, $urlGuard, $vaulterConfig, $webhooksConfig) : $database->write(fn () => $this->deliver($signer, $urlGuard, $vaulterConfig, $webhooksConfig));
+        $this->database = $database;
+        $database->write(fn () => $this->deliver($signer, $urlGuard, $vaulterConfig, $webhooksConfig));
     }
 
     private function deliver(WebhookSigner $signer, OutboundUrlGuard $urlGuard, VaulterConfig $vaulterConfig, WebhooksConfig $webhooksConfig): void
@@ -380,7 +382,7 @@ final class DeliverWebhook implements ShouldQueue
         $endpointId = $delivery->endpoint_id;
 
         // Hosts hear about it only once the disabling is durable.
-        $endpoint->getConnection()->afterCommit(static function () use ($endpointId, $failingSince): void {
+        $this->database->afterCommit(static function () use ($endpointId, $failingSince): void {
             Event::dispatch(new WebhookEndpointDisabled(endpointId: $endpointId, reason: 'failing', failingSince: $failingSince));
         });
     }
@@ -457,7 +459,7 @@ final class DeliverWebhook implements ShouldQueue
      */
     private function settle(WebhookDelivery $delivery, WebhookEndpoint $endpoint, Closure $operation): bool
     {
-        return $delivery->getConnection()->transaction(function () use ($delivery, $endpoint, $operation): bool {
+        return $this->database->transaction(function () use ($delivery, $endpoint, $operation): bool {
             // The endpoint is locked BEFORE the delivery is touched: auto-disable rewrites
             // every open delivery of the endpoint, so any other order could deadlock two
             // settlements. Serialising here also makes the disable decision see the failure
@@ -483,7 +485,7 @@ final class DeliverWebhook implements ShouldQueue
             $operation($locked);
 
             return true;
-        });
+        }, attempts: 1);
     }
 
     private function resolveDelivery(): ?WebhookDelivery

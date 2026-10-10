@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Vaulter\Actions\Webhooks\RedeliverWebhookAction;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Models\Webhooks\WebhookDelivery;
 use Vaulter\Repositories\Webhooks\OutboxStoreRepository;
+use Vaulter\Repositories\Webhooks\WebhookDeliveryStoreRepository;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 
 /**
@@ -95,3 +99,35 @@ it('keeps a completed outbox row that a replay turned pending between the select
         ->and($deleted)->toBe(0)
         ->and(Outbox::query()->whereKey($row->getKey())->value('status'))->toBe('pending');
 });
+
+it('keeps a delivery redelivered between the batch select and delete', function (string $status, bool $finished): void {
+    Bus::fake();
+    Http::fake(['https://hooks.test/*' => Http::response('', 200)]);
+    $row = WebhookTestHelpers::delivery(WebhookTestHelpers::endpoint(), [
+        'status' => $status, 'attempts' => 10, 'next_retry_at' => null,
+    ]);
+    agePruneRow($row, Carbon::now()->subDays(40));
+    $redelivered = false;
+    DB::beforeExecuting(function (string $sql) use ($row, $finished, &$redelivered): void {
+        if (!$redelivered && str_starts_with($sql, 'delete from') && str_contains($sql, $row->getTable())) {
+            $redelivered = true;
+            app(RedeliverWebhookAction::class)->execute($row);
+            if ($finished) {
+                WebhookTestHelpers::deliver($row);
+            }
+        }
+    });
+
+    // Zero retention proves the status guard; a fresh terminal row proves the age guard.
+    $threshold = $finished ? Carbon::now()->subDays(30) : Carbon::now();
+    $deleted = app(WebhookDeliveryStoreRepository::class)->pruneTerminalBefore($threshold);
+
+    expect($redelivered)->toBeTrue()
+        ->and($deleted)->toBe(0)
+        ->and(WebhookDelivery::query()->whereKey($row->getKey())->value('status'))->toBe($finished ? 'delivered' : 'pending');
+})->with([
+    'delivered re-armed at zero retention' => ['delivered', false],
+    'dead re-armed at zero retention' => ['dead', false],
+    'delivered again inside retention' => ['delivered', true],
+    'dead then delivered inside retention' => ['dead', true],
+]);

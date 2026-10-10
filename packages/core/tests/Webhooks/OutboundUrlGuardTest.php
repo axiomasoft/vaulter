@@ -8,6 +8,7 @@ use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Configuration\WebhooksConfig;
 use Vaulter\Contracts\Webhooks\HostResolver;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Webhooks\BlockedOutboundUrlException;
 use Vaulter\Jobs\Webhooks\DeliverWebhook;
 use Vaulter\Models\Webhooks\WebhookDelivery;
@@ -26,7 +27,7 @@ use Vaulter\Webhooks\WebhookSigner;
 function deliverGuarded(WebhookDelivery $delivery): void
 {
     (new DeliverWebhook(deliveryId: (string) $delivery->getKey()))
-        ->handle(app(WebhookSigner::class), app(OutboundUrlGuard::class), app(VaulterConfig::class), app(WebhooksConfig::class));
+        ->handle(signer: app(WebhookSigner::class), urlGuard: app(OutboundUrlGuard::class), vaulterConfig: app(VaulterConfig::class), webhooksConfig: app(WebhooksConfig::class), database: app(VaulterDatabase::class));
 }
 
 function fakeResolver(): FakeHostResolver

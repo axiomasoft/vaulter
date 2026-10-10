@@ -11,10 +11,10 @@ use Vaulter\Models\Webhooks\WebhookDelivery;
 
 /**
  * The write side of webhook-delivery row work (master plan §2.11 / D14 / M3b).
- * Today it carries only the RETENTION prune: a TERMINAL delivery — status
- * 'delivered' or 'dead' (the DLQ) — never transitions again, so once it is past the
- * retention window it is audit history that may be reclaimed. The terminalisation
- * time is the row's updated_at (a terminal row is never re-saved). It opens NO
+ * Today it carries the RETENTION prune: a TERMINAL delivery — status 'delivered'
+ * or 'dead' (the DLQ) — past the retention window is history that may be reclaimed.
+ * Manual redelivery can re-arm it, so deletion rechecks both the terminal status
+ * and updated_at (the latest terminalisation time). It opens NO
  * transaction and NEVER touches a 'pending'/'failed' row: those are in-flight /
  * retryable and the relay's due-retry sweep still owns them.
  */
@@ -80,7 +80,9 @@ final readonly class WebhookDeliveryStoreRepository
             // returns a typed int row count, and these models are hard-deletable (no
             // SoftDeletes scope to route around), so the base delete is the real
             // physical delete, not a soft-delete.
-            $deleted += $this->newQuery()->whereKey($ids)->toBase()->delete();
+            // Redelivery can re-arm or finish the row again after the batch SELECT.
+            // Recheck status and age at deletion so its fresh work survives.
+            $deleted += $this->terminalBefore(query: $this->newQuery(), threshold: $threshold)->whereKey($ids)->toBase()->delete();
         } while (count($ids) === $batch);
 
         return $deleted;

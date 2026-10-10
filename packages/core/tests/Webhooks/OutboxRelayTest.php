@@ -52,7 +52,7 @@ it('sends the same occurrence id on the original delivery and a relay retry', fu
     expect(relay()->process())->toBe(1);
     $delivery = WebhookDelivery::query()->sole();
     $job = new DeliverWebhook(deliveryId: (string) $delivery->getKey());
-    $job->handle(app(WebhookSigner::class), app(OutboundUrlGuard::class), app(VaulterConfig::class), app(WebhooksConfig::class));
+    $job->handle(signer: app(WebhookSigner::class), urlGuard: app(OutboundUrlGuard::class), vaulterConfig: app(VaulterConfig::class), webhooksConfig: app(WebhooksConfig::class), database: app(VaulterDatabase::class));
 
     $delivery->refresh();
     expect($delivery->status)->toBe('failed');
@@ -60,7 +60,7 @@ it('sends the same occurrence id on the original delivery and a relay retry', fu
     $delivery->forceFill(['next_retry_at' => now()->subSecond()])->save();
     $this->artisan('vaulter:relay-outbox')->assertSuccessful();
     Bus::assertDispatched(DeliverWebhook::class, fn (DeliverWebhook $retry): bool => new ReflectionProperty($retry, 'deliveryId')->getValue($retry) === (string) $delivery->getKey());
-    $job->handle(app(WebhookSigner::class), app(OutboundUrlGuard::class), app(VaulterConfig::class), app(WebhooksConfig::class));
+    $job->handle(signer: app(WebhookSigner::class), urlGuard: app(OutboundUrlGuard::class), vaulterConfig: app(VaulterConfig::class), webhooksConfig: app(WebhooksConfig::class), database: app(VaulterDatabase::class));
 
     expect($delivery->refresh()->status)->toBe('delivered')
         ->and($delivery->attempts)->toBe(2)

@@ -15,6 +15,7 @@ use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Configuration\WebhooksConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Jobs\Webhooks\DeliverWebhook;
 use Vaulter\Load\Listeners\RecordCommandPeakMemory;
 use Vaulter\Load\Listeners\RecordFailedJob;
@@ -38,14 +39,14 @@ it('records vaulter_outbox_backlog from pending outbox rows', function (): void 
 
     app(LoadStateMetrics::class)->observeOutboxBacklog();
 
-    app(MetricsRecorder::class)->assertGauge(name: 'vaulter_outbox_backlog');
+    expect(fn () => app(MetricsRecorder::class)->assertGauge(name: 'vaulter_outbox_backlog'))->not->toThrow(Throwable::class);
 });
 
 it('records vaulter_outbox_stage_duration_seconds when staging a new row', function (): void {
     // Provisioning records drive.created through the EventRecorder.
     DriveTestHelpers::drive()->model();
 
-    app(MetricsRecorder::class)->assertHistogram(name: 'vaulter_outbox_stage_duration_seconds');
+    expect(fn () => app(MetricsRecorder::class)->assertHistogram(name: 'vaulter_outbox_stage_duration_seconds'))->not->toThrow(Throwable::class);
 });
 
 it('records outbox relay metrics for a pending row', function (): void {
@@ -58,9 +59,9 @@ it('records outbox relay metrics for a pending row', function (): void {
     app(OutboxRelay::class)->process();
 
     $recorder = app(MetricsRecorder::class);
-    $recorder->assertHistogram(name: 'vaulter_outbox_relay_duration_seconds');
-    $recorder->assertCounter(name: 'vaulter_outbox_relayed_total');
-    $recorder->assertCounter(name: 'vaulter_outbox_endpoints_scanned_total');
+    expect(fn () => $recorder->assertHistogram(name: 'vaulter_outbox_relay_duration_seconds'))->not->toThrow(Throwable::class);
+    expect(fn () => $recorder->assertCounter(name: 'vaulter_outbox_relayed_total'))->not->toThrow(Throwable::class);
+    expect(fn () => $recorder->assertCounter(name: 'vaulter_outbox_endpoints_scanned_total'))->not->toThrow(Throwable::class);
 
     $scanned = collect($recorder->emissions())
         ->where('name', 'vaulter_outbox_endpoints_scanned_total')
@@ -80,8 +81,8 @@ it('records webhook retry tick and lockset metrics', function (): void {
     app(WebhookRetryDispatcher::class)->redispatchDue();
 
     $recorder = app(MetricsRecorder::class);
-    $recorder->assertHistogram(name: 'vaulter_webhook_retry_tick_seconds');
-    $recorder->assertHistogram(name: 'vaulter_webhook_retry_lockset_rows');
+    expect(fn () => $recorder->assertHistogram(name: 'vaulter_webhook_retry_tick_seconds'))->not->toThrow(Throwable::class);
+    expect(fn () => $recorder->assertHistogram(name: 'vaulter_webhook_retry_lockset_rows'))->not->toThrow(Throwable::class);
 });
 
 it('records webhook delivery metrics on successful deliver', function (): void {
@@ -90,12 +91,12 @@ it('records webhook delivery metrics on successful deliver', function (): void {
     $delivery = WebhookTestHelpers::delivery(WebhookTestHelpers::endpoint());
 
     (new DeliverWebhook(deliveryId: (string) $delivery->getKey()))
-        ->handle(app(WebhookSigner::class), app(OutboundUrlGuard::class), app(VaulterConfig::class), app(WebhooksConfig::class));
+        ->handle(signer: app(WebhookSigner::class), urlGuard: app(OutboundUrlGuard::class), vaulterConfig: app(VaulterConfig::class), webhooksConfig: app(WebhooksConfig::class), database: app(VaulterDatabase::class));
 
     $recorder = app(MetricsRecorder::class);
-    $recorder->assertHistogram(name: 'vaulter_webhook_queue_wait_seconds', labels: ['outcome' => 'success']);
-    $recorder->assertHistogram(name: 'vaulter_webhook_delivery_duration_seconds', labels: ['outcome' => 'success']);
-    $recorder->assertCounter(name: 'vaulter_webhook_delivered_total', labels: ['outcome' => 'success']);
+    expect(fn () => $recorder->assertHistogram(name: 'vaulter_webhook_queue_wait_seconds', labels: ['outcome' => 'success']))->not->toThrow(Throwable::class);
+    expect(fn () => $recorder->assertHistogram(name: 'vaulter_webhook_delivery_duration_seconds', labels: ['outcome' => 'success']))->not->toThrow(Throwable::class);
+    expect(fn () => $recorder->assertCounter(name: 'vaulter_webhook_delivered_total', labels: ['outcome' => 'success']))->not->toThrow(Throwable::class);
 });
 
 it('records vaulter_failed_jobs_total on job failed event', function (): void {
@@ -104,7 +105,7 @@ it('records vaulter_failed_jobs_total on job failed event', function (): void {
 
     app(RecordFailedJob::class)->handle(new JobFailed(connectionName: 'redis', job: $job, exception: $exception));
 
-    app(MetricsRecorder::class)->assertCounter(name: 'vaulter_failed_jobs_total', labels: ['outcome' => 'failure']);
+    expect(fn () => app(MetricsRecorder::class)->assertCounter(name: 'vaulter_failed_jobs_total', labels: ['outcome' => 'failure']))->not->toThrow(Throwable::class);
 });
 
 it('records vaulter_command_peak_memory_bytes for vaulter artisan commands', function (): void {
@@ -126,10 +127,10 @@ it('records vaulter_command_peak_memory_bytes for vaulter artisan commands', fun
             exitCode: 0,
         ));
 
-        app(MetricsRecorder::class)->assertGauge(
+        expect(fn () => app(MetricsRecorder::class)->assertGauge(
             name: 'vaulter_command_peak_memory_bytes',
             labels: ['command' => $command],
-        );
+        ))->not->toThrow(Throwable::class);
     }
 });
 
@@ -146,8 +147,8 @@ it('records prune webhook metrics when rows are reclaimed', function (): void {
     Artisan::call('vaulter:prune-webhooks');
 
     $recorder = app(MetricsRecorder::class);
-    $recorder->assertHistogram(name: 'vaulter_prune_duration_seconds');
-    $recorder->assertCounter(name: 'vaulter_prune_rows_total');
+    expect(fn () => $recorder->assertHistogram(name: 'vaulter_prune_duration_seconds'))->not->toThrow(Throwable::class);
+    expect(fn () => $recorder->assertCounter(name: 'vaulter_prune_rows_total'))->not->toThrow(Throwable::class);
 });
 
 it('exposes vaulter_pg_lock_wait_seconds from the harness collector script', function (): void {
