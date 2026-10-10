@@ -235,3 +235,28 @@ it('re-enabling an auto-disabled endpoint clears the failing run and the reason'
         ->and($endpoint->disabled_reason)->toBeNull()
         ->and($endpoint->failure_count)->toBe(0);
 });
+
+it('kills the deliveries created since when a stale inactive copy of the endpoint is switched off again', function (): void {
+    $endpoint = WebhookTestHelpers::endpoint(['is_active' => false, 'disabled_reason' => 'manual', 'disabled_at' => now()]);
+    $loadedWhileOff = $endpoint->newQuery()->findOrFail($endpoint->getKey());
+
+    app(UpdateWebhookEndpointAction::class)->execute($endpoint->fresh(), new UpdateWebhookEndpointInput(url: null, events: null, isActive: true));
+    $open = WebhookTestHelpers::delivery($endpoint->fresh());
+
+    app(UpdateWebhookEndpointAction::class)->execute($loadedWhileOff, new UpdateWebhookEndpointInput(url: null, events: null, isActive: false));
+
+    expect($endpoint->fresh()->is_active)->toBeFalse()
+        ->and($endpoint->fresh()->disabled_reason)->toBe('manual')
+        ->and($open->refresh()->status)->toBe('dead')
+        ->and($open->last_error)->toBe('endpoint_disabled');
+});
+
+it('sends nothing to an endpoint that is off and lets the delivery die', function (): void {
+    Http::fake(['https://hooks.test/*' => Http::response('', 200)]);
+    $delivery = WebhookTestHelpers::delivery(WebhookTestHelpers::endpoint(['is_active' => false]));
+
+    WebhookTestHelpers::deliver($delivery);
+
+    Http::assertNothingSent();
+    expect($delivery->refresh()->status)->toBe('dead')->and($delivery->last_error)->toBe('endpoint_disabled');
+});

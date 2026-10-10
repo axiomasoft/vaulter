@@ -31,13 +31,15 @@ final readonly class RedeliverWebhookAction
         $id = Identity::stringify($delivery->getKey());
 
         $this->database->transaction(function () use ($delivery, $id): void {
+            // Endpoint first (the order settlement and deactivation use), so a deactivation
+            // either commits before this check or waits until the delivery is pending.
+            $endpointId = $delivery->newQuery()->whereKey($delivery->getKey())->value('endpoint_id');
+            $endpoint = $delivery->endpoint()->getRelated()->newQuery()->whereKey($endpointId)->lockForUpdate()->first();
             $current = $delivery->newQuery()->whereKey($delivery->getKey())->lockForUpdate()->firstOrFail();
 
             if (!in_array($current->status, ['delivered', 'dead'], true)) {
                 throw WebhookDeliveryNotRedeliverableException::notTerminal($id, $current->status);
             }
-
-            $endpoint = $current->endpoint;
 
             if (!$endpoint instanceof WebhookEndpoint || !$endpoint->is_active) {
                 throw WebhookDeliveryNotRedeliverableException::endpointInactive($id);

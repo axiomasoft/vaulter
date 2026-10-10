@@ -100,6 +100,18 @@ final class DeliverWebhook implements ShouldQueue
                     return;
                 }
 
+                // Nothing is sent to an endpoint that is off — a redelivery or a late job racing the
+                // switch-off lands here. The row dies instead of waiting for a sweep that would
+                // keep re-queueing it.
+                if (!$endpoint->is_active) {
+                    $delivery->newQuery()->whereKey($delivery->getKey())->whereIn('status', ['pending', 'failed'])->toBase()->update([
+                        'status' => 'dead', 'next_retry_at' => null, 'claim_token' => null, 'claim_until' => null,
+                        'last_error' => 'endpoint_disabled', 'updated_at' => now(),
+                    ]);
+
+                    return;
+                }
+
                 if (!$this->claim(delivery: $delivery)) {
                     return;
                 }

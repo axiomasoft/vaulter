@@ -30,6 +30,8 @@ final readonly class DeactivateWebhookEndpointAction
     public function execute(WebhookEndpoint $endpoint): WebhookEndpoint
     {
         return $this->database->transaction(function () use ($endpoint): WebhookEndpoint {
+            // Same lock order as a delivery settlement and a redelivery: endpoint first.
+            $endpoint->setRawAttributes($endpoint->newQuery()->whereKey($endpoint->getKey())->lockForUpdate()->firstOrFail()->getAttributes(), sync: true);
             $this->endpoints->deactivate($endpoint);
             $this->deliveries->killOpenForEndpoint(endpointId: Identity::stringify($endpoint->getKey()), reason: 'endpoint_disabled');
 

@@ -20,6 +20,12 @@ final class InvalidWebhookSignatureException extends VaulterException implements
             .'Fix: pass the request headers unchanged. Docs: '.self::docs('webhook-signature'));
     }
 
+    public static function ambiguousHeaders(): self
+    {
+        return new self('[Vaulter] Webhook verification failed: webhook-id or webhook-timestamp is present more than once with different values. '
+            .'Why: the timestamp that is checked must be the one that is signed. Docs: '.self::docs('webhook-signature'));
+    }
+
     public static function invalidTimestamp(): self
     {
         return new self('[Vaulter] Webhook verification failed: webhook-timestamp is not a unix timestamp. '

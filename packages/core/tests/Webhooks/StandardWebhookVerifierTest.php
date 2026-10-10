@@ -140,3 +140,34 @@ it('verifies what DeliverWebhook-style signing sends, during a rotation overlap'
 
     expect(true)->toBeTrue();
 });
+
+it('refuses a request whose timestamp header is repeated with another value, as a header bag delivers it', function (): void {
+    $secret = WebhookSecret::generate();
+    $body = '{"id":"evt-1"}';
+    $signer = new WebhookSigner;
+    $stale = VERIFIER_NOW - 86_400;
+    $headers = [
+        'webhook-id' => ['evt-1'],
+        'webhook-timestamp' => [(string) VERIFIER_NOW, (string) $stale],
+        'webhook-signature' => [$signer->sign('evt-1', VERIFIER_NOW, $body, $secret), $signer->sign('evt-1', $stale, $body, $secret)],
+    ];
+
+    expect(fn () => (new StandardWebhookVerifier)->verify($headers, $body, [$secret], now: VERIFIER_NOW))
+        ->toThrow(InvalidWebhookSignatureException::class, 'more than once');
+});
+
+it('accepts a repeated header with the same value and signature lines split over several headers', function (): void {
+    $old = WebhookSecret::generate();
+    $new = WebhookSecret::generate();
+    $body = '{"id":"evt-1"}';
+    $signer = new WebhookSigner;
+    $headers = [
+        'webhook-id' => ['evt-1', 'evt-1'],
+        'webhook-timestamp' => [(string) VERIFIER_NOW],
+        'webhook-signature' => [$signer->sign('evt-1', VERIFIER_NOW, $body, $new), $signer->sign('evt-1', VERIFIER_NOW, $body, $old)],
+    ];
+
+    (new StandardWebhookVerifier)->verify($headers, $body, [$old], now: VERIFIER_NOW);
+
+    expect(true)->toBeTrue();
+});

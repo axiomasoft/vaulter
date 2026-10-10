@@ -29,17 +29,28 @@ final class StandardWebhookVerifier
      */
     public function verify(array $headers, string $body, array $secrets, int $toleranceSeconds = 300, ?int $now = null): void
     {
-        $normalized = [];
+        // A header may arrive as a list (Symfony's bag). The tolerance check and the signature
+        // must see the same id and timestamp, so a second, different value is refused rather
+        // than letting a stale signed timestamp ride behind a fresh one.
+        $single = [];
+        $lists = [];
         foreach ($headers as $name => $value) {
-            $first = is_array($value) ? ($value[0] ?? null) : $value;
-            if (is_string($first)) {
-                $normalized[strtolower((string) $name)] = $first;
+            $values = array_values(array_filter(is_array($value) ? $value : [$value], is_string(...)));
+            if ($values !== []) {
+                $lists[strtolower((string) $name)] = array_merge($lists[strtolower((string) $name)] ?? [], $values);
             }
         }
+        foreach (['webhook-id', 'webhook-timestamp'] as $name) {
+            $unique = array_values(array_unique($lists[$name] ?? []));
+            if (count($unique) > 1) {
+                throw InvalidWebhookSignatureException::ambiguousHeaders();
+            }
+            $single[$name] = $unique[0] ?? '';
+        }
 
-        $id = $normalized['webhook-id'] ?? '';
-        $timestampHeader = $normalized['webhook-timestamp'] ?? '';
-        $signatures = $normalized['webhook-signature'] ?? '';
+        $id = $single['webhook-id'];
+        $timestampHeader = $single['webhook-timestamp'];
+        $signatures = implode(' ', $lists['webhook-signature'] ?? []);
 
         if ($id === '' || $timestampHeader === '' || $signatures === '') {
             throw InvalidWebhookSignatureException::missingHeaders();

@@ -42,6 +42,9 @@ final readonly class UpdateWebhookEndpointAction
     public function execute(WebhookEndpoint $endpoint, UpdateWebhookEndpointInput $data): WebhookEndpoint
     {
         return $this->database->transaction(function () use ($endpoint, $data): WebhookEndpoint {
+            // Decide from the row as it is now, not from the copy the caller loaded earlier: a
+            // stale "inactive" copy would skip killing the deliveries created since.
+            $endpoint->setRawAttributes($endpoint->newQuery()->whereKey($endpoint->getKey())->lockForUpdate()->firstOrFail()->getAttributes(), sync: true);
             $wasActive = $endpoint->is_active;
 
             $this->endpoints->update(

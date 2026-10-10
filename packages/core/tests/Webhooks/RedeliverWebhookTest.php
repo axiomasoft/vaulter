@@ -5,11 +5,13 @@ declare(strict_types=1);
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
+use Vaulter\Actions\Webhooks\DeactivateWebhookEndpointAction;
 use Vaulter\Actions\Webhooks\RedeliverWebhookAction;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\Webhooks\WebhookDeliveryNotRedeliverableException;
 use Vaulter\Jobs\Webhooks\DeliverWebhook;
 use Vaulter\Models\Webhooks\WebhookDelivery;
+use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 
 /**
@@ -152,4 +154,34 @@ it('does nothing when the webhooks feature is off', function (): void {
     $this->artisan('vaulter:webhooks:redeliver')->expectsOutputToContain('Webhooks feature is off')->assertSuccessful();
 
     expect($delivery->refresh()->status)->toBe('dead');
+});
+
+it('sends nothing when the endpoint is switched off while the redelivery is being written', function (): void {
+    $sent = 0;
+    Http::fake(function () use (&$sent) {
+        $sent++;
+
+        return Http::response('', 200);
+    });
+    $delivery = deadDelivery();
+    $endpointId = $delivery->endpoint_id;
+
+    // The deactivation lands inside the redelivery, after its endpoint check, while the row is still dead.
+    // Eloquent listeners outlive the test, so the hook disarms itself.
+    $armed = true;
+    WebhookDelivery::updating(static function (WebhookDelivery $row) use ($endpointId, &$armed): void {
+        if ($armed && $row->status === 'pending' && $row->getOriginal('status') === 'dead') {
+            $armed = false;
+            app(DeactivateWebhookEndpointAction::class)->execute(
+                WebhookEndpoint::query()->findOrFail($endpointId),
+            );
+        }
+    });
+
+    app(RedeliverWebhookAction::class)->execute($delivery);
+    $armed = false;
+    WebhookTestHelpers::deliver($delivery);
+
+    expect($sent)->toBe(0)
+        ->and($delivery->fresh()->status)->toBe('dead');
 });
