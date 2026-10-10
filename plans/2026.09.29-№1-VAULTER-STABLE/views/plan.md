@@ -118,7 +118,7 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 | P3 | Прикладной слой: авторизованный публичный API | detailed | 8/8 | 🟢 Done |
 | P4 | Модель данных и документы | detailed | 14/14 | 🟠 Done with deviations |
 | P5 | Конвейер событий | detailed | 5/5 | 🟠 Done with deviations |
-| P6 | HTTP v1 и клиенты | skeleton | 0/0 | ⬜ Skeleton |
+| P6 | HTTP v1 и клиенты | detailed | 0/8 | ⬜ Not started |
 | P7 | Эксплуатация и DX | skeleton | 0/0 | ⬜ Skeleton |
 | P8 | Готовность 1.0 | skeleton | 0/0 | ⬜ Skeleton |
 
@@ -187,3 +187,8 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 | D59 | P5: журнал изменений drive — subtree, компакция, блокировка J и проекция видимости (уточнение D50) | accepted | 2026-10-09 |
 | D60 | P5: доставка webhooks 1.0 — Standard Webhooks, повторы, автоотключение, ротация, redelivery | accepted | 2026-10-09 |
 | D61 | P5.5: компакция журнала не удаляет upsert, несущий причину невидимости, обычным upsert (уточнение D59) | accepted | 2026-10-10 |
+| D62 | P6: валидаторы HTTP v1 — ETag представления, 428/412, 304 после авторизации, кэш (C07, поправка D35) | accepted | 2026-10-10 |
+| D63 | P6: разбиение OPUS P6.1 на P6.1/P6.7/P6.8 и порядок P6.2 → P6.1 → P6.7 → P6.8 → P6.3 → P6.4 → P6.5 → P6.6 | accepted | 2026-10-10 |
+| D64 | P6.3: OpenAPI 3.1 валидируется тестовым адаптером на opis/json-schema; oasdiff — закреплённый docker-образ; openapi-typescript 7 | accepted | 2026-10-10 |
+| D65 | P6: карта маршрутов/ресурсов v1 дополнена поверхностью P4/P5; egress и исключения D31 | accepted | 2026-10-10 |
+| D66 | P6: только код и тесты покрытия; без длинных прогонов и мутаторов (указание владельца 2026-10-10) | accepted | 2026-10-10 |

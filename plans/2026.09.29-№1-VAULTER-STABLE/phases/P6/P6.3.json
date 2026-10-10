@@ -1,0 +1,221 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P6.3",
+  "title": "OpenAPI 3.1 и контрактные тесты: спецификация, валидация ответов, golden маршрутов, oasdiff",
+  "status": "todo",
+  "summary": "openapi/vaulter-v1.yaml (OpenAPI 3.1) описывает каждый маршрут vaulter.v1.* (operationId = имя без префикса), режимы предусловий (If-Match 428/412, If-None-Match 304), заголовки и кэш; каждый ответ feature-тестов core/drive/documents валидируется по схеме тестовым адаптером на opis/json-schema; golden списка маршрутов; примеры ответов; CI-job oasdiff breaking.",
+  "why": "OPUS F6 P6.3/D30 + D64 + C07/C08: OpenAPI — источник истины REST и TS-типов; контракт режимов и кэшей должен быть машинно проверяем до заморозки 1.0. Риски: public-contract (дрейф спецификации от кода), ложная уверенность валидатора (3.1-конструкции), CI-зависимость от внешнего образа.",
+  "scope": {
+    "include": [
+      "Ровно P6-design#OpenAPI: openapi/vaulter-v1.yaml по фактическим маршрутам и ресурсам P6.1/P6.7/P6.8; компоненты schemas/parameters/headers/responses; Problem со списком кодов из ProblemCatalog в examples.",
+      "Тестовый адаптер packages/core/tests/Support/OpenApi/{OpenApiContract,OpenApiResponseValidator,ValidateOpenApiResponses}.php; подключение в TestCase core (packages/core/tests/TestCase.php), drive (packages/drive/tests/TestCase.php), documents (packages/documents/tests/TestCase.php) при VAULTER_OPENAPI_VALIDATE=1; <env name=\"VAULTER_OPENAPI_VALIDATE\" value=\"1\"/> в phpunit.xml (корень), packages/drive/phpunit.xml, packages/documents/phpunit.xml.",
+      "require-dev: opis/json-schema ^2.4 и symfony/yaml (мажор как в composer.lock) в composer.json корня, packages/core, packages/drive, packages/documents; composer update только этих пакетов (composer update opis/json-schema symfony/yaml --with-dependencies).",
+      "Тесты packages/core/tests/OpenApi: OpenApiRouteCoverageTest, OpenApiDocumentTest, OpenApiValidatorSelfTest (+ packages/core/tests/Fixtures/openapi/negative/*.json), OpenApiValidationEnabledTest, RouteListSnapshotTest (+ packages/core/tests/Fixtures/golden/routes-v1.json), OpenApiExamplesTest (+ openapi/examples/*.json).",
+      "CI: .github/workflows/openapi.yml — job breaking: tufin/oasdiff с закреплённым тегом версии (последний релиз oasdiff на момент исполнения; тег записать в workflow и в artifacts/P6.3/tool-pins.md; локально docker не запускать — D66), base — спецификация последнего тега v* при наличии в нём openapi/vaulter-v1.yaml, иначе base-ветки PR; --fail-on ERR.",
+      "Docs: docs/reference/rest-api.md (+ru) — раздел «OpenAPI и совместимость» (политика версий OPUS 10 §1, Deprecation/Sunset при v2), CONTRIBUTING.md — обновление спецификации, golden маршрутов и примеров."
+    ],
+    "exclude": [
+      "генерация TS-типов и api:check (P6.4)",
+      "изменение маршрутов/ресурсов (расхождение кода со спецификацией чинится в спецификации; если код нарушает P6-design — стоп и D#)",
+      "Schemathesis/fuzz (T2)"
+    ]
+  },
+  "depends_on": [
+    "P6.8"
+  ],
+  "decisions": [
+    "D62",
+    "D64",
+    "D65"
+  ],
+  "skills": [
+    "php-packages:laravel-package-testing",
+    "devops:ci-cd",
+    "php:static-analysis"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/artifacts-P6-design-opus#H10-7",
+      "why": "Первый read (D06): OPUS 10 §7",
+      "required": true
+    },
+    {
+      "ref": "knowledge/P6-design#OpenAPI",
+      "why": "Стартовый раздел нормативного контракта (документ доставлен целиком)",
+      "required": true
+    },
+    {
+      "path": "packages/core/tests/TestCase.php",
+      "why": "Подключение валидирующего middleware",
+      "required": true
+    },
+    {
+      "path": "phpunit.xml",
+      "why": "env VAULTER_OPENAPI_VALIDATE",
+      "required": true
+    },
+    {
+      "path": ".github/workflows/frontend.yml",
+      "why": "Образец workflow",
+      "required": false
+    }
+  ],
+  "task_files": [
+    {
+      "path": "openapi/vaulter-v1.yaml",
+      "change": "create"
+    },
+    {
+      "path": "openapi/examples/*.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Support/OpenApi/*.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/OpenApi/*.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Fixtures/openapi/negative/*.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Fixtures/golden/routes-v1.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/TestCase.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/tests/TestCase.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/documents/tests/TestCase.php",
+      "change": "modify"
+    },
+    {
+      "path": "phpunit.xml",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/phpunit.xml",
+      "change": "modify"
+    },
+    {
+      "path": "packages/documents/phpunit.xml",
+      "change": "modify"
+    },
+    {
+      "path": "composer.json",
+      "change": "modify"
+    },
+    {
+      "path": "composer.lock",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/composer.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/composer.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/documents/composer.json",
+      "change": "modify"
+    },
+    {
+      "path": ".github/workflows/openapi.yml",
+      "change": "create"
+    },
+    {
+      "path": "docs/reference/rest-api.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/ru/reference/rest-api.md",
+      "change": "modify"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Обязательный контекст из документов, привязанных к фазе (доставляются целиком; reads — стартовые разделы): @plan/knowledge/artifacts-P6-design-opus.json — первым (D06); нормативный @plan/knowledge/P6-design.json (кроме разделов из reads — Scope, Order, Stability, Docs, Seams); @plan/knowledge/P6-invariants.json; @plan/knowledge/P6-industry-research-2026-10-10.json (обоснование, scope не расширять); решения D62–D65; @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json (D29).",
+    "Стартовые разделы (документы фазы доставлены в пакет целиком, отдельные reads не дублируются): @plan/knowledge/P6-design.json#OpenAPI — Стартовый раздел: файл, адаптер, тесты, CI; @plan/knowledge/P6-design.json#Resources — Схемы компонентов; @plan/knowledge/P6-design.json#Validators — Описание предусловий и кэша в спецификации; @plan/knowledge/P6-industry-research-2026-10-10.json#R6-OpenAPI — Почему opis, а не league (D64); @plan/knowledge/validation-and-execution-policy.json#D51-Policy — D51: лёгкие проверки (D66 убирает барьеры и H из P6); @plan/knowledge/validation-and-execution-policy.json#Owner-Fast-Only — Только лёгкие проверки; D66 исключает длинные прогоны из фазы целиком; @plan/knowledge/validation-and-execution-policy.json#Before-Work — check-profile.json до первой продуктовой правки; @plan/knowledge/validation-and-execution-policy.json#Per-Item — Affected-проверки после каждой правки, не чинить будущие items; @plan/knowledge/validation-and-execution-policy.json#No-Mutators — Запрет mutation tools (D66: также без negative controls).",
+    "До первого product edit создать plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P6.3/check-profile.json: фактические изменяемые пути/вызывающие/фикстуры и точные cwd/env/команды acceptance-проверок (D66: без длинных прогонов и мутаторов).",
+    "Только перечисленные пакеты и файлы-потребители (task_files — подсказка; вынужденные смежные правки перечислить в Completion Notes); чужие dirty-правки, применённые миграции и OPUS не менять. Расхождение кода с P6-design → стоп и описание в Completion Notes/новый D#, не импровизация (D01).",
+    "Публичная поверхность изменилась → golden PublicApiSnapshotTest затронутого пакета (core/drive/documents, packages/<pkg>/tests/Arch|PublicApi), UPGRADE.md (было → стало, ссылки PLAN2.D62–D65), запись CHANGELOG.md [Unreleased] и тот же текст в plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P6.3/changelog-entry.md.",
+    "Комментарии в коде объясняют «почему», без кодов задач плана; docs/guide и docs/reference меняются в том же item; у страницы с зеркалом docs/ru/… — обновить зеркало тем же смыслом, при отсутствии зеркала у страниц из P6-design#Docs — создать (EV275).",
+    "Нет push/PR/hosted CI/публикации (Packagist/npm) и mutation tools (Infection, pest --mutate). Review: none (D51) — перед finish self-check применимых P6-I* и интерферирующих пар @plan/knowledge/P6-invariants.json в Completion Notes.",
+    "Новые каталоги тестов (packages/core/tests/Http|OpenApi, packages/<pkg>/tests/Http) попадают в существующие testsuites (core — корневой phpunit.xml directory packages/core/tests; пакеты — свой phpunit.xml directory tests); отдельных конфигов не создавать.",
+    "Risk-class: public-contract. Валидация включена во всех feature-тестах v1 (VAULTER_OPENAPI_VALIDATE=1); исключения из валидации запрещены — расхождение чинится в спецификации, если код соответствует P6-design, иначе стоп и D#.",
+    "Адаптер явно падает на неподдержанной конструкции (discriminator, внешние $ref вне файла, callbacks) — никаких молчаливых пропусков (OpenApiValidatorSelfTest).",
+    "Каждая IM-операция объявляет параметр If-Match (required) и ответы 412 и 428; GET nodes.show и documents.content.show — If-None-Match и 304 без content; ответы со стримом — описаны media type application/octet-stream и заголовками Content-Disposition/Cache-Control.",
+    "oasdiff и docker — только CI-файл; локально не запускаются (D66); item-проверки — PHP-тесты.",
+    "Прогоны (D66, указание владельца 2026-10-10): фаза пишет только код и тесты, покрывающие код; исполняются только acceptance-проверки item (затронутые Pest на SQLite, Arch/golden, Pint, PHPStan, клиентские unit/typecheck/build). Длинные прогоны (PG/MySQL, полные сьюты, ForkRace/гонки, e2e, docker, oasdiff, docs build) и мутаторы/negative controls в фазе не планируются и не исполняются; тесты, требующие PG/MySQL, не создаются."
+  ],
+  "guidance": "OpenApiValidatorSelfTest — каждый негативный фикстурный ответ должен дать нарушение: (1) статус 418 не описан; (2) Node.id число; (3) Node.presentation = [] вместо объекта/null; (4) отсутствует required etag; (5) type: [string, \"null\"] получает false; (6) Problem без code; (7) 304 с телом; (8) неверный Content-Type у ошибки. OpenApiRouteCoverageTest: множества {name без префикса} маршрутов и {operationId} равны; для каждой пары совпадают метод и путь (параметры {node} и т.д.). RouteListSnapshotTest: golden обновляется только флагом UPDATE_GOLDEN=1 и диффом в PR.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/OpenApi packages/core/tests/Http",
+      "expect": "exit0; покрытие маршрутов, документ, самопроверка адаптера, golden, примеры; core v1 ответы валидны",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Http tests/Feature tests/Uploads",
+      "expect": "exit0; drive v1 ответы валидны по схеме",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V3",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Http tests/Document tests/Collaboration",
+      "expect": "exit0; documents v1 ответы валидны по схеме",
+      "kind": "acceptance",
+      "cwd": "packages/documents"
+    },
+    {
+      "id": "V80",
+      "procedure": "Pint/PHPStan затронутых пакетов: scripts/php84 vendor/bin/pint --test packages/core && scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress (cwd .).",
+      "expect": "все команды exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "openapi/vaulter-v1.yaml и examples",
+    "валидирующий тестовый адаптер и golden маршрутов",
+    ".github/workflows/openapi.yml с закреплённым oasdiff",
+    "check-profile.json, tool-pins.md, changelog-entry.md в artifacts/P6.3"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed",
+    "notes": "@plan/knowledge/P6-industry-research-2026-10-10.json#R6-OpenAPI"
+  },
+  "result": null,
+  "updated_at": "2026-10-10T10:26:46Z"
+}

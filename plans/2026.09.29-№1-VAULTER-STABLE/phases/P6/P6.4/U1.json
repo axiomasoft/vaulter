@@ -1,0 +1,46 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:unit:v1",
+  "id": "U1",
+  "item": "P6.4",
+  "title": "U1 — api: генерируемые типы, клиент, ошибки, загрузки",
+  "goal": "src/api/schema.d.ts генерируется из openapi/vaulter-v1.yaml (api:generate/api:check), createVaulterClient по ресурсам v1 с проверкой X-Vaulter-Api-Version, VaulterApiError из problem+json, If-Match из непрозрачного etag; tus/s3 загрузки на /v1/uploads; старые client.ts/types.ts удалены; контрактные тесты против openapi/examples.",
+  "files": [
+    "packages/vue/src/api/schema.d.ts",
+    "packages/vue/src/api/client.ts",
+    "packages/vue/src/api/errors.ts",
+    "packages/vue/src/api/uploads/tus.ts",
+    "packages/vue/src/api/uploads/s3.ts",
+    "packages/vue/src/client.ts",
+    "packages/vue/src/types.ts",
+    "packages/vue/package.json",
+    "package-lock.json",
+    ".github/workflows/frontend.yml",
+    "packages/vue/tests/api/client.test.ts",
+    "packages/vue/tests/api/errors.test.ts",
+    "packages/vue/tests/api/uploads.test.ts",
+    "packages/vue/tests/contract/fixtures.test.ts",
+    "packages/vue/tests/contract/problem.test.ts",
+    "packages/vue/tests/client.test.ts",
+    "packages/vue/tests/drive-client.test.ts"
+  ],
+  "depends_on": [],
+  "checks": [
+    "V1",
+    {
+      "id": "V5",
+      "cmd": "npx vitest run tests/api tests/contract",
+      "expect": "exit0; клиент, ошибки, загрузки, контракт типов (полный typecheck — после U3)",
+      "kind": "acceptance",
+      "cwd": "packages/vue"
+    }
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "mode": "either",
+  "instructions": "Порядок: devDependencies (openapi-typescript 7.x, @testing-library/vue — точные версии, записать в artifacts/P6.4/tool-pins.md) → скрипты api:generate (openapi-typescript ../../openapi/vaulter-v1.yaml -o src/api/schema.d.ts) и api:check (генерация во временный файл + diff --exit-code + git ls-files --error-unmatch src/api/schema.d.ts) → client/errors/uploads → удалить src/client.ts и src/types.ts (временные импорты в composables/components заменить на api/ в U3; до U3 typecheck допускается только после правки импортов — минимальные реэкспорты не оставлять). Методы клиента — P6-design#Vue и OPUS 11 §3.",
+  "status": "todo",
+  "outcome": null,
+  "updated_at": "2026-10-10T10:25:11Z"
+}

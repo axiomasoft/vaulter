@@ -1,0 +1,315 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P6.2",
+  "title": "Problem Details: RFC 9457 рендерер, каталог кодов, lang и reference/errors.md",
+  "status": "todo",
+  "summary": "Все ответы-ошибки маршрутов vaulter.v1.* — application/problem+json по RFC 9457 с полями type/title/status/code/detail/request_id/errors/meta, локализованными title/detail из lang, allowlist meta и маппингом фреймворк-исключений; реестр кодов ProblemCatalog генерирует docs/reference/errors.md (en/ru); добавлен 428 precondition_required; V24 доказан через тестовый маршрут-зонд.",
+  "why": "D29/OPUS 10 §6: стабильные коды — контракт SemVer, внутренности не утекают клиенту; рендерер должен существовать до первых v1-маршрутов с 428/412 (D63). Риски: info-disclosure (detail из сообщения исключения, meta с путями/токенами), public-contract (коды и формат замораживаются в 1.0), регрессия хостовых маршрутов (рендерер не должен трогать чужие ответы).",
+  "scope": {
+    "include": [
+      "Ровно P6-design#Errors: ProblemException::problemDetails(); трейт Vaulter\\Exceptions\\Concerns\\ProvidesProblemDetails; перенос renderExtras() в problemDetails() во всех исключениях core/drive/documents (grep -rn \"renderExtras\\|function render(\" packages/*/src).",
+      "Vaulter\\Exceptions\\Http\\PreconditionRequiredException (precondition_required, 428; factory missing(string $header) и wildcard()).",
+      "Vaulter\\Http\\Problems\\ProblemRenderer + регистрация renderable в VaulterServiceProvider; фреймворк-маппинг (таблица P6-design#Errors); заголовки Content-Type/Content-Language/Cache-Control: no-store/X-Vaulter-Api-Version/X-Request-Id (request id: attributes 'vaulter.request_id', иначе входящий валидный X-Request-Id, иначе новый ULID — до появления AssignCorrelationId в P6.1)/Retry-After/Allow; allowlist meta; 500 internal_error с report().",
+      "Vaulter\\Http\\Problems\\ProblemCatalog + тег контейнера vaulter.problem_codes; провайдеры drive (VaulterDriveServiceProvider) и documents (VaulterDocumentsServiceProvider) регистрируют свои коды; core не импортирует их классы.",
+      "resources/lang/{en,ru}/problems.php в core, drive, documents + ->hasTranslations() в провайдерах.",
+      "Vaulter\\Http\\Problems\\ErrorsReference + команда vaulter:errors:reference {--check} {--path=*} (Vaulter\\Console\\ErrorsReferenceCommand, регистрация как EventsReferenceCommand); docs/reference/errors.md и docs/ru/reference/errors.md (создать с маркерами); docs/guide/errors.md (+ru) — обработка ошибок и ссылка на reference; VaulterException::docs() → docs/reference/errors.md#<code>.",
+      "Тестовый маршрут-зонд (только тесты): packages/core/tests/Support/ProblemProbeRoutes.php регистрирует GET {versionedPrefix}/__probe/{code} с именем vaulter.v1.__probe, бросающий доменное исключение каталога по коду (фабрики исключений из ProblemCatalog test map); DomainExceptionStatusTest core и documents расширяются HTTP-проверкой через зонд (V24): статус из таблицы, code, problem+json, ни одного 500 для доменных.",
+      "Легаси-тело {message, code} VaulterException::render() остаётся только для неверсионированных маршрутов до P6.8 (D63)."
+    ],
+    "exclude": [
+      "v1-маршруты и контроллеры (P6.1/P6.7/P6.8)",
+      "OpenAPI-схема Problem (P6.3)",
+      "Клиентский разбор ошибок (P6.4)",
+      "JSON Pointer в errors (T2; формат Laravel по OPUS)"
+    ]
+  },
+  "depends_on": [],
+  "decisions": [
+    "D29",
+    "D38",
+    "D54",
+    "D62",
+    "D63",
+    "D65"
+  ],
+  "skills": [
+    "php-packages:laravel-package-service-provider",
+    "php-packages:laravel-package-testing",
+    "php:static-analysis"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/artifacts-P6-design-opus#H10-6",
+      "why": "Первый read (D06): дословный OPUS 10 §6 — формат и таблица кодов",
+      "required": true
+    },
+    {
+      "ref": "knowledge/P6-design#Errors",
+      "why": "Стартовый раздел нормативного контракта (документ доставлен целиком)",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Exceptions/VaulterException.php",
+      "why": "Текущий рендер {message, code} и docs()",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Exceptions/Contracts/ProblemException.php",
+      "why": "Контракт расширяется",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Exceptions/Database/ConcurrentUpdateException.php",
+      "why": "Образец renderExtras → problemDetails",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Console/EventsReferenceCommand.php",
+      "why": "Образец команды генерации reference с --check/--path",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Events/EventsReference.php",
+      "why": "Образец маркеров и рендера таблицы",
+      "required": true
+    },
+    {
+      "path": "packages/core/tests/Support/DomainExceptionStatusTest.php",
+      "why": "V24 core расширяется",
+      "required": true
+    },
+    {
+      "path": "packages/documents/tests/Document/DomainExceptionStatusTest.php",
+      "why": "V24 documents расширяется",
+      "required": true
+    },
+    {
+      "path": "vendor/spatie/laravel-package-tools/src/Concerns/PackageServiceProvider/ProcessTranslations.php",
+      "why": "Путь resources/lang и namespace переводов",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/core/src/Exceptions/Contracts/ProblemException.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Exceptions/Concerns/ProvidesProblemDetails.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Exceptions/Http/PreconditionRequiredException.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Exceptions/**/*.php",
+      "change": "modify",
+      "note": "renderExtras → problemDetails; docs()"
+    },
+    {
+      "path": "packages/drive/src/Exceptions/**/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/documents/src/Exceptions/**/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Http/Problems/ProblemRenderer.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Http/Problems/ProblemCatalog.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Http/Problems/ErrorsReference.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Console/ErrorsReferenceCommand.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/VaulterServiceProvider.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/src/VaulterDriveServiceProvider.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/documents/src/VaulterDocumentsServiceProvider.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/resources/lang/en/problems.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/resources/lang/ru/problems.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/resources/lang/en/problems.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/resources/lang/ru/problems.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/documents/resources/lang/en/problems.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/documents/resources/lang/ru/problems.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Http/Problems/ProblemRendererTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Http/Problems/ProblemMetaRedactionTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Http/Problems/FrameworkExceptionMappingTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Http/Problems/ProblemCatalogLangTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Http/Problems/ErrorsReferenceTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Http/Problems/HostRouteUntouchedTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Support/ProblemProbeRoutes.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Support/DomainExceptionStatusTest.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/documents/tests/Document/DomainExceptionStatusTest.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/tests/Http/DriveProblemCodesTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Arch/PublicApiSnapshotTest.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/Arch/__snapshots__/*",
+      "change": "modify"
+    },
+    {
+      "path": "docs/reference/errors.md",
+      "change": "create"
+    },
+    {
+      "path": "docs/ru/reference/errors.md",
+      "change": "create"
+    },
+    {
+      "path": "docs/guide/errors.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/ru/guide/errors.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/.vitepress/config.*",
+      "change": "modify",
+      "note": "сайдбар reference/errors"
+    },
+    {
+      "path": "UPGRADE.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Обязательный контекст из документов, привязанных к фазе (доставляются целиком; reads — стартовые разделы): @plan/knowledge/artifacts-P6-design-opus.json — первым (D06); нормативный @plan/knowledge/P6-design.json (кроме разделов из reads — Scope, Order, Stability, Docs, Seams); @plan/knowledge/P6-invariants.json; @plan/knowledge/P6-industry-research-2026-10-10.json (обоснование, scope не расширять); решения D62–D65; @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json (D29).",
+    "Стартовые разделы (документы фазы доставлены в пакет целиком, отдельные reads не дублируются): @plan/knowledge/artifacts-P6-design-opus.json#D29-D33 — D29 — контракт ProblemException/ProblemRenderer; @plan/knowledge/P6-design.json#Errors — Стартовый раздел: рендерер, каталог, lang, новые коды; @plan/knowledge/P4-design.json#Errors — Коды P4, входящие в каталог; @plan/knowledge/P5-design.json#Errors — Коды P5 (invalid_cursor, cursor_expired, webhook_delivery_not_redeliverable); @plan/knowledge/P6-invariants.json#Invariants — P6-I7, P6-I8; @plan/knowledge/validation-and-execution-policy.json#D51-Policy — D51: лёгкие проверки (D66 убирает барьеры и H из P6); @plan/knowledge/validation-and-execution-policy.json#Owner-Fast-Only — Только лёгкие проверки; D66 исключает длинные прогоны из фазы целиком; @plan/knowledge/validation-and-execution-policy.json#Before-Work — check-profile.json до первой продуктовой правки; @plan/knowledge/validation-and-execution-policy.json#Per-Item — Affected-проверки после каждой правки, не чинить будущие items; @plan/knowledge/validation-and-execution-policy.json#No-Mutators — Запрет mutation tools (D66: также без negative controls).",
+    "До первого product edit создать plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P6.2/check-profile.json: фактические изменяемые пути/вызывающие/фикстуры и точные cwd/env/команды acceptance-проверок (D66: без длинных прогонов и мутаторов).",
+    "Только перечисленные пакеты и файлы-потребители (task_files — подсказка; вынужденные смежные правки перечислить в Completion Notes); чужие dirty-правки, применённые миграции и OPUS не менять. Расхождение кода с P6-design → стоп и описание в Completion Notes/новый D#, не импровизация (D01).",
+    "Публичная поверхность изменилась → golden PublicApiSnapshotTest затронутого пакета (core/drive/documents, packages/<pkg>/tests/Arch|PublicApi), UPGRADE.md (было → стало, ссылки PLAN2.D62–D65), запись CHANGELOG.md [Unreleased] и тот же текст в plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P6.2/changelog-entry.md.",
+    "Комментарии в коде объясняют «почему», без кодов задач плана; docs/guide и docs/reference меняются в том же item; у страницы с зеркалом docs/ru/… — обновить зеркало тем же смыслом, при отсутствии зеркала у страниц из P6-design#Docs — создать (EV275).",
+    "Нет push/PR/hosted CI/публикации (Packagist/npm) и mutation tools (Infection, pest --mutate). Review: none (D51) — перед finish self-check применимых P6-I* и интерферирующих пар @plan/knowledge/P6-invariants.json в Completion Notes.",
+    "Новые каталоги тестов (packages/core/tests/Http|OpenApi, packages/<pkg>/tests/Http) попадают в существующие testsuites (core — корневой phpunit.xml directory packages/core/tests; пакеты — свой phpunit.xml directory tests); отдельных конфигов не создавать.",
+    "Risk-class: info-disclosure + public-contract. detail клиенту — только из lang; getMessage() исключения не попадает в тело ни при каком коде; meta проходит allowlist (P6-design#Errors) рекурсивно.",
+    "Рендерер возвращает null (не вмешивается) для любого запроса вне vaulter.v1.* и вне пути versionedPrefix: хостовые маршруты и легаси-маршруты Vaulter сохраняют прежние ответы до P6.8.",
+    "Коды — стабильный контракт: ни один существующий problemCode() не переименовывается; новый код добавляется в ProblemCatalog, lang en+ru и docs одновременно (ProblemCatalogLangTest, ErrorsReferenceTest --check).",
+    "Прогоны (D66, указание владельца 2026-10-10): фаза пишет только код и тесты, покрывающие код; исполняются только acceptance-проверки item (затронутые Pest на SQLite, Arch/golden, Pint, PHPStan, клиентские unit/typecheck/build). Длинные прогоны (PG/MySQL, полные сьюты, ForkRace/гонки, e2e, docker, oasdiff, docs build) и мутаторы/negative controls в фазе не планируются и не исполняются; тесты, требующие PG/MySQL, не создаются."
+  ],
+  "guidance": "ProblemRendererTest: (a) доменное исключение на зонде → problem+json, type = …/docs/reference/errors.md#<code>, title из lang en, status = httpStatus(), request_id = X-Request-Id ответа; (b) Accept-Language/locale ru (app()->setLocale('ru') в тесте) → title ru, Content-Language: ru, code неизменен; (c) meta из problemDetails(); (d) ValidationException → 422 validation_failed, errors = карта Laravel; (e) Throttle → 429 rate_limited + Retry-After; (f) RuntimeException → 500 internal_error, detail null, текст исключения отсутствует в теле; (g) 405 на зонде с POST → method_not_allowed + Allow; (h) неизвестный путь под /api/vaulter/v1/x → 404 route_not_found. HostRouteUntouchedTest: хостовый маршрут /host/boom бросает NodeNotFoundException → тело не problem+json (стандартный Laravel), без X-Vaulter-Api-Version. ProblemMetaRedactionTest: исключение-заглушка с meta {path, token, nested:{secret}} → ключи удалены, warning в логе. ErrorsReferenceTest: vaulter:errors:reference --check exit 0 на закоммиченных страницах; изменение таблицы → exit 1.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Http packages/core/tests/Support/DomainExceptionStatusTest.php packages/core/tests/Exceptions packages/core/tests/Arch packages/core/tests/Feature",
+      "expect": "exit0; рендерер, каталог, lang, reference --check, V24 core, golden, легаси-маршруты core прежние",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Http tests/Feature tests/Uploads",
+      "expect": "exit0; DriveProblemCodesTest; легаси drive-маршруты не изменились",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V3",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Document tests/Feature",
+      "expect": "exit0; V24 documents; легаси documents-маршруты прежние",
+      "kind": "acceptance",
+      "cwd": "packages/documents"
+    },
+    {
+      "id": "V80",
+      "procedure": "Pint/PHPStan затронутых пакетов: scripts/php84 vendor/bin/pint --test packages/core && scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress (cwd .); ../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress (cwd packages/drive); ../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress (cwd packages/documents).",
+      "expect": "все команды exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "ProblemRenderer/ProblemCatalog/PreconditionRequiredException",
+    "resources/lang en/ru problems для core/drive/documents",
+    "docs/reference/errors.md (en/ru) генерируемая",
+    "check-profile.json, changelog-entry.md в artifacts/P6.2"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed",
+    "notes": "@plan/knowledge/P6-industry-research-2026-10-10.json#R5-Problems"
+  },
+  "result": null,
+  "updated_at": "2026-10-10T10:26:46Z"
+}

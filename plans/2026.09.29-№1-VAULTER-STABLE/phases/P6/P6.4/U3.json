@@ -1,0 +1,46 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:unit:v1",
+  "id": "U3",
+  "item": "P6.4",
+  "title": "U3 — composables, компоненты, коллаборация, a11y, docs",
+  "goal": "Composables и компоненты OPUS 11 §1 на api/ и viewers/ (EV249/EV323 поля, VaulterNameDialog portable-v1), createCollaborationSession на v1 с epoch_changed/read-only, a11y listbox с клавиатурой и aria-live, index.ts с snapshot экспортов, docs/guide/vue.md (+ru), changeset.",
+  "files": [
+    "packages/vue/src/composables/*",
+    "packages/vue/src/components/**",
+    "packages/vue/src/collaboration/*",
+    "packages/vue/src/nodeCollaboration.ts",
+    "packages/vue/src/index.ts",
+    "packages/vue/tests/composables.test.ts",
+    "packages/vue/tests/components.test.ts",
+    "packages/vue/tests/drive-components.test.ts",
+    "packages/vue/tests/drive-composables.test.ts",
+    "packages/vue/tests/node-collaboration.test.ts",
+    "packages/vue/tests/provider-contract.test.ts",
+    "packages/vue/tests/shared-with-me.test.ts",
+    "packages/vue/tests/spreadsheet.test.ts",
+    "packages/vue/tests/a11y/*.test.ts",
+    "packages/vue/tests/exports.test.ts",
+    "packages/vue/tests/__snapshots__/*",
+    "docs/guide/vue.md",
+    "docs/ru/guide/vue.md",
+    ".changeset/*.md"
+  ],
+  "depends_on": [
+    "U1",
+    "U2"
+  ],
+  "checks": [
+    "V2",
+    "V3",
+    "V4"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "mode": "either",
+  "instructions": "components/VaulterUnsupportedNode.vue принадлежит U2 — не менять. Списки только курсором (без page/total). Мутации принимают { etag } из ресурса; 412 → перечитать и conflict-состояние. a11y — guidance item P6.4.",
+  "status": "todo",
+  "outcome": null,
+  "updated_at": "2026-10-10T10:25:02Z"
+}
