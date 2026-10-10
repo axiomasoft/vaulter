@@ -9,7 +9,9 @@
   the caller's representation with batched abilities; lists are cursor pages without totals (PLAN2.D63, D65).
 - Added: `If-Match` is required on rename, properties, move, trash, restore, purge, adding and restoring a
   revision, and on creating an upload session for an existing file (`428` without it or with `*`, `412
-  node_sequence_mismatch` when stale); the matched sequence is the operation's compare-and-set expectation.
+  node_sequence_mismatch` when stale), after View and the route's ability (`403` first); the matched sequence
+  is the operation's compare-and-set expectation. A miss inside a drive whose root the caller cannot see answers
+  `drive_not_found`, like an unknown drive.
   `GET v1/nodes/{node}` answers `304` to `If-None-Match` only after authorization; `include=breadcrumb,children`
   returns the visible ancestors and the first page of children, without an `ETag` (PLAN2.D62, C07).
 - Added: optional expected sequences in the PHP API — `TrashOperations::purge($node, ?int $expectedSequence)`,

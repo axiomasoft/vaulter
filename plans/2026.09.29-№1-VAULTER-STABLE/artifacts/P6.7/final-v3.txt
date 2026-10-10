@@ -1,2 +1,2 @@
-  Tests:    125 passed (724 assertions)
+  Tests:    139 passed (778 assertions)
 exit 0
