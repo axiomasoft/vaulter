@@ -9,6 +9,7 @@ use Illuminate\Contracts\Events\Dispatcher;
 use LogicException;
 use Throwable;
 use Vaulter\Activity\ActivityRecorder;
+use Vaulter\Changes\ChangeJournal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
@@ -18,8 +19,10 @@ use WeakMap;
 
 /**
  * The only way a domain event is recorded. Called as the last step of an Action's
- * transaction, it writes the activity row and the outbox row of the occurrence on the
- * Vaulter connection, then hands the event to host listeners after the commit.
+ * transaction, it writes the activity row, the change-journal entry and the outbox row
+ * of the occurrence on the Vaulter connection, then hands the event to host listeners
+ * after the commit. The journal takes the drive's head lock, so nothing may lock after
+ * it in the same transaction.
  *
  * A failed write is not caught here: it leaves the transaction, which rolls the change
  * back together with whatever was already recorded, so a committed change always has
@@ -55,8 +58,20 @@ final readonly class EventRecorder
         if ($this->config->featureEnabled('activity') && $event->type()->isActivity()) {
             $sinks[] = fn (): bool => $this->container->make(ActivityRecorder::class)->record($event);
         }
+        // The journal entry comes before the outbox row, whose envelope carries its seq.
+        $seq = null;
+        $journal = $this->config->featureEnabled('changes') ? $event->journal() : null;
+        if ($journal !== null) {
+            $sinks[] = function () use ($event, $journal, &$seq): bool {
+                $seq = $this->container->make(ChangeJournal::class)->append($event, $journal);
+
+                return $seq !== null;
+            };
+        }
         if ($this->config->featureEnabled('webhooks') && $event->isWebhookEligible()) {
-            $sinks[] = fn (): bool => $this->container->make(OutboxRecorder::class)->stage($event, EventEnvelope::fromEvent($event));
+            $sinks[] = function () use ($event, &$seq): bool {
+                return $this->container->make(OutboxRecorder::class)->stage($event, EventEnvelope::fromEvent($event, $seq));
+            };
         }
 
         // The first sink tells a new occurrence from a replay of one already stored

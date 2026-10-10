@@ -14,6 +14,7 @@ use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\ActivityTarget;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
+use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
  * A subject's grants on a node were revoked (§2.6 / H.2). The grant rows are gone,
@@ -47,6 +48,11 @@ final readonly class NodeGrantRevoked extends DomainEvent
     public function subject(): EventSubject
     {
         return self::nodeSubject($this->node);
+    }
+
+    public function journal(): JournalEffect
+    {
+        return self::nodeUpsert($this->node, subtree: true);
     }
 
     public function data(): array

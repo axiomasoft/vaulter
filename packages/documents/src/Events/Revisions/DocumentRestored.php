@@ -14,6 +14,7 @@ use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\ActivityTarget;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
+use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
  * A document was restored to an earlier checkpoint. Its working state is now a copy
@@ -51,6 +52,11 @@ final readonly class DocumentRestored extends DomainEvent
     public function subject(): EventSubject
     {
         return self::nodeSubject($this->node);
+    }
+
+    public function journal(): JournalEffect
+    {
+        return self::nodeUpsert($this->node);
     }
 
     public function data(): array

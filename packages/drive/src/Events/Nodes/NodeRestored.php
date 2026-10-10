@@ -13,6 +13,7 @@ use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\ActivityTarget;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
+use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
  * A trashed node and its subtree were restored (§2.10): the trashed triplet is
@@ -48,6 +49,11 @@ final readonly class NodeRestored extends DomainEvent
     public function sequence(): int
     {
         return $this->node->sequence;
+    }
+
+    public function journal(): JournalEffect
+    {
+        return self::nodeUpsert($this->node, subtree: true, sequence: $this->node->sequence);
     }
 
     public function data(): array

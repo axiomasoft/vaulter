@@ -92,7 +92,8 @@ it('stores the thin envelope as the outbox payload', function (): void {
         ->and($payload['subject'])->toBe(['type' => 'node', 'id' => (string) $this->folder->id])
         ->and($payload['sequence'])->toBe(DriveTestHelpers::model($this->folder->id)->sequence)
         ->and($payload['actor'])->toBe(['type' => $this->user->getMorphClass(), 'id' => '7'])
-        ->and($payload['changes'])->toBeNull()
+        // The folder's creation took seq 1 of the drive's change journal, the rename seq 2.
+        ->and($payload['changes'])->toBe(['seq' => 2])
         ->and($payload['time'])->toMatch('/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/')
         ->and($outbox->aggregate_type)->toBe('node')
         ->and($outbox->aggregate_id)->toBe((string) $this->folder->id)

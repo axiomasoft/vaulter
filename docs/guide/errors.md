@@ -56,6 +56,8 @@ Codes are a stable public contract (AD29).
 | `validation_failed` | 422 | `Vaulter\Exceptions\Webhooks\BlockedOutboundUrlException` |
 | `webhook_delivery_not_redeliverable` | 409 | `Vaulter\Exceptions\Webhooks\WebhookDeliveryNotRedeliverableException` |
 | `invalid_webhook_signature` | 400 | `Vaulter\Exceptions\Webhooks\InvalidWebhookSignatureException` |
+| `invalid_cursor` | 400 | `Vaulter\Exceptions\Changes\InvalidCursorException` |
+| `cursor_expired` | 410 | `Vaulter\Exceptions\Changes\CursorExpiredException` |
 | `validation_failed` | 422 | `Vaulter\Exceptions\Access\UnenumerableGrantSubjectException` |
 | `unknown_profile` | 422 | `Vaulter\Exceptions\Profiles\UnknownProfileException` |
 | `concurrent_update` | 409 | `Vaulter\Exceptions\Database\ConcurrentUpdateException` |
@@ -392,6 +394,20 @@ header is missing, `webhook-timestamp` is outside the tolerance, or no signature
 body and the secrets. Verify the unmodified request body with the endpoint's `whsec_` secret (both
 secrets during a rotation) and check the receiver's clock. See
 [Webhooks → Verifying a delivery](/guide/webhooks#verifying-a-delivery).
+
+## invalid-change-cursor
+
+`Vaulter\Exceptions\Changes\InvalidCursorException` (`invalid_cursor`, 400) — a
+[change cursor](/guide/changes) that this application did not sign, that was altered, or that
+belongs to another drive or tenant. Cursors are opaque: store them as they are. Start again from
+`startCursor()` after a full listing.
+
+## cursor-expired
+
+`Vaulter\Exceptions\Changes\CursorExpiredException` (`cursor_expired`, 410) — entries after the
+cursor were deleted by `vaulter:changes:prune` (older than `changes.retention_days`), or the drive's
+journal was reset with `vaulter:changes:reset`. Resynchronize: take a new `startCursor()`, list the
+drive again and replace the local copy. See [Change journal → Expired cursors](/guide/changes#expired-cursors).
 
 ## invalid-cursor
 

@@ -13,6 +13,7 @@ use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\ActivityTarget;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
+use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
  * A document node's content was written (§2.5 / M4a) — the autosave path. $created
@@ -53,6 +54,11 @@ final readonly class DocumentContentUpdated extends DomainEvent
     public function subject(): EventSubject
     {
         return self::nodeSubject($this->node);
+    }
+
+    public function journal(): JournalEffect
+    {
+        return self::nodeUpsert($this->node);
     }
 
     public function data(): array

@@ -9,9 +9,11 @@ use Illuminate\Contracts\Foundation\Application;
 use Vaulter\Console\EventsReferenceCommand;
 use Vaulter\Console\LegacyFanoutCommand;
 use Vaulter\Console\MakeProfileCommand;
+use Vaulter\Console\PruneChangesCommand;
 use Vaulter\Console\PruneWebhooksCommand;
 use Vaulter\Console\RedeliverWebhooksCommand;
 use Vaulter\Console\RelayWebhooksCommand;
+use Vaulter\Console\ResetChangesCommand;
 use Vaulter\Console\RetryWebhooksCommand;
 
 final class ConsoleRegistrar
@@ -27,6 +29,8 @@ final class ConsoleRegistrar
                 PruneWebhooksCommand::class,
                 LegacyFanoutCommand::class,
                 RedeliverWebhooksCommand::class,
+                PruneChangesCommand::class,
+                ResetChangesCommand::class,
             ]);
         });
     }

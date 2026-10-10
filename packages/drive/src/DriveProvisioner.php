@@ -7,6 +7,7 @@ namespace Vaulter\Drive;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Str;
+use LogicException;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Configuration\DriveConfig;
@@ -21,9 +22,11 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileRegistry;
+use Vaulter\Repositories\Changes\ChangeHeadRepository;
 use Vaulter\Repositories\Drive\DriveReadRepository;
 use Vaulter\Repositories\Drive\DriveStoreRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
+use Vaulter\Support\Identity;
 use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\ValueObjects\Access\Actor;
 
@@ -51,6 +54,7 @@ final readonly class DriveProvisioner
         private ProfilePolicy $policy,
         private DriveConfig $config,
         private EventRecorder $recorder,
+        private ChangeHeadRepository $heads,
     ) {}
 
     /**
@@ -115,6 +119,8 @@ final readonly class DriveProvisioner
             ]);
 
             $this->store->setRootNode(storage: $storage, rootNodeId: $root->id);
+            // The journal counter exists from the start, so the first mutation finds it.
+            $this->heads->create(Identity::key($storage->getKey()) ?? throw new LogicException('A provisioned drive needs a key.'), self::tenant($storage));
 
             $this->recorder->record(new DriveCreated(storage: $storage->refresh(), root: $root, actor: Actor::system('drive provisioning')->ref(), correlationId: (string) Str::ulid()));
 
@@ -156,6 +162,13 @@ final readonly class DriveProvisioner
 
             return $root;
         });
+    }
+
+    private static function tenant(Drive $storage): ?string
+    {
+        $tenant = Identity::stringify($storage->getRawOriginal('tenant_id'));
+
+        return $tenant === '' ? null : $tenant;
     }
 
     private function defaultName(Model $owner): string

@@ -6,6 +6,7 @@ namespace Vaulter\Events;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Str;
+use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Identity;
@@ -13,6 +14,7 @@ use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\ActivityTarget;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
+use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
  * One occurrence of a change in Vaulter. Actions hand it to {@see EventRecorder}
@@ -80,6 +82,15 @@ abstract readonly class DomainEvent
         return $this->type()->isWebhook();
     }
 
+    /**
+     * The change-journal entry of this occurrence, or null when the type is not
+     * journalled. Its operation matches {@see EventType::journalOperation()}.
+     */
+    public function journal(): ?JournalEffect
+    {
+        return null;
+    }
+
     protected static function nodeScope(Node $node): EventScope
     {
         return new EventScope(tenantId: $node->tenant_id, driveId: $node->drive_id, profile: $node->profile);
@@ -88,6 +99,15 @@ abstract readonly class DomainEvent
     protected static function nodeSubject(Node $node): EventSubject
     {
         return new EventSubject(type: 'node', id: $node->getKey());
+    }
+
+    /**
+     * The upsert entry of a node change. With $subtree the entry asks clients to re-read
+     * the subtree, which only means something for a folder.
+     */
+    protected static function nodeUpsert(Node $node, bool $subtree = false, ?int $sequence = null): JournalEffect
+    {
+        return JournalEffect::upsert(nodeId: $node->getKey(), subtree: $subtree && $node->kind === NodeKind::Folder, nodeSequence: $sequence);
     }
 
     protected static function id(mixed $value): ?string

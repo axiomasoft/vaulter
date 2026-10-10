@@ -80,6 +80,7 @@ php artisan vendor:publish --tag=vaulter-config
 | `features.share_links` | `false` | Bearer-ссылки на узлы (share) |
 | `features.public_listing` | `false` | Публичный листинг |
 | `features.webhooks` | `true` | Подписчик outbox + маршруты эндпойнтов |
+| `features.changes` | `true` | Журнал изменений drive за `DriveHandle::changes()` |
 
 ## Обработчики документов — `handlers`
 
@@ -288,6 +289,15 @@ php artisan vendor:publish --tag=vaulter-config
 | `webhooks.manage_ability` | `VAULTER_WEBHOOKS_MANAGE_ABILITY` | `vaulter.webhooks.manage` | Право (ability) Gate, охраняющее поверхность управления эндпойнтами; `null` разрешает любому аутентифицированному пользователю |
 
 Флаг `features.webhooks` включает подписчик outbox и маршруты эндпойнтов; таблицы существуют всегда. См. [Рецепты → Надёжность и вебхуки](/ru/guide/recipes).
+
+## Журнал изменений — `changes.*`
+
+[Журнал изменений](/guide/changes) каждого drive, который синхронизирующие клиенты читают через `DriveHandle::changes()`. `features.changes` (по умолчанию `true`) включает запись; таблицы существуют всегда. Выключение и повторное включение оставляет пропуск, который закрывает только сброс (`vaulter:changes:reset`).
+
+| Ключ | Env | По умолчанию | Управляет |
+|---|---|---|---|
+| `changes.retention_days` | — | `30` | Сколько дней запись доступна для чтения; `vaulter:changes:prune` удаляет более старые, а курсор позади них истекает (`410 cursor_expired`). Целое ≥ 1, иное значение валит загрузку |
+| `changes.max_page_size` | — | `1000` | Наибольший `limit` одной страницы `changes()->list()` (целое 1..10000, иное значение валит загрузку) |
 
 ## API-маршруты — `routes.*`
 

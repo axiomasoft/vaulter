@@ -18,6 +18,8 @@ use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Repositories\Changes\ChangeEntryRepository;
+use Vaulter\Repositories\Changes\ChangeHeadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\Identity;
 use Vaulter\VaulterManager;
@@ -27,8 +29,8 @@ use Vaulter\VaulterManager;
  * are aborted, up to BATCH children of the root go one by one — each in its own
  * transaction through PurgeNodeAction as the system actor 'drive-purge', the same
  * lifecycle, CAS and quota path as an ordinary purge — and when the root has no
- * children left one last transaction removes the root and the drive row. Activity and
- * outbox rows stay as history. Safe to repeat after any crash.
+ * children left one last transaction removes the root, the drive's change journal and
+ * the drive row. Activity and outbox rows stay as history. Safe to repeat after any crash.
  */
 final readonly class PurgeDriveStepAction
 {
@@ -43,6 +45,8 @@ final readonly class PurgeDriveStepAction
         private DriveConfig $driveConfig,
         private NodeStoreRepository $nodes,
         private EventRecorder $recorder,
+        private ChangeEntryRepository $changes,
+        private ChangeHeadRepository $heads,
     ) {}
 
     /** @return bool true when the drive is gone (or was never being deleted), false while children remain */
@@ -106,6 +110,10 @@ final readonly class PurgeDriveStepAction
             if ($root !== null) {
                 $this->nodes->purgeSubtree(collect([$root->id]));
             }
+            // The foreign keys cascade, but not on a SQLite connection without them: the
+            // journal goes explicitly, head last (the journal lock comes after the drive's).
+            $this->changes->deleteForDrive($context->driveId());
+            $this->heads->delete($context->driveId());
             $drive->delete();
             $this->recorder->record(new DriveDeleted(driveId: Identity::stringify($drive->getKey()), ownerType: $drive->owner_type,
                 ownerId: Identity::stringify($drive->owner_id), tenantId: $drive->tenant_id,

@@ -41,6 +41,7 @@ const guideSidebar = [
       { text: 'Trash & Restore', link: '/guide/trash' },
       { text: 'Search & Trash', link: '/guide/search-trash' },
       { text: 'Sharing', link: '/guide/sharing' },
+      { text: 'Change Journal', link: '/guide/changes' },
       { text: 'Comments', link: '/guide/comments' },
       { text: 'Export', link: '/guide/export' },
     ],

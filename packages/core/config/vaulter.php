@@ -57,6 +57,8 @@ return [
         'grants' => true,
         'activity' => true,
         'webhooks' => true,
+        // The drive change journal behind DriveHandle::changes() (PLAN2.D50).
+        'changes' => true,
         'share_links' => false,
         'public_listing' => false,
     ],
@@ -160,6 +162,13 @@ return [
             'connect_timeout' => 2,
             'max_response_bytes' => 65536,
         ],
+    ],
+    'changes' => [
+        // Days a journal entry stays readable; vaulter:changes:prune deletes older ones
+        // and a cursor behind them expires (410 cursor_expired).
+        'retention_days' => 30,
+        // The largest page DriveHandle::changes()->list() returns.
+        'max_page_size' => 1000,
     ],
     'handlers' => [],
     'observability' => [

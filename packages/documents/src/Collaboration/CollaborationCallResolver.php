@@ -9,7 +9,6 @@ use Firebase\JWT\Key;
 use Illuminate\Support\Facades\Cache;
 use Throwable;
 use Vaulter\Documents\Configuration\DocumentsConfig;
-use Vaulter\Webhooks\WebhookSigner;
 
 /**
  * Authenticates a server-to-server call the Node Hocuspocus hub makes back into
@@ -47,8 +46,18 @@ final readonly class CollaborationCallResolver
 
     public function __construct(
         private DocumentsConfig $documentsConfig,
-        private WebhookSigner $signer = new WebhookSigner,
     ) {}
+
+    /**
+     * The hub's signature of a request body: lowercase hex HMAC-SHA256 of
+     * "{timestamp}.{rawBody}" keyed by the hub webhook secret. This is the hub's own
+     * contract, deliberately not the Standard Webhooks signature of outbound deliveries,
+     * which binds a webhook id the hub does not send.
+     */
+    public static function signature(string $rawBody, string $secret, int $timestamp): string
+    {
+        return hash_hmac('sha256', $timestamp.'.'.$rawBody, $secret);
+    }
 
     /**
      * The verified call, or null when the token is missing, tampered, expired or does
@@ -78,9 +87,9 @@ final readonly class CollaborationCallResolver
      * Verify the body's HMAC-SHA256 signature: the timestamp must be a well-formed
      * integer within ±tolerance of now, the signature must not have been seen before
      * within that same window (replay), and it must equal the timing-safe HMAC of
-     * "{timestamp}.{rawBody}" keyed by the webhook secret — the SAME canonical string
-     * {@see WebhookSigner} uses for outbound deliveries, so Node and PHP MUST agree
-     * byte-for-byte on $rawBody (the exact HTTP request body, not a re-encoded copy).
+     * "{timestamp}.{rawBody}" keyed by the webhook secret ({@see self::signature()}), so
+     * Node and PHP MUST agree byte-for-byte on $rawBody (the exact HTTP request body, not
+     * a re-encoded copy).
      */
     private function verifySignature(?string $presentedTimestamp, ?string $presentedSignature, string $rawBody): bool
     {
@@ -101,7 +110,7 @@ final readonly class CollaborationCallResolver
             return false;
         }
 
-        $expected = $this->signer->sign(body: $rawBody, secret: $secret, timestamp: $timestamp);
+        $expected = self::signature(rawBody: $rawBody, secret: $secret, timestamp: $timestamp);
 
         if (!hash_equals($expected, $presentedSignature)) {
             // Invalid signature for this exact rawBody — do NOT burn the nonce slot,

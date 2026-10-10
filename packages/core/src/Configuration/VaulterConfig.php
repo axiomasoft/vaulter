@@ -187,6 +187,11 @@ final readonly class VaulterConfig
         return new WebhooksConfig($this->config);
     }
 
+    public function changes(): ChangesConfig
+    {
+        return new ChangesConfig($this->config);
+    }
+
     public function observability(): ObservabilityConfig
     {
         return new ObservabilityConfig($this->config);

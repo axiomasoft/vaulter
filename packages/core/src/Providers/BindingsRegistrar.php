@@ -7,6 +7,7 @@ namespace Vaulter\Providers;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Log;
 use Vaulter\Configuration\AccessConfig;
+use Vaulter\Configuration\ChangesConfig;
 use Vaulter\Configuration\ConfigNormalizer;
 use Vaulter\Configuration\ConfigValidator;
 use Vaulter\Configuration\DatabaseConfig;
@@ -83,6 +84,7 @@ final class BindingsRegistrar
         $app->singleton(SharingConfig::class);
         $app->singleton(DownloadsConfig::class);
         $app->singleton(WebhooksConfig::class);
+        $app->singleton(ChangesConfig::class);
         $app->singleton(ObservabilityConfig::class);
         $app->singletonIf(ConfigNormalizer::class);
         $app->singleton(ConfigValidator::class);

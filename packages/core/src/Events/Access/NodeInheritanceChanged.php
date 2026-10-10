@@ -12,6 +12,7 @@ use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\ActivityTarget;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
+use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
  * A node started or stopped inheriting grants from above. Restricting with
@@ -43,6 +44,11 @@ final readonly class NodeInheritanceChanged extends DomainEvent
     public function subject(): EventSubject
     {
         return self::nodeSubject($this->node);
+    }
+
+    public function journal(): JournalEffect
+    {
+        return self::nodeUpsert($this->node, subtree: true);
     }
 
     public function data(): array

@@ -75,6 +75,7 @@ Vaulter\Contracts\Drive\DriveHandle
   actor(): \Vaulter\ValueObjects\Access\Actor
   archive(): \Vaulter\Data\Snapshots\DriveSnapshot
   asSystem(string $reason): \static
+  changes(): \Vaulter\Operations\ChangeOperations
   delete(): \Vaulter\Data\Snapshots\DriveSnapshot
   extension(string $operations): object
   files(): \Vaulter\Contracts\Drive\FileOperations
@@ -206,6 +207,11 @@ Vaulter\Configuration\AccessConfig
   spatieTeamSubjectType(): string
   spatieTeamsEnabled(): bool
 
+Vaulter\Configuration\ChangesConfig
+  __construct(\Illuminate\Contracts\Config\Repository $config)
+  maxPageSize(): int
+  retentionDays(): int
+
 Vaulter\Configuration\ConfigNormalizer
   keyMap(): array
   normalize(\Illuminate\Contracts\Config\Repository $config, array $packageDefaults): void
@@ -282,6 +288,7 @@ Vaulter\Configuration\TenancyConfig
 Vaulter\Configuration\VaulterConfig
   __construct(\Illuminate\Contracts\Config\Repository $config)
   access(): \Vaulter\Configuration\AccessConfig
+  changes(): \Vaulter\Configuration\ChangesConfig
   database(): \Vaulter\Configuration\DatabaseConfig
   defaultProfile(): string
   downloads(): \Vaulter\Configuration\DownloadsConfig
@@ -1120,6 +1127,7 @@ Vaulter\Events\Access\NodeGrantCreated
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
   isWebhookEligible(): bool
+  journal(): \Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
@@ -1136,6 +1144,7 @@ Vaulter\Events\Access\NodeGrantRevoked
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
   isWebhookEligible(): bool
+  journal(): \Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
@@ -1154,6 +1163,7 @@ Vaulter\Events\Access\NodeInheritanceChanged
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
   isWebhookEligible(): bool
+  journal(): \Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
@@ -1171,6 +1181,7 @@ Vaulter\Events\DomainEvent
   activityTarget(): ?\Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
   isWebhookEligible(): bool
+  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
@@ -1197,6 +1208,7 @@ Vaulter\Events\Sharing\NodeShareCreated
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
   isWebhookEligible(): bool
+  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
@@ -1213,6 +1225,7 @@ Vaulter\Events\Sharing\NodeShareRevoked
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
   isWebhookEligible(): bool
+  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
@@ -1229,6 +1242,7 @@ Vaulter\Events\Sharing\NodeShareRotated
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
   isWebhookEligible(): bool
+  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
@@ -1245,6 +1259,7 @@ Vaulter\Events\Sharing\NodeShareUpdated
   activityTarget(): \Vaulter\ValueObjects\Events\ActivityTarget
   data(): array
   isWebhookEligible(): bool
+  journal(): ?\Vaulter\ValueObjects\Events\JournalEffect
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject

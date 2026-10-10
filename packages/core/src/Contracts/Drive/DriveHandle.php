@@ -13,6 +13,7 @@ use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Data\Snapshots\QuotaSnapshot;
 use Vaulter\Exceptions\Drive\InvalidDriveStateException;
 use Vaulter\Models\Drive\Drive;
+use Vaulter\Operations\ChangeOperations;
 use Vaulter\Profiles\Profile;
 use Vaulter\ValueObjects\Access\Actor;
 
@@ -68,6 +69,13 @@ interface DriveHandle
     public function shares(): ShareOperations;
 
     public function activity(): ActivityOperations;
+
+    /**
+     * The drive's change journal for the acting reader (PLAN2.D50): a cursor to start
+     * from after a full listing, then pages of node changes filtered by the reader's
+     * current access.
+     */
+    public function changes(): ChangeOperations;
 
     /**
      * @template T of object

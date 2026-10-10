@@ -6,6 +6,26 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Drive change journal (PLAN2.P5.5, D50/D59/D61, D58–D60/D35)
+
+Run `php artisan migrate`: `2026_10_10_000004_drive_changes` creates `v_drive_change_heads` and
+`v_drive_changes` and gives every existing drive a head (`last_seq` 0, epoch 1). The journal
+starts empty — changes made before the upgrade are only in a full listing.
+
+- **Webhook envelope.** Before: `"changes": null` on every event. Now: `"changes": {"seq": n}` for a
+  journalled event (node, document and access changes), still `null` for the others. Receivers that
+  validated `changes` as always-null must accept the object.
+- **New public surface.** `DriveHandle::changes()` is added to the contract; a host class that
+  implements `Vaulter\Contracts\Drive\DriveHandle` itself must add it. `DomainEvent::journal()`
+  returns `null` by default; a host subclass of a journalled event keeps its parent's entry.
+- **Schedule the prune.** Add `Schedule::command('vaulter:changes:prune')->daily();` — entries
+  older than `changes.retention_days` (30) are deleted and clients behind them get `410 cursor_expired`.
+- **Turning the journal off.** `features.changes = false` stops writing entries and makes
+  `changes()` throw. Turning it on again leaves a gap: run `vaulter:changes:reset {drive}` so the
+  clients resynchronize.
+- **Collaboration hub.** Nothing to change: the hub signature is again hex HMAC-SHA256 of
+  `"{timestamp}.{body}"` (the P5.4 signer change had broken its verification).
+
 ### Standard Webhooks delivery 1.0 (PLAN2.P5.4, D58–D60/D50/D35)
 
 Run `php artisan migrate`: `2026_10_10_000003_webhook_endpoints_v1` adds the rotation and

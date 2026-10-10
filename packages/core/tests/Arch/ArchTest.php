@@ -283,7 +283,7 @@ test('split technical roots keep classes in domain subfolders', function (): voi
         'Repositories' => [],
         'Contracts' => ['IdStrategy'],
         // ADR-0017 amendment (ADR-0020): entry-point layers stay flat, so the allow-list is explicit.
-        'Operations' => ['AccessOperations', 'ActivityOperations', 'NodeLocator', 'NodeSequence', 'OperationContext', 'ShareOperations'],
+        'Operations' => ['AccessOperations', 'ActivityOperations', 'ChangeOperations', 'NodeLocator', 'NodeSequence', 'OperationContext', 'ShareOperations'],
         // Revived in Phase D2 (P2 #5), kind-neutral naming in VLT-CANON P0.1: the
         // handler extensibility-seam VOs (FileDescriptor/ContentCapabilities/ViewerDescriptor/
         // NodePresentation) are kernel-shared — core's own Contracts\Handlers\*
@@ -345,7 +345,7 @@ test('technical layers are never nested under a domain module (ADR-0017 Law 1)',
         ->and(scandir(__DIR__.'/../../src/Exceptions/Contracts'))->toBe(['.', '..', 'ProblemException.php'])
         ->and(scandir(__DIR__.'/../../src/Testing/Contracts'))->toBe(['.', '..', 'PermissionDriverContractTests.php'])
         ->and(scandir(__DIR__.'/../../src/Enums/Events'))->toBe(['.', '..', 'EventType.php'])
-        ->and(scandir(__DIR__.'/../../src/ValueObjects/Events'))->toBe(['.', '..', 'ActivityTarget.php', 'EventScope.php', 'EventSubject.php']);
+        ->and(scandir(__DIR__.'/../../src/ValueObjects/Events'))->toBe(['.', '..', 'ActivityTarget.php', 'EventScope.php', 'EventSubject.php', 'JournalEffect.php']);
 });
 
 /**

@@ -13,6 +13,7 @@ use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\ActivityTarget;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
+use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
  * A node was copied to a destination (§2.4). For files the copy references the
@@ -50,6 +51,11 @@ final readonly class NodeCopied extends DomainEvent
     public function sequence(): int
     {
         return $this->copy->sequence;
+    }
+
+    public function journal(): JournalEffect
+    {
+        return self::nodeUpsert($this->copy, subtree: true, sequence: $this->copy->sequence);
     }
 
     public function data(): array

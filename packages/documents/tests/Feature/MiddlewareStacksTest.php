@@ -20,7 +20,6 @@ use Vaulter\Http\Middleware\RecordVaulterRequestMetrics;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\FakeHostUserResolver;
 use Vaulter\Tests\Sharing\ShareTestHelpers;
-use Vaulter\Webhooks\WebhookSigner;
 
 class MiddlewareStackUser extends User
 {
@@ -76,7 +75,7 @@ it('accepts a signed hub JWT without a Sanctum token', function (): void {
         'epoch' => 0, 'schema_version' => 1, 'mode' => 'rw',
         'sub' => '17', 'iat' => $timestamp, 'exp' => $timestamp + 3600,
     ], 'middleware-stack-jwt-secret-at-least-32-bytes', 'HS256');
-    $signature = (new WebhookSigner)->sign(json_encode($body), 'middleware-stack-webhook-secret', $timestamp);
+    $signature = CollaborationCallResolver::signature((string) json_encode($body), 'middleware-stack-webhook-secret', $timestamp);
     $response = $this->postJson('api/vaulter/collab/authenticate', $body, [
         'Authorization' => 'Bearer '.$jwt,
         CollaborationCallResolver::TIMESTAMP_HEADER => (string) $timestamp,

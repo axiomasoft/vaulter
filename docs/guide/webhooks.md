@@ -86,7 +86,7 @@ into every delivery:
   "sequence": 7,
   "actor": {"type": "App\\Models\\User", "id": "5"},
   "correlation_id": "01JA2Z4P6V8Y0C1D2E3F4G5H6K",
-  "changes": null,
+  "changes": {"seq": 128},
   "data": {}
 }
 ```
@@ -102,6 +102,11 @@ into every delivery:
   in `data`). Deliveries are not ordered; compare `sequence` (or `state_version`) to
   drop a stale update.
 - `version` is the schema version of `data` for this `type`.
+- `changes.seq` is the position of this occurrence in the drive's
+  [change journal](/guide/changes) (`null` for an event that is not journalled, or when
+  `features.changes` is off). It is a hint, not a cursor: a client that syncs a drive treats the
+  webhook as a signal to call `changes()->list()` with its stored cursor, and may skip the call
+  when its cursor is already past `seq`.
 
 ## Headers and signature
 
@@ -188,7 +193,8 @@ Only deliveries still inside `webhooks.retention_days` can be redelivered.
 ## Deduplication and ordering
 
 Delivery is at-least-once and unordered: deduplicate on `webhook-id` (the envelope `id`), and
-use `sequence` to drop a stale update.
+use `sequence` to drop a stale update. A client that needs every change of a drive, in order,
+reads the [change journal](/guide/changes) and uses webhooks only to wake up.
 
 ## Event names
 

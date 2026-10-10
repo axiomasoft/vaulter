@@ -14,6 +14,7 @@ use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\ActivityTarget;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
+use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
  * A kind=document node was created with its initial v1 version (§2.5 / M4a). Carries
@@ -53,6 +54,11 @@ final readonly class DocumentCreated extends DomainEvent
     public function sequence(): int
     {
         return $this->node->sequence;
+    }
+
+    public function journal(): JournalEffect
+    {
+        return self::nodeUpsert($this->node, sequence: $this->node->sequence);
     }
 
     public function data(): array

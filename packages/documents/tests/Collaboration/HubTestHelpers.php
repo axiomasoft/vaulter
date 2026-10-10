@@ -19,7 +19,6 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\FakeHostUserResolver;
-use Vaulter\Webhooks\WebhookSigner;
 
 /**
  * The hub's side of the protocol for tests: room tokens shaped exactly like
@@ -107,7 +106,7 @@ final class HubTestHelpers
     public static function headers(array $body, ?string $token, ?int $timestamp = null, ?string $secret = null): array
     {
         $timestamp ??= time();
-        $signature = (new WebhookSigner)->sign(body: (string) json_encode($body), secret: $secret ?? self::WEBHOOK_SECRET, timestamp: $timestamp);
+        $signature = CollaborationCallResolver::signature(rawBody: (string) json_encode($body), secret: $secret ?? self::WEBHOOK_SECRET, timestamp: $timestamp);
 
         return array_filter([
             'Authorization' => $token === null ? null : 'Bearer '.$token,

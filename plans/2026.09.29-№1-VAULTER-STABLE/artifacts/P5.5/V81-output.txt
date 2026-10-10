@@ -1,0 +1,3 @@
+P5: нет ledger-P5.tsv (154 единиц)
+opus-coverage FAIL: 1438 единиц, 254 секций, 1 нарушений
+exit=1

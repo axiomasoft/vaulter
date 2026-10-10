@@ -12,6 +12,7 @@ use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\ActivityTarget;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
+use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
  * A node was renamed in place (§2.2). The names are recorded in the activity feed
@@ -49,6 +50,11 @@ final readonly class NodeRenamed extends DomainEvent
     public function sequence(): int
     {
         return $this->node->sequence;
+    }
+
+    public function journal(): JournalEffect
+    {
+        return self::nodeUpsert($this->node, sequence: $this->node->sequence);
     }
 
     public function data(): array

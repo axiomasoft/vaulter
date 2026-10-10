@@ -86,6 +86,7 @@ of these per-panel.
 | `features.share_links` | `false` | Bearer node share links |
 | `features.public_listing` | `false` | Public listing |
 | `features.webhooks` | `true` | The outbox subscriber + endpoint routes |
+| `features.changes` | `true` | The drive change journal behind `DriveHandle::changes()` |
 
 ## Document handlers — `handlers`
 
@@ -318,6 +319,17 @@ fixed by the standard).
 | `webhooks.manage_ability` | `VAULTER_WEBHOOKS_MANAGE_ABILITY` | `vaulter.webhooks.manage` | The Gate ability gating the endpoint-management surface; `null` allows any authenticated user |
 
 The `features.webhooks` flag gates the outbox subscriber and endpoint routes; tables always exist. See [Recipes → Reliability & webhooks](/guide/recipes).
+
+## Change journal — `changes.*`
+
+The per-drive [change journal](/guide/changes) syncing clients read through `DriveHandle::changes()`.
+`features.changes` (default `true`) switches the writing of entries; the tables always exist.
+Turning it off and on again leaves a gap only a reset closes (`vaulter:changes:reset`).
+
+| Key | Env | Default | Controls |
+|---|---|---|---|
+| `changes.retention_days` | — | `30` | Days an entry stays readable; `vaulter:changes:prune` deletes older ones and a cursor behind them expires (`410 cursor_expired`). Integer ≥ 1, anything else fails boot |
+| `changes.max_page_size` | — | `1000` | The largest `limit` of one `changes()->list()` page (integer 1..10000, anything else fails boot) |
 
 ## API routes — `routes.*`
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events\Nodes;
 
 use Carbon\CarbonImmutable;
+use Vaulter\Enums\Changes\ChangeReason;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Models\Drive\Node;
@@ -12,6 +13,7 @@ use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\ActivityTarget;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
+use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
  * A node and its whole subtree were soft-trashed (§2.10 / D17): the trashed
@@ -48,6 +50,11 @@ final readonly class NodeTrashed extends DomainEvent
     public function sequence(): int
     {
         return $this->node->sequence;
+    }
+
+    public function journal(): JournalEffect
+    {
+        return JournalEffect::remove(nodeId: $this->node->getKey(), reason: ChangeReason::Deleted, nodeSequence: $this->node->sequence);
     }
 
     public function data(): array

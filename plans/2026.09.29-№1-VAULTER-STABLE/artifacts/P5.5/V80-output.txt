@@ -1,0 +1,31 @@
+# V80 (2026-10-10, final tree before review)
+## pint core changed files
+{"tool":"pint","result":"passed"}
+exit=0
+## pint drive changed files
+{"tool":"pint","result":"passed"}
+exit=0
+## pint documents changed files
+{"tool":"pint","result":"passed"}
+exit=0
+## phpstan core (V902)
+{"tool":"phpstan","result":"passed","errors":0}
+exit=0
+## phpstan drive
+Note: Using configuration file /home/vostrikov/projects/packages/vaulter/packages/drive/phpstan.neon.
+
+ [OK] No errors                                                                 
+
+exit=0
+## phpstan documents
+Note: Using configuration file /home/vostrikov/projects/packages/vaulter/packages/documents/phpstan.neon.
+
+ [OK] No errors                                                                 
+
+exit=0
+## phpstan filament
+Note: Using configuration file /home/vostrikov/projects/packages/vaulter/packages/filament/phpstan.neon.
+
+ [OK] No errors                                                                 
+
+exit=0

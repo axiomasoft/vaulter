@@ -71,6 +71,8 @@ final class SchemaBuilder
         'outbox',
         'webhook_endpoints',
         'webhook_deliveries',
+        'drive_change_heads',
+        'drive_changes',
     ];
 
     /**
@@ -138,6 +140,8 @@ final class SchemaBuilder
                 'outbox' => $this->defineOutbox(table: $table, ids: $ids),
                 'webhook_endpoints' => $this->defineWebhookEndpoints(table: $table, ids: $ids),
                 'webhook_deliveries' => $this->defineWebhookDeliveries(table: $table, ids: $ids),
+                'drive_change_heads' => $this->defineDriveChangeHeads(table: $table, ids: $ids),
+                'drive_changes' => $this->defineDriveChanges(table: $table, ids: $ids),
                 default => throw new InvalidArgumentException(sprintf('Unknown Vaulter panel entity [%s].', $entity)),
             };
         });
@@ -998,6 +1002,82 @@ final class SchemaBuilder
             ->references('id')
             ->on(app(DatabaseConfig::class)->table('webhook_endpoints'))
             ->cascadeOnDelete();
+    }
+
+    /**
+     * v_drive_change_heads — one row per drive: the change journal's counter
+     * (PLAN2.D50/D59). last_seq is the seq of the newest entry; the UPDATE that raises it
+     * is the journal lock, held until the mutation commits, so entries become visible
+     * in seq order. pruned_through is the highest seq the retention prune deleted;
+     * epoch changes on a reset and expires every cursor of the drive.
+     */
+    private function defineDriveChangeHeads(Blueprint $table, IdStrategy $ids): void
+    {
+        $ids->reference(table: $table, column: 'drive_id', nullable: false);
+        $this->tenant(table: $table);
+        $table->bigInteger('last_seq')->default(0);
+        $table->bigInteger('pruned_through')->default(0);
+        $table->unsignedInteger('epoch')->default(1);
+        $table->timestamp('updated_at')->nullable();
+
+        $table->primary(['drive_id']);
+        $table->foreign('drive_id')
+            ->references('id')
+            ->on($this->table('drives'))
+            ->cascadeOnDelete();
+    }
+
+    /**
+     * v_drive_changes — the change journal of a drive (PLAN2.D50/D59): one entry per
+     * journalled event, for the node it is about. change_id is the event id, so an
+     * occurrence is journalled once. node_id has no foreign key: the entry outlives a
+     * purged node. Entries are compacted to the latest state of a node and pruned by age.
+     */
+    private function defineDriveChanges(Blueprint $table, IdStrategy $ids): void
+    {
+        $ids->reference(table: $table, column: 'drive_id', nullable: false);
+        $table->bigInteger('seq');
+        $this->tenant(table: $table);
+        $table->string('change_id', 26)->unique();
+        $table->string('event_type', 64);
+        $ids->reference(table: $table, column: 'node_id', nullable: false);
+        // 'upsert' | 'remove'; reason is 'deleted' on a remove, null otherwise.
+        $table->string('operation', 8);
+        $table->string('reason', 16)->nullable();
+        $table->boolean('subtree')->default(false);
+        $table->bigInteger('node_sequence')->nullable();
+        $table->timestamp('occurred_at');
+
+        $name = $table->getTable();
+
+        $table->primary(['drive_id', 'seq']);
+        // Compaction finds the earlier entries of a node; the prune finds the age boundary.
+        $table->index(['drive_id', 'node_id'], $name.'_node_idx');
+        $table->index(['drive_id', 'occurred_at'], $name.'_occurred_idx');
+        $table->foreign('drive_id')
+            ->references('id')
+            ->on($this->table('drives'))
+            ->cascadeOnDelete();
+    }
+
+    /**
+     * Create the change-journal tables on an existing installation; each step checks
+     * what is already there, so a re-run after a failure finishes the job.
+     */
+    public function addDriveChanges(): void
+    {
+        foreach (['drive_change_heads', 'drive_changes'] as $entity) {
+            if (!$this->schemaConnection()->hasTable($this->table($entity))) {
+                $this->createTable($entity);
+            }
+        }
+    }
+
+    public function removeDriveChanges(): void
+    {
+        foreach (['drive_changes', 'drive_change_heads'] as $entity) {
+            $this->dropTable($entity);
+        }
     }
 
     /**

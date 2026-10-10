@@ -26,6 +26,8 @@ spatie/laravel-package-tools) плюс восемь команд пакета, �
 | `vaulter:webhooks:legacy-fanout` | Показать или переиграть строки outbox до 1.0, у которых раскрытие нельзя доказать |
 | `vaulter:webhooks:redeliver` | Повторно отправить завершённые доставки вебхуков с тем же `webhook-id` |
 | `vaulter:events:reference` | Перегенерировать (или проверить `--check`) таблицу каталога событий в справке |
+| `vaulter:changes:prune` | Удалить записи журнала изменений drive старше `changes.retention_days` |
+| `vaulter:changes:reset` | Сделать недействительными все курсоры изменений drive — клиенты пересинхронизируются |
 
 ---
 
@@ -319,9 +321,44 @@ php artisan vaulter:events:reference --check
 
 ---
 
+## `vaulter:changes:prune`
+
+Удаляет записи [журнала изменений](/guide/changes) старше срока хранения — drive за drive, пачками
+по 1000. Каждая пачка держит голову журнала drive `FOR UPDATE` и поднимает `pruned_through` в той
+же транзакции, что и `DELETE`, поэтому клиент, чей курсор отстал от удалённых записей, получает
+`410 cursor_expired`, а не тихий пропуск; мутации drive ждут не больше одной пачки. Срок берётся из
+`config('vaulter.changes.retention_days')` (по умолчанию 30), если не задан `--days`. Запускайте
+ежедневно.
+
+```
+vaulter:changes:prune
+    {--days=}     Переопределить срок хранения в днях (положительное целое)
+    {--drive=*}   Только эти id drive
+```
+
+```bash
+php artisan vaulter:changes:prune            # ежедневно по расписанию
+php artisan vaulter:changes:prune --days=7 --drive=42
+```
+
+---
+
+## `vaulter:changes:reset`
+
+Начинает новую эпоху журнала изменений одного drive: все выданные для него курсоры истекают
+(`410 cursor_expired`), и клиенты пересинхронизируются полным листингом. Нужна после восстановления
+базы из бэкапа или когда журнал больше не соответствует drive (например, `features.changes` был
+какое-то время выключен).
+
+```bash
+php artisan vaulter:changes:reset 42
+```
+
+---
+
 ## Планирование по расписанию
 
-Пять команд обслуживания дружелюбны к расписанию. Показательный график:
+Команды обслуживания дружелюбны к расписанию. Показательный график:
 
 ```php
 use Illuminate\Support\Facades\Schedule;
@@ -332,6 +369,7 @@ Schedule::command('vaulter:sweep-uploads')->hourly();
 Schedule::command('vaulter:blobs:gc')->daily();
 Schedule::command('vaulter:purge-trash')->daily();
 Schedule::command('vaulter:blobs:reconcile')->weekly();
+Schedule::command('vaulter:changes:prune')->daily();
 ```
 
 ## См. также

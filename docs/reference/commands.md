@@ -26,6 +26,8 @@ outbox relay, webhook retry, webhook prune) are designed to be scheduled.
 | `vaulter:webhooks:legacy-fanout` | List or replay pre-1.0 outbox rows whose fan-out cannot be proven |
 | `vaulter:webhooks:redeliver` | Send finished webhook deliveries again with the same `webhook-id` |
 | `vaulter:events:reference` | Regenerate (or `--check`) the event catalogue table in the reference docs |
+| `vaulter:changes:prune` | Delete drive change-journal entries past `changes.retention_days` |
+| `vaulter:changes:reset` | Expire every change cursor of a drive, forcing its clients to resynchronize |
 
 ---
 
@@ -329,9 +331,44 @@ php artisan vaulter:webhooks:redeliver --endpoint=7 --since=2026-10-01
 
 ---
 
+## `vaulter:changes:prune`
+
+Delete [change-journal](/guide/changes) entries older than the retention window, drive by drive,
+in batches of 1000. Each batch holds the drive's journal head `FOR UPDATE` and raises
+`pruned_through` in the same transaction as its `DELETE`, so a client whose cursor is behind the
+pruned entries gets `410 cursor_expired` instead of a silent gap; mutations of the drive wait for
+at most one batch. The window comes from `config('vaulter.changes.retention_days')` (default 30)
+unless `--days` overrides it. Schedule it daily.
+
+```
+vaulter:changes:prune
+    {--days=}     Override the retention window in days (a positive integer)
+    {--drive=*}   Only these drive ids
+```
+
+```bash
+php artisan vaulter:changes:prune            # schedule daily
+php artisan vaulter:changes:prune --days=7 --drive=42
+```
+
+---
+
+## `vaulter:changes:reset`
+
+Start a new epoch of one drive's change journal: every cursor issued for the drive expires
+(`410 cursor_expired`) and its clients resynchronize with a full listing. Use it after restoring
+the database from a backup, or when the journal no longer matches the drive (for example after
+`features.changes` was switched off for a while).
+
+```bash
+php artisan vaulter:changes:reset 42
+```
+
+---
+
 ## Scheduling
 
-The six maintenance commands are schedule-friendly. A representative schedule:
+The maintenance commands are schedule-friendly. A representative schedule:
 
 ```php
 use Illuminate\Support\Facades\Schedule;
@@ -343,6 +380,7 @@ Schedule::command('vaulter:blobs:gc')->daily();
 Schedule::command('vaulter:purge-trash')->daily();
 Schedule::command('vaulter:blobs:reconcile')->weekly();
 Schedule::command('vaulter:prune-webhooks')->weekly();
+Schedule::command('vaulter:changes:prune')->daily();
 ```
 
 ## See also

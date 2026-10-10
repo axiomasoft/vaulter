@@ -323,6 +323,11 @@
       "mode": "recommended"
     }
   ],
+  "closed": {
+    "at": "2026-10-10T05:42:26Z",
+    "result": "done_with_deviations",
+    "summary": "5 item(s): 5 done_with_deviations"
+  },
   "orchestration": {
     "strategy": "sequential"
   },

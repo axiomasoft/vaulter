@@ -50,6 +50,8 @@ final readonly class ConfigValidator
         $config->webhooks()->retrySchedule();
         $config->webhooks()->retryJitter();
         $config->webhooks()->relayFanoutChunk();
+        $config->changes()->retentionDays();
+        $config->changes()->maxPageSize();
         $config->sharing()->tokenGenerator();
         foreach ([
             'drive',

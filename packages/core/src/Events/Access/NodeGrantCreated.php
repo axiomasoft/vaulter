@@ -13,6 +13,7 @@ use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\ActivityTarget;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
+use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
  * A per-node ACL grant was created or updated (§2.6 / H.2). Host listeners receive it
@@ -43,6 +44,11 @@ final readonly class NodeGrantCreated extends DomainEvent
     public function subject(): EventSubject
     {
         return self::nodeSubject($this->grant->node);
+    }
+
+    public function journal(): JournalEffect
+    {
+        return self::nodeUpsert($this->grant->node, subtree: true);
     }
 
     public function data(): array

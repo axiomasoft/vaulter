@@ -1,0 +1,50 @@
+{
+ "item": "PLAN2.P5.5",
+ "prepared_at": "2026-10-10",
+ "runtime": {"provider": "claude-code", "model": "claude-opus-5-5", "effort": "high", "source": "CLAUDE_EFFORT=high, session model Opus 5.5; plan.py start --actor claude-code/claude-opus-5-5/high"},
+ "runs_mode": "Owner-Fast-Only (validation-and-execution-policy#Owner-Fast-Only) + owner message 2026-10-10 «сам длинные прогоны не запускай»: only targeted SQLite Pest files, Arch/golden, Pint on changed files, PHPStan of touched packages, opus-coverage/plan check. V4–V6 (PG/MySQL), V90 phase barrier V901–V928 and full package suites are NOT executed here — recorded kind=impact «не исполнено, фазовый прогон». Review: owner requested grok/grok-4.7 read-only review without mutators and long runs. No mutation tools.",
+ "risk_class": "concurrency (seq order = commit order, prune ‖ read) + data-integrity (no silent loss of changes, compaction D59/D61) + access-boundary (projection of invisible nodes, cursor forgery) + schema/migration (new tables, backfill of heads) + public API (DriveHandle::changes, DTOs, enums, exceptions, config, envelope changes.seq)",
+ "decisions": "D50, D59, D61 (compaction strengthened, owner choice A in this session)",
+ "changed_paths": {
+  "core_src": [
+   "Changes/{ChangeJournal,ChangeCursor}.php (new)",
+   "Operations/ChangeOperations.php (new); Data/Changes/{ChangePage,NodeChange}.php (new); Enums/Changes/{ChangeOperation,ChangeReason}.php (new); ValueObjects/Events/JournalEffect.php (new)",
+   "Repositories/Changes/{ChangeHeadRepository,ChangeRecordRepository}.php (new)",
+   "Exceptions/Changes/{InvalidCursorException,CursorExpiredException}.php (new)",
+   "Console/{PruneChangesCommand,ResetChangesCommand}.php (new) + Providers/ConsoleRegistrar.php",
+   "Events/{EventRecorder,DomainEvent}.php (journal sink between activity and outbox; DomainEvent::journal())",
+   "Events/Access/{NodeGrantCreated,NodeGrantRevoked,NodeInheritanceChanged}.php (journal())",
+   "Contracts/Drive/DriveHandle.php (changes())",
+   "Configuration/{ChangesConfig (new),VaulterConfig,ConfigValidator}.php, Providers/BindingsRegistrar.php, config/vaulter.php (features.changes, changes.retention_days, changes.max_page_size)",
+   "Schema/SchemaBuilder.php (drive_change_heads, drive_changes) + database/migrations/2026_10_10_000004_drive_changes.php (create + backfill heads)"
+  ],
+  "drive_src": ["Events/{Nodes,Files}/*.php journal() for folder.created, file.uploaded, file.revision_added, node.renamed/moved/copied/updated/trashed/restored", "DriveHandle.php changes()", "DriveProvisioner.php head row", "Actions/Drives/PurgeDriveStepAction.php explicit journal delete"],
+  "documents_src": ["Events/Documents/{DocumentCreated,DocumentContentUpdated}.php, Events/Revisions/DocumentRestored.php journal()"],
+  "tests": [
+   "core/tests/Changes/{ChangeJournalTest,ChangeCursorTest,ChangeFeedReadTest,PruneChangesCommandTest}.php (new, SQLite)",
+   "core/tests/Concurrency/ChangeJournalRaceTest.php (new, PG/MySQL; skipped on SQLite) -> phase run",
+   "core/tests/Upgrade/DriveChangesUpgradeTest.php (new, PG) -> phase run",
+   "drive/tests/Changes/DriveChangesEndToEndTest.php (new, SQLite)",
+   "documents/tests/Events/DocumentJournalTest.php (new, SQLite)",
+   "core/tests/Arch/PublicApiSnapshotTest golden (+ drive/documents snapshots if their surface changes)",
+   "core/tests/Schema/* if a schema test pins the table list"
+  ],
+  "docs": ["docs/guide/changes.md (new)", "docs/guide/webhooks.md", "docs/guide/errors.md + ru", "docs/reference/configuration.md + ru", "docs/reference/commands.md + ru", "UPGRADE.md", "CHANGELOG.md", "artifacts/P5.5/changelog-entry.md"]
+ },
+ "callers_checked": "EventRecorder::record is the only writer of journal rows (P5-invariants Bypass); EventEnvelope::fromEvent already takes ?int $changeSeq (P5.1 seam). Actions recording journalled events must call record() after their last lock (J last): checked by reading each Action that records a journalled type.",
+ "behaviour": [
+  "append: duplicate change_id -> null; UPDATE head last_seq+1 (J), missing head -> insertOnce + retry; seq read in the same transaction; compaction per D59 step 3 with D61; INSERT row.",
+  "Envelope changes.seq = journal seq of the occurrence when journalled, else null.",
+  "list(): FOR SHARE head inside a transaction, else post-check of head after read; epoch/pruned_through mismatch -> 410 cursor_expired; tampered/foreign cursor -> 400 invalid_cursor; projection remove->deleted, visible upsert -> snapshot, invisible upsert -> moved_out / permission_lost / skip.",
+  "prune: per drive, batches of 1000 under head lockForUpdate, pruned_through raised in the same transaction; reset: epoch+1."
+ ],
+ "commands": {
+  "targeted_core": "cwd . : env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Changes <changed core test files>",
+  "targeted_drive": "cwd packages/drive : env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Changes <changed drive test files>",
+  "targeted_documents": "cwd packages/documents : env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Events/DocumentJournalTest.php",
+  "pint": "scripts/php84 vendor/bin/pint --test <changed php files>",
+  "phpstan": "V902/V905/V908 package analyse (allowed fast check)"
+ },
+ "negative_controls": {"a": "compact remove rows -> ChangeJournalTest red", "b": "drop the head post-check -> ChangeFeedReadTest (f) red", "c": "return the snapshot of an invisible node -> ChangeFeedReadTest (b) red", "record": "artifacts/P5.5/negative-controls.md"},
+ "deferred_to_phase_run": "P5.5 V4 (PG race/upgrade/Changes), V5 (MySQL Changes + race), V6 (PG drive Changes + lock-order races), V90 = V901–V928, plus the earlier P5 deferred H-checks (P5.1 V5, P5.2 V5–V7, P5.3 V2–V4, P5.4 V2–V4)"
+}

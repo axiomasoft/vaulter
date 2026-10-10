@@ -222,6 +222,20 @@ NFC, если установлен ext-intl.
 закончились), либо чей эндпоинт неактивен. Дождитесь конца повторов или смерти доставки и
 сначала включите эндпоинт.
 
+## invalid-change-cursor
+
+`Vaulter\Exceptions\Changes\InvalidCursorException` (`invalid_cursor`, 400) — [курсор журнала
+изменений](/guide/changes), который это приложение не подписывало, который изменён или принадлежит
+другому drive либо тенанту. Курсоры непрозрачны: храните их как есть. Начните заново со
+`startCursor()` после полного листинга.
+
+## cursor-expired
+
+`Vaulter\Exceptions\Changes\CursorExpiredException` (`cursor_expired`, 410) — записи после курсора
+удалены `vaulter:changes:prune` (старше `changes.retention_days`) либо журнал drive сброшен
+`vaulter:changes:reset`. Пересинхронизируйтесь: возьмите новый `startCursor()`, заново получите
+листинг drive и замените локальную копию.
+
 ## webhook-signature
 
 `InvalidWebhookSignatureException` (`invalid_webhook_signature`, 400) — `StandardWebhookVerifier`

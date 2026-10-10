@@ -32,6 +32,7 @@ use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Nodes\StorageNotFoundException;
 use Vaulter\Exceptions\Support\MissingPackageException;
 use Vaulter\Models\Drive\Drive;
+use Vaulter\Operations\ChangeOperations;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Profiles\Profile;
@@ -184,6 +185,11 @@ final readonly class DriveHandle implements Contract
     public function activity(): ActivityOperations
     {
         return $this->operations(\Vaulter\Operations\ActivityOperations::class);
+    }
+
+    public function changes(): ChangeOperations
+    {
+        return $this->operations(ChangeOperations::class);
     }
 
     /**
