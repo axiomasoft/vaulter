@@ -190,6 +190,34 @@ is refused — `WebhookDeliveryNotRedeliverableException`
 In bulk: [`vaulter:webhooks:redeliver`](/reference/commands#vaulter-webhooks-redeliver).
 Only deliveries still inside `webhooks.retention_days` can be redelivered.
 
+## Managing endpoints over HTTP
+
+The admin routes of the [REST API v1](/reference/rest-api#webhook-endpoints) are mounted when
+`features.webhooks` is on. They are a global surface, not a drive resource: every route —
+reads included — is authorized by the `WebhookEndpointPolicy` against
+`webhooks.manage_ability` before the id is even looked up, so a caller who may not manage
+webhooks learns nothing about which endpoints exist.
+
+| Route | What it does |
+|---|---|
+| `GET v1/webhook-endpoints` | endpoints, newest first, as a cursor page |
+| `POST v1/webhook-endpoints` | register (`url`, `events`, `is_active`, `drive_id`) — the answer carries `secret`, once |
+| `GET v1/webhook-endpoints/{endpoint}` | one endpoint |
+| `PATCH v1/webhook-endpoints/{endpoint}` | change `url`, `events`, `is_active`, `drive_id` |
+| `POST v1/webhook-endpoints/{endpoint}/deactivate` | switch off; open deliveries become `dead` |
+| `POST v1/webhook-endpoints/{endpoint}/rotate-secret` | new secret, once; `overlap_seconds` keeps the old one valid meanwhile |
+| `DELETE v1/webhook-endpoints/{endpoint}` | delete |
+| `GET v1/webhook-endpoints/{endpoint}/deliveries` | its deliveries, newest first, as a cursor page |
+| `POST v1/webhook-endpoints/{endpoint}/deliveries/{delivery}/redeliver` | `202`, see [Redelivery](#redelivery) |
+
+An endpoint is `{id, url, drive_id, events, status, disabled_at, created_at}` with `status`
+`active` or `disabled`; the stored secret is never read back. A delivery is
+`{id, event_id, event_type, status, attempts, next_retry_at, last_status_code, created_at}`,
+where `last_status_code` is the HTTP status of the last failed attempt when the endpoint
+answered at all; payloads and raw error texts stay on the server. Unknown ids answer
+`404 webhook_endpoint_not_found` or `404 webhook_delivery_not_found` (a delivery of another
+endpoint is unknown too).
+
 ## Deduplication and ordering
 
 Delivery is at-least-once and unordered: deduplicate on `webhook-id` (the envelope `id`), and
@@ -227,6 +255,6 @@ is generated from it, so the reference cannot drift from the code. The 1.0 catal
 `data.changed`, and no envelope ever carries a share token, its hash or prefix, a
 password, a name, a path or request details.
 
-REST resource JSON keys stay unchanged until P6.1. See
+The admin REST resources use the v1 shape described above. See
 [UPGRADE.md](https://github.com/axiomasoft/vaulter/blob/main/UPGRADE.md) for safety
 checks, backups and the irreversible parts of rollback.

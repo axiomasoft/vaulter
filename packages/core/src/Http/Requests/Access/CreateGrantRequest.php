@@ -14,11 +14,11 @@ use Vaulter\Http\Requests\VaulterFormRequest;
 use Vaulter\Rules\Access\RegisteredSubjectType;
 
 /**
- * Validates a grant-access request (§2.6) and assembles its GrantInput
- * command. The subject (type + id), role, scope and optional expiry are
- * host-supplied; the controller authorizes Share/Manage on the node first.
+ * Grant a role on a node to a subject: `{subject: {type, id}, role, scope?, expires_at?}`.
+ * The subject type must be one the permission driver can enumerate; Manage on the node
+ * is checked by the operation.
  */
-final class StoreNodeGrantRequest extends VaulterFormRequest
+final class CreateGrantRequest extends VaulterFormRequest
 {
     /**
      * @return array<string, mixed>
@@ -26,11 +26,12 @@ final class StoreNodeGrantRequest extends VaulterFormRequest
     public function rules(): array
     {
         return [
-            'subject_type' => ['required', 'string', 'max:255', new RegisteredSubjectType],
-            'subject_id' => ['required'],
+            'subject' => ['required', 'array:type,id'],
+            'subject.type' => ['required', 'string', 'max:255', new RegisteredSubjectType],
+            'subject.id' => ['required', 'max:191'],
             'role' => ['required', 'string', Rule::in((new RoleRegistry)->keys())],
             'scope' => ['nullable', Rule::enum(GrantScope::class)],
-            'expires_at' => ['nullable', 'date'],
+            'expires_at' => ['nullable', 'date', 'after:now'],
         ];
     }
 
@@ -40,8 +41,8 @@ final class StoreNodeGrantRequest extends VaulterFormRequest
 
         return new GrantInput(
             subject: new Subject(
-                type: $this->string('subject_type')->toString(),
-                id: $this->scalarId('subject_id'),
+                type: $this->string('subject.type')->toString(),
+                id: $this->scalarId('subject.id'),
             ),
             role: $this->string('role')->toString(),
             scope: GrantScope::from($this->string('scope', GrantScope::Subtree->value)->toString()),

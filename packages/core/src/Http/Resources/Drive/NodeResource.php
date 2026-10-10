@@ -4,79 +4,63 @@ declare(strict_types=1);
 
 namespace Vaulter\Http\Resources\Drive;
 
-use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Vaulter\Access\AccessResolver;
-use Vaulter\Access\ValueObjects\GrantSet;
+use stdClass;
 use Vaulter\Access\ValueObjects\NodeAbilities;
 use Vaulter\Contracts\Handlers\NodePresenter;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Http\Support\RepresentationTag;
+use Vaulter\ValueObjects\Handlers\NodePresentation;
 
 /**
- * The read shape of a Drive node (§2.2 / §5): the unified folder|file|document
- * leaf the Vue client renders. Read-only — it transforms a {@see NodeSnapshot} and
- * the optional children/breadcrumb snapshots handed to it.
+ * The versioned node representation. It is built only from what the operations
+ * returned — the snapshot and the caller's abilities, computed by the controller in
+ * one batch for a whole page — and never asks the access layer itself.
  *
- * The `abilities` object is filled by the AccessResolver (§2.6 / H.2) for the
- * request's actor, so the client renders only the actions that actor may perform
- * on this node. With no acting user every flag is false (a read-only shell).
- *
- * @mixin NodeSnapshot
+ * Internal pointers (file id, blob, storage key, tenant) are not part of it. The etag
+ * is the caller's representation tag: it changes whenever anything below changes for
+ * this caller, its abilities and starred flag included.
  */
 final class NodeResource extends JsonResource
 {
-    private ?GrantSet $grantSet = null;
+    /** @var array<string, mixed> */
+    private readonly array $representation;
 
-    /** @var array<string, GrantSet> */
-    private array $childrenGrants = [];
+    private readonly string $etag;
 
-    /** @var list<NodeSnapshot>|null */
-    private ?array $children = null;
-
-    /** @var list<NodeSnapshot>|null */
-    private ?array $breadcrumb = null;
-
-    public function withGrantSet(GrantSet $set): static
+    public function __construct(NodeSnapshot $node, private readonly NodeAbilities $abilities, ?NodePresentation $presentation = null)
     {
-        $this->grantSet = $set;
-
-        return $this;
-    }
-
-    /** @param array<string, GrantSet> $sets */
-    public function withChildrenGrantSets(array $sets): self
-    {
-        $this->childrenGrants = $sets;
-
-        return $this;
+        parent::__construct($node);
+        $base = $this->base($node, $presentation);
+        $this->etag = RepresentationTag::node($base, $node->id, $node->sequence);
+        // The tag goes right after `sequence`; it hashes everything else.
+        $this->representation = array_slice($base, 0, 9) + ['etag' => $this->etag] + $base;
     }
 
     /**
-     * Embed the direct children of this node in the response (the folder listing
-     * a `show` may return alongside the node).
-     *
-     * @param list<NodeSnapshot> $children
+     * @param  list<NodeSnapshot>           $nodes
+     * @param  array<string, NodeAbilities> $abilities node id => abilities, from NodeOperations::abilitiesMany()
+     * @return list<self>                   the nodes the abilities cover, in order
      */
-    public function withChildren(array $children): self
+    public static function many(array $nodes, array $abilities): array
     {
-        $this->children = $children;
+        $resources = [];
+        foreach ($nodes as $node) {
+            if (isset($abilities[$node->id])) {
+                $resources[] = new self($node, $abilities[$node->id]);
+            }
+        }
 
-        return $this;
+        return $resources;
     }
 
-    /**
-     * Embed the breadcrumb chain (root first, this node last) in the response.
-     *
-     * @param list<NodeSnapshot> $breadcrumb
-     */
-    public function withBreadcrumb(array $breadcrumb): self
+    /** The ETag header value: the same tag the body carries. */
+    public function etag(): string
     {
-        $this->breadcrumb = $breadcrumb;
-
-        return $this;
+        return $this->etag;
     }
 
     /**
@@ -85,108 +69,96 @@ final class NodeResource extends JsonResource
     #[\Override]
     public function toArray(Request $request): array
     {
-        /** @var NodeSnapshot $node */
-        $node = $this->resource;
+        return $this->representation;
+    }
 
+    /** @return array<string, mixed> */
+    private function base(NodeSnapshot $node, ?NodePresentation $presentation): array
+    {
         return [
             'id' => $node->id,
+            'drive_id' => $node->driveId,
+            'parent_id' => $node->parentId,
             'kind' => $node->kind->value,
             'name' => $node->name,
             'mime' => $node->mimeType,
             'extension' => $node->extension,
             'size_bytes' => $node->sizeBytes,
-            'storage_id' => $node->driveId,
-            'parent_id' => $node->parentId,
-            ...$this->headKeys($node),
-            'trashed_at' => SnapshotValue::iso($node->trashedAt),
+            'sequence' => $node->sequence,
+            'inherits_access' => $node->inheritsAccess,
+            'properties' => self::properties($node->properties),
             'created_at' => SnapshotValue::iso($node->createdAt),
+            'created_by' => $node->createdBy,
             'updated_at' => SnapshotValue::iso($node->updatedAt),
+            'updated_by' => $node->updatedBy,
             'content_modified_at' => SnapshotValue::iso($node->contentModifiedAt),
-            'viewer' => $node->viewer === null ? null : ['starred' => $node->viewer->starred],
-            'children' => $this->children === null
-                ? null
-                : self::collection(array_map(fn (NodeSnapshot $child): self => $this->child($child), $this->children)),
-            'breadcrumb' => $this->breadcrumb === null
-                ? null
-                : self::collection($this->breadcrumb),
-            'abilities' => $this->abilities($request, $node),
-            // The resolved format handler (§4.5 / H.5): id + capabilities + ui so the
-            // Vue client routes the node to the right editor/preview/download surface.
-            // A folder has no payload, so it carries no handler descriptor.
-            'handler' => $this->handler($node),
+            'content_modified_by' => $node->contentModifiedBy,
+            'trashed_at' => SnapshotValue::iso($node->trashedAt),
+            'trashed_by' => $node->trashedBy,
+            'trash_root' => $node->trashRoot,
+            'presentation' => self::presentation($node, $presentation),
+            'abilities' => $this->abilities->toArray(),
+            'viewer' => ['starred' => $node->viewer->starred ?? false],
+            'scan_status' => $node->file?->scanStatus->value ?? 'not_required',
+            'file' => $node->file === null ? null : [
+                'revision_id' => $node->file->revisionId,
+                'revision_number' => $node->file->revisionNumber,
+                'size_bytes' => $node->file->sizeBytes,
+                'sha256' => $node->file->sha256,
+                'mime' => $node->file->mimeType,
+                'scan_status' => $node->file->scanStatus->value,
+            ],
+            'document' => $node->document === null ? null : [
+                'type' => $node->document->type,
+                'schema_version' => $node->document->schemaVersion,
+                'state_version' => $node->document->stateVersion,
+                'collab_epoch' => $node->document->epoch,
+                'revision_id' => $node->document->headRevisionId,
+            ],
         ];
     }
 
-    private function child(NodeSnapshot $child): self
-    {
-        $resource = self::make($child);
-        if (isset($this->childrenGrants[$child->id])) {
-            $resource->withGrantSet($this->childrenGrants[$child->id]);
-        }
-
-        return $resource;
-    }
-
-    /**
-     * The presentation of a leaf node (file/document/shortcut): a document by its
-     * document type, any other leaf through the file handler registry by its
-     * server-trusted mime/extension (H.5). Null for a folder.
-     *
-     * The {@see NodePresenter} contract and its engine are core-owned since
-     * P0.4/D10: a host running Drive WITHOUT vaulter-documents still gets a real
-     * preview/download descriptor (never a degrade-to-null) — the built-in
-     * PreviewHandler/DownloadOnlyHandler are the guaranteed baseline; vaulter-documents
-     * adds the presentation of documents on top.
-     *
-     * @return array<string, mixed>|null
-     */
-    private function handler(NodeSnapshot $node): ?array
+    /** @return array<string, mixed>|null */
+    private static function presentation(NodeSnapshot $node, ?NodePresentation $presentation): ?array
     {
         if ($node->kind === NodeKind::Folder) {
             return null;
         }
+        $presentation ??= app(NodePresenter::class)->present($node);
 
-        return app(NodePresenter::class)->present($node)->toArray();
+        return [
+            // Documents are routed by document_type, never by a file handler.
+            'handler' => $node->kind === NodeKind::Document ? null : $presentation->id,
+            'document_type' => $presentation->documentType,
+            'type_available' => $presentation->typeAvailable,
+            'viewer' => ['key' => $presentation->ui->key, 'props' => self::object($presentation->ui->props)],
+            'capabilities' => $presentation->capabilities->toArray(),
+        ];
     }
 
     /**
-     * The ability map the Vue client binds against, resolved through the
-     * AccessResolver for the request's actor on this node (H.2). No acting user ⇒
-     * an all-false map (a read-only shell), never a mis-advertised action.
+     * Always a JSON object, even when empty or keyed by digits.
      *
-     * @return array<string, bool>
+     * @param array<string, array<string, string>> $properties
      */
-    private function abilities(Request $request, NodeSnapshot $snapshot): array
+    private static function properties(array $properties): stdClass
     {
-        if ($this->grantSet !== null) {
-            return NodeAbilities::fromGrantSet($this->grantSet)->toArray();
+        $object = new stdClass;
+        foreach ($properties as $namespace => $values) {
+            $object->{$namespace} = self::object($values);
         }
 
-        $user = $request->user();
-        if (!$user instanceof Authorizable) {
-            return NodeAbilities::denied()->toArray();
-        }
-
-        return app(AccessResolver::class)->abilitiesForSnapshot($user, $snapshot);
+        return $object;
     }
 
-    /**
-     * The legacy file_id/current_version_id keys, read from the kind's own head. Core
-     * does not depend on the documents package: it supplies the document head to the
-     * snapshot, and without it a document has no head here.
-     *
-     * @return array{file_id: int|string|null, current_version_id: int|string|null}
-     */
-    private function headKeys(NodeSnapshot $node): array
+    /** @param array<array-key, mixed> $values */
+    private static function object(array $values): stdClass
     {
-        if ($node->kind === NodeKind::File) {
-            return ['file_id' => $node->file?->fileId, 'current_version_id' => $node->file?->revisionId];
+        $object = new stdClass;
+        foreach ($values as $key => $value) {
+            $object->{$key} = $value;
         }
 
-        if ($node->kind === NodeKind::Document) {
-            return ['file_id' => null, 'current_version_id' => $node->document?->headRevisionId];
-        }
-
-        return ['file_id' => null, 'current_version_id' => null];
+        return $object;
     }
 }

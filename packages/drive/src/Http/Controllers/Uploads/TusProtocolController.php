@@ -22,7 +22,7 @@ use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Http\Controllers\Controller;
-use Vaulter\Http\Resources\Drive\NodeResource;
+use Vaulter\Http\Resources\Drive\LegacyNodeResource as NodeResource;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\DriveReadRepository;

@@ -37,7 +37,7 @@ it('SEC-R01 legacy not_required and bare clean cannot authorize required public 
     expect(fn () => $this->system->files()->read($node))->toThrow(ContentUnavailableException::class);
     expect($this->system->nodes()->find($node)->id)->toBe($node->id);
     ShareTestHelpers::share($node, token: 'quarantine-legacy');
-    $this->get('api/vaulter/share/quarantine-legacy/download')->assertStatus(423);
+    $this->get('api/vaulter/v1/shares/quarantine-legacy/download')->assertStatus(423);
 });
 
 it('SEC-R07 required structured failure never grants PHP or share bytes', function (string $reason, bool $retryable): void {
@@ -54,7 +54,7 @@ it('SEC-R07 required structured failure never grants PHP or share bytes', functi
     expect(app(SettleScanWorkAction::class)->execute($attempt, new ScanResult(ScanVerdict::Failed, $reason, $retryable)))->toBeTrue();
     expect(fn () => $this->system->files()->read($node))->toThrow(ContentUnavailableException::class);
     ShareTestHelpers::share($node, token: 'quarantine-failed');
-    $this->get('api/vaulter/share/quarantine-failed/download')->assertStatus(423);
+    $this->get('api/vaulter/v1/shares/quarantine-failed/download')->assertStatus(423);
 })->with([
     ['scanner_timeout', true], ['scanner_unavailable', true], ['transient_io', true],
     ['unsupported', false], ['too_large', false], ['password_protected', false], ['access_denied', false], ['unknown', false],
@@ -66,5 +66,5 @@ it('SEC-R17 public share stream rechecks revocation after descriptor resolution 
     $resolved = app(ShareResolver::class)->resolve('revoked-at-open');
     expect($resolved->isOk())->toBeTrue();
     app(VaulterDatabase::class)->write(fn () => $share->forceFill(['revoked_at' => now()])->save());
-    $this->get('api/vaulter/share/revoked-at-open/download')->assertNotFound();
+    $this->get('api/vaulter/v1/shares/revoked-at-open/download')->assertNotFound();
 });

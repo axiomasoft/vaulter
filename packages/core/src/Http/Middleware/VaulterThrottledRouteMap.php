@@ -9,18 +9,30 @@ use Vaulter\Configuration\RoutesConfig;
 
 /**
  * §9 logical `route` ids for `vaulter_throttled_total` (throttle:vaulter-public / uploads).
+ *
+ * Versioned routes are resolved by route name; the path rules serve only the unversioned
+ * drive and documents routes until those packages move to v1.
  */
 final class VaulterThrottledRouteMap
 {
+    /** @var array<string, string> route name => logical route id */
+    private const array NAMED = [
+        'vaulter.v1.public-shares.show' => 'share.show',
+        'vaulter.v1.public-shares.nodes' => 'share.nodes',
+        'vaulter.v1.public-shares.download' => 'share.download',
+    ];
+
+    public static function routeFor(string $routeName): ?string
+    {
+        return self::NAMED[$routeName] ?? null;
+    }
+
     /**
      * @return list<array{methods: list<string>, pattern: string, route: string}>
      */
     private static function rules(): array
     {
         return [
-            ['methods' => ['GET'], 'pattern' => 'share/{id}', 'route' => 'share.show'],
-            ['methods' => ['GET'], 'pattern' => 'share/{id}/nodes', 'route' => 'share.nodes'],
-            ['methods' => ['GET'], 'pattern' => 'share/{id}/download', 'route' => 'share.download'],
             ['methods' => ['POST'], 'pattern' => 'collab/authenticate', 'route' => 'collab.authenticate'],
             ['methods' => ['POST'], 'pattern' => 'collab/store', 'route' => 'collab.store'],
             ['methods' => ['POST'], 'pattern' => 'storages/{id}/resumable-uploads', 'route' => 'uploads.tus_create'],
@@ -34,6 +46,11 @@ final class VaulterThrottledRouteMap
 
     public static function resolve(Request $request): ?string
     {
+        $name = $request->route()?->getName();
+        if (is_string($name) && str_starts_with($name, 'vaulter.v1.')) {
+            return self::routeFor($name);
+        }
+
         $prefix = trim(app(RoutesConfig::class)->prefix(), '/');
         $path = trim($request->path(), '/');
 

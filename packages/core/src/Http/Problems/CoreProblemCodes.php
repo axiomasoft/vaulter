@@ -47,9 +47,13 @@ use Vaulter\Exceptions\Registry\DuplicateNodeContentLifecycleException;
 use Vaulter\Exceptions\Registry\RegistryFrozenException;
 use Vaulter\Exceptions\Schema\UpgradePreflightException;
 use Vaulter\Exceptions\Sharing\ShareLinkTtlExceededException;
+use Vaulter\Exceptions\Sharing\ShareNotFoundException;
+use Vaulter\Exceptions\Sharing\SharePasswordRequiredException;
 use Vaulter\Exceptions\Sharing\ShareRoleNotAllowedException;
 use Vaulter\Exceptions\Webhooks\InvalidWebhookSignatureException;
+use Vaulter\Exceptions\Webhooks\WebhookDeliveryNotFoundException;
 use Vaulter\Exceptions\Webhooks\WebhookDeliveryNotRedeliverableException;
+use Vaulter\Exceptions\Webhooks\WebhookEndpointNotFoundException;
 
 /**
  * The problem codes of the core package: a stable public contract, so a code is added
@@ -109,7 +113,8 @@ final class CoreProblemCodes implements ProblemCodeSource
             'revision_pinned' => ['status' => 409, 'exception' => RevisionPinnedException::class],
             'route_not_found' => ['status' => 404, 'exception' => NotFoundHttpException::class],
             'share_link_ttl_exceeded' => ['status' => 422, 'exception' => ShareLinkTtlExceededException::class],
-            'share_not_found' => ['status' => 404, 'exception' => null],
+            'share_not_found' => ['status' => 404, 'exception' => ShareNotFoundException::class],
+            'share_password_required' => ['status' => 401, 'exception' => SharePasswordRequiredException::class],
             'share_role_not_allowed' => ['status' => 422, 'exception' => ShareRoleNotAllowedException::class],
             'tree_depth_limit_exceeded' => ['status' => 409, 'exception' => TreeDepthLimitExceededException::class],
             'tree_traversal_incomplete' => ['status' => 409, 'exception' => TreeTraversalIncompleteException::class],
@@ -118,7 +123,9 @@ final class CoreProblemCodes implements ProblemCodeSource
             'unsupported_node_kind' => ['status' => 409, 'exception' => UnsupportedNodeKindException::class],
             'upgrade_preflight_failed' => ['status' => 409, 'exception' => UpgradePreflightException::class],
             'validation_failed' => ['status' => 422, 'exception' => ValidationException::class],
+            'webhook_delivery_not_found' => ['status' => 404, 'exception' => WebhookDeliveryNotFoundException::class],
             'webhook_delivery_not_redeliverable' => ['status' => 409, 'exception' => WebhookDeliveryNotRedeliverableException::class],
+            'webhook_endpoint_not_found' => ['status' => 404, 'exception' => WebhookEndpointNotFoundException::class],
             'write_outside_operation' => ['status' => 500, 'exception' => WriteOutsideOperationException::class],
         ];
     }

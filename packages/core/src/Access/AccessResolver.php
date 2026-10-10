@@ -111,14 +111,22 @@ final class AccessResolver
         if ($nodes->isEmpty()) {
             return [];
         }
-        $nodes->loadMissing('storage');
+        // Under strict tenancy each node's drive is checked against the tenant: once for the
+        // whole batch, not three reads per node. Otherwise the eager-loaded relation serves.
+        $checked = $this->boundary->enforced() ? $this->boundary->assertNodes(array_values($nodes->all())) : null;
+        if ($checked === null) {
+            $nodes->loadMissing('storage');
+        }
         $groups = [];
+        $drives = [];
         foreach ($nodes as $node) {
-            $groups[Identity::stringify($this->storageOf($node)->id)][] = $node;
+            $drive = $checked === null ? $this->storageOf($node) : $checked[Identity::stringify($node->getRawOriginal($node->getKeyName()))];
+            $groups[Identity::stringify($drive->id)][] = $node;
+            $drives[Identity::stringify($drive->id)] = $drive;
         }
         $sets = [];
-        foreach ($groups as $group) {
-            $sets += $this->evaluateGroup($actor, $group);
+        foreach ($groups as $driveKey => $group) {
+            $sets += $this->evaluateGroup($actor, $group, $drives[$driveKey]);
         }
 
         return $sets;
@@ -127,9 +135,8 @@ final class AccessResolver
     /** @param list<Node> $nodes
      * @return array<string, GrantSet>
      */
-    private function evaluateGroup(Authorizable $actor, array $nodes): array
+    private function evaluateGroup(Authorizable $actor, array $nodes, Drive $drive): array
     {
-        $drive = $this->storageOf($nodes[0]);
         $driver = $this->drivers->forProfile($drive->profile);
         $scope = AccessScope::forDrive($drive);
         $override = $driver->override($actor, $scope);

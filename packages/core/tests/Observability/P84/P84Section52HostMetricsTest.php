@@ -94,7 +94,9 @@ it('records vaulter_request_peak_memory_bytes on mapped upload operations in ter
 });
 
 it('records vaulter_throttled_total for throttled share downloads', function (): void {
-    $request = Request::create('/api/vaulter/share/token/download', 'GET');
+    $request = Request::create('/api/vaulter/v1/shares/token/download', 'GET');
+    // A versioned request is labelled by its matched route name, not by its path.
+    $request->setRouteResolver(static fn () => app('router')->getRoutes()->getByName('vaulter.v1.public-shares.download'));
     $response = new Response('', 429);
 
     app(RecordThrottledResponse::class)->handle(new RequestHandled($request, $response));
@@ -143,7 +145,7 @@ it('caps vaulter_download_stream_active at php-fpm max children', function (): v
                 ],
                 [
                     'state' => 'Running',
-                    'request uri' => '/index.php/api/vaulter/share/tok/download',
+                    'request uri' => '/index.php/api/vaulter/v1/shares/tok/download',
                 ],
             ],
         ]),
@@ -162,7 +164,7 @@ it('records download ttfb and bytes on public share download', function (): void
     $file = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('share-bytes'), 'shared.bin'));
     ShareTestHelpers::share($file, token: 'metrics-share');
 
-    $response = $this->get('api/vaulter/share/metrics-share/download');
+    $response = $this->get('api/vaulter/v1/shares/metrics-share/download');
     $response->assertOk();
     expect($response->streamedContent())->toBe('share-bytes');
 

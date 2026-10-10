@@ -174,11 +174,12 @@ it('V31 anonymous bearer shares derive only their target tenant and do not open 
     app(TenantResolver::class)->tenant = null;
     $result = app(ShareResolver::class)->resolve($link->token);
     expect($result->context?->node->id)->toEqual($rootA->id);
-    $this->getJson('api/vaulter/share/'.$link->token)->assertOk()->assertJsonFragment(['name' => 'shared child'])->assertJsonMissing(['name' => 'foreign child']);
+    $this->getJson('api/vaulter/v1/shares/'.$link->token)->assertOk();
+    $this->getJson('api/vaulter/v1/shares/'.$link->token.'/nodes')->assertOk()->assertJsonFragment(['name' => 'shared child'])->assertJsonMissing(['name' => 'foreign child']);
     app(TenantResolver::class)->tenant = 'B';
     expect(fn () => Vaulter::drive($driveA))->toThrow(NodeNotFoundException::class);
     AccessTestHelpers::shareRow($link)->forceFill(['tenant_id' => 'B'])->save();
-    $this->getJson('api/vaulter/share/'.$link->token)->assertNotFound();
+    $this->getJson('api/vaulter/v1/shares/'.$link->token)->assertNotFound();
 });
 
 it('V31 F1 binds optional owner validation lookup and insert to one persisted identity', function (): void {

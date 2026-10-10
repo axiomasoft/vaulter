@@ -232,6 +232,29 @@ NFC, если установлен ext-intl.
 Перенесите запись в операцию. `DB::table()` и сырой SQL не перехватываются: защита — это
 эшелонированная оборона, а не песочница.
 
+## share-not-found
+
+`ShareNotFoundException` (`share_not_found`, 404) — публичный запрос по ссылке ничего не открывает:
+токен неизвестен, отозван, заменён ротацией, истёк или исчерпан, посетитель вне арендатора ссылки
+либо `?node=` указывает на узел вне ссылки. Ответ во всех случаях одинаков, чтобы токен нельзя
+было подобрать. Запросите у владельца актуальную ссылку.
+
+## share-password-required
+
+`SharePasswordRequiredException` (`share_password_required`, 401) — ссылка защищена паролем, а
+запрос пришёл без пароля или с неверным. Передайте пароль в заголовке `X-Share-Password` (не в
+URL — он попадает в логи).
+
+## webhook-endpoint-not-found
+
+`WebhookEndpointNotFoundException` (`webhook_endpoint_not_found`, 404) — webhook endpoint с id из
+URL не существует (возможно, удалён). Получите список эндпоинтов и используйте актуальный id.
+
+## webhook-delivery-not-found
+
+`WebhookDeliveryNotFoundException` (`webhook_delivery_not_found`, 404) — доставки нет, она
+принадлежит другому эндпоинту или удалена по истечении срока хранения.
+
 ## webhook-delivery-not-redeliverable
 
 `WebhookDeliveryNotRedeliverableException` (`webhook_delivery_not_redeliverable`, 409) — ручная

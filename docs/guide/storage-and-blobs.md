@@ -243,6 +243,24 @@ promote → metadata commit**. A failure after promotion can leave canonical byt
 without a blob row. Reconciliation collects these orphans after the configured
 grace period under the same CAS lock, preserving objects referenced by winners.
 
+## Delivering bytes over HTTP
+
+Reading a blob is internal. Bytes reach an HTTP client only through the REST v1
+[file delivery](/reference/rest-api#file-delivery) point, which checks access, tenant, profile
+and scan state again on **every** request and pins the **exact revision** asked for (the head,
+or an explicit revision). `vaulter.downloads.delivery_mode` picks how:
+
+| Mode | What the client gets | Revocation |
+|---|---|---|
+| `strict` (default) | the bytes, streamed by the application, `Cache-Control: private, no-store` | every new request is checked; a stream already started is not cut |
+| `direct_signed` (opt-in) | a `302` to a URL your `Vaulter\Contracts\Cas\DirectContentUrlSigner` signs for that exact object version, valid `vaulter.downloads.direct_ttl_seconds` (1–300) | a URL already issued stays valid until it expires — revoking access does not cancel it |
+
+`direct_signed` needs a signer bound in the container; the signer receives the immutable content
+identity (blob, storage key, storage version, sha256, size) and must sign exactly that. Choose it
+only if a bounded revocation window is acceptable for your data. A revision whose scan state is
+not clean answers `423 content_unavailable` in both modes before any byte or URL; public share
+downloads always stream. Byte ranges are not served in 1.0 (`Accept-Ranges: none`).
+
 ## Blob lifecycle
 
 `Vaulter\Enums\Cas\BlobStatus` is the state machine:

@@ -96,9 +96,8 @@ it('grants then revokes access through the grant API', function (): void {
     $subjectType = (new TestUser)->getMorphClass();
 
     // Grant a second subject (id 2) Reader.
-    $this->postJson('api/vaulter/nodes/'.$folder->getKey().'/grants', [
-        'subject_type' => $subjectType,
-        'subject_id' => 2,
+    $created = $this->postJson('api/vaulter/v1/nodes/'.$folder->getKey().'/grants', [
+        'subject' => ['type' => $subjectType, 'id' => 2],
         'role' => 'reader',
     ])->assertCreated()
         ->assertJsonPath('data.role', 'reader');
@@ -106,15 +105,12 @@ it('grants then revokes access through the grant API', function (): void {
     expect(NodeGrant::query()->where('node_id', $folder->id)->where('subject_id', 2)->exists())->toBeTrue();
 
     // List shows both grants (owner self + reader subject 2).
-    $this->getJson('api/vaulter/nodes/'.$folder->getKey().'/grants')
+    $this->getJson('api/vaulter/v1/nodes/'.$folder->getKey().'/grants')
         ->assertOk()
         ->assertJsonCount(2, 'data');
 
-    // Revoke subject 2.
-    $this->deleteJson('api/vaulter/nodes/'.$folder->getKey().'/grants', [
-        'subject_type' => $subjectType,
-        'subject_id' => 2,
-    ])->assertNoContent();
+    // Revoke subject 2's grant by its id.
+    $this->deleteJson('api/vaulter/v1/nodes/'.$folder->getKey().'/grants/'.$created->json('data.id'))->assertNoContent();
 
     expect(NodeGrant::query()->where('node_id', $folder->id)->where('subject_id', 2)->exists())->toBeFalse();
 });
@@ -128,27 +124,26 @@ it('rejects a grant with an unregistered subject_type (422)', function (): void 
 
     // A made-up / typo'd subject_type that maps to no host model must be rejected
     // before it can ever land in v_node_grants (§2.6 / H.2 — alias-only subjects).
-    $this->postJson('api/vaulter/nodes/'.$folder->getKey().'/grants', [
-        'subject_type' => 'totally-not-a-model',
-        'subject_id' => 2,
+    $this->postJson('api/vaulter/v1/nodes/'.$folder->getKey().'/grants', [
+        'subject' => ['type' => 'totally-not-a-model', 'id' => 2],
         'role' => 'reader',
     ])->assertStatus(422)
-        ->assertJsonValidationErrorFor('subject_type');
+        ->assertJsonValidationErrorFor('subject.type');
 
     expect(NodeGrant::query()->where('node_id', $folder->id)->where('subject_id', 2)->exists())->toBeFalse();
 });
 
-it('rejects a revoke with an unregistered subject_type (422)', function (): void {
+it('refuses to revoke a grant of another node through this one (404)', function (): void {
     $storage = authStorage();
     $folder = AccessTestHelpers::folder($storage, null, 'bogus-revoke');
+    $other = AccessTestHelpers::folder($storage, null, 'other');
 
     AccessTestHelpers::grant($folder, RoleRegistry::OWNER, scope: GrantScope::Item);
+    $foreign = AccessTestHelpers::grant($other, RoleRegistry::READER, scope: GrantScope::Item, subjectId: 2);
 
-    $this->deleteJson('api/vaulter/nodes/'.$folder->getKey().'/grants', [
-        'subject_type' => 'totally-not-a-model',
-        'subject_id' => 2,
-    ])->assertStatus(422)
-        ->assertJsonValidationErrorFor('subject_type');
+    $this->deleteJson('api/vaulter/v1/nodes/'.$folder->getKey().'/grants/'.$foreign->getKey())->assertNotFound();
+
+    expect($foreign->fresh())->not->toBeNull();
 });
 
 it('blocks the grant API for an actor without SHARE', function (): void {
@@ -158,9 +153,8 @@ it('blocks the grant API for an actor without SHARE', function (): void {
     // Reader only — no SHARE bit ⇒ cannot manage grants.
     AccessTestHelpers::grant($folder, RoleRegistry::READER, scope: GrantScope::Item);
 
-    $this->postJson('api/vaulter/nodes/'.$folder->getKey().'/grants', [
-        'subject_type' => (new TestUser)->getMorphClass(),
-        'subject_id' => 2,
+    $this->postJson('api/vaulter/v1/nodes/'.$folder->getKey().'/grants', [
+        'subject' => ['type' => (new TestUser)->getMorphClass(), 'id' => 2],
         'role' => 'reader',
     ])->assertStatus(403);
 });

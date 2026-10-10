@@ -158,6 +158,7 @@ const ruGuideSidebar = [
       { text: 'Корзина и восстановление', link: '/ru/guide/trash' },
       { text: 'Поиск и корзина', link: '/ru/guide/search-trash' },
       { text: 'Публичные ссылки', link: '/ru/guide/sharing' },
+      { text: 'Журнал изменений', link: '/ru/guide/changes' },
       { text: 'Комментарии', link: '/ru/guide/comments' },
       { text: 'Экспорт', link: '/ru/guide/export' },
     ],

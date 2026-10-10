@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Vaulter\Repositories\Webhooks;
 
+use Illuminate\Contracts\Pagination\CursorPaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Webhooks\WebhookDelivery;
+use Vaulter\Models\Webhooks\WebhookEndpoint;
 
 /**
  * The write side of webhook-delivery row work (master plan §2.11 / D14 / M3b).
@@ -125,5 +127,25 @@ final readonly class WebhookDeliveryStoreRepository
                 'last_error' => $reason,
                 'updated_at' => now(),
             ]);
+    }
+
+    /**
+     * An endpoint's deliveries, newest first, for the admin API.
+     *
+     * @return CursorPaginator<int, WebhookDelivery>
+     */
+    public function pageForEndpoint(WebhookEndpoint $endpoint, ?string $cursor, int $perPage): CursorPaginator
+    {
+        return $this->newQuery()
+            ->where('endpoint_id', $endpoint->getKey())
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->cursorPaginate(perPage: $perPage, cursor: $cursor);
+    }
+
+    /** One delivery of the endpoint; a delivery of another endpoint is not found. */
+    public function findForEndpoint(WebhookEndpoint $endpoint, int|string $deliveryId): ?WebhookDelivery
+    {
+        return $this->newQuery()->where('endpoint_id', $endpoint->getKey())->whereKey($deliveryId)->first();
     }
 }

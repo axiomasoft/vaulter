@@ -6,6 +6,57 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### REST v1: HTTP kernel and core routes (PLAN2.P6.1, D62–D65)
+
+The access, sharing, activity, change journal and webhook routes moved to `/{routes.prefix}/v1` and are
+named `vaulter.v1.*`. The unversioned routes below are removed without aliases; the drive, upload,
+document and collaboration routes stay unversioned for now and move in the next items.
+
+| Was | Now |
+|---|---|
+| `GET nodes/{node}/grants` (paged `NodeGrantResource`) | `GET v1/nodes/{node}/grants` → `{data: [Grant]}` (`grants.index`) |
+| `POST nodes/{node}/grants` `{subject_type, subject_id, role, scope?, expires_at?}` | `POST v1/nodes/{node}/grants` `{subject: {type, id}, role, scope?, expires_at?}` (`grants.store`) |
+| `DELETE nodes/{node}/grants` with `{subject_type, subject_id}` in the body | `DELETE v1/nodes/{node}/grants/{grant}` — one grant by id (`grants.destroy`) |
+| — | `POST v1/nodes/{node}/inheritance/restrict` `{mode: empty\|copy_current}`, `POST v1/nodes/{node}/inheritance/restore` → Node |
+| `GET/POST nodes/{node}/shares`, `PATCH`/`DELETE nodes/{node}/shares/{share}`, `POST …/rotate` | the same under `v1/` (`shares.index/store/update/rotate/destroy`); list is `{data: [Share]}`, not paged |
+| `GET share/{token}`, `share/{token}/nodes`, `share/{token}/download` | `GET v1/shares/{token}`, `v1/shares/{token}/nodes`, `v1/shares/{token}/download?node=` (`public-shares.*`) |
+| `GET storages/{storage}/activity`, `GET nodes/{node}/activity` (`?verb=` filter) | `GET v1/drives/{drive}/activity`, `GET v1/nodes/{node}/activity` (`activity.drive/node`); no verb filter |
+| — | `GET v1/drives/{drive}/changes/start`, `GET v1/drives/{drive}/changes?cursor=&limit=` |
+| `GET/POST webhook-endpoints`, `PATCH/DELETE webhook-endpoints/{endpoint}`, `POST …/deactivate` | the same under `v1/`, plus `GET v1/webhook-endpoints/{endpoint}`, `POST …/rotate-secret`, `GET …/deliveries`, `POST …/deliveries/{delivery}/redeliver` |
+| Share resource with `token_prefix`, `revoked_at` | Share: `id, node_id, role, role_version, audience, scope, expires_at, max_uses, use_count, has_password, token_generation, created_by, created_at`; `token`/`url` only from store and rotate |
+| Grant resource with `subject_type`, `subject_id` (int) | Grant: `subject {type, id}` (string id), `created_by`; every id is a string |
+| Activity resource `verb, storage_id, actor_type, actor_id, target_type, target_id, context, ip, user_agent, request_id, created_at` | Activity: `id, type, node_id, actor {type, id} \| null, occurred_at, data`; network details are no longer returned |
+| Webhook endpoint `is_active, failure_count, last_triggered_at, updated_at, signing_secret` | Endpoint: `id, url, drive_id, events, status (active\|disabled), disabled_at, created_at`; the secret key is `secret`, returned only by register and rotate-secret |
+| Lists `{data, links, meta}` (Laravel paginator) | `{data, meta: {next_cursor, per_page}}`; `per_page` outside 1–200 is `422` instead of clamped |
+| Public share denials `{message, password_required\|login_required}` | problem+json: `404 share_not_found`, `401 share_password_required`, `401 actor_required` |
+| `GET share/{token}` embedded `children` of a subtree folder | `GET v1/shares/{token}/nodes` lists them, page by page; `show` returns the node only |
+| `NodeResource` with `storage_id`, `file_id`, `current_version_id`, `handler` | v1 `NodeResource(NodeSnapshot, NodeAbilities, ?NodePresentation)`: `drive_id`, `etag`, `presentation`, `abilities`, `viewer`, `scan_status`, `file`, `document`; the old shape is `LegacyNodeResource` (internal) for the unversioned drive and documents routes |
+| `ETag: "{id}.{sequence}"` (planned) | `"{id}.{sequence}.{digest}"` of the caller's representation (D62); opaque |
+| `ChangeOperations` with `features.changes` off threw `LogicException` (500) | `ProfileRestrictionException` (`403 profile_restriction`) |
+| `PreconditionRequiredException::wildcard()` meta `reason: wildcard` | `reason: wildcard_not_allowed` |
+| `StaleNodeException` had no meta | `meta.node_id` (`StaleNodeException::forNode()`) |
+| — | `NodeOperations::abilitiesMany(array $nodes): array<string, NodeAbilities>` and `OperationGuard::abilitiesMany()` (one batch evaluation; nodes without View are left out) |
+| — | Error codes `share_password_required` (401), `webhook_endpoint_not_found` (404), `webhook_delivery_not_found` (404); `share_not_found` now has `ShareNotFoundException` |
+
+- Every v1 response carries `X-Vaulter-Api-Version: 1` and `X-Request-Id` (a valid incoming one, at most 64
+  characters of `[A-Za-z0-9._:-]`, is kept). Read the version once and refuse a major you do not know.
+- Vaulter appends `AssignCorrelationId`, `AddApiVersionHeader`, `ApplyResponseCachePolicy` and
+  `RecordVaulterRequestMetrics` to the three route stacks and puts the first three at the top of the
+  middleware priority. Do not list them in `vaulter.routes.middleware.*`.
+- Cache policy: a single resource with `ETag` is `private, no-cache` with `Vary: Authorization, Cookie`;
+  lists, mutations, secrets, errors and bytes are `no-store`; public share answers add
+  `Referrer-Policy: no-referrer`. Remove any shared caching you put in front of `/api/vaulter`.
+- File bytes leave only through `ContentResponder`: `strict` streams with RFC 6266 `Content-Disposition`,
+  `nosniff`, a sandbox CSP, `Accept-Ranges: none`; `direct_signed` answers `302` to a signed URL of the exact
+  revision. Public share downloads always stream.
+- A route to a node or drive the caller cannot see, of another tenant or unknown answers the same `404`
+  (`node_not_found` / `drive_not_found`) with the same body except `request_id`.
+- Host code that called `GrantController`, `ShareController`, `ActivityController`, `PublicShareController` or
+  `WebhookEndpointsController`, `NodeGrantResource`, `NodeShareResource`, `StoreNodeGrantRequest` or
+  `DestroyNodeGrantRequest` must move to the v1 routes; there are no aliases.
+- `@vaulter/vue` still calls the unversioned routes; it moves to v1 in a later item. Hosts using its sharing,
+  grant or activity calls must wait for that release or call v1 directly.
+
 ### Problem Details for the versioned API (PLAN2.P6.2, D62–D65)
 
 | Was | Now |

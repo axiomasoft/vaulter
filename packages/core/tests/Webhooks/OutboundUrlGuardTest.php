@@ -220,7 +220,7 @@ it('rejects registering an endpoint whose host resolves into a private range, F-
 
     fakeResolver()->set('internal.test', ['10.0.0.5']);
 
-    $this->postJson('api/vaulter/webhook-endpoints', [
+    $this->postJson('api/vaulter/v1/webhook-endpoints', [
         'url' => 'https://internal.test/hook',
         'events' => ['folder.created'],
     ])->assertStatus(422)->assertJsonValidationErrors('url');

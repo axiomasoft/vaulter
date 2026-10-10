@@ -1,15 +1,39 @@
 ---
 title: Справочник REST API
-description: Все REST-маршруты Vaulter — Drive, публичные ссылки, резюмируемые загрузки, документные узлы, совместное редактирование и легаси-API документов — с методом, путём, параметрами, гейтами и ответом.
+description: REST API v1 Vaulter — базовые правила, стеки middleware, валидаторы и кэширование, выдача файлов и каждый маршрут с методом, путём, параметрами и ответом.
 outline: deep
 editLink: false
 ---
 
 # Справочник REST API
 
-Это исчерпывающий, маршрут-за-маршрутом справочник по HTTP-поверхности Vaulter,
-сгенерированный по `packages/core/routes/api.php`. Каждый маршрут монтируется под
-настроенным префиксом и middleware:
+Версионированный REST API живёт под `/{routes.prefix}/v1` — по умолчанию
+`/api/vaulter/v1`, — и каждый маршрут называется `vaulter.v1.<имя>`. Сначала идут
+базовые правила, затем маршруты. Ошибки описаны в [справочнике ошибок](/ru/reference/errors).
+
+::: info Миграция идёт
+Маршруты доступа, ссылок, активности, журнала изменений и вебхуков уже на v1. Маршруты
+drive, загрузок, документов, комментариев и совместного редактирования ниже пока
+обслуживаются без версии под `/{routes.prefix}` и переедут на `/v1` в ближайших
+выпусках разработки 1.0; их разделы это отмечают.
+:::
+
+## Базовые правила
+
+| Правило | Значение |
+|---|---|
+| Базовый путь | `/{routes.prefix}/v1` (по умолчанию `/api/vaulter/v1`) |
+| Версии | мажор в URL; аддитивные изменения остаются в `v1`; удаление или смена смысла — только в `v2`, и `v1` поддерживается не меньше 12 месяцев после выхода `v2` |
+| Заголовок версии | на каждом ответе v1, включая ошибки и `304`: `X-Vaulter-Api-Version: 1` |
+| Имена маршрутов | `vaulter.v1.<ресурс>.<действие>` |
+| JSON | `snake_case`; все id — строки; время — RFC 3339 в UTC с `Z`; отсутствующее значение — `null`, ключ не пропускается; пустой объект (`properties`, `data`) — `{}` |
+| Один ресурс | `{ "data": { … } }` |
+| Списки | курсорные страницы: `?cursor=&per_page=` (`per_page` 1–200, по умолчанию 50; вне диапазона — `422 validation_failed`) → `{ "data": [ … ], "meta": { "next_cursor": "…" \| null, "per_page": 50 } }`; `total` нет |
+| Корреляция | входящий `X-Request-Id`, подходящий под `^[A-Za-z0-9._:-]{1,64}$`, сохраняется, иначе назначается новый ULID; он возвращается в каждом ответе, передаётся операции и записывается с её активностью и событиями |
+| Ошибки | `application/problem+json` со стабильным `code` — см. [справочник ошибок](/ru/reference/errors) |
+| Параметры | `{node}`, `{drive}`, `{grant}`, `{share}`, `{endpoint}`, `{delivery}`, `{token}` — простые id (`[A-Za-z0-9_-]+`); привязки моделей к маршрутам нет |
+
+### Стеки middleware
 
 ```php
 // config/vaulter.php
@@ -23,42 +47,111 @@ editLink: false
 ],
 ```
 
-Так что путь, показанный как `storages/{storage}`, разворачивается в
-`/api/vaulter/storages/{storage}`.
+Хост перечисляет только свои middleware. Vaulter добавляет к каждому из трёх стеков
+свои — `AssignCorrelationId`, `AddApiVersionHeader`, `ApplyResponseCachePolicy` и
+`RecordVaulterRequestMetrics` — и ставит первые три по приоритету раньше ограничения
+частоты и аутентификации, поэтому `401` и `429` тоже несут id запроса, версию и
+политику кэша. На маршрутах хоста эти middleware ничего не делают.
 
-## Соглашения
+| Стек | Маршруты | Vaulter добавляет |
+|---|---|---|
+| `authenticated` | все, кроме двух ниже | — |
+| `public` | `shares/{token}*` | `throttle:vaulter-public`, `ResolveShareToken` |
+| `hub` | `collaboration/hub/*` | `throttle:vaulter-public`, `ResolveCollaborationCall` |
 
-- **`{storage}` / `{node}`** привязаны через **route-model binding** к сменяемым
-  `config('vaulter.models.drive')` / `config('vaulter.models.node')`. Каждый маршрут Drive
-  вдобавок явно применяет `SubstituteBindings`, так что привязка работает, даже если хост
-  подрезает свою группу `api`.
-- **`{upload_id}`, `{share}`, `{endpoint}`, `{token}`, `{version}`** — обычные
-  скаляры (не привязаны к моделям): контроллер сам их резолвит и убеждается, что они
-  принадлежат авторизованной цели.
-- **Авторизация** на поверхности Drive — это [`AccessResolver`](/ru/concepts/authorization):
-  каждый эндпоинт проверяет [`Ability`](/ru/reference/contracts) на узле (или `canCreateInWorkspace`
-  на цели назначения). Отказ — или неаутентифицированный запрос — возвращает **403**
-  (`PermissionDeniedException`). Списки фильтруются **по каждому узлу**, поэтому более
-  близкий запрет убирает строку.
-- **Актор** — это аутентифицированный `request->user()` (его auth-идентификатор становится
-  атрибутированным `actorId`).
-- **Списки** пагинируются по курсору; передавайте `?per_page=` (по умолчанию 50, зажимается в 1–200)
-  и `?cursor=`.
-- Ответы — это Laravel API resources, обёрнутые в верхнеуровневый ключ `data`.
+### Резолв и авторизация
 
-### Фиче-гейты
+Контроллер находит drive по id через `HttpResourceResolver` с фильтром арендатора и
+вызывает операции от имени пользователя запроса
+(`Vaulter::drive($drive)->actingAs($user)`): HTTP авторизует ровно так же, как вызов той же
+операции из PHP.
 
-Документы доступны при установке Documents. Остальные настройки маршрутов:
+- Нет аутентифицированного пользователя → `401 actor_required`.
+- Узел, который вам не виден, чужого арендатора или несуществующий → одинаковый
+  `404 node_not_found` с одинаковым телом, кроме `request_id`. Drive, который вам не виден
+  (нет `view` на корне), чужого арендатора, удаляемый или неизвестный → одинаковый
+  `404 drive_not_found`.
+- Узел виден, но нет нужной способности → `403 permission_denied`; функция, выключенная
+  профилем drive → `403 profile_restriction`.
+- id гранта или ссылки другого узла считается неизвестным (`404`).
 
-| Ключ | Маршруты |
+### Валидаторы и предусловия
+
+`ETag` узла — сильный валидатор **того представления, которое получаете вы**:
+`"{id}.{sequence}.{digest}"`, где дайджест покрывает всё в вашей копии узла — ваши
+способности, вашу звёздочку, состояние проверки и presentation, properties и голову
+содержимого. Поэтому грант, звёздочка или завершённая проверка меняют его, хотя
+`sequence` узла не изменился. Считайте тег непрозрачным. Содержимое документа использует
+`"{node}.{collab_epoch}.{state_version}"`, не зависящий от вызывающего.
+
+- Заголовок `ETag` приходит с чтением одного узла без `include`, с содержимым документа и с
+  мутациями, которые возвращают узел или содержимое. Каждый узел в теле, включая элементы
+  списков, несёт поле `etag`.
+- `If-None-Match` на одном узле или содержимом документа даёт `304` — с `ETag`,
+  `Cache-Control`, `Vary`, `X-Vaulter-Api-Version` и `X-Request-Id`, без тела, — только
+  после того как узел найден и авторизован. Читатель, у которого отозвали доступ, получает
+  `404`, а не `304`.
+- Маршруты с пометкой **If-Match** ниже не меняют состояние вслепую:
+  - нет `If-Match` → `428 precondition_required` с `meta.header = "If-Match"`;
+  - `If-Match: *` → `428` с `meta.reason = "wildcard_not_allowed"` (совпал бы с любой версией);
+  - слабый тег (`W/"…"`) никогда не совпадает;
+  - тег не текущий → `412 node_sequence_mismatch` (или `document_state_mismatch`) с
+    `meta.node_id` — без текущего тега;
+  - список `"a", "b"` совпадает, если совпадает любой элемент.
+
+  Проверка идёт после авторизации, а операция пишет, только если узел всё ещё на том
+  `sequence`, с которым вы совпали (атомарный compare-and-set), поэтому два клиента с
+  одним тегом не могут выиграть оба: второй получит `412`.
+
+### Кэширование
+
+| Ответ | `Cache-Control` |
 |---|---|
-| `vaulter-documents.collaboration.enabled` | Collaboration token + signed hub callbacks |
-| `vaulter-documents.comments.enabled` | Node comments (default `true`) |
-| `vaulter-drive.uploads.resumable.enabled` | Resumable uploads |
-| `vaulter.features.webhooks` | Webhook endpoint management |
-| `vaulter.features.grants` | Shared-with-me feed |
+| Один ресурс с `ETag` (и его `304`) | `private, no-cache`, `Vary: Authorization, Cookie` |
+| Списки, мутации, ответы с токеном или секретом, ошибки, `428` | `no-store` (`private, no-store` для `GET`) |
+| Байты файлов и редиректы на подписанный URL | `private, no-store` |
+| Публичные маршруты ссылок | `private, no-store` и `Referrer-Policy: no-referrer` |
+
+В v1 нет ни `public`, ни `max-age`: общий кэш не должен отдать представление одного
+вызывающего другому или отозванному вызывающему.
+
+### Выдача файлов
+
+Байты и подписанные URL выходят только через один компонент, который на каждый запрос
+заново проверяет доступ, арендатора, профиль и состояние проверки и фиксирует точную
+ревизию. Режим задаёт `vaulter.downloads.delivery_mode`:
+
+- **`strict`** (по умолчанию) — приложение отдаёт байты потоком с
+  `Content-Disposition: attachment; filename="…"; filename*=UTF-8''…` (RFC 6266; управляющие
+  символы и разделители путей из имени удаляются), `X-Content-Type-Options: nosniff`,
+  `Content-Security-Policy: sandbox; default-src 'none'`, `Cache-Control: private, no-store`,
+  `Accept-Ranges: none` и `Content-Length`. Заявленный тип сохраняется только для списка
+  безопасных inline-типов, иначе `application/octet-stream`.
+- **`direct_signed`** (по выбору) — после тех же проверок `302` на URL, подписанный вашим
+  `DirectContentUrlSigner` для этой ревизии, действующий `vaulter.downloads.direct_ttl_seconds`
+  (1–300), с `Cache-Control: private, no-store` и `Referrer-Policy: no-referrer`.
+
+Ревизия не чистая (ожидает обязательной проверки, заражена) → `423 content_unavailable` до
+любого байта или URL. Кто видит файл, но не может его скачать (previewer), получает
+`403 permission_denied`. Диапазоны байтов в 1.0 не поддерживаются.
+
+Отзыв ограничен и задокументирован, а не мгновенен: в `strict` проверяется каждый новый
+запрос, но уже начатый поток не обрывается; в `direct_signed` уже выданный URL действует
+до истечения — отзыв доступа его не отменяет. Скачивания по публичным ссылкам всегда
+идут потоком.
 
 ---
+
+## Маршруты без версии
+
+Маршруты [Drive](#drive), [документных узлов](#документные-узлы-documents),
+[резюмируемых загрузок](#резюмируемые-загрузки),
+[совместного редактирования](#совместное-редактирование-в-реальном-времени) и
+[легаси-API документов](#легаси-api-документов) пока обслуживаются под `/{routes.prefix}`
+без `/v1` и сохраняют прежние соглашения: `{storage}` и `{node}` превращаются в модели до
+контроллера, ошибки — `{ "message", "code" }`, узлы — в прежней форме (`storage_id`,
+`handler`, …). Они переедут на `/v1` — с базовыми правилами выше — в ближайших выпусках
+разработки 1.0.
 
 ## Drive
 
@@ -473,178 +566,263 @@ Complete-multipart → сборка → коммит (сервер пересч�
 
 ---
 
-## Публичные ссылки (bearer-ссылки на узлы)
+## Доступ: гранты и наследование
 
-Канал bearer-ссылок (`Sharing\ShareController` для владельцев,
-`Sharing\PublicShareController` для публики). Публичная ссылка даёт **ровно свой битмаск**
-на своём наборе узлов — на публичном пути identity-ACL никогда не запрашивается.
-См. [Публичные ссылки](/ru/guide/sharing).
+Роли, выданные на узел (`vaulter.features.grants`). Каждый маршрут требует `manage` на
+узле. См. [Гранты](/ru/guide/grants).
 
-### Поверхность владельца (аутентифицированная)
+#### `GET v1/nodes/{node}/grants` — `grants.index`
 
-Монтируется в группе Drive `SubstituteBindings`, так что `{node}` привязан через
-route-model binding. Каждое действие требует `Ability::Share` на узле.
+Гранты, выданные прямо на узел. **Ответ:** `200 { "data": [Grant, …] }` (грантов одного
+узла немного, список без страниц).
 
-#### `GET nodes/{node}/shares`
+#### `POST v1/nodes/{node}/grants` — `grants.store`
 
-Список публичных ссылок на узле (сырой токен никогда не раскрывается). → `index`
-
-**Ответ:** пагинированный `NodeShareResource`.
-
-#### `POST nodes/{node}/shares`
-
-Выпустить публичную ссылку. → `store`
-
-| Параметр | Правило |
+| Поле | Правило |
 |---|---|
-| `permissions` | nullable, integer `0..31` (битмаск CRUDS) |
-| `level` | nullable, значение `GrantLevel` |
-| `scope` | nullable, значение `GrantScope` (`item` по умолчанию, или `subtree`) |
-| `password` | nullable, string 1–255 |
-| `require_login` | nullable, boolean |
-| `allow_discovery` | nullable, boolean |
-| `expires_at` | nullable, date, позже текущего момента |
-| `max_uses` | nullable, integer ≥ 1 |
+| `subject.type` | обязательно, тип субъекта, который драйвер прав умеет перечислять |
+| `subject.id` | обязательно |
+| `role` | обязательно: `previewer`, `reader`, `commenter`, `writer`, `organizer`, `owner` |
+| `scope` | `subtree` (по умолчанию) или `item` |
+| `expires_at` | необязательно, дата в будущем |
 
-Если `permissions` опущен, он по умолчанию равен битам выбранного `level`, иначе — просто
-`READ`. **Ответ:** `201` `NodeShareResource` — **сырой `token` и полный `url`
-возвращаются здесь ровно один раз** (любой list/show их опускает):
+**Ответ:** `201` Grant:
 
 ```json
 {
   "data": {
     "id": "01J…",
     "node_id": "01J…",
-    "token_prefix": "abc12345",
-    "permissions": 1,
-    "level": "reader",
-    "scope": "item",
-    "has_password": false,
-    "require_login": false,
-    "allow_discovery": false,
-    "expires_at": null,
-    "max_uses": null,
-    "use_count": 0,
-    "revoked_at": null,
-    "created_at": "…",
-    "token": "abc12345…rawtokenonce",
-    "url": "/share/abc12345…rawtokenonce"
-  }
-}
-```
-
-#### `DELETE nodes/{node}/shares/{share}`
-
-Отозвать публичную ссылку. Id `{share}` должен принадлежать авторизованному узлу (чужой id
-даёт `404`). → `destroy`
-
-**Ответ:** `204 No Content`.
-
-### Публичная поверхность (резолвится по токену)
-
-Эти маршруты **не несут auth-middleware** — только `ResolveShareToken`, который хеширует
-`{token}`, резолвит живую публичную ссылку, прогоняет timing-safe сравнение + гейты
-пароля / require-login и складывает `ShareContext`. Авторизация — это **только** собственный
-битмаск ссылки.
-
-#### `GET share/{token}`
-
-Метаданные целевого узла в пределах scope. Папка с `scope=subtree` встраивает своих
-непосредственных потомков. → `PublicShareController::show`
-
-**Требует:** бит `View`. **Ответ:** `SharedNodeResource`.
-
-#### `GET share/{token}/nodes`
-
-Список in-scope потомков — **только** для `scope=subtree` (у ссылки со scope=item нет
-списка → `404`). → `nodes`
-
-**Требует:** бит `View`. **Ответ:** коллекция `SharedNodeResource`.
-
-#### `GET share/{token}/download`
-
-Стримить текущий head расшаренного файла в пределах бита `Download`, пересечённого с
-item-safety (блоб должен быть `Committed`). Атомарно потребляет одно использование
-(ограничено `max_uses`) перед стримингом. → `download`
-
-**Требует:** бит `Download`. **Ответ:** `302` на подписанный URL или стримингованное
-скачивание (как для [аутентифицированного скачивания](#скачивание)).
-
----
-
-## Гранты ACL на узел
-
-Управление грантами уровня узла (`Drive\GrantController`). `{node}` привязан через
-route-model binding; каждое действие требует `Ability::Share` на узле. См.
-[ACL панели](/ru/guide/grants).
-
-#### `GET nodes/{node}/grants`
-
-Список грантов на узле. → `index`
-
-**Ответ:** пагинированный `NodeGrantResource`.
-
-#### `POST nodes/{node}/grants`
-
-Выдать доступ субъекту. → `store`
-
-| Параметр | Правило |
-|---|---|
-| `subject_type` | required, string, зарегистрированный тип субъекта |
-| `subject_id` | required |
-| `level` | required, значение `GrantLevel` |
-| `effect` | nullable, значение `Effect` (`allow` по умолчанию) |
-| `scope` | nullable, значение `GrantScope` (`subtree` по умолчанию) |
-| `permissions` | nullable, integer `0..31` |
-| `expires_at` | nullable, date |
-
-**Ответ:** `201` `NodeGrantResource`:
-
-```json
-{
-  "data": {
-    "id": "01J…",
-    "node_id": "01J…",
-    "subject_type": "App\\Models\\User",
-    "subject_id": 5,
-    "level": "writer",
-    "permissions": 15,
-    "effect": "allow",
+    "subject": { "type": "user", "id": "5" },
+    "role": "writer",
+    "role_version": 1,
     "scope": "subtree",
     "expires_at": null,
-    "created_at": "…"
+    "created_by": "1",
+    "created_at": "2026-10-10T12:00:00.000000Z"
   }
 }
 ```
 
-#### `DELETE nodes/{node}/grants`
+#### `DELETE v1/nodes/{node}/grants/{grant}` — `grants.destroy`
 
-Отозвать грант субъекта. → `destroy`
+Отозвать один грант. **Ответ:** `204`.
 
-| Параметр | Правило |
-|---|---|
-| `subject_type` | required |
-| `subject_id` | required |
+#### `POST v1/nodes/{node}/inheritance/restrict` — `access.inheritance.restrict`
 
-**Ответ:** `204 No Content`.
+Перестать применять гранты сверху к узлу и его поддереву. `mode`: `empty` (по умолчанию —
+у узла остаются только свои гранты) или `copy_current` (узел сохраняет копии
+унаследованных грантов). **Ответ:** `200` Node с новым `ETag`. Если изменение сняло ваш
+собственный доступ, узел возвращается со всеми способностями `false`.
+
+#### `POST v1/nodes/{node}/inheritance/restore` — `access.inheritance.restore`
+
+Снова применять гранты сверху; собственные гранты узла остаются. **Ответ:** `200` Node.
 
 ---
 
-## Лента активности
+## Ссылки (shares)
 
-Append-only лента активности (`Activity\ActivityController`). Получатели резолвятся на
-ЧТЕНИИ через привязку к хранилищу/узлу — строк-уведомлений нет.
+Bearer-ссылки на узел (`vaulter.features.share_links`). Ссылка даёт ровно способности
+своей роли на своём наборе узлов; на публичных маршрутах гранты пользователей не
+участвуют. См. [Публичные ссылки](/ru/guide/sharing).
 
-#### `GET storages/{storage}/activity`
+### Маршруты владельца
 
-Лента активности по всему хранилищу. → `forStorage`. **Гейт:** `Ability::View` на
-корне хранилища.
+Каждый маршрут владельца требует `share` на узле.
 
-#### `GET nodes/{node}/activity`
+#### `GET v1/nodes/{node}/shares` — `shares.index`
 
-Лента активности одного узла. → `forNode`. **Гейт:** `Ability::View` на узле.
+Действующие ссылки узла. **Ответ:** `200 { "data": [Share, …] }`. Токен в списке не
+показывается.
 
-Обе возвращают пагинированную коллекцию `ActivityResource`.
+#### `POST v1/nodes/{node}/shares` — `shares.store`
+
+| Поле | Правило |
+|---|---|
+| `role` | `previewer`, `reader` (по умолчанию), `commenter`, `writer`; `organizer`/`owner` → `422 share_role_not_allowed` |
+| `audience` | `anyone` (по умолчанию), `authenticated`, `tenant`; для `writer` — только `authenticated` или `tenant` |
+| `scope` | `item` (по умолчанию) или `subtree` |
+| `password` | необязательно, 1–255 символов |
+| `expires_at` | необязательно, в будущем, в пределах `vaulter.sharing` и профиля (`422 share_link_ttl_exceeded`) |
+| `max_uses` | необязательно, ≥ 1 успешного визита |
+
+**Ответ:** `201` — ссылка плюс `token` и `url`, **один раз**:
+
+```json
+{
+  "data": {
+    "id": "01J…",
+    "node_id": "01J…",
+    "role": "reader",
+    "role_version": 1,
+    "audience": "anyone",
+    "scope": "item",
+    "expires_at": "2026-10-13T12:00:00.000000Z",
+    "max_uses": null,
+    "use_count": 0,
+    "has_password": false,
+    "token_generation": 1,
+    "created_by": "1",
+    "created_at": "2026-10-10T12:00:00.000000Z",
+    "token": "q3V…",
+    "url": "https://app.example/share/q3V…"
+  }
+}
+```
+
+#### `PATCH v1/nodes/{node}/shares/{share}` — `shares.update`
+
+Изменить срок, лимит визитов, пароль или аудиторию; токен и роль не меняются.
+Отсутствующее поле остаётся как есть; `password: null` / `max_uses: null` их снимают.
+**Ответ:** `200` Share (без токена).
+
+#### `POST v1/nodes/{node}/shares/{share}/rotate` — `shares.rotate`
+
+Заменить токен: старый токен и его открытые визиты перестают работать сразу,
+`token_generation` растёт. **Ответ:** `200` Share с новыми `token` и `url`, один раз.
+
+#### `DELETE v1/nodes/{node}/shares/{share}` — `shares.destroy`
+
+Отозвать ссылку. **Ответ:** `204`.
+
+### Публичные маршруты
+
+Стек `public`: без собственной аутентификации, `throttle:vaulter-public`, затем
+`ResolveShareToken`, который проверяет токен, аудиторию и пароль и засчитывает визит.
+Первый ответ визита возвращает заголовок `X-Share-Session`; если отправлять его обратно,
+остальные запросы визита не тратят новых использований. Пароль передаётся в
+`X-Share-Password`. Каждый ответ — `private, no-store` с `Referrer-Policy: no-referrer`.
+
+Отказы: неизвестный, отозванный, заменённый, истёкший или исчерпанный токен, посетитель
+вне арендатора ссылки и узел вне ссылки — все дают `404 share_not_found`; нет пароля или
+он неверен — `401 share_password_required`; ссылка `authenticated` без вошедшего
+посетителя — `401 actor_required`.
+
+Узлы называются непрозрачным id (никогда настоящим id узла); `?node=` принимает только сам
+узел ссылки или одного из детей, которых показывает `nodes`.
+
+#### `GET v1/shares/{token}` — `public-shares.show`
+
+Узел ссылки: `id` (непрозрачный), `kind`, `name`, `mime`, `extension`, `size_bytes`,
+`parent_id` (непрозрачный), `created_at`, `updated_at`.
+
+#### `GET v1/shares/{token}/nodes` — `public-shares.nodes`
+
+Дети папки ссылки по имени, страницей. Ссылка `item` ничего не перечисляет
+(`404 share_not_found`).
+
+#### `GET v1/shares/{token}/download?node=` — `public-shares.download`
+
+Байты файла ссылки или перечисленного ребёнка через `?node=`. Нужна роль с `download` —
+ссылка previewer получает `403 permission_denied`. Всегда потоком, с заголовками
+[выдачи файлов](#выдача-файлов); `423 content_unavailable` до любого байта, если файл не
+чистый.
+
+---
+
+## Активность
+
+Что произошло в drive или на узле, сначала новое, с фильтром для читателя
+(`vaulter.features.activity`).
+
+#### `GET v1/drives/{drive}/activity` — `activity.drive`
+
+Нужен `view` на корне drive. **Ответ:** страница Activity.
+
+#### `GET v1/nodes/{node}/activity` — `activity.node`
+
+Нужен `view` на узле. **Ответ:** страница Activity:
+
+```json
+{
+  "data": [
+    {
+      "id": "01J…",
+      "type": "node.renamed",
+      "node_id": "01J…",
+      "actor": { "type": "user", "id": "1" },
+      "occurred_at": "2026-10-10T12:00:00.000000Z",
+      "data": { "correlation_id": "01J…" }
+    }
+  ],
+  "meta": { "next_cursor": null, "per_page": 50 }
+}
+```
+
+`node_id` заполнен, если запись про узел; `actor` — `null`, когда проекция его скрывает.
+
+---
+
+## Журнал изменений
+
+Следить за drive инкрементально вместо повторного обхода (`vaulter.features.changes`;
+выключен → `403 profile_restriction`). См. [Изменения](/ru/guide/changes).
+
+#### `GET v1/drives/{drive}/changes/start` — `changes.start`
+
+**Ответ:** `200 { "data": { "cursor": "…" } }` — берите его сразу после полного обхода.
+
+#### `GET v1/drives/{drive}/changes?cursor=&limit=` — `changes.index`
+
+`cursor` обязателен; `limit` — 1–`vaulter.changes.max_page_size`, по умолчанию 100.
+**Ответ:**
+
+```json
+{
+  "data": [
+    {
+      "node_id": "01J…",
+      "operation": "upsert",
+      "reason": null,
+      "subtree": false,
+      "node_sequence": 4,
+      "node": { "id": "01J…", "etag": "\"01J….4.9f86d081884c7d65\"", "…": "…" }
+    }
+  ],
+  "meta": { "next_cursor": "…", "has_more": false }
+}
+```
+
+Применяйте изменения по порядку (для узла побеждает последнее); `remove` (с `reason`:
+`deleted`, `moved_out`, `permission_lost`) приходит с `node: null`, а с `subtree: true`
+удаляет и всё ниже. Сохраняйте `next_cursor` — в отличие от списков он есть всегда — и,
+пока `has_more`, сразу запрашивайте снова. `400 invalid_cursor` — курсор другого drive
+или повреждённый; `410 cursor_expired` — записи после него удалены: обойдите drive заново.
+
+---
+
+## Webhook-эндпоинты
+
+Глобальная админ-поверхность подписчиков вебхуков, подключается при
+`vaulter.features.webhooks`. Каждый маршрут, включая чтение, проходит
+`WebhookEndpointPolicy` (`vaulter.webhooks.manage_ability`) до поиска по id. См.
+[Вебхуки](/ru/guide/webhooks).
+
+| Метод и путь | Имя | Ответ |
+|---|---|---|
+| `GET v1/webhook-endpoints` | `webhook-endpoints.index` | страница Endpoint |
+| `POST v1/webhook-endpoints` | `webhook-endpoints.store` | `201` Endpoint + `secret` (один раз) |
+| `GET v1/webhook-endpoints/{endpoint}` | `webhook-endpoints.show` | Endpoint |
+| `PATCH v1/webhook-endpoints/{endpoint}` | `webhook-endpoints.update` | Endpoint |
+| `POST v1/webhook-endpoints/{endpoint}/deactivate` | `webhook-endpoints.deactivate` | Endpoint |
+| `POST v1/webhook-endpoints/{endpoint}/rotate-secret` | `webhook-endpoints.rotate-secret` | Endpoint + новый `secret` (один раз) |
+| `DELETE v1/webhook-endpoints/{endpoint}` | `webhook-endpoints.destroy` | `204` |
+| `GET v1/webhook-endpoints/{endpoint}/deliveries` | `webhook-deliveries.index` | страница Delivery |
+| `POST v1/webhook-endpoints/{endpoint}/deliveries/{delivery}/redeliver` | `webhook-deliveries.redeliver` | `202` Delivery |
+
+- **Регистрация / изменение** принимают `url` (http(s); адрес, ведущий в частную сеть,
+  отклоняется), `events` (типы событий), `is_active`, `drive_id` (события только этого drive).
+- **Ротация секрета** принимает `overlap_seconds` (≥ 0, с ограничением): прежний секрет
+  ещё столько же проверяет подписи.
+- **Endpoint:** `id`, `url`, `drive_id`, `events`, `status` (`active` или `disabled`),
+  `disabled_at`, `created_at`.
+- **Delivery:** `id`, `event_id`, `event_type`, `status` (`pending`, `failed`, `delivered`,
+  `dead`), `attempts`, `next_retry_at`, `last_status_code` (последний HTTP-статус эндпоинта
+  или `null`), `created_at`.
+- **Повторная доставка** — для `delivered` или `dead` при активном эндпоинте; иначе
+  `409 webhook_delivery_not_redeliverable`. Неизвестные id дают
+  `404 webhook_endpoint_not_found` / `404 webhook_delivery_not_found`.
 
 ---
 
@@ -698,25 +876,6 @@ room-JWT и привязывает вызов к его узлу (JWT для у�
 сохранить обратно, — `409 document_content_degraded`; ни Yjs-состояние, ни проекция не меняются.
 Без проекции JSON сохраняет свою версию схемы. **Ответ:**
 `{ "data": { "node_id": …, "version_no": …, "yjs_state_size": … } }`.
-
----
-
-## Управление webhook-эндпоинтами
-
-Глобальная админ-поверхность для эндпоинтов-подписчиков
-(`Webhooks\WebhookEndpointsController`). **Гейтится фичей `reliability`.**
-Каждое действие гейтится manage-правом `WebhookEndpointPolicy`. См.
-[Надёжность и вебхуки](/ru/guide/recipes).
-
-| Метод и путь | Действие | Примечания |
-|---|---|---|
-| `GET webhook-endpoints` | `index` | список эндпоинтов |
-| `POST webhook-endpoints` | `store` | зарегистрировать — возвращает `signing_secret` **один раз** |
-| `PATCH webhook-endpoints/{endpoint}` | `update` | обновить |
-| `POST webhook-endpoints/{endpoint}/deactivate` | `deactivate` | выключить |
-| `DELETE webhook-endpoints/{endpoint}` | `destroy` | удалить |
-
-`{endpoint}` — обычный скаляр, резолвится через read-репозиторий.
 
 ---
 

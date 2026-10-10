@@ -76,7 +76,7 @@ it('answers a failed precondition with 428 and names the header', function (): v
         ->assertJsonPath('detail', 'The If-Match header is required for this request.');
     $this->getJson(ProblemProbeRoutes::path('wildcard'))
         ->assertStatus(428)
-        ->assertJsonPath('meta.reason', 'wildcard');
+        ->assertJsonPath('meta.reason', 'wildcard_not_allowed');
 });
 
 it('keeps the headers an exception asks for', function (): void {

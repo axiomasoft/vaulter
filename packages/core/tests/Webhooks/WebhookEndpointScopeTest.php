@@ -142,7 +142,7 @@ it('accepts and returns drive_id over HTTP', function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
     $drive = AccessTestHelpers::storage();
 
-    $created = $this->postJson('api/vaulter/webhook-endpoints', [
+    $created = $this->postJson('api/vaulter/v1/webhook-endpoints', [
         'url' => 'https://hooks.test/receive',
         'events' => ['folder.created'],
         'drive_id' => (string) $drive->getKey(),
@@ -150,20 +150,20 @@ it('accepts and returns drive_id over HTTP', function (): void {
 
     expect((string) $created->json('data.drive_id'))->toBe((string) $drive->getKey());
 
-    $this->postJson('api/vaulter/webhook-endpoints', [
+    $this->postJson('api/vaulter/v1/webhook-endpoints', [
         'url' => 'https://hooks.test/receive',
         'events' => ['folder.created'],
         'drive_id' => '999999',
     ])->assertNotFound();
 
-    $this->postJson('api/vaulter/webhook-endpoints', [
+    $this->postJson('api/vaulter/v1/webhook-endpoints', [
         'url' => 'https://hooks.test/receive',
         'events' => ['folder.created'],
         'drive_id' => 'not a key',
     ])->assertStatus(422);
 
     $other = AccessTestHelpers::storage();
-    $this->patchJson('api/vaulter/webhook-endpoints/'.$created->json('data.id'), ['drive_id' => (string) $other->getKey()])
+    $this->patchJson('api/vaulter/v1/webhook-endpoints/'.$created->json('data.id'), ['drive_id' => (string) $other->getKey()])
         ->assertOk()
-        ->assertJsonPath('data.drive_id', $other->getKey());
+        ->assertJsonPath('data.drive_id', (string) $other->getKey());
 });

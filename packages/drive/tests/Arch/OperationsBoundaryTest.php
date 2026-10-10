@@ -50,9 +50,13 @@ it('keeps migrated HTTP and Filament boundaries on Operations including aliases 
     $paths = [
         'drive/src/Http/Controllers/NodeController.php',
         'drive/src/Http/Controllers/DownloadController.php',
-        'core/src/Http/Controllers/Access/GrantController.php',
-        'core/src/Http/Controllers/Sharing/ShareController.php',
-        'core/src/Http/Controllers/Activity/ActivityController.php',
+        'core/src/Http/Controllers/Access/ListGrantsController.php',
+        'core/src/Http/Controllers/Access/CreateGrantController.php',
+        'core/src/Http/Controllers/Access/RevokeGrantController.php',
+        'core/src/Http/Controllers/Sharing/CreateShareController.php',
+        'core/src/Http/Controllers/Sharing/DownloadPublicShareController.php',
+        'core/src/Http/Controllers/Activity/ListDriveActivityController.php',
+        'core/src/Http/Controllers/Changes/ListChangesController.php',
         'filament/src/Resources/NodeResource.php',
         'filament/src/Resources/NodeGrantResource.php',
         'filament/src/Resources/NodeShareResource.php',
@@ -92,10 +96,18 @@ PHP_CODE))->toContain('Vaulter\Drive\Actions\Nodes\RenameNodeAction', 'Vaulter\R
  */
 it('keeps every HTTP and Filament boundary on Operations except the shrinking exemption list', function (): void {
     $root = dirname(__DIR__, 3);
+    // The webhook admin is a global surface with no drive handle: its controllers call the
+    // webhook Actions and repositories by design. The HTTP support classes resolve route
+    // ids into the models that the content and share machinery take.
+    $webhookAdmin = array_map(static fn (string $name): string => 'core/src/Http/Controllers/Webhooks/'.$name.'Controller.php', [
+        'DeactivateWebhookEndpoint', 'DeleteWebhookEndpoint', 'ListWebhookDeliveries', 'ListWebhookEndpoints', 'RedeliverWebhook',
+        'RegisterWebhookEndpoint', 'RotateWebhookSecret', 'ShowWebhookEndpoint', 'UpdateWebhookEndpoint',
+    ]);
     $exempt = [
-        'core/src/Http/Controllers/Sharing/PublicShareController.php',
-        'core/src/Http/Controllers/Webhooks/WebhookEndpointsController.php',
+        ...$webhookAdmin,
+        'core/src/Http/Support/ContentResponder.php',
         'core/src/Http/Support/HttpResourceResolver.php',
+        'core/src/Http/Support/SharedNodeResolver.php',
         'drive/src/Http/Controllers/Drives/ShowDriveController.php',
         'drive/src/Http/Controllers/Uploads/S3MultipartProtocolController.php',
         'drive/src/Http/Controllers/Uploads/TusProtocolController.php',

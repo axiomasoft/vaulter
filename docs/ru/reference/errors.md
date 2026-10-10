@@ -87,7 +87,8 @@ outline: deep
 | [`revision_pinned`](#revision_pinned) | 409 | core | `Vaulter\Exceptions\Drive\RevisionPinnedException` |
 | [`route_not_found`](#route_not_found) | 404 | core | `Symfony\Component\HttpKernel\Exception\NotFoundHttpException` |
 | [`share_link_ttl_exceeded`](#share_link_ttl_exceeded) | 422 | core | `Vaulter\Exceptions\Sharing\ShareLinkTtlExceededException` |
-| [`share_not_found`](#share_not_found) | 404 | core | — |
+| [`share_not_found`](#share_not_found) | 404 | core | `Vaulter\Exceptions\Sharing\ShareNotFoundException` |
+| [`share_password_required`](#share_password_required) | 401 | core | `Vaulter\Exceptions\Sharing\SharePasswordRequiredException` |
 | [`share_role_not_allowed`](#share_role_not_allowed) | 422 | core | `Vaulter\Exceptions\Sharing\ShareRoleNotAllowedException` |
 | [`tree_depth_limit_exceeded`](#tree_depth_limit_exceeded) | 409 | core | `Vaulter\Exceptions\Policy\TreeDepthLimitExceededException` |
 | [`tree_traversal_incomplete`](#tree_traversal_incomplete) | 409 | core | `Vaulter\Exceptions\Nodes\TreeTraversalIncompleteException` |
@@ -102,7 +103,9 @@ outline: deep
 | [`upload_offset_mismatch`](#upload_offset_mismatch) | 409 | drive | `Vaulter\Drive\Exceptions\Uploads\OffsetMismatchException` |
 | [`upload_rejected`](#upload_rejected) | 422 | drive | `Vaulter\Drive\Exceptions\Files\UploadRejectedException` |
 | [`validation_failed`](#validation_failed) | 422 | core | `Illuminate\Validation\ValidationException` |
+| [`webhook_delivery_not_found`](#webhook_delivery_not_found) | 404 | core | `Vaulter\Exceptions\Webhooks\WebhookDeliveryNotFoundException` |
 | [`webhook_delivery_not_redeliverable`](#webhook_delivery_not_redeliverable) | 409 | core | `Vaulter\Exceptions\Webhooks\WebhookDeliveryNotRedeliverableException` |
+| [`webhook_endpoint_not_found`](#webhook_endpoint_not_found) | 404 | core | `Vaulter\Exceptions\Webhooks\WebhookEndpointNotFoundException` |
 | [`write_outside_operation`](#write_outside_operation) | 500 | core | `Vaulter\Exceptions\Database\WriteOutsideOperationException` |
 
 ### `actor_required`
@@ -423,6 +426,12 @@ outline: deep
 
 **Ссылка не найдена** — Ссылка не существует, истекла или недоступна вам.
 
+### `share_password_required`
+
+**401** · core
+
+**Нужен пароль ссылки** — Ссылка защищена паролем. Передайте пароль в заголовке X-Share-Password.
+
 ### `share_role_not_allowed`
 
 **422** · core
@@ -507,11 +516,23 @@ outline: deep
 
 **Ошибка валидации** — Данные запроса некорректны; подробности в поле errors.
 
+### `webhook_delivery_not_found`
+
+**404** · core
+
+**Доставка не найдена** — У этого endpoint нет такой доставки.
+
 ### `webhook_delivery_not_redeliverable`
 
 **409** · core
 
 **Доставку нельзя повторить** — Доставка ещё повторяется или её endpoint отключён.
+
+### `webhook_endpoint_not_found`
+
+**404** · core
+
+**Webhook endpoint не найден** — Такого webhook endpoint не существует.
 
 ### `write_outside_operation`
 

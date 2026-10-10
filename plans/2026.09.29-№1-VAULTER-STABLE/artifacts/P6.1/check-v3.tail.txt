@@ -1,0 +1,38 @@
+[39m Tests\Document\RevisionIdentityTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit V32 keeps a file revision and a document revision with the same[39m[90m… [39m [90m0.35s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Document\SpreadsheetContentTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit creates a spreadsheet document from the 0.x mime field[39m[90m           [39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit autosaves an opaque Univer workbook on a spreadsheet document[39m[90m    [39m [90m0.27s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects a spreadsheet create when the spreadsheet type is not re[39m[90m…[39m [90m0.21s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit still creates a rich-text (tiptap) node and enforces {"type":"do[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit rejects a non-doc create payload on a rich-text node (no mime)[39m[90m   [39m [90m0.20s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Document\TrashDocumentTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit 404s on reading the content of a trashed document node, F-P1.12-[39m[90m…[39m [90m0.26s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit 404s on exporting a trashed document node, F-P1.12-01[39m[90m            [39m [90m0.26s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit 404s on listing document-version history of a trashed node, F-P1[39m[90m…[39m [90m0.25s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Document\VersionFormatCarryForwardTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit keeps a markdown document markdown across an autosave checkpoint[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit maps every 0.2 rich-text flavour to the one rich-text type (P0.4[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit maps every 0.2 rich-text flavour to the one rich-text type (P0.4[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit maps every 0.2 rich-text flavour to the one rich-text type (P0.4[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit takes a checkpoint for a document whose head is missing, without[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit keeps the type on a NAMED checkpoint too (P0.4/L3)[39m[90m               [39m [90m0.23s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Comment\NodeCommentApiTest[39m
+  [32;1m✓[39;22m[90m [39m[90mit lists the node comment thread for a viewer[39m[90m                       [39m [90m0.26s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit V29 denies Reader comment creation and Commenter editing[39m[90m         [39m [90m0.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses comment creation once an inheritance boundary cuts the i[39m[90m…[39m [90m0.23s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit hides the thread of a node the user cannot see behind node_not_f[39m[90m…[39m [90m0.21s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit creates a comment with the REGISTERED morph alias, not a raw FQC[39m[90m…[39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit refuses creating a comment on a node the user cannot see with no[39m[90m…[39m [90m0.21s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit threads a reply and rejects a cross-node parent[39m[90m                  [39m [90m0.27s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit lets the AUTHOR resolve and delete their own comment[39m[90m             [39m [90m0.27s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit 403s a non-author WITHOUT Manage on resolve and delete[39m[90m           [39m [90m0.26s[39m  
+  [32;1m✓[39;22m[90m [39m[90mit lets a MANAGER who is not the author resolve and delete[39m[90m          [39m [90m0.26s[39m  
+
+  [90mTests:[39m    [33;1m1 skipped[39;22m[90m,[39m[39m [39m[32;1m204 passed[39;22m[90m (1180 assertions)[39m
+  [90mDuration:[39m [39m48.46s[39m
+

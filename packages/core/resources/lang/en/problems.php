@@ -162,6 +162,10 @@ return [
         'title' => 'Share link not found',
         'detail' => 'The share link does not exist, has expired or is not visible to you.',
     ],
+    'share_password_required' => [
+        'title' => 'Share link password required',
+        'detail' => 'This share link is password protected. Send its password in the X-Share-Password header.',
+    ],
     'share_role_not_allowed' => [
         'title' => 'Share role not allowed',
         'detail' => 'A share link cannot carry this role for this audience.',
@@ -194,9 +198,17 @@ return [
         'title' => 'Validation failed',
         'detail' => 'The request data is invalid; see the errors field.',
     ],
+    'webhook_delivery_not_found' => [
+        'title' => 'Webhook delivery not found',
+        'detail' => 'The delivery does not exist for this endpoint.',
+    ],
     'webhook_delivery_not_redeliverable' => [
         'title' => 'Delivery cannot be redelivered',
         'detail' => 'The delivery is still being retried or its endpoint is inactive.',
+    ],
+    'webhook_endpoint_not_found' => [
+        'title' => 'Webhook endpoint not found',
+        'detail' => 'The webhook endpoint does not exist.',
     ],
     'write_outside_operation' => [
         'title' => 'Write outside an operation',

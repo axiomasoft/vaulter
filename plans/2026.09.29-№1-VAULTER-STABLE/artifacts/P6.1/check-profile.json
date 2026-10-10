@@ -1,0 +1,39 @@
+{
+  "item": "P6.1",
+  "route": "claude-code/claude-opus-5-5/high (item route frontier/high); reviewer requested by owner in session: grok/grok-4.7/high (headless, read-only bridge launch)",
+  "policy": "D66: only light checks (affected Pest on SQLite, Arch/golden, Pint, PHPStan); no PG/MySQL, full suites, ForkRace, e2e, docs build, mutators or negative controls",
+  "changed_paths": [
+    "packages/core/routes/api.php (rewritten to vaulter.v1.* authenticated + public stacks; legacy core routes removed)",
+    "packages/core/src/Http/Support/{HttpOperationContextFactory,HttpResourceResolver,RepresentationTag,Preconditions,ContentResponder,DownloadHeaders}.php",
+    "packages/core/src/Http/Middleware/{AssignCorrelationId,AddApiVersionHeader,ApplyResponseCachePolicy,VaulterHttpOperationMap,VaulterThrottledRouteMap,RecordVaulterRequestMetrics,ResolveShareToken}.php",
+    "packages/core/src/Configuration/RoutesConfig.php (package middleware appended to the three stacks)",
+    "packages/core/src/Http/Controllers/{Access,Sharing,Activity,Changes,Webhooks}/*Controller.php (invokable; GrantController, ShareController, ActivityController, PublicShareController, WebhookEndpointsController deleted)",
+    "packages/core/src/Http/Requests/** (CreateGrantRequest, RestrictInheritanceRequest, Store/UpdateShareLinkRequest, ListChangesRequest, Webhooks/*)",
+    "packages/core/src/Http/Resources/** (NodeResource v1, LegacyNodeResource for unmigrated drive/documents routes, GrantResource, ShareResource, MintedShareResource, ActivityResource, ChangeResource, ChangePageResource, WebhookEndpointResource, WebhookDeliveryResource, PageResponse)",
+    "packages/core/src/Access/OperationGuard.php (abilitiesMany)",
+    "packages/core/src/Contracts/Drive/NodeOperations.php + packages/drive/src/Operations/NodeOperations.php (abilitiesMany)",
+    "packages/core/src/Repositories/Webhooks/WebhookDeliveryStoreRepository.php (pageForEndpoint, findForEndpoint)",
+    "packages/core/src/Exceptions/Sharing/{ShareNotFoundException,SharePasswordRequiredException}.php + CoreProblemCodes + lang problems.php en/ru + docs/reference/errors.md (+ru) regenerated",
+    "drive/documents legacy controllers: import of LegacyNodeResource only (shape unchanged until P6.7/P6.8)",
+    "tests: packages/core/tests/Http/*V1Test.php etc., tests/Support/NodeProbeRoutes.php, tests/Arch/HttpV1ArchTest.php, rewritten core-route tests (Feature, Access, Sharing, Tenancy, Operations, Webhooks, Observability), drive tests/Feature/DriveAuthorizationTest + tests/Uploads/P3/QuarantineBoundaryTest, documents tests/Feature/MiddlewareStacksTest (they called removed core routes)",
+    "golden: packages/core/tests/Arch/__snapshots__/public-api.txt, packages/drive/tests/Arch/__snapshots__/*",
+    "docs: docs/reference/rest-api.md (+ru), docs/guide/{sharing,grants,webhooks,changes,storage-and-blobs}.md (+ru); UPGRADE.md; CHANGELOG.md; artifacts/P6.1/changelog-entry.md"
+  ],
+  "callers": [
+    "drive routes/drive.php and documents routes/documents.php use RoutesConfig::authenticatedMiddleware()/publicMiddleware()/hubMiddleware() (legacy paths: AddApiVersionHeader/ApplyResponseCachePolicy act only on vaulter.v1.* names)",
+    "load/app/* uses VaulterHttpOperationMap::resolve and VaulterThrottledRouteMap::resolve (path resolve kept for drive/documents legacy paths)",
+    "drive NodeController/Tus/S3 controllers and documents DocumentNodeController render NodeResource (switched to LegacyNodeResource)",
+    "ContentDelivery::stream/streamForShare/directUrl (consumed by ContentResponder)"
+  ],
+  "checks": [
+    {"id": "V1", "cwd": ".", "env": "APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory:", "cmd": "scripts/php84 vendor/bin/pest --ci packages/core/tests/Http packages/core/tests/Feature packages/core/tests/Access packages/core/tests/Sharing packages/core/tests/Activity packages/core/tests/Changes packages/core/tests/Webhooks packages/core/tests/Tenancy packages/core/tests/Arch packages/core/tests/Observability packages/core/tests/Operations packages/core/tests/Content", "expect": "exit 0 except the 2 pre-existing EventTypeTest failures recorded by P6.2 (baseline captured before edits)"},
+    {"id": "V2", "cwd": "packages/drive", "env": "APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory:", "cmd": "../../scripts/php84 vendor/bin/pest --ci tests/Arch tests/PublicApi tests/Feature tests/Drive", "expect": "exit 0"},
+    {"id": "V3", "cwd": "packages/documents", "env": "APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory:", "cmd": "../../scripts/php84 vendor/bin/pest --ci tests/Feature tests/Document tests/Comment", "expect": "exit 0"},
+    {"id": "V4", "cwd": ".", "env": "APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: VAULTER_TEST_WRITE_GUARD=1", "cmd": "scripts/php84 vendor/bin/pest --ci packages/core/tests/Http packages/core/tests/Sharing packages/core/tests/Access", "expect": "exit 0"},
+    {"id": "V80", "cwd": ". / packages/drive / packages/documents", "cmd": "pint --test + phpstan analyse per package (item validation V80)", "expect": "all exit 0"},
+    {"id": "extra", "cwd": "packages/drive", "env": "APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory:", "cmd": "../../scripts/php84 vendor/bin/pest --ci tests/Uploads/P3/QuarantineBoundaryTest.php", "expect": "exit 0 (consumer of the removed public share route)"},
+    {"id": "errors-ref", "cwd": ".", "cmd": "vaulter:errors:reference --check through the existing ErrorsReference test", "expect": "docs in sync with the catalog after the two new share codes"}
+  ],
+  "deferred_to_phase_run": ["PG/MySQL qualification of C07/C08 (P8.1)", "full package suites", "OpenAPI/route golden (P6.3)"],
+  "fixtures": "none (SQLite in-memory only); fake DirectContentUrlSigner in ContentResponderTest"
+}

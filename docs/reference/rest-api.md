@@ -1,15 +1,40 @@
 ---
 title: REST API reference
-description: Every Vaulter REST route — Drive, sharing, resumable uploads, document nodes, collaboration and the legacy document API — with method, path, params, gates and response.
+description: The Vaulter REST API v1 — base rules, middleware stacks, validators and caching, file egress, and every route with method, path, parameters and response.
 outline: deep
 editLink: false
 ---
 
 # REST API reference
 
-This is the exhaustive, route-by-route reference for the Vaulter HTTP surface,
-generated against `packages/core/routes/api.php`. Every route is mounted under the
-configured prefix and middleware:
+The versioned REST API lives under `/{routes.prefix}/v1` — by default
+`/api/vaulter/v1` — and every route is named `vaulter.v1.<name>`. This page lists the
+base rules first, then each route. Errors are described in the
+[error reference](/reference/errors).
+
+::: info Migration in progress
+The access, sharing, activity, change journal and webhook routes are on v1. The drive,
+upload, document, comment and collaboration routes further down are still served
+unversioned under `/{routes.prefix}` and move to `/v1` with the next 1.0 development
+releases; their sections say so.
+:::
+
+## Base rules
+
+| Rule | Value |
+|---|---|
+| Base path | `/{routes.prefix}/v1` (`/api/vaulter/v1` by default) |
+| Versioning | major version in the URL; additive changes keep `v1`; removals or changed meaning only in `v2`, and `v1` stays supported for at least 12 months after `v2` ships |
+| Version header | every v1 response, errors and `304` included: `X-Vaulter-Api-Version: 1` |
+| Route names | `vaulter.v1.<resource>.<action>` |
+| JSON | `snake_case`; every id is a string; times are RFC 3339 in UTC with a `Z`; a missing value is `null`, never an absent key; an empty object (`properties`, `data`) is `{}` |
+| Single resource | `{ "data": { … } }` |
+| Lists | cursor pages: `?cursor=&per_page=` (`per_page` 1–200, default 50; outside that range `422 validation_failed`) → `{ "data": [ … ], "meta": { "next_cursor": "…" \| null, "per_page": 50 } }`; there is no `total` |
+| Correlation | an incoming `X-Request-Id` matching `^[A-Za-z0-9._:-]{1,64}$` is kept, otherwise a new ULID is assigned; it is echoed on every response, passed to the operation and recorded with its activity and events |
+| Errors | `application/problem+json` with a stable `code` — see the [error reference](/reference/errors) |
+| Parameters | `{node}`, `{drive}`, `{grant}`, `{share}`, `{endpoint}`, `{delivery}`, `{token}` are plain ids (`[A-Za-z0-9_-]+`); there is no route-model binding |
+
+### Middleware stacks
 
 ```php
 // config/vaulter.php
@@ -23,42 +48,116 @@ configured prefix and middleware:
 ],
 ```
 
-So a path shown as `storages/{storage}` resolves to
-`/api/vaulter/storages/{storage}`.
+The host lists only its own middleware. Vaulter appends its own to each of the three
+stacks — `AssignCorrelationId`, `AddApiVersionHeader`, `ApplyResponseCachePolicy` and
+`RecordVaulterRequestMetrics` — and ranks the first three ahead of throttling and
+authentication, so a `401` or `429` also carries the request id, the version and the
+cache policy. On a host route these middleware do nothing.
 
-## Conventions
+| Stack | Used by | Added by Vaulter |
+|---|---|---|
+| `authenticated` | everything except the two below | — |
+| `public` | `shares/{token}*` | `throttle:vaulter-public`, `ResolveShareToken` |
+| `hub` | `collaboration/hub/*` | `throttle:vaulter-public`, `ResolveCollaborationCall` |
 
-- **`{storage}` / `{node}`** are **route-model bound** to the swappable
-  `config('vaulter.models.drive')` / `config('vaulter.models.node')`. Every Drive
-  route also applies `SubstituteBindings` explicitly, so binding works even if the
-  host trims its `api` group.
-- **`{upload_id}`, `{share}`, `{endpoint}`, `{token}`, `{version}`** are plain
-  scalars (not model-bound) — the controller resolves them and asserts they belong
-  to the authorized target.
-- **Authorization** on the Drive surface is the [`AccessResolver`](/guide/authorization):
-  every endpoint guards an [`Ability`](/reference/contracts) on the node (or `canCreateInWorkspace`
-  on the destination). A denial — or an unauthenticated request — returns **403**
-  (`PermissionDeniedException`). Listings are filtered **per node**, so a nearer
-  deny drops a row.
-- **Actor** is the authenticated `request->user()` (its auth identifier is the
-  attributed `actorId`).
-- **Listings** are cursor-paginated; pass `?per_page=` (default 50, clamped 1–200)
-  and `?cursor=`.
-- Responses are Laravel API resources wrapped in a top-level `data` key.
+### Resolution and authorization
 
-### Feature gates
+A controller resolves the drive behind the ids through the tenant-scoped
+`HttpResourceResolver`, then calls the operations as the request's user
+(`Vaulter::drive($drive)->actingAs($user)`): HTTP authorizes exactly like a PHP call of
+the same operation.
 
-Documents are enabled by installing Documents. Other route settings:
+- No authenticated user → `401 actor_required`.
+- A node you cannot view, of another tenant or that does not exist → the same
+  `404 node_not_found`, with the same body except `request_id`. A drive you cannot see
+  (no `view` on its root), of another tenant, being deleted or unknown → the same
+  `404 drive_not_found`.
+- A node you can view but an ability you lack → `403 permission_denied`; a feature the
+  drive's profile switches off → `403 profile_restriction`.
+- A grant or share id that belongs to another node is unknown (`404`).
 
-| Key | Routes |
+### Validators and preconditions
+
+A node's `ETag` is a strong validator of **the representation you receive**:
+`"{id}.{sequence}.{digest}"`, where the digest covers everything in your copy of the
+node — your abilities, your starred flag, its scan state and presentation, its
+properties and content head. A grant, a star or a finished scan therefore changes it
+even though the node's `sequence` did not move. Treat the tag as opaque. Document
+content uses `"{node}.{collab_epoch}.{state_version}"`, which does not depend on the
+caller.
+
+- The `ETag` header comes with a single node read without `include`, with document
+  content, and with mutations that answer a node or content. Every node in a body also
+  carries an `etag` field, list items included.
+- `If-None-Match` on a single node or document content answers `304` — with `ETag`,
+  `Cache-Control`, `Vary`, `X-Vaulter-Api-Version` and `X-Request-Id`, and no body —
+  only after the node has been found and authorized. A reader whose access was revoked
+  gets `404`, never `304`.
+- Routes marked **If-Match** below refuse to change state blind:
+  - no `If-Match` → `428 precondition_required` with `meta.header = "If-Match"`;
+  - `If-Match: *` → `428` with `meta.reason = "wildcard_not_allowed"` (it would match
+    any version);
+  - a weak tag (`W/"…"`) never matches;
+  - a tag that is not the current one → `412 node_sequence_mismatch` (or
+    `document_state_mismatch`) with `meta.node_id` — without the current tag;
+  - a list `"a", "b"` matches if any element matches.
+
+  The check runs after authorization, and the operation then writes only if the node
+  is still at the sequence you matched (an atomic compare-and-set), so two clients
+  holding the same tag cannot both win: the second gets `412`.
+
+### Caching
+
+| Response | `Cache-Control` |
 |---|---|
-| `vaulter-documents.collaboration.enabled` | Collaboration token + signed hub callbacks |
-| `vaulter-documents.comments.enabled` | Node comments (default `true`) |
-| `vaulter-drive.uploads.resumable.enabled` | Resumable uploads |
-| `vaulter.features.webhooks` | Webhook endpoint management |
-| `vaulter.features.grants` | Shared-with-me feed |
+| Single resource with an `ETag` (and its `304`) | `private, no-cache`, `Vary: Authorization, Cookie` |
+| Lists, mutations, responses with a token or secret, errors, `428` | `no-store` (`private, no-store` for `GET`) |
+| File bytes and signed-URL redirects | `private, no-store` |
+| Public share routes | `private, no-store` and `Referrer-Policy: no-referrer` |
+
+Nothing in v1 is `public` or carries a `max-age`: a shared cache must never serve one
+caller's representation to another, nor a revoked caller from cache.
+
+### File delivery
+
+Bytes and signed URLs leave only through one component, which checks access, tenant,
+profile and scan state again for every request and pins the exact revision. Its mode is
+`vaulter.downloads.delivery_mode`:
+
+- **`strict`** (default) — the application streams the bytes with
+  `Content-Disposition: attachment; filename="…"; filename*=UTF-8''…` (RFC 6266; control
+  characters and path separators are removed from the name),
+  `X-Content-Type-Options: nosniff`, `Content-Security-Policy: sandbox; default-src 'none'`,
+  `Cache-Control: private, no-store`, `Accept-Ranges: none` and `Content-Length`. The
+  declared type is kept only for the inline-safe allow-list, otherwise
+  `application/octet-stream`.
+- **`direct_signed`** (opt-in) — after the same checks, a `302` to a URL signed by your
+  `DirectContentUrlSigner` for that exact revision, valid for
+  `vaulter.downloads.direct_ttl_seconds` (1–300), with `Cache-Control: private, no-store`
+  and `Referrer-Policy: no-referrer`.
+
+A revision that is not clean (pending scan where scanning is required, infected) answers
+`423 content_unavailable` before any byte or URL. A caller who can view a file but not
+download it (a previewer) gets `403 permission_denied`. Byte ranges are not supported in
+1.0.
+
+Revocation is bounded and documented, not instant: in `strict` mode every new request
+is checked, but a stream that has already started is not cut; in `direct_signed` mode a
+URL already issued stays valid until it expires — revoking access does not cancel it.
+Public share downloads always stream.
 
 ---
+
+## Unversioned routes
+
+The [Drive](#drive), [Document nodes](#document-nodes-documents),
+[Resumable uploads](#resumable-uploads), [Realtime collaboration](#realtime-collaboration)
+and [Legacy document API](#legacy-document-api) routes are still served under
+`/{routes.prefix}` without `/v1` and keep their pre-v1 conventions:
+`{storage}` and `{node}` are resolved into models before the controller runs, errors
+are `{ "message", "code" }`, and node bodies use the pre-v1 shape (`storage_id`,
+`handler`, …). They move to `/v1` — with the base rules above — in the next 1.0
+development releases.
 
 ## Drive
 
@@ -520,196 +619,265 @@ never the content address). → `complete`
 
 ---
 
-## Sharing (bearer node share-links)
+## Access: grants and inheritance
 
-The bearer share-link channel (`Sharing\ShareController` for owners,
-`Sharing\PublicShareController` for the public). A share grants **exactly the
-abilities of its role** on its node-set — the identity ACL is never consulted on the public path.
-See [Sharing](/guide/sharing).
+Roles granted on a node (`vaulter.features.grants`). Every route needs `manage` on the
+node. See [Grants](/guide/grants).
 
-### Owner surface (authenticated)
+#### `GET v1/nodes/{node}/grants` — `grants.index`
 
-Mounted in the Drive `SubstituteBindings` group, so `{node}` is route-model bound.
-Every action requires `Ability::Share` on the node.
+The grants set directly on the node. **Response:** `200 { "data": [Grant, …] }` (the
+grants of one node are few, so this list is not paged).
 
-#### `GET nodes/{node}/shares`
+#### `POST v1/nodes/{node}/grants` — `grants.store`
 
-List the share-links on a node (never exposes the raw token). → `index`
-
-**Response:** paginated `NodeShareResource`.
-
-#### `POST nodes/{node}/shares`
-
-Mint a share-link. → `store`
-
-| Param | Rule |
+| Field | Rule |
 |---|---|
-| `role` | nullable, a role key (`previewer`, `reader` default, `commenter`, `writer`; `organizer`/`owner` are refused with `share_role_not_allowed`) |
-| `audience` | nullable, `anyone` (default), `authenticated` or `tenant`; `writer` needs `authenticated`/`tenant` |
-| `scope` | nullable, a `GrantScope` value (`item` default, or `subtree`) |
-| `password` | nullable, string 1–255 |
-| `expires_at` | nullable, date, after now, within the TTL ceilings (profile `maxShareLinkTtlDays` → `422 share_link_ttl_exceeded`) |
-| `max_uses` | nullable, integer ≥ 1 (successful redemptions) |
+| `subject.type` | required, a subject type the permission driver can enumerate |
+| `subject.id` | required |
+| `role` | required: `previewer`, `reader`, `commenter`, `writer`, `organizer`, `owner` |
+| `scope` | `subtree` (default) or `item` |
+| `expires_at` | optional, a future date |
 
-**Response:** `201` `NodeShareResource` — the **raw `token` and full
-`url` are returned exactly once here** (every list/show omits them):
+**Response:** `201` Grant:
 
 ```json
 {
   "data": {
     "id": "01J…",
     "node_id": "01J…",
-    "token_prefix": "abc12345",
+    "subject": { "type": "user", "id": "5" },
+    "role": "writer",
+    "role_version": 1,
+    "scope": "subtree",
+    "expires_at": null,
+    "created_by": "1",
+    "created_at": "2026-10-10T12:00:00.000000Z"
+  }
+}
+```
+
+#### `DELETE v1/nodes/{node}/grants/{grant}` — `grants.destroy`
+
+Revoke one grant. **Response:** `204`.
+
+#### `POST v1/nodes/{node}/inheritance/restrict` — `access.inheritance.restrict`
+
+Stop grants from above applying to the node and its subtree. `mode`: `empty` (default —
+the node keeps only its own grants) or `copy_current` (it keeps copies of the grants it
+inherited). **Response:** `200` Node with its new `ETag`. If the change removed your own
+access, the node comes back with every ability `false`.
+
+#### `POST v1/nodes/{node}/inheritance/restore` — `access.inheritance.restore`
+
+Let grants from above apply again; the node's own grants stay. **Response:** `200` Node.
+
+---
+
+## Share links
+
+Bearer links to a node (`vaulter.features.share_links`). A link grants exactly its
+role's abilities on its node-set; identity grants play no part on the public routes.
+See [Sharing](/guide/sharing).
+
+### Owner routes
+
+Every owner route needs `share` on the node.
+
+#### `GET v1/nodes/{node}/shares` — `shares.index`
+
+The node's live links. **Response:** `200 { "data": [Share, …] }`. A token is never
+listed.
+
+#### `POST v1/nodes/{node}/shares` — `shares.store`
+
+| Field | Rule |
+|---|---|
+| `role` | `previewer`, `reader` (default), `commenter`, `writer`; `organizer`/`owner` → `422 share_role_not_allowed` |
+| `audience` | `anyone` (default), `authenticated`, `tenant`; `writer` needs `authenticated` or `tenant` |
+| `scope` | `item` (default) or `subtree` |
+| `password` | optional, 1–255 characters |
+| `expires_at` | optional, future, within `vaulter.sharing` and profile limits (`422 share_link_ttl_exceeded`) |
+| `max_uses` | optional, ≥ 1 successful visits |
+
+**Response:** `201` — the share plus `token` and `url`, **returned once**:
+
+```json
+{
+  "data": {
+    "id": "01J…",
+    "node_id": "01J…",
     "role": "reader",
     "role_version": 1,
     "audience": "anyone",
     "scope": "item",
-    "has_password": false,
-    "token_generation": 1,
-    "expires_at": "…",
+    "expires_at": "2026-10-13T12:00:00.000000Z",
     "max_uses": null,
     "use_count": 0,
-    "revoked_at": null,
-    "created_at": "…",
-    "token": "abc12345…rawtokenonce",
-    "url": "/share/abc12345…rawtokenonce"
+    "has_password": false,
+    "token_generation": 1,
+    "created_by": "1",
+    "created_at": "2026-10-10T12:00:00.000000Z",
+    "token": "q3V…",
+    "url": "https://app.example/share/q3V…"
   }
 }
 ```
 
-#### `PATCH nodes/{node}/shares/{share}`
+#### `PATCH v1/nodes/{node}/shares/{share}` — `shares.update`
 
-Change a live link without changing its token. → `update`
+Change expiry, use budget, password or audience; the token and role stay. A field that
+is absent stays as it is; `password: null` / `max_uses: null` remove them.
+**Response:** `200` Share (no token).
 
-| Param | Rule |
-|---|---|
-| `audience` | sometimes, `anyone`/`authenticated`/`tenant`; refused if the stored role does not fit |
-| `password` | sometimes, nullable string 1–255 (`null` removes it) |
-| `expires_at` | sometimes, date, after now, within the TTL ceilings |
-| `max_uses` | sometimes, nullable integer ≥ 1 (`null` removes it) |
+#### `POST v1/nodes/{node}/shares/{share}/rotate` — `shares.rotate`
 
-**Response:** `200` `NodeShareResource` (no token).
+Replace the token: the old token and its open visits stop working at once and
+`token_generation` goes up. **Response:** `200` Share with the new `token` and `url`,
+once.
 
-#### `POST nodes/{node}/shares/{share}/rotate`
+#### `DELETE v1/nodes/{node}/shares/{share}` — `shares.destroy`
 
-Replace the token: the old one is `404` at once, `token_generation` is raised, and the new raw
-`token`/`url` are returned exactly once. → `rotate`
+Revoke the link. **Response:** `204`.
 
-**Response:** `200` `NodeShareResource` with `token` and `url`. A revoked link is `404`.
+### Public routes
 
-#### `DELETE nodes/{node}/shares/{share}`
+`public` stack: no authentication of its own, `throttle:vaulter-public`, then
+`ResolveShareToken`, which checks the token, the audience and the password and counts
+the visit. The first answer of a visit returns an `X-Share-Session` header; sending it
+back keeps the rest of the visit from costing more uses. Send a password in
+`X-Share-Password`. Every answer is `private, no-store` with `Referrer-Policy: no-referrer`.
 
-Revoke a share-link. The `{share}` id must belong to the authorized node (a foreign
-id `404`s). → `destroy`
+Denials: an unknown, revoked, rotated, expired or used-up token, a visitor outside the
+link's tenant and a node outside the link all answer `404 share_not_found`; a missing or
+wrong password `401 share_password_required`; an `authenticated` link without a signed-in
+visitor `401 actor_required`.
 
-**Response:** `204 No Content`.
+Nodes are named by an opaque id (never the real node id); `?node=` accepts only the
+shared node or one of the children `nodes` lists.
 
-### Public surface (token-resolved)
+#### `GET v1/shares/{token}` — `public-shares.show`
 
-These routes carry **no auth middleware** — only `ResolveShareToken`, which hashes
-the `{token}`, resolves the live share, runs the timing-safe compare + audience /
-password gates, redeems the visit and stashes a `ShareContext`. Authorization is **only**
-the share's own role. The first request of a visit returns a signed `X-Share-Session`
-header; send it back and the rest of the visit costs no further use.
+The shared node: `id` (opaque), `kind`, `name`, `mime`, `extension`, `size_bytes`,
+`parent_id` (opaque), `created_at`, `updated_at`.
 
-#### `GET share/{token}`
+#### `GET v1/shares/{token}/nodes` — `public-shares.nodes`
 
-The target node's metadata within scope. A `scope=subtree` folder embeds its
-immediate children. → `PublicShareController::show`
+The children of a shared folder, name order, as a page. An `item` link lists nothing
+(`404 share_not_found`).
 
-**Requires:** the `view` ability. **Response:** `SharedNodeResource`.
+#### `GET v1/shares/{token}/download?node=` — `public-shares.download`
 
-#### `GET share/{token}/nodes`
-
-List the in-scope children — **only** for `scope=subtree` (an item-scope share has
-no listing → `404`). → `nodes`
-
-**Requires:** the `view` ability. **Response:** `SharedNodeResource` collection.
-
-#### `GET share/{token}/download`
-
-Stream the shared file's current head when the role carries `download`, intersected with
-item-safety (the blob must be `Committed`). A previewer link gets `403 permission_denied`.
-→ `download`
-
-**Requires:** the `download` ability. **Response:** `302` to a signed URL or a streamed
-download (as for the [authenticated download](#download)).
+The bytes of the shared file, or of a listed child with `?node=`. Needs a role with
+`download` — a previewer link gets `403 permission_denied`. Always streamed, with the
+headers of [File delivery](#file-delivery); `423 content_unavailable` before any byte if
+the file is not clean.
 
 ---
 
-## Per-node ACL grants
+## Activity
 
-Manage the per-node grants (`Drive\GrantController`). `{node}` is route-model
-bound; every action requires `Ability::Share` on the node. See
-[Panel ACL](/guide/grants).
+What happened on a drive or node, newest first, filtered for the reader
+(`vaulter.features.activity`).
 
-#### `GET nodes/{node}/grants`
+#### `GET v1/drives/{drive}/activity` — `activity.drive`
 
-List the grants on a node. → `index`
+Needs `view` on the drive root. **Response:** a page of Activity.
 
-**Response:** paginated `NodeGrantResource`.
+#### `GET v1/nodes/{node}/activity` — `activity.node`
 
-#### `POST nodes/{node}/grants`
-
-Grant access to a subject. → `store`
-
-| Param | Rule |
-|---|---|
-| `subject_type` | required, string, a registered subject type |
-| `subject_id` | required |
-| `level` | required, a `GrantLevel` value |
-| `effect` | nullable, an `Effect` value (`allow` default) |
-| `scope` | nullable, a `GrantScope` value (`subtree` default) |
-| `permissions` | nullable, integer `0..31` |
-| `expires_at` | nullable, date |
-
-**Response:** `201` `NodeGrantResource`:
+Needs `view` on the node. **Response:** a page of Activity:
 
 ```json
 {
-  "data": {
-    "id": "01J…",
-    "node_id": "01J…",
-    "subject_type": "App\\Models\\User",
-    "subject_id": 5,
-    "level": "writer",
-    "permissions": 15,
-    "effect": "allow",
-    "scope": "subtree",
-    "expires_at": null,
-    "created_at": "…"
-  }
+  "data": [
+    {
+      "id": "01J…",
+      "type": "node.renamed",
+      "node_id": "01J…",
+      "actor": { "type": "user", "id": "1" },
+      "occurred_at": "2026-10-10T12:00:00.000000Z",
+      "data": { "correlation_id": "01J…" }
+    }
+  ],
+  "meta": { "next_cursor": null, "per_page": 50 }
 }
 ```
 
-#### `DELETE nodes/{node}/grants`
-
-Revoke a subject's grant. → `destroy`
-
-| Param | Rule |
-|---|---|
-| `subject_type` | required |
-| `subject_id` | required |
-
-**Response:** `204 No Content`.
+`node_id` is set when the entry is about a node; `actor` is `null` when the projection
+hides it.
 
 ---
 
-## Activity feed
+## Change journal
 
-The append-only activity feed (`Activity\ActivityController`). Recipients are
-resolved at READ by scoping to the storage/node — no notification rows.
+Follow a drive incrementally instead of re-listing it (`vaulter.features.changes`;
+switched off → `403 profile_restriction`). See [Changes](/guide/changes).
 
-#### `GET storages/{storage}/activity`
+#### `GET v1/drives/{drive}/changes/start` — `changes.start`
 
-The storage-wide activity feed. → `forStorage`. **Gate:** `Ability::View` on the
-storage root.
+**Response:** `200 { "data": { "cursor": "…" } }` — take it right after a full listing.
 
-#### `GET nodes/{node}/activity`
+#### `GET v1/drives/{drive}/changes?cursor=&limit=` — `changes.index`
 
-A single node's activity feed. → `forNode`. **Gate:** `Ability::View` on the node.
+`cursor` is required; `limit` is 1–`vaulter.changes.max_page_size`, default 100.
+**Response:**
 
-Both return a paginated `ActivityResource` collection.
+```json
+{
+  "data": [
+    {
+      "node_id": "01J…",
+      "operation": "upsert",
+      "reason": null,
+      "subtree": false,
+      "node_sequence": 4,
+      "node": { "id": "01J…", "etag": "\"01J….4.9f86d081884c7d65\"", "…": "…" }
+    }
+  ],
+  "meta": { "next_cursor": "…", "has_more": false }
+}
+```
+
+Apply the changes in order (the last one for a node wins); `remove` (with a `reason`:
+`deleted`, `moved_out`, `permission_lost`) has `node: null`, and with `subtree: true`
+removes everything below too. Store `next_cursor` — unlike a list, it is always set —
+and ask again at once while `has_more` is true. `400 invalid_cursor` for a cursor of
+another drive or a damaged one; `410 cursor_expired` when the entries after it were
+pruned: list the drive again and start over.
+
+---
+
+## Webhook endpoints
+
+The global admin surface for webhook subscribers, mounted when `vaulter.features.webhooks`
+is on. Every route is gated by the `WebhookEndpointPolicy` (`vaulter.webhooks.manage_ability`),
+reads included, before the id is looked up. See [Webhooks](/guide/webhooks).
+
+| Method and path | Name | Response |
+|---|---|---|
+| `GET v1/webhook-endpoints` | `webhook-endpoints.index` | page of Endpoint |
+| `POST v1/webhook-endpoints` | `webhook-endpoints.store` | `201` Endpoint + `secret` (once) |
+| `GET v1/webhook-endpoints/{endpoint}` | `webhook-endpoints.show` | Endpoint |
+| `PATCH v1/webhook-endpoints/{endpoint}` | `webhook-endpoints.update` | Endpoint |
+| `POST v1/webhook-endpoints/{endpoint}/deactivate` | `webhook-endpoints.deactivate` | Endpoint |
+| `POST v1/webhook-endpoints/{endpoint}/rotate-secret` | `webhook-endpoints.rotate-secret` | Endpoint + new `secret` (once) |
+| `DELETE v1/webhook-endpoints/{endpoint}` | `webhook-endpoints.destroy` | `204` |
+| `GET v1/webhook-endpoints/{endpoint}/deliveries` | `webhook-deliveries.index` | page of Delivery |
+| `POST v1/webhook-endpoints/{endpoint}/deliveries/{delivery}/redeliver` | `webhook-deliveries.redeliver` | `202` Delivery |
+
+- **Register / update** take `url` (http(s), refused if it resolves to a private
+  network), `events` (event types), `is_active`, `drive_id` (only that drive's events).
+- **Rotate secret** takes `overlap_seconds` (≥ 0, capped): the previous secret keeps
+  verifying that long.
+- **Endpoint:** `id`, `url`, `drive_id`, `events`, `status` (`active` or `disabled`),
+  `disabled_at`, `created_at`.
+- **Delivery:** `id`, `event_id`, `event_type`, `status` (`pending`, `failed`,
+  `delivered`, `dead`), `attempts`, `next_retry_at`, `last_status_code` (the endpoint's
+  last HTTP status, or `null`), `created_at`.
+- **Redeliver** a `delivered` or `dead` delivery of an active endpoint; otherwise
+  `409 webhook_delivery_not_redeliverable`. Unknown ids answer
+  `404 webhook_endpoint_not_found` / `404 webhook_delivery_not_found`.
 
 ---
 
@@ -761,25 +929,6 @@ type answers `409 document_type_unavailable` and content that cannot be saved ba
 `409 document_content_degraded`; neither the Yjs state nor the projection changes. Without a
 projection the JSON keeps its schema version. **Response:**
 `{ "data": { "node_id": …, "version_no": …, "yjs_state_size": … } }`.
-
----
-
-## Webhook-endpoint management
-
-The global admin surface for subscriber endpoints
-(`Webhooks\WebhookEndpointsController`). **Gated on the `reliability` feature.**
-Every action is gated by the `WebhookEndpointPolicy` manage ability. See
-[Reliability & webhooks](/guide/recipes).
-
-| Method & path | Action | Notes |
-|---|---|---|
-| `GET webhook-endpoints` | `index` | list endpoints |
-| `POST webhook-endpoints` | `store` | register — returns the `signing_secret` **once** |
-| `PATCH webhook-endpoints/{endpoint}` | `update` | update |
-| `POST webhook-endpoints/{endpoint}/deactivate` | `deactivate` | turn off |
-| `DELETE webhook-endpoints/{endpoint}` | `destroy` | delete |
-
-`{endpoint}` is a plain scalar resolved through the read repository.
 
 ---
 

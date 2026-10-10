@@ -7,6 +7,7 @@ namespace Vaulter\Access;
 use Vaulter\Access\ValueObjects\GrantSet;
 use Vaulter\Access\ValueObjects\NodeAbilities;
 use Vaulter\Configuration\TenancyConfig;
+use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Drive\DriveStatus;
 use Vaulter\Enums\Operations\OperationKind;
@@ -123,9 +124,7 @@ final readonly class OperationGuard
     private function decide(OperationContext $context, iterable $nodes): array
     {
         $nodes = $this->locator->findMany(context: $context, nodes: $nodes);
-        foreach ($nodes as $node) {
-            $this->tenantBoundary($node);
-        }
+        $this->tenantBoundaryMany($nodes);
         $actor = $context->actor->authorizable();
         $sets = $actor === null ? [] : $this->resolver->evaluateMany(actor: $actor, nodes: $nodes);
         // Refresh the shared drive once for this batch, rather than once per node.
@@ -175,9 +174,7 @@ final readonly class OperationGuard
         if (count($nodes) !== count($included)) {
             throw PermissionDeniedException::forAbility(Ability::Copy->value);
         }
-        foreach ($nodes as $node) {
-            $this->tenantBoundary($node);
-        }
+        $this->tenantBoundaryMany($nodes);
         if ($context->actor->isSystem()) {
             return null;
         }
@@ -205,6 +202,45 @@ final readonly class OperationGuard
         }
 
         return new NodeAbilities(flags: $flags);
+    }
+
+    /**
+     * abilities() for a whole page from one batch ACL evaluation, so listing N nodes costs
+     * the same number of queries as listing one. Nodes the actor cannot view, or that are
+     * not in the context's drive, are left out rather than refused.
+     *
+     * @param  iterable<Node|NodeSnapshot|int|string> $nodes models, snapshots or ids
+     * @return array<string, NodeAbilities>           node key => abilities, in input order
+     */
+    public function abilitiesMany(OperationContext $context, iterable $nodes): array
+    {
+        $nodes = $this->locator->findMany(context: $context, nodes: $nodes);
+        if ($nodes === []) {
+            return [];
+        }
+        $this->tenantBoundaryMany($nodes);
+        $actor = $context->actor->authorizable();
+        if ($actor === null && !$context->actor->isSystem()) {
+            throw MissingActorException::required();
+        }
+        $sets = $actor === null ? [] : $this->resolver->evaluateMany(actor: $actor, nodes: $nodes);
+        $drive = $context->drive->newQuery()->whereKey($context->driveId())->first()
+            ?? throw NodeNotFoundException::forId('drive');
+        $abilities = [];
+        foreach ($nodes as $node) {
+            $grants = $context->actor->isSystem() ? GrantSet::superAllowed() : ($sets[(string) $node->id] ?? GrantSet::superDenied());
+            if (!$grants->allows(Ability::View)) {
+                continue;
+            }
+            $flags = [];
+            foreach (Ability::cases() as $ability) {
+                $flags[$ability->value] = $grants->allows($ability)
+                    && $this->profiles->allows(drive: $drive, node: $node, ability: $ability, operation: OperationKind::Metadata);
+            }
+            $abilities[(string) $node->id] = new NodeAbilities(flags: $flags);
+        }
+
+        return $abilities;
     }
 
     /**
@@ -258,6 +294,19 @@ final readonly class OperationGuard
     {
         if ($this->tenancy->enabled()) {
             $this->boundary->assertNode($node);
+        }
+    }
+
+    /**
+     * tenantBoundary() for a batch: one read of the nodes and one of their drives, so a
+     * page under strict tenancy costs the same number of queries as under none.
+     *
+     * @param list<Node> $nodes
+     */
+    private function tenantBoundaryMany(array $nodes): void
+    {
+        if ($this->tenancy->enabled()) {
+            $this->boundary->assertNodes($nodes);
         }
     }
 

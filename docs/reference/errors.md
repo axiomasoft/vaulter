@@ -87,7 +87,8 @@ out of date. For handling errors in PHP see the [error guide](/guide/errors).
 | [`revision_pinned`](#revision_pinned) | 409 | core | `Vaulter\Exceptions\Drive\RevisionPinnedException` |
 | [`route_not_found`](#route_not_found) | 404 | core | `Symfony\Component\HttpKernel\Exception\NotFoundHttpException` |
 | [`share_link_ttl_exceeded`](#share_link_ttl_exceeded) | 422 | core | `Vaulter\Exceptions\Sharing\ShareLinkTtlExceededException` |
-| [`share_not_found`](#share_not_found) | 404 | core | — |
+| [`share_not_found`](#share_not_found) | 404 | core | `Vaulter\Exceptions\Sharing\ShareNotFoundException` |
+| [`share_password_required`](#share_password_required) | 401 | core | `Vaulter\Exceptions\Sharing\SharePasswordRequiredException` |
 | [`share_role_not_allowed`](#share_role_not_allowed) | 422 | core | `Vaulter\Exceptions\Sharing\ShareRoleNotAllowedException` |
 | [`tree_depth_limit_exceeded`](#tree_depth_limit_exceeded) | 409 | core | `Vaulter\Exceptions\Policy\TreeDepthLimitExceededException` |
 | [`tree_traversal_incomplete`](#tree_traversal_incomplete) | 409 | core | `Vaulter\Exceptions\Nodes\TreeTraversalIncompleteException` |
@@ -102,7 +103,9 @@ out of date. For handling errors in PHP see the [error guide](/guide/errors).
 | [`upload_offset_mismatch`](#upload_offset_mismatch) | 409 | drive | `Vaulter\Drive\Exceptions\Uploads\OffsetMismatchException` |
 | [`upload_rejected`](#upload_rejected) | 422 | drive | `Vaulter\Drive\Exceptions\Files\UploadRejectedException` |
 | [`validation_failed`](#validation_failed) | 422 | core | `Illuminate\Validation\ValidationException` |
+| [`webhook_delivery_not_found`](#webhook_delivery_not_found) | 404 | core | `Vaulter\Exceptions\Webhooks\WebhookDeliveryNotFoundException` |
 | [`webhook_delivery_not_redeliverable`](#webhook_delivery_not_redeliverable) | 409 | core | `Vaulter\Exceptions\Webhooks\WebhookDeliveryNotRedeliverableException` |
+| [`webhook_endpoint_not_found`](#webhook_endpoint_not_found) | 404 | core | `Vaulter\Exceptions\Webhooks\WebhookEndpointNotFoundException` |
 | [`write_outside_operation`](#write_outside_operation) | 500 | core | `Vaulter\Exceptions\Database\WriteOutsideOperationException` |
 
 ### `actor_required`
@@ -423,6 +426,12 @@ out of date. For handling errors in PHP see the [error guide](/guide/errors).
 
 **Share link not found** — The share link does not exist, has expired or is not visible to you.
 
+### `share_password_required`
+
+**401** · core
+
+**Share link password required** — This share link is password protected. Send its password in the X-Share-Password header.
+
 ### `share_role_not_allowed`
 
 **422** · core
@@ -507,11 +516,23 @@ out of date. For handling errors in PHP see the [error guide](/guide/errors).
 
 **Validation failed** — The request data is invalid; see the errors field.
 
+### `webhook_delivery_not_found`
+
+**404** · core
+
+**Webhook delivery not found** — The delivery does not exist for this endpoint.
+
 ### `webhook_delivery_not_redeliverable`
 
 **409** · core
 
 **Delivery cannot be redelivered** — The delivery is still being retried or its endpoint is inactive.
+
+### `webhook_endpoint_not_found`
+
+**404** · core
+
+**Webhook endpoint not found** — The webhook endpoint does not exist.
 
 ### `write_outside_operation`
 

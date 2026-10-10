@@ -12,10 +12,11 @@ use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
 /**
- * The activity feed HTTP surface (§2.9 / M2c-activity). The feed is queried by
- * storage/node scope — this IS "recipients resolved at READ" (no notification rows,
+ * The activity feed HTTP surface (§2.9 / M2c-activity, REST v1). The feed is queried
+ * by drive/node scope — this IS "recipients resolved at READ" (no notification rows,
  * no per-user fan-out). Both endpoints require Ability::View on the scope and return
- * a scoped, newest-first, cursor-paginated feed.
+ * a scoped, newest-first, cursor-paginated feed of {id, type, node_id, actor,
+ * occurred_at, data}.
  */
 beforeEach(function (): void {
     // The feed endpoints authorise via the real grant resolver (View on the scope).
@@ -43,12 +44,15 @@ it('returns a storage-scoped feed newest-first to a viewer', function (): void {
     // storage at our granted root so the guard passes.
     $storage->forceFill(['root_node_id' => $root->getKey()])->save();
 
-    $response = $this->getJson('api/vaulter/storages/'.$storage->getKey().'/activity')->assertOk();
+    $response = $this->getJson('api/vaulter/v1/drives/'.$storage->getKey().'/activity')->assertOk();
 
-    $verbs = array_column($response->json('data'), 'verb');
+    $types = array_column($response->json('data'), 'type');
 
-    expect($verbs[0])->toBe(EventType::NodeRenamed->value)
-        ->and($verbs[1])->toBe(EventType::FolderCreated->value);
+    expect($types[0])->toBe(EventType::NodeRenamed->value)
+        ->and($types[1])->toBe(EventType::FolderCreated->value)
+        // A drive-targeted entry names no node; its context travels as data.
+        ->and($response->json('data.0.node_id'))->toBeNull()
+        ->and($response->json('data.0.data'))->toBe(['name' => 'newer']);
 });
 
 it('returns a node-scoped feed (only that node target)', function (): void {
@@ -60,27 +64,25 @@ it('returns a node-scoped feed (only that node target)', function (): void {
     targetedRow($storage->getKey(), $nodeA, EventType::NodeRenamed);
     targetedRow($storage->getKey(), $nodeB, EventType::NodeRenamed);
 
-    $response = $this->getJson('api/vaulter/nodes/'.$nodeA->getKey().'/activity')->assertOk();
+    $response = $this->getJson('api/vaulter/v1/nodes/'.$nodeA->getKey().'/activity')->assertOk();
 
-    $targets = array_column($response->json('data'), 'target_id');
+    $targets = array_column($response->json('data'), 'node_id');
 
-    expect($targets)->toHaveCount(1)
-        ->and((string) $targets[0])->toBe((string) $nodeA->getKey());
+    expect($targets)->toBe([(string) $nodeA->getKey()]);
 });
 
-it('filters a node feed by verb', function (): void {
+it('keeps request network details out of the v1 entry', function (): void {
     $storage = AccessTestHelpers::storage();
-    $node = AccessTestHelpers::folder($storage, null, 'filtered');
+    $node = AccessTestHelpers::folder($storage, null, 'private-details');
     AccessTestHelpers::grant($node, RoleRegistry::READER, scope: GrantScope::Item, subjectId: 1);
 
-    targetedRow($storage->getKey(), $node, EventType::NodeRenamed);
-    targetedRow($storage->getKey(), $node, EventType::NodeMoved);
+    targetedRow($storage->getKey(), $node, EventType::NodeMoved)->forceFill(['ip' => '10.0.0.7', 'user_agent' => 'curl'])->save();
 
-    $response = $this->getJson('api/vaulter/nodes/'.$node->getKey().'/activity?verb=node.moved')->assertOk();
+    $entry = $this->getJson('api/vaulter/v1/nodes/'.$node->getKey().'/activity')->assertOk()->json('data.0');
 
-    $verbs = array_column($response->json('data'), 'verb');
-
-    expect($verbs)->toBe([EventType::NodeMoved->value]);
+    expect(array_keys($entry))->toBe(['id', 'type', 'node_id', 'actor', 'occurred_at', 'data'])
+        ->and($entry['type'])->toBe(EventType::NodeMoved->value)
+        ->and($entry['occurred_at'])->toEndWith('Z');
 });
 
 it('cursor-paginates the feed', function (): void {
@@ -92,7 +94,7 @@ it('cursor-paginates the feed', function (): void {
         targetedRow($storage->getKey(), $node, EventType::NodeRenamed);
     }
 
-    $response = $this->getJson('api/vaulter/nodes/'.$node->getKey().'/activity?per_page=2')->assertOk();
+    $response = $this->getJson('api/vaulter/v1/nodes/'.$node->getKey().'/activity?per_page=2')->assertOk();
 
     expect($response->json('data'))->toHaveCount(2)
         ->and($response->json('meta.next_cursor'))->not->toBeNull();
@@ -104,7 +106,7 @@ it('403s a node feed for an actor WITHOUT View (opaque404)', function (): void {
     // No grant for user 1 → no View.
     targetedRow($storage->getKey(), $node, EventType::NodeRenamed);
 
-    $this->getJson('api/vaulter/nodes/'.$node->getKey().'/activity')->assertStatus(404);
+    $this->getJson('api/vaulter/v1/nodes/'.$node->getKey().'/activity')->assertStatus(404);
 });
 
 /**

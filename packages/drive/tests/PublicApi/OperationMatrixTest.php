@@ -214,6 +214,24 @@ it('enforces the complete public operation source permission matrix', function (
     }
 })->with('operation permission matrix');
 
+it('answers abilitiesMany exactly like abilities for every role and leaves hidden nodes out', function (?string $role): void {
+    $source = $this->system->folders()->create('source');
+    if ($role !== null) {
+        operationMatrixGrant($this->system, $source, $this->user, $role);
+    }
+    $before = operationMatrixState();
+
+    $many = $this->actor->nodes()->abilitiesMany([$source, $source->id]);
+
+    if ($role === null) {
+        expect($many)->toBe([]);
+    } else {
+        expect(array_map('strval', array_keys($many)))->toBe([$source->id])
+            ->and($many[$source->id]->toArray())->toBe($this->actor->nodes()->abilities($source)->toArray());
+    }
+    expect(operationMatrixState())->toBe($before);
+})->with([null, RoleRegistry::PREVIEWER, RoleRegistry::READER, RoleRegistry::COMMENTER, RoleRegistry::WRITER, RoleRegistry::ORGANIZER, RoleRegistry::OWNER]);
+
 it('checks each move copy and changed restore destination independently', function (string $operation, string $lane): void {
     $originalParent = $operation === 'restore' ? $this->system->folders()->create('original parent') : null;
     $source = $this->system->folders()->create('source', $originalParent);

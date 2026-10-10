@@ -120,6 +120,6 @@ it('checks the public download availability hook before opening bytes and keeps 
     $storage = Mockery::mock(StorageDriver::class);
     $storage->shouldNotReceive('get');
     app()->instance(StorageDriver::class, $storage);
-    $this->getJson('api/vaulter/share/pending-hook')->assertOk();
-    $this->get('api/vaulter/share/pending-hook/download')->assertStatus(423);
+    $this->getJson('api/vaulter/v1/shares/pending-hook')->assertOk();
+    $this->get('api/vaulter/v1/shares/pending-hook/download')->assertStatus(423);
 });

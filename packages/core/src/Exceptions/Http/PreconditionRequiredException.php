@@ -38,7 +38,7 @@ final class PreconditionRequiredException extends VaulterException implements Pr
         return new self(
             '[Vaulter] If-Match: * is not accepted. Why: it matches any representation, so it cannot detect a lost update. Fix: send the ETag of the representation you read. Docs: '.self::docs('precondition-required'),
             'If-Match',
-            'wildcard',
+            'wildcard_not_allowed',
         );
     }
 

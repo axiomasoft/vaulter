@@ -114,6 +114,7 @@ Vaulter\Contracts\Drive\NodeContentLifecycle
 
 Vaulter\Contracts\Drive\NodeOperations
   abilities(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): \Vaulter\Access\ValueObjects\NodeAbilities
+  abilitiesMany(array $nodes): array
   children(\Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $folder = null, ?\Vaulter\Data\Drive\ListOptions $options = null): \Vaulter\Data\Page
   copy(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $destination = null, ?\Vaulter\Data\Drive\CopyOptions $options = null): \Vaulter\Data\Snapshots\NodeSnapshot
   find(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): \Vaulter\Data\Snapshots\NodeSnapshot
@@ -606,6 +607,7 @@ Vaulter\Operations\NodeLocator
 Vaulter\Access\OperationGuard
   __construct(\Vaulter\Access\AccessResolver $resolver, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Profiles\ProfilePolicy $profiles, \Vaulter\Configuration\TenancyConfig $tenancy, \Vaulter\Tenancy\TenancyBoundary $boundary)
   abilities(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node $node): \Vaulter\Access\ValueObjects\NodeAbilities
+  abilitiesMany(\Vaulter\Operations\OperationContext $context, iterable $nodes): array
   assertMutable(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node $node): void
   authorize(\Vaulter\Operations\OperationContext $context, \Vaulter\Enums\Access\Ability $ability, \Vaulter\Models\Drive\Node $node, \Vaulter\Enums\Operations\OperationKind $operation = Vaulter\Enums\Operations\OperationKind::Metadata): void
   authorizeCreate(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node $parent): void
@@ -1055,6 +1057,8 @@ Vaulter\Schema\VaulterSchema
 
 Vaulter\Http\Support\HttpResourceResolver
   __construct(\Vaulter\Repositories\Drive\DriveReadRepository $storages, \Vaulter\Repositories\Drive\NodeReadRepository $nodes)
+  drive(string $id): \Vaulter\Models\Drive\Drive
+  driveOfNode(string $nodeId): \Vaulter\Models\Drive\Drive
   node(int|string $id): \Vaulter\Models\Drive\Node
   storage(int|string $id): \Vaulter\Models\Drive\Drive
 

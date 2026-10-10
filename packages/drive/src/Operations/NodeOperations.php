@@ -128,6 +128,15 @@ final readonly class NodeOperations implements Contract
         return $this->guard->abilities($this->context, $this->authorized($node, Ability::View));
     }
 
+    /**
+     * @param  list<NodeSnapshot|string|int> $nodes
+     * @return array<string, NodeAbilities>
+     */
+    public function abilitiesMany(array $nodes): array
+    {
+        return $this->guard->abilitiesMany($this->context, $nodes);
+    }
+
     private function snapshot(Node $node): NodeSnapshot
     {
         return $this->mapper->map($node, $this->context->actor->ref());

@@ -121,6 +121,19 @@ role map named a role (or role version) that is not registered. The 1.0 roles ar
 role for this audience. Links grant `previewer`, `reader` or `commenter` to any audience,
 `writer` only to `authenticated` or `tenant` visitors, and never `organizer` or `owner`.
 
+## share-not-found
+
+`ShareNotFoundException` (`share_not_found`, 404) — a public share request that opens nothing: the
+token is unknown, revoked, rotated, expired or used up, the visitor is outside the link's tenant,
+or `?node=` names a node outside the link. All of these answer the same so a token cannot be
+probed. Ask the owner for a current link.
+
+## share-password-required
+
+`SharePasswordRequiredException` (`share_password_required`, 401) — the link is password
+protected and the request carried no password, or a wrong one. Send it in the `X-Share-Password`
+header (not the URL, which ends up in logs).
+
 ## share-link-ttl-exceeded
 
 `ShareLinkTtlExceededException` (422 `share_link_ttl_exceeded`, extra `limit_days`) — the link
@@ -402,6 +415,16 @@ Register the endpoint with a public http(s) URL.
 `WebhookDeliveryNotRedeliverableException` — a manual redelivery was asked for a delivery that is
 still `pending` or `failed` (its retries are not finished) or whose endpoint is inactive. Wait
 for the retries to end or for the delivery to die, and re-enable the endpoint first.
+
+## webhook-endpoint-not-found
+
+`WebhookEndpointNotFoundException` (`webhook_endpoint_not_found`, 404) — no webhook endpoint has
+the id in the URL; it may have been deleted. List the endpoints and use a current id.
+
+## webhook-delivery-not-found
+
+`WebhookDeliveryNotFoundException` (`webhook_delivery_not_found`, 404) — the delivery does not
+exist, belongs to another endpoint, or was pruned after its retention period.
 
 ## webhook-signature
 

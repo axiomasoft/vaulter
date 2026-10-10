@@ -9,8 +9,11 @@ it('SEC-R17 inventory keeps descriptors metadata-only and installed delivery med
         'packages/core/src/Handlers/NodePresenter.php',
         'packages/core/src/Handlers/Builtin/PreviewHandler.php',
         'packages/core/src/Http/Resources/Drive/NodeResource.php',
+        'packages/core/src/Http/Resources/Drive/LegacyNodeResource.php',
         'packages/drive/src/Http/Controllers/DownloadController.php',
-        'packages/core/src/Http/Controllers/Sharing/PublicShareController.php',
+        'packages/core/src/Http/Controllers/Sharing/DownloadPublicShareController.php',
+        'packages/core/src/Http/Controllers/Sharing/ShowPublicShareController.php',
+        'packages/core/src/Http/Support/ContentResponder.php',
         'packages/documents/src/Actions/Export/ExportDocumentAction.php',
         'packages/documents/src/Presentation/DocumentPresenter.php',
     ];

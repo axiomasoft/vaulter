@@ -59,4 +59,13 @@ interface NodeOperations
     public function trash(NodeSnapshot|string|int $node, ?int $expectedSequence = null): NodeSnapshot;
 
     public function abilities(NodeSnapshot|string|int $node): NodeAbilities;
+
+    /**
+     * abilities() for many nodes from one batch evaluation (a listing page). Nodes the
+     * actor cannot view are left out instead of failing the call.
+     *
+     * @param  list<NodeSnapshot|string|int> $nodes
+     * @return array<string, NodeAbilities>  node id => abilities
+     */
+    public function abilitiesMany(array $nodes): array;
 }

@@ -38,9 +38,9 @@ final readonly class NodeLocator
     }
 
     /**
-     * @internal Rebind untrusted listing candidates in one scoped query.
+     * @internal Rebind untrusted listing candidates (models, snapshots or ids) in one scoped query.
      *
-     * @param  iterable<Node> $nodes
+     * @param  iterable<Node|NodeSnapshot|int|string> $nodes
      * @return list<Node>
      */
     public function findMany(OperationContext $context, iterable $nodes): array

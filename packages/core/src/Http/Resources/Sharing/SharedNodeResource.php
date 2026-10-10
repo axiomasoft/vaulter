@@ -87,7 +87,7 @@ final class SharedNodeResource extends JsonResource
      * Truncated to 32 hex chars (128 bits) — plenty to be collision-free for a
      * per-app id-space, short enough to stay a friendly list key.
      */
-    private static function opaqueId(int|string|null $id): ?string
+    public static function opaqueId(int|string|null $id): ?string
     {
         if ($id === null) {
             return null;

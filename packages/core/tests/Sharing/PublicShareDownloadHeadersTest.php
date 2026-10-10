@@ -36,7 +36,7 @@ it('serves a public download of a text/html declared mime as octet-stream with n
 
     ShareTestHelpers::share($fileNode, token: 'html-dl-token');
 
-    $response = $this->get('api/vaulter/share/html-dl-token/download');
+    $response = $this->get('api/vaulter/v1/shares/html-dl-token/download');
 
     $response->assertOk();
     expect($response->headers->get('content-type'))->toBe('application/octet-stream')
@@ -50,7 +50,7 @@ it('serves a public download of a whitelisted image/png declared mime as-is, nos
 
     ShareTestHelpers::share($fileNode, token: 'png-dl-token');
 
-    $response = $this->get('api/vaulter/share/png-dl-token/download');
+    $response = $this->get('api/vaulter/v1/shares/png-dl-token/download');
 
     $response->assertOk();
     expect($response->headers->get('content-type'))->toBe('image/png')

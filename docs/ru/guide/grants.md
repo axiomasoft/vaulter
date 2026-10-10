@@ -146,15 +146,22 @@ $removed = app(RevokeNodeAccessAction::class)->execute(
 
 ## REST-поверхность
 
-Node-ACL выставлена под префиксом Drive (по умолчанию `api/vaulter`). **Каждое** действие
-требует права `Manage` на узле. Organizer может создавать ссылки через `Share`, но управление
-грантами требует доступа owner. Отказ отдаёт 403 через `PermissionDeniedException`.
+Node-ACL — часть [REST API v1](/ru/reference/rest-api#доступ-гранты-и-наследование)
+(префикс по умолчанию `api/vaulter/v1`). **Каждое** действие требует права `Manage` на узле.
+Organizer может создавать ссылки через `Share`, но управление грантами требует доступа owner:
+кто видит узел, получает `403 permission_denied`, кто не видит — `404 node_not_found`.
 
-| Метод | Путь | Действие |
+| Метод | Путь | Имя |
 |---|---|---|
-| `GET` | `nodes/{node}/grants` | список грантов на узле (курсорная пагинация) |
-| `POST` | `nodes/{node}/grants` | выдать субъекту роль (201) |
-| `DELETE` | `nodes/{node}/grants` | отозвать гранты субъекта (204) |
+| `GET` | `v1/nodes/{node}/grants` | `grants.index` — гранты узла как `{ "data": [ … ] }` |
+| `POST` | `v1/nodes/{node}/grants` | `grants.store` — выдать субъекту роль (201) |
+| `DELETE` | `v1/nodes/{node}/grants/{grant}` | `grants.destroy` — отозвать один грант (204) |
+| `POST` | `v1/nodes/{node}/inheritance/restrict` | `access.inheritance.restrict` — `{"mode": "empty" \| "copy_current"}` |
+| `POST` | `v1/nodes/{node}/inheritance/restore` | `access.inheritance.restore` |
+
+Маршруты наследования возвращают узел (с новым `ETag`). Ограничение может снять ваш собственный
+унаследованный доступ; изменение остаётся в силе, а узел возвращается со всеми способностями
+`false`.
 
 ::: tip Где гранты проявляются на стороне листингов
 Когда фича `grants` включена и активен драйвер `database`, **листинги** Drive сужаются до
@@ -166,12 +173,11 @@ Node-ACL выставлена под префиксом Drive (по умолча
 
 ::: code-group
 ```bash [grant]
-curl -X POST https://app.test/api/vaulter/nodes/01J.../grants \
+curl -X POST https://app.test/api/vaulter/v1/nodes/01J.../grants \
   -H 'Authorization: Bearer <token>' \
   -H 'Content-Type: application/json' \
   -d '{
-    "subject_type": "user",
-    "subject_id": "42",
+    "subject": { "type": "user", "id": "42" },
     "role": "writer",
     "scope": "subtree",
     "expires_at": "2026-12-31T23:59:59Z"
@@ -179,10 +185,8 @@ curl -X POST https://app.test/api/vaulter/nodes/01J.../grants \
 ```
 
 ```bash [revoke]
-curl -X DELETE https://app.test/api/vaulter/nodes/01J.../grants \
-  -H 'Authorization: Bearer <token>' \
-  -H 'Content-Type: application/json' \
-  -d '{ "subject_type": "user", "subject_id": "42" }'
+curl -X DELETE https://app.test/api/vaulter/v1/nodes/01J.../grants/01J... \
+  -H 'Authorization: Bearer <token>'
 ```
 
 ```json [grant response 201]
@@ -190,13 +194,13 @@ curl -X DELETE https://app.test/api/vaulter/nodes/01J.../grants \
   "data": {
     "id": "01J...",
     "node_id": "01J...",
-    "subject_type": "user",
-    "subject_id": "42",
+    "subject": { "type": "user", "id": "42" },
     "role": "writer",
     "role_version": 1,
     "scope": "subtree",
-    "expires_at": "2026-12-31T23:59:59Z",
-    "created_at": "2026-06-30T10:00:00Z"
+    "expires_at": "2026-12-31T23:59:59.000000Z",
+    "created_by": "1",
+    "created_at": "2026-06-30T10:00:00.000000Z"
   }
 }
 ```
@@ -204,15 +208,15 @@ curl -X DELETE https://app.test/api/vaulter/nodes/01J.../grants \
 
 ### Валидация запроса
 
-`StoreNodeGrantRequest` валидирует тело:
+`CreateGrantRequest` валидирует тело:
 
 | Поле | Правила |
 |---|---|
-| `subject_type` | required, string, max 255, зарегистрированный тип субъекта |
-| `subject_id` | required |
+| `subject.type` | required, string, max 255, зарегистрированный тип субъекта |
+| `subject.id` | required |
 | `role` | required, один из зарегистрированных ключей ролей |
 | `scope` | nullable enum (`item`/`subtree`), по умолчанию `subtree` |
-| `expires_at` | nullable date |
+| `expires_at` | nullable date, в будущем |
 
 ## События
 

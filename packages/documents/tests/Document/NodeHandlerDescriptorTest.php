@@ -9,7 +9,7 @@ use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Http\Resources\Drive\NodeResource;
+use Vaulter\Http\Resources\Drive\LegacyNodeResource as NodeResource;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 

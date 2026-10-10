@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Http\Support;
 
+use Illuminate\Support\Str;
+use InvalidArgumentException;
+use Symfony\Component\HttpFoundation\HeaderUtils;
 use Vaulter\Configuration\DownloadsConfig;
 
 /**
@@ -35,6 +38,49 @@ final class DownloadHeaders
             'X-Content-Type-Options' => 'nosniff',
             'Cache-Control' => 'private, no-store',
         ];
+    }
+
+    /**
+     * Every header of a byte response of the versioned API: the mime rules above, an
+     * RFC 6266 disposition, a sandbox CSP so a document opened from the API origin cannot
+     * run script, no byte ranges (not supported in 1.0) and no storing.
+     *
+     * @param  'attachment'|'inline' $disposition
+     * @return array<string, string>
+     */
+    public static function forContent(?string $declaredMime, string $filename, string $disposition = 'attachment', ?int $size = null): array
+    {
+        $headers = [
+            ...self::forDeclaredMime($declaredMime),
+            'Content-Disposition' => self::disposition($disposition, $filename),
+            'Content-Security-Policy' => "sandbox; default-src 'none'",
+            'Accept-Ranges' => 'none',
+        ];
+        if ($size !== null) {
+            $headers['Content-Length'] = (string) $size;
+        }
+
+        return $headers;
+    }
+
+    /**
+     * `attachment; filename="<ascii>"; filename*=UTF-8''<encoded>`. The stored name is
+     * user input: control characters (a CR/LF would split the header) and path
+     * separators are removed before it reaches the header.
+     */
+    public static function disposition(string $type, string $filename): string
+    {
+        if ($type !== 'attachment' && $type !== 'inline') {
+            throw new InvalidArgumentException('Content-Disposition must be attachment or inline.');
+        }
+        $name = trim(str_replace(['/', '\\'], '_', (string) preg_replace('/[\x00-\x1F\x7F]+/u', '', $filename)));
+        // An invalid UTF-8 name makes the replace fail; it is served under a neutral name.
+        if ($name === '') {
+            $name = 'download';
+        }
+        $fallback = trim((string) preg_replace('/[^\x20-\x7E]|["%\\\\\/]/', '_', Str::ascii($name)));
+
+        return HeaderUtils::makeDisposition($type, $name, $fallback === '' ? 'download' : $fallback);
     }
 
     /**

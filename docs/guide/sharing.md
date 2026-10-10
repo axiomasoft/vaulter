@@ -24,7 +24,7 @@ A link has four settings that matter:
 
 ::: info Two distinct channels
 This page documents **node** share-links (`v_node_shares`, the Drive channel). The legacy
-**document** shares (`GET /shares/{token}`, `Vaulter\Models\Documents\DocumentShare`) are a
+**document** shares (unversioned `GET /shares/{token}`, `Vaulter\Models\Documents\DocumentShare`) are a
 separate, older surface that grants a stringly-typed level on a `Document`. New code should
 use node share-links.
 :::
@@ -68,26 +68,27 @@ persisted. The raw token is returned to the creator **exactly once** at mint tim
 
 ## The owner surface
 
-`ShareController` (`Vaulter\Http\Controllers\Sharing\ShareController`) is the authenticated
-owner surface. Every action requires `Ability::Share` on the node, enforced by the
-`AccessResolver` — a denial is a `403` via `PermissionDeniedException`.
+The authenticated owner routes of the [REST API v1](/reference/rest-api#share-links) call
+`Vaulter::drive($drive)->actingAs($user)->shares()`. Every action requires `Ability::Share` on
+the node: a caller who can see the node but not share it gets `403 permission_denied`, one who
+cannot see it `404 node_not_found`.
 
-| Method   | Route                                     | Action    |
-| -------- | ----------------------------------------- | --------- |
-| `GET`    | `/nodes/{node}/shares`                    | `index`   |
-| `POST`   | `/nodes/{node}/shares`                    | `store`   |
-| `PATCH`  | `/nodes/{node}/shares/{share}`            | `update`  |
-| `POST`   | `/nodes/{node}/shares/{share}/rotate`     | `rotate`  |
-| `DELETE` | `/nodes/{node}/shares/{share}`            | `destroy` |
+| Method   | Route                                        | Name             |
+| -------- | -------------------------------------------- | ---------------- |
+| `GET`    | `/v1/nodes/{node}/shares`                    | `shares.index`   |
+| `POST`   | `/v1/nodes/{node}/shares`                    | `shares.store`   |
+| `PATCH`  | `/v1/nodes/{node}/shares/{share}`            | `shares.update`  |
+| `POST`   | `/v1/nodes/{node}/shares/{share}/rotate`     | `shares.rotate`  |
+| `DELETE` | `/v1/nodes/{node}/shares/{share}`            | `shares.destroy` |
 
-Routes are mounted under the configured prefix (default `api/vaulter`). The `{share}` id is a
-plain scalar (not route-model bound) — update, rotate and revoke verify it belongs to the
-authorized node, so a foreign share id can never be changed through this node (and yields a
+Routes are mounted under the configured prefix plus `/v1` (default `api/vaulter/v1`) and named
+`vaulter.v1.*`. The `{share}` id is a plain id — update, rotate and revoke verify it belongs to
+the authorized node, so a foreign share id can never be changed through this node (and yields a
 `404` that leaks nothing).
 
 ### Create a link
 
-`POST /nodes/{node}/shares` mints a link and returns the raw token **once** (`201`). Every
+`POST /v1/nodes/{node}/shares` mints a link and returns the raw token **once** (`201`). Every
 input is optional. The validated request (`StoreShareLinkRequest`) accepts:
 
 | Field        | Type     | Default        | Notes |
@@ -103,7 +104,7 @@ input is optional. The validated request (`StoreShareLinkRequest`) accepts:
 
 ```bash [curl]
 # Mint a read-only, subtree, password-gated link for signed-in users that expires in 7 days.
-curl -X POST https://app.test/api/vaulter/nodes/01J.../shares \
+curl -X POST https://app.test/api/vaulter/v1/nodes/01J.../shares \
   -H 'Authorization: Bearer <user-token>' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -133,7 +134,7 @@ $minted = Vaulter::drive($owner)->actingAs($user)->shares()->create($node, new S
 
 // The raw token is here and ONLY here — returned exactly once.
 $rawToken = $minted->token;   // 43 characters
-$share    = $minted->share;   // persisted NodeShare (token_hash only)
+$link     = $minted->link;    // ShareLinkSnapshot (no token)
 ```
 
 ```vue [Vue]
@@ -159,25 +160,25 @@ async function mint() {
 :::
 
 The create response carries the raw `token` and a full `url` (built from
-`config('vaulter.sharing.url_base')` + the token). **Every list/show response omits them** —
-the token is unrecoverable from the stored row, so capture it now.
+`config('vaulter.sharing.url_base')` + the token). **Every other response omits them** — the
+token is unrecoverable from the stored row, so capture it now. The response is never stored by a
+cache (`Cache-Control: no-store`).
 
 ```json
 {
   "data": {
     "id": "01J...",
     "node_id": "01J...",
-    "token_prefix": "kQ3aB7xZ",
     "role": "reader",
     "role_version": 1,
     "audience": "authenticated",
     "scope": "subtree",
-    "has_password": true,
-    "token_generation": 1,
     "expires_at": "2026-07-07T00:00:00.000000Z",
     "max_uses": 100,
     "use_count": 0,
-    "revoked_at": null,
+    "has_password": true,
+    "token_generation": 1,
+    "created_by": "42",
     "created_at": "2026-06-30T10:00:00.000000Z",
     "token": "kQ3aB7xZ...43-char-raw-token...",
     "url": "/share/kQ3aB7xZ...43-char-raw-token..."
@@ -187,15 +188,14 @@ the token is unrecoverable from the stored row, so capture it now.
 
 ### List links
 
-`GET /nodes/{node}/shares` returns the live + revoked links for the node, cursor-paginated
-(`per_page`, 1–200, default 50). The listing carries the role, audience, scope, the password
-flag and the lifecycle counters (`use_count`, `max_uses`, `expires_at`, `revoked_at`) — but
-**never** the `token` or `token_hash`. The non-secret `token_prefix` is exposed so an owner can
-recognise a link in their UI.
+`GET /v1/nodes/{node}/shares` returns the node's live links as `{ "data": [ … ] }` (a node has
+few links, so the list is not paged). Each carries the role, audience, scope, the password flag,
+the token generation and the counters (`use_count`, `max_uses`, `expires_at`) — but **never**
+the `token`, its hash or its prefix.
 
 ### Change a link
 
-`PATCH /nodes/{node}/shares/{share}` changes `expires_at`, `max_uses`, `password` and
+`PATCH /v1/nodes/{node}/shares/{share}` changes `expires_at`, `max_uses`, `password` and
 `audience` of a **live** link. **The token does not change.** A field you leave out stays;
 `"password": null` removes the password and `"max_uses": null` removes the budget. The role
 and the scope are fixed at creation — a different grant is a different link — and an audience
@@ -214,7 +214,7 @@ Vaulter::drive($owner)->actingAs($user)->shares()->update($node, $share, new Sha
 
 ### Rotate a link
 
-`POST /nodes/{node}/shares/{share}/rotate` replaces the token. The **old token stops
+`POST /v1/nodes/{node}/shares/{share}/rotate` replaces the token. The **old token stops
 resolving the moment the rotation commits**, `token_generation` is raised by one so every
 visit opened with the old token is void, and the new raw token comes back **once**. Role,
 audience, expiry, budget, password and `use_count` stay. Rotating a revoked link is a `404`.
@@ -226,31 +226,34 @@ $minted->token; // the new raw token, shown once
 
 ### Revoke a link
 
-`DELETE /nodes/{node}/shares/{share}` stamps `revoked_at` so the share **never resolves
+`DELETE /v1/nodes/{node}/shares/{share}` stamps `revoked_at` so the share **never resolves
 again** (the resolver filters on `revoked_at`). It is **idempotent** — re-revoking an
 already-revoked share is a silent no-op that emits nothing.
 
 ## The public surface
 
-`PublicShareController` is the public, token-resolved surface. Its routes carry **no auth
-middleware** — only `ResolveShareToken`, which has already produced the `ShareContext`. The
-only authorization here is the role of the share on its own node-set.
+The public, token-resolved routes run on the `public` stack: **no auth middleware**, the
+`throttle:vaulter-public` limiter, then `ResolveShareToken`, which produces the `ShareContext`.
+The only authorization here is the role of the share on its own node-set. Every answer — errors
+and throttling included — is `Cache-Control: private, no-store` with `Referrer-Policy: no-referrer`,
+so neither a cache nor a page opened from the link keeps the token-bearing URL.
 
-| Method | Route                       | Action     | Required ability |
-| ------ | --------------------------- | ---------- | ---------------- |
-| `GET`  | `/share/{token}`            | `show`     | `view` |
-| `GET`  | `/share/{token}/nodes`      | `nodes`    | `view`, `scope=subtree` only |
-| `GET`  | `/share/{token}/download`   | `download` | `download` |
+| Method | Route                                 | Name                     | Required ability |
+| ------ | ------------------------------------- | ------------------------ | ---------------- |
+| `GET`  | `/v1/shares/{token}`                  | `public-shares.show`     | `view` |
+| `GET`  | `/v1/shares/{token}/nodes`            | `public-shares.nodes`    | `view`, `scope=subtree` only |
+| `GET`  | `/v1/shares/{token}/download?node=`   | `public-shares.download` | `download` |
 
 - **`show`** returns the target node's metadata (`SharedNodeResource` — deliberately leaner
-  than the owner-side node resource; it carries **no** per-actor abilities map). For a
-  `scope=subtree` folder share the immediate children are embedded so a holder can browse one
-  level without a second call.
-- **`nodes`** lists the in-scope direct children — **only** when `scope=subtree`. A
-  `scope=item` share never lists; it exposes exactly one node (a `404` otherwise).
-- **`download`** streams the target file's current head version. A **previewer** link gets
+  than the owner-side node resource; it carries **no** per-actor abilities map, and its `id`
+  and `parent_id` are opaque projections, never the real node ids).
+- **`nodes`** lists the in-scope direct children as a cursor page — **only** when
+  `scope=subtree`. A `scope=item` share never lists; it exposes exactly one node
+  (`404 share_not_found` otherwise).
+- **`download`** streams a file: the shared node, or with `?node=<opaque id>` one of the
+  children `nodes` lists — any other id is `404 share_not_found`. A **previewer** link gets
   `403 permission_denied`: the original is never handed out. Inheritance boundaries below the
-  shared folder apply live, with the current tree.
+  shared folder apply live, with the current tree. See [Downloads and revocation](#downloads-and-revocation).
 
 ### Redemptions and link sessions
 
@@ -272,16 +275,16 @@ redeemed keeps working after the budget is spent; every *new* visit gets `404`.
 
 ```bash [curl]
 # The password travels in a header so the secret stays out of the URL/logs.
-curl -i https://app.test/api/vaulter/share/<token> \
+curl -i https://app.test/api/vaulter/v1/shares/<token> \
   -H 'X-Share-Password: s3cret'
 # → X-Share-Session: eyJ2MXx...
 
 # The rest of the visit presents the session and costs no further use:
-curl https://app.test/api/vaulter/share/<token>/nodes \
+curl https://app.test/api/vaulter/v1/shares/<token>/nodes \
   -H 'X-Share-Password: s3cret' -H 'X-Share-Session: eyJ2MXx...'
 
 # Download the file behind the link (reader, commenter, writer):
-curl -L https://app.test/api/vaulter/share/<token>/download \
+curl https://app.test/api/vaulter/v1/shares/<token>/download \
   -H 'X-Share-Password: s3cret' -H 'X-Share-Session: eyJ2MXx...' -o file.bin
 ```
 
@@ -301,15 +304,15 @@ const dlUrl     = client.nodeShares.publicDownloadUrl(token)     // GET /share/{
 
 ### Resolution outcomes
 
-`ResolveShareToken` translates the resolver's `ShareResult` into HTTP status. The denial
-reasons are deliberately conflated so a probe cannot tell *which* gate failed.
+`ResolveShareToken` translates the resolver's `ShareResult` into a problem+json answer. The
+denial reasons are deliberately conflated so a probe cannot tell *which* gate failed.
 
-| Outcome            | Status | When |
+| Outcome            | Answer | When |
 | ------------------ | ------ | ---- |
 | **Ok**             | proceed | A live share resolved; the `ShareContext` is stashed and the visit is redeemed. |
-| **NotFound**       | `404`   | Wrong / expired / revoked / rotated token, a new visit past `max_uses`, a visitor outside the `tenant` audience, a role or expiry the rules no longer allow, **or** the target failed item-safety (trashed / detached). |
-| **PasswordRequired** | `401` | The share is password-gated and no/incorrect password was supplied. The body carries `"password_required": true`. |
-| **LoginRequired**  | `401`   | The audience is `authenticated` or `tenant` and no host user is signed in. The body carries `"login_required": true`. |
+| **NotFound**       | `404 share_not_found` | Wrong / expired / revoked / rotated token, a new visit past `max_uses`, a visitor outside the `tenant` audience, a role or expiry the rules no longer allow, **or** the target failed item-safety (trashed / detached). |
+| **PasswordRequired** | `401 share_password_required` | The share is password-gated and no/incorrect password was supplied. |
+| **LoginRequired**  | `401 actor_required` | The audience is `authenticated` or `tenant` and no host user is signed in. |
 
 ::: tip Password header vs query
 The middleware reads the password from the `X-Share-Password` header **first** (so the secret
@@ -346,8 +349,21 @@ Every resolution additionally passes **item-safety** (`§2.7`): the target node 
 trashed (`trashed_at`) and must belong to a real drive (the tenant/drive boundary), the drive's
 profile must still have `share_links` enabled, and the issuer of the link must still hold
 `Ability::Share` on the node. A share on an unsafe node resolves to `NotFound` —
-**indistinguishable from a wrong token**. On download, the blob must additionally be
-`Committed` (a pending or tombstoned blob is never served publicly).
+**indistinguishable from a wrong token**. On download, the revision must additionally be
+servable — committed bytes and a clean scan state — or the answer is `423 content_unavailable`
+before any byte.
+
+## Downloads and revocation
+
+Public share downloads go through the same single egress point as every authenticated
+download ([File delivery](/reference/rest-api#file-delivery)): each request re-resolves the
+link (token generation, revocation, expiry, audience, policy) and re-checks the scan state of
+the exact revision before the first byte. Public share downloads are **always streamed**
+through the application, also when `vaulter.downloads.delivery_mode` is `direct_signed`, so a
+link that is revoked or rotated stops serving at the next request. A download that has already
+started is not interrupted. The headers are `Content-Disposition: attachment` with an RFC 6266
+`filename*`, `X-Content-Type-Options: nosniff`, `Content-Security-Policy: sandbox`,
+`Accept-Ranges: none` and `Cache-Control: private, no-store`.
 
 ## Security model
 
@@ -403,6 +419,9 @@ mints 43 characters of `base64url(random_bytes(32))`; swap it by binding your ow
 | `share_link_ttl_exceeded` | `422` | `expires_at` is later than the profile's `maxShareLinkTtlDays` allows. |
 | `unknown_role` | `422` | The role key is not registered. |
 | `permission_denied` | `403` | A previewer link asked for the original, or the owner lacks `Share`. |
+| `share_not_found` | `404` | A public request that opens nothing (see [Resolution outcomes](#resolution-outcomes)). |
+| `share_password_required` | `401` | A password-protected link without its password. |
+| `content_unavailable` | `423` | The shared file's revision is not clean. |
 
 ## Events
 

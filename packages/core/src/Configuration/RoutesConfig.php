@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
+use Vaulter\Http\Middleware\AddApiVersionHeader;
+use Vaulter\Http\Middleware\ApplyResponseCachePolicy;
+use Vaulter\Http\Middleware\AssignCorrelationId;
 use Vaulter\Http\Middleware\RecordVaulterRequestMetrics;
 
 /**
@@ -28,10 +31,15 @@ final readonly class RoutesConfig
         return trim($this->prefix(), '/').'/v1';
     }
 
-    /** @return list<string> */
+    /**
+     * The host's authenticated stack followed by the package middleware; the host lists
+     * only its own middleware.
+     *
+     * @return list<string>
+     */
     public function authenticatedMiddleware(): array
     {
-        return $this->withRequestMetrics($this->stringList(
+        return $this->withPackageMiddleware($this->stringList(
             $this->config->get('vaulter.routes.middleware.authenticated'),
             ['api', 'auth:sanctum'],
         ));
@@ -40,13 +48,13 @@ final readonly class RoutesConfig
     /** @return list<string> */
     public function publicMiddleware(): array
     {
-        return $this->withRequestMetrics($this->stringList($this->config->get('vaulter.routes.middleware.public'), ['api']));
+        return $this->withPackageMiddleware($this->stringList($this->config->get('vaulter.routes.middleware.public'), ['api']));
     }
 
     /** @return list<string> */
     public function hubMiddleware(): array
     {
-        return $this->withRequestMetrics($this->stringList($this->config->get('vaulter.routes.middleware.hub'), ['api']));
+        return $this->withPackageMiddleware($this->stringList($this->config->get('vaulter.routes.middleware.hub'), ['api']));
     }
 
     public function publicRateLimit(): int
@@ -68,13 +76,18 @@ final readonly class RoutesConfig
     }
 
     /**
+     * Correlation id first, so every later middleware and the error renderer see it; a
+     * class the host already listed keeps the host's position.
+     *
      * @param  list<string> $middleware
      * @return list<string>
      */
-    private function withRequestMetrics(array $middleware): array
+    private function withPackageMiddleware(array $middleware): array
     {
-        if (!in_array(RecordVaulterRequestMetrics::class, $middleware, true)) {
-            $middleware[] = RecordVaulterRequestMetrics::class;
+        foreach ([AssignCorrelationId::class, AddApiVersionHeader::class, ApplyResponseCachePolicy::class, RecordVaulterRequestMetrics::class] as $class) {
+            if (!in_array($class, $middleware, true)) {
+                $middleware[] = $class;
+            }
         }
 
         return $middleware;

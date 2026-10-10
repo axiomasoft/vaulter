@@ -56,10 +56,10 @@ it('refuses organizer grant management and self-promotion through operations and
         ->and(fn () => $operations->revoke($this->node->id, $other->getKey()))->toThrow(PermissionDeniedException::class);
 
     $this->actingAs(AccessTestHelpers::user());
-    $url = 'api/vaulter/nodes/'.$this->node->id.'/grants';
+    $url = 'api/vaulter/v1/nodes/'.$this->node->id.'/grants';
     $this->getJson($url)->assertForbidden();
-    $this->postJson($url, ['subject_type' => $owner->subject->type, 'subject_id' => $owner->subject->id, 'role' => RoleRegistry::OWNER])->assertForbidden();
-    $this->deleteJson($url, ['subject_type' => $other->subject_type, 'subject_id' => $other->subject_id])->assertForbidden();
+    $this->postJson($url, ['subject' => ['type' => $owner->subject->type, 'id' => $owner->subject->id], 'role' => RoleRegistry::OWNER])->assertForbidden();
+    $this->deleteJson($url.'/'.$other->getKey())->assertForbidden();
 
     expect($organizer->fresh()?->role_key)->toBe(RoleRegistry::ORGANIZER)
         ->and($organizer->fresh()?->expires_at)->not->toBeNull()
@@ -127,17 +127,20 @@ it('validates public grant roles and subject keys', function (): void {
 
 it('applies the same guard on HTTP grants and conceals hidden nodes', function (): void {
     $this->actingAs(AccessTestHelpers::user());
-    $url = 'api/vaulter/nodes/'.$this->node->id.'/grants';
+    $url = 'api/vaulter/v1/nodes/'.$this->node->id.'/grants';
     $this->getJson($url)->assertNotFound();
     $grant = AccessTestHelpers::grant($this->node, RoleRegistry::READER);
     $this->getJson($url)->assertForbidden();
     app(VaulterDatabase::class)->write(fn () => $grant->forceFill(['role_key' => RoleRegistry::OWNER])->save());
-    $this->postJson($url, ['subject_type' => AccessTestHelpers::user()->getMorphClass(), 'subject_id' => 2, 'role' => 'commenter'])->assertCreated()
-        ->assertJsonPath('data.role', 'commenter')->assertJsonPath('data.role_version', 1);
-    $this->postJson($url, ['subject_type' => AccessTestHelpers::user()->getMorphClass(), 'subject_id' => 3, 'role' => 'editor'])->assertUnprocessable();
+    $created = $this->postJson($url, ['subject' => ['type' => AccessTestHelpers::user()->getMorphClass(), 'id' => 2], 'role' => 'commenter'])->assertCreated()
+        ->assertJsonPath('data.role', 'commenter')->assertJsonPath('data.role_version', 1)
+        ->assertJsonPath('data.subject.id', '2');
+    $this->postJson($url, ['subject' => ['type' => AccessTestHelpers::user()->getMorphClass(), 'id' => 3], 'role' => 'editor'])->assertUnprocessable();
     $this->getJson($url)->assertOk()->assertJsonCount(2, 'data');
-    $this->deleteJson($url, ['subject_type' => AccessTestHelpers::user()->getMorphClass(), 'subject_id' => 2])->assertNoContent();
+    $this->deleteJson($url.'/'.$created->json('data.id'))->assertNoContent();
     $this->getJson($url)->assertOk()->assertJsonCount(1, 'data');
+    // A grant id of another node is as unknown as a missing one.
+    $this->deleteJson($url.'/'.$created->json('data.id'))->assertNotFound();
 });
 
 it('preserves request UUID and ULID correlation for every grant and share mutation', function (): void {

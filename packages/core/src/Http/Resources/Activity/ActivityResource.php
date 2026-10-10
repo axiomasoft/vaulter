@@ -6,19 +6,25 @@ namespace Vaulter\Http\Resources\Activity;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use stdClass;
 use Vaulter\Data\Snapshots\ActivityEntrySnapshot;
 use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
 
 /**
- * The read shape of an activity row (§2.9 / M2c-activity). It exposes the verb, the
- * actor + target morphs, the storage scope, the structured context and the request
- * meta (ip / user-agent / request-id) for the audit surface. created_at is the feed
- * cursor; there is no updated_at (append-only).
+ * One activity entry after the visibility projection: what happened, to which node,
+ * by whom and when. Network details of the request (IP, user agent) stay server-side;
+ * fields the reader may not see arrive as null.
  *
  * @mixin ActivityEntrySnapshot
  */
 final class ActivityResource extends JsonResource
 {
+    /** @param string $nodeType the morph type activity rows use for a node target */
+    public function __construct(ActivityEntrySnapshot $activity, private readonly string $nodeType)
+    {
+        parent::__construct($activity);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -27,20 +33,18 @@ final class ActivityResource extends JsonResource
     {
         /** @var ActivityEntrySnapshot $activity */
         $activity = $this->resource;
+        $data = new stdClass;
+        foreach ($activity->context as $key => $value) {
+            $data->{$key} = $value;
+        }
 
         return [
             'id' => $activity->id,
-            'verb' => $activity->verb,
-            'storage_id' => $activity->driveId,
-            'actor_type' => $activity->actorType,
-            'actor_id' => $activity->actorId,
-            'target_type' => $activity->targetType,
-            'target_id' => $activity->targetId,
-            'context' => $activity->context === [] ? null : $activity->context,
-            'ip' => $activity->ip,
-            'user_agent' => $activity->userAgent,
-            'request_id' => $activity->requestId,
-            'created_at' => SnapshotValue::iso($activity->createdAt),
+            'type' => $activity->verb,
+            'node_id' => $activity->targetType === $this->nodeType ? $activity->targetId : null,
+            'actor' => $activity->actorType === null && $activity->actorId === null ? null : ['type' => $activity->actorType, 'id' => $activity->actorId],
+            'occurred_at' => SnapshotValue::iso($activity->createdAt),
+            'data' => $data,
         ];
     }
 }

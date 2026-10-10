@@ -1,0 +1,23 @@
+{
+  "verdict": "RED",
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "medium",
+      "file": "packages/core/src/Access/OperationGuard.php",
+      "line": 225,
+      "claim": "With tenancy enabled, abilitiesMany is not one batch. The new loop calls tenantBoundary() and thus TenancyBoundary::assertNode() once per node (unscoped node read, unscoped drive read, then a tenant-scoped drive read). evaluateMany() then calls AccessResolver::storageOf() (packages/core/src/Access/AccessResolver.php:471), which under an enforced boundary calls assertNode() again per node and does not use the storage relation loadMissing() just loaded. Returned flags still match abilities() and nodes without View are still omitted, but the query count grows with the page. AbilitiesManyTest only compares 5 vs 50 nodes with tenancy off.",
+      "repro": "Throwaway Pest, tenancy on, MutableTenantResolver, one owner drive, abilitiesMany of 2 folders vs 8: small_queries=23 small_out=2; large_queries=59 large_out=8. The log repeats per node: select * from \"v_nodes\" where \"v_nodes\".\"id\" = ? limit 1; select * from \"v_drives\" where \"v_drives\".\"id\" = ? limit 1; select * from \"v_drives\" where \"v_drives\".\"tenant_id\" = ? and \"v_drives\".\"id\" = ? limit 1."
+    }
+  ],
+  "session": "01a125e9-62db-7172-a9ee-a1466d0cbbaa",
+  "reviewer": {
+    "provider": "grok",
+    "model": "grok-4.7",
+    "effort": "high",
+    "context_window": 500000
+  },
+  "executor_confirmation": {
+    "F1": "CONFIRMED by own run: AbilitiesManyTest \"stays one batch under strict tenancy\" red 20 vs 128 queries with the per-node path, green after the batch path"
+  }
+}

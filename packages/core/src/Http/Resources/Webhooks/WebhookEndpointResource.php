@@ -6,31 +6,23 @@ namespace Vaulter\Http\Resources\Webhooks;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
 
 /**
- * The read shape of a webhook endpoint (master plan §2.11 / D14 / M3b). It NEVER
- * serializes the signing_secret from the stored row: the secret is surfaced EXACTLY
- * ONCE, at registration, via {@see self::withSecret()}. Every list/show response omits
- * it (it is unrecoverable from the row, so the owner rotates by re-registering).
+ * A webhook subscriber endpoint. The signing secret is stored encrypted and never read
+ * back into a response: only registration and rotation return it, once, through
+ * {@see self::withSecret()}.
  *
  * @mixin WebhookEndpoint
  */
 final class WebhookEndpointResource extends JsonResource
 {
-    /**
-     * The raw signing_secret, attached ONLY by the register endpoint so it is returned
-     * once. Null on every list/show response.
-     */
-    private ?string $signingSecret = null;
+    private ?string $secret = null;
 
-    /**
-     * Attach the raw signing_secret to this (register-time only) response — the single
-     * moment it is ever visible.
-     */
     public function withSecret(string $secret): self
     {
-        $this->signingSecret = $secret;
+        $this->secret = $secret;
 
         return $this;
     }
@@ -43,22 +35,17 @@ final class WebhookEndpointResource extends JsonResource
     {
         /** @var WebhookEndpoint $endpoint */
         $endpoint = $this->resource;
-
         $payload = [
-            'id' => $endpoint->getKey(),
+            'id' => SnapshotValue::id($endpoint->getKey()),
             'url' => $endpoint->url,
-            'events' => $endpoint->events,
-            'is_active' => $endpoint->is_active,
-            'drive_id' => $endpoint->drive_id,
-            'failure_count' => $endpoint->failure_count,
-            'last_triggered_at' => $endpoint->last_triggered_at,
-            'created_at' => $endpoint->created_at,
-            'updated_at' => $endpoint->updated_at,
+            'drive_id' => SnapshotValue::nullableId($endpoint->drive_id),
+            'events' => array_values($endpoint->events),
+            'status' => $endpoint->is_active ? 'active' : 'disabled',
+            'disabled_at' => SnapshotValue::iso($endpoint->disabled_at),
+            'created_at' => SnapshotValue::iso($endpoint->created_at),
         ];
-
-        // The raw secret is present ONLY in the register response (returned once).
-        if ($this->signingSecret !== null) {
-            $payload['signing_secret'] = $this->signingSecret;
+        if ($this->secret !== null) {
+            $payload['secret'] = $this->secret;
         }
 
         return $payload;

@@ -13,7 +13,7 @@ use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Queries\SharedWithActorQuery;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Exceptions\Nodes\InvalidCursorException;
-use Vaulter\Http\Resources\Drive\NodeResource;
+use Vaulter\Http\Resources\Drive\LegacyNodeResource as NodeResource;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;

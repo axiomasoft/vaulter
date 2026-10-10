@@ -62,18 +62,18 @@ function shareLimitProfile(int $days): void
 it('counts the redemption once per link session however many preview requests follow', function (): void {
     $minted = ($this->shares)()->create($this->node->id, new ShareLinkInput);
 
-    $first = $this->getJson('api/vaulter/share/'.$minted->token)->assertOk();
+    $first = $this->getJson('api/vaulter/v1/shares/'.$minted->token)->assertOk();
     $session = $first->headers->get(ShareSession::HEADER);
     expect($session)->toBeString()->not->toBe('');
 
-    $this->getJson('api/vaulter/share/'.$minted->token, [ShareSession::HEADER => $session])->assertOk();
-    $this->getJson('api/vaulter/share/'.$minted->token.'/nodes', [ShareSession::HEADER => $session]);
-    $this->getJson('api/vaulter/share/'.$minted->token, [ShareSession::HEADER => $session])->assertOk();
+    $this->getJson('api/vaulter/v1/shares/'.$minted->token, [ShareSession::HEADER => $session])->assertOk();
+    $this->getJson('api/vaulter/v1/shares/'.$minted->token.'/nodes', [ShareSession::HEADER => $session]);
+    $this->getJson('api/vaulter/v1/shares/'.$minted->token, [ShareSession::HEADER => $session])->assertOk();
 
     expect(AccessTestHelpers::shareRow($minted)->use_count)->toBe(1);
 
     // Without the session every request is a new visit.
-    $this->getJson('api/vaulter/share/'.$minted->token)->assertOk();
+    $this->getJson('api/vaulter/v1/shares/'.$minted->token)->assertOk();
     expect(AccessTestHelpers::shareRow($minted)->use_count)->toBe(2);
 });
 
@@ -84,23 +84,23 @@ it('keeps archived shares readable but hides deleting drives from new and existi
     $file = $handle->files()->upload(UploadSource::fromStream(stream: DriveTestHelpers::streamFor('shared'), name: 'shared.txt'));
     $folderLink = ($this->shares)()->create($this->node->id, new ShareLinkInput(scope: GrantScope::Subtree));
     $fileLink = ($this->shares)()->create($file->id, new ShareLinkInput);
-    $folderSession = $this->getJson('api/vaulter/share/'.$folderLink->token)->assertOk()->headers->get(ShareSession::HEADER);
-    $fileSession = $this->getJson('api/vaulter/share/'.$fileLink->token)->assertOk()->headers->get(ShareSession::HEADER);
+    $folderSession = $this->getJson('api/vaulter/v1/shares/'.$folderLink->token)->assertOk()->headers->get(ShareSession::HEADER);
+    $fileSession = $this->getJson('api/vaulter/v1/shares/'.$fileLink->token)->assertOk()->headers->get(ShareSession::HEADER);
     $resolver = app(ShareResolver::class);
     $resolved = $resolver->resolve($fileLink->token, session: $fileSession)->context;
     $context = OperationContext::system($this->drive, 'lifecycle fixture');
 
     app(ArchiveDriveAction::class)->execute($context);
-    $this->getJson('api/vaulter/share/'.$folderLink->token.'/nodes', [ShareSession::HEADER => $folderSession])->assertOk();
-    expect($this->get('api/vaulter/share/'.$fileLink->token.'/download', [ShareSession::HEADER => $fileSession])->getStatusCode())->toBeIn([200, 302]);
+    $this->getJson('api/vaulter/v1/shares/'.$folderLink->token.'/nodes', [ShareSession::HEADER => $folderSession])->assertOk();
+    expect($this->get('api/vaulter/v1/shares/'.$fileLink->token.'/download', [ShareSession::HEADER => $fileSession])->getStatusCode())->toBeIn([200, 302]);
     expect((string) $resolver->refresh($resolved)->node->id)->toBe($file->id);
 
     app(DeleteDriveAction::class)->execute($context);
     foreach ([[$folderLink, $folderSession], [$fileLink, $fileSession]] as [$link, $session]) {
         foreach ([[], [ShareSession::HEADER => $session]] as $headers) {
-            $this->getJson('api/vaulter/share/'.$link->token, $headers)->assertNotFound();
-            $this->getJson('api/vaulter/share/'.$link->token.'/nodes', $headers)->assertNotFound();
-            $this->getJson('api/vaulter/share/'.$link->token.'/download', $headers)->assertNotFound();
+            $this->getJson('api/vaulter/v1/shares/'.$link->token, $headers)->assertNotFound();
+            $this->getJson('api/vaulter/v1/shares/'.$link->token.'/nodes', $headers)->assertNotFound();
+            $this->getJson('api/vaulter/v1/shares/'.$link->token.'/download', $headers)->assertNotFound();
         }
     }
     expect(fn () => $resolver->refresh($resolved))->toThrow(NotFoundHttpException::class);
@@ -109,9 +109,9 @@ it('keeps archived shares readable but hides deleting drives from new and existi
 it('lets a visit that already redeemed keep working once max_uses is reached, and refuses new visits', function (): void {
     $minted = ($this->shares)()->create($this->node->id, new ShareLinkInput(maxUses: 1));
 
-    $session = $this->getJson('api/vaulter/share/'.$minted->token)->assertOk()->headers->get(ShareSession::HEADER);
-    $this->getJson('api/vaulter/share/'.$minted->token, [ShareSession::HEADER => $session])->assertOk();
-    $this->getJson('api/vaulter/share/'.$minted->token)->assertNotFound();
+    $session = $this->getJson('api/vaulter/v1/shares/'.$minted->token)->assertOk()->headers->get(ShareSession::HEADER);
+    $this->getJson('api/vaulter/v1/shares/'.$minted->token, [ShareSession::HEADER => $session])->assertOk();
+    $this->getJson('api/vaulter/v1/shares/'.$minted->token)->assertNotFound();
 
     expect(AccessTestHelpers::shareRow($minted)->use_count)->toBe(1);
 });
@@ -132,7 +132,7 @@ it('ignores a forged, expired or foreign session', function (): void {
 it('rotates the token: the old one is a 404, the new one works, sessions of the old one are void', function (): void {
     $minted = ($this->shares)()->create($this->node->id, new ShareLinkInput(maxUses: 5));
     $old = $minted->token;
-    $session = $this->getJson('api/vaulter/share/'.$old)->assertOk()->headers->get(ShareSession::HEADER);
+    $session = $this->getJson('api/vaulter/v1/shares/'.$old)->assertOk()->headers->get(ShareSession::HEADER);
 
     $rotated = ($this->shares)()->rotate($this->node->id, $minted->link->id);
 
@@ -142,9 +142,9 @@ it('rotates the token: the old one is a 404, the new one works, sessions of the 
         ->and(AccessTestHelpers::shareRow($rotated)->token_prefix)->toBe(substr($rotated->token, 0, 8))
         ->and(AccessTestHelpers::shareRow($rotated)->use_count)->toBe(1);
 
-    $this->getJson('api/vaulter/share/'.$old, [ShareSession::HEADER => $session])->assertNotFound();
+    $this->getJson('api/vaulter/v1/shares/'.$old, [ShareSession::HEADER => $session])->assertNotFound();
     // The old session names generation 1; on the new token it buys nothing.
-    $this->getJson('api/vaulter/share/'.$rotated->token, [ShareSession::HEADER => $session])->assertOk();
+    $this->getJson('api/vaulter/v1/shares/'.$rotated->token, [ShareSession::HEADER => $session])->assertOk();
     expect(AccessTestHelpers::shareRow($rotated)->use_count)->toBe(2);
 });
 
@@ -203,8 +203,8 @@ it('refuses a previewer link the original while it shows the node', function ():
     $preview = app()->makeWith(ShareOperations::class, ['context' => OperationContext::system($drive->model(), 'fixture')])
         ->create($file->id, new ShareLinkInput(role: RoleRegistry::PREVIEWER));
 
-    $this->getJson('api/vaulter/share/'.$preview->token)->assertOk();
-    $this->getJson('api/vaulter/share/'.$preview->token.'/download')->assertForbidden()->assertJsonPath('code', 'permission_denied');
+    $this->getJson('api/vaulter/v1/shares/'.$preview->token)->assertOk();
+    $this->getJson('api/vaulter/v1/shares/'.$preview->token.'/download')->assertForbidden()->assertJsonPath('code', 'permission_denied');
 });
 
 it('keeps a foreign tenant out of a tenant link with an opaque 404', function (): void {
@@ -240,16 +240,16 @@ it('caps a link at the drive policy and applies a tightened policy to existing l
     $default = ($this->shares)()->create($this->node->id, new ShareLinkInput);
     expect(AccessTestHelpers::shareRow($default)->expires_at->lte(now()->addDays(7)->addMinute()))->toBeTrue();
 
-    $this->getJson('api/vaulter/share/'.$short->token)->assertOk();
+    $this->getJson('api/vaulter/v1/shares/'.$short->token)->assertOk();
 
     // A long-lived link made before the policy was tightened stops resolving now.
     shareLimitProfile(1);
-    $this->getJson('api/vaulter/share/'.$short->token)->assertNotFound();
+    $this->getJson('api/vaulter/v1/shares/'.$short->token)->assertNotFound();
     expect(fn () => ($this->shares)()->update($this->node->id, $short->link->id, new ShareLinkUpdate(expiresAt: now()->addDays(3))))
         ->toThrow(ShareLinkTtlExceededException::class);
 
     ($this->shares)()->update($this->node->id, $short->link->id, new ShareLinkUpdate(expiresAt: now()->addHours(12)));
-    $this->getJson('api/vaulter/share/'.$short->token)->assertOk();
+    $this->getJson('api/vaulter/v1/shares/'.$short->token)->assertOk();
 });
 
 it('never writes tokens or passwords into the activity feed or the outbox', function (): void {

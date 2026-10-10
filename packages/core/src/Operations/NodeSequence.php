@@ -27,7 +27,7 @@ final readonly class NodeSequence
             throw new InvalidArgumentException('Expected sequence must be nonnegative.');
         }
         if ($expected !== null && $locked->sequence !== $expected) {
-            throw new StaleNodeException;
+            throw StaleNodeException::forNode($locked->id);
         }
     }
 
@@ -38,7 +38,7 @@ final readonly class NodeSequence
         $next = Int64Counter::increment($current);
         $updated = $locked->newQuery()->whereKey($locked->id)->where('drive_id', $locked->drive_id)->where('sequence', $current)->update(['sequence' => $next]);
         if ($updated !== 1) {
-            throw new StaleNodeException;
+            throw StaleNodeException::forNode($locked->id);
         }
         $locked->forceFill(['sequence' => $next])->syncOriginalAttribute('sequence');
 

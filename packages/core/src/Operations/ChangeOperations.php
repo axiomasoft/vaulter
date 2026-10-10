@@ -23,6 +23,7 @@ use Vaulter\Enums\Drive\DriveStatus;
 use Vaulter\Exceptions\Changes\CursorExpiredException;
 use Vaulter\Exceptions\Changes\InvalidCursorException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Repositories\Changes\ChangeEntryRepository;
 use Vaulter\Repositories\Changes\ChangeHeadRepository;
@@ -190,7 +191,7 @@ final readonly class ChangeOperations
     private function drive(): Drive
     {
         if (!$this->config->featureEnabled('changes')) {
-            throw new LogicException('[Vaulter] The change journal is disabled (vaulter.features.changes).');
+            throw ProfileRestrictionException::forOperation('changes');
         }
         $drive = $this->context->drive->newQuery()->whereKey($this->context->driveId())->first();
         if (!$drive instanceof Drive || $drive->status === DriveStatus::Deleting) {

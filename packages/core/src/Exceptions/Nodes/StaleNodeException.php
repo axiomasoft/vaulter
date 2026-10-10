@@ -12,9 +12,21 @@ final class StaleNodeException extends VaulterException implements ProblemExcept
 {
     use ProvidesProblemDetails;
 
-    public function __construct()
+    /** @param string|null $nodeId the node whose expectation failed, reported to the client as meta.node_id */
+    public function __construct(private readonly ?string $nodeId = null)
     {
         parent::__construct('[Vaulter] The node changed; reload it before retrying.');
+    }
+
+    public static function forNode(int|string $nodeId): self
+    {
+        return new self((string) $nodeId);
+    }
+
+    /** @return array<string, mixed> */
+    public function problemDetails(): array
+    {
+        return $this->nodeId === null ? [] : ['node_id' => $this->nodeId];
     }
 
     public function problemCode(): string

@@ -162,6 +162,10 @@ return [
         'title' => 'Ссылка не найдена',
         'detail' => 'Ссылка не существует, истекла или недоступна вам.',
     ],
+    'share_password_required' => [
+        'title' => 'Нужен пароль ссылки',
+        'detail' => 'Ссылка защищена паролем. Передайте пароль в заголовке X-Share-Password.',
+    ],
     'share_role_not_allowed' => [
         'title' => 'Роль недопустима для ссылки',
         'detail' => 'Ссылка не может нести эту роль для этой аудитории.',
@@ -194,9 +198,17 @@ return [
         'title' => 'Ошибка валидации',
         'detail' => 'Данные запроса некорректны; подробности в поле errors.',
     ],
+    'webhook_delivery_not_found' => [
+        'title' => 'Доставка не найдена',
+        'detail' => 'У этого endpoint нет такой доставки.',
+    ],
     'webhook_delivery_not_redeliverable' => [
         'title' => 'Доставку нельзя повторить',
         'detail' => 'Доставка ещё повторяется или её endpoint отключён.',
+    ],
+    'webhook_endpoint_not_found' => [
+        'title' => 'Webhook endpoint не найден',
+        'detail' => 'Такого webhook endpoint не существует.',
     ],
     'write_outside_operation' => [
         'title' => 'Запись вне операции',

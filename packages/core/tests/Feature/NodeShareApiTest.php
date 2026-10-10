@@ -47,14 +47,15 @@ it('lets an owner with the Share ability mint a link and returns the raw token o
     $node = AccessTestHelpers::folder($storage, null, 'shareable');
     AccessTestHelpers::grant($node, RoleRegistry::OWNER, scope: GrantScope::Item); // grants SHARE bit
 
-    $response = $this->postJson('api/vaulter/nodes/'.$node->getKey().'/shares', [
+    $response = $this->postJson('api/vaulter/v1/nodes/'.$node->getKey().'/shares', [
         'role' => RoleRegistry::READER,
     ])->assertCreated();
 
     // The raw token + URL come back exactly once.
     $token = $response->json('data.token');
     expect($token)->toBeString()->not->toBe('');
-    $response->assertJsonPath('data.url', '/share/'.$token);
+    $response->assertJsonPath('data.url', '/share/'.$token)
+        ->assertHeader('Cache-Control', 'no-store, private');
 
     // Only the hash is stored.
     $row = NodeShare::query()->firstOrFail();
@@ -66,7 +67,7 @@ it('stamps a default expiry when none is supplied, never minting an immortal lin
     $node = AccessTestHelpers::folder($storage, null, 'ttl-default');
     AccessTestHelpers::grant($node, RoleRegistry::OWNER, scope: GrantScope::Item);
 
-    $this->postJson('api/vaulter/nodes/'.$node->getKey().'/shares', [
+    $this->postJson('api/vaulter/v1/nodes/'.$node->getKey().'/shares', [
         'role' => RoleRegistry::READER,
     ])->assertCreated();
 
@@ -83,7 +84,7 @@ it('rejects an explicit expiry above the configured ceiling (F-P1.3-03)', functi
     AccessTestHelpers::grant($node, RoleRegistry::OWNER, scope: GrantScope::Item);
 
     // Config max is 720h (30 days) — 400 days is well past it.
-    $this->postJson('api/vaulter/nodes/'.$node->getKey().'/shares', [
+    $this->postJson('api/vaulter/v1/nodes/'.$node->getKey().'/shares', [
         'role' => RoleRegistry::READER,
         'expires_at' => now()->addDays(400)->toIso8601String(),
     ])
@@ -99,7 +100,7 @@ it('403s an owner WITHOUT the Share ability', function (): void {
     // Reader does NOT carry the SHARE bit.
     AccessTestHelpers::grant($node, RoleRegistry::READER, scope: GrantScope::Item);
 
-    $this->postJson('api/vaulter/nodes/'.$node->getKey().'/shares', [
+    $this->postJson('api/vaulter/v1/nodes/'.$node->getKey().'/shares', [
         'role' => RoleRegistry::READER,
     ])->assertStatus(403);
 });
@@ -110,10 +111,10 @@ it('lists shares WITHOUT ever exposing the raw token or hash', function (): void
     AccessTestHelpers::grant($node, RoleRegistry::OWNER, scope: GrantScope::Item);
     ShareTestHelpers::share($node, token: 'listing-secret');
 
-    $response = $this->getJson('api/vaulter/nodes/'.$node->getKey().'/shares')->assertOk();
+    $response = $this->getJson('api/vaulter/v1/nodes/'.$node->getKey().'/shares')->assertOk();
 
     $first = $response->json('data.0');
-    expect($first)->toHaveKey('token_prefix')
+    expect(array_keys($first))->toBe(['id', 'node_id', 'role', 'role_version', 'audience', 'scope', 'expires_at', 'max_uses', 'use_count', 'has_password', 'token_generation', 'created_by', 'created_at'])
         ->and($first)->not->toHaveKey('token')
         ->and($first)->not->toHaveKey('token_hash')
         ->and($first)->not->toHaveKey('password_hash');
@@ -125,7 +126,7 @@ it('revokes a share that belongs to the node', function (): void {
     AccessTestHelpers::grant($node, RoleRegistry::OWNER, scope: GrantScope::Item);
     $share = ShareTestHelpers::share($node, token: 'kill-me');
 
-    $this->deleteJson('api/vaulter/nodes/'.$node->getKey().'/shares/'.$share->getKey())
+    $this->deleteJson('api/vaulter/v1/nodes/'.$node->getKey().'/shares/'.$share->getKey())
         ->assertNoContent();
 
     expect($share->refresh()->revoked_at)->not->toBeNull();
@@ -138,7 +139,7 @@ it('404s revoking a share that belongs to a DIFFERENT node', function (): void {
     AccessTestHelpers::grant($nodeA, RoleRegistry::OWNER, scope: GrantScope::Item);
     $shareOnB = ShareTestHelpers::share($nodeB, token: 'b-share');
 
-    $this->deleteJson('api/vaulter/nodes/'.$nodeA->getKey().'/shares/'.$shareOnB->getKey())
+    $this->deleteJson('api/vaulter/v1/nodes/'.$nodeA->getKey().'/shares/'.$shareOnB->getKey())
         ->assertNotFound();
 
     expect($shareOnB->refresh()->revoked_at)->toBeNull();
@@ -151,7 +152,7 @@ it('resolves a public share token to node metadata within scope', function (): v
     $node = AccessTestHelpers::folder($storage, null, 'public-doc');
     ShareTestHelpers::share($node, token: 'public-token');
 
-    $this->getJson('api/vaulter/share/public-token')
+    $this->getJson('api/vaulter/v1/shares/public-token')
         ->assertOk()
         ->assertJsonPath('data.id', expectedOpaqueNodeId($node->getKey()))
         ->assertJsonPath('data.name', 'public-doc');
@@ -162,7 +163,7 @@ it('never exposes the raw sequential node id publicly, only an opaque projection
     $node = AccessTestHelpers::folder($storage, null, 'opaque-doc');
     ShareTestHelpers::share($node, token: 'opaque-token');
 
-    $response = $this->getJson('api/vaulter/share/opaque-token')->assertOk();
+    $response = $this->getJson('api/vaulter/v1/shares/opaque-token')->assertOk();
 
     expect($response->json('data.id'))
         ->not->toBe($node->getKey())
@@ -174,7 +175,7 @@ it('404s a public resolve for a wrong/expired token', function (): void {
     $node = AccessTestHelpers::folder($storage, null, 'public-doc');
     ShareTestHelpers::share($node, token: 'real-token');
 
-    $this->getJson('api/vaulter/share/fake-token')->assertNotFound();
+    $this->getJson('api/vaulter/v1/shares/fake-token')->assertNotFound()->assertJsonPath('code', 'share_not_found');
 });
 
 it('401s a password-gated public resolve until the password is supplied', function (): void {
@@ -182,11 +183,12 @@ it('401s a password-gated public resolve until the password is supplied', functi
     $node = AccessTestHelpers::folder($storage, null, 'pw-doc');
     ShareTestHelpers::share($node, token: 'pw-token', passwordHash: Hash::make('open-sesame'));
 
-    $this->getJson('api/vaulter/share/pw-token')
+    $this->getJson('api/vaulter/v1/shares/pw-token')
         ->assertStatus(401)
-        ->assertJsonPath('password_required', true);
+        ->assertHeader('Content-Type', 'application/problem+json')
+        ->assertJsonPath('code', 'share_password_required');
 
-    $this->getJson('api/vaulter/share/pw-token', ['X-Share-Password' => 'open-sesame'])
+    $this->getJson('api/vaulter/v1/shares/pw-token', ['X-Share-Password' => 'open-sesame'])
         ->assertOk()
         ->assertJsonPath('data.id', expectedOpaqueNodeId($node->getKey()));
 });
@@ -205,7 +207,7 @@ it('serves a public download within the READ bits, bounds it by max_uses, and ne
     // The faked local disk DOES provide a temporary url — F-P1.3-01 removed the
     // presign-redirect branch, so the response is always a streamed 200, never a
     // 302, regardless of what the disk can mint.
-    $response = $this->get('api/vaulter/share/dl-token/download');
+    $response = $this->get('api/vaulter/v1/shares/dl-token/download');
     $response->assertOk();
     expect($response->streamedContent())->toBe('public bytes');
 
@@ -213,7 +215,7 @@ it('serves a public download within the READ bits, bounds it by max_uses, and ne
     expect($share->refresh()->use_count)->toBe(1);
 
     // A second hit is over budget — denied (404), and never bumps past max_uses.
-    $this->get('api/vaulter/share/dl-token/download')->assertNotFound();
+    $this->get('api/vaulter/v1/shares/dl-token/download')->assertNotFound();
     expect($share->refresh()->use_count)->toBe(1);
 });
 
@@ -224,8 +226,8 @@ it('denies a public download to a previewer link while it still shows the node',
     // A previewer sees the node but never takes the original.
     ShareTestHelpers::share($fileNode, token: 'norights-token', role: RoleRegistry::PREVIEWER);
 
-    $this->getJson('api/vaulter/share/norights-token')->assertOk();
-    $this->getJson('api/vaulter/share/norights-token/download')->assertForbidden()->assertJsonPath('code', 'permission_denied');
+    $this->getJson('api/vaulter/v1/shares/norights-token')->assertOk();
+    $this->getJson('api/vaulter/v1/shares/norights-token/download')->assertForbidden()->assertJsonPath('code', 'permission_denied');
 });
 
 it('lists a subtree share but 404s a listing on an item share', function (): void {
@@ -236,11 +238,11 @@ it('lists a subtree share but 404s a listing on an item share', function (): voi
     ShareTestHelpers::share($folder, token: 'subtree-token', scope: GrantScope::Subtree);
     ShareTestHelpers::share($folder, token: 'item-token', scope: GrantScope::Item);
 
-    $this->getJson('api/vaulter/share/subtree-token/nodes')
+    $this->getJson('api/vaulter/v1/shares/subtree-token/nodes')
         ->assertOk()
         ->assertJsonPath('data.0.name', 'inside');
 
-    $this->getJson('api/vaulter/share/item-token/nodes')->assertNotFound();
+    $this->getJson('api/vaulter/v1/shares/item-token/nodes')->assertNotFound();
 });
 
 it('429s a public share resolve past the vaulter-public rate limit (F-P1.8-01)', function (): void {
@@ -251,8 +253,8 @@ it('429s a public share resolve past the vaulter-public rate limit (F-P1.8-01)',
     ShareTestHelpers::share($node, token: 'throttle-token');
 
     // First request within budget.
-    $this->getJson('api/vaulter/share/throttle-token')->assertOk();
+    $this->getJson('api/vaulter/v1/shares/throttle-token')->assertOk();
 
     // Second request — same IP, same minute — is over budget.
-    $this->getJson('api/vaulter/share/throttle-token')->assertStatus(429);
+    $this->getJson('api/vaulter/v1/shares/throttle-token')->assertStatus(429);
 });

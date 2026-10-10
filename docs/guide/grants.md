@@ -149,15 +149,21 @@ $removed = app(RevokeNodeAccessAction::class)->execute(
 
 ## REST surface
 
-The per-node ACL is exposed under the Drive prefix (default `api/vaulter`). **Every**
-action requires the `Manage` ability on the node. An organizer may create bearer links with
-`Share`, but managing grants requires owner access. A denial 403s through `PermissionDeniedException`.
+The per-node ACL is part of the [REST API v1](/reference/rest-api#access-grants-and-inheritance)
+(default prefix `api/vaulter/v1`). **Every** action requires the `Manage` ability on the node.
+An organizer may create bearer links with `Share`, but managing grants requires owner access:
+a caller who can see the node gets `403 permission_denied`, one who cannot `404 node_not_found`.
 
-| Method | Path | Action |
+| Method | Path | Name |
 |---|---|---|
-| `GET` | `nodes/{node}/grants` | list grants on the node (cursor-paginated) |
-| `POST` | `nodes/{node}/grants` | grant a subject a role (201) |
-| `DELETE` | `nodes/{node}/grants` | revoke a subject's grants (204) |
+| `GET` | `v1/nodes/{node}/grants` | `grants.index` — the node's grants as `{ "data": [ … ] }` |
+| `POST` | `v1/nodes/{node}/grants` | `grants.store` — grant a subject a role (201) |
+| `DELETE` | `v1/nodes/{node}/grants/{grant}` | `grants.destroy` — revoke one grant (204) |
+| `POST` | `v1/nodes/{node}/inheritance/restrict` | `access.inheritance.restrict` — `{"mode": "empty" \| "copy_current"}` |
+| `POST` | `v1/nodes/{node}/inheritance/restore` | `access.inheritance.restore` |
+
+The inheritance routes answer the node (with its new `ETag`). Restricting can remove your own
+inherited access; the change stands and the node comes back with every ability `false`.
 
 ::: tip Where the grants surface, listing-side
 When the `grants` feature is on and the `database` driver is active, Drive **listings**
@@ -169,12 +175,11 @@ the candidate-superset-vs-exact semantics and the open-driver behaviour.
 
 ::: code-group
 ```bash [grant]
-curl -X POST https://app.test/api/vaulter/nodes/01J.../grants \
+curl -X POST https://app.test/api/vaulter/v1/nodes/01J.../grants \
   -H 'Authorization: Bearer <token>' \
   -H 'Content-Type: application/json' \
   -d '{
-    "subject_type": "user",
-    "subject_id": "42",
+    "subject": { "type": "user", "id": "42" },
     "role": "writer",
     "scope": "subtree",
     "expires_at": "2026-12-31T23:59:59Z"
@@ -182,10 +187,8 @@ curl -X POST https://app.test/api/vaulter/nodes/01J.../grants \
 ```
 
 ```bash [revoke]
-curl -X DELETE https://app.test/api/vaulter/nodes/01J.../grants \
-  -H 'Authorization: Bearer <token>' \
-  -H 'Content-Type: application/json' \
-  -d '{ "subject_type": "user", "subject_id": "42" }'
+curl -X DELETE https://app.test/api/vaulter/v1/nodes/01J.../grants/01J... \
+  -H 'Authorization: Bearer <token>'
 ```
 
 ```json [grant response 201]
@@ -193,13 +196,13 @@ curl -X DELETE https://app.test/api/vaulter/nodes/01J.../grants \
   "data": {
     "id": "01J...",
     "node_id": "01J...",
-    "subject_type": "user",
-    "subject_id": "42",
+    "subject": { "type": "user", "id": "42" },
     "role": "writer",
     "role_version": 1,
     "scope": "subtree",
-    "expires_at": "2026-12-31T23:59:59Z",
-    "created_at": "2026-06-30T10:00:00Z"
+    "expires_at": "2026-12-31T23:59:59.000000Z",
+    "created_by": "1",
+    "created_at": "2026-06-30T10:00:00.000000Z"
   }
 }
 ```
@@ -207,15 +210,15 @@ curl -X DELETE https://app.test/api/vaulter/nodes/01J.../grants \
 
 ### Request validation
 
-`StoreNodeGrantRequest` validates the body:
+`CreateGrantRequest` validates the body:
 
 | Field | Rules |
 |---|---|
-| `subject_type` | required, string, max 255, a registered subject type |
-| `subject_id` | required |
+| `subject.type` | required, string, max 255, a registered subject type |
+| `subject.id` | required |
 | `role` | required, one of the registered role keys |
 | `scope` | nullable enum (`item`/`subtree`), defaults `subtree` |
-| `expires_at` | nullable date |
+| `expires_at` | nullable date, in the future |
 
 ## Events
 

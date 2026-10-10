@@ -55,6 +55,11 @@ final readonly class RecordVaulterRequestMetrics
 
     private function operationFor(Request $request): ?string
     {
+        $name = $request->route()?->getName();
+        if (is_string($name) && str_starts_with($name, 'vaulter.v1.')) {
+            return VaulterHttpOperationMap::operationFor($name);
+        }
+
         $prefix = trim($this->routesConfig->prefix(), '/');
         $path = trim($request->path(), '/');
 

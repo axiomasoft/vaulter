@@ -15,6 +15,7 @@ use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Support\Identity;
 
 /** @internal Central boundary; resolver values and supplied models are never cached. */
 final readonly class TenancyBoundary
@@ -81,6 +82,53 @@ final readonly class TenancyBoundary
         }
 
         return $fresh;
+    }
+
+    /**
+     * assertNode() for a whole page: the same checks from one read of the nodes, one read
+     * of their drives within the current tenant, instead of three reads per node.
+     *
+     * @param  list<Node>           $nodes
+     * @return array<string, Drive> node key => the node's drive
+     */
+    public function assertNodes(array $nodes): array
+    {
+        $keys = [];
+        foreach ($nodes as $node) {
+            $key = $node->getRawOriginal($node->getKeyName());
+            if (!is_int($key) && !is_string($key)) {
+                throw NodeNotFoundException::forId('node');
+            }
+            $keys[(string) $key] = $key;
+        }
+        if ($keys === []) {
+            return [];
+        }
+        $class = $this->models->model('node');
+        $fresh = [];
+        foreach ($class::query()->whereKey(array_values($keys))->get() as $row) {
+            $fresh[Identity::stringify($row->getRawOriginal($row->getKeyName()))] = $row;
+        }
+        $driveIds = [];
+        foreach ($fresh as $row) {
+            $driveIds[(string) $row->drive_id] = $row->drive_id;
+        }
+        $driveClass = $this->models->model('drive');
+        $drives = [];
+        foreach ($this->constrain($driveClass::query())->whereKey(array_values($driveIds))->get() as $drive) {
+            $drives[Identity::stringify($drive->getRawOriginal($drive->getKeyName()))] = $drive;
+        }
+        $result = [];
+        foreach (array_keys($keys) as $key) {
+            $row = $fresh[$key] ?? throw NodeNotFoundException::forId('node');
+            $drive = $drives[(string) $row->drive_id] ?? throw NodeNotFoundException::forId('drive');
+            if ($this->config->enabled() && self::normalize($row->tenant_id) !== self::normalize($drive->tenant_id)) {
+                throw NodeNotFoundException::forId('node');
+            }
+            $result[$key] = $drive;
+        }
+
+        return $result;
     }
 
     /** @param iterable<Node|\stdClass> $nodes Already fetched adjacency rows. */

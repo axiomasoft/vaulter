@@ -2,10 +2,8 @@
 
 declare(strict_types=1);
 
-use Illuminate\Http\Request;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Contracts\Observability\MetricsRecorder;
-use Vaulter\Http\Controllers\Activity\ActivityController;
 use Vaulter\Support\LoadTier;
 use Vaulter\Testing\FakeMetricsRecorder;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -33,10 +31,7 @@ it('records vaulter_activity_feed_duration_seconds for storage feed reads', func
     $user->forceFill(['id' => 1]);
     $user->exists = true;
 
-    $request = Request::create('/api/vaulter/storages/'.$storage->getKey().'/activity', 'GET');
-    $request->setUserResolver(static fn (): TestUser => $user);
-
-    app(ActivityController::class)->forStorage($request, $storage);
+    $this->actingAs($user)->getJson('api/vaulter/v1/drives/'.$storage->getKey().'/activity')->assertOk();
 
     app(MetricsRecorder::class)->assertHistogram(
         name: 'vaulter_activity_feed_duration_seconds',

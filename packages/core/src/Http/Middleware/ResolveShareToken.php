@@ -6,9 +6,11 @@ namespace Vaulter\Http\Middleware;
 
 use Closure;
 use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Vaulter\Exceptions\Access\MissingActorException;
+use Vaulter\Exceptions\Sharing\ShareNotFoundException;
+use Vaulter\Exceptions\Sharing\SharePasswordRequiredException;
 use Vaulter\Sharing\ShareContext;
 use Vaulter\Sharing\ShareRedeemer;
 use Vaulter\Sharing\ShareResolution;
@@ -52,7 +54,7 @@ final class ResolveShareToken
         $token = $request->route('token');
 
         if (!is_string($token) || $token === '') {
-            return $this->deny(ShareResolution::NotFound);
+            $this->deny(ShareResolution::NotFound);
         }
 
         $result = $this->resolver->resolve(
@@ -63,7 +65,7 @@ final class ResolveShareToken
         );
 
         if (!$result->isOk() || !$result->context instanceof ShareContext) {
-            return $this->deny($result->resolution);
+            $this->deny($result->resolution);
         }
 
         $session = null;
@@ -71,7 +73,7 @@ final class ResolveShareToken
             // The atomic UPDATE refuses a link that was revoked, rotated or spent
             // since it was resolved: the visitor sees the same opaque 404.
             if (!$this->redeemer->redeem($result->context->share)) {
-                return $this->deny(ShareResolution::NotFound);
+                $this->deny(ShareResolution::NotFound);
             }
             $session = $this->redeemer->session($result->context->share);
         }
@@ -133,21 +135,12 @@ final class ResolveShareToken
         return $request->user();
     }
 
-    private function deny(ShareResolution $resolution): JsonResponse
+    private function deny(ShareResolution $resolution): never
     {
-        return match ($resolution) {
-            ShareResolution::PasswordRequired => new JsonResponse(
-                ['message' => 'This share link is password protected.', 'password_required' => true],
-                401,
-            ),
-            ShareResolution::LoginRequired => new JsonResponse(
-                ['message' => 'This share link requires you to sign in.', 'login_required' => true],
-                401,
-            ),
-            default => new JsonResponse(
-                ['message' => 'Share link not found or no longer available.'],
-                404,
-            ),
+        throw match ($resolution) {
+            ShareResolution::PasswordRequired => SharePasswordRequiredException::challenge(),
+            ShareResolution::LoginRequired => MissingActorException::required(),
+            default => ShareNotFoundException::opaque(),
         };
     }
 }

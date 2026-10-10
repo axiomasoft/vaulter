@@ -21,7 +21,7 @@ beforeEach(function (): void {
 });
 
 it('rejects every invalid share-link request boundary', function (array $payload, string $field): void {
-    $this->postJson('api/vaulter/nodes/'.$this->shareNode->getKey().'/shares', $payload)
+    $this->postJson('api/vaulter/v1/nodes/'.$this->shareNode->getKey().'/shares', $payload)
         ->assertUnprocessable()
         ->assertJsonValidationErrors($field);
 
@@ -43,7 +43,7 @@ it('rejects every invalid share-link request boundary', function (array $payload
 it('maps the complete valid request into the persisted share contract', function (): void {
     $expiresAt = now()->addHour()->startOfSecond();
 
-    $this->postJson('api/vaulter/nodes/'.$this->shareNode->getKey().'/shares', [
+    $this->postJson('api/vaulter/v1/nodes/'.$this->shareNode->getKey().'/shares', [
         'role' => RoleRegistry::WRITER,
         'audience' => ShareAudience::Authenticated->value,
         'scope' => GrantScope::Subtree->value,
@@ -70,19 +70,19 @@ it('maps the complete valid request into the persisted share contract', function
 });
 
 it('defaults to a reader link for anyone', function (): void {
-    $this->postJson('api/vaulter/nodes/'.$this->shareNode->getKey().'/shares', [])
+    $this->postJson('api/vaulter/v1/nodes/'.$this->shareNode->getKey().'/shares', [])
         ->assertCreated()->assertJsonPath('data.role', 'reader')->assertJsonPath('data.audience', 'anyone');
 });
 
 it('accepts the roles a link may carry for anyone', function (string $role): void {
-    $this->postJson('api/vaulter/nodes/'.$this->shareNode->id.'/shares', ['role' => $role, 'scope' => GrantScope::Item->value])
+    $this->postJson('api/vaulter/v1/nodes/'.$this->shareNode->id.'/shares', ['role' => $role, 'scope' => GrantScope::Item->value])
         ->assertCreated()->assertJsonPath('data.role', $role);
 
     expect(NodeShare::query()->sole()->role_key)->toBe($role);
 })->with(['previewer', 'reader', 'commenter']);
 
 it('refuses the roles a link cannot carry with share_role_not_allowed', function (string $role, string $audience): void {
-    $this->postJson('api/vaulter/nodes/'.$this->shareNode->id.'/shares', ['role' => $role, 'audience' => $audience])
+    $this->postJson('api/vaulter/v1/nodes/'.$this->shareNode->id.'/shares', ['role' => $role, 'audience' => $audience])
         ->assertUnprocessable()->assertJsonPath('code', 'share_role_not_allowed');
 
     expect(NodeShare::query()->count())->toBe(0);
@@ -93,5 +93,5 @@ it('refuses the roles a link cannot carry with share_role_not_allowed', function
 ]);
 
 it('answers unknown_role for a stored-role lookup that does not exist', function (): void {
-    $this->postJson('api/vaulter/nodes/'.$this->shareNode->id.'/shares', ['role' => 'admin'])->assertUnprocessable()->assertJsonValidationErrors('role');
+    $this->postJson('api/vaulter/v1/nodes/'.$this->shareNode->id.'/shares', ['role' => 'admin'])->assertUnprocessable()->assertJsonValidationErrors('role');
 });

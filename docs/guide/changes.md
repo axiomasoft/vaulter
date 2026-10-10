@@ -19,6 +19,23 @@ do {
 } while ($page->hasMore);
 ```
 
+Over HTTP the same journal is two [REST v1 routes](/reference/rest-api#change-journal):
+
+```bash
+# After the initial listing:
+curl https://app.test/api/vaulter/v1/drives/01J.../changes/start -H 'Authorization: Bearer <token>'
+# → { "data": { "cursor": "…" } }
+
+curl 'https://app.test/api/vaulter/v1/drives/01J.../changes?cursor=…&limit=500' -H 'Authorization: Bearer <token>'
+# → { "data": [ {"node_id", "operation", "reason", "subtree", "node_sequence", "node"} … ],
+#     "meta": { "next_cursor": "…", "has_more": false } }
+```
+
+`node` is the v1 node as the reader sees it now, abilities and `etag` included, or `null` for a
+`remove`. `meta.next_cursor` is always set: store it even when the page is empty. With the
+journal switched off the routes answer `403 profile_restriction`; a forged or foreign cursor
+`400 invalid_cursor`, an expired one `410 cursor_expired`.
+
 ## Starting
 
 1. Take `startCursor()`.

@@ -6,9 +6,24 @@ namespace Vaulter\Http\Middleware;
 
 /**
  * §9.1 server-side `operation` labels for {@see RecordVaulterRequestMetrics}.
+ *
+ * Versioned routes are labelled by route name; the path rules serve only the unversioned
+ * drive and documents routes until those packages move to v1.
  */
 final class VaulterHttpOperationMap
 {
+    /** @var array<string, string> route name => operation label */
+    private const array NAMED = [
+        'vaulter.v1.activity.drive' => 'activity_feed',
+        'vaulter.v1.activity.node' => 'activity_feed',
+        'vaulter.v1.public-shares.download' => 'download',
+    ];
+
+    public static function operationFor(string $routeName): ?string
+    {
+        return self::NAMED[$routeName] ?? null;
+    }
+
     /**
      * @return list<array{methods: list<string>, pattern: string, operation: string}>
      */
@@ -27,8 +42,6 @@ final class VaulterHttpOperationMap
             ['methods' => ['DELETE'], 'pattern' => 'nodes/{id}', 'operation' => 'tree_mutate'],
             ['methods' => ['DELETE'], 'pattern' => 'nodes/{id}/force', 'operation' => 'tree_mutate'],
             ['methods' => ['POST'], 'pattern' => 'nodes/{id}/move', 'operation' => 'subtree_mutate'],
-            ['methods' => ['GET'], 'pattern' => 'storages/{id}/activity', 'operation' => 'activity_feed'],
-            ['methods' => ['GET'], 'pattern' => 'nodes/{id}/activity', 'operation' => 'activity_feed'],
             ['methods' => ['GET'], 'pattern' => 'nodes/{id}/content', 'operation' => 'doc_read'],
             ['methods' => ['GET'], 'pattern' => 'nodes/{id}/document-versions', 'operation' => 'doc_read'],
             ['methods' => ['GET'], 'pattern' => 'nodes/{id}/handler', 'operation' => 'doc_read'],
@@ -50,7 +63,6 @@ final class VaulterHttpOperationMap
             ['methods' => ['POST'], 'pattern' => 'storages/{id}/uploads', 'operation' => 'single_shot'],
             ['methods' => ['GET'], 'pattern' => 'nodes/{id}/download', 'operation' => 'download'],
             ['methods' => ['GET'], 'pattern' => 'nodes/{id}/versions/{id}/download', 'operation' => 'download'],
-            ['methods' => ['GET'], 'pattern' => 'share/{token}/download', 'operation' => 'download'],
         ];
     }
 

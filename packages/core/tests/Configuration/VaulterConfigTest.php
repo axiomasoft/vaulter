@@ -6,6 +6,9 @@ use Illuminate\Config\Repository;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Http\Middleware\AddApiVersionHeader;
+use Vaulter\Http\Middleware\ApplyResponseCachePolicy;
+use Vaulter\Http\Middleware\AssignCorrelationId;
 use Vaulter\Http\Middleware\RecordVaulterRequestMetrics;
 
 it('reads repository changes without caching values', function (): void {
@@ -22,10 +25,12 @@ it('keeps canonical table names separate from upgrade table overrides', function
         ->and($config->legacyTable('storages'))->toBe('custom_old_drives');
 });
 
-it('adds request metrics exactly once to each route middleware stack', function (): void {
+it('adds the package middleware exactly once to each route middleware stack', function (): void {
     $repository = new Repository;
     $config = new RoutesConfig($repository);
-    expect($config->authenticatedMiddleware())->toBe(['api', 'auth:sanctum', RecordVaulterRequestMetrics::class]);
+    $package = [AssignCorrelationId::class, AddApiVersionHeader::class, ApplyResponseCachePolicy::class, RecordVaulterRequestMetrics::class];
+    expect($config->authenticatedMiddleware())->toBe(['api', 'auth:sanctum', ...$package]);
     $repository->set('vaulter.routes.middleware.public', [RecordVaulterRequestMetrics::class]);
-    expect($config->publicMiddleware())->toBe([RecordVaulterRequestMetrics::class]);
+    expect($config->publicMiddleware())->toBe([RecordVaulterRequestMetrics::class, AssignCorrelationId::class, AddApiVersionHeader::class, ApplyResponseCachePolicy::class])
+        ->and($config->versionedPrefix())->toBe('api/vaulter/v1');
 });
