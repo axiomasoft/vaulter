@@ -12,6 +12,7 @@ use Vaulter\Tests\IdStrategy\UlidStrategyTestCase;
 use Vaulter\Tests\IdStrategy\Uuid7StrategyTestCase;
 use Vaulter\Tests\ObservabilityDocuments\P83DocumentsTestCase;
 use Vaulter\Tests\SpatieTestCase;
+use Vaulter\Tests\Support\OpenApi\OpenApiTestCase;
 use Vaulter\Tests\TablePrefixTestCase;
 use Vaulter\Tests\TestCase;
 use Vaulter\Tests\UlidTestCase;
@@ -22,6 +23,8 @@ $core = dirname(__DIR__).'/packages/core/tests';
 // Drive + Uploads suites moved to the vaulter-drive package (P2 #5 / ADR-0015, D1);
 // they run under that package's own Pest suite. The shared DriveTestHelpers stays in
 // core/tests/Drive (a plain builder used by many kernel suites), it is not a test case.
+uses(OpenApiTestCase::class)->in($core.'/OpenApi');
+
 uses(TestCase::class)->in(
     $core.'/Http',
     $core.'/Observability/Binding',

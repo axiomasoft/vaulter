@@ -54,7 +54,7 @@ final readonly class ShowNodeController
         }
         if (in_array('children', $include, true)) {
             $data['children'] = $snapshot->kind === NodeKind::Folder
-                ? $this->nodes->page($drive, $drive->nodes()->children($snapshot->id, new ListOptions(perPage: $perPage)), $perPage)->getData(true)
+                ? $this->nodes->page($drive, $drive->nodes()->children($snapshot->id, new ListOptions(perPage: $perPage)), $perPage)->getData()
                 : null;
         }
 
