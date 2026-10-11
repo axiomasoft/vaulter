@@ -8,11 +8,11 @@ use Vaulter\Documents\Data\Comments\AddCommentInput;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /**
- * The store payload for a node comment (ADR-0014 шаг 1). The author is not part of the
- * payload: CommentOperations records the acting user (their registered morph alias,
- * never a raw FQCN).
+ * POST nodes/{node}/comments: a comment's body, its parent comment (a reply) and an
+ * optional anchor. The author is not part of the payload: CommentOperations records the
+ * acting user (their registered morph alias, never a raw FQCN).
  */
-final class StoreNodeCommentRequest extends VaulterFormRequest
+final class AddCommentRequest extends VaulterFormRequest
 {
     /**
      * @return array<string, mixed>
@@ -21,7 +21,7 @@ final class StoreNodeCommentRequest extends VaulterFormRequest
     {
         return [
             'body' => ['required', 'string', 'max:5000'],
-            'parent_id' => ['nullable'],
+            'parent_id' => ['nullable', 'string', 'max:191'],
             'anchor' => ['nullable', 'array'],
         ];
     }

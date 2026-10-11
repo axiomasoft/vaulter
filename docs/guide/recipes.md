@@ -355,9 +355,9 @@ $this->app->tag([\App\Vaulter\Handlers\CadHandler::class], 'vaulter.file_handler
 :::
 
 ::: details Confirm the descriptor that ships to the client
-`GET nodes/{node}/handler` returns the resolved handler's `id`, capabilities and `ViewerDescriptor`
-for a node — exactly what the Vue client reads to pick an editor/preview implementation. (This
-route is enabled by installing `vaulter-documents`.)
+The `presentation` of `GET v1/nodes/{node}` carries the resolved handler's `id`, capabilities and
+viewer descriptor for a node — exactly what the Vue client reads to pick an editor/preview
+implementation.
 :::
 
 ## Swap the storage disk to S3 {#s3-disk}
@@ -472,7 +472,7 @@ Documents::exporters()->register(\App\Vaulter\Exporters\PdfExporter::class);
 
 :::
 
-It is then reachable at `GET nodes/{node}/export?format=pdf` and via the Vue
+It is then reachable at `GET v1/documents/{node}/export/pdf` and via the Vue
 `useDocumentNode(nodeId).exportAs('pdf')` composable.
 
 ## Custom share-token shape {#share-token}

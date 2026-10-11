@@ -1,0 +1,25 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Vaulter\Documents\Http\Controllers\Comments;
+
+use Illuminate\Http\JsonResponse;
+use Vaulter\Documents\DocumentsManager;
+use Vaulter\Documents\Http\Requests\AddCommentRequest;
+use Vaulter\Documents\Http\Resources\CommentResource;
+use Vaulter\Http\Support\HttpOperationContextFactory;
+use Vaulter\Http\Support\HttpResourceResolver;
+
+/** Add a comment, or a reply to one of the node's comments (Comment). */
+final readonly class AddCommentController
+{
+    public function __construct(private HttpResourceResolver $resolver, private HttpOperationContextFactory $contexts, private DocumentsManager $documents) {}
+
+    public function __invoke(AddCommentRequest $request, string $node): JsonResponse
+    {
+        $drive = $this->contexts->forDrive($request, $this->resolver->driveOfNode($node));
+
+        return (new CommentResource($this->documents->comments($drive)->add($node, $request->toData())))->response()->setStatusCode(201);
+    }
+}

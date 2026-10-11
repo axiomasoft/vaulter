@@ -2,10 +2,7 @@
 
 declare(strict_types=1);
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Documents\Exceptions\CommentNotFoundException;
 use Vaulter\Documents\Exceptions\DocumentContentDegradedException;
 use Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException;
@@ -40,35 +37,8 @@ it('renders each domain exception with its stable code and HTTP status', functio
     int $status,
     array $extras = [],
 ): void {
-    $path = trim(app(RoutesConfig::class)->prefix(), '/').'/__v24';
-    Route::get($path, static function () use ($exception): never {
-        throw $exception;
-    });
-
-    $response = $this->getJson($path)
-        ->assertStatus($status)
-        ->assertExactJson(['message' => $exception->getMessage(), 'code' => $code] + $extras);
-
-    expect($response->status())->not->toBe(500);
-
-    // Vaulter routes render JSON even when a browser sends an HTML Accept header.
-    $this->get($path, ['Accept' => 'text/html'])
-        ->assertStatus($status)
-        ->assertJsonPath('code', $code);
-
-    // Host HTML routes continue through Laravel's normal exception handler.
-    expect($exception->render(Request::create('/host-page')))->toBeFalse()
-        ->and((new VaulterException('infrastructure failure'))->render(Request::create($path)))->toBeFalse();
-
-    $hostJson = Request::create('/host-page', server: ['HTTP_ACCEPT' => 'application/json']);
-    $rendered = $exception->render($hostJson);
-    expect($rendered)->not->toBeFalse();
-    expect($rendered->getStatusCode())->toBe($status)
-        ->and($rendered->getData(true))->toBe(['message' => $exception->getMessage(), 'code' => $code] + $extras);
-
-    if ($exception instanceof OffsetMismatchException) {
-        $response->assertHeader('Upload-Offset', '7')->assertHeader('Tus-Resumable', '1.0.0');
-    }
+    // Problem Details is the only HTTP rendering; the exception carries no render() of its own.
+    expect(method_exists($exception, 'render'))->toBeFalse();
 
     // The same exception through the versioned surface: problem+json with the catalogue
     // status, and the machine-readable extras as `errors`/`meta`, never a 500.

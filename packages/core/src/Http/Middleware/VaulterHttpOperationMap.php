@@ -7,9 +7,9 @@ namespace Vaulter\Http\Middleware;
 /**
  * §9.1 server-side `operation` labels for {@see RecordVaulterRequestMetrics}.
  *
- * Versioned routes are labelled by route name. The path rules serve the unversioned
- * documents routes until that package moves to v1, and URI-only collectors for the
- * byte-heavy v1 drive routes.
+ * Routes are labelled by name. The path rules exist for collectors that see only a URI
+ * (php-fpm status, the load stand) and cover the versioned routes whose cost differs
+ * most: bytes in or out, document reads and writes, the hub.
  */
 final class VaulterHttpOperationMap
 {
@@ -46,6 +46,21 @@ final class VaulterHttpOperationMap
         'vaulter.v1.files.revisions.store' => 'single_shot',
         'vaulter.v1.files.download' => 'download',
         'vaulter.v1.files.revisions.download' => 'download',
+        'vaulter.v1.documents.store' => 'doc_write',
+        'vaulter.v1.documents.content.show' => 'doc_read',
+        'vaulter.v1.documents.content.update' => 'doc_write',
+        'vaulter.v1.documents.revisions.index' => 'doc_read',
+        'vaulter.v1.documents.revisions.show' => 'doc_read',
+        'vaulter.v1.documents.revisions.store' => 'doc_write',
+        'vaulter.v1.documents.revisions.restore' => 'doc_write',
+        'vaulter.v1.documents.revisions.update' => 'doc_write',
+        'vaulter.v1.documents.export' => 'doc_export',
+        'vaulter.v1.documents.collaboration.session' => 'collab_issue',
+        'vaulter.v1.collaboration.hub.store' => 'collab_persist',
+        'vaulter.v1.comments.index' => 'comment',
+        'vaulter.v1.comments.store' => 'comment',
+        'vaulter.v1.comments.resolve' => 'comment',
+        'vaulter.v1.comments.destroy' => 'comment',
     ];
 
     public static function operationFor(string $routeName): ?string
@@ -68,19 +83,20 @@ final class VaulterHttpOperationMap
             ['methods' => ['POST'], 'pattern' => 'v1/files/{id}/revisions', 'operation' => 'single_shot'],
             ['methods' => ['PATCH'], 'pattern' => 'v1/uploads/{id}', 'operation' => 'tus_patch'],
             ['methods' => ['POST'], 'pattern' => 'v1/uploads/{id}/parts', 'operation' => 's3_putpart'],
-            ['methods' => ['GET'], 'pattern' => 'nodes/{id}/content', 'operation' => 'doc_read'],
-            ['methods' => ['GET'], 'pattern' => 'nodes/{id}/document-versions', 'operation' => 'doc_read'],
-            ['methods' => ['GET'], 'pattern' => 'nodes/{id}/handler', 'operation' => 'doc_read'],
-            ['methods' => ['PATCH'], 'pattern' => 'nodes/{id}/content', 'operation' => 'doc_write'],
-            ['methods' => ['POST'], 'pattern' => 'storages/{id}/documents', 'operation' => 'doc_write'],
-            ['methods' => ['POST'], 'pattern' => 'nodes/{id}/document-versions', 'operation' => 'doc_write'],
-            ['methods' => ['POST'], 'pattern' => 'nodes/{id}/document-versions/{id}/restore', 'operation' => 'doc_write'],
-            ['methods' => ['PATCH'], 'pattern' => 'nodes/{id}/document-versions/{id}/keep-forever', 'operation' => 'doc_write'],
-            ['methods' => ['GET'], 'pattern' => 'nodes/{id}/export', 'operation' => 'doc_export'],
-            ['methods' => ['POST'], 'pattern' => 'nodes/{id}/collab/token', 'operation' => 'collab_issue'],
-            ['methods' => ['POST'], 'pattern' => 'collab/store', 'operation' => 'collab_persist'],
-            ['methods' => ['GET', 'POST', 'DELETE'], 'pattern' => 'nodes/{id}/comments', 'operation' => 'comment'],
-            ['methods' => ['GET', 'POST', 'DELETE'], 'pattern' => 'nodes/{id}/comments/{id}', 'operation' => 'comment'],
+            ['methods' => ['GET'], 'pattern' => 'v1/documents/{id}/content', 'operation' => 'doc_read'],
+            ['methods' => ['GET'], 'pattern' => 'v1/documents/{id}/revisions', 'operation' => 'doc_read'],
+            ['methods' => ['GET'], 'pattern' => 'v1/documents/{id}/revisions/{id}', 'operation' => 'doc_read'],
+            ['methods' => ['PUT'], 'pattern' => 'v1/documents/{id}/content', 'operation' => 'doc_write'],
+            ['methods' => ['POST'], 'pattern' => 'v1/drives/{id}/documents', 'operation' => 'doc_write'],
+            ['methods' => ['POST'], 'pattern' => 'v1/documents/{id}/revisions', 'operation' => 'doc_write'],
+            ['methods' => ['POST'], 'pattern' => 'v1/documents/{id}/revisions/{id}/restore', 'operation' => 'doc_write'],
+            ['methods' => ['PATCH'], 'pattern' => 'v1/documents/{id}/revisions/{id}', 'operation' => 'doc_write'],
+            ['methods' => ['GET'], 'pattern' => 'v1/documents/{id}/export/{id}', 'operation' => 'doc_export'],
+            ['methods' => ['POST'], 'pattern' => 'v1/documents/{id}/collaboration/session', 'operation' => 'collab_issue'],
+            ['methods' => ['POST'], 'pattern' => 'v1/collaboration/hub/store', 'operation' => 'collab_persist'],
+            ['methods' => ['GET', 'POST'], 'pattern' => 'v1/nodes/{id}/comments', 'operation' => 'comment'],
+            ['methods' => ['POST', 'DELETE'], 'pattern' => 'v1/nodes/{id}/comments/{id}', 'operation' => 'comment'],
+            ['methods' => ['POST'], 'pattern' => 'v1/nodes/{id}/comments/{id}/resolve', 'operation' => 'comment'],
         ];
     }
 

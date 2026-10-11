@@ -14,7 +14,7 @@ use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
 /**
- * Эндпоинт connect-рукопожатия M4b (мастер-план §7): POST nodes/{node}/collab/token.
+ * Эндпоинт connect-рукопожатия M4b (мастер-план §7): POST documents/{node}/collaboration/session.
  * Авторизация идёт через AccessResolver — без View/Comment 403; commenter получает
  * read-only сессию, writer — writable. Токен НИКОГДА не выдаёт больше, чем способность
  * актора: read_only кодируется из права на узле, а не из запроса.
@@ -56,7 +56,7 @@ it('hides the document node from an actor with no grant (node_not_found)', funct
     actAsCollaborator();
     $node = grantedDocumentNode(level: null);
 
-    test()->postJson('api/vaulter/nodes/'.$node->getKey().'/collab/token')
+    test()->postJson('api/vaulter/v1/documents/'.$node->getKey().'/collaboration/session')
         ->assertNotFound()
         ->assertJsonPath('code', 'node_not_found');
 });
@@ -65,8 +65,8 @@ it('issues a read-only session for a commenter (no edit)', function (): void {
     actAsCollaborator();
     $node = grantedDocumentNode(level: RoleRegistry::COMMENTER);
 
-    test()->postJson('api/vaulter/nodes/'.$node->getKey().'/collab/token')
-        ->assertOk()
+    test()->postJson('api/vaulter/v1/documents/'.$node->getKey().'/collaboration/session')
+        ->assertCreated()
         ->assertJsonPath('data.driver', 'hocuspocus')
         ->assertJsonPath('data.mode', 'ro')
         ->assertJsonPath('data.node_id', (string) $node->getKey())
@@ -80,8 +80,8 @@ it('issues a read-only session for a bare reader', function (): void {
     actAsCollaborator();
     $node = grantedDocumentNode(level: RoleRegistry::READER);
 
-    test()->postJson('api/vaulter/nodes/'.$node->getKey().'/collab/token')
-        ->assertOk()
+    test()->postJson('api/vaulter/v1/documents/'.$node->getKey().'/collaboration/session')
+        ->assertCreated()
         ->assertJsonPath('data.mode', 'ro');
 });
 
@@ -89,8 +89,8 @@ it('issues a writable session for a writer (edit)', function (): void {
     actAsCollaborator();
     $node = grantedDocumentNode(level: RoleRegistry::WRITER);
 
-    $response = test()->postJson('api/vaulter/nodes/'.$node->getKey().'/collab/token')
-        ->assertOk()
+    $response = test()->postJson('api/vaulter/v1/documents/'.$node->getKey().'/collaboration/session')
+        ->assertCreated()
         ->assertJsonPath('data.mode', 'rw');
 
     $claims = (array) JWT::decode($response->json('data.token'), new Key('shh-secret-at-least-32-bytes-long-for-hs256', 'HS256'));
@@ -110,13 +110,13 @@ it('issues a read-only session to an editor whose client speaks another schema v
     actAsCollaborator();
     $node = grantedDocumentNode(level: RoleRegistry::WRITER);
 
-    test()->postJson('api/vaulter/nodes/'.$node->getKey().'/collab/token', ['schema_version' => 0])
-        ->assertOk()
+    test()->postJson('api/vaulter/v1/documents/'.$node->getKey().'/collaboration/session', ['schema_version' => 0])
+        ->assertCreated()
         ->assertJsonPath('data.mode', 'ro')
         ->assertJsonPath('data.schema_version', 1);
 
-    test()->postJson('api/vaulter/nodes/'.$node->getKey().'/collab/token', ['schema_version' => 1])
-        ->assertOk()
+    test()->postJson('api/vaulter/v1/documents/'.$node->getKey().'/collaboration/session', ['schema_version' => 1])
+        ->assertCreated()
         ->assertJsonPath('data.mode', 'rw');
 });
 
@@ -128,8 +128,8 @@ it('returns a hocuspocus descriptor with url + JWT when that driver is configure
     actAsCollaborator();
     $node = grantedDocumentNode(level: RoleRegistry::WRITER);
 
-    test()->postJson('api/vaulter/nodes/'.$node->getKey().'/collab/token')
-        ->assertOk()
+    test()->postJson('api/vaulter/v1/documents/'.$node->getKey().'/collaboration/session')
+        ->assertCreated()
         ->assertJsonPath('data.driver', 'hocuspocus')
         ->assertJsonPath('data.url', 'ws://hub:1234')
         ->assertJsonPath('data.mode', 'rw');
@@ -142,6 +142,6 @@ it('409s when the target node is a folder, not a document', function (): void {
     AccessTestHelpers::grant($folder, RoleRegistry::WRITER);
 
     // A folder has no document payload — collab is document-only.
-    test()->postJson('api/vaulter/nodes/'.$folder->getKey().'/collab/token')
+    test()->postJson('api/vaulter/v1/documents/'.$folder->getKey().'/collaboration/session')
         ->assertStatus(409)->assertJsonPath('code', 'not_a_document');
 });

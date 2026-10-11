@@ -11,6 +11,7 @@ use Vaulter\Documents\Data\Revisions\UpdateRevisionRetentionInput;
 use Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
@@ -88,17 +89,17 @@ it('releases a keep_forever pin through the HTTP surface, F-P1.12-03', function 
 
     $storage = DocumentTestHelpers::drive()->model();
 
-    $nodeId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/documents', [
+    $nodeId = $this->postJson(Docs::url('drives/'.$storage->getKey().'/documents'), [
         'name' => 'Report',
         'content' => ['type' => 'doc', 'content' => []],
     ])->assertCreated()->json('data.id');
 
-    $versionId = $this->postJson('api/vaulter/nodes/'.$nodeId.'/document-versions', [
+    $versionId = $this->postJson(Docs::url('documents/'.$nodeId.'/revisions'), [
         'label' => 'Pinned',
         'keep_forever' => true,
     ])->assertCreated()->assertJsonPath('data.keep_forever', true)->json('data.id');
 
-    $this->patchJson('api/vaulter/nodes/'.$nodeId.'/document-versions/'.$versionId.'/keep-forever')
+    $this->patchJson(Docs::url('documents/'.$nodeId.'/revisions/'.$versionId), ['keep_forever' => false])
         ->assertOk()
         ->assertJsonPath('data.keep_forever', false);
 });

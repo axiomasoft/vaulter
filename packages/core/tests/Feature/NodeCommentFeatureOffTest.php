@@ -3,14 +3,13 @@
 declare(strict_types=1);
 
 /**
- * ADR-0014 шаг 1 — the node-comment routes are gated on the 'comments' feature (default
- * OFF). Under the base TestCase (feature off) they are never registered, so every verb
- * 404s. This pins the additive opt-in: a host that does not enable 'comments' sees no
- * new surface.
+ * The comment routes belong to vaulter-documents. Core alone, without that package, serves none of
+ * them: every verb answers the versioned 404 route_not_found, so a host that did not install the
+ * package sees no new surface.
  */
-it('does not register the node-comment routes when the feature is off', function (): void {
-    $this->getJson('api/vaulter/nodes/1/comments')->assertNotFound();
-    $this->postJson('api/vaulter/nodes/1/comments', ['body' => 'x'])->assertNotFound();
-    $this->postJson('api/vaulter/nodes/1/comments/1/resolve')->assertNotFound();
-    $this->deleteJson('api/vaulter/nodes/1/comments/1')->assertNotFound();
+it('serves no node-comment route without the documents package', function (): void {
+    $this->getJson('api/vaulter/v1/nodes/1/comments')->assertNotFound()->assertJsonPath('code', 'route_not_found');
+    $this->postJson('api/vaulter/v1/nodes/1/comments', ['body' => 'x'])->assertNotFound();
+    $this->postJson('api/vaulter/v1/nodes/1/comments/1/resolve')->assertNotFound();
+    $this->deleteJson('api/vaulter/v1/nodes/1/comments/1')->assertNotFound();
 });

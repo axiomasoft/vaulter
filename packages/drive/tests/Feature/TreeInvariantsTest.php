@@ -162,10 +162,8 @@ it('hides a foreign destination as 404 node_not_found', function (): void {
 
     expect($exception)->toBeInstanceOf(NodeNotFoundException::class);
 
-    $response = $exception->render(request()->create('api/vaulter/x', 'POST', server: ['HTTP_ACCEPT' => 'application/json']));
-
-    expect($response->getStatusCode())->toBe(404)
-        ->and($response->getData(true)['code'])->toBe('node_not_found');
+    expect($exception->httpStatus())->toBe(404)
+        ->and($exception->problemCode())->toBe('node_not_found');
 });
 
 it('never renames, moves, trashes or deletes the root', function (string $operation): void {

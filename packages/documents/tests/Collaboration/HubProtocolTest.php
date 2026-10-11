@@ -121,8 +121,8 @@ it('refuses a seed built before a REST update and loses no text', function (): v
     Hub::call('store', Hub::storeBody($node, 'stale-seed', Hub::tiptap('Draft'), seed: true, stateVersion: $version), Hub::token($node))
         ->assertStatus(409)
         ->assertJsonPath('code', 'collaboration_seed_conflict')
-        ->assertJsonPath('context.expected_state_version', $version)
-        ->assertJsonPath('context.actual_state_version', Hub::aggregate($node)->state_version);
+        ->assertJsonPath('meta.context.expected_state_version', $version)
+        ->assertJsonPath('meta.context.actual_state_version', Hub::aggregate($node)->state_version);
     $after = Hub::aggregate($node);
     expect($after->yjs_state)->toBeNull()
         ->and($after->content['content'][0]['content'][0]['text'])->toBe('Written over REST');
@@ -168,8 +168,8 @@ it('fences off a store from the room opened before a restore (V12)', function ()
     Hub::call('store', Hub::storeBody($node, 'late-old-edit', Hub::tiptap('Late'), epoch: 0), $oldToken)
         ->assertStatus(409)
         ->assertJsonPath('code', 'collaboration_epoch_mismatch')
-        ->assertJsonPath('context.expected', 0)
-        ->assertJsonPath('context.actual', 1);
+        ->assertJsonPath('meta.context.expected', 0)
+        ->assertJsonPath('meta.context.actual', 1);
     // The old room can neither reconnect nor load.
     foreach (['authenticate', 'load'] as $endpoint) {
         Hub::call($endpoint, ['room' => Hub::room($node, 0)], $oldToken)

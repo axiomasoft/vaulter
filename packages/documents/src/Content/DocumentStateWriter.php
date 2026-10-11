@@ -20,6 +20,7 @@ use Vaulter\Documents\Repositories\Documents\DocumentStoreRepository;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionStoreRepository;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
+use Vaulter\Support\Identity;
 use Vaulter\Support\Int64Counter;
 
 /**
@@ -60,7 +61,7 @@ final readonly class DocumentStateWriter
             }
 
             if ($change->expectedStateVersion !== $locked->state_version) {
-                throw new StaleDocumentStateException(expected: $change->expectedStateVersion, actual: $locked->state_version);
+                throw new StaleDocumentStateException(expected: $change->expectedStateVersion, actual: $locked->state_version, nodeId: Identity::stringify($locked->node_id));
             }
         }
 

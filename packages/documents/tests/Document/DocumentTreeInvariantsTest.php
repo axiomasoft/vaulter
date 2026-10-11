@@ -40,7 +40,7 @@ it('places a document without a parent under the drive root and lists it there',
     expect($node->parent_id)->toEqual($drive->model()->root_node_id)
         ->and(Node::query()->where('drive_id', $drive->model()->getKey())->whereNull('parent_id')->count())->toBe(1);
 
-    $this->getJson('api/vaulter/storages/'.$drive->model()->getKey().'/nodes')
+    $this->getJson('api/vaulter/v1/drives/'.$drive->model()->getKey().'/nodes')
         ->assertOk()
         ->assertJsonPath('data.0.id', (string) $node->getKey());
 });

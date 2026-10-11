@@ -80,18 +80,19 @@ code **4409** `epoch_changed`; clients open a new session and a **new** `Y.Doc`.
 ## The connect flow
 
 ```
-Vue client ──POST /api/vaulter/nodes/{node}/collab/token {schema_version?}──▶ Laravel
+Vue client ──POST /api/vaulter/v1/documents/{node}/collaboration/session {schema_version?}──▶ Laravel
             ◀──────────────── CollaborationSession (room, epoch, mode, token) ─┘
             │
             ▼
       ws to the hub, document name = room, token = room JWT
-            │   onAuthenticate ──▶ POST collab/authenticate   (live mode)
-            │   onLoadDocument ──▶ POST collab/load           (Yjs state, or JSON to seed once)
-            │   onStoreDocument ─▶ POST collab/store          (behind the epoch fence)
+            │   onAuthenticate ──▶ POST v1/collaboration/hub/authenticate   (live mode)
+            │   onLoadDocument ──▶ POST v1/collaboration/hub/load           (Yjs state, or JSON to seed once)
+            │   onStoreDocument ─▶ POST v1/collaboration/hub/store          (behind the epoch fence)
 ```
 
-1. The client calls `POST nodes/{node}/collab/token`, optionally with the `schema_version`
-   its editor supports.
+1. The client calls `POST {prefix}/v1/documents/{node}/collaboration/session` (`201`), optionally
+   with the `schema_version` its editor supports. The route is always registered; switched-off
+   collaboration is refused by the operation.
 2. `DocumentOperations::collaborationSession($document, $clientSchemaVersion)` locates the
    node, authorizes `View` (a node the actor cannot see answers `404 node_not_found`) and
    decides the mode. The session is **read-write** only when all of these hold:
@@ -127,8 +128,10 @@ drive, node and epoch, so a token is bound to one generation of one document.
 
 ## The hub protocol (server-to-server)
 
-The hub endpoints carry no Laravel auth middleware — only `ResolveCollaborationCall`, which
-requires **both**:
+The hub endpoints live under `{prefix}/v1/collaboration/hub/` on their own middleware stack
+(`routes.middleware.hub`, `throttle:vaulter-public`) and carry no Laravel auth middleware — only
+`ResolveCollaborationCall`, which requires **both**. They exist only while
+`vaulter-documents.collaboration.enabled` is on; otherwise they answer `404 route_not_found`:
 
 - the room JWT in `Authorization: Bearer` (signature and `exp` verified; the room must parse
   and agree with the `node`/`drive`/`epoch` claims);
@@ -137,7 +140,9 @@ requires **both**:
   signature seen before is refused. The hub puts a random `nonce` in every body so two
   genuine calls with the same payload never share a signature.
 
-Anything else is `401`. The shared secret is no longer an identity by itself.
+Anything else is `401 actor_required` as `application/problem+json`. The shared secret is no longer
+an identity by itself. Every refusal on these routes — `401`, `403`, `409`, `413`, `422` — is a
+problem body with a stable `code`; the protocol itself is unchanged.
 
 Every call re-reads what the token was issued for: the node exists, is not in the trash,
 belongs to the token's drive and tenant, the drive is active or archived, the room's epoch is
@@ -147,22 +152,22 @@ later feature).
 
 | Endpoint | Hub hook | Body | Answers |
 |---|---|---|---|
-| `POST collab/authenticate` | `onAuthenticate` | `{ room }` | `{ allowed, mode, userId, epoch }`; `allowed:false` when the user lost `View`; `409 collaboration_epoch_mismatch` for a past generation. |
-| `POST collab/load` | `onLoadDocument` | `{ room }` | `{ state, content, epoch, schemaVersion, stateVersion, type }` — `state` is the base64 Yjs working state, or `null` with the JSON `content` to seed from. |
-| `POST collab/store` | `onStoreDocument` | `{ room, state, content, seed?, state_version? }` | `{ changed, epoch, state_version, yjs_state_size }`. `state_version` is only sent with a seed (see below). |
+| `POST v1/collaboration/hub/authenticate` | `onAuthenticate` | `{ room }` | `{ allowed, mode, userId, epoch }`; `allowed:false` when the user lost `View`; `409 collaboration_epoch_mismatch` for a past generation. |
+| `POST v1/collaboration/hub/load` | `onLoadDocument` | `{ room }` | `{ state, content, epoch, schemaVersion, stateVersion, type }` — `state` is the base64 Yjs working state, or `null` with the JSON `content` to seed from. |
+| `POST v1/collaboration/hub/store` | `onStoreDocument` | `{ room, state, content, seed?, state_version? }` | `{ changed, epoch, state_version, yjs_state_size }`. `state_version` is only sent with a seed (see below). |
 
-`collab/store` rules:
+`collaboration/hub/store` rules:
 
 - a read-only token, a user without `Edit` now, an archived drive or a token for another
   schema version is `403`;
 - the room's epoch is the fence: `409 collaboration_epoch_mismatch`;
 - `seed: true` writes only while the document has no Yjs state: `409
   collaboration_seed_conflict` otherwise, so two hub instances never both seed;
-- a seed also carries the `state_version` that `collab/load` returned and is written only
+- a seed also carries the `state_version` that `collaboration/hub/load` returned and is written only
   while the document is still at it. A REST `update()` of a document **without** Yjs state
   does not move the epoch, so without this precondition the seed — built from the JSON the
   hub read earlier — would overwrite the newer text. A moved version is the same `409
-  collaboration_seed_conflict` (with `context.expected_state_version` /
+  collaboration_seed_conflict` (with `meta.context.expected_state_version` /
   `actual_state_version`); the hub loads again and seeds from the current JSON. A malformed
   `state_version` is `422`;
 - `content` is required for a type whose `projectFromState()` returns `null` (both built-in

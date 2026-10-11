@@ -215,7 +215,7 @@ auth 403s.
 
 **Why & fix.**
 
-- **Hocuspocus driver.** The Node hub calls back into `collab/authenticate` + `collab/store`.
+- **Hocuspocus driver.** The Node hub calls back into `v1/collaboration/hub/{authenticate,load,store}`.
   Those endpoints accept **only** a valid shared secret or a signed room JWT — never open. A 401
   from the hub usually means `VAULTER_COLLAB_WEBHOOK_SECRET` (or the driver `secret`) differs
   between Laravel and the hub.

@@ -164,16 +164,16 @@ $node = Documents::in($drive)->create(
 ```
 
 ```bash [HTTP]
-# POST {prefix}/storages/{storage}/documents
-curl -X POST https://app.test/api/vaulter/storages/42/documents \
+# POST {prefix}/v1/drives/{drive}/documents
+curl -X POST https://app.test/api/vaulter/v1/drives/42/documents \
   -H 'Content-Type: application/json' \
   -d '{
         "name": "Design notes",
         "parent_id": null,
-        "format": "richtext",
+        "type": "vaulter/rich-text",
         "content": { "type": "doc", "content": [] }
       }'
-# → 201, a NodeResource for the new kind=document node
+# → 201, the Node of the new kind=document node (with its ETag)
 ```
 
 ```ts [Vue — the client]
@@ -203,12 +203,12 @@ What happens:
   (`application/vnd.vaulter.document+json`); it is presented by its
   [document type](./document-types.md), never by a file handler.
 
-The request validates `name`, an optional `parent_id`, the document type — `type`
-(`vendor/name`), or the 0.x fields `format` (`richtext`, `table`, `template` → `vaulter/rich-text`,
-`markdown` → `vaulter/markdown`) and `mime` (the xlsx mime → `vaulter/spreadsheet`) — and an
-optional `content`, whose `content.type` must be `doc` for a TipTap-based type. The actor needs the
-`Create` ability on the destination (and the workspace-create gate of the permission driver), and
-the drive profile must allow the document type.
+The request validates `name`, an optional `parent_id`, the document type `type` (`vendor/name`;
+the configured default when absent) and an optional `content`. The type's codec validates the
+content (`422 invalid_document_content`; for a TipTap-based type the root must be `doc`) and a type
+that is not registered answers `422 unknown_document_type`. The actor needs the `Create` ability on
+the destination (and the workspace-create gate of the permission driver), and the drive profile
+must allow the document type.
 
 ## Reading content
 
@@ -227,17 +227,22 @@ await load()
 ```
 
 ```bash [HTTP]
-# GET {prefix}/nodes/{node}/content
-curl https://app.test/api/vaulter/nodes/77/content
-# → { "data": { ...version, "content": { "type": "doc", ... } } }
+# GET {prefix}/v1/documents/{node}/content
+curl -i https://app.test/api/vaulter/v1/documents/77/content
+# → ETag: "77.0.3"
+# → { "data": { "type": "vaulter/rich-text", "schema_version": 1, "state_version": 3,
+#               "collab_epoch": 0, "revision_id": "12", "content": { "type": "doc", ... } } }
 ```
 
 :::
 
-The response keeps the shape of a version: `id` and `version_no` name the head checkpoint,
-`content`/`content_hash`/`yjs_state_size` are the working state, and `is_autosave` is `true`
-while the working state runs ahead of the head checkpoint. The history listing (below) omits
-`content` to stay light.
+The body holds the document's `type`, the `schema_version` of the content, the generation it
+belongs to (`collab_epoch` and `state_version`), the head `revision_id` and the `content`. Nothing
+in it depends on who reads it, so a reader and an editor receive the same body and the same tag:
+`ETag: "{node}.{collab_epoch}.{state_version}"`. Renaming or moving the document does not change
+the tag. `If-None-Match` with the current tag answers `304` — after the document has been found
+and authorized, so a reader whose access was revoked gets `404`. The history listing (below)
+omits `content` to stay light.
 
 ## Working state and checkpoints
 
@@ -265,7 +270,7 @@ Every content write goes through `DocumentStateWriter`, the only writer of the w
 import { useDocumentNode } from '@vaulter/vue'
 
 const { content, setContent, flush, save, saving } = useDocumentNode(nodeId, {
-  debounceMs: 800,            // the CLIENT-side debounce before a PATCH is sent
+  debounceMs: 800,            // the CLIENT-side debounce before a save is sent
 })
 
 // As the editor emits changes, schedule a debounced save:
@@ -279,13 +284,11 @@ await save()
 ```
 
 ```bash [HTTP]
-# PATCH {prefix}/nodes/{node}/content  — always 200 (semantically an UPDATE)
-curl -X PATCH https://app.test/api/vaulter/nodes/77/content \
+# PUT {prefix}/v1/documents/{node}/content  — 200; If-Match is required
+curl -X PUT https://app.test/api/vaulter/v1/documents/77/content \
   -H 'Content-Type: application/json' \
-  -d '{
-        "content": { "type": "doc", "content": [] },
-        "yjs_state": null
-      }'
+  -H 'If-Match: "77.0.3"' \
+  -d '{ "content": { "type": "doc", "content": [] } }'
 ```
 
 ```php [PHP]
@@ -300,16 +303,16 @@ $doc = Documents::in($drive)->update(
 
 :::
 
-The PATCH returns `200` with the working state — an autosave is semantically an update; `update()`
-returns the new `DocumentSnapshot`.
-`yjs_state` is the optional **base64-encoded** Yjs CRDT update on the wire; the request decodes
-it back to raw bytes (and is null for the non-collaborative path). The TipTap `content` is its
-projection. When the save changed something the action fires `DocumentContentUpdated` after
+The PUT returns `200` with the new working state and its new `ETag`; `update()` returns the new
+`DocumentSnapshot`. Over HTTP the write needs `If-Match` with the content tag you read: without it
+`428 precondition_required` (so does `*`), with a stale or weak one `412 document_state_mismatch`
+— for instance after the collaboration hub stored a newer state in between. Only the JSON
+`content` travels; the binary Yjs state is written by the hub. When the save changed something the action fires `DocumentContentUpdated` after
 commit: `version` is the head checkpoint after the save and `created` tells whether this save
 took it. The event's `actorId` is the acting user (null for the system).
 
 ::: tip Client debounce vs checkpoint interval
-`useDocumentNode({ debounceMs })` is the **client** timer before a PATCH is sent (default
+`useDocumentNode({ debounceMs })` is the **client** timer before a save is sent (default
 800 ms). `revisions.checkpoint_interval_seconds` is the **server** interval between autosave
 checkpoints (default 300 s). Tune the client for network chatter and the server for how
 granular the history is. The 0.2 key `revisions.autosave_debounce_seconds` is deprecated and
@@ -330,8 +333,8 @@ const version = await createNamedVersion('Before client review', true)
 ```
 
 ```bash [HTTP]
-# POST {prefix}/nodes/{node}/document-versions  → 201
-curl -X POST https://app.test/api/vaulter/nodes/77/document-versions \
+# POST {prefix}/v1/documents/{node}/revisions  → 201
+curl -X POST https://app.test/api/vaulter/v1/documents/77/revisions \
   -H 'Content-Type: application/json' \
   -d '{ "label": "Before client review", "keep_forever": true }'
 ```
@@ -349,6 +352,11 @@ precondition.
 
 ## Listing the version history
 
+`GET {prefix}/v1/documents/{node}/revisions`, and one revision with its content at
+`GET {prefix}/v1/documents/{node}/revisions/{revision}`. A revision can be pinned or released with
+`PATCH {prefix}/v1/documents/{node}/revisions/{revision}` (`{ "keep_forever": true }`); its label is
+set when it is created and not changed afterwards.
+
 ::: code-group
 
 ```ts [Vue]
@@ -359,8 +367,8 @@ await loadVersions()
 ```
 
 ```bash [HTTP — cursor-paginated]
-# GET {prefix}/nodes/{node}/document-versions?per_page=50
-curl 'https://app.test/api/vaulter/nodes/77/document-versions?per_page=50'
+# GET {prefix}/v1/documents/{node}/revisions?per_page=50
+curl 'https://app.test/api/vaulter/v1/documents/77/revisions?per_page=50'
 ```
 
 ```php [PHP]
@@ -373,23 +381,21 @@ $next = Documents::in($drive)->revisions($node->id, new ListOptions(perPage: 50,
 :::
 
 The listing is cursor-paginated (`per_page` clamped to 1–200, default 50), newest first (by
-creation time), and omits `content`. Each item is a `DocumentVersion`; ids are strings:
+creation time), and omits `content`. Each item is a `DocumentRevision`; ids are strings:
 
 ```ts
-interface DocumentVersion {
-  id: NodeId
-  node_id: NodeId
-  version_no: number
-  format: 'richtext' | 'table' | 'markdown' | string
-  snapshot_label: string | null   // set on named versions
+interface DocumentRevision {
+  id: string
+  number: number
+  schema_version: number
+  label: string | null             // set on named revisions
   is_autosave: boolean
   keep_forever: boolean
-  status: string                   // 'committed'
   content_hash: string | null
-  yjs_state_size: number | null    // the binary state is NOT serialised, only its size
-  created_by: WorkspaceId | null
-  created_at: string | null
-  content: TipTapDocument | null   // populated only by the single-version `content` fetch
+  is_head: boolean
+  created_by: string | null
+  created_at: string
+  content?: object                 // only in `GET documents/{node}/revisions/{revision}`
 }
 ```
 
@@ -409,8 +415,9 @@ const restored = await restoreVersion(versionId)
 ```
 
 ```bash [HTTP]
-# POST {prefix}/nodes/{node}/document-versions/{version}/restore  → 201
-curl -X POST https://app.test/api/vaulter/nodes/77/document-versions/12/restore
+# POST {prefix}/v1/documents/{node}/revisions/{revision}/restore  → 200; If-Match is required
+curl -X POST https://app.test/api/vaulter/v1/documents/77/revisions/12/restore \
+  -H 'If-Match: "77.0.3"'
 ```
 
 ```php [PHP]
@@ -419,6 +426,9 @@ $doc = Documents::in($drive)->restore($node->id, '12', expectedStateVersion: $do
 ```
 
 :::
+
+Over HTTP a restore is a content write, so it needs `If-Match` with the content tag, answers
+`200` with the new working state and its tag, and moves the `collab_epoch`.
 
 A restore resolves the source checkpoint **within the node's own document** (a revision id of another document, or a file revision with the same id, never
 restores here), writes its payload as the working state (`state_version` +1, `collab_epoch` +1;

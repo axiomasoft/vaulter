@@ -11,7 +11,6 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Contracts\Translation\Translator;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Support\Facades\RateLimiter;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
@@ -19,7 +18,6 @@ use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Http\Middleware\AddApiVersionHeader;
 use Vaulter\Http\Middleware\ApplyResponseCachePolicy;
 use Vaulter\Http\Middleware\AssignCorrelationId;
-use Vaulter\Http\Middleware\ResolveVaulterRouteParameters;
 use Vaulter\Http\Problems\CoreProblemCodes;
 use Vaulter\Http\Problems\ProblemCatalog;
 use Vaulter\Http\Problems\ProblemRenderer;
@@ -64,7 +62,6 @@ final class HttpRegistrar
     private function registerResourceMiddlewarePriority(Kernel $kernel): void
     {
         if ($kernel instanceof \Illuminate\Foundation\Http\Kernel) {
-            $kernel->addToMiddlewarePriorityBefore(SubstituteBindings::class, ResolveVaulterRouteParameters::class);
             // The router sorts prioritized middleware (throttle, auth, bindings) ahead of
             // the rest; these wrap them so a 401 or 429 still carries the request id,
             // the API version and the cache policy.

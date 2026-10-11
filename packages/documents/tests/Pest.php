@@ -53,7 +53,14 @@ uses(ExportTestCase::class, RefreshDatabase::class)->in('Export');
 // installed, removed and installed again, and content that reads only partly.
 uses(TypesTestCase::class, RefreshDatabase::class)->in('Types');
 
+// The v1 HTTP surface: documents, revisions, comments, export, the session and the hub
+// (collaboration ON so the hub stack is registered).
+uses(CollaborationEnabledTestCase::class, RefreshDatabase::class)->in('Http');
+
 // Registrar checks use a booted application without mutating the database.
 uses(TestCase::class)->in('Providers');
 
 uses(TestCase::class)->in('Configuration');
+
+// The HTTP shape checks read the booted route table.
+uses(TestCase::class)->in('Arch');

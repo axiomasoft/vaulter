@@ -6,11 +6,45 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### REST v1: documents routes and the end of the unversioned surface (PLAN2.P6.8, D62–D65)
+
+The document, comment and collaboration routes moved to `/{routes.prefix}/v1` and are named `vaulter.v1.*`. No
+unversioned route is left: the ones below are removed without aliases, and under the v1 prefix an unknown path
+answers `404 route_not_found`. Together with the earlier REST v1 entries this is the complete was → now table of
+the phase.
+
+| Was | Now |
+|---|---|
+| `POST storages/{storage}/documents` `{name, parent_id, format\|mime, content}` | `POST v1/drives/{drive}/documents` `{name, parent_id, type, content}` (`documents.store`); `type` is `vendor/name`, the `format` and `mime` selectors are gone; `201` Node with `ETag` |
+| `GET nodes/{node}/content` (a version-shaped body) | `GET v1/documents/{node}/content` (`documents.content.show`) → `{type, schema_version, state_version, collab_epoch, revision_id, content}` with `ETag: "{node}.{collab_epoch}.{state_version}"`; `304` to `If-None-Match` after authorization |
+| `PATCH nodes/{node}/content` `{content, yjs_state?, state_version?}` | `PUT v1/documents/{node}/content` `{content}` + **If-Match** (`documents.content.update`); `428` without it, `412 document_state_mismatch` when stale; `200` content with the new `ETag` |
+| `GET nodes/{node}/document-versions` (offset `page`) | `GET v1/documents/{node}/revisions` — a cursor page (`documents.revisions.index`) |
+| `POST nodes/{node}/document-versions` `{label (required), keep_forever}` | `POST v1/documents/{node}/revisions` `{label?, keep_forever?}` (`documents.revisions.store`) |
+| — | `GET v1/documents/{node}/revisions/{revision}` (`documents.revisions.show`, with `content`) |
+| `POST nodes/{node}/document-versions/{version}/restore` → `201` revision | `POST v1/documents/{node}/revisions/{revision}/restore` + **If-Match** (`documents.revisions.restore`) → `200` content |
+| `PATCH nodes/{node}/document-versions/{version}/keep-forever` | `PATCH v1/documents/{node}/revisions/{revision}` `{keep_forever}` (`documents.revisions.update`); the label is not editable |
+| `GET nodes/{node}/handler` | removed — `presentation` of the node resource (`GET v1/nodes/{node}`) |
+| `GET nodes/{node}/export?format=` | `GET v1/documents/{node}/export/{format}[?revision=]` (`documents.export`); an attachment with `nosniff`, a `sandbox` CSP and `no-store` |
+| `POST nodes/{node}/collab/token` `{schema_version?}` → `200` | `POST v1/documents/{node}/collaboration/session` (`documents.collaboration.session`) → `201`, never cached |
+| `POST collab/authenticate`, `collab/load`, `collab/store` | `POST v1/collaboration/hub/{authenticate,load,store}` (`collaboration.hub.*`); the D36 protocol is unchanged, errors are problem+json |
+| `GET/POST nodes/{node}/comments`, `POST …/{comment}/resolve`, `DELETE …/{comment}` (a whole thread in one response) | the same paths under `v1/nodes/{node}/comments` (`comments.index/store/resolve/destroy`); the list is a cursor page, `DELETE` is `204`; routes always registered, switched off → `403 profile_restriction` |
+| `NodeCommentResource`, `DocumentRevisionResource` `{id, version_no, format, snapshot_label, status, yjs_state_size, content?}` | `CommentResource` (same fields); `DocumentRevisionResource` `{id, number, schema_version, label, is_autosave, keep_forever, content_hash, is_head, created_by, created_at}` |
+| `VaulterException::render()` — the `{message, code}` body of an unversioned route | removed; the versioned routes answer `application/problem+json` (an exception no longer renders itself) |
+| `Vaulter\Http\Middleware\ResolveVaulterRouteParameters`, `HttpResourceResolver::storage()` / `::node()`, `LegacyNodeResource` | removed; use `HttpResourceResolver::drive()` / `::driveOfNode()` and the v1 `NodeResource` |
+| `VaulterThrottledRouteMap::resolve()` by path | by route name only (`routeFor($name)`); `VaulterHttpOperationMap::resolve()` keeps v1 path rules for collectors that see only a URI |
+
+- Read the content tag from `documents.content.show` (or from the `ETag` of a content write) and send it as
+  `If-Match` on `PUT documents/{node}/content` and on a revision restore. The tag moves when the collaboration
+  hub stores a state, so an editor that kept a tag across a hub write gets `412` and reloads.
+- The binary Yjs state is written only by the hub; the HTTP content write carries JSON `content`.
+- `@vaulter/vue` and the Hocuspocus hub's client move to these routes in later items; until then they still call the
+  removed paths.
+
 ### REST v1: drive routes (PLAN2.P6.7, D62–D65)
 
 The drive, tree, trash, file and upload routes moved to `/{routes.prefix}/v1` and are named `vaulter.v1.*`.
 The unversioned routes are removed without aliases; under the v1 prefix an unknown path answers
-`404 route_not_found`. Document, comment and collaboration routes stay unversioned until the next item.
+`404 route_not_found`. Document, comment and collaboration routes moved in the entry above.
 
 | Was | Now |
 |---|---|

@@ -79,8 +79,8 @@ it('answers 422 with the allowed list through HTTP and a stable code for a missi
     [, $document, $user] = exportFixture(RoleRegistry::OWNER);
     $this->actingAs($user);
 
-    $this->getJson('api/vaulter/nodes/'.$document->id.'/export?format=docx')
+    $this->getJson('api/vaulter/v1/documents/'.$document->id.'/export/docx')
         ->assertStatus(422)
         ->assertJsonPath('code', 'unknown_export_format')
-        ->assertJsonPath('allowed', ['html', 'markdown']);
+        ->assertJsonPath('meta.allowed', ['html', 'markdown']);
 });

@@ -53,6 +53,39 @@ final readonly class HttpOperationContextFactory
         }
     }
 
+    /**
+     * Run a call addressed by a drive id that may also name a node inside it (a parent
+     * folder, a target file). When something inside is not found and the caller cannot
+     * see the drive's root either, the answer is drive_not_found — the same as for an
+     * unknown drive — so a child id never reveals that an invisible drive exists. A
+     * caller who sees the drive gets node_not_found for the missing node.
+     *
+     * @template T
+     *
+     * @param  Closure(DriveHandle): T $call
+     * @return T
+     */
+    public function withinDrive(Request $request, string $driveId, Closure $call): mixed
+    {
+        $drive = null;
+        try {
+            $drive = $this->forDrive($request, $this->resolver->drive($driveId));
+
+            return $call($drive);
+        } catch (NodeNotFoundException $missing) {
+            if ($drive === null) {
+                throw StorageNotFoundException::forId($driveId);
+            }
+            try {
+                $drive->root();
+            } catch (NodeNotFoundException) {
+                throw StorageNotFoundException::forId($driveId);
+            }
+
+            throw $missing;
+        }
+    }
+
     public function user(Request $request): Authorizable
     {
         $user = $request->user();

@@ -30,7 +30,7 @@ fail a save, and saving does not fail a rename.
 | copy a document | source 0; copy 0 | source 0; copy 1 | source 0; copy 0 | — |
 | update the content (JSON) | 0 | +1 | +1 if the document has Yjs state | `expectedStateVersion` |
 | update with identical content | 0 | 0 | 0 | checked first, so a stale expectation is still refused |
-| collaboration seed | 0 | +1 | 0 | `expectedEpoch`, `yjs_state IS NULL` and the `state_version` the hub read in `collab/load` (`409 collaboration_seed_conflict`) |
+| collaboration seed | 0 | +1 | 0 | `expectedEpoch`, `yjs_state IS NULL` and the `state_version` the hub read in `collaboration/hub/load` (`409 collaboration_seed_conflict`) |
 | collaboration store | 0 | +1 when the state changed | 0 | `expectedEpoch` (`409`) |
 | restore a document revision | 0 | +1 | +1 | `expectedStateVersion` |
 | snapshot (named checkpoint) | 0 | 0 | 0 | — |
@@ -42,7 +42,7 @@ consumer can order content events without reading the row again.
 
 A JSON update of a document **without** Yjs state moves `state_version` but not the epoch (there
 is no room to make stale). That is why a seed cannot rely on the epoch alone: the hub reads the
-JSON in `collab/load` and seeds it later, and an update in between would be overwritten by a
+JSON in `collaboration/hub/load` and seeds it later, and an update in between would be overwritten by a
 seed built from the old text. The seed therefore carries the loaded `state_version` and the
 write compares it under the document lock; a moved version is `409 collaboration_seed_conflict`
 (`context.expected_state_version`, `actual_state_version`), after which the hub loads again and

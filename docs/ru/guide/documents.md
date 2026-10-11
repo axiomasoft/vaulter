@@ -165,16 +165,16 @@ $node = Documents::in($drive)->create(
 ```
 
 ```bash [HTTP]
-# POST {prefix}/storages/{storage}/documents
-curl -X POST https://app.test/api/vaulter/storages/42/documents \
+# POST {prefix}/v1/drives/{drive}/documents
+curl -X POST https://app.test/api/vaulter/v1/drives/42/documents \
   -H 'Content-Type: application/json' \
   -d '{
         "name": "Design notes",
         "parent_id": null,
-        "format": "richtext",
+        "type": "vaulter/rich-text",
         "content": { "type": "doc", "content": [] }
       }'
-# → 201, a NodeResource for the new kind=document node
+# → 201, the Node of the new kind=document node (with its ETag)
 ```
 
 ```ts [Vue — client]
@@ -204,12 +204,11 @@ const node = await client.documentNodes.createNode(storageId, {
   (`application/vnd.vaulter.document+json`); он представляется своим
   [типом документа](./document-types.md), а не обработчиком файла.
 
-Запрос валидирует `name`, опциональный `parent_id`, тип документа — `type` (`vendor/name`) или
-поля 0.x `format` (`richtext`, `table`, `template` → `vaulter/rich-text`, `markdown` →
-`vaulter/markdown`) и `mime` (mime xlsx → `vaulter/spreadsheet`) — и опциональный `content`, у
-которого `content.type` должен быть `doc` для типа на TipTap. Актору нужно
-право `Create` на целевой точке (и гейт создания в воркспейсе драйвера прав), а профиль диска
-должен разрешать тип документа.
+Запрос валидирует `name`, опциональный `parent_id`, тип документа `type` (`vendor/name`; по
+умолчанию — настроенный) и опциональный `content`. Контент валидирует кодек типа
+(`422 invalid_document_content`; для типа на TipTap корень должен быть `doc`), а незарегистрированный
+тип отвечает `422 unknown_document_type`. Актору нужно право `Create` на целевой точке (и гейт
+создания в воркспейсе драйвера прав), а профиль диска должен разрешать тип документа.
 
 ## Чтение контента
 
@@ -228,16 +227,22 @@ await load()
 ```
 
 ```bash [HTTP]
-# GET {prefix}/nodes/{node}/content
-curl https://app.test/api/vaulter/nodes/77/content
-# → { "data": { ...version, "content": { "type": "doc", ... } } }
+# GET {prefix}/v1/documents/{node}/content
+curl -i https://app.test/api/vaulter/v1/documents/77/content
+# → ETag: "77.0.3"
+# → { "data": { "type": "vaulter/rich-text", "schema_version": 1, "state_version": 3,
+#               "collab_epoch": 0, "revision_id": "12", "content": { "type": "doc", ... } } }
 ```
 
 :::
 
-Ответ сохраняет форму версии: `id` и `version_no` называют чекпоинт-голову, а
-`content`/`content_hash`/`yjs_state_size` — это рабочее состояние; `is_autosave` равен `true`,
-пока рабочее состояние опережает голову. Листинг истории (ниже) опускает `content`.
+В теле — `type` документа, `schema_version` контента, поколение, которому он принадлежит
+(`collab_epoch` и `state_version`), `revision_id` головы и сам `content`. Ничего в нём не зависит от
+того, кто читает, поэтому читатель и редактор получают одно тело и один тег:
+`ETag: "{node}.{collab_epoch}.{state_version}"`. Переименование или перемещение документа тег не
+меняет. `If-None-Match` с текущим тегом отвечает `304` — после того как документ найден и
+авторизован, так что читатель с отозванным доступом получает `404`. Листинг истории (ниже)
+опускает `content`.
 
 ## Рабочее состояние и чекпоинты
 
@@ -267,7 +272,7 @@ curl https://app.test/api/vaulter/nodes/77/content
 import { useDocumentNode } from '@vaulter/vue'
 
 const { content, setContent, flush, save, saving } = useDocumentNode(nodeId, {
-  debounceMs: 800,            // the CLIENT-side debounce before a PATCH is sent
+  debounceMs: 800,            // the CLIENT-side debounce before a save is sent
 })
 
 // As the editor emits changes, schedule a debounced save:
@@ -281,13 +286,11 @@ await save()
 ```
 
 ```bash [HTTP]
-# PATCH {prefix}/nodes/{node}/content  — always 200 (semantically an UPDATE)
-curl -X PATCH https://app.test/api/vaulter/nodes/77/content \
+# PUT {prefix}/v1/documents/{node}/content  — 200; If-Match is required
+curl -X PUT https://app.test/api/vaulter/v1/documents/77/content \
   -H 'Content-Type: application/json' \
-  -d '{
-        "content": { "type": "doc", "content": [] },
-        "yjs_state": null
-      }'
+  -H 'If-Match: "77.0.3"' \
+  -d '{ "content": { "type": "doc", "content": [] } }'
 ```
 
 ```php [PHP]
@@ -302,15 +305,16 @@ $doc = Documents::in($drive)->update(
 
 :::
 
-PATCH возвращает `200` с рабочим состоянием — автосохранение семантически это апдейт; `update()`
-возвращает новый `DocumentSnapshot`. `yjs_state` — это опциональный **закодированный в base64** Yjs CRDT-апдейт на проводе;
-запрос декодирует его обратно в сырые байты (и он равен null для несовместного пути). TipTap
-`content` — его проекция. Если сохранение что-то изменило, после коммита выбрасывается
+PUT возвращает `200` с новым рабочим состоянием и новым `ETag`; `update()` возвращает новый
+`DocumentSnapshot`. По HTTP запись требует `If-Match` с тегом контента, который вы прочитали: без
+него `428 precondition_required` (как и с `*`), с устаревшим или слабым — `412 document_state_mismatch`
+— например, если хаб коллаборации успел сохранить более новое состояние. Передаётся только JSON
+`content`; бинарное Yjs-состояние пишет хаб. Если сохранение что-то изменило, после коммита выбрасывается
 `DocumentContentUpdated`: `version` — чекпоинт-голова после сохранения, `created` — снят ли он
 этим сохранением. `actorId` события — действующий пользователь (null для системы).
 
 ::: tip Клиентский дебаунс и интервал чекпоинтов
-`useDocumentNode({ debounceMs })` — **клиентский** таймер перед отправкой PATCH (по умолчанию
+`useDocumentNode({ debounceMs })` — **клиентский** таймер перед отправкой сохранения (по умолчанию
 800 мс). `revisions.checkpoint_interval_seconds` — **серверный** интервал между
 автосохранёнными чекпоинтами (по умолчанию 300 с). Ключ 0.2 `revisions.autosave_debounce_seconds`
 устарел и игнорируется: он перезаписывал голову на месте, чего чекпоинты никогда не делают.
@@ -330,8 +334,8 @@ const version = await createNamedVersion('Before client review', true)
 ```
 
 ```bash [HTTP]
-# POST {prefix}/nodes/{node}/document-versions  → 201
-curl -X POST https://app.test/api/vaulter/nodes/77/document-versions \
+# POST {prefix}/v1/documents/{node}/revisions  → 201
+curl -X POST https://app.test/api/vaulter/v1/documents/77/revisions \
   -H 'Content-Type: application/json' \
   -d '{ "label": "Before client review", "keep_forever": true }'
 ```
@@ -349,6 +353,11 @@ $revision = Documents::in($drive)->snapshot($node->id, 'Before client review', k
 
 ## Листинг истории версий
 
+`GET {prefix}/v1/documents/{node}/revisions`, а одна ревизия с контентом — это
+`GET {prefix}/v1/documents/{node}/revisions/{revision}`. Закрепить ревизию или снять закрепление
+можно через `PATCH {prefix}/v1/documents/{node}/revisions/{revision}` (`{ "keep_forever": true }`);
+метка задаётся при создании ревизии и потом не меняется.
+
 ::: code-group
 
 ```ts [Vue]
@@ -359,8 +368,8 @@ await loadVersions()
 ```
 
 ```bash [HTTP — cursor-paginated]
-# GET {prefix}/nodes/{node}/document-versions?per_page=50
-curl 'https://app.test/api/vaulter/nodes/77/document-versions?per_page=50'
+# GET {prefix}/v1/documents/{node}/revisions?per_page=50
+curl 'https://app.test/api/vaulter/v1/documents/77/revisions?per_page=50'
 ```
 
 ```php [PHP]
@@ -373,24 +382,22 @@ $next = Documents::in($drive)->revisions($node->id, new ListOptions(perPage: 50,
 :::
 
 Листинг пагинируется курсором (`per_page` зажат в диапазон 1–200, по умолчанию 50), сначала
-самые свежие (по времени создания), и опускает `content`. Каждый элемент — `DocumentVersion`; id —
+самые свежие (по времени создания), и опускает `content`. Каждый элемент — `DocumentRevision`; id —
 строки:
 
 ```ts
-interface DocumentVersion {
-  id: NodeId
-  node_id: NodeId
-  version_no: number
-  format: 'richtext' | 'table' | 'markdown' | string
-  snapshot_label: string | null   // set on named versions
+interface DocumentRevision {
+  id: string
+  number: number
+  schema_version: number
+  label: string | null             // set on named revisions
   is_autosave: boolean
   keep_forever: boolean
-  status: string                   // 'committed'
   content_hash: string | null
-  yjs_state_size: number | null    // the binary state is NOT serialised, only its size
-  created_by: WorkspaceId | null
-  created_at: string | null
-  content: TipTapDocument | null   // populated only by the single-version `content` fetch
+  is_head: boolean
+  created_by: string | null
+  created_at: string
+  content?: object                 // only in `GET documents/{node}/revisions/{revision}`
 }
 ```
 
@@ -410,8 +417,9 @@ const restored = await restoreVersion(versionId)
 ```
 
 ```bash [HTTP]
-# POST {prefix}/nodes/{node}/document-versions/{version}/restore  → 201
-curl -X POST https://app.test/api/vaulter/nodes/77/document-versions/12/restore
+# POST {prefix}/v1/documents/{node}/revisions/{revision}/restore  → 200; If-Match is required
+curl -X POST https://app.test/api/vaulter/v1/documents/77/revisions/12/restore \
+  -H 'If-Match: "77.0.3"'
 ```
 
 ```php [PHP]
@@ -420,6 +428,9 @@ $doc = Documents::in($drive)->restore($node->id, '12', expectedStateVersion: $do
 ```
 
 :::
+
+По HTTP восстановление — запись контента: нужен `If-Match` с тегом контента, ответ `200` с новым
+рабочим состоянием и его тегом, а `collab_epoch` растёт.
 
 Восстановление резолвит исходный чекпоинт **в документе этого узла** (id ревизии
 другого документа или ревизии файла с тем же id здесь не восстановится), пишет его как рабочее

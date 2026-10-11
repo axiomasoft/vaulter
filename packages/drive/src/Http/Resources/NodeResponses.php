@@ -17,12 +17,10 @@ use Vaulter\Drive\Queries\NodeBrowserQuery;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Exceptions\Nodes\StorageNotFoundException;
 use Vaulter\Http\Middleware\AssignCorrelationId;
 use Vaulter\Http\Resources\Drive\NodeResource;
 use Vaulter\Http\Resources\PageResponse;
 use Vaulter\Http\Support\HttpOperationContextFactory;
-use Vaulter\Http\Support\HttpResourceResolver;
 use Vaulter\Http\Support\Preconditions;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\OperationContext;
@@ -45,16 +43,12 @@ final readonly class NodeResponses
         private NodeLocator $locator,
         private NodeSnapshotMapper $mapper,
         private NodeBrowserQuery $browser,
-        private HttpResourceResolver $resolver,
         private HttpOperationContextFactory $contexts,
     ) {}
 
     /**
-     * Run a call addressed by a drive id, possibly naming a node inside it (a parent
-     * folder, a target file). When something inside is not found and the caller cannot
-     * see the drive's root either, the answer is drive_not_found — the same as for an
-     * unknown drive — so a child id never reveals that an invisible drive exists. A
-     * caller who sees the drive gets node_not_found for the missing node.
+     * Run a call addressed by a drive id, possibly naming a node inside it; see
+     * {@see HttpOperationContextFactory::withinDrive()}.
      *
      * @template T
      *
@@ -63,23 +57,7 @@ final readonly class NodeResponses
      */
     public function withinDrive(Request $request, string $driveId, Closure $call): mixed
     {
-        $drive = null;
-        try {
-            $drive = $this->contexts->forDrive($request, $this->resolver->drive($driveId));
-
-            return $call($drive);
-        } catch (NodeNotFoundException $missing) {
-            if ($drive === null) {
-                throw StorageNotFoundException::forId($driveId);
-            }
-            try {
-                $drive->root();
-            } catch (NodeNotFoundException) {
-                throw StorageNotFoundException::forId($driveId);
-            }
-
-            throw $missing;
-        }
+        return $this->contexts->withinDrive($request, $driveId, $call);
     }
 
     /**

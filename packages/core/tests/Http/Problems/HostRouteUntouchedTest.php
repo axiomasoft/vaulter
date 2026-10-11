@@ -22,21 +22,17 @@ it('leaves host routes without problem+json and without Vaulter headers', functi
         ->assertHeaderMissing('X-Vaulter-Api-Version');
 });
 
-it('keeps the legacy body on unversioned Vaulter routes', function (): void {
+it('leaves a path that is not the v1 surface to the host exception handler', function (): void {
     $prefix = trim(app(RoutesConfig::class)->prefix(), '/');
-    Route::get($prefix.'/__legacy', static function (): never {
-        throw NodeNotFoundException::forId(1);
-    });
-    // `v10` is not the `v1` surface.
-    Route::get($prefix.'/v10/__legacy', static function (): never {
-        throw NodeNotFoundException::forId(1);
-    });
+    // `v10` is not the `v1` surface, and nothing else under the prefix is Vaulter's any more.
+    foreach ([$prefix.'/__unversioned', $prefix.'/v10/__unversioned'] as $path) {
+        Route::get($path, static function (): never {
+            throw NodeNotFoundException::forId(1);
+        });
 
-    foreach ([$prefix.'/__legacy', $prefix.'/v10/__legacy'] as $path) {
-        $response = $this->getJson($path)->assertStatus(404)->assertJsonPath('code', 'node_not_found');
+        $response = $this->getJson($path)->assertStatus(500);
 
-        expect($response->json())->toHaveKeys(['message', 'code'])
-            ->and($response->headers->get('Content-Type'))->not->toContain('problem+json')
+        expect($response->headers->get('Content-Type'))->not->toContain('problem+json')
             ->and($response->headers->has('X-Vaulter-Api-Version'))->toBeFalse();
     }
 });

@@ -20,6 +20,7 @@ final class StaleDocumentStateException extends VaulterException implements Prob
     public function __construct(
         public readonly int $expected,
         public readonly int $actual,
+        private readonly ?string $nodeId = null,
     ) {
         parent::__construct(sprintf(
             '[Vaulter] The document content changed (expected state version %d, current %d); reload it before retrying. Docs: %s',
@@ -40,10 +41,13 @@ final class StaleDocumentStateException extends VaulterException implements Prob
     }
 
     /**
+     * Only the node: the current state version would let a caller rebuild the content tag
+     * without reading the content it is about to replace.
+     *
      * @return array<string, mixed>
      */
     public function problemDetails(): array
     {
-        return ['context' => ['expected' => $this->expected, 'actual' => $this->actual]];
+        return $this->nodeId === null ? [] : ['node_id' => $this->nodeId];
     }
 }

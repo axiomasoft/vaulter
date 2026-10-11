@@ -47,8 +47,7 @@ arch('drive-scoped v1 controllers go through the operations, never Actions or Re
 
 arch('no v1 controller or resource asks the AccessResolver itself')
     ->expect([...V1_CONTROLLER_NAMESPACES, 'Vaulter\Http\Resources'])
-    ->not->toUse(AccessResolver::class)
-    ->ignoring('Vaulter\Http\Resources\Drive\LegacyNodeResource');
+    ->not->toUse(AccessResolver::class);
 
 arch('bytes leave only through the ContentResponder')
     ->expect([...V1_CONTROLLER_NAMESPACES, 'Vaulter\Http\Resources'])

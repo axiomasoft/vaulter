@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Vaulter\Access\ValueObjects\NodeAbilities;
 use Vaulter\Contracts\Handlers\NodePresenter;
 use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Database\VaulterDatabase;
@@ -9,7 +10,7 @@ use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Http\Resources\Drive\LegacyNodeResource as NodeResource;
+use Vaulter\Http\Resources\Drive\NodeResource;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
@@ -40,7 +41,7 @@ it('presents a document node by its document type, not by a file handler', funct
         ->and($descriptor->ui->toArray())->toBe(['key' => 'vaulter/tiptap', 'props' => ['preset' => 'rich-text']]);
 });
 
-it('embeds the handler descriptor in the NodeResource payload', function (): void {
+it('embeds the presentation in the NodeResource payload', function (): void {
     $drive = DocumentTestHelpers::drive();
 
     $node = app(CreateDocumentAction::class)->execute(DocumentTestHelpers::context($drive->model()), new CreateDocumentInput(
@@ -50,26 +51,26 @@ it('embeds the handler descriptor in the NodeResource payload', function (): voi
         parent: DriveTestHelpers::model($drive->root()),
     ));
 
-    $payload = NodeResource::make(app(NodeSnapshotMapper::class)->map($node))->toArray(request());
+    $payload = (new NodeResource(app(NodeSnapshotMapper::class)->map($node), NodeAbilities::denied()))->toArray(request());
 
-    expect($payload)->toHaveKey('handler')
-        ->and($payload['handler'])->toBeArray()
-        ->and($payload['handler']['id'])->toBeNull()
-        ->and($payload['handler']['document_type'])->toBe('vaulter/rich-text')
-        ->and($payload['handler']['type_available'])->toBeTrue()
-        ->and($payload['handler']['capabilities'])->toHaveKey('editable')
-        ->and($payload['handler']['capabilities'])->not->toHaveKey('rich_text')
-        ->and($payload['handler']['ui'])->toHaveKey('key');
+    expect($payload)->toHaveKey('presentation')->not->toHaveKey('handler')
+        ->and($payload['presentation'])->toBeArray()
+        ->and($payload['presentation']['handler'])->toBeNull()
+        ->and($payload['presentation']['document_type'])->toBe('vaulter/rich-text')
+        ->and($payload['presentation']['type_available'])->toBeTrue()
+        ->and($payload['presentation']['capabilities'])->toHaveKey('editable')
+        ->and($payload['presentation']['capabilities'])->not->toHaveKey('rich_text')
+        ->and($payload['presentation']['viewer'])->toHaveKey('key');
 });
 
-it('omits the handler descriptor for a folder node', function (): void {
+it('omits the presentation for a folder node', function (): void {
     $drive = DocumentTestHelpers::drive();
     $folder = $drive->folders()->create('Plain');
 
-    $payload = NodeResource::make($folder)->toArray(request());
+    $payload = (new NodeResource($folder, NodeAbilities::denied()))->toArray(request());
 
     expect($folder->kind)->toBe(NodeKind::Folder)
-        ->and($payload['handler'])->toBeNull();
+        ->and($payload['presentation'])->toBeNull();
 });
 
 it('describes a file node by its server-trusted mime (never a claimed one)', function (): void {

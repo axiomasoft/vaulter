@@ -59,11 +59,10 @@ it('keys names by NFC and full case folding', function (): void {
 
 it('renders as a 422 invalid_node_name problem with the reason and the name field', function (): void {
     $exception = InvalidNodeNameException::forName('a/b', InvalidNodeNameException::SEPARATOR);
-    $response = $exception->render(request()->create('api/vaulter/x', 'POST', server: ['HTTP_ACCEPT' => 'application/json']));
 
-    expect($response->getStatusCode())->toBe(422)
-        ->and($response->getData(true))->toMatchArray([
-            'code' => 'invalid_node_name',
+    expect($exception->httpStatus())->toBe(422)
+        ->and($exception->problemCode())->toBe('invalid_node_name')
+        ->and($exception->problemDetails())->toMatchArray([
             'reason' => 'separator',
             'errors' => ['name' => [$exception->getMessage()]],
         ]);

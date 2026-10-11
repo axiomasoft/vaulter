@@ -10,6 +10,7 @@ use Vaulter\Exceptions\Nodes\NodeTrashedByAncestorException;
 use Vaulter\Exceptions\Nodes\RestoreDestinationRequiredException;
 use Vaulter\Exceptions\Nodes\TreeTraversalIncompleteException;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Tests\Support\ProblemProbeRoutes;
 
 /**
  * PLAN2.D37 error contract: stable codes and statuses, an actionable message, and the
@@ -34,8 +35,10 @@ it('carries a stable problem code, status and an actionable message', function (
 })->with('deletion exceptions');
 
 it('answers a member restore with the trash root in the response context', function (): void {
-    $response = NodeTrashedByAncestorException::forNode((new Node)->forceFill(['id' => 5]), 3)->render(request()->create('/api/vaulter/nodes/5/restore', 'POST', server: ['HTTP_ACCEPT' => 'application/json']));
+    ProblemProbeRoutes::register(['case' => NodeTrashedByAncestorException::forNode((new Node)->forceFill(['id' => 5]), 3)]);
 
-    expect($response->getStatusCode())->toBe(409)
-        ->and($response->getData(true))->toMatchArray(['code' => 'node_trashed_by_ancestor', 'context' => ['trash_root_id' => '3']]);
+    $this->getJson(ProblemProbeRoutes::path('case'))
+        ->assertStatus(409)
+        ->assertJsonPath('code', 'node_trashed_by_ancestor')
+        ->assertJsonPath('meta.context.trash_root_id', '3');
 });

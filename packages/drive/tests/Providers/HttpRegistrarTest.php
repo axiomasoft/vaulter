@@ -18,7 +18,6 @@ use Vaulter\Drive\Http\Controllers\Drives\ShowDriveController;
 use Vaulter\Drive\Http\Controllers\Uploads\CreateUploadController;
 use Vaulter\Drive\Http\Controllers\Uploads\S3MultipartProtocolController;
 use Vaulter\Drive\Providers\HttpRegistrar;
-use Vaulter\Http\Middleware\ResolveVaulterRouteParameters;
 
 it('registers no event subscriber: events are recorded by the EventRecorder', function (bool $activity, bool $webhooks): void {
     config()->set('vaulter.features.activity', $activity);
@@ -57,7 +56,7 @@ it('declares the v1 routes and commands, registered whatever the feature flags s
         expect($show)->not->toBeNull()
             ->and($show->getAction('uses'))->toBe(ShowDriveController::class.'@__invoke')
             ->and($show->methods())->toBe(['GET', 'HEAD'])
-            ->and($show->middleware())->toContain('host.auth')->not->toContain(ResolveVaulterRouteParameters::class)
+            ->and($show->middleware())->toContain('host.auth')
             ->and($show->getName())->toBe('vaulter.v1.drives.show')
             // A feature flag is the operations' decision, so route:cache never freezes it.
             ->and($routes->contains(fn ($route): bool => $route->uri() === 'host/drive/v1/shared'))->toBeTrue();

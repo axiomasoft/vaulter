@@ -79,18 +79,19 @@ epoch комнаты и сравнивается с `collab_epoch` на стро
 ## Поток подключения
 
 ```
-Vue client ──POST /api/vaulter/nodes/{node}/collab/token {schema_version?}──▶ Laravel
+Vue client ──POST /api/vaulter/v1/documents/{node}/collaboration/session {schema_version?}──▶ Laravel
             ◀──────────────── CollaborationSession (room, epoch, mode, token) ─┘
             │
             ▼
       ws to the hub, document name = room, token = room JWT
-            │   onAuthenticate ──▶ POST collab/authenticate   (live mode)
-            │   onLoadDocument ──▶ POST collab/load           (Yjs state, or JSON to seed once)
-            │   onStoreDocument ─▶ POST collab/store          (behind the epoch fence)
+            │   onAuthenticate ──▶ POST v1/collaboration/hub/authenticate   (live mode)
+            │   onLoadDocument ──▶ POST v1/collaboration/hub/load           (Yjs state, or JSON to seed once)
+            │   onStoreDocument ─▶ POST v1/collaboration/hub/store          (behind the epoch fence)
 ```
 
-1. Клиент вызывает `POST nodes/{node}/collab/token`, при желании передавая `schema_version`
-   своего редактора.
+1. Клиент вызывает `POST {prefix}/v1/documents/{node}/collaboration/session` (`201`), при желании
+   передавая `schema_version` своего редактора. Маршрут зарегистрирован всегда; выключенную
+   коллаборацию отклоняет операция.
 2. `DocumentOperations::collaborationSession($document, $clientSchemaVersion)` находит узел,
    авторизует `View` (невидимый узел — `404 node_not_found`) и выбирает режим. Сессия
    **read-write**, только если выполнено всё:
@@ -126,8 +127,10 @@ epoch, поэтому токен привязан к одному поколен
 
 ## Протокол хаба (сервер-к-серверу)
 
-Эндпоинты хаба идут без auth-middleware Laravel — только через `ResolveCollaborationCall`,
-который требует **оба** барьера:
+Эндпоинты хаба живут под `{prefix}/v1/collaboration/hub/` на собственном стеке middleware
+(`routes.middleware.hub`, `throttle:vaulter-public`) и идут без auth-middleware Laravel — только
+через `ResolveCollaborationCall`, который требует **оба** барьера. Они существуют, только пока
+включён `vaulter-documents.collaboration.enabled`; иначе отвечают `404 route_not_found`:
 
 - room-JWT в `Authorization: Bearer` (подпись и `exp`; комната разбирается и совпадает с
   claims `node`/`drive`/`epoch`);
@@ -136,7 +139,9 @@ epoch, поэтому токен привязан к одному поколен
   повтор подписи отвергаются. Хаб кладёт в каждое тело случайный `nonce`, поэтому два
   настоящих вызова с одинаковой нагрузкой никогда не делят подпись.
 
-Иначе — `401`. Общий секрет сам по себе больше не является личностью.
+Иначе — `401 actor_required` в виде `application/problem+json`. Общий секрет сам по себе больше не
+является личностью. Любой отказ на этих маршрутах — `401`, `403`, `409`, `413`, `422` — это
+problem-тело со стабильным `code`; сам протокол не изменился.
 
 Каждый вызов перечитывает живое состояние: узел существует, не в корзине, принадлежит диску
 и тенанту токена, диск активен или в архиве, epoch комнаты текущий, права пользователя —
@@ -145,18 +150,18 @@ epoch, поэтому токен привязан к одному поколен
 
 | Эндпоинт | Хук хаба | Тело | Ответ |
 |---|---|---|---|
-| `POST collab/authenticate` | `onAuthenticate` | `{ room }` | `{ allowed, mode, userId, epoch }`; `allowed:false`, если пользователь потерял `View`; `409 collaboration_epoch_mismatch` для прошлого поколения. |
-| `POST collab/load` | `onLoadDocument` | `{ room }` | `{ state, content, epoch, schemaVersion, stateVersion, type }` — `state` это base64 Yjs-state, либо `null` и JSON `content` для однократного сидирования. |
-| `POST collab/store` | `onStoreDocument` | `{ room, state, content, seed?, state_version? }` | `{ changed, epoch, state_version, yjs_state_size }`. `state_version` отправляется только с seed (см. ниже). |
+| `POST v1/collaboration/hub/authenticate` | `onAuthenticate` | `{ room }` | `{ allowed, mode, userId, epoch }`; `allowed:false`, если пользователь потерял `View`; `409 collaboration_epoch_mismatch` для прошлого поколения. |
+| `POST v1/collaboration/hub/load` | `onLoadDocument` | `{ room }` | `{ state, content, epoch, schemaVersion, stateVersion, type }` — `state` это base64 Yjs-state, либо `null` и JSON `content` для однократного сидирования. |
+| `POST v1/collaboration/hub/store` | `onStoreDocument` | `{ room, state, content, seed?, state_version? }` | `{ changed, epoch, state_version, yjs_state_size }`. `state_version` отправляется только с seed (см. ниже). |
 
-Правила `collab/store`:
+Правила `collaboration/hub/store`:
 
 - read-only токен, пользователь без `Edit` сейчас, архивный диск или токен другой версии
   схемы — `403`;
 - epoch комнаты — это fence: `409 collaboration_epoch_mismatch`;
 - `seed: true` пишется, только пока у документа нет Yjs-state: иначе `409
   collaboration_seed_conflict`, поэтому два инстанса хаба никогда не сидируют оба;
-- seed несёт также `state_version`, который вернул `collab/load`, и пишется, только пока
+- seed несёт также `state_version`, который вернул `collaboration/hub/load`, и пишется, только пока
   документ всё ещё на нём. REST `update()` документа **без** Yjs-state не двигает epoch, и без
   этого предусловия seed, построенный из JSON, прочитанного хабом ранее, затёр бы более
   новый текст. Сдвинувшаяся версия — тот же `409 collaboration_seed_conflict` (с

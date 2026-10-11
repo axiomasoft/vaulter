@@ -51,7 +51,7 @@ uses(MiddlewareStacksTestCase::class, RefreshDatabase::class);
 
 it('requires Sanctum on protected routes and accepts an authenticated actor', function (): void {
     $storage = DocumentTestHelpers::drive()->model();
-    $url = 'api/vaulter/storages/'.$storage->getKey().'/nodes';
+    $url = 'api/vaulter/v1/drives/'.$storage->getKey().'/nodes';
     $this->getJson($url)->assertUnauthorized();
     Sanctum::actingAs((new MiddlewareStackUser)->forceFill(['id' => 17]));
     $this->getJson($url)->assertOk();
@@ -79,7 +79,7 @@ it('accepts a signed hub JWT without a Sanctum token', function (): void {
         'sub' => '17', 'iat' => $timestamp, 'exp' => $timestamp + 3600,
     ], 'middleware-stack-jwt-secret-at-least-32-bytes', 'HS256');
     $signature = CollaborationCallResolver::signature((string) json_encode($body), 'middleware-stack-webhook-secret', $timestamp);
-    $response = $this->postJson('api/vaulter/collab/authenticate', $body, [
+    $response = $this->postJson('api/vaulter/v1/collaboration/hub/authenticate', $body, [
         'Authorization' => 'Bearer '.$jwt,
         CollaborationCallResolver::TIMESTAMP_HEADER => (string) $timestamp,
         CollaborationCallResolver::SIGNATURE_HEADER => $signature,

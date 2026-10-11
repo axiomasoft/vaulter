@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Drive\Exceptions\Nodes\CrossDriveOperationException;
 use Vaulter\Drive\Exceptions\Nodes\NodeCycleException;
@@ -12,6 +11,7 @@ use Vaulter\Drive\Exceptions\Uploads\StagedUploadMissingException;
 use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Exceptions\Uploads\UploadContentMismatchException;
 use Vaulter\Facades\Vaulter;
+use Vaulter\Http\Problems\ProblemRenderer;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
@@ -25,7 +25,7 @@ function r07ErrorDocs(string $anchor): string
     return 'https://github.com/axiomasoft/vaulter/blob/main/docs/guide/errors.md#'.$anchor;
 }
 
-it('R07Exception keeps UploadConflictException forSession message and 409 render body', function (): void {
+it('R07Exception keeps UploadConflictException forSession message and 409 problem code', function (): void {
     $uploadId = '0193a5f0-9a3b-7c2d-8e4f-0000000000aa';
     $exception = UploadConflictException::forSession($uploadId);
 
@@ -35,12 +35,11 @@ it('R07Exception keeps UploadConflictException forSession message and 409 render
         'Docs: '.r07ErrorDocs('upload-conflict'),
     );
 
-    $response = $exception->render(Request::create('/api/vaulter/__exception'));
-    expect($response->getStatusCode())->toBe(409)
-        ->and($response->getData(true))->toEqual(['message' => $exception->getMessage(), 'code' => 'upload_conflict']);
+    expect($exception->httpStatus())->toBe(409)
+        ->and($exception->problemCode())->toBe('upload_conflict');
 });
 
-it('R07Exception keeps UploadConflictException forClosedSession message and 409 render body', function (): void {
+it('R07Exception keeps UploadConflictException forClosedSession message and 409 problem code', function (): void {
     $uploadId = '0193a5f0-9a3b-7c2d-8e4f-0000000000bb';
     $exception = UploadConflictException::forClosedSession($uploadId);
 
@@ -50,9 +49,8 @@ it('R07Exception keeps UploadConflictException forClosedSession message and 409 
         'Docs: '.r07ErrorDocs('upload-conflict'),
     );
 
-    $response = $exception->render(Request::create('/api/vaulter/__exception'));
-    expect($response->getStatusCode())->toBe(409)
-        ->and($response->getData(true))->toEqual(['message' => $exception->getMessage(), 'code' => 'upload_conflict']);
+    expect($exception->httpStatus())->toBe(409)
+        ->and($exception->problemCode())->toBe('upload_conflict');
 });
 
 it('R07Exception keeps CycleException forMove message', function (): void {
@@ -68,7 +66,7 @@ it('R07Exception keeps CycleException forMove message', function (): void {
     );
 });
 
-it('R07Exception keeps QuotaExceededException forStorage message and 413 render body', function (): void {
+it('R07Exception keeps QuotaExceededException forStorage message and 413 problem code', function (): void {
     $exception = QuotaExceededException::forStorage(
         storageId: 7,
         quotaBytes: 100,
@@ -82,12 +80,11 @@ it('R07Exception keeps QuotaExceededException forStorage message and 413 render 
         'Docs: '.r07ErrorDocs('quota-exceeded'),
     );
 
-    $response = $exception->render(Request::create('/api/vaulter/__exception'));
-    expect($response->getStatusCode())->toBe(413)
-        ->and($response->getData(true))->toEqual(['message' => $exception->getMessage(), 'code' => 'quota_exceeded']);
+    expect($exception->httpStatus())->toBe(413)
+        ->and($exception->problemCode())->toBe('quota_exceeded');
 });
 
-it('R07Exception keeps StagedUploadMissingException forSession message and 409 render body', function (): void {
+it('R07Exception keeps StagedUploadMissingException forSession message and 409 problem code', function (): void {
     $uploadId = '0193a5f0-9a3b-7c2d-8e4f-0000000000cc';
     $offset = 512;
     $exception = StagedUploadMissingException::forSession($uploadId, $offset);
@@ -99,12 +96,11 @@ it('R07Exception keeps StagedUploadMissingException forSession message and 409 r
         'Docs: '.r07ErrorDocs('staged-upload-missing'),
     );
 
-    $response = $exception->render(Request::create('/api/vaulter/__exception'));
-    expect($response->getStatusCode())->toBe(409)
-        ->and($response->getData(true))->toEqual(['message' => $exception->getMessage(), 'code' => 'upload_conflict']);
+    expect($exception->httpStatus())->toBe(409)
+        ->and($exception->problemCode())->toBe('upload_conflict');
 });
 
-it('R07Exception keeps UploadContentMismatchException forSession message and 422 render body', function (): void {
+it('R07Exception keeps UploadContentMismatchException forSession message and 422 problem code', function (): void {
     $uploadId = '0193a5f0-9a3b-7c2d-8e4f-0000000000dd';
     $declaredMime = 'image/png';
     $exception = UploadContentMismatchException::forSession($uploadId, $declaredMime);
@@ -116,9 +112,9 @@ it('R07Exception keeps UploadContentMismatchException forSession message and 422
         'Docs: '.r07ErrorDocs('upload-content-mismatch'),
     );
 
-    $response = $exception->render(Request::create('/api/vaulter/__exception'));
-    expect($response->getStatusCode())->toBe(422)
-        ->and($response->getData(true))->toEqual(['message' => $exception->getMessage(), 'code' => 'upload_rejected', 'reason' => 'mime_mismatch']);
+    expect($exception->httpStatus())->toBe(422)
+        ->and($exception->problemCode())->toBe('upload_rejected')
+        ->and($exception->problemDetails())->toEqual(['reason' => 'mime_mismatch']);
 });
 
 it('R07Exception keeps CrossStorageMoveException between message', function (): void {
@@ -133,7 +129,7 @@ it('R07Exception keeps CrossStorageMoveException between message', function (): 
     );
 });
 
-it('R07Exception keeps OffsetMismatchException message render headers and JSON at a non-zero server offset', function (): void {
+it('R07Exception keeps OffsetMismatchException message, problem code and headers at a non-zero server offset', function (): void {
     $serverOffset = 5;
     $exception = new OffsetMismatchException($serverOffset);
 
@@ -143,11 +139,9 @@ it('R07Exception keeps OffsetMismatchException message render headers and JSON a
         'Docs: '.r07ErrorDocs('upload-conflict'),
     );
 
-    $response = $exception->render(Request::create('/api/vaulter/__exception'));
-    expect($response->getStatusCode())->toBe(409)
-        ->and($response->getData(true))->toEqual(['message' => $exception->getMessage(), 'code' => 'upload_offset_mismatch'])
-        ->and($response->headers->get('Upload-Offset'))->toBe('5')
-        ->and($response->headers->get('Tus-Resumable'))->toBe('1.0.0');
+    expect($exception->httpStatus())->toBe(409)
+        ->and($exception->problemCode())->toBe('upload_offset_mismatch')
+        ->and(ProblemRenderer::headersOf($exception))->toEqual(['Upload-Offset' => '5', 'Tus-Resumable' => '1.0.0']);
 });
 
 it('R07Exception surfaces offset mismatch over HTTP as a problem with the tus headers, never the log message', function (): void {

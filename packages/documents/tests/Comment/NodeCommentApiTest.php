@@ -29,7 +29,7 @@ $commentNode = static function (string $level, int $subjectId = 1, string $name 
     return [$storage, $node];
 };
 
-$url = static fn (Node $node): string => 'api/vaulter/nodes/'.$node->getKey().'/comments';
+$url = static fn (Node $node): string => 'api/vaulter/v1/nodes/'.$node->getKey().'/comments';
 
 // A commenter creates the thread; a reader may only list it.
 it('lists the node comment thread for a viewer', function () use ($user, $commentNode, $url): void {
@@ -71,7 +71,7 @@ it('hides the thread of a node the user cannot see behind node_not_found', funct
     $node = AccessTestHelpers::folder($storage, null, 'locked');
     $this->actingAs($user(1));
 
-    $this->getJson('api/vaulter/nodes/'.$node->getKey().'/comments')->assertNotFound()->assertJsonPath('code', 'node_not_found');
+    $this->getJson('api/vaulter/v1/nodes/'.$node->getKey().'/comments')->assertNotFound()->assertJsonPath('code', 'node_not_found');
 });
 
 it('creates a comment with the REGISTERED morph alias, not a raw FQCN', function () use ($user, $url): void {

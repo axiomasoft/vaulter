@@ -10,14 +10,16 @@ use Vaulter\Data\Snapshots\Mapping\SnapshotValue;
 use Vaulter\Documents\Data\Snapshots\CommentSnapshot;
 
 /**
- * The read shape of a node comment (ADR-0014 шаг 1): the thread pointer (parent_id),
- * the author morph, the body, the optional anchor and the resolution tombstone.
- * Read-only — transforms a {@see CommentSnapshot}, never queries.
- *
- * @mixin CommentSnapshot
+ * A comment on a node: the thread pointer (parent_id), the author, the body, the
+ * optional anchor and the resolution. Built from a {@see CommentSnapshot}, never queries.
  */
-final class NodeCommentResource extends JsonResource
+final class CommentResource extends JsonResource
 {
+    public function __construct(CommentSnapshot $comment)
+    {
+        parent::__construct($comment);
+    }
+
     /**
      * @return array<string, mixed>
      */

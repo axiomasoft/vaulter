@@ -23,20 +23,22 @@ it('answers the exporter bytes as an attachment that is never cached or sniffed'
     [$node, $user] = exportedNode('Quarterly report');
     $this->actingAs($user);
 
-    $response = $this->get('api/vaulter/nodes/'.$node->id.'/export?format=markdown')->assertOk();
+    $response = $this->get('api/vaulter/v1/documents/'.$node->id.'/export/markdown')->assertOk();
 
     expect($response->headers->get('Content-Type'))->toStartWith('text/markdown')
         ->and($response->headers->get('Content-Disposition'))->toBe('attachment; filename="Quarterly report.md"')
         ->and($response->headers->get('Cache-Control'))->toContain('no-store')->toContain('private')
         ->and($response->headers->get('X-Content-Type-Options'))->toBe('nosniff')
+        ->and($response->headers->get('Content-Security-Policy'))->toBe("sandbox; default-src 'none'")
+        ->and($response->headers->get('X-Vaulter-Api-Version'))->toBe('1')
         ->and($response->getContent())->toBe("file body\n");
 });
 
-it('defaults to html and sends an RFC 6266 filename* for a non-ASCII name', function (): void {
+it('sends an RFC 6266 filename* for a non-ASCII name', function (): void {
     [$node, $user] = exportedNode('Отчёт 100%');
     $this->actingAs($user);
 
-    $response = $this->get('api/vaulter/nodes/'.$node->id.'/export')->assertOk();
+    $response = $this->get('api/vaulter/v1/documents/'.$node->id.'/export/html')->assertOk();
     $disposition = (string) $response->headers->get('Content-Disposition');
 
     expect($response->headers->get('Content-Type'))->toStartWith('text/html')
@@ -50,7 +52,7 @@ it('does not answer JSON and creates no revision', function (): void {
     $this->actingAs($user);
     $revisions = DocumentRevision::query()->count();
 
-    $response = $this->getJson('api/vaulter/nodes/'.$node->id.'/export?format=html')->assertOk();
+    $response = $this->getJson('api/vaulter/v1/documents/'.$node->id.'/export/html')->assertOk();
 
     expect($response->headers->get('Content-Type'))->not->toContain('json')
         ->and(DocumentRevision::query()->count())->toBe($revisions);
@@ -64,9 +66,9 @@ it('marks an export of partly readable content with X-Vaulter-Export-Lossy', fun
     ]]])->save());
     $this->actingAs($user);
 
-    $this->get('api/vaulter/nodes/'.$node->id.'/export')->assertOk()->assertHeader('X-Vaulter-Export-Lossy', '1');
+    $this->get('api/vaulter/v1/documents/'.$node->id.'/export/html')->assertOk()->assertHeader('X-Vaulter-Export-Lossy', '1');
 
     [$whole, $reader] = exportedNode('Whole');
     $this->actingAs($reader);
-    expect($this->get('api/vaulter/nodes/'.$whole->id.'/export')->assertOk()->headers->has('X-Vaulter-Export-Lossy'))->toBeFalse();
+    expect($this->get('api/vaulter/v1/documents/'.$whole->id.'/export/html')->assertOk()->headers->has('X-Vaulter-Export-Lossy'))->toBeFalse();
 });

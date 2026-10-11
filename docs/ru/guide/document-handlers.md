@@ -167,25 +167,25 @@ kind-презентеру, который помечает тегом `vaulter-d
 
 ## Подбор обработчика для узла
 
-Дескриптор обработчика отдаётся по каждому узлу, чтобы клиент знал, какую поверхность монтировать:
+Представление (`presentation`) входит в каждый узел, чтобы клиент знал, какую поверхность монтировать:
 
 ::: code-group
 
 ```bash [HTTP]
-# GET {prefix}/nodes/{node}/handler
-curl https://app.test/api/vaulter/nodes/77/handler
-# PDF-файл:
-# → { "data": { "id": "vaulter/preview", "document_type": null, "type_available": true,
+# GET {prefix}/v1/nodes/{node}  → data.presentation
+curl https://app.test/api/vaulter/v1/nodes/77
+# a PDF file:
+# → { "data": { …, "presentation": { "handler": "vaulter/preview", "document_type": null, "type_available": true,
 #               "capabilities": { "editable": false, "previewable": true,
 #                                 "downloadable": true, "thumbnailable": true,
 #                                 "collaborative": false },
-#               "ui": { "key": "vaulter/pdf-preview", "props": {} } } }
-# документ rich text:
-# → { "data": { "id": null, "document_type": "vaulter/rich-text", "type_available": true,
+#               "viewer": { "key": "vaulter/pdf-preview", "props": {} } } } }
+# a rich-text document (handler is null: a document is routed by its type):
+# → { "data": { …, "presentation": { "handler": null, "document_type": "vaulter/rich-text", "type_available": true,
 #               "capabilities": { "editable": true, "previewable": true,
 #                                 "downloadable": false, "thumbnailable": false,
 #                                 "collaborative": true },
-#               "ui": { "key": "vaulter/tiptap", "props": { "preset": "rich-text" } } } }
+#               "viewer": { "key": "vaulter/tiptap", "props": { "preset": "rich-text" } } } } }
 ```
 
 ```php [PHP — the resolver]
@@ -322,8 +322,8 @@ $this->app->tag([App\Vaulter\Handlers\CsvHandler::class], 'vaulter.file_handlers
 ### 3. И оно просто работает
 
 Теперь любой узел, чей снятый по сигнатуре mime — `text/csv` (или чьё имя оканчивается на `.csv`),
-подбирается на ваш обработчик. `GET /nodes/{node}/handler` возвращает `id: "csv"` с вашими
-возможностями и `ui.key: "acme/csv-preview"`, и клиент монтирует ваш компонент. Ни одна миграция не
+подбирается на ваш обработчик. `presentation` узла содержит `handler: "csv"` с вашими
+возможностями и `viewer.key: "acme/csv-preview"`, и клиент монтирует ваш компонент. Ни одна миграция не
 выполнялась, ни один файл ядра не менялся.
 
 ::: details Список всех зарегистрированных обработчиков

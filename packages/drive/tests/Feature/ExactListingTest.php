@@ -13,7 +13,7 @@ use Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper;
 use Vaulter\Drive\Queries\SharedWithActorQuery;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Exceptions\Nodes\InvalidCursorException;
-use Vaulter\Http\Resources\Drive\LegacyNodeResource as NodeResource;
+use Vaulter\Http\Resources\Drive\NodeResource;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;
@@ -21,6 +21,7 @@ use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\Access\ProfileDenyDriver;
 use Vaulter\ValueObjects\Access\Actor;
+use Vaulter\VaulterManager;
 
 beforeEach(fn () => DriveTestHelpers::insideOperation());
 
@@ -88,7 +89,7 @@ it('V22 keeps a drive-wide Gate role through an inheritance boundary, which only
     $this->getJson('api/vaulter/v1/nodes/'.$walled->id)->assertNotFound();
 });
 
-it('uses at most five Vaulter queries for 50 visible nodes including resource abilities', function (): void {
+it('uses at most five Vaulter queries for 50 visible nodes and gives each one its abilities in one batch', function (): void {
     for ($i = 0; $i < 50; $i++) {
         AccessTestHelpers::folder($this->storage, $this->folder, 'child-'.$i);
     }
@@ -102,15 +103,20 @@ it('uses at most five Vaulter queries for 50 visible nodes including resource ab
         }
     });
     $page = $listing->page($this->actor, $query, [['column' => 'name', 'direction' => 'asc'], ['column' => 'id', 'direction' => 'asc']], 50, null, 'queries');
-    $request = Request::create('/');
-    $request->setUserResolver(fn () => $this->actor);
     $snapshots = app(NodeSnapshotMapper::class)->mapMany($page->items, Actor::user($this->actor)->ref());
-    foreach ($page->items as $index => $node) {
-        $data = NodeResource::make($snapshots[$index])->withGrantSet($listing->grantSetFor($node))->resolve($request);
-        expect($data['abilities']['view'])->toBeTrue();
-    }
     $counting = false;
     expect(count($page))->toBe(50)->and($queries)->toBeLessThanOrEqual(5);
+
+    // The abilities of the whole page come from one batch evaluation (its own query budget is
+    // pinned by AbilitiesManyTest), not from a lookup per node.
+    $request = Request::create('/');
+    $request->setUserResolver(fn () => $this->actor);
+    $handle = app(VaulterManager::class)->drive($this->storage)->actingAs($this->actor);
+    $resources = NodeResource::many($snapshots, $handle->nodes()->abilitiesMany($snapshots));
+    expect($resources)->toHaveCount(50);
+    foreach ($resources as $resource) {
+        expect($resource->resolve($request)['abilities']['view'])->toBeTrue();
+    }
 });
 
 it('rejects forged signatures and a cursor from another parent', function (): void {

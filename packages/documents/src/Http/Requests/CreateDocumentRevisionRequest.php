@@ -6,11 +6,8 @@ namespace Vaulter\Documents\Http\Requests;
 
 use Vaulter\Http\Requests\VaulterFormRequest;
 
-/**
- * Validates a named-version snapshot request (§2.5 / M4a): a non-empty label and an
- * optional keep_forever pin.
- */
-final class CreateNamedVersionRequest extends VaulterFormRequest
+/** POST documents/{node}/revisions: an optional label and whether retention keeps the revision forever. */
+final class CreateDocumentRevisionRequest extends VaulterFormRequest
 {
     /**
      * @return array<string, mixed>
@@ -18,14 +15,16 @@ final class CreateNamedVersionRequest extends VaulterFormRequest
     public function rules(): array
     {
         return [
-            'label' => ['required', 'string', 'max:255'],
+            'label' => ['nullable', 'string', 'max:255'],
             'keep_forever' => ['nullable', 'boolean'],
         ];
     }
 
-    public function label(): string
+    public function label(): ?string
     {
-        return $this->string('label')->toString();
+        $label = $this->input('label');
+
+        return is_string($label) && $label !== '' ? $label : null;
     }
 
     public function keepForever(): bool

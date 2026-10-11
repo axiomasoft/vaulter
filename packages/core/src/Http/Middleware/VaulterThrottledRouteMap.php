@@ -5,13 +5,11 @@ declare(strict_types=1);
 namespace Vaulter\Http\Middleware;
 
 use Illuminate\Http\Request;
-use Vaulter\Configuration\RoutesConfig;
 
 /**
  * §9 logical `route` ids for `vaulter_throttled_total` (throttle:vaulter-public / uploads).
  *
- * Versioned routes are resolved by route name; the path rules serve only the unversioned
- * documents routes until that package moves to v1.
+ * Routes are resolved by their name.
  */
 final class VaulterThrottledRouteMap
 {
@@ -27,6 +25,8 @@ final class VaulterThrottledRouteMap
         'vaulter.v1.uploads.parts.store' => 'uploads.s3_parts',
         'vaulter.v1.uploads.complete' => 'uploads.s3_complete',
         'vaulter.v1.files.store' => 'uploads.single',
+        'vaulter.v1.collaboration.hub.authenticate' => 'collab.authenticate',
+        'vaulter.v1.collaboration.hub.store' => 'collab.store',
     ];
 
     public static function routeFor(string $routeName): ?string
@@ -34,46 +34,10 @@ final class VaulterThrottledRouteMap
         return self::NAMED[$routeName] ?? null;
     }
 
-    /**
-     * @return list<array{methods: list<string>, pattern: string, route: string}>
-     */
-    private static function rules(): array
-    {
-        return [
-            ['methods' => ['POST'], 'pattern' => 'collab/authenticate', 'route' => 'collab.authenticate'],
-            ['methods' => ['POST'], 'pattern' => 'collab/store', 'route' => 'collab.store'],
-        ];
-    }
-
     public static function resolve(Request $request): ?string
     {
         $name = $request->route()?->getName();
-        if (is_string($name) && str_starts_with($name, 'vaulter.v1.')) {
-            return self::routeFor($name);
-        }
 
-        $prefix = trim(app(RoutesConfig::class)->prefix(), '/');
-        $path = trim($request->path(), '/');
-
-        if ($prefix !== '' && str_starts_with($path, $prefix)) {
-            $path = ltrim(substr($path, strlen($prefix)), '/');
-        }
-
-        $method = strtoupper($request->method());
-        $normalized = trim($path, '/');
-
-        foreach (self::rules() as $rule) {
-            if (!in_array($method, $rule['methods'], true)) {
-                continue;
-            }
-
-            $regex = '#^'.preg_replace('#\{id\}#', '[^/]+', $rule['pattern']).'$#';
-
-            if (preg_match($regex, $normalized) === 1) {
-                return $rule['route'];
-            }
-        }
-
-        return null;
+        return is_string($name) ? self::routeFor($name) : null;
     }
 }

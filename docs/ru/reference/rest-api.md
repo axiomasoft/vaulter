@@ -11,13 +11,6 @@ editLink: false
 `/api/vaulter/v1`, — и каждый маршрут называется `vaulter.v1.<имя>`. Сначала идут
 базовые правила, затем маршруты. Ошибки описаны в [справочнике ошибок](/ru/reference/errors).
 
-::: info Миграция идёт
-Маршруты доступа, ссылок, активности, журнала изменений, вебхуков, drive и загрузок уже на
-v1. Маршруты документов, комментариев и совместного редактирования ниже пока обслуживаются
-без версии под `/{routes.prefix}` и переедут на `/v1` в ближайшем выпуске разработки 1.0;
-их разделы это отмечают.
-:::
-
 ## Базовые правила
 
 | Правило | Значение |
@@ -144,17 +137,13 @@ v1. Маршруты документов, комментариев и совм�
 
 ---
 
-## Маршруты без версии
+## Пути без версии
 
-Маршруты [документных узлов](#документные-узлы-documents), [комментариев](#комментарии),
-[совместного редактирования](#совместное-редактирование-в-реальном-времени) и
-[легаси-API документов](#легаси-api-документов) пока обслуживаются под `/{routes.prefix}`
-без `/v1` и сохраняют прежние соглашения: `{node}` превращается в модель до контроллера,
-ошибки — `{ "message", "code" }`, узлы — в прежней форме (`storage_id`, `handler`, …). Они
-переедут на `/v1` — с базовыми правилами выше — в ближайшем выпуске разработки 1.0.
-Прежних путей drive (`storages/*`, `nodes/{node}` без `/v1`, `resumable-uploads/*`) больше
-нет: под префиксом v1 неизвестный путь отвечает `404 route_not_found`, вне его — обычным
-404 хоста.
+Под `/{routes.prefix}` без `/v1` больше ничего не обслуживается. Прежних путей
+(`storages/*`, `nodes/{node}` без `/v1`, `resumable-uploads/*`, `nodes/{node}/content`,
+`nodes/{node}/document-versions`, `collab/*`, …) нет: под префиксом v1 неизвестный путь
+отвечает `404 route_not_found` в виде problem+json, вне его — обычным 404 хоста. Какие маршруты
+куда переехали — в [таблице обновления](https://github.com/axiomasoft/vaulter/blob/main/UPGRADE.md).
 
 ## Drive
 
@@ -505,102 +494,127 @@ Multipart `file`: следующая ревизия. Нужен `edit`. **Отв
 
 ## Комментарии
 
-Комментарии к узлам (`vaulter-documents`, `vaulter.features.comments`) — пока без версии,
-до переезда маршрутов документов на v1. `{comment}` — простой id, который должен
-принадлежать `{node}`.
+Комментарии к любым узлам (`vaulter-documents`). Маршруты зарегистрированы всегда, переключатель
+проверяют операции: при выключенных комментариях — глобально (`vaulter-documents.comments.enabled`)
+или в профиле диска — видимый узел отвечает `403 profile_restriction`, невидимый — как обычно
+`404 node_not_found`. `{comment}` другого узла — `404 comment_not_found`. Чтение — `view`,
+создание — `comment`, resolve — `comment` и авторство либо `edit`, удаление — автор комментария
+или `manage`. См. [Комментарии](/ru/guide/comments).
 
-| Маршрут | Действие | Заметки |
-|---|---|---|
-| `GET nodes/{node}/comments` | `index` | |
-| `POST nodes/{node}/comments` | `store` | `body`, `parent_id?`, `anchor?` |
-| `POST nodes/{node}/comments/{comment}/resolve` | `resolve` | |
-| `DELETE nodes/{node}/comments/{comment}` | `destroy` | |
+#### `GET v1/nodes/{node}/comments` — `comments.index`
 
-Чтение — `view`, создание — `comment`, решение/удаление — автор комментария или `manage`.
+**Ответ:** `200` страница Comment, сначала старые.
+
+#### `POST v1/nodes/{node}/comments` — `comments.store`
+
+| Поле | Правило |
+|---|---|
+| `body` | обязательно, строка, до 5000 |
+| `parent_id` | опционально, id комментария того же узла (ответ в ветке) |
+| `anchor` | опционально, объект |
+
+**Ответ:** `201` Comment.
+
+#### `POST v1/nodes/{node}/comments/{comment}/resolve` — `comments.resolve`
+
+**Ответ:** `200` Comment.
+
+#### `DELETE v1/nodes/{node}/comments/{comment}` — `comments.destroy`
+
+**Ответ:** `204`.
+
+**Comment:** `id`, `node_id`, `parent_id`, `author` (`{ type, id }`), `body`, `anchor`,
+`resolved_at`, `resolved_by`, `created_at`.
 
 ---
 
-## Документные узлы (Documents)
+## Документы
 
-Документные узлы rich-text/Yjs (`DocumentNodeController`). **Доступно при установленном Documents.** См. [Редактирование](/ru/guide/documents) и
-[Версии](/ru/guide/documents).
+Документы живут в диске рядом с файлами и папками (`vaulter-documents`). Маршруты работают с
+содержимым документа под `documents/{node}`; узел другого вида отвечает `409 not_a_document`. См.
+[Документы](/ru/guide/documents).
 
-#### `POST storages/{storage}/documents`
+У **содержимого** документа свой валидатор, независимый от `sequence` узла:
+`ETag: "{node}.{collab_epoch}.{state_version}"`. От вызывающего он не зависит: читатель и
+редактор получают одно тело и один тег, а переименование или перемещение его не меняют.
+Маршруты с пометкой **If-Match** требуют этот тег; устаревший или слабый — это
+`412 document_state_mismatch`, в том числе когда хаб коллаборации успел сохранить более новое
+состояние.
 
-Создать узел `kind=document` с его версией v1. → `store`
+#### `POST v1/drives/{drive}/documents` — `documents.store`
 
-| Параметр | Правило |
+| Поле | Правило |
 |---|---|
-| `name` | required, string, max 255, без разделителей пути |
-| `parent_id` | nullable (опустить = корень) |
-| `format` | nullable, одно из зарегистрированных значений `DocumentType` |
-| `content` | nullable, array (TipTap doc) |
+| `name` | обязательно, строка, без разделителей пути |
+| `parent_id` | опционально (без него — корень диска) |
+| `type` | опционально, `vendor/name` (по умолчанию — настроенный); незарегистрированный — `422 unknown_document_type` |
+| `content` | опционально, объект — валидирует кодек типа (`422 invalid_document_content`) |
 
-**Гейт:** `canCreateInWorkspace` + `Create` на цели назначения. **Ответ:**
-`201` `NodeResource`.
+**Гейт:** `Create` в родителе и типы документов профиля. **Ответ:** `201` Node с `ETag`.
 
-#### `GET nodes/{node}/content`
+#### `GET v1/documents/{node}/content` — `documents.content.show`
 
-Документный узел плюс его текущее head-содержимое. → `content`
+**Гейт:** `view`. **Ответ:** `200 { "data": { "type", "schema_version", "state_version",
+"collab_epoch", "revision_id", "content" } }` с `ETag` содержимого; `304` на совпавший
+`If-None-Match` — только после авторизации.
 
-**Гейт:** `Ability::View` (и узел должен быть `kind=document`, иначе —
-`NotADocumentException`). **Ответ:** `DocumentRevisionResource` со встроенным
-содержимым.
+#### `PUT v1/documents/{node}/content` — `documents.content.update` · **If-Match**
 
-#### `PATCH nodes/{node}/content`
-
-Автосохранение содержимого документа (путь дебаунса). → `update`
-
-| Параметр | Правило |
+| Поле | Правило |
 |---|---|
-| `content` | required, array (TipTap doc) |
-| `yjs_state` | nullable, string (base64 Yjs-бинарь) |
-| `state_version` | nullable, integer ≥ 0 — последний прочитанный клиентом `state_version`; проигравшее гонку сохранение отвечает `412 document_state_mismatch` |
+| `content` | обязательно, объект — всё новое содержимое |
 
-**Гейт:** `Ability::Edit`. **Ответ:** `200` `DocumentRevisionResource`
-(автосохранение семантически является обновлением, даже когда была дописана новая строка версии).
-Ресурс содержит `state_version`; содержимое, которое нельзя сохранить обратно, отвечает
-`409 document_content_degraded`.
+**Гейт:** `edit`. **Ответ:** `200` как выше с новым `ETag`. Содержимое, которое нельзя сохранить
+обратно, — `409 document_content_degraded`; неустановленный тип — `409 document_type_unavailable`.
 
-#### `GET nodes/{node}/document-versions`
+#### `GET v1/documents/{node}/revisions` — `documents.revisions.index`
 
-История версий документного узла, новейшие сначала. → `versions`
+**Гейт:** `view`. **Ответ:** `200` страница DocumentRevision, сначала свежие.
 
-**Гейт:** `Ability::View`. **Ответ:** пагинированный `DocumentRevisionResource`.
+#### `POST v1/documents/{node}/revisions` — `documents.revisions.store`
 
-#### `POST nodes/{node}/document-versions`
+Снимает рабочее состояние чекпоинтом, который становится головой.
 
-Сделать снапшот текущего head как **именованной** версии. → `storeVersion`
-
-| Параметр | Правило |
+| Поле | Правило |
 |---|---|
-| `label` | required, string, max 255 |
-| `keep_forever` | nullable, boolean |
+| `label` | опционально, строка, до 255 |
+| `keep_forever` | опционально, boolean |
 
-**Гейт:** `Ability::Edit`. **Ответ:** `201` `DocumentRevisionResource`.
+**Гейт:** `edit`. **Ответ:** `201` DocumentRevision.
 
-#### `POST nodes/{node}/document-versions/{version}/restore`
+#### `GET v1/documents/{node}/revisions/{revision}` — `documents.revisions.show`
 
-Восстановить предыдущую версию (переводит head на её копию). → `restore`
+**Гейт:** `view`. **Ответ:** `200` DocumentRevision с `content`. Неизвестный id или id другого
+документа — `404 document_revision_not_found`.
 
-**Гейт:** `Ability::Edit`. **Ответ:** `201` `DocumentRevisionResource`.
+#### `POST v1/documents/{node}/revisions/{revision}/restore` — `documents.revisions.restore` · **If-Match**
 
-#### `GET nodes/{node}/handler`
+Копирует ревизию вперёд как рабочее состояние и двигает эпоху коллаборации. **Гейт:** `edit`.
+**Ответ:** `200` содержимое с новым `ETag`.
 
-Резолвнутый дескриптор обработчика (id + capabilities + ui), чтобы клиент знал, какую
-поверхность редактора/превью монтировать. → `handler`
+#### `PATCH v1/documents/{node}/revisions/{revision}` — `documents.revisions.update`
 
-**Гейт:** `Ability::View`. **Ответ:** `{ "data": { … } }`.
+| Поле | Правило |
+|---|---|
+| `keep_forever` | обязательно, boolean — закрепить ревизию вне прунинга или снять закрепление |
 
-#### `GET nodes/{node}/export`
+Метка ревизии задаётся при создании и не меняется. **Гейт:** `edit`. **Ответ:** `200`
+DocumentRevision.
 
-Экспортировать документный узел файлом в запрошенном формате. → `export`
+#### `GET v1/documents/{node}/export/{format}` — `documents.export`
 
-| Параметр | Где | Примечания |
-|---|---|---|
-| `format` | query | `html` (по умолчанию), `markdown` или любой зарегистрированный формат экспортёра |
+`{format}` — `html`, `markdown` или другой зарегистрированный формат экспортёра; `?revision={id}`
+рендерит один чекпоинт вместо рабочего состояния.
 
-**Гейт:** `Ability::Download` + выдача содержимого. **Ответ:** байты экспортёра с `Content-Type`, `Content-Disposition: attachment; filename*`, `Cache-Control: private, no-store` и `X-Content-Type-Options: nosniff` (не JSON); `X-Vaulter-Export-Lossy: 1` помечает содержимое, которое тип смог прочитать лишь частично. Формат, которого нет у типа документа, даёт `422 unknown_export_format` со списком `allowed`. См. [Экспорт](/ru/guide/export).
+**Гейт:** `download` и выдача содержимого. **Ответ:** байты экспортёра как вложение
+(`Content-Disposition`, `X-Content-Type-Options: nosniff`,
+`Content-Security-Policy: sandbox; default-src 'none'`, `Cache-Control: private, no-store`,
+`Content-Length`); `X-Vaulter-Export-Lossy: 1` помечает содержимое, которое тип смог прочитать
+лишь частично. Формат, которого нет у типа, — `422 unknown_export_format` с `meta.allowed`. См.
+[Экспорт](/ru/guide/export).
+
+**DocumentRevision:** `id`, `number`, `schema_version`, `label`, `is_autosave`, `keep_forever`,
+`content_hash`, `is_head`, `created_by`, `created_at` (и `content` при чтении одной ревизии).
 
 ---
 
@@ -866,131 +880,38 @@ Bearer-ссылки на узел (`vaulter.features.share_links`). Ссылка
 
 ## Совместное редактирование в реальном времени
 
-Совместное редактирование TipTap/Yjs поверх документных узлов
-(`Drive\NodeCollaborationController`). **Включается через `vaulter-documents.collaboration.enabled`.**
+Совместное редактирование TipTap/Yjs над документами (`vaulter-documents.collaboration.enabled`).
 См. [Совместное редактирование](/ru/guide/collaboration).
 
-### Клиентский handshake
+#### `POST v1/documents/{node}/collaboration/session` — `documents.collaboration.session`
 
-Монтируется в группе Drive `SubstituteBindings` (`{node}` привязан через route-model binding).
+Вход в комнату документа: сессия для его текущего поколения, read-write для редактора и
+read-only для остальных, кто может его видеть.
 
-#### `POST nodes/{node}/collab/token`
+| Поле | Правило |
+|---|---|
+| `schema_version` | опционально, integer — схема, которую понимает редактор клиента; иная, чем у типа, даёт read-only сессию |
 
-Выпустить транспорт-агностичную сессию совместного редактирования для документного узла.
-→ `token`
+**Гейт:** `view`. **Ответ:** `201 { "data": { "driver", "room", "node_id", "drive_id", "epoch",
+"schema_version", "mode", "token", "url" } }`, не кэшируется. Выключенная коллаборация или тип,
+который не умеет совместную работу, — `409 collaboration_unavailable`.
 
-**Гейт:** актору нужно как минимум `View`/`Comment`, чтобы подключиться; сессия
-read-only, если у него нет `Edit`. **Ответ:** `{ "data": { /* CollaborationSession */ } }`.
+### Эндпоинты хаба (сервер-к-серверу)
 
-### Server-to-server вебхуки
+Вызовы хаба идут через стек `hub`: `throttle:vaulter-public` и `ResolveCollaborationCall`,
+который требует room-JWT **и** HMAC-подпись тела. Они регистрируются, только пока включена
+коллаборация, не принимают пользовательскую сессию и отвечают отказами как problem+json
+(`401 actor_required` на неподписанный вызов). Протокол — комната, барьер эпохи, seed,
+`409 collaboration_epoch_mismatch` как терминальный ответ — не изменился; см.
+[Совместное редактирование](/ru/guide/collaboration#протокол-хаба-сервер-к-серверу).
 
-Поверхность hub-callback — **без auth-middleware**, только `ResolveCollaborationCall`,
-который аутентифицирует вызывающего через общий webhook-секрет **или** валидный подписанный
-room-JWT и привязывает вызов к его узлу (JWT для узла A не может писать в узел B).
-Узел резолвится из **тела** (`room` / `node_id`).
-
-#### `POST collab/authenticate`
-
-Хук хаба `onAuthenticate`. → `authenticate`
-
-**Ответ:** `{ "allowed": bool, "readOnly": bool, "user": { "id": … } | null }`.
-`allowed=false` (не 403), когда у пользователя нет view-доступа, чтобы хаб мог чисто
-отказать сокету. `readOnly` равно `false` только при праве `Edit` на содержимое, которое можно
-сохранить обратно: неустановленный тип, более новая схема или частичное чтение — только чтение.
-
-#### `POST collab/store`
-
-Хук хаба `onStoreDocument` — сохранить дебаунснутый Yjs-снапшот. → `store`
-
-| Параметр | Где | Примечания |
+| Маршрут | Имя | Ответ |
 |---|---|---|
-| `node_id` *или* `room` | body | целевой узел (room нормализуется обратно через префикс канала) |
-| `yjs_state` | body | required, base64 Yjs-бинарь (источник истины) |
-| `content` / `tiptap` | body | опциональная JSON-проекция, декодируется типом документа (`422 invalid_document_content`, если тип её отвергает) |
-| `user_id` | body | атрибуция (для вызова по общему секрету; вызов по JWT использует свой `sub`) |
-
-Вызову должно быть разрешено писать (`mayStore()`), иначе — `403`. На заблокированном документе
-неустановленный тип отвечает `409 document_type_unavailable`, а содержимое, которое нельзя
-сохранить обратно, — `409 document_content_degraded`; ни Yjs-состояние, ни проекция не меняются.
-Без проекции JSON сохраняет свою версию схемы. **Ответ:**
-`{ "data": { "node_id": …, "version_no": …, "yjs_state_size": … } }`.
+| `POST v1/collaboration/hub/authenticate` | `collaboration.hub.authenticate` | `{ allowed, mode, userId, epoch }` |
+| `POST v1/collaboration/hub/load` | `collaboration.hub.load` | `{ state, content, epoch, schemaVersion, stateVersion, type }` |
+| `POST v1/collaboration/hub/store` | `collaboration.hub.store` | `{ data: { changed, epoch, state_version, yjs_state_size } }` |
 
 ---
-
-## Легаси-API документов
-
-До-Drive поверхность документов (`DocumentController` и компания) остаётся смонтированной
-для обратной совместимости. Новым интеграциям стоит предпочесть маршруты
-[Drive](#drive) и [документных узлов](#документные-узлы-documents) выше.
-
-### Документы
-
-| Метод и путь | Действие | Параметры |
-|---|---|---|
-| `GET documents` | `index` | `?q=` поиск, `workspace_type`, `workspace_id` |
-| `GET documents/trash` | `trash` | список корзины |
-| `POST documents/bulk` | (`BulkDocumentController`) | `action` (`delete`/`restore`/`move`/`force-delete`), `ids[]`, `folder_id` |
-| `POST documents` | `store` | `workspace_type`, `workspace_id`, `type`, `title`, `content`, `folder_id?`, `meta?` |
-| `GET documents/{id}` | `show` | |
-| `PATCH documents/{id}` | `update` | |
-| `DELETE documents/{id}` | `destroy` | мягкое удаление |
-| `DELETE documents/{id}/force` | `forceDestroy` | навсегда |
-| `POST documents/{id}/restore` | `restore` | |
-| `PATCH documents/{id}/move` | `move` | `folder_id` (null = корень) |
-| `POST documents/{id}/duplicate` | `duplicate` | |
-| `GET documents/{documentId}/export` | (`ExportController::show`) | `?format=` |
-
-### Версии
-
-| Метод и путь | Действие | Параметры |
-|---|---|---|
-| `GET documents/{documentId}/versions` | `index` | |
-| `POST documents/{documentId}/versions` | `store` | `snapshot_label?` |
-| `POST documents/{documentId}/versions/{versionId}/restore` | `restore` | |
-
-### Разрешения
-
-| Метод и путь | Действие | Параметры |
-|---|---|---|
-| `GET documents/{documentId}/permissions` | `index` | |
-| `POST documents/{documentId}/permissions` | `store` | `subject_type`, `subject_id`, `permission` (числовое разрешение legacy-документа) |
-| `DELETE documents/{documentId}/permissions/{permissionId}` | `destroy` | |
-
-### Комментарии
-
-| Метод и путь | Действие | Параметры |
-|---|---|---|
-| `GET documents/{documentId}/comments` | `index` | |
-| `POST documents/{documentId}/comments` | `store` | `body`, `parent_id?`, `anchor?` |
-| `POST documents/{documentId}/comments/{commentId}/resolve` | `resolve` | |
-| `DELETE documents/{documentId}/comments/{commentId}` | `destroy` | |
-
-См. [Комментарии](/ru/guide/comments).
-
-### Легаси-публичные-ссылки на документы
-
-| Метод и путь | Действие | Параметры |
-|---|---|---|
-| `GET documents/{documentId}/shares` | `index` | |
-| `POST documents/{documentId}/shares` | `store` | `permission` (`view`/`comment`/`edit`), `expires_at?` |
-| `DELETE documents/{documentId}/shares/{shareId}` | `destroy` | |
-| `GET shares/{token}` | `resolve` | публичный резолв токена |
-
-### Легаси-совместное-редактирование
-
-| Метод и путь | Действие |
-|---|---|
-| `POST documents/{documentId}/collab/token` | `CollaborationController::token` |
-| `POST documents/{documentId}/collab/sync` | `CollaborationController::sync` |
-
-### Легаси-папки
-
-| Метод и путь | Действие | Параметры |
-|---|---|---|
-| `GET folders` | `index` | `workspace_type`, `workspace_id` |
-| `POST folders` | `store` | `workspace_type`, `workspace_id`, `name`, `parent_id?`, `order?` |
-| `PATCH folders/{id}` | `update` | переименование / перемещение |
-| `DELETE folders/{id}` | `destroy` | |
 
 ## Смотрите также
 

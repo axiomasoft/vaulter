@@ -11,6 +11,7 @@ use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
 use Vaulter\Drive\DriveHandle;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
@@ -145,30 +146,33 @@ it('answers node_not_found for a document of another tenant on every method', fu
 it('returns the same codes through the HTTP routes', function (?string $role, string $verb, string $path, int $status, ?string $code): void {
     [, $document, , $user] = matrixFixture($role);
     $this->actingAs($user);
-    $url = 'api/vaulter/nodes/'.$document->id.$path;
-    $body = match ($path) {
-        '/content' => ['content' => DocumentTestHelpers::content('via http')->toArray()],
-        '/comments' => ['body' => 'via http'],
+    $url = Docs::url(str_replace('{id}', (string) $document->id, $path));
+    $body = match (true) {
+        str_ends_with($path, '/content') && $verb === 'PUT' => ['content' => DocumentTestHelpers::content('via http')->toArray()],
+        str_ends_with($path, '/comments') => ['body' => 'via http'],
         default => [],
     };
+    // A caller who may write reads the tag first; the others are refused before any tag is compared.
+    $headers = $verb === 'PUT' ? ($role === RoleRegistry::WRITER ? Docs::ifMatch((string) $document->id) : ['If-Match' => '"any"']) : [];
 
-    $response = $this->json($verb, $url, $body)->assertStatus($status);
+    $response = $this->json($verb, $url, $body, $headers)->assertStatus($status);
     if ($code !== null) {
         $response->assertJsonPath('code', $code);
     }
 })->with([
-    'previewer reads content' => [RoleRegistry::PREVIEWER, 'GET', '/content', 200, null],
-    'previewer cannot export' => [RoleRegistry::PREVIEWER, 'GET', '/export?format=html', 403, 'permission_denied'],
-    'previewer cannot autosave' => [RoleRegistry::PREVIEWER, 'PATCH', '/content', 403, 'permission_denied'],
-    'reader exports' => [RoleRegistry::READER, 'GET', '/export?format=html', 200, null],
-    'reader cannot comment' => [RoleRegistry::READER, 'POST', '/comments', 403, 'permission_denied'],
-    'commenter comments' => [RoleRegistry::COMMENTER, 'POST', '/comments', 201, null],
-    'commenter gets a token' => [RoleRegistry::COMMENTER, 'POST', '/collab/token', 200, null],
-    'writer autosaves' => [RoleRegistry::WRITER, 'PATCH', '/content', 200, null],
-    'no grant hides content' => [null, 'GET', '/content', 404, 'node_not_found'],
-    'no grant hides history' => [null, 'GET', '/document-versions', 404, 'node_not_found'],
-    'no grant hides comments' => [null, 'POST', '/comments', 404, 'node_not_found'],
-    'no grant hides the token' => [null, 'POST', '/collab/token', 404, 'node_not_found'],
+    'previewer reads content' => [RoleRegistry::PREVIEWER, 'GET', 'documents/{id}/content', 200, null],
+    'previewer cannot export' => [RoleRegistry::PREVIEWER, 'GET', 'documents/{id}/export/html', 403, 'permission_denied'],
+    'previewer cannot autosave' => [RoleRegistry::PREVIEWER, 'PUT', 'documents/{id}/content', 403, 'permission_denied'],
+    'reader exports' => [RoleRegistry::READER, 'GET', 'documents/{id}/export/html', 200, null],
+    'reader cannot comment' => [RoleRegistry::READER, 'POST', 'nodes/{id}/comments', 403, 'permission_denied'],
+    'commenter comments' => [RoleRegistry::COMMENTER, 'POST', 'nodes/{id}/comments', 201, null],
+    'commenter gets a session' => [RoleRegistry::COMMENTER, 'POST', 'documents/{id}/collaboration/session', 201, null],
+    'writer autosaves' => [RoleRegistry::WRITER, 'PUT', 'documents/{id}/content', 200, null],
+    'no grant hides content' => [null, 'GET', 'documents/{id}/content', 404, 'node_not_found'],
+    'no grant hides the write' => [null, 'PUT', 'documents/{id}/content', 404, 'node_not_found'],
+    'no grant hides history' => [null, 'GET', 'documents/{id}/revisions', 404, 'node_not_found'],
+    'no grant hides comments' => [null, 'POST', 'nodes/{id}/comments', 404, 'node_not_found'],
+    'no grant hides the session' => [null, 'POST', 'documents/{id}/collaboration/session', 404, 'node_not_found'],
 ]);
 
 it('hides a trashed document from the HTTP routes with node_not_found', function (): void {
@@ -176,7 +180,7 @@ it('hides a trashed document from the HTTP routes with node_not_found', function
     $handle->nodes()->trash($document->id);
     $this->actingAs($user);
 
-    foreach (['/content', '/document-versions', '/export?format=html'] as $path) {
-        $this->getJson('api/vaulter/nodes/'.$document->id.$path)->assertNotFound()->assertJsonPath('code', 'node_not_found');
+    foreach (['content', 'revisions', 'export/html'] as $path) {
+        $this->getJson(Docs::url('documents/'.$document->id.'/'.$path))->assertNotFound()->assertJsonPath('code', 'node_not_found');
     }
 });

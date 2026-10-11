@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
@@ -34,16 +35,16 @@ function univerStorage(): Drive
 }
 
 it('refuses to export a non-rich-text (Univer) node instead of rendering it blank', function (string $format): void {
-    $base = 'api/vaulter/storages/'.univerStorage()->getKey();
+    $drive = univerStorage()->getKey();
 
-    $nodeId = $this->postJson($base.'/documents', [
+    $nodeId = $this->postJson(Docs::url('drives/'.$drive.'/documents'), [
         'name' => 'Budget.xlsx',
         'type' => 'vaulter/spreadsheet',
         'content' => ['id' => 'wb1', 'sheets' => ['s1' => ['name' => 'Sheet1', 'cellData' => []]]],
     ])->assertCreated()->json('data.id');
 
-    $this->getJson('api/vaulter/nodes/'.$nodeId.'/export?format='.$format)
+    $this->getJson(Docs::url('documents/'.$nodeId.'/export/'.$format))
         ->assertStatus(422)
         ->assertJsonPath('code', 'unknown_export_format')
-        ->assertJsonPath('allowed', []);
+        ->assertJsonPath('meta.allowed', []);
 })->with(['html', 'markdown']);

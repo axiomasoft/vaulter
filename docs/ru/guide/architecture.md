@@ -307,7 +307,7 @@ Yjs — источник истины; TipTap JSON — производная п
 `CollaborationDriver` ([ADR-0001](/adr/0001-collaboration-transport)):
 
 - **`hocuspocus`** — внешний Node-хаб (`hocuspocus-server/`). Клиент подключается с подписанным
-  room JWT; хаб коллбэчит в вебхуки `collab/authenticate` + `collab/store`.
+  room JWT; хаб коллбэчит в эндпоинты `v1/collaboration/hub/{authenticate,load,store}`.
 
 ## Точки расширения
 

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
@@ -27,14 +28,14 @@ function trashDocumentStorage(): Drive
 it('404s on reading the content of a trashed document node, F-P1.12-01', function (): void {
     $storage = trashDocumentStorage();
 
-    $nodeId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/documents', [
+    $nodeId = $this->postJson(Docs::url('drives/'.$storage->getKey().'/documents'), [
         'name' => 'Report',
         'content' => ['type' => 'doc', 'content' => [
             ['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'Body']]],
         ]],
     ])->assertCreated()->json('data.id');
 
-    $nodeBase = 'api/vaulter/nodes/'.$nodeId;
+    $nodeBase = Docs::url('documents/'.$nodeId);
 
     // Control: live document reads fine.
     $this->getJson($nodeBase.'/content')->assertOk();
@@ -48,31 +49,31 @@ it('404s on reading the content of a trashed document node, F-P1.12-01', functio
 it('404s on exporting a trashed document node, F-P1.12-01', function (): void {
     $storage = trashDocumentStorage();
 
-    $nodeId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/documents', [
+    $nodeId = $this->postJson(Docs::url('drives/'.$storage->getKey().'/documents'), [
         'name' => 'Report',
         'content' => ['type' => 'doc', 'content' => [
             ['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'Body']]],
         ]],
     ])->assertCreated()->json('data.id');
 
-    $nodeBase = 'api/vaulter/nodes/'.$nodeId;
+    $nodeBase = Docs::url('documents/'.$nodeId);
 
-    $this->getJson($nodeBase.'/export?format=html')->assertOk();
+    $this->getJson($nodeBase.'/export/html')->assertOk();
 
     app(VaulterDatabase::class)->write(fn () => Node::query()->find($nodeId)->forceFill(['trashed_at' => now()])->save());
 
-    $this->getJson($nodeBase.'/export?format=html')->assertNotFound();
+    $this->getJson($nodeBase.'/export/html')->assertNotFound();
 });
 
-it('404s on listing document-version history of a trashed node, F-P1.12-01', function (): void {
+it('404s on listing revision history of a trashed node, F-P1.12-01', function (): void {
     $storage = trashDocumentStorage();
 
-    $nodeId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/documents', [
+    $nodeId = $this->postJson(Docs::url('drives/'.$storage->getKey().'/documents'), [
         'name' => 'Report',
         'content' => ['type' => 'doc', 'content' => []],
     ])->assertCreated()->json('data.id');
 
     app(VaulterDatabase::class)->write(fn () => Node::query()->find($nodeId)->forceFill(['trashed_at' => now()])->save());
 
-    $this->getJson('api/vaulter/nodes/'.$nodeId.'/document-versions')->assertNotFound();
+    $this->getJson(Docs::url('documents/'.$nodeId.'/revisions'))->assertNotFound();
 });

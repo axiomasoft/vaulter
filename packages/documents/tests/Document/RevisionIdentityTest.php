@@ -9,6 +9,7 @@ use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Data\Revisions\CreateNamedRevisionInput;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
+use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
@@ -55,9 +56,9 @@ it('V32 keeps a file revision and a document revision with the same id apart', f
         ->and(app(DocumentRevisionReadRepository::class)->head($document)?->id)->toBe($id)
         ->and(app(DocumentRevisionReadRepository::class)->forNode(DriveTestHelpers::model($file), $id))->toBeNull();
 
-    $this->getJson('api/vaulter/nodes/'.$document->id.'/content')
+    $this->getJson(Docs::url('documents/'.$document->id.'/content'))
         ->assertOk()
-        ->assertJsonPath('data.id', (string) $id)
+        ->assertJsonPath('data.revision_id', (string) $id)
         ->assertJsonPath('data.content.content.0.content.0.text', 'document body');
 
     foreach ([$document->refresh(), DriveTestHelpers::model($file)] as $node) {

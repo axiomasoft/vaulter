@@ -254,7 +254,7 @@ environment.
 
 ## collab-webhook-unconfigured
 
-The hub endpoints (`collab/authenticate`, `collab/load`, `collab/store`) need both
+The hub endpoints (`collaboration/hub/authenticate`, `load` and `store`) need both
 `VAULTER_COLLAB_SECRET` (the room JWT key) and `VAULTER_COLLAB_WEBHOOK_SECRET` (the body
 signature key); with either missing every hub call is `401`. Set both, different from each
 other, on Laravel, and the webhook secret on the hub too.
@@ -272,7 +272,7 @@ or re-home the node into the destination storage explicitly instead of moving it
 ## document-version-not-found
 
 `DocumentRevisionNotFoundException` — the version does not exist or belongs to a
-different node. List the node's history (`GET .../document-versions`) and restore an id
+different node. List the node's history (`GET .../revisions`) and restore an id
 from it.
 
 ## missing-host-role-driver

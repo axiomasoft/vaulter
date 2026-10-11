@@ -11,6 +11,7 @@ use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Fixtures\Types\AcmeKanbanV2Type;
+use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
 use Vaulter\Documents\Tests\Types\TypesTestCase;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
@@ -60,13 +61,13 @@ it('reads content of a switched-off editor extension degraded and refuses to sav
         ->and($documents->update($node->id, ['type' => 'doc', 'content' => []])->editable)->toBeTrue();
 });
 
-it('answers 409 document_content_degraded to an HTTP autosave', function (): void {
+it('answers 409 document_content_degraded to an HTTP content write', function (): void {
     config()->set('vaulter-documents.tiptap.extra_nodes', ['acmeWidget']);
     $node = Documents::in(DocumentTestHelpers::drive())->create('Spec', content: widgetDocument());
     config()->set('vaulter-documents.tiptap.extra_nodes', []);
 
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
-    $this->patchJson('api/vaulter/nodes/'.$node->id.'/content', ['content' => ['type' => 'doc', 'content' => []]])
+    $this->putJson('api/vaulter/v1/documents/'.$node->id.'/content', ['content' => ['type' => 'doc', 'content' => []]], Docs::ifMatch($node->id))
         ->assertStatus(409)
         ->assertJsonPath('code', 'document_content_degraded');
 });

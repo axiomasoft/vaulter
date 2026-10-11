@@ -221,7 +221,7 @@ test('non-test src never uses whereHas/withCount on descendants (H.4)', ...);
 
 **Почему и решение.**
 
-- **Драйвер Hocuspocus.** Node-хаб делает колбэки в `collab/authenticate` + `collab/store`. Эти
+- **Драйвер Hocuspocus.** Node-хаб делает колбэки в `v1/collaboration/hub/{authenticate,load,store}`. Эти
   эндпоинты принимают **только** валидный общий секрет или подписанный JWT комнаты — открытыми они
   не бывают. 401 от хаба обычно означает, что `VAULTER_COLLAB_WEBHOOK_SECRET` (или `secret`
   драйвера) различается между Laravel и хабом.

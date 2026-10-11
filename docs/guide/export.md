@@ -21,7 +21,7 @@ namespace Vaulter\Documents\Contracts;
 interface DocumentExporter
 {
     public function key(): string;          // 'vaulter/html'
-    public function format(): string;       // 'html' — the ?format= value
+    public function format(): string;       // 'html' — the {format} path segment
     public function mimeType(): string;
     public function extension(): string;    // without the dot
     /** @return list<string> keys of the document types it can render */
@@ -56,20 +56,24 @@ as Markdown. A document type that no exporter lists (a spreadsheet, say) has no 
 
 ## Exporting a document
 
-`GET {prefix}/nodes/{node}/export?format=html|markdown` answers the **file** (default format
-`html`):
+`GET {prefix}/v1/documents/{node}/export/{format}` (`html`, `markdown`) answers the **file**;
+`?revision={id}` renders one checkpoint instead of the working state:
 
 ```http
 HTTP/1.1 200 OK
 Content-Type: text/markdown
 Content-Disposition: attachment; filename="notes.md"; filename*=utf-8''notes.md
-Cache-Control: no-cache, private, no-store
+Cache-Control: private, no-store
 X-Content-Type-Options: nosniff
+Content-Security-Policy: sandbox; default-src 'none'
+Accept-Ranges: none
 ```
 
 The body is the exporter's bytes. The name is the node name plus the exporter's extension; the
 scheme is the `ExportFilenameResolver` binding. It requires the **`Download`** ability and passes
-the content-egress gate — a previewer gets `403 permission_denied`.
+the content-egress gate — a previewer gets `403 permission_denied`. A format the document's type has
+no exporter for is `422 unknown_export_format` (the allowed ones are in `meta.allowed`) and
+`X-Vaulter-Export-Lossy: 1` marks content its type could only read in part.
 
 In PHP:
 

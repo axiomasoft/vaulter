@@ -62,6 +62,28 @@ final readonly class ContentResponder
         return $this->stream($drive->files()->read($nodeId, $revisionId), $disposition, $revisionId === null ? 'file' : 'version', $startedAt);
     }
 
+    /**
+     * A rendered document export as a download: the exporter's own content type is safe
+     * here because the file is an attachment that a sandbox policy and `nosniff` keep from
+     * running in the API origin. The caller has already been authorized for Download by
+     * the operation that rendered the bytes.
+     *
+     * @param bool $lossy the stored content could only be read in part, so the file is not the whole document
+     */
+    public function export(string $bytes, string $filename, string $mimeType, bool $lossy = false): Response
+    {
+        return new Response($bytes, 200, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => DownloadHeaders::disposition('attachment', $filename),
+            'Content-Length' => (string) strlen($bytes),
+            'X-Content-Type-Options' => 'nosniff',
+            'Content-Security-Policy' => "sandbox; default-src 'none'",
+            'Accept-Ranges' => 'none',
+            'Cache-Control' => 'private, no-store',
+            ...($lossy ? ['X-Vaulter-Export-Lossy' => '1'] : []),
+        ]);
+    }
+
     public function share(ShareContext $context, Node $node, FileRevision $revision): StreamedResponse
     {
         $startedAt = hrtime(true);

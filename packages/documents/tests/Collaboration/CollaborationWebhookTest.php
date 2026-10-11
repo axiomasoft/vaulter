@@ -64,7 +64,7 @@ it('no longer accepts the shared webhook secret as an identity', function (): vo
     $node = Hub::document();
     $body = Hub::storeBody($node, 'bytes');
 
-    test()->postJson('api/vaulter/collab/store', $body, [
+    test()->postJson('api/vaulter/v1/collaboration/hub/store', $body, [
         ...Hub::headers($body, null),
         'X-Vaulter-Collab-Secret' => Hub::WEBHOOK_SECRET,
     ])->assertStatus(401);
@@ -108,7 +108,7 @@ it('rejects a tampered token and a token whose claims disagree with its room', f
 it('rejects a token without a body signature', function (): void {
     $node = Hub::document();
 
-    test()->postJson('api/vaulter/collab/store', Hub::storeBody($node, 'bytes'), ['Authorization' => 'Bearer '.Hub::token($node)])
+    test()->postJson('api/vaulter/v1/collaboration/hub/store', Hub::storeBody($node, 'bytes'), ['Authorization' => 'Bearer '.Hub::token($node)])
         ->assertStatus(401);
 
     expect(Hub::aggregate($node)->state_version)->toBe(1);
@@ -118,7 +118,7 @@ it('rejects a signature whose timestamp is outside the ±300s window', function 
     $node = Hub::document();
     $body = Hub::storeBody($node, 'bytes');
 
-    test()->postJson('api/vaulter/collab/store', $body, Hub::headers($body, Hub::token($node), timestamp: time() - 301))
+    test()->postJson('api/vaulter/v1/collaboration/hub/store', $body, Hub::headers($body, Hub::token($node), timestamp: time() - 301))
         ->assertStatus(401);
 });
 
@@ -127,8 +127,8 @@ it('rejects a replayed signature (same nonce twice)', function (): void {
     $body = Hub::storeBody($node, 'replay-bytes');
     $headers = Hub::headers($body, Hub::token($node));
 
-    test()->postJson('api/vaulter/collab/store', $body, $headers)->assertOk();
-    test()->postJson('api/vaulter/collab/store', $body, $headers)->assertStatus(401);
+    test()->postJson('api/vaulter/v1/collaboration/hub/store', $body, $headers)->assertOk();
+    test()->postJson('api/vaulter/v1/collaboration/hub/store', $body, $headers)->assertStatus(401);
 });
 
 it('keeps the nonce until the signature itself expires, not just tolerance seconds from receipt', function (): void {
@@ -137,11 +137,11 @@ it('keeps the nonce until the signature itself expires, not just tolerance secon
     // Future-dated within tolerance: the signature stays valid for ~550s from now.
     $headers = Hub::headers($body, Hub::token($node), timestamp: time() + 250);
 
-    test()->postJson('api/vaulter/collab/store', $body, $headers)->assertOk();
+    test()->postJson('api/vaulter/v1/collaboration/hub/store', $body, $headers)->assertOk();
 
     $this->travel(400)->seconds();
 
-    test()->postJson('api/vaulter/collab/store', $body, $headers)->assertStatus(401);
+    test()->postJson('api/vaulter/v1/collaboration/hub/store', $body, $headers)->assertStatus(401);
 });
 
 it('rejects a body other than the signed one, without burning the nonce of the genuine delivery', function (): void {
@@ -150,8 +150,8 @@ it('rejects a body other than the signed one, without burning the nonce of the g
     $headers = Hub::headers($signed, Hub::token($node));
     $tampered = [...$signed, 'state' => base64_encode('swapped-bytes')];
 
-    test()->postJson('api/vaulter/collab/store', $tampered, $headers)->assertStatus(401);
-    test()->postJson('api/vaulter/collab/store', $signed, $headers)->assertOk();
+    test()->postJson('api/vaulter/v1/collaboration/hub/store', $tampered, $headers)->assertStatus(401);
+    test()->postJson('api/vaulter/v1/collaboration/hub/store', $signed, $headers)->assertOk();
 
     expect(Hub::aggregate($node)->yjs_state)->toBe('original-bytes');
 });

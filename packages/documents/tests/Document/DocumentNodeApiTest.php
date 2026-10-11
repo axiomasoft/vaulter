@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -9,10 +10,9 @@ use Vaulter\Tests\Fixtures\Access\ProfileCreateGate;
 use Vaulter\Tests\Fixtures\TestUser;
 
 /**
- * The Documents REST surface (§5 / §7 / M4a): create a document node, read/autosave
- * its content, snapshot + restore versions, resolve the handler descriptor and
- * export — end to end through the API. Runs open (the null driver), so a bare
- * authenticated actor suffices.
+ * The Documents REST surface (§5 / §7 / M4a): create a document, read/autosave its
+ * content, snapshot + restore revisions and export — end to end through the v1 API. Runs
+ * open (the null driver), so a bare authenticated actor suffices.
  */
 beforeEach(function (): void {
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
@@ -23,98 +23,92 @@ function documentStorage(): Drive
     return Vaulter::drive(DriveTestHelpers::host())->model();
 }
 
-it('runs the document node cycle: create → content → autosave → version → restore → handler → export', function (): void {
+it('runs the document cycle: create → content → autosave → revision → restore → export', function (): void {
     $storage = documentStorage();
-    $base = 'api/vaulter/storages/'.$storage->getKey();
 
-    // create a document node with initial content
-    $nodeId = $this->postJson($base.'/documents', [
+    // create a document with initial content
+    $nodeId = $this->postJson(Docs::url('drives/'.$storage->getKey().'/documents'), [
         'name' => 'Spec',
-        'content' => ['type' => 'doc', 'content' => [
-            ['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'Initial']]],
-        ]],
+        'content' => Docs::doc('Initial'),
     ])
         ->assertCreated()
         ->assertJsonPath('data.kind', 'document')
-        ->assertJsonPath('data.handler.id', null)
-        ->assertJsonPath('data.handler.document_type', 'vaulter/rich-text')
+        ->assertJsonPath('data.presentation.handler', null)
+        ->assertJsonPath('data.presentation.document_type', 'vaulter/rich-text')
+        ->assertJsonPath('data.presentation.type_available', true)
+        ->assertJsonPath('data.presentation.viewer.key', 'vaulter/tiptap')
+        ->assertJsonPath('data.presentation.capabilities.editable', true)
         ->json('data.id');
-
-    $nodeBase = 'api/vaulter/nodes/'.$nodeId;
+    $content = Docs::url('documents/'.$nodeId.'/content');
 
     // read the head content
-    $this->getJson($nodeBase.'/content')
+    $this->getJson($content)
         ->assertOk()
-        ->assertJsonPath('data.version_no', 1);
+        ->assertJsonPath('data.type', 'vaulter/rich-text')
+        ->assertJsonPath('data.state_version', 1)
+        ->assertJsonPath('data.content.content.0.content.0.text', 'Initial');
 
     // autosave new content
-    $this->patchJson($nodeBase.'/content', [
-        'content' => ['type' => 'doc', 'content' => [
-            ['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'Autosaved']]],
-        ]],
-    ])
+    Docs::put($nodeId, Docs::doc('Autosaved'))
         ->assertOk()
-        ->assertJsonPath('data.is_autosave', true);
+        ->assertJsonPath('data.state_version', 2)
+        ->assertJsonPath('data.content.content.0.content.0.text', 'Autosaved');
 
-    // snapshot a named version
-    $versionId = $this->postJson($nodeBase.'/document-versions', ['label' => 'Review'])
+    // checkpoint a named revision
+    $revisionId = $this->postJson(Docs::url('documents/'.$nodeId.'/revisions'), ['label' => 'Review'])
         ->assertCreated()
-        ->assertJsonPath('data.snapshot_label', 'Review')
+        ->assertJsonPath('data.label', 'Review')
+        ->assertJsonPath('data.is_head', true)
         ->json('data.id');
 
-    // history lists the versions
-    $this->getJson($nodeBase.'/document-versions')
+    // history lists the revisions
+    $this->getJson(Docs::url('documents/'.$nodeId.'/revisions'))
         ->assertOk()
-        ->assertJsonStructure(['data' => [['id', 'version_no', 'is_autosave']]]);
+        ->assertJsonStructure(['data' => [['id', 'number', 'is_autosave', 'is_head']], 'meta' => ['next_cursor', 'per_page']]);
 
-    // restore the named version
-    $this->postJson($nodeBase.'/document-versions/'.$versionId.'/restore')
-        ->assertCreated()
-        ->assertJsonPath('data.is_autosave', false);
-
-    // the presentation: by document type, not by a file handler
-    $this->getJson($nodeBase.'/handler')
+    // one revision with its content
+    $this->getJson(Docs::url('documents/'.$nodeId.'/revisions/'.$revisionId))
         ->assertOk()
-        ->assertJsonPath('data.id', null)
-        ->assertJsonPath('data.document_type', 'vaulter/rich-text')
-        ->assertJsonPath('data.type_available', true)
-        ->assertJsonPath('data.ui.key', 'vaulter/tiptap')
-        ->assertJsonPath('data.capabilities.editable', true);
+        ->assertJsonPath('data.id', $revisionId)
+        ->assertJsonPath('data.content.content.0.content.0.text', 'Autosaved');
+
+    // restore the named revision
+    Docs::put($nodeId, Docs::doc('Later'))->assertOk();
+    $this->postJson(Docs::url('documents/'.$nodeId.'/revisions/'.$revisionId.'/restore'), [], Docs::ifMatch($nodeId))
+        ->assertOk()
+        ->assertJsonPath('data.content.content.0.content.0.text', 'Autosaved');
 
     // export to html + markdown
-    $this->getJson($nodeBase.'/export?format=html')
+    $this->get(Docs::url('documents/'.$nodeId.'/export/html'))
         ->assertOk()
         ->assertHeader('Content-Type', 'text/html; charset=utf-8')
         ->assertHeader('Content-Disposition', 'attachment; filename=Spec.html');
 
-    $this->getJson($nodeBase.'/export?format=markdown')
+    $this->get(Docs::url('documents/'.$nodeId.'/export/markdown'))
         ->assertOk()
         ->assertHeader('Content-Type', 'text/markdown; charset=utf-8');
 });
 
 it('rejects a content write on a non-document node', function (): void {
     $storage = documentStorage();
-    $folderId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/folders', ['name' => 'Plain'])
+    $folderId = $this->postJson(Docs::url('drives/'.$storage->getKey().'/folders'), ['name' => 'Plain'])
         ->assertCreated()
         ->json('data.id');
 
-    $this->patchJson('api/vaulter/nodes/'.$folderId.'/content', [
-        'content' => ['type' => 'doc', 'content' => []],
-    ])->assertStatus(409)->assertJsonPath('code', 'not_a_document');
+    $this->putJson(Docs::url('documents/'.$folderId.'/content'), ['content' => ['type' => 'doc', 'content' => []]], ['If-Match' => '"any"'])
+        ->assertStatus(409)
+        ->assertJsonPath('code', 'not_a_document');
 });
 
 it('rejects invalid document-create boundaries without persisting a node', function (): void {
     $storage = documentStorage();
-    $url = 'api/vaulter/storages/'.$storage->getKey().'/documents';
+    $url = Docs::url('drives/'.$storage->getKey().'/documents');
 
     $cases = [
         'missing name' => [[], 'name'],
         'non-string name' => [['name' => ['Spec']], 'name'],
-        'unknown format' => [['name' => 'Spec', 'format' => 'pdf'], 'format'],
-        'non-string mime' => [['name' => 'Spec', 'mime' => ['text/plain']], 'mime'],
-        'non-editable mime' => [['name' => 'Spec', 'mime' => 'application/pdf'], 'mime'],
+        'malformed type key' => [['name' => 'Spec', 'type' => 'pdf'], 'type'],
         'non-array content' => [['name' => 'Spec', 'content' => 'plain text'], 'content'],
-        'non-document rich-text root' => [['name' => 'Spec', 'content' => ['type' => 'paragraph']], 'content.type'],
     ];
 
     foreach ($cases as $case => [$payload, $field]) {
@@ -122,43 +116,46 @@ it('rejects invalid document-create boundaries without persisting a node', funct
             ->assertUnprocessable("{$case} should fail validation")
             ->assertJsonValidationErrors($field);
     }
+
+    $this->postJson($url, ['name' => 'Spec', 'type' => 'acme/unregistered'])
+        ->assertUnprocessable()
+        ->assertJsonPath('code', 'unknown_document_type');
+    $this->postJson($url, ['name' => 'Spec', 'content' => ['type' => 'paragraph']])
+        ->assertUnprocessable()
+        ->assertJsonPath('code', 'invalid_document_content');
 });
 
-it('rejects invalid autosave boundaries without changing the current version', function (): void {
+it('rejects invalid autosave boundaries without changing the current state', function (): void {
     $storage = documentStorage();
-    $nodeId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/documents', [
-        'name' => 'Spec',
-        'content' => ['type' => 'doc', 'content' => []],
-    ])->assertCreated()->json('data.id');
-    $url = 'api/vaulter/nodes/'.$nodeId.'/content';
+    $nodeId = Docs::create($storage->getKey(), ['content' => ['type' => 'doc', 'content' => []]]);
+    $url = Docs::url('documents/'.$nodeId.'/content');
+    $tag = Docs::etag($nodeId);
 
     $cases = [
         'missing content' => [[], 'content'],
         'non-array content' => [['content' => 'plain text'], 'content'],
-        'non-document rich-text root' => [['content' => ['type' => 'paragraph']], 'content.type'],
-        'non-string Yjs state' => [['content' => ['type' => 'doc'], 'yjs_state' => []], 'yjs_state'],
     ];
 
     foreach ($cases as $case => [$payload, $field]) {
-        $this->patchJson($url, $payload)
+        $this->putJson($url, $payload, ['If-Match' => $tag])
             ->assertUnprocessable("{$case} should fail validation")
             ->assertJsonValidationErrors($field);
     }
+    $this->putJson($url, ['content' => ['type' => 'paragraph']], ['If-Match' => $tag])
+        ->assertUnprocessable()
+        ->assertJsonPath('code', 'invalid_document_content');
 
     $this->getJson($url)
         ->assertOk()
-        ->assertJsonPath('data.version_no', 1);
+        ->assertHeader('ETag', $tag)
+        ->assertJsonPath('data.state_version', 1);
 });
 
-it('enforces named-version label and boolean boundaries', function (): void {
+it('enforces revision label and boolean boundaries', function (): void {
     $storage = documentStorage();
-    $nodeId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/documents', [
-        'name' => 'Spec',
-        'content' => ['type' => 'doc', 'content' => []],
-    ])->assertCreated()->json('data.id');
-    $url = 'api/vaulter/nodes/'.$nodeId.'/document-versions';
+    $nodeId = Docs::create($storage->getKey(), ['content' => ['type' => 'doc', 'content' => []]]);
+    $url = Docs::url('documents/'.$nodeId.'/revisions');
 
-    $this->postJson($url, [])->assertUnprocessable()->assertJsonValidationErrors('label');
     $this->postJson($url, ['label' => str_repeat('x', 256)])
         ->assertUnprocessable()
         ->assertJsonValidationErrors('label');
@@ -168,40 +165,41 @@ it('enforces named-version label and boolean boundaries', function (): void {
 
     $this->postJson($url, ['label' => str_repeat('x', 255), 'keep_forever' => true])
         ->assertCreated()
-        ->assertJsonPath('data.snapshot_label', str_repeat('x', 255))
+        ->assertJsonPath('data.label', str_repeat('x', 255))
         ->assertJsonPath('data.keep_forever', true);
+    $this->postJson($url)->assertCreated()->assertJsonPath('data.label', null);
 });
 
 it('gates document creation through the profile driver', function (bool $allow): void {
     $drive = documentStorage();
     ProfileCreateGate::install($allow);
-    $this->postJson('api/vaulter/storages/'.$drive->id.'/documents', ['name' => 'profile-doc'])
+    $this->postJson(Docs::url('drives/'.$drive->id.'/documents'), ['name' => 'profile-doc'])
         ->assertStatus($allow ? 201 : 403);
 })->with([true, false]);
 
-it('refuses a lost autosave when the client sends the state_version it read', function (): void {
+it('refuses a lost autosave when the tag the client read is stale', function (): void {
     $storage = documentStorage();
-    $nodeId = $this->postJson('api/vaulter/storages/'.$storage->getKey().'/documents', ['name' => 'Spec'])
-        ->assertCreated()
-        ->json('data.id');
-    $url = 'api/vaulter/nodes/'.$nodeId.'/content';
+    $nodeId = Docs::create($storage->getKey());
+    $url = Docs::url('documents/'.$nodeId.'/content');
     $read = $this->getJson($url)->assertOk()->json('data.state_version');
-    $doc = fn (string $text): array => ['type' => 'doc', 'content' => [['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => $text]]]]];
+    $stale = Docs::etag($nodeId);
 
     // Another tab saves first.
-    $this->patchJson($url, ['content' => $doc('other tab'), 'state_version' => $read])
+    Docs::put($nodeId, Docs::doc('other tab'), $stale)
         ->assertOk()
         ->assertJsonPath('data.state_version', $read + 1);
 
     // The stale save is refused and changes nothing.
-    $this->patchJson($url, ['content' => $doc('stale tab'), 'state_version' => $read])
+    Docs::put($nodeId, Docs::doc('stale tab'), $stale)
         ->assertStatus(412)
-        ->assertJsonPath('code', 'document_state_mismatch');
+        ->assertJsonPath('code', 'document_state_mismatch')
+        ->assertJsonPath('meta.node_id', $nodeId)
+        ->assertJsonMissingPath('meta.context');
     $this->getJson($url)
         ->assertJsonPath('data.state_version', $read + 1)
         ->assertJsonPath('data.content.content.0.content.0.text', 'other tab');
 
-    // Without the field the autosave keeps its 0.x behaviour.
-    $this->patchJson($url, ['content' => $doc('no precondition')])->assertOk();
-    $this->patchJson($url, ['content' => $doc('negative'), 'state_version' => -1])->assertUnprocessable();
+    // Without If-Match the save does not run at all.
+    $this->putJson($url, ['content' => Docs::doc('no precondition')])->assertStatus(428)->assertJsonPath('code', 'precondition_required');
+    Docs::put($nodeId, Docs::doc('fresh'))->assertOk();
 });

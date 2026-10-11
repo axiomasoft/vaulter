@@ -528,7 +528,6 @@ Vaulter\Exceptions\Access\UnknownRoleException
   problemCode(): string
   problemDetails(): array
   problemHeaders(): array
-  render(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse|false
 
 Vaulter\Data\Sharing\ShareLinkInput
   __construct(string $role = Vaulter\Access\Roles\RoleRegistry::READER, \Vaulter\Enums\Sharing\ShareAudience $audience = Vaulter\Enums\Sharing\ShareAudience::Anyone, \Vaulter\Enums\Access\GrantScope $scope = Vaulter\Enums\Access\GrantScope::Item, ?\Illuminate\Support\Carbon $expiresAt = null, ?string $password = null, ?int $maxUses = null)
@@ -633,7 +632,6 @@ Vaulter\Exceptions\Access\MissingActorException
   problemCode(): string
   problemDetails(): array
   problemHeaders(): array
-  render(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse|false
   required(): \self
 
 Vaulter\Exceptions\Profiles\ProfileRestrictionException
@@ -652,7 +650,6 @@ Vaulter\Exceptions\Profiles\ProfileRestrictionException
   problemCode(): string
   problemDetails(): array
   problemHeaders(): array
-  render(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse|false
 
 Vaulter\Profiles\Profile
   comments(bool $enabled = true): \static
@@ -1061,8 +1058,6 @@ Vaulter\Http\Support\HttpResourceResolver
   __construct(\Vaulter\Repositories\Drive\DriveReadRepository $storages, \Vaulter\Repositories\Drive\NodeReadRepository $nodes)
   drive(string $id): \Vaulter\Models\Drive\Drive
   driveOfNode(string $nodeId): \Vaulter\Models\Drive\Drive
-  node(int|string $id): \Vaulter\Models\Drive\Node
-  storage(int|string $id): \Vaulter\Models\Drive\Drive
 
 Vaulter\Exceptions\Contracts\ProblemException
   httpStatus(): int
@@ -1074,9 +1069,6 @@ Vaulter\Exceptions\Nodes\NodeNotFoundException
 
 Vaulter\Exceptions\Nodes\StorageNotFoundException
   forId(int|string $id): \self
-
-Vaulter\Exceptions\VaulterException
-  render(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse|false
 
 Vaulter\Exceptions\Schema\UpgradePreflightException
   __construct(array $problems)
@@ -1093,7 +1085,6 @@ Vaulter\Exceptions\Schema\UpgradePreflightException
   problemCode(): string
   problemDetails(): array
   problemHeaders(): array
-  render(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse|false
 
 Vaulter\Enums\Events\EventType
   DriveCreated = drive.created

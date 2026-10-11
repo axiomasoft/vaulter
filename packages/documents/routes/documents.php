@@ -2,90 +2,81 @@
 
 declare(strict_types=1);
 
-use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Support\Facades\Route;
 use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Documents\Configuration\DocumentsConfig;
-use Vaulter\Documents\Http\Controllers\Collaboration\NodeCollaborationController;
-use Vaulter\Documents\Http\Controllers\Comments\NodeCommentController;
-use Vaulter\Documents\Http\Controllers\Documents\DocumentNodeController;
+use Vaulter\Documents\Http\Controllers\Collaboration\CreateCollaborationSessionController;
+use Vaulter\Documents\Http\Controllers\Collaboration\HubAuthenticateController;
+use Vaulter\Documents\Http\Controllers\Collaboration\HubLoadController;
+use Vaulter\Documents\Http\Controllers\Collaboration\HubStoreController;
+use Vaulter\Documents\Http\Controllers\Comments\AddCommentController;
+use Vaulter\Documents\Http\Controllers\Comments\DeleteCommentController;
+use Vaulter\Documents\Http\Controllers\Comments\ListCommentsController;
+use Vaulter\Documents\Http\Controllers\Comments\ResolveCommentController;
+use Vaulter\Documents\Http\Controllers\Documents\CreateDocumentController;
+use Vaulter\Documents\Http\Controllers\Documents\ExportDocumentController;
+use Vaulter\Documents\Http\Controllers\Documents\ShowDocumentContentController;
+use Vaulter\Documents\Http\Controllers\Documents\UpdateDocumentContentController;
+use Vaulter\Documents\Http\Controllers\Revisions\CreateDocumentRevisionController;
+use Vaulter\Documents\Http\Controllers\Revisions\ListDocumentRevisionsController;
+use Vaulter\Documents\Http\Controllers\Revisions\RestoreDocumentRevisionController;
+use Vaulter\Documents\Http\Controllers\Revisions\ShowDocumentRevisionController;
+use Vaulter\Documents\Http\Controllers\Revisions\UpdateDocumentRevisionController;
 use Vaulter\Documents\Http\Middleware\ResolveCollaborationCall;
-use Vaulter\Http\Middleware\ResolveVaulterRouteParameters;
 
 /*
 |--------------------------------------------------------------------------
-| Vaulter Documents API routes (P2 #5 / ADR-0015, D2)
+| Vaulter REST v1 — documents routes
 |--------------------------------------------------------------------------
-| The document-node surface, extracted from core's routes/api.php into the
-| vaulter-documents package. Mounted under the SAME configured prefix (default:
-| api/vaulter) and middleware as the kernel routes — Laravel merges the group
-| registrations across files. Local resource middleware resolves {storage} and
-| {node} through swappable core repositories before SubstituteBindings. The fixed sub-segments (content/versions/handler/export/collab/
-| comments) differ in segment count from core's and vaulter-drive's catch-all
-| /{node}, so cross-file registration order never shadows them.
+| Mounted under {routes.prefix}/v1 and named vaulter.v1.*. Route parameters are plain
+| ids: each controller resolves the drive through HttpResourceResolver (tenant-scoped)
+| and calls the operations, which authorize. The routes are always registered while the
+| package is installed; a disabled feature (comments, collaboration) is refused by the
+| operations, so `route:cache` never freezes a feature flag.
+|
+| Operations on the content of a document live under documents/{node}; the operations
+| every node kind shares (comments) live under nodes/{node}, so this package never
+| shares a URL with the drive package.
 */
 
-Route::prefix(app(RoutesConfig::class)->prefix())
-    ->middleware(app(RoutesConfig::class)->authenticatedMiddleware())
+$routes = app(RoutesConfig::class);
+$id = '[A-Za-z0-9_-]+';
+
+Route::prefix($routes->versionedPrefix())
+    ->name('vaulter.v1.')
+    ->middleware($routes->authenticatedMiddleware())
+    ->where(['drive' => $id, 'node' => $id, 'revision' => $id, 'comment' => $id, 'format' => '[A-Za-z0-9._-]+'])
     ->group(static function (): void {
-        Route::middleware([ResolveVaulterRouteParameters::class, SubstituteBindings::class])->group(static function (): void {
-            /*
-            |------------------------------------------------------------------
-            | Documents — document nodes (§2.5 / §7 / M4a)
-            |------------------------------------------------------------------
-            | Create a kind=document node, read/autosave its content, snapshot
-            | named versions, restore a prior version, resolve its handler
-            | descriptor and export it. Available whenever this package is installed. Authorized via the
-            | AccessResolver (Create on the destination, View to read, Edit to
-            | write).
-            */
-            Route::post('storages/{storage}/documents', [DocumentNodeController::class, 'store']);
+        Route::post('drives/{drive}/documents', CreateDocumentController::class)->name('documents.store');
 
-            Route::get('nodes/{node}/content', [DocumentNodeController::class, 'content']);
-            Route::patch('nodes/{node}/content', [DocumentNodeController::class, 'update']);
-            Route::get('nodes/{node}/document-versions', [DocumentNodeController::class, 'versions']);
-            Route::post('nodes/{node}/document-versions', [DocumentNodeController::class, 'storeVersion']);
-            Route::post('nodes/{node}/document-versions/{version}/restore', [DocumentNodeController::class, 'restore']);
-            // Release a keep_forever pin (F-P1.12-03) — the missing inverse of
-            // the pin `storeVersion` can set; the version re-enters the prune
-            // window on the node's next snapshot/restore.
-            Route::patch('nodes/{node}/document-versions/{version}/keep-forever', [DocumentNodeController::class, 'releaseVersion']);
-            Route::get('nodes/{node}/handler', [DocumentNodeController::class, 'handler']);
-            Route::get('nodes/{node}/export', [DocumentNodeController::class, 'export']);
+        Route::get('documents/{node}/content', ShowDocumentContentController::class)->name('documents.content.show');
+        Route::put('documents/{node}/content', UpdateDocumentContentController::class)->name('documents.content.update');
+        Route::get('documents/{node}/revisions', ListDocumentRevisionsController::class)->name('documents.revisions.index');
+        Route::post('documents/{node}/revisions', CreateDocumentRevisionController::class)->name('documents.revisions.store');
+        Route::get('documents/{node}/revisions/{revision}', ShowDocumentRevisionController::class)->name('documents.revisions.show');
+        Route::post('documents/{node}/revisions/{revision}/restore', RestoreDocumentRevisionController::class)->name('documents.revisions.restore');
+        Route::patch('documents/{node}/revisions/{revision}', UpdateDocumentRevisionController::class)->name('documents.revisions.update');
+        Route::get('documents/{node}/export/{format}', ExportDocumentController::class)->name('documents.export');
+        Route::post('documents/{node}/collaboration/session', CreateCollaborationSessionController::class)->name('documents.collaboration.session');
 
-            // Realtime collaboration connect handshake (§7 / ADR-0001 / M4b):
-            // authorized via the AccessResolver (≥ View/Comment to connect, read-only
-            // unless Edit), returning the transport-agnostic CollaborationSession
-            // descriptor. Gated on BOTH 'document_versions' (the schema the session
-            // reads/writes against) AND 'collaboration' (VLT-REMED P3.1 / F-P1.6-01,
-            // D13/D20) — the realtime surface is a SEPARATE opt-in over base
-            // (non-realtime) document editing, not implied by it.
-            if (app(DocumentsConfig::class)->collaborationEnabled()) {
-                Route::post('nodes/{node}/collab/token', [NodeCollaborationController::class, 'token']);
-            }
-
-            // NODE-attached comments (ADR-0014 шаг 1) — the additive twin of the
-            // legacy document_id-bound comments. Gated on the 'comments' feature.
-            // Authorized via AccessResolver: read ≥ View, create = Comment, resolve/
-            // delete = the AUTHOR or Manage. {comment} is a plain scalar (the model is
-            // swappable, not route-model bound) — the controller resolves it and
-            // asserts it belongs to the bound node.
-            if (app(DocumentsConfig::class)->commentsEnabled()) {
-                Route::get('nodes/{node}/comments', [NodeCommentController::class, 'index']);
-                Route::post('nodes/{node}/comments', [NodeCommentController::class, 'store']);
-                Route::post('nodes/{node}/comments/{comment}/resolve', [NodeCommentController::class, 'resolve']);
-                Route::delete('nodes/{node}/comments/{comment}', [NodeCommentController::class, 'destroy']);
-            }
-        });
-
+        Route::get('nodes/{node}/comments', ListCommentsController::class)->name('comments.index');
+        Route::post('nodes/{node}/comments', AddCommentController::class)->name('comments.store');
+        Route::post('nodes/{node}/comments/{comment}/resolve', ResolveCommentController::class)->name('comments.resolve');
+        Route::delete('nodes/{node}/comments/{comment}', DeleteCommentController::class)->name('comments.destroy');
     });
 
+/*
+| The Hocuspocus hub's server-to-server calls. They carry a room JWT and a body
+| signature instead of a user session, so they live on their own stack — never on the
+| authenticated one — and exist only while collaboration is on (the hub secret).
+*/
 if (app(DocumentsConfig::class)->collaborationEnabled()) {
-    Route::prefix(app(RoutesConfig::class)->prefix())
-        ->middleware([...app(RoutesConfig::class)->hubMiddleware(), 'throttle:vaulter-public', ResolveCollaborationCall::class])
+    Route::prefix($routes->versionedPrefix())
+        ->name('vaulter.v1.')
+        ->middleware([...$routes->hubMiddleware(), 'throttle:vaulter-public', ResolveCollaborationCall::class])
         ->group(static function (): void {
-            Route::post('collab/authenticate', [NodeCollaborationController::class, 'authenticate']);
-            Route::post('collab/load', [NodeCollaborationController::class, 'load']);
-            Route::post('collab/store', [NodeCollaborationController::class, 'store']);
+            Route::post('collaboration/hub/authenticate', HubAuthenticateController::class)->name('collaboration.hub.authenticate');
+            Route::post('collaboration/hub/load', HubLoadController::class)->name('collaboration.hub.load');
+            Route::post('collaboration/hub/store', HubStoreController::class)->name('collaboration.hub.store');
         });
 }

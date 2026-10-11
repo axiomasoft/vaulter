@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use Illuminate\Support\Facades\Route;
-use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Enums\Sharing\ShareAudience;
 use Vaulter\Exceptions\Access\UnknownRoleException;
@@ -25,16 +23,7 @@ use Vaulter\Http\Problems\ProblemCatalog;
 use Vaulter\Tests\Support\ProblemProbeRoutes;
 
 it('renders the documented domain code and HTTP status', function (VaulterException $exception, string $code, int $status): void {
-    $path = trim(app(RoutesConfig::class)->prefix(), '/').'/__domain_status';
-    Route::get($path, static function () use ($exception): never {
-        throw $exception;
-    });
-
-    $this->getJson($path)->assertStatus($status)->assertJsonPath('code', $code);
-    $this->get($path, ['Accept' => 'text/html'])->assertStatus($status)->assertJsonPath('code', $code);
-
-    // The same exception through the versioned surface: problem+json with the catalogue
-    // status, never the legacy body and never a 500 for a domain exception.
+    // A domain exception answers problem+json with its catalogue status, never a 500.
     ProblemProbeRoutes::register(['case' => $exception]);
     $problem = $this->getJson(ProblemProbeRoutes::path('case'))
         ->assertStatus($status)

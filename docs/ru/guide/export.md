@@ -21,7 +21,7 @@ namespace Vaulter\Documents\Contracts;
 interface DocumentExporter
 {
     public function key(): string;          // 'vaulter/html'
-    public function format(): string;       // 'html' — значение ?format=
+    public function format(): string;       // 'html' — сегмент пути {format}
     public function mimeType(): string;
     public function extension(): string;    // без точки
     /** @return list<string> ключи типов документов, которые он умеет отдавать */
@@ -56,20 +56,24 @@ interface DocumentExporter
 
 ## Экспорт документа
 
-`GET {prefix}/nodes/{node}/export?format=html|markdown` отвечает **файлом** (формат по умолчанию
-`html`):
+`GET {prefix}/v1/documents/{node}/export/{format}` (`html`, `markdown`) отвечает **файлом**;
+`?revision={id}` рендерит один чекпоинт вместо рабочего состояния:
 
 ```http
 HTTP/1.1 200 OK
 Content-Type: text/markdown
 Content-Disposition: attachment; filename="notes.md"; filename*=utf-8''notes.md
-Cache-Control: no-cache, private, no-store
+Cache-Control: private, no-store
 X-Content-Type-Options: nosniff
+Content-Security-Policy: sandbox; default-src 'none'
+Accept-Ranges: none
 ```
 
 Тело — байты экспортёра. Имя — имя узла плюс расширение экспортёра; схему задаёт привязка
 `ExportFilenameResolver`. Нужна абилити **`Download`** и прохождение шлюза выдачи содержимого —
-previewer получит `403 permission_denied`.
+previewer получит `403 permission_denied`. Формат, для которого у типа документа нет экспортёра, —
+`422 unknown_export_format` (допустимые — в `meta.allowed`), а `X-Vaulter-Export-Lossy: 1` помечает
+контент, который тип смог прочитать лишь частично.
 
 В PHP:
 

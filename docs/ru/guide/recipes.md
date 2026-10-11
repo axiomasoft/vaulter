@@ -360,9 +360,9 @@ $this->app->tag([\App\Vaulter\Handlers\CadHandler::class], 'vaulter.file_handler
 :::
 
 ::: details Проверьте дескриптор, уходящий клиенту
-`GET nodes/{node}/handler` возвращает `id` подобранного обработчика, его возможности и `ViewerDescriptor`
-для узла — ровно то, что читает Vue-клиент, чтобы выбрать реализацию редактора/превью. (Этот
-маршрут доступен при установленном `vaulter-documents`.)
+`presentation` в ответе `GET v1/nodes/{node}` содержит `id` подобранного обработчика, его
+возможности и дескриптор вьюера для узла — ровно то, что читает Vue-клиент, чтобы выбрать
+реализацию редактора/превью.
 :::
 
 ## Переключить диск хранилища на S3 {#s3-disk}
@@ -477,7 +477,7 @@ Documents::exporters()->register(\App\Vaulter\Exporters\PdfExporter::class);
 
 :::
 
-После этого он доступен по `GET nodes/{node}/export?format=pdf` и через Vue-composable
+После этого он доступен по `GET v1/documents/{node}/export/pdf` и через Vue-composable
 `useDocumentNode(nodeId).exportAs('pdf')`.
 
 ## Своя форма share-токена {#share-token}

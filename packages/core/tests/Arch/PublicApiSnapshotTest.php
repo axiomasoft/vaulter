@@ -37,7 +37,6 @@ use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Nodes\StorageNotFoundException;
 use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Exceptions\Schema\UpgradePreflightException;
-use Vaulter\Exceptions\VaulterException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Http\Support\HttpResourceResolver;
 use Vaulter\Naming\NamePolicy;
@@ -379,7 +378,7 @@ test('vaulter-core public API surface matches the frozen golden (VLT-REL P2.2)',
     $blocks[] = vaulterSnapshotInterface(VaulterSchema::class);
     $blocks[] = vaulterSnapshotInterface(HttpResourceResolver::class);
     $blocks[] = vaulterSnapshotInterface(ProblemException::class);
-    foreach ([NodeNotFoundException::class => 'forId', StorageNotFoundException::class => 'forId', VaulterException::class => 'render'] as $class => $method) {
+    foreach ([NodeNotFoundException::class => 'forId', StorageNotFoundException::class => 'forId'] as $class => $method) {
         $blocks[] = $class."\n  ".vaulterSnapshotMethod(new ReflectionMethod($class, $method));
     }
 

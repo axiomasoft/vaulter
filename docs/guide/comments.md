@@ -12,10 +12,15 @@ broadcast so open editors can show them live.
 
 | Method | URL | Ability |
 |---|---|---|
-| GET | `/nodes/{node}/comments` | `view` |
-| POST | `/nodes/{node}/comments` | `comment` |
-| POST | `/nodes/{node}/comments/{commentId}/resolve` | author or `manage` |
-| DELETE | `/nodes/{node}/comments/{commentId}` | author or `manage` |
+| GET | `/v1/nodes/{node}/comments` | `view` |
+| POST | `/v1/nodes/{node}/comments` | `comment` |
+| POST | `/v1/nodes/{node}/comments/{comment}/resolve` | `comment`, and author or `edit` |
+| DELETE | `/v1/nodes/{node}/comments/{comment}` | author or `manage` |
+
+The routes are always registered; the operations check the switch. With comments off (globally or
+in the drive's profile) a node you can see answers `403 profile_restriction`, a node you cannot
+see the usual `404 node_not_found`. The list is a cursor page (`?cursor=&per_page=`, oldest first),
+`POST` answers `201` and `DELETE` `204`; a comment of another node is `404 comment_not_found`.
 
 A comment carries an `author` (the authenticated user, polymorphic), a `body`, an optional
 `anchor` (JSON describing the text range it pins to), a `parent_id` for threads, and a

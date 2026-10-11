@@ -27,7 +27,7 @@ use Vaulter\Tests\Fixtures\FakeHostUserResolver;
  * грузит. Делает три вещи:
  *   1. Включает фичи document_versions И collaboration (P3.1 — realtime теперь отдельный
  *      опт-ин поверх document_versions) и database-драйвер прав, фиксирует bigint-id —
- *      чтобы маршруты collab/token + вебхуки collab/{authenticate,store} были смонтированы,
+ *      чтобы маршруты collaboration/session + хаб collaboration/hub/* были смонтированы,
  *      а гранты реально резолвились (register() — раньше boot, где гейтятся маршруты).
  *   2. Подмешивает тестовую аутентификацию (E2eActingAs) в группу vaulter-маршрутов.
  *   3. Отдаёт GET /e2e/setup — идемпотентно НЕ нужно: каждый вызов создаёт свежее
@@ -41,15 +41,15 @@ final class E2eServiceProvider extends ServiceProvider
         // Должно встать ДО boot VaulterServiceProvider, где маршруты гейтятся по фиче.
         config([
             // P3.1 (F-P1.6-01, D20): the realtime surface now needs its OWN opt-in
-            // ON TOP of document_versions — the e2e stand exercises collab/token +
-            // the webhooks, so it must flip this too (default false).
+            // ON TOP of document_versions — the e2e stand exercises the collaboration session +
+            // the hub endpoints, so it must flip this too (default false).
             'vaulter-documents.collaboration.enabled' => true,
             'vaulter.access.permission_driver' => 'database',
             'vaulter.ids.strategy' => 'bigint',
             'vaulter.routes.middleware.authenticated' => ['api', E2eActingAs::class],
         ]);
 
-        // Вебхук collab/authenticate несёт только JWT sub (id) — материализуем по нему
+        // Эндпоинт collaboration/hub/authenticate несёт только JWT sub (id) — материализуем по нему
         // TestUser (морф совпадает с субъектом грантов), чтобы AccessResolver отработал.
         // Боевой хост биндит свой HostUserResolver на свою таблицу пользователей.
         $this->app->bind(HostUserResolver::class, static fn (): FakeHostUserResolver => new FakeHostUserResolver);

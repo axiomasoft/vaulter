@@ -126,7 +126,7 @@ final class HubTestHelpers
     {
         $body['nonce'] = bin2hex(random_bytes(8));
 
-        return test()->postJson('api/vaulter/collab/'.$endpoint, $body, self::headers($body, $token));
+        return test()->postJson('api/vaulter/v1/collaboration/hub/'.$endpoint, $body, self::headers($body, $token));
     }
 
     /**

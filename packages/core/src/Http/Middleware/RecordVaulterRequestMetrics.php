@@ -8,7 +8,6 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
-use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Support\LoadTier;
 
@@ -17,10 +16,7 @@ use Vaulter\Support\LoadTier;
  */
 final readonly class RecordVaulterRequestMetrics
 {
-    public function __construct(
-        private readonly RoutesConfig $routesConfig,
-        private MetricsRecorder $metrics,
-    ) {}
+    public function __construct(private MetricsRecorder $metrics) {}
 
     /**
      * @param Closure(Request): Response $next
@@ -56,18 +52,8 @@ final readonly class RecordVaulterRequestMetrics
     private function operationFor(Request $request): ?string
     {
         $name = $request->route()?->getName();
-        if (is_string($name) && str_starts_with($name, 'vaulter.v1.')) {
-            return VaulterHttpOperationMap::operationFor($name);
-        }
 
-        $prefix = trim($this->routesConfig->prefix(), '/');
-        $path = trim($request->path(), '/');
-
-        if ($prefix !== '' && str_starts_with($path, $prefix)) {
-            $path = ltrim(substr($path, strlen($prefix)), '/');
-        }
-
-        return VaulterHttpOperationMap::resolve(method: $request->method(), pathAfterPrefix: $path);
+        return is_string($name) ? VaulterHttpOperationMap::operationFor($name) : null;
     }
 
     private function outcomeFor(int $status): string

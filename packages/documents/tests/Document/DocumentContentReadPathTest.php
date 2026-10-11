@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Documents\Models\Documents\Document;
+use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
 /**
- * VLT-REMED P5.2 / R-12 — ГЛАВНЫЙ путь чтения контента (GET nodes/{node}/content →
- * DocumentRevisionResource), тот самый, который монтирует в редактор SPA-компонент
+ * VLT-REMED P5.2 / R-12 — ГЛАВНЫЙ путь чтения контента (GET documents/{node}/content → DocumentContentResource), тот самый, который монтирует в редактор SPA-компонент
  * VaulterDocumentNode.vue.
  *
  * Оба эшелона защиты от stored XSS (D4) мимо него: первый (store-time TipTapContent)
@@ -46,9 +46,9 @@ function seedLegacyHeadContent(int|string $nodeId, array $content): void
 }
 
 it('отдаёт легаси-контент с javascript:-ссылкой обеззараженным, а не сырым, R-12', function (): void {
-    $base = 'api/vaulter/storages/'.readPathStorage()->getKey();
+    $drive = readPathStorage()->getKey();
 
-    $nodeId = $this->postJson($base.'/documents', ['name' => 'Legacy'])
+    $nodeId = $this->postJson(Docs::url('drives/'.$drive.'/documents'), ['name' => 'Legacy'])
         ->assertCreated()
         ->json('data.id');
 
@@ -73,7 +73,7 @@ it('отдаёт легаси-контент с javascript:-ссылкой об�
         ],
     ]);
 
-    $content = $this->getJson('api/vaulter/nodes/'.$nodeId.'/content')
+    $content = $this->getJson(Docs::url('documents/'.$nodeId.'/content'))
         ->assertOk()
         ->json('data.content');
 
@@ -97,21 +97,19 @@ it('отдаёт легаси-контент с javascript:-ссылкой об�
 
 it('круг чтение→сохранение: что ресурс отдал редактору, то он принимает обратно, P5.2', function (array $legacy): void {
     // Скраб URL (R-12) выкусывал href/src — ОБЯЗАТЕЛЬНЫЕ атрибуты, — и редактор получал
-    // из GET узел вроде {"type":"link","attrs":{"target":"_blank"}}. PATCH ровно этого же
+    // из GET узел вроде {"type":"link","attrs":{"target":"_blank"}}. PUT ровно этого же
     // payload'а падал 500 (store-time требует href): любой легаси-документ с относительной
     // ссылкой становился НЕСОХРАНЯЕМЫМ навсегда. Тест гоняет ровно этот круг по живым роутам.
-    $base = 'api/vaulter/storages/'.readPathStorage()->getKey();
+    $drive = readPathStorage()->getKey();
 
-    $nodeId = $this->postJson($base.'/documents', ['name' => 'Legacy'])->assertCreated()->json('data.id');
+    $nodeId = $this->postJson(Docs::url('drives/'.$drive.'/documents'), ['name' => 'Legacy'])->assertCreated()->json('data.id');
 
     seedLegacyHeadContent($nodeId, $legacy);
 
-    $content = $this->getJson('api/vaulter/nodes/'.$nodeId.'/content')->assertOk()->json('data.content');
+    $content = $this->getJson(Docs::url('documents/'.$nodeId.'/content'))->assertOk()->json('data.content');
 
     // Accepted back as-is; an unchanged document is a no-op, a changed one autosaves.
-    $this->patchJson('api/vaulter/nodes/'.$nodeId.'/content', ['content' => $content])
-        ->assertOk()
-        ->assertJsonPath('data.version_no', 1);
+    Docs::put($nodeId, $content)->assertOk();
 })->with([
     'относительная ссылка' => [['type' => 'doc', 'content' => [[
         'type' => 'paragraph',
@@ -127,9 +125,9 @@ it('круг чтение→сохранение: что ресурс отдал
 ]);
 
 it('сохраняет безопасные ссылки при чтении — обеззараживание не ломает нормальный контент, R-12', function (): void {
-    $base = 'api/vaulter/storages/'.readPathStorage()->getKey();
+    $drive = readPathStorage()->getKey();
 
-    $nodeId = $this->postJson($base.'/documents', [
+    $nodeId = $this->postJson(Docs::url('drives/'.$drive.'/documents'), [
         'name' => 'Safe',
         'content' => ['type' => 'doc', 'content' => [
             ['type' => 'paragraph', 'content' => [
@@ -140,7 +138,7 @@ it('сохраняет безопасные ссылки при чтении —
         ]],
     ])->assertCreated()->json('data.id');
 
-    $content = $this->getJson('api/vaulter/nodes/'.$nodeId.'/content')->assertOk()->json('data.content');
+    $content = $this->getJson(Docs::url('documents/'.$nodeId.'/content'))->assertOk()->json('data.content');
 
     expect((string) json_encode($content))->toContain('https:\/\/example.test\/a')
         ->and($content['content'][0]['content'][0]['marks'][0]['attrs']['target'])->toBe('_blank');

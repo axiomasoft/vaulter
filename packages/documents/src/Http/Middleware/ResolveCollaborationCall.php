@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Http\Middleware;
 
 use Closure;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Vaulter\Documents\Collaboration\CollaborationCall;
@@ -13,7 +13,7 @@ use Vaulter\Documents\Collaboration\CollaborationCallResolver;
 
 /**
  * Guards the server-to-server endpoints the Node Hocuspocus hub calls
- * (collab/authenticate, collab/load, collab/store). The room JWT AND an HMAC signature
+ * (collaboration/hub/authenticate, load and store). The room JWT AND an HMAC signature
  * of the raw body are both required ({@see CollaborationCallResolver}); the resolved
  * {@see CollaborationCall} is stashed on the request, anything else is a 401. The
  * endpoints are never open.
@@ -43,11 +43,9 @@ final class ResolveCollaborationCall
             rawBody: $request->getContent(),
         );
 
+        // Answered by the problem renderer as 401 actor_required.
         if (!$call instanceof CollaborationCall) {
-            return new JsonResponse(
-                ['message' => 'Unauthenticated collaboration call.'],
-                401,
-            );
+            throw new AuthenticationException('Unauthenticated collaboration call.');
         }
 
         $request->attributes->set(self::ATTRIBUTE, $call);

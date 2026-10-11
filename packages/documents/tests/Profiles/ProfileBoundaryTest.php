@@ -29,11 +29,11 @@ it('rejects profile document type restrictions after ACL and leaves unrestricted
     $this->actingAs(AccessTestHelpers::user());
     documentProfile((new Profile)->key('default')->documentTypes('vaulter/markdown'));
     $drive = Vaulter::drive(DriveTestHelpers::host())->model();
-    $url = 'api/vaulter/storages/'.$drive->id.'/documents';
-    $this->postJson($url, ['name' => 'blocked', 'format' => 'richtext'])->assertForbidden();
-    $this->postJson($url, ['name' => 'allowed', 'format' => 'markdown'])->assertCreated();
+    $url = 'api/vaulter/v1/drives/'.$drive->id.'/documents';
+    $this->postJson($url, ['name' => 'blocked', 'type' => 'vaulter/rich-text'])->assertForbidden();
+    $this->postJson($url, ['name' => 'allowed', 'type' => 'vaulter/markdown'])->assertCreated();
     documentProfile((new Profile)->key('default'));
-    $this->postJson($url, ['name' => 'unrestricted', 'format' => 'richtext'])->assertCreated();
+    $this->postJson($url, ['name' => 'unrestricted', 'type' => 'vaulter/rich-text'])->assertCreated();
 });
 
 it('enforces comments policy for list create resolve and delete including the author path', function (): void {
@@ -41,7 +41,7 @@ it('enforces comments policy for list create resolve and delete including the au
     $node = AccessTestHelpers::folder($drive, null, 'thread');
     AccessTestHelpers::grant($node, RoleRegistry::OWNER);
     $this->actingAs(AccessTestHelpers::user());
-    $url = 'api/vaulter/nodes/'.$node->id.'/comments';
+    $url = 'api/vaulter/v1/nodes/'.$node->id.'/comments';
     $id = $this->postJson($url, ['body' => 'allowed'])->assertCreated()->json('data.id');
     documentProfile((new Profile)->key('default')->comments(false));
     $this->getJson($url)->assertForbidden();

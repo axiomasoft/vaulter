@@ -167,25 +167,25 @@ to the kind presenter `vaulter-documents` tags (`vaulter.kind_presenters`).
 
 ## Resolving a node's handler
 
-The handler descriptor is exposed per node, so the client knows which surface to mount:
+The presentation is part of every node, so the client knows which surface to mount:
 
 ::: code-group
 
 ```bash [HTTP]
-# GET {prefix}/nodes/{node}/handler
-curl https://app.test/api/vaulter/nodes/77/handler
+# GET {prefix}/v1/nodes/{node}  → data.presentation
+curl https://app.test/api/vaulter/v1/nodes/77
 # a PDF file:
-# → { "data": { "id": "vaulter/preview", "document_type": null, "type_available": true,
+# → { "data": { …, "presentation": { "handler": "vaulter/preview", "document_type": null, "type_available": true,
 #               "capabilities": { "editable": false, "previewable": true,
 #                                 "downloadable": true, "thumbnailable": true,
 #                                 "collaborative": false },
-#               "ui": { "key": "vaulter/pdf-preview", "props": {} } } }
-# a rich-text document:
-# → { "data": { "id": null, "document_type": "vaulter/rich-text", "type_available": true,
+#               "viewer": { "key": "vaulter/pdf-preview", "props": {} } } } }
+# a rich-text document (handler is null: a document is routed by its type):
+# → { "data": { …, "presentation": { "handler": null, "document_type": "vaulter/rich-text", "type_available": true,
 #               "capabilities": { "editable": true, "previewable": true,
 #                                 "downloadable": false, "thumbnailable": false,
 #                                 "collaborative": true },
-#               "ui": { "key": "vaulter/tiptap", "props": { "preset": "rich-text" } } } }
+#               "viewer": { "key": "vaulter/tiptap", "props": { "preset": "rich-text" } } } } }
 ```
 
 ```php [PHP — the resolver]
@@ -322,8 +322,8 @@ $this->app->tag([App\Vaulter\Handlers\CsvHandler::class], 'vaulter.file_handlers
 ### 3. It just works
 
 Now any node whose sniffed mime is `text/csv` (or whose name ends `.csv`) resolves to your
-handler. `GET /nodes/{node}/handler` returns `id: "csv"` with your capabilities and
-`ui.key: "acme/csv-preview"`, and the client mounts your component. No migration ran, no
+handler. The node's `presentation` has `handler: "csv"` with your capabilities and
+`viewer.key: "acme/csv-preview"`, and the client mounts your component. No migration ran, no
 core file changed.
 
 ::: details Listing all registered handlers

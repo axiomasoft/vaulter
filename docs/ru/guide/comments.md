@@ -12,10 +12,15 @@
 
 | Метод | URL | Право (ability) |
 |---|---|---|
-| GET | `/nodes/{node}/comments` | `view` |
-| POST | `/nodes/{node}/comments` | `comment` |
-| POST | `/nodes/{node}/comments/{commentId}/resolve` | автор или `manage` |
-| DELETE | `/nodes/{node}/comments/{commentId}` | автор или `manage` |
+| GET | `/v1/nodes/{node}/comments` | `view` |
+| POST | `/v1/nodes/{node}/comments` | `comment` |
+| POST | `/v1/nodes/{node}/comments/{comment}/resolve` | `comment`, и автор или `edit` |
+| DELETE | `/v1/nodes/{node}/comments/{comment}` | автор или `manage` |
+
+Маршруты зарегистрированы всегда, переключатель проверяют операции. При выключенных комментариях
+(глобально или в профиле диска) видимый узел отвечает `403 profile_restriction`, невидимый — как
+обычно `404 node_not_found`. Список — курсорная страница (`?cursor=&per_page=`, сначала старые),
+`POST` отвечает `201`, а `DELETE` — `204`; комментарий другого узла — `404 comment_not_found`.
 
 Комментарий несёт `author` (аутентифицированный пользователь, полиморфно), `body`,
 опциональный `anchor` (JSON с описанием диапазона текста, к которому он привязан),

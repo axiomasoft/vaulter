@@ -18,14 +18,14 @@ it('documents vaulter:prune-webhooks in commands.md, F-P2.5-01', function (): vo
         ->and($doc)->toContain('vaulter:prune-webhooks');
 });
 
-it('documents the four Drive-native node-comment routes in rest-api.md, F-P2.5-02', function (): void {
+it('documents the four node-comment routes in rest-api.md, F-P2.5-02', function (): void {
     $doc = file_get_contents(dirname(__DIR__, 4).'/docs/reference/rest-api.md');
 
     expect($doc)->not->toBeFalse()
-        ->and($doc)->toContain('GET nodes/{node}/comments')
-        ->and($doc)->toContain('POST nodes/{node}/comments')
-        ->and($doc)->toContain('POST nodes/{node}/comments/{comment}/resolve')
-        ->and($doc)->toContain('DELETE nodes/{node}/comments/{comment}');
+        ->and($doc)->toContain('GET v1/nodes/{node}/comments')
+        ->and($doc)->toContain('POST v1/nodes/{node}/comments')
+        ->and($doc)->toContain('POST v1/nodes/{node}/comments/{comment}/resolve')
+        ->and($doc)->toContain('DELETE v1/nodes/{node}/comments/{comment}');
 });
 
 it('has an errors.md heading for every self::docs() anchor actually used in code, F-P2.5-03', function (): void {

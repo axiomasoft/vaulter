@@ -12,13 +12,6 @@ The versioned REST API lives under `/{routes.prefix}/v1` — by default
 base rules first, then each route. Errors are described in the
 [error reference](/reference/errors).
 
-::: info Migration in progress
-The access, sharing, activity, change journal, webhook, drive and upload routes are on
-v1. The document, comment and collaboration routes further down are still served
-unversioned under `/{routes.prefix}` and move to `/v1` with the next 1.0 development
-release; their sections say so.
-:::
-
 ## Base rules
 
 | Rule | Value |
@@ -150,17 +143,14 @@ Public share downloads always stream.
 
 ---
 
-## Unversioned routes
+## Unversioned paths
 
-The [Document nodes](#document-nodes-documents), [Comments](#comments),
-[Realtime collaboration](#realtime-collaboration) and
-[Legacy document API](#legacy-document-api) routes are still served under
-`/{routes.prefix}` without `/v1` and keep their pre-v1 conventions: `{node}` is resolved
-into a model before the controller runs, errors are `{ "message", "code" }`, and node
-bodies use the pre-v1 shape (`storage_id`, `handler`, …). They move to `/v1` — with the
-base rules above — in the next 1.0 development release. The old drive paths
-(`storages/*`, `nodes/{node}` without `/v1`, `resumable-uploads/*`) are gone: under the
-v1 prefix an unknown path answers `404 route_not_found`, outside it the host's plain 404.
+Nothing is served under `/{routes.prefix}` without `/v1`. The old paths
+(`storages/*`, `nodes/{node}` without `/v1`, `resumable-uploads/*`, `nodes/{node}/content`,
+`nodes/{node}/document-versions`, `collab/*`, …) are gone: under the v1 prefix an unknown path
+answers `404 route_not_found` as problem+json, outside it the host's plain 404. See the
+[upgrade table](https://github.com/axiomasoft/vaulter/blob/main/UPGRADE.md) for every route
+that moved.
 
 ## Drive
 
@@ -511,100 +501,129 @@ Stitches the parts and commits. **Response:** `201` Node.
 
 ## Comments
 
-Node comments (`vaulter-documents`, `vaulter.features.comments`) — still unversioned until
-the documents routes move to v1. `{comment}` is a plain id that must belong to `{node}`.
+Comments on any node (`vaulter-documents`). The routes are always registered; the
+operations check the switch, so with comments off — globally (`vaulter-documents.comments.enabled`)
+or in the drive's profile — a node you can see answers `403 profile_restriction` and a node you
+cannot see the usual `404 node_not_found`. A `{comment}` that belongs to another node is
+`404 comment_not_found`. Read needs `view`, create `comment`, resolve `comment` and either
+authorship or `edit`, delete the comment's author or `manage`. See [Comments](/guide/comments).
 
-| Route | Action | Notes |
-|---|---|---|
-| `GET nodes/{node}/comments` | `index` | |
-| `POST nodes/{node}/comments` | `store` | `body`, `parent_id?`, `anchor?` |
-| `POST nodes/{node}/comments/{comment}/resolve` | `resolve` | |
-| `DELETE nodes/{node}/comments/{comment}` | `destroy` | |
+#### `GET v1/nodes/{node}/comments` — `comments.index`
 
-Read needs `view`, create `comment`, resolve/delete the comment's author or `manage`.
+**Response:** `200` page of Comment, oldest first.
+
+#### `POST v1/nodes/{node}/comments` — `comments.store`
+
+| Field | Rule |
+|---|---|
+| `body` | required, string, max 5000 |
+| `parent_id` | optional, the id of a comment of the same node (a reply) |
+| `anchor` | optional, object |
+
+**Response:** `201` Comment.
+
+#### `POST v1/nodes/{node}/comments/{comment}/resolve` — `comments.resolve`
+
+**Response:** `200` Comment.
+
+#### `DELETE v1/nodes/{node}/comments/{comment}` — `comments.destroy`
+
+**Response:** `204`.
+
+**Comment:** `id`, `node_id`, `parent_id`, `author` (`{ type, id }`), `body`, `anchor`,
+`resolved_at`, `resolved_by`, `created_at`.
 
 ---
 
-## Document nodes (Documents)
+## Documents
 
-Rich-text/Yjs document nodes (`DocumentNodeController`). **Enabled with the Documents package.** See [Editing](/guide/documents) and
-[Versions](/guide/documents).
+Documents live in a drive next to files and folders (`vaulter-documents`). The routes act on
+the content of a document under `documents/{node}`; a node of another kind answers
+`409 not_a_document`. See [Documents](/guide/documents).
 
-#### `POST storages/{storage}/documents`
+A document's **content** has its own validator, independent of the node's `sequence`:
+`ETag: "{node}.{collab_epoch}.{state_version}"`. It does not depend on the caller, so a reader
+and an editor receive the same body and the same tag, and a rename or move leaves it unchanged.
+Routes marked **If-Match** need that tag; a stale or weak one is
+`412 document_state_mismatch` — also when the collaboration hub stored a newer state in
+between.
 
-Create a `kind=document` node with its v1 version. → `store`
+#### `POST v1/drives/{drive}/documents` — `documents.store`
 
-| Param | Rule |
+| Field | Rule |
 |---|---|
-| `name` | required, string, max 255, no path separators |
-| `parent_id` | nullable (omit = root) |
-| `format` | nullable, one of the registered `DocumentType` values |
-| `content` | nullable, array (TipTap doc) |
+| `name` | required, string, no path separators |
+| `parent_id` | optional (omit = the drive root) |
+| `type` | optional, `vendor/name` (the configured default when absent); an unregistered type is `422 unknown_document_type` |
+| `content` | optional, object — validated by the type's codec (`422 invalid_document_content`) |
 
-**Gate:** `canCreateInWorkspace` + `Create` on the destination. **Response:**
-`201` `NodeResource`.
+**Gate:** `Create` on the parent and the profile's document types. **Response:** `201` Node
+with its `ETag`.
 
-#### `GET nodes/{node}/content`
+#### `GET v1/documents/{node}/content` — `documents.content.show`
 
-The document node plus its current head content. → `content`
+**Gate:** `view`. **Response:** `200 { "data": { "type", "schema_version", "state_version",
+"collab_epoch", "revision_id", "content" } }` with the content `ETag`; `304` for a matching
+`If-None-Match`, only after authorization.
 
-**Gate:** `Ability::View` (and the node must be `kind=document`, else a
-`NotADocumentException`). **Response:** `DocumentRevisionResource` with the
-content embedded.
+#### `PUT v1/documents/{node}/content` — `documents.content.update` · **If-Match**
 
-#### `PATCH nodes/{node}/content`
-
-Autosave the document content (the debounce path). → `update`
-
-| Param | Rule |
+| Field | Rule |
 |---|---|
-| `content` | required, array (TipTap doc) |
-| `yjs_state` | nullable, string (base64 Yjs binary) |
-| `state_version` | nullable, integer ≥ 0 — the `state_version` the client last read; a save that lost the race answers `412 document_state_mismatch` |
+| `content` | required, object — the whole new content |
 
-**Gate:** `Ability::Edit`. **Response:** `200` `DocumentRevisionResource`
-(autosave is semantically an update even when a new version row was appended). The resource
-carries `state_version`; content that cannot be saved back answers `409 document_content_degraded`.
+**Gate:** `edit`. **Response:** `200` as above with the new `ETag`. Content that cannot be saved
+back is `409 document_content_degraded`; a type that is not installed
+`409 document_type_unavailable`.
 
-#### `GET nodes/{node}/document-versions`
+#### `GET v1/documents/{node}/revisions` — `documents.revisions.index`
 
-The version history of a document node, newest first. → `versions`
+**Gate:** `view`. **Response:** `200` page of DocumentRevision, newest first.
 
-**Gate:** `Ability::View`. **Response:** paginated `DocumentRevisionResource`.
+#### `POST v1/documents/{node}/revisions` — `documents.revisions.store`
 
-#### `POST nodes/{node}/document-versions`
+Checkpoint the working state as the new head.
 
-Snapshot the current head as a **named** version. → `storeVersion`
-
-| Param | Rule |
+| Field | Rule |
 |---|---|
-| `label` | required, string, max 255 |
-| `keep_forever` | nullable, boolean |
+| `label` | optional, string, max 255 |
+| `keep_forever` | optional, boolean |
 
-**Gate:** `Ability::Edit`. **Response:** `201` `DocumentRevisionResource`.
+**Gate:** `edit`. **Response:** `201` DocumentRevision.
 
-#### `POST nodes/{node}/document-versions/{version}/restore`
+#### `GET v1/documents/{node}/revisions/{revision}` — `documents.revisions.show`
 
-Restore a prior version (repoints the head to a copy of it). → `restore`
+**Gate:** `view`. **Response:** `200` DocumentRevision with its `content`. An unknown id, or one of
+another document, is `404 document_revision_not_found`.
 
-**Gate:** `Ability::Edit`. **Response:** `201` `DocumentRevisionResource`.
+#### `POST v1/documents/{node}/revisions/{revision}/restore` — `documents.revisions.restore` · **If-Match**
 
-#### `GET nodes/{node}/handler`
+Copies the revision forward as the working state and moves the collaboration epoch.
+**Gate:** `edit`. **Response:** `200` content with the new `ETag`.
 
-The resolved handler descriptor (id + capabilities + ui) so the client knows which
-editor/preview surface to mount. → `handler`
+#### `PATCH v1/documents/{node}/revisions/{revision}` — `documents.revisions.update`
 
-**Gate:** `Ability::View`. **Response:** `{ "data": { … } }`.
+| Field | Rule |
+|---|---|
+| `keep_forever` | required, boolean — pin the revision out of pruning, or release it |
 
-#### `GET nodes/{node}/export`
+The label of a revision is set when it is created and does not change. **Gate:** `edit`.
+**Response:** `200` DocumentRevision.
 
-Export the document node as a file in the requested format. → `export`
+#### `GET v1/documents/{node}/export/{format}` — `documents.export`
 
-| Param | In | Notes |
-|---|---|---|
-| `format` | query | `html` (default), `markdown`, or any registered exporter format |
+`{format}` is `html`, `markdown` or another registered exporter format; `?revision={id}`
+renders one checkpoint instead of the working state.
 
-**Gate:** `Ability::Download` + content egress. **Response:** the exporter's bytes with `Content-Type`, `Content-Disposition: attachment; filename*`, `Cache-Control: private, no-store` and `X-Content-Type-Options: nosniff` (not JSON); `X-Vaulter-Export-Lossy: 1` marks content its type could only read partly. A format the document's type lacks answers `422 unknown_export_format` with `allowed`. See [Export](/guide/export).
+**Gate:** `download` and content egress. **Response:** the exporter's bytes as an attachment
+(`Content-Disposition`, `X-Content-Type-Options: nosniff`,
+`Content-Security-Policy: sandbox; default-src 'none'`, `Cache-Control: private, no-store`,
+`Content-Length`); `X-Vaulter-Export-Lossy: 1` marks content its type could only read in part.
+A format the type has no exporter for is `422 unknown_export_format` with `meta.allowed`. See
+[Export](/guide/export).
+
+**DocumentRevision:** `id`, `number`, `schema_version`, `label`, `is_autosave`, `keep_forever`,
+`content_hash`, `is_head`, `created_by`, `created_at` (and `content` on a single read).
 
 ---
 
@@ -872,129 +891,36 @@ reads included, before the id is looked up. See [Webhooks](/guide/webhooks).
 
 ## Realtime collaboration
 
-TipTap/Yjs collaboration over the document nodes (`Drive\NodeCollaborationController`).
-**Enabled with `vaulter-documents.collaboration.enabled`.** See [Collaboration](/guide/collaboration).
+TipTap/Yjs collaboration over documents (`vaulter-documents.collaboration.enabled`). See
+[Collaboration](/guide/collaboration).
 
-### Client handshake
+#### `POST v1/documents/{node}/collaboration/session` — `documents.collaboration.session`
 
-Mounted in the Drive `SubstituteBindings` group (`{node}` route-model bound).
+Joins the document's room: a session for its current generation, read-write for an editor,
+read-only for everyone else who may view it.
 
-#### `POST nodes/{node}/collab/token`
-
-Issue a transport-agnostic collaboration session for the document node. → `token`
-
-**Gate:** the actor needs at least `View`/`Comment` to connect; the session is
-read-only unless they hold `Edit`. **Response:** `{ "data": { /* CollaborationSession */ } }`.
-
-### Server-to-server webhooks
-
-The hub-callback surface — **no auth middleware**, only `ResolveCollaborationCall`,
-which authenticates the caller via the shared webhook secret **or** a valid signed
-room JWT and binds the call to its node (a JWT for node A may not store to node B).
-The node is resolved from the **body** (`room` / `node_id`).
-
-#### `POST collab/authenticate`
-
-The hub's `onAuthenticate` hook. → `authenticate`
-
-**Response:** `{ "allowed": bool, "readOnly": bool, "user": { "id": … } | null }`.
-`allowed=false` (not a 403) when the user holds no view access, so the hub can
-refuse the socket cleanly. `readOnly` is `false` only for an `Edit` ability on content that can be
-saved back: an uninstalled type, a newer schema or a degraded read is read-only.
-
-#### `POST collab/store`
-
-The hub's `onStoreDocument` hook — persist the debounced Yjs snapshot. → `store`
-
-| Param | In | Notes |
-|---|---|---|
-| `node_id` *or* `room` | body | the target node (room normalised back through the channel prefix) |
-| `yjs_state` | body | required, base64 Yjs binary (the source of truth) |
-| `content` / `tiptap` | body | optional JSON projection, decoded by the document's type (`422 invalid_document_content` when it rejects it) |
-| `user_id` | body | attribution (for a shared-secret call; a JWT call uses its `sub`) |
-
-The call must be allowed to store (`mayStore()`), else `403`. On the locked document an uninstalled
-type answers `409 document_type_unavailable` and content that cannot be saved back
-`409 document_content_degraded`; neither the Yjs state nor the projection changes. Without a
-projection the JSON keeps its schema version. **Response:**
-`{ "data": { "node_id": …, "version_no": …, "yjs_state_size": … } }`.
-
----
-
-## Legacy document API
-
-The pre-Drive document surface (`DocumentController` and friends) remains mounted
-for backward compatibility. New integrations should prefer the
-[Drive](#drive) and [document-node](#document-nodes-documents) routes above.
-
-### Documents
-
-| Method & path | Action | Params |
-|---|---|---|
-| `GET documents` | `index` | `?q=` search, `workspace_type`, `workspace_id` |
-| `GET documents/trash` | `trash` | the trash listing |
-| `POST documents/bulk` | (`BulkDocumentController`) | `action` (`delete`/`restore`/`move`/`force-delete`), `ids[]`, `folder_id` |
-| `POST documents` | `store` | `workspace_type`, `workspace_id`, `type`, `title`, `content`, `folder_id?`, `meta?` |
-| `GET documents/{id}` | `show` | |
-| `PATCH documents/{id}` | `update` | |
-| `DELETE documents/{id}` | `destroy` | soft-delete |
-| `DELETE documents/{id}/force` | `forceDestroy` | permanent |
-| `POST documents/{id}/restore` | `restore` | |
-| `PATCH documents/{id}/move` | `move` | `folder_id` (null = root) |
-| `POST documents/{id}/duplicate` | `duplicate` | |
-| `GET documents/{documentId}/export` | (`ExportController::show`) | `?format=` |
-
-### Versions
-
-| Method & path | Action | Params |
-|---|---|---|
-| `GET documents/{documentId}/versions` | `index` | |
-| `POST documents/{documentId}/versions` | `store` | `snapshot_label?` |
-| `POST documents/{documentId}/versions/{versionId}/restore` | `restore` | |
-
-### Permissions
-
-| Method & path | Action | Params |
-|---|---|---|
-| `GET documents/{documentId}/permissions` | `index` | |
-| `POST documents/{documentId}/permissions` | `store` | `subject_type`, `subject_id`, `permission` (legacy numeric document permission) |
-| `DELETE documents/{documentId}/permissions/{permissionId}` | `destroy` | |
-
-### Comments
-
-| Method & path | Action | Params |
-|---|---|---|
-| `GET documents/{documentId}/comments` | `index` | |
-| `POST documents/{documentId}/comments` | `store` | `body`, `parent_id?`, `anchor?` |
-| `POST documents/{documentId}/comments/{commentId}/resolve` | `resolve` | |
-| `DELETE documents/{documentId}/comments/{commentId}` | `destroy` | |
-
-See [Comments](/guide/comments).
-
-### Legacy document share-links
-
-| Method & path | Action | Params |
-|---|---|---|
-| `GET documents/{documentId}/shares` | `index` | |
-| `POST documents/{documentId}/shares` | `store` | `permission` (`view`/`comment`/`edit`), `expires_at?` |
-| `DELETE documents/{documentId}/shares/{shareId}` | `destroy` | |
-| `GET shares/{token}` | `resolve` | public token resolution |
-
-### Legacy collaboration
-
-| Method & path | Action |
+| Field | Rule |
 |---|---|
-| `POST documents/{documentId}/collab/token` | `CollaborationController::token` |
-| `POST documents/{documentId}/collab/sync` | `CollaborationController::sync` |
+| `schema_version` | optional, integer — the schema the client's editor speaks; another version than the type's gets a read-only session |
 
-### Legacy folders
+**Gate:** `view`. **Response:** `201 { "data": { "driver", "room", "node_id", "drive_id", "epoch",
+"schema_version", "mode", "token", "url" } }`, never stored. Switched-off collaboration, or a
+type that cannot collaborate, is `409 collaboration_unavailable`.
 
-| Method & path | Action | Params |
+### Hub endpoints (server to server)
+
+The hub's calls use the `hub` stack: `throttle:vaulter-public` and `ResolveCollaborationCall`,
+which requires the room JWT **and** the HMAC signature of the body. They are registered only
+while collaboration is on, never take a user session, and answer refusals as problem+json
+(`401 actor_required` for a call that is not signed). The protocol — room, epoch fence, seed,
+`409 collaboration_epoch_mismatch` as a terminal answer — is unchanged; see
+[Collaboration](/guide/collaboration#the-hub-protocol-server-to-server).
+
+| Route | Name | Answers |
 |---|---|---|
-| `GET folders` | `index` | `workspace_type`, `workspace_id` |
-| `POST folders` | `store` | `workspace_type`, `workspace_id`, `name`, `parent_id?`, `order?` |
-| `PATCH folders/{id}` | `update` | rename / move |
-| `DELETE folders/{id}` | `destroy` | |
+| `POST v1/collaboration/hub/authenticate` | `collaboration.hub.authenticate` | `{ allowed, mode, userId, epoch }` |
+| `POST v1/collaboration/hub/load` | `collaboration.hub.load` | `{ state, content, epoch, schemaVersion, stateVersion, type }` |
+| `POST v1/collaboration/hub/store` | `collaboration.hub.store` | `{ data: { changed, epoch, state_version, yjs_state_size } }` |
 
 ---
 

@@ -11,6 +11,7 @@ use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Fixtures\Types\AcmeKanbanType;
+use Vaulter\Documents\Tests\Http\DocumentsV1 as Docs;
 use Vaulter\Documents\Tests\Types\TypesTestCase;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
@@ -94,11 +95,11 @@ it('answers 409 document_type_unavailable over HTTP and still serves the JSON co
 
     $this->actingAs((new TestUser)->forceFill(['id' => 1]));
 
-    $this->getJson('api/vaulter/nodes/'.$node->id.'/content')
+    $this->getJson('api/vaulter/v1/documents/'.$node->id.'/content')
         ->assertOk()
         ->assertJsonPath('data.content', static fn (array $content): bool => $content == kanbanBoard());
 
-    $this->patchJson('api/vaulter/nodes/'.$node->id.'/content', ['content' => ['columns' => []]])
+    $this->putJson('api/vaulter/v1/documents/'.$node->id.'/content', ['content' => ['columns' => []]], Docs::ifMatch($node->id))
         ->assertStatus(409)
         ->assertJsonPath('code', 'document_type_unavailable');
 });

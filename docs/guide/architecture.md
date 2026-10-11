@@ -300,7 +300,7 @@ Yjs is the source of truth; TipTap JSON is the derived projection. The transport
 behind `CollaborationDriver` ([ADR-0001](/adr/0001-collaboration-transport)):
 
 - **`hocuspocus`** — an external Node hub (`hocuspocus-server/`). The client connects with a
-  signed room JWT; the hub calls back into the `collab/authenticate` + `collab/store` webhooks.
+  signed room JWT; the hub calls back into the `v1/collaboration/hub/{authenticate,load,store}` endpoints.
 
 ## Extension points
 
