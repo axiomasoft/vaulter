@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P7.4",
   "title": "Фабрики, InteractsWithVaulter и контрактные наборы расширений (C09 scanner/scope/policy/recovery)",
-  "status": "todo",
+  "status": "in_progress",
   "summary": "Хост и авторы расширений получают фабрики Drive/Node/FileRevision/Document через Operations, trait InteractsWithVaulter и контрактные наборы FileHandler, PermissionDriver (общий фикстур), ContentScanner, ScanLifecycle, DocumentType, Exporter; arch запрещает production-импорт Testing.",
   "why": "OPUS 12 §5, D35; C09 требует reusable host contract tests для scanner/scoping/policy/fault recovery. Риски: фабрика в обход инвариантов (raw insert), Testing в production-графе, контрактный набор, не ловящий нарушение.",
   "scope": {
@@ -241,6 +241,14 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-11T13:58:13Z"
+  "result": {
+    "started_at": "2026-10-11T18:11:50Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet-5.5",
+      "effort": "high",
+      "session": "569ada73-07d7-4191-b88b-519df19a5503"
+    }
+  },
+  "updated_at": "2026-10-11T18:11:50Z"
 }
