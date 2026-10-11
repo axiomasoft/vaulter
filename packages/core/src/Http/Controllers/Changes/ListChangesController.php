@@ -22,7 +22,7 @@ final readonly class ListChangesController
 
     public function __invoke(ListChangesRequest $request, string $drive): JsonResponse
     {
-        return $this->contexts->onDrive($request, $drive, static function (DriveHandle $handle) use ($request): JsonResponse {
+        return $this->contexts->onVisibleDrive($request, $drive, static function (DriveHandle $handle) use ($request): JsonResponse {
             $page = $handle->changes()->list($request->cursor(), $request->limit());
             $nodes = array_values(array_filter(array_map(static fn (NodeChange $change): ?NodeSnapshot => $change->node, $page->changes)));
 

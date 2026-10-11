@@ -9,12 +9,15 @@ use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Vaulter\Access\OperationGuard;
 use Vaulter\Configuration\DownloadsConfig;
 use Vaulter\Content\ContentDelivery;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Data\Drive\FileStream;
+use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Enums\Operations\OperationKind;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Nodes\NotAFileException;
 use Vaulter\Http\Middleware\AssignCorrelationId;
@@ -49,6 +52,7 @@ final readonly class ContentResponder
         private NodeLocator $locator,
         private FileRevisionReadRepository $revisions,
         private MetricsRecorder $metrics,
+        private OperationGuard $guard,
     ) {}
 
     /** @param 'attachment'|'inline' $disposition */
@@ -93,14 +97,18 @@ final readonly class ContentResponder
 
     private function redirect(Request $request, DriveHandle $drive, string $nodeId, ?string $revisionId): RedirectResponse
     {
-        // View first, so a caller who cannot see the node learns nothing about its kind.
-        if ($drive->nodes()->find($nodeId)->kind !== NodeKind::File) {
-            throw new NotAFileException;
-        }
         $context = new OperationContext(drive: $drive->model(), actor: $drive->actor(), correlationId: AssignCorrelationId::of($request) ?? (string) Str::ulid());
         $node = $this->locator->find($context, $nodeId);
+        // Match strict egress: View and Download precede kind and revision lookup.
+        $this->guard->authorize($context, Ability::Download, $node, OperationKind::ContentEgress);
+        if ($node->kind !== NodeKind::File || $node->file()->first() === null) {
+            throw new NotAFileException;
+        }
         $revision = ($revisionId === null ? $this->revisions->head($node) : $this->revisions->forNode($node, $revisionId))
             ?? throw NodeNotFoundException::forId($nodeId);
+        if (!in_array($revision->status, ['committed', 'superseded'], true)) {
+            throw NodeNotFoundException::forId($nodeId);
+        }
         $url = $this->delivery->directUrl($context, $node, $revision, $this->downloads->directTtlSeconds());
 
         return new RedirectResponse($url->url, 302, [

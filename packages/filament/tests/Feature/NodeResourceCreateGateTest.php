@@ -25,12 +25,14 @@ it('applies the selected profile create gate to folder options and canonical fol
     Gate::define('vaulter.create', static fn ($actor, array $context): bool => $allow && $context['profile'] === 'default');
     $options = new ReflectionMethod(NodeResource::class, 'folderOptions');
     $create = static fn (): NodeSnapshot => Vaulter::drive($drive)->folders()->create('child');
+    $handle = Vaulter::drive($drive)->actingAs(DriveBuilder::user());
+    expect($handle->nodes()->abilities($drive->root_node_id)->flags['create'])->toBe($allow)
+        ->and($handle->nodes()->abilitiesMany([$drive->root_node_id])[(string) $drive->root_node_id]->flags['create'])->toBe($allow);
     if ($allow) {
         expect($options->invoke(null, DriveBuilder::row($node)))->not->toBe([]);
         expect($create()->parentId)->toEqual((string) $drive->root_node_id);
     } else {
-        // The destination list follows the handle's abilities, which do not carry the
-        // profile create gate; the operation below is what enforces it.
+        expect($options->invoke(null, DriveBuilder::row($node)))->toBe([]);
         $exception = rescue($create, static fn (Throwable $exception): Throwable => $exception, report: false);
         expect($exception)->toBeInstanceOf(PermissionDeniedException::class)
             ->and($exception->httpStatus())->toBe(403);

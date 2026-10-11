@@ -62,6 +62,10 @@ it('answers an unknown drive and a drive whose root is invisible identically', f
     'drives.unarchive' => ['POST', '/unarchive'],
     'drives.destroy' => ['DELETE', ''],
     'nodes.index' => ['GET', '/nodes'],
+    'search' => ['GET', '/search?q=a'],
+    'starred' => ['GET', '/starred'],
+    'trash.index' => ['GET', '/trash'],
+    'trash.empty' => ['DELETE', '/trash'],
 ]);
 
 it('answers a child id under an invisible drive like an unknown drive', function (string $method, string $suffix, array $body): void {
@@ -88,11 +92,14 @@ it('keeps node_not_found for a missing child of a drive the caller can see', fun
 });
 
 it('filters the drive-wide lists down to what the caller can see', function (string $suffix): void {
-    $driveId = (string) V1::drive(userId: 1)->model()->getKey();
+    $drive = V1::drive(userId: 1);
+    $driveId = (string) $drive->model()->getKey();
+    $parent = V1::folder($drive, 'hidden');
+    $folder = V1::folder($drive, 'visible', $parent->id);
+    \Vaulter\Tests\Access\AccessTestHelpers::grant($folder, \Vaulter\Access\Roles\RoleRegistry::READER, subjectId: 2);
     $this->actingAs(V1::user(2));
 
-    // A caller granted only a folder deep inside may search or list the trash of the
-    // drive; a stranger gets an empty page, an unknown drive id 404.
+    // A nested grant admits the drive even when this particular list is empty.
     $this->getJson(V1::url('drives/'.$driveId.$suffix))->assertOk()->assertJsonCount(0, 'data');
     $this->getJson(V1::url('drives/no-such-drive'.$suffix))->assertNotFound()->assertJsonPath('code', 'drive_not_found');
 })->with([
@@ -100,6 +107,28 @@ it('filters the drive-wide lists down to what the caller can see', function (str
     'nodes.starred' => ['/starred'],
     'trash.index' => ['/trash'],
 ]);
+
+it('admits a drive when the only visible node is a trash root', function (): void {
+    $drive = V1::drive(userId: 1);
+    $folder = V1::folder($drive, 'shared trash');
+    \Vaulter\Tests\Access\AccessTestHelpers::grant($folder, \Vaulter\Access\Roles\RoleRegistry::READER, subjectId: 2);
+    $drive->nodes()->trash($folder);
+    $this->actingAs(V1::user(2));
+
+    $this->getJson(V1::url('drives/'.$drive->model()->getKey().'/trash'))
+        ->assertOk()->assertJsonPath('data.0.id', $folder->id);
+});
+
+it('keeps foreign trash intact when a stranger tries to empty it', function (): void {
+    $drive = V1::drive(userId: 1);
+    $folder = V1::folder($drive, 'private trash');
+    $drive->nodes()->trash($folder);
+    $this->actingAs(V1::user(2));
+
+    $this->deleteJson(V1::url('drives/'.$drive->model()->getKey().'/trash'))
+        ->assertNotFound()->assertJsonPath('code', 'drive_not_found');
+    expect(\Vaulter\Tests\Drive\DriveTestHelpers::model($folder)->trashed_at)->not->toBeNull();
+});
 
 it('answers the retired unversioned drive paths with route_not_found under the v1 prefix only', function (): void {
     $this->actingAs(V1::user(1));

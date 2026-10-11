@@ -20,6 +20,6 @@ final readonly class ListStarredController
     {
         $options = PageResponse::listOptions($request);
 
-        return $this->contexts->onDrive($request, $drive, fn (DriveHandle $handle): JsonResponse => $this->nodes->page($handle, $handle->nodes()->starred($options), $options->perPage));
+        return $this->contexts->onVisibleDrive($request, $drive, fn (DriveHandle $handle): JsonResponse => $this->nodes->page($handle, $handle->nodes()->starred($options), $options->perPage));
     }
 }

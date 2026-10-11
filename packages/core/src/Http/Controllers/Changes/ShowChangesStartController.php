@@ -16,7 +16,7 @@ final readonly class ShowChangesStartController
 
     public function __invoke(Request $request, string $drive): JsonResponse
     {
-        $cursor = $this->contexts->onDrive($request, $drive, static fn (DriveHandle $handle): string => $handle->changes()->startCursor());
+        $cursor = $this->contexts->onVisibleDrive($request, $drive, static fn (DriveHandle $handle): string => $handle->changes()->startCursor());
 
         return new JsonResponse(['data' => ['cursor' => $cursor]]);
     }

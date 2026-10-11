@@ -179,7 +179,11 @@ describe('VaulterDrive', () => {
     const trash = vi.fn().mockImplementation((nodeId) => Promise.resolve(node({ id: nodeId, kind: 'file', trashed_at: 'now' })))
     return {
       children, getWithIncludes, move, create, update, trash,
-      client: { nodes: { children, getWithIncludes, move, update, trash }, folders: { create }, files: { downloadUrl: (id: string) => `/dl/${id}` } },
+      client: {
+        drives: { get: vi.fn().mockResolvedValue({ root_node_id: 'root' }) },
+        nodes: { children, get: vi.fn().mockResolvedValue(node({ id: 'root', kind: 'folder' })), getWithIncludes, move, update, trash },
+        folders: { create }, files: { downloadUrl: (id: string) => `/dl/${id}` },
+      },
     }
   }
 

@@ -20,6 +20,6 @@ final readonly class ListTrashController
     {
         $options = PageResponse::listOptions($request);
 
-        return $this->contexts->onDrive($request, $drive, fn (DriveHandle $handle): JsonResponse => $this->nodes->page($handle, $handle->trash()->list($options), $options->perPage));
+        return $this->contexts->onVisibleDrive($request, $drive, fn (DriveHandle $handle): JsonResponse => $this->nodes->page($handle, $handle->trash()->list($options), $options->perPage));
     }
 }

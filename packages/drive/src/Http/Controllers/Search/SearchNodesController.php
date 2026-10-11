@@ -24,7 +24,7 @@ final readonly class SearchNodesController
     {
         $options = PageResponse::listOptions($request);
 
-        return $this->contexts->onDrive($request, $drive, fn (DriveHandle $handle): JsonResponse => $this->nodes->page(
+        return $this->contexts->onVisibleDrive($request, $drive, fn (DriveHandle $handle): JsonResponse => $this->nodes->page(
             $handle,
             $handle->nodes()->search($request->term(), new SearchOptions(perPage: $options->perPage, cursor: $options->cursor)),
             $options->perPage,

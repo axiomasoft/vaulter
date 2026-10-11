@@ -16,7 +16,7 @@ final readonly class EmptyTrashController
 
     public function __invoke(Request $request, string $drive): JsonResponse
     {
-        $purged = $this->contexts->onDrive($request, $drive, static fn (DriveHandle $handle): int => $handle->trash()->empty());
+        $purged = $this->contexts->onVisibleDrive($request, $drive, static fn (DriveHandle $handle): int => $handle->trash()->empty());
 
         return new JsonResponse(['data' => ['purged_count' => $purged]]);
     }

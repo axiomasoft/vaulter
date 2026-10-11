@@ -6,14 +6,17 @@ namespace Vaulter\Http\Support;
 
 use Closure;
 use Illuminate\Contracts\Auth\Access\Authorizable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Vaulter\Contracts\Drive\DriveHandle;
+use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Nodes\StorageNotFoundException;
 use Vaulter\Http\Middleware\AssignCorrelationId;
 use Vaulter\Models\Drive\Drive;
+use Vaulter\Models\Drive\Node;
 use Vaulter\VaulterManager;
 
 /**
@@ -51,6 +54,49 @@ final readonly class HttpOperationContextFactory
         } catch (NodeNotFoundException) {
             throw StorageNotFoundException::forId($driveId);
         }
+    }
+
+    /**
+     * A drive-wide listing requires at least one viewable node, including the trash.
+     * A grant on a nested folder is sufficient; an entirely invisible drive answers
+     * exactly like an unknown drive before any listing, cursor or mutation is run.
+     *
+     * @template T
+     *
+     * @param  Closure(DriveHandle): T $call
+     * @return T
+     */
+    public function onVisibleDrive(Request $request, string $driveId, Closure $call): mixed
+    {
+        return $this->onDrive($request, $driveId, static function (DriveHandle $handle) use ($call): mixed {
+            $visible = false;
+            try {
+                $handle->root();
+                $visible = true;
+            } catch (NodeNotFoundException) {
+                // A nested or trashed grant can still make this drive readable.
+            }
+            if ($visible) {
+                return $call($handle);
+            }
+            $handle->model()->nodes()->chunkById(200, static function (Collection $nodes) use ($handle, &$visible): bool {
+                $ids = $nodes->map(static fn (Node $node): string => (string) $node->getKey())->all();
+                foreach ($handle->nodes()->abilitiesMany($ids) as $abilities) {
+                    if ($abilities->flags[Ability::View->value] ?? false) {
+                        $visible = true;
+
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+            if (!$visible) {
+                throw NodeNotFoundException::forId('drive');
+            }
+
+            return $call($handle);
+        });
     }
 
     /**

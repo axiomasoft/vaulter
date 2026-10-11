@@ -195,9 +195,13 @@ final readonly class OperationGuard
         $node = $this->scoped(context: $context, node: $node);
         $grants = $context->actor->isSystem() ? GrantSet::superAllowed() : $this->grants(context: $context, node: $node);
         $this->requireView(grants: $grants, node: $node);
+        $drive = $node->storage()->first() ?? throw NodeNotFoundException::forId($node->id);
+        $actor = $context->actor->authorizable();
+        $canCreate = $context->actor->isSystem() || ($actor !== null && $this->resolver->canCreateIn(actor: $actor, drive: $drive));
         $flags = [];
         foreach (Ability::cases() as $ability) {
             $flags[$ability->value] = $grants->allows($ability)
+                && ($ability !== Ability::Create || $canCreate)
                 && $this->profileAllows(context: $context, node: $node, ability: $ability, operation: OperationKind::Metadata);
         }
 
@@ -226,6 +230,7 @@ final readonly class OperationGuard
         $sets = $actor === null ? [] : $this->resolver->evaluateMany(actor: $actor, nodes: $nodes);
         $drive = $context->drive->newQuery()->whereKey($context->driveId())->first()
             ?? throw NodeNotFoundException::forId('drive');
+        $canCreate = $context->actor->isSystem() || ($actor !== null && $this->resolver->canCreateIn(actor: $actor, drive: $drive));
         $abilities = [];
         foreach ($nodes as $node) {
             $grants = $context->actor->isSystem() ? GrantSet::superAllowed() : ($sets[(string) $node->id] ?? GrantSet::superDenied());
@@ -235,6 +240,7 @@ final readonly class OperationGuard
             $flags = [];
             foreach (Ability::cases() as $ability) {
                 $flags[$ability->value] = $grants->allows($ability)
+                    && ($ability !== Ability::Create || $canCreate)
                     && $this->profiles->allows(drive: $drive, node: $node, ability: $ability, operation: OperationKind::Metadata);
             }
             $abilities[(string) $node->id] = new NodeAbilities(flags: $flags);

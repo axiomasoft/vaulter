@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Vaulter\Access\OperationGuard;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Profiles\Profile;
+use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Http\V1;
@@ -104,3 +107,30 @@ it('matches abilities() per node and leaves out nodes the actor cannot view', fu
         ->and($many[$editable->id]->toArray()['edit'])->toBeTrue()
         ->and($nodes->abilitiesMany([]))->toBe([]);
 });
+
+it('projects the profile create gate consistently in HTTP and a batch', function (bool $allow): void {
+    $drive = V1::drive(userId: 1);
+    $folder = V1::folder($drive, 'folder');
+    $registry = new ProfileRegistry;
+    $registry->register((new Profile)->key('default')->permissionDriver('gate'));
+    $registry->freeze();
+    app()->instance(ProfileRegistry::class, $registry);
+    Gate::define('vaulter.manage', static fn (): bool => true);
+    $calls = 0;
+    Gate::define('vaulter.create', static function () use ($allow, &$calls): bool {
+        $calls++;
+
+        return $allow;
+    });
+    $nodes = $drive->actingAs(V1::user(1))->nodes();
+    $abilities = $nodes->abilitiesMany([$drive->model()->root_node_id, $folder->id]);
+    expect($calls)->toBe(1);
+    foreach ($abilities as $set) {
+        expect($set->flags['create'])->toBe($allow);
+    }
+    expect($nodes->abilities($folder)->flags['create'])->toBe($allow);
+    $this->actingAs(V1::user(1));
+    $this->getJson(V1::url('nodes/'.$folder->id))->assertOk()->assertJsonPath('data.abilities.create', $allow);
+    $this->postJson(V1::url('drives/'.$drive->model()->getKey().'/folders'), ['name' => 'child', 'parent_id' => $folder->id])
+        ->assertStatus($allow ? 201 : 403);
+})->with([true, false]);

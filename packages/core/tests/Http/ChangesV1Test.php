@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Vaulter\Access\Roles\RoleRegistry;
+use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Http\V1;
 
 /**
@@ -63,4 +65,30 @@ it('answers profile_restriction when the journal is off', function (): void {
     config()->set('vaulter.features.changes', false);
 
     $this->getJson($this->base.'/start')->assertForbidden()->assertJsonPath('code', 'profile_restriction');
+});
+
+it('hides the journal and its tombstones from a caller with no visible nodes', function (): void {
+    $cursor = $this->drive->changes()->startCursor();
+    $folder = V1::folder($this->drive, 'private');
+    $this->drive->nodes()->trash($folder);
+    $this->actingAs(V1::user(2));
+
+    foreach (['/start', '?cursor='.urlencode($cursor)] as $suffix) {
+        $unknown = $this->getJson(V1::url('drives/no-such-drive/changes'.$suffix))->assertNotFound();
+        $hidden = $this->getJson($this->base.$suffix)->assertNotFound();
+        $expected = $unknown->json();
+        $actual = $hidden->json();
+        unset($expected['request_id'], $actual['request_id']);
+        expect($actual)->toBe($expected)->and($hidden->json('code'))->toBe('drive_not_found');
+    }
+});
+
+it('keeps the journal usable by a caller granted only a nested folder', function (): void {
+    $folder = V1::folder($this->drive, 'shared');
+    AccessTestHelpers::grant($folder, RoleRegistry::READER, subjectId: 2);
+    $this->actingAs(V1::user(2));
+    $cursor = $this->getJson($this->base.'/start')->assertOk()->json('data.cursor');
+    $child = V1::folder($this->drive, 'child', $folder->id);
+
+    $this->getJson($this->base.'?cursor='.urlencode($cursor))->assertOk()->assertJsonPath('data.0.node_id', $child->id);
 });

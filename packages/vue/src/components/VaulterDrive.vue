@@ -45,7 +45,7 @@ const client = useVaulterClient()
 
 const {
   nodes, parentId, loading, error, conflict,
-  refresh, navigate, createFolder,
+  refresh: refreshNodes, navigate, createFolder,
   rename, move, trash, restore, purge,
 } = useNodes(props.driveId, () => props.initialParentId ?? null)
 
@@ -54,6 +54,7 @@ const selectedId = ref<NodeId | null>(null)
 const searchTerm = ref('')
 /** The visible ancestry of the current folder (root → here). */
 const breadcrumb: Ref<Array<{ id: NodeId, name: string }>> = ref([])
+const canCreate = ref(false)
 /** When a search is active we list search hits instead of the folder children. */
 const searchResults = ref<Node[] | null>(null)
 /** The MOVE target picker: which node is being moved, and whether it's shown. */
@@ -116,25 +117,40 @@ let searchSeq = 0
 let breadcrumbSeq = 0
 async function refreshBreadcrumb(): Promise<void> {
   const seq = ++breadcrumbSeq
-  if (parentId.value == null) {
-    breadcrumb.value = []
-    return
-  }
+  canCreate.value = false
   try {
+    if (parentId.value == null) {
+      breadcrumb.value = []
+      const drive = await client.drives.get(props.driveId)
+      const root = await client.nodes.get(drive.root_node_id)
+      if (seq === breadcrumbSeq) {
+        canCreate.value = root.abilities.create
+      }
+      return
+    }
     const node = await client.nodes.getWithIncludes(parentId.value, ['breadcrumb'])
     // The user opened another folder meanwhile: this trail belongs to the one they left.
     if (seq === breadcrumbSeq) {
       breadcrumb.value = node.breadcrumb ?? []
+      canCreate.value = node.abilities.create
     }
   } catch {
     // A breadcrumb fetch failure must not blank the listing.
     if (seq === breadcrumbSeq) {
       breadcrumb.value = []
+      canCreate.value = false
     }
   }
 }
 
+async function refresh(): Promise<void> {
+  await refreshNodes()
+  await refreshBreadcrumb()
+}
+
 async function goTo(into: NodeId | null): Promise<void> {
+  breadcrumbSeq += 1
+  canCreate.value = false
   // Opening a folder ends any search: its answer must not come back and replace the listing.
   searchSeq += 1
   searchResults.value = null
@@ -159,6 +175,7 @@ function onOpen(node: Node): void {
 }
 
 function onNewFolder(): void {
+  if (!canCreate.value) return
   // Open the name dialog in "new folder" mode; createFolder runs on `submit`.
   nameDialog.value = { mode: 'new', title: 'New folder', initialValue: '' }
   nameDialogOpen.value = true
@@ -279,7 +296,7 @@ function onUploaded(): void {
 watch(() => props.viewMode, (next) => { view.value = next })
 
 onMounted(() => {
-  void refresh().then(refreshBreadcrumb)
+  void refresh().catch(() => undefined)
 })
 
 defineExpose({ refresh, goTo, nodes, displayNodes, selectedId, view })
@@ -291,13 +308,15 @@ defineExpose({ refresh, goTo, nodes, displayNodes, selectedId, view })
       <slot
         name="toolbar"
         :new-folder="onNewFolder"
+        :can-create="canCreate"
         :view="view"
         :set-view="(v: 'list' | 'grid') => (view = v)"
         :search-term="searchTerm"
       >
-        <button type="button" class="vaulter-drive__new-folder" @click="onNewFolder">New folder</button>
+        <button v-if="canCreate" type="button" class="vaulter-drive__new-folder" @click="onNewFolder">New folder</button>
 
         <VaulterUploader
+          v-if="canCreate"
           class="vaulter-drive__uploader"
           :drive-id="driveId"
           :parent-id="parentId"

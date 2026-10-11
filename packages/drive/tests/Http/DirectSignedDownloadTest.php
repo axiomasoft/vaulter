@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Content\ImmutableContentIdentity;
 use Vaulter\Content\SignedContentUrl;
 use Vaulter\Contracts\Cas\DirectContentUrlSigner;
 use Vaulter\Data\Drive\UploadSource;
+use Vaulter\Database\VaulterDatabase;
+use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Http\V1;
 
@@ -64,4 +67,27 @@ it('signs exactly the requested older revision', function (): void {
         ->assertHeader('Location', 'https://storage.test/object/'.$first->sha256);
 
     expect($this->signer->signed[0][0]->sha256)->toBe($first->sha256);
+});
+
+it('authorizes download before resolving an existing or unknown revision', function (): void {
+    $file = V1::file($this->drive, 'private.txt');
+    $revision = DriveTestHelpers::model($file)->file()->firstOrFail()->currentRevision()->firstOrFail();
+    AccessTestHelpers::grant($file, RoleRegistry::PREVIEWER, subjectId: 2);
+    $this->actingAs(V1::user(2));
+
+    foreach ([(string) $revision->getKey(), 'no-such-revision'] as $id) {
+        $this->getJson(V1::url('files/'.$file->id.'/revisions/'.$id.'/download'))
+            ->assertForbidden()->assertJsonPath('code', 'permission_denied')->assertHeaderMissing('Location');
+    }
+    expect($this->signer->signed)->toBe([]);
+});
+
+it('does not sign a revision that has not been committed', function (): void {
+    $file = V1::file($this->drive, 'pending.txt');
+    $revision = DriveTestHelpers::model($file)->file()->firstOrFail()->currentRevision()->firstOrFail();
+    app(VaulterDatabase::class)->write(static fn () => $revision->forceFill(['status' => 'pending'])->save());
+
+    $this->getJson(V1::url('files/'.$file->id.'/revisions/'.$revision->getKey().'/download'))
+        ->assertNotFound()->assertHeaderMissing('Location');
+    expect($this->signer->signed)->toBe([]);
 });
