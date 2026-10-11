@@ -1,0 +1,20 @@
+{
+  "item": "P7.5",
+  "changed_paths": [
+    "packages/vaulter/composer.json", "packages/{core,media,drive,documents,azgard,filament}/.gitattributes",
+    "packages/core/composer.json", "packages/vue/package.json", "release/packages.json",
+    "scripts/release/{build-artifacts.php,consumer-smoke.sh,verify-split-tags.sh,check-versions.php}",
+    "scripts/test-release-tools.py", ".github/workflows/monorepo-split.yml",
+    "docs/guide/{installation,compatibility}.md", "docs/ru/guide/{installation,compatibility}.md",
+    "CONTRIBUTING.md", "CHANGELOG.md", "UPGRADE.md"
+  ],
+  "callers": ["monorepo-split.yml (matrix, verify-tags)", "scripts/test-release-gate.py", "packages/core/tests/Support/ReleaseReadinessGuardTest.php"],
+  "fixtures": "git archive of the current repo into a temp dir; git/gh stubs through PATH; no network",
+  "acceptance": {
+    "V1": {"cwd": ".", "env": "PYTHONDONTWRITEBYTECODE=1", "cmd": "python3 scripts/test-release-tools.py && python3 scripts/test-release-gate.py"},
+    "V2": {"cwd": ".", "cmd": "bash -n scripts/release/consumer-smoke.sh && bash -n scripts/release/verify-split-tags.sh && scripts/php84 scripts/release/check-versions.php"},
+    "V3": {"cwd": ".", "cmd": "composer validate --no-check-publish packages/vaulter/composer.json && composer validate --no-check-publish packages/core/composer.json && composer validate --no-check-publish"},
+    "V4": {"cwd": ".", "env": "APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory:", "cmd": "scripts/php84 vendor/bin/pest --ci packages/core/tests/Support/ReleaseReadinessGuardTest.php"}
+  },
+  "impact": ["V5: build-artifacts + consumer-smoke.sh on 0.3.0 (network) -> phase run P7 / P8.1", "verify-split-tags against real remotes -> P8"]
+}
