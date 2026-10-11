@@ -6,6 +6,20 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Filament through the drive handle (PLAN2.P6.6, D62–D65)
+
+The panel no longer scopes Eloquent queries by access; it lists and acts through the authorized drive handle.
+
+| Was | Now |
+|---|---|
+| `Vaulter\Filament\Support\PanelAccessScope::candidateNodeIds()` | removed; use `Vaulter::drive($drive)->actingAs(PanelActor::current())` |
+| `NodeResource::getEloquentQuery()` narrowed to the grant candidates | returns no rows; the table is custom records from `nodes()->children()` and `trash()->list()` (first 2000 nodes) |
+| node row actions took a `Node` model | they take the table row array (`id`, `drive_id`, `abilities`, …) and call `nodes()` / `trash()` operations |
+| drive listed when its root is a grant candidate | listed when the admin can view the root node |
+| `ListNodes::getTableRecords()` exact-visibility pass | removed (the handle lists only visible nodes) |
+
+Host code that subclasses or calls these internals must move to the handle. `PanelActor` keeps its name and methods.
+
 ### `@vaulter/vue` on REST v1 (PLAN2.P6.4, D62–D65)
 
 `@vaulter/vue` calls the versioned API only (`baseUrl` defaults to `/api/vaulter/v1`) and its types are generated from
@@ -1579,7 +1593,7 @@ Filament resource imports become `Vaulter\Filament\Resources\DriveResource`,
 `StorageResource`, `ListStorages` and `ViewStorage` names and change
 `vaulter-filament.resources.storage` to `vaulter-filament.resources.drive`.
 The resource's navigation and view labels are Drive. P2.5 translates the old toggle;
-`PanelActor` and `PanelAccessScope` keep their names.
+`PanelActor` keeps its name; `PanelAccessScope` is removed in the P6.6 entry above.
 
 ### Document names and collaboration (AD03, AD04)
 

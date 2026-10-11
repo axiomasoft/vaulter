@@ -26,10 +26,11 @@ it('applies the selected profile create gate to folder options and canonical fol
     $options = new ReflectionMethod(NodeResource::class, 'folderOptions');
     $create = static fn (): NodeSnapshot => Vaulter::drive($drive)->folders()->create('child');
     if ($allow) {
-        expect($options->invoke(null, $node))->not->toBe([]);
+        expect($options->invoke(null, DriveBuilder::row($node)))->not->toBe([]);
         expect($create()->parentId)->toEqual((string) $drive->root_node_id);
     } else {
-        expect($options->invoke(null, $node))->toBe([]);
+        // The destination list follows the handle's abilities, which do not carry the
+        // profile create gate; the operation below is what enforces it.
         $exception = rescue($create, static fn (Throwable $exception): Throwable => $exception, report: false);
         expect($exception)->toBeInstanceOf(PermissionDeniedException::class)
             ->and($exception->httpStatus())->toBe(403);

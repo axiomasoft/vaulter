@@ -12,18 +12,18 @@ use Vaulter\Filament\Resources\DriveResource;
 use Vaulter\Filament\Resources\NodeGrantResource;
 use Vaulter\Filament\Resources\NodeResource;
 use Vaulter\Filament\Resources\NodeShareResource;
+use Vaulter\Filament\Support\PanelNodes;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
 use Vaulter\Filament\Tests\Fixtures\MutableTenantResolver;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;
-use Vaulter\Repositories\Drive\NodeReadRepository;
 
 /*
  * F-P1.10-01 (Major) — the four previously-unscoped Filament resources
  * (Storage/NodeGrant/NodeShare/Activity) now narrow getEloquentQuery() to the
- * acting admin's grant-reachable candidate set (PanelAccessScope), mirroring
- * NodeResource's existing pattern. Each pair below is red-before-fix (D7): on
+ * acting admin's grant-reachable candidate set (the drive handle's own
+ * visibility), mirroring NodeResource. Each pair below is red-before-fix (D7): on
  * the pre-fix code every "stranger sees nothing" assertion FAILS (the repro
  * `plans/AUDIT-VLT/artifacts/repro/P1.10/FilamentSurfaceReproTest.php` demonstrates
  * exactly this — a zero-grant actor saw every row of every owner).
@@ -151,14 +151,14 @@ it('isolates database resources from a sibling profile with an open candidate la
     $registry->register($profile);
     $registry->freeze();
     app()->instance(ProfileRegistry::class, $registry);
-    $nodes = app(NodeReadRepository::class);
-    expect(DriveResource::getEloquentQuery()->pluck('id')->all())->toContain($visible->id, $open->id)->not->toContain($hidden->id)
+    expect(DriveResource::getEloquentQuery()->pluck('id')->all())->toContain($visible->id)->not->toContain($hidden->id, $open->id)
         ->and(NodeGrantResource::getEloquentQuery()->pluck('id')->all())->not->toContain($hiddenGrant->id)
         ->and(NodeShareResource::getEloquentQuery()->pluck('node_id')->all())->not->toContain($hiddenNode->id)
         ->and(ActivityResource::getEloquentQuery()->pluck('target_id')->all())->not->toContain($hiddenNode->id);
-    expect($nodes->candidateNodeIds($owner))->toContain($visible->root_node_id, $openNode->id)->not->toContain($hiddenNode->id);
-    $query = $nodes->constrainToAccessible(Node::query(), $owner);
-    expect($query->pluck('id')->all())->toContain($openNode->id)->not->toContain($hiddenNode->id);
+    $rowIds = array_map(static fn (array $row): string => $row['id'], PanelNodes::rows());
+    // The sibling profile's open candidate lane no longer lists its drive: the handle
+    // (not the candidate superset) decides, and it denies the root View there.
+    expect($rowIds)->toContain((string) $visible->root_node_id)->not->toContain((string) $hiddenNode->id, (string) $openNode->id);
 })->with(['gate', 'disabled']);
 
 it('V31 Filament node grant share and activity listings stay in the current tenant', function (): void {
@@ -180,7 +180,8 @@ it('V31 Filament node grant share and activity listings stay in the current tena
     DriveBuilder::grant($nodeB, $actor, role: RoleRegistry::OWNER);
     DriveBuilder::grant(Node::query()->findOrFail($b->root()->id), $actor, role: RoleRegistry::READER, scope: GrantScope::Item);
     $shareB = $b->shares()->create($nodeB->getKey(), new ShareLinkInput);
-    expect(NodeResource::getEloquentQuery()->pluck('id')->all())->toContain($nodeB->id)->not->toContain($nodeA->id)
+    $rowIds = array_map(static fn (array $row): string => $row['id'], PanelNodes::rows());
+    expect($rowIds)->toContain((string) $nodeB->id)->not->toContain((string) $nodeA->id)
         ->and(NodeGrantResource::getEloquentQuery()->pluck('id')->all())->not->toContain($grantA->id)
         ->and(array_map('strval', NodeShareResource::getEloquentQuery()->pluck('id')->all()))->toContain($shareB->link->id)->not->toContain($shareA->link->id)
         ->and(ActivityResource::getEloquentQuery()->pluck('drive_id')->all())->toContain($b->model()->id)->not->toContain($driveAId);

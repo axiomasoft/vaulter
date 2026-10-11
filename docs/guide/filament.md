@@ -1,6 +1,6 @@
 ---
 title: Filament admin plugin
-description: Manage Vaulter storages, nodes, ACL grants, share links and the activity feed from your existing Filament 5 panel — every mutation routed through the core Actions and gated by the AccessResolver.
+description: Manage Vaulter storages, nodes, ACL grants, share links and the activity feed from your existing Filament 5 panel — every read and write goes through the authorized drive handle.
 outline: deep
 ---
 
@@ -12,9 +12,10 @@ to an existing Filament panel. It registers two families of resources:
 - the **Drive / permissions** domain — `Drive`, `Node`, `NodeGrant`, `NodeShare`, `Activity`;
 - the **legacy document-centric** surface — `Document`, `Folder`, `Share`.
 
-Every write the panel makes flows through a **core Action** (never a raw Eloquent write), and every
-row action / visibility check is gated by the core
-[`AccessResolver`](/guide/authorization) — so the panel can never bypass the ACL.
+The node and drive resources read and write through the authorized
+[`DriveHandle`](/reference/facade) — `Vaulter::drive($drive)->actingAs(PanelActor::current())` — and its
+snapshot DTOs; the grant, share and activity resources use the same core operations with the panel actor. The panel never calls a core Action or Repository and never evaluates grants itself, so it
+cannot bypass the ACL.
 
 ::: tip Related reading
 The Drive UI for end users lives in the [Vue package](/guide/vue). The authorization model these
@@ -105,30 +106,29 @@ If your host app does not use the legacy document tables, set `document`, `folde
 ## How authorization works
 
 Every Drive/permissions resource resolves its acting admin through `Vaulter\Filament\Support\PanelActor`
-and asks the core resolver whether that admin holds the required
-[`Ability`](/guide/abilities) on the target node:
+and works through the handle that admin gets from core. The handle decides what exists for them and what
+they may do, so a change in core access rules reaches the panel without a panel change:
 
 ```php
-use Vaulter\Access\AccessResolver;
-use Vaulter\Enums\Access\Ability;
+use Vaulter\Facades\Vaulter;
 use Vaulter\Filament\Support\PanelActor;
 
-$actor = PanelActor::current(); // the authenticated panel user as an Authorizable, or null
+$handle = Vaulter::drive($drive)->actingAs(PanelActor::current());
 
-if ($actor !== null && app(AccessResolver::class)->can($actor, Ability::Edit, $node)) {
-    // the action is offered / allowed
-}
+$handle->nodes()->rename(node: $id, name: $name); // 404 / 403 exactly as over HTTP
 ```
 
 `PanelActor` provides two things:
 
 | Method | Returns | Used for |
 |--------|---------|----------|
-| `PanelActor::current()` | `?Authorizable` | the actor passed to `AccessResolver::can(...)`. `null` → an all-false ability map (a read-only shell) |
-| `PanelActor::id()` | `int\|string\|null` | the `actorId` stamped on the core Action (`granted_by` / `trashed_by` …). `null` → attributed as "no actor", never a fabricated id |
+| `PanelActor::current()` | `?Authorizable` | the actor passed to `actingAs(...)`. `null` → no drives and no rows (a read-only shell) |
+| `PanelActor::id()` | `int\|string\|null` | the acting admin's id for attribution. `null` → attributed as "no actor", never a fabricated id |
 
-A row action is only **visible** when the actor holds its ability, so the panel never advertises an
-operation the admin cannot perform.
+A row action is only **visible** when the handle's abilities for that node (`nodes()->abilitiesMany()`)
+allow it, and the operation re-checks on execution, so a forged call is refused with the same error as the
+HTTP API. A drive appears in the panel when the admin can view its root node; an admin who only holds a
+grant on a nested folder reaches it through the API or the Vue client, not through the panel tables.
 
 ## Resources
 
@@ -150,70 +150,62 @@ A **read-mostly** view of the ownable, polymorphic disk roots. Drives are provis
 #### NodeResource
 
 The heart of the panel: the unified `folder | file | document | shortcut` node tree. Mutations are
-**never** flat-form edits — each row action calls a core Drive Action through the
+**never** flat-form edits — each row action calls an operation on the authorized
 [`DriveHandle`](/reference/facade):
 
-| Row action | Core path | Gating ability |
-|------------|-----------|----------------|
-| Rename | `Vaulter::forStorage($node->storage)->rename(...)` | `Ability::Edit` |
-| Move | `…->move(...)` (destination picked from the storage's folders; blank = root) | `Ability::Move` |
-| Trash | `…->trash(...)` | `Ability::Trash` |
-| Restore | `…->restore(...)` (visible only on a trashed node) | `Ability::Restore` |
-| Delete permanently | `…->forceDelete(...)` (visible only on a trashed node) | `Ability::Delete` |
+| Row action | Handle call | Gating ability |
+|------------|-------------|----------------|
+| Rename | `nodes()->rename(...)` | `Ability::Edit` |
+| Move | `nodes()->move(...)` (destinations are the folders the admin may create into; blank = root) | `Ability::Move` on the node, `Create` on the destination |
+| Trash | `nodes()->trash(...)` | `Ability::Trash` |
+| Restore | `trash()->restore(...)` (visible only on a trashed node) | `Ability::Restore` |
+| Delete permanently | `trash()->purge(...)` (visible only on a trashed node) | `Ability::Delete` |
 
 ```php
 // Inside NodeResource: the rename row action's handler.
-Vaulter::forStorage($record->storage)->rename(
-    node: $record,
-    name: $name,
-    actorId: PanelActor::id(),
-);
+PanelDrives::handle($driveId)->nodes()->rename(node: $id, name: $name);
 ```
 
 - **Model**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('node')` (`Vaulter\Models\Drive\Node`).
+- **Rows**: Filament custom records built from the handle's listings (`children()` walked per drive,
+  plus `trash()->list()`), bounded to the first 2000 nodes. There is no Eloquent query behind the table.
 - **Table**: a kind icon (`folder` → folder, `file` → document, `document` → document-text,
   `shortcut` → arrow-top-right), name (root rows show `(root)`), kind badge, storage, parent, size,
   trashed-at, created-at.
 - **Filters**: kind (`SelectFilter` over `NodeKind` cases), storage, and a `Trashed` ternary
   (`Live only` / `Trashed only`).
-- **Query**: drops the `SoftDeletingScope` so soft-**trashed** rows (`trashed_at`) are visible to the
-  Trashed filter; purged nodes no longer exist.
-- **Create**: disabled — folders/files are created through the Drive Actions, not a resource form.
+- **Trashed**: trashed rows come from the trash listing, so the Trashed filter flips between the two sets;
+  purged nodes no longer exist. Sorting, search (by name) and filters run over the loaded rows.
+- **Create**: disabled — folders/files are created through the drive operations, not a resource form.
 - **Pages**: `index` only.
 
 #### NodeGrantResource
 
 List, create and revoke the per-node ACL grants the resolver folds into effective permissions. A
-grant addresses a subject (`subject_type` + `subject_id`) on a node with a **level** + extra **CRUDS
-bits**, an **allow|deny** effect, an **item|subtree** scope and an optional expiry.
+grant addresses a subject (`subject_type` + `subject_id`) on a node with a **role** (`role_key`), an
+**item|subtree** scope and an optional expiry. Grants are positive only.
 
-Both mutations route through core Actions and require `Ability::Share` on the target node:
+Both mutations go through the handle's `access()` operations and require `Ability::Manage` on the target node:
 
 - **Create** (the list page's `Create grant` header action) →
-  `GrantNodeAccessAction` (idempotent upsert on the grant key).
-- **Revoke** (row action) → `RevokeNodeAccessAction` (drops every grant a subject holds).
+  `access()->grant(...)` (idempotent upsert on the grant key).
+- **Revoke** (row action) → `access()->revoke(...)`.
 
 ```php
-// NodeGrantResource::grantFromData — minting via the core Action.
-app(GrantNodeAccessAction::class)->execute(
-    node: $node,
-    data: new GrantNodeAccessInput(
-        subject: new Subject(type: $subjectType, id: $subjectId),
-        level: GrantLevel::from($level),     // reader | commenter | editor | manager
-        effect: Effect::from($effect),       // allow | deny
-        scope: GrantScope::from($scope),     // item | subtree
-        permissions: $extraBits,             // 0–31, OR-ed onto the level bits
-        expiresAt: $expiresAt,
-        grantedBy: PanelActor::id(),
-    ),
-);
+// NodeGrantResource::grantFromData — minting through the handle.
+$handle->access()->grant($nodeId, new GrantInput(
+    subject: new Subject(type: $subjectType, id: $subjectId),
+    role: $role,                         // a registered role key, e.g. reader | writer
+    scope: GrantScope::from($scope),     // item | subtree
+    expiresAt: $expiresAt,
+));
 ```
 
 - **Model**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('grant')` (`Vaulter\Models\Access\NodeGrant`).
-- **Table**: node, subject (`type #id`), level badge, effect badge (deny → danger), scope, raw bits
-  (hidden by default), expires-at (`Never` when null), created-at. Filters: effect, level.
+- **Table**: node, subject (`type #id`), role badge, scope, expires-at (`Never` when null), created-at.
+  Filter: role.
 - **Form fields**: node, subject type (a registered morph alias such as `user` / `role` / `team`),
-  subject id, level, effect, scope, extra CRUDS bits (0–31), expires-at.
+  subject id, role, scope, expires-at.
 - **Create**: via the header action only (`canCreate()` is `false`).
 - **Pages**: `index` only.
 
@@ -228,10 +220,10 @@ List, create and revoke **bearer share-links** on a node. The raw token is **nev
 shown in the table** — only the non-secret `token_prefix` plus the live/expired/revoked/exhausted
 status. The raw token is surfaced **exactly once**, at mint time, via a persistent notification.
 
-- **Create** (the list page's `Create share link` header action) → `CreateShareLinkAction`
+- **Create** (the list page's `Create share link` header action) → `shares()->create(...)`
   (mints + hashes the token; the raw value is shown once).
-- **Rotate token** (row action) → `ShareOperations::rotate()` (new token shown once; the old one stops working).
-- **Revoke** (row action) → `RevokeShareLinkAction` (stamps `revoked_at`; idempotent).
+- **Rotate token** (row action) → `shares()->rotate(...)` (new token shown once; the old one stops working).
+- **Revoke** (row action) → `shares()->revoke(...)`.
 
 Both require `Ability::Share` on the node.
 
@@ -250,11 +242,10 @@ $minted = Vaulter::drive($owner)->actingAs($user)->shares()->create($node, new S
 ```
 
 - **Model**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('node_share')` (`Vaulter\Models\Sharing\NodeShare`).
-- **Table**: node, `token_prefix…` badge, level, scope, a computed status badge
-  (`Live` / `Revoked` / `Expired` / `Exhausted`), require-login icon, use count (`n / max` when
+- **Table**: node, `token_prefix…` badge, role, scope, a computed status badge
+  (`Live` / `Revoked` / `Expired` / `Exhausted`), use count (`n / max` when
   capped), expires-at, created-at. Filter: a `Revoked` ternary.
-- **Form fields**: node, level, scope, permissions (0–31, defaults to READ), optional password,
-  require-login, allow-discovery, max-uses, expires-at.
+- **Form fields**: node, role, audience, scope, optional password, max-uses, expires-at.
 - **Create**: via the header action only.
 - **Pages**: `index` only.
 
@@ -269,8 +260,8 @@ non-deletable (`canCreate`/`canEdit`/`canDelete` all return `false`).
   (`SelectFilter` over `EventType` cases).
 - **Infolist** (view page): Event / Actor / Target / Request sections (the Request section includes a
   `KeyValueEntry` for `context` plus ip / user-agent / request-id).
-- **Pages**: `index` (list) and `view` (`/{record}`). Classes: `ListDrives` and `ViewDrive`
-  under `Vaulter\Filament\Resources\DriveResource\Pages`.
+- **Pages**: `index` (list) and `view` (`/{record}`). Classes: `ListActivities` and `ViewActivity`
+  under `Vaulter\Filament\Resources\ActivityResource\Pages`.
 
 ### Legacy document-centric surface
 

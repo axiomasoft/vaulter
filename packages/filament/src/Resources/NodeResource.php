@@ -20,38 +20,34 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Validation\ValidationException;
+use LogicException;
 use Override;
 use UnitEnum;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Drive\DriveHandle;
-use Vaulter\Drive\Queries\NodeBrowserQuery;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
-use Vaulter\Facades\Vaulter;
+use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Filament\Resources\NodeResource\Pages\ListNodes;
-use Vaulter\Filament\Support\PanelActor;
+use Vaulter\Filament\Support\PanelDrives;
+use Vaulter\Filament\Support\PanelNodes;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Support\Identity;
 
 /**
- * The Drive-node admin surface (master plan §2.2 / §3) — the heart of the panel. It
- * lists the unified folder|file|document nodes with kind/name/size/parent columns,
- * filters by kind / storage / trashed state, and wires the row actions to the canonical
- * Drive Operations (rename/move/trash/restore/purge) through the authorized handle —
- * NEVER a direct Eloquent write.
+ * The Drive-node admin surface — the heart of the panel. It lists the unified
+ * folder|file|document nodes of every drive the acting admin can open and wires the row
+ * actions to the Drive operations (rename/move/trash/restore/purge) through the
+ * authorized handle, never a direct Eloquent write.
  *
- * Table candidates use the grant-authoritative SQL prefilter, then ListNodes applies
- * exact batch View evaluation before display. Simple pagination avoids leaking totals.
+ * Rows are Filament custom records built from the handles' public listings
+ * ({@see PanelNodes}); a row action is visible only when the handle's own abilities for
+ * that node allow it. The panel evaluates no grants and applies no Eloquent access
+ * scope: what is listed and what is clickable are both decided by core.
  *
- * Per-ROW ACTIONS remain EXACTLY gated: each row action is gated by the acting admin's
- * {@see Ability} on that node through the AccessResolver (Edit→rename, Move→move,
- * Trash→trash, Restore→restore, Delete→forceDelete), with the full deny-veto applied,
- * so the panel never bypasses the ACL even though the table lists the candidate set.
- * The model resolves through {@see app(VaulterConfig::class)->model('node')} so a swapped Node is still
- * governed here.
+ * @phpstan-import-type NodeRow from PanelNodes
  */
 final class NodeResource extends Resource
 {
@@ -84,6 +80,7 @@ final class NodeResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->records(self::records(...))
             ->paginationMode(PaginationMode::Simple)
             ->columns([
                 IconColumn::make('kind')
@@ -139,12 +136,7 @@ final class NodeResource extends Resource
                     ->label('Trashed')
                     ->placeholder('Live only')
                     ->trueLabel('Trashed only')
-                    ->falseLabel('Live only')
-                    ->queries(
-                        true: fn (Builder $query): Builder => $query->whereNotNull('trashed_at'),
-                        false: fn (Builder $query): Builder => $query->whereNull('trashed_at'),
-                        blank: fn (Builder $query): Builder => $query->whereNull('trashed_at'),
-                    ),
+                    ->falseLabel('Live only'),
             ])
             ->recordActions([
                 ActionGroup::make([
@@ -189,19 +181,52 @@ final class NodeResource extends Resource
     #[Override]
     public static function getEloquentQuery(): Builder
     {
-        // Trashed nodes carry trashed_at (a soft-trash); surface both live and
-        // trashed rows so the Trashed filter can flip between them. Purged nodes
-        // no longer exist.
-        $query = parent::getEloquentQuery();
+        // The table is fed by handle listings (see records()); an Eloquent query over
+        // nodes would be an access bypass, so anything that reaches for one gets no rows.
+        return parent::getEloquentQuery()->whereRaw('1 = 0');
+    }
 
-        // SQL narrows candidates only; ListNodes applies the exact ACL page filter.
-        $actor = PanelActor::current();
+    /**
+     * @param  array<string, mixed>           $filters
+     * @return Paginator<int|string, NodeRow>
+     */
+    private static function records(?string $search, array $filters, ?string $sortColumn, ?string $sortDirection, int $page, int|string $recordsPerPage): Paginator
+    {
+        $rows = collect(PanelNodes::rows());
 
-        if ($actor === null) {
-            return $query->whereRaw('1 = 0');
-        }
+        $kind = self::filterValue($filters, 'kind');
+        $drive = self::filterValue($filters, 'drive_id');
+        $trashed = self::filterValue($filters, 'trashed_at');
 
-        return app(NodeBrowserQuery::class)->constrainToAccessible($query, $actor);
+        $rows = $rows
+            ->when($kind !== null, fn ($rows) => $rows->filter(fn (array $row): bool => $row['kind']->value === $kind))
+            ->when($drive !== null, fn ($rows) => $rows->filter(fn (array $row): bool => $row['drive_id'] === $drive))
+            ->filter(fn (array $row): bool => match ($trashed) {
+                '1' => $row['trashed_at'] !== null,
+                default => $row['trashed_at'] === null,
+            })
+            ->when(is_string($search) && $search !== '', fn ($rows) => $rows->filter(fn (array $row): bool => str_contains(mb_strtolower($row['name']), mb_strtolower((string) $search))));
+
+        $column = $sortColumn ?? 'created_at';
+        $rows = $rows->sortBy(
+            fn (array $row): mixed => $row[$column] instanceof BackedEnum ? $row[$column]->value : ($row[$column] instanceof \DateTimeInterface ? $row[$column]->getTimestamp() : $row[$column]),
+            descending: ($sortDirection ?? 'desc') === 'desc',
+        )->keyBy('id');
+
+        // The per-page select posts its value as a string; only "all" means every row.
+        $perPage = is_numeric($recordsPerPage) ? max((int) $recordsPerPage, 1) : max($rows->count(), 1);
+
+        // Rows stay keyed by node id (Filament's record key); one extra row tells the simple paginator whether a next page exists.
+        return new Paginator($rows->slice(($page - 1) * $perPage, $perPage + 1)->all(), $perPage, $page);
+    }
+
+    /** @param array<string, mixed> $filters */
+    private static function filterValue(array $filters, string $name): ?string
+    {
+        $entry = $filters[$name] ?? null;
+        $value = is_array($entry) ? ($entry['value'] ?? null) : null;
+
+        return is_scalar($value) && (string) $value !== '' ? (string) $value : null;
     }
 
     /**
@@ -212,44 +237,42 @@ final class NodeResource extends Resource
         return Action::make('rename')
             ->label('Rename')
             ->icon('heroicon-o-pencil-square')
-            ->visible(fn (Node $record): bool => $record->trashed_at === null && self::actorCan(Ability::Edit, $record))
+            ->visible(fn (array $record): bool => $record['trashed_at'] === null && self::allows(Ability::Edit, $record))
             ->schema([
                 TextInput::make('name')
                     ->required()
                     ->maxLength(255)
-                    ->default(fn (Node $record): string => $record->name),
+                    ->default(fn (array $record): string => self::field($record, 'name')),
             ])
-            ->action(function (Node $record, array $data): void {
+            ->action(function (array $record, array $data): void {
                 /** @var string $name */
                 $name = $data['name'];
 
-                self::driveFor($record)->nodes()->rename(
-                    node: Identity::stringify($record->getKey()),
-                    name: $name,
-                );
+                self::driveFor($record)->nodes()->rename(node: self::nodeId($record), name: $name);
 
                 self::notifyDone('Node renamed');
             });
     }
 
     /**
-     * Move through the authorized node operations. Gated by Ability::Move. The
-     * destination is picked from the storage's folder nodes; null = the storage root.
+     * Move through the authorized node operations. Gated by Ability::Move on the source;
+     * the destination list offers only folders the handle lets the admin create into, and
+     * the operation re-checks Create on the chosen destination. null = the storage root.
      */
     private static function moveAction(): Action
     {
         return Action::make('move')
             ->label('Move')
             ->icon('heroicon-o-arrows-right-left')
-            ->visible(fn (Node $record): bool => $record->trashed_at === null && self::actorCan(Ability::Move, $record))
+            ->visible(fn (array $record): bool => $record['trashed_at'] === null && self::allows(Ability::Move, $record))
             ->schema([
                 Select::make('parent_id')
                     ->label('Destination folder')
                     ->placeholder('(storage root)')
-                    ->options(fn (Node $record): array => self::folderOptions($record))
+                    ->options(fn (array $record): array => self::folderOptions($record))
                     ->searchable(),
             ])
-            ->action(function (Node $record, array $data, Action $action): void {
+            ->action(function (array $record, array $data, Action $action): void {
                 $destination = $data['parent_id'] ?? null;
                 if ($destination === '') {
                     $destination = null;
@@ -258,10 +281,7 @@ final class NodeResource extends Resource
                     throw ValidationException::withMessages(['parent_id' => 'The destination must be a node ID.']);
                 }
                 try {
-                    self::driveFor($record)->nodes()->move(
-                        node: Identity::stringify($record->getKey()),
-                        destination: $destination,
-                    );
+                    self::driveFor($record)->nodes()->move(node: self::nodeId($record), destination: $destination);
                 } catch (PermissionDeniedException) {
                     Notification::make()->title('Move not allowed')->danger()->send();
                     $action->halt();
@@ -281,38 +301,34 @@ final class NodeResource extends Resource
             ->icon('heroicon-o-trash')
             ->color('danger')
             ->requiresConfirmation()
-            ->visible(fn (Node $record): bool => $record->trashed_at === null && self::actorCan(Ability::Trash, $record))
-            ->action(function (Node $record): void {
-                self::driveFor($record)->nodes()->trash(
-                    node: Identity::stringify($record->getKey()),
-                );
+            ->visible(fn (array $record): bool => $record['trashed_at'] === null && self::allows(Ability::Trash, $record))
+            ->action(function (array $record): void {
+                self::driveFor($record)->nodes()->trash(node: self::nodeId($record));
 
                 self::notifyDone('Node trashed');
             });
     }
 
     /**
-     * Restore through the authorized trash operations. Gated by
-     * Ability::Restore; only visible on an already-trashed node.
+     * Restore through the authorized trash operations. Gated by Ability::Restore; only
+     * visible on an already-trashed node.
      */
     private static function restoreAction(): Action
     {
         return Action::make('restore')
             ->label('Restore')
             ->icon('heroicon-o-arrow-uturn-left')
-            ->visible(fn (Node $record): bool => $record->trashed_at !== null && self::actorCan(Ability::Restore, $record))
-            ->action(function (Node $record): void {
-                self::driveFor($record)->trash()->restore(
-                    node: Identity::stringify($record->getKey()),
-                );
+            ->visible(fn (array $record): bool => $record['trashed_at'] !== null && self::allows(Ability::Restore, $record))
+            ->action(function (array $record): void {
+                self::driveFor($record)->trash()->restore(node: self::nodeId($record));
 
                 self::notifyDone('Node restored');
             });
     }
 
     /**
-     * Permanent deletion through the authorized trash operations. Gated
-     * by Ability::Delete; only visible on a trashed node (purge from trash).
+     * Permanent deletion through the authorized trash operations. Gated by
+     * Ability::Delete; only visible on a trashed node (purge from trash).
      */
     private static function forceDeleteAction(): Action
     {
@@ -321,29 +337,41 @@ final class NodeResource extends Resource
             ->icon('heroicon-o-x-circle')
             ->color('danger')
             ->requiresConfirmation()
-            ->visible(fn (Node $record): bool => $record->trashed_at !== null && self::actorCan(Ability::Delete, $record))
-            ->action(function (Node $record): void {
-                self::driveFor($record)->trash()->purge(
-                    node: Identity::stringify($record->getKey()),
-                );
+            ->visible(fn (array $record): bool => $record['trashed_at'] !== null && self::allows(Ability::Delete, $record))
+            ->action(function (array $record): void {
+                self::driveFor($record)->trash()->purge(node: self::nodeId($record));
 
                 self::notifyDone('Node permanently deleted');
             });
     }
 
     /**
-     * Whether the acting admin holds the ability on the node (core AccessResolver).
-     * No acting user ⇒ false, so an unauthenticated panel never advertises an action.
+     * Whether the handle's abilities for the row allow the action. A row without an
+     * evaluated ability map (no acting user) advertises nothing.
+     *
+     * @param array<mixed> $record
      */
-    private static function actorCan(Ability $ability, Node $node): bool
+    private static function allows(Ability $ability, array $record): bool
     {
-        $actor = PanelActor::current();
+        $abilities = $record['abilities'] ?? [];
 
-        if ($actor === null) {
-            return false;
-        }
+        return is_array($abilities) && ($abilities[$ability->value] ?? false) === true;
+    }
 
-        return app(NodeBrowserQuery::class)->can(self::driveFor($node), $ability, $node);
+    /** @param array<mixed> $record */
+    private static function nodeId(array $record): string
+    {
+        $id = $record['id'] ?? null;
+
+        return is_string($id) ? $id : throw new LogicException('A node row carries its id.');
+    }
+
+    /** @param array<mixed> $record */
+    private static function field(array $record, string $key): string
+    {
+        $value = $record[$key] ?? null;
+
+        return is_string($value) ? $value : '';
     }
 
     private static function notifyDone(string $title): void
@@ -352,32 +380,32 @@ final class NodeResource extends Resource
     }
 
     /**
-     * The selectable destination folders within the node's storage (excluding the
-     * node itself, since a node cannot move into itself). Root is offered as the
-     * placeholder (null parent_id).
+     * The selectable destination folders within the node's storage, offered by the
+     * handle only where the admin may create. Root is the placeholder (null parent_id).
      *
+     * @param  array<mixed>              $record
      * @return array<int|string, string>
      */
-    private static function folderOptions(Node $record): array
+    private static function folderOptions(array $record): array
     {
-        if (PanelActor::current() === null) {
-            return [];
-        }
-
-        return app(NodeBrowserQuery::class)->folderOptions(handle: self::driveFor($record), source: $record);
+        return PanelNodes::destinations(driveId: (string) $record['drive_id'], exceptId: self::nodeId($record));
     }
 
-    private static function driveFor(Node $node): DriveHandle
+    /**
+     * The authorized handle of the row's drive. A drive the admin cannot open (or no
+     * admin at all) answers like a hidden node, the same 404 the HTTP surface gives.
+     *
+     * @param array<mixed> $record
+     */
+    private static function driveFor(array $record): DriveHandle
     {
-        $actor = PanelActor::current() ?? throw MissingActorException::required();
-
-        return Vaulter::drive(app(NodeBrowserQuery::class)->driveForNode($node))->actingAs($actor);
+        return PanelDrives::handle((string) $record['drive_id']) ?? throw NodeNotFoundException::forId(self::nodeId($record));
     }
 
     /** @return array<int|string, string> */
     private static function storageOptions(): array
     {
-        return app(NodeBrowserQuery::class)->driveOptions();
+        return PanelNodes::driveOptions();
     }
 
     /**

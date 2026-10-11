@@ -1,6 +1,6 @@
 ---
 title: Админ-плагин для Filament
-description: Управляйте хранилищами Vaulter, узлами, ACL-грантами, публичными ссылками и лентой активности прямо из вашей панели Filament 5 — каждая мутация проходит через ядровые Actions и проверяется через AccessResolver.
+description: Управляйте хранилищами Vaulter, узлами, ACL-грантами, публичными ссылками и лентой активности прямо из вашей панели Filament 5 — любое чтение и запись идут через авторизованный handle диска.
 outline: deep
 ---
 
@@ -12,9 +12,10 @@ outline: deep
 - домен **Drive / права** — `Drive`, `Node`, `NodeGrant`, `NodeShare`, `Activity`;
 - **легаси-поверхность вокруг документов** — `Document`, `Folder`, `Share`.
 
-Каждая запись, которую делает панель, проходит через **ядровый Action** (никогда напрямую через
-Eloquent), а каждое строковое действие и проверка видимости проходят через ядровый
-[`AccessResolver`](/ru/concepts/authorization) — так что панель не может обойти ACL.
+Ресурсы узлов и дисков читают и пишут через авторизованный [`DriveHandle`](/ru/reference/facade) —
+`Vaulter::drive($drive)->actingAs(PanelActor::current())` — и его snapshot-DTO; ресурсы грантов, публичных ссылок
+и активности используют те же ядровые операции с актором панели. Панель не вызывает ядровые
+Actions и Repositories и сама не вычисляет гранты, поэтому не может обойти ACL.
 
 ::: tip Смежное чтение
 Drive-UI для конечных пользователей живёт в [пакете Vue](/ru/guide/vue). Модель авторизации, которой
@@ -105,30 +106,30 @@ return [
 ## Как работает авторизация
 
 Каждый ресурс домена Drive / права определяет действующего администратора через
-`Vaulter\Filament\Support\PanelActor` и спрашивает у ядрового резолвера, обладает ли этот администратор
-нужным [`Ability`](/ru/guide/abilities) на целевом узле:
+`Vaulter\Filament\Support\PanelActor` и работает через handle, который ядро выдаёт этому администратору.
+Handle решает, что для него существует и что ему можно, поэтому изменение правил доступа в ядре доходит до
+панели без правок панели:
 
 ```php
-use Vaulter\Access\AccessResolver;
-use Vaulter\Enums\Access\Ability;
+use Vaulter\Facades\Vaulter;
 use Vaulter\Filament\Support\PanelActor;
 
-$actor = PanelActor::current(); // аутентифицированный пользователь панели как Authorizable, либо null
+$handle = Vaulter::drive($drive)->actingAs(PanelActor::current());
 
-if ($actor !== null && app(AccessResolver::class)->can($actor, Ability::Edit, $node)) {
-    // действие предлагается / разрешено
-}
+$handle->nodes()->rename(node: $id, name: $name); // 404 / 403 так же, как по HTTP
 ```
 
 `PanelActor` даёт две вещи:
 
 | Метод | Возвращает | Для чего |
 |--------|---------|----------|
-| `PanelActor::current()` | `?Authorizable` | актор, передаваемый в `AccessResolver::can(...)`. `null` → карта прав, где всё `false` (read-only оболочка) |
-| `PanelActor::id()` | `int\|string\|null` | `actorId`, штампуемый на ядровом Action (`granted_by` / `trashed_by` …). `null` → атрибутируется как «нет актора», никогда как выдуманный id |
+| `PanelActor::current()` | `?Authorizable` | актор для `actingAs(...)`. `null` → ни дисков, ни строк (read-only оболочка) |
+| `PanelActor::id()` | `int\|string\|null` | id действующего администратора для атрибуции. `null` → «нет актора», никогда не выдуманный id |
 
-Строковое действие **видно** только тогда, когда актор обладает соответствующим правом (ability), так
-что панель никогда не предлагает операцию, которую администратор не может выполнить.
+Строковое действие **видно** только тогда, когда права handle на этот узел (`nodes()->abilitiesMany()`) его
+разрешают, а при выполнении операция проверяет доступ ещё раз — поддельный вызов получает ту же ошибку, что и
+HTTP API. Drive появляется в панели, если администратор видит его корневой узел; тот, у кого есть грант только
+на вложенную папку, работает с ней через API или клиент Vue, а не через таблицы панели.
 
 ## Ресурсы
 
@@ -150,73 +151,63 @@ if ($actor !== null && app(AccessResolver::class)->can($actor, Ability::Edit, $n
 #### NodeResource
 
 Сердце панели: единое дерево узлов `folder | file | document | shortcut`. Мутации — это **никогда** не
-редактирование плоской формы: каждое строковое действие вызывает ядровый Drive Action через
+редактирование плоской формы: каждое строковое действие вызывает операцию авторизованного
 [`DriveHandle`](/ru/reference/facade):
 
-| Строковое действие | Ядровый путь | Право-гейт |
+| Строковое действие | Вызов handle | Право-гейт |
 |------------|-----------|----------------|
-| Rename | `Vaulter::forStorage($node->storage)->rename(...)` | `Ability::Edit` |
-| Move | `…->move(...)` (место назначения выбирается из папок хранилища; пусто = корень) | `Ability::Move` |
-| Trash | `…->trash(...)` | `Ability::Trash` |
-| Restore | `…->restore(...)` (видно только на узле в корзине) | `Ability::Restore` |
-| Delete permanently | `…->forceDelete(...)` (видно только на узле в корзине) | `Ability::Delete` |
+| Rename | `nodes()->rename(...)` | `Ability::Edit` |
+| Move | `nodes()->move(...)` (назначение — папки, куда администратор может создавать; пусто = корень) | `Ability::Move` на узле, `Create` на назначении |
+| Trash | `nodes()->trash(...)` | `Ability::Trash` |
+| Restore | `trash()->restore(...)` (видно только на узле в корзине) | `Ability::Restore` |
+| Delete permanently | `trash()->purge(...)` (видно только на узле в корзине) | `Ability::Delete` |
 
 ```php
 // Внутри NodeResource: обработчик строкового действия rename.
-Vaulter::forStorage($record->storage)->rename(
-    node: $record,
-    name: $name,
-    actorId: PanelActor::id(),
-);
+PanelDrives::handle($driveId)->nodes()->rename(node: $id, name: $name);
 ```
 
 - **Модель**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('node')` (`Vaulter\Models\Drive\Node`).
+- **Строки**: custom records Filament, собранные из листингов handle (`children()` по каждому диску и
+  `trash()->list()`), не более первых 2000 узлов. За таблицей нет Eloquent-запроса.
 - **Таблица**: иконка типа (`folder` → folder, `file` → document, `document` → document-text,
   `shortcut` → arrow-top-right), имя (корневые строки показывают `(root)`), бейдж типа, хранилище,
   родитель, размер, дата помещения в корзину, дата создания.
 - **Фильтры**: тип (`SelectFilter` по кейсам `NodeKind`), хранилище и тернарный `Trashed`
   (`Live only` / `Trashed only`).
-- **Запрос**: сбрасывает `SoftDeletingScope`, чтобы мягко **удалённые в корзину** строки (`trashed_at`)
-  были видны фильтру Trashed, а удалённые purge узлы больше не существуют.
-- **Create**: отключено — папки/файлы создаются через Drive Actions, а не через форму ресурса.
+- **Корзина**: строки из корзины приходят из листинга trash, поэтому фильтр Trashed переключает между
+  двумя наборами; purge-узлов больше не существует. Сортировка, поиск (по имени) и фильтры работают по
+  загруженным строкам.
+- **Create**: отключено — папки/файлы создаются через операции диска, а не через форму ресурса.
 - **Страницы**: только `index`.
 
 #### NodeGrantResource
 
 Перечисление, создание и отзыв пер-узловых ACL-грантов, которые резолвер сворачивает в эффективные
-разрешения. Грант адресует субъекта (`subject_type` + `subject_id`) на узле, задавая **уровень** плюс
-дополнительные **биты CRUDS**, эффект **allow|deny**, область **item|subtree** и опциональный срок
-истечения.
+разрешения. Грант адресует субъекта (`subject_type` + `subject_id`) на узле, задавая **роль** (`role_key`),
+область **item|subtree** и опциональный срок истечения. Гранты только позитивные.
 
-Обе мутации маршрутизируются через ядровые Actions и требуют `Ability::Share` на целевом узле:
+Обе мутации идут через операции `access()` handle и требуют `Ability::Manage` на целевом узле:
 
 - **Create** (действие в шапке страницы списка — `Create grant`) →
-  `GrantNodeAccessAction` (идемпотентный upsert по ключу гранта).
-- **Revoke** (строковое действие) → `RevokeNodeAccessAction` (снимает все гранты, которыми обладает
-  субъект).
+  `access()->grant(...)` (идемпотентный upsert по ключу гранта).
+- **Revoke** (строковое действие) → `access()->revoke(...)`.
 
 ```php
-// NodeGrantResource::grantFromData — создание через ядровый Action.
-app(GrantNodeAccessAction::class)->execute(
-    node: $node,
-    data: new GrantNodeAccessInput(
-        subject: new Subject(type: $subjectType, id: $subjectId),
-        level: GrantLevel::from($level),     // reader | commenter | editor | manager
-        effect: Effect::from($effect),       // allow | deny
-        scope: GrantScope::from($scope),     // item | subtree
-        permissions: $extraBits,             // 0–31, OR-ится поверх битов уровня
-        expiresAt: $expiresAt,
-        grantedBy: PanelActor::id(),
-    ),
-);
+// NodeGrantResource::grantFromData — создание через handle.
+$handle->access()->grant($nodeId, new GrantInput(
+    subject: new Subject(type: $subjectType, id: $subjectId),
+    role: $role,                         // ключ зарегистрированной роли, например reader | writer
+    scope: GrantScope::from($scope),     // item | subtree
+    expiresAt: $expiresAt,
+));
 ```
 
 - **Модель**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('grant')` (`Vaulter\Models\Access\NodeGrant`).
-- **Таблица**: узел, субъект (`type #id`), бейдж уровня, бейдж эффекта (deny → danger), область, сырые
-  биты (по умолчанию скрыты), срок истечения (`Never`, когда null), дата создания. Фильтры: эффект,
-  уровень.
+- **Таблица**: узел, субъект (`type #id`), бейдж роли, область, срок истечения (`Never`, когда null),
+  дата создания. Фильтр: роль.
 - **Поля формы**: узел, тип субъекта (зарегистрированный morph-алиас, например `user` / `role` /
-  `team`), id субъекта, уровень, эффект, область, дополнительные биты CRUDS (0–31), срок истечения.
+  `team`), id субъекта, роль, область, срок истечения.
 - **Create**: только через действие в шапке (`canCreate()` — `false`).
 - **Страницы**: только `index`.
 
@@ -232,38 +223,31 @@ app(GrantNodeAccessAction::class)->execute(
 live/expired/revoked/exhausted. Сырой токен показывается **ровно один раз**, в момент создания, через
 постоянное уведомление.
 
-- **Create** (действие в шапке страницы списка — `Create share link`) → `CreateShareLinkAction`
+- **Create** (действие в шапке страницы списка — `Create share link`) → `shares()->create(...)`
   (создаёт + хеширует токен; сырое значение показывается один раз).
-- **Revoke** (строковое действие) → `RevokeShareLinkAction` (штампует `revoked_at`; идемпотентно).
+- **Revoke** (строковое действие) → `shares()->revoke(...)`.
 
 Обе требуют `Ability::Share` на узле.
 
 ```php
-$minted = app(CreateShareLinkAction::class)->execute(
-    node: $node,
-    data: new ShareLinkInput(
-        permissions: $bits > 0 ? $bits : Permission::Read->value, // по умолчанию READ (1)
-        level: GrantLevel::from($level),
-        scope: GrantScope::from($scope),   // item | subtree
-        password: $password,
-        requireLogin: $requireLogin,
-        allowDiscovery: $allowDiscovery,
-        expiresAt: $expiresAt,
-        maxUses: $maxUses,
-        grantedBy: PanelActor::id(),
-    ),
-);
+$minted = Vaulter::drive($owner)->actingAs($user)->shares()->create($node, new ShareLinkInput(
+    role: $role,                              // previewer | reader | commenter | writer
+    audience: ShareAudience::from($audience), // anyone | authenticated | tenant
+    scope: GrantScope::from($scope),          // item | subtree
+    expiresAt: $expiresAt,
+    password: $password,
+    maxUses: $maxUses,
+));
 
 // Показывается ровно один раз — потом из строки уже не восстановить:
 //   app(\Vaulter\Configuration\SharingConfig::class)->urlBase() . '/' . $minted->token
 ```
 
 - **Модель**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('node_share')` (`Vaulter\Models\Sharing\NodeShare`).
-- **Таблица**: узел, бейдж `token_prefix…`, уровень, область, вычисляемый бейдж статуса
-  (`Live` / `Revoked` / `Expired` / `Exhausted`), иконка require-login, счётчик использований
+- **Таблица**: узел, бейдж `token_prefix…`, роль, область, вычисляемый бейдж статуса
+  (`Live` / `Revoked` / `Expired` / `Exhausted`), счётчик использований
   (`n / max`, когда есть лимит), срок истечения, дата создания. Фильтр: тернарный `Revoked`.
-- **Поля формы**: узел, уровень, область, разрешения (0–31, по умолчанию READ), опциональный пароль,
-  require-login, allow-discovery, max-uses, срок истечения.
+- **Поля формы**: узел, роль, аудитория, область, опциональный пароль, max-uses, срок истечения.
 - **Create**: только через действие в шапке.
 - **Страницы**: только `index`.
 
@@ -278,8 +262,8 @@ $minted = app(CreateShareLinkAction::class)->execute(
   (`SelectFilter` по кейсам `EventType`).
 - **Infolist** (страница просмотра): секции Event / Actor / Target / Request (секция Request включает
   `KeyValueEntry` для `context` плюс ip / user-agent / request-id).
-- **Страницы**: `index` (список) и `view` (`/{record}`). Классы: `ListDrives` и `ViewDrive` в
-  `Vaulter\Filament\Resources\DriveResource\Pages`.
+- **Страницы**: `index` (список) и `view` (`/{record}`). Классы: `ListActivities` и `ViewActivity` в
+  `Vaulter\Filament\Resources\ActivityResource\Pages`.
 
 ### Легаси-поверхность вокруг документов
 

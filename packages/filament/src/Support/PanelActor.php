@@ -9,15 +9,15 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 
 /**
  * Resolves the panel's acting admin for the Vaulter resources. The Filament
- * resources never bypass the core ACL: they gate visibility and row actions
- * through the {@see AccessResolver}, which needs an Authorizable
+ * resources never bypass the core ACL: every read and write goes through
+ * `Vaulter::drive(...)->actingAs(PanelActor::current())`, which needs an Authorizable
  * actor. This helper narrows the authenticated panel user to one (or null when no
- * one is signed in, which yields an all-false ability map — a read-only shell).
+ * one is signed in, which yields no drives and no rows — a read-only shell).
  *
  * The actor is resolved through the ACTIVE PANEL's own auth guard
  * (F-P1.10-02, `Filament::auth()` → `getCurrentOrDefaultPanel()->auth()`), not the
  * application's global default guard: a host whose panel runs on a non-default
- * guard would otherwise have the AccessResolver evaluate a DIFFERENT identity than
+ * guard would otherwise have the drive handle authorize a DIFFERENT identity than
  * the one actually signed into the panel. Outside a resolvable panel context
  * (falls back to the default panel; genuinely panel-less callers get whatever that
  * default guard reports) this still degrades to null cleanly.

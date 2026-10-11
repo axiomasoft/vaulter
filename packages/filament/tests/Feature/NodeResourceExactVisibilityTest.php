@@ -21,5 +21,20 @@ it('hides a denied node from the actual table and shows an allowed node', functi
     // hidden folder cuts it off in the exact check.
     DriveBuilder::grant($storage->rootNode()->firstOrFail(), $actor);
     $hidden->forceFill(['inherit_grants' => false])->save();
-    Livewire::test(ListNodes::class)->assertCanNotSeeTableRecords([$hidden])->assertCanSeeTableRecords([$visible]);
+    Livewire::test(ListNodes::class)->assertCanNotSeeTableRecords([(string) $hidden->getKey()])->assertCanSeeTableRecords([(string) $visible->getKey()]);
+});
+
+it('keeps paginating when the page size arrives as a string from the select', function (): void {
+    app(DataStore::class)->register();
+    $actor = DriveBuilder::user();
+    $this->actingAs($actor);
+    $storage = DriveBuilder::storage();
+    DriveBuilder::grant($storage->rootNode()->firstOrFail(), $actor);
+    foreach (range(1, 7) as $i) {
+        DriveBuilder::folder($storage, 'Folder '.$i);
+    }
+
+    $table = Livewire::test(ListNodes::class)->set('tableRecordsPerPage', '5');
+
+    expect($table->instance()->getTableRecords())->toHaveCount(5);
 });

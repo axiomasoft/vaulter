@@ -6,138 +6,102 @@ use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Filament\Resources\NodeResource;
+use Vaulter\Filament\Support\PanelNodes;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Repositories\Drive\NodeReadRepository;
 
 /*
- * Access-aware Filament table (master plan P1 #3). NodeResource::getEloquentQuery()
- * narrows the admin table to the acting admin's grant-reachable CANDIDATE set — the
- * SAME candidate-SQL the core API listing uses, so the two surfaces are CONSISTENT.
- * The narrowing is a deliberate SUPERSET (it hides nodes with no grant-reachability
- * but does NOT apply the exact inheritance boundary in the listing SQL — deferred to the H.4
- * read-model); per-ROW actions stay exactly gated by the AccessResolver.
- *
- * The full Livewire page render hits a known Filament-5/Testbench snag (see the note
- * in NodeResourceTest), so these pin the load-bearing query behaviour directly:
- * getEloquentQuery() under different actors, the Trashed-filter query closures still
- * flipping live/trashed WITHIN the accessible set, and the repository seam the query
- * delegates to.
+ * The node table is fed by the authorized handle's listings (PanelNodes), never by an
+ * Eloquent query over the node table. These pin what the rows contain under different
+ * actors; the table itself is rendered in NodeResourceExactVisibilityTest.
  */
 
-it('returns an empty table query when no admin is acting', function (): void {
+/** @return list<string> */
+function panelNodeIds(bool $trashed = false): array
+{
+    $rows = array_filter(PanelNodes::rows(), static fn (array $row): bool => ($row['trashed_at'] !== null) === $trashed);
+
+    return array_values(array_map(static fn (array $row): string => $row['id'], $rows));
+}
+
+it('lists no node when no admin is acting', function (): void {
     $storage = DriveBuilder::storage();
     DriveBuilder::folder($storage, 'Hidden');
 
-    // No actingAs — a panel never lists nodes for nobody.
-    $ids = NodeResource::getEloquentQuery()->pluck('id')->all();
-
-    expect($ids)->toBe([]);
+    expect(PanelNodes::rows())->toBe([])
+        ->and(NodeResource::getEloquentQuery()->count())->toBe(0);
 });
 
-it('narrows the table to the acting admin candidate set', function (): void {
+it('lists the nodes of a drive whose root the admin can view and nothing of a drive it cannot', function (): void {
     $admin = DriveBuilder::user();
     $this->actingAs($admin);
 
     $storage = DriveBuilder::storage();
-    $granted = DriveBuilder::folder($storage, 'Granted');
-    $ungranted = DriveBuilder::folder($storage, 'Ungranted');
+    $inside = DriveBuilder::folder($storage, 'Inside');
+    $foreign = DriveBuilder::folder(DriveBuilder::storage(), 'Foreign');
+    DriveBuilder::grant($storage->rootNode()->firstOrFail(), $admin, role: RoleRegistry::READER);
 
-    // A subtree grant on 'Granted' makes it (and any descendant) a candidate; the
-    // sibling 'Ungranted' has no grant and must NOT appear in the admin table.
-    DriveBuilder::grant($granted, $admin, role: RoleRegistry::READER);
+    expect(panelNodeIds())->toContain((string) $inside->getKey())->not->toContain((string) $foreign->getKey());
 
-    $ids = NodeResource::getEloquentQuery()->pluck('id')->all();
+    $this->actingAs(DriveBuilder::user(99));
 
-    expect($ids)->toContain($granted->getKey())
-        ->and($ids)->not->toContain($ungranted->getKey());
+    expect(PanelNodes::rows())->toBe([]);
 });
 
-it('flips between live and trashed WITHIN the accessible set via the Trashed filter', function (): void {
+it('keeps live and trashed nodes apart within the listed rows', function (): void {
     $admin = DriveBuilder::user();
     $this->actingAs($admin);
 
     $storage = DriveBuilder::storage();
     $live = DriveBuilder::folder($storage, 'Live');
     $trashed = DriveBuilder::folder($storage, 'Trashed');
-
-    // Both are candidates (Owner subtree grants), so the access narrowing keeps both;
-    // the Trashed filter then selects by trashed_at within that accessible set.
-    DriveBuilder::grant($live, $admin);
-    DriveBuilder::grant($trashed, $admin);
+    DriveBuilder::grant($storage->rootNode()->firstOrFail(), $admin);
 
     Vaulter::drive($storage)->actingAs($admin)->nodes()->trash(node: $trashed->getKey());
 
-    $base = NodeResource::getEloquentQuery();
-
-    // The "Live only" branch (the filter's false/blank query) keeps the live node only.
-    $liveIds = (clone $base)->whereNull('trashed_at')->pluck('id')->all();
-    expect($liveIds)->toContain($live->getKey())
-        ->and($liveIds)->not->toContain($trashed->getKey());
-
-    // The "Trashed only" branch (the filter's true query) keeps the trashed node only —
-    // proving the access narrowing did NOT pre-impose a live/trashed filter.
-    $trashedIds = (clone NodeResource::getEloquentQuery())->whereNotNull('trashed_at')->pluck('id')->all();
-    expect($trashedIds)->toContain($trashed->getKey())
-        ->and($trashedIds)->not->toContain($live->getKey());
+    expect(panelNodeIds())->toContain((string) $live->getKey())->not->toContain((string) $trashed->getKey())
+        ->and(panelNodeIds(trashed: true))->toContain((string) $trashed->getKey())->not->toContain((string) $live->getKey());
 });
 
-it('keeps force-deleted tombstones out of the resource table', function (): void {
+it('keeps purged nodes out of the rows', function (): void {
     $admin = DriveBuilder::user();
     $this->actingAs($admin);
 
     $storage = DriveBuilder::storage();
     $live = DriveBuilder::folder($storage, 'Live');
     $deleted = DriveBuilder::folder($storage, 'Deleted');
-
-    DriveBuilder::grant($live, $admin);
-    DriveBuilder::grant($deleted, $admin);
+    DriveBuilder::grant($storage->rootNode()->firstOrFail(), $admin);
 
     Vaulter::drive($storage)->actingAs($admin)->nodes()->trash(node: $deleted->getKey());
     Vaulter::drive($storage)->actingAs($admin)->trash()->purge(node: $deleted->getKey());
 
-    $ids = NodeResource::getEloquentQuery()->pluck('id')->all();
-
-    expect($ids)->toContain($live->getKey())
-        ->and($ids)->not->toContain($deleted->getKey());
+    expect(array_merge(panelNodeIds(), panelNodeIds(trashed: true)))->toContain((string) $live->getKey())->not->toContain((string) $deleted->getKey());
 });
 
-it('constrains a raw builder to the item anchor only via the repository seam', function (): void {
-    $admin = DriveBuilder::user();
-    $this->actingAs($admin);
-
-    $storage = DriveBuilder::storage();
-    $folder = DriveBuilder::folder($storage, 'ItemOnly');
-    $child = Node::query()->findOrFail(Vaulter::drive($storage)->asSystem('test fixture')->folders()->create(name: 'Inside', parent: $folder->getKey())->id);
-
-    // ITEM scope = that node only; the child is not a candidate.
-    DriveBuilder::grant($folder, $admin, role: RoleRegistry::READER, scope: GrantScope::Item);
-
-    $ids = app(NodeReadRepository::class)
-        ->constrainToAccessible(Node::query(), $admin)
-        ->pluck('id')
-        ->all();
-
-    expect($ids)->toBe([$folder->getKey()])
-        ->and($ids)->not->toContain($child->getKey());
-});
-
-it('lists a walled-off candidate in the table query (superset), per the listing decision', function (): void {
+it('omits a node behind an inheritance boundary the admin cannot pass', function (): void {
     $admin = DriveBuilder::user();
     $this->actingAs($admin);
 
     $storage = DriveBuilder::storage();
     $parent = DriveBuilder::folder($storage, 'Parent');
-    $childSnapshot = Vaulter::drive($storage)->asSystem('test fixture')->folders()->create(name: 'Walled', parent: $parent->getKey());
-    $child = Node::query()->findOrFail($childSnapshot->id);
-
-    // A subtree grant on the parent makes the child a candidate; the child's inheritance
-    // boundary cuts its EXACT access. The candidate SUPERSET still LISTS the child (the
-    // boundary is enforced on the per-row action, never in the listing SQL).
-    DriveBuilder::grant($parent, $admin, role: RoleRegistry::READER);
+    $child = Node::query()->findOrFail(Vaulter::drive($storage)->asSystem('test fixture')->folders()->create(name: 'Walled', parent: $parent->getKey())->id);
+    DriveBuilder::grant($storage->rootNode()->firstOrFail(), $admin, role: RoleRegistry::READER);
     $child->forceFill(['inherit_grants' => false])->save();
 
-    $ids = NodeResource::getEloquentQuery()->pluck('id')->all();
+    expect(panelNodeIds())->toContain((string) $parent->getKey())->not->toContain((string) $child->getKey());
+});
 
-    expect($ids)->toContain($child->getKey());
+it('carries the handle abilities on each row so actions follow them', function (): void {
+    $admin = DriveBuilder::user();
+    $this->actingAs($admin);
+
+    $storage = DriveBuilder::storage();
+    $folder = DriveBuilder::folder($storage, 'Folder');
+    DriveBuilder::grant($storage->rootNode()->firstOrFail(), $admin, role: RoleRegistry::READER);
+    DriveBuilder::grant($folder, $admin, role: RoleRegistry::WRITER, scope: GrantScope::Item);
+
+    $row = DriveBuilder::row($folder);
+
+    expect($row['abilities']['edit'])->toBeTrue()
+        ->and($row['abilities']['delete'])->toBeFalse();
 });

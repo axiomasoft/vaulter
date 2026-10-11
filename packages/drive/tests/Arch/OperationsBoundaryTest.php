@@ -115,7 +115,6 @@ it('keeps every HTTP and Filament boundary on Operations except the shrinking ex
         // drive; the upload operations then authorize every act on it.
         'drive/src/Http/Controllers/Uploads/S3MultipartProtocolController.php',
         'drive/src/Http/Controllers/Uploads/TusProtocolController.php',
-        'filament/src/Support/PanelAccessScope.php',
     ];
     $offenders = [];
     $directories = array_filter([

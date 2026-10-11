@@ -18,7 +18,7 @@ use UnitEnum;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Filament\Resources\DriveResource\Pages\ListDrives;
 use Vaulter\Filament\Resources\DriveResource\Pages\ViewDrive;
-use Vaulter\Filament\Support\PanelAccessScope;
+use Vaulter\Filament\Support\PanelDrives;
 use Vaulter\Models\Drive\Drive;
 
 /**
@@ -48,31 +48,13 @@ final class DriveResource extends Resource
     }
 
     /**
-     * Access-aware listing (F-P1.10-01): narrow to drives whose root node is in
-     * the acting admin's grant-reachable candidate set — mirrors
-     * {@see NodeResource::getEloquentQuery()}. A drive
-     * has no other grant anchor of its own (a grant addresses a NODE), so "may see
-     * this drive" reduces to "may reach its root". Empty candidate set (no actor,
-     * or an actor with zero grants) ⇒ empty table, never an open listing.
+     * Access-aware listing: the rows are the drives whose handle opens for the acting
+     * admin ({@see PanelDrives}); no actor or no openable drive means an empty table.
      */
     #[Override]
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
-
-        $nodeIds = PanelAccessScope::candidateNodeIds();
-
-        if ($nodeIds === null) {
-            // The active driver doesn't narrow by grant (host roles govern).
-            return $query;
-        }
-
-        if ($nodeIds === []) {
-            // `whereIn([], ...)` below is also empty; keep the explicit fail-closed branch readable.
-            return $query->whereRaw('1 = 0'); // @pest-mutate-ignore: RemoveEarlyReturn
-        }
-
-        return $query->whereIn('root_node_id', $nodeIds);
+        return parent::getEloquentQuery()->whereKey(PanelDrives::ids());
     }
 
     #[Override]

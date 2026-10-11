@@ -34,7 +34,7 @@ beforeEach(function (): void {
 });
 
 it('omits a destination without Create from the folder options', function (): void {
-    $options = (new ReflectionMethod(NodeResource::class, 'folderOptions'))->invoke(null, $this->moveSource);
+    $options = (new ReflectionMethod(NodeResource::class, 'folderOptions'))->invoke(null, DriveBuilder::row($this->moveSource));
     expect($options)->not->toHaveKey($this->moveTarget->getKey());
 });
 
@@ -45,18 +45,18 @@ it('rejects a forged move into a folder without Create and notifies the actor', 
     // authorization even if an option was cached before access changed.
     Select::configureUsing(
         modifyUsing: fn (Select $select) => $select->in([$this->moveTarget->getKey()]),
-        during: fn () => Livewire::test(ListNodes::class)->callTableAction('move', $this->moveSource, ['parent_id' => $this->moveTarget->getKey()]),
+        during: fn () => Livewire::test(ListNodes::class)->callTableAction('move', (string) $this->moveSource->getKey(), ['parent_id' => $this->moveTarget->getKey()]),
         isImportant: true,
     );
     expect($this->moveSource->fresh()->parent_id)->toBe($parent);
     Notification::assertNotified(Notification::make()->title('Move not allowed')->danger());
-    Livewire::test(ListNodes::class)->callTableAction('move', $this->moveSource, ['parent_id' => null]);
+    Livewire::test(ListNodes::class)->callTableAction('move', (string) $this->moveSource->getKey(), ['parent_id' => null]);
     expect($this->moveSource->fresh()->parent_id)->toBe($parent);
     Notification::assertNotified(Notification::make()->title('Move not allowed')->danger());
 });
 
 it('moves into a destination when the actor has Create there', function (): void {
     DriveBuilder::grant($this->moveTarget, $this->moveActor, RoleRegistry::WRITER, scope: GrantScope::Item);
-    Livewire::test(ListNodes::class)->callTableAction('move', $this->moveSource, ['parent_id' => $this->moveTarget->getKey()]);
+    Livewire::test(ListNodes::class)->callTableAction('move', (string) $this->moveSource->getKey(), ['parent_id' => $this->moveTarget->getKey()]);
     expect($this->moveSource->fresh()->parent_id)->toBe($this->moveTarget->getKey());
 });
