@@ -68,8 +68,10 @@ the same operation.
 - A node you can view but an ability you lack → `403 permission_denied`; a feature the
   drive's profile switches off → `403 profile_restriction`.
 - A grant or share id that belongs to another node is unknown (`404`).
-- Drive-wide lists (search, starred, trash) are filtered down to what you can see rather
-  than refused: a caller granted only a folder deep inside finds what is in it.
+- Drive-wide routes (search, starred, trash, emptying the trash, the change journal) are
+  filtered down to what you can see rather than refused: a caller granted only a folder deep
+  inside finds what is in it. A drive where you can see no node at all answers
+  `404 drive_not_found`, like an unknown drive.
 
 ### Validators and preconditions
 

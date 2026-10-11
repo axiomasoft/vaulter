@@ -10,7 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### P6 audit corrections
 
 - Fixed: HTTP changes, search, starred and trash routes return `404 drive_not_found` when the caller
-  cannot view any node of the drive. Nested-folder and trash grants still admit the drive.
+  cannot view any node of the drive. Nested-folder and trash grants still admit the drive. The check
+  reads only the nodes holding the caller's own grants, so a stranger's request costs the same however
+  large the drive is.
 - Fixed: `abilities.create` includes the profile's create gate, including batch responses and
   Filament move destinations; `VaulterDrive` offers New folder and Upload only when the current
   folder allows creation, and exposes `canCreate` to its toolbar slot.
