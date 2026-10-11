@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { useSpreadsheet } from '../composables/useSpreadsheet'
-import type { NodeId, SpreadsheetVersion, SpreadsheetWorkbook } from '../types'
+import { computed, onMounted } from 'vue'
+import type { DocumentBody, DocumentContent, Node } from '../api/types'
+import { useDocument } from '../composables/useDocument'
 
-// Headless shell for a NON-rich-text (spreadsheet) document node — the sibling of
-// VaulterEditor for TipTap. It owns loading the opaque workbook snapshot, tracking
-// unsaved edits and persisting them (with debounced autosave); the actual spreadsheet
-// surface (Univer, etc.) is mounted by the CONSUMER in the default slot, seeded from
-// `workbook` and fed back through `set-workbook`. No spreadsheet engine is a dependency
-// of @vaulter/vue — the shell is engine-agnostic.
+// Headless shell for a spreadsheet document (the built-in `vaulter/univer` viewer) — the
+// sibling of VaulterDocumentNode for an opaque workbook. It owns loading the snapshot with its
+// ETag, tracking unsaved edits and persisting them (debounced autosave); the actual
+// spreadsheet surface (Univer, etc.) is mounted by the CONSUMER in the default slot, seeded
+// from `workbook` and fed back through `set-workbook`. No spreadsheet engine is a dependency
+// of @vaulter/vue — the shell is engine-agnostic, and the server stores the workbook verbatim.
 const props = withDefaults(
   defineProps<{
-    nodeId: NodeId
+    node: Node
     readonly?: boolean
     autoLoad?: boolean
     /** Autosave debounce window in ms. */
@@ -21,49 +21,51 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  save: [version: SpreadsheetVersion]
-  'workbook-changed': [workbook: SpreadsheetWorkbook]
+  save: [saved: DocumentContent]
+  'workbook-changed': [workbook: DocumentBody]
 }>()
 
-const { workbook, handler, loading, saving, error, load, setWorkbook, save, loadHandler } =
-  useSpreadsheet(props.nodeId, { debounceMs: props.debounceMs })
+const { content: workbook, loading, saving, error, conflict, load, setContent, save } =
+  useDocument(props.node.id, { debounceMs: props.debounceMs })
+
+const isReadonly = computed(() => props.readonly || !props.node.abilities.edit)
 
 onMounted(() => {
   if (props.autoLoad) {
     // A load failure is captured in `error` (shown via the error slot); swallow the
     // rejection here so it is not an unhandled promise rejection.
-    void load().then(loadHandler).catch(() => {})
+    void load().catch(() => undefined)
   }
 })
 
-function update(next: SpreadsheetWorkbook): void {
-  if (props.readonly) {
+function update(next: DocumentBody): void {
+  if (isReadonly.value) {
     return
   }
-  setWorkbook(next)
+  setContent(next)
   emit('workbook-changed', next)
 }
 
 async function persist(): Promise<void> {
-  const saved = await save()
-  emit('save', saved)
+  emit('save', await save())
 }
 
-defineExpose({ load, save: persist, setWorkbook: update, workbook, saving })
+defineExpose({ load, save: persist, setWorkbook: update, workbook, saving, conflict })
 </script>
 
 <template>
-  <div class="vaulter-spreadsheet" :data-readonly="readonly">
+  <div class="vaulter-spreadsheet" :data-readonly="isReadonly">
     <slot v-if="loading" name="loading">Loading…</slot>
-    <p v-else-if="error" class="vaulter-spreadsheet__error" role="alert">
+    <p v-else-if="error && !conflict" class="vaulter-spreadsheet__error" role="alert">
       <slot name="error" :error="error">Could not load this spreadsheet.</slot>
     </p>
     <slot
       v-else
+      :node="node"
       :workbook="workbook"
-      :handler="handler"
       :saving="saving"
-      :readonly="readonly"
+      :readonly="isReadonly"
+      :conflict="conflict"
       :set-workbook="update"
       :save="persist"
     >

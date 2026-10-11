@@ -29,6 +29,10 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      # The committed API types must be exactly what openapi/vaulter-v1.yaml generates.
+      - name: Generated API types are current
+        run: npm run api:check --workspace @vaulter/vue
+
       - name: Type-check
         run: npm run typecheck --workspace @vaulter/vue
 

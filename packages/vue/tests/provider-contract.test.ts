@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { HocuspocusProvider } from '@hocuspocus/provider'
 import { Doc as YDoc } from 'yjs'
-import { createNodeCollaborationSession } from '../src/nodeCollaboration'
-import type { NodeCollaborationSession } from '../src/types'
+import { openCollaborationTransport } from '../src/collaboration/transport'
+import type { CollaborationSession } from '../src/api/types'
 
 // F-P4.5-02 — the @hocuspocus/provider 2.x → 4.x bump. Every other collaboration
 // test injects a mock `createHocuspocusProvider`, so none of them exercise the real
@@ -11,7 +11,7 @@ import type { NodeCollaborationSession } from '../src/types'
 // event names. If a future v4/v5 bump renames either, these go red — instead of the
 // collaboration UI silently sticking on perpetually-(dis)connected with green CI.
 
-function hocuspocusSession(): NodeCollaborationSession {
+function hocuspocusSession(): CollaborationSession {
   return {
     driver: 'hocuspocus',
     room: 'vaulter.documents.7.42.0',
@@ -31,7 +31,7 @@ describe('defaultHocuspocusProvider against the real @hocuspocus/provider v4', (
   it('builds a live session through the default (non-mocked) path', () => {
     // No `createHocuspocusProvider` override → the production default factory runs
     // against the real HocuspocusProvider constructor.
-    const handle = createNodeCollaborationSession(hocuspocusSession(), { doc: new YDoc() })
+    const handle = openCollaborationTransport(hocuspocusSession(), { doc: new YDoc() })
 
     // `isConnected()` reads the real `provider.isSynced` getter — a boolean, not
     // `undefined` (which is what a renamed/removed getter would yield).

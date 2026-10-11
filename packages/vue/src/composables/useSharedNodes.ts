@@ -1,12 +1,12 @@
 import { ref, shallowRef, type Ref, type ShallowRef } from 'vue'
 import { useVaulterClient } from './useVaulterClient'
-import type { Node, CursorMeta, SharedNodesQuery } from '../types'
+import type { CursorQuery, Node, PageMeta } from '../api/types'
 
 export interface UseSharedNodesReturn {
-  /** The nodes shared with the actor (flat, cross-storage). */
+  /** The nodes shared with the actor (flat, cross-drive). */
   nodes: ShallowRef<Node[]>
   /** The cursor meta of the last load, or null before first load. */
-  meta: ShallowRef<CursorMeta | null>
+  meta: ShallowRef<PageMeta | null>
   loading: Ref<boolean>
   error: Ref<unknown>
   /** Whether another scan page exists, including after an empty visible page. */
@@ -18,25 +18,22 @@ export interface UseSharedNodesReturn {
 }
 
 /**
- * Reactive "shared with me" listing — the nodes the actor holds a live allow-grant
- * on, served by the cross-storage `GET /shared` endpoint. A FLAT list: there is no
- * folder navigation here (the set spans storages), so unlike {@link useNodes} it
- * has no `parentId`/`navigate`. Paging follows the last inspected candidate cursor,
+ * Reactive "shared with me" listing — the nodes the actor holds a live grant on, served by
+ * the cross-drive `GET /shared` endpoint. A FLAT list: the set spans drives, so unlike
+ * {@link useNodes} there is no folder navigation. Paging follows the opaque cursor,
  * including empty pages when the server reaches its scan budget.
  *
- * Injection + error handling mirror {@link useNodes}: the client is resolved via
- * `useVaulterClient`, every load flips `loading` and captures into `error`. It does
- * NOT auto-load — the component calls `refresh()` on mount, matching the Drive idiom.
+ * It does NOT auto-load — the component calls `refresh()` on mount, matching the Drive idiom.
  *
  * Both `refresh()` and `loadMore()` are guarded against stale overlapping loads (a shared
  * `loadSeq` token): a slower earlier call can never overwrite the list a later call already
- * replaced, and `loadMore` is additionally re-entrant-safe (it no-ops while a load is in
- * flight) so a double-click can't append the same page twice.
+ * replaced, and `loadMore` is re-entrant-safe (it no-ops while a load is in flight) so a
+ * double-click can't append the same page twice.
  */
-export function useSharedNodes(query?: SharedNodesQuery): UseSharedNodesReturn {
+export function useSharedNodes(query?: CursorQuery): UseSharedNodesReturn {
   const client = useVaulterClient()
   const nodes = shallowRef<Node[]>([])
-  const meta = shallowRef<CursorMeta | null>(null)
+  const meta = shallowRef<PageMeta | null>(null)
   const loading = ref(false)
   const error = ref<unknown>(null)
   const hasMore = ref(false)
@@ -75,9 +72,9 @@ export function useSharedNodes(query?: SharedNodesQuery): UseSharedNodesReturn {
   }
 
   async function loadMore(): Promise<Node[]> {
-    // Re-entry guard: a second click (or a click during a refresh) is a no-op while a
-    // load is in flight — otherwise two clicks both pass the hasMore check on the same
-    // meta and append the SAME page twice (duplicate node ids → VaulterNodeList key clash).
+    // A second click (or a click during a refresh) is a no-op while a load is in flight —
+    // otherwise two clicks both pass the hasMore check on the same meta and append the SAME
+    // page twice (duplicate node ids → VaulterNodeList key clash).
     if (loading.value || !hasMore.value || meta.value == null) {
       return nodes.value
     }
@@ -87,8 +84,8 @@ export function useSharedNodes(query?: SharedNodesQuery): UseSharedNodesReturn {
     error.value = null
     try {
       const page = await client.nodes.shared({ cursor: next, perPage })
-      // A later refresh/loadMore already won — never graft this stale page onto the
-      // list (or rewind meta) it already replaced.
+      // A later refresh/loadMore already won — never graft this stale page onto the list
+      // (or rewind meta) it already replaced.
       if (seq !== loadSeq) {
         return nodes.value
       }

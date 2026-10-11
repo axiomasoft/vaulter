@@ -1,4 +1,4 @@
-import type { Node, NodeKind } from '../../types'
+import type { Node, NodeKind } from '../../api/types'
 
 /**
  * The small set of visual kinds the Drive list paints an icon for. They are NOT
@@ -37,7 +37,7 @@ const EXTENSION_BUCKETS: Record<string, NodeIconKind> = {
  * kind, otherwise by mime family, then by extension, defaulting to a plain file.
  */
 export function nodeIconKind(node: Pick<Node, 'kind' | 'mime' | 'extension'>): NodeIconKind {
-  const kind = node.kind as NodeKind
+  const kind: NodeKind = node.kind
   if (kind === 'folder') {
     return 'folder'
   }

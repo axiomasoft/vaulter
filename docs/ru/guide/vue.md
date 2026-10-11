@@ -1,36 +1,33 @@
 ---
 title: Vue-пакет (@vaulter/vue)
-description: UI Vaulter Drive для Vue 3 — типизированный API-клиент, composable-функции Drive (useNodes, useUpload, useNodeGrants, useNodeShares, useDocumentNode, useNodeCollaboration) и компоненты (VaulterDrive, breadcrumb, list, uploader, панели grants/share, документный узел), с разобранным примером файлового менеджера.
+description: UI Vaulter Drive для Vue 3 на REST v1 — генерируемые типы и типизированный клиент (If-Match, problem+json, проверка версии API), реестр viewer'ов на приложение с запасным вариантом для неподдерживаемых элементов, composable-функции и доступные компоненты, с разобранным примером файлового менеджера.
 outline: deep
 ---
 
 # Vue-пакет (`@vaulter/vue`)
 
-`@vaulter/vue` — пакет на Vue 3 + TypeScript, который поставляет три слоя:
+`@vaulter/vue` — пакет на Vue 3 + TypeScript, который работает **только с REST API v1** и состоит из четырёх слоёв:
 
-1. **типизированный API-клиент** (`createVaulterClient`), который общается с REST API Vaulter;
-2. **composable-функции**, оборачивающие клиент в реактивное состояние (`useNodes`, `useUpload`, …);
-3. **компоненты**, собирающие composable-функции в headless-UI Drive (`VaulterDrive`, …).
-
-Всё аддитивно: новая поверхность **Drive** (дерево файлов/папок/документов) живёт рядом с
-легаси-компонентами, ориентированными на документы. Эта страница описывает поверхность Drive — ту,
-на которой вы строите новые приложения.
+1. **типы, сгенерированные из контракта OpenAPI** (`openapi/vaulter-v1.yaml`): клиент не может разойтись с сервером;
+2. **типизированный API-клиент** (`createVaulterClient`) с отдельным пространством имён на каждый ресурс;
+3. **реестр viewer'ов**, который решает, каким компонентом показать узел, и безопасный запасной вариант;
+4. **composable-функции** и **компоненты**, превращающие клиент в headless-UI Drive (`VaulterDrive`, …).
 
 ```bash
 npm install @vaulter/vue
 ```
 
-::: tip Peer-зависимость
-`@vaulter/vue` объявляет `vue@^3.4` как peer-зависимость. Транспорт совместного редактирования
-дополнительно тянет `@hocuspocus/provider`, `@tiptap/*` и `yjs` (уже объявлены как зависимости).
+::: tip Peer-зависимости
+Peer-зависимости: `vue@^3.4`, `yjs@^13.6` и `@tiptap/pm@^3`. Транспорт совместного редактирования тянет
+`@hocuspocus/provider`; сам редактор (TipTap, Univer, …) — ваш, см. [viewer'ы](#viewer-ы).
 :::
 
 ## Настройка
 
 ### Как плагин
 
-Установите плагин один раз: он создаёт клиент из ваших опций и предоставляет его всему приложению, а
-также регистрирует каждый компонент глобально:
+Установите плагин один раз. Он собирает клиент из ваших опций, создаёт реестр viewer'ов **этого приложения**,
+предоставляет i18n и регистрирует все компоненты глобально:
 
 ```ts
 import { createApp } from 'vue'
@@ -39,641 +36,317 @@ import App from './App.vue'
 
 createApp(App)
   .use(VaulterPlugin, {
-    baseUrl: '/api/vaulter',                  // default
+    baseUrl: '/api/vaulter/v1',               // по умолчанию; сегмент версии входит в базу
     csrfToken: document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content,
+    viewers: {
+      'acme/diagram': () => import('./viewers/DiagramViewer.vue'), // ваш viewer
+    },
+    i18n: { locale: 'ru' },
   })
   .mount('#app')
 ```
 
-`VaulterPluginOptions` расширяет `VaulterClientOptions` (ниже) и добавляет одно поле:
-
 | Опция | Тип | Примечания |
-|--------|------|-------|
-| `client` | `VaulterClient` | передать заранее собранный клиент вместо конструирования из опций (тесты / кастомная проводка) |
+|-------|-----|------------|
+| `client` | `VaulterClient` | готовый клиент вместо собранного из опций (тесты / своя обвязка) |
+| `viewers` | `Record<string, ViewerEntry>` | добавляются к встроенным; переданный ключ **заменяет** встроенный |
+| `i18n` | `{ locale?, messages? }` | `en` (по умолчанию) и `ru` поставляются с пакетом; `messages` переопределяет отдельные строки по локалям |
+| `baseUrl`, `headers`, `csrfToken`, `fetch` | см. ниже | передаются в `createVaulterClient` |
 
-### Передача заранее собранного клиента
+### Опции клиента
 
-Для тестов или пораундовой SSR-проводки соберите клиент сами и предоставьте его:
+| Опция | Тип | По умолчанию | Примечания |
+|-------|-----|--------------|------------|
+| `baseUrl` | `string` | `/api/vaulter/v1` | совпадает с `routes.prefix` + `/v1`. Хвостовые слэши обрезаются |
+| `headers` | `Record<string, string>` или `() => Record<string, string>` | — | дополнительные заголовки или функция-геттер (например, для ротируемого bearer-токена) |
+| `csrfToken` | `string` | — | отправляется как `X-CSRF-TOKEN` |
+| `fetch` | `typeof fetch` | глобальный `fetch` | своя реализация fetch |
+
+Для тестов или SSR-обвязки на запрос соберите клиент сами и предоставьте его:
 
 ```ts
 import { createVaulterClient, provideVaulterClient } from '@vaulter/vue'
 
-const client = createVaulterClient({ baseUrl: '/api/vaulter' })
-provideVaulterClient(app, client)
+provideVaulterClient(app, createVaulterClient({ baseUrl: '/api/vaulter/v1' }))
 ```
 
-В любом дочернем компоненте разрешите его через `useVaulterClient()`. Он бросит понятную ошибку, если
-клиент не был предоставлен — установите плагин или вызовите `provideVaulterClient()` в родителе.
+Внутри компонента `useVaulterClient()` возвращает клиент и понятной ошибкой сообщает, что он не предоставлен.
 
-### Опции клиента
+## Типы
 
-`createVaulterClient(options)` и плагин оба принимают `VaulterClientOptions`:
+`src/api/schema.d.ts` **генерируется** из `openapi/vaulter-v1.yaml` утилитой `openapi-typescript` и хранится в git;
+руками его не правят. Пакет экспортирует готовые алиасы — `Node`, `Drive`, `FileRevision`, `DocumentRevision`,
+`Grant`, `Share`, `MintedShare`, `Comment`, `Activity`, `Change`, `CollaborationSession`, `Problem`, … — а также
+сырые `components`, `paths` и `operations` для всего остального. Идентификаторы — всегда строки.
 
-| Опция | Тип | По умолчанию | Примечания |
-|--------|------|---------|-------|
-| `baseUrl` | `string` | `/api/vaulter` | соответствует конфигу `routes.prefix` на бэкенде. Хвостовые слэши обрезаются |
-| `headers` | `Record<string, string>` или `() => Record<string, string>` | — | дополнительные заголовки запроса или геттер (например, ротируемый bearer-токен) |
-| `csrfToken` | `string` | — | отправляется как `X-CSRF-TOKEN` |
-| `fetch` | `typeof fetch` | глобальный `fetch` | своя реализация fetch |
-
-Клиент отправляет `credentials: 'same-origin'` и `Accept: application/json`; тела — JSON, если только
-вызов не загружает `FormData` или не стримит чанк tus/S3.
-
-::: warning Ошибки
-Ответ не из диапазона 2xx бросает `VaulterApiError` с полями `status`, `message`, `errors`
-(`Record<string, string[]>`, форма валидации Laravel) и сырым `Response`. Ловите его, чтобы отрисовать
-ошибки валидации или 403.
-:::
+```bash
+npm run api:generate   # перегенерировать после изменения контракта
+npm run api:check      # CI: падает, если файл устарел или не отслеживается git
+```
 
 ## API-клиент
 
-`createVaulterClient()` возвращает `VaulterClient`, чьи методы сгруппированы в **пространства имён**.
-Пространства имён Drive (M1–M4):
+`createVaulterClient()` возвращает `VaulterClient` с пространством имён на каждый ресурс, повторяющим маршруты v1:
 
-| Пространство имён | Что покрывает | Опорные маршруты (под `baseUrl`) |
-|-----------|--------|----------------------------------|
-| `storages` | одно хранилище-контейнер + его корень/использование | `GET /storages/{storage}` |
-| `nodes` | CRUD дерева папок/файлов/документов + поиск + корзина + скачивание | `/storages/{storage}/nodes`, `/nodes/{node}/*` |
-| `uploads` | прямые + резюмируемые (tus / S3-multipart) загрузки | `/storages/{storage}/uploads`, `/resumable-uploads/*` |
-| `grants` | гранты ACL на узел | `/nodes/{node}/grants` |
-| `nodeShares` | bearer-ссылки share + публичный resolve/download | `/nodes/{node}/shares`, `/share/{token}*` |
-| `activity` | append-only лента активности | `/storages/{storage}/activity`, `/nodes/{node}/activity` |
-| `documentNodes` | контент документного узла, версии, обработчик, экспорт | `/storages/{storage}/documents`, `/nodes/{node}/content`, `/nodes/{node}/document-versions/*` |
-| `nodeCollaboration` | рукопожатие сессии realtime-совместного редактирования | `POST /nodes/{node}/collab/token` |
-
-Легаси-пространства имён, ориентированные на документы (`documents`, `versions`, `folders`, `permissions`,
-`comments`, `shares`, `collaboration`), остаются для хостов, всё ещё сидящих на той поверхности.
+| Пространство | Что покрывает |
+|--------------|---------------|
+| `drives` | `get`, `archive`, `unarchive`, `delete` |
+| `nodes` | `children`, `search`, `starred`, `shared`, `get`, `getWithIncludes`, `update` (переименование), `setProperties`, `move`, `copy`, `trash`, `restore`, `purge`, `star`, `unstar`, `abilities` |
+| `trash` | `list`, `empty` |
+| `folders` | `create` |
+| `files` | `upload`, `download`, `downloadUrl`, `revisions`, `addRevision`, `downloadRevision`, `restoreRevision`, `setRevisionRetention`, `deleteRevision` |
+| `uploads` | `start` (возобновляемая загрузка tus или S3 multipart), `show` |
+| `documents` | `create`, `content`, `update`, `export`, `revisions`, `revision`, `snapshot`, `setRevisionRetention`, `restoreRevision`, `collaborationSession` |
+| `grants`, `access` | `list`, `create`, `revoke`; `restrictInheritance`, `restoreInheritance` |
+| `shares`, `publicShares` | `list`, `create`, `update`, `rotate`, `revoke`; `get`, `nodes`, `downloadUrl` |
+| `comments`, `activity`, `changes` | обсуждения; ленты активности; `start` и `list` ленты изменений |
 
 ```ts
-import { useVaulterClient } from '@vaulter/vue'
-
 const client = useVaulterClient()
 
-const storage = await client.storages.get(storageId)
-const page    = await client.nodes.list(storageId, { parentId: null }) // CursorPage<Node>
-const folder  = await client.nodes.createFolder(storageId, { name: 'Invoices' })
-const node    = await client.uploads.upload(storageId, file, { parentId: folder.id })
+const page = await client.nodes.children(driveId, { parent: null, perPage: 50 }) // { data, meta }
+const folder = await client.folders.create(driveId, { name: 'Invoices' })
+const renamed = await client.nodes.update(folder.id, { name: 'Bills' }, { etag: folder.etag })
 ```
 
-Эндпоинты списков используют **курсорную пагинацию**: `client.nodes.list(...)` резолвит `CursorPage<Node>`
-(`{ data, meta }`); читайте `meta.next_cursor` и передавайте его обратно как `{ cursor }` для следующей
-страницы.
+### Страницы по курсору
 
-## Composable-функции
+Каждый список **постраничный по курсору** и возвращает `{ data, meta: { next_cursor, per_page } }` — без номера
+страницы и без общего числа. Передайте `meta.next_cursor` обратно как `{ cursor }`. Лента изменений использует
+`{ cursor, limit }` и отвечает `meta.has_more`.
 
-Все composable-функции Drive внутри вызывают `useVaulterClient()`, поэтому они должны исполняться внутри
-компонента, который находится под предоставленным клиентом. Каждая выдаёт реактивные ref-ы плюс
-асинхронные методы, которые мутируют их оптимистично.
+### Предусловия: `If-Match` и ETag
 
-### `useNodes`
-
-Реактивный листинг дочерних узлов папки с навигацией и мутациями узлов, завязанными на клиент.
+`etag` узла — **непрозрачный валидатор** представления, которое у вас на руках. Не разбирайте его и не собирайте
+сами. Каждый метод, меняющий узел или документ, принимает его **обязательной** опцией `{ etag }` и отправляет как
+`If-Match`:
 
 ```ts
-import { useNodes } from '@vaulter/vue'
-
-const {
-  nodes, parentId, cursor, loading, error,
-  refresh, loadMore, navigate,
-  createFolder, rename, move, copy, trash, restore, forceDelete,
-} = useNodes(storageId, () => currentFolderId.value)
+await client.nodes.trash(node.id, { etag: node.etag })
+await client.nodes.move(node.id, targetId, { etag: node.etag, onConflict: 'rename' })
+await client.documents.update(node.id, content, { etag: loaded.etag! })
 ```
 
-| Член | Тип | Примечания |
-|--------|------|-------|
-| `nodes` | `ShallowRef<Node[]>` | дочерние узлы текущей папки |
-| `parentId` | `Ref<NodeId \| null>` | листаемая папка (`null` = корень хранилища) |
-| `cursor` | `Ref<CursorMeta \| null>` | мета пагинации последней загрузки |
-| `loading` / `error` | `Ref<boolean>` / `Ref<unknown>` | состояние запроса |
-| `refresh()` | `Promise<Node[]>` | (пере)загрузить первую страницу текущей папки |
-| `loadMore()` | `Promise<Node[]>` | добавить следующую курсорную страницу (no-op, когда её нет) |
-| `navigate(parentId)` | `Promise<Node[]>` | войти в папку (`null` = корень) и загрузить её |
-| `createFolder(payload)` | `Promise<Node>` | создать папку (отражается в списке, когда она попадает сюда) |
-| `rename` / `move` / `copy` / `trash` / `restore` / `forceDelete` | `Promise<Node \| void>` | мутации узла — список обновляется оптимистично (rename оставляет строку, move/trash убирают её, copy/restore дописывают) |
+Вызов без `etag` не пройдёт проверку типов. Валидатор содержимого документа приходит в заголовке ответа `ETag`;
+клиент отдаёт его как `content.etag` (`null`, если заголовок не виден браузеру: для кросс-доменного API добавьте
+`ETag` в `Access-Control-Expose-Headers`).
 
-Передайте `parentRef` (ref или геттер), чтобы управлять навигацией снаружи — когда он меняется, список
-перезагружается.
+| Ответ | `error.code` | Что значит |
+|-------|--------------|------------|
+| `412` | `node_sequence_mismatch`, `document_state_mismatch` | ресурс изменили после того, как вы его прочитали — прочитайте заново |
+| `428` | `precondition_required` | вызов ушёл без `If-Match`: ошибка интеграции, а не состояние, из которого восстанавливаются |
 
-### `useSharedNodes`
+### Ошибки
 
-Реактивный листинг **«поделились со мной»** поверх кросс-хранилищного эндпоинта `GET /shared` — узлы, на
-которые у актора есть живой разрешающий грант (перерезолвится точно на стороне сервера). **Плоский**
-список: здесь нет `parentId` / `navigate`, потому что набор охватывает несколько хранилищ. Эндпоинт
-**знает длину** (`page` / `total`), поэтому пагинация — на основе `page`.
+Ответ не из 2xx бросает `VaulterApiError`, разобранный из `application/problem+json` (RFC 9457):
 
 ```ts
-import { useSharedNodes } from '@vaulter/vue'
-
-const { nodes, meta, loading, error, hasMore, refresh, loadMore } = useSharedNodes()
+try {
+  await client.nodes.update(node.id, { name }, { etag: node.etag })
+} catch (error) {
+  if (error instanceof VaulterApiError) {
+    error.status     // 422
+    error.code       // 'invalid_node_name'  (строка; новые коды в v1 добавляются без поломки)
+    error.title      // локализованное краткое описание
+    error.detail     // локализованное пояснение или null
+    error.requestId  // укажите в отчёте об ошибке
+    error.meta       // { reason: 'reserved_name' }
+    error.errors     // ошибки полей при 422 validation_failed или null
+  }
+}
 ```
 
-| Член | Тип | Примечания |
-|--------|------|-------|
-| `nodes` | `ShallowRef<Node[]>` | узлы, которыми поделились (плоский список, кросс-хранилищный) |
-| `meta` | `ShallowRef<PageMeta \| null>` | счётчики страниц + total последней загрузки |
-| `loading` / `error` | `Ref<boolean>` / `Ref<unknown>` | состояние запроса |
-| `hasMore` | `Ref<boolean>` | существует ли ещё одна страница |
-| `refresh()` | `Promise<Node[]>` | (пере)загрузить первую страницу, заменив список |
-| `loadMore()` | `Promise<Node[]>` | добавить следующую страницу (no-op, когда её нет) |
+Ответ, который не является problem-документом (HTML 502 от прокси, пустой 504), превращается в
+`code: 'http_<status>'`, а не в ошибку разбора.
 
-Он **не** загружается автоматически — вызовите `refresh()` на монтировании (идиома, которую разделяют
-composable-функции Drive). Передайте опциональный `SharedNodesQuery` (`{ page, perPage }`), чтобы задать
-начальную страницу / размер.
+### Версия API
 
-### `useUpload`
+Решает первый ответ с заголовком `X-Vaulter-Api-Version`: мажорная версия не `1` бросает `VaulterApiError` с
+`code: 'api_version_mismatch'` для этого вызова **и всех последующих** — клиент одного мажора не работает «вполовину»
+с другим.
 
-Загрузка в хранилище с прогрессом; выставляет и прямой, и резюмируемый (tus) пути.
+### Загрузки
+
+`client.files.upload()` — загрузка одним запросом. `client.uploads.start()` возвращает возобновляемую загрузку (tus
+по умолчанию, `protocol: 's3'` для S3 multipart), которая всегда продолжает с серверного смещения:
 
 ```ts
-import { useUpload } from '@vaulter/vue'
+const upload = client.uploads.start(driveId, file, { parentId, onProgress: (sent, total) => {} })
+const node = await upload.start()   // позже: await upload.abort()
+```
 
-const { uploading, error, sent, total, progress, upload, uploadResumable, abort } =
-  useUpload(storageId)
+Замена содержимого существующего файла требует его тег: `{ replace: { nodeId, etag } }`.
 
-await upload(file, { parentId })            // single-request
-await uploadResumable(largeFile, {          // chunked, resumable, progress-reporting
-  parentId,
-  onProgress: (sent, total) => { /* … */ },
+## Viewer'ы
+
+Сервер сообщает, **каким viewer'ом** показать узел, в `node.presentation.viewer.key` (и его `props`). Реестр сопоставляет
+ключи компонентам. Он принадлежит **одному приложению** (`provide/inject`): два приложения или два SSR-запроса никогда
+не видят viewer'ы друг друга.
+
+```ts
+app.use(VaulterPlugin, {
+  viewers: {
+    'acme/diagram': () => import('./DiagramViewer.vue'),  // обычная функция — ленивый загрузчик
+    'vaulter/download': MyDownloadViewer,                 // заменяет встроенный
+  },
 })
 ```
 
-| Член | Тип | Примечания |
-|--------|------|-------|
-| `uploading` / `error` | `Ref<boolean>` / `Ref<unknown>` | состояние запроса |
-| `sent` / `total` | `Ref<number>` | байты активной резюмируемой загрузки |
-| `progress` | `ComputedRef<number>` | `sent / total`, `0` в простое |
-| `upload(file, options?)` | `Promise<Node>` | прямая загрузка одним запросом |
-| `uploadResumable(file, options?)` | `Promise<Node>` | ведёт tus-сессию, возобновляясь с **серверного** смещения |
-| `abort()` | `Promise<void>` | прервать активную резюмируемую загрузку |
+Компонент viewer'а получает `node` и `readonly` (плюс `viewer.props` с сервера, которые не могут их переопределить).
+Встроенные ключи: `vaulter/tiptap`, `vaulter/univer` (headless-оболочки редактирования `VaulterDocumentNode` /
+`VaulterSpreadsheet` — движок редактора монтируете **вы** в их слоте или заменяете ключ), `vaulter/pdf-preview`,
+`vaulter/image-preview` (показ идёт через авторизованное скачивание, поэтому *previewer* без права `download` не
+получает байтов), `vaulter/download` и `vaulter/unsupported`.
 
-`useUpload` принимает опциональный второй аргумент — заранее разрешённый клиент — чтобы поднять пофайловый
-загрузчик **вне** контекста инъекции `setup()` (например, по одному экземпляру на брошенный файл), где
-`inject()` уже недоступен. `VaulterUploader` использует ровно этот паттерн.
+`<VaulterViewer :node="node" />` монтирует нужный. Узел **без** presentation, с ключом, который приложение не
+регистрировало, или документ типа, который приложение не умеет (`presentation.type_available === false`) показывает
+`VaulterUnsupportedNode`: имя, тип документа или mime, причину и кнопку скачивания — только для **файла** и только при
+`abilities.download`. Сам запасной вариант можно заменить через `vaulter/unsupported`.
 
-### `useNodeGrants`
+## Composable-функции
 
-Реактивное управление грантами ACL на узел.
+Все composable-функции вызывают `useVaulterClient()`, поэтому работают под предоставленным клиентом. Они возвращают
+реактивные ref'ы и асинхронные методы.
 
-```ts
-import { useNodeGrants } from '@vaulter/vue'
+| Composable | Назначение |
+|------------|------------|
+| `useDrive(driveId)` | загрузить один диск |
+| `useNodes(driveId, parent?)` | список и навигация по папке; `createFolder`, `rename`, `move`, `copy`, `trash`, `restore`, `purge`, `star`, `unstar`; `conflict` |
+| `useSharedNodes(query?)` | плоский список «доступно мне» |
+| `useUpload(driveId)` | прямая и возобновляемая загрузка с прогрессом |
+| `useGrants(nodeId)`, `useShares(nodeId)` | гранты и ссылки доступа (сырой токен хранится один раз в `lastCreated`) |
+| `useActivity({ driveId } \| { nodeId })` | лента активности |
+| `useComments(nodeId)` | обсуждение |
+| `useDocument(nodeId)` | загрузка, отложенное автосохранение, `conflict`, экспорт |
+| `useRevisions(nodeId)` | история документа: `snapshot`, `setRetention`, `restore` |
+| `useCollaboration(nodeId)` | сессия реального времени (ниже) |
 
-const { grants, loading, error, list, grant, revoke } = useNodeGrants(nodeId)
-
-await list()
-await grant({ subjectType: 'user', subjectId: 42, role: 'writer', scope: 'subtree' })
-await revoke({ subjectType: 'user', subjectId: 42 })
-```
-
-| Член | Тип | Примечания |
-|--------|------|-------|
-| `grants` | `ShallowRef<NodeGrant[]>` | гранты узла |
-| `list()` | `Promise<NodeGrant[]>` | загрузить гранты |
-| `grant(payload)` | `Promise<NodeGrant>` | добавить грант (добавляется в начало списка) |
-| `revoke(payload)` | `Promise<void>` | снять **все** гранты, что держит субъект |
-
-Полезная нагрузка гранта (`GrantNodeAccessPayload`) несёт `subjectType`, `subjectId`, `role`
-(`previewer` / `reader` / `commenter` / `writer` / `organizer` / `owner`) и опциональные `scope`
-(`item` / `subtree`) и `expiresAt`.
-
-### `useNodeShares`
-
-Реактивное управление **bearer-ссылками share** узла. Сырой токен всплывает **ровно один раз** через
-`lastCreated`; перечисленные ссылки несут только `token_prefix`.
+**Мутации принимают узел, а не его id**, потому что сервер сравнивает его `etag`:
 
 ```ts
-import { useNodeShares } from '@vaulter/vue'
-
-const { shares, lastCreated, loading, error, list, create, revoke, clearLastCreated } =
-  useNodeShares(nodeId)
-
-const created = await create({ level: 'reader', scope: 'item', requireLogin: true })
-// created.token + created.url доступны ЗДЕСЬ — и только здесь.
-clearLastCreated() // забыть секрет, чтобы он никогда не задерживался в памяти
+const { nodes, rename, conflict } = useNodes(driveId)
+await rename(node, 'новое имя')       // отправляет If-Match: node.etag
 ```
 
-| Член | Тип | Примечания |
-|--------|------|-------|
-| `shares` | `ShallowRef<NodeShare[]>` | ссылки узла (без сырого токена) |
-| `lastCreated` | `ShallowRef<NodeShareCreated \| null>` | последний выпущенный сырой токен + URL, хранится один раз |
-| `create(payload?)` | `Promise<NodeShareCreated>` | выпустить ссылку; ответ несёт `token` + `url` один раз |
-| `revoke(shareId)` | `Promise<void>` | отозвать ссылку |
-| `clearLastCreated()` | `void` | забыть последний выпущенный секрет |
+При `412` composable **перечитывает узел** (список уже показывает победившую версию), записывает в `conflict`
+`{ nodeId, error }` и пробрасывает ошибку дальше. `428` пробрасывается как есть. `useDocument` ведёт себя так же для
+документа: устаревшее сохранение оставляет ваш локальный `content`, обновляет `head` (серверное содержимое и тег) и
+выставляет `conflict`; вызовите `save()`, чтобы перезаписать своими правками, или `load()`, чтобы взять версию сервера.
 
-### `useDocumentNode`
+### Совместное редактирование
 
-Реактивное редактирование **документного узла**: загрузка head-контента, правка с автосохранением по
-дебаунсу, снапшот/восстановление именованных версий, резолв обработчика и экспорт.
+`useCollaboration(nodeId, { supportedSchemaVersion, onEpochChanged })` запрашивает сессию
+(`documents.collaborationSession`) и открывает провайдер Hocuspocus на `Y.Doc`, который вы привязываете расширением
+Collaboration из TipTap. Содержимое всегда приходит от хаба — не заполняйте редактор сами.
 
-```ts
-import { useDocumentNode } from '@vaulter/vue'
+- `readOnly` истинно для сессии `ro` **или** если схема сервера новее `supportedSchemaVersion` (`schemaOutdated`):
+  монтируйте редактор с `editable: false` и попросите пользователя обновить приложение.
+- Когда хаб закрывает комнату кодом `4409 epoch_changed` (документ восстановили), старый `Y.Doc` уничтожается, его
+  заменяют новые сессия и **новый** `Y.Doc`, после чего вызывается `onEpochChanged` — перечитайте содержимое и его ETag.
+- `4001` (токен истёк) и `4403` (право на запись потеряно) обновляют сессию; `4422` не повторяется.
 
-const {
-  content, head, versions, handler, loading, saving, error,
-  load, setContent, flush, save,
-  loadVersions, createNamedVersion, restoreVersion, loadHandler, exportAs,
-} = useDocumentNode(nodeId, { debounceMs: 800 })
+`connect()`, который перехватил другой `connect()`/`disconnect()`, отклоняется с `CollaborationCancelledError` — это не сбой сессии.
 
-await load()                                  // fetch the head content
-setContent(newTipTapDoc)                       // schedules a debounced autosave
-await flush()                                  // force any pending autosave now
-await createNamedVersion('Before edit', true)  // snapshot, keep forever
-```
-
-| Член | Тип | Примечания |
-|--------|------|-------|
-| `content` | `ShallowRef<TipTapDocument \| null>` | рабочий контент |
-| `head` | `ShallowRef<DocumentVersion \| null>` | текущая head-версия |
-| `versions` | `ShallowRef<DocumentVersion[]>` | загруженные именованные/авто версии |
-| `handler` | `ShallowRef<NodePresentation \| null>` | разрешённый обработчик документа |
-| `saving` | `Ref<boolean>` | true, пока сохранение в полёте |
-| `setContent(content, options?)` | `void` | задать рабочий контент + запланировать автосохранение по дебаунсу |
-| `flush()` | `Promise<DocumentVersion \| null>` | форс-сброс отложенного автосохранения (null, когда ничего не отложено) |
-| `save(options?)` | `Promise<DocumentVersion>` | сохранить немедленно (без дебаунса) |
-| `createNamedVersion(label, keepForever?)` | `Promise<DocumentVersion>` | снапшот именованной версии |
-| `restoreVersion(versionId)` | `Promise<DocumentVersion>` | восстановить версию (обновляет head + content) |
-| `exportAs(format?)` | `Promise<NodeDocumentExport>` | экспортировать документ узла |
-
-`options.yjsState` у `setContent` несёт опциональный base64-апдейт Yjs CRDT (realtime-источник истины) —
-передавайте его, когда мостите из Yjs-редактора.
-
-### `useNodeCollaboration`
-
-Открывает сессию realtime-совместного редактирования для документного узла. Он забирает токен комнаты,
-затем строит поверх него Yjs-сессию (Hocuspocus через `@hocuspocus/provider`, Reverb через мост,
-поставляемый хостом).
-
-```ts
-import { useNodeCollaboration } from '@vaulter/vue'
-
-const {
-  doc, session, handle,
-  connecting, connected, readOnly, collaborators, error,
-  fetchSession, connect, disconnect,
-} = useNodeCollaboration(nodeId)
-
-await connect()        // mints the token AND opens the Yjs session
-// bind `doc` to TipTap via the Collaboration extension; mount read-only when readOnly is true
-onBeforeUnmount(disconnect)
-```
-
-| Член | Тип | Примечания |
-|--------|------|-------|
-| `doc` | `Y.Doc` | общий Yjs-документ для привязки к TipTap |
-| `session` | `ShallowRef<NodeCollaborationSession \| null>` | разрешённый дескриптор бэкенда |
-| `connected` | `Ref<boolean>` | флаг живого соединения |
-| `readOnly` | `Ref<boolean>` | запись запрещена (из бэкенд-права актора) |
-| `collaborators` | `Ref<Collaborator[]>` | удалённые участники (awareness) |
-| `fetchSession()` | `Promise<NodeCollaborationSession>` | забрать только токен (стройте свой собственный provider) |
-| `connect()` | `Promise<NodeCollaborationSessionHandle>` | забрать токен И открыть сессию |
-| `disconnect()` | `void` | снести живую сессию (идемпотентно) |
-
-Про детали транспорта см. [Совместное редактирование в реальном времени](/ru/guide/collaboration).
-
-::: details Прочие composable-функции
-Пакет также экспортирует `useStorage` (загрузить одно хранилище), `useActivity` (лента активности),
-`useComments` (ветка комментариев узла), `useNodeGrants` / `useNodeShares` (ACL узла и share-ссылки)
-и `useSpreadsheet` (безголовая оболочка книги). Полное покрытие живёт в
-[Vue composables](/ru/guide/vue).
-:::
+`createCollaborationSession(client, nodeId, options)` делает то же один раз, без логики переоткрытия.
 
 ## Компоненты
 
-Все компоненты **почти-headless**: минимальные scoped-стили, class-хуки (`vaulter-*`) и слоты повсюду, так
-что вы можете полностью их перестилизовать.
+Все компоненты headless: классы-хуки (`vaulter-*`), слоты и немного scoped-стилей. Действия строк гейтятся по
+`abilities` узла — кнопка или клавиша не предлагается для права, которое сервер не выдал.
 
-### `VaulterDrive`
+| Компонент | Примечания |
+|-----------|------------|
+| `VaulterDrive` | файловый менеджер: хлебные крошки, панель, список, диалоги. Props: `driveId`, `initialParentId`, `viewMode`, `actions`, `confirm`. События `open-node`, `node-selected`, `navigate` |
+| `VaulterNodeList` | список/сетка; см. [доступность](#доступность). Действия: `rename` (нужно `edit`), `move`, `copy`, `trash`, `restore`, `purge` (нужно `delete`), `download`, `share` |
+| `VaulterBreadcrumb` | `path` из `{ id, name }`, событие `navigate` |
+| `VaulterFolderPicker` | выбор папки назначения для перемещения; скрывает перемещаемую папку и её поддерево |
+| `VaulterNameDialog` | ввод имени с [проверкой portable-v1](#имена) |
+| `VaulterUploader` | зона перетаскивания, прогресс по файлам, ошибки объявляются в области `aria-live` |
+| `VaulterGrantsPanel`, `VaulterSharePanel` | управление ACL и ссылками доступа |
+| `VaulterCommentsPanel` | обсуждение |
+| `VaulterSharedWithMe` | список «доступно мне» по всем дискам |
+| `VaulterViewer`, `VaulterUnsupportedNode` | см. [viewer'ы](#viewer-ы) |
+| `VaulterDocumentNode`, `VaulterSpreadsheet` | оболочки редактирования (загрузка, автосохранение, совместная работа, конфликт) для **вашего** редактора |
 
-Заглавный файловый менеджер: тулбар (новая папка, загрузка, переключатель список/сетка, поиск), breadcrumb
-и листинг узлов. Открытие папки навигирует внутренне; открытие файла/документа эмитит `open-node` для
-хоста. Действия в строке завязаны на `useNodes`, с гейтом подтверждения на разрушающих.
+Хелперы отображения: `humanByteSize(bytes)` и `nodeIconKind(node)`.
 
-**Пропсы**
+### Имена
 
-| Проп | Тип | По умолчанию | Примечания |
-|------|------|---------|-------|
-| `storageId` | `StorageId` | — | обязательный |
-| `initialParentId` | `NodeId \| null` | `null` | папка, которую открыть изначально (`null` = корень) |
-| `viewMode` | `'list' \| 'grid'` | `'list'` | начальный вид |
-| `actions` | `NodeAction[]` | `['rename','move','trash','download','share']` | действия в строке для предложения (всё равно фильтруются по правам узла) |
-| `confirm` | `(message) => boolean \| Promise<boolean>` | `window.confirm` | гейт для разрушающих действий |
+`VaulterNameDialog` проверяет имя функцией `portableNameReason(name)` — теми же правилами в том же порядке, что и
+серверная политика **`portable-v1`** по умолчанию (без `< > : " | ? *`, без точки в конце, без имён устройств Windows и
+`desktop.ini`, не более 255 байт UTF-8 и единиц UTF-16, NFC). Причины совпадают с серверным `meta.reason`: `empty`,
+`path_alias`, `separator`, `control_char`, `reserved_char`, `trailing_dot_or_space`, `leading_or_trailing_space`,
+`reserved_name`, `too_long`. Если сервер всё же отклонил имя (диск со строже политикой), передайте ошибку как
+`:server-error` — диалог покажет её причину.
 
-**Эмиты**
+### Доступность
 
-| Событие | Полезная нагрузка | Когда |
-|-------|---------|------|
-| `open-node` | `node: Node` | открыт непапочный узел — хост открывает/редактирует/превьюит его |
-| `node-selected` | `node: Node` | узел выбран (одиночный клик) |
-| `navigate` | `parentId: NodeId \| null` | листаемая папка сменилась |
+`VaulterNodeList` — **listbox** WAI-ARIA из options с одной точкой табуляции (roving `tabindex`):
 
-**Слоты**: `toolbar` (с `new-folder`, `view`, `set-view`, `search-term`), `error`, `empty`.
-**Экспоузит**: `refresh`, `goTo`, `nodes`, `displayNodes`, `selectedId`, `view`.
+| Клавиша | Действие |
+|---------|----------|
+| `↑` `↓`, `Home`, `End` | перемещают фокус |
+| `Enter` | открыть (папка — перейти) |
+| `Space` | выбрать |
+| `F2` | переименовать (если можно редактировать) |
+| `Delete` | в корзину с `etag` узла (если можно в корзину) |
 
-### `VaulterDriveBreadcrumb`
-
-Родословная корень → текущий узел в виде кликабельных крошек. Навигация **только-эмит** — хост решает, что
-делает `navigate(null = корень)`.
-
-| Проп | Тип | По умолчанию |
-|------|------|---------|
-| `path` | `Node[]` | `[]` (breadcrumb узла) |
-| `rootLabel` | `string` | `'Drive'` |
-
-Эмитит `navigate: NodeId \| null`. Слоты: `root`, `crumb` (на каждого предка, с `node`, `is-current`).
-
-### `VaulterNodeList`
-
-Листинг узлов — список или сетка узлов с иконкой по kind/mime, именем, размером и датой изменения.
-Действия в строке гейтятся на `node.abilities` (действие, которое актор не может выполнить, никогда не
-предлагается).
-
-**Пропсы**
-
-| Проп | Тип | По умолчанию | Примечания |
-|------|------|---------|-------|
-| `nodes` | `Node[]` | — | обязательный |
-| `viewMode` | `'list' \| 'grid'` | `'list'` | |
-| `selectedId` | `NodeId \| null` | `null` | подсветка одиночного выбора |
-| `actions` | `NodeAction[]` | `['rename','move','trash','download','share']` | предлагаемый набор ∩ права каждого узла |
-| `loading` | `boolean` | `false` | рендерит слот `loading` |
-
-`NodeAction` — это `'rename' \| 'move' \| 'copy' \| 'trash' \| 'restore' \| 'forceDelete' \| 'download' \| 'share'`.
-
-**Эмиты**: `select(node)`, `open(node)` (двойной клик / Enter), `action(action, node)`.
-**Слоты**: `loading`, `empty`, `icon` (с `node`, `kind`), `name`, `actions` (с `node`, `actions`, `run`).
-
-### `VaulterUploader`
-
-Автономная зона загрузки drag-drop + выбор файла, ведущая `useUpload`. Мелкие файлы идут напрямую; файлы
-сверх `resumableThreshold` используют резюмируемый (tus) путь с побайтовым прогрессом и отменой. Каждый файл
-получает **свой** `useUpload`, так что прогресс отслеживается независимо.
-
-**Пропсы**
-
-| Проп | Тип | По умолчанию | Примечания |
-|------|------|---------|-------|
-| `storageId` | `StorageId` | — | обязательный |
-| `parentId` | `NodeId \| null` | `null` | папка, в которую грузить (`null` = корень) |
-| `resumableThreshold` | `number` | `5 * 1024 * 1024` | байты, выше которых используется tus-путь |
-| `accept` | `string` | — | атрибут `accept` файлового инпута |
-| `multiple` | `boolean` | `true` | разрешить выбор более одного файла |
-| `disabled` | `boolean` | `false` | |
-
-**Эмиты**: `uploaded(node)`, `error(file, error)`.
-**Слоты**: `dropzone` (с `open-picker`, `is-dragging`), `item` (с `item`, `progress`, `cancel`).
-**Экспоузит**: `openPicker`, `items`, `clearFinished`.
-
-### `VaulterNodeGrantsPanel`
-
-Управление ACL на узел поверх `useNodeGrants` — список грантов, добавление гранта, отзыв. Хост владеет
-**выбором субъекта** (компонент не может знать ваших пользователей/роли/команды), делегированным в слот
-`subject` или проп `resolveSubject`.
-
-**Пропсы**
-
-| Проп | Тип | По умолчанию |
-|------|------|---------|
-| `nodeId` | `NodeId` | — |
-| `autoLoad` | `boolean` | `true` |
-| `roles` | `GrantRoleName[]` | `['previewer','reader','commenter','writer','organizer','owner']` |
-| `scopes` | `GrantScopeName[]` | `['item','subtree']` |
-| `resolveSubject` | `(type, id) => GrantSubject \| Promise<GrantSubject>` | пробрасывает сырые type/id как есть |
-
-`GrantSubject` — это `{ type: string; id: WorkspaceId; label?: string }`.
-**Эмиты**: `granted(grant)`, `revoked(subject)`.
-**Слоты**: `loading`, `item` (с `grant`, `revoke`), `subject` (с `set-subject`, `subject-type`,
-`subject-id`), `error`.
-
-### `VaulterNodeSharePanel`
-
-Управление bearer-ссылками share поверх `useNodeShares`. При создании сырой токен + URL всплывают
-**ровно один раз** (через `lastCreated`) с кнопкой копирования; перечисленные ссылки несут только
-`token_prefix`.
-
-**Пропсы**
-
-| Проп | Тип | По умолчанию |
-|------|------|---------|
-| `nodeId` | `NodeId` | — |
-| `autoLoad` | `boolean` | `true` |
-| `levels` | `GrantLevelName[]` | `['previewer','reader','writer']` |
-| `scopes` | `GrantScopeName[]` | `['item','subtree']` |
-
-**Эмиты**: `created(share)`, `revoked(shareId)`.
-**Слоты**: `created` (с `share`, `url`, `copy`, `dismiss`, `copied`), `loading`, `item`, `error`.
-
-### `VaulterDocumentNode`
-
-Мост от **дескриптора обработчика** документного узла к конкретному UI редактора/превью. Он загружает
-обработчик (`useDocumentNode.loadHandler`) и head-контент, затем монтирует компонент, на который
-отображается `ui.component` обработчика — отображение задаёт ваш проп `componentMap`, так что хосты
-регистрируют собственные редакторы под каждый обработчик. Неотображённые обработчики откатываются к слоту
-превью/скачивания.
-
-Когда обработчик **совместный** и совместное редактирование включено, он открывает Yjs-сессию
-(`useNodeCollaboration`) и отдаёт общий `doc` редактору (привяжите его через расширение TipTap
-Collaboration); путь автосохранения обходится.
-
-**Пропсы**
-
-| Проп | Тип | По умолчанию | Примечания |
-|------|------|---------|-------|
-| `nodeId` | `NodeId` | — | обязательный |
-| `componentMap` | `Record<string, Component>` | `{}` | отображает `ui.component` обработчика (или `id`) на компонент-редактор |
-| `readonly` | `boolean` | `false` | форсировать только-чтение |
-| `autoLoad` | `boolean` | `true` | загрузка на монтировании |
-| `debounceMs` | `number` | `800` | дебаунс автосохранения |
-| `collaboration` | `boolean` | `true` | включить realtime-совместное редактирование, когда обработчик его объявляет |
-| `collaborationProviders` | `Partial<…>` | `{}` | фабрики provider-ов (переопределение Hocuspocus / мост Reverb) |
-
-Ключи TipTap-редактора `VaulterEditor`, `tiptap`, `richtext`, `rich-text` резолвятся в поставляемый хостом
-редактор под одним из этих ключей `componentMap`.
-
-**Эмиты**: `ready(handler)`, `saved(content)`, `collaborating(readonly)`.
-**Слоты**: дефолтный слот (с `handler`, `content`, `readonly`, `set-content`, `flush`, `collaborative`,
-`ydoc`, `connected`, `collaborators`), плюс `loading`, `fallback`, `error`.
-
-Тип `DocumentNodeEditorProps` описывает, что получает отображённый компонент-редактор — `nodeId`,
-`content`, `handler`, `readonly`, `onChange` и (в совместном режиме) `collaborative`, `ydoc`, `connected`,
-`collaborators`.
-
-### `VaulterSharedWithMe`
-
-Кросс-хранилищный вид **«поделились со мной»** поверх [`useSharedNodes`](#usesharednodes): **плоский**
-листинг узлов, которыми поделились с актором, без навигации по папкам (узлы охватывают несколько хранилищ,
-поэтому каждое открытие эмитит `open-node`, чтобы хост его смаршрутизировал). Он переиспользует
-`VaulterNodeList` для рендеринга и владеет только обвязкой загрузки / обновления / пустого / ошибки плюс
-пейджером «Загрузить ещё».
-
-**Пропсы**
-
-| Проп | Тип | По умолчанию | Примечания |
-|------|------|---------|-------|
-| `viewMode` | `'list' \| 'grid'` | `'list'` | |
-| `actions` | `NodeAction[]` | `['download','share']` | действия в строке для предложения (всё равно фильтруются по правам узла) |
-| `query` | `SharedNodesQuery` | `undefined` | начальные `{ page, perPage }` |
-
-**Эмиты**: `open-node(node)` (кросс-хранилищный — хост его маршрутизирует), `node-selected(node)`,
-`action(action, node)`.
-**Слоты**: `toolbar` (с `refresh`, `loading`), `title`, `refresh-label`, `error`, `empty`,
-`name` / `context` (на строку), `load-more`.
-**Экспоузит**: `refresh`, `loadMore`.
-
-### `VaulterFolderPicker`
-
-Модальный выбор назначения для **перемещения**: он обходит дерево **папок** хранилища (только папки) с
-breadcrumb и действием «Переместить сюда» в текущей локации. Headless под стать остальному Drive —
-минимальные scoped-стили, class-хуки + слоты, навигация управляется эмитами. Недопустимые назначения
-никогда не предлагаются: перемещаемый узел скрыт из листинга (так что нельзя спуститься в его собственное
-поддерево), а «Переместить сюда» отключено в *текущем* родителе узла (перемещение-no-op) или на самом узле.
-Корень хранилища (родитель `null`) — выбираемое назначение.
-
-**Пропсы**
-
-| Проп | Тип | По умолчанию | Примечания |
-|------|------|---------|-------|
-| `storageId` | `StorageId` | — | обязательный |
-| `node` | `Node` | — | обязательный — перемещаемый узел (его self/поддерево + текущий родитель исключены) |
-| `open` | `boolean` | `false` | показан ли выбор (переоткрытие сбрасывает к корню) |
-| `rootLabel` | `string` | `'Drive'` | подпись корневой крошки / корневого назначения |
-
-**Эмиты**: `picked(targetId: NodeId \| null)` (`null` = корень хранилища), `close()`.
-**Слоты**: `header` (с `node`), `folder` (на папку), `loading`, `empty`, `error`, `footer`
-(с `move-here`, `can-move-here`, `current-parent-id`, `cancel`).
-**Экспоузит**: `goTo`, `moveHere`, `currentParentId`, `folders`, `breadcrumb`, `canMoveHere`, `loading`.
-
-### `VaulterNameDialog`
-
-Крошечный доступный диалог **ввода имени** — одно текстовое поле для «новой папки», «переименования» или
-любого потока ввода имени. Он повторяет модальную форму `VaulterFolderPicker` (бэкдроп + панель,
-`role="dialog"`, закрытие по Esc / бэкдропу, фокус на открытии). На открытии поле засеивается из
-`initialValue`, фокусируется и **полностью выделяется** (так что переименование предвыбирает текущее имя для
-мгновенного перепечатывания). `submit` несёт **обрезанное** значение и срабатывает только когда оно
-непустое; кнопка подтверждения отключена, пока обрезка пуста.
-
-**Пропсы**
-
-| Проп | Тип | По умолчанию | Примечания |
-|------|------|---------|-------|
-| `open` | `boolean` | `false` | показан ли диалог |
-| `title` | `string` | `'Name'` | текст заголовка (например, `'New folder'` / `'Rename'`) |
-| `label` | `string` | `'Name'` | доступный лейбл инпута |
-| `initialValue` | `string` | `''` | предзаполнение — пусто для новой папки, имя узла для переименования |
-| `confirmLabel` | `string` | `'Save'` | текст кнопки подтверждения |
-| `placeholder` | `string` | `''` | плейсхолдер инпута |
-
-**Эмиты**: `submit(name: string)` (обрезанное, только непустое), `close()`.
-**Слоты**: `header` (с `title`), `footer` (с `submit`, `cancel`, `value`, `can-submit`).
-**Экспоузит**: `value`, `submit`.
-
-### Хелперы отображения
-
-Два чистых хелпера подпирают рендеринг списка и экспортируются для переиспользования:
-
-```ts
-import { humanByteSize, nodeIconKind } from '@vaulter/vue'
-
-humanByteSize(1_500_000)   // '1.4 MB' — null/undefined → '' (blank cell)
-nodeIconKind(node)         // 'folder' | 'document' | 'image' | 'pdf' | 'archive' | 'audio' | 'video' | 'file'
-```
-
-`nodeIconKind` сворачивает несколько mime-семейств (image/pdf/archive/audio/video) в одну визуальную
-корзину; перестилизуйте через класс `vaulter-node-icon--<bucket>` или построчный слот `icon`.
-
-::: details Панель комментариев
-Пакет также экспортирует `VaulterCommentsPanel` — панель со слотами для ветки комментариев
-узла-документа (prop `node-id`). Её API см. в [Комментариях](/ru/guide/comments).
-:::
+После того как узел покинул список (корзина, перемещение, удаление), фокус переходит на соседний элемент, а не уходит
+на страницу. Ошибки — отклонённая мутация (`role="alert"`) и сбой загрузки (`aria-live="assertive"`) — объявляются.
 
 ## Разобранный пример: файловый менеджер
 
-Полный экран диска — список, навигация, загрузка, открытие документа на редактирование и управление
-грантами — собранный из `VaulterDrive`, `VaulterDocumentNode` и `VaulterNodeGrantsPanel`:
-
 ```vue
 <script setup lang="ts">
-import { ref, shallowRef } from 'vue'
-import {
-  VaulterDrive,
-  VaulterDocumentNode,
-  VaulterNodeGrantsPanel,
-  type Node,
-} from '@vaulter/vue'
-import AppTipTapEditor from './AppTipTapEditor.vue' // the host-supplied TipTap editor
+import { shallowRef } from 'vue'
+import { VaulterDrive, VaulterViewer, VaulterGrantsPanel, type Node } from '@vaulter/vue'
 
-const props = defineProps<{ storageId: string }>()
+const props = defineProps<{ driveId: string }>()
 
-// The node currently opened for editing (a file/document), null while browsing.
-const openNode = shallowRef<Node | null>(null)
-// The node whose grants we're managing in a side panel.
-const grantsNode = shallowRef<Node | null>(null)
-
-// Map the handler's ui.component to a concrete editor. The built-in TipTap keys
-// (VaulterEditor / tiptap / richtext / rich-text) resolve to the host editor below.
-const componentMap = { VaulterEditor: AppTipTapEditor }
-
-function onOpenNode(node: Node) {
-  if (node.kind === 'document') {
-    openNode.value = node
-  } else {
-    // a plain file — download it
-    window.open(`/api/vaulter/nodes/${node.id}/download`, '_blank')
-  }
-}
+const openNode = shallowRef<Node | null>(null)    // открыт во viewer'е
+const grantsNode = shallowRef<Node | null>(null)  // управляется в боковой панели
 
 function onNodeSelected(node: Node) {
-  // surface grants management for the selected node when the actor may share it
+  // Кто может делиться, решает сервер; интерфейс только следует.
   grantsNode.value = node.abilities.share ? node : null
 }
 </script>
 
 <template>
-  <div class="drive-screen">
-    <VaulterDrive
-      :storage-id="props.storageId"
-      :actions="['rename', 'move', 'copy', 'trash', 'download', 'share']"
-      @open-node="onOpenNode"
-      @node-selected="onNodeSelected"
-    />
+  <VaulterDrive
+    :drive-id="props.driveId"
+    :actions="['rename', 'move', 'copy', 'trash', 'download', 'share']"
+    @open-node="openNode = $event"
+    @node-selected="onNodeSelected"
+  />
 
-    <aside v-if="grantsNode" class="drive-screen__grants">
-      <h3>Sharing — {{ grantsNode.name }}</h3>
-      <VaulterNodeGrantsPanel :node-id="grantsNode.id">
-        <!-- The host owns subject selection; wire your own picker here. -->
-        <template #subject="{ setSubject }">
-          <button type="button" @click="setSubject({ type: 'user', id: 42, label: 'Alice' })">
-            Grant to Alice
-          </button>
-        </template>
-      </VaulterNodeGrantsPanel>
-    </aside>
+  <aside v-if="grantsNode">
+    <VaulterGrantsPanel :node-id="grantsNode.id">
+      <template #subject="{ setSubject }">
+        <button type="button" @click="setSubject({ type: 'user', id: '42' })">Выдать Алисе</button>
+      </template>
+    </VaulterGrantsPanel>
+  </aside>
 
-    <dialog v-if="openNode" open class="drive-screen__editor">
-      <header>
-        <strong>{{ openNode.name }}</strong>
-        <button type="button" @click="openNode = null">Close</button>
-      </header>
-      <VaulterDocumentNode
-        :node-id="openNode.id"
-        :component-map="componentMap"
-        @saved="() => { /* toast 'Saved' */ }"
-      />
-    </dialog>
-  </div>
+  <dialog v-if="openNode" open>
+    <button type="button" @click="openNode = null">Закрыть</button>
+    <!-- Тот viewer, который выбрал сервер; неизвестные откатываются на безопасный просмотр «скачать». -->
+    <VaulterViewer :node="openNode" />
+  </dialog>
 </template>
 ```
 
-Ключевые моменты:
+Зарегистрируйте редактор документов один раз в опциях плагина — viewer получает узел и монтирует ваш TipTap в слоте
+`VaulterDocumentNode`:
 
-- `VaulterDrive` обрабатывает навигацию, загрузку и подтверждения разрушающих действий внутренне; вы лишь
-  реагируете на `open-node` и `node-selected`.
-- Узел `document` открывается в `VaulterDocumentNode`, который резолвит обработчик, монтирует ваш
-  TipTap-редактор (через `componentMap`) и автосохраняет с дебаунсом — или работает совместно, если
-  обработчик это объявляет.
-- `VaulterNodeGrantsPanel` управляет грантами ACL; вы поставляете только выбор субъекта.
+```ts
+app.use(VaulterPlugin, { viewers: { 'vaulter/tiptap': () => import('./AppDocumentViewer.vue') } })
+```
 
 ## См. также
 
-- [Админ-плагин Filament](/ru/guide/filament) — административный аналог.
-- [Файлы и папки](/ru/guide/drive) — REST-маршруты Drive за этими composable-функциями.
+- [Справочник REST API](/ru/reference/rest-api) — контракт, из которого генерируется этот пакет.
+- [Файлы и папки](/ru/guide/drive) — маршруты Drive за этими composable-функциями.
 - [Авторизация](/ru/concepts/authorization) — права, на которых гейтятся компоненты.
-- [Совместное редактирование в реальном времени](/ru/guide/collaboration) — Yjs-транспорт, который открывает `useNodeCollaboration`.
+- [Совместное редактирование в реальном времени](/ru/guide/collaboration) — Yjs-транспорт, который открывает `useCollaboration`.
+- [Руководство по обновлению](https://github.com/axiomasoft/vaulter/blob/main/UPGRADE.md) — что изменилось по сравнению с пакетом до v1.

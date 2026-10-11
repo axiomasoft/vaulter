@@ -3,7 +3,7 @@ import { reactive, ref } from 'vue'
 import { useUpload } from '../composables/useUpload'
 import { useVaulterClient } from '../composables/useVaulterClient'
 import { humanByteSize } from './drive/nodeDisplay'
-import type { Node, NodeId, StorageId } from '../types'
+import type { DriveId, Node, NodeId } from '../api/types'
 
 // A reusable, standalone upload zone: drag-drop + file picker, driving the
 // `useUpload` composable. Small files go direct; files past `resumableThreshold`
@@ -12,8 +12,8 @@ import type { Node, NodeId, StorageId } from '../types'
 
 const props = withDefaults(
   defineProps<{
-    storageId: StorageId
-    /** The folder to upload into (null/undefined = the storage root). */
+    driveId: DriveId
+    /** The folder to upload into (null/undefined = the drive root). */
     parentId?: NodeId | null
     /** Bytes above which the resumable (tus) path is used. Default 5 MiB. */
     resumableThreshold?: number
@@ -47,6 +47,15 @@ interface UploadItem {
   sent: number
   status: 'uploading' | 'done' | 'error' | 'cancelled'
   abort: (() => Promise<void>) | null
+}
+
+/** The last failure, announced to assistive tech through the live region. */
+const announcement = ref('')
+
+function failureMessage(name: string, error: unknown): string {
+  const reason = error instanceof Error && error.message !== '' ? error.message : 'upload failed'
+
+  return `Upload of ${name} failed: ${reason}`
 }
 
 // Resolve the client ONCE in setup; per-file uploaders are spun up after a user
@@ -110,7 +119,7 @@ async function uploadOne(file: File): Promise<void> {
   // the template never re-renders on a progress/status change.
   const item = items[items.length - 1]
 
-  const uploader = useUpload(props.storageId, client)
+  const uploader = useUpload(props.driveId, client)
 
   try {
     let node: Node
@@ -128,12 +137,14 @@ async function uploadOne(file: File): Promise<void> {
     }
     item.status = 'done'
     item.abort = null
+    announcement.value = ''
     emit('uploaded', node)
   } catch (error) {
     // An aborted upload is a cancellation, not an error.
     item.status = item.status === 'cancelled' ? 'cancelled' : 'error'
     item.abort = null
     if (item.status !== 'cancelled') {
+      announcement.value = failureMessage(file.name, error)
       emit('error', file, error)
     }
   }
@@ -190,6 +201,9 @@ defineExpose({ openPicker, items, clearFinished })
         Drop files here or click to browse
       </slot>
     </button>
+
+    <!-- Always in the DOM so the announcement of a failure is read the moment it is set. -->
+    <p class="vaulter-uploader__announce" role="alert" aria-live="assertive" aria-atomic="true">{{ announcement }}</p>
 
     <ul v-if="items.length > 0" class="vaulter-uploader__list">
       <li

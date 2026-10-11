@@ -1,57 +1,90 @@
 import { ref, shallowRef, type Ref, type ShallowRef } from 'vue'
 import { useVaulterClient } from './useVaulterClient'
-import type { CreateCommentPayload, VaulterComment, NodeId } from '../types'
+import { createListGuard } from './listGuard'
+import type { Comment, CreateCommentInput, NodeId, PageMeta } from '../api/types'
 
 export interface UseCommentsReturn {
-  comments: ShallowRef<VaulterComment[]>
+  comments: ShallowRef<Comment[]>
+  cursor: ShallowRef<PageMeta | null>
   loading: Ref<boolean>
   error: Ref<unknown>
-  list: () => Promise<VaulterComment[]>
-  add: (payload: CreateCommentPayload) => Promise<VaulterComment>
-  resolve: (commentId: NodeId) => Promise<VaulterComment>
-  remove: (commentId: NodeId) => Promise<void>
+  /** (Re)load the first page of the thread. */
+  list: () => Promise<Comment[]>
+  /** Append the next cursor page (if any). */
+  loadMore: () => Promise<Comment[]>
+  add: (input: CreateCommentInput) => Promise<Comment>
+  resolve: (commentId: string) => Promise<Comment>
+  remove: (commentId: string) => Promise<void>
 }
 
-/**
- * Reactive comment thread for a document NODE (`/nodes/{node}/comments`), backed by
- * the injected client — the canonical comment surface after ADR-0014.
- */
+/** Reactive comment thread for a node (`/nodes/{node}/comments`), backed by the injected client. */
 export function useComments(nodeId: NodeId): UseCommentsReturn {
   const client = useVaulterClient()
-  const comments = shallowRef<VaulterComment[]>([])
+  const comments = shallowRef<Comment[]>([])
+  const cursor = shallowRef<PageMeta | null>(null)
   const loading = ref(false)
   const error = ref<unknown>(null)
+  const guard = createListGuard()
 
-  async function list(): Promise<VaulterComment[]> {
+  async function list(): Promise<Comment[]> {
+    const token = guard.begin()
     loading.value = true
     error.value = null
     try {
-      comments.value = await client.comments.list(nodeId)
+      const page = await client.comments.list(nodeId)
+      // A newer load or a local change happened meanwhile: this page is history.
+      if (guard.isCurrent(token)) {
+        comments.value = page.data
+        cursor.value = page.meta
+      }
       return comments.value
     } catch (caught) {
-      error.value = caught
+      if (guard.isCurrent(token)) {
+        error.value = caught
+      }
       throw caught
     } finally {
-      loading.value = false
+      loading.value = !guard.end()
     }
   }
 
-  async function add(payload: CreateCommentPayload): Promise<VaulterComment> {
-    const created = await client.comments.create(nodeId, payload)
+  async function loadMore(): Promise<Comment[]> {
+    const next = cursor.value?.next_cursor
+    const token = next == null ? null : guard.beginMore()
+    if (next == null || token === null) {
+      return comments.value
+    }
+    try {
+      const page = await client.comments.list(nodeId, { cursor: next })
+      if (guard.isCurrent(token)) {
+        comments.value = [...comments.value, ...page.data]
+        cursor.value = page.meta
+      }
+      return comments.value
+    } finally {
+      guard.endMore()
+    }
+  }
+
+  async function add(input: CreateCommentInput): Promise<Comment> {
+    const created = await client.comments.add(nodeId, input)
+    guard.invalidate()
     comments.value = [...comments.value, created]
     return created
   }
 
-  async function resolve(commentId: NodeId): Promise<VaulterComment> {
+  async function resolve(commentId: string): Promise<Comment> {
     const updated = await client.comments.resolve(nodeId, commentId)
+    guard.invalidate()
     comments.value = comments.value.map((comment) => (comment.id === commentId ? updated : comment))
     return updated
   }
 
-  async function remove(commentId: NodeId): Promise<void> {
+  async function remove(commentId: string): Promise<void> {
     await client.comments.remove(nodeId, commentId)
+    guard.invalidate()
     comments.value = comments.value.filter((comment) => comment.id !== commentId)
   }
 
-  return { comments, loading, error, list, add, resolve, remove }
+  return { comments, cursor, loading, error, list, loadMore, add, resolve, remove }
 }

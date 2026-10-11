@@ -2,12 +2,12 @@
 import { computed, onMounted, ref, watch, type Ref } from 'vue'
 import { useNodes } from '../composables/useNodes'
 import { useVaulterClient } from '../composables/useVaulterClient'
-import VaulterDriveBreadcrumb from './VaulterDriveBreadcrumb.vue'
+import VaulterBreadcrumb from './VaulterBreadcrumb.vue'
 import VaulterFolderPicker from './VaulterFolderPicker.vue'
 import VaulterNameDialog from './VaulterNameDialog.vue'
 import VaulterNodeList, { type NodeAction } from './VaulterNodeList.vue'
 import VaulterUploader from './VaulterUploader.vue'
-import type { Node, NodeId, StorageId } from '../types'
+import type { DriveId, Node, NodeId } from '../api/types'
 
 // The headline Drive file-manager: a breadcrumb, a toolbar (new folder, upload,
 // view toggle, search) and the node listing. Folder opens navigate internally;
@@ -15,8 +15,8 @@ import type { Node, NodeId, StorageId } from '../types'
 // the `useNodes` composable mutations, with a confirm on the destructive ones.
 const props = withDefaults(
   defineProps<{
-    storageId: StorageId
-    /** The folder to open initially (null/undefined = the storage root). */
+    driveId: DriveId
+    /** The folder to open initially (null/undefined = the drive root). */
     initialParentId?: NodeId | null
     viewMode?: 'list' | 'grid'
     /** Row actions to offer (still filtered per node abilities by the list). */
@@ -44,16 +44,16 @@ const emit = defineEmits<{
 const client = useVaulterClient()
 
 const {
-  nodes, parentId, loading, error,
+  nodes, parentId, loading, error, conflict,
   refresh, navigate, createFolder,
-  rename, move, trash, restore, forceDelete,
-} = useNodes(props.storageId, () => props.initialParentId ?? null)
+  rename, move, trash, restore, purge,
+} = useNodes(props.driveId, () => props.initialParentId ?? null)
 
 const view = ref<'list' | 'grid'>(props.viewMode)
 const selectedId = ref<NodeId | null>(null)
 const searchTerm = ref('')
-/** The active breadcrumb ancestry for the current folder (root → here). */
-const breadcrumb: Ref<Node[]> = ref([])
+/** The visible ancestry of the current folder (root → here). */
+const breadcrumb: Ref<Array<{ id: NodeId, name: string }>> = ref([])
 /** When a search is active we list search hits instead of the folder children. */
 const searchResults = ref<Node[] | null>(null)
 /** The MOVE target picker: which node is being moved, and whether it's shown. */
@@ -100,6 +100,9 @@ async function runMutation(action: () => Promise<unknown>): Promise<void> {
 /** A human-readable line for the current error — the API/Error message when present,
  *  else a neutral fallback (the error covers BOTH a failed listing and a failed mutation). */
 const errorMessage = computed<string>(() => {
+  if (conflict.value !== null) {
+    return 'This item was changed by someone else. It has been reloaded — review it and try again.'
+  }
   const caught = error.value
   if (caught instanceof Error && caught.message !== '') {
     return caught.message
@@ -108,21 +111,32 @@ const errorMessage = computed<string>(() => {
 })
 
 /** Refresh the breadcrumb for the current folder (root → here), if not at root. */
+/** Bumped by every search, clear and navigation: only the newest search may show its hits. */
+let searchSeq = 0
+let breadcrumbSeq = 0
 async function refreshBreadcrumb(): Promise<void> {
+  const seq = ++breadcrumbSeq
   if (parentId.value == null) {
     breadcrumb.value = []
     return
   }
   try {
-    const node = await client.nodes.show(parentId.value)
-    breadcrumb.value = node.breadcrumb ?? []
+    const node = await client.nodes.getWithIncludes(parentId.value, ['breadcrumb'])
+    // The user opened another folder meanwhile: this trail belongs to the one they left.
+    if (seq === breadcrumbSeq) {
+      breadcrumb.value = node.breadcrumb ?? []
+    }
   } catch {
     // A breadcrumb fetch failure must not blank the listing.
-    breadcrumb.value = []
+    if (seq === breadcrumbSeq) {
+      breadcrumb.value = []
+    }
   }
 }
 
 async function goTo(into: NodeId | null): Promise<void> {
+  // Opening a folder ends any search: its answer must not come back and replace the listing.
+  searchSeq += 1
   searchResults.value = null
   searchTerm.value = ''
   selectedId.value = null
@@ -167,7 +181,7 @@ async function onAction(action: NodeAction, node: Node): Promise<void> {
     case 'trash': {
       if (await confirmAction(`Move "${node.name}" to trash?`)) {
         await runMutation(async () => {
-          await trash(node.id)
+          await trash(node)
           if (String(selectedId.value) === String(node.id)) {
             selectedId.value = null
           }
@@ -176,18 +190,18 @@ async function onAction(action: NodeAction, node: Node): Promise<void> {
       break
     }
     case 'restore': {
-      await runMutation(() => restore(node.id))
+      await runMutation(() => restore(node))
       break
     }
-    case 'forceDelete': {
+    case 'purge': {
       if (await confirmAction(`Permanently delete "${node.name}"? This cannot be undone.`)) {
-        await runMutation(() => forceDelete(node.id))
+        await runMutation(() => purge(node))
       }
       break
     }
     case 'download': {
       if (typeof window !== 'undefined') {
-        window.open(client.nodes.downloadUrl(node.id), '_blank')
+        window.open(client.files.downloadUrl(node.id), '_blank')
       }
       break
     }
@@ -205,7 +219,7 @@ async function onMovePicked(targetId: NodeId | null): Promise<void> {
   pickerOpen.value = false
   moveTarget.value = null
   if (node) {
-    await runMutation(() => move(node.id, targetId))
+    await runMutation(() => move(node, targetId))
   }
 }
 
@@ -230,7 +244,7 @@ async function onNameSubmit(name: string): Promise<void> {
   if (state.mode === 'new') {
     await runMutation(() => createFolder({ name }))
   } else if (name !== state.node.name) {
-    await runMutation(() => rename(state.node.id, name))
+    await runMutation(() => rename(state.node, name))
   }
 }
 
@@ -240,15 +254,15 @@ function onNameDialogClose(): void {
   nameDialog.value = null
 }
 
-let searchSeq = 0
 async function runSearch(): Promise<void> {
   const term = searchTerm.value.trim()
+  // An empty query also supersedes a search that is still in flight.
+  const seq = ++searchSeq
   if (term === '') {
     searchResults.value = null
     return
   }
-  const seq = ++searchSeq
-  const page = await client.nodes.search(props.storageId, term)
+  const page = await client.nodes.search(props.driveId, term)
   // Ignore a stale response if a newer search has started.
   if (seq === searchSeq) {
     searchResults.value = page.data
@@ -258,7 +272,7 @@ async function runSearch(): Promise<void> {
 function onUploaded(): void {
   // A direct/resumable upload landed — re-list so the new node appears.
   if (searchResults.value === null) {
-    void refresh()
+    void refresh().catch(() => undefined)
   }
 }
 
@@ -285,7 +299,7 @@ defineExpose({ refresh, goTo, nodes, displayNodes, selectedId, view })
 
         <VaulterUploader
           class="vaulter-drive__uploader"
-          :storage-id="storageId"
+          :drive-id="driveId"
           :parent-id="parentId"
           @uploaded="onUploaded"
         >
@@ -324,7 +338,7 @@ defineExpose({ refresh, goTo, nodes, displayNodes, selectedId, view })
       </slot>
     </div>
 
-    <VaulterDriveBreadcrumb
+    <VaulterBreadcrumb
       class="vaulter-drive__breadcrumb"
       :path="breadcrumb"
       @navigate="goTo"
@@ -355,7 +369,7 @@ defineExpose({ refresh, goTo, nodes, displayNodes, selectedId, view })
     <VaulterFolderPicker
       v-if="moveTarget"
       class="vaulter-drive__folder-picker"
-      :storage-id="storageId"
+      :drive-id="driveId"
       :node="moveTarget"
       :open="pickerOpen"
       @picked="onMovePicked"

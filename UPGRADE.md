@@ -6,6 +6,38 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### `@vaulter/vue` on REST v1 (PLAN2.P6.4, D62–D65)
+
+`@vaulter/vue` calls the versioned API only (`baseUrl` defaults to `/api/vaulter/v1`) and its types are generated from
+`openapi/vaulter-v1.yaml`. The hand-written `types.ts`, the unversioned client namespaces and the engine registry are
+removed without aliases; the package is `0.x`, so this ships as a `minor` with a changeset.
+
+| Was | Now |
+|---|---|
+| `baseUrl: '/api/vaulter'` (default) | `'/api/vaulter/v1'`; the version segment is part of the base |
+| `src/types.ts` (`NodeGrant`, `NodeShare`, `VaulterComment`, `DocumentVersion`, `Storage`, …) | aliases of the generated schema: `Grant`, `Share`, `MintedShare`, `Comment`, `DocumentRevision`, `Drive`, …; `components`, `paths`, `operations` are exported; ids are strings |
+| `client.storages` / `StorageId` / `storage_id` | `client.drives` / `DriveId` / `drive_id`; props `storageId` → `driveId` on `VaulterDrive`, `VaulterUploader`, `VaulterFolderPicker` |
+| `client.nodes.list/show/createFolder/rename/forceDelete/trashed/downloadUrl` | `nodes.children/get/…`, `folders.create`, `nodes.update`, `nodes.purge`, `trash.list`, `files.downloadUrl` |
+| node mutations by id (`rename(id, name)`, `trash(id)`, …) | `{ etag }` of the node as a required option, sent as `If-Match`: `nodes.update(id, patch, { etag })`; the composables take the **node** (`rename(node, name)`) |
+| `documentNodes.updateContent(id, content, { yjsState })` | `documents.update(id, content, { etag })`; `content()` returns the ETag (`content.etag`, `null` when the header is not exposed) |
+| `documentNodes.handler()`, `HandlerDescriptor`, `HandlerCapabilities.rich_text`, `Node.handler`, `is_pinned`, `position` | removed — `node.presentation` (`handler`, `document_type`, `type_available`, `viewer { key, props }`, `capabilities`), `node.viewer.starred`, `node.content_modified_at` |
+| `nodeCollaboration.token()` / `useNodeCollaboration` / `createNodeCollaborationSession` | `documents.collaborationSession()` / `useCollaboration` / `createCollaborationSession` (+ `openCollaborationTransport` for the low-level handle); `useCollaboration` has `onEpochChanged` and no `fetchSession` |
+| `useStorage`, `useNodeGrants`, `useNodeShares`, `useDocumentNode`, `useSpreadsheet` | `useDrive`, `useGrants`, `useShares`, `useDocument` (also for a workbook), + `useRevisions`; grants are revoked by id |
+| `VaulterDriveBreadcrumb`, `VaulterNodeGrantsPanel`, `VaulterNodeSharePanel` | `VaulterBreadcrumb`, `VaulterGrantsPanel`, `VaulterSharePanel`; a share has no `token_prefix`/`revoked_at` (a revoked link is gone) |
+| `registerEngineComponent` / `resolveEngineComponent` / `componentMap` / `docVaultClientKey` | the viewer registry of the app: `VaulterPlugin` option `viewers`, `useViewerRegistry()`, `<VaulterViewer :node>`; unknown or unavailable → `VaulterUnsupportedNode` |
+| `VaulterDocumentNode` `:node-id` + `componentMap` | `:node` (the node resource) and the default slot for your editor |
+| `NodeAction` `'forceDelete'` | `'purge'`; `rename` is offered on the `edit` ability |
+| `VaulterApiError(status, message, errors, response, code)` | `VaulterApiError` from problem+json: `status`, `code`, `title`, `detail`, `requestId`, `meta`, `errors`; an HTML or empty error is `http_<status>`; a server of another major version is `api_version_mismatch` |
+| lists as `CursorPage { data, meta: { next_cursor, prev_cursor } }` | `{ data, meta: { next_cursor, per_page } }`; no `page`, `total` or `prev_cursor` |
+| a free-form name check (≤ 255 chars, no `/` or `\`) in `VaulterNameDialog` | the server's `portable-v1` rules (`portableNameReason`) with the server's reason codes; `:server-error` shows the server's `meta.reason` |
+
+- On `412` the composables re-read the node (or the document head) and set `conflict`; a `428` is rethrown — it means
+  a call went out without its `If-Match`.
+- Cross-origin APIs must expose the content validator: `Access-Control-Expose-Headers: ETag` (a document cannot be saved
+  without it; `useDocument` throws a clear error).
+- Strings of the built-in viewers come from `i18n` (`en`, `ru`); override them with the plugin's `i18n.messages`.
+- CI: `npm run api:check` (in `frontend.yml`) fails when `src/api/schema.d.ts` is not what the contract generates.
+
 ### REST v1: documents routes and the end of the unversioned surface (PLAN2.P6.8, D62–D65)
 
 The document, comment and collaboration routes moved to `/{routes.prefix}/v1` and are named `vaulter.v1.*`. No

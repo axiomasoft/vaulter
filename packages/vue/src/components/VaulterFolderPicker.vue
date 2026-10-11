@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch, type Ref } from 'vue'
 import { useVaulterClient } from '../composables/useVaulterClient'
-import VaulterDriveBreadcrumb from './VaulterDriveBreadcrumb.vue'
-import type { Node, NodeId, StorageId } from '../types'
+import VaulterBreadcrumb from './VaulterBreadcrumb.vue'
+import type { DriveId, Node, NodeId } from '../api/types'
 
-// A modal/overlay destination picker for MOVE: it walks the storage's FOLDER tree
+// A modal/overlay destination picker for MOVE: it walks the drive's FOLDER tree
 // (folders only) with the SAME client the rest of the Drive uses — a breadcrumb,
 // the current folder's child folders, and a "Move here" action at the current
 // location. Root (a null parent) is a selectable destination.
@@ -14,11 +14,11 @@ import type { Node, NodeId, StorageId } from '../types'
 // excluded by construction), and "Move here" is disabled when the current
 // location is the node's CURRENT parent (a no-op move) or the node itself.
 //
-// Headless by default to match VaulterNodeList/VaulterDriveBreadcrumb: minimal
+// Headless by default to match VaulterNodeList/VaulterBreadcrumb: minimal
 // scoped styles, class hooks + slots throughout; navigation is emit-driven.
 const props = withDefaults(
   defineProps<{
-    storageId: StorageId
+    driveId: DriveId
     /** The node being moved — its self/subtree and current parent are excluded. */
     node: Node
     /** Whether the picker is shown. */
@@ -33,7 +33,7 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  /** A destination was chosen — `null` is the storage root. */
+  /** A destination was chosen — `null` is the drive root. */
   'picked': [targetId: NodeId | null]
   /** The picker was dismissed (Esc / overlay / cancel) — no move happens. */
   'close': []
@@ -41,24 +41,21 @@ const emit = defineEmits<{
 
 const client = useVaulterClient()
 
-/** Where we are browsing (null = the storage root). */
+/** Where we are browsing (null = the drive root). */
 const currentParentId = ref<NodeId | null>(null)
 /** The child FOLDERS at the current location (already filtered). */
 const folders = ref<Node[]>([])
 /** Root → current location, for the breadcrumb (empty = at root). */
-const breadcrumb: Ref<Node[]> = ref([])
+const breadcrumb: Ref<Array<{ id: NodeId, name: string }>> = ref([])
 const loading = ref(false)
 const error = ref<unknown>(null)
 
-/** Tolerant id compare (ids may be number OR string across the API). */
+/** Ids are always strings; a missing parent (the drive root) is `null`. */
 function sameId(a: NodeId | null, b: NodeId | null): boolean {
-  if (a == null || b == null) {
-    return a == null && b == null
-  }
-  return String(a) === String(b)
+  return (a ?? null) === (b ?? null)
 }
 
-/** The node's current parent (null = it currently lives at the storage root). */
+/** The node's current parent (null = it currently lives at the drive root). */
 const currentParentOfNode = computed<NodeId | null>(() => props.node.parent_id ?? null)
 
 /**
@@ -95,7 +92,7 @@ async function load(): Promise<void> {
   loading.value = true
   error.value = null
   try {
-    const page = await client.nodes.list(props.storageId, { parentId: currentParentId.value })
+    const page = await client.nodes.children(props.driveId, { parent: currentParentId.value })
     if (seq !== loadSeq) {
       return
     }
@@ -121,7 +118,7 @@ async function refreshBreadcrumb(seq: number): Promise<void> {
     return
   }
   try {
-    const node = await client.nodes.show(currentParentId.value)
+    const node = await client.nodes.getWithIncludes(currentParentId.value, ['breadcrumb'])
     if (seq !== loadSeq) {
       return
     }
@@ -134,7 +131,7 @@ async function refreshBreadcrumb(seq: number): Promise<void> {
   }
 }
 
-/** Navigate into a folder (or `null` for the storage root) and list it. */
+/** Navigate into a folder (or `null` for the drive root) and list it. */
 async function goTo(into: NodeId | null): Promise<void> {
   currentParentId.value = into
   await load()
@@ -206,7 +203,7 @@ defineExpose({ goTo, moveHere, currentParentId, folders, breadcrumb, canMoveHere
         </button>
       </header>
 
-      <VaulterDriveBreadcrumb
+      <VaulterBreadcrumb
         class="vaulter-folder-picker__breadcrumb"
         :path="breadcrumb"
         :root-label="rootLabel"

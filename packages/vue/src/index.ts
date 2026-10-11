@@ -1,99 +1,108 @@
 // Client
-export { createVaulterClient, VaulterApiError } from './client'
+export { createVaulterClient, filenameFromDisposition } from './api/client'
 export type {
+  NodeMoveOptions,
+  NodeRestoreOptions,
+  ShareAccess,
+  StartUploadOptions,
   VaulterClient,
-  ResumableUpload,
-  ResumableUploadOptions,
-  TusPatchResult,
-  S3PartResult,
-} from './client'
+  VaulterClientOptions,
+} from './api/client'
+export { VaulterApiError } from './api/errors'
+export type { VaulterApiErrorInit, VaulterErrorCode } from './api/errors'
+export type { ResumableUpload, ResumableUploadOptions } from './api/uploads/shared'
+export type { components, operations, paths } from './api/schema'
 
 // Plugin
-export { VaulterPlugin, provideVaulterClient } from './plugin'
+export { VaulterPlugin, provideVaulterClient, provideViewerRegistry } from './plugin'
 export type { VaulterPluginOptions } from './plugin'
+export { createVaulterI18n, useVaulterI18n } from './i18n'
+export type { VaulterI18n, VaulterI18nOptions, VaulterMessageKey, VaulterMessages } from './i18n'
+
+// Viewers
+export { createViewerRegistry, useViewerRegistry } from './viewers/registry'
+export type { ViewerEntry, ViewerLoader, ViewerRegistry } from './viewers/registry'
+export { VIEWER_KEYS, builtinViewers } from './viewers/builtin'
+export type { BuiltinViewerKey } from './viewers/builtin'
+export { default as VaulterViewer } from './viewers/VaulterViewer.vue'
 
 // Composables
-export { docVaultClientKey, useVaulterClient } from './composables/useVaulterClient'
-export { useComments } from './composables/useComments'
-export type { UseCommentsReturn } from './composables/useComments'
-
-// Drive composables (M1–M4)
-export { useStorage } from './composables/useStorage'
-export type { UseStorageReturn } from './composables/useStorage'
+export { useVaulterClient } from './composables/useVaulterClient'
+export { useDrive } from './composables/useDrive'
+export type { UseDriveReturn } from './composables/useDrive'
 export { useNodes } from './composables/useNodes'
-export type { UseNodesReturn } from './composables/useNodes'
+export type { NodeConflict, UseNodesReturn } from './composables/useNodes'
 export { useSharedNodes } from './composables/useSharedNodes'
 export type { UseSharedNodesReturn } from './composables/useSharedNodes'
 export { useUpload } from './composables/useUpload'
 export type { UseUploadReturn } from './composables/useUpload'
-export { useNodeGrants } from './composables/useNodeGrants'
-export type { UseNodeGrantsReturn } from './composables/useNodeGrants'
-export { useNodeShares } from './composables/useNodeShares'
-export type { UseNodeSharesReturn } from './composables/useNodeShares'
+export { useGrants } from './composables/useGrants'
+export type { UseGrantsReturn } from './composables/useGrants'
+export { useShares } from './composables/useShares'
+export type { UseSharesReturn } from './composables/useShares'
 export { useActivity } from './composables/useActivity'
 export type { UseActivityReturn } from './composables/useActivity'
-export { useDocumentNode } from './composables/useDocumentNode'
-export type { UseDocumentNodeOptions, UseDocumentNodeReturn } from './composables/useDocumentNode'
-export { useSpreadsheet } from './composables/useSpreadsheet'
-export type { UseSpreadsheetOptions, UseSpreadsheetReturn } from './composables/useSpreadsheet'
-export { useNodeCollaboration } from './composables/useNodeCollaboration'
+export { useComments } from './composables/useComments'
+export type { UseCommentsReturn } from './composables/useComments'
+export { useDocument } from './composables/useDocument'
+export type { UseDocumentOptions, UseDocumentReturn } from './composables/useDocument'
+export { useRevisions } from './composables/useRevisions'
+export type { UseRevisionsReturn } from './composables/useRevisions'
+export { CollaborationCancelledError, useCollaboration } from './composables/useCollaboration'
+export type { UseCollaborationOptions, UseCollaborationReturn } from './composables/useCollaboration'
+
+// Collaboration transport
+export { createCollaborationSession, fetchCollaborationSession } from './collaboration/session'
 export type {
-  UseNodeCollaborationOptions,
-  UseNodeCollaborationReturn,
-} from './composables/useNodeCollaboration'
-
-// Engine component registry (VLT-CANON P1.2) — explicit, host-owned mapping from a
-// handler's `ui.component`/`id` to the Vue component `VaulterDocumentNode` mounts.
+  CollaborationOptions,
+  CollaborationSessionHandle,
+  ResolvedCollaborationSession,
+} from './collaboration/session'
 export {
-  clearEngineComponents,
-  registerEngineComponent,
-  registeredEngineComponentIds,
-  resolveEngineComponent,
-  unregisterEngineComponent,
-} from './engineRegistry'
-
-// Node collaboration transport (M4b)
-export {
-  createNodeCollaborationSession,
   EPOCH_CHANGED_CODE,
   EPOCH_CHANGED_REASON,
-  sessionEnd,
+  FORBIDDEN_CODE,
+  FORBIDDEN_REASON,
+  STORE_REFUSED_CODE,
+  STORE_REFUSED_REASON,
   TOKEN_EXPIRED_CODE,
   TOKEN_EXPIRED_REASON,
-} from './nodeCollaboration'
+  openCollaborationTransport,
+  sessionEnd,
+} from './collaboration/transport'
 export type {
   AwarenessLike,
+  CollaborationEnd,
+  CollaborationProviderHandle,
+  CollaborationTransportHandle,
+  CollaborationTransportOptions,
   Collaborator,
-  CreateNodeCollaborationOptions,
-  NodeCollaborationEnd,
-  NodeCollaborationProviderHandle,
-  NodeCollaborationSessionHandle,
-} from './nodeCollaboration'
+} from './collaboration/transport'
 
 // Components
+export { default as VaulterBreadcrumb } from './components/VaulterBreadcrumb.vue'
 export { default as VaulterCommentsPanel } from './components/VaulterCommentsPanel.vue'
-
-// Drive components (M1–M4)
+export { default as VaulterDocumentNode } from './components/VaulterDocumentNode.vue'
 export { default as VaulterDrive } from './components/VaulterDrive.vue'
-export { default as VaulterDriveBreadcrumb } from './components/VaulterDriveBreadcrumb.vue'
 export { default as VaulterFolderPicker } from './components/VaulterFolderPicker.vue'
+export { default as VaulterGrantsPanel } from './components/VaulterGrantsPanel.vue'
+export type { GrantSubject } from './components/VaulterGrantsPanel.vue'
 export { default as VaulterNameDialog } from './components/VaulterNameDialog.vue'
 export { default as VaulterNodeList } from './components/VaulterNodeList.vue'
 export type { NodeAction } from './components/VaulterNodeList.vue'
-export { default as VaulterUploader } from './components/VaulterUploader.vue'
-export { default as VaulterNodeGrantsPanel } from './components/VaulterNodeGrantsPanel.vue'
-export type { GrantSubject } from './components/VaulterNodeGrantsPanel.vue'
-export { default as VaulterNodeSharePanel } from './components/VaulterNodeSharePanel.vue'
-export { default as VaulterDocumentNode } from './components/VaulterDocumentNode.vue'
-export type { DocumentNodeEditorProps } from './components/VaulterDocumentNode.vue'
-export { default as VaulterSpreadsheet } from './components/VaulterSpreadsheet.vue'
 export { default as VaulterSharedWithMe } from './components/VaulterSharedWithMe.vue'
+export { default as VaulterSharePanel } from './components/VaulterSharePanel.vue'
+export { default as VaulterSpreadsheet } from './components/VaulterSpreadsheet.vue'
+export { default as VaulterUnsupportedNode } from './components/VaulterUnsupportedNode.vue'
+export { default as VaulterUploader } from './components/VaulterUploader.vue'
 
-// Drive display helpers
+// Display helpers
 export { humanByteSize, nodeIconKind } from './components/drive/nodeDisplay'
 export type { NodeIconKind } from './components/drive/nodeDisplay'
+export { MAX_NAME_LENGTH, NAME_REASONS, portableNameReason } from './naming'
+export type { NameReason } from './naming'
 
 // Types
-export type * from './types'
+export type * from './api/types'
 
 export { VaulterPlugin as default } from './plugin'

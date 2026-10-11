@@ -1,14 +1,14 @@
 import { inject, type InjectionKey } from 'vue'
-import type { VaulterClient } from '../client'
+import type { VaulterClient } from '../api/client'
 
-export const docVaultClientKey: InjectionKey<VaulterClient> = Symbol('vaulter.client')
+export const vaulterClientKey: InjectionKey<VaulterClient> = Symbol('vaulter.client')
 
 /**
  * Resolve the Vaulter API client provided by `VaulterPlugin`
  * (or `provideVaulterClient`).
  */
 export function useVaulterClient(): VaulterClient {
-  const client = inject(docVaultClientKey, null)
+  const client = inject(vaulterClientKey, null)
 
   if (client === null) {
     throw new Error(

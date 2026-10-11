@@ -2,12 +2,12 @@
 import { onMounted } from 'vue'
 import { useSharedNodes } from '../composables/useSharedNodes'
 import VaulterNodeList, { type NodeAction } from './VaulterNodeList.vue'
-import type { Node, SharedNodesQuery } from '../types'
+import type { CursorQuery, Node } from '../api/types'
 
-// The cross-storage "shared with me" view: a FLAT listing of the nodes shared with
-// the actor (the access-aware `GET /shared` endpoint). Unlike VaulterDrive there is
+// The cross-drive "shared with me" view: a FLAT listing of the nodes shared with
+// the actor (`GET /shared`). Unlike VaulterDrive there is
 // no folder navigation — every open emits `open-node` for the host to route (the
-// nodes span storages, so the host decides where each one opens). Reuses
+// nodes span drives, so the host decides where each one opens). Reuses
 // VaulterNodeList for the rendering (icon/name/size + per-node-ability actions) and
 // owns only the load/refresh/empty/error chrome. Headless: minimal scoped styles,
 // class hooks + slots throughout.
@@ -17,7 +17,7 @@ const props = withDefaults(
     /** Row actions to offer (still filtered per node abilities by the list). */
     actions?: NodeAction[]
     /** Initial cursor / page size for the shared listing. */
-    query?: SharedNodesQuery
+    query?: CursorQuery
   }>(),
   {
     viewMode: 'list',
@@ -27,7 +27,7 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  /** A shared node was opened — the host opens/edits/previews it (cross-storage). */
+  /** A shared node was opened — the host opens/edits/previews it (cross-drive). */
   'open-node': [node: Node]
   /** A shared node was selected (single-click). */
   'node-selected': [node: Node]
@@ -95,13 +95,13 @@ defineExpose({ refresh, loadMore })
           <p class="vaulter-shared__empty">Nothing has been shared with you yet.</p>
         </slot>
       </template>
-      <!-- Surface the storage the node lives in (the only cross-storage context the
-           /shared payload carries — breadcrumb is attached only on `show`). Hosts can
-           override the `name` slot to resolve a storage label / richer breadcrumb. -->
+      <!-- Surface the drive the node lives in (the only cross-drive context the /shared
+           payload carries — the breadcrumb is attached only on `show`). Hosts can
+           override the `name` slot to resolve a drive label / richer breadcrumb. -->
       <template #name="{ node }">
         <slot name="name" :node="node">
           <span class="vaulter-shared__name">{{ node.name }}</span>
-          <span class="vaulter-shared__context" :data-storage="node.storage_id">
+          <span class="vaulter-shared__context" :data-drive="node.drive_id">
             <slot name="context" :node="node">{{ node.kind }}</slot>
           </span>
         </slot>

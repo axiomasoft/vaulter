@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useComments } from '../composables/useComments'
-import type { VaulterComment, NodeId } from '../types'
+import type { Comment, NodeId } from '../api/types'
 
 const props = withDefaults(
   defineProps<{ nodeId: NodeId, autoLoad?: boolean }>(),
@@ -9,29 +9,30 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  added: [comment: VaulterComment]
-  resolved: [comment: VaulterComment]
+  added: [comment: Comment]
+  resolved: [comment: Comment]
 }>()
 
-const { comments, loading, list, add, resolve } = useComments(props.nodeId)
+const { comments, loading, error, cursor, list, loadMore, add, resolve } = useComments(props.nodeId)
 
 async function submit(body: string): Promise<void> {
   const comment = await add({ body })
   emit('added', comment)
 }
 
-async function markResolved(comment: VaulterComment): Promise<void> {
+async function markResolved(comment: Comment): Promise<void> {
   const updated = await resolve(comment.id)
   emit('resolved', updated)
 }
 
 onMounted(() => {
   if (props.autoLoad) {
-    void list()
+    // A failure is captured in `error` and shown through the error slot.
+    void list().catch(() => undefined)
   }
 })
 
-defineExpose({ list, add: submit, resolve: markResolved, comments, loading })
+defineExpose({ list, loadMore, add: submit, resolve: markResolved, comments, loading, error })
 </script>
 
 <template>
@@ -49,5 +50,16 @@ defineExpose({ list, add: submit, resolve: markResolved, comments, loading })
         </slot>
       </li>
     </ul>
+    <p v-if="error" class="vaulter-comments-panel__error" role="alert">
+      <slot name="error" :error="error">Could not load comments.</slot>
+    </p>
+    <button
+      v-if="cursor?.next_cursor"
+      type="button"
+      class="vaulter-comments-panel__more"
+      @click="loadMore"
+    >
+      <slot name="load-more">Load more</slot>
+    </button>
   </div>
 </template>
