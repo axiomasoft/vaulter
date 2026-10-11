@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P7.1",
   "title": "vaulter:doctor: контракт, runner, проверки всех пакетов (C09) и шаг doctor в install",
-  "status": "todo",
+  "status": "in_progress",
   "summary": "Расширяемый read-only vaulter:doctor с тегом vaulter.doctor_checks, --production/--json(vaulter.doctor/v1)/--check/--sample/--probe-storage, каталогом проверок core, media, drive (включая scan scanner/policy/obligations/scope и leases), documents и azgard; install завершается выводом doctor.",
   "why": "OPUS 12 §2, D34, D68; C09: doctor обязан выявлять неверно сконфигурированный scanner, незавершённый cutover политики, зависшие/проваленные durable obligations и leases, неверный scope; P8 (V15) опирается на doctor --production. Риски: проверка, мутирующая данные или открывающая write scope; вывод секретов; вторая формула quota; scan-проверки, выключенные вместе с webhooks.",
   "scope": {
@@ -292,6 +292,14 @@
     "U2",
     "U3"
   ],
-  "result": null,
-  "updated_at": "2026-10-11T13:58:13Z"
+  "result": {
+    "started_at": "2026-10-11T16:56:06Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "c8a6696c-4326-470b-a768-c0b0e9c71cd7"
+    }
+  },
+  "updated_at": "2026-10-11T16:56:06Z"
 }

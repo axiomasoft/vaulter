@@ -1,0 +1,24 @@
+{
+  "item": "P7.1",
+  "changed_paths": [
+    "packages/core/src/Contracts/Doctor/DoctorCheck.php",
+    "packages/core/src/Doctor/** (DoctorSeverity, DoctorFinding, DoctorContext, DoctorRegistry, DoctorRunner, DoctorReport, Checks/*)",
+    "packages/core/src/Console/{DoctorCommand,InstallCommand}.php, packages/core/src/Providers/{ConsoleRegistrar,BindingsRegistrar}.php, packages/core/src/VaulterServiceProvider.php",
+    "packages/core/src/Configuration/ConfigNormalizer.php (usedDeprecatedKeys)",
+    "packages/core/resources/schemas/doctor-v1.schema.json",
+    "packages/{media,drive,documents,azgard}/src/Doctor/*.php + the package service provider (tag vaulter.doctor_checks)",
+    "packages/core/tests/{Doctor,Console,Arch}/**, packages/{media,drive,documents,azgard}/tests/Doctor/*, packages/core/tests/Arch/__snapshots__/public-api.txt (additive: DoctorCheck)",
+    "docs/reference/commands.md, docs/guide/troubleshooting.md (+ docs/ru mirrors), UPGRADE.md, CHANGELOG.md"
+  ],
+  "callers": ["Artisan (ConsoleRegistrar), vaulter:install step 5 ($this->call('vaulter:doctor')), container tag vaulter.doctor_checks from each package provider"],
+  "fixtures": ["scripts/fixtures/**, packages/core/tests/Fixtures/config/vaulter-0.2.php, tests/fixtures/v0.2.0/** untouched; bad cases are built in tests with direct DB/Schema inserts"],
+  "acceptance": {
+    "V1": {"cwd": ".", "env": "APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory:", "cmd": "scripts/php84 vendor/bin/pest --ci packages/core/tests/Doctor packages/core/tests/Console packages/core/tests/Configuration packages/core/tests/Arch"},
+    "V2": {"cwd": "packages/drive", "env": "same", "cmd": "../../scripts/php84 vendor/bin/pest --ci tests/Doctor tests/Arch"},
+    "V3": {"cwd": "packages/media", "env": "same", "cmd": "same"},
+    "V4": {"cwd": "packages/documents", "env": "same", "cmd": "same"},
+    "V5": {"cwd": "packages/azgard", "env": "same", "cmd": "same"},
+    "V6": {"cwd": ".", "cmd": "pint --test + phpstan for core (root) and drive/media/documents/azgard (per package)"}
+  },
+  "impact_for_phase_run_P7": ["V7: PG/MySQL doctor key_types/integrity/connection and drive.scan.*; vaulter:doctor --production on the 0.2 fixture after upgrade (V15)", "full suites, docs:build"]
+}
