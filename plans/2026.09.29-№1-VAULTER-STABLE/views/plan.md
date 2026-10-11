@@ -118,7 +118,7 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 | P3 | Прикладной слой: авторизованный публичный API | detailed | 8/8 | 🟢 Done |
 | P4 | Модель данных и документы | detailed | 14/14 | 🟠 Done with deviations |
 | P5 | Конвейер событий | detailed | 5/5 | 🟠 Done with deviations |
-| P6 | HTTP v1 и клиенты | detailed | 4/8 | 🟡 In progress |
+| P6 | HTTP v1 и клиенты | detailed | 8/8 | 🟠 Done with deviations |
 | P7 | Эксплуатация и DX | skeleton | 0/0 | ⬜ Skeleton |
 | P8 | Готовность 1.0 | skeleton | 0/0 | ⬜ Skeleton |
 
@@ -192,3 +192,4 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 | D64 | P6.3: OpenAPI 3.1 валидируется тестовым адаптером на opis/json-schema; oasdiff — закреплённый docker-образ; openapi-typescript 7 | accepted | 2026-10-10 |
 | D65 | P6: карта маршрутов/ресурсов v1 дополнена поверхностью P4/P5; egress и исключения D31 | accepted | 2026-10-10 |
 | D66 | P6: только код и тесты покрытия; без длинных прогонов и мутаторов (указание владельца 2026-10-10) | accepted | 2026-10-10 |
+| D67 | P6: bounded audit repairs и свежие быстрые acceptance checks по D66 | accepted | 2026-10-11 |
