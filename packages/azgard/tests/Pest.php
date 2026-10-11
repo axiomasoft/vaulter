@@ -18,3 +18,5 @@ uses(TestCase::class)->in('AdapterTest.php', 'ActorGuardTest.php', 'ProviderBind
 
 uses(AccessTestCase::class, RefreshDatabase::class)->in('Access');
 uses(TestCase::class)->in('ConfigurationTest.php');
+
+uses(TestCase::class)->in('Doctor');

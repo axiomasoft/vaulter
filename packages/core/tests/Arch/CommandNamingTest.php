@@ -8,8 +8,8 @@ use Vaulter\Tests\TestCase;
 uses(TestCase::class);
 
 it('names every Vaulter command vaulter:<area>:<verb>', function (): void {
-    // The one top-level entry point is the install command.
-    $names = array_values(array_filter(array_keys(Artisan::all()), static fn (string $name): bool => str_starts_with($name, 'vaulter:') && $name !== 'vaulter:install'));
+    // The top-level entry points are the install and doctor commands.
+    $names = array_values(array_filter(array_keys(Artisan::all()), static fn (string $name): bool => str_starts_with($name, 'vaulter:') && !in_array($name, ['vaulter:install', 'vaulter:doctor'], true)));
 
     expect($names)->not->toBeEmpty();
     foreach ($names as $name) {

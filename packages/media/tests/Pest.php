@@ -6,7 +6,7 @@ use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vaulter\Media\Tests\TestCase;
 
-uses(TestCase::class, RefreshDatabase::class)->in('Feature', 'Observability');
+uses(TestCase::class, RefreshDatabase::class)->in('Feature', 'Observability', 'Doctor');
 
 uses(TestCase::class)->in('Cas');
 $unwrapped = ['BlobScopeKeyTest.php', 'ScopeKeyReconcileTest.php', 'RepairBlobScopesCommandTest.php'];

@@ -17,6 +17,9 @@ use Vaulter\Documents\Tests\Types\TypesTestCase;
 // base TestCase.
 uses(TestCase::class, RefreshDatabase::class)->in('Schema', 'Unit');
 
+// The doctor checks read the document aggregate; documents are created through the document actions.
+uses(DocumentTestCase::class, RefreshDatabase::class)->in('Doctor');
+
 // The document-node suite boots with 'document_versions' ON so the routes register.
 // 'collaboration' stays OFF (the true default) — CollaborationFeatureGateTest (VLT-
 // REMED P3.1 / F-P1.6-01) lives here and asserts exactly that combination.
