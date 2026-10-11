@@ -1,0 +1,23 @@
+{
+  "head": "2ed8f4a5d67ff6faefa456b63389b98b02f2eb16",
+  "files": {
+    "packages/core/src/Http/Support/HttpOperationContextFactory.php": "49384571bed3ec419d403bf28e6f6d2833d333873f93c84f82ee2d6749cb88b0",
+    "packages/core/src/Http/Controllers/Changes/ListChangesController.php": "0cfed2be544440225e4319d2eb0fe139b97260f43e3f1ff5ee2bdfcbf2df3dae",
+    "packages/core/src/Http/Controllers/Changes/ShowChangesStartController.php": "203ab1d156a910fd984b825fabf97ba72f8e90f5d05424bb2ce44c3b1d8b2bc3",
+    "packages/core/src/Access/OperationGuard.php": "7df0bd815ac93bae3218a12461dfee5bef0406c9c6fe328fb6e91fb6c68e9414",
+    "packages/core/src/Http/Support/ContentResponder.php": "dfd2d78fd695b207c01ca6c9a95a4bfff6f81236b1d625724ec759b953531e4a",
+    "packages/drive/src/Http/Controllers/Search/SearchNodesController.php": "2561e8c19f906114dfe54b054fc78b542f6eab610d8baf713f2fc898d60d8d2c",
+    "packages/drive/src/Http/Controllers/Nodes/ListStarredController.php": "863fbe35ebb552f4612a2441c6090deadfb1717c2188c55e018f017c3a3b58c2",
+    "packages/drive/src/Http/Controllers/Trash/ListTrashController.php": "c68a1b3cf49205d088282a50d86b4f47ccf6cdfc509b995c3316157fa61b7841",
+    "packages/drive/src/Http/Controllers/Trash/EmptyTrashController.php": "f750cdbdfef12c37c243158f67997542b33f961d8de329302a16ea132c2aaacb",
+    "packages/vue/src/components/VaulterDrive.vue": "9caf4ce581c558cff86858fde0c70fcbb4b99e5165a0ca59dd32493b19b2fe4a",
+    "packages/filament/src/Support/PanelDrives.php": "348e21520a12029dda5f846afe730bde9adf8bc24a3f15da6b355fc18fb01c02",
+    "packages/filament/src/Support/PanelDriveAccess.php": "15a69bcb12821848b2721e4fc94b82a42aeb9bb6f28862bd4ca80f9e5ca15cbd",
+    "packages/core/tests/Http/ChangesV1Test.php": "6360fcf18d6f1d1434950fc82da94e4c020f62951564a4f7e740f228652480fb",
+    "packages/core/tests/Http/AbilitiesManyTest.php": "55676ac86bd2b674fe4a925d4703cc143ac6ca3cd3c4853e918d369f6c482ba7",
+    "packages/drive/tests/Http/UniformNotFoundDriveV1Test.php": "009a78789ce1160ddd0052522ac0a4282b3c7ed91ad5115210559670c164d686",
+    "packages/drive/tests/Http/DirectSignedDownloadTest.php": "d0abf32616c1a82d4791b24dc25f2b3706e4968b2e1f7b3eb1391460e57668c9",
+    "packages/filament/tests/Feature/NodeResourceCreateGateTest.php": "16a88b9d08930e9a5ce49ca5e388361c96538f5e1f6078fd976676ead573a6c7",
+    "packages/vue/tests/drive-create-abilities.test.ts": "9c48fc2d6a466eb9a41cf32e74a9e703f25a111aca01c1f915f92c44b60808d5"
+  }
+}

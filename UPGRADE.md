@@ -6,6 +6,18 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### P6 audit: drive visibility and creation permissions (D59, D62–D65)
+
+Search, starred, trash and changes HTTP routes previously returned an empty result or a cursor
+for an entirely invisible drive. They now return `404 drive_not_found`, matching an unknown id.
+A grant on a nested folder or a trash root is sufficient for these routes; a root grant is not
+required. Change-journal removal entries retain the synchronization semantics of D59.
+
+`abilities.create` now includes the profile's create gate. `VaulterDrive` reads the current
+folder's ability before offering New folder or Upload. Custom toolbar slots receive `canCreate`
+and should use it to gate their creation controls. Signed revision downloads check Download
+before resolving either an existing or an unknown revision id.
+
 ### Filament through the drive handle (PLAN2.P6.6, D62–D65)
 
 The panel no longer scopes Eloquent queries by access; it lists and acts through the authorized drive handle.

@@ -36,6 +36,12 @@ curl 'https://app.test/api/vaulter/v1/drives/01J.../changes?cursor=…&limit=500
 journal switched off the routes answer `403 profile_restriction`; a forged or foreign cursor
 `400 invalid_cursor`, an expired one `410 cursor_expired`.
 
+The HTTP journal requires at least one node the caller can view in this drive, including a
+trash root. A nested-folder grant is sufficient. An entirely invisible drive returns
+`404 drive_not_found` before issuing or reading a cursor, exactly like an unknown drive id.
+Removal entries keep their node ids so a syncing reader can discard previously stored nodes
+after deletion, a move or lost access.
+
 ## Starting
 
 1. Take `startCursor()`.

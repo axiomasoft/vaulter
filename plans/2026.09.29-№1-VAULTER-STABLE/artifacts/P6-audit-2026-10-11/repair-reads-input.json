@@ -1,0 +1,220 @@
+[
+  {
+    "ref": "P6.1",
+    "patch": {
+      "reads": [
+        {
+          "ref": "knowledge/artifacts-P6-design-opus#H10-1-3",
+          "why": "Первый read (D06): OPUS 10 §1–§3",
+          "required": true
+        },
+        {
+          "ref": "knowledge/P6-design#Kernel",
+          "why": "Стартовый раздел нормативного контракта (документ доставлен целиком)",
+          "required": true
+        },
+        {
+          "ref": "knowledge/P6-invariants#Invariants",
+          "why": "P6-I1–P6-I12: авторизация до валидаторов, egress, кэш",
+          "required": true
+        },
+        {
+          "ref": "knowledge/security-correction-contract#Egress",
+          "why": "C08 норматив (C07 — раздел Sequence того же документа)",
+          "required": true
+        },
+        {
+          "ref": "knowledge/P6-industry-research-2026-10-10#Adoption",
+          "why": "Принято/отложено — границы scope",
+          "required": true
+        },
+        {
+          "ref": "knowledge/validation-and-execution-policy#Owner-Fast-Only",
+          "why": "Только быстрые проверки (D66 сужает до кода и тестов)",
+          "required": true
+        },
+        {
+          "ref": "knowledge/implementation-security-assessment-2026-10-06#Owner-Map",
+          "why": "D29: владельцы C07/C08 (P6.1/6.3) и обязательные доказательства",
+          "required": true
+        },
+        {
+          "path": "packages/core/routes/api.php",
+          "why": "Переписывается",
+          "required": true
+        },
+        {
+          "path": "packages/core/src/Http/Support/HttpResourceResolver.php",
+          "why": "Расширяется",
+          "required": true
+        },
+        {
+          "path": "packages/core/src/Http/Resources/Drive/NodeResource.php",
+          "why": "Переписывается",
+          "required": true
+        },
+        {
+          "path": "packages/drive/src/Http/Resources/NodeResponses.php",
+          "why": "Current v1 replacement for the historical legacy read, for owner-authorized bounded audit correction.",
+          "required": true
+        },
+        {
+          "path": "packages/core/src/Content/ContentDelivery.php",
+          "why": "stream/streamForShare/directUrl",
+          "required": true
+        },
+        {
+          "path": "packages/core/src/Http/Support/DownloadHeaders.php",
+          "why": "Базовые заголовки скачивания",
+          "required": true
+        },
+        {
+          "path": "packages/core/src/Http/Controllers/Sharing/DownloadPublicShareController.php",
+          "why": "Current v1 replacement for the historical legacy read, for owner-authorized bounded audit correction.",
+          "required": true
+        },
+        {
+          "path": "packages/core/src/Access/OperationGuard.php",
+          "why": "abilities()/visible() → abilitiesMany",
+          "required": true
+        },
+        {
+          "path": "packages/core/src/Http/Middleware/VaulterHttpOperationMap.php",
+          "why": "Переход на имена маршрутов",
+          "required": true
+        },
+        {
+          "path": "packages/core/src/Configuration/RoutesConfig.php",
+          "why": "Стеки и префикс",
+          "required": true
+        }
+      ]
+    }
+  },
+  {
+    "ref": "P6.7",
+    "patch": {
+      "reads": [
+        {
+          "ref": "knowledge/artifacts-P6-design-opus#H10-4",
+          "why": "Первый read (D06): OPUS 10 §4 карта маршрутов",
+          "required": true
+        },
+        {
+          "ref": "knowledge/P6-design#Routes",
+          "why": "Стартовый раздел нормативного контракта (документ доставлен целиком)",
+          "required": true
+        },
+        {
+          "path": "packages/drive/routes/drive.php",
+          "why": "Переписывается",
+          "required": true
+        },
+        {
+          "path": "packages/drive/src/Http/Resources/NodeResponses.php",
+          "why": "Current v1 replacement for the historical legacy read, for owner-authorized bounded audit correction.",
+          "required": true
+        },
+        {
+          "path": "packages/drive/src/Http/Controllers/Files/DownloadFileController.php",
+          "why": "Current v1 replacement for the historical legacy read, for owner-authorized bounded audit correction.",
+          "required": true
+        },
+        {
+          "path": "packages/drive/src/Http/Controllers/Uploads/TusProtocolController.php",
+          "why": "Остаётся, меняется резолв",
+          "required": true
+        },
+        {
+          "path": "packages/core/src/Contracts/Drive/TrashOperations.php",
+          "why": "purge(+expectedSequence)",
+          "required": true
+        },
+        {
+          "path": "packages/drive/src/Operations/TrashOperations.php",
+          "why": "Реализация ожиданий",
+          "required": true
+        }
+      ]
+    }
+  },
+  {
+    "ref": "P6.4",
+    "patch": {
+      "reads": [
+        {
+          "ref": "knowledge/artifacts-P6-design-opus#F11-1-3",
+          "why": "Первый read (D06): OPUS 11 §1–§3",
+          "required": true
+        },
+        {
+          "ref": "knowledge/P6-design#Vue",
+          "why": "Стартовый раздел нормативного контракта (документ доставлен целиком)",
+          "required": true
+        },
+        {
+          "path": "packages/vue/src/api/client.ts",
+          "why": "Current v1 replacement for the historical legacy read, for owner-authorized bounded audit correction.",
+          "required": true
+        },
+        {
+          "path": "packages/vue/src/api/types.ts",
+          "why": "Current v1 replacement for the historical legacy read, for owner-authorized bounded audit correction.",
+          "required": true
+        },
+        {
+          "path": "packages/vue/src/viewers/registry.ts",
+          "why": "Current v1 replacement for the historical legacy read, for owner-authorized bounded audit correction.",
+          "required": true
+        },
+        {
+          "path": "packages/vue/src/components/VaulterNameDialog.vue",
+          "why": "portable-v1 причины",
+          "required": true
+        },
+        {
+          "path": "packages/core/src/Naming/PortableNamePolicy.php",
+          "why": "Источник правил имён",
+          "required": true
+        },
+        {
+          "path": "packages/vue/package.json",
+          "why": "Скрипты и devDependencies",
+          "required": true
+        }
+      ]
+    }
+  },
+  {
+    "ref": "P6.6",
+    "patch": {
+      "reads": [
+        {
+          "ref": "knowledge/artifacts-P6-design-opus#F6",
+          "why": "Первый read (D06): OPUS F6 P6.6",
+          "required": true
+        },
+        {
+          "ref": "knowledge/P6-design#Filament",
+          "why": "Стартовый раздел нормативного контракта (документ доставлен целиком)",
+          "required": true
+        },
+        {
+          "path": "packages/filament/src/Support/PanelDriveAccess.php",
+          "why": "Current v1 replacement for the historical legacy read, for owner-authorized bounded audit correction.",
+          "required": true
+        },
+        {
+          "path": "packages/filament/src/Support/PanelActor.php",
+          "why": "Актор панели",
+          "required": true
+        },
+        {
+          "path": "packages/filament/src/Resources/NodeResource.php",
+          "why": "Образец текущих действий",
+          "required": true
+        }
+      ]
+    }
+  }
+]

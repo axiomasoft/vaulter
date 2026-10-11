@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Vaulter\Access\Roles\RoleRegistry;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Tests\Http\DriveV1;
+use Vaulter\Enums\Drive\DriveStatus;
+use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Http\V1;
 
 /**
@@ -96,7 +101,7 @@ it('filters the drive-wide lists down to what the caller can see', function (str
     $driveId = (string) $drive->model()->getKey();
     $parent = V1::folder($drive, 'hidden');
     $folder = V1::folder($drive, 'visible', $parent->id);
-    \Vaulter\Tests\Access\AccessTestHelpers::grant($folder, \Vaulter\Access\Roles\RoleRegistry::READER, subjectId: 2);
+    AccessTestHelpers::grant($folder, RoleRegistry::READER, subjectId: 2);
     $this->actingAs(V1::user(2));
 
     // A nested grant admits the drive even when this particular list is empty.
@@ -111,7 +116,7 @@ it('filters the drive-wide lists down to what the caller can see', function (str
 it('admits a drive when the only visible node is a trash root', function (): void {
     $drive = V1::drive(userId: 1);
     $folder = V1::folder($drive, 'shared trash');
-    \Vaulter\Tests\Access\AccessTestHelpers::grant($folder, \Vaulter\Access\Roles\RoleRegistry::READER, subjectId: 2);
+    AccessTestHelpers::grant($folder, RoleRegistry::READER, subjectId: 2);
     $drive->nodes()->trash($folder);
     $this->actingAs(V1::user(2));
 
@@ -127,8 +132,20 @@ it('keeps foreign trash intact when a stranger tries to empty it', function (): 
 
     $this->deleteJson(V1::url('drives/'.$drive->model()->getKey().'/trash'))
         ->assertNotFound()->assertJsonPath('code', 'drive_not_found');
-    expect(\Vaulter\Tests\Drive\DriveTestHelpers::model($folder)->trashed_at)->not->toBeNull();
+    expect(DriveTestHelpers::model($folder)->trashed_at)->not->toBeNull();
 });
+
+it('hides deleting drives on drive-wide routes', function (string $method, string $suffix): void {
+    $drive = V1::drive(userId: 1);
+    $model = $drive->model();
+    app(VaulterDatabase::class)->write(static fn () => $model->forceFill(['status' => DriveStatus::Deleting])->save());
+    $this->actingAs(V1::user(1));
+
+    $this->json($method, V1::url('drives/'.$model->getKey().$suffix))
+        ->assertNotFound()->assertJsonPath('code', 'drive_not_found');
+})->with([
+    ['GET', '/search?q=a'], ['GET', '/starred'], ['GET', '/trash'], ['DELETE', '/trash'],
+]);
 
 it('answers the retired unversioned drive paths with route_not_found under the v1 prefix only', function (): void {
     $this->actingAs(V1::user(1));

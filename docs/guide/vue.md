@@ -233,6 +233,11 @@ On a `412` the composable **re-reads the node** (the list already shows what won
 stale save keeps your local `content`, refreshes `head` (server content and tag), and sets `conflict`; call `save()` to
 overwrite with your edits or `load()` to take the server's version.
 
+`VaulterDrive` shows New folder and Upload only when the current folder's `abilities.create`
+is true. At the drive root it loads the root node's abilities; a failed or pending lookup
+offers no creation action. Custom `toolbar` slots receive `canCreate` alongside `newFolder`.
+Navigation and `refresh()` reload this permission, including the profile's create gate.
+
 ### Collaboration
 
 `useCollaboration(nodeId, { supportedSchemaVersion, onEpochChanged })` asks for a session

@@ -17,6 +17,7 @@ use Vaulter\Exceptions\Nodes\StorageNotFoundException;
 use Vaulter\Http\Middleware\AssignCorrelationId;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Support\Identity;
 use Vaulter\VaulterManager;
 
 /**
@@ -36,9 +37,9 @@ final readonly class HttpOperationContextFactory
     }
 
     /**
-     * Run a drive-level call ({drive} in the URL). A drive whose root the caller cannot
-     * see answers drive_not_found like an unknown or foreign one, so the routes do not
-     * reveal which drive ids exist.
+     * Run a drive-level call ({drive} in the URL), mapping the operation's missing
+     * resource to drive_not_found. Drive-wide listings use onVisibleDrive() to admit
+     * the drive before running the operation.
      *
      * @template T
      *
@@ -80,7 +81,7 @@ final readonly class HttpOperationContextFactory
                 return $call($handle);
             }
             $handle->model()->nodes()->chunkById(200, static function (Collection $nodes) use ($handle, &$visible): bool {
-                $ids = $nodes->map(static fn (Node $node): string => (string) $node->getKey())->all();
+                $ids = array_values($nodes->map(static fn (Node $node): string => Identity::stringify($node->getKey()))->all());
                 foreach ($handle->nodes()->abilitiesMany($ids) as $abilities) {
                     if ($abilities->flags[Ability::View->value] ?? false) {
                         $visible = true;

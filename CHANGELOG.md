@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### P6 audit corrections
+
+- Fixed: HTTP changes, search, starred and trash routes return `404 drive_not_found` when the caller
+  cannot view any node of the drive. Nested-folder and trash grants still admit the drive.
+- Fixed: `abilities.create` includes the profile's create gate, including batch responses and
+  Filament move destinations; `VaulterDrive` offers New folder and Upload only when the current
+  folder allows creation, and exposes `canCreate` to its toolbar slot.
+- Fixed: signed revision downloads authorize Download before resolving the revision and only
+  sign committed or superseded revisions. Filament's drive service receives its dependencies
+  through the container; service-locator ratchet limits decreased.
+
 ### Filament through the drive handle (PLAN2.P6.6)
 
 - Changed: the node and drive resources read and write through `Vaulter::drive($drive)->actingAs(PanelActor::current())`

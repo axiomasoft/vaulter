@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.7",
   "title": "Маршруты drive v1: drives, nodes, files, revisions, trash, uploads; If-Match и PHP-ожидания purge/restore",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Все drive-маршруты переведены на vaulter.v1.* с invokable-контроллерами (drives, nodes, star/properties, files/revisions, trash, search, starred, shared, uploads), If-Match обязателен на rename/properties/move/trash/restore/purge/addRevision/restoreRevision и при создании resumable-сессии с node_id; PHP API получил ожидания purge/restore/restoreRevision; скачивания идут через ContentResponder; drive feature-тесты переписаны на v1.",
   "why": "OPUS 10 §4 (drive) + D65 + V36/C07: основной поток клиента — дерево и файлы; lost update и утечка байтов здесь критичны. Риски: concurrency (V36, CAS purge/restore), access-boundary (download/preview без Download, карантин), public-contract (крупнейшая часть маршрутов и ресурсов), регрессия загрузок tus/S3.",
   "scope": {
@@ -65,13 +65,13 @@
       "required": true
     },
     {
-      "path": "packages/drive/src/Http/Controllers/NodeController.php",
-      "why": "Удаляется; логика переносится",
+      "path": "packages/drive/src/Http/Resources/NodeResponses.php",
+      "why": "Current v1 replacement for the historical legacy read, for owner-authorized bounded audit correction.",
       "required": true
     },
     {
-      "path": "packages/drive/src/Http/Controllers/DownloadController.php",
-      "why": "Удаляется → ContentResponder",
+      "path": "packages/drive/src/Http/Controllers/Files/DownloadFileController.php",
+      "why": "Current v1 replacement for the historical legacy read, for owner-authorized bounded audit correction.",
       "required": true
     },
     {
@@ -87,6 +87,11 @@
     {
       "path": "packages/drive/src/Operations/TrashOperations.php",
       "why": "Реализация ожиданий",
+      "required": true
+    },
+    {
+      "ref": "D67",
+      "why": "Bounded audit-correction acceptance; original validation/results remain in pre-reopen snapshots.",
       "required": true
     }
   ],
@@ -250,31 +255,25 @@
   "guidance": "StaleIfMatchTest/V36 (SQLite-вариант последовательный): A и B читают узел (ETag E); A PATCH name=x If-Match E → 200, ETag E2; B PATCH name=y If-Match E → 412 node_sequence_mismatch, имя x. IfMatchRequiredTest — матрица всех IM-маршрутов (rename, properties, move, trash, restore, purge, revisions.store, revisions.restore, uploads.store с node_id): без заголовка → 428; с `*` → 428. NodeEtagRepresentationTest: (1) владелец и reader получают разные ETag одного узла; (2) grant reader→writer меняет abilities и ETag reader; (3) star меняет ETag только у вызывающего; (4) ETag в теле == заголовку. TrashV1Test: purge не из корзины → 409 node_not_trashed; purge со старым ETag → 412 и узел не удалён; restore с конфликтом имени on_conflict=rename. UploadsV1Test: tus create → HEAD → PATCH → завершение под /v1/uploads/{id}; s3 parts/complete; создание с node_id без If-Match → 428.",
   "validation": [
     {
-      "id": "V1",
-      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Http tests/Feature tests/Drive tests/Uploads tests/Tenancy tests/Observability tests/Providers tests/WriteGuard tests/Arch tests/PublicApi",
-      "expect": "exit0; все drive-маршруты v1, IM/428/412/304, egress, tus/S3, arch, golden",
+      "id": "V602",
+      "cmd": "../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress",
+      "expect": "exit0; formatting и анализ пакета",
       "kind": "acceptance",
       "cwd": "packages/drive"
     },
     {
-      "id": "V2",
-      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Http packages/core/tests/Observability packages/core/tests/Tenancy packages/core/tests/Operations packages/core/tests/Access packages/core/tests/Support packages/core/tests/Arch packages/core/tests/PublicApi packages/core/tests/Drive packages/core/tests/Feature",
-      "expect": "exit0; core-тесты на drive-путях переписаны, golden core (TrashOperations/FileOperations/RestoreOptions)",
+      "id": "V606",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Http tests/Arch",
+      "expect": "exit0; drive v1",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V611",
+      "cmd": "python3 /home/vostrikov/projects/packages/swissknifeman/packages/task/scripts/plan.py check plans/2026.09.29-№1-VAULTER-STABLE",
+      "expect": "0 errors",
       "kind": "acceptance",
       "cwd": "."
-    },
-    {
-      "id": "V3",
-      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: VAULTER_TEST_WRITE_GUARD=1 ../../scripts/php84 vendor/bin/pest --ci tests/Http tests/WriteGuard",
-      "expect": "exit0; drive v1 под WriteScope",
-      "kind": "acceptance",
-      "cwd": "packages/drive"
-    },
-    {
-      "id": "V80",
-      "procedure": "Pint/PHPStan затронутых пакетов: scripts/php84 vendor/bin/pint --test packages/core && scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress (cwd .); ../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress (cwd packages/drive).",
-      "expect": "все команды exit 0",
-      "kind": "acceptance"
     }
   ],
   "deliverables": [
@@ -297,6 +296,36 @@
     "status": "not_needed",
     "notes": "@plan/knowledge/P6-industry-research-2026-10-10.json#R2-Validators"
   },
-  "result": null,
-  "updated_at": "2026-10-11T14:14:46Z"
+  "result": {
+    "started_at": "2026-10-11T14:54:07Z",
+    "finished_at": "2026-10-11T14:54:08Z",
+    "executor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "xhigh",
+      "session": "01a12b3a-0c23-7220-9ad9-bfdd42dca689"
+    },
+    "notes": "D67 bounded repair F02 completed; fresh exact V602/V606/V611 passed on closure candidate. Unknown/invisible drive404; deep and trash-only grants retained; deleting drive404 and foreign trash intact. Grok closure GREEN. Historical initial P6.7 implementation results retained in P6.7-show.json; current proof @plan/knowledge/audit-p6-fixes-2026-10-11.json.",
+    "deviations": [
+      "D67/D66 bounded correction only; original broad checks remain historical. Recorded Q01 deep-parent missing code difference and other original deviations are retained in historical snapshot; no PG/MySQL/races/e2e/full suite rerun."
+    ],
+    "checks": [
+      {
+        "id": "V602",
+        "exit": 0,
+        "at": "2026-10-11T14:54:08Z"
+      },
+      {
+        "id": "V606",
+        "exit": 0,
+        "at": "2026-10-11T14:54:08Z"
+      },
+      {
+        "id": "V611",
+        "exit": 0,
+        "at": "2026-10-11T14:54:08Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-11T14:54:08Z"
 }

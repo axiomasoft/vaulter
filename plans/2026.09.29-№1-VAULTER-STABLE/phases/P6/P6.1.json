@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.1",
   "title": "HTTP-ядро v1 и маршруты core: контекст, резолв, валидаторы представления, egress, пакетные abilities",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "HTTP-ядро v1 в core (HttpOperationContextFactory, HttpResourceResolver, AssignCorrelationId, AddApiVersionHeader, стеки, Preconditions/RepresentationTag, ContentResponder, PageResponse, пакетные abilities) и все core-маршруты v1 (гранты, наследование, шары, activity, журнал изменений, публичные шары, webhooks) с invokable-контроллерами поверх Operations; старые core-маршруты удалены.",
   "why": "OPUS F6 P6.1/D30/D31/D33 + C07/C08 (D29): ядро задаёт авторизацию до валидаторов, сильный ETag представления, 428/412, единый egress и кэш-политику, на которых строятся P6.7/P6.8. Риски: access-boundary (304/412/стрим до авторизации, cross-tenant), info-disclosure (кэш персональных ответов, токены шар в Referer), public-contract (формат ресурсов и маршрутов 1.0), производительность (abilities N+1).",
   "scope": {
@@ -102,8 +102,8 @@
       "required": true
     },
     {
-      "path": "packages/drive/src/Http/Controllers/NodeController.php",
-      "why": "driveFor() — источник HttpOperationContextFactory",
+      "path": "packages/drive/src/Http/Resources/NodeResponses.php",
+      "why": "Current v1 replacement for the historical legacy read, for owner-authorized bounded audit correction.",
       "required": true
     },
     {
@@ -117,8 +117,8 @@
       "required": true
     },
     {
-      "path": "packages/core/src/Http/Controllers/Sharing/PublicShareController.php",
-      "why": "Публичная шара → invokable",
+      "path": "packages/core/src/Http/Controllers/Sharing/DownloadPublicShareController.php",
+      "why": "Current v1 replacement for the historical legacy read, for owner-authorized bounded audit correction.",
       "required": true
     },
     {
@@ -134,6 +134,11 @@
     {
       "path": "packages/core/src/Configuration/RoutesConfig.php",
       "why": "Стеки и префикс",
+      "required": true
+    },
+    {
+      "ref": "D67",
+      "why": "Bounded audit-correction acceptance; original validation/results remain in pre-reopen snapshots.",
       "required": true
     }
   ],
@@ -357,38 +362,25 @@
   "guidance": "NotModifiedAfterAuthorizationTest: (1) GET __probe/nodes/{id} → 200, ETag E; (2) GET с If-None-Match: E → 304 без тела, с ETag/Cache-Control: private, no-cache/Vary/X-Vaulter-Api-Version/X-Request-Id; (3) отозвать грант читателя; (4) GET с If-None-Match: E → 404 node_not_found (не 304). PreconditionsTest (зонд PATCH): нет If-Match → 428 precondition_required meta.header; If-Match: * → 428 reason wildcard_not_allowed; W/\"…\" → 412; старый E после star вызывающего → 412 node_sequence_mismatch; актуальный E → 200 и новый ETag ≠ E; список \"x\", E → совпадение. RepresentationTagTest: одинаковый массив с разным порядком ключей → одинаковый digest; изменение abilities.download → другой digest; properties {} vs [] сериализуются как {}. CrossTenantV1Test (tenancy on): drive/узел другого tenant на каждом core-маршруте → 404 с телом, равным телу несуществующего id (кроме request_id). ContentResponderTest: имя «отчёт\\r\\nX: y.pdf» → disposition без CR/LF, filename* UTF-8; strict → Cache-Control: private, no-store, nosniff, CSP sandbox, Accept-Ranges: none; direct_signed (фейковый DirectContentUrlSigner) → 302, Location с точной ревизией, no-store; ревизия в карантине → 423 до чтения потока.",
   "validation": [
     {
-      "id": "V1",
-      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Http packages/core/tests/Feature packages/core/tests/Access packages/core/tests/Sharing packages/core/tests/Activity packages/core/tests/Changes packages/core/tests/Webhooks packages/core/tests/Tenancy packages/core/tests/Arch packages/core/tests/Observability packages/core/tests/Operations packages/core/tests/Content",
-      "expect": "exit0; ядро v1, валидаторы, egress, core-маршруты, arch, golden; drive/documents-пути в core-тестах ещё легаси и зелёные",
+      "id": "V601",
+      "cmd": "scripts/php84 vendor/bin/pint --test packages/core && scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress",
+      "expect": "exit0; core formatting и анализ",
       "kind": "acceptance",
       "cwd": "."
     },
     {
-      "id": "V2",
-      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Arch tests/PublicApi tests/Feature tests/Drive",
-      "expect": "exit0; NodeOperations::abilitiesMany реализован, golden drive обновлён, легаси drive-маршруты зелёные",
-      "kind": "acceptance",
-      "cwd": "packages/drive"
-    },
-    {
-      "id": "V3",
-      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Feature tests/Document tests/Comment",
-      "expect": "exit0; documents не задеты",
-      "kind": "acceptance",
-      "cwd": "packages/documents"
-    },
-    {
-      "id": "V4",
-      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: VAULTER_TEST_WRITE_GUARD=1 scripts/php84 vendor/bin/pest --ci packages/core/tests/Http packages/core/tests/Sharing packages/core/tests/Access",
-      "expect": "exit0; v1 core под WriteScope",
+      "id": "V605",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Http packages/core/tests/OpenApi packages/core/tests/Arch",
+      "expect": "exit0; core v1: ядро, валидаторы, egress, ошибки, OpenAPI, arch",
       "kind": "acceptance",
       "cwd": "."
     },
     {
-      "id": "V80",
-      "procedure": "Pint/PHPStan затронутых пакетов: scripts/php84 vendor/bin/pint --test packages/core && scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress (cwd .); ../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress (cwd packages/drive); ../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress (cwd packages/documents).",
-      "expect": "все команды exit 0",
-      "kind": "acceptance"
+      "id": "V611",
+      "cmd": "python3 /home/vostrikov/projects/packages/swissknifeman/packages/task/scripts/plan.py check plans/2026.09.29-№1-VAULTER-STABLE",
+      "expect": "0 errors",
+      "kind": "acceptance",
+      "cwd": "."
     }
   ],
   "deliverables": [
@@ -412,6 +404,36 @@
     "status": "not_needed",
     "notes": "@plan/knowledge/P6-industry-research-2026-10-10.json#R2-Validators, #R4-Egress"
   },
-  "result": null,
-  "updated_at": "2026-10-11T14:14:46Z"
+  "result": {
+    "started_at": "2026-10-11T14:46:15Z",
+    "finished_at": "2026-10-11T14:54:07Z",
+    "executor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "xhigh",
+      "session": "01a12b3a-0c23-7220-9ad9-bfdd42dca689"
+    },
+    "notes": "D67 bounded repair F01/F03/F05 completed by current executor. Fresh exact phase checks V601/V605/V611 passed; initial broad implementation results remain archived in P6.1-show.json. Grok 4.7 closure GREEN and full evidence: @plan/knowledge/audit-p6-fixes-2026-10-11.json. No product changes after independent closure.",
+    "deviations": [
+      "D67 limits this reopened attempt to audit repairs and D66 fast checks. Original broad checks are historical; excluded PG/MySQL/races/e2e/full suites are not claimed fresh. D59 identity-only removals retained; entirely invisible callers denied."
+    ],
+    "checks": [
+      {
+        "id": "V601",
+        "exit": 0,
+        "at": "2026-10-11T14:54:07Z"
+      },
+      {
+        "id": "V605",
+        "exit": 0,
+        "at": "2026-10-11T14:54:07Z"
+      },
+      {
+        "id": "V611",
+        "exit": 0,
+        "at": "2026-10-11T14:54:07Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-11T14:54:07Z"
 }

@@ -261,6 +261,10 @@ only if a bounded revocation window is acceptable for your data. A revision whos
 not clean answers `423 content_unavailable` in both modes before any byte or URL; public share
 downloads always stream. Byte ranges are not served in 1.0 (`Accept-Ranges: none`).
 
+Revision downloads authorize View and Download before selecting the revision in both modes.
+Only committed or superseded revisions can be downloaded. A caller without Download receives
+`403 permission_denied` for either an existing or an unknown revision id, without a signed URL.
+
 ## Blob lifecycle
 
 `Vaulter\Enums\Cas\BlobStatus` is the state machine:
