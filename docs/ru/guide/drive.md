@@ -352,7 +352,7 @@ $drive->forceDelete($node);
 ::: danger Необратимо
 `forceDelete()` нельзя отменить. Для восстановимого удаления используйте `trash()`;
 пусть вашу политику хранения применяет команда
-[`vaulter:purge-trash`](/ru/guide/trash#scheduled-purge), а не жёсткое удаление в
+[`vaulter:trash:purge`](/ru/guide/trash#scheduled-purge), а не жёсткое удаление в
 коде приложения.
 :::
 

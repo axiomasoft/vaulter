@@ -234,7 +234,7 @@ PY
 run_mixed_workload "$P3_DURATION" measured
 touch "$RUN_DIR/workload.ok"
 
-for command in vaulter:relay-outbox vaulter:retry-webhooks vaulter:sweep-uploads vaulter:blobs:gc; do
+for command in vaulter:webhooks:relay vaulter:webhooks:retry vaulter:uploads:sweep vaulter:blobs:gc; do
     "${COMPOSE[@]}" exec -T app php vendor/bin/testbench "$command" --no-interaction >"$RUN_DIR/$command.log" 2>&1
 done
 

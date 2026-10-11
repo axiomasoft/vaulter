@@ -274,6 +274,15 @@ Vaulter\Configuration\ScanConfig
   mode(): \Vaulter\Enums\Cas\ScanMode
   scanner(): ?string
 
+Vaulter\Configuration\ScheduleConfig
+  __construct(\Illuminate\Contracts\Config\Repository $config)
+  enabled(): bool
+  frequencies(string $root, array $keys): array
+
+Vaulter\Configuration\ScheduleFrequency
+  applyTo(\Illuminate\Console\Scheduling\Event $event): \Illuminate\Console\Scheduling\Event
+  parse(string $key, mixed $value): ?\self
+
 Vaulter\Configuration\SharingConfig
   __construct(\Illuminate\Contracts\Config\Repository $config)
   defaultTtlHours(): int

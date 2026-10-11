@@ -6,23 +6,28 @@ outline: deep
 
 # Artisan-команды
 
-Vaulter регистрирует девять Artisan-команд: команду установки (из
-spatie/laravel-package-tools) плюс восемь команд пакета, подключённых в
-`VaulterServiceProvider`. Команды обслуживания (сборка мусора, очистка корзины, чистка
-загрузок, релей outbox, повтор вебхуков) рассчитаны на запуск по расписанию.
+Команды Vaulter называются `vaulter:<область>:<действие>`; единственное исключение — точка
+входа `vaulter:install`. Команды обслуживания (сборка мусора, очистка корзины, чистка загрузок,
+релей outbox, повтор и очистка вебхуков, scan reconcile) пакеты сами ставят в планировщик
+хоста — см. [Планировщик](#планировщик).
 
 | Команда | Назначение |
 |---|---|
-| `vaulter:install` | Опубликовать конфиг + миграции, выполнить их, предложить поставить репозиторию звезду |
+| `vaulter:install` | Опубликовать конфиги установленных пакетов, вывести настройки хоста, при желании выполнить миграции |
+| `vaulter:upgrade:inspect` | Read-only проверка готовности данных 0.2 к схеме 0.3 |
+| `vaulter:scan:reconcile` | Восстановить scan-намерения, backfill и очистку закоммиченных загрузок (с лимитами) |
+| `vaulter:scan:rescan` | Поставить в очередь повторное сканирование ревизий файлов по tenant, drive или набору ревизий |
+| `vaulter:drives:purge` | Окончательно удалить помеченные на удаление drive |
+| `vaulter:drives:recount` | Показать (или исправить) расхождение размера и числа узлов drive |
 | `vaulter:make:profile` | Сгенерировать класс-провайдер Storage Panel |
 | `vaulter:blobs:gc` | Двухфазная, устойчивая к гонкам сборка мусора блобов |
 | `vaulter:blobs:reconcile` | Пересчитать `ref_count` блобов и сообщить о висячих строках |
-| `vaulter:purge-trash` | Окончательно удалить узлы из корзины по истечении срока хранения |
+| `vaulter:trash:purge` | Окончательно удалить узлы из корзины по истечении срока хранения |
 | `vaulter:revisions:prune` | Удалить нетекущие ревизии файлов сверх политики ретеншна профиля |
-| `vaulter:sweep-uploads` | Прервать и подчистить протухшие сессии резюмируемой загрузки |
-| `vaulter:relay-outbox` | Передать ожидающие события outbox на эндпоинты вебхуков |
-| `vaulter:retry-webhooks` | Повторно отправить доставки вебхуков, у которых истекла пауза повтора |
-| `vaulter:prune-webhooks` | Удалить завершённые строки outbox и терминальные доставки старше срока хранения |
+| `vaulter:uploads:sweep` | Прервать и подчистить протухшие сессии резюмируемой загрузки |
+| `vaulter:webhooks:relay` | Передать ожидающие события outbox на эндпоинты вебхуков |
+| `vaulter:webhooks:retry` | Повторно отправить доставки вебхуков, у которых истекла пауза повтора |
+| `vaulter:webhooks:prune` | Удалить завершённые строки outbox и терминальные доставки старше срока хранения |
 | `vaulter:webhooks:legacy-fanout` | Показать или переиграть строки outbox до 1.0, у которых раскрытие нельзя доказать |
 | `vaulter:webhooks:redeliver` | Повторно отправить завершённые доставки вебхуков с тем же `webhook-id` |
 | `vaulter:events:reference` | Перегенерировать (или проверить `--check`) таблицу каталога событий в справке |
@@ -34,20 +39,67 @@ spatie/laravel-package-tools) плюс восемь команд пакета, �
 
 ## `vaulter:install`
 
-Предоставляется spatie/laravel-package-tools. Публикует файл конфига и миграции,
-предлагает выполнить миграции и поставить репозиторию звезду на GitHub.
+Публикует конфиг каждого установленного пакета Vaulter (`vaulter-config`,
+`vaulter-media-config`, `vaulter-drive-config`, `vaulter-documents-config`,
+`vaulter-filament-config`, `vaulter-azgard-config`), выводит настройки хоста, которые команда
+**не** редактирует, и при желании выполняет миграции. Повторный запуск безопасен: уже
+опубликованный файл пропускается (`--force` перезаписывает его), а `config/*.php` и `.env`
+никогда не переписываются.
 
 ```bash
 php artisan vaulter:install
 ```
 
-Эквивалентные ручные шаги:
+| Опция | Смысл |
+|---|---|
+| `--middleware=` | Auth-middleware для authenticated-стека маршрутов (по умолчанию `auth:sanctum`) |
+| `--driver=` | `database` (по умолчанию), `gate`, `spatie` или ключ `access.permission_drivers` |
+| `--migrate` | Выполнить `php artisan migrate` без вопроса |
+| `--force` | Перезаписать уже опубликованные конфиги |
+
+Интерактивно команда спрашивает middleware и драйвер, нужно ли мигрировать (по умолчанию нет) и
+ставить ли звезду; без терминала берутся опции или значения по умолчанию, а миграции не
+выполняются без `--migrate`. Она печатает строки для применения
+(`VAULTER_PERMISSION_DRIVER=…` и запись `routes.middleware.authenticated`).
+
+## `vaulter:upgrade:inspect`
+
+Read-only отчёт о готовности данных к переходу 0.2 → 0.3: мягко удалённые строки старой схемы,
+документы без ревизий и посторонние собственные таблицы. Та же проверка блокирует миграцию
+обновления.
 
 ```bash
-php artisan vendor:publish --tag=vaulter-config
-php artisan vendor:publish --tag=vaulter-migrations
-php artisan migrate
+php artisan vaulter:upgrade:inspect          # «ready» и код 0, либо список проблем и код 1
+php artisan vaulter:upgrade:inspect --json   # {"schema":"vaulter.upgrade-inspect/v1","ready":…,"problems":[…]}
 ```
+
+## Планировщик
+
+При `vaulter.schedule.enabled` (env `VAULTER_SCHEDULE_ENABLED`, по умолчанию `true`) пакеты
+сами регистрируют команды обслуживания в планировщике Laravel, каждую с `withoutOverlapping()`
+и `onOneServer()`, поэтому строки `Schedule::command(...)` в хосте не нужны (существующие
+уберите, чтобы не было двойных запусков). Хост по-прежнему должен запускать `schedule:run`
+каждую минуту, а `onOneServer()` требует кэш-хранилища, общего для всех инстансов.
+
+| Ключ конфига | Команда | По умолчанию |
+|---|---|---|
+| `vaulter.schedule.webhooks_relay` | `vaulter:webhooks:relay` (нужен `features.webhooks`) | `everyMinute` |
+| `vaulter.schedule.webhooks_retry` | `vaulter:webhooks:retry` (нужен `features.webhooks`) | `everyMinute` |
+| `vaulter.schedule.webhooks_prune` | `vaulter:webhooks:prune` (нужен `features.webhooks`) | `dailyAt:03:10` |
+| `vaulter.schedule.changes_prune` | `vaulter:changes:prune` (нужен `features.changes`) | `dailyAt:03:20` |
+| `vaulter-drive.schedule.uploads_sweep` | `vaulter:uploads:sweep` | `hourlyAt:15` |
+| `vaulter-drive.schedule.trash_purge` | `vaulter:trash:purge` | `dailyAt:03:30` |
+| `vaulter-drive.schedule.drives_purge` | `vaulter:drives:purge` | `hourlyAt:25` |
+| `vaulter-drive.schedule.revisions_prune` | `vaulter:revisions:prune` | `dailyAt:03:40` |
+| `vaulter-drive.schedule.scan_reconcile` | `vaulter:scan:reconcile --all-tenants --reason=scheduled --limit=100 --max-seconds=30` (нужен режим scan ≠ `off`, не зависит от вебхуков) | `everyFiveMinutes` |
+| `vaulter-drive.schedule.drives_recount` | `vaulter:drives:recount --dry-run` | `null` (выключено) |
+| `vaulter-media.schedule.blobs_gc` | `vaulter:blobs:gc` | `dailyAt:04:00` |
+| `vaulter-media.schedule.blobs_reconcile` | `vaulter:blobs:reconcile` | `weeklyOn:0,04:30` |
+
+Значение — `null` (задача выключена), имя частоты без аргументов (`everyMinute`,
+`everyFiveMinutes`, `hourly`, `daily`, `weekly`, …), `dailyAt:HH:MM`, `hourlyAt:M`,
+`weeklyOn:D,HH:MM` (0 — воскресенье) или cron-выражение из пяти полей. Иное значение
+останавливает boot с `InvalidConfigurationException`.
 
 См. [Руководство → Установка](/ru/guide/installation).
 
@@ -115,7 +167,7 @@ vaulter:blobs:reconcile
 php artisan vaulter:blobs:reconcile
 ```
 
-## `vaulter:purge-trash`
+## `vaulter:trash:purge`
 
 Окончательно вычистить узлы из корзины, у которых истекло окно хранения. Находит **корни**
 корзины, чей `trashed_at` старше `now() - retention_days`, и принудительно удаляет каждое
@@ -124,13 +176,13 @@ php artisan vaulter:blobs:reconcile
 поддерево, включая ранее удалённых отдельно потомков, поэтому ничего не чистится дважды.
 
 ```
-vaulter:purge-trash
+vaulter:trash:purge
     {--days=} Переопределить окно хранения (конфиг vaulter-drive.trash.retention_days)
 ```
 
 ```bash
-php artisan vaulter:purge-trash           # использует хранение из конфига (по умолчанию 30 дней)
-php artisan vaulter:purge-trash --days=7  # своё окно хранения
+php artisan vaulter:trash:purge           # использует хранение из конфига (по умолчанию 30 дней)
+php artisan vaulter:trash:purge --days=7  # своё окно хранения
 ```
 
 См. [Использование → Поиск и корзина](/ru/guide/search-trash).
@@ -184,18 +236,18 @@ php artisan vaulter:revisions:prune          # планируйте ежедне
 
 См. [Использование → Загрузки → Ретеншн ревизий](/ru/guide/uploads#квота-и-ретеншн-ревизий).
 
-## `vaulter:sweep-uploads`
+## `vaulter:uploads:sweep`
 
 Прервать и подчистить протухшие сессии резюмируемой загрузки, у которых истёк TTL
 (`config('vaulter-drive.uploads.resumable.session_ttl_hours')`). Временный staged-файл и любое состояние
 S3 multipart высвобождаются, а статус сессии переключается на `expired`.
 
 ```
-vaulter:sweep-uploads
+vaulter:uploads:sweep
 ```
 
 ```bash
-php artisan vaulter:sweep-uploads
+php artisan vaulter:uploads:sweep
 ```
 
 ::: tip Совет: свяжите с lifecycle-правилом S3
@@ -205,7 +257,7 @@ lifecycle-правило `AbortIncompleteMultipartUpload` как страхов�
 
 См. [Использование → Загрузки](/ru/guide/uploads).
 
-## `vaulter:relay-outbox`
+## `vaulter:webhooks:relay`
 
 Передать ожидающие события outbox на эндпоинты вебхуков и повторно отправить назревшие
 повторы. Каждая ожидающая строка `v_outbox` разворачивается в одну строку
@@ -218,31 +270,31 @@ at-least-once с экспоненциальным backoff + DLQ. Управля�
 См. [Webhooks → Delivery guarantees](/guide/webhooks#delivery-guarantees).
 
 ```
-vaulter:relay-outbox
+vaulter:webhooks:relay
     {--limit=} Максимум строк outbox, которые нужно слить за этот тик
 ```
 
 ```bash
-php artisan vaulter:relay-outbox --limit=500
+php artisan vaulter:webhooks:relay --limit=500
 ```
 
 См. [Рецепты → Надёжность и вебхуки](/ru/guide/recipes).
 
-## `vaulter:retry-webhooks`
+## `vaulter:webhooks:retry`
 
 Повторно отправить доставки вебхуков, у которых истекло окно backoff, и ожидающие
 доставки, чей первый job потерян (никем не взяты через `webhooks.relay.claim_seconds`
 после срока). Управляется флагом `features.webhooks`.
 
 ```
-vaulter:retry-webhooks
+vaulter:webhooks:retry
 ```
 
 ```bash
-php artisan vaulter:retry-webhooks
+php artisan vaulter:webhooks:retry
 ```
 
-## `vaulter:prune-webhooks`
+## `vaulter:webhooks:prune`
 
 Удалить ЗАВЕРШЁННЫЕ строки outbox (`completed`, `fanned_out_at` старше срока хранения) и
 ТЕРМИНАЛЬНЫЕ доставки (`delivered`/`dead`, старше срока хранения). Строка outbox в
@@ -252,7 +304,7 @@ php artisan vaulter:retry-webhooks
 Удалённые строки нельзя восстановить или переиграть.
 
 ```
-vaulter:prune-webhooks
+vaulter:webhooks:prune
     {--days=}    Переопределить срок хранения в днях
     {--dry-run}  Показать, что будет удалено, ничего не удаляя
 ```
@@ -375,14 +427,16 @@ php artisan vaulter:changes:reset 42
 
 Команды обслуживания дружелюбны к расписанию. Показательный график:
 
+Эти строки нужны, только если `vaulter.schedule.enabled` равен `false`; иначе пакеты уже планируют эти команды, и сниппет запустит каждую дважды.
+
 ```php
 use Illuminate\Support\Facades\Schedule;
 
-Schedule::command('vaulter:relay-outbox')->everyMinute();
-Schedule::command('vaulter:retry-webhooks')->everyFiveMinutes();
-Schedule::command('vaulter:sweep-uploads')->hourly();
+Schedule::command('vaulter:webhooks:relay')->everyMinute();
+Schedule::command('vaulter:webhooks:retry')->everyFiveMinutes();
+Schedule::command('vaulter:uploads:sweep')->hourly();
 Schedule::command('vaulter:blobs:gc')->daily();
-Schedule::command('vaulter:purge-trash')->daily();
+Schedule::command('vaulter:trash:purge')->daily();
 Schedule::command('vaulter:blobs:reconcile')->weekly();
 Schedule::command('vaulter:changes:prune')->daily();
 ```

@@ -10,6 +10,7 @@ use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Http\Problems\DriveProblemCodes;
 use Vaulter\Drive\Providers\BindingsRegistrar;
 use Vaulter\Drive\Providers\HttpRegistrar;
+use Vaulter\Drive\Providers\SchedulingRegistrar;
 use Vaulter\Http\Problems\ProblemCatalog;
 
 final class VaulterDriveServiceProvider extends PackageServiceProvider
@@ -33,5 +34,6 @@ final class VaulterDriveServiceProvider extends PackageServiceProvider
         $config = $this->app->make(DriveConfig::class);
         $config->model('upload_session');
         $config->model('upload_part');
+        (new SchedulingRegistrar)->boot($this->app);
     }
 }

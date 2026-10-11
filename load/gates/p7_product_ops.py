@@ -232,7 +232,7 @@ class ProductOperationRunner:
                 body, auth_headers(int(fixture['actor_id'])), operation, ordinal,
             )
         if operation == 'sweeper':
-            return self._artisan(['vaulter:sweep-uploads'], operation, fixture, ordinal)
+            return self._artisan(['vaulter:uploads:sweep'], operation, fixture, ordinal)
         if operation in {'cas-stage', 'write', 'lock-holder'}:
             return self._artisan([
                 'load:chaos-operation', operation,

@@ -16,6 +16,7 @@ use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Media\Console\GcBlobsCommand;
 use Vaulter\Media\Console\ReconcileBlobsCommand;
 use Vaulter\Media\Console\RepairBlobScopesCommand;
+use Vaulter\Media\Providers\SchedulingRegistrar;
 
 /**
  * Vaulter Media — the content-addressed file/blob layer (CAS), extracted from
@@ -84,5 +85,6 @@ final class VaulterMediaServiceProvider extends PackageServiceProvider
         $config->contentStore();
         $config->storageDriver();
         $config->blobStore();
+        (new SchedulingRegistrar)->boot($this->app);
     }
 }

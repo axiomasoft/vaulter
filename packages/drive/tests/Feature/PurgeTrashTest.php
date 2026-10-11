@@ -15,7 +15,7 @@ use Vaulter\Tests\Drive\DriveTestHelpers;
 beforeEach(fn () => DriveTestHelpers::insideOperation());
 
 /**
- * vaulter:purge-trash (D17 / §2.10 / F-P1.12-02): nodes trashed past the retention
+ * vaulter:trash:purge (D17 / §2.10 / F-P1.12-02): nodes trashed past the retention
  * window are PHYSICALLY purged — the stage-2 force-delete detaches version↔blob
  * edges (the bytes become GC-eligible), then the subtree's own rows are hard-deleted
  * (not just soft-deleted, F-P1.12-02) so FK cascade removes dependent rows too. A
@@ -33,7 +33,7 @@ it('physically purges a node trashed past the retention window, F-P1.12-02', fun
     // Trashed 40 days ago — past the 30-day retention.
     $node->forceFill(['trashed_at' => Carbon::now()->subDays(40), 'trash_root_id' => $node->getKey()])->save();
 
-    $this->artisan('vaulter:purge-trash')->assertSuccessful();
+    $this->artisan('vaulter:trash:purge')->assertSuccessful();
 
     // The node is now PHYSICALLY gone (F-P1.12-02: purge means purge; nodes have no
     // soft-delete tombstone a forensic query could still see).
@@ -47,7 +47,7 @@ it('leaves a node still inside the retention window untouched', function (): voi
     // Trashed 5 days ago — well inside the 30-day retention.
     $node->forceFill(['trashed_at' => Carbon::now()->subDays(5), 'trash_root_id' => $node->getKey()])->save();
 
-    $this->artisan('vaulter:purge-trash')->assertSuccessful();
+    $this->artisan('vaulter:trash:purge')->assertSuccessful();
 
     expect(Node::query()->whereKey($node->getKey())->exists())->toBeTrue();
 });
@@ -62,7 +62,7 @@ it('frees the blob edges of a purged file subtree (GC-eligible)', function (): v
 
     DriveTestHelpers::model($fileNode)->forceFill(['trashed_at' => Carbon::now()->subDays(40), 'trash_root_id' => $fileNode->id])->save();
 
-    $this->artisan('vaulter:purge-trash')->assertSuccessful();
+    $this->artisan('vaulter:trash:purge')->assertSuccessful();
 
     // The edge is detached — the blob is now unreferenced (GC-eligible).
     expect($blob->refresh()->versions()->count())->toBe(0);
@@ -79,7 +79,7 @@ it('cascades the physical purge to file/version rows on PostgreSQL, F-P1.12-02',
 
     DriveTestHelpers::model($fileNode)->forceFill(['trashed_at' => Carbon::now()->subDays(40), 'trash_root_id' => $fileNode->id])->save();
 
-    $this->artisan('vaulter:purge-trash')->assertSuccessful();
+    $this->artisan('vaulter:trash:purge')->assertSuccessful();
 
     // The node AND every row that FK-cascades off it are physically gone — not
     // just the version↔blob edge (already covered by the GC-eligibility test
@@ -114,7 +114,7 @@ it('does not physically purge a node restored between candidate materialisation 
         $drive->trash()->restore((string) $targetId);
     });
 
-    $this->artisan('vaulter:purge-trash')->assertSuccessful();
+    $this->artisan('vaulter:trash:purge')->assertSuccessful();
 
     // The re-check + row-lock inside the purge transaction sees the CURRENT
     // (restored) state and aborts the purge for this subtree — the node
@@ -130,7 +130,7 @@ it('honours the --days override', function (): void {
     $node->forceFill(['trashed_at' => Carbon::now()->subDays(10), 'trash_root_id' => $node->getKey()])->save();
 
     // With a 7-day override, a 10-day-old trashed node IS purged.
-    $this->artisan('vaulter:purge-trash', ['--days' => '7'])->assertSuccessful();
+    $this->artisan('vaulter:trash:purge', ['--days' => '7'])->assertSuccessful();
 
     expect(Node::query()->whereKey($node->getKey())->exists())->toBeFalse();
 });

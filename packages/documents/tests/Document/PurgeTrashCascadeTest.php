@@ -15,7 +15,7 @@ use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /**
  * F-P1.12-02, on real PostgreSQL only (SQLite does not enforce the FK
- * cascadeOnDelete this fix relies on): vaulter:purge-trash past retention must
+ * cascadeOnDelete this fix relies on): vaulter:trash:purge past retention must
  * PHYSICALLY remove the document's working state and checkpoints (v_documents and
  * v_document_revisions content/yjs_state) through the node → document → revision
  * cascades, even though the head FK (RESTRICT) points back from the document into
@@ -44,7 +44,7 @@ it('physically deletes a trashed document node\'s inline version content on purg
 
     app(VaulterDatabase::class)->write(fn () => $node->refresh()->forceFill(['trashed_at' => Carbon::now()->subDays(40), 'trash_root_id' => $node->getKey()])->save());
 
-    $this->artisan('vaulter:purge-trash')->assertSuccessful();
+    $this->artisan('vaulter:trash:purge')->assertSuccessful();
 
     // The node row, its aggregate and every checkpoint that FK-cascades off it are
     // physically gone — the content does not survive purge.

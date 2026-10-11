@@ -1,0 +1,27 @@
+{
+  "item": "P7.2",
+  "note": "Written after the product edits (the profile was missed before the first edit); logged as a deviation.",
+  "changed_paths": [
+    "packages/core/src/Console/{InstallCommand,UpgradeInspectCommand,RelayWebhooksCommand,RetryWebhooksCommand,PruneWebhooksCommand,PruneChangesCommand}.php",
+    "packages/core/src/Configuration/{ScheduleConfig,ScheduleFrequency,ConfigValidator}.php",
+    "packages/core/src/Providers/{SchedulingRegistrar,ConsoleRegistrar}.php",
+    "packages/core/src/{VaulterServiceProvider}.php, packages/core/src/Schema/UpgradePreflight.php",
+    "packages/core/database/migrations/2026_10_01_000001_vaulter_preflight.php",
+    "packages/{core,drive,media}/config/*.php",
+    "packages/drive/src/{Providers/SchedulingRegistrar,VaulterDriveServiceProvider}.php, packages/media/src/{Providers/SchedulingRegistrar,VaulterMediaServiceProvider}.php",
+    "packages/*/tests (renamed refs, Console/*, Arch/CommandNamingTest, Configuration/ScheduleFrequencyTest), tests/Pest.php, packages/{drive,media}/tests/Pest.php",
+    "packages/core/tests/Arch/__snapshots__/public-api.txt (additive: ScheduleConfig, ScheduleFrequency)",
+    "docs/**, README.md, UPGRADE.md, CHANGELOG.md, load/app|scripts|gates, packages/*/src (renamed refs)"
+  ],
+  "callers": ["Artisan (ConsoleRegistrar), Laravel scheduler (callAfterResolving Schedule), ConfigValidator at boot, upgrade migration"],
+  "fixtures": ["scripts/fixtures/**, packages/core/tests/Fixtures/config/vaulter-0.2.php, tests/fixtures/v0.2.0/** untouched"],
+  "acceptance": {
+    "V1": {"cwd": ".", "env": "APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory:"},
+    "V2": {"cwd": "packages/drive", "env": "same"},
+    "V3": {"cwd": "packages/media", "env": "same"},
+    "V4": {"cwd": "packages/documents", "env": "same"},
+    "V5": {"cwd": ".", "cmds": "pint --test + phpstan per package"},
+    "V6": {"cwd": ".", "cmd": "grep for the seven old names"}
+  },
+  "impact_for_phase_run_P7": ["V7 load/tests + load/gates unittest (needs Redis stand)", "PG/MySQL sweeps", "docs:build"]
+}

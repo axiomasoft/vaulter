@@ -376,7 +376,7 @@ $drive->forceDelete($node);
 
 ::: danger Irreversible
 `forceDelete()` cannot be undone. For a recoverable delete use `trash()`; let the
-[`vaulter:purge-trash`](/guide/trash#scheduled-purge) command apply your retention
+[`vaulter:trash:purge`](/guide/trash#scheduled-purge) command apply your retention
 policy instead of force-deleting in app code.
 :::
 

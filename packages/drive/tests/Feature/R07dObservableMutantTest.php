@@ -378,7 +378,7 @@ it('counts one purged trash root from zero', function (): void {
     $node = AccessTestHelpers::folder($storage, null, 'r07d-one');
     $node->forceFill(['trashed_at' => Carbon::now()->subDays(2), 'trash_root_id' => $node->getKey()])->save();
 
-    Artisan::call('vaulter:purge-trash', ['--days' => '1']);
+    Artisan::call('vaulter:trash:purge', ['--days' => '1']);
 
     expect(Artisan::output())->toContain('Purged 1 trashed subtree.');
 });
@@ -400,7 +400,7 @@ it('does not count a trash root that is restored before the lock', function (): 
         Node::query()->whereKey($id)->update(['trashed_at' => null]);
     });
 
-    Artisan::call('vaulter:purge-trash', ['--days' => '1']);
+    Artisan::call('vaulter:trash:purge', ['--days' => '1']);
 
     expect(Artisan::output())->toContain('Purged 0 trashed subtrees.')
         ->and(Node::query()->whereKey($id)->exists())->toBeTrue();
@@ -409,7 +409,7 @@ it('does not count a trash root that is restored before the lock', function (): 
 it('does not emit a purge counter when nothing was purged', function (): void {
     r07dMetrics();
 
-    Artisan::call('vaulter:purge-trash', ['--days' => '1']);
+    Artisan::call('vaulter:trash:purge', ['--days' => '1']);
 
     expect(array_column(r07dEmissions('vaulter_purge_nodes_total'), 'name'))->toBe([]);
 });
@@ -421,7 +421,7 @@ it('floors negative retention at zero and purges a root trashed now', function (
     $live = AccessTestHelpers::folder($storage, null, 'still-live');
     $trashed->forceFill(['trashed_at' => Carbon::now(), 'trash_root_id' => $trashed->getKey()])->save();
 
-    expect(Artisan::call('vaulter:purge-trash', ['--days' => '-3']))->toBe(0)
+    expect(Artisan::call('vaulter:trash:purge', ['--days' => '-3']))->toBe(0)
         ->and(Artisan::output())->toContain('Purged 1 trashed subtree.')
         ->and(Node::query()->whereKey($trashed->id)->exists())->toBeFalse()
         ->and(Node::query()->whereKey($live->id)->exists())->toBeTrue();

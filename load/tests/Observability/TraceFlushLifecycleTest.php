@@ -77,7 +77,7 @@ it('flushes on request, job and command terminal hooks and shuts down once', fun
         ],
     );
     $listener->handle(new CommandFinished(
-        'vaulter:sweep-uploads',
+        'vaulter:uploads:sweep',
         new ArrayInput([]),
         new BufferedOutput,
         0,

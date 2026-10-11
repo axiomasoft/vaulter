@@ -17,14 +17,14 @@ beforeEach(function (): void {
 });
 
 it('reports zero, one and multiple swept sessions with the actual counts', function (): void {
-    Artisan::call('vaulter:sweep-uploads');
+    Artisan::call('vaulter:uploads:sweep');
     expect(Artisan::output())->toContain('Swept 0 stale upload sessions.');
 
     $storage = UploadTestHelpers::storage();
     $first = UploadTestHelpers::session($storage);
     $first->forceFill(['expires_at' => Carbon::now()->subHour()])->save();
 
-    Artisan::call('vaulter:sweep-uploads');
+    Artisan::call('vaulter:uploads:sweep');
     expect(Artisan::output())->toContain('Swept 1 stale upload session.');
 
     foreach (range(1, 2) as $number) {
@@ -32,7 +32,7 @@ it('reports zero, one and multiple swept sessions with the actual counts', funct
         $session->forceFill(['expires_at' => Carbon::now()->subHour()])->save();
     }
 
-    Artisan::call('vaulter:sweep-uploads');
+    Artisan::call('vaulter:uploads:sweep');
     expect(Artisan::output())->toContain('Swept 2 stale upload sessions.');
 });
 
@@ -42,7 +42,7 @@ it('applies the maintenance retention override and reports the actual subtree co
     $node = AccessTestHelpers::folder($storage, null, 'old');
     $node->forceFill(['trashed_at' => Carbon::now()->subDays(2), 'trash_root_id' => $node->getKey()])->save();
 
-    Artisan::call('vaulter:purge-trash', ['--days' => '1']);
+    Artisan::call('vaulter:trash:purge', ['--days' => '1']);
     $output = Artisan::output();
 
     expect($output)->toContain('Purged 1 trashed subtree.')

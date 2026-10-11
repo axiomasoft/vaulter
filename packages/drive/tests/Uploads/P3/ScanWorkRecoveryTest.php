@@ -62,10 +62,10 @@ it('SEC-BACKFILL materializes bounded durable activation work and checkpoints it
 });
 
 it('SEC-RECOVERY-bounds rejects contradictory command scope and dry run creates no work', function (): void {
-    $this->artisan('vaulter:scan-reconcile', ['--limit' => 0])->assertExitCode(2);
-    $this->artisan('vaulter:scan-reconcile', ['--tenant' => 'a', '--all-tenants' => true])->assertExitCode(2);
-    $this->artisan('vaulter:scan-rescan', ['--request-id' => 'not-a-uuid', '--dry-run' => true])->assertExitCode(2);
-    $this->artisan('vaulter:scan-reconcile', ['--dry-run' => true])->assertExitCode(0);
+    $this->artisan('vaulter:scan:reconcile', ['--limit' => 0])->assertExitCode(2);
+    $this->artisan('vaulter:scan:reconcile', ['--tenant' => 'a', '--all-tenants' => true])->assertExitCode(2);
+    $this->artisan('vaulter:scan:rescan', ['--request-id' => 'not-a-uuid', '--dry-run' => true])->assertExitCode(2);
+    $this->artisan('vaulter:scan:reconcile', ['--dry-run' => true])->assertExitCode(0);
     $class = app(VaulterConfig::class)->model('scan_obligation');
     expect($class::query()->count())->toBe(0);
 });
@@ -185,17 +185,17 @@ it('SEC-RECOVERY-bounds signed cursors resume one revision and reject signature 
         fclose($stream);
     }
     $options = ['--drive' => (string) $drive->id, '--request-id' => (string) Str::uuid(), '--reason' => 'fixture', '--limit' => 1, '--json' => true];
-    expect(Artisan::call('vaulter:scan-rescan', $options))->toBe(0);
+    expect(Artisan::call('vaulter:scan:rescan', $options))->toBe(0);
     $first = json_decode(Artisan::output(), true);
     expect($first['created'])->toBe(1)->and($first['next_cursor'])->not->toBeNull();
     $cursor = $first['next_cursor'];
     $tampered = substr($cursor, 0, -1).(str_ends_with($cursor, '0') ? '1' : '0');
-    expect(Artisan::call('vaulter:scan-rescan', [...$options, '--after' => $tampered]))->toBe(2);
+    expect(Artisan::call('vaulter:scan:rescan', [...$options, '--after' => $tampered]))->toBe(2);
     $class = app(VaulterConfig::class)->model('scan_obligation');
     expect($class::query()->count())->toBe(1);
-    expect(Artisan::call('vaulter:scan-rescan', [...$options, '--after' => $cursor]))->toBe(0);
+    expect(Artisan::call('vaulter:scan:rescan', [...$options, '--after' => $cursor]))->toBe(0);
     expect($class::query()->count())->toBe(2);
-    expect(Artisan::call('vaulter:scan-rescan', [...$options, '--after' => $cursor]))->toBe(0);
+    expect(Artisan::call('vaulter:scan:rescan', [...$options, '--after' => $cursor]))->toBe(0);
     expect($class::query()->count())->toBe(2);
 });
 
@@ -279,7 +279,7 @@ it('SEC-RECOVERY-bounds optional off rescan rejects sync before SQL or publicati
     app(VaulterDatabase::class)->connection()->listen(function () use (&$queries): void {
         $queries++;
     });
-    expect(Artisan::call('vaulter:scan-rescan', ['--reason' => 'fixture', '--json' => true]))->toBe(2)
+    expect(Artisan::call('vaulter:scan:rescan', ['--reason' => 'fixture', '--json' => true]))->toBe(2)
         ->and($queries)->toBe(0)->and(Artisan::output())->toContain('asynchronous queue');
     Bus::assertNothingDispatched();
 });
@@ -408,7 +408,7 @@ it('SEC-RECOVERY-remaining-due counts all still-due work whatever the batch limi
 it('activates the desired scan policies of a drive with --activate-policy', function (): void {
     $drive = UploadTestHelpers::storage();
 
-    expect(Artisan::call('vaulter:scan-rescan', ['--drive' => (string) $drive->id, '--activate-policy' => true, '--request-id' => (string) Str::uuid(), '--reason' => 'fixture', '--json' => true]))->toBe(0);
+    expect(Artisan::call('vaulter:scan:rescan', ['--drive' => (string) $drive->id, '--activate-policy' => true, '--request-id' => (string) Str::uuid(), '--reason' => 'fixture', '--json' => true]))->toBe(0);
 
     expect(json_decode(Artisan::output(), true)['activated'])->toBe(1);
 });

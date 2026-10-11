@@ -192,7 +192,7 @@ test('non-test src never uses whereHas/withCount on descendants (H.4)', ...);
   не перенумеровывайте их.
 
   ```bash
-  php artisan vaulter:install        # publishes config + migrations, offers to run them
+  php artisan vaulter:install        # publishes config, offers to run the migrations
   # or, manually:
   php artisan vendor:publish --tag=vaulter-config
   php artisan vendor:publish --tag=vaulter-migrations

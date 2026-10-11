@@ -27,7 +27,7 @@ it('records sweep upload metrics for stale sessions', function (): void {
     app(TusUploadHandler::class)->patch($stale->refresh(), UploadTestHelpers::streamFor('partial'), 0);
     $stale->forceFill(['expires_at' => Carbon::now()->subHour()])->save();
 
-    Artisan::call('vaulter:sweep-uploads');
+    Artisan::call('vaulter:uploads:sweep');
 
     $recorder = app(MetricsRecorder::class);
     $recorder->assertHistogram(name: 'vaulter_sweep_tick_seconds');
@@ -43,7 +43,7 @@ it('records purge trash metrics when a subtree is purged', function (): void {
     $node = AccessTestHelpers::folder($storage, null, 'old');
     $node->forceFill(['trashed_at' => Carbon::now()->subDays(40), 'trash_root_id' => $node->getKey()])->save();
 
-    Artisan::call('vaulter:purge-trash');
+    Artisan::call('vaulter:trash:purge');
 
     $recorder = app(MetricsRecorder::class);
     $recorder->assertHistogram(name: 'vaulter_purge_duration_seconds');

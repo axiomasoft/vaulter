@@ -94,7 +94,7 @@ it('retention counts from the root and the command purges only roots past it', f
     $recent = $drive->folders()->create('Recent');
     $drive->nodes()->trash($recent);
 
-    $this->artisan('vaulter:purge-trash')->assertSuccessful();
+    $this->artisan('vaulter:trash:purge')->assertSuccessful();
 
     expect(Node::query()->whereKey([$folder->id, $early->id])->count())->toBe(0)
         ->and(Node::query()->whereKey($recent->id)->count())->toBe(1);

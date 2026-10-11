@@ -298,7 +298,7 @@ final class QueueProbeCommand extends Command
             // Run the product command through the console kernel so CommandFinished
             // records its memory seam. Keep its text separate from the probe JSON.
             $output = new BufferedOutput;
-            $status = Artisan::call('vaulter:retry-webhooks', [], $output);
+            $status = Artisan::call('vaulter:webhooks:retry', [], $output);
             if ($status !== self::SUCCESS || preg_match('/Re-dispatched (\d+) due webhook delivery\(ies\)\./', $output->fetch(), $matches) !== 1) {
                 throw new RuntimeException('Retry command failed or did not report its dispatch count.');
             }

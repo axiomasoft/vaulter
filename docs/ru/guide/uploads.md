@@ -304,7 +304,7 @@ $profile->revisionLimit(10);
 Прунинг запускается как `php artisan vaulter:revisions:prune [--drive=ID ...] [--dry-run]`
 (системный актор `revision-retention`, файлы пачками по 500) или как очередная задача
 `Vaulter\Drive\Jobs\PruneFileRevisionsJob` для одного диска. Планируйте ежедневно, как
-`vaulter:purge-trash`:
+`vaulter:trash:purge`:
 
 ```php
 Schedule::command('vaulter:revisions:prune')->daily();
@@ -329,18 +329,18 @@ $drive->files()->deleteRevision($file, $revision);                          // M
 
 - **Abort** (`DELETE /v1/uploads/{upload}`) → терминальное состояние `Aborted` (клиент
   отменил). Идемпотентно — терминальная сессия возвращается нетронутой.
-- **Sweep** (`php artisan vaulter:sweep-uploads`) → терминальное состояние `Expired`. Команда
+- **Sweep** (`php artisan vaulter:uploads:sweep`) → терминальное состояние `Expired`. Команда
   сканирует **открытые** сессии (`initiated` | `uploading`), у которых истёк `expires_at`, и
   освобождает каждую. Можно ставить в расписание.
 
 ```bash
 # Забрать протухшие сессии по истечении TTL (staged-temp + S3-multipart очищаются).
-php artisan vaulter:sweep-uploads
+php artisan vaulter:uploads:sweep
 ```
 
 ```php
 // Поставить в расписание (например, app/Console/Kernel.php или routes/console.php):
-Schedule::command('vaulter:sweep-uploads')->hourly();
+Schedule::command('vaulter:uploads:sweep')->hourly();
 ```
 
 ::: tip В паре с lifecycle-правилом S3

@@ -20,6 +20,6 @@ it('runs retry through the product command and emits its memory gauge', function
     expect(Artisan::call('load:queue-probe', ['action' => 'retry', '--run-id' => 'r09-memory-test']))->toBe(0);
     $samples = array_values(array_filter($metrics->emissions(), static fn (array $sample): bool => $sample['name'] === 'vaulter_command_peak_memory_bytes'));
     expect($samples)->toHaveCount(1)
-        ->and($samples[0]['labels'])->toBe(['command' => 'vaulter:retry-webhooks'])
+        ->and($samples[0]['labels'])->toBe(['command' => 'vaulter:webhooks:retry'])
         ->and($samples[0]['value'])->toBeGreaterThan(0);
 });

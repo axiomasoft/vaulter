@@ -33,7 +33,7 @@ if name == 'compose':
         sys.exit(7 if failure == 'writer-' + phase else 0)
     if 'artisan' in args:
         sys.exit('Invalid Testbench artisan argv')
-    if 'vaulter:sweep-uploads' in args and failure == 'maintenance':
+    if 'vaulter:uploads:sweep' in args and failure == 'maintenance':
         sys.exit(8)
     if 'psql' in args:
         sql = sys.stdin.read() if '-f' in args else ' '.join(args)

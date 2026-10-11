@@ -33,7 +33,7 @@ final class SweepUploadsCommand extends Command
 {
     use OpensWriteScope;
 
-    protected $signature = 'vaulter:sweep-uploads';
+    protected $signature = 'vaulter:uploads:sweep';
 
     protected $description = 'Abort and clean up stale resumable-upload sessions past their TTL (§2.8).';
 

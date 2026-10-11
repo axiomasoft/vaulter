@@ -26,7 +26,7 @@ use Vaulter\Webhooks\WebhookSigner;
 /**
  * The transactional-outbox RELAY (§2.11 / D14 / M3b), ported from chatom: process()
  * fans pending outbox rows out into per-endpoint WebhookDelivery rows + DeliverWebhook
- * jobs; vaulter:relay-outbox ticks and re-arms due retries. A row is 'completed' only
+ * jobs; vaulter:webhooks:relay ticks and re-arms due retries. A row is 'completed' only
  * together with its last deliveries, so overlapping ticks never double-deliver.
  *
  * Jobs are faked (Queue/Bus::fake) so dispatch is asserted without the HTTP job.
@@ -58,7 +58,7 @@ it('sends the same occurrence id on the original delivery and a relay retry', fu
     expect($delivery->status)->toBe('failed');
 
     $delivery->forceFill(['next_retry_at' => now()->subSecond()])->save();
-    $this->artisan('vaulter:relay-outbox')->assertSuccessful();
+    $this->artisan('vaulter:webhooks:relay')->assertSuccessful();
     Bus::assertDispatched(DeliverWebhook::class, fn (DeliverWebhook $retry): bool => new ReflectionProperty($retry, 'deliveryId')->getValue($retry) === (string) $delivery->getKey());
     $job->handle(signer: app(WebhookSigner::class), urlGuard: app(OutboundUrlGuard::class), vaulterConfig: app(VaulterConfig::class), webhooksConfig: app(WebhooksConfig::class), database: app(VaulterDatabase::class));
 
@@ -238,15 +238,15 @@ it('leaves a not-yet-available outbox row pending', function (): void {
     Queue::assertNothingPushed();
 });
 
-// ─────────────────────── vaulter:relay-outbox ───────────────────────
+// ─────────────────────── vaulter:webhooks:relay ───────────────────────
 
-it('vaulter:relay-outbox drains a pending outbox row into a delivery and a job', function (): void {
+it('vaulter:webhooks:relay drains a pending outbox row into a delivery and a job', function (): void {
     Bus::fake();
 
     WebhookTestHelpers::endpoint();
     $message = WebhookTestHelpers::outbox();
 
-    $this->artisan('vaulter:relay-outbox')->assertSuccessful();
+    $this->artisan('vaulter:webhooks:relay')->assertSuccessful();
 
     expect($message->refresh()->status)->toBe('completed')
         ->and(WebhookDelivery::query()->where('status', 'pending')->count())->toBe(1);
@@ -254,7 +254,7 @@ it('vaulter:relay-outbox drains a pending outbox row into a delivery and a job',
     Bus::assertDispatched(DeliverWebhook::class, 1);
 });
 
-it('vaulter:relay-outbox re-dispatches a due failed retry but skips a not-yet-due one', function (): void {
+it('vaulter:webhooks:relay re-dispatches a due failed retry but skips a not-yet-due one', function (): void {
     Bus::fake();
 
     $endpoint = WebhookTestHelpers::endpoint();
@@ -271,13 +271,13 @@ it('vaulter:relay-outbox re-dispatches a due failed retry but skips a not-yet-du
         'next_retry_at' => now()->addHour(),
     ]);
 
-    $this->artisan('vaulter:relay-outbox')->assertSuccessful();
+    $this->artisan('vaulter:webhooks:relay')->assertSuccessful();
 
     Bus::assertDispatched(DeliverWebhook::class, fn (DeliverWebhook $job): bool => new ReflectionProperty($job, 'deliveryId')->getValue($job) === (string) $due->getKey());
     Bus::assertDispatched(DeliverWebhook::class, 1);
 });
 
-it('vaulter:relay-outbox does not re-dispatch terminal deliveries', function (): void {
+it('vaulter:webhooks:relay does not re-dispatch terminal deliveries', function (): void {
     Bus::fake();
 
     $endpoint = WebhookTestHelpers::endpoint();
@@ -285,19 +285,19 @@ it('vaulter:relay-outbox does not re-dispatch terminal deliveries', function ():
     WebhookTestHelpers::delivery($endpoint, ['status' => 'delivered', 'attempts' => 1, 'next_retry_at' => now()->subMinute()]);
     WebhookTestHelpers::delivery($endpoint, ['status' => 'dead', 'attempts' => 5, 'next_retry_at' => now()->subMinute()]);
 
-    $this->artisan('vaulter:relay-outbox')->assertSuccessful();
+    $this->artisan('vaulter:webhooks:relay')->assertSuccessful();
 
     Bus::assertNotDispatched(DeliverWebhook::class);
 });
 
-it('vaulter:relay-outbox honours the --limit option', function (): void {
+it('vaulter:webhooks:relay honours the --limit option', function (): void {
     Bus::fake();
 
     WebhookTestHelpers::endpoint();
     WebhookTestHelpers::outbox(['event_id' => 'a', 'available_at' => now()->subSeconds(2)]);
     WebhookTestHelpers::outbox(['event_id' => 'b', 'available_at' => now()->subSecond()]);
 
-    $this->artisan('vaulter:relay-outbox', ['--limit' => 1])->assertSuccessful();
+    $this->artisan('vaulter:webhooks:relay', ['--limit' => 1])->assertSuccessful();
 
     expect(Outbox::query()->where('status', 'pending')->count())->toBe(1)
         ->and(Outbox::query()->where('status', 'completed')->count())->toBe(1);
@@ -305,9 +305,9 @@ it('vaulter:relay-outbox honours the --limit option', function (): void {
     Bus::assertDispatched(DeliverWebhook::class, 1);
 });
 
-// ─────────────────────── vaulter:retry-webhooks ───────────────────────
+// ─────────────────────── vaulter:webhooks:retry ───────────────────────
 
-it('vaulter:retry-webhooks re-queues only due failed deliveries', function (): void {
+it('vaulter:webhooks:retry re-queues only due failed deliveries', function (): void {
     Bus::fake();
 
     $endpoint = WebhookTestHelpers::endpoint();
@@ -316,7 +316,7 @@ it('vaulter:retry-webhooks re-queues only due failed deliveries', function (): v
     WebhookTestHelpers::delivery($endpoint, ['status' => 'failed', 'attempts' => 1, 'next_retry_at' => now()->addHour()]);
     WebhookTestHelpers::delivery($endpoint, ['status' => 'dead', 'attempts' => 5, 'next_retry_at' => now()->subMinute()]);
 
-    $this->artisan('vaulter:retry-webhooks')->assertSuccessful();
+    $this->artisan('vaulter:webhooks:retry')->assertSuccessful();
 
     Bus::assertDispatched(DeliverWebhook::class, fn (DeliverWebhook $job): bool => new ReflectionProperty($job, 'deliveryId')->getValue($job) === (string) $due->getKey());
     Bus::assertDispatched(DeliverWebhook::class, 1);

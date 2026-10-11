@@ -45,7 +45,7 @@ P6_PROMETHEUS_QUERIES = {
     for name in ev.P6_METRIC_NAMES
 }
 P6_PROMETHEUS_QUERIES['vaulter_command_peak_memory_bytes'] = (
-    'sum(vaulter_command_peak_memory_bytes{command="vaulter:retry-webhooks"})'
+    'sum(vaulter_command_peak_memory_bytes{command="vaulter:webhooks:retry"})'
 )
 
 

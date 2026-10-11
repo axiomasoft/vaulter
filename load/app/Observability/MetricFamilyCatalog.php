@@ -58,7 +58,7 @@ final class MetricFamilyCatalog
             'vaulter_prune_rows_total' => ['type' => 'counter', 'label_keys' => [], 'registration' => [], 'bucket_set' => null, 'gauge_mode' => 'set'],
             'vaulter_reconcile_duration_seconds' => ['type' => 'histogram', 'label_keys' => [], 'registration' => [], 'bucket_set' => 'batch_s', 'gauge_mode' => 'set'],
             'vaulter_reconcile_objects_total' => ['type' => 'counter', 'label_keys' => [], 'registration' => [], 'bucket_set' => null, 'gauge_mode' => 'set'],
-            'vaulter_command_peak_memory_bytes' => ['type' => 'gauge', 'label_keys' => ['command'], 'registration' => ['command' => 'vaulter:sweep-uploads'], 'bucket_set' => null, 'gauge_mode' => 'max'],
+            'vaulter_command_peak_memory_bytes' => ['type' => 'gauge', 'label_keys' => ['command'], 'registration' => ['command' => 'vaulter:uploads:sweep'], 'bucket_set' => null, 'gauge_mode' => 'max'],
             'vaulter_pg_lock_wait_seconds' => ['type' => 'histogram', 'label_keys' => [], 'registration' => [], 'bucket_set' => 'lock_s', 'gauge_mode' => 'set'],
         ];
     }

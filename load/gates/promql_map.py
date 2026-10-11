@@ -192,7 +192,7 @@ def _raw_map(pm_max_children):
                     'vaulter_command_peak_memory_bytes',
                     '<',
                     268_435_456,
-                    labels={'command': 'vaulter:retry-webhooks'},
+                    labels={'command': 'vaulter:webhooks:retry'},
                 ),
             ],
         }
@@ -220,7 +220,7 @@ def _raw_map(pm_max_children):
                     'vaulter_command_peak_memory_bytes',
                     '<',
                     268_435_456,
-                    labels={'command': 'vaulter:sweep-uploads'},
+                    labels={'command': 'vaulter:uploads:sweep'},
                 ),
             ],
         }

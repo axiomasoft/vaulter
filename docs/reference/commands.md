@@ -6,23 +6,28 @@ outline: deep
 
 # Artisan commands
 
-Vaulter registers ten Artisan commands: an install command (from
-spatie/laravel-package-tools) plus nine package commands wired in
-`VaulterServiceProvider`. The maintenance commands (GC, trash purge, upload sweep,
-outbox relay, webhook retry, webhook prune) are designed to be scheduled.
+Vaulter's commands are named `vaulter:<area>:<verb>`; the one exception is the entry point
+`vaulter:install`. The maintenance commands (GC, trash purge, upload sweep, outbox relay,
+webhook retry, webhook prune, scan reconcile) are put on the host scheduler by the packages
+themselves — see [Scheduling](#scheduling).
 
 | Command | Purpose |
 |---|---|
-| `vaulter:install` | Publish config + migrations, run them, offer to star the repo |
+| `vaulter:install` | Publish the config of every installed package, print the host settings to apply, optionally migrate |
+| `vaulter:upgrade:inspect` | Read-only check that 0.2 data can move to the 0.3 schema |
+| `vaulter:uploads:sweep` | Abort and clean up stale resumable-upload sessions |
+| `vaulter:scan:reconcile` | Recover scan intents, backfill discovery and committed-upload cleanup (bounded) |
+| `vaulter:scan:rescan` | Queue a rescan of file revisions for a tenant, drive or revision set |
+| `vaulter:drives:purge` | Purge soft-deleted drives |
+| `vaulter:drives:recount` | Report (or correct) drive size and node-count drift |
 | `vaulter:make:profile` | Scaffold a storage-panel provider class |
 | `vaulter:blobs:gc` | Two-phase, race-safe blob garbage collection |
 | `vaulter:blobs:reconcile` | Rebuild blob `ref_count` and report dangling rows |
-| `vaulter:purge-trash` | Permanently delete trashed nodes past retention |
+| `vaulter:trash:purge` | Permanently delete trashed nodes past retention |
 | `vaulter:revisions:prune` | Delete non-current file revisions past the profile retention policy |
-| `vaulter:sweep-uploads` | Abort and clean up stale resumable-upload sessions |
-| `vaulter:relay-outbox` | Relay pending outbox events to webhook endpoints |
-| `vaulter:retry-webhooks` | Re-dispatch webhook deliveries whose retry delay elapsed |
-| `vaulter:prune-webhooks` | Delete completed outbox rows and terminal webhook deliveries past retention |
+| `vaulter:webhooks:relay` | Relay pending outbox events to webhook endpoints |
+| `vaulter:webhooks:retry` | Re-dispatch webhook deliveries whose retry delay elapsed |
+| `vaulter:webhooks:prune` | Delete completed outbox rows and terminal webhook deliveries past retention |
 | `vaulter:webhooks:legacy-fanout` | List or replay pre-1.0 outbox rows whose fan-out cannot be proven |
 | `vaulter:webhooks:redeliver` | Send finished webhook deliveries again with the same `webhook-id` |
 | `vaulter:events:reference` | Regenerate (or `--check`) the event catalogue table in the reference docs |
@@ -34,20 +39,65 @@ outbox relay, webhook retry, webhook prune) are designed to be scheduled.
 
 ## `vaulter:install`
 
-Provided by spatie/laravel-package-tools. Publishes the config file and migrations,
-asks to run the migrations, and offers to star the repo on GitHub.
+Publishes the config file of every installed Vaulter package (`vaulter-config`,
+`vaulter-media-config`, `vaulter-drive-config`, `vaulter-documents-config`,
+`vaulter-filament-config`, `vaulter-azgard-config`), prints the host settings it will **not**
+edit, and runs the migrations when asked. Safe to run again: an already published file is
+skipped (`--force` overwrites it) and nothing in `config/*.php` or `.env` is ever rewritten.
 
 ```bash
 php artisan vaulter:install
 ```
 
-Equivalent manual steps:
+| Option | Meaning |
+|---|---|
+| `--middleware=` | Auth middleware for the authenticated route stack (default `auth:sanctum`) |
+| `--driver=` | `database` (default), `gate`, `spatie` or a key of `access.permission_drivers` |
+| `--migrate` | Run `php artisan migrate` without asking |
+| `--force` | Overwrite config files that are already published |
+
+Interactively the command asks for the middleware and the driver, whether to migrate (default
+no) and whether to star the repo; without a terminal it uses the options or the defaults and
+does not migrate unless `--migrate` is given. It prints the lines to apply
+(`VAULTER_PERMISSION_DRIVER=…` and the `routes.middleware.authenticated` entry).
+
+## `vaulter:upgrade:inspect`
+
+Read-only readiness report for the 0.2 → 0.3 data move: soft-deleted legacy rows, documents
+without revisions and unexpected own tables. The same check blocks the upgrade migration.
 
 ```bash
-php artisan vendor:publish --tag=vaulter-config
-php artisan vendor:publish --tag=vaulter-migrations
-php artisan migrate
+php artisan vaulter:upgrade:inspect          # "ready" and exit 0, or the problems and exit 1
+php artisan vaulter:upgrade:inspect --json   # {"schema":"vaulter.upgrade-inspect/v1","ready":…,"problems":[…]}
 ```
+
+## Scheduling
+
+With `vaulter.schedule.enabled` (env `VAULTER_SCHEDULE_ENABLED`, default `true`) the packages
+register their maintenance commands on Laravel's scheduler, each with `withoutOverlapping()`
+and `onOneServer()`, so a host needs no `Schedule::command(...)` lines of its own (remove
+existing ones to avoid double runs). A host still has to run `schedule:run` every minute, and
+`onOneServer()` needs a cache store shared by all instances.
+
+| Config key | Command | Default |
+|---|---|---|
+| `vaulter.schedule.webhooks_relay` | `vaulter:webhooks:relay` (needs `features.webhooks`) | `everyMinute` |
+| `vaulter.schedule.webhooks_retry` | `vaulter:webhooks:retry` (needs `features.webhooks`) | `everyMinute` |
+| `vaulter.schedule.webhooks_prune` | `vaulter:webhooks:prune` (needs `features.webhooks`) | `dailyAt:03:10` |
+| `vaulter.schedule.changes_prune` | `vaulter:changes:prune` (needs `features.changes`) | `dailyAt:03:20` |
+| `vaulter-drive.schedule.uploads_sweep` | `vaulter:uploads:sweep` | `hourlyAt:15` |
+| `vaulter-drive.schedule.trash_purge` | `vaulter:trash:purge` | `dailyAt:03:30` |
+| `vaulter-drive.schedule.drives_purge` | `vaulter:drives:purge` | `hourlyAt:25` |
+| `vaulter-drive.schedule.revisions_prune` | `vaulter:revisions:prune` | `dailyAt:03:40` |
+| `vaulter-drive.schedule.scan_reconcile` | `vaulter:scan:reconcile --all-tenants --reason=scheduled --limit=100 --max-seconds=30` (needs scan mode ≠ `off`, independent of webhooks) | `everyFiveMinutes` |
+| `vaulter-drive.schedule.drives_recount` | `vaulter:drives:recount --dry-run` | `null` (off) |
+| `vaulter-media.schedule.blobs_gc` | `vaulter:blobs:gc` | `dailyAt:04:00` |
+| `vaulter-media.schedule.blobs_reconcile` | `vaulter:blobs:reconcile` | `weeklyOn:0,04:30` |
+
+A value is `null` (task off), a frequency name without arguments (`everyMinute`,
+`everyFiveMinutes`, `hourly`, `daily`, `weekly`, …), `dailyAt:HH:MM`, `hourlyAt:M`,
+`weeklyOn:D,HH:MM` (0 = Sunday) or a five-field cron expression. Anything else fails boot with
+`InvalidConfigurationException`.
 
 See [Guide → Installation](/guide/installation).
 
@@ -114,7 +164,7 @@ vaulter:blobs:reconcile
 php artisan vaulter:blobs:reconcile
 ```
 
-## `vaulter:purge-trash`
+## `vaulter:trash:purge`
 
 Permanently purge trashed nodes past their retention window. Finds the trash **roots**
 whose `trashed_at` is older than `now() - retention_days` and force-deletes each
@@ -123,13 +173,13 @@ is released. Only roots (`trash_root_id = id`) are eligible: purging a root remo
 including descendants trashed earlier on their own, so nothing is purged twice.
 
 ```
-vaulter:purge-trash
+vaulter:trash:purge
     {--days=} Override the retention window (config vaulter-drive.trash.retention_days)
 ```
 
 ```bash
-php artisan vaulter:purge-trash           # uses config retention (default 30 days)
-php artisan vaulter:purge-trash --days=7  # custom retention
+php artisan vaulter:trash:purge           # uses config retention (default 30 days)
+php artisan vaulter:trash:purge --days=7  # custom retention
 ```
 
 See [Usage → Search & trash](/guide/search-trash).
@@ -182,18 +232,18 @@ php artisan vaulter:revisions:prune          # schedule daily
 
 See [Usage → Uploads → Revision retention](/guide/uploads#revision-retention).
 
-## `vaulter:sweep-uploads`
+## `vaulter:uploads:sweep`
 
 Abort and clean up stale resumable-upload sessions past their TTL
 (`config('vaulter-drive.uploads.resumable.session_ttl_hours')`). The staged temp file and any S3
 multipart state are reclaimed, and the session status flips to `expired`.
 
 ```
-vaulter:sweep-uploads
+vaulter:uploads:sweep
 ```
 
 ```bash
-php artisan vaulter:sweep-uploads
+php artisan vaulter:uploads:sweep
 ```
 
 ::: tip Pair with an S3 lifecycle rule
@@ -203,7 +253,7 @@ The sweeper aborts in-flight multiparts it knows about. Add an
 
 See [Usage → Uploads](/guide/uploads).
 
-## `vaulter:relay-outbox`
+## `vaulter:webhooks:relay`
 
 Relay pending outbox events to webhook endpoints and re-dispatch due retries. Each
 pending `v_outbox` row fans out into one `v_webhook_deliveries` row per eligible
@@ -215,28 +265,28 @@ run at once. At-least-once with exponential backoff + DLQ. Gated by
 `features.webhooks`. See [Webhooks → Delivery guarantees](/guide/webhooks#delivery-guarantees).
 
 ```
-vaulter:relay-outbox
+vaulter:webhooks:relay
     {--limit=} Max outbox rows to drain this tick
 ```
 
 ```bash
-php artisan vaulter:relay-outbox --limit=500
+php artisan vaulter:webhooks:relay --limit=500
 ```
 
 See [Recipes → Reliability & webhooks](/guide/recipes).
 
-## `vaulter:retry-webhooks`
+## `vaulter:webhooks:retry`
 
 Re-dispatch webhook deliveries whose backoff window has elapsed, and pending
 deliveries whose first job was lost (still unclaimed `webhooks.relay.claim_seconds`
 after they became due). Gated by `features.webhooks`.
 
 ```
-vaulter:retry-webhooks
+vaulter:webhooks:retry
 ```
 
 ```bash
-php artisan vaulter:retry-webhooks
+php artisan vaulter:webhooks:retry
 ```
 
 ---
@@ -271,7 +321,7 @@ php artisan vaulter:errors:reference --check
 
 ---
 
-## `vaulter:prune-webhooks`
+## `vaulter:webhooks:prune`
 
 Delete COMPLETED outbox rows (`completed`, `fanned_out_at` older than the retention
 window) and TERMINAL webhook deliveries (`delivered`/`dead`, older than the retention
@@ -282,15 +332,15 @@ window). A `pending` outbox row — even one whose fan-out stopped half way — 
 Pruned rows cannot be restored or replayed.
 
 ```
-vaulter:prune-webhooks
+vaulter:webhooks:prune
     {--days=}    Override the retention window in days
     {--dry-run}  Report what would be pruned without deleting
 ```
 
 ```bash
-php artisan vaulter:prune-webhooks
-php artisan vaulter:prune-webhooks --dry-run
-php artisan vaulter:prune-webhooks --days=7
+php artisan vaulter:webhooks:prune
+php artisan vaulter:webhooks:prune --dry-run
+php artisan vaulter:webhooks:prune --days=7
 ```
 
 See [Recipes → Reliability & webhooks](/guide/recipes).
@@ -386,16 +436,18 @@ php artisan vaulter:changes:reset 42
 
 The maintenance commands are schedule-friendly. A representative schedule:
 
+These lines are only needed when `vaulter.schedule.enabled` is `false`; otherwise the packages already schedule these commands and the snippet would run each of them twice.
+
 ```php
 use Illuminate\Support\Facades\Schedule;
 
-Schedule::command('vaulter:relay-outbox')->everyMinute();
-Schedule::command('vaulter:retry-webhooks')->everyFiveMinutes();
-Schedule::command('vaulter:sweep-uploads')->hourly();
+Schedule::command('vaulter:webhooks:relay')->everyMinute();
+Schedule::command('vaulter:webhooks:retry')->everyFiveMinutes();
+Schedule::command('vaulter:uploads:sweep')->hourly();
 Schedule::command('vaulter:blobs:gc')->daily();
-Schedule::command('vaulter:purge-trash')->daily();
+Schedule::command('vaulter:trash:purge')->daily();
 Schedule::command('vaulter:blobs:reconcile')->weekly();
-Schedule::command('vaulter:prune-webhooks')->weekly();
+Schedule::command('vaulter:webhooks:prune')->weekly();
 Schedule::command('vaulter:changes:prune')->daily();
 ```
 

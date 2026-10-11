@@ -217,7 +217,7 @@ it('R07b: one-day retention purges an old root and preserves one inside the wind
     $old->forceFill(['trashed_at' => Carbon::now()->subDays(2), 'trash_root_id' => $old->getKey()])->save();
     $recent->forceFill(['trashed_at' => Carbon::now()->subDay()->addSecond(), 'trash_root_id' => $recent->getKey()])->save();
 
-    expect(Artisan::call('vaulter:purge-trash', ['--days' => '1']))->toBe(0)
+    expect(Artisan::call('vaulter:trash:purge', ['--days' => '1']))->toBe(0)
         ->and(Artisan::output())->toContain('Purged 1 trashed subtree.')
         ->and(Node::query()->whereKey($old->id)->exists())->toBeFalse()
         ->and(Node::query()->whereKey($recent->id)->exists())->toBeTrue();
@@ -233,7 +233,7 @@ it('R07b: two-day retention includes the exact cutoff and reports two purged roo
     $boundary->forceFill(['trashed_at' => Carbon::now()->subDays(2), 'trash_root_id' => $boundary->getKey()])->save();
     $recent->forceFill(['trashed_at' => Carbon::now()->subDays(2)->addSecond(), 'trash_root_id' => $recent->getKey()])->save();
 
-    expect(Artisan::call('vaulter:purge-trash', ['--days' => '2']))->toBe(0)
+    expect(Artisan::call('vaulter:trash:purge', ['--days' => '2']))->toBe(0)
         ->and(Artisan::output())->toContain('Purged 2 trashed subtrees.')
         ->and(Node::query()->whereKey($old->id)->exists())->toBeFalse()
         ->and(Node::query()->whereKey($boundary->id)->exists())->toBeFalse()
@@ -247,7 +247,7 @@ it('R07b: zero retention purges a root trashed now while leaving live nodes', fu
     $live = AccessTestHelpers::folder($storage, null, 'live');
     $trashed->forceFill(['trashed_at' => Carbon::now(), 'trash_root_id' => $trashed->getKey()])->save();
 
-    expect(Artisan::call('vaulter:purge-trash', ['--days' => '0']))->toBe(0)
+    expect(Artisan::call('vaulter:trash:purge', ['--days' => '0']))->toBe(0)
         ->and(Artisan::output())->toContain('Purged 1 trashed subtree.')
         ->and(Node::query()->whereKey($trashed->id)->exists())->toBeFalse()
         ->and(Node::query()->whereKey($live->id)->exists())->toBeTrue();
@@ -262,7 +262,7 @@ it('R07b: non-numeric days uses configured retention rather than zero', function
     $old->forceFill(['trashed_at' => Carbon::now()->subDays(15), 'trash_root_id' => $old->getKey()])->save();
     $recent->forceFill(['trashed_at' => Carbon::now()->subDays(7), 'trash_root_id' => $recent->getKey()])->save();
 
-    expect(Artisan::call('vaulter:purge-trash', ['--days' => 'not-a-number']))->toBe(0)
+    expect(Artisan::call('vaulter:trash:purge', ['--days' => 'not-a-number']))->toBe(0)
         ->and(Artisan::output())->toContain('Purged 1 trashed subtree.')
         ->and(Node::query()->whereKey($old->id)->exists())->toBeFalse()
         ->and(Node::query()->whereKey($recent->id)->exists())->toBeTrue();
@@ -280,7 +280,7 @@ it('R07b: purge-trash decrements storage used_bytes — ForceDeleteNodeAction mu
 
     DriveTestHelpers::model($file)->forceFill(['trashed_at' => Carbon::now()->subDay(), 'trash_root_id' => $file->id])->save();
 
-    Artisan::call('vaulter:purge-trash', ['--days' => '0']);
+    Artisan::call('vaulter:trash:purge', ['--days' => '0']);
 
     // ForceDeleteNodeAction releases quota via NodeStoreRepository; without it, used_bytes stays elevated
     expect($storage->refresh()->used_bytes)->toBeLessThan($usedAfterUpload);
@@ -295,7 +295,7 @@ it('R07b: purge-trash physically removes rows — no query finds them afterwards
     $n->forceFill(['trashed_at' => Carbon::now()->subDays(2), 'trash_root_id' => $n->getKey()])->save();
     $nodeId = $n->getKey();
 
-    Artisan::call('vaulter:purge-trash', ['--days' => '1']);
+    Artisan::call('vaulter:trash:purge', ['--days' => '1']);
 
     // Row must be physically deleted (nodes have no soft-delete tombstone)
     expect(Node::query()->whereKey($nodeId)->exists())->toBeFalse();
@@ -312,7 +312,7 @@ it('R07b: purge-trash increments purgedRoots correctly for multiple subtrees (L1
         $n->forceFill(['trashed_at' => Carbon::now()->subDays(2), 'trash_root_id' => $n->getKey()])->save();
     }
 
-    Artisan::call('vaulter:purge-trash', ['--days' => '1']);
+    Artisan::call('vaulter:trash:purge', ['--days' => '1']);
     $out = Artisan::output();
 
     expect($out)->toContain('Purged 3 trashed subtrees.');
@@ -330,7 +330,7 @@ it('R07b: purge-trash emits vaulter_purge_nodes_total when nodes are purged (L11
     $n = AccessTestHelpers::folder($storage, null, 'r07b-counter');
     $n->forceFill(['trashed_at' => Carbon::now()->subDays(2), 'trash_root_id' => $n->getKey()])->save();
 
-    Artisan::call('vaulter:purge-trash', ['--days' => '1']);
+    Artisan::call('vaulter:trash:purge', ['--days' => '1']);
 
     /** @var FakeMetricsRecorder $recorder */
     $recorder = app(MetricsRecorder::class);

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Vaulter;
 
-use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Vaulter\Configuration\ConfigNormalizer;
@@ -15,6 +14,7 @@ use Vaulter\Providers\BindingsRegistrar;
 use Vaulter\Providers\ConsoleRegistrar;
 use Vaulter\Providers\EventsRegistrar;
 use Vaulter\Providers\HttpRegistrar;
+use Vaulter\Providers\SchedulingRegistrar;
 
 final class VaulterServiceProvider extends PackageServiceProvider
 {
@@ -26,14 +26,7 @@ final class VaulterServiceProvider extends PackageServiceProvider
             ->hasTranslations()
             ->discoversMigrations()
             ->runsMigrations()
-            ->hasRoute('api')
-            ->hasInstallCommand(static function (InstallCommand $command): void {
-                $command
-                    ->publishConfigFile()
-                    ->publishMigrations()
-                    ->askToRunMigrations()
-                    ->askToStarRepoOnGitHub('axiomasoft/vaulter');
-            });
+            ->hasRoute('api');
     }
 
     public function packageRegistered(): void
@@ -57,5 +50,6 @@ final class VaulterServiceProvider extends PackageServiceProvider
         (new HttpRegistrar)->boot($this->app);
         (new AccessRegistrar)->boot($this->app);
         (new BindingsRegistrar)->boot($this->app);
+        (new SchedulingRegistrar)->register($this->app);
     }
 }

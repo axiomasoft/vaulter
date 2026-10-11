@@ -28,6 +28,16 @@ return [
         ],
     ],
     'trash' => ['retention_days' => 30],
+    // Same value grammar and vaulter.schedule.enabled switch as the core schedule keys.
+    'schedule' => [
+        'uploads_sweep' => 'hourlyAt:15',
+        'trash_purge' => 'dailyAt:03:30',
+        'drives_purge' => 'hourlyAt:25',
+        'revisions_prune' => 'dailyAt:03:40',
+        'scan_reconcile' => 'everyFiveMinutes',
+        // Report-only drift check; off until an operator wants it.
+        'drives_recount' => null,
+    ],
     'models' => [
         'upload_session' => UploadSession::class,
         'upload_part' => UploadPart::class,

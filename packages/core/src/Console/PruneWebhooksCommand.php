@@ -37,7 +37,7 @@ final class PruneWebhooksCommand extends Command
 {
     use OpensWriteScope;
 
-    protected $signature = 'vaulter:prune-webhooks
+    protected $signature = 'vaulter:webhooks:prune
         {--days= : Override the retention window in days (config vaulter.webhooks.retention_days)}
         {--dry-run : Report what would be pruned without deleting}';
 

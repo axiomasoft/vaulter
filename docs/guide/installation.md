@@ -42,22 +42,23 @@ Request metrics are added to all three stacks automatically. Published 0.2 confi
 with `vaulter.routes.middleware.authenticated` still override the authenticated stack; remove that legacy
 key to adopt the new default. See [Configuration](/guide/configuration#routes).
 
-Then run the bundled install command, which publishes the config, publishes the migrations
-and offers to run them:
+Then run the bundled install command, which publishes the config of every installed Vaulter
+package and offers to run the migrations:
 
 ```bash
 php artisan vaulter:install
 ```
 
 ::: details What `vaulter:install` does
-It is the standard Spatie package-tools install command:
-
-- publishes `config/vaulter.php` (tag `vaulter-config`),
-- publishes the package migrations (tag `vaulter-migrations`),
-- asks to run `php artisan migrate`,
+- publishes the config of each installed package (`vaulter-config`, `vaulter-media-config`,
+  `vaulter-drive-config`, …); a file that already exists is skipped unless `--force`,
+- asks for the auth middleware and the permission driver (or takes `--middleware` / `--driver`)
+  and prints the `.env` and config lines to apply — it never edits `config/*.php` or `.env`,
+- asks to run `php artisan migrate` (or runs it with `--migrate`),
 - asks to star the repo on GitHub.
 
-Nothing is published silently — you are prompted at each step.
+Without a terminal it takes the options or the defaults and does not migrate unless `--migrate`
+is given. Running it again is safe. See [Commands → `vaulter:install`](/reference/commands#vaulter-install).
 :::
 
 ### Manual install

@@ -137,7 +137,7 @@ class R05CaptureTest(unittest.TestCase):
                 {'cell_id':'overlap'}, 1, 101)
             self.assertEqual(overlap['sweep_exit'], 0)
             self.assertTrue(overlap['sweepable'])
-            sweep_calls = [c.args for c in compose.call_args_list if 'vaulter:sweep-uploads' in c.args]
+            sweep_calls = [c.args for c in compose.call_args_list if 'vaulter:uploads:sweep' in c.args]
             self.assertEqual(len(sweep_calls), 1)
             self.assertNotIn('artisan', sweep_calls[0])
             self.assertTrue(any('touch' in c.args for c in compose.call_args_list))

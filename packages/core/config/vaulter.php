@@ -170,6 +170,16 @@ return [
         // The largest page DriveHandle::changes()->list() returns.
         'max_page_size' => 1000,
     ],
+    // Maintenance tasks put on the host scheduler. Value: null (off) | everyMinute | everyFiveMinutes |
+    // hourly | daily | weekly | 'dailyAt:HH:MM' | 'hourlyAt:M' | 'weeklyOn:D,HH:MM' | a 5-field cron
+    // expression. Set enabled to false when the host schedules the commands itself.
+    'schedule' => [
+        'enabled' => env('VAULTER_SCHEDULE_ENABLED', true),
+        'webhooks_relay' => 'everyMinute',
+        'webhooks_retry' => 'everyMinute',
+        'webhooks_prune' => 'dailyAt:03:10',
+        'changes_prune' => 'dailyAt:03:20',
+    ],
     'handlers' => [],
     'observability' => [
         'enabled' => env('VAULTER_OBSERVABILITY_ENABLED', false),

@@ -30,7 +30,7 @@ beforeEach(function (): void {
 });
 
 it('purge-trash reports zero subtrees when nothing qualifies', function (): void {
-    Artisan::call('vaulter:purge-trash');
+    Artisan::call('vaulter:trash:purge');
 
     expect(Artisan::output())->toContain('Purged 0 trashed subtrees.');
 });
@@ -45,7 +45,7 @@ it('purge-trash purges on the cutoff day but spares one day newer', function ():
     $newer = AccessTestHelpers::folder($storage, null, 'newer');
     app(VaulterDatabase::class)->write(fn () => $newer->forceFill(['trashed_at' => Carbon::parse('2026-02-10 00:00:01'), 'trash_root_id' => $newer->getKey()])->save());
 
-    Artisan::call('vaulter:purge-trash', ['--days' => '1']);
+    Artisan::call('vaulter:trash:purge', ['--days' => '1']);
     $output = Artisan::output();
 
     expect($output)->toContain('Purged 1 trashed subtree.')
@@ -62,7 +62,7 @@ it('purge-trash pluralizes multiple purged roots', function (): void {
         app(VaulterDatabase::class)->write(fn () => $node->forceFill(['trashed_at' => Carbon::now()->subDays(3), 'trash_root_id' => $node->getKey()])->save());
     }
 
-    Artisan::call('vaulter:purge-trash', ['--days' => '1']);
+    Artisan::call('vaulter:trash:purge', ['--days' => '1']);
 
     expect(Artisan::output())->toContain('Purged 2 trashed subtrees.');
 });
@@ -78,7 +78,7 @@ it('records sweep counters for the materialised stale batch size', function (): 
         app(VaulterDatabase::class)->write(fn () => $session->forceFill(['expires_at' => Carbon::now()->subHour()])->save());
     }
 
-    Artisan::call('vaulter:sweep-uploads');
+    Artisan::call('vaulter:uploads:sweep');
 
     $recorder = app(MetricsRecorder::class);
     $recorder->assertHistogram(name: 'vaulter_sweep_batch_rows');

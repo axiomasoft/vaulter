@@ -523,10 +523,11 @@ reconcile чинит дрейф `ref_count`.
 
 ```php
 // routes/console.php (Laravel 11+) or app/Console/Kernel.php
+// Нужно только при vaulter.schedule.enabled=false; иначе пакеты планируют это сами.
 use Illuminate\Support\Facades\Schedule;
 
 // Trash retention → permanently force-deletes nodes past trash.retention_days.
-Schedule::command('vaulter:purge-trash')->daily();
+Schedule::command('vaulter:trash:purge')->daily();
 
 // Two-phase blob GC: tombstone unreferenced blobs, sweep tombstoned past grace.
 Schedule::command('vaulter:blobs:gc')->hourly();
@@ -536,7 +537,7 @@ Schedule::command('vaulter:blobs:gc')->hourly();
 Schedule::command('vaulter:blobs:reconcile')->dailyAt('03:00');
 
 // Reclaim resumable-upload sessions older than uploads.session_ttl_hours.
-Schedule::command('vaulter:sweep-uploads')->hourly();
+Schedule::command('vaulter:uploads:sweep')->hourly();
 ```
 
 Окно отсрочки — `config('vaulter-media.gc.grace_hours')` (по умолчанию 24, с нижней границей 1ч). Оно
@@ -562,11 +563,12 @@ relay разносит его в подписанные строки `v_webhook_
 эндпоинту:
 
 ```php
+// Нужно только при vaulter.schedule.enabled=false; иначе пакеты планируют это сами.
 use Illuminate\Support\Facades\Schedule;
 
-Schedule::command('vaulter:relay-outbox')->everyMinute();    // outbox → deliveries → queue
-Schedule::command('vaulter:retry-webhooks')->everyFiveMinutes(); // retry failed deliveries
-Schedule::command('vaulter:prune-webhooks')->daily();        // reclaim settled audit history
+Schedule::command('vaulter:webhooks:relay')->everyMinute();    // outbox → deliveries → queue
+Schedule::command('vaulter:webhooks:retry')->everyFiveMinutes(); // retry failed deliveries
+Schedule::command('vaulter:webhooks:prune')->daily();        // reclaim settled audit history
 ```
 
 Эндпоинтами подписчиков управляют через маршруты `webhook-endpoints` (завязаны на право manage
@@ -578,16 +580,16 @@ Schedule::command('vaulter:prune-webhooks')->daily();        // reclaim settled 
 ### Обрезка урегулированной истории outbox и вебхуков
 
 Разнесённые строки outbox и терминальные доставки вебхуков — это append-only аудит-след, который
-иначе растёт бесконечно. `vaulter:prune-webhooks` освобождает **урегулированные** строки за
+иначе растёт бесконечно. `vaulter:webhooks:prune` освобождает **урегулированные** строки за
 пределами окна хранения — и *только* урегулированные:
 
 ```bash
 # Prune settled rows older than config('vaulter.webhooks.retention_days') (default 30):
-php artisan vaulter:prune-webhooks
+php artisan vaulter:webhooks:prune
 
 # Override the window, or preview the exact counts without deleting anything:
-php artisan vaulter:prune-webhooks --days=7
-php artisan vaulter:prune-webhooks --dry-run
+php artisan vaulter:webhooks:prune --days=7
+php artisan vaulter:webhooks:prune --dry-run
 ```
 
 Она удаляет ровно два вида строк, которые больше никогда не меняются:

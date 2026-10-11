@@ -271,7 +271,7 @@ See [Usage → Sharing](/guide/sharing).
 | `vaulter-drive.trash.retention_days` | `VAULTER_TRASH_RETENTION_DAYS` | `30` |
 
 The retention window before a trashed node's subtree is permanently force-deleted by
-`php artisan vaulter:purge-trash`.
+`php artisan vaulter:trash:purge`.
 
 ## Drives — `vaulter.drives.*`
 
@@ -330,6 +330,24 @@ Turning it off and on again leaves a gap only a reset closes (`vaulter:changes:r
 |---|---|---|---|
 | `changes.retention_days` | — | `30` | Days an entry stays readable; `vaulter:changes:prune` deletes older ones and a cursor behind them expires (`410 cursor_expired`). Integer ≥ 1, anything else fails boot |
 | `changes.max_page_size` | — | `1000` | The largest `limit` of one `changes()->list()` page (integer 1..10000, anything else fails boot) |
+
+## Scheduling — `schedule.*`
+
+Which maintenance commands the packages put on Laravel's scheduler and how often; the command
+list and the value grammar are in [Commands → Scheduling](/reference/commands#scheduling).
+
+| Key | Env | Default | Controls |
+|---|---|---|---|
+| `schedule.enabled` | `VAULTER_SCHEDULE_ENABLED` | `true` | Master switch for every Vaulter scheduled task (core, drive, media); set `false` when the host schedules the commands itself. Must be a boolean |
+| `schedule.webhooks_relay` | — | `'everyMinute'` | `vaulter:webhooks:relay`; `null` turns it off |
+| `schedule.webhooks_retry` | — | `'everyMinute'` | `vaulter:webhooks:retry`; `null` turns it off |
+| `schedule.webhooks_prune` | — | `'dailyAt:03:10'` | `vaulter:webhooks:prune`; `null` turns it off |
+| `schedule.changes_prune` | — | `'dailyAt:03:20'` | `vaulter:changes:prune`; `null` turns it off |
+| `vaulter-drive.schedule.*` | — | `uploads_sweep` `hourlyAt:15`, `trash_purge` `dailyAt:03:30`, `drives_purge` `hourlyAt:25`, `revisions_prune` `dailyAt:03:40`, `scan_reconcile` `everyFiveMinutes`, `drives_recount` `null` | Drive tasks; `scan_reconcile` runs only while the scan mode is not `off` and does not depend on `features.webhooks` |
+| `vaulter-media.schedule.*` | — | `blobs_gc` `dailyAt:04:00`, `blobs_reconcile` `weeklyOn:0,04:30` | Blob tasks |
+
+An invalid value fails boot with `InvalidConfigurationException`; a key a host leaves out of its
+`schedule` array gets the package default — set it to `null` to turn the task off.
 
 ## API routes — `routes.*`
 

@@ -14,6 +14,8 @@ return [
         'grace_hours' => env('VAULTER_GC_GRACE_HOURS', 24),
         'orphan_grace_hours' => env('VAULTER_ORPHAN_GRACE_HOURS', env('VAULTER_GC_GRACE_HOURS', 24)),
     ],
+    // Same value grammar and vaulter.schedule.enabled switch as the core schedule keys.
+    'schedule' => ['blobs_gc' => 'dailyAt:04:00', 'blobs_reconcile' => 'weeklyOn:0,04:30'],
     'content_store' => Sha256ContentStore::class,
     'storage_driver' => FlysystemStorageDriver::class,
     'blob_store' => BlobStore::class,

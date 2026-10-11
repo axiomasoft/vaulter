@@ -15,7 +15,7 @@ beforeEach(function (): void {
 });
 
 it('records command root and action child spans for upload.sweep', function (): void {
-    Artisan::call('vaulter:sweep-uploads');
+    Artisan::call('vaulter:uploads:sweep');
 
     $tracer = app(TraceRecorder::class);
     expect($tracer)->toBeInstanceOf(FakeTraceRecorder::class);

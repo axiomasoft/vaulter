@@ -16,4 +16,4 @@ foreach (glob(__DIR__.'/Cas/*Test.php') as $file) {
         : RefreshDatabase::class)->in($file);
 }
 
-uses(TestCase::class)->in('Configuration');
+uses(TestCase::class)->in('Configuration', 'Console');

@@ -918,7 +918,7 @@ final class SchemaBuilder
         $name = $table->getTable();
 
         $table->index(['status', 'available_at'], $name.'_drain_idx');
-        // The retention sweep (vaulter:prune-webhooks) deletes finished rows by
+        // The retention sweep (vaulter:webhooks:prune) deletes finished rows by
         // (status='completed', fanned_out_at <= threshold) — its own scan cursor.
         $table->index(['status', 'fanned_out_at'], $name.'_prune_idx');
     }
@@ -994,7 +994,7 @@ final class SchemaBuilder
 
         $table->unique(['event_id', 'endpoint_id'], $name.'_event_endpoint_unique');
         $table->index(['status', 'next_retry_at'], $name.'_retry_idx');
-        // The retention sweep (vaulter:prune-webhooks) deletes terminal rows by
+        // The retention sweep (vaulter:webhooks:prune) deletes terminal rows by
         // (status in delivered|dead, updated_at <= threshold) — its own scan cursor.
         $table->index(['status', 'updated_at'], $name.'_prune_idx');
 

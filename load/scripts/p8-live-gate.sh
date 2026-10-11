@@ -142,26 +142,26 @@ run_triggers() {
         record_trigger "$family" "GET /load/metrics-snapshot" true
     done
 
-    app_artisan vaulter:relay-outbox --limit=100 || true
-    record_trigger vaulter_outbox_stage_duration_seconds "vaulter:relay-outbox" true
-    record_trigger vaulter_outbox_relay_duration_seconds "vaulter:relay-outbox" true
-    record_trigger vaulter_outbox_relayed_total "vaulter:relay-outbox" true
-    record_trigger vaulter_outbox_endpoints_scanned_total "vaulter:relay-outbox" true
-    record_trigger vaulter_webhook_queue_wait_seconds "vaulter:relay-outbox" true
-    record_trigger vaulter_webhook_delivery_duration_seconds "vaulter:relay-outbox" true
-    record_trigger vaulter_webhook_delivered_total "vaulter:relay-outbox" true
+    app_artisan vaulter:webhooks:relay --limit=100 || true
+    record_trigger vaulter_outbox_stage_duration_seconds "vaulter:webhooks:relay" true
+    record_trigger vaulter_outbox_relay_duration_seconds "vaulter:webhooks:relay" true
+    record_trigger vaulter_outbox_relayed_total "vaulter:webhooks:relay" true
+    record_trigger vaulter_outbox_endpoints_scanned_total "vaulter:webhooks:relay" true
+    record_trigger vaulter_webhook_queue_wait_seconds "vaulter:webhooks:relay" true
+    record_trigger vaulter_webhook_delivery_duration_seconds "vaulter:webhooks:relay" true
+    record_trigger vaulter_webhook_delivered_total "vaulter:webhooks:relay" true
 
-    app_artisan vaulter:retry-webhooks || true
-    record_trigger vaulter_webhook_retry_tick_seconds "vaulter:retry-webhooks" true
-    record_trigger vaulter_webhook_retry_lockset_rows "vaulter:retry-webhooks" true
-    record_trigger vaulter_failed_jobs_total "vaulter:retry-webhooks" true
+    app_artisan vaulter:webhooks:retry || true
+    record_trigger vaulter_webhook_retry_tick_seconds "vaulter:webhooks:retry" true
+    record_trigger vaulter_webhook_retry_lockset_rows "vaulter:webhooks:retry" true
+    record_trigger vaulter_failed_jobs_total "vaulter:webhooks:retry" true
 
-    app_artisan vaulter:sweep-uploads || true
-    record_trigger vaulter_sweep_tick_seconds "vaulter:sweep-uploads" true
-    record_trigger vaulter_sweep_batch_rows "vaulter:sweep-uploads" true
-    record_trigger vaulter_sweep_expired_total "vaulter:sweep-uploads" true
-    record_trigger vaulter_sweep_skipped_total "vaulter:sweep-uploads" true
-    record_trigger vaulter_command_peak_memory_bytes "vaulter:sweep-uploads" true
+    app_artisan vaulter:uploads:sweep || true
+    record_trigger vaulter_sweep_tick_seconds "vaulter:uploads:sweep" true
+    record_trigger vaulter_sweep_batch_rows "vaulter:uploads:sweep" true
+    record_trigger vaulter_sweep_expired_total "vaulter:uploads:sweep" true
+    record_trigger vaulter_sweep_skipped_total "vaulter:uploads:sweep" true
+    record_trigger vaulter_command_peak_memory_bytes "vaulter:uploads:sweep" true
 
     app_artisan vaulter:blobs:gc || true
     record_trigger vaulter_gc_duration_seconds "vaulter:blobs:gc" true
@@ -169,14 +169,14 @@ run_triggers() {
     record_trigger vaulter_gc_rows_scanned_total "vaulter:blobs:gc" true
     record_trigger vaulter_gc_objects_deleted_total "vaulter:blobs:gc" true
 
-    app_artisan vaulter:purge-trash || true
-    record_trigger vaulter_purge_duration_seconds "vaulter:purge-trash" true
-    record_trigger vaulter_purge_batch_nodes "vaulter:purge-trash" true
-    record_trigger vaulter_purge_nodes_total "vaulter:purge-trash" true
+    app_artisan vaulter:trash:purge || true
+    record_trigger vaulter_purge_duration_seconds "vaulter:trash:purge" true
+    record_trigger vaulter_purge_batch_nodes "vaulter:trash:purge" true
+    record_trigger vaulter_purge_nodes_total "vaulter:trash:purge" true
 
-    app_artisan vaulter:prune-webhooks --days=0 || true
-    record_trigger vaulter_prune_duration_seconds "vaulter:prune-webhooks" true
-    record_trigger vaulter_prune_rows_total "vaulter:prune-webhooks" true
+    app_artisan vaulter:webhooks:prune --days=0 || true
+    record_trigger vaulter_prune_duration_seconds "vaulter:webhooks:prune" true
+    record_trigger vaulter_prune_rows_total "vaulter:webhooks:prune" true
 
     app_artisan vaulter:blobs:reconcile || true
     record_trigger vaulter_reconcile_duration_seconds "vaulter:blobs:reconcile" true

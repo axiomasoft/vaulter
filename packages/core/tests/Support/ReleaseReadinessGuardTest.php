@@ -60,6 +60,6 @@ it('formulates README\'s vaulter:install line as "asks to run", not "runs them",
     $readme = file_get_contents(dirname(__DIR__, 4).'/README.md');
 
     expect($readme)->not->toBeFalse()
-        ->and($readme)->toContain('vaulter:install   # publishes config + migrations, asks to run them')
-        ->and($readme)->not->toContain('vaulter:install   # publishes config + migrations, runs them');
+        ->and($readme)->toContain('vaulter:install   # publishes config, asks to run the migrations')
+        ->and($readme)->not->toContain('vaulter:install   # publishes config, runs the migrations');
 });

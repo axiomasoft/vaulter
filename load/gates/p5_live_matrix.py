@@ -870,7 +870,7 @@ def run_patch_overlap(invoke, upload_id, out, cell, attempt, base):
             ).strip() == '1'
             evidence['sweep_start_ns'] = time.monotonic_ns()
             sweep = compose('exec', '-T', '-e', 'P5_SWEEP_TARGET=' + upload_id, 'app', 'php', 'vendor/bin/testbench',
-                            'vaulter:sweep-uploads', '--no-interaction', timeout=30)
+                            'vaulter:uploads:sweep', '--no-interaction', timeout=30)
             evidence['lock_after_sweep'] = psql(
                 f"SELECT count(*) FROM pg_locks WHERE pid = {int(evidence['backend_pid'])} "
                 "AND locktype = 'advisory' AND granted;"
@@ -975,7 +975,7 @@ def run_sweeper(cell, attempt, out, *, run_id: str | None = None) -> dict:
         raise gate.EvidenceInvalid(f'dirty seed {seeded} != {rows}')
     metric_before = sweep_batch_metric()
     command = ['exec', '-T', 'app', 'php', '-d', 'auto_prepend_file=/app/load/scripts/p5-php-peak.php',
-               'vendor/bin/testbench', 'vaulter:sweep-uploads', '--no-interaction']
+               'vendor/bin/testbench', 'vaulter:uploads:sweep', '--no-interaction']
     started = time.monotonic()
     timed_out = False
     try:

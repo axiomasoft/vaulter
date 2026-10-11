@@ -46,10 +46,10 @@ it('never prunes a pending outbox row, however old, even half fanned out', funct
     agePruneRow($halfway, $ancient);
     $completed = WebhookTestHelpers::outbox(['status' => 'completed', 'fanned_out_at' => Carbon::now()->subDay()]);
 
-    Artisan::call('vaulter:prune-webhooks', ['--days' => '0', '--dry-run' => true]);
+    Artisan::call('vaulter:webhooks:prune', ['--days' => '0', '--dry-run' => true]);
     expect(Artisan::output())->toContain('Would prune 1 completed outbox row');
 
-    Artisan::call('vaulter:prune-webhooks', ['--days' => '0']);
+    Artisan::call('vaulter:webhooks:prune', ['--days' => '0']);
 
     expect(Outbox::query()->whereKey($untouched->getKey())->exists())->toBeTrue()
         ->and(Outbox::query()->whereKey($halfway->getKey())->exists())->toBeTrue()
@@ -67,7 +67,7 @@ it('never prunes a pending or failed delivery, however old', function (): void {
         agePruneRow($row, $ancient);
     }
 
-    Artisan::call('vaulter:prune-webhooks', ['--days' => '0']);
+    Artisan::call('vaulter:webhooks:prune', ['--days' => '0']);
 
     expect(WebhookDelivery::query()->pluck('event_id')->sort()->values()->all())->toBe(['f', 'p']);
 });
@@ -77,7 +77,7 @@ it('keeps a completed row inside the retention window', function (): void {
     $recent = WebhookTestHelpers::outbox(['status' => 'completed', 'fanned_out_at' => Carbon::now()->subDays(29)]);
     $old = WebhookTestHelpers::outbox(['status' => 'completed', 'fanned_out_at' => Carbon::now()->subDays(30)]);
 
-    Artisan::call('vaulter:prune-webhooks');
+    Artisan::call('vaulter:webhooks:prune');
 
     expect(Outbox::query()->whereKey($recent->getKey())->exists())->toBeTrue()
         ->and(Outbox::query()->whereKey($old->getKey())->exists())->toBeFalse();

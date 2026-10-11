@@ -74,7 +74,7 @@ it('sweep-expire пишет activity-строку upload.expired без акто
     // as the system actor, whoever is logged in.
     Auth::logout();
 
-    $this->artisan('vaulter:sweep-uploads')->assertSuccessful();
+    $this->artisan('vaulter:uploads:sweep')->assertSuccessful();
 
     $row = ActivityTestHelpers::only(EventType::UploadExpired->value);
 

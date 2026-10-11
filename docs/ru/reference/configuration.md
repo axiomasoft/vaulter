@@ -246,7 +246,7 @@ php artisan vendor:publish --tag=vaulter-config
 |---|---|---|
 | `vaulter-drive.trash.retention_days` | `VAULTER_TRASH_RETENTION_DAYS` | `30` |
 
-Окно хранения, по истечении которого поддерево узла из корзины окончательно принудительно удаляется командой `php artisan vaulter:purge-trash`.
+Окно хранения, по истечении которого поддерево узла из корзины окончательно принудительно удаляется командой `php artisan vaulter:trash:purge`.
 
 ## Диски — `vaulter.drives.*`
 
@@ -298,6 +298,24 @@ php artisan vendor:publish --tag=vaulter-config
 |---|---|---|---|
 | `changes.retention_days` | — | `30` | Сколько дней запись доступна для чтения; `vaulter:changes:prune` удаляет более старые, а курсор позади них истекает (`410 cursor_expired`). Целое ≥ 1, иное значение валит загрузку |
 | `changes.max_page_size` | — | `1000` | Наибольший `limit` одной страницы `changes()->list()` (целое 1..10000, иное значение валит загрузку) |
+
+## Планировщик — `schedule.*`
+
+Какие команды обслуживания пакеты ставят в планировщик Laravel и как часто; список команд и
+грамматика значений — в [Команды → Планировщик](/ru/reference/commands#планировщик).
+
+| Ключ | Env | По умолчанию | Что задаёт |
+|---|---|---|---|
+| `schedule.enabled` | `VAULTER_SCHEDULE_ENABLED` | `true` | Общий выключатель всех плановых задач Vaulter (core, drive, media); поставьте `false`, если хост планирует команды сам. Только boolean |
+| `schedule.webhooks_relay` | — | `'everyMinute'` | `vaulter:webhooks:relay`; `null` выключает |
+| `schedule.webhooks_retry` | — | `'everyMinute'` | `vaulter:webhooks:retry`; `null` выключает |
+| `schedule.webhooks_prune` | — | `'dailyAt:03:10'` | `vaulter:webhooks:prune`; `null` выключает |
+| `schedule.changes_prune` | — | `'dailyAt:03:20'` | `vaulter:changes:prune`; `null` выключает |
+| `vaulter-drive.schedule.*` | — | `uploads_sweep` `hourlyAt:15`, `trash_purge` `dailyAt:03:30`, `drives_purge` `hourlyAt:25`, `revisions_prune` `dailyAt:03:40`, `scan_reconcile` `everyFiveMinutes`, `drives_recount` `null` | Задачи drive; `scan_reconcile` работает, только пока режим scan не `off`, и не зависит от `features.webhooks` |
+| `vaulter-media.schedule.*` | — | `blobs_gc` `dailyAt:04:00`, `blobs_reconcile` `weeklyOn:0,04:30` | Задачи блобов |
+
+Неверное значение останавливает boot с `InvalidConfigurationException`; ключ, пропущенный в
+массиве `schedule` хоста, получает значение пакета по умолчанию — задайте `null`, чтобы выключить задачу.
 
 ## API-маршруты — `routes.*`
 

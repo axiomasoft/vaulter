@@ -11,11 +11,11 @@ use Symfony\Component\Finder\Finder;
  * non-test files this item touched (docs/**, CONTRIBUTING.md), then reverting.
  */
 
-it('documents vaulter:prune-webhooks in commands.md, F-P2.5-01', function (): void {
+it('documents vaulter:webhooks:prune in commands.md, F-P2.5-01', function (): void {
     $doc = file_get_contents(dirname(__DIR__, 4).'/docs/reference/commands.md');
 
     expect($doc)->not->toBeFalse()
-        ->and($doc)->toContain('vaulter:prune-webhooks');
+        ->and($doc)->toContain('vaulter:webhooks:prune');
 });
 
 it('documents the four node-comment routes in rest-api.md, F-P2.5-02', function (): void {

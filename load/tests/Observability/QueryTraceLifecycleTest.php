@@ -75,15 +75,15 @@ it('flushes failed and successful Artisan invocations with independent identitie
     $output = new NullOutput;
 
     foreach ([1, 0] as $exitCode) {
-        Event::dispatch(new CommandStarting('vaulter:sweep-uploads', $input, $output));
+        Event::dispatch(new CommandStarting('vaulter:uploads:sweep', $input, $output));
         DB::connection('testing')->select('select 1');
-        Event::dispatch(new CommandFinished('vaulter:sweep-uploads', $input, $output, $exitCode));
+        Event::dispatch(new CommandFinished('vaulter:uploads:sweep', $input, $output, $exitCode));
     }
 
     $rows = r04TraceRows($this->tracePath);
 
     expect($rows)->toHaveCount(2)
-        ->and($rows[0]['command_id'])->toBe('artisan:vaulter:sweep-uploads')
+        ->and($rows[0]['command_id'])->toBe('artisan:vaulter:uploads:sweep')
         ->and($rows[0]['invocation_id'])->not->toBe($rows[1]['invocation_id'])
         ->and(array_column($rows, 'ordinal'))->toBe([1, 1]);
 });

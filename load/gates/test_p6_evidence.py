@@ -122,11 +122,11 @@ class EvidenceTest(unittest.TestCase):
         del metrics['vaulter_command_peak_memory_bytes']
         with self.assertRaisesRegex(ValueError, 'missing P6 metrics'):
             ev.validate_p6_metrics(metrics, volume)
-        body = 'vaulter_command_peak_memory_bytes{command="vaulter:relay-outbox"} 90000000\n'
+        body = 'vaulter_command_peak_memory_bytes{command="vaulter:webhooks:relay"} 90000000\n'
         self.assertNotIn('vaulter_command_peak_memory_bytes', ev.exposition_totals(body))
-        body += 'vaulter_command_peak_memory_bytes{command="vaulter:retry-webhooks"} 32000000\n'
+        body += 'vaulter_command_peak_memory_bytes{command="vaulter:webhooks:retry"} 32000000\n'
         self.assertEqual(ev.exposition_totals(body)['vaulter_command_peak_memory_bytes'], 32000000)
-        self.assertIn('command="vaulter:retry-webhooks"', live.P6_PROMETHEUS_QUERIES['vaulter_command_peak_memory_bytes'])
+        self.assertIn('command="vaulter:webhooks:retry"', live.P6_PROMETHEUS_QUERIES['vaulter_command_peak_memory_bytes'])
 
     def test_relay_minimum_includes_disjoint_completed_steady_uuids(self):
         rows = [row(uuid, source, ns, cell_id=cell)

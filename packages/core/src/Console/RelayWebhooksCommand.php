@@ -25,7 +25,7 @@ final class RelayWebhooksCommand extends Command
 {
     use OpensWriteScope;
 
-    protected $signature = 'vaulter:relay-outbox {--limit= : Max outbox rows to drain this tick}';
+    protected $signature = 'vaulter:webhooks:relay {--limit= : Max outbox rows to drain this tick}';
 
     protected $description = 'Relay pending outbox events to webhook endpoints and re-dispatch due retries (§2.11).';
 

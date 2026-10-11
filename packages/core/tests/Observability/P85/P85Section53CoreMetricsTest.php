@@ -110,13 +110,13 @@ it('records vaulter_failed_jobs_total on job failed event', function (): void {
 
 it('records vaulter_command_peak_memory_bytes for vaulter artisan commands', function (): void {
     $commands = [
-        'vaulter:sweep-uploads',
+        'vaulter:uploads:sweep',
         'vaulter:blobs:gc',
         'vaulter:blobs:reconcile',
-        'vaulter:purge-trash',
-        'vaulter:prune-webhooks',
-        'vaulter:retry-webhooks',
-        'vaulter:relay-outbox',
+        'vaulter:trash:purge',
+        'vaulter:webhooks:prune',
+        'vaulter:webhooks:retry',
+        'vaulter:webhooks:relay',
     ];
 
     foreach ($commands as $command) {
@@ -144,7 +144,7 @@ it('records prune webhook metrics when rows are reclaimed', function (): void {
         'fanned_out_at' => $threshold,
     ]);
 
-    Artisan::call('vaulter:prune-webhooks');
+    Artisan::call('vaulter:webhooks:prune');
 
     $recorder = app(MetricsRecorder::class);
     expect(fn () => $recorder->assertHistogram(name: 'vaulter_prune_duration_seconds'))->not->toThrow(Throwable::class);

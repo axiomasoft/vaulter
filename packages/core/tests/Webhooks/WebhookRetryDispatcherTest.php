@@ -9,8 +9,8 @@ use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 use Vaulter\Webhooks\WebhookRetryDispatcher;
 
 /**
- * Re-dispatch has a SINGLE owner (§2.11 / F-P1.7-05): vaulter:relay-outbox and
- * vaulter:retry-webhooks both claim a due delivery through the same
+ * Re-dispatch has a SINGLE owner (§2.11 / F-P1.7-05): vaulter:webhooks:relay and
+ * vaulter:webhooks:retry both claim a due delivery through the same
  * WebhookRetryDispatcher, which locks + re-arms next_retry_at before dispatch. Running
  * both back-to-back therefore fans a delivery out exactly once — RED on the old code
  * where each command independently dispatched the same due row.
@@ -24,8 +24,8 @@ it('does not re-dispatch the same due delivery twice across the two commands, F-
         'next_retry_at' => now()->subMinute(),
     ]);
 
-    $this->artisan('vaulter:relay-outbox')->assertSuccessful();
-    $this->artisan('vaulter:retry-webhooks')->assertSuccessful();
+    $this->artisan('vaulter:webhooks:relay')->assertSuccessful();
+    $this->artisan('vaulter:webhooks:retry')->assertSuccessful();
 
     Bus::assertDispatchedTimes(DeliverWebhook::class, 1);
 

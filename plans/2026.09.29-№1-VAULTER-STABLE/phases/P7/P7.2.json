@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P7.2",
   "title": "Канон команд vaulter:<area>:<verb>, планировщик, vaulter:install и vaulter:upgrade:inspect",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Семь команд переименованы без алиасов, пакеты регистрируют задачи в Schedule при vaulter.schedule.enabled (включая ограниченный scan reconcile независимо от webhooks), своя неинтерактивно-безопасная vaulter:install и read-only vaulter:upgrade:inspect на извлечённом UpgradePreflight.",
   "why": "OPUS 12 §1/§3, D34, N23: семь maintenance-команд никто не планирует, имена несогласованы; C09 требует расписания scan backfill/reconcile и fan-out/retry recovery с безопасным scope. Риски: пропущенная ссылка на старое имя (docs/load/CI), задача без onOneServer на нескольких инстансах, install, перезаписывающий конфиг хоста.",
   "scope": {
@@ -294,6 +294,51 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-11T13:58:13Z"
+  "result": {
+    "started_at": "2026-10-11T16:10:28Z",
+    "finished_at": "2026-10-11T16:54:39Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "2f00a0be-432e-44c4-affa-8e579dcc338b"
+    },
+    "notes": "Renames, schedulers (core/drive/media), InstallCommand, upgrade:inspect + UpgradePreflight done; golden core public-api additive (ScheduleConfig, ScheduleFrequency). V7 impact not executed (phase run P7). Hard risk: operations/public API; task:review recommended. Grok 4.7 review: 2 findings fixed (docs).",
+    "deviations": [
+      "check-profile.json written after product edits; installer discovers config tags via publishableGroups (core must not name sibling packages); README/troubleshooting install wording and ReleaseReadinessGuardTest updated; drive/media tests/Pest.php and tests/Pest.php register Console dirs; documents PurgeTrashCascadeTest and load/** refs renamed"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-11T16:54:39Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-11T16:54:39Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-11T16:54:39Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-11T16:54:39Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-11T16:54:39Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-11T16:54:39Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-11T16:54:40Z"
 }

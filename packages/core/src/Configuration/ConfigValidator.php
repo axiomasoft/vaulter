@@ -17,6 +17,7 @@ use Vaulter\Exceptions\Profiles\InvalidProfileException;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileRegistry;
+use Vaulter\Providers\SchedulingRegistrar;
 
 final readonly class ConfigValidator
 {
@@ -52,6 +53,9 @@ final readonly class ConfigValidator
         $config->webhooks()->relayFanoutChunk();
         $config->changes()->retentionDays();
         $config->changes()->maxPageSize();
+        $schedule = new ScheduleConfig($this->config);
+        $schedule->enabled();
+        $schedule->frequencies('vaulter', SchedulingRegistrar::KEYS);
         $config->sharing()->tokenGenerator();
         foreach ([
             'drive',

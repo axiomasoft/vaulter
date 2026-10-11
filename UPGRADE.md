@@ -6,6 +6,32 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Command names, scheduler and `vaulter:install` (PLAN2.D71–D70)
+
+The seven maintenance commands were renamed without aliases; options and behaviour are unchanged.
+Update crontabs, supervisor units, CI and host `Schedule::command(...)` lines.
+
+| Was | Now |
+|---|---|
+| `vaulter:relay-outbox` | `vaulter:webhooks:relay` |
+| `vaulter:retry-webhooks` | `vaulter:webhooks:retry` |
+| `vaulter:prune-webhooks` | `vaulter:webhooks:prune` |
+| `vaulter:sweep-uploads` | `vaulter:uploads:sweep` |
+| `vaulter:purge-trash` | `vaulter:trash:purge` |
+| `vaulter:scan-reconcile` | `vaulter:scan:reconcile` |
+| `vaulter:scan-rescan` | `vaulter:scan:rescan` |
+
+The packages now register these tasks on the scheduler themselves while
+`vaulter.schedule.enabled` (`VAULTER_SCHEDULE_ENABLED`, default `true`). Remove your own
+`Schedule::command(...)` lines for them, or set `VAULTER_SCHEDULE_ENABLED=false` to keep scheduling
+them yourself. Tasks use `onOneServer()`, which needs a cache store shared by all instances. A published
+config without a `schedule` block gets the defaults; a key missing from a partial block gets the package default (`null` turns a task off).
+
+`vaulter:install` is no longer the spatie package-tools command: it publishes only the config of
+every installed package (no migrations tag), never edits `config/*.php` or `.env`, and runs migrations
+only with `--migrate` or an interactive yes. New: `vaulter:upgrade:inspect [--json]` reports 0.2 data
+that blocks the 0.3 upgrade migration.
+
 ### P6 audit: drive visibility and creation permissions (D59, D62–D65)
 
 Search, starred, trash and changes HTTP routes previously returned an empty result or a cursor

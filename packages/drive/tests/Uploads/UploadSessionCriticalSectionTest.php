@@ -119,14 +119,14 @@ it('expire() перечитывает статус под локом и не т�
  * (пропуск залоченной сессии требует реального второго соединения — он в
  * tests/Concurrency/TusPatchVsSweepRaceTest.php, PG-лейн).
  */
-it('vaulter:sweep-uploads реклеймит стухшую сессию и чистит staged, R-02', function (): void {
+it('vaulter:uploads:sweep реклеймит стухшую сессию и чистит staged, R-02', function (): void {
     $storage = UploadTestHelpers::storage();
     $session = UploadTestHelpers::session($storage, totalSizeBytes: 100);
 
     app(StagedUpload::class)->append($session, UploadTestHelpers::streamFor('0123456789'), 0);
     app(VaulterDatabase::class)->write(fn () => $session->forceFill(['expires_at' => Carbon::now()->subHour()])->save());
 
-    $this->artisan('vaulter:sweep-uploads')->assertSuccessful();
+    $this->artisan('vaulter:uploads:sweep')->assertSuccessful();
 
     $after = UploadSession::query()->findOrFail($session->getKey());
 

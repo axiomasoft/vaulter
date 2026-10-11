@@ -109,7 +109,7 @@ class ProductOperationRunnerTest(unittest.TestCase):
         result = runner.execute(cell, fixture)
 
         self.assertTrue(any("expires_at = now() - interval '1 minute'" in statement for statement in sql))
-        self.assertEqual(artisan_calls, [['vaulter:sweep-uploads']])
+        self.assertEqual(artisan_calls, [['vaulter:uploads:sweep']])
         self.assertEqual(result['command_exit'], 0)
 
     def test_enospc_retry_has_a_distinct_request_identity(self):

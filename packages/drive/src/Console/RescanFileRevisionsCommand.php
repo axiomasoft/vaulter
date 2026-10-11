@@ -35,7 +35,7 @@ final class RescanFileRevisionsCommand extends Command
 
     private bool $withinMaintenanceScope = false;
 
-    protected $signature = 'vaulter:scan-rescan {--tenant=} {--drive=} {--all-tenants} {--reason=} {--revision=*} {--after=} {--limit=100} {--request-id=} {--rescan} {--retry-failed} {--activate-policy} {--dry-run} {--json}';
+    protected $signature = 'vaulter:scan:rescan {--tenant=} {--drive=} {--all-tenants} {--reason=} {--revision=*} {--after=} {--limit=100} {--request-id=} {--rescan} {--retry-failed} {--activate-policy} {--dry-run} {--json}';
 
     protected $description = 'Activate scan policy or record bounded durable scan requests.';
 
@@ -54,8 +54,8 @@ final class RescanFileRevisionsCommand extends Command
         if (app(TenancyConfig::class)->enabled() && $tenant === null && !$all) {
             throw new InvalidArgumentException('Tenant scope is required.');
         }
-        if ($reason === null && !$all && $command->getName() === 'vaulter:scan-reconcile') {
-            $reason = 'vaulter:scan-reconcile';
+        if ($reason === null && !$all && $command->getName() === 'vaulter:scan:reconcile') {
+            $reason = 'vaulter:scan:reconcile';
         }
         if (!$command->option('dry-run') && (!is_string($reason) || trim($reason) === '' || strlen($reason) > 191)) {
             throw new InvalidArgumentException('A nonempty maintenance reason is required.');
@@ -156,7 +156,7 @@ final class RescanFileRevisionsCommand extends Command
                     throw new InvalidArgumentException('Selected revision is outside the maintenance scope.');
                 }
             }
-            $out = self::summary('vaulter:scan-rescan', (bool) $this->option('dry-run'));
+            $out = self::summary('vaulter:scan:rescan', (bool) $this->option('dry-run'));
             $out['request_id'] = $request;
             $last = null;
             foreach ($drives->limit($scope['limit'] + 1)->get() as $drive) {

@@ -41,8 +41,8 @@ use Vaulter\Webhooks\WebhookSigner;
  *   - 2xx        → delivery 'delivered'; the endpoint's failure run is cleared.
  *   - anything   → attempts++, last_error recorded. While the schedule has entries the
  *     else           delivery is parked 'failed' with next_retry_at (schedule delay with
- *                    jitter) and the job returns; the relay tick (vaulter:relay-outbox /
- *                    vaulter:retry-webhooks) re-dispatches it once due. Past the last
+ *                    jitter) and the job returns; the relay tick (vaulter:webhooks:relay /
+ *                    vaulter:webhooks:retry) re-dispatches it once due. Past the last
  *                    entry it is parked 'dead' (DLQ).
  *   Redirects, 3xx, 4xx and 5xx all count as failures; only 2xx is success.
  *

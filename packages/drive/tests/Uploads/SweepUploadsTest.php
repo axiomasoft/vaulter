@@ -29,7 +29,7 @@ it('sweep помечает протухшие открытые сессии expi
     $stagedKey = app(StagedUpload::class)->keyFor($stale);
     Storage::disk('local')->assertExists($stagedKey);
 
-    $this->artisan('vaulter:sweep-uploads')->assertSuccessful();
+    $this->artisan('vaulter:uploads:sweep')->assertSuccessful();
 
     expect($stale->refresh()->status)->toBe(UploadStatus::Expired);
     Storage::disk('local')->assertMissing($stagedKey);
@@ -41,7 +41,7 @@ it('sweep НЕ трогает свежие (не протухшие) сесси�
     $fresh = UploadTestHelpers::session($storage, totalSizeBytes: 100);
     app(VaulterDatabase::class)->write(fn () => $fresh->forceFill(['expires_at' => Carbon::now()->addHour()])->save());
 
-    $this->artisan('vaulter:sweep-uploads')->assertSuccessful();
+    $this->artisan('vaulter:uploads:sweep')->assertSuccessful();
 
     expect($fresh->refresh()->status)->toBe(UploadStatus::Initiated);
 });
@@ -55,7 +55,7 @@ it('sweep НЕ трогает уже завершённые/aborted сессии
         'expires_at' => Carbon::now()->subDay(),
     ])->save());
 
-    $this->artisan('vaulter:sweep-uploads')->assertSuccessful();
+    $this->artisan('vaulter:uploads:sweep')->assertSuccessful();
 
     // A terminal session past its TTL is NOT swept (the sweeper only acts on open ones).
     expect($committed->refresh()->status)->toBe(UploadStatus::Committed);
@@ -108,7 +108,7 @@ it('sweep сметает застрявшую Assembled-сессию за TTL и
     $stagedKey = app(StagedUpload::class)->keyFor($stuck);
     Storage::disk('local')->assertExists($stagedKey);
 
-    $this->artisan('vaulter:sweep-uploads')->assertSuccessful();
+    $this->artisan('vaulter:uploads:sweep')->assertSuccessful();
 
     expect($stuck->refresh()->status)->toBe(UploadStatus::Expired);
     Storage::disk('local')->assertMissing($stagedKey);
@@ -124,7 +124,7 @@ it('sweep НЕ трогает свежую Assembled-сессию в преде�
 
     $stagedKey = app(StagedUpload::class)->keyFor($fresh);
 
-    $this->artisan('vaulter:sweep-uploads')->assertSuccessful();
+    $this->artisan('vaulter:uploads:sweep')->assertSuccessful();
 
     expect($fresh->refresh()->status)->toBe(UploadStatus::Assembled);
     Storage::disk('local')->assertExists($stagedKey);
@@ -140,7 +140,7 @@ it('sweep абортит S3-multipart части протухшей сессии
 
     Storage::disk('local')->assertExists("tmp/uploads/{$stale->upload_id}.parts/1");
 
-    $this->artisan('vaulter:sweep-uploads')->assertSuccessful();
+    $this->artisan('vaulter:uploads:sweep')->assertSuccessful();
 
     Storage::disk('local')->assertMissing("tmp/uploads/{$stale->upload_id}.parts/1");
     expect($stale->refresh()->status)->toBe(UploadStatus::Expired);

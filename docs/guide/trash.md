@@ -1,6 +1,6 @@
 ---
 title: Trash & restore
-description: The Vaulter trash lifecycle — soft-delete, restore, force-delete, retention windows and the vaulter:purge-trash command.
+description: The Vaulter trash lifecycle — soft-delete, restore, force-delete, retention windows and the vaulter:trash:purge command.
 outline: deep
 ---
 
@@ -9,7 +9,7 @@ outline: deep
 Deleting a node in the Drive is **reversible** by default: `trash()` soft-deletes
 the node (and its subtree), which can be listed, restored, or — once its retention
 window elapses — permanently purged. This page covers that lifecycle and the
-`vaulter:purge-trash` command that enforces retention.
+`vaulter:trash:purge` command that enforces retention.
 
 ::: tip Two kinds of delete
 `trash()` is recoverable (sets `trashed_at`). `forceDelete()` is permanent and
@@ -22,7 +22,7 @@ purge apply your retention policy — see [Drive · forceDelete](/guide/drive#fo
 ```
 live node ──trash()──▶ trashed (trashed_at set) ──restore()──▶ live node
                               │
-                              └── retention elapses ──▶ vaulter:purge-trash ──▶ gone
+                              └── retention elapses ──▶ vaulter:trash:purge ──▶ gone
 ```
 
 A trashed node keeps its row (and subtree) until either it is restored or its
@@ -108,10 +108,10 @@ The value is read through `Vaulter\Drive\Configuration\DriveConfig::trashRetenti
 ## Scheduled purge
 
 Permanently delete trashed nodes whose retention window has elapsed with the
-**`vaulter:purge-trash`** Artisan command:
+**`vaulter:trash:purge`** Artisan command:
 
 ```bash
-php artisan vaulter:purge-trash
+php artisan vaulter:trash:purge
 ```
 
 It finds the trash **roots** whose `trashed_at` is older than
@@ -130,10 +130,10 @@ at 0):
 
 ```bash
 # Purge anything trashed more than 7 days ago, ignoring the config default.
-php artisan vaulter:purge-trash --days=7
+php artisan vaulter:trash:purge --days=7
 
 # Purge everything currently in the trash.
-php artisan vaulter:purge-trash --days=0
+php artisan vaulter:trash:purge --days=0
 ```
 
 ### Scheduling it
@@ -144,19 +144,19 @@ Run the purge on a schedule so retention is enforced automatically:
 ```php [routes/console.php]
 use Illuminate\Support\Facades\Schedule;
 
-Schedule::command('vaulter:purge-trash')->daily();
+Schedule::command('vaulter:trash:purge')->daily();
 ```
 
 ```php [Console Kernel]
 protected function schedule(Schedule $schedule): void
 {
-    $schedule->command('vaulter:purge-trash')->daily();
+    $schedule->command('vaulter:trash:purge')->daily();
 }
 ```
 :::
 
 ::: warning Purge releases bytes, GC reclaims them
-`vaulter:purge-trash` detaches the version↔blob edges, but the underlying CAS
+`vaulter:trash:purge` detaches the version↔blob edges, but the underlying CAS
 objects are reclaimed by the separate **blob GC** pass. Schedule both — see
 [Blob GC](/guide/recipes).
 :::

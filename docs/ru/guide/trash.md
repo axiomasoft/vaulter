@@ -1,6 +1,6 @@
 ---
 title: Корзина и восстановление
-description: "Жизненный цикл корзины Vaulter — мягкое удаление, восстановление, безвозвратное удаление, окна хранения и команда vaulter:purge-trash."
+description: "Жизненный цикл корзины Vaulter — мягкое удаление, восстановление, безвозвратное удаление, окна хранения и команда vaulter:trash:purge."
 outline: deep
 ---
 
@@ -9,7 +9,7 @@ outline: deep
 Удаление узла в Drive по умолчанию **обратимо**: `trash()` мягко удаляет
 узел (и его поддерево), который затем можно вывести списком, восстановить или —
 когда истечёт окно хранения — безвозвратно вычистить. Эта страница описывает
-такой жизненный цикл и команду `vaulter:purge-trash`, которая применяет политику хранения.
+такой жизненный цикл и команду `vaulter:trash:purge`, которая применяет политику хранения.
 
 ::: tip Два вида удаления
 `trash()` обратимо (выставляет `trashed_at`). `forceDelete()` безвозвратно и
@@ -22,7 +22,7 @@ outline: deep
 ```
 живой узел ──trash()──▶ в корзине (trashed_at выставлен) ──restore()──▶ живой узел
                               │
-                              └── истекло хранение ──▶ vaulter:purge-trash ──▶ удалён
+                              └── истекло хранение ──▶ vaulter:trash:purge ──▶ удалён
 ```
 
 Узел в корзине сохраняет свою строку (и поддерево) до тех пор, пока его либо не
@@ -103,10 +103,10 @@ $drive->forceDelete($node);    // безвозвратно — диспатчи�
 ## Плановая чистка
 
 Безвозвратно удалить узлы в корзине, у которых истекло окно хранения, можно
-Artisan-командой **`vaulter:purge-trash`**:
+Artisan-командой **`vaulter:trash:purge`**:
 
 ```bash
-php artisan vaulter:purge-trash
+php artisan vaulter:trash:purge
 ```
 
 Она находит **корни** корзины, чей `trashed_at` старше
@@ -124,10 +124,10 @@ php artisan vaulter:purge-trash
 
 ```bash
 # Вычистить всё, что попало в корзину более 7 дней назад, игнорируя значение из конфига.
-php artisan vaulter:purge-trash --days=7
+php artisan vaulter:trash:purge --days=7
 
 # Вычистить всё, что сейчас в корзине.
-php artisan vaulter:purge-trash --days=0
+php artisan vaulter:trash:purge --days=0
 ```
 
 ### Планирование
@@ -138,19 +138,19 @@ php artisan vaulter:purge-trash --days=0
 ```php [routes/console.php]
 use Illuminate\Support\Facades\Schedule;
 
-Schedule::command('vaulter:purge-trash')->daily();
+Schedule::command('vaulter:trash:purge')->daily();
 ```
 
 ```php [Console Kernel]
 protected function schedule(Schedule $schedule): void
 {
-    $schedule->command('vaulter:purge-trash')->daily();
+    $schedule->command('vaulter:trash:purge')->daily();
 }
 ```
 :::
 
 ::: warning Чистка освобождает байты, GC их возвращает
-`vaulter:purge-trash` отвязывает рёбра версия↔блоб, но сами CAS-объекты
+`vaulter:trash:purge` отвязывает рёбра версия↔блоб, но сами CAS-объекты
 возвращает отдельный проход **blob GC**. Планируйте оба — см.
 [Blob GC](/ru/guide/recipes).
 :::

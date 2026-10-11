@@ -17,7 +17,7 @@ on, the recorder writes one `v_outbox` row for the occurrence **in that transact
 - your Laravel listeners run only after the commit; a failing listener is reported and
   never undoes the change.
 
-The `vaulter:relay-outbox` command then fans each pending row out into deliveries.
+The `vaulter:webhooks:relay` command then fans each pending row out into deliveries.
 
 ## Delivery guarantees
 
@@ -32,12 +32,12 @@ eligible endpoint and queues a job per delivery:
   lapses and continues after the cursor; a relay that lost its lease writes nothing, and
   `UNIQUE(event_id, endpoint_id)` backs this up. You may run several relays at once.
 - **Jobs are queued after the rows commit.** A job lost after that is re-queued by the
-  retry sweep (`vaulter:retry-webhooks`, also run by `vaulter:relay-outbox`) once the
+  retry sweep (`vaulter:webhooks:retry`, also run by `vaulter:webhooks:relay`) once the
   delivery has waited `webhooks.relay.claim_seconds` without being picked up.
 - **HTTP is at-least-once.** A delivery is retried on failure and can arrive twice if
   your acknowledgement is lost: deduplicate on the envelope `id`. Deliveries are not
   ordered.
-- **Prune deletes only finished work.** `vaulter:prune-webhooks` removes `completed`
+- **Prune deletes only finished work.** `vaulter:webhooks:prune` removes `completed`
   outbox rows and `delivered`/`dead` deliveries older than `webhooks.retention_days`; a
   `pending` row or a `pending`/`failed` delivery stays however old it is. Pruned rows are
   gone for good — nothing can replay them.

@@ -13,7 +13,7 @@ use Vaulter\Repositories\Webhooks\WebhookDeliveryStoreRepository;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 
 /**
- * vaulter:prune-webhooks (master plan §2.11 / D14 / M3b): the reliability-channel
+ * vaulter:webhooks:prune (master plan §2.11 / D14 / M3b): the reliability-channel
  * retention sweep reclaims SETTLED audit history past its window. The contract pinned
  * here, in priority order:
  *
@@ -28,7 +28,7 @@ use Vaulter\Tests\Webhooks\WebhookTestHelpers;
  *  - --dry-run reports the EXACT counts a real run would remove and deletes nothing.
  *  - The whole surface is feature-gated: 'reliability' off ⇒ the command no-ops with a
  *    notice and SUCCESS, touching no table.
- *  - --days parses like vaulter:purge-trash: negative ⇒ 0, non-numeric ⇒ config default.
+ *  - --days parses like vaulter:trash:purge: negative ⇒ 0, non-numeric ⇒ config default.
  *
  * The base Feature suite runs with 'reliability' ON (config default), so the v_outbox /
  * v_webhook_* tables exist. The chunking + boundary-precision cases call the store-repo
@@ -61,7 +61,7 @@ beforeEach(function (): void {
  */
 function runPrune(array $arguments = []): string
 {
-    $exit = Artisan::call('vaulter:prune-webhooks', $arguments);
+    $exit = Artisan::call('vaulter:webhooks:prune', $arguments);
 
     expect($exit)->toBe(Command::SUCCESS);
 
@@ -88,7 +88,7 @@ it('1) keeps a pending outbox row with NULL fanned_out_at and an ancient created
         'created_at' => Carbon::now()->subYears(5),
     ]);
 
-    $this->artisan('vaulter:prune-webhooks', ['--days' => '0'])
+    $this->artisan('vaulter:webhooks:prune', ['--days' => '0'])
         ->expectsOutputToContain('Pruned 0 completed outbox rows')
         ->assertExitCode(Command::SUCCESS);
 
@@ -104,7 +104,7 @@ it('2) never deletes a pending outbox row even with an artificially old fanned_o
         'created_at' => Carbon::now()->subDays(100),
     ]);
 
-    $this->artisan('vaulter:prune-webhooks', ['--days' => '0'])
+    $this->artisan('vaulter:webhooks:prune', ['--days' => '0'])
         ->expectsOutputToContain('Pruned 0 completed outbox rows')
         ->assertExitCode(Command::SUCCESS);
 
@@ -156,7 +156,7 @@ it('5) prunes a completed outbox row at the threshold but keeps one inside the w
         'created_at' => Carbon::now()->subDays(40),
     ]);
 
-    $this->artisan('vaulter:prune-webhooks')
+    $this->artisan('vaulter:webhooks:prune')
         ->expectsOutputToContain('Pruned 1 completed outbox row')
         ->assertExitCode(Command::SUCCESS);
 
@@ -271,7 +271,7 @@ it('9) the dry-run count equals the real deletion count over the same fixture (n
     expect($outboxDryCount)->toBe(3)
         ->and($deliveryDryCount)->toBe(4);
 
-    $this->artisan('vaulter:prune-webhooks')->assertExitCode(Command::SUCCESS);
+    $this->artisan('vaulter:webhooks:prune')->assertExitCode(Command::SUCCESS);
 
     // Everything the dry-run promised is now gone; nothing of either kind remains.
     expect(Outbox::query()->count())->toBe(0)
@@ -342,7 +342,7 @@ it('12) no-ops with a notice and SUCCESS when the reliability feature is off, to
 
     config()->set('vaulter.features.webhooks', false);
 
-    $this->artisan('vaulter:prune-webhooks', ['--days' => '0'])
+    $this->artisan('vaulter:webhooks:prune', ['--days' => '0'])
         ->expectsOutputToContain('Reliability feature is off')
         ->assertExitCode(Command::SUCCESS);
 

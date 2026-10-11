@@ -74,7 +74,7 @@ it('PATCH и sweep одной сессии: победитель ровно од
     $pids = [];
 
     // Актор 0 — клиентский PATCH (дошлёт свой чанк на offset=prefixLen).
-    // Актор 1 — фоновый уборщик (vaulter:sweep-uploads по той же сессии).
+    // Актор 1 — фоновый уборщик (vaulter:uploads:sweep по той же сессии).
     foreach ([0, 1] as $actor) {
         $pid = pcntl_fork();
 
@@ -108,7 +108,7 @@ it('PATCH и sweep одной сессии: победитель ровно од
                     // Пусть PATCH успеет войти в критическую секцию и начать писать байты.
                     usleep($sweepDelayUs);
 
-                    Artisan::call('vaulter:sweep-uploads');
+                    Artisan::call('vaulter:uploads:sweep');
 
                     $outcome = 'sweep:'.trim(Artisan::output());
                 }

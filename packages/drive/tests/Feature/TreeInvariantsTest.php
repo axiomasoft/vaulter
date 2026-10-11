@@ -338,7 +338,7 @@ it('purges trash under the tree lock taken before the trashed root row', functio
         $queries[] = $query->sql;
     });
 
-    $this->artisan('vaulter:purge-trash', ['--days' => 1])->assertSuccessful();
+    $this->artisan('vaulter:trash:purge', ['--days' => 1])->assertSuccessful();
 
     $treeLock = array_key_first(array_filter($queries, static fn (string $sql): bool => str_starts_with($sql, 'select "id" from "v_drives"')));
     $rootLock = array_key_first(array_filter($queries, static fn (string $sql): bool => str_contains($sql, 'from "v_nodes"') && str_contains($sql, '"trashed_at" <=') && str_contains($sql, 'limit 1')));

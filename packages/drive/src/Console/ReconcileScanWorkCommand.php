@@ -21,7 +21,7 @@ final class ReconcileScanWorkCommand extends Command
 
     private bool $withinMaintenanceScope = false;
 
-    protected $signature = 'vaulter:scan-reconcile {--tenant=} {--drive=} {--all-tenants} {--reason=} {--limit=100} {--max-seconds=30} {--dry-run} {--json}';
+    protected $signature = 'vaulter:scan:reconcile {--tenant=} {--drive=} {--all-tenants} {--reason=} {--limit=100} {--max-seconds=30} {--dry-run} {--json}';
 
     protected $description = 'Recover bounded scan intents, backfill discovery and committed upload cleanup.';
 
@@ -48,7 +48,7 @@ final class ReconcileScanWorkCommand extends Command
             }
             $ids = RescanFileRevisionsCommand::drives($scope)->select('id')->reorder();
             $dryRun = (bool) $this->option('dry-run');
-            $out = RescanFileRevisionsCommand::summary('vaulter:scan-reconcile', $dryRun);
+            $out = RescanFileRevisionsCommand::summary('vaulter:scan:reconcile', $dryRun);
             $result = $backfill->expand($scope['limit'], $seconds, $dryRun, $ids);
             $stalled = $result['stalled_configuration'];
             $out = array_replace($out, $result);

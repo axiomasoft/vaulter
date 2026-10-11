@@ -275,7 +275,7 @@ it('retention purge reports a failed root exits one and still physically commits
     lifecycleBoundaryInjectFailure($failed, new RuntimeException('controlled retention failure'));
     Log::spy();
 
-    $this->artisan('vaulter:purge-trash', ['--days' => 30])->assertExitCode(1);
+    $this->artisan('vaulter:trash:purge', ['--days' => 30])->assertExitCode(1);
     expect(Node::query()->whereKey($failed->id)->exists())->toBeTrue()
         ->and(Node::query()->whereKey($later->id)->exists())->toBeFalse()
         ->and(lifecycleBoundaryEdges($failedRevision->fresh()))->toBe($edges)

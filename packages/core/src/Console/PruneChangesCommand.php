@@ -14,7 +14,7 @@ use Vaulter\Repositories\Changes\ChangeHeadRepository;
 
 /**
  * Delete change-journal entries older than the retention window (PLAN2.D50), drive by
- * drive, in batches of {@see self::BATCH}. Schedule it daily, like vaulter:prune-webhooks.
+ * drive, in batches of {@see self::BATCH}. Schedule it daily, like vaulter:webhooks:prune.
  *
  * Each batch holds the drive's journal head FOR UPDATE and raises pruned_through in the
  * same transaction as its DELETE, so a reader either sees the entries or learns that

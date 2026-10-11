@@ -51,6 +51,7 @@ uses(TestCase::class, RefreshDatabase::class)->in(
     $core.'/Sharing',
     $core.'/Support',
     $core.'/Configuration',
+    $core.'/Console',
     $core.'/Webhooks',
     $core.'/WriteGuard',
 );

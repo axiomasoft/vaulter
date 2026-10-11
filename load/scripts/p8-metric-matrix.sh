@@ -15,7 +15,7 @@ curl -fsS "${APP_URL}/load/metrics-snapshot" >/dev/null || true
 
 if command -v docker >/dev/null 2>&1; then
   docker compose -f docker-compose.load.yml exec -T app \
-    php vendor/bin/testbench vaulter:relay-outbox --max=1 >/dev/null 2>&1 || true
+    php vendor/bin/testbench vaulter:webhooks:relay --max=1 >/dev/null 2>&1 || true
 fi
 
 METRICS="$(curl -fsS "${APP_URL}/metrics?run_id=${RUN_ID}")"

@@ -64,7 +64,7 @@ from `superseded_at`, the moment a revision stopped being the head.
 Pruning runs as `php artisan vaulter:revisions:prune [--drive=ID ...] [--dry-run]` (system actor
 `revision-retention`, files in batches of 500) or as the queued
 `Vaulter\Drive\Jobs\PruneFileRevisionsJob` for one drive. Schedule it daily, like
-`vaulter:purge-trash`:
+`vaulter:trash:purge`:
 
 ```php
 Schedule::command('vaulter:revisions:prune')->daily();
@@ -340,18 +340,18 @@ Two paths reclaim a session — both release the protocol-side state (S3
 
 - **Abort** (`DELETE /v1/uploads/{upload}`) → terminal state `Aborted` (the client
   cancelled). Idempotent — a terminal session is returned untouched.
-- **Sweep** (`php artisan vaulter:sweep-uploads`) → terminal state `Expired`. The command scans
+- **Sweep** (`php artisan vaulter:uploads:sweep`) → terminal state `Expired`. The command scans
   the **open** sessions (`initiated` | `uploading`) whose `expires_at` has elapsed and reclaims
   each. Schedulable.
 
 ```bash
 # Reclaim stale sessions past their TTL (staged temp + S3 multipart cleaned).
-php artisan vaulter:sweep-uploads
+php artisan vaulter:uploads:sweep
 ```
 
 ```php
 // Schedule it (e.g. app/Console/Kernel.php or routes/console.php):
-Schedule::command('vaulter:sweep-uploads')->hourly();
+Schedule::command('vaulter:uploads:sweep')->hourly();
 ```
 
 ::: tip Pair with an S3 lifecycle rule

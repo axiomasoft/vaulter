@@ -8,6 +8,7 @@ use Illuminate\Console\Application as Artisan;
 use Illuminate\Contracts\Foundation\Application;
 use Vaulter\Console\ErrorsReferenceCommand;
 use Vaulter\Console\EventsReferenceCommand;
+use Vaulter\Console\InstallCommand;
 use Vaulter\Console\LegacyFanoutCommand;
 use Vaulter\Console\MakeProfileCommand;
 use Vaulter\Console\PruneChangesCommand;
@@ -16,6 +17,7 @@ use Vaulter\Console\RedeliverWebhooksCommand;
 use Vaulter\Console\RelayWebhooksCommand;
 use Vaulter\Console\ResetChangesCommand;
 use Vaulter\Console\RetryWebhooksCommand;
+use Vaulter\Console\UpgradeInspectCommand;
 
 final class ConsoleRegistrar
 {
@@ -33,6 +35,8 @@ final class ConsoleRegistrar
                 RedeliverWebhooksCommand::class,
                 PruneChangesCommand::class,
                 ResetChangesCommand::class,
+                InstallCommand::class,
+                UpgradeInspectCommand::class,
             ]);
         });
     }

@@ -26,7 +26,7 @@ final class PurgeTrashCommand extends Command
 {
     use OpensWriteScope;
 
-    protected $signature = 'vaulter:purge-trash {--days= : Override the retention window}';
+    protected $signature = 'vaulter:trash:purge {--days= : Override the retention window}';
 
     protected $description = 'Permanently delete trashed nodes whose retention window has elapsed.';
 

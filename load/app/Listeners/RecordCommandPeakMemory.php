@@ -14,13 +14,13 @@ final class RecordCommandPeakMemory
 {
     /** @var list<string> Closed §9 vocabulary; unknown artisan names are dropped. */
     private const array COMMANDS = [
-        'vaulter:sweep-uploads',
+        'vaulter:uploads:sweep',
         'vaulter:blobs:gc',
         'vaulter:blobs:reconcile',
-        'vaulter:purge-trash',
-        'vaulter:prune-webhooks',
-        'vaulter:retry-webhooks',
-        'vaulter:relay-outbox',
+        'vaulter:trash:purge',
+        'vaulter:webhooks:prune',
+        'vaulter:webhooks:retry',
+        'vaulter:webhooks:relay',
     ];
 
     public function __construct(

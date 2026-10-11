@@ -74,11 +74,11 @@ HTTP_OP_TO_METRIC = {
 }
 
 ARTISAN_OP = {
-    'OP-40': 'vaulter:relay-outbox',
-    'OP-42': 'vaulter:retry-webhooks',
-    'OP-43': 'vaulter:prune-webhooks',
-    'OP-44': 'vaulter:sweep-uploads',
-    'OP-45': 'vaulter:purge-trash',
+    'OP-40': 'vaulter:webhooks:relay',
+    'OP-42': 'vaulter:webhooks:retry',
+    'OP-43': 'vaulter:webhooks:prune',
+    'OP-44': 'vaulter:uploads:sweep',
+    'OP-45': 'vaulter:trash:purge',
     'OP-46': 'vaulter:gc-blobs',
     'OP-47': 'vaulter:reconcile-blobs',
 }

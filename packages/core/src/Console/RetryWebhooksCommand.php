@@ -10,7 +10,7 @@ use Vaulter\Webhooks\WebhookRetryDispatcher;
 
 /**
  * Re-queues due failed webhook deliveries (master plan §2.11 / D14 / M3b). A focused
- * companion to vaulter:relay-outbox: where the relay both drains the outbox AND
+ * companion to vaulter:webhooks:relay: where the relay both drains the outbox AND
  * re-arms retries, this command ONLY re-dispatches the deliveries whose backoff window
  * has elapsed (status in pending|failed, next_retry_at <= now). Schedulable on its own
  * cadence for a host that runs the relay as a long-lived worker but wants a separate
@@ -25,7 +25,7 @@ final class RetryWebhooksCommand extends Command
 {
     use OpensWriteScope;
 
-    protected $signature = 'vaulter:retry-webhooks';
+    protected $signature = 'vaulter:webhooks:retry';
 
     protected $description = 'Re-dispatch webhook deliveries whose backoff window has elapsed (§2.11).';
 

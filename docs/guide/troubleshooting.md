@@ -186,7 +186,7 @@ collide with Vaulter's.
   renumber them.
 
   ```bash
-  php artisan vaulter:install        # publishes config + migrations, offers to run them
+  php artisan vaulter:install        # publishes config, offers to run the migrations
   # or, manually:
   php artisan vendor:publish --tag=vaulter-config
   php artisan vendor:publish --tag=vaulter-migrations
