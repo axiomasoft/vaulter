@@ -4,6 +4,9 @@
   "description": "Vue 3 + TypeScript components, composables and API client for Vaulter.",
   "license": "MIT",
   "type": "module",
+  "vaulter": {
+    "api": "1"
+  },
   "keywords": [
     "vue",
     "tiptap",

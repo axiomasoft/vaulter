@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P7.5",
   "title": "Metapackage, export-ignore, release manifest, сборка артефактов, consumer-smoke, split-проверки, AzGuard-исключение",
-  "status": "in_progress",
+  "status": "done",
   "summary": "packages/vaulter metapackage, .gitattributes export-ignore, release/packages.json, scripts/release/{build-artifacts.php, consumer-smoke.sh, verify-split-tags.sh, check-versions.php} с офлайн unittest; monorepo-split.yml синхронизирован с manifest и проверяет теги; vaulter-azgard исключается до тега AzGuard.",
   "why": "OPUS 12 §6–§7, D02 п.2, D36, D70: релиз должен доказывать установку собранных архивов и единый тег всех split. Риски: dist с tests/, metapackage, скрывающий недостающий require, dev-* в релизе, тег на чужом commit.",
   "scope": {
@@ -206,12 +206,36 @@
   },
   "result": {
     "started_at": "2026-10-11T19:37:35Z",
+    "finished_at": "2026-10-11T20:19:51Z",
     "executor": {
       "provider": "claude-code",
       "model": "claude-sonnet-5-5",
       "effort": "high",
       "session": "92cb1b41-9bc5-4409-8cd1-8d1af77181ad"
-    }
+    },
+    "notes": "Метапакет, export-ignore (+pint.json/rector.php), release/packages.json, scripts/release/*, verify-tags в monorepo-split.yml, vaulter.api в @vaulter/vue, docs/CHANGELOG/UPGRADE. Ревью grok/grok-4.7/high: раунд 1 — 4 находки исправлены одной коррекцией, 1 отклонена; раунд 2 — без находок. V5 (build-artifacts + consumer-smoke, сеть) не исполнено, фазовый прогон P7. Корневой composer.json не менялся (path @dev оставлен). AzGuard require не менялся (O-4); vaulter-azgard исключён из релиза.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-11T20:19:51Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-11T20:19:51Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-11T20:19:51Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-11T20:19:51Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-11T19:37:35Z"
+  "updated_at": "2026-10-11T20:19:51Z"
 }

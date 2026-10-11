@@ -7,9 +7,9 @@ name: Monorepo split (PHP)
 # by release-npm.yml.
 #
 # PREREQUISITES (one-time, NOT done here):
-#   1. Create the empty target repos: axioma-studio/vaulter-core, axioma-studio/vaulter-media,
-#      axioma-studio/vaulter-drive, axioma-studio/vaulter-documents, axioma-studio/vaulter-filament,
-#      axioma-studio/vaulter-azgard.
+#   1. Create the empty target repos: axioma-studio/vaulter (metapackage), axioma-studio/vaulter-core,
+#      axioma-studio/vaulter-media, axioma-studio/vaulter-drive, axioma-studio/vaulter-documents,
+#      axioma-studio/vaulter-filament, axioma-studio/vaulter-azgard.
 #   2. Add a repo/org secret GH_ACCESS_TOKEN — a PAT with `repo` scope that can push to
 #      those split repos.
 #   3. Register the SPLIT repos on Packagist (not this monorepo). Note: vaulter-azgard
@@ -21,6 +21,10 @@ name: Monorepo split (PHP)
 #      under the pre-rename prerequisites, delete/abandon it — this workflow will never push to
 #      it again, and an abandoned empty package under the old name would outrank nothing but
 #      confuse everyone.
+#
+# The matrix below mirrors release/packages.json (scripts/release/check-versions.php fails on a
+# mismatch). vaulter-azgard is skipped while its AzGuard require is a dev constraint, and the
+# verify-tags job then proves every other split repo carries the tag on the commit just pushed.
 # Until the repos + secret exist this workflow will fail, so it is authored but dormant.
 on:
   push:
@@ -90,10 +94,27 @@ jobs:
           - documents
           - filament
           - azgard
+          - vaulter
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      # The repository name comes from release/packages.json: the metapackage is axioma-studio/vaulter,
+      # not axioma-studio/vaulter-vaulter. A manifest or probe error fails the job instead of shipping.
+      - name: Decide whether packages/${{ matrix.package }} ships in this release
+        id: plan
+        run: |
+          split="$(jq -er --arg p 'packages/${{ matrix.package }}' '.php[] | select(.path == $p) | .split' release/packages.json)"
+          excluded="$(scripts/release/verify-split-tags.sh --excluded)"
+          echo "split=${split}" >> "$GITHUB_OUTPUT"
+          echo "name=${split#axioma-studio/}" >> "$GITHUB_OUTPUT"
+          if grep -qxF "${split}" <<<"${excluded}"; then
+            echo "excluded=true" >> "$GITHUB_OUTPUT"
+            echo "packages/${{ matrix.package }} is excluded from this release (upstream not tagged)"
+          else
+            echo "excluded=false" >> "$GITHUB_OUTPUT"
+          fi
 
       # F-P2.1-06 (VLT-REMED P4.7): the subtree split below copies ONLY
       # packages/<name>, so a split repo (what Packagist is registered against, D15/
@@ -102,15 +123,17 @@ jobs:
       # changelog history. Copy the root CHANGELOG.md into the package directory
       # BEFORE the split step so it becomes part of the split commit/subtree.
       - name: Copy root CHANGELOG.md into packages/${{ matrix.package }} (F-P2.1-06)
+        if: steps.plan.outputs.excluded != 'true'
         run: cp CHANGELOG.md packages/${{ matrix.package }}/CHANGELOG.md
 
-      - name: Split packages/${{ matrix.package }} → axioma-studio/vaulter-${{ matrix.package }}
+      - name: Split packages/${{ matrix.package }} → ${{ steps.plan.outputs.split }}
+        if: steps.plan.outputs.excluded != 'true'
         # Pinned by commit for supply-chain safety; the trailing comment is the version tag.
         uses: danharrin/monorepo-split-github-action@14e42e2437f674b8987c1f50ca3689116aea1893 # v2.4.5
         with:
           package_directory: packages/${{ matrix.package }}
           repository_organization: axioma-studio
-          repository_name: vaulter-${{ matrix.package }}
+          repository_name: ${{ steps.plan.outputs.name }}
           user_name: Axioma Bot
           user_email: dev@axioma.studio
           branch: main
@@ -118,3 +141,51 @@ jobs:
           tag: ${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+
+      # The subtree action does not report the commit it pushed, so read it back from the split
+      # repo; verify-tags compares the tag against it.
+      - name: Record the pushed split commit
+        if: steps.plan.outputs.excluded != 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+          SPLIT: ${{ steps.plan.outputs.split }}
+        run: |
+          mkdir -p expected-splits
+          sha="$(git ls-remote "https://x-access-token:${GITHUB_TOKEN}@github.com/${SPLIT}.git" refs/heads/main | cut -f1)"
+          if [[ -z "${sha}" ]]; then
+            echo "split repo ${SPLIT} has no main branch" >&2
+            exit 1
+          fi
+          jq -n --arg k "${SPLIT}" --arg v "${sha}" '{($k): $v}' \
+            > "expected-splits/${{ matrix.package }}.json"
+
+      - name: Upload expected split commit
+        if: steps.plan.outputs.excluded != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: expected-split-${{ matrix.package }}
+          path: expected-splits/${{ matrix.package }}.json
+
+  verify-tags:
+    name: Verify split tags
+    needs: split
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download expected split commits
+        uses: actions/download-artifact@v4
+        with:
+          pattern: expected-split-*
+          path: expected-splits
+          merge-multiple: true
+
+      - name: Every split repository carries the tag on the pushed commit
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          jq -s 'add' expected-splits/*.json > expected-splits.json
+          scripts/release/verify-split-tags.sh "${TAG}" expected-splits.json

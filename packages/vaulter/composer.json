@@ -1,0 +1,26 @@
+{
+    "name": "axioma-studio/vaulter",
+    "description": "Vaulter — embeddable file drive and documents for Laravel (core + media + drive + documents).",
+    "type": "metapackage",
+    "license": "MIT",
+    "homepage": "https://github.com/axiomasoft/vaulter",
+    "authors": [
+        {
+            "name": "Dmitry Vostrikov",
+            "email": "dv.vostrikov@gmail.com"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/axiomasoft/vaulter/issues",
+        "source": "https://github.com/axiomasoft/vaulter"
+    },
+    "require": {
+        "php": "^8.4",
+        "axioma-studio/vaulter-core": "self.version",
+        "axioma-studio/vaulter-media": "self.version",
+        "axioma-studio/vaulter-drive": "self.version",
+        "axioma-studio/vaulter-documents": "self.version"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

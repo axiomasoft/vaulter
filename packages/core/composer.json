@@ -1,6 +1,6 @@
 {
     "name": "axioma-studio/vaulter-core",
-    "description": "Embeddable document management for Laravel — file manager, TipTap editor, version history and real-time collaboration, integrated through adapters.",
+    "description": "Kernel of Vaulter: schema, access control, sharing, audit events and extension contracts. Install axioma-studio/vaulter for the full product.",
     "type": "library",
     "license": "MIT",
     "keywords": [

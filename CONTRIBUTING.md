@@ -173,6 +173,27 @@ npm run docs:dev     # VitePress docs dev server
 - Document every deprecation in `UPGRADE.md` (breaking-change log) with what replaces it and
   why, once it is actually removed.
 
+## Release tooling
+
+The release set lives in `release/packages.json`; `monorepo-split.yml` splits exactly those packages
+(`scripts/release/check-versions.php` fails when the matrix and the manifest disagree).
+
+- `scripts/php84 scripts/release/check-versions.php` — siblings are required only as `self.version`, nothing shipped
+  requires a `dev-*` constraint (the excluded AzGuard bridge may pin its untagged upstream), and `@vaulter/vue` declares
+  the REST API line.
+- `scripts/php84 scripts/release/build-artifacts.php --version=X.Y.Z --out=DIR` — one zip per package from `git archive`
+  (so `export-ignore` applies), with the version written into `composer.json`. No network. A package whose upstream is a
+  dev require (`vaulter-azgard` until AzGuard is tagged) is skipped with the reason.
+- `scripts/release/consumer-smoke.sh DIR X.Y.Z` — installs the artifacts into a fresh Laravel app without path
+  repositories and runs `vaulter:install`, config/route cache and `vaulter:doctor --json`. Needs network and takes
+  minutes; run it before tagging, not in a feature branch.
+- `scripts/release/verify-split-tags.sh TAG [expected-splits.json]` — read-only; the `verify-tags` job of
+  `monorepo-split.yml` runs it after the split. It exits 1 and lists every split repository that lacks the tag or has it
+  on another commit.
+- `PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-release-tools.py` — offline tests of the tools above; remotes are
+  replaced by a `git` stub on `PATH`.
+
+
 ## Documentation sync
 
 The `docs/` folder is two-way synced with the Brain vault project
