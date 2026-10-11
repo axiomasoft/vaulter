@@ -27,9 +27,11 @@ services:
       # — Connectivity —
       VAULTER_COLLAB_PORT: 1234
       VAULTER_COLLAB_HEALTH_PORT: 1235
-      # The Laravel backend the hub calls back into (collab/authenticate + collab/store).
+      # The Laravel backend the hub calls back into (v1/collaboration/hub/*).
       VAULTER_BACKEND_URL: ${VAULTER_BACKEND_URL:-http://host.docker.internal}
       VAULTER_API_PREFIX: ${VAULTER_API_PREFIX:-api/vaulter}
+      # Optional: the full versioned base; must end with /v1 (overrides the two above).
+      VAULTER_API_URL: ${VAULTER_API_URL:-}
       # Optional shared webhook secret; when unset the webhooks are authenticated by the
       # forwarded room JWT alone (never open). MUST equal the Laravel webhook_secret.
       VAULTER_COLLAB_WEBHOOK_SECRET: ${VAULTER_COLLAB_WEBHOOK_SECRET:-}

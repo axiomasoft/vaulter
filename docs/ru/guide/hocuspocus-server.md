@@ -32,9 +32,9 @@ services:
 ```
  browser (writer/viewer) ──ws(token = room JWT, doc = room name)──▶  hub
         │                                  onConnect → Origin allowlist (CSWSH)
-        │                                  onAuthenticate ─POST /collab/authenticate─┐
-        │                                  onLoadDocument ─POST /collab/load─────────┤
-        │                                  onStoreDocument ─POST /collab/store───────┤
+        │                                  onAuthenticate ─POST /v1/collaboration/hub/authenticate┐
+        │                                  onLoadDocument ─POST /v1/collaboration/hub/load────────┤
+        │                                  onStoreDocument ─POST /v1/collaboration/hub/store───────┤
         └──── POST /api/vaulter/nodes/{node}/collab/token ──▶ Laravel ◀──────────────┘
                                           рабочее состояние + ограждение по epoch (v_documents)
 ```
@@ -42,16 +42,16 @@ services:
 1. Клиент вызывает `POST /api/vaulter/nodes/{node}/collab/token` и получает сессию: комнату
    `<prefix>.<driveId>.<nodeId>.<epoch>`, режим (`rw`|`ro`) и room JWT.
 2. Он открывает WebSocket к хабу, передавая JWT как **token**, а комнату — как имя документа.
-3. Хаб проверяет `Origin` и спрашивает `collab/authenticate`. Отказ закрывает сокет;
+3. Хаб проверяет `Origin` и спрашивает `collaboration/hub/authenticate`. Отказ закрывает сокет;
    `mode: ro` делает соединение read-only (Hocuspocus отбрасывает его изменения).
-4. `onLoadDocument` запрашивает `collab/load`: бинарный Yjs-state или — для документа без
+4. `onLoadDocument` запрашивает `collaboration/hub/load`: бинарный Yjs-state или — для документа без
    него — JSON. Хаб строит Y.Doc из JSON **один раз** через `@hocuspocus/transformer` и
    `src/schema.js` и сохраняет его с `seed: true` и загруженным `state_version` (документ,
    обновлённый в промежутке, получает `409 collaboration_seed_conflict` и загружается заново).
    Клиенты никогда не сидируют. Seed, который что-либо потерял бы, отклоняется (см. раздел про
    схему), а с Redis первое read-only подключение к документу без Yjs-state отклоняется, пока
    писатель его не засидирует.
-5. `onStoreDocument` (с debounce) отправляет бинарный state и JSON-проекцию в `collab/store`.
+5. `onStoreDocument` (с debounce) отправляет бинарный state и JSON-проекцию в `collaboration/hub/store`.
    Бэкенд ограждает записи по epoch комнаты: после restore запись старой комнаты получает
    `409 collaboration_epoch_mismatch`. Хаб её **не** повторяет: закрывает соединения комнаты
    кодом **4409** `epoch_changed` и отбрасывает последующие записи этой комнаты; клиенты
@@ -99,9 +99,10 @@ Image и Table для `vaulter/rich-text`; подмножество Markdown д�
 | --- | --- | --- |
 | `VAULTER_COLLAB_PORT` | `1234` | WebSocket-порт, к которому подключаются клиенты (`ws(s)://host:PORT`). |
 | `VAULTER_COLLAB_HEALTH_PORT` | `1235` | HTTP-порт health — `GET /health` → `200`. Отдельно от WS-порта. |
+| `VAULTER_API_URL` | *(производное)* | Версионированная база API, к которой обращается хаб, например `https://app.example.com/api/vaulter/v1`. **Должна оканчиваться на `/v1`**: база без суффикса останавливает запуск хаба. |
 | `VAULTER_BACKEND_URL` | `http://localhost` | Базовый URL вашего Laravel-приложения, к которому хаб обращается обратно. **Обязательно в production.** |
-| `VAULTER_API_PREFIX` | `api/vaulter` | Префикс маршрутов Vaulter. Вызовы резолвятся в `{BACKEND}/{PREFIX}/collab/{authenticate,load,store}`. |
-| `VAULTER_LARAVEL_WEBHOOK_URL` | *(производное)* | Явная полная база вебхуков; переопределяет две предыдущие переменные (reverse proxy / раздельный хост). |
+| `VAULTER_API_PREFIX` | `api/vaulter` | Префикс маршрутов Vaulter. Вызовы резолвятся в `{BACKEND}/{PREFIX}/v1/collaboration/hub/{authenticate,load,store}`. |
+| `VAULTER_LARAVEL_WEBHOOK_URL` | *(производное)* | Явная полная база (…/v1); переопределяет все предыдущие переменные (reverse proxy / раздельный хост). |
 | `VAULTER_COLLAB_WEBHOOK_SECRET` | *(не задано)* | Ключ HMAC-подписи каждого вызова бэкенда. Должен совпадать с `vaulter-documents.collaboration.hub.webhook_secret` в Laravel; сам секрет не передаётся. Обязателен: без него каждый вызов отвергается. |
 | `VAULTER_COLLAB_WEBHOOK_TIMEOUT_MS` | `10000` | Таймаут туда-обратно для вебхука. |
 

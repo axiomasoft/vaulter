@@ -31,9 +31,9 @@ Vaulter.
 ```
  browser (writer/viewer) ──ws(token = room JWT, doc = room name)──▶  hub
         │                                  onConnect → Origin allowlist (CSWSH)
-        │                                  onAuthenticate ─POST /collab/authenticate─┐
-        │                                  onLoadDocument ─POST /collab/load─────────┤
-        │                                  onStoreDocument ─POST /collab/store───────┤
+        │                                  onAuthenticate ─POST /v1/collaboration/hub/authenticate┐
+        │                                  onLoadDocument ─POST /v1/collaboration/hub/load────────┤
+        │                                  onStoreDocument ─POST /v1/collaboration/hub/store───────┤
         └──── POST /api/vaulter/nodes/{node}/collab/token ──▶ Laravel ◀──────────────┘
                                                  working state + epoch fence (v_documents)
 ```
@@ -42,9 +42,9 @@ Vaulter.
    room `<prefix>.<driveId>.<nodeId>.<epoch>`, the mode (`rw`|`ro`) and a room JWT.
 2. It opens a WebSocket to the hub with the JWT as the **token** and the room as the
    document name.
-3. The hub validates the `Origin`, then asks `collab/authenticate`. A refusal closes the
+3. The hub validates the `Origin`, then asks `collaboration/hub/authenticate`. A refusal closes the
    socket; `mode: ro` makes the connection read-only (Hocuspocus drops its updates).
-4. `onLoadDocument` asks `collab/load`: the binary Yjs working state, or — for a document
+4. `onLoadDocument` asks `collaboration/hub/load`: the binary Yjs working state, or — for a document
    without one — its JSON. The hub builds the Y.Doc from the JSON **once** with
    `@hocuspocus/transformer` and `src/schema.js` and stores it with `seed: true` and the
    `state_version` it loaded (a document updated in between answers `409
@@ -52,7 +52,7 @@ Vaulter.
    lose anything is refused (see the schema section), and with Redis a read-only first
    connection to a document without Yjs state is refused until a writer has seeded it.
 5. `onStoreDocument` (debounced) sends the binary state and its JSON projection to
-   `collab/store`. The backend fences stores by the room's epoch: after a restore, the old
+   `collaboration/hub/store`. The backend fences stores by the room's epoch: after a restore, the old
    room's store answers `409 collaboration_epoch_mismatch`. The hub does **not** retry then:
    it closes the room's connections with close code **4409** `epoch_changed` and drops every
    later store of that room; clients reopen the document with a new Y.Doc. A `404` (document
@@ -101,9 +101,10 @@ missing.
 | --- | --- | --- |
 | `VAULTER_COLLAB_PORT` | `1234` | WebSocket port clients connect to (`ws(s)://host:PORT`). |
 | `VAULTER_COLLAB_HEALTH_PORT` | `1235` | HTTP health port — `GET /health` → `200`. Separate from the WS port. |
+| `VAULTER_API_URL` | *(derived)* | Versioned API base the hub calls, e.g. `https://app.example.com/api/vaulter/v1`. **Must end with `/v1`**: a base without it stops the hub at start. |
 | `VAULTER_BACKEND_URL` | `http://localhost` | Your Laravel app base URL the hub calls back into. **Required in production.** |
-| `VAULTER_API_PREFIX` | `api/vaulter` | The Vaulter route prefix. Calls resolve to `{BACKEND}/{PREFIX}/collab/{authenticate,load,store}`. |
-| `VAULTER_LARAVEL_WEBHOOK_URL` | *(derived)* | Explicit full webhook base; overrides the two above (reverse proxy / split host). |
+| `VAULTER_API_PREFIX` | `api/vaulter` | The Vaulter route prefix. Calls resolve to `{BACKEND}/{PREFIX}/v1/collaboration/hub/{authenticate,load,store}`. |
+| `VAULTER_LARAVEL_WEBHOOK_URL` | *(derived)* | Explicit full base (…/v1); overrides all the above (reverse proxy / split host). |
 | `VAULTER_COLLAB_WEBHOOK_SECRET` | *(unset)* | Key of the HMAC signature of every backend call. Must equal the Laravel `vaulter-documents.collaboration.hub.webhook_secret`; the secret itself is never sent. Required: without it every call is refused. |
 | `VAULTER_COLLAB_WEBHOOK_TIMEOUT_MS` | `10000` | Webhook round-trip timeout. |
 

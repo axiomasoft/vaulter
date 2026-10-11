@@ -2,9 +2,9 @@ import crypto from 'node:crypto'
 import { config as defaultConfig } from './config.js'
 
 // The server-to-server calls the hub makes BACK into Laravel:
-//   - authenticate  → POST {base}/collab/authenticate  (onAuthenticate)
-//   - loadDocument  → POST {base}/collab/load          (onLoadDocument)
-//   - storeDocument → POST {base}/collab/store         (onStoreDocument and the seed)
+//   - authenticate  → POST {base}/collaboration/hub/authenticate  (onAuthenticate)
+//   - loadDocument  → POST {base}/collaboration/hub/load          (onLoadDocument)
+//   - storeDocument → POST {base}/collaboration/hub/store         (onStoreDocument and the seed)
 //
 // Every call carries two independent proofs, both required by the backend:
 //   - the room JWT the client presented (Authorization: Bearer) — it names the user, the
@@ -68,7 +68,7 @@ async function post(endpoint, payload, token, { config = defaultConfig, fetchImp
   const timer = config.webhookTimeoutMs ? setTimeout(() => controller.abort(), config.webhookTimeoutMs) : null
 
   try {
-    return await fetchImpl(`${config.webhookBase}/collab/${endpoint}`, {
+    return await fetchImpl(`${config.webhookBase}/collaboration/hub/${endpoint}`, {
       method: 'POST',
       headers: headersFor({ token, signed: signRawBody(rawBody, config.webhookSecret) }),
       body: rawBody,

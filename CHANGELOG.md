@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Hub on REST v1 (PLAN2.P6.5)
+
+- Changed: the hocuspocus hub calls `{base}/collaboration/hub/{authenticate,load,store}` (was `{base}/collab/*`).
+  `VAULTER_API_URL` (or `VAULTER_LARAVEL_WEBHOOK_URL`) is the versioned base and must end with `/v1`; a base
+  without it fails the start. Derived from `VAULTER_BACKEND_URL` + `VAULTER_API_PREFIX` it gains `/v1` itself.
+  A 409 `collaboration_epoch_mismatch` still closes the room with 4409 and is never retried.
+
 ### `@vaulter/vue` on REST v1 (PLAN2.P6.4)
 
 - Changed: `@vaulter/vue` talks to REST v1 only (`baseUrl` defaults to `/api/vaulter/v1`). Its types are generated

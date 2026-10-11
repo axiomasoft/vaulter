@@ -20,16 +20,16 @@ configure it entirely through environment variables; you never copy its source i
 Vue client ──ws(token=room JWT, doc=room name)──▶  this hub
                                                      │
    onConnect ── Origin allowlist (CSWSH) ───────────┤
-   onAuthenticate ─POST /collab/authenticate────────┤  every call: room JWT + HMAC signature
-   onLoadDocument ─POST /collab/load────────────────┤
-   onStoreDocument ─POST /collab/store──────────────▶  Laravel (api/vaulter), epoch fence
+   onAuthenticate ─POST /v1/collaboration/hub/authenticate┤  every call: room JWT + HMAC signature
+   onLoadDocument ─POST /v1/collaboration/hub/load────────┤
+   onStoreDocument ─POST /v1/collaboration/hub/store───────▶  Laravel (api/vaulter), epoch fence
 ```
 
 1. The client gets a session from `POST /api/vaulter/nodes/{node}/collab/token`: the room
    `<prefix>.<driveId>.<nodeId>.<epoch>`, the mode (`rw`|`ro`) and a room JWT.
 2. It connects with the JWT as the **token** and the room as the document name.
-3. `onAuthenticate` asks `collab/authenticate`; `mode: ro` makes the connection read-only.
-4. `onLoadDocument` loads the Yjs working state from `collab/load`, or — for a document
+3. `onAuthenticate` asks `collaboration/hub/authenticate`; `mode: ro` makes the connection read-only.
+4. `onLoadDocument` loads the Yjs working state from `collaboration/hub/load`, or — for a document
    without one — builds the Y.Doc from its JSON **once** (`@hocuspocus/transformer` +
    `src/schema.js`) and stores it with `seed: true` and the `state_version` it loaded (a
    document that changed in between is refused with `409` and loaded again). **Clients never
@@ -37,7 +37,7 @@ Vue client ──ws(token=room JWT, doc=room name)──▶  this hub
    deployment a read-only first connection to an unseeded document is refused until a writer has
    seeded it.
 5. `onStoreDocument` (debounced) sends the binary state and its JSON projection to
-   `collab/store`. A `409` (the room's epoch is over after a restore, or a seed conflict) is
+   `collaboration/hub/store`. A `409` (the room's epoch is over after a restore, or a seed conflict) is
    terminal: the hub closes the room with **4409 `epoch_changed`**, never retries, and drops
    the room's later stores; clients reopen with a new Y.Doc. `404` closes with `4404`; `5xx`,
    `408`/`425`/`429` and network errors are retried. `401`, `403`, `413` and `422` are **not** a
@@ -70,6 +70,7 @@ a numeric value is malformed. The most common variables:
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
+| `VAULTER_API_URL` | *(derived)* | Versioned API base the hub calls (`https://app/api/vaulter/v1`). **Must end with `/v1`**, otherwise the hub refuses to start. |
 | `VAULTER_BACKEND_URL` | `http://localhost` | Laravel base URL the hub calls back into. **Required in production.** |
 | `VAULTER_COLLAB_ALLOWED_ORIGINS` | *(empty)* | CSWSH allowlist — exact browser origins. **Required in production** (`*` = dev only). |
 | `VAULTER_COLLAB_WEBHOOK_SECRET` | *(unset)* | Key of the HMAC signature of every backend call; must match the Laravel config. Required — without it the backend refuses every call. |

@@ -6,7 +6,7 @@ import { authenticate, BackendRejection, loadDocument, storeDocument } from '../
 // Unit coverage for the backend client the hooks call. fetch is mocked — no network.
 
 const cfg = {
-  webhookBase: 'http://laravel/api/vaulter',
+  webhookBase: 'http://laravel/api/vaulter/v1',
   webhookSecret: 'shared-secret',
   webhookTimeoutMs: 0,
 }
@@ -45,7 +45,7 @@ test('every call carries the room JWT and a signature of the exact bytes it send
   const { headers, body: rawBody } = calls[0].init
   const timestamp = Number(headers['X-Vaulter-Collab-Timestamp'])
 
-  assert.equal(calls[0].url, 'http://laravel/api/vaulter/collab/authenticate')
+  assert.equal(calls[0].url, 'http://laravel/api/vaulter/v1/collaboration/hub/authenticate')
   assert.equal(headers.Authorization, 'Bearer jwt-abc')
   assert.equal(headers['X-Vaulter-Collab-Secret'], undefined)
   assert.ok(Number.isInteger(timestamp) && timestamp >= before && timestamp <= after)
@@ -128,7 +128,7 @@ test('storeDocument posts the base64 state, the projection and the seed flag', a
   const result = await storeDocument({ room: 'r', state, content, seed: true, token: 'jwt' }, { config: cfg, fetchImpl })
   const sent = JSON.parse(calls[0].init.body)
 
-  assert.equal(calls[0].url, 'http://laravel/api/vaulter/collab/store')
+  assert.equal(calls[0].url, 'http://laravel/api/vaulter/v1/collaboration/hub/store')
   assert.deepEqual({ room: sent.room, state: sent.state, content: sent.content, seed: sent.seed }, { room: 'r', state, content, seed: true })
   assert.equal('user_id' in sent, false)
   assert.deepEqual(result, { ok: true, data: { changed: true, epoch: 0 } })

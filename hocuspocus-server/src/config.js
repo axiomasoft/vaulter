@@ -8,7 +8,8 @@
 //   VAULTER_COLLAB_HEALTH_PORT   — HTTP health endpoint port (default 1235).
 //   VAULTER_BACKEND_URL          — Laravel app base URL (e.g. http://app). REQUIRED in prod.
 //   VAULTER_API_PREFIX           — API route prefix (default api/vaulter).
-//   VAULTER_LARAVEL_WEBHOOK_URL  — explicit override of the full webhook base (…/api/vaulter).
+//   VAULTER_API_URL              — versioned API base the hub calls (…/api/vaulter/v1); must end with /v1.
+//   VAULTER_LARAVEL_WEBHOOK_URL  — explicit override of the full base (…/api/vaulter/v1); wins over VAULTER_API_URL.
 //   VAULTER_COLLAB_WEBHOOK_SECRET— shared secret presented on the webhook calls
 //                                  (X-Vaulter-Collab-Secret). Mirrors the Laravel config.
 //   VAULTER_COLLAB_WEBHOOK_TIMEOUT_MS — webhook round-trip timeout (default 10000).
@@ -86,21 +87,38 @@ function isProductionEnv(env = process.env) {
   return !['development', 'dev', 'test', 'local'].includes(nodeEnv)
 }
 
+/** The Laravel API version every hub call is addressed to. */
+const API_VERSION_SUFFIX = '/v1'
+
+function requireVersionedBase(base, envName) {
+  if (!base.endsWith(API_VERSION_SUFFIX)) {
+    throw new Error(
+      `${envName} must end with "${API_VERSION_SUFFIX}" (e.g. http://app/api/vaulter/v1); got "${base}". `
+      + 'The hub only talks to the versioned collaboration/hub API.',
+    )
+  }
+
+  return base
+}
+
 /**
- * The base URL the collab/authenticate + collab/store webhooks live under
- * (…/api/vaulter). An explicit VAULTER_LARAVEL_WEBHOOK_URL wins; otherwise it is
- * derived from the backend URL + the API prefix.
+ * The versioned base URL the collaboration/hub calls live under (…/api/vaulter/v1).
+ * An explicit VAULTER_LARAVEL_WEBHOOK_URL wins, then VAULTER_API_URL; otherwise it is
+ * derived from the backend URL + the API prefix. An explicit base without the /v1
+ * suffix is a deploy mistake and fails the start instead of hitting dead routes.
  */
 export function resolveWebhookBase(env = process.env) {
-  const explicit = env.VAULTER_LARAVEL_WEBHOOK_URL
-  if (typeof explicit === 'string' && explicit !== '') {
-    return trimSlashes(explicit)
+  for (const name of ['VAULTER_LARAVEL_WEBHOOK_URL', 'VAULTER_API_URL']) {
+    const explicit = env[name]
+    if (typeof explicit === 'string' && explicit !== '') {
+      return requireVersionedBase(trimSlashes(explicit), name)
+    }
   }
 
   const backend = trimSlashes(env.VAULTER_BACKEND_URL ?? 'http://localhost')
   const prefix = (env.VAULTER_API_PREFIX ?? 'api/vaulter').replace(/^\/+|\/+$/g, '')
 
-  return prefix === '' ? backend : `${backend}/${prefix}`
+  return `${prefix === '' ? backend : `${backend}/${prefix}`}${API_VERSION_SUFFIX}`
 }
 
 export function buildConfig(env = process.env) {
@@ -110,8 +128,8 @@ export function buildConfig(env = process.env) {
     port: int('VAULTER_COLLAB_PORT', 1234, env),
     healthPort: int('VAULTER_COLLAB_HEALTH_PORT', 1235, env),
     webhookBase: resolveWebhookBase(env),
-    backendUrlSet: typeof str('VAULTER_BACKEND_URL', undefined, env) === 'string'
-      || typeof str('VAULTER_LARAVEL_WEBHOOK_URL', undefined, env) === 'string',
+    backendUrlSet: ['VAULTER_BACKEND_URL', 'VAULTER_API_URL', 'VAULTER_LARAVEL_WEBHOOK_URL']
+      .some((name) => typeof str(name, undefined, env) === 'string'),
     webhookSecret: str('VAULTER_COLLAB_WEBHOOK_SECRET', undefined, env),
     webhookTimeoutMs: int('VAULTER_COLLAB_WEBHOOK_TIMEOUT_MS', 10000, env),
 
@@ -170,7 +188,7 @@ export function validateConfig(conf = config) {
   const problems = []
 
   if (conf.isProduction && !conf.backendUrlSet) {
-    problems.push('VAULTER_BACKEND_URL (or VAULTER_LARAVEL_WEBHOOK_URL) is required in production.')
+    problems.push('VAULTER_API_URL (or VAULTER_BACKEND_URL, VAULTER_LARAVEL_WEBHOOK_URL) is required in production.')
   }
   if (conf.isProduction && conf.allowedOrigins.length === 0) {
     problems.push('VAULTER_COLLAB_ALLOWED_ORIGINS is required in production (CSWSH defence); set explicit origins or "*" for dev only.')

@@ -86,7 +86,7 @@ echo "== hub :$hub_port" | tee -a "$log"
 (
     cd "$root/hocuspocus-server"
     NODE_ENV=test \
-    VAULTER_LARAVEL_WEBHOOK_URL="http://127.0.0.1:${port}/api/vaulter" \
+    VAULTER_LARAVEL_WEBHOOK_URL="http://127.0.0.1:${port}/api/vaulter/v1" \
     VAULTER_COLLAB_WEBHOOK_SECRET="$webhook_secret" \
     VAULTER_COLLAB_PORT="$hub_port" \
     VAULTER_COLLAB_HEALTH_PORT="$health_port" \

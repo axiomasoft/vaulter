@@ -1,0 +1,11 @@
+{
+  "item": "P6.5",
+  "changed_paths": ["hocuspocus-server/src/config.js", "hocuspocus-server/src/webhook.js", "hocuspocus-server/test/{webhook,config,security,on-connect,v1-paths}.test.js", "hocuspocus-server/{README.md,docker-compose.yml,.env.example}", "load/docker-compose.load.yml", "docs/guide/hocuspocus-server.md", "docs/ru/guide/hocuspocus-server.md", "CHANGELOG.md"],
+  "callers": ["hocuspocus-server/src/index.js (webhook module, unchanged API)"],
+  "fixtures": ["injected fetchImpl and config objects in node tests"],
+  "checks": [
+    {"id": "V1", "cwd": "hocuspocus-server", "env": {}, "cmd": "npm run check"},
+    {"id": "V2", "cwd": "hocuspocus-server", "env": {}, "cmd": "npm test"}
+  ],
+  "excluded": "docker build, test:e2e, mutators (D66)"
+}

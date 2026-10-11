@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.5",
   "title": "Хаб на v1: пути collaboration/hub, конфиг /v1, epoch и read-only",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Хаб hocuspocus-server обращается к Laravel только по v1/collaboration/hub/{authenticate,load,store}, конфиг требует base с /v1, ошибки разбираются как problem+json, 409 collaboration_epoch_mismatch закрывает комнату 4409 без повторов, read-only сохраняется; node-тесты обновлены.",
   "why": "OPUS F6 P6.5/11 §6 + D36: старые collab/* удалены в P6.8, хаб без переноса перестаёт работать. Риски: потеря записей (повтор на 409, неверный base), запись в read-only, конфигурационные ошибки деплоя.",
   "scope": {
@@ -136,6 +136,31 @@
     "status": "not_needed",
     "notes": "@plan/knowledge/P6-industry-research-2026-10-10.json#R8-Hub"
   },
-  "result": null,
-  "updated_at": "2026-10-10T10:26:46Z"
+  "result": {
+    "started_at": "2026-10-11T11:20:49Z",
+    "finished_at": "2026-10-11T11:40:27Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet-5.5",
+      "effort": "medium",
+      "session": "7c015701-d797-49e4-acd1-b2e44fe249ac"
+    },
+    "notes": "Hub on /v1/collaboration/hub/*; VAULTER_API_URL+override validated for /v1; v1-paths test; docs/README/compose/CHANGELOG. Review grok-4.7/high: 1 finding fixed. e2e restore-epoch.e2e.js still uses removed collab/token (not run, D66). Risk: data-integrity -> task:review recommended. P6-I* self-check: no retry on 409, ro unchanged.",
+    "deviations": [
+      "scripts/collab-e2e.sh /v1; no explicit document.unload (connections closed -> Hocuspocus unloads)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-11T11:40:27Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-11T11:40:27Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-11T11:40:27Z"
 }
