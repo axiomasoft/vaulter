@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Vaulter\Tests;
 
 use Illuminate\Foundation\Application;
-use Vaulter\Tests\Concerns\RefreshesDatabaseForSchemaVariant;
 
 /**
  * Boots the package with a non-default table prefix so the migrations and models
@@ -13,8 +12,6 @@ use Vaulter\Tests\Concerns\RefreshesDatabaseForSchemaVariant;
  */
 class TablePrefixTestCase extends TestCase
 {
-    use RefreshesDatabaseForSchemaVariant;
-
     /**
      * @param Application $app
      */

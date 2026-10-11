@@ -6,28 +6,51 @@ namespace Vaulter\Tests\Concerns;
 
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 
+use function Orchestra\Testbench\load_migration_paths;
+
 /**
- * Isolates a TestCase whose migrations depend on non-default Vaulter config.
- *
- * RefreshDatabase keeps one process-wide "migrated" flag. PostgreSQL uses one
- * persistent database for the suite, so a schema variant must migrate its own
- * shape and then force the following default TestCase to restore the base shape.
+ * Reuses a server schema while RefreshDatabase rolls back each test's data.
+ * A change of TestCase, connection or schema configuration forces fresh migrations.
  */
 trait RefreshesDatabaseForSchemaVariant
 {
-    protected function setUp(): void
-    {
-        RefreshDatabaseState::$migrated = false;
+    private static ?string $databaseSchema = null;
 
-        parent::setUp();
-    }
-
-    protected function tearDown(): void
+    protected function loadMigrationsFrom(array|string $paths): void
     {
-        try {
-            parent::tearDown();
-        } finally {
-            RefreshDatabaseState::$migrated = false;
+        // SQLite retains Testbench's in-memory lifecycle. Race tests and tests
+        // without RefreshDatabase retain their committed migrations and rollback.
+        if (!static::usesRefreshDatabaseTestingConcern()
+            || $this->usesSqliteInMemoryDatabaseConnection()
+            || (is_array($paths) && !array_is_list($paths))) {
+            self::$databaseSchema = null;
+            parent::loadMigrationsFrom($paths);
+
+            return;
         }
+
+        $config = $this->app['config'];
+        $schema = serialize([
+            // Pest generates one child class per file; its parent identifies
+            // the shared TestCase, including extra providers/migration paths.
+            str_starts_with(static::class, 'P\\') ? get_parent_class($this) : static::class,
+            $this->getPackageProviders($this->app),
+            $config->get('database.default'),
+            $config->get('database.connections.'.$config->get('database.default')),
+            $config->get('vaulter.ids'),
+            $config->get('vaulter.database'),
+            $config->get('vaulter.tenancy.enabled'),
+            $config->get('vaulter.features'),
+        ]);
+
+        if (self::$databaseSchema !== $schema) {
+            RefreshDatabaseState::$migrated = false;
+            self::$databaseSchema = $schema;
+        }
+
+        // Testbench's loadMigrationsFrom() starts a separate migrator when the
+        // process has already migrated, then rolls that schema back at teardown.
+        // Register paths on every new app; let RefreshDatabase alone migrate.
+        load_migration_paths($this->app, $paths);
     }
 }

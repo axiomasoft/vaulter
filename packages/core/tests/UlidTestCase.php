@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Vaulter\Tests;
 
 use Illuminate\Foundation\Application;
-use Vaulter\Tests\Concerns\RefreshesDatabaseForSchemaVariant;
 use Vaulter\Tests\Fixtures\TenantAwareNode;
 use Vaulter\Tests\Tenancy\MutableTenantResolver;
 
@@ -15,8 +14,6 @@ use Vaulter\Tests\Tenancy\MutableTenantResolver;
  */
 class UlidTestCase extends TestCase
 {
-    use RefreshesDatabaseForSchemaVariant;
-
     /**
      * @param Application $app
      */
