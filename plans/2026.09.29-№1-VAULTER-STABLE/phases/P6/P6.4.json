@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.4",
   "title": "@vaulter/vue на v1: генерируемые типы, клиент, реестр viewer'ов, fallback, composables, a11y",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "@vaulter/vue работает только с REST v1: типы генерируются из openapi/vaulter-v1.yaml (api:check), клиент по ресурсам с проверкой X-Vaulter-Api-Version и разбором problem+json, мутации с непрозрачным ETag в If-Match, реестр viewer'ов на приложение с VaulterUnsupportedNode (V37), composables/компоненты на v1, a11y-тесты, контрактные тесты типов против примеров ответов.",
   "why": "OPUS F6 P6.4/D32/11 + EV249/EV323 + C07: клиент не должен изобретать собственный sequence-ETag и обязан совпадать с JSON сервера. Риски: public-contract (npm API), рассинхрон типов со спецификацией, потеря обработки 412 (lost update в UI), a11y регрессии.",
   "scope": {
@@ -182,6 +182,48 @@
     "U2",
     "U3"
   ],
-  "result": null,
-  "updated_at": "2026-10-10T10:26:46Z"
+  "result": {
+    "started_at": "2026-10-11T09:32:58Z",
+    "finished_at": "2026-10-11T11:16:07Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "6f9c7d90-289b-4b43-a538-813d6a87f78e"
+    },
+    "notes": "@vaulter/vue on REST v1: generated types + api:check (CI), resource client with If-Match/problem+json/version guard, per-app viewer registry with VaulterUnsupportedNode (V37), v1 composables/components, listbox a11y + aria-live, portable-v1 name dialog, collaboration on v1, docs en/ru, changeset, CHANGELOG, UPGRADE. Unit checks V5 (tests/api tests/contract) and V6 (tests/viewers) also exit 0. Self-check P6-I*: no hand-written types.ts, no ETag built/parsed on the client, no If-Match '*' invented, no cacheable client state, components gate on abilities only. Hard risk: public-contract (npm API) — task:review recommended for the corrected diff.",
+    "deviations": [
+      "Open<> type helper over generated Record<string, never> (YAML untouched; recommend additionalProperties: true in the spec).",
+      "UPGRADE.md, packages/vue/scripts/api-check.mjs, tests/support/*, exports snapshot added beyond task_files.",
+      "useSpreadsheet folded into useDocument; NodeAction forceDelete→purge; rename gated on edit; viewers vaulter/tiptap|univer are headless shells, editor engine is the host's.",
+      "Review: grok/grok-4.7 (500k) round 1 = 5 findings, fixed; round 2 = 9 findings, all reproduced and fixed by one owner-authorised correction; the corrected diff was NOT re-reviewed (budget spent, no round 3)."
+    ],
+    "pending": [
+      "Other guide pages (grants, sharing, collaboration, documents, recipes, document-handlers, writing-an-engine, master plan, ru mirrors) still name removed vue APIs.",
+      "Server: S3 multipart cannot complete an empty file (isComplete needs size>0)."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-11T11:16:07Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-11T11:16:07Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-11T11:16:07Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-11T11:16:07Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-11T11:16:07Z"
 }

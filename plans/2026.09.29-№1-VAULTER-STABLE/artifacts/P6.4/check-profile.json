@@ -1,0 +1,18 @@
+{
+  "item": "P6.4",
+  "changed_paths": [
+    "packages/vue/src/**", "packages/vue/tests/**", "packages/vue/package.json", "package-lock.json",
+    ".github/workflows/frontend.yml", ".changeset/*.md", "docs/guide/vue.md", "docs/ru/guide/vue.md", "CHANGELOG.md", "UPGRADE.md"
+  ],
+  "callers": ["packages/vue/src/composables/*", "packages/vue/src/components/**", "packages/vue/src/plugin.ts", "packages/vue/src/index.ts"],
+  "fixtures": ["openapi/examples/*.json", "openapi/vaulter-v1.yaml"],
+  "checks": {
+    "V1": {"cwd": "packages/vue", "cmd": "npm run api:check"},
+    "V2": {"cwd": "packages/vue", "cmd": "npm run typecheck"},
+    "V3": {"cwd": "packages/vue", "cmd": "npm test"},
+    "V4": {"cwd": "packages/vue", "cmd": "npm run build"},
+    "V5": {"cwd": "packages/vue", "cmd": "npx vitest run tests/api tests/contract"},
+    "V6": {"cwd": "packages/vue", "cmd": "npx vitest run tests/viewers"}
+  },
+  "excluded": "D66: no docker/oasdiff, no PG/MySQL, no full PHP suites, no e2e, no docs build, no mutators"
+}

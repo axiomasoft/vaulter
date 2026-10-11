@@ -33,7 +33,18 @@
   },
   "mode": "either",
   "instructions": "V37 — guidance item P6.4. Реестр не глобальный: два createApp с разными viewers не видят чужие регистрации (тест). tests/engine-registry.test.ts удалить вместе с engineRegistry.ts.",
-  "status": "todo",
-  "outcome": null,
-  "updated_at": "2026-10-10T10:25:00Z"
+  "status": "accepted",
+  "outcome": {
+    "agent": {
+      "provider": "claude-code",
+      "model": "claude-sonnet-5-5",
+      "effort": "high"
+    },
+    "at": "2026-10-11T10:05:10Z",
+    "notes": "diff reviewed by the integrator; V6 rerun green",
+    "changed": [
+      "packages/vue/src/viewers/registry.ts"
+    ]
+  },
+  "updated_at": "2026-10-11T10:05:10Z"
 }

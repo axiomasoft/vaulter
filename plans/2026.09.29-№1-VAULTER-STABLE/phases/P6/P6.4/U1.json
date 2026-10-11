@@ -40,7 +40,18 @@
   },
   "mode": "either",
   "instructions": "Порядок: devDependencies (openapi-typescript 7.x, @testing-library/vue — точные версии, записать в artifacts/P6.4/tool-pins.md) → скрипты api:generate (openapi-typescript ../../openapi/vaulter-v1.yaml -o src/api/schema.d.ts) и api:check (генерация во временный файл + diff --exit-code + git ls-files --error-unmatch src/api/schema.d.ts) → client/errors/uploads → удалить src/client.ts и src/types.ts (временные импорты в composables/components заменить на api/ в U3; до U3 typecheck допускается только после правки импортов — минимальные реэкспорты не оставлять). Методы клиента — P6-design#Vue и OPUS 11 §3.",
-  "status": "todo",
-  "outcome": null,
-  "updated_at": "2026-10-10T10:25:11Z"
+  "status": "accepted",
+  "outcome": {
+    "agent": {
+      "provider": "claude-code",
+      "model": "claude-sonnet-5-5",
+      "effort": "high"
+    },
+    "at": "2026-10-11T10:05:07Z",
+    "notes": "diff reviewed by the integrator; V1 and V5 rerun green (logs in artifacts/P6.4/checks)",
+    "changed": [
+      "packages/vue/src/api/client.ts"
+    ]
+  },
+  "updated_at": "2026-10-11T10:05:07Z"
 }
