@@ -17,9 +17,16 @@ PHP `^8.4`, Laravel `^12.0 || ^13.0`, and (for the UI) Vue `^3.4` / Node `>=20`.
 
 ## 1. Backend — the Laravel package
 
+For the full product install the metapackage. It has no code of its own and requires
+`axioma-studio/vaulter-core`, `-media`, `-drive` and `-documents` at exactly its own version:
+
+```bash
+composer require axioma-studio/vaulter
+```
+
 `axioma-studio/vaulter-core` alone ships no Drive or document-editing features — it is
-the shared kernel (authorization, CAS contracts, sharing, panels). Require the packages
-your app actually needs:
+the shared kernel (authorization, CAS contracts, sharing, panels). To take only part of the
+product, require the packages your app actually needs:
 
 ```bash
 # Drive (folders/files/uploads) — pulls in axioma-studio/vaulter-media (CAS) automatically

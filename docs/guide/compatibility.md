@@ -29,6 +29,16 @@ return type a caller may rely on, changes a machine code, or removes an enum cas
 parameter, a method to a result type, a new exception code, a new enum case of an `@extensible` enum, a
 config key or an event is **MINOR**.
 
+## Packages and versions
+
+Every PHP package is released with one version and one tag, and each split repository
+(`axioma-studio/vaulter-core`, `-media`, `-drive`, `-documents`, `-filament`, plus the
+`axioma-studio/vaulter` metapackage) receives the same tag. Packages require each other as
+`self.version`, so mixing versions is not possible. `axioma-studio/vaulter-azgard` is released
+only once AzGuard itself has a tagged version; until then it is left out of the release.
+`@vaulter/vue` has its own semver line and declares the REST API line it speaks in `package.json`
+(`"vaulter": { "api": "1" }`). The release set is listed in `release/packages.json`.
+
 ## What is not
 
 - **Eloquent models** (`Vaulter\Models\**`), their columns, relations and scopes. They are `@internal`:

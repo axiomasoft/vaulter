@@ -30,6 +30,15 @@ outline: deep
 enum'а. Необязательный параметр, метод у результата, новый код исключения, новое значение `@extensible`
 enum'а, ключ конфигурации или событие — **MINOR**.
 
+## Пакеты и версии
+
+Все PHP-пакеты выходят с одной версией и одним тегом, и каждый split-репозиторий
+(`axioma-studio/vaulter-core`, `-media`, `-drive`, `-documents`, `-filament` и метапакет
+`axioma-studio/vaulter`) получает один и тот же тег. Пакеты требуют друг друга как `self.version`,
+поэтому смешать версии нельзя. `axioma-studio/vaulter-azgard` выходит только после тега самого AzGuard;
+до тех пор он исключён из релиза. У `@vaulter/vue` своя semver-линия, а поддерживаемую линию REST API
+он объявляет в `package.json` (`"vaulter": { "api": "1" }`). Состав релиза — в `release/packages.json`.
+
 ## Что не входит
 
 - **Eloquent-модели** (`Vaulter\Models\**`), их колонки, связи и scope'ы. Они `@internal`: операции

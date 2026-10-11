@@ -6,6 +6,15 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Release tooling and the metapackage (PLAN2.D71–D70)
+
+- Before: no metapackage, dist archives of every package carried `tests/`, and nothing checked that all split
+  repositories received the same tag. After: `composer require axioma-studio/vaulter` installs core, media, drive and
+  documents at one version; archives exclude tests; `verify-tags` fails a release whose split repositories disagree.
+- Before: the `axioma-studio/vaulter-core` description presented it as the whole product. After: it describes the kernel and
+  points to `axioma-studio/vaulter`.
+- `axioma-studio/vaulter-azgard` is not part of a release while `axiomasoft/azguard` is required as `dev-main`.
+
 ### Host testing kit and factories (PLAN2.D71)
 
 Additive. Hosts get `Drive::factory()`, `Node::factory()`, `FileRevision::factory()` and
