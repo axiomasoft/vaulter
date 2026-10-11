@@ -50,11 +50,11 @@ Execution sheet: run the batches in order. Route is the maximum class/effort of 
 | 43 | P5 | B503 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P5.3` | frontier/high | done |
 | 44 | P5 | B504 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P5.4` | implementation/high | done |
 | 45 | P5 | B505 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P5.5` | frontier/high | done |
-| 46 | P6 | B601 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P6.2` | implementation/high | ready |
-| 47 | P6 | B602 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P6.1` | frontier/high | waiting: B601 |
-| 48 | P6 | B603 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P6.7` | implementation/high | waiting: B601 |
-| 49 | P6 | B604 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P6.8` | implementation/high | waiting: B601 |
-| 50 | P6 | B605 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P6.3` | implementation/high | waiting: B601 |
-| 51 | P6 | B606 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P6.4` | implementation/high | waiting: B601 |
-| 52 | P6 | B607 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P6.5` | implementation/medium | waiting: B601 |
-| 53 | P6 | B608 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P6.6` | implementation/medium | waiting: B601 |
+| 46 | P6 | B601 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P6.2` | implementation/high | done |
+| 47 | P6 | B602 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P6.1` | frontier/high | done |
+| 48 | P6 | B603 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P6.7` | implementation/high | done |
+| 49 | P6 | B604 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P6.8` | implementation/high | done |
+| 50 | P6 | B605 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P6.3` | implementation/high | done |
+| 51 | P6 | B606 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P6.4` | implementation/high | done |
+| 52 | P6 | B607 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P6.5` | implementation/medium | done |
+| 53 | P6 | B608 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P6.6` | implementation/medium | done |

@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Vaulter\Filament\Tests\Fixtures;
 
+use Carbon\CarbonImmutable;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Data\Access\GrantInput;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Facades\Vaulter;
+use Vaulter\Filament\Support\PanelNodes;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
@@ -44,6 +46,33 @@ final class DriveBuilder
         $snapshot = Vaulter::drive($storage)->asSystem('test fixture')->folders()->create(name: $name);
 
         return Node::query()->findOrFail($snapshot->id);
+    }
+
+    /**
+     * The panel table row of a node as the acting admin sees it; a node the panel does
+     * not list (no View) yields a bare row, so action callbacks can still be forged.
+     *
+     * @return array<string, mixed>
+     */
+    public static function row(Node $node): array
+    {
+        foreach (PanelNodes::rows() as $row) {
+            if ($row['id'] === (string) $node->getKey()) {
+                return $row;
+            }
+        }
+
+        return [
+            'id' => (string) $node->getKey(),
+            'drive_id' => (string) $node->getRawOriginal('drive_id'),
+            'parent_id' => $node->parent_id === null ? null : (string) $node->parent_id,
+            'kind' => $node->kind,
+            'name' => $node->name,
+            'size_bytes' => 0,
+            'trashed_at' => null,
+            'created_at' => CarbonImmutable::now(),
+            'abilities' => [],
+        ];
     }
 
     /**

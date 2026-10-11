@@ -264,6 +264,16 @@ D29: C07 → P6.1 (RepresentationTag/Preconditions, NotModifiedAfterAuthorizatio
 ]
 ```
 
+## Closed
+
+```json
+{
+  "at": "2026-10-11T12:26:00Z",
+  "result": "done_with_deviations",
+  "summary": "8 item(s): 8 done_with_deviations"
+}
+```
+
 ## Orchestration
 
 ```json
