@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P7.4",
   "title": "Фабрики, InteractsWithVaulter и контрактные наборы расширений (C09 scanner/scope/policy/recovery)",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "Хост и авторы расширений получают фабрики Drive/Node/FileRevision/Document через Operations, trait InteractsWithVaulter и контрактные наборы FileHandler, PermissionDriver (общий фикстур), ContentScanner, ScanLifecycle, DocumentType, Exporter; arch запрещает production-импорт Testing.",
   "why": "OPUS 12 §5, D35; C09 требует reusable host contract tests для scanner/scoping/policy/fault recovery. Риски: фабрика в обход инвариантов (raw insert), Testing в production-графе, контрактный набор, не ловящий нарушение.",
   "scope": {
@@ -243,12 +243,49 @@
   },
   "result": {
     "started_at": "2026-10-11T18:11:50Z",
+    "finished_at": "2026-10-11T19:22:45Z",
     "executor": {
       "provider": "claude-code",
       "model": "sonnet-5.5",
       "effort": "high",
       "session": "569ada73-07d7-4191-b88b-519df19a5503"
-    }
+    },
+    "notes": "Factories (core Drive/Node/FileRevision via Operations, documents Document), InteractsWithVaulter, FakeContentScanner, six contract suites (FileHandler, PermissionDriver+PermissionFixture, ContentScanner, ScanLifecycle C09, DocumentType, Exporter) each proved on reference and broken fixture, TestingBoundaryTest in core/drive/documents/media (red proven), docs EN+RU, UPGRADE, CHANGELOG. Review grok-4.7/high: 8 findings fixed in one correction (artifacts/P7.4/review-verdict.md). V7 (ScanLifecycle on PostgreSQL) not executed: phase run P7. Seams self-check: factories never raw insert (insert() refused), Testing not imported by production (arch), no behaviour change in scan Actions.",
+    "deviations": [
+      "TestingBoundaryTest: one arch() per namespace (Pest ignoring() drops dependencies, vacuous otherwise); ScanLifecycle uses existing Claim/Settle Actions and ScanPolicyResolver::initialize for lease/stale/legacy scenarios; scanner IO exception is asserted 'never a verdict' (existing job maps it to failed/unknown, non-retryable, lifecycle unchanged); forced adjacent edits: core/drive Arch/ArchTest.php, Pest.php maps, phpstan.neon scoped trait.unused, public-api goldens"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-11T19:22:45Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-11T19:22:45Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-11T19:22:45Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-11T19:22:45Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-11T19:22:45Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-11T19:22:45Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-11T18:11:50Z"
+  "updated_at": "2026-10-11T19:22:46Z"
 }

@@ -6,6 +6,16 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### Host testing kit and factories (PLAN2.D71)
+
+Additive. Hosts get `Drive::factory()`, `Node::factory()`, `FileRevision::factory()` and
+`Document::factory()`, the `Vaulter\Testing\InteractsWithVaulter` trait and the contract suites
+`FileHandlerContractTests`, `ContentScannerContractTests`, `ScanLifecycleContractTests` and
+`ExporterContractTests`; `PermissionDriverContractTests` gains `assertSameDecisionsAsReference()`.
+Factories create through Operations, so a host's own `database/factories` that insert `v_*` rows directly can be replaced by them.
+If a test suite of yours autoloads `Vaulter\Database\Factories` from `packages/core/database/factories` in its own
+`autoload-dev`, remove that entry: the namespace now comes from `axioma-studio/vaulter-core`. Nothing changes at runtime.
+
 ### `vaulter:doctor` and the install report (PLAN2.D68, D71)
 
 New: `php artisan vaulter:doctor --production` checks the host before and after a deploy and

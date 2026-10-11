@@ -39,7 +39,6 @@
     "autoload-dev": {
         "psr-4": {
             "Vaulter\\Tests\\": "packages/core/tests/",
-            "Vaulter\\Database\\Factories\\": "packages/core/database/factories/",
             "Vaulter\\Documents\\Tests\\": "packages/documents/tests/",
             "Vaulter\\Load\\": "load/app/",
             "Vaulter\\Load\\Tests\\": "load/tests/"
