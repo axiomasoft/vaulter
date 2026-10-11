@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.3",
   "title": "OpenAPI 3.1 и контрактные тесты: спецификация, валидация ответов, golden маршрутов, oasdiff",
-  "status": "todo",
+  "status": "in_progress",
   "summary": "openapi/vaulter-v1.yaml (OpenAPI 3.1) описывает каждый маршрут vaulter.v1.* (operationId = имя без префикса), режимы предусловий (If-Match 428/412, If-None-Match 304), заголовки и кэш; каждый ответ feature-тестов core/drive/documents валидируется по схеме тестовым адаптером на opis/json-schema; golden списка маршрутов; примеры ответов; CI-job oasdiff breaking.",
   "why": "OPUS F6 P6.3/D30 + D64 + C07/C08: OpenAPI — источник истины REST и TS-типов; контракт режимов и кэшей должен быть машинно проверяем до заморозки 1.0. Риски: public-contract (дрейф спецификации от кода), ложная уверенность валидатора (3.1-конструкции), CI-зависимость от внешнего образа.",
   "scope": {
@@ -216,6 +216,14 @@
     "status": "not_needed",
     "notes": "@plan/knowledge/P6-industry-research-2026-10-10.json#R6-OpenAPI"
   },
-  "result": null,
-  "updated_at": "2026-10-10T10:26:46Z"
+  "result": {
+    "started_at": "2026-10-11T04:16:41Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "e9c81aa4-8854-4b34-8891-4f18d1b555a2"
+    }
+  },
+  "updated_at": "2026-10-11T04:16:41Z"
 }

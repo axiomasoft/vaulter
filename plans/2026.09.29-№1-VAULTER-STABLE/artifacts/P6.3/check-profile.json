@@ -1,0 +1,20 @@
+{
+  "item": "P6.3",
+  "changed_paths": [
+    "openapi/vaulter-v1.yaml", "openapi/examples/*.json",
+    "packages/core/tests/Support/OpenApi/*.php", "packages/core/tests/OpenApi/*.php",
+    "packages/core/tests/Fixtures/openapi/negative/*.json", "packages/core/tests/Fixtures/golden/routes-v1.json",
+    "packages/{core,drive,documents}/tests/TestCase.php", "phpunit.xml", "packages/{drive,documents}/phpunit.xml",
+    "composer.json", "composer.lock", "packages/{core,drive,documents}/composer.json",
+    ".github/workflows/openapi.yml", "docs/reference/rest-api.md", "docs/ru/reference/rest-api.md", "CONTRIBUTING.md", "CHANGELOG.md"
+  ],
+  "callers": ["packages/core/tests/Http/*", "packages/drive/tests/Http|Feature|Uploads", "packages/documents/tests/Http|Document|Collaboration"],
+  "fixtures": ["packages/core/tests/Fixtures/openapi/negative", "packages/core/tests/Fixtures/golden/routes-v1.json", "openapi/examples"],
+  "checks": {
+    "V1": {"cwd": ".", "env": "APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory:", "cmd": "scripts/php84 vendor/bin/pest --ci packages/core/tests/OpenApi packages/core/tests/Http"},
+    "V2": {"cwd": "packages/drive", "env": "APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory:", "cmd": "../../scripts/php84 vendor/bin/pest --ci tests/Http tests/Feature tests/Uploads"},
+    "V3": {"cwd": "packages/documents", "env": "APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory:", "cmd": "../../scripts/php84 vendor/bin/pest --ci tests/Http tests/Document tests/Collaboration"},
+    "V80": {"cwd": ".", "cmd": "scripts/php84 vendor/bin/pint --test packages/core && scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress"}
+  },
+  "excluded": "D66: no docker/oasdiff, no PG/MySQL, no full suites, no mutators"
+}
