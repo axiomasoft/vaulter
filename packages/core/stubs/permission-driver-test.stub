@@ -1,0 +1,12 @@
+<?php
+
+declare(strict_types=1);
+
+use {{ fqcn }};
+use Vaulter\Testing\Contracts\PermissionDriverContractTests;
+
+// Run inside the application test case: the contract builds its fixture in the database.
+// Drop this check once the driver adds roles of its own and decides differently on purpose.
+it('decides like the reference driver', function (): void {
+    (new PermissionDriverContractTests)->assertSameDecisionsAsReference(new {{ class }});
+});

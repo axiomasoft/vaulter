@@ -193,6 +193,15 @@ $profile->documentTypes('vaulter/markdown', 'acme/kanban');
 Пустой список разрешает все зарегистрированные типы. Создание типа вне списка бросает
 `ProfileRestrictionException`.
 
+## Генератор
+
+```bash
+php artisan vaulter:make:document-type Kanban
+```
+
+Создаёт тип в `app/Vaulter/DocumentTypes/KanbanDocumentType.php` и Pest-тест в `tests/Unit/Vaulter/`, который запускает `DocumentTypeContractTests`. Команда печатает строку для
+`vaulter-documents.types` и не меняет ваш конфиг. Существующий файл не перезаписывается без `--force`.
+
 ## Тесты вашего расширения
 
 Кроме контрактного набора выше, `Document::factory()` создаёт документы через

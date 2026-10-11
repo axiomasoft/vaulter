@@ -396,6 +396,15 @@ If the presentation is **collaborative** (e.g. a `vaulter/rich-text` document) a
 enabled, `VaulterDocumentNode` opens a Yjs session and runs the editor in collaborative mode;
 otherwise it uses the autosave path described in [Document nodes](./documents.md#autosave-vs-named-versions).
 
+## Generator
+
+```bash
+php artisan vaulter:make:file-handler Csv
+```
+
+Writes a handler in `app/Vaulter/FileHandlers/Csv.php` and a Pest test in `tests/Unit/Vaulter/` that runs `FileHandlerContractTests`. It prints the line to `vaulter.handlers`
+and never edits your config. An existing file is kept unless you pass `--force`.
+
 ## Reference
 
 - Contract — `Vaulter\Contracts\Handlers\FileHandler`

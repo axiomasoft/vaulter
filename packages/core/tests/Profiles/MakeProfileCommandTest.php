@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Vaulter\Profiles\ProjectDriveProfile;
 use Illuminate\Support\Facades\File;
+use Vaulter\Profiles\ProfileRegistry;
 
 beforeEach(function (): void {
     $this->panelDir = app_path('Vaulter/Profiles');
@@ -65,4 +67,24 @@ it('не перезаписывает существующий провайде�
     $this->artisan('vaulter:make:profile', ['name' => 'project_drive'])->assertSuccessful();
     $this->artisan('vaulter:make:profile', ['name' => 'project_drive'])->assertFailed();
     $this->artisan('vaulter:make:profile', ['name' => 'project_drive', '--force' => true])->assertSuccessful();
+});
+
+it('пишет Pest-тест, который лентится и проходит на сгенерированном профиле', function (): void {
+    File::deleteDirectory(base_path('tests/Unit/Vaulter'));
+    $this->artisan('vaulter:make:profile', ['name' => 'project_drive'])->assertSuccessful();
+
+    $test = base_path('tests/Unit/Vaulter/ProjectDriveProfileTest.php');
+    expect($test)->toBeFile();
+    exec(escapeshellarg(PHP_BINARY).' -l '.escapeshellarg($test).' 2>&1', $output, $code);
+    expect($code)->toBe(0)
+        ->and(File::get($test))->toContain('ProfileRegistry')->toContain("has('project-drive')");
+
+    require_once $this->panelDir.'/ProjectDriveProfile.php';
+    $registry = new ProfileRegistry;
+    $registry->register(new ProjectDriveProfile);
+    $registry->freeze();
+    expect($registry->has('project-drive'))->toBeTrue()
+        ->and($registry->get('project-drive')->getDrivePolicy())->not->toBeNull();
+
+    File::deleteDirectory(base_path('tests/Unit/Vaulter'));
 });

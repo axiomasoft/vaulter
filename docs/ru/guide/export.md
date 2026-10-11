@@ -151,6 +151,15 @@ Documents::exporters()->replace('vaulter/html', MyHtmlExporter::class); // за�
 `DuplicateDocumentExporterException`; заменяйте через `replace()`. После загрузки приложения
 реестр замораживается.
 
+## Генератор
+
+```bash
+php artisan vaulter:make:exporter Pdf
+```
+
+Создаёт экспортёр в `app/Vaulter/Exporters/PdfExporter.php` и Pest-тест в `tests/Unit/Vaulter/`, который запускает `ExporterContractTests`. Команда печатает строку для
+`vaulter-documents.exporters` и не меняет ваш конфиг. Существующий файл не перезаписывается без `--force`.
+
 ## Тесты вашего расширения
 
 `ExporterContractTests` проверяет экспортёр на соответствие контракту:

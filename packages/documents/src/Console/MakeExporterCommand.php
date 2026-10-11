@@ -54,11 +54,30 @@ final class MakeExporterCommand extends Command
             $this->files->get(__DIR__.'/../../stubs/exporter.stub'),
         ));
 
+        $this->writeTest($class, 'App\\Vaulter\\Exporters\\'.$class, (bool) $this->option('force'));
         $this->components->task(sprintf('Exporter app/Vaulter/Exporters/%s.php', $class));
         $this->newLine();
         $this->line("Register it in <info>config/vaulter-documents.php</info> under 'exporters':");
         $this->line(sprintf('    \App\Vaulter\Exporters\%s::class,', $class));
 
         return self::SUCCESS;
+    }
+
+    private function writeTest(string $class, string $fqcn, bool $force): void
+    {
+        $path = sprintf('%s/%sTest.php', base_path('tests/Unit/Vaulter'), $class);
+        if (!$force && $this->files->exists($path)) {
+            $this->components->warn(sprintf('Test tests/Unit/Vaulter/%sTest.php already exists; left as is. Pass --force to overwrite.', $class));
+
+            return;
+        }
+
+        $this->files->ensureDirectoryExists(dirname($path));
+        $this->files->put($path, str_replace(
+            ['{{ fqcn }}', '{{ class }}'],
+            [$fqcn, $class],
+            $this->files->get(__DIR__.'/../../stubs/exporter-test.stub'),
+        ));
+        $this->components->task(sprintf('Test tests/Unit/Vaulter/%sTest.php', $class));
     }
 }

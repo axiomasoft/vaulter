@@ -448,6 +448,15 @@ grants through AzGuard's change pipeline.
 | Workspace-scoped | per-node grants | node-blind context | team-scoped | `hasPermissionIn` |
 | Safe when not configured | n/a | yes | yes (no access) | only with the bridge installed |
 
+## Generator
+
+```bash
+php artisan vaulter:make:permission-driver Workspace
+```
+
+Writes a pass-through driver in `app/Vaulter/PermissionDrivers/Workspace.php` and a Pest test in `tests/Unit/Vaulter/` that runs `PermissionDriverContractTests`. It prints the line to `vaulter.access.permission_drivers`
+and never edits your config. An existing file is kept unless you pass `--force`.
+
 ## Testing your extension
 
 `Vaulter\Testing\Contracts\PermissionDriverContractTests` proves a driver the same way the

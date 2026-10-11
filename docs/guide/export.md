@@ -151,6 +151,15 @@ Documents::exporters()->replace('vaulter/html', MyHtmlExporter::class); // swap 
 Two exporters for one (type, format) pair fail at boot with `DuplicateDocumentExporterException`;
 swap one with `replace()` instead. The registry freezes once the application has booted.
 
+## Generator
+
+```bash
+php artisan vaulter:make:exporter Pdf
+```
+
+Writes an exporter in `app/Vaulter/Exporters/PdfExporter.php` and a Pest test in `tests/Unit/Vaulter/` that runs `ExporterContractTests`. It prints the line to `vaulter-documents.exporters`
+and never edits your config. An existing file is kept unless you pass `--force`.
+
 ## Testing your extension
 
 `ExporterContractTests` checks an exporter against the contract:

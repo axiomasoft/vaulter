@@ -1,0 +1,11 @@
+<?php
+
+declare(strict_types=1);
+
+use {{ fqcn }};
+use Vaulter\Documents\Testing\Contracts\ExporterContractTests;
+
+// Run inside the application test case: the exporter's types come from the installed registry.
+it('keeps the exporter contract', function (): void {
+    (new ExporterContractTests)->assertExporterContract(new {{ class }});
+});

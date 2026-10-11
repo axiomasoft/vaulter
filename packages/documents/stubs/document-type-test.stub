@@ -1,0 +1,13 @@
+<?php
+
+declare(strict_types=1);
+
+use {{ fqcn }};
+use Vaulter\Documents\Testing\Contracts\DocumentTypeContractTests;
+
+// Run inside the application test case: codecs may read configuration.
+uses(DocumentTypeContractTests::class);
+
+it('keeps the document type contract', function (): void {
+    $this->assertDocumentTypeContract(new {{ class }});
+});

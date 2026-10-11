@@ -79,3 +79,6 @@ php artisan vaulter:make:profile project --host="App\Models\Project" --no-grants
 меняет. Для перезаписи существующего провайдера используйте `--force`.
 Опции `--prefix/--id` и команда `vaulter:panel:migrations` удалены.
 Полная карта изменений API приведена в UPGRADE.md.
+
+Команда также создаёт `tests/Unit/Vaulter/ProjectProfileTest.php`: он регистрирует провайдер, замораживает
+реестр и получает замороженную политику диска. Существующий тест не перезаписывается без `--force`.

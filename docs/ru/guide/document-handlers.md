@@ -399,6 +399,15 @@ registerEngineComponent('AppCsvPreview', AppCsvPreview)
 редактирования; иначе он использует путь автосохранения, описанный в
 [Узлах-документах](./documents.md#autosave-vs-named-versions).
 
+## Генератор
+
+```bash
+php artisan vaulter:make:file-handler Csv
+```
+
+Создаёт обработчик в `app/Vaulter/FileHandlers/Csv.php` и Pest-тест в `tests/Unit/Vaulter/`, который запускает `FileHandlerContractTests`. Команда печатает строку для
+`vaulter.handlers` и не меняет ваш конфиг. Существующий файл не перезаписывается без `--force`.
+
 ## Справочник
 
 - Контракт — `Vaulter\Contracts\Handlers\FileHandler`

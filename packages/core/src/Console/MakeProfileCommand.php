@@ -47,6 +47,8 @@ final class MakeProfileCommand extends Command
             return self::FAILURE;
         }
 
+        $this->writeTest(studly: $studly, id: $id, force: (bool) $this->option('force'));
+
         $this->printNextSteps(studly: $studly, id: $id);
 
         return self::SUCCESS;
@@ -76,6 +78,25 @@ final class MakeProfileCommand extends Command
         $this->components->task(sprintf('Profile provider app/Vaulter/Profiles/%s.php', $class));
 
         return $path;
+    }
+
+    private function writeTest(string $studly, string $id, bool $force): void
+    {
+        $class = $studly.'Profile';
+        $path = sprintf('%s/%sTest.php', base_path('tests/Unit/Vaulter'), $class);
+        if (!$force && $this->files->exists($path)) {
+            $this->components->warn(sprintf('Test tests/Unit/Vaulter/%sTest.php already exists; left as is. Pass --force to overwrite.', $class));
+
+            return;
+        }
+
+        $this->files->ensureDirectoryExists(dirname($path));
+        $this->files->put($path, str_replace(
+            ['{{ fqcn }}', '{{ class }}', '{{ id }}'],
+            ['App\\Vaulter\\Profiles\\'.$class, $class, $id],
+            $this->files->get($this->stubPath('profile-test')),
+        ));
+        $this->components->task(sprintf('Test tests/Unit/Vaulter/%sTest.php', $class));
     }
 
     private function renderProvider(string $namespace, string $class, string $id): string

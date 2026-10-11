@@ -1,0 +1,10 @@
+<?php
+
+declare(strict_types=1);
+
+use {{ fqcn }};
+use Vaulter\Testing\Contracts\FileHandlerContractTests;
+
+it('keeps the file handler contract', function (): void {
+    (new FileHandlerContractTests)->assertFileHandlerContract(new {{ class }});
+});

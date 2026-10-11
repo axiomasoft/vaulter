@@ -11,6 +11,8 @@ use Vaulter\Console\ErrorsReferenceCommand;
 use Vaulter\Console\EventsReferenceCommand;
 use Vaulter\Console\InstallCommand;
 use Vaulter\Console\LegacyFanoutCommand;
+use Vaulter\Console\MakeFileHandlerCommand;
+use Vaulter\Console\MakePermissionDriverCommand;
 use Vaulter\Console\MakeProfileCommand;
 use Vaulter\Console\PruneChangesCommand;
 use Vaulter\Console\PruneWebhooksCommand;
@@ -27,6 +29,8 @@ final class ConsoleRegistrar
         Artisan::starting(static function (Artisan $artisan): void {
             $artisan->resolveCommands([
                 MakeProfileCommand::class,
+                MakeFileHandlerCommand::class,
+                MakePermissionDriverCommand::class,
                 EventsReferenceCommand::class,
                 ErrorsReferenceCommand::class,
                 RelayWebhooksCommand::class,

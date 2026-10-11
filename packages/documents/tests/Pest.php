@@ -57,6 +57,9 @@ uses(ExportTestCase::class, RefreshDatabase::class)->in('Export', 'Testing');
 // installed, removed and installed again, and content that reads only partly.
 uses(TypesTestCase::class, RefreshDatabase::class)->in('Types');
 
+// Generated scaffolds run their contract suites on the same booted types and exporters.
+uses(ExportTestCase::class, RefreshDatabase::class)->in('Console');
+
 // The v1 HTTP surface: documents, revisions, comments, export, the session and the hub
 // (collaboration ON so the hub stack is registered).
 uses(CollaborationEnabledTestCase::class, RefreshDatabase::class)->in('Http');

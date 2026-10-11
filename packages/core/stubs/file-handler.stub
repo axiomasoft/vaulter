@@ -1,0 +1,45 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use Vaulter\Handlers\AbstractFileHandler;
+use Vaulter\ValueObjects\Handlers\ContentCapabilities;
+use Vaulter\ValueObjects\Handlers\FileDescriptor;
+use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
+
+/** Register this class in config('vaulter.handlers'). */
+final class {{ class }} extends AbstractFileHandler
+{
+    public function key(): string
+    {
+        return '{{ key }}';
+    }
+
+    public function mimeTypes(): array
+    {
+        return ['application/x-{{ slug }}'];
+    }
+
+    public function extensions(): array
+    {
+        return ['{{ extension }}'];
+    }
+
+    public function priority(): int
+    {
+        return 10;
+    }
+
+    public function capabilities(FileDescriptor $file): ContentCapabilities
+    {
+        // The registry caches by mime type and extension: decide on nothing else.
+        return new ContentCapabilities(downloadable: true);
+    }
+
+    public function viewer(FileDescriptor $file): ViewerDescriptor
+    {
+        return new ViewerDescriptor(key: '{{ key }}');
+    }
+}

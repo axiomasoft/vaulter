@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P7.3",
   "title": "Генераторы vaulter:make:* со стабами и Pest-тестом на контрактный набор",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "vaulter:make:file-handler и vaulter:make:permission-driver добавлены, make:profile/document-type/exporter дополнены генерацией Pest-теста; каждый сгенерированный класс проходит свой контрактный набор.",
   "why": "OPUS 06 §12, D34: генератор создаёт класс, строку регистрации и тест на контрактном наборе. Риск: стаб, не проходящий собственный контракт или Pint.",
   "scope": {
@@ -169,6 +169,36 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-11T13:58:13Z"
+  "result": {
+    "started_at": "2026-10-11T19:30:35Z",
+    "finished_at": "2026-10-11T19:36:05Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "sonnet-5.5",
+      "effort": "low",
+      "session": "97834321-4241-4a1c-a4b2-63bbd02eb41c"
+    },
+    "notes": "5 generators write class + Pest contract test; Pint/PHPStan green core+documents; PG/MySQL/full suites/docs:build deferred to phase run P7. Self-check vs Seams: generators after P7.4 contract suites.",
+    "deviations": [
+      "tests location; ArchTest allowlist; no UPGRADE.md (additive commands)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-11T19:36:05Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-11T19:36:05Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-11T19:36:05Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-11T19:36:05Z"
 }

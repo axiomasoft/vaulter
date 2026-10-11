@@ -54,11 +54,30 @@ final class MakeDocumentTypeCommand extends Command
             $this->files->get(__DIR__.'/../../stubs/document-type.stub'),
         ));
 
+        $this->writeTest($class, 'App\\Vaulter\\DocumentTypes\\'.$class, (bool) $this->option('force'));
         $this->components->task(sprintf('Document type app/Vaulter/DocumentTypes/%s.php', $class));
         $this->newLine();
         $this->line("Register it in <info>config/vaulter-documents.php</info> under 'types':");
         $this->line(sprintf('    \App\Vaulter\DocumentTypes\%s::class,', $class));
 
         return self::SUCCESS;
+    }
+
+    private function writeTest(string $class, string $fqcn, bool $force): void
+    {
+        $path = sprintf('%s/%sTest.php', base_path('tests/Unit/Vaulter'), $class);
+        if (!$force && $this->files->exists($path)) {
+            $this->components->warn(sprintf('Test tests/Unit/Vaulter/%sTest.php already exists; left as is. Pass --force to overwrite.', $class));
+
+            return;
+        }
+
+        $this->files->ensureDirectoryExists(dirname($path));
+        $this->files->put($path, str_replace(
+            ['{{ fqcn }}', '{{ class }}'],
+            [$fqcn, $class],
+            $this->files->get(__DIR__.'/../../stubs/document-type-test.stub'),
+        ));
+        $this->components->task(sprintf('Test tests/Unit/Vaulter/%sTest.php', $class));
     }
 }

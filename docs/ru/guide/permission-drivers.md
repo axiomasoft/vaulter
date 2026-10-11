@@ -449,6 +449,15 @@ on: AssignmentScopeRef::of('team', $teamId))` и `actingAsSuperAdmin($user)` с�
 | Область workspace | гранты на уровне узла | node-blind контекст | в области команды | `hasPermissionIn` |
 | Безопасно, когда не настроен | н/д | да | да (запрет) | только с установленным мостом |
 
+## Генератор
+
+```bash
+php artisan vaulter:make:permission-driver Workspace
+```
+
+Создаёт драйвер-проход в `app/Vaulter/PermissionDrivers/Workspace.php` и Pest-тест в `tests/Unit/Vaulter/`, который запускает `PermissionDriverContractTests`. Команда печатает строку для
+`vaulter.access.permission_drivers` и не меняет ваш конфиг. Существующий файл не перезаписывается без `--force`.
+
 ## Тесты вашего расширения
 
 `Vaulter\Testing\Contracts\PermissionDriverContractTests` проверяет драйвер так же, как

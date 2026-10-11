@@ -78,3 +78,6 @@ php artisan vaulter:make:profile project --host="App\Models\Project" --no-grants
 This writes `app/Vaulter/Profiles/ProjectProfile.php` without modifying config or migrations.
 Use `--force` to overwrite an existing provider. Own-tables `--prefix/--id` options and
 `vaulter:panel:migrations` are removed. See UPGRADE.md for the complete breaking API map.
+
+The command also writes `tests/Unit/Vaulter/ProjectProfileTest.php`: it registers the provider, freezes the
+registry and resolves the frozen drive policy. An existing test is kept unless you pass `--force`.
