@@ -1,0 +1,316 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P6.8",
+  "title": "Маршруты documents v1, хаб-эндпоинты и удаление легаси HTTP",
+  "status": "done_with_deviations",
+  "summary": "Documents-маршруты (документы, содержимое с ETag \"{nodeId}.{epoch}.{stateVersion}\", ревизии, экспорт, сессия коллаборации, комментарии) и хаб-эндпоинты v1/collaboration/hub/{authenticate,load,store} переведены на vaulter.v1.*; легаси HTTP удалено: VaulterException::render, ResolveVaulterRouteParameters, путевые правила карт операций/throttle, HttpResourceResolver::storage.",
+  "why": "OPUS 10 §4 (documents) + D35/D36/D62/D65: контент документа имеет собственный валидатор, хаб — отдельный стек; после item в пакете нет неверсионированных маршрутов (D63). Риски: concurrency (PUT content ‖ hub store, restore ‖ epoch), access-boundary (экспорт, read-only сессия), public-contract, регрессия хаба (контракт load/store).",
+  "scope": {
+    "include": [
+      "packages/documents/routes/documents.php — по P6-design#Routes (DOCUMENTS и Hub), имена vaulter.v1.*; authenticated-маршруты регистрируются всегда (comments/collaboration session проверяются в Operations: если CommentOperations/DocumentOperations::collaborationSession не проверяют глобальный флаг — добавить ProfileRestrictionException + тест); hub-стек — при collaborationEnabled.",
+      "Invokable-контроллеры packages/documents/src/Http/Controllers/{Documents,Revisions,Collaboration,Comments}/*; удалить DocumentNodeController, NodeCommentController, NodeCollaborationController (логика authenticate/load/store переносится в HubAuthenticate/HubLoad/HubStoreController без изменения протокола D36).",
+      "Содержимое: ShowDocumentContentController — ETag RepresentationTag::document, 304 после авторизации; UpdateDocumentContentController/RestoreDocumentRevisionController — Preconditions::requireIfMatch + matchDocument → expectedStateVersion; 412 document_state_mismatch.",
+      "Экспорт: ExportDocumentController → ContentResponder::export(DocumentExport) (attachment, nosniff, CSP sandbox, no-store).",
+      "Ресурсы: DocumentContentResource (type, schema_version, state_version, collab_epoch, revision_id, content — без полей вызывающего), DocumentRevisionResource, CommentResource (NodeCommentResource переименовать), CollaborationSessionResource.",
+      "Удаление легаси: VaulterException::render() и renderExtras-остатки; packages/core/src/Http/Middleware/ResolveVaulterRouteParameters.php; путевые правила и путевой резолв VaulterHttpOperationMap/VaulterThrottledRouteMap; HttpResourceResolver::storage(); NodeResource-хелперы для handler.",
+      "Тесты: переписать на v1 packages/documents/tests/{Document,Collaboration,Comment,Export,Feature,Operations,Profiles,Providers,Types}/* и корневые tests/*.php с documents-путями, core-тесты с documents-путями; новые packages/documents/tests/Http: DocumentContentV1Test, DocumentRevisionsV1Test, ExportV1Test, CollaborationSessionV1Test, HubV1RoutesTest, CommentsV1Test; packages/documents/tests/Arch/HttpV1ArchTest.php; packages/core/tests/Http/LegacyRoutesRemovedTest.php.",
+      "Docs: docs/reference/rest-api.md (+ru) — documents/comments/collaboration/hub; docs/guide/documents.md, collaboration.md, comments.md, export.md (+ru); UPGRADE.md — полная таблица было → стало всех маршрутов фазы."
+    ],
+    "exclude": [
+      "изменение протокола хаба кроме путей (P6.5 — клиентская сторона хаба)",
+      "label ревизии документа (нет PHP-операции, D65)",
+      "OpenAPI (P6.3)"
+    ]
+  },
+  "depends_on": [
+    "P6.7"
+  ],
+  "decisions": [
+    "D35",
+    "D36",
+    "D38",
+    "D44",
+    "D54",
+    "D62",
+    "D63",
+    "D65"
+  ],
+  "skills": [
+    "php:laravel",
+    "php:production-readiness-checklist",
+    "php-packages:laravel-package-testing",
+    "php:static-analysis"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/artifacts-P6-design-opus#H10-4",
+      "why": "Первый read (D06): OPUS 10 §4 (документы)",
+      "required": true
+    },
+    {
+      "ref": "knowledge/P6-design#Routes",
+      "why": "Стартовый раздел нормативного контракта (документ доставлен целиком)",
+      "required": true
+    },
+    {
+      "path": "packages/documents/routes/documents.php",
+      "why": "Переписывается",
+      "required": true
+    },
+    {
+      "path": "packages/documents/src/Http/Controllers/Documents/DocumentNodeController.php",
+      "why": "Удаляется; логика переносится",
+      "required": true
+    },
+    {
+      "path": "packages/documents/src/Http/Controllers/Collaboration/NodeCollaborationController.php",
+      "why": "Разделяется на hub-контроллеры",
+      "required": true
+    },
+    {
+      "path": "packages/documents/src/Http/Middleware/ResolveCollaborationCall.php",
+      "why": "Hub-стек",
+      "required": true
+    },
+    {
+      "path": "packages/documents/src/Operations/DocumentOperations.php",
+      "why": "content/update/restore/export/collaborationSession",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Http/Middleware/ResolveVaulterRouteParameters.php",
+      "why": "Удаляется",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/documents/routes/documents.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/documents/src/Http/Controllers/**/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/documents/src/Http/Requests/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/documents/src/Http/Resources/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/documents/src/Operations/*.php",
+      "change": "modify",
+      "note": "только проверка глобального флага при отсутствии"
+    },
+    {
+      "path": "packages/core/src/Exceptions/VaulterException.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Http/Middleware/ResolveVaulterRouteParameters.php",
+      "change": "delete"
+    },
+    {
+      "path": "packages/core/src/Http/Middleware/VaulterHttpOperationMap.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Http/Middleware/VaulterThrottledRouteMap.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Http/Support/HttpResourceResolver.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Http/Support/ContentResponder.php",
+      "change": "any",
+      "note": "создаётся в P6.1; здесь export()"
+    },
+    {
+      "path": "packages/core/src/Exceptions/**/*.php",
+      "change": "modify",
+      "note": "удаление render-остатков"
+    },
+    {
+      "path": "packages/drive/src/Exceptions/**/*.php",
+      "change": "modify",
+      "note": "удаление render-остатков"
+    },
+    {
+      "path": "packages/documents/tests/**/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/documents/tests/Http/*.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/documents/tests/Arch/HttpV1ArchTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Http/LegacyRoutesRemovedTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/**/*.php",
+      "change": "modify",
+      "note": "только тесты с documents-путями"
+    },
+    {
+      "path": "packages/core/tests/Arch/__snapshots__/*",
+      "change": "modify"
+    },
+    {
+      "path": "packages/documents/tests/Arch/__snapshots__/*",
+      "change": "modify"
+    },
+    {
+      "path": "docs/reference/rest-api.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/ru/reference/rest-api.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/guide/documents.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/guide/collaboration.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/guide/comments.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/guide/export.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/ru/guide/*.md",
+      "change": "modify",
+      "note": "зеркала documents/collaboration/comments/export"
+    },
+    {
+      "path": "UPGRADE.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Обязательный контекст из документов, привязанных к фазе (доставляются целиком; reads — стартовые разделы): @plan/knowledge/artifacts-P6-design-opus.json — первым (D06); нормативный @plan/knowledge/P6-design.json (кроме разделов из reads — Scope, Order, Stability, Docs, Seams); @plan/knowledge/P6-invariants.json; @plan/knowledge/P6-industry-research-2026-10-10.json (обоснование, scope не расширять); решения D62–D65; @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json (D29).",
+    "Стартовые разделы (документы фазы доставлены в пакет целиком, отдельные reads не дублируются): @plan/knowledge/P6-design.json#Routes — Стартовый раздел: DOCUMENTS и Hub; @plan/knowledge/P6-design.json#Validators — ETag контента и 412 document_state_mismatch; @plan/knowledge/P6-design.json#Egress — Экспорт; @plan/knowledge/P6-design.json#Resources — DocumentRevision/Comment; @plan/knowledge/P6-invariants.json#Pairs — PUT content ‖ hub store, restore ‖ hub store; @plan/knowledge/P4-design.json#Errors — Коды документов; @plan/knowledge/validation-and-execution-policy.json#D51-Policy — D51: лёгкие проверки (D66 убирает барьеры и H из P6); @plan/knowledge/validation-and-execution-policy.json#Owner-Fast-Only — Только лёгкие проверки; D66 исключает длинные прогоны из фазы целиком; @plan/knowledge/validation-and-execution-policy.json#Before-Work — check-profile.json до первой продуктовой правки; @plan/knowledge/validation-and-execution-policy.json#Per-Item — Affected-проверки после каждой правки, не чинить будущие items; @plan/knowledge/validation-and-execution-policy.json#No-Mutators — Запрет mutation tools (D66: также без negative controls).",
+    "До первого product edit создать plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P6.8/check-profile.json: фактические изменяемые пути/вызывающие/фикстуры и точные cwd/env/команды acceptance-проверок (D66: без длинных прогонов и мутаторов).",
+    "Только перечисленные пакеты и файлы-потребители (task_files — подсказка; вынужденные смежные правки перечислить в Completion Notes); чужие dirty-правки, применённые миграции и OPUS не менять. Расхождение кода с P6-design → стоп и описание в Completion Notes/новый D#, не импровизация (D01).",
+    "Публичная поверхность изменилась → golden PublicApiSnapshotTest затронутого пакета (core/drive/documents, packages/<pkg>/tests/Arch|PublicApi), UPGRADE.md (было → стало, ссылки PLAN2.D62–D65), запись CHANGELOG.md [Unreleased] и тот же текст в plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P6.8/changelog-entry.md.",
+    "Комментарии в коде объясняют «почему», без кодов задач плана; docs/guide и docs/reference меняются в том же item; у страницы с зеркалом docs/ru/… — обновить зеркало тем же смыслом, при отсутствии зеркала у страниц из P6-design#Docs — создать (EV275).",
+    "Нет push/PR/hosted CI/публикации (Packagist/npm) и mutation tools (Infection, pest --mutate). Review: none (D51) — перед finish self-check применимых P6-I* и интерферирующих пар @plan/knowledge/P6-invariants.json в Completion Notes.",
+    "Новые каталоги тестов (packages/core/tests/Http|OpenApi, packages/<pkg>/tests/Http) попадают в существующие testsuites (core — корневой phpunit.xml directory packages/core/tests; пакеты — свой phpunit.xml directory tests); отдельных конфигов не создавать.",
+    "Risk-class: concurrency + access-boundary + public-contract. ETag контента — только RepresentationTag::document; тело content не содержит полей, зависящих от вызывающего (DocumentContentV1Test проверяет равенство тела и ETag для reader и writer).",
+    "Хаб-эндпоинты: протокол D36 неизменен (JWT комнаты + HMAC, ResolveCollaborationCall, 409 collaboration_epoch_mismatch терминален); меняются только пути, имена и формат ошибок (problem+json с code).",
+    "После item под {prefix} нет маршрутов без имени vaulter.v1.* (LegacyRoutesRemovedTest перебирает Route::getRoutes()); VaulterException больше не имеет render().",
+    "Прогоны (D66, указание владельца 2026-10-10): фаза пишет только код и тесты, покрывающие код; исполняются только acceptance-проверки item (затронутые Pest на SQLite, Arch/golden, Pint, PHPStan, клиентские unit/typecheck/build). Длинные прогоны (PG/MySQL, полные сьюты, ForkRace/гонки, e2e, docker, oasdiff, docs build) и мутаторы/negative controls в фазе не планируются и не исполняются; тесты, требующие PG/MySQL, не создаются."
+  ],
+  "guidance": "DocumentContentV1Test: (1) GET content reader и writer → тела равны, ETag \"{nodeId}.{epoch}.{stateVersion}\" равны; (2) If-None-Match → 304; (3) PUT без If-Match → 428; (4) PUT с актуальным ETag → 200, state_version+1, новый ETag; (5) хаб store между чтением и PUT (вызов HubStoreController с валидной подписью) → PUT 412 document_state_mismatch; (6) previewer GET content → 200, PUT → 403. HubV1RoutesTest: authenticate/load/store по v1 с подписью → 200; без подписи → 401/403 problem+json; store с устаревшей эпохой → 409 collaboration_epoch_mismatch; маршруты hub не принимают сессию authenticated-стека. ExportV1Test: заголовки attachment/nosniff/CSP/no-store; неизвестный формат → 422 unknown_export_format. LegacyRoutesRemovedTest: GET /api/vaulter/nodes/{id}/content → 404 (не 200), GET /api/vaulter/v1/collab/store → 404 route_not_found.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Http tests/Document tests/Collaboration tests/Comment tests/Export tests/Feature tests/Operations tests/Profiles tests/Providers tests/Types tests/Arch",
+      "expect": "exit0; documents v1, контент ETag/IM/304, хаб-маршруты, экспорт, arch, golden",
+      "kind": "acceptance",
+      "cwd": "packages/documents"
+    },
+    {
+      "id": "V2",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Http packages/core/tests/Arch packages/core/tests/Support packages/core/tests/PublicApi packages/core/tests/Observability packages/core/tests/Feature packages/core/tests/Exceptions",
+      "expect": "exit0; легаси удалено, LegacyRoutesRemovedTest, golden core (без VaulterException::render)",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Http tests/Arch tests/Observability tests/Feature",
+      "expect": "exit0; drive не задет удалением легаси карт",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V80",
+      "procedure": "Pint/PHPStan затронутых пакетов: scripts/php84 vendor/bin/pint --test packages/core && scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress (cwd .); ../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress (cwd packages/drive); ../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress (cwd packages/documents).",
+      "expect": "все команды exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "documents/hub маршруты vaulter.v1.*",
+    "удалённое легаси HTTP",
+    "полная таблица было → стало в UPGRADE.md",
+    "check-profile.json, changelog-entry.md в artifacts/P6.8"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed",
+    "notes": "@plan/knowledge/P6-industry-research-2026-10-10.json#R8-Hub"
+  },
+  "result": {
+    "started_at": "2026-10-11T02:34:28Z",
+    "finished_at": "2026-10-11T04:14:34Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "39b4dd5b-5900-4571-b25d-fdf7e4e95f6c"
+    },
+    "notes": "Documents v1 routes (documents/content/revisions/export/session/comments) + hub v1 endpoints; legacy HTTP removed (render(), ResolveVaulterRouteParameters, path rules, HttpResourceResolver::storage/node, LegacyNodeResource). Risk: concurrency + access-boundary + public-contract; task:review recommended. Reviewer grok/grok-4.7/high: round 1 FINDINGS (major: 412 leaked current state_version; minor: archived-drive order) fixed with own tests; round 2 GREEN. Self-check P6-I1/I2 (View+Edit before If-Match/304, uniform 404: DocumentContentV1Test), I4 (428/412 + CAS expectedStateVersion; hub-store race), I5 (export only via ContentResponder: HttpV1ArchTest), I6 (cache headers tests), I7 (412 body node_id only), I8 (HostRouteUntouchedTest), I10 (hub own stack, unsigned 401 problem+json, 409 epoch terminal: HubV1RoutesTest, LegacyRoutesRemovedTest). Pairs: PUT content || hub store -> 412; restore || hub store -> 409 epoch (DocumentRevisionsV1Test). OpenAPI (P6.3), vue (P6.4), hocuspocus client (P6.5) untouched; they still call removed paths. Evidence: artifacts/P6.8/final-v{1,2,3}.txt",
+    "deviations": [
+      "V2 exit 1 only from 2 pre-existing EventTypeTest failures (stale EventType list since P5.2, recorded under P6.2); all other V2 tests pass",
+      "ContentResponder::export takes (bytes, filename, mimeType, lossy), not DocumentExport (core cannot depend on documents)",
+      "VaulterHttpOperationMap::resolve() v1 path rules kept for URI-only collectors in load/; throttle map name-only",
+      "Forced edits outside include: LegacyNodeResource removed with drive ExactListingTest/R07ExceptionContractsTest/TreeInvariantsTest/HttpRegistrarTest, core Unit/Support/Feature/Tenancy tests, other docs pages; HttpOperationContextFactory::withinDrive added",
+      "Review fixes folded into the single executor commit (nothing committed to fix against); StaleDocumentStateException gained an optional nodeId and its problem body is node_id only"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-11T04:14:34Z"
+      },
+      {
+        "id": "V2",
+        "exit": 1,
+        "at": "2026-10-11T04:14:34Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-11T04:14:34Z"
+      },
+      {
+        "id": "V80",
+        "exit": 0,
+        "at": "2026-10-11T04:14:34Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-11T04:14:34Z"
+}

@@ -1,0 +1,229 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P6.4",
+  "title": "@vaulter/vue на v1: генерируемые типы, клиент, реестр viewer'ов, fallback, composables, a11y",
+  "status": "done_with_deviations",
+  "summary": "@vaulter/vue работает только с REST v1: типы генерируются из openapi/vaulter-v1.yaml (api:check), клиент по ресурсам с проверкой X-Vaulter-Api-Version и разбором problem+json, мутации с непрозрачным ETag в If-Match, реестр viewer'ов на приложение с VaulterUnsupportedNode (V37), composables/компоненты на v1, a11y-тесты, контрактные тесты типов против примеров ответов.",
+  "why": "OPUS F6 P6.4/D32/11 + EV249/EV323 + C07: клиент не должен изобретать собственный sequence-ETag и обязан совпадать с JSON сервера. Риски: public-contract (npm API), рассинхрон типов со спецификацией, потеря обработки 412 (lost update в UI), a11y регрессии.",
+  "scope": {
+    "include": [
+      "Ровно P6-design#Vue и OPUS 11 §1–§5 с поправками D62/D65; три unit (U1 api, U2 viewers, U3 composables/components/collaboration/a11y/docs).",
+      "Удалить src/client.ts, src/types.ts, src/engineRegistry.ts, src/nodeCollaboration.ts (заменены api/, viewers/, collaboration/); docVaultClientKey и registerEngineComponent/resolveEngineComponent.",
+      "devDependencies точными версиями (npm install -D --save-exact): openapi-typescript@7 (последний 7.x на момент исполнения, версия в artifacts/P6.4/tool-pins.md), @testing-library/vue (совместимая с vue 3.4+); скрипты api:generate и api:check в packages/vue/package.json; шаг api:check в .github/workflows/frontend.yml.",
+      "EV249/EV323: нет is_pinned/rich_text; viewer.starred, content_modified_at, presentation.document_type/type_available, presentation.handler null; VaulterNameDialog — portable-v1 причины.",
+      "Контрактные тесты tests/contract/* против openapi/examples/*.json (P6.3).",
+      "docs/guide/vue.md (+ru); changeset в .changeset/ (minor для 0.x с описанием breaking)."
+    ],
+    "exclude": [
+      "SSR-рендер компонентов (только SSR-safe реестр)",
+      "изменение REST (расхождение → стоп и D#)",
+      "публикация npm (O-3/P8)"
+    ]
+  },
+  "depends_on": [
+    "P6.3"
+  ],
+  "decisions": [
+    "D45",
+    "D53",
+    "D62",
+    "D64",
+    "D65"
+  ],
+  "skills": [],
+  "reads": [
+    {
+      "ref": "knowledge/artifacts-P6-design-opus#F11-1-3",
+      "why": "Первый read (D06): OPUS 11 §1–§3",
+      "required": true
+    },
+    {
+      "ref": "knowledge/P6-design#Vue",
+      "why": "Стартовый раздел нормативного контракта (документ доставлен целиком)",
+      "required": true
+    },
+    {
+      "path": "packages/vue/src/client.ts",
+      "why": "Заменяется api/client.ts",
+      "required": true
+    },
+    {
+      "path": "packages/vue/src/types.ts",
+      "why": "Удаляется (EV249)",
+      "required": true
+    },
+    {
+      "path": "packages/vue/src/engineRegistry.ts",
+      "why": "Заменяется viewers/registry.ts",
+      "required": true
+    },
+    {
+      "path": "packages/vue/src/components/VaulterNameDialog.vue",
+      "why": "portable-v1 причины",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Naming/PortableNamePolicy.php",
+      "why": "Источник правил имён",
+      "required": true
+    },
+    {
+      "path": "packages/vue/package.json",
+      "why": "Скрипты и devDependencies",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/vue/src/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/vue/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/vue/package.json",
+      "change": "modify"
+    },
+    {
+      "path": "package-lock.json",
+      "change": "modify"
+    },
+    {
+      "path": ".github/workflows/frontend.yml",
+      "change": "modify"
+    },
+    {
+      "path": ".changeset/*.md",
+      "change": "create"
+    },
+    {
+      "path": "docs/guide/vue.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/ru/guide/vue.md",
+      "change": "any"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Обязательный контекст из документов, привязанных к фазе (доставляются целиком; reads — стартовые разделы): @plan/knowledge/artifacts-P6-design-opus.json — первым (D06); нормативный @plan/knowledge/P6-design.json (кроме разделов из reads — Scope, Order, Stability, Docs, Seams); @plan/knowledge/P6-invariants.json; @plan/knowledge/P6-industry-research-2026-10-10.json (обоснование, scope не расширять); решения D62–D65; @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json (D29).",
+    "Стартовые разделы (документы фазы доставлены в пакет целиком, отдельные reads не дублируются): @plan/knowledge/artifacts-P6-design-opus.json#F11-4-6 — OPUS 11 §4–§5 (коллаборация, a11y); @plan/knowledge/P6-design.json#Vue — Стартовый раздел: клиент, реестр, правила; @plan/knowledge/P6-design.json#Resources — Поля ресурсов (типы из schema.d.ts); @plan/knowledge/P6-design.json#Validators — If-Match, 412/428 на клиенте; @plan/knowledge/validation-and-execution-policy.json#D51-Policy — D51: лёгкие проверки (D66 убирает барьеры и H из P6); @plan/knowledge/validation-and-execution-policy.json#Owner-Fast-Only — Только лёгкие проверки; D66 исключает длинные прогоны из фазы целиком; @plan/knowledge/validation-and-execution-policy.json#Before-Work — check-profile.json до первой продуктовой правки; @plan/knowledge/validation-and-execution-policy.json#Per-Item — Affected-проверки после каждой правки, не чинить будущие items; @plan/knowledge/validation-and-execution-policy.json#No-Mutators — Запрет mutation tools (D66: также без negative controls).",
+    "До первого product edit создать plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P6.4/check-profile.json: фактические изменяемые пути/вызывающие/фикстуры и точные cwd/env/команды acceptance-проверок (D66: без длинных прогонов и мутаторов).",
+    "Только перечисленные пакеты и файлы-потребители (task_files — подсказка; вынужденные смежные правки перечислить в Completion Notes); чужие dirty-правки, применённые миграции и OPUS не менять. Расхождение кода с P6-design → стоп и описание в Completion Notes/новый D#, не импровизация (D01).",
+    "Публичная поверхность изменилась → golden PublicApiSnapshotTest затронутого пакета (core/drive/documents, packages/<pkg>/tests/Arch|PublicApi), UPGRADE.md (было → стало, ссылки PLAN2.D62–D65), запись CHANGELOG.md [Unreleased] и тот же текст в plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P6.4/changelog-entry.md.",
+    "Комментарии в коде объясняют «почему», без кодов задач плана; docs/guide и docs/reference меняются в том же item; у страницы с зеркалом docs/ru/… — обновить зеркало тем же смыслом, при отсутствии зеркала у страниц из P6-design#Docs — создать (EV275).",
+    "Нет push/PR/hosted CI/публикации (Packagist/npm) и mutation tools (Infection, pest --mutate). Review: none (D51) — перед finish self-check применимых P6-I* и интерферирующих пар @plan/knowledge/P6-invariants.json в Completion Notes.",
+    "Новые каталоги тестов (packages/core/tests/Http|OpenApi, packages/<pkg>/tests/Http) попадают в существующие testsuites (core — корневой phpunit.xml directory packages/core/tests; пакеты — свой phpunit.xml directory tests); отдельных конфигов не создавать.",
+    "Risk-class: public-contract. schema.d.ts только генерируется (api:generate), руками не править; любые типы ресурсов — алиасы components['schemas'][…].",
+    "Мутации узла/контента принимают { etag } из ресурса и отправляют его в If-Match без разбора; IM-методы требуют etag на уровне типов; 412 → перечитать и сообщить conflict; 428 → ошибка интеграции.",
+    "Ни один компонент не определяет права сам: кнопки по abilities ресурса; скачивание только при abilities.download (previewer без download, D53).",
+    "Units последовательно U1 → U2 → U3; каждый unit проходит свои проверки до следующего.",
+    "Прогоны (D66, указание владельца 2026-10-10): фаза пишет только код и тесты, покрывающие код; исполняются только acceptance-проверки item (затронутые Pest на SQLite, Arch/golden, Pint, PHPStan, клиентские unit/typecheck/build). Длинные прогоны (PG/MySQL, полные сьюты, ForkRace/гонки, e2e, docker, oasdiff, docs build) и мутаторы/negative controls в фазе не планируются и не исполняются; тесты, требующие PG/MySQL, не создаются."
+  ],
+  "guidance": "V37 (tests/viewers/fallback.test.ts): узел с presentation.viewer.key = 'acme/unknown' → VaulterViewer монтирует VaulterUnsupportedNode с именем и кнопкой «Скачать» (abilities.download=true) / без кнопки (false); документ с type_available=false → тот же fallback с document_type. Клиент: первый ответ с X-Vaulter-Api-Version: 2 → VaulterApiError code api_version_mismatch для этого и последующих вызовов; problem+json 412 → error.code 'node_sequence_mismatch', requestId из request_id; ответ 502 text/html → code 'http_502'. a11y: стрелки перемещают фокус в listbox, Enter открывает, F2 → диалог имени, Delete → trash с etag, после удаления фокус на соседнем элементе; ошибка загрузки объявляется в aria-live.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "npm run api:check",
+      "expect": "exit0; schema.d.ts совпадает с генерацией из openapi/vaulter-v1.yaml и отслеживается git",
+      "kind": "acceptance",
+      "cwd": "packages/vue"
+    },
+    {
+      "id": "V2",
+      "cmd": "npm run typecheck",
+      "expect": "exit0; vue-tsc без ошибок, контрактные фикстуры присваиваются типам",
+      "kind": "acceptance",
+      "cwd": "packages/vue"
+    },
+    {
+      "id": "V3",
+      "cmd": "npm test",
+      "expect": "exit0; vitest: client, errors, uploads, viewers (V37), composables, components, a11y, contract, exports snapshot",
+      "kind": "acceptance",
+      "cwd": "packages/vue"
+    },
+    {
+      "id": "V4",
+      "cmd": "npm run build",
+      "expect": "exit0; vite build",
+      "kind": "acceptance",
+      "cwd": "packages/vue"
+    }
+  ],
+  "deliverables": [
+    "@vaulter/vue на v1 (api/viewers/composables/components/collaboration)",
+    "schema.d.ts генерируемый и api:check в CI",
+    "check-profile.json, tool-pins.md, changelog-entry.md в artifacts/P6.4"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed",
+    "notes": "@plan/knowledge/P6-design.json#Vue"
+  },
+  "units": [
+    "U1",
+    "U2",
+    "U3"
+  ],
+  "result": {
+    "started_at": "2026-10-11T09:32:58Z",
+    "finished_at": "2026-10-11T11:16:07Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "6f9c7d90-289b-4b43-a538-813d6a87f78e"
+    },
+    "notes": "@vaulter/vue on REST v1: generated types + api:check (CI), resource client with If-Match/problem+json/version guard, per-app viewer registry with VaulterUnsupportedNode (V37), v1 composables/components, listbox a11y + aria-live, portable-v1 name dialog, collaboration on v1, docs en/ru, changeset, CHANGELOG, UPGRADE. Unit checks V5 (tests/api tests/contract) and V6 (tests/viewers) also exit 0. Self-check P6-I*: no hand-written types.ts, no ETag built/parsed on the client, no If-Match '*' invented, no cacheable client state, components gate on abilities only. Hard risk: public-contract (npm API) — task:review recommended for the corrected diff.",
+    "deviations": [
+      "Open<> type helper over generated Record<string, never> (YAML untouched; recommend additionalProperties: true in the spec).",
+      "UPGRADE.md, packages/vue/scripts/api-check.mjs, tests/support/*, exports snapshot added beyond task_files.",
+      "useSpreadsheet folded into useDocument; NodeAction forceDelete→purge; rename gated on edit; viewers vaulter/tiptap|univer are headless shells, editor engine is the host's.",
+      "Review: grok/grok-4.7 (500k) round 1 = 5 findings, fixed; round 2 = 9 findings, all reproduced and fixed by one owner-authorised correction; the corrected diff was NOT re-reviewed (budget spent, no round 3)."
+    ],
+    "pending": [
+      "Other guide pages (grants, sharing, collaboration, documents, recipes, document-handlers, writing-an-engine, master plan, ru mirrors) still name removed vue APIs.",
+      "Server: S3 multipart cannot complete an empty file (isComplete needs size>0)."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-11T11:16:07Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-11T11:16:07Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-11T11:16:07Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-11T11:16:07Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-11T11:16:07Z"
+}

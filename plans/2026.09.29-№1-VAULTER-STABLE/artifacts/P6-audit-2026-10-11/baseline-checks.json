@@ -1,0 +1,87 @@
+[
+  {
+    "name": "baseline-core-http-openapi-arch",
+    "cwd": ".",
+    "argv": [
+      "scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "packages/core/tests/Http",
+      "packages/core/tests/OpenApi",
+      "packages/core/tests/Arch"
+    ],
+    "env": {
+      "APP_ENV": "testing",
+      "DB_CONNECTION": "sqlite",
+      "DB_DATABASE": ":memory:",
+      "LOG_CHANNEL": "stderr"
+    },
+    "exit": 2,
+    "started_at": "2026-10-11T13:59:35.392779+00:00",
+    "duration_s": 62.98,
+    "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P6-audit-2026-10-11/baseline-core-http-openapi-arch.log"
+  },
+  {
+    "name": "baseline-drive-http-arch",
+    "cwd": "packages/drive",
+    "argv": [
+      "../../scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "tests/Http",
+      "tests/Arch"
+    ],
+    "env": {
+      "APP_ENV": "testing",
+      "DB_CONNECTION": "sqlite",
+      "DB_DATABASE": ":memory:",
+      "LOG_CHANNEL": "stderr"
+    },
+    "exit": 2,
+    "started_at": "2026-10-11T14:00:38.377063+00:00",
+    "duration_s": 38.1,
+    "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P6-audit-2026-10-11/baseline-drive-http-arch.log"
+  },
+  {
+    "name": "baseline-documents-http-arch",
+    "cwd": "packages/documents",
+    "argv": [
+      "../../scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "tests/Http",
+      "tests/Arch"
+    ],
+    "env": {
+      "APP_ENV": "testing",
+      "DB_CONNECTION": "sqlite",
+      "DB_DATABASE": ":memory:",
+      "LOG_CHANNEL": "stderr"
+    },
+    "exit": 2,
+    "started_at": "2026-10-11T14:01:16.480864+00:00",
+    "duration_s": 25.46,
+    "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P6-audit-2026-10-11/baseline-documents-http-arch.log"
+  },
+  {
+    "name": "baseline-filament-feature-arch",
+    "cwd": "packages/filament",
+    "argv": [
+      "../../scripts/php84",
+      "vendor/bin/pest",
+      "--ci",
+      "tests/Feature",
+      "tests/Arch"
+    ],
+    "env": {
+      "APP_ENV": "testing",
+      "DB_CONNECTION": "sqlite",
+      "DB_DATABASE": ":memory:",
+      "LOG_CHANNEL": "stderr"
+    },
+    "exit": 0,
+    "started_at": "2026-10-11T14:01:41.942332+00:00",
+    "duration_s": 38.1,
+    "log": "plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P6-audit-2026-10-11/baseline-filament-feature-arch.log"
+  }
+]

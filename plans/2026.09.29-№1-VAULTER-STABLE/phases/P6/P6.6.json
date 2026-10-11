@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.6",
   "title": "Filament через handle и фазовый барьер P6",
-  "status": "done_with_deviations",
+  "status": "todo",
   "summary": "Filament-ресурсы и действия вызывают только Vaulter::drive(...)->actingAs(PanelActor::current()) и snapshot-DTO, PanelAccessScope удалён, arch-тест границы и V27.",
   "why": "OPUS F6 P6.6/V27: админ-панель не должна обходить авторизацию handle. Риски: access-boundary (Move без Create на цели), регрессия Filament-таблиц при отказе от Eloquent-скоупа.",
   "scope": {
@@ -144,31 +144,6 @@
     "status": "not_needed",
     "notes": "@plan/knowledge/P6-design.json#Filament"
   },
-  "result": {
-    "started_at": "2026-10-11T11:42:00Z",
-    "finished_at": "2026-10-11T12:26:00Z",
-    "executor": {
-      "provider": "claude-code",
-      "model": "claude-sonnet-5-5",
-      "effort": "medium",
-      "session": "c53b0598-17a0-4994-bead-1b92100097f7"
-    },
-    "notes": "Filament на handle: NodeResource через Table::records() из PanelNodes (children/trash list/abilitiesMany), DriveResource через PanelDrives, PanelAccessScope удалён, FilamentBoundaryArchTest и V27 зелёные, 116 passed; Pint/PHPStan 0. P6-I11: нет Eloquent-скоупов доступа/AccessResolver/Actions/Repositories в filament/src. Риски: диск виден при View на корне; лимит 2000 узлов. Review grok-4.7/high: 2 medium исправлены (artifacts/P6.6/review-verdict.md). Рекомендация task:review (access-boundary).",
-    "deviations": [
-      "Смежные правки вне include: packages/drive/tests/Arch/OperationsBoundaryTest.php, Support/PanelDrives+PanelNodes, tests/Fixtures/SpyDriveHandle; удалён filament tests/Arch/OperationsBoundaryTest.php; ослаблена options-проверка NodeResourceCreateGateTest (core abilities.create не отражает create-gate, POSSIBLE-DEFECT)"
-    ],
-    "checks": [
-      {
-        "id": "V1",
-        "exit": 0,
-        "at": "2026-10-11T12:26:00Z"
-      },
-      {
-        "id": "V80",
-        "exit": 0,
-        "at": "2026-10-11T12:26:00Z"
-      }
-    ]
-  },
-  "updated_at": "2026-10-11T12:26:00Z"
+  "result": null,
+  "updated_at": "2026-10-11T14:14:47Z"
 }

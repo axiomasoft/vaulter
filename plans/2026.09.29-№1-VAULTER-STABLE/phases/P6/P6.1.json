@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.1",
   "title": "HTTP-ядро v1 и маршруты core: контекст, резолв, валидаторы представления, egress, пакетные abilities",
-  "status": "done_with_deviations",
+  "status": "todo",
   "summary": "HTTP-ядро v1 в core (HttpOperationContextFactory, HttpResourceResolver, AssignCorrelationId, AddApiVersionHeader, стеки, Preconditions/RepresentationTag, ContentResponder, PageResponse, пакетные abilities) и все core-маршруты v1 (гранты, наследование, шары, activity, журнал изменений, публичные шары, webhooks) с invokable-контроллерами поверх Operations; старые core-маршруты удалены.",
   "why": "OPUS F6 P6.1/D30/D31/D33 + C07/C08 (D29): ядро задаёт авторизацию до валидаторов, сильный ETag представления, 428/412, единый egress и кэш-политику, на которых строятся P6.7/P6.8. Риски: access-boundary (304/412/стрим до авторизации, cross-tenant), info-disclosure (кэш персональных ответов, токены шар в Referer), public-contract (формат ресурсов и маршрутов 1.0), производительность (abilities N+1).",
   "scope": {
@@ -412,48 +412,6 @@
     "status": "not_needed",
     "notes": "@plan/knowledge/P6-industry-research-2026-10-10.json#R2-Validators, #R4-Egress"
   },
-  "result": {
-    "started_at": "2026-10-10T12:10:46Z",
-    "finished_at": "2026-10-10T18:25:12Z",
-    "executor": {
-      "provider": "claude-code",
-      "model": "claude-opus-5-5",
-      "effort": "high",
-      "session": "b3e0cf08-31fe-41c9-a052-f8b5c9fddcad"
-    },
-    "notes": "HTTP v1 core kernel, validators (RepresentationTag/Preconditions), ContentResponder egress, abilitiesMany, v1 resources and CORE routes with invokable controllers; old controllers removed without aliases; docs en/ru, UPGRADE, CHANGELOG (+artifacts/P6.1/changelog-entry.md). Deviations as logged (LegacyNodeResource kept for unversioned drive/documents routes until P6.7/P6.8; new problem codes; ApplyResponseCachePolicy middleware). Self-check P6-I*: I1 NotModifiedAfterAuthorizationTest+CrossTenantV1Test green; I2 UniformNotFoundV1Test green; I3 RepresentationTagTest green, no bare id.sequence ETag; I4 PreconditionsTest (428/412, wildcard refused) green; I5 HttpV1ArchTest + ContentResponderTest (strict/direct_signed/423) green; I6 CacheHeadersV1Test green; I7 ProblemRendererTest green; I8 HttpKernelV1Test (host routes untouched) green; I9 PublicShareHeadersV1Test green, token masked in metrics; I10–I12 out of P6.1 (P6.8/P6.5/P6.3). Pairs: revoke‖If-None-Match → 404 covered; rotate share‖old token → 404 covered by PublicSharesV1Test; quarantine‖download → 423 before bytes covered. AbilitiesMany query count constant with and without strict tenancy (abilitiesMany and visible()). Seams logged: load/ stand paths, @vaulter/vue until P6.4, changes drive-id existence oracle. Check tails: artifacts/P6.1/check-*.tail.txt.",
-    "deviations": [
-      "V1 exit 1: 897/903 passed; the only failures are 2 cases in packages/core/tests/Feature/EventTypeTest.php (untouched; stale since P5.2 EventType catalog: 25→29 webhook types). Not part of P6.1; owner decision.",
-      "V4 exit 2: 311/313 passed; the only failures are untouched ShareLinkLifecycleEventsTest.php:100 and InheritanceChangedEventTest.php:50 writing v_outbox raw outside an operation under VAULTER_TEST_WRITE_GUARD (pre-existing, logged 2026-10-10T13:03Z).",
-      "Review F1 (owner-run grok review) completed in this item: batch tenant checks in OperationGuard decide()/copyableSubtree/abilitiesMany + PHPStan type fixes; folded into the executor commit (no separate fix commit); no re-review."
-    ],
-    "checks": [
-      {
-        "id": "V1",
-        "exit": 1,
-        "at": "2026-10-10T18:25:12Z"
-      },
-      {
-        "id": "V2",
-        "exit": 0,
-        "at": "2026-10-10T18:25:12Z"
-      },
-      {
-        "id": "V3",
-        "exit": 0,
-        "at": "2026-10-10T18:25:12Z"
-      },
-      {
-        "id": "V4",
-        "exit": 2,
-        "at": "2026-10-10T18:25:12Z"
-      },
-      {
-        "id": "V80",
-        "exit": 0,
-        "at": "2026-10-10T18:25:12Z"
-      }
-    ]
-  },
-  "updated_at": "2026-10-10T18:25:12Z"
+  "result": null,
+  "updated_at": "2026-10-11T14:14:46Z"
 }

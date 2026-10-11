@@ -118,7 +118,7 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 | P3 | Прикладной слой: авторизованный публичный API | detailed | 8/8 | 🟢 Done |
 | P4 | Модель данных и документы | detailed | 14/14 | 🟠 Done with deviations |
 | P5 | Конвейер событий | detailed | 5/5 | 🟠 Done with deviations |
-| P6 | HTTP v1 и клиенты | detailed | 8/8 | 🟠 Done with deviations |
+| P6 | HTTP v1 и клиенты | detailed | 4/8 | 🟡 In progress |
 | P7 | Эксплуатация и DX | skeleton | 0/0 | ⬜ Skeleton |
 | P8 | Готовность 1.0 | skeleton | 0/0 | ⬜ Skeleton |
 

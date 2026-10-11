@@ -1,0 +1,27 @@
+{
+  "type": "result",
+  "subtype": "success",
+  "is_error": false,
+  "session_id": "b0b1a29c-01c1-4f6a-a939-3f48d8b2c6c6",
+  "num_turns": 84,
+  "duration_ms": 1015095,
+  "modelUsage": {
+    "grok-4.7-build": {
+      "inputTokens": 384810,
+      "outputTokens": 48441,
+      "cacheReadInputTokens": 12994176,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 3.58827228
+    }
+  },
+  "usage": {
+    "input_tokens": 384810,
+    "output_tokens": 48441,
+    "cache_read_input_tokens": 12994176,
+    "cache_creation_input_tokens": 0,
+    "server_tool_use": {
+      "web_search_requests": 0
+    }
+  }
+}

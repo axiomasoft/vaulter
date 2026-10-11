@@ -1,0 +1,342 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P6.7",
+  "title": "Маршруты drive v1: drives, nodes, files, revisions, trash, uploads; If-Match и PHP-ожидания purge/restore",
+  "status": "done_with_deviations",
+  "summary": "Все drive-маршруты переведены на vaulter.v1.* с invokable-контроллерами (drives, nodes, star/properties, files/revisions, trash, search, starred, shared, uploads), If-Match обязателен на rename/properties/move/trash/restore/purge/addRevision/restoreRevision и при создании resumable-сессии с node_id; PHP API получил ожидания purge/restore/restoreRevision; скачивания идут через ContentResponder; drive feature-тесты переписаны на v1.",
+  "why": "OPUS 10 §4 (drive) + D65 + V36/C07: основной поток клиента — дерево и файлы; lost update и утечка байтов здесь критичны. Риски: concurrency (V36, CAS purge/restore), access-boundary (download/preview без Download, карантин), public-contract (крупнейшая часть маршрутов и ресурсов), регрессия загрузок tus/S3.",
+  "scope": {
+    "include": [
+      "packages/drive/routes/drive.php — по P6-design#Routes (DRIVE и Uploads), имена vaulter.v1.*, стек authenticated, uploads + throttle:vaulter-uploads; без ResolveVaulterRouteParameters/SubstituteBindings.",
+      "Invokable-контроллеры packages/drive/src/Http/Controllers/{Drives,Nodes,Search,Shared,Folders,Files,Trash,Uploads}/* по таблице; удалить NodeController и DownloadController; Uploads\\CreateUploadController выбирает протокол по полю protocol (tus|s3) и делегирует TusProtocolController@create / S3MultipartProtocolController@create; Tus/S3 протокольные контроллеры остаются многоактовыми (D65), их резолв сессии и цели — через HttpResourceResolver/Operations.",
+      "PHP-ожидания (C07): TrashOperations::purge($node, ?int $expectedSequence = null), RestoreOptions::$expectedSequence, FileOperations::restoreRevision($file, $revision, ?int $expectedSequence = null) — контракты core/src/Contracts/Drive/{TrashOperations,FileOperations}.php, core/src/Data/Drive/RestoreOptions.php, реализации drive/src/Operations/{TrashOperations,FileOperations}.php, проброс в соответствующие Actions (CAS до побочных эффектов; если Action уже принимает expectation — только проброс).",
+      "If-Match на node_id в POST drives/{drive}/uploads: проверка Preconditions::matchNode при создании сессии (D62; persisted expectation — T2, задокументировать в uploads.md).",
+      "Ресурсы drive: DriveResource (переписать по P6-design#Resources), FileRevisionResource, UploadSessionResource (storage_id → drive_id); NodeResource из core; списки через PageResponse; abilities через abilitiesMany; GET nodes/{node}?include=breadcrumb,children (children — первая страница, не полный обход).",
+      "Глобальные фичи в Operations (OPUS 10 §4): если resumable uploads (DriveConfig::resumableEnabled) и shared listing (feature grants) сейчас гейтятся только регистрацией маршрута — перенести проверку в UploadOperations/контроллер Shared через Operations-исключение ProfileRestrictionException (403 на видимом узле/drive) + тест.",
+      "VaulterHttpOperationMap/VaulterThrottledRouteMap: заменить drive-путевые правила именами vaulter.v1.*.",
+      "Тесты: переписать на v1 packages/drive/tests/{Feature,Drive,Uploads,Tenancy,Observability,Providers,WriteGuard}/* и core-тесты, вызывающие drive-пути (grep -rlE \"storages/|resumable-uploads|nodes/[^/]+/(download|versions|move|copy|restore|force)\" packages/core/tests); новые packages/drive/tests/Http: DrivesV1Test, NodesV1Test, NodeEtagRepresentationTest, IfMatchRequiredTest, StaleIfMatchTest, NotModifiedV1Test, StarPropertiesV1Test, FilesV1Test, DirectSignedDownloadTest, QuarantinedDownloadTest, PreviewerCannotDownloadTest, TrashV1Test, UploadsV1Test, CacheHeadersDriveV1Test, UniformNotFoundDriveV1Test; packages/drive/tests/Arch/HttpV1ArchTest.php. V36 доказывается последовательным StaleIfMatchTest на SQLite.",
+      "Docs: docs/reference/rest-api.md (+ru) — разделы drive/files/trash/uploads; docs/guide/drive.md, uploads.md, trash.md, search-trash.md (+ru); docs/reference/concurrency.md (+ru) — ETag представления узла (D62) вместо \"{id}.{sequence}\", 428, порядок проверок."
+    ],
+    "exclude": [
+      "documents/comments/collaboration (P6.8)",
+      "OpenAPI (P6.3)",
+      "Range-запросы, Idempotency-Key, LRO для copy/empty-trash (T2)",
+      "persisted expected sequence в resumable-сессии (T2)"
+    ]
+  },
+  "depends_on": [
+    "P6.1"
+  ],
+  "decisions": [
+    "D29",
+    "D35",
+    "D37",
+    "D38",
+    "D41",
+    "D44",
+    "D45",
+    "D48",
+    "D53",
+    "D54",
+    "D62",
+    "D63",
+    "D65"
+  ],
+  "skills": [
+    "php:laravel",
+    "php:production-readiness-checklist",
+    "php-packages:laravel-package-testing",
+    "php:static-analysis"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/artifacts-P6-design-opus#H10-4",
+      "why": "Первый read (D06): OPUS 10 §4 карта маршрутов",
+      "required": true
+    },
+    {
+      "ref": "knowledge/P6-design#Routes",
+      "why": "Стартовый раздел нормативного контракта (документ доставлен целиком)",
+      "required": true
+    },
+    {
+      "path": "packages/drive/routes/drive.php",
+      "why": "Переписывается",
+      "required": true
+    },
+    {
+      "path": "packages/drive/src/Http/Controllers/NodeController.php",
+      "why": "Удаляется; логика переносится",
+      "required": true
+    },
+    {
+      "path": "packages/drive/src/Http/Controllers/DownloadController.php",
+      "why": "Удаляется → ContentResponder",
+      "required": true
+    },
+    {
+      "path": "packages/drive/src/Http/Controllers/Uploads/TusProtocolController.php",
+      "why": "Остаётся, меняется резолв",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Contracts/Drive/TrashOperations.php",
+      "why": "purge(+expectedSequence)",
+      "required": true
+    },
+    {
+      "path": "packages/drive/src/Operations/TrashOperations.php",
+      "why": "Реализация ожиданий",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/drive/routes/drive.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/src/Http/Controllers/**/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Http/Requests/**/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/drive/src/Http/Resources/**/*.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Contracts/Drive/TrashOperations.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Contracts/Drive/FileOperations.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Data/Drive/RestoreOptions.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/src/Operations/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/src/Actions/**/*.php",
+      "change": "modify",
+      "note": "только проброс expectation в Purge/Restore/RestoreRevision"
+    },
+    {
+      "path": "packages/core/src/Http/Middleware/VaulterHttpOperationMap.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Http/Middleware/VaulterThrottledRouteMap.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/tests/Http/*.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/tests/Arch/HttpV1ArchTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/drive/tests/Feature/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/tests/Drive/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/tests/Uploads/**/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/tests/Tenancy/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/tests/Observability/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/tests/Providers/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/tests/WriteGuard/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/tests/PublicApi/*",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/**/*.php",
+      "change": "modify",
+      "note": "только тесты, вызывающие drive-пути"
+    },
+    {
+      "path": "packages/core/tests/Arch/__snapshots__/*",
+      "change": "modify"
+    },
+    {
+      "path": "docs/reference/rest-api.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/ru/reference/rest-api.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/reference/concurrency.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/ru/reference/concurrency.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/guide/drive.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/guide/uploads.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/guide/trash.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/guide/search-trash.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/ru/guide/*.md",
+      "change": "modify",
+      "note": "зеркала drive/uploads/trash/search-trash"
+    },
+    {
+      "path": "UPGRADE.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Обязательный контекст из документов, привязанных к фазе (доставляются целиком; reads — стартовые разделы): @plan/knowledge/artifacts-P6-design-opus.json — первым (D06); нормативный @plan/knowledge/P6-design.json (кроме разделов из reads — Scope, Order, Stability, Docs, Seams); @plan/knowledge/P6-invariants.json; @plan/knowledge/P6-industry-research-2026-10-10.json (обоснование, scope не расширять); решения D62–D65; @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json (D29).",
+    "Стартовые разделы (документы фазы доставлены в пакет целиком, отдельные reads не дублируются): @plan/knowledge/artifacts-P6-design-opus.json#V-rows — V36; @plan/knowledge/P6-design.json#Routes — Стартовый раздел: таблица DRIVE и Uploads; @plan/knowledge/P6-design.json#Validators — IM-маршруты, 428/412, 304; @plan/knowledge/P6-design.json#Egress — Скачивания файла и ревизий; @plan/knowledge/P6-design.json#Resources — Node/Drive/FileRevision/UploadSession; @plan/knowledge/P6-invariants.json#Pairs — rename‖rename, отзыв‖304/стрим, карантин‖download; @plan/knowledge/P4-invariants.json#LockOrder — CAS purge/restore не меняет порядок блокировок; @plan/knowledge/validation-and-execution-policy.json#D51-Policy — D51: лёгкие проверки (D66 убирает барьеры и H из P6); @plan/knowledge/validation-and-execution-policy.json#Owner-Fast-Only — Только лёгкие проверки; D66 исключает длинные прогоны из фазы целиком; @plan/knowledge/validation-and-execution-policy.json#Before-Work — check-profile.json до первой продуктовой правки; @plan/knowledge/validation-and-execution-policy.json#Per-Item — Affected-проверки после каждой правки, не чинить будущие items; @plan/knowledge/validation-and-execution-policy.json#No-Mutators — Запрет mutation tools (D66: также без negative controls).",
+    "До первого product edit создать plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P6.7/check-profile.json: фактические изменяемые пути/вызывающие/фикстуры и точные cwd/env/команды acceptance-проверок (D66: без длинных прогонов и мутаторов).",
+    "Только перечисленные пакеты и файлы-потребители (task_files — подсказка; вынужденные смежные правки перечислить в Completion Notes); чужие dirty-правки, применённые миграции и OPUS не менять. Расхождение кода с P6-design → стоп и описание в Completion Notes/новый D#, не импровизация (D01).",
+    "Публичная поверхность изменилась → golden PublicApiSnapshotTest затронутого пакета (core/drive/documents, packages/<pkg>/tests/Arch|PublicApi), UPGRADE.md (было → стало, ссылки PLAN2.D62–D65), запись CHANGELOG.md [Unreleased] и тот же текст в plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P6.7/changelog-entry.md.",
+    "Комментарии в коде объясняют «почему», без кодов задач плана; docs/guide и docs/reference меняются в том же item; у страницы с зеркалом docs/ru/… — обновить зеркало тем же смыслом, при отсутствии зеркала у страниц из P6-design#Docs — создать (EV275).",
+    "Нет push/PR/hosted CI/публикации (Packagist/npm) и mutation tools (Infection, pest --mutate). Review: none (D51) — перед finish self-check применимых P6-I* и интерферирующих пар @plan/knowledge/P6-invariants.json в Completion Notes.",
+    "Новые каталоги тестов (packages/core/tests/Http|OpenApi, packages/<pkg>/tests/Http) попадают в существующие testsuites (core — корневой phpunit.xml directory packages/core/tests; пакеты — свой phpunit.xml directory tests); отдельных конфигов не создавать.",
+    "Risk-class: concurrency + access-boundary + public-contract. Каждый IM-маршрут: Preconditions::requireIfMatch → find + авторизация → matchNode → Operations с expectedSequence; 412 из CAS Operations — тот же код node_sequence_mismatch.",
+    "Purge/restore/restoreRevision проверяют expectation до побочных эффектов (удаления блобов, событий, квоты); no-op не увеличивает sequence (security-correction-contract#Sequence).",
+    "Download/revisions.download — только ContentResponder; previewer (view без download) получает 403 permission_denied до чтения потока; карантин — 423.",
+    "Tus/S3 протокольные заголовки (Upload-Offset, Tus-Resumable, ETag частей S3) сохраняются; problem+json применяется к ошибкам этих маршрутов, тело tus-ответов без изменений.",
+    "Удалённые контроллеры не оставлять алиасами (D02); старые drive-пути после item отвечают 404 route_not_found problem+json (если под versionedPrefix) либо стандартным 404 Laravel (вне него).",
+    "Прогоны (D66, указание владельца 2026-10-10): фаза пишет только код и тесты, покрывающие код; исполняются только acceptance-проверки item (затронутые Pest на SQLite, Arch/golden, Pint, PHPStan, клиентские unit/typecheck/build). Длинные прогоны (PG/MySQL, полные сьюты, ForkRace/гонки, e2e, docker, oasdiff, docs build) и мутаторы/negative controls в фазе не планируются и не исполняются; тесты, требующие PG/MySQL, не создаются."
+  ],
+  "guidance": "StaleIfMatchTest/V36 (SQLite-вариант последовательный): A и B читают узел (ETag E); A PATCH name=x If-Match E → 200, ETag E2; B PATCH name=y If-Match E → 412 node_sequence_mismatch, имя x. IfMatchRequiredTest — матрица всех IM-маршрутов (rename, properties, move, trash, restore, purge, revisions.store, revisions.restore, uploads.store с node_id): без заголовка → 428; с `*` → 428. NodeEtagRepresentationTest: (1) владелец и reader получают разные ETag одного узла; (2) grant reader→writer меняет abilities и ETag reader; (3) star меняет ETag только у вызывающего; (4) ETag в теле == заголовку. TrashV1Test: purge не из корзины → 409 node_not_trashed; purge со старым ETag → 412 и узел не удалён; restore с конфликтом имени on_conflict=rename. UploadsV1Test: tus create → HEAD → PATCH → завершение под /v1/uploads/{id}; s3 parts/complete; создание с node_id без If-Match → 428.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Http tests/Feature tests/Drive tests/Uploads tests/Tenancy tests/Observability tests/Providers tests/WriteGuard tests/Arch tests/PublicApi",
+      "expect": "exit0; все drive-маршруты v1, IM/428/412/304, egress, tus/S3, arch, golden",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V2",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Http packages/core/tests/Observability packages/core/tests/Tenancy packages/core/tests/Operations packages/core/tests/Access packages/core/tests/Support packages/core/tests/Arch packages/core/tests/PublicApi packages/core/tests/Drive packages/core/tests/Feature",
+      "expect": "exit0; core-тесты на drive-путях переписаны, golden core (TrashOperations/FileOperations/RestoreOptions)",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: VAULTER_TEST_WRITE_GUARD=1 ../../scripts/php84 vendor/bin/pest --ci tests/Http tests/WriteGuard",
+      "expect": "exit0; drive v1 под WriteScope",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V80",
+      "procedure": "Pint/PHPStan затронутых пакетов: scripts/php84 vendor/bin/pint --test packages/core && scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress (cwd .); ../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress (cwd packages/drive).",
+      "expect": "все команды exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "drive-маршруты vaulter.v1.*",
+    "PHP-ожидания purge/restore/restoreRevision",
+    "check-profile.json, changelog-entry.md в artifacts/P6.7"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed",
+    "notes": "@plan/knowledge/P6-industry-research-2026-10-10.json#R2-Validators"
+  },
+  "result": {
+    "started_at": "2026-10-10T18:29:05Z",
+    "finished_at": "2026-10-10T21:11:23Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "session": "ee7793c8-8692-46e1-9d3f-700d877256f1"
+    },
+    "notes": "Drive routes on REST v1 (vaulter.v1.*), 30 invokable controllers + tus/S3 protocol controllers; NodeController/DownloadController removed. If-Match on all IM routes (403 ability → 428 → 412, sequence handed to the operation CAS); 304 after authorization; include=breadcrumb,children first page without ETag. PHP API: purge/RestoreOptions/restoreRevision expectedSequence, checked on the locked row before side effects (RestoreNodeAction). Downloads via ContentResponder. Resumable/shared feature gates in operations (403 profile_restriction). Tests: 16 new drive Http tests + Arch/HttpV1ArchTest; drive and core tests rewritten to v1. Checks: V1 964 passed; V3 139 passed; V2 655/658 (2 pre-existing EventTypeTest); V80 pint+phpstan core/drive clean. Self-check P6-I1..I7 hold for drive routes (I2 with the drive-wide-list and deep-grantee residuals above); pairs rename‖rename (StaleIfMatchTest), revoke‖304 (NotModifiedV1Test), quarantine‖download (QuarantinedDownloadTest), empty-trash‖restore unchanged locks. Review: grok/grok-4.7/high, 2 rounds (artifacts review-round1.md, review-round2.md). Phase-run (not executed, D66): PG/MySQL qualification and parallel V36 race (P8.1), OpenAPI/route golden (P6.3). Recommend task:review — hard risks: concurrency, access boundary, public API/HTTP contract.",
+    "deviations": [
+      "V2 exit 1 only from 2 pre-existing EventTypeTest failures (present in the pre-edit baseline since P6.2, artifacts/P6.7/baseline-v2.txt); all core tests touched by this item pass, incl. the OperationsContractTest baseline failure fixed here.",
+      "Design fields without snapshot backing omitted: Drive.archived_at, FileRevision.original_name; not_a_file stays 422 (catalog) vs OPUS 409; tus HEAD keeps 204 (tus 1.0.0 allows 200/204) vs design table 200.",
+      "Drive-wide lists (search, starred, trash list/empty) filter by visibility instead of requiring a visible root (V09/ExactListingTest); a stranger gets an empty page there. A caller granted only a deep folder gets drive_not_found (owner: node_not_found) for a missing child id on nodes.index/folders.store/files.store/uploads.store — round-2 review residual, not corrected (budget exhausted), no leak.",
+      "Forced adjacent edits outside task_files: core ProblemRenderer (Tus-Resumable/Tus-Version passthrough), core HttpOperationContextFactory::onDrive (handle opened inside the drive_not_found mapping), drive Data/Trash/RestoreNodeInput (expectation), drive tests/Arch/OperationsBoundaryTest, core tests/Http/V1 helper, docs/guide/{quick-start,architecture}.md (+ru) that named removed routes; VaulterHttpOperationMap keeps URI rules for v1 byte routes used by the load stand.",
+      "Round-1 review fix was folded into the executor commit: the reviewed candidate was the uncommitted working tree, so the correction cannot be split from the item's own product diff (no separate --role fix commit).",
+      "Out of scope and now calling removed drive paths: documents tests (P6.8) and filament PublicApiParityTest (P6.6); @vaulter/vue client still on unversioned paths (P6.4)."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-10T21:11:23Z"
+      },
+      {
+        "id": "V2",
+        "exit": 1,
+        "at": "2026-10-10T21:11:23Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-10T21:11:23Z"
+      },
+      {
+        "id": "V80",
+        "exit": 0,
+        "at": "2026-10-10T21:11:23Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-10T21:11:24Z"
+}
