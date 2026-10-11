@@ -26,8 +26,15 @@
   },
   "mode": "either",
   "instructions": "Сначала контракт и runner (их используют U2/U3), затем core-проверки по каталогу; DoctorReadOnlyTest обязателен.",
-  "status": "todo",
-  "outcome": null,
-  "updated_at": "2026-10-11T13:52:41Z",
+  "status": "accepted",
+  "outcome": {
+    "agent": {
+      "provider": "claude-code",
+      "model": "claude-sonnet-5-5"
+    },
+    "at": "2026-10-11T18:05:35Z",
+    "notes": "integrator's own implementation; unit checks V1-V6 rerun on the final tree and the grok-4.7 review findings fixed"
+  },
+  "updated_at": "2026-10-11T18:05:35Z",
   "kind": "implementation"
 }

@@ -6,14 +6,15 @@ outline: deep
 
 # Artisan commands
 
-Vaulter's commands are named `vaulter:<area>:<verb>`; the one exception is the entry point
-`vaulter:install`. The maintenance commands (GC, trash purge, upload sweep, outbox relay,
+Vaulter's commands are named `vaulter:<area>:<verb>`; the exceptions are the entry points
+`vaulter:install` and `vaulter:doctor`. The maintenance commands (GC, trash purge, upload sweep, outbox relay,
 webhook retry, webhook prune, scan reconcile) are put on the host scheduler by the packages
 themselves — see [Scheduling](#scheduling).
 
 | Command | Purpose |
 |---|---|
 | `vaulter:install` | Publish the config of every installed package, print the host settings to apply, optionally migrate |
+| `vaulter:doctor` | Read-only diagnosis of the host's Vaulter setup; `--production` raises part of the warnings to errors |
 | `vaulter:upgrade:inspect` | Read-only check that 0.2 data can move to the 0.3 schema |
 | `vaulter:uploads:sweep` | Abort and clean up stale resumable-upload sessions |
 | `vaulter:scan:reconcile` | Recover scan intents, backfill discovery and committed-upload cleanup (bounded) |
@@ -59,7 +60,82 @@ php artisan vaulter:install
 Interactively the command asks for the middleware and the driver, whether to migrate (default
 no) and whether to star the repo; without a terminal it uses the options or the defaults and
 does not migrate unless `--migrate` is given. It prints the lines to apply
-(`VAULTER_PERMISSION_DRIVER=…` and the `routes.middleware.authenticated` entry).
+(`VAULTER_PERMISSION_DRIVER=…` and the `routes.middleware.authenticated` entry) and ends with the
+[`vaulter:doctor`](#vaulter-doctor) report. The install is not a gate: it exits `0` whatever the
+doctor finds.
+
+## `vaulter:doctor`
+
+Read-only diagnosis of the host's Vaulter setup. Every installed package contributes checks; a
+check reports `ok`, `warning` or `error` findings, each with a stable `code`, a message and — when
+a command fixes it — a hint. Doctor never repairs anything.
+
+```bash
+php artisan vaulter:doctor                          # all checks, human-readable
+php artisan vaulter:doctor --production             # the production profile
+php artisan vaulter:doctor --json                   # one vaulter.doctor/v1 document on stdout
+php artisan vaulter:doctor --check=drive.scan       # only the checks under a key prefix
+php artisan vaulter:doctor --probe-storage          # also write a test object to each storage disk
+```
+
+| Option | Meaning |
+|---|---|
+| `--production` | Check against the production profile: the checks marked *warning → error* below become errors, and the storage disks are probed |
+| `--json` | Print one `vaulter.doctor/v1` document and nothing else on stdout (usage errors go to stderr) |
+| `--check=` | Run only the checks whose key equals the prefix or starts with it followed by a dot; repeatable. A prefix that matches nothing exits `2` |
+| `--sample=1000` | Row limit of the sampling checks (integrity, scan scope, drive usage) |
+| `--probe-storage` | Allow `media.disk.probe` to write, read and delete `.vaulter-doctor/<ulid>` on each disk. Without it (and without `--production`) the check reports `not evaluated; pass --probe-storage` |
+
+Exit code: `1` when any finding is an `error`, `2` for a bad option, otherwise `0`. Warnings do not
+fail the run. A check that throws becomes the error `doctor.check_failed` naming the exception
+class; add `-v` to print the message in the human output (it can contain a connection string; the JSON never carries it). Evidence holds counts, names and flags only —
+never a secret.
+
+The JSON document is described by `packages/core/resources/schemas/doctor-v1.schema.json`:
+
+```json
+{"schema":"vaulter.doctor/v1","production":false,"generated_at":"2026-10-11T12:00:00Z",
+ "summary":{"ok":14,"warning":2,"error":0},
+ "checks":[{"key":"core.queue","title":"Queue connection","findings":[
+   {"severity":"warning","code":"core.queue.synchronous","message":"…","hint":"…","evidence":{"connection":"sync","driver":"sync"}}]}],
+ "exit_code":0}
+```
+
+| Key | Looks at | Non-production → production |
+|---|---|---|
+| `core.database.connection` | The Vaulter connection answers; the driver is PostgreSQL, MySQL or MariaDB | SQLite: warning → error |
+| `core.schema.tables` | Every Vaulter table exists; no Vaulter migration is pending | error → error |
+| `core.schema.key_types` | Key columns match `ids.strategy` / `ids.host_keys` (PostgreSQL, MySQL, MariaDB) | error → error |
+| `core.schema.integrity` | One root per drive; node kind ⇄ file/document row; head revision belongs to its aggregate (sampled) | warning → warning |
+| `core.config.valid` | Every installed package's boot validation, listed together | error → error |
+| `core.config.deprecated_keys` | Deprecated config keys that are still set | warning → warning |
+| `core.routes.auth` | `routes.middleware.authenticated` has an auth middleware whose guard exists | error → error |
+| `core.access.driver` | The permission driver is real and resolves; a test-only driver is refused in production | error → error |
+| `core.tenancy` | With tenancy on, the resolver class resolves (its value needs a request) | error → error |
+| `core.queue` | The default queue is not `sync`/`null` | warning → warning |
+| `core.scheduler` | `vaulter.schedule.enabled` or `vaulter:*` tasks on the scheduler | warning → warning |
+| `core.cache` | The default cache is shared (not `array`/`file`) and has atomic locks | warning → warning |
+| `core.webhooks.outbox_lag` | The oldest due outbox row waited less than 10 minutes | warning → warning |
+| `core.webhooks.relay_leases` | No outbox row holds a relay lease expired for more than 5 minutes | warning → error |
+| `core.webhooks.deliveries` | Endpoints auto-disabled for failing and deliveries that used up their retries, counted (`vaulter:webhooks:redeliver`) | warning → warning |
+| `media.disk.probe` | Write, read and delete a test object on every disk (only with `--probe-storage` or `--production`) | error → error |
+| `media.dedup.scope` | Tenant-wide deduplication across profiles on different disks | warning → warning |
+| `media.legacy_scopes` | Blobs with a `legacy:snull`/`legacy:tnull` scope (`vaulter:blobs:repair-scopes`) | warning → warning |
+| `drive.uploads.tmp` | The temp directory is writable and larger than `max_file_size` | error → error |
+| `drive.intl` | `ext-intl` is loaded (NFC names) | warning → warning |
+| `drive.scan.scanner` | An enabled scan policy has a scanner that resolves and answers to the configured key and version | error → error |
+| `drive.scan.policy` | Every drive runs the configured scan policy (`vaulter:scan:rescan --activate-policy`); no backfill stalled for 24 h | warning → error |
+| `drive.scan.obligations` | Expired leases and work overdue by 30 minutes (`vaulter:scan:reconcile`); work that settled unscanned, by reason | warning → error for stuck work, warning → warning for unscanned |
+| `drive.scan.scope` | Scan rows whose drive is missing or of another tenant; unavailable content scope under a scan-everything policy | error → error |
+| `drive.drives.deleting` | Drives in `deleting` for more than 24 h (`vaulter:drives:purge`) | warning → warning |
+| `drive.drives.usage` | Stored `used_bytes` against the quota formula, same calculator as `vaulter:drives:recount`, without a lock | warning → warning |
+| `documents.types` | The default type is registered; documents of unregistered types, counted | warning → warning |
+| `documents.collaboration` | With collaboration on: both secrets set and different, hub URL (`wss://` in production), token lifetime ≤ 3600 s, `firebase/php-jwt` installed | error → error |
+| `azgard.dependency` | AzGuard is installed and the bridge guard resolves | error → error |
+
+The `drive.scan.*` checks run whether or not `features.webhooks` is on: scan work is mandatory
+content-safety work, not a webhook. `media.disk.probe` is the only check that writes; it removes
+its object in every case.
 
 ## `vaulter:upgrade:inspect`
 

@@ -12,6 +12,7 @@ use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Providers\AccessRegistrar;
 use Vaulter\Providers\BindingsRegistrar;
 use Vaulter\Providers\ConsoleRegistrar;
+use Vaulter\Providers\DoctorRegistrar;
 use Vaulter\Providers\EventsRegistrar;
 use Vaulter\Providers\HttpRegistrar;
 use Vaulter\Providers\SchedulingRegistrar;
@@ -41,6 +42,7 @@ final class VaulterServiceProvider extends PackageServiceProvider
         (new AccessRegistrar)->register($this->app);
         (new EventsRegistrar)->register($this->app);
         (new ConsoleRegistrar)->register($this->app);
+        (new DoctorRegistrar)->register($this->app);
         (new HttpRegistrar)->register($this->app);
     }
 

@@ -6,14 +6,15 @@ outline: deep
 
 # Artisan-команды
 
-Команды Vaulter называются `vaulter:<область>:<действие>`; единственное исключение — точка
-входа `vaulter:install`. Команды обслуживания (сборка мусора, очистка корзины, чистка загрузок,
+Команды Vaulter называются `vaulter:<область>:<действие>`; исключения — точки
+входа `vaulter:install` и `vaulter:doctor`. Команды обслуживания (сборка мусора, очистка корзины, чистка загрузок,
 релей outbox, повтор и очистка вебхуков, scan reconcile) пакеты сами ставят в планировщик
 хоста — см. [Планировщик](#планировщик).
 
 | Команда | Назначение |
 |---|---|
 | `vaulter:install` | Опубликовать конфиги установленных пакетов, вывести настройки хоста, при желании выполнить миграции |
+| `vaulter:doctor` | Read-only диагностика настройки Vaulter на хосте; `--production` поднимает часть предупреждений до ошибок |
 | `vaulter:upgrade:inspect` | Read-only проверка готовности данных 0.2 к схеме 0.3 |
 | `vaulter:scan:reconcile` | Восстановить scan-намерения, backfill и очистку закоммиченных загрузок (с лимитами) |
 | `vaulter:scan:rescan` | Поставить в очередь повторное сканирование ревизий файлов по tenant, drive или набору ревизий |
@@ -60,7 +61,82 @@ php artisan vaulter:install
 Интерактивно команда спрашивает middleware и драйвер, нужно ли мигрировать (по умолчанию нет) и
 ставить ли звезду; без терминала берутся опции или значения по умолчанию, а миграции не
 выполняются без `--migrate`. Она печатает строки для применения
-(`VAULTER_PERMISSION_DRIVER=…` и запись `routes.middleware.authenticated`).
+(`VAULTER_PERMISSION_DRIVER=…` и запись `routes.middleware.authenticated`) и завершается отчётом
+[`vaulter:doctor`](#vaulter-doctor). Установка не является барьером: код выхода `0`, что бы ни нашёл
+doctor.
+
+## `vaulter:doctor`
+
+Read-only диагностика настройки Vaulter на хосте. Каждый установленный пакет добавляет свои
+проверки; проверка сообщает находки `ok`, `warning` или `error` — со стабильным `code`, текстом и,
+если проблему устраняет команда, подсказкой. Doctor ничего не чинит.
+
+```bash
+php artisan vaulter:doctor                          # все проверки, читаемый вывод
+php artisan vaulter:doctor --production             # профиль production
+php artisan vaulter:doctor --json                   # один документ vaulter.doctor/v1 в stdout
+php artisan vaulter:doctor --check=drive.scan       # только проверки под префиксом ключа
+php artisan vaulter:doctor --probe-storage          # дополнительно записать тестовый объект на каждый диск
+```
+
+| Опция | Смысл |
+|---|---|
+| `--production` | Проверка по профилю production: отмеченные ниже *warning → error* становятся ошибками, диски проверяются записью |
+| `--json` | Напечатать один документ `vaulter.doctor/v1` и больше ничего в stdout (ошибки использования — в stderr) |
+| `--check=` | Запустить только проверки, ключ которых равен префиксу или начинается с него и точки; можно повторять. Префикс без совпадений — код `2` |
+| `--sample=1000` | Лимит строк выборочных проверок (целостность, scope сканирования, использование drive) |
+| `--probe-storage` | Разрешить `media.disk.probe` записать, прочитать и удалить `.vaulter-doctor/<ulid>` на каждом диске. Без флага (и без `--production`) проверка сообщает `not evaluated; pass --probe-storage` |
+
+Код выхода: `1`, если любая находка — `error`; `2` при неверной опции; иначе `0`. Предупреждения
+запуск не проваливают. Проверка, бросившая исключение, превращается в ошибку `doctor.check_failed` с именем
+класса исключения; с `-v` сообщение печатается в читаемом выводе (в нём может быть строка подключения; в JSON оно не попадает). Evidence содержит только
+счётчики, имена и флаги — никогда секреты.
+
+JSON-документ описан схемой `packages/core/resources/schemas/doctor-v1.schema.json`:
+
+```json
+{"schema":"vaulter.doctor/v1","production":false,"generated_at":"2026-10-11T12:00:00Z",
+ "summary":{"ok":14,"warning":2,"error":0},
+ "checks":[{"key":"core.queue","title":"Queue connection","findings":[
+   {"severity":"warning","code":"core.queue.synchronous","message":"…","hint":"…","evidence":{"connection":"sync","driver":"sync"}}]}],
+ "exit_code":0}
+```
+
+| Ключ | Что проверяет | Не production → production |
+|---|---|---|
+| `core.database.connection` | Соединение Vaulter отвечает; драйвер — PostgreSQL, MySQL или MariaDB | SQLite: warning → error |
+| `core.schema.tables` | Все таблицы Vaulter существуют; нет неприменённых миграций Vaulter | error → error |
+| `core.schema.key_types` | Типы ключевых колонок совпадают с `ids.strategy` / `ids.host_keys` (PostgreSQL, MySQL, MariaDB) | error → error |
+| `core.schema.integrity` | Один корень на drive; kind узла ⇄ строка file/document; head-ревизия принадлежит своему агрегату (выборочно) | warning → warning |
+| `core.config.valid` | Boot-валидация каждого установленного пакета, сводным списком | error → error |
+| `core.config.deprecated_keys` | Устаревшие ключи конфига, которые всё ещё заданы | warning → warning |
+| `core.routes.auth` | В `routes.middleware.authenticated` есть auth-middleware, guard которого существует | error → error |
+| `core.access.driver` | Драйвер прав настоящий и разрешается; тестовый драйвер в production отклоняется | error → error |
+| `core.tenancy` | При включённой tenancy класс resolver разрешается (значение известно только в запросе) | error → error |
+| `core.queue` | Очередь по умолчанию не `sync`/`null` | warning → warning |
+| `core.scheduler` | `vaulter.schedule.enabled` или задачи `vaulter:*` в планировщике | warning → warning |
+| `core.cache` | Кэш по умолчанию общий (не `array`/`file`) и поддерживает атомарные блокировки | warning → warning |
+| `core.webhooks.outbox_lag` | Самая старая готовая к отправке строка outbox ждала менее 10 минут | warning → warning |
+| `core.webhooks.relay_leases` | Нет строки outbox с арендой релея, истёкшей более 5 минут назад | warning → error |
+| `core.webhooks.deliveries` | Число endpoint, отключённых из-за сбоев, и доставок, исчерпавших повторы (`vaulter:webhooks:redeliver`) | warning → warning |
+| `media.disk.probe` | Запись, чтение и удаление тестового объекта на каждом диске (только с `--probe-storage` или `--production`) | error → error |
+| `media.dedup.scope` | Дедупликация по tenant при профилях на разных дисках | warning → warning |
+| `media.legacy_scopes` | Blob со scope `legacy:snull`/`legacy:tnull` (`vaulter:blobs:repair-scopes`) | warning → warning |
+| `drive.uploads.tmp` | Временный каталог доступен на запись и больше `max_file_size` | error → error |
+| `drive.intl` | Загружен `ext-intl` (имена в NFC) | warning → warning |
+| `drive.scan.scanner` | У включённой политики сканирования есть сканер, который разрешается и отвечает заданным key и version | error → error |
+| `drive.scan.policy` | Каждый drive работает по настроенной политике (`vaulter:scan:rescan --activate-policy`); нет backfill без прогресса 24 ч | warning → error |
+| `drive.scan.obligations` | Истёкшие аренды и работа с опозданием 30 минут (`vaulter:scan:reconcile`); работа, завершённая без вердикта, по причинам | warning → error для зависшей, warning → warning для непросканированной |
+| `drive.scan.scope` | Строки сканирования с отсутствующим drive или drive другого tenant; недоступный scope контента при политике «сканировать всё» | error → error |
+| `drive.drives.deleting` | Drive в статусе `deleting` дольше 24 ч (`vaulter:drives:purge`) | warning → warning |
+| `drive.drives.usage` | Сохранённый `used_bytes` против формулы квоты, тот же калькулятор, что у `vaulter:drives:recount`, без блокировки | warning → warning |
+| `documents.types` | Тип по умолчанию зарегистрирован; документы незарегистрированных типов, счётчик | warning → warning |
+| `documents.collaboration` | При включённой совместной работе: оба секрета заданы и различны, URL хаба (`wss://` в production), срок токена ≤ 3600 с, установлен `firebase/php-jwt` | error → error |
+| `azgard.dependency` | AzGuard установлен и guard моста разрешается | error → error |
+
+Проверки `drive.scan.*` выполняются независимо от `features.webhooks`: сканирование — обязательная
+работа по безопасности контента, а не вебхук. `media.disk.probe` — единственная проверка, которая пишет;
+свой объект она удаляет в любом случае.
 
 ## `vaulter:upgrade:inspect`
 

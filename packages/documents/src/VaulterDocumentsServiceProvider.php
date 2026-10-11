@@ -4,17 +4,23 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents;
 
+use Closure;
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Vaulter\Configuration\ConfigValidator;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Doctor\Checks\ConfigValidCheck;
+use Vaulter\Doctor\DoctorRegistry;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Console\MakeDocumentTypeCommand;
 use Vaulter\Documents\Console\MakeExporterCommand;
 use Vaulter\Documents\Contracts\DocumentExporter;
 use Vaulter\Documents\Contracts\DocumentType;
+use Vaulter\Documents\Doctor\CollaborationCheck;
+use Vaulter\Documents\Doctor\DocumentTypesCheck;
 use Vaulter\Documents\Export\DocumentExporterRegistry;
 use Vaulter\Documents\Http\Problems\DocumentsProblemCodes;
 use Vaulter\Documents\Models\Documents\Document;
@@ -46,6 +52,15 @@ final class VaulterDocumentsServiceProvider extends PackageServiceProvider
         (new CollaborationRegistrar($this->app))->register();
         $this->app->singleton(DocumentsProblemCodes::class);
         $this->app->tag(DocumentsProblemCodes::class, ProblemCatalog::TAG);
+        $this->app->bind('vaulter.config_validator.documents', static fn (Container $app): Closure => static function () use ($app): void {
+            $config = $app->make(DocumentsConfig::class);
+            $config->model('document_revision');
+            $config->model('node_comment');
+            $config->assertDistinctHubSecrets();
+            $config->hubTokenTtl();
+        });
+        $this->app->tag('vaulter.config_validator.documents', ConfigValidCheck::TAG);
+        $this->app->tag([DocumentTypesCheck::class, CollaborationCheck::class], DoctorRegistry::TAG);
     }
 
     public function packageBooted(): void

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Media;
 
+use Closure;
 use Illuminate\Contracts\Container\Container;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -11,11 +12,16 @@ use Vaulter\Configuration\ConfigNormalizer;
 use Vaulter\Contracts\Cas\BlobStore;
 use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Contracts\Cas\StorageDriver;
+use Vaulter\Doctor\Checks\ConfigValidCheck;
+use Vaulter\Doctor\DoctorRegistry;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Media\Console\GcBlobsCommand;
 use Vaulter\Media\Console\ReconcileBlobsCommand;
 use Vaulter\Media\Console\RepairBlobScopesCommand;
+use Vaulter\Media\Doctor\DedupScopeCheck;
+use Vaulter\Media\Doctor\DiskProbeCheck;
+use Vaulter\Media\Doctor\LegacyScopesCheck;
 use Vaulter\Media\Providers\SchedulingRegistrar;
 
 /**
@@ -76,6 +82,16 @@ final class VaulterMediaServiceProvider extends PackageServiceProvider
 
             return $service;
         });
+
+        $this->app->bind('vaulter.config_validator.media', static fn (Container $app): Closure => static function () use ($app): void {
+            $config = $app->make(MediaConfig::class);
+            $config->dedupScope();
+            $config->contentStore();
+            $config->storageDriver();
+            $config->blobStore();
+        });
+        $this->app->tag('vaulter.config_validator.media', ConfigValidCheck::TAG);
+        $this->app->tag([DiskProbeCheck::class, DedupScopeCheck::class, LegacyScopesCheck::class], DoctorRegistry::TAG);
     }
 
     public function packageBooted(): void

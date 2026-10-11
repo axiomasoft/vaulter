@@ -68,6 +68,11 @@ Vaulter\Contracts\Cas\StorageDriver
   put(string $key, mixed $stream, ?string $disk = null, bool $ifNoneMatch = false, array $options = []): bool
   temporaryUrl(string $key, \DateTimeInterface $expiresAt, ?string $disk = null): ?string
 
+Vaulter\Contracts\Doctor\DoctorCheck
+  key(): string
+  run(\Vaulter\Doctor\DoctorContext $context): array
+  title(): string
+
 Vaulter\Contracts\Drive\DriveHandle
   access(): \Vaulter\Contracts\Access\AccessOperations
   actingAs(\Illuminate\Contracts\Auth\Access\Authorizable $user): \static
@@ -218,6 +223,7 @@ Vaulter\Configuration\ConfigNormalizer
   normalize(\Illuminate\Contracts\Config\Repository $config, array $packageDefaults): void
   packageDefaults(): array
   registerDefaults(string $root, string $path): void
+  usedDeprecatedKeys(): array
 
 Vaulter\Configuration\ConfigValidator
   __construct(\Illuminate\Contracts\Config\Repository $config)

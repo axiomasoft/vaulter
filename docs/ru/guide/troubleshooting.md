@@ -226,6 +226,31 @@ test('non-test src never uses whereHas/withCount on descendants (H.4)', ...);
   не бывают. 401 от хаба обычно означает, что `VAULTER_COLLAB_WEBHOOK_SECRET` (или `secret`
   драйвера) различается между Laravel и хабом.
 
+## Как читать отчёт doctor {#doctor}
+
+**Симптом.** После деплоя или установки нужен ответ «да/нет» по настройке, либо что-то работает
+локально и не работает в production.
+
+**Почему и решение.** Запустите `php artisan vaulter:doctor --production` (с `--json` для CI). У каждой
+находки есть `code` и, если проблему устраняет команда, подсказка:
+
+- Ошибки `core.routes.*` / `core.access.*` означают, что API открыт или нет настоящего драйвера прав;
+  см. [Нет драйвера прав в проде](#no-permission-driver).
+- Ошибки `core.schema.tables`: выполните `php artisan migrate`; `core.schema.key_types` значит, что
+  `ids.strategy` или `ids.host_keys` отличается от значения, с которым создавалась схема, — верните
+  прежнее значение, колонки руками не правьте.
+- `core.webhooks.relay_leases` и `drive.scan.obligations` указывают на не запущенный воркер или
+  планировщик: запустите воркер очереди и `schedule:run`, затем `vaulter:webhooks:relay` или
+  `vaulter:scan:reconcile --all-tenants --dry-run`.
+- `drive.scan.policy` с предупреждением о переходе значит, что конфиг называет политику сканирования,
+  которую drive не активировал; сначала `vaulter:scan:rescan --activate-policy --drive=<id> --dry-run`.
+- `media.disk.probe` пропускается, пока не передан `--probe-storage` (или `--production`); он пишет и
+  удаляет один небольшой объект на диск.
+- `doctor.check_failed` значит, что проверка не смогла выполниться; повторите с `-v`, чтобы увидеть
+  сообщение исключения.
+
+Doctor — read-only, сам он ничего не чинит. См. [`vaulter:doctor`](/ru/reference/commands#vaulter-doctor).
+
 ## Несовпадение диска блоба / пропавшие байты {#blob-disk}
 
 **Симптом.** Узел существует, но скачивание отдаёт 404 на байтах, либо GC удаляет объекты, на

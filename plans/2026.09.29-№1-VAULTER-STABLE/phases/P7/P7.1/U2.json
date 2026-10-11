@@ -25,8 +25,15 @@
   },
   "mode": "either",
   "instructions": "scan-проверки независимы от features.webhooks; drives.usage только через QuotaCalculator без транзакции; probe — по D68.",
-  "status": "todo",
-  "outcome": null,
-  "updated_at": "2026-10-11T13:52:43Z",
+  "status": "accepted",
+  "outcome": {
+    "agent": {
+      "provider": "claude-code",
+      "model": "claude-sonnet-5-5"
+    },
+    "at": "2026-10-11T18:05:38Z",
+    "notes": "integrator's own implementation; unit checks V1-V6 rerun on the final tree and the grok-4.7 review findings fixed"
+  },
+  "updated_at": "2026-10-11T18:05:38Z",
   "kind": "implementation"
 }

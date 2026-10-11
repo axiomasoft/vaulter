@@ -6,6 +6,16 @@ changes that require action from consumers of the package.
 
 ## Unreleased
 
+### `vaulter:doctor` and the install report (PLAN2.D68, D71)
+
+New: `php artisan vaulter:doctor --production` checks the host before and after a deploy and
+exits `1` on any error; `--json` prints a `vaulter.doctor/v1` document for CI. Run it once after
+upgrading: the checks `core.routes.auth`, `core.access.driver`, `core.queue`, `core.cache` and
+`drive.scan.*` name settings that are easy to miss. `vaulter:install` now runs it at the end and
+still exits `0`. A package or host adds its own check by implementing
+`Vaulter\Contracts\Doctor\DoctorCheck` and tagging it `vaulter.doctor_checks`. Nothing changes for
+existing code; the command never writes except the opt-in storage probe (`--probe-storage`, implied by `--production`).
+
 ### Command names, scheduler and `vaulter:install` (PLAN2.D71–D70)
 
 The seven maintenance commands were renamed without aliases; options and behaviour are unchanged.

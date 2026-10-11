@@ -6,6 +6,7 @@ namespace Vaulter\Providers;
 
 use Illuminate\Console\Application as Artisan;
 use Illuminate\Contracts\Foundation\Application;
+use Vaulter\Console\DoctorCommand;
 use Vaulter\Console\ErrorsReferenceCommand;
 use Vaulter\Console\EventsReferenceCommand;
 use Vaulter\Console\InstallCommand;
@@ -36,6 +37,7 @@ final class ConsoleRegistrar
                 PruneChangesCommand::class,
                 ResetChangesCommand::class,
                 InstallCommand::class,
+                DoctorCommand::class,
                 UpgradeInspectCommand::class,
             ]);
         });

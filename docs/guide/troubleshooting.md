@@ -220,6 +220,29 @@ auth 403s.
   from the hub usually means `VAULTER_COLLAB_WEBHOOK_SECRET` (or the driver `secret`) differs
   between Laravel and the hub.
 
+## Reading the doctor report {#doctor}
+
+**Symptom.** A deploy or an install needs a yes/no answer on the setup, or something works
+locally and not in production.
+
+**Why & fix.** Run `php artisan vaulter:doctor --production` (add `--json` for CI). Every
+finding has a `code` and, when a command fixes it, a hint:
+
+- `core.routes.*` / `core.access.*` errors mean the API is open or has no real permission driver; see
+  [No permission driver in production](#no-permission-driver).
+- `core.schema.tables` errors: run `php artisan migrate`; `core.schema.key_types` means `ids.strategy` or
+  `ids.host_keys` differs from what the schema was created with — restore the old value, do not edit columns by hand.
+- `core.webhooks.relay_leases` and `drive.scan.obligations` point at a worker or scheduler that is not
+  running: start the queue worker and `schedule:run`, then `vaulter:webhooks:relay` or
+  `vaulter:scan:reconcile --all-tenants --dry-run`.
+- `drive.scan.policy` with a cutover warning means the config names a scan policy the drive has not
+  activated; run `vaulter:scan:rescan --activate-policy --drive=<id> --dry-run` first.
+- `media.disk.probe` is skipped unless you pass `--probe-storage` (or `--production`); it writes and
+  deletes one small object per disk.
+- `doctor.check_failed` means a check could not run; rerun with `-v` to see the exception message.
+
+Doctor is read-only and never fixes anything itself. See [`vaulter:doctor`](/reference/commands#vaulter-doctor).
+
 ## Blob disk mismatch / missing bytes {#blob-disk}
 
 **Symptom.** A node exists but downloading it 404s the bytes, or GC deletes objects that are

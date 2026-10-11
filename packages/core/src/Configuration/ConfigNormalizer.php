@@ -41,6 +41,19 @@ final class ConfigNormalizer
         return $defaults;
     }
 
+    /**
+     * Legacy config keys the host still sets, collected while normalizing.
+     *
+     * @return list<string>
+     */
+    public function usedDeprecatedKeys(): array
+    {
+        $keys = array_map(strval(...), array_keys($this->warned));
+        sort($keys);
+
+        return $keys;
+    }
+
     /** @param array<string, array<string, mixed>> $packageDefaults */
     public function normalize(Repository $config, array $packageDefaults): void
     {

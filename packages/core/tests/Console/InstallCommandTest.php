@@ -66,3 +66,18 @@ it('runs the migrations with --migrate', function (): void {
         ->doesntExpectOutputToContain('Migrations not run')
         ->assertExitCode(0);
 });
+
+it('ends with the doctor report and still exits 0 when the doctor finds an error', function (): void {
+    // The test host runs the null permission driver and has no auth middleware: the doctor reports errors.
+    $this->artisan('vaulter:install', ['--no-interaction' => true])
+        ->expectsOutputToContain('core.routes.auth')
+        ->expectsOutputToContain('error')
+        ->assertExitCode(0);
+});
+
+it('stays idempotent with the doctor step and leaves the published config as shipped', function (): void {
+    $this->artisan('vaulter:install', ['--no-interaction' => true])->assertExitCode(0);
+    $this->artisan('vaulter:install', ['--no-interaction' => true])->assertExitCode(0);
+
+    expect(file_get_contents(config_path('vaulter.php')))->toBe(file_get_contents(__DIR__.'/../../config/vaulter.php'));
+});

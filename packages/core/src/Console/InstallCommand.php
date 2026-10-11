@@ -29,7 +29,7 @@ final class InstallCommand extends Command
         {--migrate : Run the migrations without asking}
         {--force : Overwrite config files that are already published}';
 
-    protected $description = 'Publish Vaulter config, show the host settings to apply and optionally migrate';
+    protected $description = 'Publish Vaulter config, show the host settings to apply, optionally migrate and run the doctor';
 
     public function __construct(private readonly Filesystem $files, private readonly VaulterConfig $config)
     {
@@ -68,6 +68,10 @@ final class InstallCommand extends Command
         } else {
             $this->components->info('Migrations not run; run `php artisan migrate` when ready.');
         }
+
+        // The install is not a gate: a finding is reported, the exit code stays 0.
+        $this->newLine();
+        $this->call('vaulter:doctor');
 
         if ($interactive && confirm('Star axiomasoft/vaulter on GitHub?', false)) {
             $this->line('https://github.com/axiomasoft/vaulter');

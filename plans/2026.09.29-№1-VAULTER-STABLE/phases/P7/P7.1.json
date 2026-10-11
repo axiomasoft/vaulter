@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P7.1",
   "title": "vaulter:doctor: контракт, runner, проверки всех пакетов (C09) и шаг doctor в install",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "Расширяемый read-only vaulter:doctor с тегом vaulter.doctor_checks, --production/--json(vaulter.doctor/v1)/--check/--sample/--probe-storage, каталогом проверок core, media, drive (включая scan scanner/policy/obligations/scope и leases), documents и azgard; install завершается выводом doctor.",
   "why": "OPUS 12 §2, D34, D68; C09: doctor обязан выявлять неверно сконфигурированный scanner, незавершённый cutover политики, зависшие/проваленные durable obligations и leases, неверный scope; P8 (V15) опирается на doctor --production. Риски: проверка, мутирующая данные или открывающая write scope; вывод секретов; вторая формула quota; scan-проверки, выключенные вместе с webhooks.",
   "scope": {
@@ -294,12 +294,52 @@
   ],
   "result": {
     "started_at": "2026-10-11T16:56:06Z",
+    "finished_at": "2026-10-11T18:05:48Z",
     "executor": {
       "provider": "claude-code",
       "model": "claude-sonnet-5-5",
       "effort": "high",
       "session": "c8a6696c-4326-470b-a768-c0b0e9c71cd7"
-    }
+    },
+    "notes": "vaulter:doctor with 29 checks in 5 packages, doctor-v1 JSON schema, install step 5 (doctor, exit 0), docs en+ru, UPGRADE, CHANGELOG; public-api golden additive (DoctorCheck, ConfigNormalizer::usedDeprecatedKeys). Read-only proven by DB::listen test; only media.disk.probe writes (opt-in, removes its object, delete failure is an error). C09: drive.scan.* independent of features.webhooks (tested). Seams self-check: commands arch name test updated (vaulter:doctor exempt like install); drives.usage only via QuotaCalculator without lock; no new tables/columns; no OpensWriteScope. Review grok/grok-4.7/high: 4 findings, all reproduced and fixed (artifacts/P7.1/review-verdict.md). Final: V1 499 tests, drive/media/documents/azgard Doctor+Arch green, Pint+PHPStan clean for all five packages.",
+    "deviations": [
+      "DoctorFinding/DoctorContext/DoctorSeverity live in Vaulter\\Doctor, not Vaulter\\Contracts\\Doctor (core arch: Contracts are interfaces only); check-profile.json written after the first product edit (ConfigNormalizer::usedDeprecatedKeys); media.dedup.scope warns only for scope tenant (off never shares a blob); config validators of media/drive/documents are closures tagged vaulter.config_validators (new internal tag, needed for 'all packages' in core.config.valid); units U1-U3 implemented inline, not dispatched; review requested by the owner in-session (grok/grok-4.7/high) although the item has review mode none"
+    ],
+    "pending": [
+      "V7 impact: PG/MySQL runs of core.schema.key_types/integrity/database.connection and drive.scan.*, vaulter:doctor --production on the 0.2 fixture after upgrade (V15) — phase run P7 / P8.2; the key_types mismatch path has no SQLite test (driver-gated); full suites, docs:build"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-11T18:05:48Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-11T18:05:48Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-11T18:05:48Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-11T18:05:48Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-11T18:05:48Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-11T18:05:48Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-11T16:56:06Z"
+  "updated_at": "2026-10-11T18:05:48Z"
 }

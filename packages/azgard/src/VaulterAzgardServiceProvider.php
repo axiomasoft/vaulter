@@ -10,7 +10,9 @@ use Illuminate\Support\ServiceProvider;
 use Vaulter\Azgard\Configuration\AzgardConfig;
 use Vaulter\Azgard\Contracts\AzgardBackedUser;
 use Vaulter\Azgard\Contracts\AzgardGuard;
+use Vaulter\Azgard\Doctor\AzgardDependencyCheck;
 use Vaulter\Configuration\ConfigNormalizer;
+use Vaulter\Doctor\DoctorRegistry;
 
 /**
  * Wires the AzGuard v1 permission bridge (master plan P1 #2). It binds the Vaulter
@@ -54,6 +56,8 @@ final class VaulterAzgardServiceProvider extends ServiceProvider
                 panelId: $app->make(AzgardConfig::class)->panelId(),
             );
         });
+
+        $this->app->tag([AzgardDependencyCheck::class], DoctorRegistry::TAG);
     }
 
     public function boot(): void
