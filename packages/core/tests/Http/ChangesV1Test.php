@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Http\V1;
@@ -91,4 +92,25 @@ it('keeps the journal usable by a caller granted only a nested folder', function
     $child = V1::folder($this->drive, 'child', $folder->id);
 
     $this->getJson($this->base.'?cursor='.urlencode($cursor))->assertOk()->assertJsonPath('data.0.node_id', $child->id);
+});
+
+it('turns a stranger away without walking the nodes of the drive', function (): void {
+    $this->actingAs(V1::user(2));
+    $count = function (): int {
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        $this->getJson($this->base.'/start')->assertNotFound()->assertJsonPath('code', 'drive_not_found');
+        $count = count(DB::getQueryLog());
+        DB::disableQueryLog();
+
+        return $count;
+    };
+    $count();
+    $small = $count();
+    $owner = $this->drive->actingAs(V1::user(1));
+    foreach (range(1, 210) as $index) {
+        V1::folder($owner, 'f'.$index);
+    }
+
+    expect($count())->toBe($small);
 });

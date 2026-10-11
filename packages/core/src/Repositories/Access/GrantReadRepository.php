@@ -139,6 +139,33 @@ final class GrantReadRepository
     }
 
     /**
+     * The distinct node ids of one drive a subject-set holds a live grant on: the only
+     * places below an invisible root where that subject-set can see anything.
+     *
+     * @param  list<Subject>    $subjects
+     * @return list<int|string>
+     */
+    public function nodeIdsGrantedIn(array $subjects, int|string $driveId, Carbon $now): array
+    {
+        if ($subjects === []) {
+            return [];
+        }
+
+        $model = $this->vaulterConfig->model('grant');
+
+        /** @var list<int|string> $ids */
+        $ids = $this->boundary->constrain($model::query(), 'node.storage')
+            ->whereHas('node', static fn (Builder $query): Builder => $query->where('drive_id', $driveId))
+            ->forSubjects($subjects)
+            ->notExpired($now)
+            ->distinct()
+            ->pluck('node_id')
+            ->all();
+
+        return $ids;
+    }
+
+    /**
      * Every live subtree grant on the given nodes, for any subject: what a node below
      * them currently inherits when those nodes are its ancestors up to the boundary.
      *

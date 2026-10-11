@@ -73,7 +73,7 @@ it('V31 constrains HTTP lookup search shared and trash reads to the owning drive
     expect($read->find($nodeA->id))->toBeNull()->and($read->find($nodeB->id)?->id)->toBe($nodeB->id)
         ->and($read->queryForUser(AccessTestHelpers::user())->pluck('id')->all())->not->toContain($nodeA->id)
         ->and($read->sharedWith(AccessTestHelpers::user())->pluck('id')->all())->not->toContain($nodeA->id)
-        ->and(fn () => app(HttpResourceResolver::class)->driveOfNode($nodeA->id))->toThrow(NodeNotFoundException::class);
+        ->and(fn () => app(HttpResourceResolver::class)->driveOfNode((string) $nodeA->id))->toThrow(NodeNotFoundException::class);
     $this->actingAs(AccessTestHelpers::user());
     $this->getJson('api/vaulter/v1/nodes/'.$nodeA->id)->assertNotFound();
     $this->getJson('api/vaulter/v1/nodes/'.$nodeB->id)->assertOk();

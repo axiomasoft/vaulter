@@ -6,9 +6,9 @@ namespace Vaulter\Http\Support;
 
 use Closure;
 use Illuminate\Contracts\Auth\Access\Authorizable;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Vaulter\Access\AccessResolver;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Access\MissingActorException;
@@ -16,7 +16,6 @@ use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Nodes\StorageNotFoundException;
 use Vaulter\Http\Middleware\AssignCorrelationId;
 use Vaulter\Models\Drive\Drive;
-use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Identity;
 use Vaulter\VaulterManager;
 
@@ -27,7 +26,11 @@ use Vaulter\VaulterManager;
  */
 final readonly class HttpOperationContextFactory
 {
-    public function __construct(private VaulterManager $vaulter, private HttpResourceResolver $resolver) {}
+    public function __construct(
+        private VaulterManager $vaulter,
+        private HttpResourceResolver $resolver,
+        private AccessResolver $access,
+    ) {}
 
     public function forDrive(Request $request, Drive $drive): DriveHandle
     {
@@ -58,9 +61,14 @@ final readonly class HttpOperationContextFactory
     }
 
     /**
-     * A drive-wide listing requires at least one viewable node, including the trash.
-     * A grant on a nested folder is sufficient; an entirely invisible drive answers
-     * exactly like an unknown drive before any listing, cursor or mutation is run.
+     * A drive-wide listing requires at least one viewable node. A grant on a nested
+     * folder is sufficient; an entirely invisible drive answers exactly like an unknown
+     * drive before any listing, cursor or mutation is run.
+     *
+     * Below an invisible root only a node holding one of the actor's grants can be
+     * visible (a grant reaches its own node whatever its scope, and the profile hides a
+     * whole drive or nothing), so checking those anchors is exact and costs the same
+     * for a stranger however large the drive is.
      *
      * @template T
      *
@@ -69,35 +77,36 @@ final readonly class HttpOperationContextFactory
      */
     public function onVisibleDrive(Request $request, string $driveId, Closure $call): mixed
     {
-        return $this->onDrive($request, $driveId, static function (DriveHandle $handle) use ($call): mixed {
-            $visible = false;
-            try {
-                $handle->root();
-                $visible = true;
-            } catch (NodeNotFoundException) {
-                // A nested or trashed grant can still make this drive readable.
-            }
-            if ($visible) {
-                return $call($handle);
-            }
-            $handle->model()->nodes()->chunkById(200, static function (Collection $nodes) use ($handle, &$visible): bool {
-                $ids = array_values($nodes->map(static fn (Node $node): string => Identity::stringify($node->getKey()))->all());
-                foreach ($handle->nodes()->abilitiesMany($ids) as $abilities) {
-                    if ($abilities->flags[Ability::View->value] ?? false) {
-                        $visible = true;
-
-                        return false;
-                    }
-                }
-
-                return true;
-            });
-            if (!$visible) {
+        return $this->onDrive($request, $driveId, function (DriveHandle $handle) use ($call): mixed {
+            if (!$this->seesAnyNode($handle)) {
                 throw NodeNotFoundException::forId('drive');
             }
 
             return $call($handle);
         });
+    }
+
+    private function seesAnyNode(DriveHandle $handle): bool
+    {
+        try {
+            $handle->root();
+
+            return true;
+        } catch (NodeNotFoundException) {
+            // A grant below the root can still make this drive readable.
+        }
+        $actor = $handle->actor()->authorizable();
+        $anchors = $actor === null ? [] : $this->access->grantAnchorIdsIn($actor, $handle->model());
+        foreach (array_chunk($anchors, 200) as $chunk) {
+            $ids = array_map(static fn (int|string $id): string => Identity::stringify($id), $chunk);
+            foreach ($handle->nodes()->abilitiesMany($ids) as $abilities) {
+                if ($abilities->flags[Ability::View->value] ?? false) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**

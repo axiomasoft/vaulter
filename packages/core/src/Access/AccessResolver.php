@@ -362,6 +362,32 @@ final class AccessResolver
     }
 
     /**
+     * The nodes of one drive the actor holds a live grant on. With the root out of
+     * sight, only these and their subtrees can be visible: none means the actor sees
+     * nothing in the drive. Candidates only; resolve each before relying on it.
+     *
+     * @internal
+     *
+     * @return list<int|string>
+     */
+    public function grantAnchorIdsIn(Authorizable $actor, Drive $drive): array
+    {
+        if ($this->tenancy->enabled()) {
+            $drive = $this->boundary->assertDrive($drive);
+        }
+        if (!$this->vaulterConfig->featureEnabled('grants', $drive->profile)) {
+            return [];
+        }
+        $driver = $this->drivers->forProfile($drive->profile);
+
+        return $this->grants->nodeIdsGrantedIn(
+            subjects: $this->drivers->subjectsFor($driver, $actor, AccessScope::forDrive($drive)),
+            driveId: $drive->id,
+            now: Carbon::now(),
+        );
+    }
+
+    /**
      * The live grants of the subject-set that apply to the node, nearest first, each
      * with whether it was inherited, and the boundary node that ended the walk.
      *
