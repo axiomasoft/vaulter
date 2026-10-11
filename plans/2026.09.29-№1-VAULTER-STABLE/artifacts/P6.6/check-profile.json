@@ -1,0 +1,11 @@
+{
+  "item": "P6.6",
+  "changed_paths": ["packages/filament/src/Resources/**", "packages/filament/src/Support/{PanelActor,PanelDrives,PanelNodes}.php", "packages/filament/src/Support/PanelAccessScope.php (deleted)", "packages/filament/tests/Arch/FilamentBoundaryArchTest.php", "packages/filament/tests/Feature/*", "docs/guide/filament.md", "docs/ru/guide/filament.md", "UPGRADE.md", "CHANGELOG.md"],
+  "callers": ["packages/drive/tests/Arch/OperationsBoundaryTest.php (mentions PanelAccessScope)"],
+  "fixtures": ["packages/filament/tests/Fixtures/DriveBuilder.php (SQLite in-memory)"],
+  "checks": [
+    {"id": "V1", "cwd": "packages/filament", "env": {"APP_ENV": "testing", "DB_CONNECTION": "sqlite", "DB_DATABASE": ":memory:"}, "cmd": "../../scripts/php84 vendor/bin/pest --ci tests/Arch tests/Feature tests/Configuration"},
+    {"id": "V80", "cwd": "packages/filament", "env": {}, "cmd": "../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress"}
+  ],
+  "excluded": "PG/MySQL, full suites, mutators (D66)"
+}

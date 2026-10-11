@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.6",
   "title": "Filament через handle и фазовый барьер P6",
-  "status": "todo",
+  "status": "in_progress",
   "summary": "Filament-ресурсы и действия вызывают только Vaulter::drive(...)->actingAs(PanelActor::current()) и snapshot-DTO, PanelAccessScope удалён, arch-тест границы и V27.",
   "why": "OPUS F6 P6.6/V27: админ-панель не должна обходить авторизацию handle. Риски: access-boundary (Move без Create на цели), регрессия Filament-таблиц при отказе от Eloquent-скоупа.",
   "scope": {
@@ -144,6 +144,14 @@
     "status": "not_needed",
     "notes": "@plan/knowledge/P6-design.json#Filament"
   },
-  "result": null,
-  "updated_at": "2026-10-10T10:26:46Z"
+  "result": {
+    "started_at": "2026-10-11T11:42:00Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "c53b0598-17a0-4994-bead-1b92100097f7"
+    }
+  },
+  "updated_at": "2026-10-11T11:42:00Z"
 }
