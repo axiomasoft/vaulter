@@ -1,0 +1,32 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:unit:v1",
+  "id": "U3",
+  "item": "P7.1",
+  "title": "Documents + azgard проверки",
+  "goal": "documents.types, documents.collaboration, azgard.dependency с тестами",
+  "files": [
+    "packages/documents/src/Doctor/*.php",
+    "packages/azgard/src/Doctor/*.php",
+    "packages/documents/src/VaulterDocumentsServiceProvider.php",
+    "packages/azgard/src/VaulterAzgardServiceProvider.php",
+    "packages/documents/tests/Doctor/*.php",
+    "packages/azgard/tests/Doctor/*.php"
+  ],
+  "depends_on": [
+    "U1"
+  ],
+  "checks": [
+    "V4",
+    "V5"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "mode": "either",
+  "instructions": "Секреты коллаборации не выводятся: только факт задан/различен.",
+  "status": "todo",
+  "outcome": null,
+  "updated_at": "2026-10-11T13:52:45Z",
+  "kind": "implementation"
+}

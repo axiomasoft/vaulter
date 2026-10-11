@@ -1,0 +1,244 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P7.6",
+  "title": "Структура docs по OPUS §8 (en+ru), генерация reference config/commands, офлайн-проверка ссылок",
+  "status": "todo",
+  "summary": "docs перенесены по карте P7-design-docs#Docs в getting-started/concepts/guides/extending/reference/security, VitePress-навигация en+ru обновлена, docs/reference/config.md и commands.md генерируются командами с --check, ссылки и зеркало проверяются scripts/check-doc-links.php.",
+  "why": "OPUS 12 §8, D38, D69: структура по потребностям читателя и reference из источника истины. Риски: битые ссылки из src (VaulterException::docs), тесты-сторожа docs на старых путях, рассинхрон en/ru.",
+  "scope": {
+    "include": [
+      "P7-design-docs#Docs: карта переноса (git mv en и ru), слияния страниц, новые пустые-разделы НЕ создаются (новые страницы — P7.8), docs/.vitepress/config.ts, docs/index.md и docs/ru/index.md.",
+      "vaulter:config:reference и vaulter:commands:reference (--check) + тесты; scripts/check-doc-links.php (+ --mirror).",
+      "Ссылки на docs из src и тестов (P7-design#Seams) и тесты-сторожа: packages/core/tests/Support/*Guard*Test.php, packages/core/tests/Unit/*DocsGuardTest.php, packages/core/tests/Http/Problems/{ErrorsReferenceTest,ProblemRendererTest}.php, packages/core/tests/Events/EventsReferenceTest.php, packages/core/tests/Sharing/ShareLinkLifecycleTest.php, packages/documents/tests/Document/DocumentHeadIntegrityTest.php, packages/drive/tests/Feature/R07ExceptionContractsTest.php, packages/drive/tests/Http/DriveProblemCodesTest.php; EventsReferenceCommand/ErrorsReferenceCommand — новые пути страниц."
+    ],
+    "exclude": [
+      "переписывание содержания страниц (кроме слияний и ссылок)",
+      "рецепты (P7.7)",
+      "README/upgrade guide/runbooks/security (P7.8)",
+      "docs/adr, docs/plan"
+    ]
+  },
+  "depends_on": [
+    "P7.5"
+  ],
+  "decisions": [
+    "D69",
+    "D71"
+  ],
+  "skills": [
+    "php-packages:laravel-package-docs",
+    "php-packages:laravel-package-testing"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/artifacts-P7-design-opus#O12-8",
+      "why": "Первый read (D06): дословный OPUS",
+      "required": true
+    },
+    {
+      "ref": "knowledge/validation-and-execution-policy#Owner-Fast-Only",
+      "why": "Только быстрые проверки в item; тяжёлые — фазовый прогон",
+      "required": true
+    },
+    {
+      "ref": "knowledge/P7-design-docs#Docs",
+      "why": "Нормативный раздел item (документ привязан к item)",
+      "required": true
+    },
+    {
+      "ref": "knowledge/P7-design#Seams",
+      "why": "Швы и риски фазы",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Console/EventsReferenceCommand.php",
+      "why": "Образец --check генератора",
+      "required": true
+    },
+    {
+      "path": "docs/.vitepress/config.ts",
+      "why": "Навигация en+ru",
+      "required": true
+    },
+    {
+      "path": "packages/core/tests/Support/DocsDriftGuardTest.php",
+      "why": "Сторож путей docs",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "docs/{getting-started,concepts,guides,extending,reference}/*.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/ru/{getting-started,concepts,guides,extending,reference}/*.md",
+      "change": "any"
+    },
+    {
+      "path": "docs/guide/*.md",
+      "change": "delete"
+    },
+    {
+      "path": "docs/ru/guide/*.md",
+      "change": "delete"
+    },
+    {
+      "path": "docs/.vitepress/config.ts",
+      "change": "modify"
+    },
+    {
+      "path": "docs/index.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/ru/index.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Console/{ConfigReferenceCommand,CommandsReferenceCommand,EventsReferenceCommand,ErrorsReferenceCommand}.php",
+      "change": "any"
+    },
+    {
+      "path": "packages/core/src/Providers/ConsoleRegistrar.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Exceptions/VaulterException.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Handlers/AbstractFileHandler.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/documents/src/Collaboration/CollaborationDriverManager.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/documents/src/Configuration/DocumentsConfig.php",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/check-doc-links.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Console/{ConfigReferenceCommandTest,CommandsReferenceCommandTest}.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/{Support,Unit,Http/Problems,Events,Sharing}/*.php",
+      "change": "modify",
+      "note": "только тесты, читающие docs-пути"
+    },
+    {
+      "path": "packages/documents/tests/Document/DocumentHeadIntegrityTest.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/tests/{Feature/R07ExceptionContractsTest,Http/DriveProblemCodesTest}.php",
+      "change": "modify"
+    },
+    {
+      "path": "README.md",
+      "change": "modify",
+      "note": "только ссылки на docs"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Обязательный контекст — разделы из reads (в порядке): дословный OPUS @plan/knowledge/artifacts-P7-design-opus.json первым (D06), затем validation-and-execution-policy#Owner-Fast-Only, нормативные разделы @plan/knowledge/P7-design.json (Scope/Order/Validation/Seams/Map) и тематических @plan/knowledge/P7-design-<ops|doctor|testkit|release|docs>.json, C-контракт D29 (для C09 items) и обоснование @plan/knowledge/P7-industry-research-2026-10-11.json (scope не расширять); решения D71–D70. Документы, привязанные к item, доставляются целиком; прочие — plan.py show <plan> knowledge/<id>.",
+    "Стартовые разделы (привязанные документы доставлены в пакет целиком, отдельными reads не дублируются), читать в этом порядке: @plan/knowledge/P7-design-docs.json#Docs; @plan/knowledge/P7-design.json#Seams; @plan/knowledge/P7-design.json#Validation.",
+    "До первого product edit создать plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P7.6/check-profile.json: фактические изменяемые пути, вызывающие, фикстуры, точные cwd/env/команды acceptance-проверок и список impact-проверок фазового прогона.",
+    "Только перечисленные пакеты и файлы-потребители (task_files — подсказка; вынужденные смежные правки перечислить в Completion Notes); чужие dirty-правки, OPUS, фикстуры 0.2 (scripts/fixtures/**, packages/core/tests/Fixtures/config/vaulter-0.2.php, tests/fixtures/v0.2.0/**), docs/plan/**, docs/adr/** и plans/** (кроме artifacts/<item>) не менять. Расхождение кода с P7-design → стоп и описание в Completion Notes/новый D#, не импровизация (D01).",
+    "Публичная поверхность изменилась → golden PublicApiSnapshotTest затронутого пакета, UPGRADE.md (было → стало, ссылка PLAN2.D71–D70), запись CHANGELOG.md [Unreleased] и тот же текст в plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P7.6/changelog-entry.md.",
+    "Комментарии в коде объясняют «почему», без кодов задач плана (PLAN2, P7.x, D##, C09, OPUS §); docs меняются в том же item; у страницы с ru-зеркалом — обновить зеркало тем же смыслом (EV275).",
+    "Нет push/PR/hosted CI/публикации (Packagist/npm/GHCR) и mutation tools (Infection, pest --mutate). Review: none (D51) — перед finish self-check по P7-design#Seams и применимым C09-строкам в Completion Notes. Статус done_with_deviations предыдущих items не считается доказательством текущего дерева (mid-audit): доказательство — только собственные проверки item.",
+    "Новые каталоги тестов попадают в существующие testsuites (core — корневой phpunit.xml directory packages/core/tests; пакеты — свой phpunit.xml directory tests); отдельных phpunit-конфигов не создавать.",
+    "Прогоны (D51, Owner-Fast-Only, D71): режим L — исполняются только acceptance-проверки item (затронутые Pest на SQLite, Arch/golden, Pint, PHPStan, unittest инструментов, --check генераторов, plan check). PG/MySQL, полные сьюты, consumer-smoke, docs:build, hosted CI — kind=impact «→ фазовый прогон P7», не записывать как успех; тесты, требующие только PG/MySQL, не создаются.",
+    "Перенос — git mv (история файла сохраняется), содержание не переписывается, кроме слияний страниц по карте и исправления ссылок."
+  ],
+  "guidance": "Порядок: 1) git mv по карте en и ru; 2) config.ts sidebar/nav; 3) grep -rn 'guide/' docs README.md packages/*/src openapi → правка ссылок; 4) генераторы config/commands с маркерами; 5) check-doc-links.php: парсит [..](..) и <a href>, игнорирует http(s)/mailto, резолвит относительные пути .md и VitePress-чистые URL (/getting-started/installation), якоря по slug VitePress (lowercase, пробелы→-, удаление пунктуации, кириллица сохраняется) — заголовки и {#custom-id}. --mirror: множество путей docs/**/*.md без ru/ равно множеству docs/ru/**/*.md (исключая adr/, plan/, index.md различий нет).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "scripts/php84 scripts/check-doc-links.php docs README.md && scripts/php84 scripts/check-doc-links.php --mirror docs",
+      "expect": "exit0; все внутренние ссылки/якоря валидны, en==ru",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/testbench vaulter:config:reference --check && env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/testbench vaulter:commands:reference --check && env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/testbench vaulter:events:reference --check && env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/testbench vaulter:errors:reference --check",
+      "expect": "exit0; reference совпадает с генерацией",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Console packages/core/tests/Support packages/core/tests/Unit packages/core/tests/Http/Problems packages/core/tests/Events/EventsReferenceTest.php packages/core/tests/Sharing/ShareLinkLifecycleTest.php",
+      "expect": "exit0; генераторы и сторожа docs на новых путях",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Document/DocumentHeadIntegrityTest.php",
+      "expect": "exit0",
+      "kind": "acceptance",
+      "cwd": "packages/documents"
+    },
+    {
+      "id": "V5",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Feature/R07ExceptionContractsTest.php tests/Http/DriveProblemCodesTest.php",
+      "expect": "exit0",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V6",
+      "cmd": "! grep -rn 'docs/guide/\\|/guide/' packages/core/src packages/drive/src packages/documents/src packages/media/src packages/filament/src packages/azgard/src openapi README.md docs/.vitepress/config.ts",
+      "expect": "exit0; нет ссылок на удалённый guide/",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V7",
+      "procedure": "Pint/PHPStan: core из корня; documents в packages/documents (команды как P7.2 V5).",
+      "expect": "все команды exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V8",
+      "procedure": "npm run docs:build (VitePress, cwd .) — фазовый прогон P7 (dead links VitePress, рендер навигации).",
+      "expect": "не исполняется в item: «не исполнено, фазовый прогон P7» (Owner-Fast-Only)",
+      "kind": "impact"
+    }
+  ],
+  "deliverables": [
+    "Раскладка docs OPUS §8 en+ru",
+    "vaulter:config:reference, vaulter:commands:reference",
+    "scripts/check-doc-links.php",
+    "check-profile.json, changelog-entry.md в plans/2026.09.29-№1-VAULTER-STABLE/artifacts/P7.6"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-11T13:58:13Z"
+}

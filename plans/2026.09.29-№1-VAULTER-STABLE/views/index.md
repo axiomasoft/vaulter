@@ -24,7 +24,7 @@ PLAN2 · layout v4 · 🟡 Active. JSON files are the source of truth; the Markd
 - [P4](phases/P4/phase.md) — Модель данных и документы · 🟠 Done with deviations
 - [P5](phases/P5/phase.md) — Конвейер событий · 🟠 Done with deviations
 - [P6](phases/P6/phase.md) — HTTP v1 и клиенты · 🟠 Done with deviations
-- [P7](phases/P7/phase.md) — Эксплуатация и DX · ⬜ Skeleton
+- [P7](phases/P7/phase.md) — Эксплуатация и DX · ⬜ Not started
 - [P8](phases/P8/phase.md) — Готовность 1.0 · ⬜ Skeleton
 
 ## Change the plan

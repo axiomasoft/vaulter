@@ -2,52 +2,286 @@
   "$schema": "urn:swissknifeman:task:plan:phase:v1",
   "id": "P7",
   "title": "Эксплуатация и DX",
-  "design": "skeleton",
-  "goal": "> SKELETON — not detailed, разворачивается `design-phase: task:plan-design 2026.09.29-№1-VAULTER-STABLE P7`\n\nvaulter:doctor с проверками всех пакетов; vaulter:install, автопланировщик, канон команд vaulter:<area>:<verb>; генераторы vaulter:make:*; тест-кит хоста и контрактные наборы расширений; metapackage axioma-studio/vaulter, split-проверки, consumer-установка из собранных артефактов; документация по структуре OPUS 12 §8 с рецепт-тестами, README с нуля, UPGRADE 0.2→0.3, чистка docblock.\n\n> **Контракт фазы (предварительный).** Потребляет: AD34–AD38, AD02 п.2; OPUS 06 §12, 12 §1–§8; N23. Детализация, маршруты и Validation — при дизайне фазы.\n\n> Phase Assurance: release-readiness; фазовый аудит (D03).",
-  "context": "> SKELETON — not detailed, разворачивается `design-phase: task:plan-design 2026.09.29-№1-VAULTER-STABLE P7`\n\nvaulter:doctor с проверками всех пакетов; vaulter:install, автопланировщик, канон команд vaulter:<area>:<verb>; генераторы vaulter:make:*; тест-кит хоста и контрактные наборы расширений; metapackage axioma-studio/vaulter, split-проверки, consumer-установка из собранных артефактов; документация по структуре OPUS 12 §8 с рецепт-тестами, README с нуля, UPGRADE 0.2→0.3, чистка docblock.\n\n> **Контракт фазы (предварительный).** Потребляет: AD34–AD38, AD02 п.2; OPUS 06 §12, 12 §1–§8; N23. Детализация, маршруты и Validation — при дизайне фазы.\n\n> Phase Assurance: release-readiness; фазовый аудит (D03).\n\nD51 — единственная действующая политика: L каждого item, H по owning риску/блокам максимум 2 миграционных или 3 иных рискованных items, фазовый BARRIER и точный V90. @plan/knowledge/validation-and-execution-policy.json. Mutation tools запрещены; hosted CI/push только по уже применимому разрешению O-3.\n\nD29 — обязательные corrections при следующей детализации. Read @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json до разработки contracts; применимые C-rows разворачиваются в concrete owning item files/reads/named tests/exact validation, не остаются note-only. C09: P7.1 doctor проверяет configured scanner, effective policy/cutover, stalled/failed durable obligations, leases и invalid scope. P7.2 регистрирует bounded scan backfill/reconcile и fan-out/retry recovery schedules с безопасным maintenance scope; P7.4 reusable host contract tests scanner/scoping/policy/fault recovery; P7.6 эксплуатационные runbooks перехода legacy, failures/unsupported/password files, повторных доставок и direct URL limits. Disabled webhooks не отключают mandatory scan work.\n\nvaulter:drives:recount реализуется P4.6 (OPUS 12:7e1380c4), P7.1/P7.2 проверяют/планируют эксплуатацию существующей команды, не создают вторую формулу. Runbook по dedup=off downgrade/preflight, AzGuard штатные зависимости без transient composer override; doc recipes и ru/en должны использовать current Types/Content API, после P4.4 без core DocumentExporter/DocumentContent. Doctor избегает трактовки done_with_deviations как current-tree GREEN.",
+  "design": "detailed",
+  "goal": "Эксплуатация и DX Vaulter 1.0: канонические команды vaulter:<area>:<verb> с автопланировщиком (включая ограниченный scan reconcile — C09), своя vaulter:install и vaulter:upgrade:inspect, расширяемый read-only vaulter:doctor с JSON v1 и проверками всех пакетов (C09 scan/leases/scope), фабрики, InteractsWithVaulter и контрактные наборы расширений, генераторы vaulter:make:*, metapackage axioma-studio/vaulter и офлайн-проверяемые релизные инструменты (артефакты, consumer-smoke, split-теги, AzGuard-исключение), документация по OPUS §8 с исполняемыми рецептами, генерируемым reference, README с нуля, upgrade guide 0.2→0.3, runbooks и security, чистые от кодов задач комментарии src. Решения сверены с практикой AWS/Google/Dropbox/Stripe/Nextcloud/GitLab (@plan/knowledge/P7-industry-research-2026-10-11.json).",
+  "context": "P6 закрыта 2026-10-11 (done_with_deviations), затем фазовый аудит Grok 4.7 RED (@plan/knowledge/audit-p6-2026-10-11.json) переоткрыл P6.1, P6.7, P6.4, P6.6 для исправлений; исполнение P7 начинается только после повторного закрытия P6 (depends_on P6). Дизайн P7 — по фактическому коду HEAD 2ed8f4a5 (2026-10-11): команды частично неканонические, планировщика и doctor нет, spatie install, Testing-набор частичный, фабрик нет, metapackage нет, docs guide/+reference/ (VitePress, en+ru). Нормативный контракт — @plan/knowledge/P7-design.json, дословный OPUS — @plan/knowledge/artifacts-P7-design-opus.json, практика — @plan/knowledge/P7-industry-research-2026-10-11.json. Владелец 2026-10-11: «используй perplexity, опирайся на лучшие практики aws, google, dropbox и других» → D68 (doctor), D69 (docs), D70 (release); D71 — разбиение/порядок/прогоны.\nПорядок: P7.2 → P7.1 (U1 → U2 ∥ U3) → P7.4 → P7.3 → P7.5 → P7.6 → P7.7 → P7.8 → P7.9. Окружение: cwd /home/vostrikov/projects/packages/vaulter; PHP 8.4 через scripts/php84 (из packages/<pkg> — ../../scripts/php84); testbench — scripts/php84 vendor/bin/testbench; Node — npm (packages/vue).\nПрогоны: D51 + validation-and-execution-policy#Owner-Fast-Only (D71): items исполняют только быстрые проверки (затронутые Pest на SQLite, Arch/golden, Pint, PHPStan, unittest инструментов, --check генераторов/docs, vitest/typecheck, plan check); PG/MySQL, полные сьюты, consumer-smoke, docs:build, load-стенд, hosted CI — kind=impact в фазовый прогон P7 (@plan/knowledge/P7-design.json#Validation PR1–PR6). phase.validation V701–V713 — быстрый набор на финальном дереве, acceptance P7.9 V2. Review none; фазовый аудит D03 — owner-launched. CHANGELOG.md [Unreleased] пишет каждый item.\nD29/C09: P7.1 — drive.scan.scanner|policy|obligations|scope, core.webhooks.relay_leases|deliveries (ScanDoctorChecksTest, CoreDoctorChecksTest); P7.2 — scan_reconcile в расписании с --all-tenants --limit --max-seconds, webhooks_relay/retry как fan-out/retry recovery, scan не зависит от features.webhooks (SchedulingRegistrarTest); P7.4 — ContentScannerContractTests, ScanLifecycleContractTests (scope/policy/fault recovery/webhooks off); P7.8 — runbooks scan backlog/leases, failures/unsupported/password, policy cutover legacy, webhook redelivery, direct URL limits. Mid-audit: drives:recount — только существующая формула (P7.1 через QuotaCalculator, P7.2 опциональное расписание --dry-run); dedup=off runbook — P7.8; рецепты на текущем Types/Content API — P7.7; done_with_deviations ≠ GREEN — правило всех items.\nBaseline-наблюдение дизайна: load/gates unittest и load/tests Pest на HEAD 2ed8f4a5 красные без Redis/load-окружения (1 failure + 3 errors; 1 failure + 2 errors) — не acceptance P7 (P7.2 V7 impact).",
+  "contract": {
+    "consumes": [
+      "Закрытые P1–P6: Operations/handle, ScanConfig и scan durable work (P3.7), RecountDriveQuotaAction/QuotaCalculator и drives:purge (P4.6), outbox lease/fan-out и webhooks Actions (P5.3/P5.4), changes:prune (P5.5), Problem Details и generators events/errors reference (P5.2/P6.2), VitePress docs и OpenAPI (P6.3)",
+      "OPUS 12 §1–§8, 06 §12, 13 F7, D34–D38, D02 п.2, N23, V15 (@plan/knowledge/artifacts-P7-design-opus.json)",
+      "D29/C09, D51, Owner-Fast-Only, D02 (Q6/Q9/Q11), новые D71–D70"
+    ],
+    "produces": [
+      "Канонические имена команд + CommandNamingTest; SchedulingRegistrar core/drive/media; ScheduleFrequency; InstallCommand; UpgradeInspectCommand + UpgradePreflight",
+      "Vaulter\\Contracts\\Doctor, DoctorRegistry/Runner, DoctorCommand, doctor-v1.schema.json, проверки core/media/drive/documents/azgard",
+      "Фабрики core/documents, InteractsWithVaulter, контрактные наборы FileHandler/PermissionDriver(+PermissionFixture)/ContentScanner/ScanLifecycle/DocumentType/Exporter, TestingBoundaryTest",
+      "vaulter:make:file-handler, vaulter:make:permission-driver; тест-стабы всех генераторов",
+      "packages/vaulter metapackage, .gitattributes, release/packages.json, scripts/release/*, scripts/test-release-tools.py, verify-tags job",
+      "docs по OPUS §8 en+ru, vaulter:config:reference, vaulter:commands:reference, scripts/check-doc-links.php, scripts/check-doc-snippets.php, рецепт-тесты, README, upgrade guide, runbooks, security, scripts/strip-task-codes.php"
+    ]
+  },
+  "scope": {
+    "include": [
+      "OPUS F7 P7.1–P7.6 с разбиением P7.6 → P7.6–P7.9 (D71) и поправками D68–D70",
+      "C09-строки P7.1/P7.2/P7.4/P7.6(→P7.8) и обязательства mid-audit (P7-design#Scope)"
+    ],
+    "exclude": [
+      "публикация Packagist/npm/GHCR, создание split-репозиториев, теги (P8, owner)",
+      "исполнение релиз-гейтов OPUS 12 §7 (P8.1) и upgrade на реальных данных (P8.2)",
+      "смена require AzGuard без тега (O-4)",
+      "отдельный test-kit пакет (post-1.0)"
+    ]
+  },
   "depends_on": [
     "P6"
   ],
-  "items": [],
-  "batches": [],
+  "pitfalls": [
+    "Старые имена команд в load/, .github, docs ru — V6 P7.2 ловит",
+    "Doctor не пишет и не открывает write scope; probe только с --production/--probe-storage",
+    "drive.scan.* не выключаются вместе с webhooks",
+    "Вторая формула quota запрещена — QuotaCalculator",
+    "Testing не импортируется production-кодом; фабрики через Operations, без Faker",
+    "install не трогает config/*.php и .env хоста",
+    "Consumer-smoke и docs:build — только фазовый прогон",
+    "Перенос docs: ссылки из src (VaulterException::docs) и тесты-сторожа обновляются в P7.6",
+    "Чистка комментариев не трогает код и литералы; изменение golden = стоп"
+  ],
+  "validation": [
+    {
+      "id": "V701",
+      "cmd": "scripts/php84 vendor/bin/pint --test packages/core && scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress",
+      "expect": "exit0; core",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V702",
+      "cmd": "../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress",
+      "expect": "exit0; drive",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V703",
+      "cmd": "../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress",
+      "expect": "exit0; media",
+      "kind": "acceptance",
+      "cwd": "packages/media"
+    },
+    {
+      "id": "V704",
+      "cmd": "../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress",
+      "expect": "exit0; documents",
+      "kind": "acceptance",
+      "cwd": "packages/documents"
+    },
+    {
+      "id": "V705",
+      "cmd": "../../scripts/php84 vendor/bin/pint --test && ../../scripts/php84 vendor/bin/phpstan analyse --memory-limit=512M --no-progress",
+      "expect": "exit0; azgard",
+      "kind": "acceptance",
+      "cwd": "packages/azgard"
+    },
+    {
+      "id": "V706",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/pest --ci packages/core/tests/Doctor packages/core/tests/Console packages/core/tests/Configuration packages/core/tests/Arch packages/core/tests/PublicApi packages/core/tests/Testing packages/core/tests/Recipes packages/core/tests/Support packages/core/tests/Unit packages/core/tests/Webhooks",
+      "expect": "exit0; core P7",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V707",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Doctor tests/Console tests/Testing tests/Recipes tests/Arch tests/Configuration tests/Feature tests/Uploads",
+      "expect": "exit0; drive P7",
+      "kind": "acceptance",
+      "cwd": "packages/drive"
+    },
+    {
+      "id": "V708",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Doctor tests/Console tests/Recipes tests/Arch tests/Configuration",
+      "expect": "exit0; media P7",
+      "kind": "acceptance",
+      "cwd": "packages/media"
+    },
+    {
+      "id": "V709",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Doctor tests/Console tests/Testing tests/Recipes tests/Arch tests/Types",
+      "expect": "exit0; documents P7",
+      "kind": "acceptance",
+      "cwd": "packages/documents"
+    },
+    {
+      "id": "V710",
+      "cmd": "env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: ../../scripts/php84 vendor/bin/pest --ci tests/Doctor tests/Arch",
+      "expect": "exit0; azgard P7",
+      "kind": "acceptance",
+      "cwd": "packages/azgard"
+    },
+    {
+      "id": "V711",
+      "cmd": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-release-tools.py && PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-release-gate.py && PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-strip-task-codes.py && scripts/php84 scripts/release/check-versions.php && scripts/php84 scripts/strip-task-codes.php --check && scripts/php84 scripts/check-doc-links.php docs README.md UPGRADE.md && scripts/php84 scripts/check-doc-links.php --mirror docs && scripts/php84 scripts/check-doc-snippets.php docs && scripts/php84 scripts/check-doc-snippets.php README.md && env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/testbench vaulter:config:reference --check && env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/testbench vaulter:commands:reference --check && env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/testbench vaulter:events:reference --check && env APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: scripts/php84 vendor/bin/testbench vaulter:errors:reference --check",
+      "expect": "exit0; инструменты релиза, docs, reference, чистка комментариев",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V712",
+      "cmd": "npx vitest run tests/recipes && npm run typecheck",
+      "expect": "exit0; TS-рецепты",
+      "kind": "acceptance",
+      "cwd": "packages/vue"
+    },
+    {
+      "id": "V713",
+      "cmd": "python3 /home/vostrikov/.claude/plugins/cache/swissknifeman/task/0.28.3/scripts/plan.py check plans/2026.09.29-№1-VAULTER-STABLE",
+      "expect": "0 errors",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "P7-design, P7-industry-research-2026-10-11, artifacts-P7-design-opus, решения D71–D70",
+    "9 детализированных items с точными командами (P7.1 — 3 unit)"
+  ],
+  "assurance": {
+    "impact": "operations + release-integrity + test-boundary + docs-accuracy; read-only/info-disclosure для doctor",
+    "seams": [
+      "команды ↔ планировщик ↔ docs/load",
+      "doctor ↔ scan/outbox/quota модели",
+      "Testing ↔ production",
+      "генераторы ↔ контрактные наборы",
+      "manifest ↔ monorepo-split.yml",
+      "docs ↔ src ссылки и тесты-сторожа"
+    ],
+    "live": false,
+    "note": "Design only; продуктовые проверки при дизайне не исполнялись (кроме read-only проб окружения: testbench vaulter:events:reference --check exit 0; load-стенд baseline красный). Фазовый аудит — owner-launched (D03)."
+  },
+  "supporting": [
+    "@plan/knowledge/P7-design.json",
+    "@plan/knowledge/P7-industry-research-2026-10-11.json",
+    "@plan/knowledge/artifacts-P7-design-opus.json",
+    "@plan/knowledge/security-correction-contract.json",
+    "@plan/knowledge/validation-and-execution-policy.json",
+    "@plan/knowledge/P7-design-ops.json",
+    "@plan/knowledge/P7-design-doctor.json",
+    "@plan/knowledge/P7-design-testkit.json",
+    "@plan/knowledge/P7-design-release.json",
+    "@plan/knowledge/P7-design-docs.json"
+  ],
+  "items": [
+    "P7.1",
+    "P7.2",
+    "P7.3",
+    "P7.4",
+    "P7.5",
+    "P7.6",
+    "P7.7",
+    "P7.8",
+    "P7.9"
+  ],
+  "batches": [
+    {
+      "id": "B701",
+      "items": [
+        "P7.2"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B702",
+      "items": [
+        "P7.1"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B703",
+      "items": [
+        "P7.4"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B704",
+      "items": [
+        "P7.3"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B705",
+      "items": [
+        "P7.5"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B706",
+      "items": [
+        "P7.6"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B707",
+      "items": [
+        "P7.7"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B708",
+      "items": [
+        "P7.8"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B709",
+      "items": [
+        "P7.9"
+      ],
+      "mode": "recommended"
+    }
+  ],
   "orchestration": {
     "strategy": "sequential"
   },
   "sections": [
     {
-      "id": "P7-DX",
+      "id": "P7",
       "title": "P7 — Эксплуатация и DX",
-      "text": "> **Статус дизайна:** skeleton (D03); items детализируются `task:plan-design 2026.09.29-№1-VAULTER-STABLE P7` после закрытия предыдущей фазы, по фактическому коду."
+      "text": "Детализирована 2026-10-11 (claude-opus-5-5/high) по фактическому коду HEAD 2ed8f4a5. Контракт — @plan/knowledge/P7-design.json; OPUS — @plan/knowledge/artifacts-P7-design-opus.json; практика — @plan/knowledge/P7-industry-research-2026-10-11.json; решения D71–D70."
     },
     {
-      "id": "Phase-Context",
-      "title": "Phase Context",
-      "text": "> SKELETON — not detailed, разворачивается `design-phase: task:plan-design 2026.09.29-№1-VAULTER-STABLE P7`\n\nvaulter:doctor с проверками всех пакетов; vaulter:install, автопланировщик, канон команд vaulter:<area>:<verb>; генераторы vaulter:make:*; тест-кит хоста и контрактные наборы расширений; metapackage axioma-studio/vaulter, split-проверки, consumer-установка из собранных артефактов; документация по структуре OPUS 12 §8 с рецепт-тестами, README с нуля, UPGRADE 0.2→0.3, чистка docblock.\n\n> **Контракт фазы (предварительный).** Потребляет: AD34–AD38, AD02 п.2; OPUS 06 §12, 12 §1–§8; N23. Детализация, маршруты и Validation — при дизайне фазы.\n\n> Phase Assurance: release-readiness; фазовый аудит (D03).\n\nD51 — единственная действующая политика: L каждого item, H по owning риску/блокам максимум 2 миграционных или 3 иных рискованных items, фазовый BARRIER и точный V90. @plan/knowledge/validation-and-execution-policy.json. Mutation tools запрещены; hosted CI/push только по уже применимому разрешению O-3.\n\nD29 — обязательные corrections при следующей детализации. Read @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json до разработки contracts; применимые C-rows разворачиваются в concrete owning item files/reads/named tests/exact validation, не остаются note-only. C09: P7.1 doctor проверяет configured scanner, effective policy/cutover, stalled/failed durable obligations, leases и invalid scope. P7.2 регистрирует bounded scan backfill/reconcile и fan-out/retry recovery schedules с безопасным maintenance scope; P7.4 reusable host contract tests scanner/scoping/policy/fault recovery; P7.6 эксплуатационные runbooks перехода legacy, failures/unsupported/password files, повторных доставок и direct URL limits. Disabled webhooks не отключают mandatory scan work."
+      "id": "Execution",
+      "title": "Execution",
+      "text": "P7.2 — канон команд, планировщик, install, upgrade:inspect; implementation/medium; L\nP7.1 — doctor (U1 core → U2 media+drive ∥ U3 documents+azgard); implementation/high; L\nP7.4 — фабрики, InteractsWithVaulter, контрактные наборы (C09); implementation/high; L\nP7.3 — генераторы; implementation/low; L\nP7.5 — metapackage и релизные инструменты; implementation/high; L\nP7.6 — структура docs, генерируемый reference, ссылки; implementation/medium; L\nP7.7 — исполняемые рецепты; implementation/medium; L\nP7.8 — README, upgrade guide, glossary, runbooks, security; implementation/medium; L\nP7.9 — чистка комментариев src + phase.validation V701–V713; economy/medium; L (последний item)\nВсе — review none (D51), строго последовательно. Барьеров с тяжёлыми проверками в items нет (Owner-Fast-Only); фазовый прогон — @plan/knowledge/P7-design.json#Validation."
     },
     {
-      "id": "Scope-Included-planned",
-      "title": "Scope Included (planned)",
-      "text": "Команды и планировщик; стабы генераторов; InteractsWithVaulter и фабрики; packages/vaulter metapackage; consumer-гейт; docs/ дерево и генерация reference.\n\nC09: P7.1 doctor проверяет configured scanner, effective policy/cutover, stalled/failed durable obligations, leases и invalid scope. P7.2 регистрирует bounded scan backfill/reconcile и fan-out/retry recovery schedules с безопасным maintenance scope; P7.4 reusable host contract tests scanner/scoping/policy/fault recovery; P7.6 эксплуатационные runbooks перехода legacy, failures/unsupported/password files, повторных доставок и direct URL limits. Disabled webhooks не отключают mandatory scan work."
+      "id": "Industry-Alignment",
+      "title": "Практика AWS/Google/Dropbox и др.",
+      "text": "Владелец 2026-10-11: «используй perplexity, опирайся на лучшие практики aws, google, dropbox и других». Принято: doctor — стабильные ключи, read-only, явный write-probe, JSON v1, exit 0/1/2 (Nextcloud/GitLab/clig.dev/AWS Trusted Advisor) → D68; планировщик — onOneServer+withoutOverlapping с expiry, ограниченные батчи, возраст backlog (AWS Builders' Library, Google SRE) → P7-design-ops#Scheduler/#Doctor; контрактные наборы с самопроверкой (Flysystem) → P7-design-testkit#TestKit; release manifest, артефакты, consumer из архивов, проверка split-тегов (Composer/Symfony/Laravel) → D70; Diátaxis, region-tag рецепты, генерируемый reference, migration guide (Google/AWS/Dropbox Stone/Stripe) → D69; runbooks по шаблону AWS OPS/Google SRE → P7-design-docs#Docs. Отклонено: отдельный test-kit пакет (post-1.0), метрики/алерты вне doctor. Подробно — @plan/knowledge/P7-industry-research-2026-10-11.json#Adoption."
     },
     {
-      "id": "Scope-Excluded",
-      "title": "Scope Excluded",
-      "text": "Публикация (P8, owner gate)."
+      "id": "Validation-Execution-Policy",
+      "title": "Mandatory validation/execution policy (D51, Owner-Fast-Only)",
+      "text": "D51 + validation-and-execution-policy#Owner-Fast-Only (до конца плана): items — только быстрые проверки; тяжёлые (PG/MySQL, полные сьюты, consumer-smoke, docs:build, load-стенд, hosted CI по O-3) — kind=impact, исполняются фазовым прогоном P7 после закрытия фазы отдельным промтом владельца (P7-design#Validation PR1–PR6). Mutation tools запрещены."
+    },
+    {
+      "id": "Security-Corrections",
+      "title": "Обязательные forward corrections (D29, C09)",
+      "text": "C09 развёрнут: P7.1 doctor — drive.scan.scanner (configured scanner), drive.scan.policy (effective policy/cutover, backfill), drive.scan.obligations (stalled/failed durable obligations, expired leases), drive.scan.scope (invalid scope), core.webhooks.relay_leases/deliveries; P7.2 — scan_reconcile (--all-tenants --reason=scheduled --limit=100 --max-seconds=30, onOneServer) и webhooks_relay/retry как fan-out/retry recovery, scan не зависит от features.webhooks; P7.4 — ContentScannerContractTests и ScanLifecycleContractTests (scanner/scoping/policy/fault recovery); P7.8 — runbooks legacy cutover, failures/unsupported/password files, webhook redelivery, direct URL limits. Disabled webhooks не отключают mandatory scan work — тесты P7.1 (ScanDoctorChecksTest) и P7.2 (SchedulingRegistrarTest)."
+    },
+    {
+      "id": "Mid-Audit-2026-10-08",
+      "title": "Обязательства сквозного аудита 2026-10-08",
+      "text": "drives:recount (P4.6) — P7.1 drive.drives.usage через QuotaCalculator (без второй формулы), P7.2 опциональное расписание drives_recount --dry-run (по умолчанию null); runbook dedup=off downgrade/preflight — P7.8 (guides/operations/dedup-off-downgrade-and-preflight.md); AzGuard штатные зависимости без transient composer override — P7.5 (exclusion до O-4, check-versions); рецепты ru/en на текущем Types/Content API без core DocumentExporter/DocumentContent — P7.7; done_with_deviations ≠ current-tree GREEN — общее правило items."
     },
     {
       "id": "Dependencies",
       "title": "Dependencies",
-      "text": "P6 закрыта. Owner gate O-4: тег AzGuard для vaulter-azgard (D02, Q9)."
-    },
-    {
-      "id": "Planned-Items-OPUS-13-D01-.3",
-      "title": "Planned Items (из OPUS 13, нумерация сохраняется — D01 п.3)",
-      "text": "- P7.1 — vaulter:doctor (implementation/medium)\n- P7.2 — vaulter:install, планировщик, переименование команд (implementation/medium)\n- P7.3 — Генераторы vaulter:make:* (implementation/low)\n- P7.4 — Фабрики, InteractsWithVaulter, контрактные наборы (implementation/medium)\n- P7.5 — Metapackage, split-проверки, consumer-установка, AzGuard-тег (implementation/high)\n- P7.6 — Документация (economy/medium + implementation-ревью)\n\nОбязательное расширение scope этих planned items: C09: P7.1 doctor проверяет configured scanner, effective policy/cutover, stalled/failed durable obligations, leases и invalid scope. P7.2 регистрирует bounded scan backfill/reconcile и fan-out/retry recovery schedules с безопасным maintenance scope; P7.4 reusable host contract tests scanner/scoping/policy/fault recovery; P7.6 эксплуатационные runbooks перехода legacy, failures/unsupported/password files, повторных доставок и direct URL limits. Disabled webhooks не отключают mandatory scan work."
-    },
-    {
-      "id": "Items",
-      "title": "Items",
-      "text": "| ID | Title | Status | Updated |\n|:--|:--|:--|:--|"
+      "text": "P6 (переоткрыта аудитом 2026-10-11: P6.1, P6.7, P6.4, P6.6) должна быть закрыта до start P7. Owner gate O-4 (тег AzGuard) — только для включения vaulter-azgard в релиз; без него azgard исключается (D70). O-3 — hosted CI в фазовом прогоне."
     },
     {
       "id": "Phase-Handoff",
@@ -55,19 +289,9 @@
       "text": "—"
     },
     {
-      "id": "Validation-Execution-Policy",
-      "title": "Mandatory validation/execution policy (D25)",
-      "text": "D51 — единственная действующая политика: L каждого item, H по owning риску/блокам максимум 2 миграционных или 3 иных рискованных items, фазовый BARRIER и точный V90. @plan/knowledge/validation-and-execution-policy.json. Mutation tools запрещены; hosted CI/push только по уже применимому разрешению O-3."
-    },
-    {
-      "id": "Security-Corrections",
-      "title": "Обязательные forward corrections (D29)",
-      "text": "D29 — обязательные corrections при следующей детализации. Read @plan/knowledge/security-correction-contract.json и @plan/knowledge/implementation-security-assessment-2026-10-06.json до разработки contracts; применимые C-rows разворачиваются в concrete owning item files/reads/named tests/exact validation, не остаются note-only. C09: P7.1 doctor проверяет configured scanner, effective policy/cutover, stalled/failed durable obligations, leases и invalid scope. P7.2 регистрирует bounded scan backfill/reconcile и fan-out/retry recovery schedules с безопасным maintenance scope; P7.4 reusable host contract tests scanner/scoping/policy/fault recovery; P7.6 эксплуатационные runbooks перехода legacy, failures/unsupported/password files, повторных доставок и direct URL limits. Disabled webhooks не отключают mandatory scan work."
-    },
-    {
-      "id": "Mid-Audit-2026-10-08",
-      "title": "Обязательства сквозного аудита 2026-10-08",
-      "text": "vaulter:drives:recount реализуется P4.6 (OPUS 12:7e1380c4), P7.1/P7.2 проверяют/планируют эксплуатацию существующей команды, не создают вторую формулу. Runbook по dedup=off downgrade/preflight, AzGuard штатные зависимости без transient composer override; doc recipes и ru/en должны использовать current Types/Content API, после P4.4 без core DocumentExporter/DocumentContent. Doctor избегает трактовки done_with_deviations как current-tree GREEN. Источник: artifacts/P4-midaudit/ledger.json; при детализации развернуть в scope/reads/task_files/validation именованного item, не оставлять note-only."
+      "id": "D06-Self-Check",
+      "title": "D06 self-check дизайна",
+      "text": "Каждый item: первый read — дословный OPUS (@plan/knowledge/artifacts-P7-design-opus.json, раздел своего источника), затем стартовый раздел P7-design, C-контракт (#Scan/#Egress для C09 items) и правило «Прогоны (D51, Owner-Fast-Only, D71)»; файлы/имена/сигнатуры/команды/ключи конфига/JSON-схема/regex заданы в P7-design (#Commands, #Scheduler, #Install, #Doctor, #TestKit, #Generators, #Release, #Docs). H-проверки — kind=impact с адресом «фазовый прогон P7». ledger-P7.tsv не генерировался (artifacts/coverage закрыт deny-правилом сессии дизайнера, как в P6); все единицы OPUS 12 §1–§8, 06 §12, 13 F7, D34–D38, D02 п.2, N23 назначены items в P7-design#Order. Проверки дизайна: plan.py check."
     }
   ]
 }

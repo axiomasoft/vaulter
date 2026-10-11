@@ -1,0 +1,83 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "artifacts-P7-design-opus",
+  "title": "P7 — дословные единицы OPUS (12 §1–§8, 06 §12, 13 F7, D34–D38, D02 п.2, N23, V15)",
+  "sections": [
+    {
+      "id": "O12-1",
+      "title": "OPUS 12 §1 — команды (→ P7.2)",
+      "text": "## 1. Команды artisan (канон `vaulter:<area>:<verb>`)\n\n| Команда | Пакет | Было | Назначение |\n|---|---|---|---|\n| `vaulter:install` | core | `vaulter:install` (spatie) | Интерактивная установка: стек middleware, драйвер прав, публикация конфигов пакетов, миграции, итоговый doctor |\n| `vaulter:doctor [--production] [--json]` | core | — | Диагностика (§2); код выхода 1 при error |\n| `vaulter:upgrade:inspect` | core | — | Отчёт готовности данных 0.2 → 0.3 (то, что проверяет preflight-миграция) |\n| `vaulter:make:profile` | core | `vaulter:make-panel` | Генератор профиля |\n| `vaulter:make:file-handler` / `vaulter:make:permission-driver` | core | — | Генераторы |\n| `vaulter:make:document-type` / `vaulter:make:exporter` | documents | — | Генераторы |\n| `vaulter:webhooks:relay [--limit=]` | core | `vaulter:relay-outbox` | |\n| `vaulter:webhooks:retry` | core | `vaulter:retry-webhooks` | |\n| `vaulter:webhooks:prune` | core | `vaulter:prune-webhooks` | |\n| `vaulter:uploads:sweep` | drive | `vaulter:sweep-uploads` | |\n| `vaulter:trash:purge` | drive | `vaulter:purge-trash` | |\n| `vaulter:drives:purge` | drive | — | Завершение удаления drives со статусом `deleting` |\n| `vaulter:drives:recount [--drive=]` | drive | — | Пересчёт `used_bytes` |\n| `vaulter:blobs:gc` | media | `vaulter:gc-blobs` | |\n| `vaulter:blobs:reconcile` | media | `vaulter:reconcile-blobs` | |\n| `vaulter:blobs:repair-scopes [--dry-run\\|--execute]` | media | — | D20 |\n| `vaulter:panel:migrations` | — | удалить | D05 |\n\nВсе команды, изменяющие данные, поддерживают `--dry-run`, работают батчами, пишут итог в лог и идемпотентны."
+    },
+    {
+      "id": "O12-2",
+      "title": "OPUS 12 §2 — doctor (→ P7.1)",
+      "text": "## 2. `vaulter:doctor`\n\nКонтракт проверки (core):\n\n```php\nnamespace Vaulter\\Contracts\\Doctor;\n\ninterface DoctorCheck\n{\n    public function key(): string;                          // 'core.database.connection'\n    public function title(): string;\n    /** @return list<DoctorFinding> */\n    public function run(DoctorContext $context): array;    // DoctorFinding{severity: ok|warning|error, message, hint}\n}\n```\n\n`--production` повышает часть warning до error. Регистрация — тег `vaulter.doctor_checks`.\n\n| Ключ | Пакет | Проверяет | Уровень в production |\n|---|---|---|---|\n| `core.database.connection` | core | соединение Vaulter доступно; драйвер поддерживается (SQLite → error) | error |\n| `core.schema.tables` | core | все таблицы и индексы на месте; применены все миграции Vaulter | error |\n| `core.schema.key_types` | core | фактические типы PK/HK-колонок совпадают с `ids.strategy`/`ids.host_keys` (N28) | error |\n| `core.schema.integrity` | core | I1, I5, I6 (выборочно, лимит строк) | warning |\n| `core.config.valid` | core | повтор boot-валидации всех пакетов без исключения, сводным списком | error |\n| `core.config.deprecated_keys` | core | используются устаревшие ключи | warning |\n| `core.routes.auth` | core | в `routes.middleware.authenticated` есть auth-middleware, guard существует | error |\n| `core.access.driver` | core | драйвер прав не `null`; класс разрешается | error |\n| `core.tenancy` | core | при включённой — resolver разрешается и возвращает значение в HTTP-контексте | error |\n| `core.queue` | core | очередь не `sync` в production (webhooks, scan) | warning |\n| `core.scheduler` | core | `schedule.enabled` или задачи найдены в `schedule:list` | warning |\n| `core.cache` | core | драйвер кэша не `array`/`file` при нескольких инстансах (replay-кэш, rate limits) | warning |\n| `core.webhooks.outbox_lag` | core | возраст самой старой pending-строки outbox < 10 мин | warning |\n| `media.disk.probe` | media | запись/чтение/удаление тестового объекта на каждом диске профилей | error |\n| `media.dedup.scope` | media | профили с разными дисками при `dedup.scope ≠ drive` | warning |\n| `media.legacy_scopes` | media | есть blobs `legacy:snull|tnull` → предложить repair-scopes | warning |\n| `drive.uploads.tmp` | drive | временный каталог доступен, свободное место > `max_file_size` | error |\n| `drive.intl` | drive | `ext-intl` для NFC | warning |\n| `drive.scan` | drive | `scan.required` без scanner | error |\n| `documents.types` | documents | `default_type` зарегистрирован; документы неизвестных типов (счётчик) | warning |\n| `documents.collaboration` | documents | секреты заданы и различны, `wss://`, `token_ttl ≤ 3600`, `firebase/php-jwt` установлен | error |\n| `azgard.dependency` | azgard | AzGuard-пакет и guard разрешаются | error |"
+    },
+    {
+      "id": "O12-3",
+      "title": "OPUS 12 §3 — планировщик (→ P7.2)",
+      "text": "## 3. Планировщик\n\n`Providers\\SchedulingRegistrar` (core) и аналоги в пакетах регистрируют задачи через\n`$this->callAfterResolving(Schedule::class, …)`, если `vaulter.schedule.enabled = true`:\n`webhooks:relay` (everyMinute, withoutOverlapping), `webhooks:retry` (everyMinute), `webhooks:prune` (daily),\n`uploads:sweep` (hourly), `trash:purge` (daily), `drives:purge` (hourly), `blobs:gc` (daily),\n`blobs:reconcile` (weekly). Частоты — из `vaulter.schedule.*`. Хост отключает автоматику одним ключом."
+    },
+    {
+      "id": "O12-4",
+      "title": "OPUS 12 §4 — установка у хоста (→ P7.2, P7.7 README)",
+      "text": "## 4. Установка у хоста (целевой сценарий README)\n\n```bash\ncomposer require axioma-studio/vaulter          # core + media + drive + documents\nphp artisan vaulter:install                     # middleware, драйвер прав, конфиги, миграции, doctor\nnpm install @vaulter/vue\n```\n\n```php\n// app/Models/Project.php\nuse Vaulter\\Concerns\\HasDrives;\n\nfinal class Project extends Model\n{\n    use HasDrives;\n}\n\n// где угодно в HTTP-контексте\n$project->drive()->files()->upload(UploadSource::fromUploadedFile($request->file('file')));\n```"
+    },
+    {
+      "id": "O12-5",
+      "title": "OPUS 12 §5 — набор для тестов (→ P7.4)",
+      "text": "## 5. Набор для тестов хоста и расширений (D35)\n\n| Компонент | Что даёт |\n|---|---|\n| `database/factories/*` (core, drive, documents) | `Drive::factory()->for($project)->create()`, `Node::factory()->folder()->in($drive)`, `->file(bytes: '…')`, `Document::factory()->richText()` |\n| `Vaulter\\Testing\\InteractsWithVaulter` | `vaulterFakeStorage()` (in-memory диск), `vaulterActingAs($user)`, `assertVaulterEventRecorded(EventType $type, …)`, `assertNodeVisibleTo($user, $node)` |\n| `Vaulter\\Testing\\Contracts\\FileHandlerContractTests` | трейт/датасет Pest для автора обработчика |\n| `Vaulter\\Documents\\Testing\\Contracts\\DocumentTypeContractTests`, `ExporterContractTests` | то же для типов и экспортёров |\n| `Vaulter\\Testing\\Contracts\\PermissionDriverContractTests` | одинаковые решения на общем фикстуре |"
+    },
+    {
+      "id": "O12-6",
+      "title": "OPUS 12 §6 — релиз и версии (→ P7.5)",
+      "text": "## 6. Релиз и версии\n\n| Пункт | Решение |\n|---|---|\n| Метапакет | `packages/vaulter/composer.json` (`type: metapackage`), split-репозиторий `axioma-studio/vaulter` |\n| Версии split-пакетов | одна версия монорепо на все PHP-пакеты; `self.version` допустим, но release-гейт проверяет, что все split-репозитории получили один и тот же тег |\n| `vaulter-azgard` | публикуется только при тегированной версии AzGuard (`^0.x`), `dev-main` запрещён в `require`; иначе исключается из релиза с пометкой в CHANGELOG |\n| npm | `@vaulter/vue` — своя semver-линия; `peerDependencies`/`package.json` поле `\"vaulter\": { \"api\": \"1\" }` |\n| Хаб | Docker-образ `ghcr.io/axiomasoft/vaulter-hocuspocus:<версия>`; совместимость — API v1 |\n| Метаданные | homepage/support/issues/source → `https://github.com/axiomasoft/vaulter`; `VaulterException::docs()` и `askToStarRepoOnGitHub` — тоже; описание core: «Kernel of Vaulter: schema, access control, sharing, audit events and extension contracts. Install axioma-studio/vaulter for the full product.» |\n\nПорядок версий: **0.3.0** — canon break (D01); **0.3.x** — исправления по результатам гейтов;\n**1.0.0-rc.1** — когда все гейты §7 зелёные; **1.0.0** — после двух недель без изменений публичного API\n(Roave BC check пуст относительно rc) и прогона upgrade на данных из 0.2."
+    },
+    {
+      "id": "O12-7",
+      "title": "OPUS 12 §7 — release-гейты (→ P7.5 инструменты; исполнение — P8.1)",
+      "text": "## 7. Release-гейты\n\n| Гейт | Матрица / содержание |\n|---|---|\n| Статика | Pint, PHPStan max, Rector dry-run, Pest arch — во всех пакетах |\n| Unit/feature | PHP 8.4 × Laravel 12, 13 × (SQLite для быстрых, PostgreSQL для всех feature) |\n| ID-стратегии | bigint, ulid, uuid7 × host_keys string/bigint/uuid — только suites CAS, access, provisioning |\n| Конкурентность | PostgreSQL 15/17: квота, ревизии, move-циклы, restore-конфликты, CAS commit/GC, outbox claims, upload complete |\n| MySQL smoke | MySQL 8.0: миграции, инварианты I1–I3, основные сценарии |\n| Upgrade | дамп фикстуры 0.2.0 → миграции 0.3 → `vaulter:doctor --production` зелёный → сценарии V15 |\n| Consumer | чистый Laravel-проект, установка **собранных** zip-артефактов split-пакетов (без path-репозиториев): metapackage; каждый пакет отдельно (core+media+drive; +documents; +filament; +azgard) |\n| Config cache | тесты маршрутов и провайдеров под `config:cache` и `route:cache` |\n| API | OpenAPI-валидация, snapshot маршрутов, `oasdiff breaking` против последнего тега |\n| PHP BC | Roave BackwardCompatibilityCheck против последнего тега (после 1.0 — блокирующий) + обновлённые `PublicApiSnapshotTest` |\n| Front | Node 20, 22: `vue-tsc`, vitest, build, проверка сгенерированных типов |\n| Hub | Node 22: тесты, Docker build, healthcheck-контейнер |\n| Безопасность | gitleaks, `composer audit`, `npm audit --omit=dev`, Trivy для образа хаба |\n| Документация | рецепты (`tests/Recipes/*`) исполняются; ссылки в docs валидны |"
+    },
+    {
+      "id": "O12-8",
+      "title": "OPUS 12 §8 — документация (→ P7.6, P7.7, P7.8)",
+      "text": "## 8. Документация\n\n```text\ndocs/\n├── getting-started/ (installation, quick-start, upgrading-0.2-to-0.3)\n├── concepts/        (glossary, drives-and-profiles, nodes-and-revisions, access-model, events, tenancy)\n├── guides/          (uploads, documents, collaboration, sharing, webhooks, filament, vue, operations)\n├── extending/       (file-handlers, document-types, exporters, permission-drivers, upload-inspectors, profiles)\n├── reference/       (config, php-api, rest-api (из OpenAPI), events, errors, commands)\n├── security/        (threat-model, hardening-checklist)\n└── adr/             (+ 0019 kernel ownership, 0020 authorized public API, 0021 profiles, 0022 revisions & documents aggregate, 0023 event pipeline, 0024 REST v1)\n```\n\n- Каждый PHP/TS-фрагмент guides имеет рецепт-тест (`tests/Recipes/<Guide>Test.php`), фрагмент в markdown\n  включается из рецепта (или сверяется скриптом `scripts/check-doc-snippets.php`).\n- `reference/config.md` генерируется из `config/*.php` (комментарии), `reference/events.md` — из `EventType`,\n  `reference/errors.md` — из таблицы кодов (единый источник — enum/константы исключений).\n- Из `src` удаляются внутренние коды задач в docblock'ах (`P2 #5`, `F-P3.5-01`, `H.5`, `D10`, `§2.4`),\n  ADR-ссылки остаются как `@see docs/adr/00NN-…`. Выполняется механическим скриптом с ревью.\n- README переписывается с нуля по §4."
+    },
+    {
+      "id": "O06-12",
+      "title": "OPUS 06 §12 — генераторы (→ P7.3)",
+      "text": "## 12. Генераторы\n\n`vaulter:make:file-handler`, `vaulter:make:document-type`, `vaulter:make:exporter`,\n`vaulter:make:permission-driver`, `vaulter:make:profile` создают класс, регистрацию (строка для конфига или\nprovider) и Pest-тест, подключающий соответствующий контрактный набор."
+    },
+    {
+      "id": "O13-F7",
+      "title": "OPUS 13 F7 — рабочие пакеты",
+      "text": "## F7 — Эксплуатация и DX (T1)\n\n| Пункт | Содержание | Спецификация | Исполнитель |\n|---|---|---|---|\n| P7.1 | `vaulter:doctor` + проверки всех пакетов | 12 §2 | sonnet/medium |\n| P7.2 | `vaulter:install`, планировщик, переименование команд | 12 §1, §3 | sonnet/medium |\n| P7.3 | Генераторы `vaulter:make:*` со стабами и тестами | 06 §12 | sonnet/low |\n| P7.4 | Фабрики, `InteractsWithVaulter`, контрактные наборы | 12 §5 | sonnet/medium |\n| P7.5 | Metapackage, split-проверки, consumer-установка из артефактов, AzGuard-тег | 12 §6–§7 | sonnet/high |\n| P7.6 | Документация: структура, рецепты, генерация reference, README, UPGRADE 0.2→0.3, чистка docblock | 12 §8 | haiku/medium (по шаблонам) + sonnet ревью |"
+    },
+    {
+      "id": "O02-D34-D38",
+      "title": "OPUS 02 D34–D38",
+      "text": "### D34 — Эксплуатация: doctor, install, планировщик, генераторы · T1\n\n- `vaulter:doctor` с расширяемыми проверками (`DoctorCheck` из каждого пакета), `--production`,\n  `--json`, код выхода ≠ 0 при ошибке.\n- `vaulter:install` — интерактивный выбор middleware, драйвера прав, публикации и миграций,\n  печать проверки doctor.\n- Планировщик регистрирует задачи пакетов автоматически (`vaulter.schedule.enabled = true`,\n  частоты конфигурируемы) (N23).\n- Команды — `vaulter:<area>:<verb>`; генераторы `vaulter:make:profile|file-handler|document-type|permission-driver|exporter`.\n\n---\n\n<a id=\"d35\"></a>\n### D35 — Набор для тестов хоста и контрактные наборы расширений · T1\n\n`Vaulter\\Testing\\`: фабрики моделей, `InteractsWithVaulter` (acting-as, fake storage disk,\nassert-helpers событий), контрактные наборы `FileHandlerContract`, `DocumentTypeContract`,\n`PermissionDriverContract`, `ExporterContract` для авторов расширений. Production-код не\nимпортирует `Testing` (arch-тест).\n\n---\n\n<a id=\"d36\"></a>\n### D36 — Релиз и артефакты · T0 (блокеры) / T1\n\nMetapackage; проверка согласованности версий split-пакетов; `vaulter-azgard` публикуется только\nпри тегированном `azguard-core`, иначе исключается из релиза; clean-consumer установка из собранных\nархивов; upgrade 0.2 → 0.3 на данных. Детали — [12-operations-and-release.md](12-operations-and-release.md).\n\n---\n\n<a id=\"d37\"></a>\n### D37 — Поддержка СУБД · T1\n\nPostgreSQL 15+ — основная, полный набор тестов, включая конкурентность; MySQL 8.0+/MariaDB 10.11+ —\nподдерживается, CI smoke + тесты инвариантов; SQLite — только dev/test (doctor в production\nвыдаёт ошибку). Обоснование: advisory locks, частичные индексы, SERIALIZABLE-ретраи.\n\n---\n\n<a id=\"d38\"></a>\n### D38 — Документация следует за кодом · T1\n\nREADME и `docs/` переписываются после канона; каждый PHP/TS-пример из guide — исполняемый\nрецепт в тестах (`tests/Recipes`), а не свободный текст; внутренние коды задач (`P2 #5`, `F-P3.3-02`,\n`H.5`) удаляются из docblock'ов `src`, ADR-ссылки остаются как `@see docs/adr/...`.\n\n---"
+    },
+    {
+      "id": "O02-D02-2",
+      "title": "OPUS 02 D02 п.2 — metapackage (→ P7.5)",
+      "text": "2. Добавляется metapackage **`axioma-studio/vaulter`** (`core + media + drive + documents`)."
+    },
+    {
+      "id": "O01-N23",
+      "title": "OPUS 01 N23 (→ P7.2)",
+      "text": "### N23 (S3). Эксплуатация: 7 команд нужно расписать вручную, doctor отсутствует\n\n`relay-outbox`, `retry-webhooks`, `prune-webhooks`, `sweep-uploads`, `purge-trash`, `gc-blobs`, `reconcile-blobs` —\nни одна не регистрируется в планировщике. Имена несогласованы (`vaulter:make-panel` против `vaulter:panel:migrations`)."
+    },
+    {
+      "id": "O14-V15",
+      "title": "OPUS 14 V15 (doctor на upgrade; исполнение — P8.2)",
+      "text": "| V15 | Чистый хост ставит артефакты 0.3; upgrade БД/конфига 0.2 (фикстура P0.3); старый Vue SDK | Миграции проходят; doctor зелёный; устаревшие ключи работают с предупреждением; старый SDK получает понятную ошибку версии API | PG + MySQL | P2.x, P4.1, P8.2 |"
+    }
+  ],
+  "applies_to": [
+    "P7"
+  ],
+  "provenance": {
+    "note": "Извлечено дословно 2026-10-11 из audits/2026-09-29-stable-audit/opus (12, 06, 13, 02, 01, 14) скриптом дизайнера; ledger-P7.tsv не генерировался (artifacts/coverage закрыт deny-правилом сессии, как и в P6)."
+  }
+}

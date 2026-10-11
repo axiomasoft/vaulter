@@ -1,0 +1,33 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:unit:v1",
+  "id": "U1",
+  "item": "P7.1",
+  "title": "Core: контракт, registry, runner, команда, JSON-схема, core-проверки, install→doctor",
+  "goal": "vaulter:doctor работает с core-проверками P7-design#Doctor (core), JSON v1 валиден, read-only доказан, install вызывает doctor",
+  "files": [
+    "packages/core/src/Contracts/Doctor/*.php",
+    "packages/core/src/Doctor/**/*.php",
+    "packages/core/src/Console/DoctorCommand.php",
+    "packages/core/resources/schemas/doctor-v1.schema.json",
+    "packages/core/src/Configuration/ConfigNormalizer.php",
+    "packages/core/src/Console/InstallCommand.php",
+    "packages/core/src/Providers/ConsoleRegistrar.php",
+    "packages/core/src/VaulterServiceProvider.php",
+    "packages/core/tests/Doctor/*.php",
+    "packages/core/tests/Console/InstallCommandTest.php",
+    "packages/core/tests/Arch/__snapshots__/*"
+  ],
+  "checks": [
+    "V1"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "mode": "either",
+  "instructions": "Сначала контракт и runner (их используют U2/U3), затем core-проверки по каталогу; DoctorReadOnlyTest обязателен.",
+  "status": "todo",
+  "outcome": null,
+  "updated_at": "2026-10-11T13:52:41Z",
+  "kind": "implementation"
+}

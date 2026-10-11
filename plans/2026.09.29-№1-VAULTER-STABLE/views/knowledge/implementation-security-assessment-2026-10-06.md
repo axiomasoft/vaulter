@@ -9,8 +9,11 @@ Source: [JSON](../../knowledge/implementation-security-assessment-2026-10-06.jso
 - P4
 - P5
 - P6
-- P7
 - P8
+- P7.1
+- P7.2
+- P7.4
+- P7.8
 
 ## Provenance
 

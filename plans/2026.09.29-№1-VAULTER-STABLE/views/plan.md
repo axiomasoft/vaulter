@@ -119,7 +119,7 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 | P4 | Модель данных и документы | detailed | 14/14 | 🟠 Done with deviations |
 | P5 | Конвейер событий | detailed | 5/5 | 🟠 Done with deviations |
 | P6 | HTTP v1 и клиенты | detailed | 8/8 | 🟠 Done with deviations |
-| P7 | Эксплуатация и DX | skeleton | 0/0 | ⬜ Skeleton |
+| P7 | Эксплуатация и DX | detailed | 0/9 | ⬜ Not started |
 | P8 | Готовность 1.0 | skeleton | 0/0 | ⬜ Skeleton |
 
 ## Decisions
@@ -193,3 +193,7 @@ webhooks, tus/S3 uploads, pluggable авторизация, load/observability �
 | D65 | P6: карта маршрутов/ресурсов v1 дополнена поверхностью P4/P5; egress и исключения D31 | accepted | 2026-10-10 |
 | D66 | P6: только код и тесты покрытия; без длинных прогонов и мутаторов (указание владельца 2026-10-10) | accepted | 2026-10-10 |
 | D67 | P6: bounded audit repairs и свежие быстрые acceptance checks по D66 | accepted | 2026-10-11 |
+| D68 | P7.1: контракт vaulter:doctor — read-only, write-probe, JSON v1, C09 | accepted | 2026-10-11 |
+| D69 | P7: документация — раскладка OPUS §8, проверяемые фрагменты, генерация reference | accepted | 2026-10-11 |
+| D70 | P7.5: релизные инструменты — metapackage, артефакты, consumer, split-теги, AzGuard | accepted | 2026-10-11 |
+| D71 | P7: разбиение OPUS P7.6, порядок и прогоны фазы | accepted | 2026-10-11 |

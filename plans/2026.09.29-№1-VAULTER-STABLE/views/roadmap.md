@@ -58,3 +58,12 @@ Execution sheet: run the batches in order. Route is the maximum class/effort of 
 | 51 | P6 | B606 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P6.4` | implementation/high | done |
 | 52 | P6 | B607 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P6.5` | implementation/medium | done |
 | 53 | P6 | B608 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P6.6` | implementation/medium | done |
+| 54 | P7 | B701 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P7.2` | implementation/medium | ready |
+| 55 | P7 | B702 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P7.1` | implementation/high | waiting: B701 |
+| 56 | P7 | B703 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P7.4` | implementation/high | waiting: B701 |
+| 57 | P7 | B704 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P7.3` | implementation/low | waiting: B701 |
+| 58 | P7 | B705 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P7.5` | implementation/high | waiting: B701 |
+| 59 | P7 | B706 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P7.6` | implementation/medium | waiting: B701 |
+| 60 | P7 | B707 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P7.7` | implementation/medium | waiting: B701 |
+| 61 | P7 | B708 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P7.8` | implementation/medium | waiting: B701 |
+| 62 | P7 | B709 | `task:plan-run 2026.09.29-№1-VAULTER-STABLE P7.9` | economy/medium | waiting: B701 |
