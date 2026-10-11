@@ -6,6 +6,7 @@ namespace Vaulter\Models\Drive;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -14,6 +15,7 @@ use Illuminate\Support\Carbon;
 use Staudenmeir\LaravelAdjacencyList\Eloquent\HasRecursiveRelationships;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Database\Factories\NodeFactory;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
@@ -64,6 +66,10 @@ class Node extends Model
     use GuardsWrites, HasRecursiveRelationships {
         GuardsWrites::newBaseQueryBuilder insteadof HasRecursiveRelationships;
     }
+
+    /** @use HasFactory<NodeFactory> */
+    use HasFactory;
+
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
     use StampsDriveTenant;
@@ -84,6 +90,11 @@ class Node extends Model
         'mime_type',
         'extension',
     ];
+
+    protected static function newFactory(): NodeFactory
+    {
+        return NodeFactory::new();
+    }
 
     #[\Override]
     public function getTable(): string

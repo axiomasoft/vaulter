@@ -109,6 +109,12 @@ test('technical layers are never nested under a domain module (ADR-0017 Law 1)',
         $relative = str_replace($src.'/', '', $dir->getPathname());
         $segments = explode('/', $relative);
 
+        // Testing/Contracts holds the contract suites a host runs against its own configuration;
+        // like core's, they live with the testing kit rather than in the Contracts layer.
+        if ($relative === 'Testing/Contracts') {
+            continue;
+        }
+
         foreach ($segments as $index => $segment) {
             if ($index > 0 && in_array($segment, $layers, true)) {
                 $offenders[] = $relative;

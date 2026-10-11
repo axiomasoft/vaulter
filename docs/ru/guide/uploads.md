@@ -382,6 +382,55 @@ Schedule::command('vaulter:uploads:sweep')->hourly();
 Модели задаются в `vaulter-drive.models.*`; резюмируемые маршруты управляются
 `vaulter-drive.uploads.resumable.enabled`.
 
+## Тесты вашего расширения
+
+Набор для тестов поставляется внутри пакетов (`Vaulter\Testing`, `Vaulter\Drive\Testing`);
+production-код его не импортирует.
+
+**Данные — через Operations.** `Drive::factory()->for($owner)`, `Node::factory()->file('bytes')->in($drive)`
+и `FileRevision::factory()->for($file)->bytes('v2')` создают данные теми же Actions, что и запрос,
+от имени system-актора, поэтому квота, sequence, блобы и scan-работа остаются согласованными.
+Тенант выбирается через `forTenant()`. `InteractsWithVaulter` добавляет `vaulterFakeStorage()`,
+`vaulterActingAs($user)`, `assertVaulterEventRecorded()` / `assertVaulterEventNotRecorded()` и
+проверки видимости.
+
+**Сканер содержимого.** `ContentScannerContractTests::assertContentScannerContract($scanner, $samples)`
+принимает байты, на которых ваш сканер выдаёт каждый исход (`clean` обязателен; `infected`,
+`unsupported`, `too_large`, `password_protected`, `access_denied` и `timeout` — по желанию), и
+проверяет, что каждый превращается в evidence так, как его пишет жизненный цикл: вердикт либо сбой
+с этой причиной, повторяемый только для таймаута. Также проверяется, что нечитаемые байты никогда не
+объявляются чистыми.
+
+**Жизненный цикл сканирования на вашей конфигурации.** `ScanLifecycleContractTests` работает через
+Operations драйва от вашего актора, команду `vaulter:scan:reconcile` и скриптованный
+`FakeContentScanner`:
+
+```php
+use Vaulter\Drive\Testing\Contracts\ScanLifecycleContractTests;
+
+it('keeps the scan lifecycle', function (): void {
+    (new ScanLifecycleContractTests)->assertScanLifecycleContract(
+        static function (): void {
+            config()->set('vaulter.scan.mode', 'all_content');
+            config()->set('vaulter.scan.scanner_key', 'acme');
+            config()->set('vaulter.scan.scanner_version', '1');
+            config()->set('queue.default', 'redis');
+        },
+        $user,
+    );
+});
+```
+
+Набор доказывает: scan-работа создаётся в области драйва и тенанта ревизии, а evidence не
+переиспользуется между областями; новое содержимое недоступно до clean, а legacy-содержимое блокируется
+только при `all_content`; потерянная публикация и просроченная аренда восстанавливаются командой, а
+устаревшая попытка не может завершить работу; отключение webhooks не выключает сканирование. Хосту нужны
+асинхронное подключение очереди и актор, который может создавать и читать в драйве.
+
+**Файловые обработчики.** `FileHandlerContractTests::assertFileHandlerContract($handler)` проверяет ключ,
+заявленные типы и что `capabilities()` зависит только от mime-типа и расширения, по которым реестр
+кеширует результат.
+
 ## Смотрите также
 
 - [Блобы](/ru/guide/storage-and-blobs) — контент-адресуемое хранилище, в которое коммитит каждая загрузка.

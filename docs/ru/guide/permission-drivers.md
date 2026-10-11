@@ -449,6 +449,30 @@ on: AssignmentScopeRef::of('team', $teamId))` и `actingAsSuperAdmin($user)` с�
 | Область workspace | гранты на уровне узла | node-blind контекст | в области команды | `hasPermissionIn` |
 | Безопасно, когда не настроен | н/д | да | да (запрет) | только с установленным мостом |
 
+## Тесты вашего расширения
+
+`Vaulter\Testing\Contracts\PermissionDriverContractTests` проверяет драйвер так же, как
+встроенные. Общий фикстур (`PermissionFixture`) строится через Operations: грант writer на
+поддерево для актора на родительской папке и дочерняя папка с ограниченным наследованием и без
+собственного гранта.
+
+```php
+use Vaulter\Testing\Contracts\PermissionDriverContractTests;
+
+it('decides like the reference driver', function (): void {
+    (new PermissionDriverContractTests)->assertSameDecisionsAsReference(new AcmeRoleDriver);
+});
+```
+
+`assertSameDecisionsAsReference()` сравнивает каждую `Ability` на родителе и на потомке с
+database-драйвером и падает, если ваш решает иначе. Используйте его для драйвера, который не
+добавляет собственных ролей, субъектов и override; драйвер, который их добавляет, проверяйте на
+ожидаемых вами решениях через `assertPermissionDriverContract()` на своём фикстуре.
+
+Проверки видимости для тестов хоста — в трейте `InteractsWithVaulter`:
+`assertNodeVisibleTo($user, $node)` и `assertNodeNotVisibleTo($user, $node)` спрашивают через
+Operations драйва, как это сделал бы запрос.
+
 ## См. также
 
 - [Авторизация](/ru/concepts/authorization) — как ответы драйвера подмешиваются в итоговое

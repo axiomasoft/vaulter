@@ -344,7 +344,7 @@ test('technical layers are never nested under a domain module (ADR-0017 Law 1)',
     // Exceptions/Http holds the exceptions of the HTTP protocol itself (428 precondition).
     expect(array_values(array_diff($nested, ['Exceptions/Contracts', 'Exceptions/Http', 'Enums/Events', 'Testing/Contracts', 'ValueObjects/Events', 'Webhooks/Events'])))->toBe([])
         ->and(scandir(__DIR__.'/../../src/Exceptions/Contracts'))->toBe(['.', '..', 'ProblemException.php'])
-        ->and(scandir(__DIR__.'/../../src/Testing/Contracts'))->toBe(['.', '..', 'PermissionDriverContractTests.php'])
+        ->and(scandir(__DIR__.'/../../src/Testing/Contracts'))->toBe(['.', '..', 'ContentScannerContractTests.php', 'FileHandlerContractTests.php', 'PermissionDriverContractTests.php', 'PermissionFixture.php'])
         ->and(scandir(__DIR__.'/../../src/Enums/Events'))->toBe(['.', '..', 'EventType.php'])
         ->and(scandir(__DIR__.'/../../src/ValueObjects/Events'))->toBe(['.', '..', 'ActivityTarget.php', 'EventScope.php', 'EventSubject.php', 'JournalEffect.php']);
 });

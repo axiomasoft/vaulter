@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Models\Drive;
 
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Database\Factories\FileRevisionFactory;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
@@ -53,6 +55,10 @@ use Vaulter\Models\Content\ScanUtcDateTime;
 class FileRevision extends Model
 {
     use GuardsWrites;
+
+    /** @use HasFactory<FileRevisionFactory> */
+    use HasFactory;
+
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
     use StampsDriveTenant;
@@ -73,6 +79,11 @@ class FileRevision extends Model
         'original_name',
         'keep_forever',
     ];
+
+    protected static function newFactory(): FileRevisionFactory
+    {
+        return FileRevisionFactory::new();
+    }
 
     #[\Override]
     public function getTable(): string

@@ -18,6 +18,10 @@ use Vaulter\Data\Drive\NodePage;
 use Vaulter\Data\Page;
 use Vaulter\Data\Sharing\MintedShareLink;
 use Vaulter\Data\Sharing\ShareLinkInput;
+use Vaulter\Database\Factories\DriveFactory;
+use Vaulter\Database\Factories\FileRevisionFactory;
+use Vaulter\Database\Factories\NodeFactory;
+use Vaulter\Database\Factories\VaulterFactory;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\Effect;
@@ -56,7 +60,12 @@ use Vaulter\Profiles\RevisionRetentionPolicy;
 use Vaulter\Profiles\UploadPolicy;
 use Vaulter\Schema\HostKeyColumns;
 use Vaulter\Schema\VaulterSchema;
+use Vaulter\Testing\Contracts\ContentScannerContractTests;
+use Vaulter\Testing\Contracts\FileHandlerContractTests;
 use Vaulter\Testing\Contracts\PermissionDriverContractTests;
+use Vaulter\Testing\Contracts\PermissionFixture;
+use Vaulter\Testing\FakeContentScanner;
+use Vaulter\Testing\InteractsWithVaulter;
 use Vaulter\ValueObjects\Access\Actor;
 use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Access\OwnerRef;
@@ -366,7 +375,20 @@ test('vaulter-core public API surface matches the frozen golden (VLT-REL P2.2)',
         static fn (OperationKind $case): string => '  '.$case->name.' = '.$case->value,
         OperationKind::cases(),
     ));
-    $blocks[] = vaulterSnapshotInterface(PermissionDriverContractTests::class);
+    // The testing kit hosts build their own suites on: the contract suites, the scripted scanner and the helper trait.
+    foreach ([PermissionDriverContractTests::class, FileHandlerContractTests::class, ContentScannerContractTests::class, PermissionFixture::class, FakeContentScanner::class, InteractsWithVaulter::class] as $class) {
+        $blocks[] = vaulterSnapshotInterface($class);
+    }
+    // The factories are frozen by what Vaulter adds to Eloquent's Factory, not by Laravel's own surface.
+    foreach ([VaulterFactory::class, DriveFactory::class, NodeFactory::class, FileRevisionFactory::class] as $class) {
+        $own = array_filter(
+            (new ReflectionClass($class))->getMethods(ReflectionMethod::IS_PUBLIC),
+            static fn (ReflectionMethod $method): bool => str_starts_with($method->getDeclaringClass()->getName(), 'Vaulter\\'),
+        );
+        $lines = array_map(static fn (ReflectionMethod $method): string => '  '.vaulterSnapshotMethod($method), $own);
+        sort($lines);
+        $blocks[] = $class."\n".implode("\n", $lines);
+    }
     foreach ([Permission::class, Ability::class, Effect::class, InheritanceRestriction::class, OnNameConflict::class, NodeSort::class, QuotaState::class, ScanStatus::class, ShareAudience::class] as $enum) {
         $blocks[] = $enum."\n".implode("\n", array_map(static fn ($case): string => '  '.$case->name.' = '.$case->value, $enum::cases()));
     }

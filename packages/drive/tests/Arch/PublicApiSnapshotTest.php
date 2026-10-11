@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+use Vaulter\Drive\Testing\Contracts\ScanLifecycleContractTests;
 
 /**
  * VLT-REL P2.2 — executable freeze of vaulter-drive's public composer surface for the `0.1.0`
@@ -259,6 +260,9 @@ test('vaulter-drive public API surface matches the frozen golden (VLT-REL P2.2)'
         sort($properties);
         $blocks[] = vaulterSnapshotInterface($eventClass)."\n".implode("\n", $properties);
     }
+
+    // The host-facing scan lifecycle suite.
+    $blocks[] = vaulterSnapshotInterface(ScanLifecycleContractTests::class);
 
     vaulterSnapshotAssert(implode("\n\n", $blocks)."\n", __DIR__.'/__snapshots__/public-api.txt');
 });

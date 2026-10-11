@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Models\Documents;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -15,6 +16,7 @@ use Vaulter\Documents\Casts\BinaryString;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Content\OpaqueContent;
 use Vaulter\Documents\Content\TipTap\TipTapContent;
+use Vaulter\Documents\Database\Factories\DocumentFactory;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Support\DocumentTypeKey;
 use Vaulter\Models\Concerns\GuardsWrites;
@@ -57,6 +59,10 @@ use Vaulter\Models\Drive\Node;
 class Document extends Model
 {
     use GuardsWrites;
+
+    /** @use HasFactory<DocumentFactory> */
+    use HasFactory;
+
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
     use StampsDriveTenant;
@@ -81,6 +87,11 @@ class Document extends Model
     public static function configure(DatabaseConfig $database, VaulterConfig $vaulter, DocumentsConfig $documents): void
     {
         self::$configuration = ['database' => $database, 'vaulter' => $vaulter, 'documents' => $documents];
+    }
+
+    protected static function newFactory(): DocumentFactory
+    {
+        return DocumentFactory::new();
     }
 
     #[\Override]

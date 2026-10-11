@@ -151,6 +151,24 @@ Documents::exporters()->replace('vaulter/html', MyHtmlExporter::class); // за�
 `DuplicateDocumentExporterException`; заменяйте через `replace()`. После загрузки приложения
 реестр замораживается.
 
+## Тесты вашего расширения
+
+`ExporterContractTests` проверяет экспортёр на соответствие контракту:
+
+```php
+use Vaulter\Documents\Testing\Contracts\ExporterContractTests;
+
+it('keeps the exporter contract', function (): void {
+    (new ExporterContractTests)->assertExporterContract(app(PdfExporter::class));
+});
+```
+
+Запускайте его внутри приложения. Проверяются форматы ключа, формата, расширения и mime-типа;
+что реестр находит экспортёр для каждой объявленной пары `(тип, формат)`, отклоняет тип, который
+экспортёр не рендерит, и повторную регистрацию; что привязанный `ExportFilenameResolver` даёт имя
+файла с этим расширением; и что экспорт содержимого по умолчанию каждого установленного типа
+дважды даёт одинаковые байты.
+
 ## Ошибки
 
 | Код | Статус | Когда |

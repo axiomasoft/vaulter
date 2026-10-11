@@ -42,7 +42,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Vaulter\\Documents\\": "src/"
+            "Vaulter\\Documents\\": "src/",
+            "Vaulter\\Documents\\Database\\Factories\\": "database/factories/"
         }
     },
     "autoload-dev": {

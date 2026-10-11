@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Models\Drive;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Database\Factories\DriveFactory;
 use Vaulter\Enums\Drive\DriveStatus;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
@@ -41,6 +43,10 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 class Drive extends Model
 {
     use GuardsWrites;
+
+    /** @use HasFactory<DriveFactory> */
+    use HasFactory;
+
     use HasVaulterKeys;
     use ResolvesVaulterConnection;
 
@@ -55,6 +61,11 @@ class Drive extends Model
         'name',
         'quota_bytes',
     ];
+
+    protected static function newFactory(): DriveFactory
+    {
+        return DriveFactory::new();
+    }
 
     #[\Override]
     public function getTable(): string

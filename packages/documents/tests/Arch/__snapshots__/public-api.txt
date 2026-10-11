@@ -426,3 +426,15 @@ Vaulter\Documents\Presentation\DocumentPresenter
 
 Vaulter\Documents\Testing\Contracts\DocumentTypeContractTests
   assertDocumentTypeContract(\Vaulter\Documents\Contracts\DocumentType $type): void
+
+Vaulter\Documents\Testing\Contracts\ExporterContractTests
+  assertExporterContract(\Vaulter\Documents\Contracts\DocumentExporter $exporter): void
+
+Vaulter\Documents\Database\Factories\DocumentFactory
+  definition(): array
+  forTenant(int|string $tenant): \static
+  in(\Vaulter\Models\Drive\Drive|\Vaulter\Models\Drive\Node $container): \static
+  insert(array $attributes = [], ?\Illuminate\Database\Eloquent\Model $parent = null): void
+  named(string $name): \static
+  ofType(string $type): \static
+  richText(string $text = 'fixture'): \static

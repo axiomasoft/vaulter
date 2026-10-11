@@ -392,6 +392,51 @@ mechanism (the CAS bucket itself stays unversioned, H.3).
 Models are configured under `vaulter-drive.models.*`; resumable routes are controlled
 by `vaulter-drive.uploads.resumable.enabled`.
 
+## Testing your extension
+
+The testing kit ships inside the packages (`Vaulter\Testing`, `Vaulter\Drive\Testing`); nothing
+in production code imports it.
+
+**Create data through Operations.** `Drive::factory()->for($owner)`, `Node::factory()->file('bytes')->in($drive)`
+and `FileRevision::factory()->for($file)->bytes('v2')` provision through the same Actions a request
+uses, as a system actor, so quota, sequences, blobs and scan work hold. `forTenant()` picks the tenant.
+`InteractsWithVaulter` adds `vaulterFakeStorage()`, `vaulterActingAs($user)`,
+`assertVaulterEventRecorded()` / `assertVaulterEventNotRecorded()` and the visibility assertions.
+
+**Content scanner.** `ContentScannerContractTests::assertContentScannerContract($scanner, $samples)` takes
+bytes that make your scanner produce each outcome (`clean` is required; `infected`, `unsupported`,
+`too_large`, `password_protected`, `access_denied` and `timeout` are optional) and checks that each maps to
+the evidence the lifecycle records: a verdict, or a failure with that reason, retryable only for a
+timeout. It also checks that bytes the scanner cannot read are never reported clean.
+
+**Scan lifecycle on your configuration.** `ScanLifecycleContractTests` drives a drive's Operations as
+your actor, `vaulter:scan:reconcile` and a scripted `FakeContentScanner`:
+
+```php
+use Vaulter\Drive\Testing\Contracts\ScanLifecycleContractTests;
+
+it('keeps the scan lifecycle', function (): void {
+    (new ScanLifecycleContractTests)->assertScanLifecycleContract(
+        static function (): void {
+            config()->set('vaulter.scan.mode', 'all_content');
+            config()->set('vaulter.scan.scanner_key', 'acme');
+            config()->set('vaulter.scan.scanner_version', '1');
+            config()->set('queue.default', 'redis');
+        },
+        $user,
+    );
+});
+```
+
+It proves that scan work is created in the drive and tenant scope of the revision and evidence is never
+reused across scopes; that new content is unreadable until it is clean and legacy content is blocked only
+under `all_content`; that a lost publication and an expired lease are recovered by the command and a stale
+attempt cannot settle; and that switching webhooks off leaves scanning on. The host needs an asynchronous
+queue connection and an actor that may create and read in a drive.
+
+**File handlers.** `FileHandlerContractTests::assertFileHandlerContract($handler)` checks the key, the claims,
+and that `capabilities()` depends only on the mime type and extension, which the registry caches by.
+
 ## See also
 
 - [Blobs](/guide/storage-and-blobs) — the content-addressed store every upload commits into.

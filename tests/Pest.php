@@ -50,6 +50,7 @@ uses(TestCase::class, RefreshDatabase::class)->in(
     $core.'/Content',
     $core.'/Sharing',
     $core.'/Support',
+    $core.'/Testing',
     $core.'/Configuration',
     $core.'/Console',
     $core.'/Doctor',

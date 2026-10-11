@@ -11,6 +11,7 @@ use Vaulter\Documents\Data\Comments\AddCommentInput;
 use Vaulter\Documents\Data\Snapshots\CommentSnapshot;
 use Vaulter\Documents\Data\Snapshots\DocumentRevisionSnapshot;
 use Vaulter\Documents\Data\Snapshots\DocumentSnapshot;
+use Vaulter\Documents\Database\Factories\DocumentFactory;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\Export\DocumentExporterRegistry;
 use Vaulter\Documents\Facades\Documents;
@@ -18,6 +19,7 @@ use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
 use Vaulter\Documents\Presentation\DocumentPresenter;
 use Vaulter\Documents\Testing\Contracts\DocumentTypeContractTests;
+use Vaulter\Documents\Testing\Contracts\ExporterContractTests;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
@@ -324,9 +326,18 @@ test('vaulter-documents public API surface matches the frozen golden (VLT-REL P2
         TipTapSchema::class,
         DocumentPresenter::class,
         DocumentTypeContractTests::class,
+        ExporterContractTests::class,
     ] as $class) {
         $blocks[] = vaulterSnapshotInterface($class);
     }
+    // The factory is frozen by what Vaulter adds to Eloquent's Factory, not by Laravel's own surface.
+    $own = array_filter(
+        (new ReflectionClass(DocumentFactory::class))->getMethods(ReflectionMethod::IS_PUBLIC),
+        static fn (ReflectionMethod $method): bool => str_starts_with($method->getDeclaringClass()->getName(), 'Vaulter\\'),
+    );
+    $lines = array_map(static fn (ReflectionMethod $method): string => '  '.vaulterSnapshotMethod($method), $own);
+    sort($lines);
+    $blocks[] = DocumentFactory::class."\n".implode("\n", $lines);
 
     vaulterSnapshotAssert(implode("\n\n", $blocks)."\n", __DIR__.'/__snapshots__/public-api.txt');
 });

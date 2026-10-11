@@ -151,6 +151,24 @@ Documents::exporters()->replace('vaulter/html', MyHtmlExporter::class); // swap 
 Two exporters for one (type, format) pair fail at boot with `DuplicateDocumentExporterException`;
 swap one with `replace()` instead. The registry freezes once the application has booted.
 
+## Testing your extension
+
+`ExporterContractTests` checks an exporter against the contract:
+
+```php
+use Vaulter\Documents\Testing\Contracts\ExporterContractTests;
+
+it('keeps the exporter contract', function (): void {
+    (new ExporterContractTests)->assertExporterContract(app(PdfExporter::class));
+});
+```
+
+Run it inside the application. It checks the key, format, extension and mime type formats; that
+the registry resolves the exporter for every `(type, format)` it declares and refuses a type it
+does not render, and a second registration; that the bound `ExportFilenameResolver` gives a file
+name ending with the extension; and that exporting the default content of each installed type
+twice gives the same bytes.
+
 ## Errors
 
 | Code | Status | When |

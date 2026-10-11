@@ -53,13 +53,13 @@
     },
     "autoload": {
         "psr-4": {
-            "Vaulter\\": "src/"
+            "Vaulter\\": "src/",
+            "Vaulter\\Database\\Factories\\": "database/factories/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Vaulter\\Tests\\": "tests/",
-            "Vaulter\\Database\\Factories\\": "database/factories/"
+            "Vaulter\\Tests\\": "tests/"
         }
     },
     "extra": {

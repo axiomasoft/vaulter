@@ -192,3 +192,19 @@ $profile->documentTypes('vaulter/markdown', 'acme/kanban');
 
 An empty list allows every registered type. Creating a type outside the list throws
 `ProfileRestrictionException`.
+
+## Testing your extension
+
+Besides the contract suite above, `Document::factory()` creates documents through
+`DocumentOperations`, so a fixture has its node, its type's codec and its first checkpoint:
+
+```php
+use Vaulter\Documents\Models\Documents\Document;
+
+$document = Document::factory()->richText('Hello')->in($drive)->create();
+$board = Document::factory()->ofType('acme/kanban')->named('Roadmap')->in($folder)->create();
+```
+
+`richText()` fills a rich-text document, `ofType()` starts a document of any installed type with
+that type's default content, and `in()` takes a drive (its root) or a folder. A tenant other than
+the current one is chosen with `forTenant()`.

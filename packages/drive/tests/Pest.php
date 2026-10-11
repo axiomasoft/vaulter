@@ -7,7 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vaulter\Drive\Tests\PanelTestCase;
 use Vaulter\Drive\Tests\TestCase;
 
-uses(TestCase::class, RefreshDatabase::class)->in('Drive', 'Uploads', 'Feature', 'Observability', 'PublicApi', 'WriteGuard', 'Doctor');
+uses(TestCase::class, RefreshDatabase::class)->in('Drive', 'Uploads', 'Feature', 'Observability', 'PublicApi', 'WriteGuard', 'Doctor', 'Testing');
 
 uses(TestCase::class)->in('Providers', 'Http', 'Console');
 

@@ -359,3 +359,6 @@ Vaulter\Drive\Events\Uploads\UploadInitiated
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
+
+Vaulter\Drive\Testing\Contracts\ScanLifecycleContractTests
+  assertScanLifecycleContract(callable $configureHost, \Illuminate\Contracts\Auth\Authenticatable $actor): void

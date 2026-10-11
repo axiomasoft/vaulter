@@ -448,6 +448,30 @@ grants through AzGuard's change pipeline.
 | Workspace-scoped | per-node grants | node-blind context | team-scoped | `hasPermissionIn` |
 | Safe when not configured | n/a | yes | yes (no access) | only with the bridge installed |
 
+## Testing your extension
+
+`Vaulter\Testing\Contracts\PermissionDriverContractTests` proves a driver the same way the
+built-in ones are proved. The shared fixture (`PermissionFixture`) is built through
+Operations: a writer subtree grant for an actor on a parent folder, and a child below it with
+inheritance restricted and no grant of its own.
+
+```php
+use Vaulter\Testing\Contracts\PermissionDriverContractTests;
+
+it('decides like the reference driver', function (): void {
+    (new PermissionDriverContractTests)->assertSameDecisionsAsReference(new AcmeRoleDriver);
+});
+```
+
+`assertSameDecisionsAsReference()` compares every `Ability` on the parent and the child with the
+database driver and fails when yours decides differently. Use it for a driver that adds no
+roles, subjects or override of its own; a driver that does add them is tested against the
+decisions you expect instead, with `assertPermissionDriverContract()` on your own fixture.
+
+Visibility assertions for the host's own tests live in the `InteractsWithVaulter` trait:
+`assertNodeVisibleTo($user, $node)` and `assertNodeNotVisibleTo($user, $node)` ask through the
+drive's Operations, the way a request would.
+
 ## See also
 
 - [Authorization](./authorization) — how a driver's answers are folded into the final

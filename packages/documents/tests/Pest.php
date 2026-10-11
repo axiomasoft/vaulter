@@ -49,8 +49,9 @@ uses(CommentsTestCase::class, RefreshDatabase::class)->in('Comment');
 // database grants, comments and collaboration ON.
 uses(OperationsTestCase::class, RefreshDatabase::class)->in('Operations');
 
-// Document export: registry, authorization, source selection and the file response.
-uses(ExportTestCase::class, RefreshDatabase::class)->in('Export');
+// Document export: registry, authorization, source selection and the file response;
+// the host testing kit (factories, contract suites) runs on the same booted types.
+uses(ExportTestCase::class, RefreshDatabase::class)->in('Export', 'Testing');
 
 // Document types: the registry, the built-in types, a third-party type that is
 // installed, removed and installed again, and content that reads only partly.

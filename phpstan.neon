@@ -41,3 +41,9 @@ parameters:
         -
             identifier: trait.unused
             path: packages/core/src/Concerns/HasDrives.php
+
+        # Shipped for host test suites: the trait is consumed by Pest `uses()` in the
+        # host's own tests, never inside this package's src.
+        -
+            identifier: trait.unused
+            path: packages/core/src/Testing/InteractsWithVaulter.php
