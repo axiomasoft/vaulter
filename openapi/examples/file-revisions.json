@@ -1,0 +1,31 @@
+{
+    "operation_id": "files.revisions.index",
+    "status": 200,
+    "headers": {
+        "content-type": "application/json",
+        "cache-control": "no-store, private",
+        "x-vaulter-api-version": "1",
+        "x-request-id": "01M4MPFHVN8EKZC7TZ2B6RA2YH"
+    },
+    "body": {
+        "data": [
+            {
+                "id": "3",
+                "number": 1,
+                "size_bytes": 8,
+                "mime": "text/plain",
+                "declared_mime": "text/plain",
+                "sha256": "d461299cf950bd732857886dc0bb2730817e710b24812e896bd99e183e01e440",
+                "scan_status": "not_required",
+                "keep_forever": false,
+                "is_head": true,
+                "created_by": null,
+                "created_at": "2026-10-11T05:20:29.000000Z"
+            }
+        ],
+        "meta": {
+            "next_cursor": null,
+            "per_page": 50
+        }
+    }
+}

@@ -941,6 +941,37 @@ site's token), but a client relying on cookies/session credentials should publis
 `config/cors.php` and narrow `allowed_origins` to its own known origins (and the
 origins `@vaulter/vue` is served from) before shipping to production.
 
+## OpenAPI and compatibility
+
+[`openapi/vaulter-v1.yaml`](https://github.com/axiomasoft/vaulter/blob/main/openapi/vaulter-v1.yaml) (OpenAPI 3.1)
+is the source of truth of this API: every route named `vaulter.v1.<name>` is an operation with
+`operationId: <name>`, and this page explains what the file states. It describes the parameters, the
+`If-Match` (`428` / `412`) and `If-None-Match` (`304`) rules, the cache and file-delivery headers, the
+`application/problem+json` errors with their `code` values, and a schema for every resource.
+`openapi/examples/` holds one real response per resource.
+
+The contract is checked, not just written:
+
+- **Coverage.** A test compares the route table with the document: a route without an operation, or an
+  operation without a route, or a different method or path, fails.
+- **Responses.** The `core`, `drive` and `documents` feature tests run with `VAULTER_OPENAPI_VALIDATE=1`;
+  every `vaulter.v1.*` response is validated for status, headers, media type and body
+  (`opis/json-schema`, draft 2020-12). An undocumented status or media type fails the test.
+- **Route list.** `packages/core/tests/Fixtures/golden/routes-v1.json` pins names, methods, paths and
+  middleware stacks; a changed route shows up in the pull request diff.
+- **Breaking changes.** CI compares the document with the contract of the last released tag (the base branch
+  before the first release that has the file) using `oasdiff breaking --fail-on ERR`; a breaking change to `v1`
+  fails the build.
+
+**Compatibility policy.** Inside `v1` only additive changes are made: a new route, a new optional parameter, a
+new response field, a new problem `code`. Clients must ignore unknown fields. Removing or renaming a field,
+changing its meaning or type, a new required request field, or a new status for an existing outcome needs `v2`.
+When `v2` ships, `v1` answers with `Deprecation` and `Sunset` headers and stays supported for at least 12 months.
+
+**Changing the contract.** Edit the routes and `openapi/vaulter-v1.yaml` in one change, then regenerate the
+golden with `UPDATE_GOLDEN=1` and the examples with `VAULTER_OPENAPI_EXAMPLES_WRITE=1` (see
+[CONTRIBUTING](https://github.com/axiomasoft/vaulter/blob/main/CONTRIBUTING.md)).
+
 ## See also
 
 - [Drive](/guide/drive) — the `DriveHandle` handle the Drive routes wrap

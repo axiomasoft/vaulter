@@ -1,0 +1,6 @@
+{
+    "description": "Node without its required etag.",
+    "example": "node",
+    "unset": ["data.etag"],
+    "expect": "etag"
+}

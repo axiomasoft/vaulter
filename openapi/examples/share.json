@@ -1,0 +1,29 @@
+{
+    "operation_id": "shares.store",
+    "status": 201,
+    "headers": {
+        "content-type": "application/json",
+        "cache-control": "no-store, private",
+        "x-vaulter-api-version": "1",
+        "x-request-id": "01M4MPFJA1BFTS7PDV0XM60T06"
+    },
+    "body": {
+        "data": {
+            "id": "1",
+            "node_id": "19",
+            "role": "reader",
+            "role_version": 1,
+            "audience": "authenticated",
+            "scope": "item",
+            "expires_at": "2026-10-14T05:20:30.000000Z",
+            "max_uses": 3,
+            "use_count": 0,
+            "has_password": false,
+            "token_generation": 1,
+            "created_by": "1",
+            "created_at": "2026-10-11T05:20:30.000000Z",
+            "token": "trkvmrHn7PZJIgetv0y7ZuRUtTQ6BLIOiVN3thIX7-k",
+            "url": "/share/trkvmrHn7PZJIgetv0y7ZuRUtTQ6BLIOiVN3thIX7-k"
+        }
+    }
+}

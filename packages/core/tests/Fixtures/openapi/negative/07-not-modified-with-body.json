@@ -1,0 +1,8 @@
+{
+    "description": "A 304 must not carry a body.",
+    "example": "node",
+    "operation_id": "nodes.show",
+    "status": 304,
+    "headers": {"cache-control": "no-cache, private"},
+    "expect": "documents no content but the response has a body"
+}

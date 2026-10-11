@@ -1,0 +1,22 @@
+{
+    "operation_id": "nodes.update",
+    "status": 412,
+    "headers": {
+        "content-type": "application/problem+json",
+        "cache-control": "no-store, private",
+        "x-vaulter-api-version": "1",
+        "x-request-id": "01M4MPFJK9WV8F277ZQK399RRD"
+    },
+    "body": {
+        "type": "https://github.com/axiomasoft/vaulter/blob/main/docs/reference/errors.md#node_sequence_mismatch",
+        "title": "Node changed",
+        "status": 412,
+        "code": "node_sequence_mismatch",
+        "detail": "The node changed since you read it; reload it and retry.",
+        "request_id": "01M4MPFJK9WV8F277ZQK399RRD",
+        "errors": null,
+        "meta": {
+            "node_id": "26"
+        }
+    }
+}

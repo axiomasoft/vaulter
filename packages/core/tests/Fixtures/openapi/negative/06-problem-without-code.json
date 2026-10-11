@@ -1,0 +1,6 @@
+{
+    "description": "A problem without its stable code.",
+    "example": "problem-412",
+    "unset": ["code"],
+    "expect": "code"
+}

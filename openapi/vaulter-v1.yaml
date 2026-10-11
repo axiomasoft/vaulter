@@ -1,0 +1,5521 @@
+# OpenAPI 3.1 contract of the Vaulter REST API v1 (source of truth).
+# Keep it in step with the routes: packages/core/tests/OpenApi checks coverage, schemas and examples.
+openapi: 3.1.1
+info:
+  title: Vaulter REST API
+  version: 1.0.0
+  summary: Drive, documents, sharing, changes and webhooks over HTTP.
+  description: 'Source of truth of the v1 REST contract. Authentication is the host''s: the routes run on the stack the host
+    configures (`vaulter.routes.middleware`). Every response carries X-Vaulter-Api-Version and X-Request-Id; every failure
+    is `application/problem+json` (RFC 9457) with a stable `code`. Strong ETags are validators of the caller''s representation:
+    opaque, never parsed. Operations that change a node or a document require If-Match (428 without, 412 when stale).'
+  license:
+    name: MIT
+    identifier: MIT
+servers:
+- url: /api/vaulter/v1
+  description: Default prefix; configurable through vaulter.routes.prefix.
+security:
+- hostAuth: []
+tags:
+- name: access
+- name: sharing
+- name: activity
+- name: changes
+- name: webhooks
+- name: public-shares
+- name: drives
+- name: nodes
+- name: trash
+- name: files
+- name: uploads
+- name: documents
+- name: collaboration
+- name: comments
+- name: hub
+paths:
+  /nodes/{node}/grants:
+    get:
+      operationId: grants.index
+      tags:
+      - access
+      summary: List grants of a node
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrantList'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '500':
+          $ref: '#/components/responses/Problem500'
+    post:
+      operationId: grants.store
+      tags:
+      - access
+      summary: Grant a role on a node
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - subject
+              - role
+              properties:
+                subject:
+                  type: object
+                  required:
+                  - type
+                  - id
+                  properties:
+                    type:
+                      type: string
+                    id:
+                      type:
+                      - string
+                      - integer
+                role:
+                  type: string
+                scope:
+                  type: string
+                  enum:
+                  - item
+                  - subtree
+                expires_at:
+                  type: string
+                  format: date-time
+                  pattern: Z$
+      responses:
+        '201':
+          description: Created
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrantEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /nodes/{node}/grants/{grant}:
+    delete:
+      operationId: grants.destroy
+      tags:
+      - access
+      summary: Revoke a grant
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/Grant'
+      responses:
+        '204':
+          description: No content
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /nodes/{node}/inheritance/restrict:
+    post:
+      operationId: access.inheritance.restrict
+      tags:
+      - access
+      summary: Stop inheriting access from the parent
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              required: []
+              properties:
+                mode:
+                  type: string
+                  enum:
+                  - empty
+                  - copy_current
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            ETag:
+              $ref: '#/components/headers/ETagRequired'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /nodes/{node}/inheritance/restore:
+    post:
+      operationId: access.inheritance.restore
+      tags:
+      - access
+      summary: Inherit access from the parent again
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            ETag:
+              $ref: '#/components/headers/ETagRequired'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /nodes/{node}/shares:
+    get:
+      operationId: shares.index
+      tags:
+      - sharing
+      summary: List share links of a node
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShareList'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '500':
+          $ref: '#/components/responses/Problem500'
+    post:
+      operationId: shares.store
+      tags:
+      - sharing
+      summary: Create a share link (token returned once)
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: []
+              properties:
+                role:
+                  type: string
+                audience:
+                  type: string
+                  enum:
+                  - anyone
+                  - authenticated
+                  - tenant
+                scope:
+                  type: string
+                  enum:
+                  - item
+                  - subtree
+                password:
+                  type: string
+                expires_at:
+                  type: string
+                  format: date-time
+                  pattern: Z$
+                max_uses:
+                  type: integer
+                  minimum: 1
+      responses:
+        '201':
+          description: Created
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MintedShareEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /nodes/{node}/shares/{share}:
+    patch:
+      operationId: shares.update
+      tags:
+      - sharing
+      summary: Update a share link
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/Share'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: []
+              properties:
+                audience:
+                  type: string
+                  enum:
+                  - anyone
+                  - authenticated
+                  - tenant
+                password:
+                  type:
+                  - string
+                  - 'null'
+                expires_at:
+                  type: string
+                  format: date-time
+                  pattern: Z$
+                max_uses:
+                  type:
+                  - integer
+                  - 'null'
+                  minimum: 1
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShareEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+    delete:
+      operationId: shares.destroy
+      tags:
+      - sharing
+      summary: Revoke a share link
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/Share'
+      responses:
+        '204':
+          description: No content
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /nodes/{node}/shares/{share}/rotate:
+    post:
+      operationId: shares.rotate
+      tags:
+      - sharing
+      summary: Rotate the token of a share link (new token returned once)
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/Share'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MintedShareEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /drives/{drive}/activity:
+    get:
+      operationId: activity.drive
+      tags:
+      - activity
+      summary: Activity feed of a drive
+      parameters:
+      - $ref: '#/components/parameters/Drive'
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityPage'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /nodes/{node}/activity:
+    get:
+      operationId: activity.node
+      tags:
+      - activity
+      summary: Activity feed of a node
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityPage'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /drives/{drive}/changes/start:
+    get:
+      operationId: changes.start
+      tags:
+      - changes
+      summary: Cursor at the current end of the change feed
+      parameters:
+      - $ref: '#/components/parameters/Drive'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangesStartEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /drives/{drive}/changes:
+    get:
+      operationId: changes.index
+      tags:
+      - changes
+      summary: Read the change feed after a cursor
+      parameters:
+      - $ref: '#/components/parameters/Drive'
+      - name: cursor
+        in: query
+        required: true
+        description: From changes.start or the previous page.
+        schema:
+          type: string
+          maxLength: 2048
+      - name: limit
+        in: query
+        required: false
+        description: 1..max_page_size, default 100.
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangePage'
+        '400':
+          $ref: '#/components/responses/Problem400'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '410':
+          $ref: '#/components/responses/Problem410'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /webhook-endpoints:
+    get:
+      operationId: webhook-endpoints.index
+      tags:
+      - webhooks
+      summary: List webhook endpoints
+      parameters:
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookEndpointPage'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+    post:
+      operationId: webhook-endpoints.store
+      tags:
+      - webhooks
+      summary: Register a webhook endpoint (secret returned once)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - url
+              - events
+              properties:
+                url:
+                  type: string
+                events:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: string
+                is_active:
+                  type: boolean
+                drive_id:
+                  type: string
+      responses:
+        '201':
+          description: Created
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookEndpointEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /webhook-endpoints/{endpoint}:
+    get:
+      operationId: webhook-endpoints.show
+      tags:
+      - webhooks
+      summary: Show a webhook endpoint
+      parameters:
+      - $ref: '#/components/parameters/Endpoint'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookEndpointEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '500':
+          $ref: '#/components/responses/Problem500'
+    patch:
+      operationId: webhook-endpoints.update
+      tags:
+      - webhooks
+      summary: Update a webhook endpoint
+      parameters:
+      - $ref: '#/components/parameters/Endpoint'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: []
+              properties:
+                url:
+                  type: string
+                events:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: string
+                is_active:
+                  type: boolean
+                drive_id:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookEndpointEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+    delete:
+      operationId: webhook-endpoints.destroy
+      tags:
+      - webhooks
+      summary: Delete a webhook endpoint
+      parameters:
+      - $ref: '#/components/parameters/Endpoint'
+      responses:
+        '204':
+          description: No content
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /webhook-endpoints/{endpoint}/deactivate:
+    post:
+      operationId: webhook-endpoints.deactivate
+      tags:
+      - webhooks
+      summary: Deactivate a webhook endpoint
+      parameters:
+      - $ref: '#/components/parameters/Endpoint'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookEndpointEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /webhook-endpoints/{endpoint}/rotate-secret:
+    post:
+      operationId: webhook-endpoints.rotate-secret
+      tags:
+      - webhooks
+      summary: Rotate the signing secret (new secret returned once)
+      parameters:
+      - $ref: '#/components/parameters/Endpoint'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              required: []
+              properties:
+                overlap_seconds:
+                  type: integer
+                  minimum: 0
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookEndpointEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /webhook-endpoints/{endpoint}/deliveries:
+    get:
+      operationId: webhook-deliveries.index
+      tags:
+      - webhooks
+      summary: List deliveries of an endpoint
+      parameters:
+      - $ref: '#/components/parameters/Endpoint'
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookDeliveryPage'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /webhook-endpoints/{endpoint}/deliveries/{delivery}/redeliver:
+    post:
+      operationId: webhook-deliveries.redeliver
+      tags:
+      - webhooks
+      summary: Redeliver a failed delivery
+      parameters:
+      - $ref: '#/components/parameters/Endpoint'
+      - $ref: '#/components/parameters/Delivery'
+      responses:
+        '202':
+          description: Accepted
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookDeliveryEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '409':
+          $ref: '#/components/responses/Problem409'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /shares/{token}:
+    get:
+      operationId: public-shares.show
+      tags:
+      - public-shares
+      summary: Resolve a share token to its node
+      security: []
+      parameters:
+      - $ref: '#/components/parameters/ShareToken'
+      - $ref: '#/components/parameters/ShareSession'
+      - $ref: '#/components/parameters/SharePassword'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            Referrer-Policy:
+              $ref: '#/components/headers/ReferrerPolicyRequired'
+            X-Share-Session:
+              $ref: '#/components/headers/XShareSession'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicNodeEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '429':
+          $ref: '#/components/responses/Problem429'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /shares/{token}/nodes:
+    get:
+      operationId: public-shares.nodes
+      tags:
+      - public-shares
+      summary: List the children of a shared folder
+      security: []
+      parameters:
+      - $ref: '#/components/parameters/ShareToken'
+      - $ref: '#/components/parameters/ShareSession'
+      - $ref: '#/components/parameters/SharePassword'
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            Referrer-Policy:
+              $ref: '#/components/headers/ReferrerPolicyRequired'
+            X-Share-Session:
+              $ref: '#/components/headers/XShareSession'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicNodePage'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '429':
+          $ref: '#/components/responses/Problem429'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /shares/{token}/download:
+    get:
+      operationId: public-shares.download
+      tags:
+      - public-shares
+      summary: Download the shared file (or a file inside a shared folder)
+      security: []
+      parameters:
+      - $ref: '#/components/parameters/ShareToken'
+      - $ref: '#/components/parameters/ShareSession'
+      - $ref: '#/components/parameters/SharePassword'
+      - name: node
+        in: query
+        required: false
+        description: A file inside a shared folder.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: The bytes. Content-Type is the declared mime type when it is on the inline allow-list, application/octet-stream
+            otherwise.
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            Referrer-Policy:
+              $ref: '#/components/headers/ReferrerPolicyRequired'
+            X-Share-Session:
+              $ref: '#/components/headers/XShareSession'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            Content-Disposition:
+              $ref: '#/components/headers/ContentDisposition'
+            Content-Security-Policy:
+              $ref: '#/components/headers/ContentSecurityPolicy'
+            X-Content-Type-Options:
+              $ref: '#/components/headers/XContentTypeOptions'
+            Accept-Ranges:
+              $ref: '#/components/headers/AcceptRangesNone'
+            Content-Length:
+              $ref: '#/components/headers/ContentLength'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '423':
+          $ref: '#/components/responses/Problem423'
+        '429':
+          $ref: '#/components/responses/Problem429'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /drives/{drive}:
+    get:
+      operationId: drives.show
+      tags:
+      - drives
+      summary: Show a drive
+      parameters:
+      - $ref: '#/components/parameters/Drive'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriveEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '500':
+          $ref: '#/components/responses/Problem500'
+    delete:
+      operationId: drives.destroy
+      tags:
+      - drives
+      summary: Start deleting a drive (status deleting)
+      parameters:
+      - $ref: '#/components/parameters/Drive'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriveEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '409':
+          $ref: '#/components/responses/Problem409'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /drives/{drive}/archive:
+    post:
+      operationId: drives.archive
+      tags:
+      - drives
+      summary: Archive a drive (read only)
+      parameters:
+      - $ref: '#/components/parameters/Drive'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriveEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '409':
+          $ref: '#/components/responses/Problem409'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /drives/{drive}/unarchive:
+    post:
+      operationId: drives.unarchive
+      tags:
+      - drives
+      summary: Return an archived drive to service
+      parameters:
+      - $ref: '#/components/parameters/Drive'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriveEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '409':
+          $ref: '#/components/responses/Problem409'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /drives/{drive}/nodes:
+    get:
+      operationId: nodes.index
+      tags:
+      - nodes
+      summary: List the children of a folder (root by default)
+      parameters:
+      - $ref: '#/components/parameters/Drive'
+      - name: parent
+        in: query
+        required: false
+        description: Parent folder id; the drive root when omitted.
+        schema:
+          type:
+          - string
+          - 'null'
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodePage'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /drives/{drive}/search:
+    get:
+      operationId: nodes.search
+      tags:
+      - nodes
+      summary: Search nodes by name
+      parameters:
+      - $ref: '#/components/parameters/Drive'
+      - name: q
+        in: query
+        required: true
+        description: Search text, up to 255 characters.
+        schema:
+          type: string
+          maxLength: 255
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodePage'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /drives/{drive}/starred:
+    get:
+      operationId: nodes.starred
+      tags:
+      - nodes
+      summary: Nodes the caller starred
+      parameters:
+      - $ref: '#/components/parameters/Drive'
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodePage'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /drives/{drive}/trash:
+    get:
+      operationId: trash.index
+      tags:
+      - trash
+      summary: List the trash of a drive
+      parameters:
+      - $ref: '#/components/parameters/Drive'
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodePage'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+    delete:
+      operationId: trash.empty
+      tags:
+      - trash
+      summary: Purge the whole trash of a drive
+      parameters:
+      - $ref: '#/components/parameters/Drive'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurgedCountEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '409':
+          $ref: '#/components/responses/Problem409'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /drives/{drive}/folders:
+    post:
+      operationId: folders.store
+      tags:
+      - nodes
+      summary: Create a folder
+      parameters:
+      - $ref: '#/components/parameters/Drive'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - name
+              properties:
+                name:
+                  type: string
+                parent_id:
+                  type:
+                  - string
+                  - 'null'
+      responses:
+        '201':
+          description: Created
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            ETag:
+              $ref: '#/components/headers/ETagRequired'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '409':
+          $ref: '#/components/responses/Problem409'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /drives/{drive}/files:
+    post:
+      operationId: files.store
+      tags:
+      - files
+      summary: Upload a file in one request
+      parameters:
+      - $ref: '#/components/parameters/Drive'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+              - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                parent_id:
+                  type: string
+                name:
+                  type: string
+      responses:
+        '201':
+          description: Created
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            ETag:
+              $ref: '#/components/headers/ETagRequired'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '409':
+          $ref: '#/components/responses/Problem409'
+        '413':
+          $ref: '#/components/responses/Problem413'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /shared:
+    get:
+      operationId: shared.index
+      tags:
+      - nodes
+      summary: Nodes shared with the caller
+      parameters:
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodePage'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /nodes/{node}:
+    get:
+      operationId: nodes.show
+      tags:
+      - nodes
+      summary: Show a node
+      description: A matching If-None-Match answers 304 without a body, only after the caller was authorized.
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/IfNoneMatch'
+      - name: include
+        in: query
+        required: false
+        description: breadcrumb and/or children. A response with include carries no ETag header.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlAny'
+            ETag:
+              $ref: '#/components/headers/ETag'
+            Vary:
+              $ref: '#/components/headers/VaryOptional'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeWithIncludesEnvelope'
+        '304':
+          description: 'Not modified: no body, the ETag and cache headers are repeated.'
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlRevalidate'
+            ETag:
+              $ref: '#/components/headers/ETagRequired'
+            Vary:
+              $ref: '#/components/headers/VaryRepresentation'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+    patch:
+      operationId: nodes.update
+      tags:
+      - nodes
+      summary: Rename a node
+      description: 'Requires If-Match with the ETag of the current representation (428 without, 412 when stale). Checked after
+        authorization: a caller without access gets 404/403, never a tag comparison.'
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - name
+              properties:
+                name:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            ETag:
+              $ref: '#/components/headers/ETagRequired'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '409':
+          $ref: '#/components/responses/Problem409'
+        '412':
+          $ref: '#/components/responses/Problem412'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '428':
+          $ref: '#/components/responses/Problem428'
+        '500':
+          $ref: '#/components/responses/Problem500'
+    delete:
+      operationId: nodes.purge
+      tags:
+      - trash
+      summary: Purge a trashed node for good
+      description: 'Requires If-Match with the ETag of the current representation (428 without, 412 when stale). Checked after
+        authorization: a caller without access gets 404/403, never a tag comparison.'
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/IfMatch'
+      responses:
+        '204':
+          description: No content
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '409':
+          $ref: '#/components/responses/Problem409'
+        '412':
+          $ref: '#/components/responses/Problem412'
+        '428':
+          $ref: '#/components/responses/Problem428'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /nodes/{node}/properties:
+    patch:
+      operationId: nodes.properties.update
+      tags:
+      - nodes
+      summary: Set or unset custom properties of one namespace
+      description: 'Requires If-Match with the ETag of the current representation (428 without, 412 when stale). Checked after
+        authorization: a caller without access gets 404/403, never a tag comparison.'
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - namespace
+              properties:
+                namespace:
+                  type: string
+                set:
+                  type: object
+                  additionalProperties:
+                    type: string
+                unset:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            ETag:
+              $ref: '#/components/headers/ETagRequired'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '412':
+          $ref: '#/components/responses/Problem412'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '428':
+          $ref: '#/components/responses/Problem428'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /nodes/{node}/star:
+    put:
+      operationId: nodes.star
+      tags:
+      - nodes
+      summary: Star a node for the caller
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            ETag:
+              $ref: '#/components/headers/ETagRequired'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '500':
+          $ref: '#/components/responses/Problem500'
+    delete:
+      operationId: nodes.unstar
+      tags:
+      - nodes
+      summary: Remove the caller's star
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            ETag:
+              $ref: '#/components/headers/ETagRequired'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /nodes/{node}/move:
+    post:
+      operationId: nodes.move
+      tags:
+      - nodes
+      summary: Move a node
+      description: 'Requires If-Match with the ETag of the current representation (428 without, 412 when stale). Checked after
+        authorization: a caller without access gets 404/403, never a tag comparison.'
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - destination_id
+              properties:
+                destination_id:
+                  type:
+                  - string
+                  - 'null'
+                on_conflict:
+                  type: string
+                  enum:
+                  - fail
+                  - rename
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            ETag:
+              $ref: '#/components/headers/ETagRequired'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '409':
+          $ref: '#/components/responses/Problem409'
+        '412':
+          $ref: '#/components/responses/Problem412'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '428':
+          $ref: '#/components/responses/Problem428'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /nodes/{node}/copy:
+    post:
+      operationId: nodes.copy
+      tags:
+      - nodes
+      summary: Copy a node
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              required: []
+              properties:
+                destination_id:
+                  type:
+                  - string
+                  - 'null'
+                name:
+                  type: string
+      responses:
+        '201':
+          description: Created
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            ETag:
+              $ref: '#/components/headers/ETagRequired'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '409':
+          $ref: '#/components/responses/Problem409'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /nodes/{node}/trash:
+    post:
+      operationId: nodes.trash
+      tags:
+      - trash
+      summary: Move a node to the trash
+      description: 'Requires If-Match with the ETag of the current representation (428 without, 412 when stale). Checked after
+        authorization: a caller without access gets 404/403, never a tag comparison.'
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/IfMatch'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            ETag:
+              $ref: '#/components/headers/ETagRequired'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '409':
+          $ref: '#/components/responses/Problem409'
+        '412':
+          $ref: '#/components/responses/Problem412'
+        '428':
+          $ref: '#/components/responses/Problem428'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /nodes/{node}/restore:
+    post:
+      operationId: nodes.restore
+      tags:
+      - trash
+      summary: Restore a node from the trash
+      description: 'Requires If-Match with the ETag of the current representation (428 without, 412 when stale). Checked after
+        authorization: a caller without access gets 404/403, never a tag comparison.'
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              required: []
+              properties:
+                destination_id:
+                  type:
+                  - string
+                  - 'null'
+                on_conflict:
+                  type: string
+                  enum:
+                  - fail
+                  - rename
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            ETag:
+              $ref: '#/components/headers/ETagRequired'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '409':
+          $ref: '#/components/responses/Problem409'
+        '412':
+          $ref: '#/components/responses/Problem412'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '428':
+          $ref: '#/components/responses/Problem428'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /nodes/{node}/abilities:
+    get:
+      operationId: nodes.abilities
+      tags:
+      - nodes
+      summary: What the caller may do with a node
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      - name: explain
+        in: query
+        required: false
+        description: An ability name; needs the manage ability.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbilitiesExplainedEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /files/{node}/download:
+    get:
+      operationId: files.download
+      tags:
+      - files
+      summary: Download the head revision of a file (stream, or 302 with direct_signed)
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      responses:
+        '200':
+          description: The bytes. Content-Type is the declared mime type when it is on the inline allow-list, application/octet-stream
+            otherwise.
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            Content-Disposition:
+              $ref: '#/components/headers/ContentDisposition'
+            Content-Security-Policy:
+              $ref: '#/components/headers/ContentSecurityPolicy'
+            X-Content-Type-Options:
+              $ref: '#/components/headers/XContentTypeOptions'
+            Accept-Ranges:
+              $ref: '#/components/headers/AcceptRangesNone'
+            Content-Length:
+              $ref: '#/components/headers/ContentLength'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        '302':
+          description: 'direct_signed delivery: 302 to a short-lived URL of the exact revision.'
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            Location:
+              $ref: '#/components/headers/Location'
+            Referrer-Policy:
+              $ref: '#/components/headers/ReferrerPolicy'
+          content:
+            text/html: {}
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '423':
+          $ref: '#/components/responses/Problem423'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /files/{node}/revisions:
+    get:
+      operationId: files.revisions.index
+      tags:
+      - files
+      summary: List the revisions of a file
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileRevisionPage'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+    post:
+      operationId: files.revisions.store
+      tags:
+      - files
+      summary: Upload a new revision of a file
+      description: 'Requires If-Match with the ETag of the current representation (428 without, 412 when stale). Checked after
+        authorization: a caller without access gets 404/403, never a tag comparison.'
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+              - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Created
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileRevisionEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '412':
+          $ref: '#/components/responses/Problem412'
+        '413':
+          $ref: '#/components/responses/Problem413'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '428':
+          $ref: '#/components/responses/Problem428'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /files/{node}/revisions/{revision}/download:
+    get:
+      operationId: files.revisions.download
+      tags:
+      - files
+      summary: Download one revision of a file
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/Revision'
+      responses:
+        '200':
+          description: The bytes. Content-Type is the declared mime type when it is on the inline allow-list, application/octet-stream
+            otherwise.
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            Content-Disposition:
+              $ref: '#/components/headers/ContentDisposition'
+            Content-Security-Policy:
+              $ref: '#/components/headers/ContentSecurityPolicy'
+            X-Content-Type-Options:
+              $ref: '#/components/headers/XContentTypeOptions'
+            Accept-Ranges:
+              $ref: '#/components/headers/AcceptRangesNone'
+            Content-Length:
+              $ref: '#/components/headers/ContentLength'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        '302':
+          description: 'direct_signed delivery: 302 to a short-lived URL of the exact revision.'
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            Location:
+              $ref: '#/components/headers/Location'
+            Referrer-Policy:
+              $ref: '#/components/headers/ReferrerPolicy'
+          content:
+            text/html: {}
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '423':
+          $ref: '#/components/responses/Problem423'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /files/{node}/revisions/{revision}/restore:
+    post:
+      operationId: files.revisions.restore
+      tags:
+      - files
+      summary: Make an old revision the head
+      description: 'Requires If-Match with the ETag of the current representation (428 without, 412 when stale). Checked after
+        authorization: a caller without access gets 404/403, never a tag comparison.'
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/Revision'
+      - $ref: '#/components/parameters/IfMatch'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileRevisionEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '412':
+          $ref: '#/components/responses/Problem412'
+        '428':
+          $ref: '#/components/responses/Problem428'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /files/{node}/revisions/{revision}:
+    patch:
+      operationId: files.revisions.update
+      tags:
+      - files
+      summary: Pin or unpin a revision
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/Revision'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - keep_forever
+              properties:
+                keep_forever:
+                  type: boolean
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileRevisionEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+    delete:
+      operationId: files.revisions.destroy
+      tags:
+      - files
+      summary: Delete a revision (not the head, not pinned)
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/Revision'
+      responses:
+        '204':
+          description: No content
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '409':
+          $ref: '#/components/responses/Problem409'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /drives/{drive}/uploads:
+    post:
+      operationId: uploads.store
+      tags:
+      - uploads
+      summary: Create a resumable upload session (tus or s3-multipart)
+      parameters:
+      - $ref: '#/components/parameters/Drive'
+      - $ref: '#/components/parameters/IfMatchWhenReplacing'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: []
+              properties:
+                protocol:
+                  type: string
+                  enum:
+                  - tus
+                  - s3-multipart
+                  - direct
+                parent_id:
+                  type:
+                  - string
+                  - 'null'
+                node_id:
+                  type:
+                  - string
+                  - 'null'
+                name:
+                  type: string
+                total_size_bytes:
+                  type:
+                  - integer
+                  - 'null'
+                  minimum: 0
+                expected_sha256:
+                  type: string
+                mime_type:
+                  type: string
+                metadata:
+                  type: object
+      responses:
+        '201':
+          description: Created
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            Location:
+              $ref: '#/components/headers/UploadLocation'
+            Tus-Resumable:
+              $ref: '#/components/headers/TusResumable'
+            Upload-Offset:
+              $ref: '#/components/headers/UploadOffset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadSessionEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '412':
+          $ref: '#/components/responses/Problem412'
+        '413':
+          $ref: '#/components/responses/Problem413'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '428':
+          $ref: '#/components/responses/Problem428'
+        '429':
+          $ref: '#/components/responses/Problem429'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /uploads/{upload}:
+    get:
+      operationId: uploads.show
+      tags:
+      - uploads
+      summary: Status of an upload session
+      parameters:
+      - $ref: '#/components/parameters/Upload'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadSessionEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '429':
+          $ref: '#/components/responses/Problem429'
+        '500':
+          $ref: '#/components/responses/Problem500'
+    head:
+      operationId: uploads.tus.head
+      tags:
+      - uploads
+      summary: 'tus: current offset of an upload'
+      parameters:
+      - $ref: '#/components/parameters/Upload'
+      - $ref: '#/components/parameters/TusResumableHeader'
+      responses:
+        '204':
+          description: No content
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            Tus-Resumable:
+              $ref: '#/components/headers/TusResumable'
+            Upload-Offset:
+              $ref: '#/components/headers/UploadOffset'
+            Upload-Length:
+              $ref: '#/components/headers/UploadLength'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '412':
+          $ref: '#/components/responses/Problem412'
+        '429':
+          $ref: '#/components/responses/Problem429'
+        '500':
+          $ref: '#/components/responses/Problem500'
+    patch:
+      operationId: uploads.tus.patch
+      tags:
+      - uploads
+      summary: 'tus: append bytes; the final chunk answers 201 with the created node'
+      parameters:
+      - $ref: '#/components/parameters/Upload'
+      - $ref: '#/components/parameters/TusResumableHeader'
+      - name: Upload-Offset
+        in: header
+        required: true
+        description: Offset the chunk starts at.
+        schema:
+          type: integer
+      requestBody:
+        required: true
+        content:
+          application/offset+octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '201':
+          description: Created
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            ETag:
+              $ref: '#/components/headers/ETagRequired'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            Tus-Resumable:
+              $ref: '#/components/headers/TusResumable'
+            Upload-Offset:
+              $ref: '#/components/headers/UploadOffset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeEnvelope'
+        '204':
+          description: No content
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            Tus-Resumable:
+              $ref: '#/components/headers/TusResumable'
+            Upload-Offset:
+              $ref: '#/components/headers/UploadOffset'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '409':
+          $ref: '#/components/responses/Problem409'
+        '412':
+          $ref: '#/components/responses/Problem412'
+        '413':
+          $ref: '#/components/responses/Problem413'
+        '415':
+          $ref: '#/components/responses/Problem415'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '429':
+          $ref: '#/components/responses/Problem429'
+        '500':
+          $ref: '#/components/responses/Problem500'
+    delete:
+      operationId: uploads.tus.destroy
+      tags:
+      - uploads
+      summary: 'tus: abort an upload'
+      parameters:
+      - $ref: '#/components/parameters/Upload'
+      - $ref: '#/components/parameters/TusResumableHeader'
+      responses:
+        '204':
+          description: No content
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '429':
+          $ref: '#/components/responses/Problem429'
+        '500':
+          $ref: '#/components/responses/Problem500'
+    options:
+      operationId: uploads.tus.options
+      tags:
+      - uploads
+      summary: 'tus: server capabilities'
+      parameters:
+      - $ref: '#/components/parameters/Upload'
+      responses:
+        '204':
+          description: No content
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            Tus-Resumable:
+              $ref: '#/components/headers/TusResumable'
+            Tus-Version:
+              $ref: '#/components/headers/TusVersion'
+            Tus-Extension:
+              $ref: '#/components/headers/TusExtension'
+            Tus-Max-Size:
+              $ref: '#/components/headers/TusMaxSize'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '429':
+          $ref: '#/components/responses/Problem429'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /uploads/{upload}/parts:
+    post:
+      operationId: uploads.parts.store
+      tags:
+      - uploads
+      summary: 's3-multipart: upload one part'
+      parameters:
+      - $ref: '#/components/parameters/Upload'
+      - name: part_no
+        in: query
+        required: false
+        description: Part number, when not in the body.
+        schema:
+          type: integer
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '201':
+          description: Created
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadPart'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '409':
+          $ref: '#/components/responses/Problem409'
+        '413':
+          $ref: '#/components/responses/Problem413'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '429':
+          $ref: '#/components/responses/Problem429'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /uploads/{upload}/complete:
+    post:
+      operationId: uploads.complete
+      tags:
+      - uploads
+      summary: 's3-multipart: assemble the parts into a node'
+      parameters:
+      - $ref: '#/components/parameters/Upload'
+      responses:
+        '201':
+          description: Created
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            ETag:
+              $ref: '#/components/headers/ETagRequired'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '409':
+          $ref: '#/components/responses/Problem409'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '429':
+          $ref: '#/components/responses/Problem429'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /drives/{drive}/documents:
+    post:
+      operationId: documents.store
+      tags:
+      - documents
+      summary: Create a document
+      parameters:
+      - $ref: '#/components/parameters/Drive'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - name
+              properties:
+                name:
+                  type: string
+                parent_id:
+                  type:
+                  - string
+                  - 'null'
+                type:
+                  type: string
+                content:
+                  type: object
+      responses:
+        '201':
+          description: Created
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            ETag:
+              $ref: '#/components/headers/ETagRequired'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '409':
+          $ref: '#/components/responses/Problem409'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /documents/{node}/content:
+    get:
+      operationId: documents.content.show
+      tags:
+      - documents
+      summary: Read the content of a document
+      description: A matching If-None-Match answers 304 without a body, only after the caller was authorized.
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/IfNoneMatch'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlRevalidate'
+            ETag:
+              $ref: '#/components/headers/ETagRequired'
+            Vary:
+              $ref: '#/components/headers/VaryRepresentation'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentContentEnvelope'
+        '304':
+          description: 'Not modified: no body, the ETag and cache headers are repeated.'
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlRevalidate'
+            ETag:
+              $ref: '#/components/headers/ETagRequired'
+            Vary:
+              $ref: '#/components/headers/VaryRepresentation'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '409':
+          $ref: '#/components/responses/Problem409'
+        '500':
+          $ref: '#/components/responses/Problem500'
+    put:
+      operationId: documents.content.update
+      tags:
+      - documents
+      summary: Replace the content of a document
+      description: 'Requires If-Match with the ETag of the current representation (428 without, 412 when stale). Checked after
+        authorization: a caller without access gets 404/403, never a tag comparison.'
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - content
+              properties:
+                content:
+                  type: object
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            ETag:
+              $ref: '#/components/headers/ETagRequired'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentContentEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '409':
+          $ref: '#/components/responses/Problem409'
+        '412':
+          $ref: '#/components/responses/Problem412'
+        '413':
+          $ref: '#/components/responses/Problem413'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '428':
+          $ref: '#/components/responses/Problem428'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /documents/{node}/revisions:
+    get:
+      operationId: documents.revisions.index
+      tags:
+      - documents
+      summary: List the revisions of a document
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentRevisionPage'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+    post:
+      operationId: documents.revisions.store
+      tags:
+      - documents
+      summary: Snapshot the document as a revision
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              required: []
+              properties:
+                label:
+                  type:
+                  - string
+                  - 'null'
+                keep_forever:
+                  type: boolean
+      responses:
+        '201':
+          description: Created
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentRevisionEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '409':
+          $ref: '#/components/responses/Problem409'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /documents/{node}/revisions/{revision}:
+    get:
+      operationId: documents.revisions.show
+      tags:
+      - documents
+      summary: One revision with its content
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/Revision'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentRevisionWithContentEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '500':
+          $ref: '#/components/responses/Problem500'
+    patch:
+      operationId: documents.revisions.update
+      tags:
+      - documents
+      summary: Pin or unpin a revision
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/Revision'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - keep_forever
+              properties:
+                keep_forever:
+                  type: boolean
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentRevisionEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /documents/{node}/revisions/{revision}/restore:
+    post:
+      operationId: documents.revisions.restore
+      tags:
+      - documents
+      summary: Restore a revision as the current content
+      description: 'Requires If-Match with the ETag of the current representation (428 without, 412 when stale). Checked after
+        authorization: a caller without access gets 404/403, never a tag comparison.'
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/Revision'
+      - $ref: '#/components/parameters/IfMatch'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            ETag:
+              $ref: '#/components/headers/ETagRequired'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentContentEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '409':
+          $ref: '#/components/responses/Problem409'
+        '412':
+          $ref: '#/components/responses/Problem412'
+        '428':
+          $ref: '#/components/responses/Problem428'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /documents/{node}/export/{format}:
+    get:
+      operationId: documents.export
+      tags:
+      - documents
+      summary: Export a document (file download)
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/ExportFormat'
+      - name: revision
+        in: query
+        required: false
+        description: Export this revision instead of the head.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: The bytes. Content-Type is the declared mime type when it is on the inline allow-list, application/octet-stream
+            otherwise.
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            Content-Disposition:
+              $ref: '#/components/headers/ContentDisposition'
+            Content-Security-Policy:
+              $ref: '#/components/headers/ContentSecurityPolicy'
+            X-Content-Type-Options:
+              $ref: '#/components/headers/XContentTypeOptions'
+            Accept-Ranges:
+              $ref: '#/components/headers/AcceptRangesNone'
+            Content-Length:
+              $ref: '#/components/headers/ContentLength'
+            X-Vaulter-Export-Lossy:
+              $ref: '#/components/headers/XExportLossy'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '409':
+          $ref: '#/components/responses/Problem409'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /documents/{node}/collaboration/session:
+    post:
+      operationId: documents.collaboration.session
+      tags:
+      - collaboration
+      summary: Open a collaboration session (room token)
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              required: []
+              properties:
+                schema_version:
+                  type:
+                  - integer
+                  - 'null'
+                  minimum: 0
+      responses:
+        '201':
+          description: Created
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollaborationSessionEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '409':
+          $ref: '#/components/responses/Problem409'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /nodes/{node}/comments:
+    get:
+      operationId: comments.index
+      tags:
+      - comments
+      summary: List comments of a node
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentPage'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+    post:
+      operationId: comments.store
+      tags:
+      - comments
+      summary: Add a comment
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - body
+              properties:
+                body:
+                  type: string
+                  maxLength: 5000
+                parent_id:
+                  type:
+                  - string
+                  - 'null'
+                anchor:
+                  type:
+                  - object
+                  - 'null'
+      responses:
+        '201':
+          description: Created
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /nodes/{node}/comments/{comment}/resolve:
+    post:
+      operationId: comments.resolve
+      tags:
+      - comments
+      summary: Resolve a comment
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/Comment'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /nodes/{node}/comments/{comment}:
+    delete:
+      operationId: comments.destroy
+      tags:
+      - comments
+      summary: Delete a comment
+      parameters:
+      - $ref: '#/components/parameters/Node'
+      - $ref: '#/components/parameters/Comment'
+      responses:
+        '204':
+          description: No content
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /collaboration/hub/authenticate:
+    post:
+      operationId: collaboration.hub.authenticate
+      tags:
+      - hub
+      summary: 'Hub: authenticate a room connection'
+      security:
+      - hubSecret: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - room
+              properties:
+                room:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HubAuthenticated'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '409':
+          $ref: '#/components/responses/Problem409'
+        '429':
+          $ref: '#/components/responses/Problem429'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /collaboration/hub/load:
+    post:
+      operationId: collaboration.hub.load
+      tags:
+      - hub
+      summary: 'Hub: load the state of a room'
+      security:
+      - hubSecret: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - room
+              properties:
+                room:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HubLoaded'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '409':
+          $ref: '#/components/responses/Problem409'
+        '429':
+          $ref: '#/components/responses/Problem429'
+        '500':
+          $ref: '#/components/responses/Problem500'
+  /collaboration/hub/store:
+    post:
+      operationId: collaboration.hub.store
+      tags:
+      - hub
+      summary: 'Hub: store the state of a room'
+      security:
+      - hubSecret: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - room
+              - state
+              properties:
+                room:
+                  type: string
+                state:
+                  type: string
+                  description: Base64 Yjs state.
+                content:
+                  type:
+                  - object
+                  - 'null'
+                seed:
+                  type: boolean
+                state_version:
+                  type:
+                  - integer
+                  - 'null'
+                  minimum: 0
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Vaulter-Api-Version:
+              $ref: '#/components/headers/XVaulterApiVersion'
+            X-Request-Id:
+              $ref: '#/components/headers/XRequestId'
+            Cache-Control:
+              $ref: '#/components/headers/CacheControlStore'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HubStoredEnvelope'
+        '401':
+          $ref: '#/components/responses/Problem401'
+        '403':
+          $ref: '#/components/responses/Problem403'
+        '404':
+          $ref: '#/components/responses/Problem404'
+        '409':
+          $ref: '#/components/responses/Problem409'
+        '413':
+          $ref: '#/components/responses/Problem413'
+        '422':
+          $ref: '#/components/responses/Problem422'
+        '429':
+          $ref: '#/components/responses/Problem429'
+        '500':
+          $ref: '#/components/responses/Problem500'
+components:
+  securitySchemes:
+    hostAuth:
+      type: http
+      scheme: bearer
+      description: Whatever the host application authenticates with (session, Sanctum, ...); Vaulter only needs an authenticated
+        actor.
+    hubSecret:
+      type: apiKey
+      in: header
+      name: X-Vaulter-Collab-Secret
+      description: Shared secret of the collaboration hub.
+  parameters:
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      description: 'The ETag of the representation you read. Missing: 428 precondition_required. `*`: 428. Weak or stale tag:
+        412. Checked after authorization.'
+      schema:
+        type: string
+    IfMatchWhenReplacing:
+      name: If-Match
+      in: header
+      required: false
+      description: 'Required when the request replaces an existing node (node_id given): 428 without it, 412 on a stale tag.'
+      schema:
+        type: string
+    IfNoneMatch:
+      name: If-None-Match
+      in: header
+      required: false
+      description: Weak comparison; a match answers 304 without a body, after authorization.
+      schema:
+        type: string
+    Cursor:
+      name: cursor
+      in: query
+      required: false
+      description: Opaque cursor from meta.next_cursor.
+      schema:
+        type: string
+        maxLength: 2048
+    PerPage:
+      name: per_page
+      in: query
+      required: false
+      description: Page size, 1..200, default 50.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 200
+        default: 50
+    Drive:
+      name: drive
+      in: path
+      required: true
+      description: Drive id.
+      schema:
+        type: string
+    Node:
+      name: node
+      in: path
+      required: true
+      description: Node id.
+      schema:
+        type: string
+    Revision:
+      name: revision
+      in: path
+      required: true
+      description: Revision id.
+      schema:
+        type: string
+    Grant:
+      name: grant
+      in: path
+      required: true
+      description: Grant id.
+      schema:
+        type: string
+    Share:
+      name: share
+      in: path
+      required: true
+      description: Share link id.
+      schema:
+        type: string
+    Comment:
+      name: comment
+      in: path
+      required: true
+      description: Comment id.
+      schema:
+        type: string
+    ShareToken:
+      name: token
+      in: path
+      required: true
+      description: Share token.
+      schema:
+        type: string
+    Upload:
+      name: upload
+      in: path
+      required: true
+      description: Upload session id.
+      schema:
+        type: string
+    Endpoint:
+      name: endpoint
+      in: path
+      required: true
+      description: Webhook endpoint id.
+      schema:
+        type: string
+    Delivery:
+      name: delivery
+      in: path
+      required: true
+      description: Webhook delivery id.
+      schema:
+        type: string
+    ExportFormat:
+      name: format
+      in: path
+      required: true
+      description: Export format, for example html, md.
+      schema:
+        type: string
+    ShareSession:
+      name: X-Share-Session
+      in: header
+      required: false
+      description: Session token returned by a previous share response.
+      schema:
+        type: string
+    SharePassword:
+      name: X-Share-Password
+      in: header
+      required: false
+      description: Password of a protected share.
+      schema:
+        type: string
+    TusResumableHeader:
+      name: Tus-Resumable
+      in: header
+      required: false
+      description: tus protocol version, 1.0.0.
+      schema:
+        type: string
+  headers:
+    ETag:
+      description: 'Strong validator of the representation. Opaque: never parse it. Send it back verbatim in If-Match.'
+      schema:
+        type: string
+        pattern: ^"[^"]+"$
+    XVaulterApiVersion:
+      description: Major version of the REST API that answered.
+      required: true
+      schema:
+        type: string
+        const: '1'
+    XRequestId:
+      description: 'Correlation id: the caller''s X-Request-Id when well formed, else a fresh ULID.'
+      required: true
+      schema:
+        type: string
+        pattern: ^[A-Za-z0-9._:-]{1,64}$
+    CacheControlRevalidate:
+      description: 'A single resource with an ETag: stored by the client, revalidated every time.'
+      required: true
+      schema:
+        type: string
+        const: no-cache, private
+    CacheControlStore:
+      description: Lists, mutations, sessions, secrets, downloads and errors are never stored.
+      required: true
+      schema:
+        type: string
+        const: no-store, private
+    CacheControlAny:
+      description: no-cache, private when the response carries an ETag, no-store otherwise.
+      required: true
+      schema:
+        type: string
+        enum:
+        - no-cache, private
+        - no-store, private
+    CacheControlError:
+      description: Errors are never stored.
+      required: true
+      schema:
+        type: string
+        enum:
+        - no-store
+        - no-store, private
+    Location:
+      description: Absolute URL of the redirect target.
+      required: true
+      schema:
+        type: string
+    UploadLocation:
+      description: 'tus only: absolute URL of the upload session.'
+      schema:
+        type: string
+    ReferrerPolicy:
+      description: no-referrer on public share responses.
+      schema:
+        type: string
+        const: no-referrer
+    ReferrerPolicyRequired:
+      description: no-referrer on every public share response.
+      required: true
+      schema:
+        type: string
+        const: no-referrer
+    VaryRepresentation:
+      description: The representation depends on who asks.
+      required: true
+      schema:
+        type: string
+        const: Authorization, Cookie
+    VaryOptional:
+      description: Present when the response carries an ETag.
+      schema:
+        type: string
+        const: Authorization, Cookie
+    XShareSession:
+      description: Share session token; send it back as X-Share-Session on follow-up requests.
+      schema:
+        type: string
+    RetryAfter:
+      description: Seconds until the rate limit window resets.
+      schema:
+        type: integer
+    XRateLimitLimit:
+      description: Requests allowed per window.
+      schema:
+        type: integer
+    XRateLimitRemaining:
+      description: Requests left in the window.
+      schema:
+        type: integer
+    ContentDisposition:
+      description: attachment or inline, with a filename.
+      required: true
+      schema:
+        type: string
+        pattern: ^(attachment|inline);
+    ContentSecurityPolicy:
+      description: Sandboxes every served byte.
+      required: true
+      schema:
+        type: string
+        const: sandbox; default-src 'none'
+    XContentTypeOptions:
+      description: Always nosniff.
+      required: true
+      schema:
+        type: string
+        const: nosniff
+    AcceptRangesNone:
+      description: Range requests are not supported in 1.0.
+      required: true
+      schema:
+        type: string
+        const: none
+    ContentLength:
+      description: Size of the body in bytes.
+      schema:
+        type: integer
+    XExportLossy:
+      description: 1 when the chosen format drops information of the document.
+      schema:
+        type: string
+    TusResumable:
+      description: tus protocol version.
+      schema:
+        type: string
+        const: 1.0.0
+    UploadOffset:
+      description: Bytes the server holds.
+      schema:
+        type: integer
+    UploadLength:
+      description: Declared total size.
+      schema:
+        type: integer
+    TusVersion:
+      description: Supported tus versions.
+      schema:
+        type: string
+    TusExtension:
+      description: Supported tus extensions.
+      schema:
+        type: string
+    TusMaxSize:
+      description: Largest accepted upload.
+      schema:
+        type: integer
+    ETagRequired:
+      description: 'Strong validator of the representation. Opaque: never parse it. Send it back verbatim in If-Match.'
+      schema:
+        type: string
+        pattern: ^"[^"]+"$
+      required: true
+  responses:
+    Problem400:
+      description: Malformed request (invalid_cursor, ...).
+      headers:
+        X-Vaulter-Api-Version:
+          $ref: '#/components/headers/XVaulterApiVersion'
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+        Cache-Control:
+          $ref: '#/components/headers/CacheControlError'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Problem401:
+      description: No authenticated actor (actor_required) or a share password is required.
+      headers:
+        X-Vaulter-Api-Version:
+          $ref: '#/components/headers/XVaulterApiVersion'
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+        Cache-Control:
+          $ref: '#/components/headers/CacheControlError'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Problem403:
+      description: The caller may see the resource but lacks the ability (permission_denied, profile_restriction).
+      headers:
+        X-Vaulter-Api-Version:
+          $ref: '#/components/headers/XVaulterApiVersion'
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+        Cache-Control:
+          $ref: '#/components/headers/CacheControlError'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Problem404:
+      description: The resource does not exist or is not visible to the caller (same answer for both).
+      headers:
+        X-Vaulter-Api-Version:
+          $ref: '#/components/headers/XVaulterApiVersion'
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+        Cache-Control:
+          $ref: '#/components/headers/CacheControlError'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Problem405:
+      description: Method not allowed.
+      headers:
+        X-Vaulter-Api-Version:
+          $ref: '#/components/headers/XVaulterApiVersion'
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+        Cache-Control:
+          $ref: '#/components/headers/CacheControlError'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Problem409:
+      description: Conflict with the current state (node_name_conflict, invalid_destination, drive_archived, ...).
+      headers:
+        X-Vaulter-Api-Version:
+          $ref: '#/components/headers/XVaulterApiVersion'
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+        Cache-Control:
+          $ref: '#/components/headers/CacheControlError'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Problem410:
+      description: The cursor expired (cursor_expired).
+      headers:
+        X-Vaulter-Api-Version:
+          $ref: '#/components/headers/XVaulterApiVersion'
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+        Cache-Control:
+          $ref: '#/components/headers/CacheControlError'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Problem412:
+      description: 'Precondition failed: the If-Match tag does not match the current representation.'
+      headers:
+        X-Vaulter-Api-Version:
+          $ref: '#/components/headers/XVaulterApiVersion'
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+        Cache-Control:
+          $ref: '#/components/headers/CacheControlError'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Problem413:
+      description: Payload too large or quota exceeded.
+      headers:
+        X-Vaulter-Api-Version:
+          $ref: '#/components/headers/XVaulterApiVersion'
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+        Cache-Control:
+          $ref: '#/components/headers/CacheControlError'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Problem415:
+      description: Unsupported media type.
+      headers:
+        X-Vaulter-Api-Version:
+          $ref: '#/components/headers/XVaulterApiVersion'
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+        Cache-Control:
+          $ref: '#/components/headers/CacheControlError'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Problem422:
+      description: Validation failed (validation_failed and field-bound codes).
+      headers:
+        X-Vaulter-Api-Version:
+          $ref: '#/components/headers/XVaulterApiVersion'
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+        Cache-Control:
+          $ref: '#/components/headers/CacheControlError'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Problem423:
+      description: Content is unavailable, for example quarantined by the scanner (content_unavailable).
+      headers:
+        X-Vaulter-Api-Version:
+          $ref: '#/components/headers/XVaulterApiVersion'
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+        Cache-Control:
+          $ref: '#/components/headers/CacheControlError'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Problem428:
+      description: The operation requires If-Match (precondition_required).
+      headers:
+        X-Vaulter-Api-Version:
+          $ref: '#/components/headers/XVaulterApiVersion'
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+        Cache-Control:
+          $ref: '#/components/headers/CacheControlError'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Problem429:
+      description: Rate limited (rate_limited).
+      headers:
+        X-Vaulter-Api-Version:
+          $ref: '#/components/headers/XVaulterApiVersion'
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+        Cache-Control:
+          $ref: '#/components/headers/CacheControlError'
+        Retry-After:
+          $ref: '#/components/headers/RetryAfter'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Problem500:
+      description: Unexpected failure (internal_error).
+      headers:
+        X-Vaulter-Api-Version:
+          $ref: '#/components/headers/XVaulterApiVersion'
+        X-Request-Id:
+          $ref: '#/components/headers/XRequestId'
+        Cache-Control:
+          $ref: '#/components/headers/CacheControlError'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+  schemas:
+    Problem:
+      type: object
+      description: RFC 9457 problem details, served as application/problem+json.
+      required:
+      - type
+      - title
+      - status
+      - code
+      - request_id
+      properties:
+        type:
+          type: string
+          description: URI of the error code reference (docs/reference/errors.md#<code>).
+        title:
+          type: string
+          description: Localized, human readable summary (Content-Language).
+        status:
+          type: integer
+          description: HTTP status, repeated from the response line.
+        code:
+          type: string
+          description: Stable machine readable code (SemVer). A status without a Vaulter code answers http_<status>.
+          examples:
+          - actor_required
+          - cannot_delete_head_revision
+          - collaboration_epoch_mismatch
+          - collaboration_seed_conflict
+          - collaboration_unavailable
+          - comment_not_found
+          - concurrent_update
+          - content_unavailable
+          - cross_drive_operation
+          - cursor_expired
+          - document_content_degraded
+          - document_revision_not_found
+          - document_state_mismatch
+          - document_state_too_large
+          - document_type_unavailable
+          - drive_archived
+          - drive_not_found
+          - duplicate_registration
+          - file_size_limit_exceeded
+          - folder_children_limit_exceeded
+          - grant_not_found
+          - internal_error
+          - invalid_cursor
+          - invalid_destination
+          - invalid_document_content
+          - invalid_drive_state
+          - invalid_node_name
+          - invalid_properties
+          - invalid_webhook_signature
+          - method_not_allowed
+          - node_move_cycle
+          - node_name_conflict
+          - node_not_found
+          - node_not_trashed
+          - node_sequence_exhausted
+          - node_sequence_mismatch
+          - node_trashed_by_ancestor
+          - not_a_document
+          - not_a_file
+          - payload_too_large
+          - permission_denied
+          - precondition_required
+          - profile_restriction
+          - quota_exceeded
+          - rate_limited
+          - registry_frozen
+          - restore_destination_changed
+          - restore_destination_required
+          - revision_not_found
+          - revision_pinned
+          - route_not_found
+          - share_link_ttl_exceeded
+          - share_not_found
+          - share_password_required
+          - share_role_not_allowed
+          - tree_depth_limit_exceeded
+          - tree_traversal_incomplete
+          - unknown_document_type
+          - unknown_export_format
+          - unknown_profile
+          - unknown_role
+          - unsupported_node_kind
+          - upgrade_preflight_failed
+          - upload_conflict
+          - upload_not_found
+          - upload_offset_mismatch
+          - upload_rejected
+          - validation_failed
+          - webhook_delivery_not_found
+          - webhook_delivery_not_redeliverable
+          - webhook_endpoint_not_found
+          - write_outside_operation
+        detail:
+          type:
+          - string
+          - 'null'
+          description: Localized explanation; never storage paths, tokens or SQL.
+        request_id:
+          type: string
+          description: Equals the X-Request-Id response header.
+        errors:
+          type:
+          - object
+          - 'null'
+          description: Laravel field map for validation_failed and field-bound errors.
+        meta:
+          type: object
+          description: Allow-listed machine readable extras (reason, header, node_id, ...).
+      additionalProperties: true
+    PageMeta:
+      type: object
+      required:
+      - next_cursor
+      - per_page
+      properties:
+        next_cursor:
+          type:
+          - string
+          - 'null'
+          description: Opaque; pass it back as ?cursor to read the next page.
+        per_page:
+          type: integer
+          minimum: 1
+    Abilities:
+      type: object
+      description: What the caller may do with the node; twelve booleans.
+      required:
+      - view
+      - download
+      - comment
+      - edit
+      - create
+      - move
+      - copy
+      - trash
+      - restore
+      - share
+      - manage
+      - delete
+      properties:
+        view:
+          type: boolean
+        download:
+          type: boolean
+        comment:
+          type: boolean
+        edit:
+          type: boolean
+        create:
+          type: boolean
+        move:
+          type: boolean
+        copy:
+          type: boolean
+        trash:
+          type: boolean
+        restore:
+          type: boolean
+        share:
+          type: boolean
+        manage:
+          type: boolean
+        delete:
+          type: boolean
+    NodeFile:
+      type: object
+      required:
+      - revision_id
+      - revision_number
+      - size_bytes
+      - sha256
+      - mime
+      - scan_status
+      properties:
+        revision_id:
+          type: string
+        revision_number:
+          type: integer
+        size_bytes:
+          type: integer
+        sha256:
+          type: string
+        mime:
+          type:
+          - string
+          - 'null'
+        scan_status:
+          $ref: '#/components/schemas/ScanStatus'
+    ScanStatus:
+      type: string
+      enum:
+      - not_required
+      - pending
+      - clean
+      - infected
+      - failed
+    NodeDocument:
+      type: object
+      required:
+      - type
+      - schema_version
+      - state_version
+      - collab_epoch
+      - revision_id
+      properties:
+        type:
+          type: string
+        schema_version:
+          type: integer
+        state_version:
+          type: integer
+        collab_epoch:
+          type: integer
+        revision_id:
+          type:
+          - string
+          - 'null'
+    NodePresentation:
+      type: object
+      required:
+      - handler
+      - document_type
+      - type_available
+      - viewer
+      - capabilities
+      properties:
+        handler:
+          type:
+          - string
+          - 'null'
+          description: Presentation handler id; null for documents.
+        document_type:
+          type:
+          - string
+          - 'null'
+        type_available:
+          type: boolean
+        viewer:
+          type: object
+          required:
+          - key
+          - props
+          properties:
+            key:
+              type:
+              - string
+              - 'null'
+            props:
+              type: object
+        capabilities:
+          type: object
+          required:
+          - editable
+          - previewable
+          - downloadable
+          - thumbnailable
+          - collaborative
+          properties:
+            editable:
+              type: boolean
+            previewable:
+              type: boolean
+            downloadable:
+              type: boolean
+            thumbnailable:
+              type: boolean
+            collaborative:
+              type: boolean
+    NodeKind:
+      type: string
+      enum:
+      - folder
+      - file
+      - document
+    Node:
+      type: object
+      required:
+      - id
+      - drive_id
+      - parent_id
+      - kind
+      - name
+      - mime
+      - extension
+      - size_bytes
+      - sequence
+      - etag
+      - inherits_access
+      - properties
+      - created_at
+      - created_by
+      - updated_at
+      - updated_by
+      - content_modified_at
+      - content_modified_by
+      - trashed_at
+      - trashed_by
+      - trash_root
+      - presentation
+      - abilities
+      - viewer
+      - scan_status
+      - file
+      - document
+      properties:
+        id:
+          type: string
+        drive_id:
+          type: string
+        parent_id:
+          type:
+          - string
+          - 'null'
+        kind:
+          $ref: '#/components/schemas/NodeKind'
+        name:
+          type: string
+        mime:
+          type:
+          - string
+          - 'null'
+        extension:
+          type:
+          - string
+          - 'null'
+        size_bytes:
+          type: integer
+        sequence:
+          type: integer
+          description: Opaque change counter; never parse it out of the etag.
+        etag:
+          type: string
+          description: Validator of this representation for this caller; send it back verbatim in If-Match.
+        inherits_access:
+          type: boolean
+        properties:
+          type: object
+          description: Namespace -> key -> value. Always a JSON object, `{}` when empty.
+          additionalProperties:
+            type: object
+        created_at:
+          type: string
+          format: date-time
+          pattern: Z$
+        created_by:
+          type:
+          - string
+          - 'null'
+        updated_at:
+          type: string
+          format: date-time
+          pattern: Z$
+        updated_by:
+          type:
+          - string
+          - 'null'
+        content_modified_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          pattern: Z$
+        content_modified_by:
+          type:
+          - string
+          - 'null'
+        trashed_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          pattern: Z$
+        trashed_by:
+          type:
+          - string
+          - 'null'
+        trash_root:
+          type: boolean
+        presentation:
+          oneOf:
+          - $ref: '#/components/schemas/NodePresentation'
+          - type: 'null'
+          description: null for folders.
+        abilities:
+          $ref: '#/components/schemas/Abilities'
+        viewer:
+          type: object
+          required:
+          - starred
+          properties:
+            starred:
+              type: boolean
+        scan_status:
+          $ref: '#/components/schemas/ScanStatus'
+        file:
+          oneOf:
+          - $ref: '#/components/schemas/NodeFile'
+          - type: 'null'
+        document:
+          oneOf:
+          - $ref: '#/components/schemas/NodeDocument'
+          - type: 'null'
+    NodeWithIncludes:
+      allOf:
+      - $ref: '#/components/schemas/Node'
+      - type: object
+        properties:
+          breadcrumb:
+            type: array
+            description: 'include=breadcrumb: visible ancestors, root first.'
+            items:
+              type: object
+              required:
+              - id
+              - name
+              properties:
+                id:
+                  type: string
+                name:
+                  type: string
+          children:
+            oneOf:
+            - $ref: '#/components/schemas/NodePage'
+            - type: 'null'
+            description: 'include=children: first page of a folder; null for other kinds.'
+    PublicNode:
+      type: object
+      required:
+      - id
+      - kind
+      - name
+      - mime
+      - extension
+      - size_bytes
+      - parent_id
+      - created_at
+      - updated_at
+      - children
+      properties:
+        id:
+          type: string
+          description: Opaque id scoped to the share session.
+        kind:
+          $ref: '#/components/schemas/NodeKind'
+        name:
+          type: string
+        mime:
+          type:
+          - string
+          - 'null'
+        extension:
+          type:
+          - string
+          - 'null'
+        size_bytes:
+          type: integer
+        parent_id:
+          type:
+          - string
+          - 'null'
+        created_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          pattern: Z$
+        updated_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          pattern: Z$
+        children:
+          type:
+          - array
+          - 'null'
+          items:
+            $ref: '#/components/schemas/PublicNode'
+    Drive:
+      type: object
+      required:
+      - id
+      - owner
+      - profile
+      - name
+      - root_node_id
+      - status
+      - quota_bytes
+      - used_bytes
+      - created_at
+      properties:
+        id:
+          type: string
+        owner:
+          type: object
+          required:
+          - type
+          - id
+          properties:
+            type:
+              type: string
+            id:
+              type: string
+        profile:
+          type: string
+        name:
+          type: string
+        root_node_id:
+          type: string
+        status:
+          type: string
+          enum:
+          - active
+          - archived
+          - deleting
+        quota_bytes:
+          type:
+          - integer
+          - 'null'
+        used_bytes:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+          pattern: Z$
+    FileRevision:
+      type: object
+      required:
+      - id
+      - number
+      - size_bytes
+      - mime
+      - declared_mime
+      - sha256
+      - scan_status
+      - keep_forever
+      - is_head
+      - created_by
+      - created_at
+      properties:
+        id:
+          type: string
+        number:
+          type: integer
+        size_bytes:
+          type: integer
+        mime:
+          type:
+          - string
+          - 'null'
+        declared_mime:
+          type:
+          - string
+          - 'null'
+        sha256:
+          type: string
+        scan_status:
+          $ref: '#/components/schemas/ScanStatus'
+        keep_forever:
+          type: boolean
+        is_head:
+          type: boolean
+        created_by:
+          type:
+          - string
+          - 'null'
+        created_at:
+          type: string
+          format: date-time
+          pattern: Z$
+    DocumentRevision:
+      type: object
+      required:
+      - id
+      - number
+      - schema_version
+      - label
+      - is_autosave
+      - keep_forever
+      - content_hash
+      - is_head
+      - created_by
+      - created_at
+      properties:
+        id:
+          type: string
+        number:
+          type: integer
+        schema_version:
+          type: integer
+        label:
+          type:
+          - string
+          - 'null'
+        is_autosave:
+          type: boolean
+        keep_forever:
+          type: boolean
+        content_hash:
+          type: string
+        is_head:
+          type: boolean
+        created_by:
+          type:
+          - string
+          - 'null'
+        created_at:
+          type: string
+          format: date-time
+          pattern: Z$
+    DocumentRevisionWithContent:
+      allOf:
+      - $ref: '#/components/schemas/DocumentRevision'
+      - type: object
+        required:
+        - content
+        properties:
+          content:
+            $ref: '#/components/schemas/DocumentBody'
+    DocumentBody:
+      type:
+      - object
+      - array
+      description: The type-defined JSON content of a document (a TipTap doc, a Univer workbook, ...); its shape belongs to
+        the document type, not to this API.
+    DocumentContent:
+      type: object
+      required:
+      - type
+      - schema_version
+      - state_version
+      - collab_epoch
+      - revision_id
+      - content
+      properties:
+        type:
+          type: string
+        schema_version:
+          type: integer
+        state_version:
+          type: integer
+          description: Opaque; the document ETag carries it.
+        collab_epoch:
+          type: integer
+        revision_id:
+          type:
+          - string
+          - 'null'
+        content:
+          $ref: '#/components/schemas/DocumentBody'
+    Grant:
+      type: object
+      required:
+      - id
+      - node_id
+      - subject
+      - role
+      - role_version
+      - scope
+      - expires_at
+      - created_by
+      - created_at
+      properties:
+        id:
+          type: string
+        node_id:
+          type: string
+        subject:
+          type: object
+          required:
+          - type
+          - id
+          properties:
+            type:
+              type: string
+            id:
+              type: string
+        role:
+          type: string
+        role_version:
+          type: integer
+        scope:
+          type: string
+          enum:
+          - item
+          - subtree
+        expires_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          pattern: Z$
+        created_by:
+          type:
+          - string
+          - 'null'
+        created_at:
+          type: string
+          format: date-time
+          pattern: Z$
+    Share:
+      type: object
+      required:
+      - id
+      - node_id
+      - role
+      - role_version
+      - audience
+      - scope
+      - expires_at
+      - max_uses
+      - use_count
+      - has_password
+      - token_generation
+      - created_by
+      - created_at
+      properties:
+        id:
+          type: string
+        node_id:
+          type: string
+        role:
+          type: string
+        role_version:
+          type: integer
+        audience:
+          type: string
+          enum:
+          - anyone
+          - authenticated
+          - tenant
+        scope:
+          type: string
+          enum:
+          - item
+          - subtree
+        expires_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          pattern: Z$
+        max_uses:
+          type:
+          - integer
+          - 'null'
+        use_count:
+          type: integer
+        has_password:
+          type: boolean
+        token_generation:
+          type: integer
+        created_by:
+          type:
+          - string
+          - 'null'
+        created_at:
+          type: string
+          format: date-time
+          pattern: Z$
+    MintedShare:
+      allOf:
+      - $ref: '#/components/schemas/Share'
+      - type: object
+        required:
+        - token
+        - url
+        properties:
+          token:
+            type: string
+            description: Shown once, in store and rotate responses only.
+          url:
+            type: string
+    Activity:
+      type: object
+      required:
+      - id
+      - type
+      - node_id
+      - actor
+      - occurred_at
+      - data
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        node_id:
+          type:
+          - string
+          - 'null'
+        actor:
+          oneOf:
+          - type: object
+            required:
+            - type
+            - id
+            properties:
+              type:
+                type:
+                - string
+                - 'null'
+              id:
+                type:
+                - string
+                - 'null'
+          - type: 'null'
+        occurred_at:
+          type: string
+          format: date-time
+          pattern: Z$
+        data:
+          type: object
+    Change:
+      type: object
+      required:
+      - node_id
+      - operation
+      - reason
+      - subtree
+      - node_sequence
+      - node
+      properties:
+        node_id:
+          type: string
+        operation:
+          type: string
+          enum:
+          - upsert
+          - remove
+        reason:
+          oneOf:
+          - type: string
+            enum:
+            - deleted
+            - moved_out
+            - permission_lost
+          - type: 'null'
+        subtree:
+          type: boolean
+        node_sequence:
+          type: integer
+        node:
+          oneOf:
+          - $ref: '#/components/schemas/Node'
+          - type: 'null'
+    Comment:
+      type: object
+      required:
+      - id
+      - node_id
+      - parent_id
+      - author
+      - body
+      - anchor
+      - resolved_at
+      - resolved_by
+      - created_at
+      properties:
+        id:
+          type: string
+        node_id:
+          type: string
+        parent_id:
+          type:
+          - string
+          - 'null'
+        author:
+          type: object
+          required:
+          - type
+          - id
+          properties:
+            type:
+              type:
+              - string
+              - 'null'
+            id:
+              type:
+              - string
+              - 'null'
+        body:
+          type: string
+        anchor:
+          type:
+          - object
+          - 'null'
+        resolved_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          pattern: Z$
+        resolved_by:
+          type:
+          - string
+          - 'null'
+        created_at:
+          type: string
+          format: date-time
+          pattern: Z$
+    UploadSession:
+      type: object
+      required:
+      - upload_id
+      - drive_id
+      - protocol
+      - status
+      - received_bytes
+      - total_size_bytes
+      - chunk_size
+      - mime_type
+      - node_id
+      - target_parent_id
+      - target_name
+      - expires_at
+      properties:
+        upload_id:
+          type: string
+        drive_id:
+          type: string
+        protocol:
+          type: string
+          enum:
+          - tus
+          - s3-multipart
+          - direct
+        status:
+          type: string
+          enum:
+          - initiated
+          - uploading
+          - assembled
+          - committed
+          - aborted
+          - expired
+        received_bytes:
+          type: integer
+        total_size_bytes:
+          type:
+          - integer
+          - 'null'
+        chunk_size:
+          type: integer
+        mime_type:
+          type:
+          - string
+          - 'null'
+        node_id:
+          type:
+          - string
+          - 'null'
+        target_parent_id:
+          type:
+          - string
+          - 'null'
+        target_name:
+          type:
+          - string
+          - 'null'
+        expires_at:
+          type: string
+          format: date-time
+          pattern: Z$
+    UploadPart:
+      type: object
+      required:
+      - part_no
+      - size
+      - etag
+      properties:
+        part_no:
+          type: integer
+        size:
+          type: integer
+        etag:
+          type: string
+    WebhookEndpoint:
+      type: object
+      required:
+      - id
+      - url
+      - drive_id
+      - events
+      - status
+      - disabled_at
+      - created_at
+      properties:
+        id:
+          type: string
+        url:
+          type: string
+        drive_id:
+          type:
+          - string
+          - 'null'
+        events:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum:
+          - active
+          - disabled
+        disabled_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          pattern: Z$
+        created_at:
+          type: string
+          format: date-time
+          pattern: Z$
+        secret:
+          type: string
+          description: Signing secret; only in store and rotate-secret responses.
+    WebhookDelivery:
+      type: object
+      required:
+      - id
+      - event_id
+      - event_type
+      - status
+      - attempts
+      - next_retry_at
+      - last_status_code
+      - created_at
+      properties:
+        id:
+          type: string
+        event_id:
+          type:
+          - string
+          - 'null'
+        event_type:
+          type: string
+        status:
+          type: string
+        attempts:
+          type: integer
+        next_retry_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          pattern: Z$
+        last_status_code:
+          type:
+          - integer
+          - 'null'
+        created_at:
+          type: string
+          format: date-time
+          pattern: Z$
+    CollaborationSession:
+      type: object
+      required:
+      - driver
+      - room
+      - node_id
+      - drive_id
+      - epoch
+      - schema_version
+      - mode
+      - token
+      - url
+      properties:
+        driver:
+          type: string
+        room:
+          type: string
+        node_id:
+          type: string
+        drive_id:
+          type: string
+        epoch:
+          type: integer
+        schema_version:
+          type: integer
+        mode:
+          type: string
+          enum:
+          - ro
+          - rw
+        token:
+          type: string
+          description: Short-lived room token; never log it.
+        url:
+          type:
+          - string
+          - 'null'
+          description: Hub websocket URL; null when the host configured none.
+    HubAuthenticated:
+      type: object
+      required:
+      - allowed
+      - mode
+      - userId
+      properties:
+        allowed:
+          type: boolean
+        mode:
+          type: string
+          enum:
+          - ro
+          - rw
+        userId:
+          type:
+          - string
+          - 'null'
+        epoch:
+          type: integer
+    HubLoaded:
+      type: object
+      required:
+      - state
+      - content
+      - epoch
+      - schemaVersion
+      - stateVersion
+      - type
+      properties:
+        state:
+          type:
+          - string
+          - 'null'
+          description: Base64 Yjs state, null before the first store.
+        content:
+          type:
+          - object
+          - 'null'
+        epoch:
+          type: integer
+        schemaVersion:
+          type: integer
+        stateVersion:
+          type: integer
+        type:
+          type: string
+    HubStored:
+      type: object
+      required:
+      - changed
+      - epoch
+      - state_version
+      - yjs_state_size
+      properties:
+        changed:
+          type: boolean
+        epoch:
+          type: integer
+        state_version:
+          type: integer
+        yjs_state_size:
+          type: integer
+    AbilitiesExplained:
+      type: object
+      required:
+      - abilities
+      - explain
+      properties:
+        abilities:
+          $ref: '#/components/schemas/Abilities'
+        explain:
+          oneOf:
+          - type: object
+            required:
+            - ability
+            - allowed
+            - reasons
+            properties:
+              ability:
+                type: string
+              allowed:
+                type: boolean
+              reasons:
+                type: array
+                items:
+                  type: string
+          - type: 'null'
+    NodePage:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Node'
+        meta:
+          $ref: '#/components/schemas/PageMeta'
+    NodeEnvelope:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          $ref: '#/components/schemas/Node'
+    NodeWithIncludesEnvelope:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          $ref: '#/components/schemas/NodeWithIncludes'
+    PublicNodePage:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicNode'
+        meta:
+          $ref: '#/components/schemas/PageMeta'
+    PublicNodeEnvelope:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          $ref: '#/components/schemas/PublicNode'
+    DriveEnvelope:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          $ref: '#/components/schemas/Drive'
+    FileRevisionEnvelope:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          $ref: '#/components/schemas/FileRevision'
+    FileRevisionPage:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileRevision'
+        meta:
+          $ref: '#/components/schemas/PageMeta'
+    DocumentRevisionEnvelope:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          $ref: '#/components/schemas/DocumentRevision'
+    DocumentRevisionWithContentEnvelope:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          $ref: '#/components/schemas/DocumentRevisionWithContent'
+    DocumentRevisionPage:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentRevision'
+        meta:
+          $ref: '#/components/schemas/PageMeta'
+    DocumentContentEnvelope:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          $ref: '#/components/schemas/DocumentContent'
+    GrantEnvelope:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          $ref: '#/components/schemas/Grant'
+    GrantList:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Grant'
+    ShareEnvelope:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          $ref: '#/components/schemas/Share'
+    ShareList:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Share'
+    MintedShareEnvelope:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          $ref: '#/components/schemas/MintedShare'
+    ActivityPage:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Activity'
+        meta:
+          $ref: '#/components/schemas/PageMeta'
+    ChangePage:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Change'
+        meta:
+          type: object
+          required:
+          - next_cursor
+          - has_more
+          properties:
+            next_cursor:
+              type: string
+            has_more:
+              type: boolean
+    ChangesStartEnvelope:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          type: object
+          required:
+          - cursor
+          properties:
+            cursor:
+              type: string
+              description: Opaque; start of the change feed.
+    CommentEnvelope:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          $ref: '#/components/schemas/Comment'
+    CommentPage:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+        meta:
+          $ref: '#/components/schemas/PageMeta'
+    UploadSessionEnvelope:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          $ref: '#/components/schemas/UploadSession'
+    CollaborationSessionEnvelope:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          $ref: '#/components/schemas/CollaborationSession'
+    HubStoredEnvelope:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          $ref: '#/components/schemas/HubStored'
+    AbilitiesExplainedEnvelope:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          $ref: '#/components/schemas/AbilitiesExplained'
+    PurgedCountEnvelope:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          type: object
+          required:
+          - purged_count
+          properties:
+            purged_count:
+              type: integer
+    WebhookEndpointEnvelope:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          $ref: '#/components/schemas/WebhookEndpoint'
+    WebhookEndpointPage:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WebhookEndpoint'
+        meta:
+          $ref: '#/components/schemas/PageMeta'
+    WebhookDeliveryEnvelope:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          $ref: '#/components/schemas/WebhookDelivery'
+    WebhookDeliveryPage:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WebhookDelivery'
+        meta:
+          $ref: '#/components/schemas/PageMeta'

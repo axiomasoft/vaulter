@@ -1,0 +1,6 @@
+{
+    "description": "An error served as application/json instead of application/problem+json.",
+    "example": "problem-412",
+    "headers": {"content-type": "application/json"},
+    "expect": "Content-Type 'application/json' is not documented"
+}

@@ -1,0 +1,6 @@
+{
+    "description": "type: [string, null] receives false.",
+    "example": "node",
+    "set": {"data.parent_id": false},
+    "expect": "/data/parent_id"
+}

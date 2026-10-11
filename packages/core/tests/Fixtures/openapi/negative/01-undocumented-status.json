@@ -1,0 +1,7 @@
+{
+    "description": "A status the operation does not list (418).",
+    "example": "problem-412",
+    "operation_id": "nodes.show",
+    "status": 418,
+    "expect": "status 418 is not documented"
+}

@@ -1,0 +1,6 @@
+{
+    "description": "format: date-time is enforced.",
+    "example": "node",
+    "set": {"data.created_at": "yesterday"},
+    "expect": "/data/created_at"
+}

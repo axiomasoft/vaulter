@@ -1,0 +1,6 @@
+{
+    "description": "Node.id is a number instead of a string.",
+    "example": "node",
+    "set": {"data.id": 1},
+    "expect": "/data/id"
+}

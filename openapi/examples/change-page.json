@@ -1,0 +1,69 @@
+{
+    "operation_id": "changes.index",
+    "status": 200,
+    "headers": {
+        "content-type": "application/json",
+        "cache-control": "no-store, private",
+        "x-vaulter-api-version": "1",
+        "x-request-id": "01M4MPFJF4REZY50JW80P2168S"
+    },
+    "body": {
+        "data": [
+            {
+                "node_id": "23",
+                "operation": "upsert",
+                "reason": null,
+                "subtree": false,
+                "node_sequence": 0,
+                "node": {
+                    "id": "23",
+                    "drive_id": "7",
+                    "parent_id": "20",
+                    "kind": "folder",
+                    "name": "After",
+                    "mime": null,
+                    "extension": null,
+                    "size_bytes": 0,
+                    "sequence": 0,
+                    "etag": "\"23.0.4887ef20ea7fb127\"",
+                    "inherits_access": true,
+                    "properties": {},
+                    "created_at": "2026-10-11T05:20:30.000000Z",
+                    "created_by": null,
+                    "updated_at": "2026-10-11T05:20:30.000000Z",
+                    "updated_by": null,
+                    "content_modified_at": null,
+                    "content_modified_by": null,
+                    "trashed_at": null,
+                    "trashed_by": null,
+                    "trash_root": false,
+                    "presentation": null,
+                    "abilities": {
+                        "view": true,
+                        "download": true,
+                        "comment": true,
+                        "edit": true,
+                        "create": true,
+                        "move": true,
+                        "copy": true,
+                        "trash": true,
+                        "restore": true,
+                        "share": true,
+                        "manage": true,
+                        "delete": true
+                    },
+                    "viewer": {
+                        "starred": false
+                    },
+                    "scan_status": "not_required",
+                    "file": null,
+                    "document": null
+                }
+            }
+        ],
+        "meta": {
+            "next_cursor": "eyJ2IjoxLCJ0IjpudWxsLCJkIjoiNyIsImUiOjEsImEiOjN9.WashDn0o9RAt3jCq0maIjmcfjQBPwr4ogSTj75-McNg",
+            "has_more": false
+        }
+    }
+}

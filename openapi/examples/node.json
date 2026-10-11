@@ -1,0 +1,82 @@
+{
+    "operation_id": "nodes.show",
+    "status": 200,
+    "headers": {
+        "content-type": "application/json",
+        "cache-control": "no-cache, private",
+        "etag": "\"3.0.8b455220295bd2e0\"",
+        "vary": "Authorization, Cookie",
+        "x-vaulter-api-version": "1",
+        "x-request-id": "01M4MPFHHRN63TXN2ZCMHX3K56"
+    },
+    "body": {
+        "data": {
+            "id": "3",
+            "drive_id": "1",
+            "parent_id": "2",
+            "kind": "file",
+            "name": "report.txt",
+            "mime": "text/plain",
+            "extension": "txt",
+            "size_bytes": 8,
+            "sequence": 0,
+            "etag": "\"3.0.8b455220295bd2e0\"",
+            "inherits_access": true,
+            "properties": {},
+            "created_at": "2026-10-11T05:20:29.000000Z",
+            "created_by": null,
+            "updated_at": "2026-10-11T05:20:29.000000Z",
+            "updated_by": null,
+            "content_modified_at": "2026-10-11T05:20:29.000000Z",
+            "content_modified_by": null,
+            "trashed_at": null,
+            "trashed_by": null,
+            "trash_root": false,
+            "presentation": {
+                "handler": "vaulter/download",
+                "document_type": null,
+                "type_available": true,
+                "viewer": {
+                    "key": "vaulter/download",
+                    "props": {
+                        "filename": "report.txt"
+                    }
+                },
+                "capabilities": {
+                    "editable": false,
+                    "previewable": false,
+                    "downloadable": true,
+                    "thumbnailable": false,
+                    "collaborative": false
+                }
+            },
+            "abilities": {
+                "view": true,
+                "download": true,
+                "comment": true,
+                "edit": true,
+                "create": true,
+                "move": true,
+                "copy": true,
+                "trash": true,
+                "restore": true,
+                "share": false,
+                "manage": true,
+                "delete": true
+            },
+            "viewer": {
+                "starred": false
+            },
+            "scan_status": "not_required",
+            "file": {
+                "revision_id": "1",
+                "revision_number": 1,
+                "size_bytes": 8,
+                "sha256": "d461299cf950bd732857886dc0bb2730817e710b24812e896bd99e183e01e440",
+                "mime": "text/plain",
+                "scan_status": "not_required"
+            },
+            "document": null
+        }
+    }
+}

@@ -1,0 +1,6 @@
+{
+    "description": "A timestamp without the Z of RFC 3339 UTC.",
+    "example": "node",
+    "set": {"data.created_at": "2026-10-11T04:35:03"},
+    "expect": "/data/created_at"
+}

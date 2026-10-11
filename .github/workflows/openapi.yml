@@ -1,0 +1,61 @@
+name: OpenAPI
+
+on:
+  push:
+    branches: [main, 'feat/**', 'fix/**', 'hotfix/**']
+    paths: ['openapi/**', '.github/workflows/openapi.yml']
+  pull_request:
+    branches: [main]
+    paths: ['openapi/**', '.github/workflows/openapi.yml']
+  workflow_dispatch:
+
+env:
+  # Pinned: a floating tag would let a new oasdiff rule fail an unrelated PR.
+  # Bump deliberately, together with plans/.../artifacts/P6.3/tool-pins.md.
+  OASDIFF_IMAGE: tufin/oasdiff:v1.33.0
+
+jobs:
+  breaking:
+    name: Breaking changes (oasdiff)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # The base is the contract of the last released tag; before the first release that carries
+      # the file, it is the contract on the base branch of the pull request.
+      - name: Select the base contract
+        id: base
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/base"
+          tag="$(git tag --list 'v*' --sort=-v:refname | head -n 1)"
+          source=""
+          if [ -n "$tag" ] && git cat-file -e "$tag:openapi/vaulter-v1.yaml" 2>/dev/null; then
+            source="$tag"
+          elif [ "$EVENT_NAME" = "pull_request" ] && git cat-file -e "origin/$BASE_REF:openapi/vaulter-v1.yaml" 2>/dev/null; then
+            source="origin/$BASE_REF"
+          fi
+
+          if [ -z "$source" ]; then
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No released or base-branch openapi/vaulter-v1.yaml yet; nothing to compare."
+            exit 0
+          fi
+
+          git show "$source:openapi/vaulter-v1.yaml" > "$RUNNER_TEMP/base/vaulter-v1.yaml"
+          echo "found=true" >> "$GITHUB_OUTPUT"
+          echo "Comparing against $source"
+
+      - name: oasdiff breaking
+        if: steps.base.outputs.found == 'true'
+        run: |
+          docker run --rm \
+            -v "$RUNNER_TEMP/base:/base:ro" \
+            -v "$PWD/openapi:/w/openapi:ro" \
+            "$OASDIFF_IMAGE" breaking /base/vaulter-v1.yaml /w/openapi/vaulter-v1.yaml --fail-on ERR

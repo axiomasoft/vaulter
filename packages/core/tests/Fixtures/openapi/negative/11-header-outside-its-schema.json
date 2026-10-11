@@ -1,0 +1,6 @@
+{
+    "description": "X-Vaulter-Api-Version is const 1.",
+    "example": "node",
+    "headers": {"x-vaulter-api-version": "2"},
+    "expect": "header X-Vaulter-Api-Version"
+}

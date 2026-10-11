@@ -18,6 +18,8 @@
         "axioma-studio/vaulter-documents": "@dev"
     },
     "require-dev": {
+        "opis/json-schema": "^2.4",
+        "symfony/yaml": "^8.0",
         "laravel/pint": "^1.13",
         "rector/rector": "^2.0",
         "pestphp/pest": "^4.7",

@@ -1,0 +1,6 @@
+{
+    "description": "Node.presentation is [] instead of an object or null.",
+    "example": "node",
+    "set": {"data.presentation": []},
+    "expect": "/data/presentation"
+}

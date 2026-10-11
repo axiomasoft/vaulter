@@ -9,11 +9,14 @@ use Orchestra\Testbench\TestCase as OrchestraTestCase;
 use Vaulter\Documents\VaulterDocumentsServiceProvider;
 use Vaulter\Drive\VaulterDriveServiceProvider;
 use Vaulter\Media\VaulterMediaServiceProvider;
+use Vaulter\Tests\Support\OpenApi\ValidatesOpenApiResponses;
 use Vaulter\Tests\Support\SuiteDatabaseConnection;
 use Vaulter\VaulterServiceProvider;
 
 abstract class TestCase extends OrchestraTestCase
 {
+    use ValidatesOpenApiResponses;
+
     /**
      * @param  Application              $app
      * @return array<int, class-string>
@@ -49,6 +52,8 @@ abstract class TestCase extends OrchestraTestCase
      */
     protected function defineEnvironment($app): void
     {
+        $this->validateOpenApiResponses($app);
+
         $app['config']->set('vaulter.database.write_guard', (bool) env('VAULTER_TEST_WRITE_GUARD', false));
         $app['config']->set('database.default', 'testing');
         $app['config']->set('database.connections.testing', $this->suiteDatabaseConnection());

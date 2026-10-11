@@ -1,0 +1,1110 @@
+[
+    {
+        "name": "vaulter.v1.access.inheritance.restore",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/nodes/{node}/inheritance/restore",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.access.inheritance.restrict",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/nodes/{node}/inheritance/restrict",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.activity.drive",
+        "methods": [
+            "GET",
+            "HEAD"
+        ],
+        "uri": "api/vaulter/v1/drives/{drive}/activity",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.activity.node",
+        "methods": [
+            "GET",
+            "HEAD"
+        ],
+        "uri": "api/vaulter/v1/nodes/{node}/activity",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.changes.index",
+        "methods": [
+            "GET",
+            "HEAD"
+        ],
+        "uri": "api/vaulter/v1/drives/{drive}/changes",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.changes.start",
+        "methods": [
+            "GET",
+            "HEAD"
+        ],
+        "uri": "api/vaulter/v1/drives/{drive}/changes/start",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.collaboration.hub.authenticate",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/collaboration/hub/authenticate",
+        "middleware": [
+            "api",
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "throttle:vaulter-public",
+            "Vaulter\\Documents\\Http\\Middleware\\ResolveCollaborationCall"
+        ]
+    },
+    {
+        "name": "vaulter.v1.collaboration.hub.load",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/collaboration/hub/load",
+        "middleware": [
+            "api",
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "throttle:vaulter-public",
+            "Vaulter\\Documents\\Http\\Middleware\\ResolveCollaborationCall"
+        ]
+    },
+    {
+        "name": "vaulter.v1.collaboration.hub.store",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/collaboration/hub/store",
+        "middleware": [
+            "api",
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "throttle:vaulter-public",
+            "Vaulter\\Documents\\Http\\Middleware\\ResolveCollaborationCall"
+        ]
+    },
+    {
+        "name": "vaulter.v1.comments.destroy",
+        "methods": [
+            "DELETE"
+        ],
+        "uri": "api/vaulter/v1/nodes/{node}/comments/{comment}",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.comments.index",
+        "methods": [
+            "GET",
+            "HEAD"
+        ],
+        "uri": "api/vaulter/v1/nodes/{node}/comments",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.comments.resolve",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/nodes/{node}/comments/{comment}/resolve",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.comments.store",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/nodes/{node}/comments",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.documents.collaboration.session",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/documents/{node}/collaboration/session",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.documents.content.show",
+        "methods": [
+            "GET",
+            "HEAD"
+        ],
+        "uri": "api/vaulter/v1/documents/{node}/content",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.documents.content.update",
+        "methods": [
+            "PUT"
+        ],
+        "uri": "api/vaulter/v1/documents/{node}/content",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.documents.export",
+        "methods": [
+            "GET",
+            "HEAD"
+        ],
+        "uri": "api/vaulter/v1/documents/{node}/export/{format}",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.documents.revisions.index",
+        "methods": [
+            "GET",
+            "HEAD"
+        ],
+        "uri": "api/vaulter/v1/documents/{node}/revisions",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.documents.revisions.restore",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/documents/{node}/revisions/{revision}/restore",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.documents.revisions.show",
+        "methods": [
+            "GET",
+            "HEAD"
+        ],
+        "uri": "api/vaulter/v1/documents/{node}/revisions/{revision}",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.documents.revisions.store",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/documents/{node}/revisions",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.documents.revisions.update",
+        "methods": [
+            "PATCH"
+        ],
+        "uri": "api/vaulter/v1/documents/{node}/revisions/{revision}",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.documents.store",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/drives/{drive}/documents",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.drives.archive",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/drives/{drive}/archive",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.drives.destroy",
+        "methods": [
+            "DELETE"
+        ],
+        "uri": "api/vaulter/v1/drives/{drive}",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.drives.show",
+        "methods": [
+            "GET",
+            "HEAD"
+        ],
+        "uri": "api/vaulter/v1/drives/{drive}",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.drives.unarchive",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/drives/{drive}/unarchive",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.files.download",
+        "methods": [
+            "GET",
+            "HEAD"
+        ],
+        "uri": "api/vaulter/v1/files/{node}/download",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.files.revisions.destroy",
+        "methods": [
+            "DELETE"
+        ],
+        "uri": "api/vaulter/v1/files/{node}/revisions/{revision}",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.files.revisions.download",
+        "methods": [
+            "GET",
+            "HEAD"
+        ],
+        "uri": "api/vaulter/v1/files/{node}/revisions/{revision}/download",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.files.revisions.index",
+        "methods": [
+            "GET",
+            "HEAD"
+        ],
+        "uri": "api/vaulter/v1/files/{node}/revisions",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.files.revisions.restore",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/files/{node}/revisions/{revision}/restore",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.files.revisions.store",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/files/{node}/revisions",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.files.revisions.update",
+        "methods": [
+            "PATCH"
+        ],
+        "uri": "api/vaulter/v1/files/{node}/revisions/{revision}",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.files.store",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/drives/{drive}/files",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.folders.store",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/drives/{drive}/folders",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.grants.destroy",
+        "methods": [
+            "DELETE"
+        ],
+        "uri": "api/vaulter/v1/nodes/{node}/grants/{grant}",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.grants.index",
+        "methods": [
+            "GET",
+            "HEAD"
+        ],
+        "uri": "api/vaulter/v1/nodes/{node}/grants",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.grants.store",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/nodes/{node}/grants",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.nodes.abilities",
+        "methods": [
+            "GET",
+            "HEAD"
+        ],
+        "uri": "api/vaulter/v1/nodes/{node}/abilities",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.nodes.copy",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/nodes/{node}/copy",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.nodes.index",
+        "methods": [
+            "GET",
+            "HEAD"
+        ],
+        "uri": "api/vaulter/v1/drives/{drive}/nodes",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.nodes.move",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/nodes/{node}/move",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.nodes.properties.update",
+        "methods": [
+            "PATCH"
+        ],
+        "uri": "api/vaulter/v1/nodes/{node}/properties",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.nodes.purge",
+        "methods": [
+            "DELETE"
+        ],
+        "uri": "api/vaulter/v1/nodes/{node}",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.nodes.restore",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/nodes/{node}/restore",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.nodes.search",
+        "methods": [
+            "GET",
+            "HEAD"
+        ],
+        "uri": "api/vaulter/v1/drives/{drive}/search",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.nodes.show",
+        "methods": [
+            "GET",
+            "HEAD"
+        ],
+        "uri": "api/vaulter/v1/nodes/{node}",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.nodes.star",
+        "methods": [
+            "PUT"
+        ],
+        "uri": "api/vaulter/v1/nodes/{node}/star",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.nodes.starred",
+        "methods": [
+            "GET",
+            "HEAD"
+        ],
+        "uri": "api/vaulter/v1/drives/{drive}/starred",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.nodes.trash",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/nodes/{node}/trash",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.nodes.unstar",
+        "methods": [
+            "DELETE"
+        ],
+        "uri": "api/vaulter/v1/nodes/{node}/star",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.nodes.update",
+        "methods": [
+            "PATCH"
+        ],
+        "uri": "api/vaulter/v1/nodes/{node}",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.public-shares.download",
+        "methods": [
+            "GET",
+            "HEAD"
+        ],
+        "uri": "api/vaulter/v1/shares/{token}/download",
+        "middleware": [
+            "api",
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "throttle:vaulter-public",
+            "Vaulter\\Http\\Middleware\\ResolveShareToken"
+        ]
+    },
+    {
+        "name": "vaulter.v1.public-shares.nodes",
+        "methods": [
+            "GET",
+            "HEAD"
+        ],
+        "uri": "api/vaulter/v1/shares/{token}/nodes",
+        "middleware": [
+            "api",
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "throttle:vaulter-public",
+            "Vaulter\\Http\\Middleware\\ResolveShareToken"
+        ]
+    },
+    {
+        "name": "vaulter.v1.public-shares.show",
+        "methods": [
+            "GET",
+            "HEAD"
+        ],
+        "uri": "api/vaulter/v1/shares/{token}",
+        "middleware": [
+            "api",
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "throttle:vaulter-public",
+            "Vaulter\\Http\\Middleware\\ResolveShareToken"
+        ]
+    },
+    {
+        "name": "vaulter.v1.shared.index",
+        "methods": [
+            "GET",
+            "HEAD"
+        ],
+        "uri": "api/vaulter/v1/shared",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.shares.destroy",
+        "methods": [
+            "DELETE"
+        ],
+        "uri": "api/vaulter/v1/nodes/{node}/shares/{share}",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.shares.index",
+        "methods": [
+            "GET",
+            "HEAD"
+        ],
+        "uri": "api/vaulter/v1/nodes/{node}/shares",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.shares.rotate",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/nodes/{node}/shares/{share}/rotate",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.shares.store",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/nodes/{node}/shares",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.shares.update",
+        "methods": [
+            "PATCH"
+        ],
+        "uri": "api/vaulter/v1/nodes/{node}/shares/{share}",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.trash.empty",
+        "methods": [
+            "DELETE"
+        ],
+        "uri": "api/vaulter/v1/drives/{drive}/trash",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.trash.index",
+        "methods": [
+            "GET",
+            "HEAD"
+        ],
+        "uri": "api/vaulter/v1/drives/{drive}/trash",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.uploads.complete",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/uploads/{upload}/complete",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "throttle:vaulter-uploads"
+        ]
+    },
+    {
+        "name": "vaulter.v1.uploads.parts.store",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/uploads/{upload}/parts",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "throttle:vaulter-uploads"
+        ]
+    },
+    {
+        "name": "vaulter.v1.uploads.show",
+        "methods": [
+            "GET",
+            "HEAD"
+        ],
+        "uri": "api/vaulter/v1/uploads/{upload}",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "throttle:vaulter-uploads"
+        ]
+    },
+    {
+        "name": "vaulter.v1.uploads.store",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/drives/{drive}/uploads",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "throttle:vaulter-uploads"
+        ]
+    },
+    {
+        "name": "vaulter.v1.uploads.tus.destroy",
+        "methods": [
+            "DELETE"
+        ],
+        "uri": "api/vaulter/v1/uploads/{upload}",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "throttle:vaulter-uploads"
+        ]
+    },
+    {
+        "name": "vaulter.v1.uploads.tus.head",
+        "methods": [
+            "HEAD"
+        ],
+        "uri": "api/vaulter/v1/uploads/{upload}",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "throttle:vaulter-uploads"
+        ]
+    },
+    {
+        "name": "vaulter.v1.uploads.tus.options",
+        "methods": [
+            "OPTIONS"
+        ],
+        "uri": "api/vaulter/v1/uploads/{upload}",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "throttle:vaulter-uploads"
+        ]
+    },
+    {
+        "name": "vaulter.v1.uploads.tus.patch",
+        "methods": [
+            "PATCH"
+        ],
+        "uri": "api/vaulter/v1/uploads/{upload}",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "throttle:vaulter-uploads"
+        ]
+    },
+    {
+        "name": "vaulter.v1.webhook-deliveries.index",
+        "methods": [
+            "GET",
+            "HEAD"
+        ],
+        "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}/deliveries",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.webhook-deliveries.redeliver",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}/deliveries/{delivery}/redeliver",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.webhook-endpoints.deactivate",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}/deactivate",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.webhook-endpoints.destroy",
+        "methods": [
+            "DELETE"
+        ],
+        "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.webhook-endpoints.index",
+        "methods": [
+            "GET",
+            "HEAD"
+        ],
+        "uri": "api/vaulter/v1/webhook-endpoints",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.webhook-endpoints.rotate-secret",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}/rotate-secret",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.webhook-endpoints.show",
+        "methods": [
+            "GET",
+            "HEAD"
+        ],
+        "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.webhook-endpoints.store",
+        "methods": [
+            "POST"
+        ],
+        "uri": "api/vaulter/v1/webhook-endpoints",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    },
+    {
+        "name": "vaulter.v1.webhook-endpoints.update",
+        "methods": [
+            "PATCH"
+        ],
+        "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}",
+        "middleware": [
+            "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+        ]
+    }
+]

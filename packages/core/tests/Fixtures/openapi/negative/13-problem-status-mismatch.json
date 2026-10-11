@@ -1,0 +1,6 @@
+{
+    "description": "A problem whose status disagrees with the HTTP status.",
+    "example": "problem-412",
+    "set": {"status": 500},
+    "expect": "problem body repeats status 500"
+}

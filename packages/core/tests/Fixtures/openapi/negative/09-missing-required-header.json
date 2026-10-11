@@ -1,0 +1,6 @@
+{
+    "description": "A response without X-Request-Id.",
+    "example": "node",
+    "unset_headers": ["x-request-id"],
+    "expect": "missing the required header X-Request-Id"
+}

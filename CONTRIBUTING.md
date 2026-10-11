@@ -119,6 +119,25 @@ scripts/test-db.sh sqlite packages/core/tests                   # in-memory, par
 - **Racing tests need their own database.** Never point two lanes at the same `*_test` database (`DatabaseMigrations`
   and `ForkRace` suites drop and rebuild it); the harness gives each run a server of its own.
 
+### Changing the REST contract
+
+`openapi/vaulter-v1.yaml` is the source of truth of the REST API v1. Change a route, a resource or a header and the
+document in the same pull request, then:
+
+```bash
+scripts/php84 vendor/bin/pest packages/core/tests/OpenApi                 # coverage, document, validator, examples
+UPDATE_GOLDEN=1 scripts/php84 vendor/bin/pest packages/core/tests/OpenApi/RouteListSnapshotTest.php
+VAULTER_OPENAPI_EXAMPLES_WRITE=1 scripts/php84 vendor/bin/pest packages/core/tests/OpenApi/OpenApiExamplesTest.php
+```
+
+- The `core`, `drive` and `documents` suites set `VAULTER_OPENAPI_VALIDATE=1`: every `vaulter.v1.*` response of a
+  feature test is checked against the document, so a field the document does not describe fails the test that
+  produced it. Fix the document when the code is right; there are no exemptions.
+- `UPDATE_GOLDEN=1` rewrites `packages/core/tests/Fixtures/golden/routes-v1.json`; commit its diff.
+- `VAULTER_OPENAPI_EXAMPLES_WRITE=1` rewrites `openapi/examples/*.json` from real responses; commit the diff.
+- CI (`.github/workflows/openapi.yml`) runs `oasdiff breaking` against the contract of the last released tag. A
+  breaking change to `v1` needs `v2`, not an exception.
+
 ## Development workflow (JS)
 
 ```bash
