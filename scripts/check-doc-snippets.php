@@ -44,12 +44,12 @@ registerPackageAutoload($root);
 function fragments(string $docs): array
 {
     $out = [];
-    foreach (SECTIONS as $section) {
-        foreach ([$docs.'/'.$section, $docs.'/ru/'.$section] as $dir) {
-            if (!is_dir($dir)) {
+    foreach (is_file($docs) ? [null] : SECTIONS as $section) {
+        foreach ($section === null ? [$docs] : [$docs.'/'.$section, $docs.'/ru/'.$section] as $dir) {
+            if (!is_dir($dir) && !is_file($dir)) {
                 continue;
             }
-            foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS)) as $file) {
+            foreach (is_file($dir) ? [new SplFileInfo($dir)] : new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS)) as $file) {
                 if (!$file->isFile() || $file->getExtension() !== 'md') {
                     continue;
                 }

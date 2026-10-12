@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P7.8",
   "title": "README с нуля, upgrade guide 0.2→0.3, glossary, operations runbooks (C09, dedup=off), security",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "README по OPUS 12 §4, docs/getting-started/upgrading-0.2-to-0.3.md, concepts/glossary.md, extending/{exporters,upload-inspectors,profiles}.md, guides/operations.md с восемью runbooks и security/{threat-model,hardening-checklist}.md (en+ru), все фрагменты маркированы и проверены.",
   "why": "OPUS 12 §4/§8, D38, D02 п.2 (README пишется с нуля в P7); C09: эксплуатационные runbooks перехода legacy, failures/unsupported/password files, повторных доставок и direct URL limits; mid-audit: runbook dedup=off downgrade/preflight. Риски: runbook с несуществующей командой или массовым действием без dry-run; upgrade guide, расходящийся с миграциями.",
   "scope": {
@@ -209,6 +209,51 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-11T13:58:13Z"
+  "result": {
+    "started_at": "2026-10-12T05:27:03Z",
+    "finished_at": "2026-10-12T05:32:26Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "a2159401-cfc0-4732-b557-155ff43a3c17"
+    },
+    "notes": "README с нуля, glossary, extending x3, operations+8 runbooks, security x2 (en+ru), навигация, ReadmeRecipeTest; check-doc-snippets принимает файл. V7 — фазовый прогон.",
+    "deviations": [
+      "Upgrade guide 0.2→0.3 и вводный абзац UPGRADE.md исключены по решению владельца (пакет не опубликован, D02)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-12T05:32:26Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-12T05:32:26Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-12T05:32:26Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-12T05:32:26Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-12T05:32:26Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-12T05:32:26Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-12T05:32:26Z"
 }

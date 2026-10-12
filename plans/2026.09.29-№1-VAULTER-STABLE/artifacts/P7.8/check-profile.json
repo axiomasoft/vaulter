@@ -1,0 +1,7 @@
+{
+  "item": "P7.8",
+  "changed_paths": ["README.md", "docs/concepts/glossary.md", "docs/extending/{exporters,upload-inspectors,profiles}.md", "docs/guides/operations.md", "docs/guides/operations/*.md", "docs/security/*.md", "docs/ru twins", "docs/.vitepress/config.ts", "packages/drive/tests/Recipes/ReadmeRecipeTest.php", "scripts/check-doc-snippets.php", "CHANGELOG.md"],
+  "deviation": "upgrade guide 0.2->0.3 and UPGRADE.md intro dropped by owner decision",
+  "acceptance": {"V1": "check-doc-snippets docs && README.md", "V2": "check-doc-links + --mirror", "V3-V6": "pest recipes core/drive/documents/media"},
+  "impact_phase_run_P7": ["npm run docs:build"]
+}

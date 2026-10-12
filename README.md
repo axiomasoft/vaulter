@@ -1,96 +1,60 @@
 # Vaulter
 
-> Embeddable document management for Laravel — a file manager, TipTap editor, version history
-> and real-time collaboration, wired into your app's own roles through a thin adapter.
+Files, folders and collaborative documents for any Laravel app — authorized by your own roles.
 
-Vaulter grew out of the collaborative-documents module in FlexCRM and packages that
-infrastructure into a reusable component you can drop into any Laravel project **without adopting
-a new auth system** — it delegates every permission check to a `PermissionResolver` you implement.
+## Requirements
 
-| Component | Version |
-|---|---|
-| PHP | `^8.4` |
-| Laravel | `^12` \| `^13` |
-| Orchestra Testbench (dev/CI) | `^10.0` (Laravel 12) \| `^11.0` (Laravel 13) |
-| Filament (optional `vaulter-filament` panel) | `^5.0`, requires Laravel **13** (Testbench `^11.0` only — see below) |
-| Vue | `3.x` |
-| Node (collab server, `hocuspocus-server`) | `>=22` (Hocuspocus 4 requires Node 22+) |
-| Node (Vue build / tooling) | `>=20` |
-
-`vaulter-core`/`vaulter-drive`/`vaulter-media`/`vaulter-documents`/`vaulter-azgard` are
-CI-tested against **both** Laravel 12 and 13 (Testbench `^10.0`/`^11.0`). `vaulter-filament` pins
-`orchestra/testbench: ^11.0` deliberately: Filament 5 targets Laravel 11.28+/13, and its own CI
-matrix therefore covers only the Laravel 13 lane — installing the Filament panel on a Laravel 12
-host is not currently CI-verified.
-
-## Features
-
-- **Documents** *(enabled when `vaulter-documents` is installed)* —
-  TipTap-JSON content, four built-in types (rich text, table, markdown, template),
-  soft-delete + trash, restore, permanent purge, **move**, **duplicate**, **bulk** operations and
-  title/content **search**.
-- **Versions** *(enabled when `vaulter-documents` is installed)* — named snapshots,
-  history and one-click restore, with pruning to a configurable cap.
-- **Folders** — a hierarchical tree scoped to a workspace.
-- **Permissions** — delegated entirely to your app via `PermissionResolver`; computed **abilities**
-  (`view/comment/edit/manage/delete`) are shipped to the front-end on every document.
-- **Real-time collaboration** *(opt-in — `config('vaulter-documents.collaboration.enabled')`)* — Yjs over a pluggable
-  `CollaborationDriver`: an external **Hocuspocus** Node hub by default, or **Laravel Reverb**
-  (no extra service, deprecated for Yjs editing). Server-side state sync + `content.synced`
-  broadcast.
-- **Comments** *(enabled by default — `config('vaulter-documents.comments.enabled')`)* — threaded, optionally
-  anchored, broadcast live (`comment.added`).
-- **Share links** *(opt-in — `config('vaulter.features.share_links')`)* — tokenized,
-  level-scoped, optionally expiring public links.
-- **Export** — render any document to HTML or Markdown.
-- **Embeddable by design** — swappable Eloquent models, dual `id`/`ulid` keys and optional
-  `tenant_id` (drops cleanly into both plain Laravel and multi-tenant apps).
-- **TypeScript front-end** (`@vaulter/vue`) — a typed API client, composables
-  (`useDocuments`, `useVaulterEditor`, `useCollaboration`, `useComments`, `useShares`,
-  `usePermissions`, `useDocumentExport`) and slot-driven components, shipped with `.d.ts`.
-- **Filament admin** (`@vaulter/filament`, optional) — a drop-in Filament 5 plugin to manage
-  documents (incl. trash/restore) from your panel.
+- PHP 8.4, Laravel 12 or 13
+- PostgreSQL 15+ (primary), MySQL 8.0+, or SQLite for development
+- Node 20+ for the `@vaulter/vue` client (Node 22+ for the optional collaboration hub)
 
 ## Install
 
-`axioma-studio/vaulter-core` alone ships no Drive or document-editing features — it is the
-shared kernel. Require the packages your app actually needs (each pulls in `vaulter-core`,
-and `vaulter-drive` also pulls in `vaulter-media`, automatically):
+<!-- snippet: shell -->
 
 ```bash
-# Drive (folders/files/uploads) — pulls in axioma-studio/vaulter-media (CAS) automatically
 composer require axioma-studio/vaulter-drive
-
-# Document nodes (TipTap/Yjs editing, versions, comments) — requires vaulter-drive
-composer require axioma-studio/vaulter-documents
-
 php artisan vaulter:install   # publishes config, asks to run the migrations
 npm install @vaulter/vue
 ```
 
-Tell Vaulter how to authorize, by implementing `Vaulter\Contracts\PermissionResolver`:
+## Quick example
+
+<!-- recipe: packages/drive/tests/Recipes/ReadmeRecipeTest.php#readme-quick-example -->
 
 ```php
+use Vaulter\Data\Drive\UploadOptions;
+use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Facades\Vaulter;
 
-Vaulter::resolvePermissionsWith(new \App\Vaulter\PermissionResolver());
+// $project is any Eloquent model; $user is the signed-in user.
+$drive = Vaulter::drive($project)->actingAs($user);
+
+$reports = $drive->folders()->create('Reports');
+$file = $drive->files()->upload(UploadSource::fromString('hello', 'hello.txt'), new UploadOptions(parent: $reports));
 ```
 
-Wire the front-end:
+## Packages
 
-```ts
-import { VaulterPlugin } from '@vaulter/vue'
+| Package | Purpose |
+| --- | --- |
+| `axioma-studio/vaulter-core` | contracts, guards, shared kernel |
+| `axioma-studio/vaulter-drive` | folders, files, uploads (tus/S3) |
+| `axioma-studio/vaulter-documents` | editor, versions, comments, collaboration (opt-in) |
+| `axioma-studio/vaulter-media` | content-addressed storage |
+| `axioma-studio/vaulter-azgard` | AzGuard permission resolver |
+| `@vaulter/vue` | TypeScript / Vue 3 client and components |
+| `axioma-studio/vaulter-filament` | Filament admin (optional, Laravel 13) |
 
-app.use(VaulterPlugin, { baseUrl: '/api/vaulter' })
-```
+The optional collaboration hub lives in `hocuspocus-server/`.
 
-```vue
-<VaulterFileManager workspace-type="App\Models\Project" :workspace-id="project.id"
-  @open-document="openEditor" />
-```
+## Documentation
 
-See the [documentation](docs/) for the full API, the permission-resolver contract, the collaboration
-setup and embedding into multi-tenant apps.
+- [Quick start](docs/getting-started/quick-start.md) · [Installation](docs/getting-started/installation.md)
+- [Concepts](docs/concepts/architecture.md) · [Glossary](docs/concepts/glossary.md)
+- [Guides](docs/guides/uploads.md) · [Extending](docs/extending/profiles.md)
+- [Operations runbooks](docs/guides/operations.md) · [Security](docs/security/threat-model.md)
+- [Contributing](CONTRIBUTING.md) · [Upgrading](UPGRADE.md)
 
 ## Monorepo layout
 
@@ -114,6 +78,8 @@ Integrations follow the AzGuard convention — each lives under `packages/` with
 constrain the core matrix.
 
 ## Development
+
+<!-- snippet: shell -->
 
 ```bash
 composer install && make ci      # Pint + PHPStan (level max) + Rector + Pest

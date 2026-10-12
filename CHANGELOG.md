@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### README, glossary, runbooks and security docs (PLAN2.P7.8)
+
+- Changed: `README.md` rewritten — requirements, three-command install, a tested quick example (`packages/drive/tests/Recipes/ReadmeRecipeTest.php`), package table and documentation links.
+- Added: `concepts/glossary`, `extending/{exporters,upload-inspectors,profiles}`, `guides/operations` with eight runbooks (scan backlog, scan failures, scan policy cut-over, webhook redelivery, direct URL limits, dedup preflight, drives purge/recount, scheduler and locks) and `security/{threat-model,hardening-checklist}`, in English and Russian.
+- Changed: `scripts/check-doc-snippets.php` also accepts a single file (`README.md`).
+- Not added: a 0.2→0.3 upgrade guide — 0.2.0 was never published, so there is nobody to upgrade.
+
 ### Executable documentation recipes (PLAN2.P7.7)
 
 - Added: `scripts/check-doc-snippets.php` — every php/ts/vue/js/bash fence in `docs/{getting-started,guides,extending}` (en and ru) carries a `<!-- recipe | snippet -->` marker and is verified: `recipe` blocks equal a tested region of a package Pest/vitest recipe, `config` keys exist in the package configs, `shell` commands are registered, `signature` blocks name existing contracts and methods, `host` blocks use existing imports, facade methods, drive handle methods, composables, client methods and component props. A ru block must carry the same marker and code as its en twin.
