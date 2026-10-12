@@ -1,1 +1,0 @@
-{"tool":"pint","result":"fixed","files":[{"path":"tests\/Profiles\/ProfileRuntimeTest.php","fixers":["fully_qualified_strict_types","ordered_imports"]}]}

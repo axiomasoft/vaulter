@@ -1,7 +1,0 @@
-$ /home/vostrikov/projects/packages/vaulter/scripts/php84 vendor/bin/pest --ci packages/core/tests/Ulid
-cwd: /home/vostrikov/projects/packages/vaulter/build/baseline-l12
-source: tests.yml:test-pgsql / Postgres: ULID suite
-{"tool":"pest","result":"passed","tests":3,"passed":3,"assertions":9,"duration_ms":1000}
-
-exit: 0
-elapsed_seconds: 1.064

@@ -1,5 +1,0 @@
-error: unexpected argument '--tools' found
-
-Usage: grok agent --model <MODEL> --reasoning-effort <EFFORT>
-
-For more information, try '--help'.

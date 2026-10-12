@@ -1,1 +1,0 @@
-{"tool":"pint","result":"fixed","files":[{"path":"packages\/core\/src\/Exceptions\/VaulterException.php","fixers":["unary_operator_spaces"]}]}

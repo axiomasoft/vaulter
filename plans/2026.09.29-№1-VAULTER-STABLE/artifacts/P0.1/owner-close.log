@@ -1,5 +1,0 @@
-UTC: 2026-09-29T16:08:20.391379+00:00
-Owner continuation: "ну ты доделывай, но без тяжелых перепроверок, что ужас просто. Я всегда говорю работать оптимально".
-Accepted execution constraint: finish P0.1 using saved measurements; no heavy mutation rechecks and no hosted CI.
-Core SQLite/PG, Drive, Documents native verdict remains UNKNOWN; actual interrupted exits -15 preserved.
-Closure disposition: closed-deviations, no claim that interrupted mutation gates passed.

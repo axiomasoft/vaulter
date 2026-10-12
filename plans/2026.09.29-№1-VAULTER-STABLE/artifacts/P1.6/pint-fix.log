@@ -1,1 +1,0 @@
-{"tool":"pint","result":"fixed","files":[{"path":"packages\/drive\/tests\/Feature\/QuotaReserveTest.php","fixers":["no_extra_blank_lines"]}]}

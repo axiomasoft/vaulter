@@ -1,1 +1,0 @@
-{"tool":"pint","result":"fixed","files":[{"path":"src\/Models\/Uploads\/UploadSession.php","fixers":["class_attributes_separation","ordered_traits","ordered_imports"]}]}

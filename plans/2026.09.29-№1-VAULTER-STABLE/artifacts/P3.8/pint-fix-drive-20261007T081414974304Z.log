@@ -1,1 +1,0 @@
-{"tool":"pint","result":"fixed","files":[{"path":"tests\/Tenancy\/PrivateScannerTenantBoundaryTest.php","fixers":["class_definition","fully_qualified_strict_types","braces_position","blank_line_before_statement","ordered_imports"]}]}

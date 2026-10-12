@@ -1,7 +1,0 @@
-$ /home/vostrikov/projects/packages/vaulter/scripts/php84 vendor/bin/pest --ci packages/core/tests/Access packages/core/tests/Activity packages/core/tests/Feature packages/core/tests/Panels packages/core/tests/Schema packages/core/tests/Sharing packages/core/tests/Webhooks
-cwd: /home/vostrikov/projects/packages/vaulter/build/baseline-l12
-source: tests.yml:test-pgsql / Postgres: base TestCase suite
-{"tool":"pest","result":"passed","tests":395,"passed":391,"assertions":1071,"duration_ms":106847,"skipped":4}
-
-exit: 0
-elapsed_seconds: 107.035

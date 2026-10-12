@@ -1,6 +1,0 @@
-$ /home/vostrikov/projects/packages/vaulter/scripts/php84 vendor/bin/pint --test
-cwd: /home/vostrikov/projects/packages/vaulter/packages/documents
-source: documents.yml:documents / Code style (Pint)
-{"tool":"pint","result":"passed"}
-exit: 0
-elapsed_seconds: 9.429

@@ -1,1 +1,0 @@
-{"tool":"pint","result":"fail","files":[{"path":"packages\/core\/src\/Database\/VaulterDatabase.php","fixers":["braces_position","single_line_empty_body","phpdoc_align"]}]}

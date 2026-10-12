@@ -1,1 +1,0 @@
-{"tool":"pint","result":"fixed","files":[{"path":"src\/Actions\/Collaboration\/PersistYjsSnapshotAction.php","fixers":["braces_position","single_line_empty_body","ordered_imports"]}]}

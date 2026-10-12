@@ -1,1 +1,0 @@
-{"tool":"pint","result":"fixed","files":[{"path":"src\/Console\/RescanFileRevisionsCommand.php","fixers":["fully_qualified_strict_types","ordered_imports"]},{"path":"src\/Uploads\/Inspection\/MimeConsistencyInspector.php","fixers":["fully_qualified_strict_types","ordered_imports"]}]}

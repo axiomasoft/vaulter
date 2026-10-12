@@ -1,9 +1,0 @@
-
-  [30;42;1m PASS [39;49;22m[39m Tests\Uploads\P3\ScanWorkRecoveryTest[39m
-  [32;1m✓[39;22m[90m [39m[90mit SEC-RECOVERY-bounds rejects contradictory command scope and dry[39m[90m… [39m [90m0.19s[39m  
-  [32;1m✓[39;22m[90m [39m[90mit SEC-RECOVERY-bounds signed cursors resume one revision and rejec[39m[90m…[39m [90m0.30s[39m  
-  [32;1m✓[39;22m[90m [39m[90mit SEC-RECOVERY-bounds optional off rescan rejects sync before SQL[39m[90m… [39m [90m0.09s[39m  
-
-  [90mTests:[39m    [32;1m3 passed[39;22m[90m (18 assertions)[39m
-  [90mDuration:[39m [39m0.65s[39m
-

@@ -1,7 +1,0 @@
-$ /home/vostrikov/projects/packages/vaulter/scripts/php84 vendor/bin/pest --ci packages/core/tests/ActivityGate
-cwd: /home/vostrikov/projects/packages/vaulter/build/baseline-l12
-source: tests.yml:test-pgsql / Postgres: activity-disabled suite
-{"tool":"pest","result":"passed","tests":1,"passed":1,"assertions":1,"duration_ms":375}
-
-exit: 0
-elapsed_seconds: 0.436

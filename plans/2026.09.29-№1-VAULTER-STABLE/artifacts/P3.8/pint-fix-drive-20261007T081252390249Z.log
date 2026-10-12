@@ -1,1 +1,0 @@
-{"tool":"pint","result":"fixed","files":[{"path":"src\/Uploads\/UploadSessionManager.php","fixers":["fully_qualified_strict_types","braces_position","single_line_empty_body"]},{"path":"src\/Console\/ReconcileScanWorkCommand.php","fixers":["blank_line_before_statement"]},{"path":"src\/Console\/RescanFileRevisionsCommand.php","fixers":["blank_line_before_statement"]}]}

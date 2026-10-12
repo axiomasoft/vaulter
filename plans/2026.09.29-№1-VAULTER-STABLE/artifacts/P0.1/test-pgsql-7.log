@@ -1,7 +1,0 @@
-$ /home/vostrikov/projects/packages/vaulter/scripts/php84 vendor/bin/pest --ci packages/core/tests/IdStrategy/Uuid7
-cwd: /home/vostrikov/projects/packages/vaulter/build/baseline-l12
-source: tests.yml:test-pgsql / Postgres: id-strategy (UUIDv7) suite
-{"tool":"pest","result":"passed","tests":4,"passed":4,"assertions":22,"duration_ms":1190}
-
-exit: 0
-elapsed_seconds: 1.261

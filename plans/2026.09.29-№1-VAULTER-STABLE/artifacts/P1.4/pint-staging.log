@@ -1,1 +1,0 @@
-{"tool":"pint","result":"fixed","files":[{"path":"packages\/core\/tests\/Webhooks\/OutboxStagingTest.php","fixers":["ordered_imports"]}]}

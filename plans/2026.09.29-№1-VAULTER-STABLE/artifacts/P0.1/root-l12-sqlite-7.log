@@ -1,9 +1,0 @@
-$ /home/vostrikov/projects/packages/vaulter/scripts/php84 composer test:types
-cwd: /home/vostrikov/projects/packages/vaulter/build/baseline-l12
-source: tests.yml:test / Type coverage (100%)
-> vendor/bin/pest --type-coverage --min=100
-{"tool":"pest","raw":["packages/core/src/Engines/DocumentHandlerRegistry.php .. 100%","ERROR Type coverage below expected: 100.0%, currently 99.8%"]}
-Script vendor/bin/pest --type-coverage --min=100 handling the test:types event returned with error code 1
-
-exit: 1
-elapsed_seconds: 11.930

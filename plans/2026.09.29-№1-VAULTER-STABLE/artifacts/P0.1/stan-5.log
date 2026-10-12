@@ -1,7 +1,0 @@
-$ /home/vostrikov/projects/packages/vaulter/scripts/php84 vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G --no-progress
-cwd: /home/vostrikov/projects/packages/vaulter
-source: static-analysis.yml:larastan / Run Larastan
-{"tool":"phpstan","result":"passed","errors":0}
-
-exit: 0
-elapsed_seconds: 5.230

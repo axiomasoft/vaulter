@@ -1,7 +1,0 @@
-$ git clone --depth=1 https://github.com/axiomasoft/azguard-private.git ../azguard
-cwd: /home/vostrikov/projects/packages/vaulter/build/baseline-l13
-source: azgard.yml:azgard / Checkout latest public AzGuard
-Cloning into '../azguard'...
-
-exit: 0
-elapsed_seconds: 4.305

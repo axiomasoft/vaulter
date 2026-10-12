@@ -1,6 +1,0 @@
-$ /home/vostrikov/projects/packages/vaulter/scripts/php84 vendor/bin/pest --mutate --path=packages/core/src --covered-only --clear-cache --min=95
-cwd: /home/vostrikov/projects/packages/vaulter
-source: mutation.yml:mutation-testing SQLite
-
-exit: -15
-elapsed_seconds: 6571.404

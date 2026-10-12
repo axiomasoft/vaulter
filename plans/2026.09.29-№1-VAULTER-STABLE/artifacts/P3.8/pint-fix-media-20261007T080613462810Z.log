@@ -1,1 +1,0 @@
-{"tool":"pint","result":"fixed","files":[{"path":"src\/Console\/RepairBlobScopesCommand.php","fixers":["fully_qualified_strict_types"]},{"path":"src\/Console\/ReconcileBlobsCommand.php","fixers":["fully_qualified_strict_types"]},{"path":"src\/Console\/GcBlobsCommand.php","fixers":["fully_qualified_strict_types"]}]}
