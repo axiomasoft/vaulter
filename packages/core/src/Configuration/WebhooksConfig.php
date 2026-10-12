@@ -57,7 +57,7 @@ final readonly class WebhooksConfig
             if ($this->config->has('vaulter.webhooks.'.$key)) {
                 throw new InvalidConfigurationException(
                     "[Vaulter] vaulter.webhooks.{$key} was removed: use {$replacement}. "
-                    .'Docs: https://github.com/axiomasoft/vaulter/blob/main/docs/reference/configuration.md',
+                    .'Docs: https://github.com/axiomasoft/vaulter/blob/main/docs/reference/config.md',
                 );
             }
         }

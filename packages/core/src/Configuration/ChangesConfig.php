@@ -44,7 +44,7 @@ final readonly class ChangesConfig
         if (!is_int($value) || $value < 1 || $value > $max) {
             throw new InvalidConfigurationException(
                 "[Vaulter] {$key} must be an integer between 1 and {$max}. "
-                .'Docs: https://github.com/axiomasoft/vaulter/blob/main/docs/reference/configuration.md',
+                .'Docs: https://github.com/axiomasoft/vaulter/blob/main/docs/reference/config.md',
             );
         }
 
