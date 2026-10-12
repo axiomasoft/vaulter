@@ -1,0 +1,26 @@
+---
+title: Hardening checklist
+---
+
+# Hardening checklist
+
+Run before going live and after every upgrade:
+
+<!-- snippet: shell -->
+
+```bash
+php artisan vaulter:doctor --production
+```
+
+It must end without errors. Then confirm each item:
+
+- [ ] Vaulter routes sit behind your authentication middleware (`core.routes.auth` is green).
+- [ ] The permission driver is a real one — not `null` (`core.access.*`).
+- [ ] Scanning is **required** for uploads and the policy is current (`drive.scan.policy`).
+- [ ] Webhook delivery uses the URL guard; set `vaulter.webhooks.delivery.allowed_ip_ranges` only to what you need.
+- [ ] Collaboration, if enabled: `wss://` hub URL, distinct `jwt_secret` and `webhook_secret`, short `token_ttl` (`documents.collaboration*`).
+- [ ] The cache store is shared and supports atomic locks (`core.cache`).
+- [ ] The queue driver is not `sync` (`core.queue`).
+- [ ] `downloads.direct_ttl_seconds` is as short as clients allow, or `delivery_mode` is `strict`.
+- [ ] No deprecated config keys remain (`core.config.deprecated_keys`).
+- [ ] Database is PostgreSQL, MySQL or MariaDB — SQLite only for development.
