@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P7.7",
   "title": "Исполняемые рецепты docs: области в тестах пакетов и scripts/check-doc-snippets.php",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "Каждый PHP/TS-блок в docs/getting-started|guides|extending (en+ru) маркирован: recipe-блоки побайтно совпадают с областями в Pest/vitest-рецептах пакетов, config/signature/shell — проверяемые категории; scripts/check-doc-snippets.php падает на немаркированном или разошедшемся блоке.",
   "why": "D38, OPUS 12 §8, D69: примеры документации не должны расходиться с API. Риски: рецепты на удалённом API (core DocumentExporter/DocumentContent — mid-audit), тесты-зеркала без поведения.",
   "scope": {
@@ -191,12 +191,59 @@
   },
   "result": {
     "started_at": "2026-10-12T04:32:32Z",
+    "finished_at": "2026-10-12T05:21:56Z",
     "executor": {
       "provider": "claude-code",
       "model": "sonnet-5-5",
       "effort": "medium",
       "session": "054d4a6e-1d3d-49ab-a796-b46ec13d6725"
-    }
+    },
+    "notes": "Checker verifies 388 fragments (48 pages). Grok-4.7 review: 9 findings fixed in one round (artifacts/P7.7/review-verdict.md). Not run: PHPStan, PG/MySQL, docs:build, full suites (phase run P7). Hard risk: none (docs/tests/tooling only); core/drive/documents/media Pest.php bindings touched.",
+    "deviations": [
+      "Added 'snippet: host' category and multi-FQCN signature markers; recipe blocks drop leading use/import lines; ru code compared without comments; docs fragments rewritten to the current API (Vaulter::for/DriveHandle methods, useDocument/useRevisions/useGrants/useShares, viewer registry, PermissionDriver contract, abilities page); recipes cover drive/documents/media/core/vue subsets, remaining fragments are verified by host/config/shell/signature checks"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-12T05:21:56Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-12T05:21:56Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-12T05:21:56Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-12T05:21:56Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-12T05:21:56Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-12T05:21:56Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-12T05:21:56Z"
+      },
+      {
+        "id": "V8",
+        "exit": 0,
+        "at": "2026-10-12T05:21:56Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-12T04:32:32Z"
+  "updated_at": "2026-10-12T05:21:56Z"
 }

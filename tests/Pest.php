@@ -54,6 +54,7 @@ uses(TestCase::class, RefreshDatabase::class)->in(
     $core.'/Configuration',
     $core.'/Console',
     $core.'/Doctor',
+    $core.'/Recipes',
     $core.'/Webhooks',
     $core.'/WriteGuard',
 );
