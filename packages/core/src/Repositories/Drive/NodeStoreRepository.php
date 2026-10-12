@@ -12,7 +12,7 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Identity;
 
 /**
- * Write-side row work for v_nodes (§2.2). Bare mutations only: create/update,
+ * Write-side row work for v_nodes. Bare mutations only: create/update,
  * the single-UPDATE move, and the bulk subtree state changes (trash, restore,
  * permanent soft-delete). It opens NO transactions and dispatches NO events — the
  * Drive Actions wrap every call in VaulterDatabase::transaction and emit the domain event. The
@@ -30,7 +30,7 @@ final class NodeStoreRepository
      */
     public function create(array $attributes): Node
     {
-        // forceFill (P1.4/F-P1.8-02): $attributes here is ALWAYS a server-built
+        // forceFill: $attributes here is ALWAYS a server-built
         // literal array from a Drive Action (never raw request input reaching this
         // repository) — mass-assignment guarding belongs at the HTTP boundary
         // (Node::$guarded), not on this trusted internal seam.
@@ -56,7 +56,7 @@ final class NodeStoreRepository
     }
 
     /**
-     * The §2.2 move: a single parent_id UPDATE on the moved node only — its
+     * The move: a single parent_id UPDATE on the moved node only — its
      * descendants keep their parent_id, so the subtree rides along untouched (the
      * whole point of adjacency over materialised paths).
      */
@@ -75,7 +75,7 @@ final class NodeStoreRepository
     }
 
     /**
-     * Soft-trash a whole subtree atomically (§2.10 triplet). Every node in the id
+     * Soft-trash a whole subtree atomically (triplet). Every node in the id
      * list gets trashed_at/trashed_by stamped in ONE bulk UPDATE; the subtree
      * ROOT additionally records trashed_from_parent_id so restore can re-home it.
      * Descendants keep parent_id untouched, so the shape is restored verbatim.
@@ -108,7 +108,7 @@ final class NodeStoreRepository
     }
 
     /**
-     * Clear the trashed triplet across a subtree (§2.10 restore) in ONE bulk
+     * Clear the trashed triplet across a subtree (restore) in ONE bulk
      * UPDATE. The root's parent_id may have been re-homed by the Action before
      * this call; this only clears the trash stamps.
      *
@@ -131,7 +131,7 @@ final class NodeStoreRepository
     }
 
     /**
-     * Physically purge a subtree's rows (§2.10 stage 3, F-P1.12-02) — a genuine
+     * Physically purge a subtree's rows (stage 3) — a genuine
      * DELETE (nodes have no tombstone), so FK `cascadeOnDelete` on every dependent
      * table (files → file_revisions → file_revision_blobs, documents →
      * document_revisions, node_grants, node_shares, …) physically removes their
@@ -150,12 +150,12 @@ final class NodeStoreRepository
     }
 
     /**
-     * Re-verify + row-lock the purge root at delete time (P2.2 review fix,
+     * Re-verify + row-lock the purge root at delete time (review fix,
      * TOCTOU). `PurgeTrashCommand` materialises purge candidates before opening
      * a transaction; between that read and the transaction actually running, a
      * concurrent `POST nodes/{id}/restore` can clear `trashed_at` on the same
      * node (queue delay, a slow prior candidate in the same batch, or plain bad
-     * timing). Because purge is now irreversible (ADR-0016 / F-P1.12-02), acting
+     * timing). Because purge is now irreversible (docs/adr/0016-trash-retention-erasure.md /), acting
      * on the stale pre-transaction node would physically delete live data the
      * user just restored — including anything they added after restoring, since
      * the purge transaction runs strictly after the restore commits.
@@ -190,7 +190,7 @@ final class NodeStoreRepository
 
     /**
      * Lock live node rows for the rest of the transaction, in ascending id order so
-     * two operations over overlapping nodes queue instead of deadlocking (D21 level 2:
+     * two operations over overlapping nodes queue instead of deadlocking (level 2:
      * after lockTree, before aggregate and quota locks). SQLite has no row locks and
      * serialises writers, so the grammar drops FOR UPDATE there. A missing id means
      * the node is gone.
@@ -221,7 +221,7 @@ final class NodeStoreRepository
     }
 
     /**
-     * Stamp a content change (who and when, PLAN2.D42) without touching the
+     * Stamp a content change (who and when) without touching the
      * sequence — document content writes change the node's content, not its
      * editorial state.
      */
@@ -240,7 +240,7 @@ final class NodeStoreRepository
 
     /**
      * Refresh a file node's cached mime/size/extension after its aggregate's head
-     * moved (§2.4) and stamp the content change. The head pointer itself lives on
+     * moved and stamp the content change. The head pointer itself lives on
      * v_files.
      */
     public function cacheHead(

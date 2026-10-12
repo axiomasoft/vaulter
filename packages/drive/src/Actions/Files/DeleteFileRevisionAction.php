@@ -23,7 +23,7 @@ use Vaulter\Support\Identity;
 use Vaulter\Support\TreeGuard;
 
 /**
- * Delete one non-current revision of a file (PLAN2.D48) — the single path of the API
+ * Delete one non-current revision of a file — the single path of the API
  * and of the retention pruning. Lock order T(shared) → N(file node) → F(v_files) →
  * R(revision) → Q(drive quota) → C(CAS edges). Under the file and revision locks the
  * head and pinned revisions are refused (P4-I19), so a concurrent new revision or pin

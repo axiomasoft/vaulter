@@ -13,7 +13,7 @@ use Vaulter\Models\Cas\Blob;
 use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
- * Write-side row work for v_blobs (H.3). It owns the locked find-or-create by the
+ * Write-side row work for v_blobs. It owns the locked find-or-create by the
  * per-scope dedup key, resurrection of a tombstoned match, and the blob state
  * transitions. It opens NO transactions — BlobStore wraps every call in one — and
  * makes NO liveness decision beyond reading the row under the lock the caller
@@ -28,7 +28,7 @@ final readonly class BlobStoreRepository
 
     /**
      * Find-or-create the committed blob for a content address inside the caller's
-     * already-locked transaction (H.3). Returns the existing row on a dedup hit
+     * already-locked transaction. Returns the existing row on a dedup hit
      * (resurrecting it if tombstoned) or a freshly created committed row, plus a
      * flag telling BlobStore whether bytes must be promoted (true ⇒ newly created,
      * promote; false ⇒ dedup hit, skip the physical write).
@@ -70,7 +70,7 @@ final readonly class BlobStoreRepository
         } catch (UniqueConstraintViolationException) {
             // We lost the INSERT race (another committer of the same bytes won).
             // Re-SELECT under the same transaction and reuse its row — never treat
-            // a unique violation as fatal (H.3). This is the loser branch of the
+            // a unique violation as fatal. This is the loser branch of the
             // UNIQUE (scope, sha256) backbone.
             $winner = $this->lockedLookup(sha256: $sha256, scope: $scope);
 
@@ -123,7 +123,7 @@ final readonly class BlobStoreRepository
     /**
      * Overwrite the ref_count CACHE from a freshly counted edge total
      * (reconciliation). This is the only writer of ref_count — commit never
-     * touches it (H.3, no hot-row).
+     * touches it (no hot-row).
      */
     public function setRefCount(Blob $blob, int $count): void
     {
@@ -205,7 +205,7 @@ final readonly class BlobStoreRepository
         ?string $tenantId,
         ?string $storageId,
     ): Blob {
-        // forceFill (P1.4/F-P1.5-04): Blob is intentionally fully guarded (CAS
+        // forceFill: Blob is intentionally fully guarded (CAS
         // integrity: sha256/storage_key are content-addressed) — this is the
         // sole trusted commit seam, never raw request input.
         $blob = new ($this->vaulterConfig->model('blob'));
@@ -229,7 +229,7 @@ final readonly class BlobStoreRepository
     }
 
     /**
-     * Resurrection (H.3): a commit that finds a tombstoned blob un-tombstones it
+     * Resurrection: a commit that finds a tombstoned blob un-tombstones it
      * (→ committed, clear delete_after_at) in the same locked transaction. A
      * deleting/deleted row is also resurrected — its bytes will be re-promoted by
      * BlobStore since the canonical object may already be gone.

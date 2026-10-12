@@ -9,7 +9,7 @@ use Vaulter\Models\Drive\FileRevision;
 use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
- * The high-level content-addressed blob lifecycle (H.3): the race-free CAS.
+ * The high-level content-addressed blob lifecycle: the race-free CAS.
  *
  * commit() prepares bytes; commitStaged() accepts already prepared bytes →
  * find-or-create the blob by its per-scope dedup key inside ONE locked
@@ -38,7 +38,7 @@ interface BlobStore
 
     /**
      * Create the version↔blob edge in v_file_revision_blobs. The edge — not
-     * ref_count — is the liveness truth (H.3).
+     * ref_count — is the liveness truth.
      *
      * @param array{role?: string, ordinal?: int, offset_bytes?: int|null, length_bytes?: int|null} $attributes
      */

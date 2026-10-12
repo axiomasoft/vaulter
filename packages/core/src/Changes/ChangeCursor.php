@@ -8,7 +8,7 @@ use JsonException;
 use Vaulter\Exceptions\Changes\InvalidCursorException;
 
 /**
- * The position of a client in a drive's change journal (PLAN2.D50): the drive, its
+ * The position of a client in a drive's change journal: the drive, its
  * tenant, the journal epoch and the last seq the client has applied. The token is
  * opaque to clients: base64url(json) "." base64url(HMAC-SHA256(json)), signed with a
  * key derived from the application key, so a client can neither forge a position

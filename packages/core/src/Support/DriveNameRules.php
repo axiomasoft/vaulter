@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Support;
 
 /**
- * The request-shape check for node names in the Drive write requests (§2.2): a name
+ * The request-shape check for node names in the Drive write requests: a name
  * is required, at most 255 characters, and carries no path separators (the tree is
  * adjacency-based — a name is a single segment, never a path). Kept in one place so
  * create/rename/upload/copy surface the same message.

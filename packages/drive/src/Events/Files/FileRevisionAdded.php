@@ -18,7 +18,7 @@ use Vaulter\ValueObjects\Events\EventSubject;
 use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
- * A new version was committed onto an existing file node (§2.4): number
+ * A new version was committed onto an existing file node: number
  * bumped, current_revision_id repointed, the prior head marked superseded.
  */
 final readonly class FileRevisionAdded extends DomainEvent

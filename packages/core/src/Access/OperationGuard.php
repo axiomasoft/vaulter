@@ -69,7 +69,7 @@ final readonly class OperationGuard
         }
     }
 
-    /** Grant and share-link changes are mutations: an archived drive refuses them (PLAN2.D37). */
+    /** Grant and share-link changes are mutations: an archived drive refuses them. */
     public function assertMutable(OperationContext $context, Node $node): void
     {
         $this->assertDriveLifecycle(context: $context, node: $this->scoped(context: $context, node: $node), operation: OperationKind::Mutation);
@@ -146,7 +146,7 @@ final readonly class OperationGuard
 
     /**
      * COPY duplicates the content of every active descendant, so each copied node
-     * needs view, download and copy (PLAN2.D30/D45): one the actor cannot see or take
+     * needs view, download and copy: one the actor cannot see or take
      * stops the whole copy, so a hidden child never leaks through its folder.
      * Returns the authorised node keys so the Action can refuse a descendant that
      * appears between this check and its locks; null for a system actor, which
@@ -250,7 +250,7 @@ final readonly class OperationGuard
     }
 
     /**
-     * The drive lifecycle (PLAN2.D37): a drive being deleted does not exist for anyone
+     * The drive lifecycle: a drive being deleted does not exist for anyone
      * but the system purge; an archived drive refuses every non-system mutation.
      */
     private function assertDriveLifecycle(OperationContext $context, Node $node, OperationKind $operation): Drive

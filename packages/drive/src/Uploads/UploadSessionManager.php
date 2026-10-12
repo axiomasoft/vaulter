@@ -36,7 +36,7 @@ use Vaulter\ValueObjects\Access\Actor;
 use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
- * The resumable-upload lifecycle coordinator (§2.8 / D16 / M3a). It owns:
+ * The resumable-upload lifecycle coordinator. It owns:
  *   - initiate(UploadInitData) → a fresh UploadSession (status=initiated, a UNIQUE
  *     upload_id, expires_at = now + the configured TTL), oversize-rejected up front;
  *   - the lifecycle transitions (initiated → uploading → assembled → committed) plus
@@ -48,7 +48,7 @@ use Vaulter\ValueObjects\Access\ActorRef;
  * repository (never Model::create) so the controller stays thin and the sweeper /
  * queue can drive it. The actual assemble→commit (BlobStore.commit) is
  * CommitUploadAction — the manager only moves the session's state and cleans up the
- * staged temp + protocol state on abort/expire (H.3).
+ * staged temp + protocol state on abort/expire.
  */
 final readonly class UploadSessionManager
 {
@@ -63,9 +63,9 @@ final readonly class UploadSessionManager
     ) {}
 
     /**
-     * Open a resumable session (§2.8). Validates the declared total against the
+     * Open a resumable session. Validates the declared total against the
      * configured ceiling BEFORE any bytes are accepted (oversize rejected up front,
-     * never staged), checks the actor's active-session cap (P1.3 / F-P1.4-09), mints
+     * never staged), checks the actor's active-session cap, mints
      * a UNIQUE upload_id, stamps the TTL, and lets the protocol handler initialise
      * its side (S3 CreateMultipartUpload; a no-op for tus).
      */
@@ -104,7 +104,7 @@ final readonly class UploadSessionManager
     }
 
     /**
-     * The per-protocol handler for a session (§2.8), resolved from the container by
+     * The per-protocol handler for a session, resolved from the container by
      * the session's protocol enum so a host may swap either implementation.
      */
     public function handlerFor(UploadSession $session): UploadProtocolHandler
@@ -124,7 +124,7 @@ final readonly class UploadSessionManager
     }
 
     /**
-     * Mark a session assembled (§2.8) once its handler reports every byte received —
+     * Mark a session assembled once its handler reports every byte received —
      * the gate the commit step waits on. A no-op (returns as-is) when the session is
      * not actually complete, so a premature complete() call cannot skip ahead.
      */
@@ -160,8 +160,7 @@ final readonly class UploadSessionManager
     }
 
     /**
-     * Drive assemble→commit INSIDE the same critical section as a tus PATCH (VLT-REMED
-     * P5.2 / R-11). The controller used to do it in the open: `markAssembled()` then
+     * Drive assemble→commit INSIDE the same critical section as a tus PATCH. The controller used to do it in the open: `markAssembled()` then
      * `CommitUploadAction::execute()`, each on its own connection-level transaction, with
      * nothing holding the session lock in between — while {@see reclaim()} explicitly
      * reclaims an Assembled session and {@see UploadSession::scopeSweepable()} lists one
@@ -206,12 +205,12 @@ final readonly class UploadSessionManager
     }
 
     /**
-     * Abort a session (§2.8): reclaim the protocol-side state (S3 AbortMultipartUpload),
+     * Abort a session: reclaim the protocol-side state (S3 AbortMultipartUpload),
      * discard the staged temp, and tombstone the row as Aborted. Idempotent — a
      * terminal session is returned untouched (and, since nothing changed, emits no
-     * activity — F-P1.4-13 traces state CHANGES, not no-op calls).
+     * activity — traces state CHANGES, not no-op calls).
      *
-     * Runs inside the SAME critical section as a tus PATCH (VLT-REMED P5.2 / R-02) —
+     * Runs inside the SAME critical section as a tus PATCH —
      * see {@see reclaim()}. Throws UploadConflictException when a PATCH holds the lock.
      * Without an actor the abort is recorded as a system reclaim.
      */
@@ -229,12 +228,12 @@ final readonly class UploadSessionManager
     }
 
     /**
-     * Expire a stale session (§2.8 sweeper): the same cleanup as abort but the
+     * Expire a stale session (sweeper): the same cleanup as abort but the
      * terminal state is Expired (so the audit distinguishes a swept session from a
      * client-cancelled one). Runs outside an HTTP request (console/schedule) — the
      * activity row carries no actor (a system reclaim).
      *
-     * Runs inside the SAME critical section as a tus PATCH (VLT-REMED P5.2 / R-02) —
+     * Runs inside the SAME critical section as a tus PATCH —
      * see {@see reclaim()}. Throws UploadConflictException when a PATCH holds the lock;
      * the sweeper treats that as "skip, it is alive", not as a failure.
      */
@@ -255,7 +254,7 @@ final readonly class UploadSessionManager
      * The shared abort/expire body — and the reason both exist at all: reclaiming a
      * session DESTROYS bytes (staged temp discard) and moves the row to a terminal
      * state, which is exactly the window a concurrent tus PATCH is writing into
-     * (VLT-REMED P5.2 / R-02).
+     * .
      *
      * Before the fix, expire() ran with no lock at all: the sweeper could delete the
      * staged object between a PATCH's "read offset" and its "append", so the PATCH wrote
@@ -297,7 +296,7 @@ final readonly class UploadSessionManager
     }
 
     /**
-     * Reject an oversize upload at initiate (§2.8 / HARDENING): a declared total past
+     * Reject an oversize upload at initiate (HARDENING): a declared total past
      * the configured ceiling never opens a session, so we never stage bytes we must
      * reject. A null total (size unknown up front) is allowed; the tus PATCH path
      * still re-checks the ceiling as the offset grows.
@@ -340,7 +339,7 @@ final readonly class UploadSessionManager
 
     /**
      * Refuse a new session past the configured cap on OPEN sessions per actor
-     * (§2.8 / P1.3 / F-P1.4-09) — an actor may not open an unbounded number of
+     * — an actor may not open an unbounded number of
      * concurrent staging areas. 0 disables the cap; a null actor id (unattributed/
      * system-minted session) is never capped (there is no per-actor bucket).
      */

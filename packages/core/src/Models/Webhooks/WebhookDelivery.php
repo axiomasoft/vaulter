@@ -16,7 +16,7 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 
 /**
  * A single delivery attempt of an event to a webhook endpoint, with retry
- * bookkeeping (master plan §2.11 / D14 / M3b). At-least-once with exponential
+ * bookkeeping. At-least-once with exponential
  * backoff: a non-2xx parks it 'failed' with next_retry_at on the backoff schedule;
  * the relay's due-retry sweep re-queues it; past the attempt budget it terminalises
  * 'dead' (DLQ) for inspection. event_id names the occurrence; an occurrence reaches
@@ -47,7 +47,7 @@ class WebhookDelivery extends Model
     use ResolvesVaulterConnection;
 
     /**
-     * Fully guarded (F-P1.7-04): a delivery-attempt row — every column is
+     * Fully guarded: a delivery-attempt row — every column is
      * system-computed retry bookkeeping. The relay writes it with forceFill()
      * or a bulk insert, never from request input.
      *

@@ -10,7 +10,7 @@ use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
 
 /**
  * A pluggable document-processing handler — THE format-extensibility headline
- * (master plan §4.5 / §7 / H.5). A handler claims a set of mime types (exact or
+ * . A handler claims a set of mime types (exact or
  * wildcards like "image/*") and/or extensions, declares its capabilities and its
  * front-end mount descriptor per file, and the {@see
  * \Vaulter\Handlers\FileHandlerRegistry} resolves the best one for a
@@ -20,9 +20,9 @@ use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
  * and register it (tagged container binding 'vaulter.handlers', config(
  * 'vaulter.handlers') FQCN list, or runtime Vaulter::handlers()->register()). No
  * migration, no core change, NOT gated by the sealed NodeKind/DocumentType enum
- * (H.5 — the registry's string keys are the source of truth).
+ * (the registry's string keys are the source of truth).
  *
- * Every new handler is a SemVer-frozen public API from its release (H.5).
+ * Every new handler is a SemVer-frozen public API from its release.
  */
 interface FileHandler
 {
@@ -59,14 +59,14 @@ interface FileHandler
 
     /**
      * What this handler can do with the described file — editable / previewable /
-     * downloadable / thumbnailable / collaborative (§4.5). Computed per file so a
+     * downloadable / thumbnailable / collaborative. Computed per file so a
      * capabilities() depends only on MIME and extension, which identify the registry cache key.
      */
     public function capabilities(FileDescriptor $file): ContentCapabilities;
 
     /**
      * The front-end mount descriptor for the file: the Vue component + open route +
-     * props the client routes the node to (§4.5 / §7).
+     * props the client routes the node to.
      */
     public function viewer(FileDescriptor $file): ViewerDescriptor;
 }

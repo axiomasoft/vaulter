@@ -13,7 +13,7 @@ namespace Vaulter\ValueObjects\Handlers;
  * \Vaulter\Enums\Handlers\Capability}. downloadable defaults to true (anything can be
  * downloaded as bytes); the richer flags are opt-in.
  *
- * NOTE on previewable vs safe-to-inline (H.5 hardening): `previewable` means a
+ * NOTE on previewable vs safe-to-inline (hardening): `previewable` means a
  * handler CAN render a preview, NOT that the bytes are safe to inline unsandboxed.
  * HTML/SVG are previewable but must NEVER be inlined into the app origin without a
  * sandbox (see PreviewHandler) — the client decides the sandboxing, the capability

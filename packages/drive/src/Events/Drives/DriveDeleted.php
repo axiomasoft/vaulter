@@ -12,7 +12,7 @@ use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
 
 /**
- * The last row of a drive is gone: its purge finished (PLAN2.D27). The row no longer
+ * The last row of a drive is gone: its purge finished. The row no longer
  * exists, so the event carries its ids, tenant and profile.
  */
 final readonly class DriveDeleted extends DomainEvent

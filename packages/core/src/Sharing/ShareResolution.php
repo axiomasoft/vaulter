@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Sharing;
 
 /**
- * The outcome of resolving a bearer share-token (§2.7 / M2c). It distinguishes the
+ * The outcome of resolving a bearer share-token. It distinguishes the
  * denial reasons the public HTTP layer must translate to different statuses:
  *
  *  - Ok            → a ShareContext is available (the request proceeds).

@@ -9,7 +9,7 @@ use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
 
 /**
- * The write side of webhook-endpoint persistence (master plan §2.11 / D14 / M3b). It
+ * The write side of webhook-endpoint persistence. It
  * shapes the rows — create, attribute update, deactivate, secret rotation, delete —
  * and opens NO transaction (the Action owns it). It never generates a signing secret:
  * the Action mints it (returned once) and hands the stored value here.
@@ -31,7 +31,7 @@ final readonly class WebhookEndpointStoreRepository
         /** @var class-string<WebhookEndpoint> $model */
         $model = $this->vaulterConfig->model('webhook_endpoint');
 
-        // forceFill (P1.4/F-P1.7-04): signing_secret is deliberately NOT
+        // forceFill: signing_secret is deliberately NOT
         // fillable on WebhookEndpoint — Model::create() would silently drop it.
         /** @var WebhookEndpoint $endpoint */
         $endpoint = new $model;

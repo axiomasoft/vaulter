@@ -184,7 +184,7 @@ final class TusProtocolController
 
     /**
      * The raw PATCH body as a STREAM the handler appends — `php://input` itself, never a
-     * PHP string (VLT-REMED P5.2 review / F-P1.4-04).
+     * PHP string (review /).
      *
      * `fwrite($stream, $request->getContent())` materialised the ENTIRE body in memory
      * before the per-chunk ceiling downstream ever got to look at it: the barrier stood
@@ -209,7 +209,7 @@ final class TusProtocolController
 
     /**
      * Refuse an over-cap PATCH on its DECLARED length, before the body is touched
-     * (VLT-REMED P5.2 review): a client that announces more than `uploads.max_chunk_bytes`
+     * (review): a client that announces more than `uploads.max_chunk_bytes`
      * gets a 413 and we read nothing. A body with no declared length is not trusted to be
      * small — StagedUpload cuts THAT one off at the ceiling mid-copy, before staging.
      */
@@ -274,7 +274,7 @@ final class TusProtocolController
     }
 
     /**
-     * F-P1.4-06: the CORE protocol requires the client to declare the resumable
+     * the CORE protocol requires the client to declare the resumable
      * version it speaks; a request that omits it (or names one this deployment does
      * not support) is refused with 412 + the version we DO support, never silently
      * accepted.
@@ -292,7 +292,7 @@ final class TusProtocolController
     }
 
     /**
-     * F-P1.4-05: a tus PATCH body MUST be application/offset+octet-stream; anything
+     * a tus PATCH body MUST be application/offset+octet-stream; anything
      * else (a stray text/plain, a misconfigured client) is refused with 415 BEFORE
      * a single byte is appended — never silently accepted as a valid chunk.
      */

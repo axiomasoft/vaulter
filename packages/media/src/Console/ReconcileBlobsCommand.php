@@ -12,7 +12,7 @@ use Vaulter\VaulterManager;
 
 /**
  * Rebuild the ref_count cache from the v_file_revision_blobs edge counts — the real
- * liveness truth (H.3) — and report integrity hazards: dangling rows (a committed
+ * liveness truth — and report integrity hazards: dangling rows (a committed
  * blob whose canonical object is missing on disk). With --orphans it ALSO walks the
  * disk for the inverse hazard — orphan objects (bytes on disk with no blob row),
  * reporting them by default and DELETING them only under --prune. The default run

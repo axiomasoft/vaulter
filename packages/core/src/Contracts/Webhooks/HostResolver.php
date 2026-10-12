@@ -6,7 +6,7 @@ namespace Vaulter\Contracts\Webhooks;
 
 /**
  * Resolves a hostname to EVERY IP it maps to — both A (IPv4) and AAAA (IPv6) records
- * (§2.11 / F-P1.7-01). The outbound guard rejects the host if ANY returned address
+ * . The outbound guard rejects the host if ANY returned address
  * lands in a blocked range: a public A paired with a private AAAA must not slip
  * through.
  *

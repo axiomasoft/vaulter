@@ -10,7 +10,7 @@ use Vaulter\Azgard\Contracts\AzgardBackedUser;
 use Vaulter\Azgard\Contracts\AzgardGuard;
 
 /**
- * The REAL {@see AzgardGuard} adapter (master plan P1 #2 / §6 / H.2 / ADR-0007): it
+ * The REAL {@see AzgardGuard} adapter (docs/adr/0007-pluggable-authorization.md): it
  * satisfies Vaulter's narrow permission seam by delegating to an AzGuard v1 subject
  * ({@see AzgardBackedUser}). This is the production counterpart to
  * {@see Testing\FakeAzgardGuard} — the {@see AzgardPermissionDriver} only ever sees the

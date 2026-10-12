@@ -14,7 +14,7 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Tenancy\TenancyBoundary;
 
 /**
- * Read-side queries over v_activity (§2.9 / M2c-activity). The feed is scoped to a
+ * Read-side queries over v_activity. The feed is scoped to a
  * storage / node / actor — this IS "recipients resolved at read": there are no
  * notification rows and no per-user fan-out, just a scoped, newest-first query the
  * controller cursor-paginates.

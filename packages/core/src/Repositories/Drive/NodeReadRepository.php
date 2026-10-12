@@ -29,11 +29,11 @@ use Vaulter\Support\NodeName;
 use Vaulter\Tenancy\TenancyBoundary;
 
 /**
- * Read-side queries over the v_nodes adjacency tree (§2.2 / H.4). Tree reads use
+ * Read-side queries over the v_nodes adjacency tree. Tree reads use
  * the staudenmeir recursive relationships (descendants/ancestors), always bounded
  * by treeOf(storage) and — for bulk descents — withMaxDepth, never the BANNED
  * whereHas('descendants') / withCount('descendants') which break on MariaDB and
- * degrade on Postgres (H.4 arch-ban).
+ * degrade on Postgres (arch-ban).
  *
  * queryForUser()/constrainToAccessible() narrow grant-authoritative drivers to
  * candidate IDs. Candidates require exact AccessResolver evaluation before display;
@@ -43,7 +43,7 @@ final class NodeReadRepository
 {
     /**
      * The maximum recursion depth for bulk subtree descents — file managers live
-     * at depth ≤ ~20 (§1.5), so this caps a pathological tree without an explicit
+     * at depth ≤ ~20, so this caps a pathological tree without an explicit
      * caller bound.
      */
     public const int DEFAULT_MAX_DEPTH = 64;
@@ -121,7 +121,7 @@ final class NodeReadRepository
 
     /**
      * The whole subtree below a node via the recursive CTE, bounded by
-     * withMaxDepth so the descent never runs unbounded (H.4). The node itself is
+     * withMaxDepth so the descent never runs unbounded. The node itself is
      * NOT part of descendants() — callers add it when needed.
      *
      * @return Collection<int, Node>
@@ -317,9 +317,9 @@ final class NodeReadRepository
 
     /**
      * The ancestor chain from the node up to the storage root (nearest first),
-     * bounded by withMaxDepth (F-P4.2-01, VLT-REMED P4.3) — the same cap
+     * bounded by withMaxDepth — the same cap
      * descendants()/subtree() already apply on the other traversal direction
-     * (ADR-0005 requires the symmetry; this was the missing ascend-side half).
+     * (docs/adr/0005-unified-node-tree.md requires the symmetry; this was the missing ascend-side half).
      *
      * @return Collection<int, Node>
      */
@@ -339,7 +339,7 @@ final class NodeReadRepository
 
     /**
      * Breadcrumb from the storage root down to the node (root first), the node
-     * included as the last crumb. Bounded by withMaxDepth (F-P4.2-01) — same
+     * included as the last crumb. Bounded by withMaxDepth — same
      * reasoning as ancestors() above.
      *
      * @return Collection<int, Node>
@@ -374,15 +374,15 @@ final class NodeReadRepository
 
     /**
      * Name search within a storage tree (live nodes only). Matches a case-folded
-     * substring of the node name — the §2.2 search index backs this.
+     * substring of the node name — the search index backs this.
      *
-     * The caller-supplied term is untrusted (F-P1.8-03): `LIKE` metacharacters
+     * The caller-supplied term is untrusted: `LIKE` metacharacters
      * (`%`, `_`, `\`) are escaped BEFORE the substring wildcards are wrapped
      * around it, with an explicit `ESCAPE` clause (the backslash is BOUND, not a literal: MySQL reads `'\'` as an escaped quote) — a raw `%`/`_` in the
      * term is matched LITERALLY, never as a wildcard, on SQLite, MySQL
      * and PostgreSQL. Case-folding happens first so escaping never touches
      * multibyte case-mapping. `orderBy('id')` is a stable tie-breaker
-     * (F-P4.2-05, VLT-REMED P4.3): `name` is unique only per-parent (ADR-0005)
+     * `name` is unique only per-parent (docs/adr/0005-unified-node-tree.md)
      * and this method searches across the WHOLE tree, so cursorPaginate()'s
      * keyset would otherwise skip/duplicate rows across a page boundary that
      * lands on two nodes sharing a name in different folders.
@@ -413,7 +413,7 @@ final class NodeReadRepository
     /**
      * The trash view: trashed (but not yet permanently deleted) nodes in a
      * storage, newest first. `orderByDesc('id')` is a stable tie-breaker
-     * (F-P4.2-05, VLT-REMED P4.3): several nodes trashed by the same
+     * several nodes trashed by the same
      * operation/request share an identical trashed_at timestamp, so
      * cursorPaginate()'s keyset would otherwise skip/duplicate rows on that
      * page boundary.
@@ -431,7 +431,7 @@ final class NodeReadRepository
 
     /**
      * The trash roots whose trashed_at is at or before $threshold — the purge-trash
-     * candidates past their retention window (§2.10, PLAN2.D37). Only explicit
+     * candidates past their retention window. Only explicit
      * roots (trash_root_id = id) are returned: purging a root deletes its whole
      * subtree, including descendants trashed earlier on their own, so a member is
      * never purged twice. Returns a Builder so the command chunks it.
@@ -466,7 +466,7 @@ final class NodeReadRepository
      * (same name_key: NFC + full case folding, compared byte for byte) — the
      * sibling-unique predicate the Actions check
      * before create/move/rename. $ignoreId excludes the node being renamed in
-     * place. Uses a direct EXISTS, NOT a recursive descendant aggregate (H.4).
+     * place. Uses a direct EXISTS, NOT a recursive descendant aggregate.
      */
     public function siblingNameExists(
         Drive $storage,
@@ -500,7 +500,7 @@ final class NodeReadRepository
     }
 
     /**
-     * The STANDALONE public seam (master plan P1 #3): the live (non-trashed) nodes an
+     * The STANDALONE public seam: the live (non-trashed) nodes an
      * actor may reach, as a Builder for pagination / admin. It is the named entry
      * for "give me this actor's nodes" = the live-nodes base + constrainToAccessible.
      * A caller that needs its own trashed-state control (the children cursor below, or
@@ -530,7 +530,7 @@ final class NodeReadRepository
 
     /**
      * Constrain an ALREADY-BUILT node query to the actor's grant-reachable candidate
-     * set (P1 #3), WITHOUT imposing the live/trashed filter — so a caller that owns
+     * set, WITHOUT imposing the live/trashed filter — so a caller that owns
      * its own trashed-state handling (the children cursor; the admin table, whose
      * Trashed filter flips trashed_at) composes the access narrowing on top of its own
      * query. A no-op when grant-filtering does not apply (open drivers); forces an
@@ -579,7 +579,7 @@ final class NodeReadRepository
     }
 
     /**
-     * The "shared with me" top-level view (§2.6): the nodes the actor holds a live
+     * The "shared with me" top-level view: the nodes the actor holds a live
      * grant on, RE-RESOLVED through the full algorithm (the EXACT gate, over a bounded candidate set —
      * unlike the candidate-SQL listings). Cross-storage by nature: the subject index
      * is not storage-bound.
@@ -640,7 +640,7 @@ final class NodeReadRepository
      * descendants of every SUBTREE-scoped anchor. Item-scoped anchors contribute
      * only their own node. A SUPERSET — see {@see queryForUser()}.
      *
-     * PUBLIC (F-P1.10-01): {@see constrainToAccessible()} narrows a query by the
+     * PUBLIC: {@see constrainToAccessible()} narrows a query by the
      * NODE model's own primary key, which only fits a Node-shaped listing. The
      * admin panel's non-Node resources (grant/share/activity/storage) key off a
      * DIFFERENT column (node_id / target_id / root_node_id), so they call this
@@ -713,7 +713,7 @@ final class NodeReadRepository
 
     /**
      * The descendant node ids BELOW the given subtree anchors, via the staudenmeir
-     * recursive CTE, bounded by withMaxDepth — H.4, never whereHas('descendants') /
+     * recursive CTE, bounded by withMaxDepth, never whereHas('descendants') /
      * withCount('descendants'). KEY-ONLY: the only full models hydrated are the anchors
      * themselves (bounded by the actor's grant count, NOT the subtree size); each
      * anchor's descendant subtree is pulled with ->pluck(key) — node KEYS, never

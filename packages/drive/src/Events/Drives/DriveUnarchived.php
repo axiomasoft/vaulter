@@ -13,7 +13,7 @@ use Vaulter\ValueObjects\Events\ActivityTarget;
 use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
 
-/** The drive changed its lifecycle status (PLAN2.D27): it is now active again. */
+/** The drive changed its lifecycle status: it is now active again. */
 final readonly class DriveUnarchived extends DomainEvent
 {
     public function __construct(

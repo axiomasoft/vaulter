@@ -8,7 +8,7 @@ use Vaulter\Attributes\Label;
 use Vaulter\Support\Concerns\HasLabel;
 
 /**
- * The resumable-upload session lifecycle (master plan §2.8 / D16):
+ * The resumable-upload session lifecycle:
  *
  *   Initiated → Uploading → Assembled → Committed
  *        └──────────┴──────────┘
@@ -20,7 +20,7 @@ use Vaulter\Support\Concerns\HasLabel;
  *                 the authoritative server-side offset.
  *  - Assembled  — all bytes are present on the staged temp (received_bytes ==
  *                 total_size_bytes for tus / multipart completed); ready to commit.
- *  - Committed  — the assembled bytes went through BlobStore.commit (H.3 — server
+ *  - Committed  — the assembled bytes went through BlobStore.commit (server
  *                 recomputes sha256, dedup + race-free GC apply) and the File +
  *                 FileRevision + node were created; assembled_blob_id is set. Terminal.
  *  - Aborted    — the client (or a DELETE) abandoned the session; staged temp +
@@ -74,7 +74,7 @@ enum UploadStatus: string
 
     /**
      * Whether the session is still open (accepts bytes and is a sweep/abort
-     * candidate). Initiated and Uploading are the only sweepable states (§2.8).
+     * candidate). Initiated and Uploading are the only sweepable states.
      */
     public function isOpen(): bool
     {

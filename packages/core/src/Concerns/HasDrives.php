@@ -14,7 +14,7 @@ use Vaulter\Models\Drive\Drive;
 use Vaulter\VaulterManager;
 
 /**
- * Mounts drives on a host model (PLAN2.D27). With vaulter.drives.delete_with_owner
+ * Mounts drives on a host model. With vaulter.drives.delete_with_owner
  * the drives of a deleted owner are deleted too; a host with SoftDeletes reacts to
  * forceDeleted, not to deleted, so a soft-deleted owner keeps its drives.
  *

@@ -10,7 +10,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Support\Identity;
 
 /**
- * The quota formula (PLAN2.D48, P4-I18): a drive uses the sum of size_bytes of every
+ * The quota formula (P4-I18): a drive uses the sum of size_bytes of every
  * retained revision of its files, trashed files included, without any discount for
  * deduplicated bytes. v_drives.used_bytes is the eager cache of this sum, kept by
  * conditional UPDATEs on every path that adds or removes a revision; the upgrade
@@ -19,7 +19,7 @@ use Vaulter\Support\Identity;
  * Reads the tables directly (no Eloquent scopes), so it works inside migrations and
  * for system maintenance alike.
  *
- * @internal The public quota view is DriveHandle::quota() (P4.13).
+ * @internal The public quota view is DriveHandle::quota().
  */
 final readonly class QuotaCalculator
 {

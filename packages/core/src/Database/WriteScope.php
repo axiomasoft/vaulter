@@ -11,7 +11,7 @@ use Vaulter\Exceptions\Database\WriteOutsideOperationException;
 /**
  * Tracks whether the current unit of work is a Vaulter operation. Every write to a
  * Vaulter model asks it first; outside VaulterDatabase::transaction() and
- * VaulterDatabase::write() the write is refused (PLAN2.D44, defence in depth: a host
+ * VaulterDatabase::write() the write is refused (defence in depth: a host
  * cannot bypass the invariants and the authorization of the Operations by saving a
  * model it got hold of). Bound as a scoped service: one counter per request, job or
  * Octane tick. It is not a sandbox; DB::table() and raw SQL are not intercepted.

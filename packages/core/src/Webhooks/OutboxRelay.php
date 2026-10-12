@@ -21,7 +21,7 @@ use Vaulter\Observability\TracingSpanNames;
 use Vaulter\Support\Identity;
 
 /**
- * The transactional-outbox RELAY (master plan §2.11 / D14 / M3b): turns each due
+ * The transactional-outbox RELAY: turns each due
  * outbox row into one WebhookDelivery per eligible endpoint and queues their jobs.
  *
  * Nothing is lost when a worker dies at any point:
@@ -243,7 +243,7 @@ final class OutboxRelay
                 continue;
             }
 
-            // forceFill (P1.4/F-P1.8-02): WebhookDelivery is intentionally fully
+            // forceFill: WebhookDelivery is intentionally fully
             // guarded — this is the relay's own trusted seam, never raw request input.
             /** @var WebhookDelivery $delivery */
             $delivery = new $deliveryClass;

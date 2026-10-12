@@ -12,7 +12,7 @@ use Vaulter\Models\Activity\Activity;
 use Vaulter\Schema\IdStrategyResolver;
 
 /**
- * Write-side row work for v_activity (§2.9 / M2c-activity). It inserts EXACTLY ONE
+ * Write-side row work for v_activity. It inserts EXACTLY ONE
  * append-only row from an already-resolved {@see RecordActivityCommand} and stamps
  * created_at itself (the model keeps timestamps off — append-only has no
  * updated_at). It opens NO transactions and dispatches NO events; the EventRecorder

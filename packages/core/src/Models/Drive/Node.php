@@ -24,9 +24,9 @@ use Vaulter\Models\Concerns\StampsDriveTenant;
 use Vaulter\Support\NodeName;
 
 /**
- * A node in the unified folder|file|document adjacency tree (master plan §2.2,
+ * A node in the unified folder|file|document adjacency tree (
  * the centre of the schema). One tree carries all kinds; move/rename are a single
- * parent_id/name UPDATE and reads use a recursive CTE (D5).
+ * parent_id/name UPDATE and reads use a recursive CTE.
  *
  * The recursive relationships come from staudenmeir/laravel-adjacency-list; the
  * adjacency key column is parent_id and the local key is the strategy-driven
@@ -75,7 +75,7 @@ class Node extends Model
     use StampsDriveTenant;
 
     /**
-     * Closed allow-list (F-P1.8-02): only the handful of columns a caller
+     * Closed allow-list: only the handful of columns a caller
      * legitimately mass-assigns through fill()/create() with untrusted-shaped
      * arrays. Everything structural/security (id, tenant_id, drive_id,
      * parent_id, inherit_grants, shortcut_target_id, the
@@ -119,7 +119,7 @@ class Node extends Model
     }
 
     /**
-     * The adjacency parent-key column (§2.2). Constant across id strategies — only
+     * The adjacency parent-key column. Constant across id strategies — only
      * the column TYPE changes, not its name. Overrides the trait default.
      */
     public function getParentKeyName(): string
@@ -138,7 +138,7 @@ class Node extends Model
     }
 
     /**
-     * Cycle detection on READ (F-P4.2-02): a cycle in `parent_id` that reached
+     * Cycle detection on READ: a cycle in `parent_id` that reached
      * the data outside `MoveNodeAction::assertNoCycle()` (raw SQL, a seeder, a
      * legacy import, a future bulk-write path) must not send `ancestors()`/
      * `descendants()` into an inflated or unbounded recursive scan. The trait
@@ -198,7 +198,7 @@ class Node extends Model
     }
 
     /**
-     * Personal state of this node, one row per actor (PLAN2.D40).
+     * Personal state of this node, one row per actor.
      *
      * @return HasMany<NodeUserState, $this>
      */

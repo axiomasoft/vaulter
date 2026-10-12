@@ -9,7 +9,7 @@ use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /**
- * A properties patch broke the contract of PLAN2.D41 or the drive policy limits.
+ * A properties patch broke the contract of or the drive policy limits.
  * `reason` is one of the stable codes below.
  */
 final class InvalidPropertiesException extends VaulterException implements ProblemException

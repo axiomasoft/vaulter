@@ -33,7 +33,7 @@ use Vaulter\Support\TreeGuard;
 
 /**
  * Create a kind=document node under a folder (or the storage root) with its document
- * aggregate and first checkpoint from the given content (§2.5 / M4a). The parent row
+ * aggregate and first checkpoint from the given content. The parent row
  * is locked and must be a live folder of the same storage; no parent means the root
  * folder, never a parentless node. One outer transaction: the node row, the
  * aggregate (working state at state version 1) and checkpoint #1 commit atomically,
@@ -71,7 +71,7 @@ final readonly class CreateDocumentAction
         $name = $this->policy->name(drive: $data->storage, name: $data->name);
         $parentId = $this->tree->destinationId(storage: $data->storage, into: $data->parent);
 
-        // F-P1.11-05: the ADR-0004 size limit was defined but never enforced at save
+        // the docs/adr/0004-content-format.md size limit was defined but never enforced at save
         // time — check it before the transaction, not just at the UI layer. Callers
         // that decode through the type already applied its own limit.
         if ($data->content instanceof TipTapContent) {

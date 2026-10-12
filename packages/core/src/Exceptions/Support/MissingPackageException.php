@@ -12,7 +12,7 @@ use Vaulter\Exceptions\VaulterException;
  * installed. Before this exception, the container's own generic
  * {@see BindingResolutionException} ("Target [...]
  * is not instantiable.") surfaced with no mention of "vaulter" or which composer
- * package to require — a host had to guess (F-P3.3-02 / F-P3.5-01).
+ * package to require — a host had to guess.
  */
 final class MissingPackageException extends VaulterException
 {

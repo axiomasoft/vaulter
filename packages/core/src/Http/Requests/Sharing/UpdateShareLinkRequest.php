@@ -12,7 +12,7 @@ use Vaulter\Enums\Sharing\ShareAudience;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /**
- * Validates a share-link update (PLAN2.D47): expiry, use budget, password and
+ * Validates a share-link update: expiry, use budget, password and
  * audience. A field that is absent stays as it is; `password: null` and
  * `max_uses: null` remove the password and the budget. The token, the role and
  * the scope cannot be changed here.

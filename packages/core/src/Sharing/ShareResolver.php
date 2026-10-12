@@ -32,7 +32,7 @@ use Vaulter\Tenancy\ShareTenantContext;
 use Vaulter\Tenancy\TenancyBoundary;
 
 /**
- * Resolves a bearer share-token into a {@see ShareContext} (§2.7 / M2c) — the
+ * Resolves a bearer share-token into a {@see ShareContext} — the
  * SEPARATE sharing pass that runs INSTEAD of the identity ACL. Given a raw token it:
  *
  *   1. hashes the token (sha256) and looks up the LIVE share by token_hash (not
@@ -40,7 +40,7 @@ use Vaulter\Tenancy\TenancyBoundary;
  *   2. re-verifies the match timing-safe (hash_equals) — defence-in-depth so the
  *      compare can never be a probe-able side channel;
  *   3. checks the use budget (use_count < max_uses) unless the request carries a
- *      valid link session, which has already paid for its visit (PLAN2.D47);
+ *      valid link session, which has already paid for its visit;
  *   4. resolves the target node and INTERSECTS it with item-safety — the node must
  *      not be trashed or soft-deleted and must belong to a real storage (tenant
  *      boundary) — and with the link rules as they are NOW: the role may still be
@@ -49,7 +49,7 @@ use Vaulter\Tenancy\TenancyBoundary;
  *      indistinguishable from a wrong token;
  *   5. enforces the audience (anyone | authenticated | tenant) and the optional
  *      password gate.
- *   6. (P1.2 / F-P1.3-02, D14, S2.2) re-checks that the share's issuer (granted_by)
+ *   6. re-checks that the share's issuer (granted_by)
  *      STILL holds Ability::Share on the node through the identity ACL — a share
  *      does not outlive the access that authorized minting it (confused-deputy
  *      hardening). A share with no recorded issuer has nothing to re-verify.
@@ -126,7 +126,7 @@ final readonly class ShareResolver
         }
 
         if (!$this->issuerStillAuthorized($share, $node)) {
-            // Confused-deputy re-check failed (F-P1.3-02) — opaque 404, same as any
+            // Confused-deputy re-check failed — opaque 404, same as any
             // other resolve failure.
             return ShareResult::notFound();
         }
@@ -173,7 +173,7 @@ final readonly class ShareResolver
     }
 
     /**
-     * The share's target node, but ONLY when it passes item-safety (§2.7): not
+     * The share's target node, but ONLY when it passes item-safety: not
      * trashed, not soft-deleted, attached to a real storage (the tenant boundary)
      * and that storage's profile still allows the link as it is stored — its role
      * for its audience, its expiry within maxShareLinkTtlDays. Returns null
@@ -209,7 +209,7 @@ final readonly class ShareResolver
     }
 
     /**
-     * The confused-deputy re-check (P1.2 / F-P1.3-02, D14, S2.2): a bearer link is
+     * The confused-deputy re-check: a bearer link is
      * only as trustworthy as the identity that minted it, so its issuer must STILL
      * hold Ability::Share on the node — the SAME ability the owner surface
      * ({@see ShareController::guardShare()})
@@ -217,7 +217,7 @@ final readonly class ShareResolver
      * (host-role driver + grants), never a hand-rolled grant lookup, so this
      * honours exactly the algorithm every other authorization decision does.
      *
-     * D14 binds the re-check to Ability::Share (the ability that authorized the
+     * binds the re-check to Ability::Share (the ability that authorized the
      * mint), NOT to the share's own role: an issuer who has lost write but kept
      * Share still keeps a read-only link alive; only losing Share itself revokes
      * every link they minted.

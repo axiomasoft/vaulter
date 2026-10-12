@@ -9,7 +9,7 @@ use Vaulter\Azgard\Contracts\AzgardGuard;
 /**
  * A configurable in-memory {@see AzgardGuard} so consumers (and this package's own
  * tests) can exercise the {@see AzgardPermissionDriver}
- * WITHOUT installing AzGuard (master plan §6 / H.5 — the src/Testing seam). It
+ * WITHOUT installing AzGuard (the src/Testing seam). It
  * lives in src/Testing/ (not tests/) so hosts can reference it from their own suites.
  *
  * It models the two AzGuard answers as plain data:

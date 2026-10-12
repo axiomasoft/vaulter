@@ -11,7 +11,7 @@ use Vaulter\Documents\Enums\Collaboration\CollaborationDriverType;
 use Vaulter\Exceptions\VaulterException;
 
 /**
- * Resolves the active node-collaboration transport (M4b) from
+ * Resolves the active node-collaboration transport from
  * the configuration key ('vaulter-documents.collaboration.driver'). The driver class map is keyed by the
  * CollaborationDriverType so adding a transport is one enum case + one binding, no
  * stringly-typed lookup. Distinct from VaulterManager::driver(), which resolves the

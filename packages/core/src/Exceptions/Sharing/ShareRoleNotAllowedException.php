@@ -9,7 +9,7 @@ use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
-/** A share link cannot carry this role for this audience (PLAN2.D47). */
+/** A share link cannot carry this role for this audience. */
 final class ShareRoleNotAllowedException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

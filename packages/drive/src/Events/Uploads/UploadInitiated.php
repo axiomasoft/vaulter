@@ -13,7 +13,7 @@ use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
 
 /**
- * A resumable-upload session was opened (§2.8 / F-P1.4-13). Audited only: upload
+ * A resumable-upload session was opened. Audited only: upload
  * sessions are not a webhook type.
  */
 final readonly class UploadInitiated extends DomainEvent

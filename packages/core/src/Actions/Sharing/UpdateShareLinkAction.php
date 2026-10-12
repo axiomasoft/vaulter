@@ -23,7 +23,7 @@ use Vaulter\Repositories\Sharing\NodeShareStoreRepository;
 use Vaulter\Sharing\ShareLinkRules;
 
 /**
- * Change a live share link without touching its token (PLAN2.D47): expiry, use
+ * Change a live share link without touching its token: expiry, use
  * budget, password and audience. The link row is locked after the node, so a
  * concurrent revoke or rotate and this update serialize. The new expiry obeys the
  * same bounds as at creation.

@@ -12,7 +12,7 @@ use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
 
 /**
- * Reads and writes one actor's personal node state (PLAN2.D40). Personal state
+ * Reads and writes one actor's personal node state. Personal state
  * takes no tree locks and never touches the node row: it changes neither the
  * node's sequence nor its timestamps.
  */

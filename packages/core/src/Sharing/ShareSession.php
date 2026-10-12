@@ -10,7 +10,7 @@ use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Support\Identity;
 
 /**
- * The session a visitor opens by redeeming a share link (PLAN2.D47). It is a signed,
+ * The session a visitor opens by redeeming a share link. It is a signed,
  * stateless token the client sends back in the X-Share-Session header: while it is
  * valid, further requests on the link are the same visit and cost no use. It is
  * bound to the link, its token generation and the settings that decide who may

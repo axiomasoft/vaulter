@@ -9,7 +9,7 @@ use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
 
 /**
- * The read side of webhook-endpoint queries (master plan §2.11 / D14 / M3b) — the
+ * The read side of webhook-endpoint queries — the
  * admin listing + single lookup for the management surface. Authorization is the
  * controller's job (a global manage ability); this repository only shapes queries.
  */

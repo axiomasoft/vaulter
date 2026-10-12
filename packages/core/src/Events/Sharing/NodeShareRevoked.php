@@ -15,7 +15,7 @@ use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
 
 /**
- * A bearer share-link was revoked (§2.7 / M2c). A revoked share never resolves
+ * A bearer share-link was revoked. A revoked share never resolves
  * again (the resolver filters on revoked_at).
  */
 final readonly class NodeShareRevoked extends DomainEvent

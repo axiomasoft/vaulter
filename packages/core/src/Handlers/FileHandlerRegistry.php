@@ -13,7 +13,7 @@ use Vaulter\Handlers\Builtin\DownloadOnlyHandler;
 use Vaulter\ValueObjects\Handlers\FileDescriptor;
 
 /**
- * THE format-extensibility engine (master plan §4.5 / §7 / H.5). Resolves the best
+ * THE format-extensibility engine. Resolves the best
  * {@see FileHandler} for a {@see FileDescriptor} and a requested {@see
  * Capability}, from three cache-safe sources merged once:
  *
@@ -21,13 +21,13 @@ use Vaulter\ValueObjects\Handlers\FileDescriptor;
  *   2. configuration key vaulter.handlers — an FQCN list (config-cache safe);
  *   3. runtime registrations via Vaulter::handlers()->register()/register().
  *
- * Resolution order (§4.5): mime-first → extension-fallback → capability-filter →
+ * Resolution order: mime-first → extension-fallback → capability-filter →
  * priority-sort → the DownloadOnlyHandler null-object (so a resolution NEVER returns
  * null). The registry is the SOURCE OF TRUTH for formats — a runtime-registered
- * format works with NO migration and NO core/enum change (H.5: the sealed NodeKind/
+ * format works with NO migration and NO core/enum change (the sealed NodeKind/
  * DocumentType enums are only built-in sugar, never a gate).
  *
- * SECURITY (H.5): routing is keyed on FileDescriptor::canonicalMime() — the
+ * SECURITY: routing is keyed on FileDescriptor::canonicalMime() — the
  * server-sniffed detectedMime, never the client claimedMime. A spoofed Content-Type
  * cannot force an editable handler onto hostile bytes.
  *
@@ -85,7 +85,7 @@ final class FileHandlerRegistry implements FileHandlerRegistryContract
      * Resolve the best handler for the file and the requested capability. NEVER
      * returns null — the DownloadOnlyHandler null-object is the guaranteed fallback.
      *
-     * Algorithm (§4.5): collect mime-matching handlers (canonical/sniffed mime,
+     * Algorithm: collect mime-matching handlers (canonical/sniffed mime,
      * exact then wildcard); if none, fall back to extension-matching handlers; keep
      * only those whose capabilities satisfy $capability; sort by priority desc; take
      * the first, else DownloadOnly.

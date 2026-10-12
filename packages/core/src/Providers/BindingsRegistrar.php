@@ -94,7 +94,7 @@ final class BindingsRegistrar
         $app->bind(NodeLocator::class);
         $app->singleton(IdStrategyResolver::class);
 
-        // Container-owned, scoped (F-P2.1-05 / P4.6 review): the enum-attribute
+        // Container-owned, scoped (review): the enum-attribute
         // reflection cache used to be a process-wide `static $cache`, a literal
         // E3.3 violation (global state outside the facade). Binding it here means
         // the cache's lifecycle follows the container instance instead of the
@@ -104,7 +104,7 @@ final class BindingsRegistrar
         // like the removed static cache did.
         $app->scoped(EnumCaseAttributeResolver::class);
 
-        // Scoped (P1.3 / F-P4.2-03): DriveReadRepository memoizes find() by id in
+        // Scoped: DriveReadRepository memoizes find() by id in
         // an in-request identity map, so `AccessResolver::storageOf()` resolved
         // fresh per NodeResource (no explicit AccessResolver binding — see below)
         // still hits the SAME repository instance across a listing page, collapsing
@@ -125,7 +125,7 @@ final class BindingsRegistrar
         $app->alias(VaulterManager::class, 'vaulter');
 
         // Drive behaviour (StorageManager, the DriveHandle factory, resumable uploads)
-        // moved to axioma-studio/vaulter-drive (P2 #5 / ADR-0015, D1). Core resolves the
+        // moved to axioma-studio/vaulter-drive (ADR-0015). Core resolves the
         // Contracts\Drive\DriveHandleFactory seam that package binds; `Vaulter::for()`
         // fails loudly when the package is absent.
 
@@ -138,7 +138,7 @@ final class BindingsRegistrar
             return $generator;
         });
 
-        // Outbound webhook SSRF guard (§2.11 / D5 / F-P1.7-01): the host resolver is
+        // Outbound webhook SSRF guard: the host resolver is
         // the injectable DNS seam (A + AAAA), and the guard is host-swappable via
         // delivery path (DeliverWebhook) and — as an early reject — at registration.
         $app->bind(HostResolver::class, SystemHostResolver::class);
@@ -151,16 +151,16 @@ final class BindingsRegistrar
             return $guard;
         });
 
-        // CAS services (H.3) — the concrete ContentStore/StorageDriver/BlobStore
-        // engine now lives in axioma-studio/vaulter-media (P2 #5, D2/D3); its
+        // CAS services — the concrete ContentStore/StorageDriver/BlobStore
+        // engine now lives in axioma-studio/vaulter-media; its
         // provider binds them against the Contracts\Cas\* seam this package owns.
         // Core resolves those contracts from the container when a host installs it.
 
-        // The host-user resolver seam (M4b) stays in axioma-studio/vaulter-documents
-        // (P2 #5 / ADR-0015, D2) — collaboration is documents-only machinery.
+        // The host-user resolver seam stays in axioma-studio/vaulter-documents
+        // (ADR-0015) — collaboration is documents-only machinery.
         //
-        // The format-extensibility registry (§4.5 / §7 / H.5 / M4a) — superseding H.5
-        // + the T5 Option-B allocation (VLT-CANON P0.4, D10): a drive-only host (no
+        // The format-extensibility registry — superseding
+        // + the T5 Option-B allocation: a drive-only host (no
         // vaulter-documents installed) still needs a preview/download handler
         // descriptor, so the ENGINE (not just its contract) is core-owned. Singleton —
         // it memoises the merged handler set + resolutions. `Vaulter::handlers()->register()`
@@ -170,11 +170,11 @@ final class BindingsRegistrar
         $app->singleton(FileHandlerRegistry::class);
         $app->bind(\Vaulter\Contracts\Handlers\FileHandlerRegistry::class, FileHandlerRegistry::class);
 
-        // The baseline is TAGGED, not merely config-defaulted (P0.4 review, HIGH-1).
+        // The baseline is TAGGED, not merely config-defaulted (review, HIGH-1).
         // `hasConfigFile()` merges via Laravel's shallow, existing-wins mergeConfigFrom:
-        // a host that ran `vendor:publish --tag=vaulter-config` BEFORE P0.4 carries a
+        // a host that ran `vendor:publish --tag=vaulter-config` BEFORE carries a
         // literal `'handlers' => []` in its own config, which would WIN over core's new
-        // default and silently drop PreviewHandler (exactly the drive-only host P0.4
+        // default and silently drop PreviewHandler (exactly the drive-only host
         // exists for). The tag is a second, config-independent source the registry
         // merges and de-duplicates by FQCN, so the baseline survives a stale or emptied
         // config — and the merge stops depending on provider-registration order.
@@ -182,7 +182,7 @@ final class BindingsRegistrar
 
         // NodeResource resolves this seam to embed the handler descriptor on every
         // leaf node — unconditionally bound, so Drive-only serialisation gets a real
-        // preview/download descriptor instead of degrading to null (P0.4/D10).
+        // preview/download descriptor instead of degrading to null.
         $app->bind(NodePresenter::class, \Vaulter\Handlers\NodePresenter::class);
 
         $app->singleton(

@@ -6,7 +6,7 @@ namespace Vaulter\Contracts\Access;
 
 /**
  * A capability a {@see PermissionDriver} implements to declare that v_node_grants is the
- * SOLE authority for read-visibility (master plan P1 #3 / H.4). When {@see
+ * SOLE authority for read-visibility. When {@see
  * isGrantAuthoritative()} is true, the grant-anchor narrowing in {@see
  * NodeReadRepository::constrainToAccessible()} is a COMPLETE superset of everything the
  * actor can reach, so narrowing a listing to that set never wrongly hides a row.

@@ -12,7 +12,7 @@ use Vaulter\Models\Webhooks\WebhookDelivery;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
 
 /**
- * The write side of webhook-delivery row work (master plan §2.11 / D14 / M3b).
+ * The write side of webhook-delivery row work.
  * Today it carries the RETENTION prune: a TERMINAL delivery — status 'delivered'
  * or 'dead' (the DLQ) — past the retention window is history that may be reclaimed.
  * Manual redelivery can re-arm it, so deletion rechecks both the terminal status

@@ -10,7 +10,7 @@ use Vaulter\Enums\Events\EventType;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /**
- * Validates an update-webhook-endpoint request (master plan §2.11 / D14 / M3b) and
+ * Validates an update-webhook-endpoint request and
  * assembles its UpdateWebhookEndpointInput command. Every field is optional (a PATCH
  * touches only what it sends); a present field must still be valid. drive_id moves
  * the drive filter to another drive. signing_secret is never updatable. The controller authorizes the manage ability first.

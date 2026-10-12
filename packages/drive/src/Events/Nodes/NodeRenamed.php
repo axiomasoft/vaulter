@@ -15,7 +15,7 @@ use Vaulter\ValueObjects\Events\EventSubject;
 use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
- * A node was renamed in place (§2.2). The names are recorded in the activity feed
+ * A node was renamed in place. The names are recorded in the activity feed
  * only; a webhook receiver reads the node for its current name.
  */
 final readonly class NodeRenamed extends DomainEvent

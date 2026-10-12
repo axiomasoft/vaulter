@@ -10,7 +10,7 @@ use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Sharing\ShareAudience;
 
 /**
- * The command DTO for minting a bearer share-link on a node (§2.7 / M2c). Carries
+ * The command DTO for minting a bearer share-link on a node. Carries
  * the role the link grants (previewer, reader, commenter; writer only for an
  * authenticated or tenant audience), who may open it, the reach (item|subtree), an
  * optional plaintext password (hashed by the Action — never stored raw), an

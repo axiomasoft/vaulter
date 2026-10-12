@@ -12,15 +12,14 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Identity;
 
 /**
- * The PUBLIC read shape of a node reached through a bearer share (§2.7 / M2c). It
+ * The PUBLIC read shape of a node reached through a bearer share. It
  * is deliberately leaner than the owner-side NodeResource: it carries NO identity
  * "abilities" map (the share grants exactly its own bits — there is no per-actor
  * ability resolution here) and exposes only the metadata safe for an anonymous
  * holder of the link. It never queries — it transforms an already-loaded node and
  * an optional already-loaded children collection.
  *
- * `id`/`parent_id` are an OPAQUE deterministic projection of the real key (P1.2 /
- * F-P1.3-05, D15, S3.3), never the raw `getKey()` — under `id_type=bigint` the raw
+ * `id`/`parent_id` are an OPAQUE deterministic projection of the real key, never the raw `getKey()` — under `id_type=bigint` the raw
  * key is a sequential integer that would leak creation order/count to an anonymous
  * link holder. The projection is a truncated `hash_hmac('sha256', …, APP_KEY)`:
  * deterministic (the same node always opaques to the same string, so a child's
@@ -81,7 +80,7 @@ final class SharedNodeResource extends JsonResource
 
     /**
      * The opaque, deterministic, non-recoverable projection of a raw node key
-     * (P1.2 / F-P1.3-05) — null in, null out (a root node's `parent_id`). Keyed by
+     * — null in, null out (a root node's `parent_id`). Keyed by
      * APP_KEY (never persisted, never leaves the server), matching how Laravel's
      * own signed-URL machinery derives request-scoped secrets from the same key.
      * Truncated to 32 hex chars (128 bits) — plenty to be collision-free for a

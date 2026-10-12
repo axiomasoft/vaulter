@@ -8,7 +8,7 @@ use Illuminate\Support\Carbon;
 use Vaulter\Enums\Sharing\ShareAudience;
 
 /**
- * Changes to an existing share link (PLAN2.D47). A null field stays as it is; the
+ * Changes to an existing share link. A null field stays as it is; the
  * token never changes (use rotate for that). The role and the scope are fixed at
  * creation: a different grant is a different link.
  */

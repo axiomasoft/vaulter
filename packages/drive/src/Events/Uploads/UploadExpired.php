@@ -13,7 +13,7 @@ use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
 
 /**
- * A stale resumable-upload session was reclaimed by the sweeper (§2.8 / F-P1.4-13)
+ * A stale resumable-upload session was reclaimed by the sweeper
  * after its staged temp and protocol-side state were released. The sweeper is a
  * system actor.
  */

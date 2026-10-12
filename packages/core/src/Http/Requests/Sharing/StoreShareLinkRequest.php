@@ -14,14 +14,14 @@ use Vaulter\Enums\Sharing\ShareAudience;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /**
- * Validates a create-share-link request (§2.7 / M2c) and assembles its
+ * Validates a create-share-link request and assembles its
  * ShareLinkInput command. The role key, audience, scope, optional password, expiry
  * and use budget are host-supplied; the controller authorizes Ability::Share on the
  * node first. Which roles a link may carry for which audience is decided by the
  * Action (share_role_not_allowed), so the one rule table lives in one place.
  *
  * role defaults to reader and audience to anyone. An EXPLICIT `expires_at` is bounded
- * above by `$sharingConfig->maxTtlHours()` (P1.2 / F-P1.3-03) and by the drive
+ * above by `$sharingConfig->maxTtlHours()` and by the drive
  * profile's maxShareLinkTtlDays (checked by the Action) — an omitted `expires_at`
  * defaults to `$sharingConfig->defaultTtlHours()` in {@see CreateShareLinkAction},
  * which this request never sees.

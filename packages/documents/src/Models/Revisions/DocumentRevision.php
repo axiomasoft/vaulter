@@ -102,7 +102,7 @@ class DocumentRevision extends Model
     /**
      * The TipTap content of this checkpoint (the structural JSON projection).
      *
-     * READING NEVER THROWS (VLT-REMED D29 / R-01). A snapshot written before today's
+     * READING NEVER THROWS. A snapshot written before today's
      * allow-list existed — or by a host extension since switched off — DECAYS: unknown
      * nodes/marks/attribute keys are stripped and a valid doc comes back. Store-time
      * validation is the strict gate ({@see TipTapContent::fromArray()}); making the read
@@ -110,13 +110,13 @@ class DocumentRevision extends Model
      * the listing UI, i.e. an XSS barrier bought at the price of denial of service.
      *
      * Attribute VALUES survive the decay by design: a legacy `href="javascript:…"` reaches
-     * the RENDERER, where the render-time HTML sanitizer (second echelon, D4) neutralises
+     * the RENDERER, where the render-time HTML sanitizer (second echelon) neutralises
      * it — that is the echelon's only real input.
      *
      * That covers the HTML paths (export/preview) and NOTHING else, so the JSON read path —
      * DocumentRevisionResource, which hands the content straight to the editor with no
      * renderer in between — scrubs the URL values itself through
-     * {@see TipTapContent::withSanitizedUrls()} (VLT-REMED P5.2 / R-12). A caller that uses
+     * {@see TipTapContent::withSanitizedUrls()}. A caller that uses
      * tipTapContent() to build its OWN client-facing payload must do the same.
      */
     public function tipTapContent(): TipTapContent
@@ -127,7 +127,7 @@ class DocumentRevision extends Model
     }
 
     /**
-     * This checkpoint's content as an opaque, unvalidated snapshot (§7 level 2) — the
+     * This checkpoint's content as an opaque, unvalidated snapshot (level 2) — the
      * shape a non-rich-text handler's content round-trips as, e.g. a Univer workbook.
      */
     public function opaqueContent(): OpaqueContent

@@ -19,7 +19,7 @@ use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
- * Blob reconciliation (H.3): ref_count is a CACHE, not the truth, so it drifts and
+ * Blob reconciliation: ref_count is a CACHE, not the truth, so it drifts and
  * must be rebuilt from the edge table — the real liveness source. Reconciliation
  * also surfaces the two integrity hazards a CAS must watch, the inverse images of
  * each other:
@@ -119,7 +119,7 @@ final readonly class BlobReconciler
     /**
      * Walk the DISK for orphan objects — bytes that match the committed CAS key
      * layout but have NO blob row — and, when $prune AND the driver serialises the
-     * write-less prune section, physically delete the true orphans (H.3).
+     * write-less prune section, physically delete the true orphans.
      * Report-only by default (a safe dry run on EVERY driver).
      *
      * CAPABILITY GATES:

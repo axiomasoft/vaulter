@@ -13,7 +13,7 @@ use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Schema\IdStrategyResolver;
 
 /**
- * The SYNCHRONOUS half of the transactional outbox (master plan §2.11 / D14 / M3b):
+ * The SYNCHRONOUS half of the transactional outbox:
  * it stages ONE v_outbox row for a domain event, with the webhook envelope as its
  * payload. Only {@see EventRecorder} calls it, inside the transaction of the Action
  * that caused the event, so the row commits or rolls back with the change.

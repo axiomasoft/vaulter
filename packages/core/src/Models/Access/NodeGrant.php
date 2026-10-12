@@ -52,7 +52,7 @@ class NodeGrant extends Model
     use StampsDriveTenant;
 
     /**
-     * Fully guarded (F-P1.8-02): an ACL row — every column (subject, role,
+     * Fully guarded: an ACL row — every column (subject, role,
      * scope, expiry, granted_by) is security-
      * critical. The sole writer, GrantStoreRepository, uses forceFill()
      * exclusively and is unaffected by this list.
@@ -96,7 +96,7 @@ class NodeGrant extends Model
     /**
      * Constrain a query to the grants addressed to any subject in the given set —
      * the "WHERE (subject_type, subject_id) IN (...)" the resolver builds from
-     * PermissionDriver::subjectsFor (§2.6 "shared with me" index).
+     * PermissionDriver::subjectsFor ("shared with me" index).
      *
      * @param  Builder<$this> $query
      * @param  list<Subject>  $subjects
@@ -121,7 +121,7 @@ class NodeGrant extends Model
 
     /**
      * Constrain a query to grants that have not expired as of $now (expiry is
-     * enforced read-time, H.2 — never a cron). A null expires_at never expires.
+     * enforced read-time, — never a cron). A null expires_at never expires.
      *
      * @param  Builder<$this> $query
      * @return Builder<$this>

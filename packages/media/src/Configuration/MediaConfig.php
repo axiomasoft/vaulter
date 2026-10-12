@@ -26,7 +26,7 @@ final readonly class MediaConfig
 
     /**
      * vaulter-media.dedup.scope: tenant (default), drive or off; 'storage' is read as
-     * drive. The install-wide 'global' scope was removed (PLAN2.D49).
+     * drive. The install-wide 'global' scope was removed.
      */
     public function dedupScope(): DedupScope
     {

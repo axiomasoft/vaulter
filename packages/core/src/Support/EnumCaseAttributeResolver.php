@@ -9,7 +9,7 @@ use UnitEnum;
 
 /**
  * Resolves a single PHP attribute declared on an enum case, with per-instance
- * caching (F-P2.1-05, D-none): the cache is owned by this instance, not the
+ * caching (D-none): the cache is owned by this instance, not the
  * process/class — the container binds it as a singleton
  * ({@see VaulterServiceProvider::packageRegistered()}), so its lifecycle
  * follows the container (one per request/job on Octane/queue workers via

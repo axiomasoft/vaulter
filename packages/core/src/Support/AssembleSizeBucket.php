@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Support;
 
 /**
- * Bounded `size_bucket` labels for multipart assembly metrics (VLT-LOAD §9).
+ * Bounded `size_bucket` labels for multipart assembly metrics.
  */
 final class AssembleSizeBucket
 {

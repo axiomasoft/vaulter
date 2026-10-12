@@ -21,7 +21,7 @@ use Vaulter\Media\Cas\StagedTempObject;
 use Vaulter\Models\Drive\Drive;
 
 /**
- * The staged temp for a resumable upload (§2.8 / H.3). The bytes accumulate on the
+ * The staged temp for a resumable upload. The bytes accumulate on the
  * SESSION'S disk under a tmp/ prefix keyed by the upload_id, so they live next to
  * the eventual CAS objects (same disk, reclaimable by the sweeper) and never touch
  * the canonical CAS key until BlobStore.commit promotes them.
@@ -33,14 +33,14 @@ use Vaulter\Models\Drive\Drive;
  * This is intentionally NOT the CAS ContentStore: the CAS stages to a LOCAL seekable
  * file for hashing, whereas this stages to the (possibly remote) session disk so a
  * multi-GB resumable upload survives across requests. The commit path streams this
- * back through ContentStore::stage, so the H.3 invariant (hash the local staged
+ * back through ContentStore::stage, so the invariant (hash the local staged
  * file) still holds at the moment of commit.
  */
 final readonly class StagedUpload
 {
     /**
      * The in-memory ceiling for the assembly buffer before it spills to a temp file
-     * on disk (§2.8 / F-P1.4-04): peak memory stays bounded by this, never the full
+     * on disk: peak memory stays bounded by this, never the full
      * staged file, no matter how large the resumable upload grows.
      */
     private const int SPILL_BYTES = 2_097_152; // 2 MiB
@@ -111,7 +111,7 @@ final readonly class StagedUpload
     }
 
     /**
-     * The tmp/ staging key for a session on its disk (§2.8). Keyed by upload_id so a
+     * The tmp/ staging key for a session on its disk. Keyed by upload_id so a
      * second session never collides, and prefixed tmp/ so the sweeper / an S3
      * lifecycle rule can reclaim abandoned staging in bulk.
      */
@@ -161,18 +161,18 @@ final readonly class StagedUpload
     }
 
     /**
-     * Append a chunk's bytes to the staged temp at $offset (§2.8 tus PATCH). The
-     * write is offset-aware and STREAMING (F-P1.4-04): the already-staged bytes up
+     * Append a chunk's bytes to the staged temp at $offset (tus PATCH). The
+     * write is offset-aware and STREAMING: the already-staged bytes up
      * to the authoritative offset are streamed into a spill-to-disk assembly buffer
      * followed by the new chunk, and the result is written back — the full staged
      * file is NEVER read into a PHP string, so peak memory stays bounded by the
      * spill ceiling regardless of upload size. A per-chunk ceiling is enforced
      * BEFORE any bytes are staged. Returns the new staged length.
      *
-     * FAIL-CLOSED (VLT-REMED P5.2 / R-03): a positive $offset with NO staged object is
+     * FAIL-CLOSED: a positive $offset with NO staged object is
      * an impossible state — the bytes it names were accepted and acknowledged. It only
      * happens when the object was removed underneath us (a concurrent sweep/abort — see
-     * R-02 — or an out-of-band bucket cleanup). Continuing would write the new chunk
+     * or an out-of-band bucket cleanup). Continuing would write the new chunk
      * alone, drop the already-accepted prefix and hand the client a REGRESSED offset:
      * a corrupted file with no error anywhere. We refuse instead.
      *
@@ -191,7 +191,7 @@ final readonly class StagedUpload
 
         // A spill-to-disk buffer: it holds up to SPILL_BYTES in RAM then transparently
         // spills to a temp file, so assembling a multi-GB staged file peaks at the
-        // ceiling, not the file size (F-P1.4-04).
+        // ceiling, not the file size.
         $buffer = fopen('php://temp/maxmemory:'.self::SPILL_BYTES, 'r+b');
 
         if ($buffer === false) {
@@ -201,8 +201,8 @@ final readonly class StagedUpload
         try {
             // Honour the authoritative offset: stream only the bytes we already hold
             // up to it (anything past it is dropped — the server, not the client, owns
-            // the resume point, H.3 / §2.8). Streamed, never materialised as a string.
-            // The object's existence is guaranteed above (fail-closed, R-03).
+            // the resume point). Streamed, never materialised as a string.
+            // The object's existence is guaranteed above (fail-closed).
             if ($offset > 0) {
                 $existing = $disk->readStream($key);
 
@@ -229,7 +229,7 @@ final readonly class StagedUpload
 
     /**
      * Whether $chunk's bytes are IDENTICAL to what already sits on the staged temp
-     * at [$offset, $offset+len($chunk)) (§2.8 / F-P1.4-02, N3 C6): the ONLY case tus
+     * at [$offset, $offset+len($chunk)) (N3 C6): the ONLY case tus
      * permits treating an `offset < server` PATCH as an idempotent retransmit rather
      * than a 409 Conflict. A chunk longer than what is already staged, or whose
      * bytes disagree anywhere in the overlap, is NOT a match — the caller rejects it.
@@ -303,10 +303,10 @@ final readonly class StagedUpload
 
     /**
      * Reject a PATCH chunk larger than the per-chunk hard ceiling BEFORE any bytes are
-     * staged (§2.8 / F-P1.4-04 / U3.3): an unbounded single PATCH is a memory/IO DoS
+     * staged: an unbounded single PATCH is a memory/IO DoS
      * vector. This is `uploads.max_chunk_bytes` — the hard cap — NOT `chunk_size`, which
      * is only the advertised HINT. 0 disables the cap; the shipped default does NOT (it
-     * is 64 MiB — VLT-REMED P5.2 review).
+     * is 64 MiB —review).
      *
      * This is the CHEAP pre-check and it only sees a stat-able stream (a seekable temp).
      * The real request body is `php://input`, whose fstat size is 0 — for that one the
@@ -333,7 +333,7 @@ final readonly class StagedUpload
 
     /**
      * Copy the chunk into the assembly buffer, refusing to read past the per-chunk ceiling
-     * (VLT-REMED P5.2 review). A body whose length we cannot know up front (`php://input`
+     * (review). A body whose length we cannot know up front (`php://input`
      * under chunked transfer-encoding, or any non-stat-able stream) would otherwise slip
      * past {@see assertChunkWithinLimit()} entirely — the check that the docblock there
      * promises happens "BEFORE any bytes are staged" — and stream in unbounded. We read at
@@ -372,7 +372,7 @@ final readonly class StagedUpload
     }
 
     /**
-     * Overwrite the staged temp with $bytes in one shot (§2.8 S3-multipart assemble):
+     * Overwrite the staged temp with $bytes in one shot (S3-multipart assemble):
      * the multipart parts have been stitched into the assembled object, which is
      * written here so the commit path can stream it through ContentStore::stage and
      * re-hash it server-side.
@@ -407,7 +407,7 @@ final readonly class StagedUpload
     /**
      * A read stream over the staged temp, or null when nothing is staged. The commit
      * path feeds this to BlobStore.commit (which stages it locally and re-hashes —
-     * H.3).
+     * ).
      *
      * @return resource|null
      */
@@ -426,7 +426,7 @@ final readonly class StagedUpload
     }
 
     /**
-     * Remove the staged temp (§2.8) — called on commit AND on abort/expire so an
+     * Remove the staged temp — called on commit AND on abort/expire so an
      * abandoned upload never leaves bytes behind. Idempotent.
      */
     public function discard(UploadSession $session): void

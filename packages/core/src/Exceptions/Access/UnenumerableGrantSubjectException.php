@@ -12,7 +12,7 @@ use Vaulter\Exceptions\VaulterException;
 
 /**
  * A grant was addressed to a role/group/team subject under a host-role driver whose
- * `subjectsFor()` does not enumerate role subjects (F-P1.2-01), so the grant would
+ * `subjectsFor()` does not enumerate role subjects, so the grant would
  * never take effect. Thrown OUTSIDE production to make the otherwise-silent no-op
  * loud; in production the write is only logged (the direction of failure is safe —
  * an inert grant grants nothing).

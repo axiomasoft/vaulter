@@ -90,7 +90,7 @@ final class GatePermissionDriver implements PermissionDriver
      * Because this lane does NOT implement
      * {@see EnumeratesRoleSubjects}, a v_node_grants row
      * addressed to a role/team is inert under it; writing one fails loud
-     * (GrantNodeAccessAction warns, and throws outside production — F-P1.2-01).
+     * (GrantNodeAccessAction warns, and throws outside production).
      *
      * @return list<Subject>
      */
@@ -114,7 +114,7 @@ final class GatePermissionDriver implements PermissionDriver
     }
 
     /**
-     * Run a Gate ability for the actor, node-blind (F-P1.2-02: this is a plain
+     * Run a Gate ability for the actor, node-blind (this is a plain
      * delegation, there is no try/catch here — `Gate::allows()` itself already
      * returns false, never throws, for an ability the host has not defined, which
      * is what keeps an unconfigured host gate fail-closed).

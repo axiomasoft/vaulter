@@ -13,7 +13,7 @@ use Vaulter\Repositories\Drive\DriveStoreRepository;
 
 /**
  * active|archived → deleting, then an asynchronous, idempotent purge of the whole
- * drive (PLAN2.D27): nodes, revisions and blob references first, the drive row last.
+ * drive: nodes, revisions and blob references first, the drive row last.
  * A drive already being deleted is left alone and its purge is queued again, which
  * is how an interrupted purge resumes.
  */

@@ -17,7 +17,7 @@ use Vaulter\ValueObjects\Events\EventSubject;
 
 /**
  * A non-current revision was deleted, by the API or by the retention pruning
- * (PLAN2.D48): its blob edges are gone and its bytes left the drive's quota. The
+ * its blob edges are gone and its bytes left the drive's quota. The
  * revision row no longer exists, so the event carries its id, number and size.
  */
 final readonly class FileRevisionDeleted extends DomainEvent

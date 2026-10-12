@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Data\Webhooks;
 
 /**
- * The command DTO for updating a webhook endpoint (master plan §2.11 / D14 / M3b).
+ * The command DTO for updating a webhook endpoint.
  * Each field is nullable so a PATCH may touch only what it sends — a null field is
  * left unchanged by the Action. The signing_secret is NEVER updatable through this
  * command (it is shown once at registration and never re-serialized). A non-null

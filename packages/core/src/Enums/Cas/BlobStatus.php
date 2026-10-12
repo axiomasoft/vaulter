@@ -8,7 +8,7 @@ use Vaulter\Attributes\Label;
 use Vaulter\Support\Concerns\HasLabel;
 
 /**
- * The blob lifecycle state machine (master plan §2.3 / H.3):
+ * The blob lifecycle state machine:
  *
  *   Pending → Committed → Tombstoned → Deleting → Deleted
  *                ↑____________|
@@ -20,7 +20,7 @@ use Vaulter\Support\Concerns\HasLabel;
  *  - Tombstoned  — GC marked it unreferenced; delete_after_at carries the grace
  *                  deadline. A concurrent commit RESURRECTS it back to Committed
  *                  in the same locked transaction (this is what makes online GC
- *                  safe — H.3).
+ *                  safe).
  *  - Deleting    — the sweep claimed it; the physical delete is in flight.
  *  - Deleted     — bytes gone; the row is kept as an idempotent tombstone so a
  *                  re-run of the sweep is a no-op.
@@ -55,7 +55,7 @@ enum BlobStatus: string
         return match ($this) {
             self::Pending => [self::Committed, self::Deleting, self::Deleted],
             // Committed → Tombstoned is the GC mark; it never goes straight to
-            // Deleting (the grace window must elapse first, H.3).
+            // Deleting (the grace window must elapse first).
             self::Committed => [self::Tombstoned],
             // Tombstoned → Committed is resurrection; → Deleting is the sweep.
             self::Tombstoned => [self::Committed, self::Deleting],

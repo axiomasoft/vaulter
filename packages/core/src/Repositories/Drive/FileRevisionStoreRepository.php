@@ -9,7 +9,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Models\Drive\FileRevision;
 
 /**
- * Write-side row work for the immutable v_file_revisions (§2.4). Bare create +
+ * Write-side row work for the immutable v_file_revisions. Bare create +
  * the supersede transition for a prior head. Opens NO transactions —
  * UploadFileAction wraps it. number is monotonic per file (the unique index
  * is the backbone); the caller allocates numbers from the locked file counter.
@@ -26,7 +26,7 @@ final class FileRevisionStoreRepository
      */
     public function create(array $attributes): FileRevision
     {
-        // forceFill (P1.4/F-P1.8-02): $attributes is a server-built literal array
+        // forceFill: $attributes is a server-built literal array
         // from UploadFileAction/CopyNodeAction, never raw request input.
         $model = $this->vaulterConfig->model('file_revision');
         $version = new $model;
@@ -37,9 +37,9 @@ final class FileRevisionStoreRepository
     }
 
     /**
-     * Mark the prior head version superseded (§2.4) when a newer version takes
+     * Mark the prior head version superseded when a newer version takes
      * over. The row stays — only the lifecycle status changes, and superseded_at
-     * starts the non-current age the retention policy counts (PLAN2.D48).
+     * starts the non-current age the retention policy counts.
      */
     public function markSuperseded(FileRevision $version): FileRevision
     {

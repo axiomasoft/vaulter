@@ -9,7 +9,7 @@ use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Repositories\Webhooks\WebhookEndpointStoreRepository;
 
 /**
- * Permanently delete a webhook endpoint (master plan §2.11 / D14 / M3b). Its
+ * Permanently delete a webhook endpoint. Its
  * v_webhook_deliveries cascade away via the FK, so no orphaned delivery history is
  * left behind. Irreversible — for a reversible stop use
  * DeactivateWebhookEndpointAction.

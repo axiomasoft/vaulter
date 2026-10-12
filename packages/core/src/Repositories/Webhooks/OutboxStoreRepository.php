@@ -12,7 +12,7 @@ use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Models\Webhooks\WebhookDelivery;
 
 /**
- * The write side of transactional-outbox row work (master plan §2.11 / D14 / M3b).
+ * The write side of transactional-outbox row work.
  * Today it carries only the RETENTION prune: a COMPLETED outbox row — every
  * eligible endpoint already has its delivery, fanned_out_at stamped — past the
  * retention window is audit history that may be reclaimed. It opens NO transaction

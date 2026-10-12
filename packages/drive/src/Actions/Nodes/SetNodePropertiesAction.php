@@ -19,7 +19,7 @@ use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\TreeGuard;
 
 /**
- * Patch one namespace of a node's properties atomically (PLAN2.D41): the set keys
+ * Patch one namespace of a node's properties atomically: the set keys
  * are written, the unset keys removed, and the result checked against the drive
  * policy limits under the node lock. A change bumps the node sequence; a patch
  * that changes nothing does not. The vaulter namespaces are the system's.

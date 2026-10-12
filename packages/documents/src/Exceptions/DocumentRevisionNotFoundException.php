@@ -10,8 +10,7 @@ use Vaulter\Exceptions\VaulterException;
 use Vaulter\Support\Identity;
 
 /**
- * A document version lookup did not resolve a version belonging to the node (§2.5 /
- * M4a) — either it does not exist or it belongs to another node. "Not found" and "no
+ * A document version lookup did not resolve a version belonging to the node — either it does not exist or it belongs to another node. "Not found" and "no
  * access to another node's version" are deliberately indistinguishable to the caller.
  */
 final class DocumentRevisionNotFoundException extends VaulterException implements ProblemException

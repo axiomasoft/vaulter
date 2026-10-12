@@ -12,7 +12,7 @@ use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Tenancy\TenancyBoundary;
 
 /**
- * Read-side lookups over v_upload_sessions (§2.8 / M3a). The resumable endpoints
+ * Read-side lookups over v_upload_sessions. The resumable endpoints
  * address a session by its client upload_id handle; the sweeper scans the stale
  * candidates. No transactions, no mutations.
  */
@@ -28,7 +28,7 @@ final class UploadSessionReadRepository
     }
 
     /**
-     * Resolve a session by its client UNIQUE upload_id handle (§2.8) — the key every
+     * Resolve a session by its client UNIQUE upload_id handle — the key every
      * tus HEAD/PATCH/DELETE and S3 part/complete endpoint addresses it by. Null when
      * absent (a gone/never-existed session 404s at the controller).
      */
@@ -38,8 +38,8 @@ final class UploadSessionReadRepository
     }
 
     /**
-     * The §2.8 sweeper candidates: OPEN sessions (initiated|uploading) PLUS stuck
-     * Assembled sessions (F-P1.4-10), whose expires_at is at or before $threshold.
+     * The sweeper candidates: OPEN sessions (initiated|uploading) PLUS stuck
+     * Assembled sessions, whose expires_at is at or before $threshold.
      * Returns a Builder so the command chunks it. Backed by the (status, expires_at)
      * index.
      *
@@ -54,7 +54,7 @@ final class UploadSessionReadRepository
 
     /**
      * The number of OPEN (initiated|uploading) sessions an actor currently holds
-     * (P1.3 / F-P1.4-09) — the count `UploadSessionManager::initiate()` checks
+     * — the count `UploadSessionManager::initiate()` checks
      * against the configured cap BEFORE opening a new session. A null actor id
      * (unattributed/system-minted session) counts as 0 — there is no per-actor
      * bucket to bound.

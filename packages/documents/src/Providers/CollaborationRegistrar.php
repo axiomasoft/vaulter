@@ -20,10 +20,10 @@ final class CollaborationRegistrar extends ServiceProvider
 {
     public function register(): void
     {
-        // The host-user resolver seam (M4b): the collaboration webhook resolves the
+        // The host-user resolver seam: the collaboration webhook resolves the
         // acting user by id through the host's auth user-provider. Bound to the
         // default DefaultHostUserResolver; a host (or a test) may swap it. Purely
-        // documents machinery — core neither defines nor binds it (D2 finding).
+        // documents machinery — core neither defines nor binds it (finding).
         $this->app->bind(HostUserResolver::class, DefaultHostUserResolver::class);
     }
 
@@ -34,11 +34,10 @@ final class CollaborationRegistrar extends ServiceProvider
 
     /**
      * Authorize the private collaboration room channel (channel_prefix.{id}). The
-     * room id is a NODE id (M4b): a kind=document node authorizes through the
+     * room id is a NODE id: a kind=document node authorizes through the
      * Vaulter-owned AccessResolver (Ability::View to connect at all; read-only vs
      * writable is encoded in the issued session, not the channel). Gated on BOTH the
-     * 'document_versions' feature AND 'collaboration' (VLT-REMED P3.1 / F-P1.6-01,
-     * D13/D20) — the realtime channel is a separate opt-in over base document
+     * 'document_versions' feature AND 'collaboration' — the realtime channel is a separate opt-in over base document
      * editing. The channel preserves the broadcast authorization seam
      * independently of the Hocuspocus room token.
      */

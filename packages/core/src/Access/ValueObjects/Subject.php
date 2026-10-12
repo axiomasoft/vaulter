@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * A grant subject — the (type, id) pair a v_node_grants row is addressed to
- * (master plan §2.6 / H.2). The type is a registered morph alias (user|role|team
+ * . The type is a registered morph alias (user|role|team
  * or a host alias), never a raw FQCN leaking through the API; the PermissionDriver
  * expands an actor into the list of Subjects whose grants apply (user + roles +
  * teams) and Vaulter builds `WHERE (subject_type, subject_id) IN (...)` from them.

@@ -45,7 +45,7 @@ use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\ValueObjects\Access\Actor;
 
 /**
- * The bearer share-link admin surface (master plan §2.7 / §3): list, create and
+ * The bearer share-link admin surface: list, create and
  * revoke the public share-links on a node. The raw token is NEVER stored and NEVER
  * displayed here — only the non-secret `token_prefix` plus the live/expired/revoked
  * status. It is shown exactly ONCE, at mint time, via the {@see ShareOperations}
@@ -74,7 +74,7 @@ final class NodeShareResource extends Resource
     }
 
     /**
-     * Access-aware listing (F-P1.10-01): narrow to share rows whose node_id is in
+     * Access-aware listing: narrow to share rows whose node_id is in
      * the acting admin's grant-reachable candidate set. Empty candidate set (no
      * actor, or an actor with zero grants) ⇒ empty table.
      */
@@ -197,7 +197,7 @@ final class NodeShareResource extends Resource
     }
 
     /**
-     * The create-share form fields (master plan §2.7). The raw token is NOT a field —
+     * The create-share form fields. The raw token is NOT a field —
      * it is minted by the Action and surfaced once.
      *
      * @return array<int, Component>

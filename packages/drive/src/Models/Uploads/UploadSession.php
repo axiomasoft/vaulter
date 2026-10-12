@@ -22,12 +22,12 @@ use Vaulter\Models\Concerns\StampsDriveTenant;
 use Vaulter\Models\Drive\Drive;
 
 /**
- * A resumable-upload session (master plan §2.8 / D16 / M3a): the first-class row
+ * A resumable-upload session: the first-class row
  * behind S3-multipart and tus.io ingest. upload_id is the client handle; status
  * drives the lifecycle (initiated→uploading→assembled→committed, with abort/expire);
  * received_bytes is the AUTHORITATIVE server-side tus offset — the resume point is
  * never the client's claim. On completion the assembled staged bytes go through
- * BlobStore.commit (H.3 — server recomputes sha256, never the client/ETag hash) and
+ * BlobStore.commit (server recomputes sha256, never the client/ETag hash) and
  * assembled_blob_id is set.
  *
  * Swappable via the configuration key ('vaulter-drive.models.upload_session').
@@ -70,8 +70,8 @@ class UploadSession extends Model
     use StampsDriveTenant;
 
     /**
-     * Closed allow-list (F-P1.8-02): upload metadata a caller may legitimately
-     * declare. received_bytes (the AUTHORITATIVE tus offset, F-P1.4-01),
+     * Closed allow-list: upload metadata a caller may legitimately
+     * declare. received_bytes (the AUTHORITATIVE tus offset),
      * status/protocol/assembled_blob_id/drive_id/tenant_id/upload_id are
      * lifecycle/security state — every write path that sets them already uses
      * forceFill() (UploadSessionStoreRepository/UploadSessionManager).
@@ -102,7 +102,7 @@ class UploadSession extends Model
     }
 
     /**
-     * The normalised S3-multipart parts (§2.8); empty for a tus session.
+     * The normalised S3-multipart parts; empty for a tus session.
      *
      * @return HasMany<UploadPart, $this>
      */
@@ -122,7 +122,7 @@ class UploadSession extends Model
     }
 
     /**
-     * Whether this is a new-version upload onto an existing file node (§2.8).
+     * Whether this is a new-version upload onto an existing file node.
      */
     public function isNewVersion(): bool
     {
@@ -130,8 +130,8 @@ class UploadSession extends Model
     }
 
     /**
-     * The §2.8 sweeper scope: OPEN sessions (initiated|uploading) PLUS stuck
-     * `Assembled` sessions (F-P1.4-10 — a session whose commit was interrupted after
+     * The sweeper scope: OPEN sessions (initiated|uploading) PLUS stuck
+     * `Assembled` sessions (a session whose commit was interrupted after
      * every byte landed but before BlobStore.commit ran) whose expires_at is at or
      * before $threshold — the stale candidates the sweeper reclaims. `expires_at` is
      * stamped once at initiate and never bumped on assembly, so a session that
@@ -143,7 +143,7 @@ class UploadSession extends Model
      * The TTL is a heuristic, not the barrier: an upload that lands its last chunk AFTER
      * expires_at (a PATCH is gated on status, never on expiry) reaches Assembled already
      * sweepable. What actually keeps the sweeper off a live commit is the session lock the
-     * commit path now holds (UploadSessionManager::commitAssembled, VLT-REMED P5.2 / R-11).
+     * commit path now holds (UploadSessionManager::commitAssembled, ).
      *
      * @param  Builder<$this> $query
      * @return Builder<$this>

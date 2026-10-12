@@ -8,7 +8,7 @@ use Vaulter\Exceptions\VaulterException;
 
 /**
  * The host-role driver is missing, unknown, or the open null-driver was selected
- * in production (master plan H.2 / D6″ — fail-loud, never silently open).
+ * in production (fail-loud, never silently open).
  */
 final class MissingPermissionDriverException extends VaulterException
 {

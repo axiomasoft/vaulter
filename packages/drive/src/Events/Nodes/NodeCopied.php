@@ -16,7 +16,7 @@ use Vaulter\ValueObjects\Events\EventSubject;
 use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
- * A node was copied to a destination (§2.4). For files the copy references the
+ * A node was copied to a destination. For files the copy references the
  * SAME blob through a new edge (dedup keeps one physical object); for folders the
  * whole subtree is deep-copied. $copy is the newly created destination root.
  */

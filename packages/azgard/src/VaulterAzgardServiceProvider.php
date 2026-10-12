@@ -15,7 +15,7 @@ use Vaulter\Configuration\ConfigNormalizer;
 use Vaulter\Doctor\DoctorRegistry;
 
 /**
- * Wires the AzGuard v1 permission bridge (master plan P1 #2). It binds the Vaulter
+ * Wires the AzGuard v1 permission bridge. It binds the Vaulter
  * {@see AzgardGuard} seam to an {@see AzgardGuardAdapter} built from the CURRENT
  * request's AzGuard-backed user, so that once the host selects the `azgard` permission
  * driver (`vaulter.access.permission_driver = 'azgard'`) the driver resolves real

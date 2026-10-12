@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Contracts\Cas;
 
 /**
- * The result of staging an upload to a LOCAL, seekable temp file (H.3): the
+ * The result of staging an upload to a LOCAL, seekable temp file: the
  * sha256 is recomputed from these durable bytes, never from the live stream nor
  * a client-supplied hash nor an S3 multipart ETag. A StagedObject is the unit a
  * ContentStore hands to BlobStore — the bytes are not yet at their canonical CAS

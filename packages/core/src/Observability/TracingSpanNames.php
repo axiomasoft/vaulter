@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Observability;
 
 /**
- * Closed span literals for P8.8-selected targets (observability-spec §20.2).
+ * Closed span literals for selected targets (observability-spec).
  */
 final class TracingSpanNames
 {

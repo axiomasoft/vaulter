@@ -12,8 +12,7 @@ use Vaulter\Repositories\Activity\ActivityStoreRepository;
 use Vaulter\Support\RequestContext;
 
 /**
- * Writes EXACTLY ONE activity row for a domain event (master plan §2.9 /
- * M2c-activity). It maps the event into a {@see RecordActivityCommand} (occurrence
+ * Writes EXACTLY ONE activity row for a domain event. It maps the event into a {@see RecordActivityCommand} (occurrence
  * id, verb, actor, target morph, storage, context) and hands it to the
  * ActivityStoreRepository. Only {@see EventRecorder} calls it, inside the
  * transaction of the Action that caused the event.
@@ -21,7 +20,7 @@ use Vaulter\Support\RequestContext;
  * ip / user-agent / request-id are captured from the current request via
  * {@see RequestContext}, degrading to null off the HTTP lifecycle (console/queue).
  *
- * This is the anti-NC-fan-out core (§1.5): ONE row per event, never a per-affected-
+ * This is the anti-NC-fan-out core: ONE row per event, never a per-affected-
  * user fan-out. Recipients are resolved at READ by scoping the feed.
  *
  * @internal

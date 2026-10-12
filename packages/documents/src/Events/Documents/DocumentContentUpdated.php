@@ -16,7 +16,7 @@ use Vaulter\ValueObjects\Events\EventSubject;
 use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
- * A document node's content was written (§2.5 / M4a) — the autosave path. $created
+ * A document node's content was written — the autosave path. $created
  * is true when this write took a new checkpoint; false when the head checkpoint stayed
  * as it was (the checkpoint interval had not passed), so $version then predates the
  * write. $stateVersion and $epoch are the content validators after this write, taken

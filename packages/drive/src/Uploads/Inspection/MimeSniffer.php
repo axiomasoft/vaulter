@@ -7,8 +7,7 @@ namespace Vaulter\Drive\Uploads\Inspection;
 use finfo;
 
 /**
- * Content-vs-declared-mime sniffer for the assembled resumable object (§2.8 /
- * F-P1.4-11 / U5.5). A resumable commit must not trust the CLIENT's declared
+ * Content-vs-declared-mime sniffer for the assembled resumable object. A resumable commit must not trust the CLIENT's declared
  * mime — a file uploaded as image/png whose magic bytes are a ZIP (or a script)
  * is a type-confusion vector. The sniff reads the leading bytes of the assembled
  * object and compares the detected type against what the client declared.

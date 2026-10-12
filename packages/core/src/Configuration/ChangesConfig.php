@@ -9,7 +9,7 @@ use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
 /**
  * Typed accessors over config('vaulter.changes.*'), the drive change journal
- * (PLAN2.D50). The journal itself is switched by vaulter.features.changes.
+ * . The journal itself is switched by vaulter.features.changes.
  */
 final readonly class ChangesConfig
 {

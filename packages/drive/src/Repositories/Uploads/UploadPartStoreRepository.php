@@ -11,7 +11,7 @@ use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 
 /**
- * Write-side row work for v_upload_parts (§2.8 / M3a). The S3-multipart part record:
+ * Write-side row work for v_upload_parts. The S3-multipart part record:
  * recording a part REPLACES any prior row for the same (session, part_no) — the S3
  * re-upload semantics encoded in the composite primary key. Opens NO transactions.
  */
@@ -23,7 +23,7 @@ final class UploadPartStoreRepository
     ) {}
 
     /**
-     * Record (or REPLACE) a part for a session (§2.8). A re-upload of part N
+     * Record (or REPLACE) a part for a session. A re-upload of part N
      * overwrites its etag/size/offset — keyed on the (upload_session_id, part_no)
      * composite primary key, so the second PUT updates the same row rather than
      * inserting a duplicate.
@@ -51,7 +51,7 @@ final class UploadPartStoreRepository
 
         // The (upload_session_id, part_no) composite primary key has no single
         // auto-key for Eloquent to update by, so the re-upload-REPLACES semantics
-        // (§2.8) is a query-builder upsert keyed on the composite: a matching part is
+        // is a query-builder upsert keyed on the composite: a matching part is
         // UPDATEd in place, otherwise INSERTed. (Eloquent's updateOrCreate keys on
         // getKeyName(), which a composite-PK pivot lacks.)
         $existing = $this->database->connection()->table($table)
@@ -83,7 +83,7 @@ final class UploadPartStoreRepository
 
     /**
      * Every recorded part for a session, ascending by part_no — the order the
-     * multipart assembler stitches them in (§2.8).
+     * multipart assembler stitches them in.
      *
      * @return Collection<int, UploadPart>
      */

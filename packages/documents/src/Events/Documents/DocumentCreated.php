@@ -17,7 +17,7 @@ use Vaulter\ValueObjects\Events\EventSubject;
 use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
- * A kind=document node was created with its initial v1 version (§2.5 / M4a). Carries
+ * A kind=document node was created with its initial v1 version. Carries
  * both the node and the v1 version so a listener need not re-read either, and the
  * content validators the write produced (state_version, collab_epoch).
  */

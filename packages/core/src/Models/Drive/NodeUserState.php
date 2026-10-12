@@ -15,7 +15,7 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Models\Concerns\StampsDriveTenant;
 
 /**
- * @internal One actor's personal state of a node (PLAN2.D40): starred_at today.
+ * @internal One actor's personal state of a node: starred_at today.
  * Personal state never changes the node's sequence or timestamps.
  *
  * @property int|string      $id

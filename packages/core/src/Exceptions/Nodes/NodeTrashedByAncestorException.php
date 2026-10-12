@@ -9,7 +9,7 @@ use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Models\Drive\Node;
 
-/** A node trashed together with a folder is restored through that folder (PLAN2.D37). */
+/** A node trashed together with a folder is restored through that folder. */
 final class NodeTrashedByAncestorException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

@@ -15,7 +15,7 @@ use Vaulter\ValueObjects\Events\EventSubject;
 use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
- * A node's properties changed (PLAN2.D41). The values are host data and may hold
+ * A node's properties changed. The values are host data and may hold
  * anything, so the event only says that the properties changed.
  */
 final readonly class NodeUpdated extends DomainEvent

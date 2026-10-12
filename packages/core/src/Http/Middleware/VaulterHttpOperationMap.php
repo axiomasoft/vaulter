@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Http\Middleware;
 
 /**
- * §9.1 server-side `operation` labels for {@see RecordVaulterRequestMetrics}.
+ * server-side `operation` labels for {@see RecordVaulterRequestMetrics}.
  *
  * Routes are labelled by name. The path rules exist for collectors that see only a URI
  * (php-fpm status, the load stand) and cover the versioned routes whose cost differs

@@ -10,7 +10,7 @@ use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 
 /**
- * The version ↔ blob edge (master plan §2.4): the GC truth. A blob is live iff an
+ * The version ↔ blob edge: the GC truth. A blob is live iff an
  * edge here references it, so this table is never soft-deleted and its composite
  * primary key is (file_revision_id, blob_id, role, ordinal). Swappable via
  * configuration key vaulter.models.file_revision_blob.
@@ -32,7 +32,7 @@ class FileRevisionBlob extends Pivot
     public $timestamps = false;
 
     /**
-     * Fully guarded (F-P1.8-02): the GC-liveness edge table. Every write goes
+     * Fully guarded: the GC-liveness edge table. Every write goes
      * through FileRevisionBlobStoreRepository via the query builder
      * (updateOrInsert), never Eloquent mass-assignment, so this is pure
      * defense-in-depth against a future Eloquent-based write.

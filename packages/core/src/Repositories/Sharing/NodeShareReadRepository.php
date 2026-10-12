@@ -12,7 +12,7 @@ use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Tenancy\TenancyBoundary;
 
 /**
- * Read-side queries over v_node_shares (§2.7 / M2c). It resolves a LIVE share by
+ * Read-side queries over v_node_shares. It resolves a LIVE share by
  * its token hash (the bearer lookup) and lists the shares on a node for the owner
  * surface. Expiry + revocation are enforced HERE, read-time — an expired or
  * revoked share never reaches the resolver. The lookup is by token_hash; the raw
@@ -54,7 +54,7 @@ final class NodeShareReadRepository
     }
 
     /**
-     * Every share on a node for the owner listing (§2.7), newest first. Returns a
+     * Every share on a node for the owner listing, newest first. Returns a
      * Builder so the controller paginates it; the Resource serialises prefix/hash
      * only — never the raw token (which is unrecoverable from these rows anyway).
      *

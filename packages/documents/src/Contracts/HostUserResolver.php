@@ -7,7 +7,7 @@ namespace Vaulter\Documents\Contracts;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 
 /**
- * Materialises a host user (an Authorizable) by its id (master plan §7 / M4b) so the
+ * Materialises a host user (an Authorizable) by its id so the
  * server-to-server collaboration webhook — which carries only a user id, no session —
  * can run the AccessResolver against a real actor. The host owns its users (Vaulter
  * has no users table), so this is a genuine variance seam: the default

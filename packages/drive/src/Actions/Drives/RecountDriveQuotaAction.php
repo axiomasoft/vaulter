@@ -10,7 +10,7 @@ use Vaulter\Quota\QuotaCalculator;
 use Vaulter\Repositories\Drive\DriveStoreRepository;
 
 /**
- * Recount one drive's eager used_bytes from its retained revisions (PLAN2.D48). The
+ * Recount one drive's eager used_bytes from its retained revisions. The
  * count is read under the exclusive tree lock, where no upload, purge or revision
  * delete of the drive can commit in between, so the stored value is replaced by what
  * the revisions sum to at that moment, never by a number read before a concurrent

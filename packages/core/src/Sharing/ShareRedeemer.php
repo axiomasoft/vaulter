@@ -9,7 +9,7 @@ use Vaulter\Actions\Sharing\RedeemShareLinkAction;
 use Vaulter\Models\Sharing\NodeShare;
 
 /**
- * Opens a visit on a resolved share link (PLAN2.D47): counts the redemption, then
+ * Opens a visit on a resolved share link: counts the redemption, then
  * hands out the link session that makes the visitor's next requests part of the same
  * visit. The public HTTP layer talks to this instead of to the Action.
  */

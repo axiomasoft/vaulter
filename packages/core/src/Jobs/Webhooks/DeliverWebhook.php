@@ -34,7 +34,7 @@ use Vaulter\Webhooks\WebhookSigner;
 
 /**
  * Delivers one WebhookDelivery to its endpoint over a Standard Webhooks signed HTTP POST
- * (master plan §2.11 / D14 / M3b, PLAN2.D60). The delivery is QUEUED, so it never blocks
+ * . The delivery is QUEUED, so it never blocks
  * the originating request.
  *
  * At-least-once with a retry schedule and a dead-letter terminal state:
@@ -192,14 +192,14 @@ final class DeliverWebhook implements ShouldQueue
      * id, identical on every retry) and rejects a replay by timestamp. While a rotation
      * overlap lasts the header carries two signatures, the current secret's first.
      *
-     * SSRF-hardened (§2.11 / N2 / F-P1.7-01): the guard resolves + range-checks the
+     * SSRF-hardened (N2 /): the guard resolves + range-checks the
      * URL on the delivery path and hands back the vetted IP, which is PINNED onto the
      * connection (CURLOPT_RESOLVE) so DNS cannot rebind to an internal address between
      * the check and the dial. The transport is locked to HTTP(S) and the response body
-     * is capped (F-P1.7-06). A blocked URL throws and is recorded as a failed attempt —
+     * is capped. A blocked URL throws and is recorded as a failed attempt —
      * nothing leaves the process.
      *
-     * REDIRECTS ARE NEVER FOLLOWED (VLT-REMED P5.2 / R-05 / D30). The pin covers only the
+     * REDIRECTS ARE NEVER FOLLOWED. The pin covers only the
      * ORIGINAL host:port; a redirect hop is resolved again, with no guard and no pin, so a
      * receiver answering `302 Location: http://169.254.169.254/…` walks the request straight
      * onto the metadata service and reopens the Blocker in full. This used to be a config
@@ -226,7 +226,7 @@ final class DeliverWebhook implements ShouldQueue
 
         $request = Http::timeout($this->webhooksConfig->timeout())
             ->connectTimeout($this->webhooksConfig->connectTimeout())
-            // Unconditional (D30) — see the docblock: a redirect hop escapes the pin.
+            // Unconditional — see the docblock: a redirect hop escapes the pin.
             ->withoutRedirecting()
             ->withOptions($this->transportOptions(pinned: $pinned))
             ->withHeaders([
@@ -247,9 +247,9 @@ final class DeliverWebhook implements ShouldQueue
     }
 
     /**
-     * The Guzzle transport options that harden a delivery (§2.11 / N2): pin the vetted
+     * The Guzzle transport options that harden a delivery (N2): pin the vetted
      * IP onto the connection, lock the protocol to HTTP(S), forbid the transport itself
-     * from following a redirect (the second barrier under `withoutRedirecting()` — R-05:
+     * from following a redirect (the second barrier under `withoutRedirecting()`:
      * a cURL handle that never follows Location cannot leave the pinned host even if the
      * HTTP layer is reconfigured), and bound the response body — an oversized declared
      * Content-Length is refused from the on_headers hook, and the buffering sink spills to

@@ -21,7 +21,7 @@ use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\TreeGuard;
 
 /**
- * Rename a node in place (§2.2), subject to the sibling-name conflict check at
+ * Rename a node in place, subject to the sibling-name conflict check at
  * its current parent (the node itself is excluded from the check, so changing
  * only the case of a name succeeds). The root is
  * never renamed; the check runs against the locked row.

@@ -10,7 +10,7 @@ use Vaulter\ValueObjects\Handlers\FileDescriptor;
 use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
 
 /**
- * The NULL-OBJECT handler (master plan §4.5): claims everything ("*") at the lowest
+ * The NULL-OBJECT handler: claims everything ("*") at the lowest
  * priority and offers download-only. It is the guaranteed terminal resolution — when
  * no richer handler matches a FileDescriptor, the registry falls back here so a
  * resolution NEVER returns null. Archives, unknown binaries and anything unhandled

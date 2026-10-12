@@ -35,7 +35,7 @@ use Vaulter\Tenancy\TenancyBoundary;
  * authority every guard, listing and resource asks. Only the host-role lane (the
  * driver) is swappable.
  *
- * THE ALGORITHM (PLAN2.D45):
+ * THE ALGORITHM:
  *   1. Host override — Allow is a super-user bypass, Deny an administrative block;
  *      both are absolute and skip the walk.
  *   2. Walk the node and its ancestors nearest-first within the drive, collecting
@@ -307,7 +307,7 @@ final class AccessResolver
     }
 
     /**
-     * The "shared with me" view (§2.6): the nodes an actor holds a grant on,
+     * The "shared with me" view: the nodes an actor holds a grant on,
      * re-resolved through the full algorithm. The fast subject-index pass yields
      * candidate node ids; each candidate is then re-checked with can(View), because
      * a previewer-free role, a host override or a disabled feature may still hide it.
@@ -331,7 +331,7 @@ final class AccessResolver
 
     /**
      * The candidate node ids an actor has a live grant on — the fast
-     * subject-index pass behind filterSharedWith (§2.6). The caller loads the nodes
+     * subject-index pass behind filterSharedWith. The caller loads the nodes
      * and re-resolves them; this never decides visibility on its own.
      *
      * @return list<int|string>
@@ -465,7 +465,7 @@ final class AccessResolver
      * Runs under withMaxDepth(NodeReadRepository::DEFAULT_MAX_DEPTH): this executes
      * on every authorization check, so an unbounded recursive-CTE walk would pay its
      * cost on every request and, on SQLite, could hit SQLITE_MAX_RECURSION_DEPTH on a
-     * deep tree (ADR-0005 caps both traversal directions).
+     * deep tree (docs/adr/0005-unified-node-tree.md caps both traversal directions).
      *
      * @return list<Node>
      */

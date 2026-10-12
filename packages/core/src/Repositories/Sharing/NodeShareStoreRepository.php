@@ -12,7 +12,7 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Sharing\NodeShare;
 
 /**
- * Write-side row work for v_node_shares (§2.7 / M2c). It persists ONLY the token's
+ * Write-side row work for v_node_shares. It persists ONLY the token's
  * sha256 hash + prefix (never the raw token), and owns the atomic, max_uses-bounded
  * use-count increment. Opens NO transactions and dispatches NO events — the Action
  * does. Authorization and token minting/hashing happen upstream (Action); this is
@@ -42,7 +42,7 @@ final class NodeShareStoreRepository
     ): NodeShare {
         $model = $this->vaulterConfig->model('node_share');
 
-        // forceFill (P1.4/F-P1.8-02): every key here — including token_hash and
+        // forceFill: every key here — including token_hash and
         // use_count, which NodeShare deliberately excludes from $fillable — is a
         // server-computed literal, never raw request input.
         /** @var NodeShare $share */
@@ -114,7 +114,7 @@ final class NodeShareStoreRepository
     }
 
     /**
-     * Atomically redeem one use of a share, bounded by max_uses (§2.7). A single
+     * Atomically redeem one use of a share, bounded by max_uses. A single
      * conditional UPDATE increments use_count only while the link is not revoked,
      * is still on the generation the caller resolved and is still below max_uses
      * (or max_uses is null/unbounded), so two concurrent visits can never push it

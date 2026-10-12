@@ -21,7 +21,7 @@ use Vaulter\Models\Concerns\StampsDriveTenant;
 use Vaulter\Models\Drive\Node;
 
 /**
- * A bearer share-link on a node (master plan §2.7) — the SEPARATE public sharing
+ * A bearer share-link on a node — the SEPARATE public sharing
  * channel. A share grants exactly the abilities of its role (role_key, role_version)
  * on its node-set (the node itself for scope=item; the node + its descendants for
  * scope=subtree), evaluated in its OWN pass intersected with item-safety — it is
@@ -64,7 +64,7 @@ class NodeShare extends Model
     use StampsDriveTenant;
 
     /**
-     * Closed allow-list (F-P1.8-02): the share's own audience/lifecycle shape —
+     * Closed allow-list: the share's own audience/lifecycle shape —
      * never the role, token_hash/token_prefix (the bearer secret's hash),
      * token_generation nor use_count/granted_by/node_id/tenant_id
      * (server-computed/security). The

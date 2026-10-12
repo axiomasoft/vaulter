@@ -29,7 +29,7 @@ use Illuminate\Database\Eloquent\Model;
  * true payload size regardless of the at-rest base64 representation.
  *
  * Used for v_documents.yjs_state and v_document_revisions.yjs_state — the binary Yjs
- * CRDT state that is the M4b collaboration source of truth (§2.5), read back through
+ * CRDT state that is the collaboration source of truth, read back through
  * Eloquent by the restore path and checkpoint capture. No code reads the column out of band (the hub persists it
  * via the collab/store webhook and never queries it directly).
  *

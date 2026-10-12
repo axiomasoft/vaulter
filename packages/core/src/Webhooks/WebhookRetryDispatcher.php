@@ -18,7 +18,7 @@ use Vaulter\Observability\TracingSpanNames;
 use Vaulter\Support\Identity;
 
 /**
- * The SINGLE owner of webhook-delivery re-dispatch (§2.11 / F-P1.7-05). Both
+ * The SINGLE owner of webhook-delivery re-dispatch. Both
  * vaulter:webhooks:relay and vaulter:webhooks:retry route their due-retry sweep through
  * here, so two ticks (or the two commands overlapping) can never fan the same failed
  * delivery out twice.

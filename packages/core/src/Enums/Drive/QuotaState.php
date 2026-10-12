@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Enums\Drive;
 
 /**
- * How full a drive is against its quota (PLAN2.D44).
+ * How full a drive is against its quota.
  *
  * @closed
  */

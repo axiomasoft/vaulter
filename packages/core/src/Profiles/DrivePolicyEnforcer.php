@@ -13,7 +13,7 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 
 /**
- * @internal The checks Actions run against the drive policy of a drive (PLAN2.D43).
+ * @internal The checks Actions run against the drive policy of a drive.
  *
  * Each check refuses only an operation that makes the state worse than the limit
  * allows; an excess left behind by a lowered limit stays readable and shrinkable.

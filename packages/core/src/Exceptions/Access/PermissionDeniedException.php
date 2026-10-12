@@ -27,7 +27,7 @@ final class PermissionDeniedException extends VaulterException implements Proble
     }
 
     /**
-     * The Drive ACL denial (H.2): the AccessResolver vetoed the ability on the node
+     * The Drive ACL denial: the AccessResolver vetoed the ability on the node
      * (no matching grant, or a deny overrode it).
      */
     public static function forAbility(string $ability): self

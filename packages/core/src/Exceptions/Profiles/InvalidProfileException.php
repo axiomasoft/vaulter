@@ -10,7 +10,7 @@ use Vaulter\Exceptions\VaulterException;
  * Thrown at boot (ProfileRegistry::fromConfig / registerProvider) when a panel's
  * configuration is incoherent: a referenced FQCN (model, pipe, resource) does
  * not exist or does not satisfy its contract, or a panel declares a per-panel id
- * strategy while running on the shared default schema (H.1) — a per-panel PK type
+ * strategy while running on the shared default schema — a per-panel PK type
  * is meaningless when every panel shares the same v_* tables.
  *
  * Failing loud at boot (not at runtime) keeps a broken panel from silently

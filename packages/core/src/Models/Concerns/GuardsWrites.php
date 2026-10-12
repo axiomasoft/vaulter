@@ -12,7 +12,7 @@ use Vaulter\Database\GuardedCteBuilder;
 use Vaulter\Database\WriteScope;
 
 /**
- * Refuses writes made outside a Vaulter operation (PLAN2.D44). Every statement that
+ * Refuses writes made outside a Vaulter operation. Every statement that
  * changes rows ends in the model's base query builder, which {@see GuardedBuilder}
  * replaces: a model save, delete or touch and a mass update, delete, insert, upsert or
  * increment are all refused the same way (the Eloquent builder class stays the model's

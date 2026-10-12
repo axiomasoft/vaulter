@@ -12,7 +12,7 @@ use Vaulter\Models\Drive\FileRevisionBlob;
 
 /**
  * Write-side row work for the v_file_revision_blobs edge table — the GC liveness
- * truth (H.3). A blob is live iff an edge here references it, so attaching /
+ * truth. A blob is live iff an edge here references it, so attaching /
  * detaching an edge is what actually changes liveness; ref_count is only a
  * reconciled cache. Opens no transactions (the caller wraps it). Idempotent
  * upsert so a re-attach of the same (version, blob, role, ordinal) is a no-op.
@@ -63,7 +63,7 @@ final readonly class FileRevisionBlobStoreRepository
 
     /**
      * Whether ANY edge still references this blob — the liveness re-check the GC
-     * runs under the lock before it tombstones (H.3).
+     * runs under the lock before it tombstones.
      */
     public function hasLiveEdge(Blob $blob): bool
     {

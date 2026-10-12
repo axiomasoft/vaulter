@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Gate;
 use Vaulter\Configuration\WebhooksConfig;
 
 /**
- * Authorizes the webhook-endpoint MANAGEMENT surface (master plan §2.11 / D14 / M3b)
+ * Authorizes the webhook-endpoint MANAGEMENT surface
  * — a GLOBAL admin/owner resource, NOT node-scoped (so it never goes through the
  * node AccessResolver). Every management action (register/update/deactivate/delete/
  * list) requires the host's configured manage ability.

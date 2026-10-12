@@ -10,7 +10,7 @@ use Vaulter\Database\VaulterDatabase;
 
 /**
  * Runs a Vaulter command as a Vaulter write: the models it changes pass the write guard
- * (PLAN2.D44). A command is maintenance work done by the package, not by a caller.
+ * . A command is maintenance work done by the package, not by a caller.
  *
  * @internal
  */

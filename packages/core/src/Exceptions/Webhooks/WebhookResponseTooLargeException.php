@@ -8,7 +8,7 @@ use Vaulter\Exceptions\VaulterException;
 
 /**
  * A webhook receiver announced (or streamed) a response body larger than the
- * configured ceiling (§2.11 / F-P1.7-06). Delivery needs only the status code, so an
+ * configured ceiling. Delivery needs only the status code, so an
  * oversized body is refused before it is buffered whole — a broken/hostile receiver
  * cannot OOM the delivery worker.
  */

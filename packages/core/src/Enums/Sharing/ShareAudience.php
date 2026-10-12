@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Enums\Sharing;
 
 /**
- * Who may open a share link (PLAN2.D47). The token is always required; the audience
+ * Who may open a share link. The token is always required; the audience
  * adds who must hold it.
  *
  *   anyone         the token is enough

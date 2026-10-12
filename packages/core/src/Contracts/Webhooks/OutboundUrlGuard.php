@@ -8,7 +8,7 @@ use Vaulter\Exceptions\Webhooks\BlockedOutboundUrlException;
 use Vaulter\ValueObjects\Webhooks\PinnedOutboundEndpoint;
 
 /**
- * The SSRF barrier for outbound webhooks (§2.11 / D5 / F-P1.7-01). A registered
+ * The SSRF barrier for outbound webhooks. A registered
  * endpoint URL is a user-controlled primitive; without this guard the relay would POST
  * to whatever host it names — internal services and cloud metadata (169.254.169.254)
  * included.

@@ -15,7 +15,7 @@ use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
 
 /**
- * A bearer share-link was minted on a node (§2.7 / M2c). Carries the persisted
+ * A bearer share-link was minted on a node. Carries the persisted
  * NodeShare (token_hash only — never the raw token); the token prefix is recorded in
  * the activity feed only.
  */

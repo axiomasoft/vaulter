@@ -10,10 +10,10 @@ use Vaulter\Exceptions\VaulterException;
 
 /**
  * The staged temp of a resumable upload is GONE while the session still claims a
- * non-zero offset (VLT-REMED P5.2 / R-03). This is an impossible state on the happy
+ * non-zero offset. This is an impossible state on the happy
  * path — the bytes for [0, offset) were accepted and acknowledged, so the object must
  * exist. It shows up when something else removed the staged object underneath an
- * in-flight PATCH: the sweeper/abort reclaimed it (R-02), the bucket was cleaned by
+ * in-flight PATCH: the sweeper/abort reclaimed it, the bucket was cleaned by
  * hand, the session's disk was re-pointed, or the storage backend lost the object.
  *
  * The path is FAIL-CLOSED on purpose: appending the new chunk to an absent object

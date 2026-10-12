@@ -11,12 +11,12 @@ use Vaulter\Support\Identity;
 use Vaulter\Tenancy\TenancyBoundary;
 
 /**
- * Read-side lookups over v_drives (§2.1). The get-or-create entry point is the
+ * Read-side lookups over v_drives. The get-or-create entry point is the
  * StorageManager; this repository just resolves the existing row for a host
  * entity within a panel (the idempotency key behind the partial-unique index on
  * owner_type/owner_id/panel).
  *
- * SCOPED-singleton bound (P1.3 / F-P4.2-03) — `find()` memoizes by id in an
+ * SCOPED-singleton bound — `find()` memoizes by id in an
  * in-request identity map, so a page of N sibling nodes belonging to the SAME
  * storage (the common case: `AccessResolver::storageOf()` calls this once per
  * node via `abilitiesFor()`) issues exactly ONE `SELECT` for that storage, not N.
@@ -51,7 +51,7 @@ final class DriveReadRepository
     }
 
     /**
-     * The storage mounted on a host entity within a panel (§2.1) — the
+     * The storage mounted on a host entity within a panel — the
      * polymorphic owner triple (owner_type, owner_id, panel) is the idempotency
      * key. Returns null when none exists yet (the manager then provisions one).
      */

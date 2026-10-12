@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Sharing;
 
 /**
- * The resolver's result envelope (§2.7 / M2c): a {@see ShareResolution} status plus
+ * The resolver's result envelope: a {@see ShareResolution} status plus
  * the {@see ShareContext} when (and only when) the status is Ok. Immutable — the
  * public HTTP layer reads the status to choose 404 / 401 / proceed.
  */

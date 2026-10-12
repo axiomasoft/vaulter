@@ -9,7 +9,7 @@ use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /**
- * A move/copy targeted a parent in a DIFFERENT storage tree (§2.2 — drive_id
+ * A move/copy targeted a parent in a DIFFERENT storage tree (drive_id
  * is the tree boundary). A single parent_id UPDATE cannot cross storages without
  * re-homing the whole subtree, so the operation is rejected explicitly rather
  * than corrupting the tree.

@@ -11,7 +11,7 @@ use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Enums\Access\Effect;
 
 /**
- * The host's pluggable, per-profile role lane (master plan H.2 / D6). It bridges the
+ * The host's pluggable, per-profile role lane. It bridges the
  * host application's identity + role system into Vaulter WITHOUT leaking Vaulter's
  * own domain: it never receives a Node and never deals in magic-string actions —
  * only an Authorizable actor and an {@see AccessScope} (profile + drive owner/id + tenant
@@ -21,7 +21,7 @@ use Vaulter\Enums\Access\Effect;
  * Swap it via configuration key vaulter.access.permission_driver + permission_drivers map); the
  * default is the standalone {@see DatabasePermissionDriver}.
  *
- * Implementations are a SemVer-frozen public API from M2a — M2b's Gate/Spatie/
+ * Implementations are a SemVer-frozen public API from — 's Gate/Spatie/
  * host authorization drivers implement exactly this surface, and a contract test asserts every
  * driver yields identical AccessResolver decisions on a shared fixture.
  */

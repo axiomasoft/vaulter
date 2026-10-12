@@ -17,7 +17,7 @@ use Vaulter\Repositories\Sharing\NodeShareStoreRepository;
 use Vaulter\Sharing\ShareTokenMinter;
 
 /**
- * Replace the token of a live share link (PLAN2.D47, P4-I22): the old token stops
+ * Replace the token of a live share link (P4-I22): the old token stops
  * resolving the moment this commits, the generation moves on so link sessions
  * opened with the old token are void, and everything else about the link — role,
  * audience, expiry, budget, password — stays. The new raw token is returned once.

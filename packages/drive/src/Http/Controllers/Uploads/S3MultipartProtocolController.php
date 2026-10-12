@@ -107,8 +107,8 @@ final class S3MultipartProtocolController
 
     /**
      * The raw part body as a STREAM, never a PHP string — see
-     * TusProtocolController::chunkStream() for the full rationale (VLT-REMED P5.2 review /
-     * F-P1.4-04): the per-chunk ceiling used to sit BEHIND a `getContent()` that had
+     * TusProtocolController::chunkStream() for the full rationale (review /
+     * ): the per-chunk ceiling used to sit BEHIND a `getContent()` that had
      * already materialised the whole body in memory.
      *
      * @return resource

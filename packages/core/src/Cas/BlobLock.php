@@ -7,7 +7,7 @@ namespace Vaulter\Cas;
 use Vaulter\Database\VaulterDatabase;
 
 /**
- * The per-(scope, sha256) liveness lock (H.3 safety invariant). EVERY transaction
+ * The per-(scope, sha256) liveness lock (safety invariant). EVERY transaction
  * that changes the liveness of a content address — upload-commit, GC-mark,
  * GC-sweep — takes this lock as its FIRST statement and makes every liveness
  * decision from rows read AFTER the lock. That is what makes online GC safe

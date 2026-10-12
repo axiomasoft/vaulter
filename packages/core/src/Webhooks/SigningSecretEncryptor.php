@@ -11,7 +11,7 @@ use Vaulter\Database\VaulterDatabase;
 
 /**
  * One-shot, IDEMPOTENT migration of webhook signing secrets between plaintext and
- * encrypted-at-rest (F-P1.7-02). A value that already decrypts is left untouched, so
+ * encrypted-at-rest. A value that already decrypts is left untouched, so
  * re-running encryptPlaintext() is a no-op — the migration (and any repair path) can
  * call it more than once safely.
  *

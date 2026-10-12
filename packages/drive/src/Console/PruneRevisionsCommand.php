@@ -19,7 +19,7 @@ use Vaulter\Support\Identity;
 use Vaulter\VaulterManager;
 
 /**
- * Apply the revision retention policy of each drive's profile (PLAN2.D48), drive by
+ * Apply the revision retention policy of each drive's profile, drive by
  * drive, in this process. Schedule it daily, like vaulter:trash:purge; a drive that
  * fails is logged and the others still run.
  */

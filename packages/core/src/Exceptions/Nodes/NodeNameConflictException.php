@@ -9,7 +9,7 @@ use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /**
- * A live sibling already owns this name under the destination parent (§2.2
+ * A live sibling already owns this name under the destination parent (
  * sibling-unique). Drive operations never silently auto-rename — the conflict is
  * surfaced deterministically so the caller decides (overwrite, suffix, abort).
  */

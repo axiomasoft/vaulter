@@ -26,7 +26,7 @@ use Vaulter\Media\Providers\SchedulingRegistrar;
 
 /**
  * Vaulter Media — the content-addressed file/blob layer (CAS), extracted from
- * vaulter-core (P2 #5, ADR decisions D2/D3). This package OWNS the concrete CAS
+ * vaulter-core (ADR decisions). This package OWNS the concrete CAS
  * engine (ContentStore / StorageDriver / BlobStore implementations, the two-phase
  * GC + reconciler and their commands); the seam contracts, the Blob model/schema
  * and the per-file ACL stay in core (ACL-agnostic CAS — the media layer never

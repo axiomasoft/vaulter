@@ -27,7 +27,7 @@ interface DriveHandle
     public function quota(): QuotaSnapshot;
 
     /**
-     * active → archived: the drive becomes read-only (PLAN2.D37). Needs Manage on the
+     * active → archived: the drive becomes read-only. Needs Manage on the
      * root, or the system actor.
      *
      * @throws InvalidDriveStateException
@@ -38,7 +38,7 @@ interface DriveHandle
     public function unarchive(): DriveSnapshot;
 
     /**
-     * Start the asynchronous, idempotent purge of the whole drive (PLAN2.D27): the drive
+     * Start the asynchronous, idempotent purge of the whole drive: the drive
      * is gone for everyone at once, its nodes, revisions and blob references follow, the
      * drive row last. Needs Manage on the root, or the system actor.
      */
@@ -71,7 +71,7 @@ interface DriveHandle
     public function activity(): ActivityOperations;
 
     /**
-     * The drive's change journal for the acting reader (PLAN2.D50): a cursor to start
+     * The drive's change journal for the acting reader: a cursor to start
      * from after a full listing, then pages of node changes filtered by the reader's
      * current access.
      */

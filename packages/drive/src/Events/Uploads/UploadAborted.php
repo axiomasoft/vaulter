@@ -14,7 +14,7 @@ use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
 
 /**
- * A resumable-upload session was aborted (§2.8 / F-P1.4-13): the staged temp and any
+ * A resumable-upload session was aborted: the staged temp and any
  * protocol-side state (S3 multipart) were already reclaimed by
  * {@see UploadSessionManager::abort()} in the same transaction.
  */

@@ -44,7 +44,7 @@ final class DocumentRevisionStoreRepository
     }
 
     /**
-     * Prune a document's history down to the $max most recent checkpoints (§2.5),
+     * Prune a document's history down to the $max most recent checkpoints,
      * NEVER deleting a keep_forever checkpoint nor the head. Returns the number of
      * pruned rows. $max <= 0 means unlimited. revision_count is not lowered, so a
      * number is never handed out twice.

@@ -11,7 +11,7 @@ use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Drive\NodeUserStateRepository;
 
 /**
- * Star or unstar a node for the acting user (PLAN2.D40). A star is personal: it
+ * Star or unstar a node for the acting user. A star is personal: it
  * takes no tree lock and changes neither the node's sequence nor its timestamps.
  *
  * Operations authorize (View) before this command.

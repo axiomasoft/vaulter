@@ -13,7 +13,7 @@ use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 
 /**
- * A transactional-outbox row (master plan §2.11 / D14 / M3b): a domain event
+ * A transactional-outbox row: a domain event
  * durably staged for reliable webhook fan-out, its payload the webhook envelope.
  * event_id is UNIQUE — the OutboxRecorder writes one row per occurrence, so the same
  * event never stages a duplicate row.
@@ -60,7 +60,7 @@ class Outbox extends Model
     use ResolvesVaulterConnection;
 
     /**
-     * Fully guarded (F-P1.8-02): the transactional-outbox staging row — every
+     * Fully guarded: the transactional-outbox staging row — every
      * column is system-computed (event_id, payload, status, retry bookkeeping).
      * The sole writer, OutboxRecorder::stage(), fills it with forceFill().
      *
@@ -76,7 +76,7 @@ class Outbox extends Model
 
     /**
      * The pending rows that are due (available_at <= now) and not leased by a live
-     * relay worker, oldest-first — the relay-drain order (§2.11). The relay claims
+     * relay worker, oldest-first — the relay-drain order. The relay claims
      * a batch from this scope.
      *
      * @param  Builder<$this> $query

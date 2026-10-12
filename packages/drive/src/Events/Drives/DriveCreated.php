@@ -17,7 +17,7 @@ use Vaulter\ValueObjects\Events\EventSubject;
 
 /**
  * A storage container was provisioned for a host entity, together with its
- * auto-created root folder node (§2.1).
+ * auto-created root folder node.
  */
 final readonly class DriveCreated extends DomainEvent
 {

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Media\Configuration;
 
 /**
- * Where identical bytes share one stored blob (PLAN2.D49). Deduplication never
+ * Where identical bytes share one stored blob. Deduplication never
  * crosses a tenant: a shared install-wide scope would let one tenant learn that
  * another stored a given file. Quota and upload responses never depend on a match.
  *

@@ -19,7 +19,7 @@ use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
  * A brand-new file node was uploaded — first version committed against a
- * (possibly deduplicated) blob (§2.4). A subsequent upload onto the same node
+ * (possibly deduplicated) blob. A subsequent upload onto the same node
  * fires FileRevisionAdded instead.
  */
 final readonly class FileUploaded extends DomainEvent

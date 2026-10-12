@@ -10,13 +10,13 @@ use Vaulter\Naming\PermissiveNamePolicy;
 use Vaulter\Naming\PortableNamePolicy;
 
 /**
- * The tree and content limits of every drive of a profile (PLAN2.D43), checked by
+ * The tree and content limits of every drive of a profile, checked by
  * the Actions under the locks of the rows they change, on every path: HTTP, PHP,
  * system, import and restore. Lowering a limit deletes nothing; it only refuses
  * operations that would make an existing excess worse.
  *
- * maxShareLinkTtlDays is enforced by share links (PLAN2.D47); revisionRetention by
- * the revision pruning (PLAN2.D48).
+ * maxShareLinkTtlDays is enforced by share links; revisionRetention by
+ * the revision pruning.
  */
 final readonly class DrivePolicy
 {

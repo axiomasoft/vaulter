@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Data\Webhooks;
 
 /**
- * The command DTO for registering a webhook endpoint (master plan §2.11 / D14 / M3b).
+ * The command DTO for registering a webhook endpoint.
  * Carries the receiver URL and the list of subscribed event names (validated against
  * the EventType enum by the request). The signing_secret is NOT part of this
  * command — it is generated inside the Action and returned ONCE; only its stored form

@@ -11,7 +11,7 @@ use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\VaulterManager;
 
 /**
- * Two-phase, race-safe blob garbage collection (H.3). ACL-blind, system context:
+ * Two-phase, race-safe blob garbage collection. ACL-blind, system context:
  * mark unreferenced committed blobs as tombstoned (with a grace deadline), then
  * sweep tombstoned blobs past grace to a physical delete. --pending also clears
  * crashed-staging PENDING rows. The grace window comes from the configuration key ('vaulter.gc.

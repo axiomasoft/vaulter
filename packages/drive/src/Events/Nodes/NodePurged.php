@@ -14,8 +14,8 @@ use Vaulter\ValueObjects\Events\EventSubject;
 
 /**
  * A node and its subtree were permanently deleted (purge is a real DELETE), their
- * version↔blob edges detached so the blobs become GC-eligible (M1b GC reclaims
- * the bytes — never deleted directly here, §2.4 / §2.3). used_bytes was
+ * version↔blob edges detached so the blobs become GC-eligible (GC reclaims
+ * the bytes — never deleted directly here). used_bytes was
  * decremented by the freed size. The node objects are gone, so the ids, the
  * reclaimed byte total and the drive's tenant and profile travel with the event.
  *

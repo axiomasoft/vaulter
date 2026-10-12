@@ -10,7 +10,7 @@ use Vaulter\Exceptions\VaulterException;
 
 /**
  * A webhook delivery (or endpoint registration) targeted a URL the outbound guard
- * refused (§2.11 / F-P1.7-01): a non-http(s) scheme, an unresolvable host, or a host
+ * refused: a non-http(s) scheme, an unresolvable host, or a host
  * that resolves — on ANY A/AAAA record — into a private, loopback, link-local or
  * otherwise reserved range (cloud metadata at 169.254.169.254 included).
  *

@@ -48,7 +48,7 @@ final readonly class DriveHandle implements Contract
     public function model(): Drive
     {
         $drive = $this->container->make(TenancyBoundary::class)->assertDrive($this->drive);
-        // A drive being deleted is absent for everyone but its own purge (PLAN2.D37).
+        // A drive being deleted is absent for everyone but its own purge.
         $purging = $this->explicitActor?->isSystem() === true && $this->explicitActor->ref()->reason === OperationGuard::PURGE_REASON;
         if ($drive->status === DriveStatus::Deleting && !$purging) {
             throw StorageNotFoundException::forId($drive->id);

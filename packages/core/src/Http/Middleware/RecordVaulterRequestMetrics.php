@@ -12,7 +12,7 @@ use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Support\LoadTier;
 
 /**
- * Records `vaulter_http_request_duration_seconds` for mapped Vaulter API routes (P8.3 / §9.1).
+ * Records `vaulter_http_request_duration_seconds` for mapped Vaulter API routes.
  */
 final readonly class RecordVaulterRequestMetrics
 {

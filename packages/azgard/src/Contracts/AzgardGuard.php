@@ -6,7 +6,7 @@ namespace Vaulter\Azgard\Contracts;
 
 /**
  * The NARROW Vaulter-owned seam the host's AzGuard-backed actor satisfies (master
- * plan §6 / H.2 / ADR-0007). It exposes EXACTLY the two checks the
+ * plan / docs/adr/0007-pluggable-authorization.md). It exposes EXACTLY the two checks the
  * {@see AzgardPermissionDriver} needs — and nothing of AzGuard's own API — so the
  * driver path references no concrete AzGuard class.
  *

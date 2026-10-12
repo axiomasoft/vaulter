@@ -20,7 +20,7 @@ use Vaulter\Repositories\Cas\BlobStoreRepository;
 use Vaulter\Repositories\Drive\FileRevisionBlobStoreRepository;
 
 /**
- * Two-phase, race-safe blob GC (H.3). It is ACL-blind — liveness ≠ the viewer's
+ * Two-phase, race-safe blob GC. It is ACL-blind — liveness ≠ the viewer's
  * rights, so a node a user cannot see still pins its blob; GC runs as the system
  * with no panel/workspace context.
  *
@@ -171,7 +171,7 @@ final readonly class BlobGarbageCollector
     }
 
     /**
-     * Sweep PENDING blobs from a crashed staging (H.3): a pending row older than
+     * Sweep PENDING blobs from a crashed staging: a pending row older than
      * the grace window whose commit never finished and that carries no edge. Its
      * (possibly partial) object is deleted and the row is finalised as a deleted
      * tombstone, all under the lock so a slow-but-live commit is not stolen.
@@ -191,7 +191,7 @@ final readonly class BlobGarbageCollector
 
         foreach ($batches as $batch) {
             foreach ($batch as $candidate) {
-                // Symmetry with sweep() (F-P1.5-02): the pending-sweep runs its unit
+                // Symmetry with sweep(): the pending-sweep runs its unit
                 // SERIALIZABLE on PostgreSQL with retry-on-40001, so a transient
                 // serialization failure under concurrent GC is retried rather than
                 // propagated as a QueryException that aborts the whole pass.
@@ -264,7 +264,7 @@ final readonly class BlobGarbageCollector
 
     /**
      * On PostgreSQL run the unit SERIALIZABLE and retry on a 40001 serialization
-     * failure (H.3) — the isolation level itself is raised INSIDE the transaction
+     * failure — the isolation level itself is raised INSIDE the transaction
      * (see lockedTransaction), this only drives the retry loop. On MySQL/SQLite the
      * FOR-UPDATE/single-writer path already serialises, so run once.
      *

@@ -17,7 +17,7 @@ use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
  * A node was re-parented within its storage tree — a single parent_id UPDATE
- * (§2.2 / H.4). Carries the old parent so listeners can reconstruct the move.
+ * . Carries the old parent so listeners can reconstruct the move.
  */
 final readonly class NodeMoved extends DomainEvent
 {

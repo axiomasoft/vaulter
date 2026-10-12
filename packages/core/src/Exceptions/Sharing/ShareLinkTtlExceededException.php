@@ -8,7 +8,7 @@ use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
-/** The share link would outlive the drive policy's maxShareLinkTtlDays (PLAN2.D47). */
+/** The share link would outlive the drive policy's maxShareLinkTtlDays. */
 final class ShareLinkTtlExceededException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

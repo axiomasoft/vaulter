@@ -8,7 +8,7 @@ use RuntimeException;
 use Vaulter\Contracts\Cas\StagedObject;
 
 /**
- * A StagedObject backed by a local seekable temp file (H.3). The sha256 was
+ * A StagedObject backed by a local seekable temp file. The sha256 was
  * recomputed from THESE durable bytes by the ContentStore, so promotion and the
  * dedup decision never trust the live stream or a client hash. discard() removes
  * the temp file and is idempotent.

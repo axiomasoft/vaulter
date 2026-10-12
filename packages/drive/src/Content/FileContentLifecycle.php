@@ -56,7 +56,7 @@ final readonly class FileContentLifecycle implements NodeContentLifecycle
     /**
      * Lock the files (F) and every revision (R) of the file nodes about to be purged and
      * return the bytes they hold against the quota: all retained revisions, not only
-     * the heads (PLAN2.D48).
+     * the heads.
      *
      * @param iterable<array-key, Node> $sources
      */

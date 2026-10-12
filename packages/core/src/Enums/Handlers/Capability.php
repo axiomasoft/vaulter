@@ -8,11 +8,11 @@ use Vaulter\ValueObjects\Handlers\ContentCapabilities;
 
 /**
  * The capability a {@see FileHandlerRegistry} resolution is
- * filtered by (master plan §4.5 / §7). A FileDescriptor is asked "which handler can
+ * filtered by. A FileDescriptor is asked "which handler can
  * EDIT / PREVIEW / DOWNLOAD / THUMBNAIL this file?", and the registry only returns a
  * handler whose ContentCapabilities advertises the requested flag. This is the
  * runtime capability axis — orthogonal to the built-in NodeKind/DocumentType enums
- * (H.5: the registry, keyed by mime/extension strings, is the source of truth; the
+ * (the registry, keyed by mime/extension strings, is the source of truth; the
  * enums are only built-in sugar).
  */
 enum Capability: string

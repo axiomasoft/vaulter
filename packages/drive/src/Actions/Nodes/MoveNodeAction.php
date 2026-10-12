@@ -24,7 +24,7 @@ use Vaulter\Support\Identity;
 use Vaulter\Support\TreeGuard;
 
 /**
- * Re-parent a node within its storage tree — the §2.2 / H.4 single parent_id
+ * Re-parent a node within its storage tree — the single parent_id
  * UPDATE. Every guard runs inside the transaction, after the storage tree lock and
  * the row locks on the node and its destination:
  *   1. the root never moves;
@@ -114,7 +114,7 @@ final readonly class MoveNodeAction
     }
 
     /**
-     * The cycle guard (H.4): a node cannot move into itself nor any node in its
+     * The cycle guard: a node cannot move into itself nor any node in its
      * own subtree. We materialise the bounded subtree once and test membership —
      * never a recursive correlated aggregate in the request path.
      */

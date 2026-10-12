@@ -14,7 +14,7 @@ use Vaulter\Drive\Actions\Drives\PurgeDriveStepAction;
 use Vaulter\Support\Identity;
 
 /**
- * Purge a drive that is being deleted (PLAN2.D27), one resumable step per run
+ * Purge a drive that is being deleted, one resumable step per run
  * ({@see PurgeDriveStepAction}). The job queues itself again while children remain, so
  * one run never holds a worker for long; re-running a finished purge does nothing.
  */

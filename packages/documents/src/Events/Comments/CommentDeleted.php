@@ -19,7 +19,7 @@ use Vaulter\ValueObjects\Events\EventScope;
 use Vaulter\ValueObjects\Events\EventSubject;
 
 /**
- * A node comment was permanently deleted (ADR-0014 шаг 1 — no soft-delete). Broadcast
+ * A node comment was permanently deleted (docs/adr/0014-legacy-docvault-strangler.md шаг 1 — no soft-delete). Broadcast
  * on the node's private collaboration channel so open editors drop it live. The model
  * still carries its id/node_id in memory after the delete, so the payload is complete.
  */

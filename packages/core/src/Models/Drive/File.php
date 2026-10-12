@@ -16,7 +16,7 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Models\Concerns\StampsDriveTenant;
 
 /**
- * The mutable 1:1 handle for a kind=file node (master plan §2.4): it owns the
+ * The mutable 1:1 handle for a kind=file node: it owns the
  * version history and caches the head's mime/size. Swappable via
  * configuration key vaulter.models.file.
  *
@@ -40,7 +40,7 @@ class File extends Model
     use StampsDriveTenant;
 
     /**
-     * Closed guard-list (F-P1.8-02): id/tenant_id/node_id/current_revision_id/
+     * Closed guard-list: id/tenant_id/node_id/current_revision_id/
      * size_bytes/revision_count/created_by/timestamps are structural or
      * server-computed bookkeeping — every write path that sets them already uses
      * forceFill() (FileStoreRepository). Only mime_type is a plain scalar left

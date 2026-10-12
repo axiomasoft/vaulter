@@ -13,7 +13,7 @@ use Vaulter\Contracts\IdStrategy;
  * call these helpers instead of hard-coding column types, so "ulid vs uuid7 vs
  * bigint" stays driven by configuration key vaulter.ids.strategy. Key/reference/morphs route through the strategy;
  * hostKey/actor/tenant use the independent host-key type; panel/bits/reference add
- * the per-table convention columns from the master plan §2.0.
+ * the per-table convention columns from the .
  */
 final class VaulterSchema
 {
@@ -74,7 +74,7 @@ final class VaulterSchema
 
     /**
      * Optional tenant column — emitted only when tenancy is enabled. Host-scoped:
-     * Vaulter never scopes by it (D8).
+     * Vaulter never scopes by it.
      */
     public static function tenant(Blueprint $table): void
     {

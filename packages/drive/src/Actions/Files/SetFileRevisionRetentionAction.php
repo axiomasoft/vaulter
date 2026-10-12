@@ -16,7 +16,7 @@ use Vaulter\Support\Identity;
 use Vaulter\Support\TreeGuard;
 
 /**
- * Pin (keep forever) or unpin one revision of a file (PLAN2.D48). Takes the same
+ * Pin (keep forever) or unpin one revision of a file. Takes the same
  * T(shared) → N → F → R locks as DeleteFileRevisionAction, so a delete or prune
  * either sees the pin or finished before it. keep_forever is the only column of a
  * revision that changes after its insert; the node's sequence does not move.

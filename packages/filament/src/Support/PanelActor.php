@@ -15,7 +15,7 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
  * one is signed in, which yields no drives and no rows — a read-only shell).
  *
  * The actor is resolved through the ACTIVE PANEL's own auth guard
- * (F-P1.10-02, `Filament::auth()` → `getCurrentOrDefaultPanel()->auth()`), not the
+ * (`Filament::auth()` → `getCurrentOrDefaultPanel()->auth()`), not the
  * application's global default guard: a host whose panel runs on a non-default
  * guard would otherwise have the drive handle authorize a DIFFERENT identity than
  * the one actually signed into the panel. Outside a resolvable panel context

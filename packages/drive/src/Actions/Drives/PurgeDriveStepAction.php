@@ -25,7 +25,7 @@ use Vaulter\Support\Identity;
 use Vaulter\VaulterManager;
 
 /**
- * One resumable step of purging a drive that is being deleted (PLAN2.D27): open uploads
+ * One resumable step of purging a drive that is being deleted: open uploads
  * are aborted, up to BATCH children of the root go one by one — each in its own
  * transaction through PurgeNodeAction as the system actor 'drive-purge', the same
  * lifecycle, CAS and quota path as an ordinary purge — and when the root has no

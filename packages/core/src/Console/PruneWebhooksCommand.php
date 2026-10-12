@@ -15,7 +15,7 @@ use Vaulter\Repositories\Webhooks\WebhookDeliveryStoreRepository;
 
 /**
  * Reclaim the reliability channel's audit history past its retention window (master
- * plan §2.11 / D14 / M3b). It deletes two kinds of FINISHED rows — they never change
+ * plan). It deletes two kinds of FINISHED rows — they never change
  * again, so keeping them forever only grows the tables:
  *  - COMPLETED outbox rows: status 'completed' with fanned_out_at older than the
  *    window. A 'pending' row is still being fanned out — the relay owns it — and is

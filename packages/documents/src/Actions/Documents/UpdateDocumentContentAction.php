@@ -25,7 +25,7 @@ use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\TreeGuard;
 
 /**
- * Write a document node's content — the autosave path (§2.5 / M4a). The working
+ * Write a document node's content — the autosave path. The working
  * state is replaced; an autosave checkpoint is taken only when the checkpoint
  * interval has passed, so a typing session does not flood the history and no
  * stored checkpoint is ever rewritten. Replacing the JSON of a document that has
@@ -57,7 +57,7 @@ final readonly class UpdateDocumentContentAction
     {
         $node = $data->node;
 
-        // F-P1.11-05: the ADR-0004 size limit was defined but never enforced at save
+        // the docs/adr/0004-content-format.md size limit was defined but never enforced at save
         // time — check it before the transaction, not just at the UI layer. Callers
         // that decode through the type already applied its own limit.
         if ($data->content instanceof TipTapContent) {
@@ -77,7 +77,7 @@ final readonly class UpdateDocumentContentAction
             if (!$this->tree->sameStorage($current, $driveId)) {
                 throw NodeNotFoundException::forId($nodeId);
             }
-            // A trash that committed before this lock leaves nothing to write to (PLAN2.F05).
+            // A trash that committed before this lock leaves nothing to write to.
             $this->tree->assertLive($current);
             if (!$current->kind->isDocument()) {
                 throw NotADocumentException::forNode($nodeId);

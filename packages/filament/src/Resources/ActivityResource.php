@@ -33,7 +33,7 @@ use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\ValueObjects\Access\Actor;
 
 /**
- * The audit-feed admin surface (master plan §2.9 / §3): a READ-ONLY view of the
+ * The audit-feed admin surface: a READ-ONLY view of the
  * append-only v_activity log — verb, actor, target and time, filterable by verb and
  * storage. The model is append-only by construction (no updated_at, no soft-delete),
  * so this resource is non-creatable, non-editable and non-deletable: it lists and
@@ -56,7 +56,7 @@ final class ActivityResource extends Resource
     }
 
     /**
-     * Access-aware listing (F-P1.10-01): narrow to activity rows whose target is a
+     * Access-aware listing: narrow to activity rows whose target is a
      * node in the acting admin's grant-reachable candidate set. Every recorded verb
      * targets a node (drive.created targets its root folder — see
      * ActivityRecorder), so `target_type = <node model>` + `target_id IN

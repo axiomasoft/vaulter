@@ -39,7 +39,7 @@ final readonly class UploadInspection
         $global = new UploadPolicy(maxFileSize: $this->config->maxFileSize() ?: null, allowedMimeTypes: $this->config->allowedMimeTypes(), blockedExtensions: $this->config->blockedExtensions());
         $profile = $this->profiles->get($context->drive->profile);
         $uploads = $profile->getUploadPolicy();
-        // The profile's file size limit lives in its drive policy (PLAN2.D43).
+        // The profile's file size limit lives in its drive policy.
         $local = new UploadPolicy(maxFileSize: $profile->getDrivePolicy()->maxFileBytes, allowedMimeTypes: $uploads->allowedMimeTypes,
             blockedExtensions: $uploads->blockedExtensions, requireScan: $uploads->requireScan, scanMode: $uploads->scanMode,
             scanPolicyVersion: $uploads->scanPolicyVersion);

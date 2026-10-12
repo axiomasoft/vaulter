@@ -10,7 +10,7 @@ use Vaulter\Exceptions\VaulterException;
 
 /**
  * The assembled resumable object's magic bytes contradict the client-declared mime
- * (§2.8 / F-P1.4-11 / U5.5): e.g. a file declared image/png whose leading bytes are
+ * e.g. a file declared image/png whose leading bytes are
  * a ZIP archive. The server recomputes the type from the bytes it holds and refuses
  * to commit a type-confused object rather than trust the client's claim.
  */

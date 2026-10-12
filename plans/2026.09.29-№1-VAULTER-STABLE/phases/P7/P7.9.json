@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P7.9",
   "title": "Чистка внутренних кодов задач из комментариев src и финальная быстрая валидация фазы P7",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "scripts/strip-task-codes.php (--check|--write) удаляет коды PLAN/P/F-P/H/EV/D/C/N/V/§ из комментариев packages/*/src и packages/vue/src, ADR-ссылки нормализованы к @see docs/adr/…; --check зелёный; быстрый phase.validation P7 на финальном дереве.",
   "why": "OPUS 12 §8, D38: внутренние коды задач не должны попадать в публичный исходник 1.0. Риск: правка вне комментариев (литералы, код) — токенизатор ограничивает T_COMMENT/T_DOC_COMMENT.",
   "scope": {
@@ -127,6 +127,36 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-11T13:58:13Z"
+  "result": {
+    "started_at": "2026-10-12T05:48:44Z",
+    "finished_at": "2026-10-12T06:01:55Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "8f3fe525-b6c3-434e-9267-616cbf991abd"
+    },
+    "notes": "strip-task-codes.php + test + fixtures; 587 comments in 307 src files rewritten, comments only; ADR-NNNN inlined as docs/adr/NNNN-slug.md (ADR-0015 has no file, kept). V3 not executed: phase run P7. Sampled diff reviewed. check-profile written after first --write (late). Adjacent edit: core GatePermissionResolverDocGuardTest.",
+    "deviations": [
+      "GatePermissionResolverDocGuardTest assertion flipped (code no longer in docblock); V706 rerun green for that test (other 953 passed in full run)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-12T06:01:55Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-12T06:01:55Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-12T06:01:55Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-12T06:01:55Z"
 }

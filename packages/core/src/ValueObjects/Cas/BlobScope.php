@@ -9,7 +9,7 @@ use InvalidArgumentException;
 
 /**
  * The deduplication scope of a CAS blob: identical bytes share one blob only inside
- * one tenant or one drive (PLAN2.D49). 'off' gives every upload a scope of its own.
+ * one tenant or one drive. 'off' gives every upload a scope of its own.
  * Uploads never build the retired install-wide 'global' scope; it is still parsed so
  * existing objects stay readable until vaulter:blobs:repair-scopes moves them.
  */

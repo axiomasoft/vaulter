@@ -63,7 +63,7 @@ final readonly class PurgeNodeAction
                     $this->lifecycles->forKind($member->kind);
                 }
             }
-            // Every retained revision of every purged file leaves the quota (PLAN2.D48).
+            // Every retained revision of every purged file leaves the quota.
             $freedBytes = app(FileContentLifecycle::class)->preparePurge($locked);
             if ($freedBytes > 0) {
                 $this->storageStore->adjustUsedBytes(storage: $context->drive, delta: -$freedBytes);

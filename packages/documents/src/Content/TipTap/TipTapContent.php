@@ -43,7 +43,7 @@ final readonly class TipTapContent implements DocumentContent
     ) {}
 
     /**
-     * STORE-time constructor: strict, fail-closed (F-P1.11-01/-02).
+     * STORE-time constructor: strict, fail-closed (02).
      *
      * @param array<string, mixed> $doc
      */
@@ -59,7 +59,7 @@ final readonly class TipTapContent implements DocumentContent
     }
 
     /**
-     * READ-time constructor: DECAYS instead of throwing (VLT-REMED D29 / R-01).
+     * READ-time constructor: DECAYS instead of throwing.
      *
      * A snapshot written before today's allow-list existed (or by a host extension that
      * has since been switched off) is read back with the unknown nodes/marks/attribute
@@ -67,13 +67,13 @@ final readonly class TipTapContent implements DocumentContent
      *
      * What is deliberately NOT touched here are attribute VALUES: a legacy
      * `href="javascript:…"` is carried through to the renderer, where the render-time HTML
-     * sanitizer (the second echelon of D4) neutralises it. Scrubbing it here would leave
-     * that echelon with nothing to catch and make it untestable (VLT-REMED R-07) — and the
+     * sanitizer (the second echelon of) neutralises it. Scrubbing it here would leave
+     * that echelon with nothing to catch and make it untestable — and the
      * Markdown path re-applies {@see LinkSchemeValidator} on its own.
      *
      * A consumer that hands this content to a CLIENT without a renderer in between (the JSON
      * API resource, an editor payload) has no such echelon behind it and must therefore take
-     * {@see withSanitizedUrls()} (VLT-REMED P5.2 / R-12).
+     * {@see withSanitizedUrls()}.
      *
      * @param array<string, mixed> $doc
      */
@@ -112,7 +112,7 @@ final readonly class TipTapContent implements DocumentContent
 
     /**
      * A copy whose `link.href` / `image.src` values are guaranteed to carry an allowed
-     * scheme — every other URL is DROPPED (VLT-REMED P5.2 / R-12).
+     * scheme — every other URL is DROPPED.
      *
      * This is the echelon for the JSON read path (the API resource that hands the stored
      * content straight to the editor). {@see decayFrom()} deliberately leaves attribute
@@ -125,7 +125,7 @@ final readonly class TipTapContent implements DocumentContent
      * What cannot survive is dropped WITH its node/mark when the attribute is a required one
      * (`link.href`, `image.src`): the result of this method is what the API resource hands the
      * editor, and the editor hands it straight back on the next save — so it must pass
-     * {@see fromArray()} unchanged (VLT-REMED P5.2). Leaving a link mark with no href behind
+     * {@see fromArray()} unchanged. Leaving a link mark with no href behind
      * looked like a graceful degradation and was in fact a one-way door: GET returned
      * `{"type":"link","attrs":{"target":"_blank"}}` and the PATCH of that same payload was
      * rejected by the store gate, which REQUIRES the href — every legacy document with a
@@ -312,18 +312,18 @@ final readonly class TipTapContent implements DocumentContent
      * Reject any attribute outside the allow-list for the given node/mark type, then
      * validate the values this package actually interprets (`heading.level`) or that are a
      * security primitive — every URL-bearing attribute of the type, the host's own included
-     * (R-11: the seam widens the allow-list, it does not switch off the scheme check).
+     * (the seam widens the allow-list, it does not switch off the scheme check).
      *
      * Presence is required only for the CANONICAL URL attributes: the package knows a link
      * without an href is malformed. For a host's attribute it knows no such thing, so an
      * absent one passes and a present one is checked — a value guard, not a schema opinion.
      *
      * On top of that, EVERY attribute value is checked for an executable scheme, whatever
-     * the attribute is called (VLT-REMED P5.2). Recognising URL attributes by NAME
+     * the attribute is called. Recognising URL attributes by NAME
      * ({@see INFERRED_URL_ATTRIBUTE_NAMES}) leaves the config seam fail-OPEN for every name
      * the package never heard of: `extra_attributes = ['embed' => ['source']]` bought a node
      * whose `source` was scheme-checked nowhere, so `javascript:` went in and came back out
-     * to the editor — the very hole R-11 was supposed to close, one attribute name to the
+     * to the editor — the very hole was supposed to close, one attribute name to the
      * left. The name is host taste; `javascript:`/`data:`/`vbscript:` in a VALUE never is.
      */
     private static function validateAttributes(TipTapSchema $schema, string $type, mixed $attrs): void
@@ -584,10 +584,10 @@ final readonly class TipTapContent implements DocumentContent
 
     /**
      * Scheme-guard the attributes of one node/mark, so that what the editor is handed can be
-     * handed BACK (VLT-REMED P5.2 — the read→save circle):
+     * handed BACK (the read→save circle):
      *
      *  - every URL-bearing attribute of the type — the host's own included, on the same map
-     *    the store-time gate uses ({@see urlAttributes()}, R-11) — must carry an allowed
+     *    the store-time gate uses ({@see urlAttributes()}) — must carry an allowed
      *    scheme, or it goes;
      *  - every OTHER attribute whose VALUE carries an executable scheme goes too, whatever
      *    it is called (the name heuristic's fail-open half — see {@see validateAttributes()});
@@ -595,7 +595,7 @@ final readonly class TipTapContent implements DocumentContent
      *
      * When the attribute that cannot survive is a REQUIRED one (`link.href`, `image.src`),
      * the node/mark is dropped WHOLE rather than emitted without it. Emitting the naked node
-     * was the actual R-12 defect: `fromArray()` requires those attributes, so the editor got
+     * was the actual defect: `fromArray()` requires those attributes, so the editor got
      * `{"type":"link","attrs":{"target":"_blank"}}` back from GET and the very next PATCH of
      * that same payload blew up — every legacy document with a relative href (`/pricing`, an
      * anchor, and yes a `javascript:` one) became PERMANENTLY unsavable. Dropping the mark
@@ -642,7 +642,7 @@ final readonly class TipTapContent implements DocumentContent
 
     /**
      * Keep only the attribute KEYS the type is allowed to carry. VALUES are passed through
-     * untouched on purpose (D29 — see {@see decayFrom()}).
+     * untouched on purpose (see {@see decayFrom()}).
      *
      * @return array<string, mixed>
      */

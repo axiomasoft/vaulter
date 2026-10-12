@@ -11,14 +11,14 @@ use Vaulter\Webhooks\WebhookRetryDispatcher;
 
 /**
  * Drains the transactional outbox into webhook deliveries and re-arms due retries
- * (master plan §2.11 / D14 / M3b) — the tick of the reliable webhook channel. Run it
+ * — the tick of the reliable webhook channel. Run it
  * on a short schedule or as a long-running worker; it is idempotent (row-state +
  * event_id), so overlapping ticks never double-deliver.
  *
  * Each tick: re-arm due retries FIRST (so the sweep only sees deliveries already due
  * at tick start), then OutboxRelay::process() fans pending outbox rows out into
  * per-endpoint deliveries + jobs. The due-retry sweep is the SINGLE owner of retries
- * (WebhookRetryDispatcher claims each row atomically, F-P1.7-05) — DeliverWebhook never
+ * (WebhookRetryDispatcher claims each row atomically) — DeliverWebhook never
  * self-releases. Still schedule it withoutOverlapping() for tidiness.
  */
 final class RelayWebhooksCommand extends Command

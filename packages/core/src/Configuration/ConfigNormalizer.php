@@ -123,8 +123,8 @@ final class ConfigNormalizer
         }
         // The autosave debounce rewrote the head revision in place; checkpoints are
         // immutable now and taken on their own interval, so its value has no meaning
-        // to carry over to checkpoint_interval_seconds. extra_data is gone (PLAN2.D41)
-        // and a name's length is part of the profile's name policy (PLAN2.D39/D43).
+        // to carry over to checkpoint_interval_seconds. extra_data is gone
+        // and a name's length is part of the profile's name policy.
         foreach (['vaulter.tenant.column', 'vaulter.migrations.path', 'vaulter.features.blobs', 'vaulter.features.versions', 'vaulter.features.document_versions', 'vaulter.versions.autosave_debounce_seconds', 'vaulter-documents.revisions.autosave_debounce_seconds', 'vaulter.drive.name_rules.no_separators_pattern', 'vaulter.extra_data.enabled', 'vaulter.drive.name_rules.max_length', 'vaulter-drive.names.max_length'] as $key) {
             $owner = match ($key) {
                 'vaulter.features.document_versions', 'vaulter.versions.autosave_debounce_seconds', 'vaulter-documents.revisions.autosave_debounce_seconds' => 'vaulter-documents',

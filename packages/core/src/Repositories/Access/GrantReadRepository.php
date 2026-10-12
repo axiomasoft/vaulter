@@ -15,9 +15,9 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Tenancy\TenancyBoundary;
 
 /**
- * Read-side queries over v_node_grants (§2.6). It fetches the live, non-expired
+ * Read-side queries over v_node_grants. It fetches the live, non-expired
  * grant rows for a subject-set across a set of nodes — the raw material the
- * AccessResolver folds into a GrantSet. Expiry is enforced HERE, read-time (H.2):
+ * AccessResolver folds into a GrantSet. Expiry is enforced HERE, read-time:
  * an expired row never reaches the resolver.
  */
 final class GrantReadRepository
@@ -58,9 +58,9 @@ final class GrantReadRepository
     }
 
     /**
-     * Every live grant directly on a node (the permissions UI listing, §2.6).
+     * Every live grant directly on a node (the permissions UI listing).
      * Returns a Builder so the controller paginates it. `orderByDesc('id')` is a
-     * stable tie-breaker (F-P4.2-05, VLT-REMED P4.3): grants created in the same
+     * stable tie-breaker: grants created in the same
      * transaction/batch share an identical created_at timestamp, so
      * cursorPaginate()'s keyset would otherwise skip/duplicate rows on that page
      * boundary — the same pattern already applied in
@@ -80,7 +80,7 @@ final class GrantReadRepository
 
     /**
      * Every live, non-expired grant addressed to the subject-set across ALL
-     * nodes (the §2.6 subject index, unbounded by an ancestor chain). The
+     * nodes (the subject index, unbounded by an ancestor chain). The
      * access-aware listing seam (NodeReadRepository::queryForUser) reads these as
      * the candidate ANCHORS: an item-scoped anchor contributes only its own node,
      * a subtree-scoped anchor additionally contributes its descendants. The caller
@@ -113,7 +113,7 @@ final class GrantReadRepository
 
     /**
      * The distinct node ids a subject-set has ANY grant on — the "shared with me"
-     * fast pass (§2.6 subject index). The caller re-resolves each node through the
+     * fast pass (subject index). The caller re-resolves each node through the
      * AccessResolver (an inheritance boundary or a host override may still hide it).
      *
      * @param  list<Subject>    $subjects

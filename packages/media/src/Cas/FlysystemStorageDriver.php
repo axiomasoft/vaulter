@@ -14,7 +14,7 @@ use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Media\Configuration\MediaConfig;
 
 /**
- * The default StorageDriver (H.3): a thin Flysystem-disk abstraction. The disk is
+ * The default StorageDriver: a thin Flysystem-disk abstraction. The disk is
  * resolved per call (a blob's v_drives.disk, else the install default); writes
  * are stream writes; the conditional-create / object-store checksum specifics are
  * applied only when the underlying disk is an object store, degrading gracefully
@@ -41,7 +41,7 @@ final class FlysystemStorageDriver implements ListableStorageDriver, StorageDriv
 
         // Conditional create. On an object store this maps to If-None-Match: * so
         // a concurrent uploader of identical bytes cannot clobber; we surface the
-        // "already there" race as a false return (re-SELECT + reuse, H.3). On a
+        // "already there" race as a false return (re-SELECT + reuse). On a
         // local/sqlite test disk there is no conditional PUT, so we degrade to a
         // best-effort exists() guard — the per-(scope,sha256) lock in BlobStore is
         // the real serialiser there.
@@ -56,7 +56,7 @@ final class FlysystemStorageDriver implements ListableStorageDriver, StorageDriv
         // where a direct PUT succeeds. Write straight to the canonical key on those
         // disks; reserve temp-then-move for non-atomic disks (local/ftp) where a
         // crash mid-write WOULD leave a truncated object under the canonical CAS key
-        // (F-P1.5-01; review def.2).
+        // (review def.2).
         if ($this->writesAtomically($filesystem)) {
             // x-amz-checksum-sha256 (in $options) lets S3 verify the bytes server-side.
             $written = $filesystem->writeStream($key, $stream, $options);
@@ -68,7 +68,7 @@ final class FlysystemStorageDriver implements ListableStorageDriver, StorageDriv
     }
 
     /**
-     * Temp-then-atomic-move promotion for a NON-atomic disk (F-P1.5-01): a crash
+     * Temp-then-atomic-move promotion for a NON-atomic disk: a crash
      * mid-write must never leave a TRUNCATED object under the canonical CAS key (a
      * partial object there would be trusted as committed — silent CAS corruption). We
      * stream into a sibling temp key and only atomically move it onto the canonical
@@ -134,7 +134,7 @@ final class FlysystemStorageDriver implements ListableStorageDriver, StorageDriv
     }
 
     /**
-     * Whether the disk lands a write atomically (F-P1.5-01 / review def.2). An object
+     * Whether the disk lands a write atomically (review def.2). An object
      * store commits a PUT server-side — a failed upload never appears under the key —
      * so it needs no temp-then-move staging. A local/ftp disk, and any disk we cannot
      * positively identify as an object store, is treated as non-atomic so the
@@ -147,7 +147,7 @@ final class FlysystemStorageDriver implements ListableStorageDriver, StorageDriv
     }
 
     /**
-     * A sibling temp key for the atomic-move promotion (F-P1.5-01): same directory
+     * A sibling temp key for the atomic-move promotion: same directory
      * as the canonical key (so the move is a same-filesystem rename on local) with
      * a random suffix so two concurrent promotions never collide on the temp.
      */

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Enums\Changes;
 
 /**
- * Why a node is removed from a reader's view (PLAN2.D59). Only `deleted` is stored;
+ * Why a node is removed from a reader's view. Only `deleted` is stored;
  * the other two come from the read projection, when the node still exists but the
  * reader may no longer see it.
  *

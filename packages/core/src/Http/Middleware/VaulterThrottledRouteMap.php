@@ -7,7 +7,7 @@ namespace Vaulter\Http\Middleware;
 use Illuminate\Http\Request;
 
 /**
- * §9 logical `route` ids for `vaulter_throttled_total` (throttle:vaulter-public / uploads).
+ * logical `route` ids for `vaulter_throttled_total` (throttle:vaulter-public / uploads).
  *
  * Routes are resolved by their name.
  */

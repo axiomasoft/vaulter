@@ -22,7 +22,7 @@ use Vaulter\Filament\Support\PanelDrives;
 use Vaulter\Models\Drive\Drive;
 
 /**
- * The drive admin surface (master plan §2.1 / §3): a read-mostly view of
+ * The drive admin surface: a read-mostly view of
  * the ownable, polymorphic disk roots — owner, disk, used/quota accounting and
  * status. Drives are provisioned by the DriveProvisioner (get-or-create on a
  * host entity), never minted from the panel, so this resource never creates/edits a

@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Data\Nodes;
 
 use Vaulter\Models\Drive\Node;
 
-/** A patch of one namespace of a node's properties (PLAN2.D41). */
+/** A patch of one namespace of a node's properties. */
 final readonly class SetNodePropertiesInput
 {
     /**

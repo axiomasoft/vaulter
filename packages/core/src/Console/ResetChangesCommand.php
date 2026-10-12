@@ -13,7 +13,7 @@ use Vaulter\Support\Identity;
 use Vaulter\VaulterManager;
 
 /**
- * Start a new epoch of a drive's change journal (PLAN2.D50): every cursor issued for
+ * Start a new epoch of a drive's change journal: every cursor issued for
  * the drive expires (410 cursor_expired) and its clients resynchronize with a full
  * listing. For a database restored from a backup, or when an operator knows the
  * journal no longer matches the drive (the journal was switched off for a while).

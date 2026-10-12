@@ -44,7 +44,7 @@ final readonly class RestoreNodeAction
 
     /**
      * Public authorization must use the destination this resolution actually chooses
-     * (PLAN2.D37): the explicit one, else the original parent. A restore never moves a
+     * the explicit one, else the original parent. A restore never moves a
      * node silently to the root.
      */
     public function resolveDestination(OperationContext $context, Node $node, Node|NodeSnapshot|int|string|null $explicit = null): Node
@@ -140,7 +140,7 @@ final readonly class RestoreNodeAction
         });
     }
 
-    /** A member comes back with its trash root, never on its own (PLAN2.D37). */
+    /** A member comes back with its trash root, never on its own. */
     private function assertTrashRoot(Node $node): void
     {
         if ($node->trashed_at === null || $node->trash_root_id === null) {

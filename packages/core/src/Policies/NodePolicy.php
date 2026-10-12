@@ -10,7 +10,7 @@ use Vaulter\Enums\Access\Ability;
 use Vaulter\Models\Drive\Node;
 
 /**
- * The Drive authorization policy (§6 / H.2): a thin delegation to the Vaulter-owned
+ * The Drive authorization policy: a thin delegation to the Vaulter-owned
  * {@see AccessResolver}, which runs the effective-permission algorithm over
  * v_node_grants + the host-role driver. Each method maps a Gate ability to an
  * {@see Ability} the resolver answers; the controller calls

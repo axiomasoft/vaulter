@@ -19,7 +19,7 @@ use Vaulter\Sharing\ShareSession;
 
 /**
  * Resolves the {token} route parameter of a PUBLIC share endpoint into a
- * {@see ShareContext} and stashes it on the request (§2.7 / M2c). This is the
+ * {@see ShareContext} and stashes it on the request. This is the
  * SEPARATE sharing pass — it never touches the identity ACL / AccessResolver; a
  * share grants exactly its role's abilities on its node-set.
  *
@@ -30,7 +30,7 @@ use Vaulter\Sharing\ShareSession;
  * whose target failed item-safety, yields an opaque 404 — a password-gated share
  * without a valid password yields 401 with a password challenge.
  *
- * A visit that passes is REDEEMED once (PLAN2.D47): the use is counted and the
+ * A visit that passes is REDEEMED once: the use is counted and the
  * response carries a link session in the X-Share-Session header. Requests that send
  * that header back belong to the same visit and are not counted again, so opening a
  * preview, paging a listing and fetching ranges cost one use.

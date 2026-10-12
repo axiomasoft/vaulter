@@ -7,7 +7,7 @@ namespace Vaulter\Contracts\Cas;
 use Illuminate\Contracts\Filesystem\Filesystem;
 
 /**
- * A thin abstraction over a Flysystem disk (H.3): the byte plane under the CAS.
+ * A thin abstraction over a Flysystem disk: the byte plane under the CAS.
  * The disk to use is resolved per storage (v_drives.disk) or the install
  * default; everything else is a straight Flysystem call. Swap the implementation
  * to add object-store specifics (x-amz-checksum-sha256, If-None-Match: *) while
@@ -24,7 +24,7 @@ interface StorageDriver
     /**
      * Write bytes to $key on $disk. When $ifNoneMatch is true the driver attempts
      * a conditional create (If-None-Match: * on S3); a 412/409 means we were
-     * overtaken and must re-SELECT + reuse (H.3) — surfaced as a return of false,
+     * overtaken and must re-SELECT + reuse — surfaced as a return of false,
      * not an exception. On a local disk the condition degrades gracefully to a
      * best-effort exists() guard.
      *

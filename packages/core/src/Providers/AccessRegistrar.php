@@ -22,9 +22,9 @@ final class AccessRegistrar
     {
         $app->bind(OperationGuard::class);
 
-        // Drive ACL (M2a / H.2): the host-role driver manager resolves the
+        // Drive ACL: the host-role driver manager resolves the
         // configured PermissionDriver (default 'database'), keyed per driver-key, and
-        // enforces the null-driver fail-loud guard in production (D6″). The
+        // enforces the null-driver fail-loud guard in production. The
         // AccessResolver (Vaulter-owned, NON-swappable) is auto-wired from it.
         $app->singleton(
             PermissionDriverManager::class,
@@ -59,7 +59,7 @@ final class AccessRegistrar
             Gate::policy(Node::class, NodePolicy::class);
         }
 
-        // The webhook-endpoint management surface (§2.11 / D14 / M3b) is a global
+        // The webhook-endpoint management surface is a global
         // admin resource, authorized by the WebhookEndpointPolicy (manage ability).
         Gate::policy(WebhookEndpoint::class, WebhookEndpointPolicy::class);
 

@@ -18,7 +18,7 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Models\Drive\Node;
 
 /**
- * A comment on a NODE (ADR-0014 шаг 1) — the additive parity twin of the legacy
+ * A comment on a NODE (docs/adr/0014-legacy-docvault-strangler.md шаг 1) — the additive parity twin of the legacy
  * document_id-attached {@see DocumentComment}, which stays untouched. Optionally
  * anchored to a text range and threaded under a parent comment.
  *
@@ -49,7 +49,7 @@ class NodeComment extends Model
     use ResolvesVaulterConnection;
 
     /**
-     * Closed allow-list (F-P1.8-02): the comment's own user-authored content.
+     * Closed allow-list: the comment's own user-authored content.
      * author_type/author_id (morph), node_id/tenant_id, and resolved_at/
      * resolved_by are structural/server-only — the sole writer,
      * NodeCommentStoreRepository, uses forceFill() exclusively and is

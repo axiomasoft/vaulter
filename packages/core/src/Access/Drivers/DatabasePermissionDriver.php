@@ -14,7 +14,7 @@ use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Enums\Access\Effect;
 
 /**
- * The default, standalone host-role driver (master plan §6 / H.2) — the zero-host-
+ * The default, standalone host-role driver — the zero-host-
  * dependency lane. It introduces NO external role system: decisions come purely
  * from the v_node_grants rows that the (Vaulter-owned) AccessResolver reads, so
  * this driver only contributes the actor's own identity to the subject-set and

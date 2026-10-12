@@ -17,7 +17,7 @@ use Vaulter\Tenancy\TenancyBoundary;
 
 /**
  * Update a webhook endpoint's mutable attributes — url, subscribed events, active
- * flag (master plan §2.11 / D14 / M3b). A partial command: a null field is left
+ * flag. A partial command: a null field is left
  * unchanged. The signing secret is NEVER touched here (it is shown once; use
  * RotateWebhookSecretAction). Switching an active endpoint off finishes its open
  * deliveries as dead, as DeactivateWebhookEndpointAction does; switching it on clears

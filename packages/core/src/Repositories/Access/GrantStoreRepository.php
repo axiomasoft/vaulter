@@ -15,7 +15,7 @@ use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Node;
 
 /**
- * Write-side row work for v_node_grants (§2.6). Idempotent upsert on the grant-
+ * Write-side row work for v_node_grants. Idempotent upsert on the grant-
  * unique key (node_id, subject_type, subject_id, scope) so re-granting a subject
  * the same scope replaces its role/expiry rather than breeding a duplicate. Opens
  * NO transactions and dispatches NO events — the Action does.
@@ -42,7 +42,7 @@ final class GrantStoreRepository
             'scope' => $scope->value,
         ];
 
-        // Manual find-then-forceFill (P1.4/F-P1.8-02) instead of updateOrCreate:
+        // Manual find-then-forceFill instead of updateOrCreate:
         // Eloquent's updateOrCreate() routes both the match attributes and the
         // values through fill()/$fillable, and NodeGrant is intentionally fully
         // guarded (ACL row) — every key here is server-computed, never raw

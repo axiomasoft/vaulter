@@ -53,7 +53,7 @@ final readonly class RestoreFileRevisionAction
             $this->admission->assertSource($source);
             $admissionSequence = app(ScanAdmission::class)->next($context);
             $previous = $file->currentRevision()->first();
-            // The restored copy is a new retained revision: its full size counts (PLAN2.D48).
+            // The restored copy is a new retained revision: its full size counts.
             if ($source->size_bytes > 0) {
                 $this->drives->reserveBytes($context->drive, $source->size_bytes);
             }

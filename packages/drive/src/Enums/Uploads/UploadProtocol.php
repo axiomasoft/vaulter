@@ -8,7 +8,7 @@ use Vaulter\Attributes\Label;
 use Vaulter\Support\Concerns\HasLabel;
 
 /**
- * The resumable-upload transport a session speaks (master plan §2.8 / D16):
+ * The resumable-upload transport a session speaks:
  *
  *  - Tus         — the tus.io CORE protocol (Creation + HEAD(Upload-Offset) +
  *                  PATCH(application/offset+octet-stream)). Each PATCH chunk is
@@ -18,7 +18,7 @@ use Vaulter\Support\Concerns\HasLabel;
  *                  hand back presigned part URLs (or proxy PUT each part), record
  *                  parts in v_upload_parts, complete-multipart, then feed the
  *                  assembled object to BlobStore (server recompute sha256 — never
- *                  trust the multipart ETag, H.3). Only on S3-style disks.
+ *                  trust the multipart ETag). Only on S3-style disks.
  *  - Direct      — a one-shot (non-resumable) PUT; the session is a thin envelope
  *                  whose bytes are staged and committed in a single step (the
  *                  small-file fast path; reserved).

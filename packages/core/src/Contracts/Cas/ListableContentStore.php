@@ -6,7 +6,7 @@ namespace Vaulter\Contracts\Cas;
 
 /**
  * A capability a {@see ContentStore} implements to declare it can ENUMERATE stored
- * objects and report their age (master plan P4 #11 / H.3) — the consumer seam the
+ * objects and report their age — the consumer seam the
  * orphan disk-walk (the CAS reconciler's sweepOrphans, in vaulter-media) walks to
  * find bytes that have no blob row.
  *

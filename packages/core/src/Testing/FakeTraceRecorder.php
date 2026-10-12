@@ -9,7 +9,7 @@ use Throwable;
 use Vaulter\Contracts\Observability\TraceRecorder;
 
 /**
- * In-memory {@see TraceRecorder} for package tests (P8.9). Records span nesting,
+ * In-memory {@see TraceRecorder} for package tests. Records span nesting,
  * attributes and error status without a tracing backend.
  */
 final class FakeTraceRecorder implements TraceRecorder

@@ -8,7 +8,7 @@ use Vaulter\Exceptions\VaulterException;
 
 /**
  * A realtime-collaboration operation could not proceed because its configuration is
- * incomplete (M4b): firebase/php-jwt missing, or no signing/webhook secret set. These
+ * incomplete: firebase/php-jwt missing, or no signing/webhook secret set. These
  * are operator-fixable setup errors, surfaced loud rather than failing open.
  */
 final class CollaborationConfigException extends VaulterException

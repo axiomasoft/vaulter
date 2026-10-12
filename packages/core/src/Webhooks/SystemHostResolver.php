@@ -8,7 +8,7 @@ use Vaulter\Contracts\Webhooks\HostResolver;
 
 /**
  * The production {@see HostResolver}: resolves a hostname to every A and AAAA record
- * via the system resolver (§2.11 / F-P1.7-01). An IP-literal host resolves to itself,
+ * via the system resolver. An IP-literal host resolves to itself,
  * so a URL like http://169.254.169.254/ is range-checked without a DNS lookup.
  *
  * Both families are queried so a public A record paired with a private AAAA cannot

@@ -12,17 +12,17 @@ use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
  * images, tables; bold/italic/strike/code/underline/link marks); unknown nodes fall back to
  * rendering their children.
  *
- * Second echelon of the F-P1.11-01 stored-XSS fix (D4): {@see TipTapContent} rejects
+ * Second echelon of the stored-XSS fix: {@see TipTapContent} rejects
  * disallowed node/mark/attribute shapes and non-http(s)/mailto URL schemes at STORE time,
  * but content persisted before that validator existed decays through on READ with its
- * attribute VALUES intact (D29) — so a legacy `javascript:` href really does arrive here.
+ * attribute VALUES intact — so a legacy `javascript:` href really does arrive here.
  * The two output paths neutralise it differently, because they are different languages:
  *
  *  - HTML     → `symfony/html-sanitizer` (injected, never resolved inline). This renderer
  *               deliberately does NOT pre-filter the href: the sanitizer IS the echelon, and
- *               pre-filtering would leave it nothing to catch (VLT-REMED R-07).
+ *               pre-filtering would leave it nothing to catch.
  *  - Markdown → no sanitizer exists, so the escaping is done here — and it is MARKDOWN
- *               escaping, not HTML escaping (VLT-REMED R-04/R-10). Running text through
+ *               escaping, not HTML escaping. Running text through
  *               `htmlspecialchars` neutralises `<>&` but leaves `[`, `]`, `(`, `)` live, so a
  *               label like `click](javascript:alert(1))` closed the link early and opened a
  *               NEW, live one — the allow-list had checked the href, not the string actually
@@ -111,7 +111,7 @@ final class TipTapRenderer
 
     /**
      * The `src` is emitted ESCAPED but NOT scheme-filtered: the injected sanitizer is the
-     * second echelon (D4) and owns that call — see the class docblock (R-07).
+     * second echelon and owns that call — see the class docblock.
      *
      * @param array<string, mixed> $node
      */
@@ -147,7 +147,7 @@ final class TipTapRenderer
                 'code' => sprintf('<code>%s</code>', $text),
                 'underline' => sprintf('<u>%s</u>', $text),
                 // No scheme pre-filter here on purpose: the injected sanitizer is the second
-                // echelon and must actually SEE the bad href to strip it (R-07).
+                // echelon and must actually SEE the bad href to strip it.
                 'link' => '<a href="'.$this->escape($this->stringValue($this->attrs($mark), 'href')).'">'.$text.'</a>',
                 default => $text,
             };
@@ -181,7 +181,7 @@ final class TipTapRenderer
 
     /**
      * A fenced code block — the BLOCK sibling of {@see markdownCodeSpan()}, and the same
-     * class of hole (VLT-REMED P5.2 review / F-P1.11-01, F-P1.11-04). Both halves used to be
+     * class of hole (review /). Both halves used to be
      * emitted RAW, and both halves close the fence:
      *
      *  - the BODY. A code block is inert only while its fence holds, and a fence is closed by
@@ -238,7 +238,7 @@ final class TipTapRenderer
 
     /**
      * `![alt](src)` — the destination goes through the same safe emitter as a link (scheme
-     * allow-list + a destination that cannot be broken out of, R-04). A disallowed scheme
+     * allow-list + a destination that cannot be broken out of). A disallowed scheme
      * drops the image entirely: an image with no usable src is nothing anyway.
      *
      * @param array<string, mixed> $node
@@ -258,7 +258,7 @@ final class TipTapRenderer
     /**
      * A GFM pipe table. The first row is the header (TipTap puts `tableHeader` cells there).
      *
-     * The cell does NOT re-escape the pipe (VLT-REMED P5.2): {@see escapeMarkdown()} already
+     * The cell does NOT re-escape the pipe: {@see escapeMarkdown()} already
      * emits `\|`, and a second `str_replace('|', '\|')` on top of it produced `\\|` — which
      * GFM reads as an escaped BACKSLASH followed by a LIVE delimiter, splitting the cell into
      * an extra column and shifting every column after it. The escaping lives in exactly one
@@ -338,7 +338,7 @@ final class TipTapRenderer
     {
         $raw = $this->stringValue($node, 'text');
 
-        // MARKDOWN escaping, not HTML escaping (R-04/R-10). htmlspecialchars() neutralises
+        // MARKDOWN escaping, not HTML escaping. htmlspecialchars() neutralises
         // `<>&` but leaves the markdown metacharacters live — which is exactly what a payload
         // uses to close the link it sits in and open a new one.
         $text = $this->escapeMarkdown($raw);
@@ -364,14 +364,14 @@ final class TipTapRenderer
      * A code span is inert — but ONLY while it actually closes, and backslash escapes are
      * LITERAL inside one, so the text cannot simply be run through {@see escapeMarkdown()}.
      * That left the branch emitting RAW text, and two characters can prise the span open
-     * (VLT-REMED P5.2):
+     * :
      *
      *  - a BACKTICK closes it early (stripped, as before);
      *  - a BLANK LINE ends the enclosing paragraph outright, so everything after it lands in
      *    the document as top-level markup. That is how `a\n\n<script>alert(1)</script>` with
      *    a `code` mark — which store-time validation accepts, it is legitimate TEXT — left
      *    the span behind and emitted a LIVE raw-HTML block into the exported `.md`, exactly
-     *    the F-P1.11-04 class the sibling text branch escapes `<`/`>` to prevent. Newlines
+     *    the class the sibling text branch escapes `<`/`>` to prevent. Newlines
      *    are collapsed to spaces: the span always closes on the line it opened on.
      *
      * The pipe is the third: a raw `|` inside a table cell adds a column, and this branch is
@@ -397,7 +397,7 @@ final class TipTapRenderer
 
     /**
      * `[label](destination)` — Markdown has no sanitizer, so BOTH halves are handled here
-     * (R-04): the label arrives markdown-escaped (its `]` can no longer close the link
+     * the label arrives markdown-escaped (its `]` can no longer close the link
      * early), and the destination goes through {@see markdownDestination()} instead of being
      * concatenated in. A disallowed scheme drops the link wrapper and keeps the escaped
      * label as plain text.
@@ -413,15 +413,15 @@ final class TipTapRenderer
      * A link/image destination that cannot be broken out of, or null when the scheme is not
      * on the allow-list (http/https/mailto — the same {@see LinkSchemeValidator} the
      * store-time validator uses, re-applied because decayed legacy content reaches us with
-     * its href intact, D29).
+     * its href intact).
      *
-     * The scheme check alone is NOT enough (R-04, vector B): a perfectly legal
+     * The scheme check alone is NOT enough (vector B): a perfectly legal
      * `https://a.example/) [pwn](javascript:alert(1)` closes the destination early through
      * its `)` and injects a second, live link. CommonMark's angle-bracket form takes `(`/`)`
      * and spaces verbatim and only forbids `<`, `>` and newlines — which we percent-encode.
      * So: plain form when the URL is boring, angle form otherwise.
      *
-     * The `|` is percent-encoded in BOTH forms (VLT-REMED P5.2). A destination never passes
+     * The `|` is percent-encoded in BOTH forms. A destination never passes
      * through {@see escapeMarkdown()} — this is the one place it is built — and neither form
      * protects it: a perfectly legal `https://a.example/?a=1|2|3` inside a table cell rendered
      * as `| [x](https://a.example/?a=1|2|3) | y |`, which GFM reads as FOUR columns, shifting
@@ -450,7 +450,7 @@ final class TipTapRenderer
      * Backslash-escape the markdown metacharacters that can change the STRUCTURE of the
      * output (CommonMark allows a backslash escape before any ASCII punctuation). `<` and
      * `>` are included because a Markdown consumer may pass raw HTML through — a literal
-     * `<script>` in the text must not become live markup (F-P1.11-04).
+     * `<script>` in the text must not become live markup.
      */
     private function escapeMarkdown(string $value): string
     {

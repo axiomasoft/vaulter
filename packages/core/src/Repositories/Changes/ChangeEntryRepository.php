@@ -30,7 +30,7 @@ final readonly class ChangeEntryRepository
     }
 
     /**
-     * Delete the earlier upserts of a node that a new entry supersedes (PLAN2.D59, D61).
+     * Delete the earlier upserts of a node that a new entry supersedes.
      * A remove entry is never deleted here.
      *
      * @param list<string> $keptTypes event types whose upserts survive (an empty list keeps none)

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Support;
 
 /**
- * The bearer share-token hashing primitives (§2.7 / M2c hardening). The raw token
+ * The bearer share-token hashing primitives (hardening). The raw token
  * is hashed with sha256 to a char(64) the DB stores as token_hash; the raw token
  * is never persisted. The prefix is a short, non-secret leading slice kept for
  * owner-side UX lookup. Comparison is timing-safe (hash_equals) so a token can

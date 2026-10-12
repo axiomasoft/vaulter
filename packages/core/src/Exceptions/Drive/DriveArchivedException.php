@@ -8,7 +8,7 @@ use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
-/** An archived drive is read-only (PLAN2.D37). */
+/** An archived drive is read-only. */
 final class DriveArchivedException extends VaulterException implements ProblemException
 {
     use ProvidesProblemDetails;

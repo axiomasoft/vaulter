@@ -9,8 +9,8 @@ use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /**
- * A move would place a node inside itself or one of its own descendants (§2.13 /
- * H.4 cycle guard), which would orphan a cycle out of the adjacency tree. The
+ * A move would place a node inside itself or one of its own descendants (
+ * cycle guard), which would orphan a cycle out of the adjacency tree. The
  * guard checks the destination against the moved node's subtree before the single
  * parent_id UPDATE.
  */

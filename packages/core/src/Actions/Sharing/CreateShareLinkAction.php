@@ -24,7 +24,7 @@ use Vaulter\Sharing\ShareLinkRules;
 use Vaulter\Sharing\ShareTokenMinter;
 
 /**
- * Mint a bearer share-link on a node (§2.7 / M2c) — the SEPARATE public sharing
+ * Mint a bearer share-link on a node — the SEPARATE public sharing
  * channel. The raw token is generated here, returned ONCE via the result and NEVER
  * persisted: only its sha256 hash (token_hash, UNIQUE) and a short token_prefix are
  * stored. Any password is hashed before it touches the DB. The write runs in a
@@ -32,7 +32,7 @@ use Vaulter\Sharing\ShareTokenMinter;
  *
  * The role and audience obey {@see ShareLinkRules}, and the expiry may not pass the
  * drive profile's maxShareLinkTtlDays. A link is never minted immortal by omission
- * (P1.2 / F-P1.3-03, S4.1): without an `expiresAt` the Action stamps
+ * without an `expiresAt` the Action stamps
  * `now() + sharingConfig->defaultTtlHours()` (cut back to the profile limit) at mint
  * time, NOT a DB column default, so it stays host-config-overridable. An explicit
  * `expiresAt` above `sharingConfig->maxTtlHours()` is rejected before minting.
@@ -73,7 +73,7 @@ final readonly class CreateShareLinkAction
         }
         $passwordHash = $data->password === null || $data->password === '' ? null : Hash::make($data->password);
 
-        // F-P1.3-03: an omitted expiry defaults to the configured TTL, stamped at
+        // an omitted expiry defaults to the configured TTL, stamped at
         // mint time (not a DB default) so it stays host-overridable.
         $expiresAt = $data->expiresAt ?? $this->defaultExpiry($context->drive, $now);
 

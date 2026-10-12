@@ -17,7 +17,7 @@ use Vaulter\Support\Identity;
 use Vaulter\VaulterManager;
 
 /**
- * Start or resume the purge of the drives that are being deleted (PLAN2.D27). The
+ * Start or resume the purge of the drives that are being deleted. The
  * purge itself is idempotent, so running this again after a crash finishes the job.
  */
 final class PurgeDrivesCommand extends Command

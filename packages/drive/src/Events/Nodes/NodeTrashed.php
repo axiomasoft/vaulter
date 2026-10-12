@@ -16,7 +16,7 @@ use Vaulter\ValueObjects\Events\EventSubject;
 use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
- * A node and its whole subtree were soft-trashed (§2.10 / D17): the trashed
+ * A node and its whole subtree were soft-trashed: the trashed
  * triplet is set atomically. used_bytes is NOT decremented — trashed bytes still
  * occupy storage until forceDelete.
  */

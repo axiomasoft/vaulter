@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Enums\Changes;
 
 /**
- * What a change-journal entry tells a syncing client to do with a node (PLAN2.D50).
+ * What a change-journal entry tells a syncing client to do with a node.
  *
  *   upsert  the node exists in its current state: fetch or replace it
  *   remove  the node is gone for this reader; a removed folder takes its subtree along

@@ -9,7 +9,7 @@ use Vaulter\Models\Drive\File;
 
 /**
  * Write-side row work for v_files — the mutable 1:1 handle for a kind=file node
- * (§2.4). Bare create + head/version-count bookkeeping. Opens NO transactions —
+ * . Bare create + head/version-count bookkeeping. Opens NO transactions —
  * UploadFileAction wraps it.
  */
 final class FileStoreRepository
@@ -31,7 +31,7 @@ final class FileStoreRepository
      */
     public function create(array $attributes): File
     {
-        // forceFill (P1.4/F-P1.8-02): $attributes is a server-built literal array
+        // forceFill: $attributes is a server-built literal array
         // from UploadFileAction/CopyNodeAction, never raw request input.
         $model = $this->vaulterConfig->model('file');
         $file = new $model;
@@ -43,7 +43,7 @@ final class FileStoreRepository
 
     /**
      * Repoint the file head to a new current version and refresh the cached
-     * mime/size, setting revision_count to the allocated number (§2.4 commit flow).
+     * mime/size, setting revision_count to the allocated number (commit flow).
      */
     public function repointHead(
         File $file,

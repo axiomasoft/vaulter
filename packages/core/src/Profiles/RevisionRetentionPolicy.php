@@ -7,7 +7,7 @@ namespace Vaulter\Profiles;
 use Vaulter\Exceptions\Profiles\InvalidProfileException;
 
 /**
- * How long the non-current revisions of a file are kept (PLAN2.D48). The age of a
+ * How long the non-current revisions of a file are kept. The age of a
  * non-current revision counts from the moment it stopped being the head
  * (v_file_revisions.superseded_at).
  *

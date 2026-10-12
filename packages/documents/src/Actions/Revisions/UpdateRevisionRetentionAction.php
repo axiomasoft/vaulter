@@ -54,7 +54,7 @@ final readonly class UpdateRevisionRetentionAction
             if (!$this->tree->sameStorage($current, $driveId)) {
                 throw NodeNotFoundException::forId($nodeId);
             }
-            // A trash that committed before this lock leaves nothing to write to (PLAN2.F05).
+            // A trash that committed before this lock leaves nothing to write to.
             $this->tree->assertLive($current);
             if (!$current->kind->isDocument()) {
                 throw NotADocumentException::forNode($nodeId);

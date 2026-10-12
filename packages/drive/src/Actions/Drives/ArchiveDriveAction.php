@@ -13,7 +13,7 @@ use Vaulter\Models\Drive\Drive;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Drive\DriveStoreRepository;
 
-/** active → archived: the drive becomes read-only (PLAN2.D37). */
+/** active → archived: the drive becomes read-only. */
 final readonly class ArchiveDriveAction
 {
     public function __construct(private VaulterDatabase $database, private DriveStoreRepository $drives, private EventRecorder $recorder) {}

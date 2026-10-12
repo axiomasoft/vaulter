@@ -13,7 +13,7 @@ use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
- * The default ContentStore (H.3): hash the LOCAL staged temp file, never the live
+ * The default ContentStore: hash the LOCAL staged temp file, never the live
  * stream. An incoming stream is drained into a seekable temp file; the sha256 is
  * computed from those durable bytes (a lying client sha256 or an S3 multipart
  * ETag is irrelevant). Promotion writes the staged bytes to the canonical
@@ -90,7 +90,7 @@ final readonly class Sha256ContentStore implements ContentStore, ListableContent
 
         try {
             // If-None-Match: * — a 412/409 means we were overtaken; the driver
-            // returns false and we treat that as "already there" (H.3), not fatal.
+            // returns false and we treat that as "already there", not fatal.
             $this->driver->put(
                 key: $key,
                 stream: $stream,

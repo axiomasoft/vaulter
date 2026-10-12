@@ -6,7 +6,7 @@ namespace Vaulter\Contracts\Cas;
 
 /**
  * A capability a {@see StorageDriver} implements to declare it can ENUMERATE the
- * disk and report object age (master plan P4 #11 / H.3). It is the seam the orphan
+ * disk and report object age. It is the seam the orphan
  * disk-walk (the CAS reconciler's sweepOrphans, in vaulter-media) consumes to find
  * bytes that have no blob row.
  *

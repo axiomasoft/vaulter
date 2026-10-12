@@ -10,11 +10,11 @@ use Vaulter\ValueObjects\Handlers\FileDescriptor;
 use Vaulter\ValueObjects\Handlers\ViewerDescriptor;
 
 /**
- * The built-in preview handler (master plan §7 level 4): PDFs and images render a
+ * The built-in preview handler (level 4): PDFs and images render a
  * read-only preview and a thumbnail, and download. It claims "application/pdf" and
  * the "image/*" wildcard.
  *
- * SAFE-TO-INLINE (H.5 hardening): `previewable` advertises that a preview EXISTS, it
+ * SAFE-TO-INLINE (hardening): `previewable` advertises that a preview EXISTS, it
  * does NOT assert the bytes are safe to inline unsandboxed. This handler deliberately
  * does NOT claim text/html or image/svg+xml — an inline HTML/SVG preview is an XSS
  * vector unless sandboxed, so those fall through to DownloadOnly here. A host that

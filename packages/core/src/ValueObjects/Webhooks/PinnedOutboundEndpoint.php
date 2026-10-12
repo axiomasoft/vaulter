@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\ValueObjects\Webhooks;
 
 /**
- * The result of validating an outbound webhook URL (§2.11 / F-P1.7-01): the scheme,
+ * The result of validating an outbound webhook URL: the scheme,
  * host and port to dial together with the EXACT IP that passed the range check.
  *
  * Delivery pins {@see curlResolveEntry()} onto the request (CURLOPT_RESOLVE) so the

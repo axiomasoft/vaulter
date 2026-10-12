@@ -17,7 +17,7 @@ use Vaulter\VaulterManager;
 
 /**
  * Recompute v_drives.used_bytes from the retained revisions, drive by drive, and
- * report the drift it finds (PLAN2.D48). --dry-run reads and reports without writing.
+ * report the drift it finds. --dry-run reads and reports without writing.
  * It runs as maintenance outside any tenant, scoped to the drives it names.
  */
 final class RecountDrivesCommand extends Command

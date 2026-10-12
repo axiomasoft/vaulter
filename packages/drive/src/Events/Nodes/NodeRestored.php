@@ -16,7 +16,7 @@ use Vaulter\ValueObjects\Events\EventSubject;
 use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
- * A trashed node and its subtree were restored (§2.10): the trashed triplet is
+ * A trashed node and its subtree were restored: the trashed triplet is
  * cleared. The node may have been re-homed when its original parent was gone.
  */
 final readonly class NodeRestored extends DomainEvent

@@ -11,9 +11,9 @@ use Vaulter\Support\Concerns\HasLabel;
 
 /**
  * The kind of a v_nodes row — the single adjacency tree carries all of them
- * (master plan §2.2). It is the built-in sugar over the kind discriminator; the
+ * . It is the built-in sugar over the kind discriminator; the
  * format/handler registry (a later slice) remains the source of truth for what a
- * given file/document can actually do (H.5).
+ * given file/document can actually do.
  *
  *  - folder   — a virtual directory, no payload, holds children.
  *  - file     — a binary leaf, payload lives in v_files/v_file_revisions/v_blobs.
@@ -44,7 +44,7 @@ enum NodeKind: string
     /**
      * Whether this is a Documents document leaf (payload in its v_documents aggregate).
      * Built-in sugar over the kind discriminator — the FileHandlerRegistry, not
-     * this enum, decides what a node can actually do (H.5).
+     * this enum, decides what a node can actually do.
      */
     public function isDocument(): bool
     {

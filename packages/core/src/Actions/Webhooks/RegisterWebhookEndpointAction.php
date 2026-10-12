@@ -16,7 +16,7 @@ use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\Webhooks\WebhookSecret;
 
 /**
- * Register a webhook endpoint (master plan §2.11 / D14 / M3b). It GENERATES the
+ * Register a webhook endpoint. It GENERATES the
  * signing secret here — a Standard Webhooks "whsec_" secret the receiver verifies
  * signatures with — persists it, and returns the raw secret ONCE via the result. The
  * resource never re-exposes it, so it is unrecoverable afterward (the owner gets a new

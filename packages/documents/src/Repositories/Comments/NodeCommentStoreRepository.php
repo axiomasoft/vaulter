@@ -9,7 +9,7 @@ use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Models\Comments\NodeComment;
 
 /**
- * Write-side persistence for the NODE-attached comments (ADR-0014 шаг 1). resolve()
+ * Write-side persistence for the NODE-attached comments (docs/adr/0014-legacy-docvault-strangler.md шаг 1). resolve()
  * stamps the (resolved_at, resolved_by) tombstone; delete() is permanent (legacy
  * parity — there is no soft-delete on this table).
  */
@@ -24,7 +24,7 @@ final class NodeCommentStoreRepository
      */
     public function create(array $attributes): NodeComment
     {
-        // forceFill (P1.4/F-P1.8-02): $attributes is a server-built literal array
+        // forceFill: $attributes is a server-built literal array
         // from AddCommentAction, never raw request input.
         $model = $this->documentsConfig->model('node_comment');
         $comment = new $model;

@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Content\TipTap;
 
 /**
- * Strict allow-list guard for `href` URL schemes in TipTap content (F-P1.11-01,
- * plans/VLT-REMED/findings/P0-remediation-norms.md N1). Shared by the store-time
+ * Strict allow-list guard for `href` URL schemes in TipTap content (
+ * plans/ /findings/P0-remediation-norms.md N1). Shared by the store-time
  * validator ({@see TipTapContent}) and the render-time Markdown path (the HTML path
- * gets its second echelon from `symfony/html-sanitizer` instead, per D4).
+ * gets its second echelon from `symfony/html-sanitizer` instead).
  *
  * Only `http`, `https`, `mailto` are allowed — everything else (`javascript:`,
  * `data:`, `vbscript:`, schema-less paths) is rejected. The scheme is extracted AFTER
@@ -28,7 +28,7 @@ final readonly class LinkSchemeValidator
 
     /**
      * The schemes that are an XSS primitive wherever a browser resolves them — whatever the
-     * attribute they sit in is called (VLT-REMED P5.2).
+     * attribute they sit in is called.
      *
      * @var list<string>
      */
@@ -45,7 +45,7 @@ final readonly class LinkSchemeValidator
      * The allow-list above answers "may this URL be emitted"; this answers a different,
      * weaker question — "would a browser execute this string if it ever resolved it as a
      * URL" — and it is the one an attribute the package knows NOTHING about can be asked
-     * (VLT-REMED P5.2). The store-time allow-list only knows which attributes are
+     * . The store-time allow-list only knows which attributes are
      * URL-BEARING by name ({@see TipTapContent::urlAttributes()}), so a host extension whose
      * URL lives in `source` / `dataSrc` / any name outside that list slipped a
      * `javascript:` past the barrier at write AND at read. Guarding by VALUE closes the seam

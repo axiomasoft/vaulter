@@ -6,12 +6,11 @@ namespace Vaulter\ValueObjects\Handlers;
 
 /**
  * The immutable description of a file the {@see
- * \Vaulter\Handlers\FileHandlerRegistry} resolves a handler for (master plan
- * §4.5). It carries everything the registry needs to route — the claimed (client)
+ * \Vaulter\Handlers\FileHandlerRegistry} resolves a handler for. It carries everything the registry needs to route — the claimed (client)
  * mime, the server-SNIFFED detected mime, the extension and size — WITHOUT touching
  * the bytes or the database.
  *
- * SECURITY (H.5): claimedMime is the client-supplied Content-Type and is NEVER
+ * SECURITY: claimedMime is the client-supplied Content-Type and is NEVER
  * trusted for routing. canonicalMime() prefers detectedMime (the server's own sniff)
  * and only falls back to claimedMime when no sniff is available — so a spoofed
  * Content-Type can never force an editable/preview handler onto hostile bytes.
@@ -56,7 +55,7 @@ final readonly class FileDescriptor
     /**
      * The mime the registry routes on: the server-sniffed detectedMime when present
      * (the trusted value), else the claimedMime, else null. NEVER returns the
-     * claimed mime over a detected one — that ordering is the spoof guard (H.5).
+     * claimed mime over a detected one — that ordering is the spoof guard.
      */
     public function canonicalMime(): ?string
     {

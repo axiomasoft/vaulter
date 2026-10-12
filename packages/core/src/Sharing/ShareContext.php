@@ -12,7 +12,7 @@ use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Support\Identity;
 
 /**
- * The authorization context a resolved bearer share produces (§2.7 / M2c) — the
+ * The authorization context a resolved bearer share produces — the
  * SEPARATE sharing pass. It is used INSTEAD of the identity ACL for a
  * share-authorized request: a share grants EXACTLY the abilities of its role on its
  * node-set and NOTHING inherited from any identity. The AccessResolver is never
@@ -68,7 +68,7 @@ final readonly class ShareContext
             return false;
         }
 
-        // A subtree share never crosses the storage boundary (item-safety §2.7).
+        // A subtree share never crosses the storage boundary (item-safety).
         if (Identity::stringify($candidate->drive_id) !== Identity::stringify($this->node->drive_id)) {
             return false;
         }

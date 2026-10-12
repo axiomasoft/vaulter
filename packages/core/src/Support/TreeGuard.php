@@ -90,7 +90,7 @@ final readonly class TreeGuard
 
     /**
      * A locked node that a concurrent trash took since the caller looked: a writer that
-     * holds the node lock must not write into the trash (PLAN2.F05).
+     * holds the node lock must not write into the trash.
      */
     public function assertLive(Node $locked): void
     {

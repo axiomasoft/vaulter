@@ -13,14 +13,14 @@ use Vaulter\Exceptions\Webhooks\BlockedOutboundUrlException;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /**
- * Validates a register-webhook-endpoint request (master plan §2.11 / D14 / M3b) and
+ * Validates a register-webhook-endpoint request and
  * assembles its RegisterWebhookEndpointInput command. The url must be a valid http(s)
  * URL; every subscribed event must be one of the closed EventType set; is_active
  * defaults true; drive_id optionally limits the endpoint to one drive's events. The
  * signing_secret is NOT accepted from the client — the Action mints it. The
  * controller authorizes the manage ability first.
  *
- * SSRF early-reject (§2.11 / F-P1.7-01): the OutboundUrlGuard resolves + range-checks
+ * SSRF early-reject: the OutboundUrlGuard resolves + range-checks
  * the URL at registration too, so a target inside the internal network is refused with
  * a 422 instead of only failing at delivery. This is UX/defence-in-depth — the binding
  * barrier is on the delivery path (DNS can flip between register and deliver).

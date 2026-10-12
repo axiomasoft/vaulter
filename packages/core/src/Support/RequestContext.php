@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 
 /**
  * The request-scoped audit context the ActivityRecorder stamps onto an activity row
- * (§2.9): the client ip, the user-agent and a per-request correlation id. It is
+ * the client ip, the user-agent and a per-request correlation id. It is
  * captured from the CURRENT request when one is bound and degrades to all-null off
  * the request lifecycle (console commands, queue workers) — recording an event from
  * a job must never blow up for lack of a request.

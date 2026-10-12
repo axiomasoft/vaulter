@@ -12,7 +12,7 @@ use Vaulter\Configuration\DatabaseConfig;
 
 /**
  * Every default Vaulter model reads its database connection from
- * `configuration key vaulter.database.connection` (F-P2.3-02) instead of always resolving to the
+ * `configuration key vaulter.database.connection` instead of always resolving to the
  * host's default connection. `app(\Vaulter\Configuration\DatabaseConfig::class)->connection()` returns null when the key is
  * unset, and `null` is exactly what `Model::getConnectionName()` already returned
  * before this trait existed — a host that never sets the key sees no change in

@@ -15,9 +15,9 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 use Vaulter\Models\Concerns\StampsDriveTenant;
 
 /**
- * An APPEND-ONLY audit/activity row (master plan §2.9 / M2c-activity). ONE row per
+ * An APPEND-ONLY audit/activity row. ONE row per
  * domain event — recipients are resolved at READ by scoping the feed to a
- * storage/node/actor, never a per-affected-user fan-out (anti-NC-explosion, §1.5).
+ * storage/node/actor, never a per-affected-user fan-out (anti-NC-explosion).
  *
  * Append-only is structural, not just convention: the table has NO updated_at and
  * NO soft-delete, so {@see self::$timestamps} is OFF and created_at is set on
@@ -58,7 +58,7 @@ class Activity extends Model
     public $timestamps = false;
 
     /**
-     * Fully guarded (F-P1.8-02): an append-only audit row — every column is
+     * Fully guarded: an append-only audit row — every column is
      * system-recorded metadata about a domain event, never user input. The sole
      * writer, ActivityStoreRepository, already uses forceFill() exclusively.
      *
@@ -73,7 +73,7 @@ class Activity extends Model
     }
 
     /**
-     * Newest-first ordering — the canonical feed order (§2.9 (created_at desc)).
+     * Newest-first ordering — the canonical feed order ((created_at desc)).
      * Every feed query builds on this so the cursor walks back through time.
      *
      * @param  Builder<$this> $query

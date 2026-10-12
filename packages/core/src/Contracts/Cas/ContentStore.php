@@ -7,7 +7,7 @@ namespace Vaulter\Contracts\Cas;
 use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
- * The low-level byte side of the CAS (H.3): stage an incoming stream to a local
+ * The low-level byte side of the CAS: stage an incoming stream to a local
  * seekable temp file (hashing those durable bytes server-side), then promote the
  * staged bytes to their canonical scope-qualified key. The high-level
  * find-or-create / dedup / GC lifecycle is BlobStore — ContentStore knows only
@@ -47,7 +47,7 @@ interface ContentStore
     /**
      * Build "<scope>/ab/<sha256>" for new scopes, or preserve the legacy
      * "<scope>/ab/cd/<sha256>" layout for legacy scopes.
-     * (H.3): the scope segment keeps two dedup scopes from ever sharing one
+     * the scope segment keeps two dedup scopes from ever sharing one
      * physical object, so one scope's GC can never delete another's live bytes.
      */
     public function keyFor(BlobScope $scope, string $sha256): string;

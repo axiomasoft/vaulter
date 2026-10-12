@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Context;
 
 /**
- * Load-stand tier label (`S0`/`S`/`M`/`L`) from host middleware (VLT-LOAD P8.3).
+ * Load-stand tier label (`S0`/`S`/`M`/`L`) from host middleware.
  * Package seams read only this context — never load env/config directly.
  */
 final class LoadTier

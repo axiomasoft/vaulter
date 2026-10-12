@@ -63,7 +63,7 @@ final class CreateUploadSessionRequest extends VaulterFormRequest
     }
 
     /**
-     * The existing file node to commit a NEW VERSION onto (§2.8); null = a brand-new
+     * The existing file node to commit a NEW VERSION onto; null = a brand-new
      * file upload.
      */
     public function targetNodeId(): ?string

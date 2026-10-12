@@ -10,7 +10,7 @@ use Vaulter\Enums\Access\Ability;
 use Vaulter\Models\Drive\Node;
 
 /**
- * Per-node computed permissions for the front-end (§2.6 / H.2), generalising the
+ * Per-node computed permissions for the front-end, generalising the
  * legacy DocumentAbilities pattern to the unified node tree. It asks the
  * AccessResolver for the full ability map of an actor on a node and exposes it as
  * the stable "abilities" object the Vue client binds against — so the UI renders

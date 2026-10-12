@@ -26,7 +26,7 @@ final readonly class NodePageQuery
         $query = $class::query()->where('drive_id', $context->driveId());
 
         if ($trash) {
-            // Only explicit trash roots are listed (PLAN2.D37).
+            // Only explicit trash roots are listed.
             $table = (new $class)->getTable();
 
             return $query->whereNotNull('trashed_at')->whereColumn($table.'.trash_root_id', $table.'.id');

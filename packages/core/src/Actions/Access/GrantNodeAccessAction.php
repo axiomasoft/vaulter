@@ -21,7 +21,7 @@ use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Access\GrantStoreRepository;
 
 /**
- * Give a subject a role on a node (§2.6). Idempotent on the grant-unique key:
+ * Give a subject a role on a node. Idempotent on the grant-unique key:
  * re-granting the same subject the same scope replaces the role and expiry. The
  * write runs in a transaction and emits NodeGrantCreated.
  *
@@ -44,7 +44,7 @@ final readonly class GrantNodeAccessAction
     {
         $node = $this->locator->find(context: $context, key: $input->node);
         $data = $input->grant;
-        // Fail-loud (F-P1.2-01) BEFORE persisting: a grant to a role/team subject under
+        // Fail-loud BEFORE persisting: a grant to a role/team subject under
         // a driver that cannot enumerate role subjects would be silently inert.
         $this->guardEnumerableSubject($node, $data);
 
@@ -59,7 +59,7 @@ final readonly class GrantNodeAccessAction
     }
 
     /**
-     * Make the silent no-op loud (F-P1.2-01): a grant addressed to a role/group/team
+     * Make the silent no-op loud: a grant addressed to a role/group/team
      * subject only ever matches when the active {@see PermissionDriver} expands the actor
      * into those Subjects. Whether it does is decided by
      * {@see PermissionDriverManager::enumeratesRoleSubjects()} — the explicit

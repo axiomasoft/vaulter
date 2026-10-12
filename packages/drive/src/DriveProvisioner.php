@@ -31,7 +31,7 @@ use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\ValueObjects\Access\Actor;
 
 /**
- * Get-or-create a storage container for a host entity within a panel (§2.1), with
+ * Get-or-create a storage container for a host entity within a panel, with
  * automatic root-folder provisioning. The polymorphic owner triple
  * (owner_type, owner_id, panel) is the idempotency key — guarded by the partial
  * UNIQUE index defineStorages adds, so concurrent first-touches converge on one

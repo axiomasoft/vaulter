@@ -41,7 +41,7 @@ use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\ValueObjects\Access\Actor;
 
 /**
- * The per-node ACL admin surface (master plan §2.6 / §3): list, create and revoke
+ * The per-node ACL admin surface: list, create and revoke
  * the node grants the {@see AccessOperations} folds into effective permissions. A
  * grant gives a subject (type + id) a role on a node, with an item|subtree scope
  * and an optional read-time expiry; grants are positive only.
@@ -68,7 +68,7 @@ final class NodeGrantResource extends Resource
     }
 
     /**
-     * Access-aware listing (F-P1.10-01): narrow to grant rows whose node_id is in
+     * Access-aware listing: narrow to grant rows whose node_id is in
      * the acting admin's grant-reachable candidate set (the same set
      * {@see NodeResource::getEloquentQuery()} narrows the node table to). Empty
      * candidate set (no actor, or an actor with zero grants) ⇒ empty table.
@@ -165,7 +165,7 @@ final class NodeGrantResource extends Resource
     }
 
     /**
-     * The grant form fields shared by the create header action (master plan §2.6).
+     * The grant form fields shared by the create header action.
      *
      * @return array<int, Component>
      */

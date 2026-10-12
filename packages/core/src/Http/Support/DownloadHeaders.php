@@ -10,11 +10,10 @@ use Symfony\Component\HttpFoundation\HeaderUtils;
 use Vaulter\Configuration\DownloadsConfig;
 
 /**
- * The ONE shared response-header builder for a file download (P1.1 / F-P1.3-04,
- * F-P1.11-03), used by BOTH PHP-stream download surfaces — the identity
+ * The ONE shared response-header builder for a file download, used by BOTH PHP-stream download surfaces — the identity
  * DownloadController (vaulter-drive) and the public PublicShareController (this
  * package). Referenced from vaulter-drive, never the other way — core must not
- * depend on the extracted drive package (P2 #5 / D1), so this class stays
+ * depend on the extracted drive package, so this class stays
  * plain-prose about its drive-side caller rather than importing/`@see`-ing it.
  * The declared `mime_type` is attacker-controlled (set by whoever uploaded the
  * file), so it is NEVER trusted directly: `X-Content-Type-Options: nosniff` is

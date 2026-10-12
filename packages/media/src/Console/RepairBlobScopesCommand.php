@@ -37,7 +37,7 @@ final class RepairBlobScopesCommand extends Command
 
     /**
      * Scope keys that do not name one tenant or drive: the mixed legacy segments and
-     * the retired install-wide 'global' scope (PLAN2.D49).
+     * the retired install-wide 'global' scope.
      */
     private const array UNSAFE_SCOPES = ['legacy:snull', 'legacy:tnull', 'global'];
 

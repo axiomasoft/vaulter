@@ -144,7 +144,7 @@ final class Profile
     }
 
     /**
-     * Shorthand for the drive policy's revision retention (PLAN2.D48): keep at most
+     * Shorthand for the drive policy's revision retention: keep at most
      * $max revisions per file, the head included — maxNoncurrentRevisions = $max − 1;
      * null keeps every revision. The other retention settings stay as they are.
      */
@@ -177,7 +177,7 @@ final class Profile
     }
 
     /**
-     * Tree and content limits of the profile's drives (PLAN2.D43):
+     * Tree and content limits of the profile's drives:
      * ->drivePolicy(fn (DrivePolicyBuilder $p) => $p->maxFolderChildren(5000)).
      *
      * @param callable(DrivePolicyBuilder): mixed $configure

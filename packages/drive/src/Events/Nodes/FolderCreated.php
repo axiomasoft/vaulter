@@ -16,7 +16,7 @@ use Vaulter\ValueObjects\Events\EventSubject;
 use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
- * A folder was created in a storage tree (§2.2).
+ * A folder was created in a storage tree.
  */
 final readonly class FolderCreated extends DomainEvent
 {

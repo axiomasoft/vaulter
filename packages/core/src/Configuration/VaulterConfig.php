@@ -131,7 +131,7 @@ final readonly class VaulterConfig
         return is_bool($value) && $value;
     }
 
-    /** Whether deleting the owner entity deletes its drives (HasDrives, PLAN2.D27). */
+    /** Whether deleting the owner entity deletes its drives (HasDrives). */
     public function drivesDeleteWithOwner(): bool
     {
         return $this->config->get('vaulter.drives.delete_with_owner', false) === true;

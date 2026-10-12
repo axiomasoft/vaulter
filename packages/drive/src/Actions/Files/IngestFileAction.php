@@ -44,11 +44,11 @@ use Vaulter\Support\TreeGuard;
 use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
- * Commit an upload into the Drive (§2.4 commit flow): stage → quota → BlobStore.commitStaged
+ * Commit an upload into the Drive (commit flow): stage → quota → BlobStore.commitStaged
  * (content-addressed dedup) → File + FileRevision(number) + version↔blob edge
  * → file node (current_revision_id, mime, size, extension).
  *
- * Quota (§1.5 eager, PLAN2.D48): every retained revision counts with its full
+ * Quota (eager): every retained revision counts with its full
  * logical size, so the incoming size is reserved against the storage's quota_bytes
  * by a conditional UPDATE WITHIN the transaction, before CAS promotion — whether the
  * bytes deduplicate or not. Preparation happens once outside SQL so transaction
@@ -206,7 +206,7 @@ final readonly class IngestFileAction
     }
 
     /**
-     * New-file path (§2.4): node(kind=file) → file → number=1 → edge → repoint.
+     * New-file path: node(kind=file) → file → number=1 → edge → repoint.
      */
     private function commitNewFile(OperationContext $context, IngestFileInput $data, Blob $blob, int $size, string $name, int|string $parentId, int $admissionSequence): IngestReceipt
     {
@@ -250,7 +250,7 @@ final readonly class IngestFileAction
     }
 
     /**
-     * New-version path (§2.4): bump number, new version + edge against the
+     * New-version path: bump number, new version + edge against the
      * (deduped) blob, mark the prior head superseded, repoint file + node heads.
      */
     private function commitNewVersion(OperationContext $context, IngestFileInput $data, File $file, ?FileRevision $previousHead, Blob $blob, int $size, int $admissionSequence): IngestReceipt
@@ -336,7 +336,7 @@ final readonly class IngestFileAction
 
     /**
      * Reject the upload BEFORE committing bytes when it would push used_bytes past
-     * quota_bytes (§1.5). A null quota is unlimited; an empty upload never trips
+     * quota_bytes. A null quota is unlimited; an empty upload never trips
      * the check.
      */
     private function assertWithinQuota(IngestFileInput $data, int $delta): void

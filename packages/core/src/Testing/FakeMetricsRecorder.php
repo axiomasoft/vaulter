@@ -9,7 +9,7 @@ use Throwable;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 
 /**
- * In-memory {@see MetricsRecorder} for package and host tests (P8.2). Lives in
+ * In-memory {@see MetricsRecorder} for package and host tests. Lives in
  * src/Testing/ so consumers can assert emissions without a metrics backend.
  */
 final class FakeMetricsRecorder implements MetricsRecorder

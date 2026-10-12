@@ -19,7 +19,7 @@ final class SchemaBuilder
 {
     /**
      * The Schema builder for the connection Vaulter's tables live on
-     * (`app(\Vaulter\Configuration\DatabaseConfig::class)->connection()`, F-P2.3-02) — null defers to the host's default
+     * (`app(\Vaulter\Configuration\DatabaseConfig::class)->connection()`) — null defers to the host's default
      * connection exactly as every call site did before this key existed.
      */
     private function schemaConnection(): Builder
@@ -174,7 +174,7 @@ final class SchemaBuilder
     }
 
     /**
-     * v_drives — the ownable polymorphic disk container (§2.1). Always created;
+     * v_drives — the ownable polymorphic disk container. Always created;
      * carries the panel discriminator.
      */
     private function defineDrives(Blueprint $table, IdStrategy $ids): void
@@ -200,7 +200,7 @@ final class SchemaBuilder
         $table->index(['owner_type', 'owner_id']);
         $table->index(['profile', 'status']);
 
-        // Idempotency backbone for get-or-create (M1c): one live storage per
+        // Idempotency backbone for get-or-create: one live storage per
         // (owner_type, owner_id, panel). A partial unique (driver-aware, added in
         // afterCreate) lets a soft-deleted row's owner be re-provisioned while a
         // concurrent first-touch converges on one row via this constraint.
@@ -211,7 +211,7 @@ final class SchemaBuilder
     }
 
     /**
-     * v_nodes — the unified folder|file|document adjacency tree (§2.2, the
+     * v_nodes — the unified folder|file|document adjacency tree (the
      * centre). Always created; carries the panel discriminator, the soft-trash
      * triplet and the sibling-unique guard (added in afterCreate, driver-aware).
      * Content heads live in the kind's own aggregate (v_files, v_documents), never
@@ -233,26 +233,26 @@ final class SchemaBuilder
         $table->bigInteger('size_bytes')->default(0);
         $table->boolean('inherit_grants')->default(true);
         $ids->reference(table: $table, column: 'shortcut_target_id', nullable: true);
-        // Namespaced string properties (PLAN2.D41): {namespace: {key: value}}.
+        // Namespaced string properties: {namespace: {key: value}}.
         $table->jsonb('properties')->nullable();
         // The last content change (a file revision, a document state write), apart
-        // from updated_at which any public change moves (PLAN2.D42).
+        // from updated_at which any public change moves.
         $table->timestamp('content_modified_at')->nullable();
         HostKeyColumns::add(table: $table, column: 'content_modified_by', nullable: true, index: false);
 
-        // Soft-trash triplet (D17); purge is a real DELETE, there is no tombstone.
+        // Soft-trash triplet; purge is a real DELETE, there is no tombstone.
         $table->timestamp('trashed_at')->nullable();
         HostKeyColumns::add(table: $table, column: 'trashed_by', nullable: true, index: false);
         $ids->reference(table: $table, column: 'trashed_from_parent_id', nullable: true);
-        // The explicit trash root a trashed node belongs to (PLAN2.D37); the root points at itself.
+        // The explicit trash root a trashed node belongs to; the root points at itself.
         $ids->reference(table: $table, column: 'trash_root_id', nullable: true);
 
         HostKeyColumns::add(table: $table, column: 'created_by', nullable: true, index: false);
         HostKeyColumns::add(table: $table, column: 'updated_by', nullable: true, index: false);
         $table->timestamps();
 
-        // Hot listing indexes (§2.2 index plan). The purge-trash scan index
-        // (trashed_at, driver-aware partial) is emitted in afterCreate() — F-P4.1-01.
+        // Hot listing indexes (index plan). The purge-trash scan index
+        // (trashed_at, driver-aware partial) is emitted in afterCreate().
         $table->index(['drive_id', 'parent_id']);
         $table->index(['drive_id', 'kind', 'trashed_at']);
         $table->index(['drive_id', 'trash_root_id']);
@@ -269,8 +269,8 @@ final class SchemaBuilder
     }
 
     /**
-     * v_blobs — the content-addressable, immutable payload (dedup + GC, §2.3).
-     * Gated on 'blobs'. storage_key is scope-qualified (H.3) and the dedup-unique
+     * v_blobs — the content-addressable, immutable payload (dedup + GC).
+     * Gated on 'blobs'. storage_key is scope-qualified and the dedup-unique
      * index spans the scope column so two scopes never share one physical row.
      */
     private function defineBlobs(Blueprint $table, IdStrategy $ids): void
@@ -284,16 +284,16 @@ final class SchemaBuilder
         $table->bigInteger('size_bytes')->index();
         $table->string('disk', 64)->default('default');
 
-        // Scope-qualified storage_key: "<scope>/ab/cd/<sha256>" (H.3 / D18′). A
+        // Scope-qualified storage_key: "<scope>/ab/cd/<sha256>". A
         // scope-free path under per-scope dedup would let one GC delete another
         // scope's live bytes. BlobScope bounds canonical keys below 255 bytes;
         // VARCHAR keeps the full-value UNIQUE portable to MySQL without a lossy
         // prefix index or a hash surrogate.
         $table->string('storage_key');
 
-        // Blob state machine (logic is M1b; the columns exist now): pending →
+        // Blob state machine (logic is; the columns exist now): pending →
         // committed → tombstoned → deleting → deleted. No standalone index on
-        // status (F-P4.1-02, VLT-REMED P4.3): it is a strict column-prefix of the
+        // status: it is a strict column-prefix of the
         // (status, ref_count, delete_after_at) GC index below, so it never wins
         // over it and only pays extra write cost.
         $table->string('status', 12)->default('pending');
@@ -315,12 +315,12 @@ final class SchemaBuilder
         $table->unique(['scope_key', 'sha256'], $name.'_scope_sha_uniq');
         $table->unique('storage_key', $name.'_storage_key_uniq');
 
-        // GC scan support (§2.3): committed orphans past their grace deadline.
+        // GC scan support: committed orphans past their grace deadline.
         $table->index(['status', 'ref_count', 'delete_after_at'], $name.'_gc_idx');
     }
 
     /**
-     * v_files — the mutable 1:1 handle for a kind=file node (§2.4). Gated on
+     * v_files — the mutable 1:1 handle for a kind=file node. Gated on
      * 'versions'.
      */
     private function defineFiles(Blueprint $table, IdStrategy $ids): void
@@ -345,7 +345,7 @@ final class SchemaBuilder
     }
 
     /**
-     * v_file_revisions — the immutable file ↔ blob version (§2.4). Gated on
+     * v_file_revisions — the immutable file ↔ blob version. Gated on
      * 'versions'. number is monotonic per file (unique).
      */
     private function defineFileRevisions(Blueprint $table, IdStrategy $ids): void
@@ -371,9 +371,9 @@ final class SchemaBuilder
         $table->timestamp('created_at')->nullable();
         $table->timestamp('committed_at')->nullable();
         // When the revision stopped being the head: the non-current age the
-        // retention policy counts from (PLAN2.D48).
+        // retention policy counts from.
         $table->timestamp('superseded_at')->nullable();
-        // The uploader's own modification time: informational, never trusted (PLAN2.D42).
+        // The uploader's own modification time: informational, never trusted.
         $table->timestamp('client_modified_at')->nullable();
 
         $table->unique(['file_id', 'number'], $table->getTable().'_no_uniq');
@@ -398,7 +398,7 @@ final class SchemaBuilder
     }
 
     /**
-     * v_file_revision_blobs — the edge table that is the GC truth (§2.4). Gated on
+     * v_file_revision_blobs — the edge table that is the GC truth. Gated on
      * 'versions'. Composite primary key; liveness of a blob = existence of an edge
      * here, so it is never soft-deleted.
      */
@@ -425,7 +425,7 @@ final class SchemaBuilder
     }
 
     /**
-     * v_node_grants — positive per-node grants of a versioned role (PLAN2.D45). Gated
+     * v_node_grants — positive per-node grants of a versioned role. Gated
      * on 'grants'. The (node_id, subject_type, subject_id, scope) UNIQUE (added in
      * afterCreate) keeps one grant per subject/scope per node; the
      * (subject_type, subject_id) index backs the "shared with me" fast pass.
@@ -450,7 +450,7 @@ final class SchemaBuilder
 
         $name = $table->getTable();
 
-        // "Shared with me": every node a subject is granted access to (§2.6).
+        // "Shared with me": every node a subject is granted access to.
         $table->index(['subject_type', 'subject_id'], $name.'_subject_idx');
 
         $table->foreign('node_id')
@@ -461,7 +461,7 @@ final class SchemaBuilder
 
     /**
      * v_node_shares — the bearer share-link, the SEPARATE public sharing channel
-     * (§2.7 / M2c). Gated on 'share_links'. ONLY the sha256 token_hash is stored
+     * . Gated on 'share_links'. ONLY the sha256 token_hash is stored
      * (UNIQUE — the raw token is never persisted); token_prefix backs owner-side UX
      * lookup without revealing the token. The partial (expires_at) WHERE
      * revoked_at IS NULL index (added driver-aware in afterCreate) backs the
@@ -474,7 +474,7 @@ final class SchemaBuilder
         $ids->reference(table: $table, column: 'node_id');
 
         // ONLY the hash is stored — the raw bearer token is returned once at mint
-        // and never persisted (§2.7 hardening). token_prefix is a non-secret
+        // and never persisted (hardening). token_prefix is a non-secret
         // leading slice kept purely for owner-side UX lookup.
         $table->char('token_hash', 64);
         $table->string('token_prefix', 16)->index();
@@ -488,11 +488,11 @@ final class SchemaBuilder
         $table->unsignedInteger('token_generation')->default(1);
         $table->string('scope', 8)->default('item');
 
-        // Optional password gate (§2.7): stored only as a hash.
+        // Optional password gate: stored only as a hash.
         $table->string('password_hash')->nullable();
 
         // Lifecycle bounds: an optional expiry, an optional atomic use budget and a
-        // revocation tombstone (§2.7). use_count is incremented atomically and
+        // revocation tombstone. use_count is incremented atomically and
         // bounded by max_uses.
         $table->timestamp('expires_at')->nullable();
         $table->unsignedInteger('max_uses')->nullable();
@@ -508,7 +508,7 @@ final class SchemaBuilder
         // collide on a token (the loser of a mint race retries with a fresh token).
         $table->unique('token_hash', $name.'_token_hash_uniq');
 
-        // Owner-side "shares on this node" listing (§2.7).
+        // Owner-side "shares on this node" listing.
         $table->index(['node_id', 'revoked_at'], $name.'_node_revoked_idx');
 
         $table->foreign('node_id')
@@ -518,7 +518,7 @@ final class SchemaBuilder
     }
 
     /**
-     * v_node_comments — the NODE-attached, threaded, anchorable comment (ADR-0014
+     * v_node_comments — the NODE-attached, threaded, anchorable comment (docs/adr/0014-legacy-docvault-strangler.md
      * шаг 1 — parity with the legacy document_id-attached v_document_comments, which
      * stays untouched). Gated on 'comments'. A comment hangs off ANY node via node_id
      * (cascade); parent_id is a self-FK for threading (a reply cascades when its parent
@@ -577,7 +577,7 @@ final class SchemaBuilder
     }
 
     /**
-     * v_node_user_states — one actor's personal state of a node (PLAN2.D40): starred
+     * v_node_user_states — one actor's personal state of a node: starred
      * now, more per-user flags later. Never part of the node: a star changes neither
      * the node's sequence nor its updated_at, and is invisible to other actors.
      */
@@ -704,12 +704,12 @@ final class SchemaBuilder
     }
 
     /**
-     * v_upload_sessions — the resumable-ingest session (§2.8 / D16 / M3a). Gated on
+     * v_upload_sessions — the resumable-ingest session. Gated on
      * 'uploads'. upload_id is the client-facing UNIQUE handle (the S3 uploadId / tus
      * resource id). received_bytes is the AUTHORITATIVE server-side tus offset — the
      * client never decides where to resume. status drives the lifecycle
      * (initiated→uploading→assembled→committed, with abort/expire). assembled_blob_id
-     * points at the blob produced by BlobStore.commit on completion (H.3 — server
+     * points at the blob produced by BlobStore.commit on completion (server
      * recompute, never the client/ETag hash). Two target shapes share one row:
      *   - new file    → target_parent_id (null = root) + target_name;
      *   - new version → node_id (the existing kind=file node).
@@ -724,7 +724,7 @@ final class SchemaBuilder
         // endpoints address the session by. UNIQUE — the resume key.
         $table->uuid('upload_id');
 
-        // Targets (§2.8): a NEW-VERSION upload pins node_id; a NEW-FILE upload pins
+        // Targets: a NEW-VERSION upload pins node_id; a NEW-FILE upload pins
         // target_parent_id (null = storage root) + target_name. No DB FK on node_id /
         // target_parent_id: a session may outlive a concurrently-moved node and the
         // sweeper must still reclaim it.
@@ -740,7 +740,7 @@ final class SchemaBuilder
 
         // The client-DECLARED sha256 (optional). It is NEVER trusted as the content
         // address — BlobStore.commit recomputes sha256 from the assembled staged file
-        // (H.3). It is kept only as an optional integrity cross-check.
+        // . It is kept only as an optional integrity cross-check.
         $table->char('expected_sha256', 64)->nullable();
         $table->bigInteger('total_size_bytes')->nullable();
 
@@ -750,7 +750,7 @@ final class SchemaBuilder
         $table->bigInteger('chunk_size')->nullable();
         $table->string('mime_type', 191)->nullable();
 
-        // Inline manifest for the small-part fast path (§2.8): a denormalised parts
+        // Inline manifest for the small-part fast path: a denormalised parts
         // list a session may carry without spilling to v_upload_parts.
         $table->json('parts')->nullable();
 
@@ -770,7 +770,7 @@ final class SchemaBuilder
         // handle (the loser of a mint race retries with a fresh uuid).
         $table->unique('upload_id', $name.'_upload_id_uniq');
 
-        // The sweeper scan axis (§2.8): stale OPEN sessions past expires_at. The
+        // The sweeper scan axis: stale OPEN sessions past expires_at. The
         // (status, expires_at) composite is added driver-aware in afterCreate so the
         // index name stays distinct per prefixed panel table.
         $table->index('drive_id', $name.'_drive_idx');
@@ -782,7 +782,7 @@ final class SchemaBuilder
     }
 
     /**
-     * v_upload_parts — the normalised per-part record (§2.8 / D16 / M3a). Gated on
+     * v_upload_parts — the normalised per-part record. Gated on
      * 'uploads'. The composite primary key (upload_session_id, part_no) is the S3
      * re-upload semantics: re-uploading a part REPLACES its row (a fresh PUT of part
      * N supersedes the prior etag/size). temp_blob_id is the optional staged-blob
@@ -810,10 +810,10 @@ final class SchemaBuilder
     }
 
     /**
-     * v_activity — the append-only audit/activity feed (§2.9 / M2c-activity). Gated
+     * v_activity — the append-only audit/activity feed. Gated
      * on 'activity'. ONE row per domain event; recipients are resolved at READ by
      * scoping the feed to a storage/node — there is NEVER a per-affected-user
-     * fan-out (anti-NC-explosion, §1.5).
+     * fan-out (anti-NC-explosion).
      *
      * Append-only: NO updated_at, NO soft-delete. The id honours the panel id
      * strategy (recommend uuid7 — time-ordered — but bigint/ulid all keep the
@@ -851,12 +851,12 @@ final class SchemaBuilder
 
         // request_id is an opaque per-request CORRELATION id (X-Request-Id / a
         // minted uuid), NOT a Vaulter entity reference — so it is a fixed nullable
-        // uuid column independent of the panel id strategy (§2.9 "request_id uuid").
+        // uuid column independent of the panel id strategy ("request_id uuid").
         $table->uuid('request_id')->nullable();
 
         // Append-only: created_at ONLY. No timestamps()/softDeletes() — there is no
         // update or delete path for an audit row. No inline ->index() here
-        // (F-P4.1-02, VLT-REMED P4.3): addActivityCreatedAtIndex() below already
+        // addActivityCreatedAtIndex() below already
         // emits the one (created_at) index this table carries; a second one on the
         // very same single column was a literal duplicate, pure write cost on this
         // append-only, write-hottest table with zero read benefit.
@@ -864,7 +864,7 @@ final class SchemaBuilder
 
         $name = $table->getTable();
 
-        // §2.9 feed indexes — every read axis is newest-first. The leading column is
+        // feed indexes — every read axis is newest-first. The leading column is
         // the scope/filter; created_at is the cursor tail.
         $table->index(['actor_type', 'actor_id', 'created_at'], $name.'_actor_idx');
         $table->index(['target_type', 'target_id', 'created_at'], $name.'_target_idx');
@@ -873,8 +873,7 @@ final class SchemaBuilder
     }
 
     /**
-     * v_outbox — the transactional-outbox staging table (master plan §2.11 / D14 /
-     * M3b), ported from chatom 1:1. Gated on 'reliability'. ONE row per domain event,
+     * v_outbox — the transactional-outbox staging table, ported from chatom 1:1. Gated on 'reliability'. ONE row per domain event,
      * idempotent by event_id (UNIQUE) so the same event never stages a duplicate and
      * the relay drains each row exactly once.
      *
@@ -924,7 +923,7 @@ final class SchemaBuilder
     }
 
     /**
-     * v_webhook_endpoints — the subscriber endpoints (master plan §2.11 / D14 / M3b),
+     * v_webhook_endpoints — the subscriber endpoints,
      * ported from chatom 1:1. Gated on 'reliability'. events is the JSON subscription
      * list (matched in SQL with whereJsonContains); signing_secret signs the
      * deliveries (Standard Webhooks, HMAC-SHA256); failing_since is the auto-disable
@@ -937,7 +936,7 @@ final class SchemaBuilder
 
         $table->string('url');
         $table->json('events');
-        // text, not string: the signing_secret is encrypted at rest (F-P1.7-02) and
+        // text, not string: the signing_secret is encrypted at rest and
         // the ciphertext is longer than the 64-char plaintext.
         $table->text('signing_secret');
         // The secret before the last rotation, valid for signing until its expiry.
@@ -967,7 +966,7 @@ final class SchemaBuilder
 
     /**
      * v_webhook_deliveries — a single delivery attempt with retry bookkeeping (master
-     * plan §2.11 / D14 / M3b), ported from chatom 1:1. Gated on 'reliability'.
+     * plan), ported from chatom 1:1. Gated on 'reliability'.
      * endpoint_id is an explicit FK → v_webhook_endpoints (cascade on delete). The
      * (status, next_retry_at) index is the due-retry sweep cursor; (status, updated_at)
      * backs the retention prune of terminal (delivered|dead) rows. (event_id,
@@ -1006,7 +1005,7 @@ final class SchemaBuilder
 
     /**
      * v_drive_change_heads — one row per drive: the change journal's counter
-     * (PLAN2.D50/D59). last_seq is the seq of the newest entry; the UPDATE that raises it
+     * . last_seq is the seq of the newest entry; the UPDATE that raises it
      * is the journal lock, held until the mutation commits, so entries become visible
      * in seq order. pruned_through is the highest seq the retention prune deleted;
      * epoch changes on a reset and expires every cursor of the drive.
@@ -1028,7 +1027,7 @@ final class SchemaBuilder
     }
 
     /**
-     * v_drive_changes — the change journal of a drive (PLAN2.D50/D59): one entry per
+     * v_drive_changes — the change journal of a drive: one entry per
      * journalled event, for the node it is about. change_id is the event id, so an
      * occurrence is journalled once. node_id has no foreign key: the entry outlives a
      * purged node. Entries are compacted to the latest state of a node and pruned by age.
@@ -1168,7 +1167,7 @@ final class SchemaBuilder
     }
 
     /**
-     * The plain (created_at desc) feed index (§2.9). Added here rather than inline
+     * The plain (created_at desc) feed index. Added here rather than inline
      * because the column is added last (a fresh-row tail) and naming it off the
      * table keeps a per-panel prefixed table's index distinct.
      */
@@ -1180,7 +1179,7 @@ final class SchemaBuilder
     }
 
     /**
-     * The OPTIONAL gin(context) index for jsonb containment queries (§2.9). Only
+     * The OPTIONAL gin(context) index for jsonb containment queries. Only
      * Postgres has gin + jsonb; on SQLite/MySQL context is a plain json column and
      * the index is skipped (the feed never queries by context shape — it scopes by
      * storage/node/actor/verb, all covered by btree indexes).
@@ -1196,7 +1195,7 @@ final class SchemaBuilder
 
     /**
      * The OPTIONAL gin(content jsonb_path_ops) index for document-revision content
-     * containment queries (§2.5). Postgres-only (gin + jsonb); on SQLite/MySQL
+     * containment queries. Postgres-only (gin + jsonb); on SQLite/MySQL
      * content is a plain json column and the index is skipped — the history is read
      * by (document_id, number) / (document_id, is_autosave), all btree-covered.
      */
@@ -1210,7 +1209,7 @@ final class SchemaBuilder
     }
 
     /**
-     * The §2.7 partial expiry index: (expires_at) WHERE revoked_at IS NULL — the
+     * The partial expiry index: (expires_at) WHERE revoked_at IS NULL — the
      * sweep of live, expiring shares. Driver-aware: a real partial index on
      * Postgres/SQLite, a plain (expires_at) index elsewhere (the WHERE is then
      * applied at query time by the Live scope).
@@ -1234,7 +1233,7 @@ final class SchemaBuilder
     }
 
     /**
-     * F-P4.1-01 (VLT-REMED P4.3): the trashed_at scan index PurgeTrashCommand's
+     * the trashed_at scan index PurgeTrashCommand's
      * predicate needs — trashedBefore() filters `whereNotNull('trashed_at')
      * ->where('trashed_at', '<=', $threshold)`, and without a leading-column index
      * on trashed_at that scan is a full v_nodes seq-scan on every scheduled run
@@ -1264,7 +1263,7 @@ final class SchemaBuilder
     }
 
     /**
-     * The §2.8 sweeper index: (status, expires_at). The leading status narrows to the
+     * The sweeper index: (status, expires_at). The leading status narrows to the
      * open sessions; expires_at is the cursor the sweeper scans for stale rows. A
      * plain composite btree on every driver — there is no partial predicate here (the
      * status filter is the leading column), so no driver split is needed.
@@ -1277,7 +1276,7 @@ final class SchemaBuilder
     }
 
     /**
-     * One grant per (node_id, subject_type, subject_id, scope) — the §2.6
+     * One grant per (node_id, subject_type, subject_id, scope) — the
      * grant-unique key.
      */
     private function addGrantUniqueIndex(string $table): void
@@ -1288,8 +1287,8 @@ final class SchemaBuilder
     }
 
     /**
-     * One LIVE storage per (owner_type, owner_id, panel) — the M1c get-or-create
-     * idempotency key (§2.1). Driver-aware so the partial (soft-delete-aware)
+     * One LIVE storage per (owner_type, owner_id, panel) — the get-or-create
+     * idempotency key. Driver-aware so the partial (soft-delete-aware)
      * shape works on Postgres/SQLite, with a MySQL generated-column fallback and a
      * plain unique on unknown drivers.
      */
@@ -1301,7 +1300,7 @@ final class SchemaBuilder
     }
 
     /**
-     * Sibling-name uniqueness among active nodes (PLAN2.D39): one live name_key per
+     * Sibling-name uniqueness among active nodes: one live name_key per
      * parent, compared byte for byte so the host's collation never decides.
      *
      *  - PostgreSQL: a PARTIAL unique index on (parent_id, name_key COLLATE "C")
@@ -1427,7 +1426,7 @@ final class SchemaBuilder
     }
 
     /**
-     * The activity ip column (§2.9). A native inet on Postgres (efficient,
+     * The activity ip column. A native inet on Postgres (efficient,
      * type-checked); a portable varchar(45) (max IPv6 length) everywhere else. The
      * Activity model casts it to a plain string either way.
      */
@@ -1443,8 +1442,8 @@ final class SchemaBuilder
     }
 
     /**
-     * A nullable binary column (§2.5 yjs_state). longBlob on MySQL/MariaDB (the
-     * §2.5 portability note — Yjs state can outgrow a plain blob); a portable
+     * A nullable binary column (yjs_state). longBlob on MySQL/MariaDB (the
+     * portability note — Yjs state can outgrow a plain blob); a portable
      * binary() (bytea on Postgres) everywhere else.
      */
     private function binaryColumn(Blueprint $table, string $column): void

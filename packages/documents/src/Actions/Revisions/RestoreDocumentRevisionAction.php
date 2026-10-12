@@ -25,7 +25,7 @@ use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\TreeGuard;
 
 /**
- * Restore a document to an earlier checkpoint (§2.5 / M4a) — copy-forward: the
+ * Restore a document to an earlier checkpoint — copy-forward: the
  * source checkpoint is never changed; its content and Yjs state become the working
  * state and a new checkpoint records restored_from_revision_id. The collaboration
  * epoch moves, so rooms editing the replaced state cannot write it back.
@@ -66,7 +66,7 @@ final readonly class RestoreDocumentRevisionAction
             if (!$this->tree->sameStorage($current, $driveId)) {
                 throw NodeNotFoundException::forId($nodeId);
             }
-            // A trash that committed before this lock leaves nothing to write to (PLAN2.F05).
+            // A trash that committed before this lock leaves nothing to write to.
             $this->tree->assertLive($current);
             if (!$current->kind->isDocument()) {
                 throw NotADocumentException::forNode($nodeId);

@@ -9,7 +9,7 @@ use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /**
- * The upload would push v_drives.used_bytes past v_drives.quota_bytes (§1.5,
+ * The upload would push v_drives.used_bytes past v_drives.quota_bytes (
  * eager quota). Checked BEFORE the blob is committed so we never store bytes we
  * must immediately reject. A null quota means unlimited and never throws.
  */

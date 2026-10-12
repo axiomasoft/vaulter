@@ -16,7 +16,7 @@ use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Profiles\ProfileRegistry;
 
 /**
- * What a share link may be (PLAN2.D47): which roles it can carry for which audience,
+ * What a share link may be: which roles it can carry for which audience,
  * and how long the drive's profile lets it live. One place, used when a link is
  * created or changed and again on every visit, so tightening a rule takes effect on
  * links that already exist.

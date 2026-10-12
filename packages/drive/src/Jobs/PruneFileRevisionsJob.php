@@ -28,7 +28,7 @@ use Vaulter\VaulterManager;
 
 /**
  * Apply the drive profile's RevisionRetentionPolicy to every file of one drive,
- * trashed files included (PLAN2.D48). Protection order: the head, then pinned
+ * trashed files included. Protection order: the head, then pinned
  * revisions, then revisions superseded less than minNoncurrentAgeDays ago; of the
  * rest, everything past the newest maxNoncurrentRevisions unpinned non-current
  * revisions and everything superseded more than maxNoncurrentAgeDays ago goes.

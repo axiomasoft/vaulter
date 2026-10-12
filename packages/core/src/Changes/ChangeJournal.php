@@ -15,7 +15,7 @@ use Vaulter\Repositories\Changes\ChangeHeadRepository;
 use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
- * Writes the change journal of a drive (PLAN2.D50, D59): one entry per journalled
+ * Writes the change journal of a drive: one entry per journalled
  * event, numbered by the drive's head row. Only {@see EventRecorder} calls it, as the
  * last step of the mutation's transaction.
  *
@@ -27,7 +27,7 @@ use Vaulter\ValueObjects\Events\JournalEffect;
  * Entries are compacted to the latest state of a node: an upsert replaces the earlier
  * upserts it makes redundant. A remove is never compacted away, and neither is an
  * entry a weaker one would hide: the read projection turns an invisible node's move or
- * access change into a remove, so a later rename must not erase it (PLAN2.D61).
+ * access change into a remove, so a later rename must not erase it.
  */
 final readonly class ChangeJournal
 {

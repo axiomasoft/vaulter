@@ -11,7 +11,7 @@ use Vaulter\Exceptions\Webhooks\BlockedOutboundUrlException;
 use Vaulter\ValueObjects\Webhooks\PinnedOutboundEndpoint;
 
 /**
- * The default SSRF barrier for outbound webhooks (§2.11 / D5 / N2 / F-P1.7-01).
+ * The default SSRF barrier for outbound webhooks (N2 /).
  *
  * pin() is the real barrier on the delivery path: it parses the URL, enforces the
  * scheme allow-list, resolves EVERY A/AAAA record and rejects the host if ANY address

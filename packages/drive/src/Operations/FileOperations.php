@@ -105,7 +105,7 @@ final readonly class FileOperations implements Contract
     public function deleteRevision(NodeSnapshot|string|int $file, FileRevisionSnapshot|string|int $revision): void
     {
         // Permanent removal of stored data: authorized like a purge, without the
-        // upload/egress profile gates (PLAN2.D48).
+        // upload/egress profile gates.
         $node = $this->file($file, Ability::Manage, OperationKind::Purge);
         $this->deleteRevision->execute($this->context, $node, $this->revision($node, $revision));
     }
@@ -146,7 +146,7 @@ final readonly class FileOperations implements Contract
 
     /**
      * A sibling the actor cannot View answers 404 about the requested name, never its id or kind
-     * (D33/Q4): the name-conflict policy discloses occupancy, nothing more.
+     * the name-conflict policy discloses occupancy, nothing more.
      */
     private function assertSiblingVisible(Node $sibling, string $name): void
     {

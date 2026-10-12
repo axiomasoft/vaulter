@@ -11,7 +11,7 @@ use Vaulter\Repositories\Webhooks\WebhookEndpointStoreRepository;
 use Vaulter\Support\Identity;
 
 /**
- * Deactivate a webhook endpoint (master plan §2.11 / D14 / M3b): flip is_active off so
+ * Deactivate a webhook endpoint: flip is_active off so
  * the relay stops fanning events out to it (disabled_reason 'manual'), and finish its
  * waiting and retrying deliveries as dead — they would never be sent, and a dead row
  * can be redelivered once the endpoint is back. The row and its delivery history are

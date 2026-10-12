@@ -20,11 +20,11 @@ use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\FileRevisionBlob;
 
 /**
- * A content-addressable, immutable payload (master plan §2.3): identified by its
+ * A content-addressable, immutable payload: identified by its
  * sha256 within a dedup scope and stored once on the Flysystem disk under a
  * scope-qualified storage_key. ref_count is a reconciled cache; the liveness
- * truth is the existence of a v_file_revision_blobs edge (H.3). The byte handling
- * and GC commit-flow are M1b — this is the schema + model only.
+ * truth is the existence of a v_file_revision_blobs edge. The byte handling
+ * and GC commit-flow are — this is the schema + model only.
  *
  * Swappable via configuration key vaulter.models.blob.
  *
@@ -60,7 +60,7 @@ class Blob extends Model
     public $timestamps = false;
 
     /**
-     * Fully guarded (F-P1.5-04): every column is content-addressed or CAS
+     * Fully guarded: every column is content-addressed or CAS
      * integrity state (sha256/storage_key are the content address itself;
      * ref_count/status drive GC). Mass-assigning ANY of them could point a CAS
      * reference at the wrong bytes. The sole writer, BlobStoreRepository, uses
@@ -94,7 +94,7 @@ class Blob extends Model
     }
 
     /**
-     * GC-candidate scope (§2.3): committed blobs whose ref-count CACHE is zero.
+     * GC-candidate scope: committed blobs whose ref-count CACHE is zero.
      * That cache is rebuilt from the edge table by reconciliation, so a committed
      * blob reaches ref_count<=0 the moment its last edge is detached and
      * reconciled — that, not a pre-armed deadline, is what arms the mark scan.
@@ -102,7 +102,7 @@ class Blob extends Model
      * NOT here: requiring delete_after_at on a still-committed blob would gate the
      * scan on a column no commit path ever writes, so a genuinely orphaned blob
      * would never be tombstoned. This scope only narrows the scan — the real
-     * liveness re-check happens under the per-(scope,sha256) lock (H.3).
+     * liveness re-check happens under the per-(scope,sha256) lock.
      *
      * @param  Builder<$this> $query
      * @return Builder<$this>

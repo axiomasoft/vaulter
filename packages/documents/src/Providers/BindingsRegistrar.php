@@ -53,7 +53,7 @@ final class BindingsRegistrar extends ServiceProvider
         // default is the node's basename plus the exporter's extension.
         $this->app->bind(ExportFilenameResolver::class, DefaultExportFilenameResolver::class);
 
-        // Second echelon of the F-P1.11-01 stored-XSS fix (D4): TipTapRenderer takes
+        // Second echelon of the stored-XSS fix: TipTapRenderer takes
         // the sanitizer through its constructor (never resolved inline from the
         // container) so every HTML render — including content persisted before the
         // store-time validator existed — is sanitized on the way out. Singleton: the

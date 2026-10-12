@@ -19,7 +19,7 @@ use Vaulter\Support\TreeGuard;
 
 /**
  * Checkpoint a document's current working state as a NAMED (non-autosave) revision
- * with a label (§2.5 / M4a) — even when the working state did not change since the
+ * with a label — even when the working state did not change since the
  * last checkpoint. The named revision becomes the head; keepForever pins it out of
  * the prune window. The working state and its validators are untouched, so a
  * snapshot needs no precondition. One outer transaction under T → N → D locks; a
@@ -53,7 +53,7 @@ final readonly class CreateNamedRevisionAction
             if (!$this->tree->sameStorage($current, $driveId)) {
                 throw NodeNotFoundException::forId($nodeId);
             }
-            // A trash that committed before this lock leaves nothing to write to (PLAN2.F05).
+            // A trash that committed before this lock leaves nothing to write to.
             $this->tree->assertLive($current);
             if (!$current->kind->isDocument()) {
                 throw NotADocumentException::forNode($nodeId);

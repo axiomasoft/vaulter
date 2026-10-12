@@ -11,7 +11,7 @@ use Vaulter\Exceptions\Http\PreconditionRequiredException;
 use Vaulter\Exceptions\Nodes\StaleNodeException;
 
 /**
- * Conditional requests of the versioned API (RFC 9110 §13).
+ * Conditional requests of the versioned API (RFC 9110).
  *
  * Every method here runs only after the controller has found the resource through
  * its operations, i.e. after authentication, tenant scoping and authorization: a

@@ -10,7 +10,7 @@ use Vaulter\Events\DomainEvent;
 use Vaulter\Support\Identity;
 
 /**
- * The change-journal entry an event writes (PLAN2.D59): one entry for the node the
+ * The change-journal entry an event writes: one entry for the node the
  * event is about, never one per descendant. `subtree` tells a syncing client to
  * re-read the folder's subtree, because the change reaches every descendant (a move,
  * a copy, a restore, an access change).

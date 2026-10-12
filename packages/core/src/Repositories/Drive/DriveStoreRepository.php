@@ -11,10 +11,10 @@ use Vaulter\Exceptions\Drive\QuotaExceededException;
 use Vaulter\Models\Drive\Drive;
 
 /**
- * Write-side row work for v_drives (§2.1). Bare create + the byte-accounting
+ * Write-side row work for v_drives. Bare create + the byte-accounting
  * mutations (used_bytes delta, root pointer). Opens NO transactions — the
  * StorageManager / Drive Actions wrap it. used_bytes is the EAGER quota cache
- * (§1.5): incremented within the upload transaction, decremented only on
+ * incremented within the upload transaction, decremented only on
  * forceDelete (trashed bytes still occupy storage).
  */
 final class DriveStoreRepository
@@ -75,7 +75,7 @@ final class DriveStoreRepository
      */
     public function create(array $attributes): Drive
     {
-        // forceFill (P1.4/F-P1.8-02): $attributes is a server-built literal array
+        // forceFill: $attributes is a server-built literal array
         // from StorageManager, never raw request input.
         $model = $this->vaulterConfig->model('drive');
         $storage = new $model;
@@ -86,7 +86,7 @@ final class DriveStoreRepository
     }
 
     /**
-     * Point a freshly created storage at its root folder node (§2.1) once the
+     * Point a freshly created storage at its root folder node once the
      * node exists — the chicken-and-egg insert order the schema deliberately
      * leaves without a hard FK.
      */
@@ -98,7 +98,7 @@ final class DriveStoreRepository
     }
 
     /**
-     * Adjust the used_bytes quota cache by a signed delta (§1.5 eager quota),
+     * Adjust the used_bytes quota cache by a signed delta (eager quota),
      * clamped at zero so a reconciliation drift can never drive it negative. Runs
      * inside the caller's upload/force-delete transaction.
      *

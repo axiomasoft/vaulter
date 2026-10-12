@@ -19,7 +19,7 @@ use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\TreeGuard;
 
 /**
- * Create a kind=folder node under a parent (or the storage root) — §2.2. The
+ * Create a kind=folder node under a parent (or the storage root). The
  * parent row is locked and must be a live folder of the same storage; the
  * sibling-name conflict is surfaced deterministically (NodeNameConflictException)
  * rather than silently auto-renamed: Drive never invents a name behind the

@@ -19,9 +19,9 @@ use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 
 /**
- * An ownable, polymorphic disk container (master plan §2.1): one storage row is a
+ * An ownable, polymorphic disk container: one storage row is a
  * disk root mounted on ANY host entity through the owner_type/owner_id morph
- * (D11). Swappable — point configuration key vaulter.models.drive at a subclass to add
+ * . Swappable — point configuration key vaulter.models.drive at a subclass to add
  * tenant scoping or extra behaviour.
  *
  * @property int             $scan_admission_sequence
@@ -51,7 +51,7 @@ class Drive extends Model
     use ResolvesVaulterConnection;
 
     /**
-     * Closed allow-list (F-P1.8-02). owner_type/owner_id/panel/disk/storage_type/
+     * Closed allow-list. owner_type/owner_id/panel/disk/storage_type/
      * used_bytes/status/root_node_id are structural or accounting columns — every
      * write path that sets them already uses forceFill() (DriveStoreRepository).
      *

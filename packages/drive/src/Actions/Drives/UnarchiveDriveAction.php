@@ -13,7 +13,7 @@ use Vaulter\Models\Drive\Drive;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Drive\DriveStoreRepository;
 
-/** archived → active (PLAN2.D37). */
+/** archived → active. */
 final readonly class UnarchiveDriveAction
 {
     public function __construct(private VaulterDatabase $database, private DriveStoreRepository $drives, private EventRecorder $recorder) {}

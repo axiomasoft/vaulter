@@ -16,7 +16,7 @@ use Vaulter\ValueObjects\Events\EventSubject;
 use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
- * A per-node ACL grant was created or updated (§2.6 / H.2). Host listeners receive it
+ * A per-node ACL grant was created or updated. Host listeners receive it
  * after the grant transaction commits.
  */
 final readonly class NodeGrantCreated extends DomainEvent

@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Translation\PotentiallyTranslatedString;
 
 /**
- * A grant subject_type must resolve to a REAL host model (master plan §2.6 / H.2):
+ * A grant subject_type must resolve to a REAL host model:
  * either a registered morph alias (user|role|team / a host alias) or — when the host
  * does not enforce a morph map — a concrete Eloquent model FQCN. An arbitrary or
  * typo'd string is rejected here so it can never be written into v_node_grants: a

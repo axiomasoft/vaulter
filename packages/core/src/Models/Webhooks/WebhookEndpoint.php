@@ -16,7 +16,7 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 
 /**
  * A subscriber endpoint receiving signed webhook deliveries for the events it is
- * subscribed to (master plan §2.11 / D14 / M3b). signing_secret is generated at
+ * subscribed to. signing_secret is generated at
  * registration and shown to the owner exactly once; the deliveries are signed with it
  * (Standard Webhooks, HMAC-SHA256 over its whsec_ key). After a rotation the previous
  * secret keeps signing until previous_secret_expires_at. failing_since marks the start
@@ -54,8 +54,8 @@ class WebhookEndpoint extends Model
     use ResolvesVaulterConnection;
 
     /**
-     * Closed allow-list (F-P1.7-04): NEVER the signing secrets (the HMAC keys,
-     * F-P1.7-02) nor the failure/disable bookkeeping — all server-only. The
+     * Closed allow-list: NEVER the signing secrets (the HMAC keys,
+     * ) nor the failure/disable bookkeeping — all server-only. The
      * sole writer, WebhookEndpointStoreRepository, uses forceFill() exclusively
      * and is unaffected by this list.
      *
@@ -132,7 +132,7 @@ class WebhookEndpoint extends Model
     {
         return [
             'events' => 'array',
-            // Encrypted at rest (F-P1.7-02): a DB dump/replica leak must not hand an
+            // Encrypted at rest: a DB dump/replica leak must not hand an
             // attacker the HMAC keys to forge signed deliveries. Laravel encrypts with
             // APP_KEY on write and decrypts transparently on read (WebhookSigner sees
             // the plaintext); the column is text-typed to hold the longer ciphertext.

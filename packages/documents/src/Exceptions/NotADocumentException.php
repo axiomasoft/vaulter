@@ -11,7 +11,7 @@ use Vaulter\Support\Identity;
 
 /**
  * A document content/version operation targeted a node that is not kind=document
- * (§2.5 / M4a). A folder/file/shortcut has no document aggregate, so the operation
+ * . A folder/file/shortcut has no document aggregate, so the operation
  * is rejected rather than silently writing an orphan revision.
  */
 final class NotADocumentException extends VaulterException implements ProblemException

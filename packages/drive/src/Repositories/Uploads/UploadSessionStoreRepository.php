@@ -13,7 +13,7 @@ use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 
 /**
- * Write-side row work for v_upload_sessions (§2.8 / M3a). Bare create + the
+ * Write-side row work for v_upload_sessions. Bare create + the
  * lifecycle transitions (status, received_bytes, assembled_blob_id). It opens NO
  * transactions — the UploadSessionManager / CommitUploadAction wrap it — and makes
  * no business decision: received_bytes is advanced from the bytes the caller already
@@ -31,7 +31,7 @@ final class UploadSessionStoreRepository
      */
     public function create(array $attributes): UploadSession
     {
-        // forceFill (P1.4/F-P1.8-02): $attributes is a server-built literal array
+        // forceFill: $attributes is a server-built literal array
         // from UploadSessionManager::initiate, never raw request input.
         $model = $this->driveConfig->model('upload_session');
         $session = new $model;
@@ -45,7 +45,7 @@ final class UploadSessionStoreRepository
 
     /**
      * Take the per-session lock as the FIRST statement of the tus PATCH transaction
-     * and return the fresh, locked row (§2.8 / N3 / F-P1.4-01). The lock is held for
+     * and return the fresh, locked row (N3 /). The lock is held for
      * the whole "read offset → append → advance received_bytes" window so two
      * concurrent PATCH can never both read the same offset and clobber each other's
      * bytes. Its received_bytes/status are the authoritative values the handler must
@@ -55,14 +55,14 @@ final class UploadSessionStoreRepository
      * The lock is NON-BLOCKING on every engine that has one, because "I could not take
      * the lock" is a first-class ANSWER here, not a delay to sit out: a PATCH turns it
      * into an immediate 409 instead of piling up blocked requests behind a retry storm
-     * (§N3), and the sweeper turns it into "skip, this session is alive" (R-02).
+     * (§N3), and the sweeper turns it into "skip, this session is alive".
      *
      *  - pgsql : pg_try_advisory_xact_lock keyed by upload_id (the same advisory-lock
      *            seam BlobStore uses, in its try_ form). Releases at COMMIT/ROLLBACK.
      *  - mysql : SELECT … FOR UPDATE NOWAIT on the row (MySQL 8 / MariaDB 10.3, the
      *            engines the compatibility guide declares). A plain blocking
      *            lockForUpdate() here silently broke the contract above on MySQL alone
-     *            (VLT-REMED P5.2): the sweeper never got its UploadConflictException, it
+     * the sweeper never got its UploadConflictException, it
      *            WAITED on the PATCH's row lock instead and, at innodb_lock_wait_timeout,
      *            threw a raw QueryException — which SweepUploadsCommand does not catch, so
      *            one live upload aborted the whole scheduled sweep and left every remaining
@@ -72,13 +72,13 @@ final class UploadSessionStoreRepository
      *            critical section, so the fresh read alone is correct.
      *
      * The same seam is taken by every OTHER actor that touches those staged bytes, which is
-     * the whole point: the sweeper/abort path (UploadSessionManager::expire / abort, R-02)
-     * and the commit path (UploadSessionManager::commitAssembled, R-11 — an Assembled
+     * the whole point: the sweeper/abort path (UploadSessionManager::expire / abort)
+     * and the commit path (UploadSessionManager::commitAssembled, — an Assembled
      * session is reclaimable, so streaming its bytes into BlobStore must exclude the sweeper
      * exactly as a PATCH does). Reclaiming a session's staged bytes, appending to them and
      * committing them are ONE critical section; none of the three can interleave.
      *
-     * The pgsql key is 64-bit (`hashtextextended`, R-09): the 32-bit `hashtext` shares
+     * The pgsql key is 64-bit (`hashtextextended`): the 32-bit `hashtext` shares
      * a key between two DIFFERENT upload_ids often enough to matter (birthday bound over
      * int4), and a collision there means a PATCH on session A is refused with a bogus 409
      * because an unrelated session B holds the lock.
@@ -152,7 +152,7 @@ final class UploadSessionStoreRepository
     }
 
     /**
-     * Move the session to a new lifecycle status (§2.8). The legal transition is the
+     * Move the session to a new lifecycle status. The legal transition is the
      * caller's responsibility (the manager guards it via UploadStatus::canTransitionTo).
      */
     public function transition(UploadSession $session, UploadStatus $status): UploadSession
@@ -164,11 +164,11 @@ final class UploadSessionStoreRepository
 
     /**
      * Advance the authoritative server-side received_bytes offset after a tus PATCH
-     * chunk has been appended (§2.8). The session flips to Uploading on the first
+     * chunk has been appended. The session flips to Uploading on the first
      * write. The offset is SET (not incremented) from the staged temp's new length,
      * so a re-sent identical chunk is idempotent.
      *
-     * COMPARE-AND-SET on the status (VLT-REMED P5.2 / R-08): the write only lands while
+     * COMPARE-AND-SET on the status: the write only lands while
      * the session is still OPEN. The previous unconditional `forceFill(status =>
      * Uploading)` could RESURRECT a session another actor had just moved to a terminal
      * state (Expired by the sweeper, Aborted by the client) — the row went back to
@@ -197,11 +197,11 @@ final class UploadSessionStoreRepository
 
     /**
      * Stamp the assembled blob id + flip to Committed once the assembled bytes have
-     * gone through BlobStore.commit (§2.8 / H.3). The single writer of
+     * gone through BlobStore.commit. The single writer of
      * assembled_blob_id.
      *
-     * COMPARE-AND-SET on Assembled (VLT-REMED P5.2 / R-11) — the last writer that was still
-     * a plain forceFill after R-08 gave one to advanceReceived(). It closes the same
+     * COMPARE-AND-SET on Assembled — the last writer that was still
+     * a plain forceFill after gave one to advanceReceived(). It closes the same
      * resurrection hole on the OTHER end of the lifecycle: `scopeSweepable` includes an
      * Assembled session past its TTL, so a sweeper may reclaim the row (staged bytes
      * discarded, status → Expired) while the commit is streaming those very bytes into

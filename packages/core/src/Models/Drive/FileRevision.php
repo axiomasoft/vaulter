@@ -24,7 +24,7 @@ use Vaulter\Models\Content\ScanObligation;
 use Vaulter\Models\Content\ScanUtcDateTime;
 
 /**
- * An immutable file version (master plan §2.4): a monotonic number per file
+ * An immutable file version: a monotonic number per file
  * pointing at a content-addressed blob (or a chunk manifest). The version ↔ blob
  * edges in v_file_revision_blobs are the GC truth. Swappable via
  * configuration key vaulter.models.file_revision.
@@ -66,7 +66,7 @@ class FileRevision extends Model
     public const UPDATED_AT = null;
 
     /**
-     * Closed allow-list (F-P1.8-02): id/tenant_id/file_id/number/blob_id/
+     * Closed allow-list: id/tenant_id/file_id/number/blob_id/
      * manifest_blob_id/sha256/size_bytes/status/created_by/committed_at
      * are content-addressed or lifecycle columns — every write path that sets
      * them already uses forceFill()/create() with a server-built literal array

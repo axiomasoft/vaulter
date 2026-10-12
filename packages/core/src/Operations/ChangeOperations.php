@@ -31,7 +31,7 @@ use Vaulter\Support\Identity;
 use Vaulter\Tenancy\TenancyBoundary;
 
 /**
- * The change journal of a drive as one reader sees it (PLAN2.D50, D59). A syncing
+ * The change journal of a drive as one reader sees it. A syncing
  * client lists the drive, takes startCursor(), and from then on applies list() pages
  * instead of listing again.
  *

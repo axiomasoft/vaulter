@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Contracts\Observability;
 
 /**
- * SDK-neutral tracing seam (VLT-LOAD P8.9 / §20). Package code depends only on this
+ * SDK-neutral tracing seam. Package code depends only on this
  * contract; the host binds a real adapter. With no backend installed the container
  * resolves {@see NullTraceRecorder}.
  */

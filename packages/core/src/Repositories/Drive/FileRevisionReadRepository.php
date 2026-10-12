@@ -12,7 +12,7 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Tenancy\TenancyBoundary;
 
 /**
- * Read-side lookups over the immutable v_file_revisions (§2.4) for the HTTP layer:
+ * Read-side lookups over the immutable v_file_revisions for the HTTP layer:
  * resolve the head version a file node points at, or a specific historical
  * version by its key — both scoped to the node's own file so a version id from a
  * different file can never be streamed through another node.

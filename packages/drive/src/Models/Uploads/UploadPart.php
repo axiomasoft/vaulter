@@ -11,11 +11,11 @@ use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
 
 /**
- * A single resumable-upload part (master plan §2.8 / D16 / M3a): the normalised
+ * A single resumable-upload part: the normalised
  * record behind an S3-multipart part. The composite primary key
  * (upload_session_id, part_no) IS the S3 re-upload-replaces semantics — a fresh PUT
  * of part N supersedes the prior etag/size. etag is the object-store part etag (kept
- * for the complete-multipart call, NEVER trusted as a content hash, H.3);
+ * for the complete-multipart call, NEVER trusted as a content hash);
  * part_sha256 is the optional server-recomputed per-part digest. Swappable via
  * the configuration key ('vaulter-drive.models.upload_part').
  *
@@ -38,7 +38,7 @@ class UploadPart extends Pivot
     public $timestamps = false;
 
     /**
-     * Fully guarded (F-P1.8-02): the S3-multipart part record. Every write goes
+     * Fully guarded: the S3-multipart part record. Every write goes
      * through UploadPartStoreRepository via the query builder (the connection query builder
      * insert/update), never Eloquent mass-assignment, so this is pure
      * defense-in-depth against a future Eloquent-based write.

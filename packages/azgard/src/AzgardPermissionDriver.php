@@ -21,14 +21,14 @@ use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\Effect;
 
 /**
- * The AzGuard host-role driver (ADR-0007, ADR-0025). It bridges a
+ * The AzGuard host-role driver (docs/adr/0007-pluggable-authorization.md, docs/adr/0025-access-model-v1.md). It bridges a
  * host running AzGuard's per-resource, scoped permission model into Vaulter's
  * composite ACL — WITHOUT vaulter-core depending on azguard/corex. Every AzGuard
  * touch goes through the narrow Vaulter-owned {@see AzgardGuard} seam, so PHPStan
  * stays green with the package absent and the driver references NO concrete
  * AzGuard\* / CoreX\* class.
  *
- * THE COMPOSITE RESOLUTION ORDER (master plan §6 — node-ACL → workspace-scoped role
+ * THE COMPOSITE RESOLUTION ORDER (node-ACL → workspace-scoped role
  * → global), and which lane this driver owns:
  *   1. node-ACL (v_node_grants) — owned by the Vaulter AccessResolver, NOT here;
  *   2. workspace-scoped role — THIS driver's lane: resolve() maps the requested
@@ -37,7 +37,7 @@ use Vaulter\Enums\Access\Effect;
  *      role lane is the WORKSPACE-scoped check; AzGuard's own per-resource
  *      hasScopedPermission lane is reachable through the same seam for a host adapter
  *      that has the node entity, but the contract hands the driver only the workspace
- *      coordinates (H.2 / ADR-0007 node-blind boundary);
+ *      coordinates (docs/adr/0007-pluggable-authorization.md node-blind boundary);
  *   3. global — folded inside AzGuard: a tenant-wide grant satisfies hasPermissionIn in an
  *      inheriting scope, and AzGuard's super-admin is not a separate lane — AzGuard's own
  *      decision allows a super-admin every grant-based permission in the workspace (under
@@ -111,14 +111,14 @@ final class AzgardPermissionDriver implements NonEnumeratingPermissionDriver, Pe
     /**
      * AzGuard answers per-resource checks rather than enumerating the role-subjects a
      * grant row could target, so the subject-set is the actor itself (documented
-     * limitation, master plan §6). A host that addresses v_node_grants rows to AzGuard
+     * limitation, ). A host that addresses v_node_grants rows to AzGuard
      * roles should subclass and append those Subjects; the guard still answers the
      * scoped checks for the actor lane.
      *
      * Because this lane does NOT implement
      * {@see EnumeratesRoleSubjects}, a v_node_grants row
      * addressed to a role/team is inert under it; writing one fails loud
-     * (GrantNodeAccessAction warns, and throws outside production — F-P1.2-01).
+     * (GrantNodeAccessAction warns, and throws outside production).
      *
      * @return list<Subject>
      */
@@ -134,7 +134,7 @@ final class AzgardPermissionDriver implements NonEnumeratingPermissionDriver, Pe
     /**
      * May the actor create nodes in the host workspace? Delegates to AzGuard's
      * workspace-scoped check (hasPermissionIn) with the configured create permission —
-     * the folder/upload create path has no existing node to resolve against (§6).
+     * the folder/upload create path has no existing node to resolve against.
      */
     public function canCreateIn(Authorizable $actor, AccessScope $scope): bool
     {
