@@ -1,0 +1,5 @@
+### Executable documentation recipes (PLAN2.P7.7)
+
+- Added: `scripts/check-doc-snippets.php` — every php/ts/vue/js/bash fence in `docs/{getting-started,guides,extending}` (en and ru) carries a `<!-- recipe | snippet -->` marker and is verified: `recipe` blocks equal a tested region of a package Pest/vitest recipe, `config` keys exist in the package configs, `shell` commands are registered, `signature` blocks name existing contracts and methods, `host` blocks use existing imports, facade methods, drive handle methods, composables, client methods and component props. A ru block must carry the same marker and code as its en twin.
+- Added: recipe tests in `packages/{core,drive,documents,media}/tests/Recipes` and `packages/vue/tests/recipes`.
+- Fixed: guide fragments that described an API that no longer exists (`Vaulter::for()`, `$drive->upload()`, `useDocumentNode`, `useNodeGrants`, `registerEngineComponent`, `AbilitiesDto`, `canCreateInWorkspace`, …) now use the current drive, documents and `@vaulter/vue` API.

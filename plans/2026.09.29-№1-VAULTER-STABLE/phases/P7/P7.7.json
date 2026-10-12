@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P7.7",
   "title": "Исполняемые рецепты docs: области в тестах пакетов и scripts/check-doc-snippets.php",
-  "status": "todo",
+  "status": "in_progress",
   "summary": "Каждый PHP/TS-блок в docs/getting-started|guides|extending (en+ru) маркирован: recipe-блоки побайтно совпадают с областями в Pest/vitest-рецептах пакетов, config/signature/shell — проверяемые категории; scripts/check-doc-snippets.php падает на немаркированном или разошедшемся блоке.",
   "why": "D38, OPUS 12 §8, D69: примеры документации не должны расходиться с API. Риски: рецепты на удалённом API (core DocumentExporter/DocumentContent — mid-audit), тесты-зеркала без поведения.",
   "scope": {
@@ -189,6 +189,14 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-11T13:58:13Z"
+  "result": {
+    "started_at": "2026-10-12T04:32:32Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet-5-5",
+      "effort": "medium",
+      "session": "054d4a6e-1d3d-49ab-a796-b46ec13d6725"
+    }
+  },
+  "updated_at": "2026-10-12T04:32:32Z"
 }
