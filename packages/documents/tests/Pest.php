@@ -47,7 +47,7 @@ uses(CommentsTestCase::class, RefreshDatabase::class)->in('Comment');
 
 // The Documents API (DocumentOperations/CommentOperations) with every guard live:
 // database grants, comments and collaboration ON.
-uses(OperationsTestCase::class, RefreshDatabase::class)->in('Operations');
+uses(OperationsTestCase::class, RefreshDatabase::class)->in('Operations', 'Recipes');
 
 // Document export: registry, authorization, source selection and the file response;
 // the host testing kit (factories, contract suites) runs on the same booted types.

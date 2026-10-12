@@ -11,6 +11,8 @@ uses(TestCase::class, RefreshDatabase::class)->in('Drive', 'Uploads', 'Feature',
 
 uses(TestCase::class)->in('Providers', 'Http', 'Console');
 
+uses(TestCase::class, RefreshDatabase::class)->in('Recipes');
+
 // Панели живут отдельной директорией, потому что им нужен ДРУГОЙ TestCase: панель обязана
 // попасть в конфиг ДО boot'а (ProfileRegistry резолвится в packageBooted с P4.4), а Pest
 // разрешает ровно один базовый TestCase на директорию.
