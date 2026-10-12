@@ -132,6 +132,8 @@ Any Standard Webhooks library verifies Vaulter deliveries — see the
 [official libraries](https://github.com/standard-webhooks/standard-webhooks/tree/main/libraries).
 In PHP, `Vaulter\Webhooks\StandardWebhookVerifier` does it without extra dependencies:
 
+<!-- snippet: host -->
+
 ```php
 use Vaulter\Exceptions\Webhooks\InvalidWebhookSignatureException;
 use Vaulter\Webhooks\StandardWebhookVerifier;

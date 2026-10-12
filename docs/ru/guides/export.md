@@ -15,6 +15,8 @@ outline: deep
 Экспортёр превращает один тип документа в один формат. Реестр находит его по паре
 **(тип документа, формат)**:
 
+<!-- snippet: signature Vaulter\Documents\Contracts\DocumentExporter -->
+
 ```php
 namespace Vaulter\Documents\Contracts;
 
@@ -44,6 +46,8 @@ interface DocumentExporter
 |---|---|---|---|---|
 | `vaulter/html` | `html` | `text/html` | `html` | `vaulter/rich-text`, `vaulter/markdown` |
 | `vaulter/markdown` | `markdown` | `text/markdown` | `md` | `vaulter/rich-text`, `vaulter/markdown` |
+
+<!-- snippet: config -->
 
 ```php
 // config/vaulter-documents.php
@@ -77,6 +81,8 @@ previewer получит `403 permission_denied`. Формат, для кото�
 
 В PHP:
 
+<!-- snippet: host -->
+
 ```php
 $export = Documents::in($drive)->export($node, 'html');           // рабочее состояние
 $export = Documents::in($drive)->export($node, 'html', $revision); // одна ревизия
@@ -101,10 +107,12 @@ HTTP в этом случае файл несёт заголовок `X-Vaulter-
 Если вы кэшируете рендеры, ключ — `(documentId, sourceEpoch, sourceStateVersion | sourceRevisionId,
 ключ экспортёра, формат)`, а доступ проверяйте заново при каждом попадании.
 
+<!-- snippet: host -->
+
 ```ts
 import { useVaulterClient } from '@vaulter/vue'
 
-const file = await useVaulterClient().documentNodes.export(nodeId, 'markdown')
+const file = await useVaulterClient().documents.export(nodeId, 'markdown')
 // → { blob: Blob, filename: 'notes.md', mimeType: 'text/markdown' }
 ```
 
@@ -112,6 +120,8 @@ const file = await useVaulterClient().documentNodes.export(nodeId, 'markdown')
 
 Заготовка: `php artisan vaulter:make:exporter Pdf` (создаёт
 `app/Vaulter/Exporters/PdfExporter.php` и печатает строку для конфига). Или вручную:
+
+<!-- snippet: host -->
 
 ```php
 final class PdfExporter implements DocumentExporter
@@ -138,6 +148,8 @@ final class PdfExporter implements DocumentExporter
 Регистрируйте по имени класса в конфиге (безопасно для config:cache), тегом контейнера
 `vaulter.exporters` или из провайдера:
 
+<!-- snippet: config -->
+
 ```php
 // config/vaulter-documents.php
 'exporters' => [HtmlExporter::class, MarkdownExporter::class, App\Vaulter\Exporters\PdfExporter::class],
@@ -153,6 +165,8 @@ Documents::exporters()->replace('vaulter/html', MyHtmlExporter::class); // за�
 
 ## Генератор
 
+<!-- snippet: shell -->
+
 ```bash
 php artisan vaulter:make:exporter Pdf
 ```
@@ -163,6 +177,8 @@ php artisan vaulter:make:exporter Pdf
 ## Тесты вашего расширения
 
 `ExporterContractTests` проверяет экспортёр на соответствие контракту:
+
+<!-- snippet: host -->
 
 ```php
 use Vaulter\Documents\Testing\Contracts\ExporterContractTests;

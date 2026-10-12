@@ -10,7 +10,7 @@ outline: deep
 файл и список, — а затем Vue-UI сверху.
 
 ::: tip Предусловие
-Установлен `axioma-studio/vaulter-drive` (этот разбор использует `Vaulter::for()`,
+Установлен `axioma-studio/vaulter-drive` (этот разбор использует `Vaulter::drive()`,
 `DriveHandle`, загрузки — всё это функции Drive) и выполнены миграции. Если нет —
 сначала пройдите [Установку](/ru/getting-started/installation) (это две команды).
 :::
@@ -23,6 +23,8 @@ Laravel-приложению **не нужна никакая настройка
 
 К этому возвращаются, только когда нужно, чтобы роли из *вашего* приложения учитывались. Чтобы
 сменить полосу, задайте один ключ конфига:
+
+<!-- snippet: config -->
 
 ```php
 // config/vaulter.php
@@ -38,39 +40,47 @@ Laravel-приложению **не нужна никакая настройка
 
 ## 2. Открыть диск и работать с ним
 
-`Vaulter::for($entity)` находит-или-создаёт хранилище сущности (и его корневую папку) и
-возвращает `DriveHandle` — удобный хэндл для всего диска. Всё ниже — настоящие методы на нём:
+`Vaulter::drive($entity)` находит-или-создаёт диск сущности (и его корневую папку) и
+возвращает `DriveHandle` — хэндл для всего диска; `actingAs($user)` выполняет каждый вызов с
+правами этого пользователя. Всё ниже — настоящие методы на нём:
+
+<!-- recipe: packages/drive/tests/Recipes/DriveRecipeTest.php#quick-start-open -->
 
 ```php
+use Vaulter\Data\Drive\UploadOptions;
+use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Facades\Vaulter;
 
-// $project — любая Eloquent-модель; Vaulter::for() привязывает к ней хранилище.
-$drive = Vaulter::for($project);
+// $project — любая Eloquent-модель; $user — вошедший пользователь, от имени которого работает диск.
+$drive = Vaulter::drive($project)->actingAs($user);
 
 // Создать папку под корнем.
-$reports = $drive->createFolder('Reports');
+$reports = $drive->folders()->create('Reports');
 
-// Загрузить байты — строка, SplFileInfo/UploadedFile, ресурс-поток
-// или PSR-7 StreamInterface. $into по умолчанию — корень.
-$node = $drive->upload(
-    source: request()->file('document'),
-    into: $reports,
+// Загрузить байты — путь, UploadedFile, поток или строка, обёрнутые в UploadSource.
+$node = $drive->files()->upload(
+    UploadSource::fromUploadedFile(request()->file('document')),
+    new UploadOptions(parent: $reports),
 );
 
-// Список прямых детей папки (null = корень).
-$drive->list($reports);   // Illuminate\Database\Eloquent\Collection<Node>
+// Список прямых потомков папки (null = корень).
+$page = $drive->nodes()->children($reports);   // Vaulter\Data\Page из NodeSnapshot
 ```
 
 Это полностью рабочий диск. Несколько остальных методов `DriveHandle`:
 
+<!-- recipe: packages/drive/tests/Recipes/DriveRecipeTest.php#quick-start-methods -->
+
 ```php
-$drive->rename($node, 'Q3 report.pdf');
-$drive->move($node, into: $reports);
-$drive->copy($node, into: $reports, name: 'Q3 report (copy).pdf');
-$drive->trash($node);           // мягкое удаление в корзину (восстановимо)
-$drive->restore($node);
-$drive->forceDelete($node);     // безвозвратно
-$drive->uploadVersion($node, source: $newBytes); // новая версия на файл
+use Vaulter\Data\Drive\CopyOptions;
+use Vaulter\Data\Drive\UploadSource;
+
+$drive->nodes()->rename($node, 'Q3 report.pdf');
+$drive->nodes()->move($node, $reports);
+$drive->nodes()->copy($node, $reports, new CopyOptions(name: 'Q3 report (copy).pdf'));
+$drive->nodes()->trash($node);                         // мягкая корзина (восстановимо)
+$drive->trash()->restore($node);
+$drive->files()->addRevision($node, UploadSource::fromString($newBytes, 'Q3 report.pdf')); // новая ревизия файла
 ```
 
 ::: details Куда попадают загрузки?
@@ -84,13 +94,15 @@ $drive->uploadVersion($node, source: $newBytes); // новая версия на
 Drive REST-маршруты уже смонтированы под `api/vaulter` (`routes.prefix`). Вашему приложению
 нужно лишь передать id хранилища на фронтенд — обычно из сущности:
 
+<!-- snippet: host -->
+
 ```php
 // routes/web.php (или ответ Inertia/контроллера)
 use Vaulter\Facades\Vaulter;
 
 Route::get('/projects/{project}/drive', function (App\Models\Project $project) {
     return inertia('Drive', [
-        'storageId' => Vaulter::for($project)->storage()->getKey(),
+        'driveId' => Vaulter::drive($project)->snapshot()->id,
     ]);
 });
 ```
@@ -111,15 +123,17 @@ POST   api/vaulter/v1/nodes/{node}/trash         в корзину (If-Match)
 ## 4. Встроить Vue-UI
 
 С [установленным плагином](/ru/getting-started/installation#_2-фронтенд-—-vue-пакет) встройте компонент
-файлового менеджера и передайте ему `storageId`:
+файлового менеджера и передайте ему `driveId`:
 
 ::: code-group
+
+<!-- snippet: host -->
 
 ```vue [VaulterDrive.vue]
 <script setup lang="ts">
 import { VaulterDrive } from '@vaulter/vue'
 
-defineProps<{ storageId: string }>()
+defineProps<{ driveId: string }>()
 
 function openNode(node: { id: string; kind: string }) {
   // открыть/просмотреть/редактировать узел в вашем приложении
@@ -127,16 +141,18 @@ function openNode(node: { id: string; kind: string }) {
 </script>
 
 <template>
-  <VaulterDrive :storage-id="storageId" @open-node="openNode" />
+  <VaulterDrive :drive-id="driveId" @open-node="openNode" />
 </template>
 ```
+
+<!-- snippet: host -->
 
 ```ts [useNodes (уровнем ниже)]
 import { useNodes } from '@vaulter/vue'
 
 // Composable за VaulterDrive — соберите свой UI на нём.
 const { nodes, parentId, loading, error, refresh, navigate, createFolder, rename, move, trash } =
-  useNodes(storageId)
+  useNodes(driveId)
 
 await createFolder('Reports')
 await refresh()

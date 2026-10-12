@@ -12,7 +12,7 @@ outline: deep
 такой жизненный цикл и команду `vaulter:trash:purge`, которая применяет политику хранения.
 
 ::: tip Два вида удаления
-`trash()` обратимо (выставляет `trashed_at`). `forceDelete()` безвозвратно и
+`trash()` обратимо (выставляет `trashed_at`). `trash()->purge()` безвозвратно и
 отвязывает байты. В коде приложения везде предпочитайте `trash()` и позвольте
 плановой чистке применить вашу политику хранения — см. [Drive · forceDelete](/ru/concepts/nodes-and-revisions#forcedelete).
 :::
@@ -40,12 +40,14 @@ outline: deep
 
 ### Отправка в корзину
 
+<!-- recipe: packages/drive/tests/Recipes/DriveRecipeTest.php#trash-trash -->
+
 ```php
 use Vaulter\Facades\Vaulter;
 
-$drive = Vaulter::for($project);
+$drive = Vaulter::drive($project)->actingAs($user);
 
-$drive->trash($node);          // мягкое удаление — диспатчит NodeTrashed
+$drive->nodes()->trash($node);          // мягкое удаление — диспатчит NodeTrashed
 ```
 
 Отправка папки в корзину отправляет туда всё её поддерево. Узел исчезает из `list()`
@@ -53,8 +55,10 @@ $drive->trash($node);          // мягкое удаление — диспат
 
 ### Восстановление
 
+<!-- recipe: packages/drive/tests/Recipes/DriveRecipeTest.php#trash-restore -->
+
 ```php
-$drive->restore($node);        // обратно в живые — диспатчит NodeRestored
+$drive->trash()->restore($node);        // обратно в живые — диспатчит NodeRestored
 ```
 
 Узел возвращается в папку, из которой был удалён. Если её больше нет или она сама в корзине,
@@ -62,7 +66,11 @@ $drive->restore($node);        // обратно в живые — диспат�
 (409 `restore_destination_required`). Передайте назначение явно — оно проверяется как создание
 (`Create` на папке, активная папка диска):
 
+<!-- recipe: packages/drive/tests/Recipes/DriveRecipeTest.php#trash-restore-destination -->
+
 ```php
+use Vaulter\Data\Drive\RestoreOptions;
+
 $drive->trash()->restore($node, new RestoreOptions(destination: $folder));
 ```
 
@@ -72,21 +80,25 @@ $drive->trash()->restore($node, new RestoreOptions(destination: $folder));
 
 ### Безвозвратное удаление
 
+<!-- recipe: packages/drive/tests/Recipes/DriveRecipeTest.php#trash-purge -->
+
 ```php
-$drive->forceDelete($node);    // безвозвратно — диспатчит NodePurged
+$drive->trash()->purge($node);          // безвозвратно — диспатчит NodePurged
 ```
 
 Безвозвратное удаление отвязывает каждое ребро версия↔блоб в поддереве (байты
 становятся кандидатами на [GC](/ru/guides/recipes)) и освобождает квоту хранилища.
 
 ::: danger Необратимо
-`forceDelete()` нельзя отменить. «Восстановления после чистки» не существует.
+`trash()->purge()` нельзя отменить. «Восстановления после чистки» не существует.
 :::
 
 ## Хранение
 
 Сколько узел в корзине живёт, прежде чем станет кандидатом на чистку, задаётся
 параметром `config('vaulter-drive.trash.retention_days')`:
+
+<!-- snippet: config -->
 
 ```php
 // config/vaulter-drive.php
@@ -105,6 +117,8 @@ $drive->forceDelete($node);    // безвозвратно — диспатчи�
 Безвозвратно удалить узлы в корзине, у которых истекло окно хранения, можно
 Artisan-командой **`vaulter:trash:purge`**:
 
+<!-- snippet: shell -->
+
 ```bash
 php artisan vaulter:trash:purge
 ```
@@ -122,6 +136,8 @@ php artisan vaulter:trash:purge
 Опция `--days` переопределяет настроенное хранение для одного запуска (с нижней
 границей 0):
 
+<!-- snippet: shell -->
+
 ```bash
 # Вычистить всё, что попало в корзину более 7 дней назад, игнорируя значение из конфига.
 php artisan vaulter:trash:purge --days=7
@@ -135,11 +151,15 @@ php artisan vaulter:trash:purge --days=0
 Запускайте чистку по расписанию, чтобы хранение применялось автоматически:
 
 ::: code-group
+<!-- snippet: host -->
+
 ```php [routes/console.php]
 use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('vaulter:trash:purge')->daily();
 ```
+
+<!-- snippet: host -->
 
 ```php [Console Kernel]
 protected function schedule(Schedule $schedule): void
@@ -175,13 +195,15 @@ DELETE /api/vaulter/v1/nodes/{node}            If-Match: <etag из списка
 
 В браузере `useNodes` даёт представление корзины и восстановление:
 
+<!-- recipe: packages/vue/tests/recipes/trash.recipe.test.ts#vue-trash-use-nodes -->
+
 ```ts
 import { useNodes } from '@vaulter/vue'
 
-const { trashed, restore } = useNodes(storageId)
+const { restore, purge } = useNodes(driveId)
 
-await trashed()             // листинг корзины
-await restore(nodeId)       // вернуть узел обратно
+await restore(trashedNode)  // вернуть узел обратно
+await purge(trashedNode)    // удалить навсегда
 ```
 
 Полный контракт маршрута — параметры, форма ответа и права-гейты `Restore`/`Delete` —
@@ -189,7 +211,7 @@ await restore(nodeId)       // вернуть узел обратно
 
 ## См. также
 
-- [Drive](/ru/concepts/nodes-and-revisions) — `trash()` / `restore()` / `forceDelete()` на хэндле
+- [Drive](/ru/concepts/nodes-and-revisions) — `trash()` / `restore()` / `trash()->purge()` на хэндле
 - [Справочник REST API](/ru/reference/rest-api#drive) — маршруты корзины и восстановления
 - [Blob GC](/ru/guides/recipes) — возврат байтов, которые отвязывает чистка
 
@@ -208,11 +230,13 @@ GET /api/vaulter/v1/drives/{drive}/search?q=roadmap
 `422`), без `total` и номеров страниц: передавайте `cursor` из предыдущего ответа, пока
 `next_cursor` не станет `null`.
 
+<!-- snippet: host -->
+
 ```ts
 import { useVaulterClient } from '@vaulter/vue'
 
 const client = useVaulterClient()
-const page = await client.nodes.search(storageId, 'roadmap')
+const page = await client.nodes.search(driveId, 'roadmap')
 ```
 
 ::: tip Масштабирование поиска
@@ -237,13 +261,15 @@ read-репозиторий.
 | DELETE | `/nodes/{node}` | `delete` (только узлы в корзине) | да |
 | DELETE | `/drives/{drive}/trash` | `delete` на каждом корне | — |
 
+<!-- recipe: packages/vue/tests/recipes/trash.recipe.test.ts#vue-trash-client -->
+
 ```ts
 const client = useVaulterClient()
 
-const trashed = await client.nodes.trashed(storageId)
-await client.nodes.trash(nodeId)        // обратимое мягкое удаление
-await client.nodes.restore(nodeId)      // вернуть обратно
-await client.nodes.forceDelete(nodeId)  // окончательно
+const trashed = await client.trash.list(driveId)
+await client.nodes.trash(node.id, { etag: node.etag })                // обратимое мягкое удаление
+await client.nodes.restore(node.id, { etag: trashedNode.etag })       // вернуть обратно
+await client.nodes.purge(node.id, { etag: trashedNode.etag })         // окончательно
 ```
 
 И обратимое удаление, и окончательная вычистка записываются в
@@ -262,11 +288,13 @@ await client.nodes.forceDelete(nodeId)  // окончательно
 отклоняется; `copy` клонирует узел (а для папки — её поддерево) в назначение и при совпадении
 имени берёт свободное.
 
+<!-- recipe: packages/vue/tests/recipes/trash.recipe.test.ts#vue-trash-move-copy -->
+
 ```ts
 const client = useVaulterClient()
 
-await client.nodes.move(nodeId, folderId)   // или move(nodeId, null), чтобы вынести из папки
-const copy = await client.nodes.copy(nodeId, folderId)
+await client.nodes.move(node.id, folderId, { etag: node.etag })   // или move(node.id, null, …), чтобы вынести из папки
+const copy = await client.nodes.copy(node.id, folderId)
 ```
 
 Для листинга и операций с папками на реактивном состоянии используйте

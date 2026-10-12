@@ -1,6 +1,6 @@
 ---
 title: Grants
-description: Per-node ACL grants — subject, role, scope and expiry — the GrantNodeAccess / RevokeNodeAccess actions, the REST surface, events, and the Vue useNodeGrants composable.
+description: Per-node ACL grants — subject, role, scope and expiry — the GrantNodeAccess / RevokeNodeAccess actions, the REST surface, events, and the Vue useGrants composable.
 outline: deep
 ---
 
@@ -46,6 +46,8 @@ an actor into the list of subjects whose grants apply (see
 [`subjectsFor`](/extending/permission-drivers#the-permissiondriver-contract)); Vaulter builds
 `WHERE (subject_type, subject_id) IN (...)` from that list.
 
+<!-- snippet: host -->
+
 ```php
 use Vaulter\Access\ValueObjects\Subject;
 
@@ -88,6 +90,8 @@ grant. It is **idempotent** on the grant-unique key: re-granting the same subjec
 scope updates the role and expiry. The write runs in a transaction and emits
 `NodeGrantCreated`.
 
+<!-- snippet: host -->
+
 ```php
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\Subject;
@@ -116,6 +120,8 @@ only after doing the same.
 To keep a subfolder away from a team that has access higher up, stop inheritance on it and
 grant the people who need it directly:
 
+<!-- snippet: host -->
+
 ```php
 $access = Vaulter::drive($drive)->actingAs($owner)->access();
 
@@ -135,6 +141,8 @@ never broader and never longer-lived than what it inherits.
 on a node — both scopes — and returns the count removed. It emits
 `NodeGrantRevoked` only when something was actually revoked (an empty revoke is a silent
 no-op). Transactional.
+
+<!-- snippet: host -->
 
 ```php
 use Vaulter\Actions\Access\RevokeNodeAccessAction;
@@ -174,6 +182,8 @@ the candidate-superset-vs-exact semantics and the open-driver behaviour.
 :::
 
 ::: code-group
+<!-- snippet: shell -->
+
 ```bash [grant]
 curl -X POST https://app.test/api/vaulter/v1/nodes/01J.../grants \
   -H 'Authorization: Bearer <token>' \
@@ -185,6 +195,8 @@ curl -X POST https://app.test/api/vaulter/v1/nodes/01J.../grants \
     "expires_at": "2026-12-31T23:59:59Z"
   }'
 ```
+
+<!-- snippet: shell -->
 
 ```bash [revoke]
 curl -X DELETE https://app.test/api/vaulter/v1/nodes/01J.../grants/01J... \
@@ -232,6 +244,8 @@ transaction commits, so a listener never sees an uncommitted grant.
 
 A downstream listener can bump an `acl_version` cache or record activity:
 
+<!-- snippet: host -->
+
 ```php
 use Vaulter\Events\Access\NodeGrantCreated;
 
@@ -240,33 +254,33 @@ Event::listen(function (NodeGrantCreated $event): void {
 });
 ```
 
-## On the client — useNodeGrants
+## On the client — useGrants
 
-`@vaulter/vue` ships `useNodeGrants(nodeId)` for reactive management of a node's grants,
+`@vaulter/vue` ships `useGrants(nodeId)` for reactive management of a node's grants,
 backed by the injected client's `grants` namespace
 (`client.grants.list` / `grant` / `revoke`).
 
+<!-- snippet: host -->
+
 ```vue
 <script setup lang="ts">
-import { useNodeGrants } from '@vaulter/vue'
+import { useGrants } from '@vaulter/vue'
 
-const { grants, loading, list, grant, revoke } = useNodeGrants(nodeId)
+const { grants, loading, list, grant, revoke } = useGrants(nodeId)
 
 await list()
 
-await grant({
-  subjectType: 'user',
-  subjectId: 42,
+const created = await grant({
+  subject: { type: 'user', id: 42 },
   role: 'writer',
   scope: 'subtree',
 })
 
-await revoke({ subjectType: 'user', subjectId: 42 })
+await revoke(created.id)
 </script>
 ```
 
-A `grant()` prepends to the reactive list; a `revoke()` drops every grant for that
-subject. The `VaulterNodeGrantsPanel` component wraps this for a drop-in grants UI — see
+A `grant()` prepends to the reactive list; `revoke(grantId)` removes that one grant. The `VaulterGrantsPanel` component wraps this for a drop-in grants UI — see
 [Vue components](/guides/vue).
 
 ## See also

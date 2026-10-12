@@ -110,6 +110,8 @@ v_document_revisions(id, document_id)` с `ON DELETE RESTRICT` гарантир�
 Экспорту нужен `Download`, а не `View`: previewer читает документ в приложении, но не может вынести
 копию.
 
+<!-- recipe: packages/documents/tests/Recipes/DocumentsRecipeTest.php#documents-operations -->
+
 ```php
 use Vaulter\Documents\Data\Comments\AddCommentInput;
 use Vaulter\Documents\Facades\Documents;
@@ -122,7 +124,7 @@ $node = $documents->create('Design notes', content: ['type' => 'doc', 'content' 
 $doc = $documents->content($node->id);            // DocumentSnapshot: content, stateVersion, epoch, …
 $doc = $documents->update($node->id, $tipTapDoc, expectedStateVersion: $doc->stateVersion);
 $named = $documents->snapshot($node->id, 'Before review', keepForever: true);
-$html = $documents->export($node->id, 'html')->content;
+$html = $documents->export($node->id, 'html')->bytes;
 
 Documents::comments($drive)->add($node->id, new AddCommentInput('Looks good', anchor: ['from' => 1, 'to' => 4]));
 ```
@@ -143,6 +145,8 @@ spreadsheet или неустановленного типа), `revision`
 
 ::: code-group
 
+<!-- recipe: packages/documents/tests/Recipes/DocumentsRecipeTest.php#documents-create -->
+
 ```php [PHP]
 use Vaulter\Data\Drive\CreateFolderOptions;
 use Vaulter\Documents\Facades\Documents;
@@ -152,7 +156,7 @@ $node = Documents::in($drive)->create(
     name: 'Design notes',
     type: 'vaulter/rich-text',              // or 'vaulter/markdown', 'vaulter/spreadsheet'
     content: [
-        'type'    => 'doc',
+        'type' => 'doc',
         'content' => [
             ['type' => 'paragraph', 'content' => [
                 ['type' => 'text', 'text' => 'Hello.'],
@@ -163,6 +167,8 @@ $node = Documents::in($drive)->create(
     options: new CreateFolderOptions(OnNameConflict::Rename),
 );
 ```
+
+<!-- snippet: shell -->
 
 ```bash [HTTP]
 # POST {prefix}/v1/drives/{drive}/documents
@@ -177,15 +183,17 @@ curl -X POST https://app.test/api/vaulter/v1/drives/42/documents \
 # → 201, the Node of the new kind=document node (with its ETag)
 ```
 
+<!-- recipe: packages/vue/tests/recipes/documents.recipe.test.ts#vue-documents-create -->
+
 ```ts [Vue — client]
 import { useVaulterClient } from '@vaulter/vue'
 
 const client = useVaulterClient()
 
-const node = await client.documentNodes.createNode(storageId, {
+const node = await client.documents.create(driveId, {
   name: 'Design notes',
-  parentId: null,             // null = storage root
-  format: 'richtext',
+  parentId: null,             // null = drive root
+  type: 'vaulter/rich-text',
   content: { type: 'doc', content: [] },
 })
 ```
@@ -216,15 +224,19 @@ const node = await client.documentNodes.createNode(storageId, {
 
 ::: code-group
 
-```ts [Vue — composable]
-import { useDocumentNode } from '@vaulter/vue'
+<!-- recipe: packages/vue/tests/recipes/documents.recipe.test.ts#vue-documents-read -->
 
-const { content, head, load, loading } = useDocumentNode(nodeId)
+```ts [Vue — composable]
+import { useDocument } from '@vaulter/vue'
+
+const { content, head, load, loading } = useDocument(nodeId)
 
 await load()
 // content.value → TipTapDocument | null
-// head.value    → the head DocumentVersion (its `content` is populated)
+// head.value    → the head DocumentContent (its `etag` goes into the next save)
 ```
+
+<!-- snippet: shell -->
 
 ```bash [HTTP]
 # GET {prefix}/v1/documents/{node}/content
@@ -268,12 +280,17 @@ curl -i https://app.test/api/vaulter/v1/documents/77/content
 
 ::: code-group
 
-```ts [Vue — дебаунс-автосохранение]
-import { useDocumentNode } from '@vaulter/vue'
+<!-- recipe: packages/vue/tests/recipes/documents.recipe.test.ts#vue-documents-autosave -->
 
-const { content, setContent, flush, save, saving } = useDocumentNode(nodeId, {
+```ts [Vue — дебаунс-автосохранение]
+import { useDocument } from '@vaulter/vue'
+
+const { load, setContent, flush, save } = useDocument(nodeId, {
   debounceMs: 800,            // the CLIENT-side debounce before a save is sent
 })
+
+// Сначала загрузить: сохранение несёт ETag того контента, на котором основано.
+await load()
 
 // As the editor emits changes, schedule a debounced save:
 setContent(nextTipTapDoc)
@@ -285,6 +302,8 @@ await flush()
 await save()
 ```
 
+<!-- snippet: shell -->
+
 ```bash [HTTP]
 # PUT {prefix}/v1/documents/{node}/content  — 200; If-Match is required
 curl -X PUT https://app.test/api/vaulter/v1/documents/77/content \
@@ -292,6 +311,8 @@ curl -X PUT https://app.test/api/vaulter/v1/documents/77/content \
   -H 'If-Match: "77.0.3"' \
   -d '{ "content": { "type": "doc", "content": [] } }'
 ```
+
+<!-- snippet: host -->
 
 ```php [PHP]
 use Vaulter\Documents\Facades\Documents;
@@ -314,7 +335,7 @@ PUT возвращает `200` с новым рабочим состоянием
 этим сохранением. `actorId` события — действующий пользователь (null для системы).
 
 ::: tip Клиентский дебаунс и интервал чекпоинтов
-`useDocumentNode({ debounceMs })` — **клиентский** таймер перед отправкой сохранения (по умолчанию
+`useDocument({ debounceMs })` — **клиентский** таймер перед отправкой сохранения (по умолчанию
 800 мс). `revisions.checkpoint_interval_seconds` — **серверный** интервал между
 автосохранёнными чекпоинтами (по умолчанию 300 с). Ключ 0.2 `revisions.autosave_debounce_seconds`
 устарел и игнорируется: он перезаписывал голову на месте, чего чекпоинты никогда не делают.
@@ -326,12 +347,18 @@ PUT возвращает `200` с новым рабочим состоянием
 
 ::: code-group
 
+<!-- recipe: packages/vue/tests/recipes/documents.recipe.test.ts#vue-documents-snapshot -->
+
 ```ts [Vue]
-const { createNamedVersion } = useDocumentNode(nodeId)
+import { useRevisions } from '@vaulter/vue'
+
+const { snapshot } = useRevisions(nodeId)
 
 // keepForever = true pins it out of the prune window
-const version = await createNamedVersion('Before client review', true)
+const version = await snapshot({ label: 'Before client review', keepForever: true })
 ```
+
+<!-- snippet: shell -->
 
 ```bash [HTTP]
 # POST {prefix}/v1/documents/{node}/revisions  → 201
@@ -339,6 +366,8 @@ curl -X POST https://app.test/api/vaulter/v1/documents/77/revisions \
   -H 'Content-Type: application/json' \
   -d '{ "label": "Before client review", "keep_forever": true }'
 ```
+
+<!-- snippet: host -->
 
 ```php [PHP]
 $revision = Documents::in($drive)->snapshot($node->id, 'Before client review', keepForever: true);
@@ -360,17 +389,25 @@ $revision = Documents::in($drive)->snapshot($node->id, 'Before client review', k
 
 ::: code-group
 
-```ts [Vue]
-const { versions, loadVersions } = useDocumentNode(nodeId)
+<!-- recipe: packages/vue/tests/recipes/documents.recipe.test.ts#vue-documents-revisions -->
 
-await loadVersions()
-// versions.value → DocumentVersion[] (newest version_no first; `content` omitted)
+```ts [Vue]
+import { useRevisions } from '@vaulter/vue'
+
+const { revisions, list } = useRevisions(nodeId)
+
+await list()
+// revisions.value → DocumentRevision[] (newest first; `content` omitted)
 ```
+
+<!-- snippet: shell -->
 
 ```bash [HTTP — cursor-paginated]
 # GET {prefix}/v1/documents/{node}/revisions?per_page=50
 curl 'https://app.test/api/vaulter/v1/documents/77/revisions?per_page=50'
 ```
+
+<!-- recipe: packages/documents/tests/Recipes/DocumentsRecipeTest.php#documents-revisions -->
 
 ```php [PHP]
 use Vaulter\Data\Drive\ListOptions;
@@ -384,6 +421,8 @@ $next = Documents::in($drive)->revisions($node->id, new ListOptions(perPage: 50,
 Листинг пагинируется курсором (`per_page` зажат в диапазон 1–200, по умолчанию 50), сначала
 самые свежие (по времени создания), и опускает `content`. Каждый элемент — `DocumentRevision`; id —
 строки:
+
+<!-- snippet: host -->
 
 ```ts
 interface DocumentRevision {
@@ -409,18 +448,28 @@ interface DocumentRevision {
 
 ::: code-group
 
-```ts [Vue]
-const { restoreVersion } = useDocumentNode(nodeId)
+<!-- recipe: packages/vue/tests/recipes/documents.recipe.test.ts#vue-documents-restore -->
 
-const restored = await restoreVersion(versionId)
+```ts [Vue]
+import { useDocument, useRevisions } from '@vaulter/vue'
+
+const { head, load } = useDocument(nodeId)
+const { restore } = useRevisions(nodeId)
+
+await load()
+const restored = await restore(versionId, { etag: head.value!.etag! })
 // the new head is a copy of versionId, labelled "Restored from #N"
 ```
+
+<!-- snippet: shell -->
 
 ```bash [HTTP]
 # POST {prefix}/v1/documents/{node}/revisions/{revision}/restore  → 200; If-Match is required
 curl -X POST https://app.test/api/vaulter/v1/documents/77/revisions/12/restore \
   -H 'If-Match: "77.0.3"'
 ```
+
+<!-- snippet: host -->
 
 ```php [PHP]
 $doc = Documents::in($drive)->restore($node->id, '12', expectedStateVersion: $doc->stateVersion);
@@ -443,6 +492,8 @@ $doc = Documents::in($drive)->restore($node->id, '12', expectedStateVersion: $do
 История ограничена `config('vaulter-documents.revisions.limit')` — числом самых свежих сохраняемых
 чекпоинтов (`0` = без лимита). Прунинг выполняется **внутри** транзакции записи сразу после
 каждого чекпоинта (`DocumentRevisionStoreRepository::prune`).
+
+<!-- snippet: config -->
 
 ```php
 // config/vaulter-documents.php

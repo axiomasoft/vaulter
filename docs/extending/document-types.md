@@ -33,6 +33,8 @@ document" exists.
 Rich text and markdown are registered by default. The spreadsheet type is registered only
 when you list it:
 
+<!-- snippet: config -->
+
 ```php
 // config/vaulter-documents.php
 'types' => [
@@ -50,6 +52,8 @@ be registered, or the application refuses to boot.
 
 Generate a class:
 
+<!-- snippet: shell -->
+
 ```bash
 php artisan vaulter:make:document-type Kanban
 ```
@@ -58,6 +62,8 @@ This writes `app/Vaulter/DocumentTypes/KanbanDocumentType.php` with the key `app
 opaque JSON codec and schema version 1. Registration is up to you — add the class to
 `vaulter-documents.types`, tag it in a service provider, or register it before the application
 has booted:
+
+<!-- snippet: config -->
 
 ```php
 // config/vaulter-documents.php
@@ -69,6 +75,8 @@ $this->app->make(\Vaulter\Documents\Types\DocumentTypeRegistry::class)->register
 ```
 
 A type implements `Vaulter\Documents\Contracts\DocumentType`:
+
+<!-- snippet: signature Vaulter\Documents\Contracts\DocumentType Vaulter\Documents\Contracts\DocumentCodec -->
 
 ```php
 interface DocumentType
@@ -117,6 +125,8 @@ JSON as is), `Content\TipTap\TipTapCodec` with `TipTapSchema::richText()` or
 ### Contract tests
 
 Run your type through the same contract the built-in types keep:
+
+<!-- snippet: host -->
 
 ```php
 use Vaulter\Documents\Testing\Contracts\DocumentTypeContractTests;
@@ -186,6 +196,8 @@ kind and core's `NodePresenter` defers to it.
 
 A profile can narrow the types that may be **created** in its drives:
 
+<!-- snippet: host -->
+
 ```php
 $profile->documentTypes('vaulter/markdown', 'acme/kanban');
 ```
@@ -194,6 +206,8 @@ An empty list allows every registered type. Creating a type outside the list thr
 `ProfileRestrictionException`.
 
 ## Generator
+
+<!-- snippet: shell -->
 
 ```bash
 php artisan vaulter:make:document-type Kanban
@@ -206,6 +220,8 @@ and never edits your config. An existing file is kept unless you pass `--force`.
 
 Besides the contract suite above, `Document::factory()` creates documents through
 `DocumentOperations`, so a fixture has its node, its type's codec and its first checkpoint:
+
+<!-- snippet: host -->
 
 ```php
 use Vaulter\Documents\Models\Documents\Document;

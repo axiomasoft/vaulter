@@ -15,6 +15,8 @@ over the [document path](./documents.md).
 An exporter renders one document type into one format. The registry resolves it by the pair
 **(document type, format)**:
 
+<!-- snippet: signature Vaulter\Documents\Contracts\DocumentExporter -->
+
 ```php
 namespace Vaulter\Documents\Contracts;
 
@@ -45,6 +47,8 @@ Binary formats return the encoded bytes of the file and advertise the matching m
 |---|---|---|---|---|
 | `vaulter/html` | `html` | `text/html` | `html` | `vaulter/rich-text`, `vaulter/markdown` |
 | `vaulter/markdown` | `markdown` | `text/markdown` | `md` | `vaulter/rich-text`, `vaulter/markdown` |
+
+<!-- snippet: config -->
 
 ```php
 // config/vaulter-documents.php
@@ -77,6 +81,8 @@ no exporter for is `422 unknown_export_format` (the allowed ones are in `meta.al
 
 In PHP:
 
+<!-- snippet: host -->
+
 ```php
 $export = Documents::in($drive)->export($node, 'html');           // working state
 $export = Documents::in($drive)->export($node, 'html', $revision); // one checkpoint
@@ -102,10 +108,12 @@ export. Over HTTP the file carries `X-Vaulter-Export-Lossy: 1` in that case.
 If you cache renders, key them on `(documentId, sourceEpoch, sourceStateVersion | sourceRevisionId,
 exporter key, format)` and re-check access on every hit.
 
+<!-- snippet: host -->
+
 ```ts
 import { useVaulterClient } from '@vaulter/vue'
 
-const file = await useVaulterClient().documentNodes.export(nodeId, 'markdown')
+const file = await useVaulterClient().documents.export(nodeId, 'markdown')
 // → { blob: Blob, filename: 'notes.md', mimeType: 'text/markdown' }
 ```
 
@@ -113,6 +121,8 @@ const file = await useVaulterClient().documentNodes.export(nodeId, 'markdown')
 
 Scaffold one with `php artisan vaulter:make:exporter Pdf` (writes
 `app/Vaulter/Exporters/PdfExporter.php` and prints the config line), or write it by hand:
+
+<!-- snippet: host -->
 
 ```php
 final class PdfExporter implements DocumentExporter
@@ -139,6 +149,8 @@ final class PdfExporter implements DocumentExporter
 Register it by class name in config (cache-safe), with the `vaulter.exporters` container tag, or
 from a provider:
 
+<!-- snippet: config -->
+
 ```php
 // config/vaulter-documents.php
 'exporters' => [HtmlExporter::class, MarkdownExporter::class, App\Vaulter\Exporters\PdfExporter::class],
@@ -153,6 +165,8 @@ swap one with `replace()` instead. The registry freezes once the application has
 
 ## Generator
 
+<!-- snippet: shell -->
+
 ```bash
 php artisan vaulter:make:exporter Pdf
 ```
@@ -163,6 +177,8 @@ and never edits your config. An existing file is kept unless you pass `--force`.
 ## Testing your extension
 
 `ExporterContractTests` checks an exporter against the contract:
+
+<!-- snippet: host -->
 
 ```php
 use Vaulter\Documents\Testing\Contracts\ExporterContractTests;

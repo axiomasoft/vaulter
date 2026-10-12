@@ -12,7 +12,7 @@ window elapses — permanently purged. This page covers that lifecycle and the
 `vaulter:trash:purge` command that enforces retention.
 
 ::: tip Two kinds of delete
-`trash()` is recoverable (sets `trashed_at`). `forceDelete()` is permanent and
+`trash()` is recoverable (sets `trashed_at`). `trash()->purge()` is permanent and
 detaches the bytes. Prefer `trash()` everywhere in app code and let the scheduled
 purge apply your retention policy — see [Drive · forceDelete](/concepts/nodes-and-revisions#forcedelete).
 :::
@@ -39,12 +39,14 @@ sit inside it (the same as permanently deleting a folder in Drive or Box).
 
 ### Trashing
 
+<!-- recipe: packages/drive/tests/Recipes/DriveRecipeTest.php#trash-trash -->
+
 ```php
 use Vaulter\Facades\Vaulter;
 
-$drive = Vaulter::for($project);
+$drive = Vaulter::drive($project)->actingAs($user);
 
-$drive->trash($node);          // soft-delete — dispatches NodeTrashed
+$drive->nodes()->trash($node);          // soft-delete — dispatches NodeTrashed
 ```
 
 Trashing a folder trashes its whole subtree. The node disappears from `list()` and
@@ -54,8 +56,10 @@ node that is already in the trash raises `InvalidDestinationException`
 
 ### Restoring
 
+<!-- recipe: packages/drive/tests/Recipes/DriveRecipeTest.php#trash-restore -->
+
 ```php
-$drive->restore($node);        // back to live — dispatches NodeRestored
+$drive->trash()->restore($node);        // back to live — dispatches NodeRestored
 ```
 
 The node returns to the folder it was trashed from. When that folder is gone or is itself in the
@@ -64,7 +68,11 @@ trash, the restore **does not move the node silently**: it raises
 explicitly and it is checked like any create (`Create` on the folder, an active folder of the
 drive):
 
+<!-- recipe: packages/drive/tests/Recipes/DriveRecipeTest.php#trash-restore-destination -->
+
 ```php
+use Vaulter\Data\Drive\RestoreOptions;
+
 $drive->trash()->restore($node, new RestoreOptions(destination: $folder));
 ```
 
@@ -76,8 +84,10 @@ restore the root instead. If a live sibling already uses the name there, `OnName
 
 ### Force-deleting
 
+<!-- recipe: packages/drive/tests/Recipes/DriveRecipeTest.php#trash-purge -->
+
 ```php
-$drive->forceDelete($node);    // permanent — dispatches NodePurged
+$drive->trash()->purge($node);          // permanent — dispatches NodePurged
 ```
 
 Force-delete only purges from the trash: a live node raises `NodeNotTrashedException`
@@ -85,13 +95,15 @@ Force-delete only purges from the trash: a live node raises `NodeNotTrashedExcep
 [GC](/guides/recipes)-eligible) and releases the storage quota.
 
 ::: danger Irreversible
-`forceDelete()` cannot be undone. There is no "restore from purge".
+`purge()` cannot be undone. There is no "restore from purge".
 :::
 
 ## Retention
 
 How long a trashed node survives before it becomes purge-eligible is controlled by
 `config('vaulter-drive.trash.retention_days')`:
+
+<!-- snippet: config -->
 
 ```php
 // config/vaulter-drive.php
@@ -109,6 +121,8 @@ The value is read through `Vaulter\Drive\Configuration\DriveConfig::trashRetenti
 
 Permanently delete trashed nodes whose retention window has elapsed with the
 **`vaulter:trash:purge`** Artisan command:
+
+<!-- snippet: shell -->
 
 ```bash
 php artisan vaulter:trash:purge
@@ -128,6 +142,8 @@ earlier on its own has its own root and its own clock.
 The `--days` option overrides the configured retention for a single run (floored
 at 0):
 
+<!-- snippet: shell -->
+
 ```bash
 # Purge anything trashed more than 7 days ago, ignoring the config default.
 php artisan vaulter:trash:purge --days=7
@@ -141,11 +157,15 @@ php artisan vaulter:trash:purge --days=0
 Run the purge on a schedule so retention is enforced automatically:
 
 ::: code-group
+<!-- snippet: host -->
+
 ```php [routes/console.php]
 use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('vaulter:trash:purge')->daily();
 ```
+
+<!-- snippet: host -->
 
 ```php [Console Kernel]
 protected function schedule(Schedule $schedule): void
@@ -180,13 +200,15 @@ is available in PHP: `$drive->trash()->purge($node, expectedSequence: $snapshot-
 
 In the browser, `useNodes` exposes the trash view and restore:
 
+<!-- recipe: packages/vue/tests/recipes/trash.recipe.test.ts#vue-trash-use-nodes -->
+
 ```ts
 import { useNodes } from '@vaulter/vue'
 
-const { trashed, restore } = useNodes(storageId)
+const { restore, purge } = useNodes(driveId)
 
-await trashed()             // the trash listing
-await restore(nodeId)       // bring a node back
+await restore(trashedNode)  // bring a node back
+await purge(trashedNode)    // remove it for good
 ```
 
 See the full route contract — params, response shape and the `restore`/`delete`
@@ -194,7 +216,7 @@ ability gates — in the [REST API reference](/reference/rest-api#trash).
 
 ## See also
 
-- [Drive](/concepts/nodes-and-revisions) — `trash()` / `restore()` / `forceDelete()` on the handle
+- [Drive](/concepts/nodes-and-revisions) — `trash()` / `restore()` / `trash()->purge()` on the handle
 - [REST API reference](/reference/rest-api#drive) — trash & restore routes
 - [Blob GC](/guides/recipes) — reclaiming the bytes a purge detaches
 
@@ -209,11 +231,13 @@ scoped to the drive and filtered by the `view` ability:
 GET /api/vaulter/v1/drives/{drive}/search?q=roadmap
 ```
 
+<!-- snippet: host -->
+
 ```ts
 import { useVaulterClient } from '@vaulter/vue'
 
 const client = useVaulterClient()
-const page = await client.nodes.search(storageId, 'roadmap')
+const page = await client.nodes.search(driveId, 'roadmap')
 ```
 
 ::: tip Scaling search
@@ -250,13 +274,15 @@ permanently purged. Routes marked If-Match need the node's current `ETag` (`428`
 | DELETE | `/nodes/{node}` | `delete` (trashed nodes only) | yes |
 | DELETE | `/drives/{drive}/trash` | `delete` per root | — |
 
+<!-- recipe: packages/vue/tests/recipes/trash.recipe.test.ts#vue-trash-client -->
+
 ```ts
 const client = useVaulterClient()
 
-const trashed = await client.nodes.trashed(storageId)
-await client.nodes.trash(nodeId)        // reversible soft-delete
-await client.nodes.restore(nodeId)      // bring it back
-await client.nodes.forceDelete(nodeId)  // permanent
+const trashed = await client.trash.list(driveId)
+await client.nodes.trash(node.id, { etag: node.etag })                // reversible soft-delete
+await client.nodes.restore(node.id, { etag: trashedNode.etag })       // bring it back
+await client.nodes.purge(node.id, { etag: trashedNode.etag })         // permanent
 ```
 
 Both the reversible delete and the permanent purge are recorded in the
@@ -274,11 +300,13 @@ also takes `on_conflict` (`fail` or `rename`). Moving a node into its own subtre
 `copy` clones the node (and, for a folder, its subtree) into the destination and takes a free
 name on a clash.
 
+<!-- recipe: packages/vue/tests/recipes/trash.recipe.test.ts#vue-trash-move-copy -->
+
 ```ts
 const client = useVaulterClient()
 
-await client.nodes.move(nodeId, folderId)   // or move(nodeId, null) to un-file
-const copy = await client.nodes.copy(nodeId, folderId)
+await client.nodes.move(node.id, folderId, { etag: node.etag })   // or move(node.id, null, …) to un-file
+const copy = await client.nodes.copy(node.id, folderId)
 ```
 
 For listing and folder operations backed by reactive state, use the

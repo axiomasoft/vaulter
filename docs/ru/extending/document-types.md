@@ -33,6 +33,8 @@ outline: deep
 Rich text и markdown регистрируются по умолчанию. Тип spreadsheet регистрируется, только если
 вы его перечислили:
 
+<!-- snippet: config -->
+
 ```php
 // config/vaulter-documents.php
 'types' => [
@@ -50,6 +52,8 @@ Rich text и markdown регистрируются по умолчанию. Ти
 
 Сгенерируйте класс:
 
+<!-- snippet: shell -->
+
 ```bash
 php artisan vaulter:make:document-type Kanban
 ```
@@ -58,6 +62,8 @@ php artisan vaulter:make:document-type Kanban
 непрозрачным JSON-кодеком и версией схемы 1. Регистрация — за вами: добавьте класс в
 `vaulter-documents.types`, пометьте тегом в сервис-провайдере или зарегистрируйте до окончания
 загрузки приложения:
+
+<!-- snippet: config -->
 
 ```php
 // config/vaulter-documents.php
@@ -69,6 +75,8 @@ $this->app->make(\Vaulter\Documents\Types\DocumentTypeRegistry::class)->register
 ```
 
 Тип реализует `Vaulter\Documents\Contracts\DocumentType`:
+
+<!-- snippet: signature Vaulter\Documents\Contracts\DocumentType Vaulter\Documents\Contracts\DocumentCodec -->
 
 ```php
 interface DocumentType
@@ -116,6 +124,8 @@ interface DocumentCodec
 ### Контрактные тесты
 
 Прогоните свой тип через тот же контракт, что и встроенные:
+
+<!-- snippet: host -->
 
 ```php
 use Vaulter\Documents\Testing\Contracts\DocumentTypeContractTests;
@@ -186,6 +196,8 @@ it('keeps the document type contract', function (): void {
 
 Профиль может сузить типы, которые можно **создавать** в его дисках:
 
+<!-- snippet: host -->
+
 ```php
 $profile->documentTypes('vaulter/markdown', 'acme/kanban');
 ```
@@ -194,6 +206,8 @@ $profile->documentTypes('vaulter/markdown', 'acme/kanban');
 `ProfileRestrictionException`.
 
 ## Генератор
+
+<!-- snippet: shell -->
 
 ```bash
 php artisan vaulter:make:document-type Kanban
@@ -206,6 +220,8 @@ php artisan vaulter:make:document-type Kanban
 
 Кроме контрактного набора выше, `Document::factory()` создаёт документы через
 `DocumentOperations`, поэтому у фикстуры есть узел, кодек её типа и первый чекпоинт:
+
+<!-- snippet: host -->
 
 ```php
 use Vaulter\Documents\Models\Documents\Document;

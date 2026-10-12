@@ -20,6 +20,66 @@ outline: deep
 собранный staged-файл в момент коммита.
 :::
 
+## Квота и ретеншн ревизий
+
+Квота **логическая** (PLAN2.D48): `used_bytes` — сумма `size_bytes` всех сохранённых ревизий всех
+файлов диска, включая корзину, без скидки на сдедуплицированные байты: две одинаковые загрузки
+занимают двойной размер. Новая ревизия получает номер `revision_count + 1` из заблокированного
+файла и добавляет свой полный размер, потому что прежняя голова остаётся сохранённой ревизией.
+Восстановление ревизии копирует её вперёд как новую и снова добавляет размер; копия файла
+добавляет размер копируемой головы. Удаление ревизии, прунинг по политике ретеншна и очистка
+файла освобождают байты. Диск, чьё потребление оказалось выше квоты (квоту снизили, пересчёт при
+обновлении), продолжает читаться, удалять и очищаться; отклоняется только рост.
+
+Каждая ревизия хранится, пока её не удалят, не вычистят прунингом или не очистят файл. Что
+удаляет прунинг, решает `RevisionRetentionPolicy` профиля диска:
+
+<!-- snippet: host -->
+
+```php
+use Vaulter\Profiles\DrivePolicyBuilder;
+use Vaulter\Profiles\RevisionRetentionPolicy;
+
+$profile->drivePolicy(fn (DrivePolicyBuilder $policy) => $policy->revisionRetention(new RevisionRetentionPolicy(
+    maxNoncurrentRevisions: 100, // сколько новейших нетекущих ревизий хранить на файл; null = без лимита по числу
+    maxNoncurrentAgeDays: null,  // удалять нетекущие ревизии, замещённые давнее этого; null = без лимита по возрасту
+    minNoncurrentAgeDays: 7,     // никогда не удалять ревизию, замещённую позже этого срока
+)));
+// Короткая форма: не больше 10 ревизий на файл, включая голову.
+$profile->revisionLimit(10);
+```
+
+Порядок защиты: голова не удаляется никогда, затем закреплённые ревизии, затем замещённые менее
+`minNoncurrentAgeDays` назад; из остальных уходит всё сверх новейших `maxNoncurrentRevisions`
+незакреплённых нетекущих ревизий и всё старше `maxNoncurrentAgeDays`. Закреплённые ревизии не
+входят в лимит. Возраст считается от `superseded_at` — момента, когда ревизия перестала быть
+головой.
+
+Прунинг запускается как `php artisan vaulter:revisions:prune [--drive=ID ...] [--dry-run]`
+(системный актор `revision-retention`, файлы пачками по 500) или как очередная задача
+`Vaulter\Drive\Jobs\PruneFileRevisionsJob` для одного диска. Планируйте ежедневно, как
+`vaulter:trash:purge`:
+
+<!-- snippet: host -->
+
+```php
+Schedule::command('vaulter:revisions:prune')->daily();
+```
+
+Отдельными ревизиями управляет файловый API:
+
+<!-- snippet: host -->
+
+```php
+$drive->files()->setRevisionRetention($file, $revision, keepForever: true); // Edit: закрепить / снять
+$drive->files()->deleteRevision($file, $revision);                          // Manage: удалить сразу
+```
+
+`deleteRevision` отказывает для головы (409 `cannot_delete_head_revision`) и закреплённых ревизий
+(409 `revision_pinned`); сначала снимите закрепление. Удаление и прунинг берут одни и те же
+блокировки (диск → узел файла → файл → ревизия → квота → CAS), поэтому ревизия, закреплённая или
+ставшая неудаляемой после выбора прунингом, пропускается. Номера ревизий не переиспользуются.
+
 ## Транспорты
 
 `UploadProtocol` (`Vaulter\Enums\Uploads\UploadProtocol`) выбирает транспорт для каждой сессии:
@@ -75,7 +135,7 @@ Initiated → Uploading → Assembled → Committed
 Авторизация — по цели, проверяется через `AccessResolver` при каждом перемещении байтов/состояния
 (и при создании, и на каждой последующей операции):
 
-- **Новый файл** → `canCreateInWorkspace($actor, $storage)` **и** право (ability) `Ability::Create`
+- **Новый файл** → `canCreateIn($actor, $scope)` **и** право (ability) `Ability::Create`
   на папке-назначении.
 - **Новая версия** → право (ability) `Ability::Edit` на целевом узле.
 
@@ -135,6 +195,8 @@ tus-обработчик реализует три операции CORE нап�
 
 ::: code-group
 
+<!-- snippet: shell -->
+
 ```bash [curl]
 # 1. Создать сессию (файл 1 ГиБ, в корень хранилища).
 curl -i -X POST https://app.test/api/vaulter/v1/drives/01J.../uploads \
@@ -158,11 +220,13 @@ curl -X PATCH https://app.test/api/vaulter/v1/uploads/<upload_id> \
 # → 204 Upload-Offset: <new>  (ещё чанки)  |  201 + node JSON (завершено)
 ```
 
+<!-- snippet: host -->
+
 ```vue [Vue]
 <script setup lang="ts">
 import { useUpload } from '@vaulter/vue'
 
-const { uploadResumable, progress, sent, total, abort } = useUpload(storageId)
+const { uploadResumable, progress, sent, total, abort } = useUpload(driveId)
 
 async function onPick(file: File) {
   // Ведёт tus-сессию чанк за чанком; прогресс реактивен.
@@ -196,6 +260,8 @@ async function onPick(file: File) {
 повторная загрузка части **заменяет** её строку (семантика S3, закодированная в
 составном первичном ключе `(session, part_no)`) — и на `complete` сшивает части (по возрастанию
 `part_no`) в собранный staged-temp.
+
+<!-- snippet: shell -->
 
 ```bash
 # Записать часть 1 (тело — байты части).
@@ -268,60 +334,6 @@ One-shot `files()->upload()` читает и хэширует байты *до* 
 Преждевременный `complete()` не может перепрыгнуть вперёд: `markAssembled` — no-op, пока
 обработчик не отрапортует о приёме каждого байта.
 
-## Квота и ретеншн ревизий
-
-Квота **логическая** (PLAN2.D48): `used_bytes` — сумма `size_bytes` всех сохранённых ревизий всех
-файлов диска, включая корзину, без скидки на сдедуплицированные байты: две одинаковые загрузки
-занимают двойной размер. Новая ревизия получает номер `revision_count + 1` из заблокированного
-файла и добавляет свой полный размер, потому что прежняя голова остаётся сохранённой ревизией.
-Восстановление ревизии копирует её вперёд как новую и снова добавляет размер; копия файла
-добавляет размер копируемой головы. Удаление ревизии, прунинг по политике ретеншна и очистка
-файла освобождают байты. Диск, чьё потребление оказалось выше квоты (квоту снизили, пересчёт при
-обновлении), продолжает читаться, удалять и очищаться; отклоняется только рост.
-
-Каждая ревизия хранится, пока её не удалят, не вычистят прунингом или не очистят файл. Что
-удаляет прунинг, решает `RevisionRetentionPolicy` профиля диска:
-
-```php
-use Vaulter\Profiles\DrivePolicyBuilder;
-use Vaulter\Profiles\RevisionRetentionPolicy;
-
-$profile->drivePolicy(fn (DrivePolicyBuilder $policy) => $policy->revisionRetention(new RevisionRetentionPolicy(
-    maxNoncurrentRevisions: 100, // сколько новейших нетекущих ревизий хранить на файл; null = без лимита по числу
-    maxNoncurrentAgeDays: null,  // удалять нетекущие ревизии, замещённые давнее этого; null = без лимита по возрасту
-    minNoncurrentAgeDays: 7,     // никогда не удалять ревизию, замещённую позже этого срока
-)));
-// Короткая форма: не больше 10 ревизий на файл, включая голову.
-$profile->revisionLimit(10);
-```
-
-Порядок защиты: голова не удаляется никогда, затем закреплённые ревизии, затем замещённые менее
-`minNoncurrentAgeDays` назад; из остальных уходит всё сверх новейших `maxNoncurrentRevisions`
-незакреплённых нетекущих ревизий и всё старше `maxNoncurrentAgeDays`. Закреплённые ревизии не
-входят в лимит. Возраст считается от `superseded_at` — момента, когда ревизия перестала быть
-головой.
-
-Прунинг запускается как `php artisan vaulter:revisions:prune [--drive=ID ...] [--dry-run]`
-(системный актор `revision-retention`, файлы пачками по 500) или как очередная задача
-`Vaulter\Drive\Jobs\PruneFileRevisionsJob` для одного диска. Планируйте ежедневно, как
-`vaulter:trash:purge`:
-
-```php
-Schedule::command('vaulter:revisions:prune')->daily();
-```
-
-Отдельными ревизиями управляет файловый API:
-
-```php
-$drive->files()->setRevisionRetention($file, $revision, keepForever: true); // Edit: закрепить / снять
-$drive->files()->deleteRevision($file, $revision);                          // Manage: удалить сразу
-```
-
-`deleteRevision` отказывает для головы (409 `cannot_delete_head_revision`) и закреплённых ревизий
-(409 `revision_pinned`); сначала снимите закрепление. Удаление и прунинг берут одни и те же
-блокировки (диск → узел файла → файл → ревизия → квота → CAS), поэтому ревизия, закреплённая или
-ставшая неудаляемой после выбора прунингом, пропускается. Номера ревизий не переиспользуются.
-
 ## Прерывание и подметание
 
 Освобождают сессию два пути — оба отпускают состояние на стороне протокола (S3
@@ -333,10 +345,14 @@ $drive->files()->deleteRevision($file, $revision);                          // M
   сканирует **открытые** сессии (`initiated` | `uploading`), у которых истёк `expires_at`, и
   освобождает каждую. Можно ставить в расписание.
 
+<!-- snippet: shell -->
+
 ```bash
 # Забрать протухшие сессии по истечении TTL (staged-temp + S3-multipart очищаются).
 php artisan vaulter:uploads:sweep
 ```
+
+<!-- snippet: host -->
 
 ```php
 // Поставить в расписание (например, app/Console/Kernel.php или routes/console.php):
@@ -352,6 +368,8 @@ Schedule::command('vaulter:uploads:sweep')->hourly();
 :::
 
 ## Конфигурация
+
+<!-- snippet: config -->
 
 ```php
 // config/vaulter-drive.php
@@ -370,7 +388,6 @@ Schedule::command('vaulter:uploads:sweep')->hourly();
         ],
     ],
 ],
-'names' => ['max_length' => 255],
 'trash' => ['retention_days' => 30],
 'models' => [
     'upload_session' => \Vaulter\Drive\Models\Uploads\UploadSession::class,
@@ -404,6 +421,8 @@ production-код его не импортирует.
 **Жизненный цикл сканирования на вашей конфигурации.** `ScanLifecycleContractTests` работает через
 Operations драйва от вашего актора, команду `vaulter:scan:reconcile` и скриптованный
 `FakeContentScanner`:
+
+<!-- snippet: host -->
 
 ```php
 use Vaulter\Drive\Testing\Contracts\ScanLifecycleContractTests;

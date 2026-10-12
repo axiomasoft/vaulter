@@ -15,52 +15,54 @@ and [Configuration](/guides/configuration) for every key in full.
 ## Attach a Drive to a CRM task or project {#attach-drive}
 
 The headline use case: give any host entity its own file/folder Drive with **zero migrations**.
-`Vaulter::for($entity)` get-or-creates a `v_storages` row keyed by the polymorphic
+`Vaulter::drive($entity)` get-or-creates a `v_storages` row keyed by the polymorphic
 `(owner_type, owner_id, panel)` triple and provisions a root folder — idempotent, so calling it
 twice returns the same storage.
 
 ::: code-group
 
+<!-- snippet: host -->
+
 ```php [Controller]
+use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Facades\Vaulter;
 
 final class TaskDriveController
 {
     public function index(\App\Models\Task $task)
     {
-        // Authorize through your app, then open the Drive for this task.
-        $drive = Vaulter::for($task);
+        // Authorize through your app, then open the Drive for this task as the signed-in user.
+        $drive = Vaulter::drive($task)->actingAs(request()->user());
 
         return response()->json([
-            'storage' => $drive->model()->id,
-            'nodes'   => $drive->list(), // Collection<Node> of the root's children
+            'storage' => $drive->snapshot()->id,
+            'nodes'   => $drive->nodes()->children()->items, // the root's children, as NodeSnapshot
         ]);
     }
 
     public function store(\App\Models\Task $task, \Illuminate\Http\Request $request)
     {
-        $drive = Vaulter::for($task);
+        $drive = Vaulter::drive($task)->actingAs($request->user());
 
-        $node = $drive->upload(
-            $request->file('document'),
-            actorId: $request->user()->getKey(),
-        );
+        $node = $drive->files()->upload(UploadSource::fromUploadedFile($request->file('document')));
 
         return response()->json(['node' => $node->id], 201);
     }
 }
 ```
 
+<!-- snippet: host -->
+
 ```vue [Vue]
 <script setup lang="ts">
 import { VaulterDrive } from '@vaulter/vue'
 
-// The storage id resolved server-side (e.g. from Vaulter::for($task)->storage()->id).
-const props = defineProps<{ storageId: string }>()
+// The storage id resolved server-side (e.g. from Vaulter::drive($task)->snapshot()->id).
+const props = defineProps<{ driveId: string }>()
 </script>
 
 <template>
-  <VaulterDrive :storage-id="props.storageId" />
+  <VaulterDrive :drive-id="props.driveId" />
 </template>
 ```
 
@@ -69,6 +71,8 @@ const props = defineProps<{ storageId: string }>()
 For a **dedicated** Drive on a specific entity type — with its own feature flags and a Filament
 resource — define a Storage Profile instead of using the `default` panel:
 
+<!-- snippet: shell -->
+
 ```bash
 php artisan vaulter:make:profile task_drive --host="App\\Models\\Task"
 ```
@@ -76,12 +80,16 @@ php artisan vaulter:make:profile task_drive --host="App\\Models\\Task"
 This scaffolds `app/Vaulter/Profiles/TaskDriveStoragePanel.php`. Edit its feature flags, then
 register the provider FQCN in `config/vaulter.php`:
 
+<!-- snippet: config -->
+
 ```php
 // config/vaulter.php
 'profiles' => ['providers' => [
     \App\Vaulter\Profiles\TaskDriveStoragePanel::class,
 ]],
 ```
+
+<!-- snippet: host -->
 
 ```php
 // app/Vaulter/Profiles/TaskDriveStoragePanel.php
@@ -103,8 +111,10 @@ final class TaskDriveStoragePanel extends ProfileProvider
 
 Now mount it with the panel id:
 
+<!-- snippet: host -->
+
 ```php
-$drive = Vaulter::for($task, panel: 'task_drive');
+$drive = Vaulter::drive($task, profile: 'task_drive');
 ```
 
 ::: tip Zero migrations
@@ -120,6 +130,8 @@ moving parts.
 
 ### 1. Add the tenant column
 
+<!-- snippet: config -->
+
 ```php
 // config/vaulter.php
 'tenancy' => [
@@ -131,6 +143,8 @@ moving parts.
 
 Vaulter resolves every model through `config('vaulter.models.*')`. Point one (or all) at your
 own subclass that applies your tenant scope — Vaulter never scopes by `tenant_id` itself:
+
+<!-- snippet: host -->
 
 ```php
 // app/Models/Vaulter/Node.php
@@ -145,6 +159,8 @@ final class Node extends BaseNode
 }
 ```
 
+<!-- snippet: config -->
+
 ```php
 // config/vaulter.php
 'models' => [
@@ -158,6 +174,8 @@ final class Node extends BaseNode
 
 Per-tenant dedup is already the default, so a global dedup namespace can't leak the
 *existence* of a file across tenants ([ADR-0012](/adr/0012-dedup-scope)):
+
+<!-- snippet: config -->
 
 ```php
 // config/vaulter-media.php
@@ -179,10 +197,12 @@ The Drive ACL combines `v_node_grants` with a swappable `PermissionDriver` lane.
 app's role system, implement
 [`Vaulter\Contracts\Access\PermissionDriver`](/concepts/architecture#authorization). It is
 **node-blind**: it never receives a `Node` — only an `Authorizable` actor and an `AccessScope`
-(panel + workspace coordinates + node owner).
+(profile + the drive's owner and id + tenant).
 
 The simplest real driver subclasses the standalone `database` lane and just expands the
 subject-set with the actor's roles/teams (so `v_node_grants` rows addressed to a role apply):
+
+<!-- snippet: host -->
 
 ```php
 namespace App\Vaulter;
@@ -209,16 +229,20 @@ final class TeamRoleDriver extends DatabasePermissionDriver
 
 A fuller driver also answers the role lane and the super-admin override:
 
+<!-- snippet: host -->
+
 ```php
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Access\Roles\RoleRegistry;
 
 final class AppRoleDriver implements PermissionDriver
 {
+    public function __construct(private RoleRegistry $roles) {}
+
     public function override(Authorizable $actor, AccessScope $scope): ?Effect
     {
         return $actor->is_super_admin ? Effect::Allow : null; // absolute, step 1
@@ -228,10 +252,9 @@ final class AppRoleDriver implements PermissionDriver
     {
         // Raise access from a host role — folded as roleAllow into max(aclAllow, roleAllow).
         // It can RAISE access but never override a deny (the final veto still applies).
-        if ($actor->canEditIn($scope->workspaceType, $scope->workspaceId)) {
-            // Decision::allow(level) defaults bits to the level's bitmask;
-            // pass explicit bits only to narrow them.
-            return Decision::allow(GrantLevel::Writer);
+        if ($actor->canEditIn($scope->driveOwner->type, $scope->driveOwner->id)) {
+            // A Decision carries a role from the registry; the abilities come from the role.
+            return new Decision($this->roles->latest(RoleRegistry::WRITER));
         }
 
         return null; // nothing to say — the ACL is the sole authority
@@ -243,14 +266,16 @@ final class AppRoleDriver implements PermissionDriver
         return [Subject::ofModel($actor)];
     }
 
-    public function canCreateInWorkspace(Authorizable $actor, string $workspaceType, int|string $workspaceId): bool
+    public function canCreateIn(Authorizable $actor, AccessScope $scope): bool
     {
-        return $actor->canCreateIn($workspaceType, $workspaceId);
+        return $actor->canCreateIn($scope->driveOwner->type, $scope->driveOwner->id);
     }
 }
 ```
 
 Register it as a named driver and select it:
+
+<!-- snippet: config -->
 
 ```php
 // config/vaulter.php
@@ -283,6 +308,8 @@ the best one by mime → extension → capability → priority, falling back to 
 Adding a
 format is **one class + one register call — no migration, no core change**
 ([H.5 / ADR-0004](/adr/0004-content-format)).
+
+<!-- snippet: host -->
 
 ```php
 namespace App\Vaulter\Handlers;
@@ -331,6 +358,8 @@ Register it any of three ways — config FQCN (cache-safe), a runtime call, or a
 
 ::: code-group
 
+<!-- snippet: config -->
+
 ```php [config]
 // config/vaulter.php
 'handlers' => [
@@ -340,12 +369,16 @@ Register it any of three ways — config FQCN (cache-safe), a runtime call, or a
 ],
 ```
 
+<!-- snippet: host -->
+
 ```php [runtime]
 // A service provider's boot()
 use Vaulter\Facades\Vaulter;
 
 Vaulter::handlers()->register(\App\Vaulter\Handlers\CadHandler::class);
 ```
+
+<!-- snippet: host -->
 
 ```php [tagged]
 // A service provider's register()
@@ -366,6 +399,8 @@ Vaulter's byte plane is a content-addressed store over a Flysystem disk. To use 
 only change config — no custom class needed.
 
 ### Point Vaulter at an S3 disk
+
+<!-- snippet: host -->
 
 ```php
 // config/filesystems.php — a standard Laravel S3 disk
@@ -402,6 +437,8 @@ uploads ([ADR-0006](/adr/0006-content-addressed-blobs-gc)).
 If you need behaviour the default driver doesn't cover, implement
 `Vaulter\Contracts\Cas\StorageDriver` (or `ContentStore` / `BlobStore`) and bind it:
 
+<!-- snippet: config -->
+
 ```php
 // config/vaulter-media.php
 'content_store'  => \Vaulter\Media\Cas\Sha256ContentStore::class,
@@ -418,6 +455,8 @@ The `StorageDriver` surface: `disk()`, `put($key, $stream, $disk, $ifNoneMatch, 
 The built-in `html` and `markdown` exporters render rich-text and Markdown documents. Add your
 own (PDF, DOCX, …) by implementing `Vaulter\Documents\Contracts\DocumentExporter` — scaffold one
 with `php artisan vaulter:make:exporter Pdf`:
+
+<!-- snippet: host -->
 
 ```php
 namespace App\Vaulter\Exporters;
@@ -455,6 +494,8 @@ Register it by class name in config, or from a provider before the application h
 
 ::: code-group
 
+<!-- snippet: config -->
+
 ```php [config]
 // config/vaulter-documents.php
 'exporters' => [
@@ -463,6 +504,8 @@ Register it by class name in config, or from a provider before the application h
     \App\Vaulter\Exporters\PdfExporter::class,
 ],
 ```
+
+<!-- snippet: host -->
 
 ```php [provider]
 use Vaulter\Documents\Facades\Documents;
@@ -473,13 +516,15 @@ Documents::exporters()->register(\App\Vaulter\Exporters\PdfExporter::class);
 :::
 
 It is then reachable at `GET v1/documents/{node}/export/pdf` and via the Vue
-`useDocumentNode(nodeId).exportAs('pdf')` composable.
+`useDocument(nodeId).exportAs('pdf')` composable.
 
 ## Custom share-token shape {#share-token}
 
 By default share tokens are random strings. To mint short, hashed, or prefixed tokens, implement
 `Vaulter\Contracts\Sharing\ShareTokenGenerator` (a token must be unique and fit the token
 column, ≤ 64 chars):
+
+<!-- snippet: host -->
 
 ```php
 namespace App\Vaulter;
@@ -494,6 +539,8 @@ final class ShortTokenGenerator implements ShareTokenGenerator
     }
 }
 ```
+
+<!-- snippet: config -->
 
 ```php
 // config/vaulter.php
@@ -514,6 +561,8 @@ owner-side lookup. The raw token is returned to the creator exactly once and nev
 
 Trashing or replacing files leaves blobs unreferenced. The two-phase GC tombstones them, then
 sweeps after a grace window; a separate reconcile job repairs `ref_count` drift.
+
+<!-- snippet: host -->
 
 ```php
 // routes/console.php (Laravel 11+) or app/Console/Kernel.php
@@ -538,6 +587,8 @@ The grace window is `config('vaulter-media.gc.grace_hours')` (default 24, floore
 be ≥ your worst-case multipart-commit latency so an in-flight upload can resurrect a tombstoned
 blob first.
 
+<!-- snippet: shell -->
+
 ```bash
 # Override the grace window ad hoc, and also clear crashed-staging PENDING rows.
 php artisan vaulter:blobs:gc --grace=48 --pending
@@ -553,6 +604,8 @@ blob a slow multipart commit was about to reference.
 
 The `reliability` feature stages each Drive domain event in `v_outbox` (after-commit), then a
 relay fans it out into signed `v_webhook_deliveries` rows per active subscribed endpoint:
+
+<!-- snippet: host -->
 
 ```php
 // Only needed with vaulter.schedule.enabled=false; otherwise the packages schedule these already.
@@ -575,6 +628,8 @@ at-least-once. Tune `config('vaulter.webhooks.*')` (`retry_schedule`, `retry_jit
 The relayed outbox rows and terminal webhook deliveries are an append-only audit trail that
 otherwise grows forever. `vaulter:webhooks:prune` reclaims the **settled** rows past a
 retention window — and *only* the settled ones:
+
+<!-- snippet: shell -->
 
 ```bash
 # Prune settled rows older than config('vaulter.webhooks.retention_days') (default 30):
@@ -609,12 +664,14 @@ real role system:
 - **`Vaulter\Azgard\Testing\FakeAzgardGuard`** — a guard double for the `azgard` lane;
   the bridge and its Composer dependencies must be installed.
 
+<!-- recipe: packages/drive/tests/Recipes/DriveRecipeTest.php#testing-open-driver -->
+
 ```php
 // In a Pest test, force the open driver for the duration of the test.
 config()->set('vaulter.access.permission_driver', 'null'); // non-production only
 
-$drive = Vaulter::for($task);
-$node  = $drive->upload('hello', name: 'note.txt');
+$drive = Vaulter::drive($task)->actingAs($user);
+$node = $drive->files()->upload(UploadSource::fromString('hello', 'note.txt'));
 
 expect($node->name)->toBe('note.txt');
 ```

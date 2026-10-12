@@ -101,6 +101,8 @@ drive — точное сравнение ключей арендаторов, �
 
 ::: code-group
 
+<!-- snippet: shell -->
+
 ```bash [curl]
 # Ссылка только для чтения, на поддерево, с паролем, для вошедших пользователей, на 7 дней.
 curl -X POST https://app.test/api/vaulter/v1/nodes/01J.../shares \
@@ -115,6 +117,8 @@ curl -X POST https://app.test/api/vaulter/v1/nodes/01J.../shares \
         "max_uses": 100
       }'
 ```
+
+<!-- snippet: host -->
 
 ```php [PHP]
 use Vaulter\Data\Sharing\ShareLinkInput;
@@ -136,11 +140,13 @@ $rawToken = $minted->token;   // 43 символа
 $link     = $minted->link;    // ShareLinkSnapshot (без токена)
 ```
 
+<!-- snippet: host -->
+
 ```vue [Vue]
 <script setup lang="ts">
-import { useNodeShares } from '@vaulter/vue'
+import { useShares } from '@vaulter/vue'
 
-const { create, lastCreated, clearLastCreated } = useNodeShares(nodeId)
+const { create, lastCreated, clearLastCreated } = useShares(nodeId)
 
 async function mint() {
   const created = await create({
@@ -201,6 +207,8 @@ async function mint() {
 подходит. Новый срок подчиняется тем же границам, что и при создании. Смена пароля или аудитории
 завершает сессии ссылки, открытые до изменения.
 
+<!-- snippet: host -->
+
 ```php
 use Vaulter\Data\Sharing\ShareLinkUpdate;
 
@@ -216,6 +224,8 @@ Vaulter::drive($owner)->actingAs($user)->shares()->update($node, $share, new Sha
 разрешаться в момент коммита ротации**, `token_generation` растёт на единицу, поэтому все визиты,
 открытые старым токеном, недействительны, а новый сырой токен возвращается **один раз**. Роль,
 аудитория, срок, лимит, пароль и `use_count` сохраняются. Ротация отозванной ссылки — `404`.
+
+<!-- snippet: host -->
 
 ```php
 $minted = Vaulter::drive($owner)->actingAs($user)->shares()->rotate($node, $share);
@@ -273,6 +283,8 @@ $minted->token; // новый сырой токен, показывается о
 
 ::: code-group
 
+<!-- snippet: shell -->
+
 ```bash [curl]
 # Пароль едет в заголовке, чтобы секрет не попал в URL или логи.
 curl -i https://app.test/api/vaulter/v1/shares/<token> \
@@ -288,15 +300,17 @@ curl https://app.test/api/vaulter/v1/shares/<token>/download \
   -H 'X-Share-Password: s3cret' -H 'X-Share-Session: eyJ2MXx...' -o file.bin
 ```
 
+<!-- snippet: host -->
+
 ```vue [Vue]
 <script setup lang="ts">
 import { useVaulterClient } from '@vaulter/vue'
 
 const client = useVaulterClient()
 
-const node      = await client.nodeShares.publicResolve(token)   // GET /share/{token}
-const children  = await client.nodeShares.publicNodes(token)     // GET /share/{token}/nodes
-const dlUrl     = client.nodeShares.publicDownloadUrl(token)     // GET /share/{token}/download
+const node      = await client.publicShares.get(token)           // GET /shares/{token}
+const children  = await client.publicShares.nodes(token)         // GET /shares/{token}/nodes
+const dlUrl     = client.publicShares.downloadUrl(token)         // GET /shares/{token}/download
 </script>
 ```
 
@@ -325,6 +339,8 @@ Middleware читает пароль **сначала** из заголовка 
 `vaulter.sharing.default_ttl_hours`»; явное значение не может превышать
 `vaulter.sharing.max_ttl_hours`. Сверх того профиль drive может ограничить все ссылки своих
 drive:
+
+<!-- snippet: host -->
 
 ```php
 $profile->drivePolicy(fn (DrivePolicyBuilder $policy) => $policy->maxShareLinkTtlDays(7));
@@ -385,6 +401,8 @@ $profile->drivePolicy(fn (DrivePolicyBuilder $policy) => $policy->maxShareLinkTt
 
 ## Конфигурация
 
+<!-- snippet: config -->
+
 ```php
 // config/vaulter.php
 'sharing' => [
@@ -443,4 +461,4 @@ $profile->drivePolicy(fn (DrivePolicyBuilder $policy) => $policy->maxShareLinkTt
 - [Загрузки](/ru/guides/uploads) — путь резюмируемого приёма, создающий файловые узлы, которые вы
   расшариваете.
 - [Свой генератор share-токенов](/ru/guides/recipes) — сменить формат токена.
-- [Frontend-composables](/ru/guides/vue) — `useNodeShares` и публичный namespace клиента.
+- [Frontend-composables](/ru/guides/vue) — `useShares` и публичный namespace клиента.

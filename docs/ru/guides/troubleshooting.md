@@ -31,6 +31,8 @@ or bind your own \Vaulter\Contracts\Access\PermissionDriver.
 
 **Решение.** Выберите реальный драйвер в `config/vaulter.php`:
 
+<!-- snippet: config -->
+
 ```php
 // config/vaulter.php
 'access' => [
@@ -123,6 +125,8 @@ VAULTER_PERMISSION_DRIVER=database   # or gate | spatie | azgard
 
 **Решение.**
 
+<!-- recipe: packages/media/tests/Recipes/MediaRecipeTest.php#media-dedup-scope -->
+
 ```php
 // config/vaulter-media.php
 'dedup' => [
@@ -152,6 +156,8 @@ VAULTER_PERMISSION_DRIVER=database   # or gate | spatie | azgard
 `whereHas('descendants')` или `withCount('descendants')` — генерирует коррелированные рекурсивные
 подзапросы, фатальные на MariaDB и патологичные в остальных случаях, поэтому они **запрещены на
 путях запросов** и это проверяется арх-тестом:
+
+<!-- snippet: host -->
 
 ```php
 // tests/Arch/ArchTest.php
@@ -279,7 +285,7 @@ Doctor — read-only, сам он ничего не чинит. См. [`vaulter:
 
 **Почему и решение.** Проверьте регистрацию запрошенного профиля:
 
-- **`UnknownProfileException::forName`** — `Vaulter::for($entity, panel: 'x')` (или маршрут) назвал
+- **`UnknownProfileException::forName`** — `Vaulter::drive($entity, profile: 'x')` (или маршрут) назвал
   панель, которая не зарегистрирована. Зарегистрируйте FQCN её провайдера в
   `config('vaulter.profiles.providers')` или используйте панель `default`.
 

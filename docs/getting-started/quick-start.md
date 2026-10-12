@@ -10,7 +10,7 @@ This is the ≤60-second happy path: from a fresh install to a working drive —
 uploaded file, and a listing — then the Vue UI on top.
 
 ::: tip Prerequisite
-You have installed `axioma-studio/vaulter-drive` (this walkthrough uses `Vaulter::for()`,
+You have installed `axioma-studio/vaulter-drive` (this walkthrough uses `Vaulter::drive()`,
 `DriveHandle`, uploads — all Drive features) and run the migrations. If not, do
 [Installation](/getting-started/installation) first (it is two commands).
 :::
@@ -23,6 +23,8 @@ per-node grants (`v_node_grants`) that the Vaulter-owned `AccessResolver` reads.
 
 You only touch this when you want roles from *your* app to count. To swap the lane, set one
 config key:
+
+<!-- snippet: config -->
 
 ```php
 // config/vaulter.php
@@ -39,40 +41,47 @@ configuring a driver is covered in [Host-role driver](/extending/permission-driv
 
 ## 2. Open a drive and use it
 
-`Vaulter::for($entity)` get-or-creates the entity's storage (and its root folder) and returns
-a `DriveHandle` — the ergonomic handle for the whole drive. Everything below is a real
-method on it:
+`Vaulter::drive($entity)` get-or-creates the entity's drive (and its root folder) and returns
+a `DriveHandle` — the handle for the whole drive; `actingAs($user)` makes every call run with
+that user's access. Everything below is a real method on it:
+
+<!-- recipe: packages/drive/tests/Recipes/DriveRecipeTest.php#quick-start-open -->
 
 ```php
+use Vaulter\Data\Drive\UploadOptions;
+use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Facades\Vaulter;
 
-// $project is any Eloquent model — Vaulter::for() owns the storage to it.
-$drive = Vaulter::for($project);
+// $project is any Eloquent model; $user is the signed-in user who acts on the drive.
+$drive = Vaulter::drive($project)->actingAs($user);
 
 // Create a folder under the root.
-$reports = $drive->createFolder('Reports');
+$reports = $drive->folders()->create('Reports');
 
-// Upload bytes — a string, an SplFileInfo/UploadedFile, a stream resource,
-// or a PSR-7 StreamInterface all work. $into defaults to the root.
-$node = $drive->upload(
-    source: request()->file('document'),
-    into: $reports,
+// Upload bytes — a path, an UploadedFile, a stream or a string, wrapped in an UploadSource.
+$node = $drive->files()->upload(
+    UploadSource::fromUploadedFile(request()->file('document')),
+    new UploadOptions(parent: $reports),
 );
 
 // List the direct children of a folder (null = the root).
-$drive->list($reports);   // Illuminate\Database\Eloquent\Collection<Node>
+$page = $drive->nodes()->children($reports);   // Vaulter\Data\Page of NodeSnapshot
 ```
 
 That is a fully working drive. A handful of the other `DriveHandle` methods:
 
+<!-- recipe: packages/drive/tests/Recipes/DriveRecipeTest.php#quick-start-methods -->
+
 ```php
-$drive->rename($node, 'Q3 report.pdf');
-$drive->move($node, into: $reports);
-$drive->copy($node, into: $reports, name: 'Q3 report (copy).pdf');
-$drive->trash($node);           // soft trash (recoverable)
-$drive->restore($node);
-$drive->forceDelete($node);     // permanent
-$drive->uploadVersion($node, source: $newBytes); // new version onto a file
+use Vaulter\Data\Drive\CopyOptions;
+use Vaulter\Data\Drive\UploadSource;
+
+$drive->nodes()->rename($node, 'Q3 report.pdf');
+$drive->nodes()->move($node, $reports);
+$drive->nodes()->copy($node, $reports, new CopyOptions(name: 'Q3 report (copy).pdf'));
+$drive->nodes()->trash($node);                         // soft trash (recoverable)
+$drive->trash()->restore($node);
+$drive->files()->addRevision($node, UploadSource::fromString($newBytes, 'Q3 report.pdf')); // a new revision of a file
 ```
 
 ::: details Where do uploads land?
@@ -87,13 +96,15 @@ The Drive REST routes are already mounted under `api/vaulter` (the `routes.prefi
 just needs a way to hand a storage id to the frontend — typically resolved from the host
 entity:
 
+<!-- snippet: host -->
+
 ```php
 // routes/web.php (or an Inertia/controller response)
 use Vaulter\Facades\Vaulter;
 
 Route::get('/projects/{project}/drive', function (App\Models\Project $project) {
     return inertia('Drive', [
-        'storageId' => Vaulter::for($project)->storage()->getKey(),
+        'driveId' => Vaulter::drive($project)->snapshot()->id,
     ]);
 });
 ```
@@ -116,15 +127,17 @@ See the full list in the [API routes reference](/reference/rest-api).
 ## 4. Drop in the Vue UI
 
 With the [plugin installed](/getting-started/installation#_2-frontend-—-the-vue-package), embed the
-file-manager component and pass it the `storageId`:
+file-manager component and pass it the `driveId`:
 
 ::: code-group
+
+<!-- snippet: host -->
 
 ```vue [VaulterDrive.vue]
 <script setup lang="ts">
 import { VaulterDrive } from '@vaulter/vue'
 
-defineProps<{ storageId: string }>()
+defineProps<{ driveId: string }>()
 
 function openNode(node: { id: string; kind: string }) {
   // open/preview/edit the node in your app
@@ -132,16 +145,18 @@ function openNode(node: { id: string; kind: string }) {
 </script>
 
 <template>
-  <VaulterDrive :storage-id="storageId" @open-node="openNode" />
+  <VaulterDrive :drive-id="driveId" @open-node="openNode" />
 </template>
 ```
+
+<!-- snippet: host -->
 
 ```ts [useNodes (lower-level)]
 import { useNodes } from '@vaulter/vue'
 
 // The composable behind VaulterDrive — drive your own UI with it.
 const { nodes, parentId, loading, error, refresh, navigate, createFolder, rename, move, trash } =
-  useNodes(storageId)
+  useNodes(driveId)
 
 await createFolder('Reports')
 await refresh()

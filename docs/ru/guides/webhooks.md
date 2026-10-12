@@ -127,6 +127,8 @@ Payload outbox — это тело вебхука. Он собирается о�
 [официальные библиотеки](https://github.com/standard-webhooks/standard-webhooks/tree/main/libraries).
 В PHP это делает `Vaulter\Webhooks\StandardWebhookVerifier` без лишних зависимостей:
 
+<!-- snippet: host -->
+
 ```php
 use Vaulter\Exceptions\Webhooks\InvalidWebhookSignatureException;
 use Vaulter\Webhooks\StandardWebhookVerifier;

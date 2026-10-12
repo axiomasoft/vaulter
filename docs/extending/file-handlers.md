@@ -31,6 +31,8 @@ every leaf node, not just `kind=document`. For rendering content out to a file, 
 
 A handler implements `Vaulter\Contracts\Handlers\FileHandler`:
 
+<!-- snippet: signature Vaulter\Contracts\Handlers\FileHandler -->
+
 ```php
 namespace Vaulter\Contracts\Handlers;
 
@@ -66,6 +68,8 @@ interface FileHandler
 `downloadable` defaults to `true` (anything can be downloaded as bytes); the richer flags are
 opt-in:
 
+<!-- snippet: host -->
+
 ```php
 new ContentCapabilities(
     editable:      false,
@@ -91,6 +95,8 @@ advertises that a preview exists.
 
 `Vaulter\ValueObjects\Handlers\ViewerDescriptor` tells the client which Vue component to mount, the
 stable viewer key and any extra serialisable props:
+
+<!-- snippet: host -->
 
 ```php
 new ViewerDescriptor(
@@ -148,6 +154,8 @@ files sorts the handler set once.
 
 The default set is registered from config (`config('vaulter.handlers')`):
 
+<!-- snippet: config -->
+
 ```php
 // config/vaulter.php
 'handlers' => [
@@ -171,6 +179,8 @@ The presentation is part of every node, so the client knows which surface to mou
 
 ::: code-group
 
+<!-- snippet: shell -->
+
 ```bash [HTTP]
 # GET {prefix}/v1/nodes/{node}  → data.presentation
 curl https://app.test/api/vaulter/v1/nodes/77
@@ -188,6 +198,8 @@ curl https://app.test/api/vaulter/v1/nodes/77
 #               "viewer": { "key": "vaulter/tiptap", "props": { "preset": "rich-text" } } } } }
 ```
 
+<!-- snippet: host -->
+
 ```php [PHP — the resolver]
 use Vaulter\Contracts\Handlers\NodePresenter;
 
@@ -195,12 +207,13 @@ $descriptor = app(NodePresenter::class)->present($node);
 // NodePresentation: ->id, ->documentType, ->typeAvailable, ->capabilities, ->ui (->toArray() to serialise)
 ```
 
-```ts [Vue — composable]
-import { useDocumentNode } from '@vaulter/vue'
+<!-- snippet: host -->
 
-const { handler, loadHandler } = useDocumentNode(nodeId)
-await loadHandler()
-// handler.value → { id, capabilities, ui }
+```ts [Vue — composable]
+import { useVaulterClient } from '@vaulter/vue'
+
+const node = await useVaulterClient().nodes.get(nodeId)
+// node.presentation → { handler, document_type, type_available, capabilities, viewer }
 ```
 
 :::
@@ -216,6 +229,8 @@ This is the headline. Here is a complete handler for **CSV** files — preview +
 migration, no core change.
 
 ### 1. Implement the handler
+
+<!-- snippet: host -->
 
 ```php
 <?php
@@ -286,6 +301,8 @@ once, so registering in two places is safe):
 
 ::: code-group
 
+<!-- snippet: config -->
+
 ```php [config — cache-safe FQCN list]
 // config/vaulter.php — append to the handlers list (FQCN only, config-cache safe)
 'handlers' => [
@@ -295,6 +312,8 @@ once, so registering in two places is safe):
 ],
 ```
 
+<!-- snippet: host -->
+
 ```php [runtime — Vaulter::handlers()->register]
 // In a service provider's boot() — FQCN or an instance
 use Vaulter\Facades\Vaulter;
@@ -302,6 +321,8 @@ use App\Vaulter\Handlers\CsvHandler;
 
 Vaulter::handlers()->register(CsvHandler::class);
 ```
+
+<!-- snippet: host -->
 
 ```php [tagged container binding]
 // In a service provider's register() — the conditional/host extension channel
@@ -334,69 +355,68 @@ is included as the terminal entry.
 
 ## Mounting the resolved handler in Vue
 
-`VaulterDocumentNode` is the bridge from a handler descriptor to a concrete editor/preview. It
-loads the handler + head content, then mounts the component the descriptor's `ui.key`
-maps to. Two mapping sources exist, checked in order:
+The node's `presentation.viewer.key` names the **viewer** the client mounts. `VaulterViewer`
+(`@vaulter/vue`) looks the key up in the app's viewer registry and mounts the component with
+the `node`, a `readonly` flag and the handler's `viewer.props` as props. A node without a key,
+with a key the app never registered, or whose document type this application cannot handle
+(`type_available = false`) falls back to the `vaulter/unsupported` viewer — the item is still
+shown, named and downloadable.
 
-1. the `componentMap` prop — scoped to one `VaulterDocumentNode` mount point;
-2. the global `registerEngineComponent` registry (`@vaulter/vue`) — an explicit function a host
-   calls once at startup, for engines shared across every mount point (VLT-CANON P1.2).
+The built-in keys (`vaulter/tiptap`, `vaulter/univer`, `vaulter/pdf-preview`,
+`vaulter/image-preview`, `vaulter/download`, `vaulter/unsupported`) are installed by the plugin.
+Add your own, or replace a built-in one, through the plugin's `viewers` option — an explicit
+ES-module import, not an ambient global:
 
-`componentMap` always wins when both map the same key. Neither is required — use whichever fits
-how many mount points your app has.
-
-```vue
-<script setup lang="ts">
-import { VaulterDocumentNode } from '@vaulter/vue'
-import AppTipTapEditor from './AppTipTapEditor.vue'   // a TipTap editor the host supplies
-import AppCsvPreview from './AppCsvPreview.vue'
-
-// Map a handler's `ui.key` (or its `id`) to the component to mount.
-const componentMap = {
-  'vaulter/tiptap': AppTipTapEditor,   // the TipTap handler's ui.key
-  'acme/csv-preview': AppCsvPreview,                    // our CSV handler's ui.key
-}
-</script>
-
-<template>
-  <VaulterDocumentNode :node-id="nodeId" :component-map="componentMap">
-    <!-- Fallback for any unmapped handler: a preview/download surface. -->
-    <template #fallback="{ handler }">
-      No editor registered for {{ handler.id }}.
-    </template>
-  </VaulterDocumentNode>
-</template>
-```
-
-Or register once at app startup — an explicit ES-module import/call, not an ambient global (the
-lesson behind Nextcloud Viewer's move away from `OCA.Viewer.registerHandler`):
+<!-- snippet: host -->
 
 ```ts
 // main.ts — once, before mounting the app
-import { registerEngineComponent } from '@vaulter/vue'
-import AppTipTapEditor from './AppTipTapEditor.vue'
-import AppCsvPreview from './AppCsvPreview.vue'
+import { createApp } from 'vue'
+import { VaulterPlugin } from '@vaulter/vue'
+import App from './App.vue'
+import AppTipTapEditor from './AppTipTapEditor.vue'   // a TipTap editor the host supplies
 
-registerEngineComponent('VaulterEditor', AppTipTapEditor)
-registerEngineComponent('AppCsvPreview', AppCsvPreview)
+createApp(App)
+  .use(VaulterPlugin, {
+    baseUrl: '/api/vaulter',
+    viewers: {
+      'vaulter/tiptap': AppTipTapEditor,                        // replace a built-in key
+      'acme/csv-preview': () => import('./AppCsvPreview.vue'),  // our CSV handler's viewer key
+    },
+  })
+  .mount('#app')
 ```
 
-Every `VaulterDocumentNode` on the page now resolves these without a local `componentMap`.
-`unregisterEngineComponent(id)` removes an entry; `registeredEngineComponentIds()` lists what is
-currently registered (mostly for diagnostics/tests). The registry lookup is **not reactive**:
-register before mounting the app (or at least before mounting the `VaulterDocumentNode` that
-needs the entry) — an already-mounted node does not re-resolve just because a later
-`registerEngineComponent` call added its `ui.key` key.
+A function entry is a loader (lazily imported); a component is mounted directly. Render a node
+with the viewer the server chose:
 
-In development, `VaulterDocumentNode` logs one `console.warn` per unmapped `ui.key`/`id`
-(not repeated for the same key WITHIN ONE component instance) naming both registration
-channels — the same gap Nova's string-key `Nova.booting` binding leaves silent.
+<!-- snippet: host -->
 
-If the presentation is **collaborative** (e.g. a `vaulter/rich-text` document) and collaboration is
-enabled, `VaulterDocumentNode` opens a Yjs session and runs the editor in collaborative mode;
-otherwise it uses the autosave path described in [Document nodes](/guides/documents#working-state-and-checkpoints).
+```vue
+<script setup lang="ts">
+import { VaulterViewer } from '@vaulter/vue'
+import type { Node } from '@vaulter/vue'
+
+defineProps<{ node: Node }>()
+</script>
+
+<template>
+  <VaulterViewer :node="node" />
+</template>
+```
+
+`useViewerRegistry()` returns the registry for runtime changes (`register`, `unregister`,
+`has`, `keys`). Registrations belong to one app: two apps on a page never share viewers.
+
+The `vaulter/tiptap` and `vaulter/univer` viewers are headless editing shells
+(`VaulterDocumentNode`, `VaulterSpreadsheet`): they load the content, autosave and, when the
+presentation is **collaborative** and collaboration is enabled, open a Yjs session. The editor
+engine itself is yours — replace the key as above, or fill the shell's default slot. See
+[Document nodes](/guides/documents#working-state-and-checkpoints) for the autosave path.
 
 ## Generator
+
+<!-- snippet: shell -->
 
 ```bash
 php artisan vaulter:make:file-handler Csv
@@ -414,5 +434,4 @@ and never edits your config. An existing file is kept unless you pass `--force`.
 - VOs — `ContentCapabilities`, `ViewerDescriptor`, `NodePresentation`, `FileDescriptor`
 - Enum — `Vaulter\Enums\Handlers\Capability`
 - Built-ins — `PreviewHandler`, `DownloadOnlyHandler` (documents: see [Document Types](./document-types.md))
-- Frontend registry (`@vaulter/vue`) — `registerEngineComponent`, `unregisterEngineComponent`,
-  `resolveEngineComponent`, `registeredEngineComponentIds`, `clearEngineComponents`
+- Frontend viewers (`@vaulter/vue`) — the `viewers` plugin option, `VaulterViewer`, `createViewerRegistry`, `useViewerRegistry`

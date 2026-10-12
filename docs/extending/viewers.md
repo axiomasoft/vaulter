@@ -25,6 +25,8 @@ Start from [Document Handlers → the worked CSV example](/extending/file-handle
 if your handler is preview/download-only. The rest of this guide assumes an **editable**
 handler — the richer case.
 
+<!-- snippet: host -->
+
 ```php
 <?php
 
@@ -123,6 +125,8 @@ side and the contract does not privilege either:
   **not** a content payload at all. The server never parses or validates the document body; it
   only brokers the session.
 
+<!-- snippet: host -->
+
 ```php
 // WOPI-class handler — the viewer() payload has a completely different shape.
 public function viewer(FileDescriptor $file): ViewerDescriptor
@@ -169,54 +173,58 @@ Same three channels as any handler — see
 ## 7. Mounting it on the client
 
 See [Document Handlers → Mounting the resolved handler in Vue](/extending/file-handlers#mounting-the-resolved-handler-in-vue)
-for the two registration channels (`componentMap` prop vs. the global
-`registerEngineComponent(id, component)`) — the server-side registry never assumes a specific
-frontend stack. What follows is the client-side skeleton itself: the component
-`VaulterDocumentNode` mounts receives one `handler` prop, typed `NodePresentation` (exported by
-`@vaulter/vue`), carrying your `ui.props` map verbatim.
+for how `presentation.viewer.key` reaches a component — the server-side registry never assumes a
+specific frontend stack. What follows is the client-side skeleton itself: the component
+registered under your viewer key receives `node`, `readonly` and every entry of the
+`viewer.props` map your PHP handler returned, verbatim.
+
+<!-- snippet: host -->
 
 ```vue
-<!-- AppMyEditor.vue — the component registered for handler id "my-editor" -->
+<!-- AppMyEditor.vue — the component registered for viewer key "acme/my-editor" -->
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { DocumentNodeEditorProps } from '@vaulter/vue'
+import type { Node } from '@vaulter/vue'
 
-// `VaulterDocumentNode` binds this shape (`DocumentNodeEditorProps`) — `content`/`onChange`
-// are typed for TipTap in the exported interface (the built-in editor), so a non-rich-text
-// handler narrows `handler.ui.props` to its own shape instead of relying on `content`.
-// `handler.ui.props` is whatever your PHP handler's viewer() returned (step 1/3) — an
-// arbitrary, handler-decided map; the contract does not validate it for you.
-interface MyEditorProps {
-  format: string
-  extensions: string[]
-}
+// `viewer.props` is whatever your PHP handler's viewer() returned (step 1/3) — an arbitrary,
+// handler-decided map; the contract does not validate it for you. The server's props go
+// first, so they can never override `node` or `readonly`.
+const props = defineProps<{
+  node: Node
+  readonly: boolean
+  format?: string
+  extensions?: string[]
+}>()
 
-const props = defineProps<DocumentNodeEditorProps>()
-
-const editorProps = computed(() => props.handler.ui.props as unknown as MyEditorProps)
+const editable = computed(() => !props.readonly && props.node.abilities.edit)
 </script>
 
 <template>
   <div class="app-my-editor">
-    <!-- Read editorProps.format / editorProps.extensions here; call onChange(next)
-         on every local edit unless readonly is true. -->
+    <!-- Read props.format / props.extensions here; skip edits unless `editable` is true. -->
   </div>
 </template>
 ```
 
-Register it once at startup, the same way as [any handler component](/extending/file-handlers#mounting-the-resolved-handler-in-vue):
+Register it once at startup, the same way as [any handler viewer](/extending/file-handlers#mounting-the-resolved-handler-in-vue):
+
+<!-- snippet: host -->
 
 ```ts
 // main.ts
-import { registerEngineComponent } from '@vaulter/vue'
+import { createApp } from 'vue'
+import { VaulterPlugin } from '@vaulter/vue'
+import App from './App.vue'
 import AppMyEditor from './AppMyEditor.vue'
 
-registerEngineComponent('my-editor', AppMyEditor)
+createApp(App)
+  .use(VaulterPlugin, { viewers: { 'acme/my-editor': AppMyEditor } })
+  .mount('#app')
 ```
 
-No separate frontend package is required (D8, VLT-CANON P1.1): a third-party engine ships as
-plain host application code — a `.vue` file plus one `registerEngineComponent` call — the same
-way `@vaulter/vue` itself bundles its TipTap editor rather than publishing it standalone.
+No separate frontend package is required: a third-party engine ships as plain host application
+code — a `.vue` file plus one entry in the plugin's `viewers` option — the same way
+`@vaulter/vue` itself bundles its TipTap shell rather than publishing it standalone.
 A dedicated `@vaulter/vue-engine-<name>` package is introduced later, lazily, only once a real
 external consumer of that specific engine exists.
 

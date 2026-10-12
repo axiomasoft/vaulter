@@ -28,6 +28,8 @@ A comment carries an `author` (the authenticated user, polymorphic), a `body`, a
 
 ## Front-end
 
+<!-- snippet: host -->
+
 ```ts
 import { useComments } from '@vaulter/vue'
 
@@ -38,6 +40,8 @@ await add({ body: 'Needs a citation', anchor: { from: 10, to: 24 } })
 ```
 
 Or drop in the slot-driven panel:
+
+<!-- snippet: host -->
 
 ```vue
 <VaulterCommentsPanel :node-id="nodeId" @added="scrollToBottom">

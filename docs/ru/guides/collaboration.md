@@ -20,6 +20,8 @@ reverb` теперь даёт `InvalidConfigurationException`. Broadcast-кан�
 
 Все ключи находятся под `config('vaulter-documents.collaboration')`:
 
+<!-- snippet: config -->
+
 ```php
 // config/vaulter-documents.php
 'collaboration' => [
@@ -246,7 +248,7 @@ VAULTER_COLLAB_WEBHOOK_SECRET=<другой случайный>   # общий �
 
 ## Фронтенд (`@vaulter/vue`)
 
-`useNodeCollaboration` получает сессию, открывает `@hocuspocus/provider` на свежем `Y.Doc` и
+`useCollaboration` получает сессию, открывает `@hocuspocus/provider` на свежем `Y.Doc` и
 обрабатывает терминальные закрытия хаба:
 
 - **4409 `epoch_changed`** — провайдер и старый `Y.Doc` уничтожаются, запрашивается новая
@@ -259,13 +261,15 @@ VAULTER_COLLAB_WEBHOOK_SECRET=<другой случайный>   # общий �
   сессия получила бы тот же отказ: ничего не переоткрывается, выставляется `error`, редактор
   остаётся отключённым.
 
+<!-- snippet: host -->
+
 ```ts
 import { watch } from 'vue'
-import { useNodeCollaboration } from '@vaulter/vue'
+import { useCollaboration } from '@vaulter/vue'
 import { Editor } from '@tiptap/vue-3'
 import Collaboration from '@tiptap/extension-collaboration'
 
-const collab = useNodeCollaboration(nodeId, { supportedSchemaVersion: 1 })
+const collab = useCollaboration(nodeId, { supportedSchemaVersion: 1 })
 await collab.connect()
 
 let editor = makeEditor()
@@ -297,15 +301,16 @@ collab.disconnect()
 ### `VaulterDocumentNode`
 
 Когда выбранный handler коллаборативный (`capabilities.collaborative === true`) и
-коллаборация включена, `VaulterDocumentNode` открывает сессию через `useNodeCollaboration` и
+коллаборация включена, `VaulterDocumentNode` открывает сессию через `useCollaboration` и
 передаёт редактору `collaborative: true`, `content: null`, `ydoc` (заменяется после restore —
 перепривязывайте при изменении), присутствие и состояние соединения. Иначе используется путь
 автосохранения.
 
+<!-- snippet: host -->
+
 ```vue
 <VaulterDocumentNode
-  :node-id="nodeId"
-  :component-map="componentMap"
+  :node="node"
   :supported-schema-version="1"
   @collaborating="(readonly) => { /* a session opened */ }"
   @schema-outdated="(version) => { /* ask the user to update the application */ }"

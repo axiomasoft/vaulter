@@ -15,7 +15,7 @@ Vaulter ships as a set of packages — install the ones your app needs:
 
 - **`axioma-studio/vaulter-core`** — the shared kernel (authorization, CAS contracts, sharing,
   panels, Artisan commands). Required by every other backend package.
-- **`axioma-studio/vaulter-drive`** — folders, files, uploads, `Vaulter::for()` / `DriveHandle`.
+- **`axioma-studio/vaulter-drive`** — folders, files, uploads, `Vaulter::drive()` / `DriveHandle`.
   Pulls in `axioma-studio/vaulter-media` (the CAS engine) automatically.
 - **`axioma-studio/vaulter-documents`** — TipTap/Yjs document nodes, versions, comments, export.
 - **`@vaulter/vue`** — the Vue 3 + TypeScript components, composables and API client.
@@ -47,7 +47,7 @@ These are the nouns you will meet throughout the docs and the code.
 | Concept | What it is |
 |---|---|
 | **Drive Profile** | A named drive policy for a host entity: feature flags and grants over one shared schema. |
-| **Storage** | The concrete drive row (`v_storages`) for one host entity within a panel. `Vaulter::for($entity)` get-or-creates it and provisions its root folder. |
+| **Storage** | The concrete drive row (`v_storages`) for one host entity within a panel. `Vaulter::drive($entity)` get-or-creates it and provisions its root folder. |
 | **Node** | An entry in the unified tree (`v_nodes`): a **folder**, **file**, **document** or **shortcut**. One tree per storage, rooted at the storage's root folder. |
 | **Blob** | The content-addressed bytes behind a file (`v_blobs`). Keyed by `sha256`, deduplicated within a configurable scope, and reclaimed by a two-phase garbage collector. |
 | **ACL / AccessResolver** | The Vaulter-owned effective-permission engine. It folds per-node grants (`v_node_grants`) with a swappable **host-role driver** to answer "may this actor do this?". |
@@ -88,24 +88,27 @@ and the resolver combines them with node grants. The design is recorded in
 Everything host-facing goes through the `Vaulter` facade (`Vaulter\Facades\Vaulter`,
 auto-aliased as `Vaulter`). The methods you will use most:
 
+<!-- snippet: host -->
+
 ```php
+use Vaulter\Documents\Facades\Documents;
 use Vaulter\Facades\Vaulter;
 
-// Open a Drive handle for a host entity (get-or-creates its storage + root folder).
-$drive = Vaulter::for($project);                 // DriveHandle
-$drive = Vaulter::for($project, 'project_drive'); // …within a named panel
+// Open a Drive handle for a host entity (get-or-creates its drive + root folder).
+$drive = Vaulter::drive($project);                  // DriveHandle
+$drive = Vaulter::drive($project, 'project_drive'); // …within a named profile
+$drive = Vaulter::findDrive($project);              // null instead of creating one
 
-// Resolve panels.
-Vaulter::profiles()->get('project_drive');                  // Panel
+// Resolve profiles.
+Vaulter::profiles()->get('project_drive');          // Profile
 Vaulter::profiles();                                // ProfileRegistry
 
 // Extend the package at runtime.
-Vaulter::handlers()->register(MyPdfHandler::class);    // a new document format
+Vaulter::handlers()->register(MyPdfHandler::class);   // a new file format
 Documents::exporters()->register(PdfExporter::class); // a new export format
-Vaulter::resolvePermissionsWith($resolver);       // the legacy document-path resolver
 
-// Resolve the collaboration driver.
-Vaulter::driver();                                // CollaborationDriver
+// The permission driver lane.
+Vaulter::permissions();                             // PermissionDriverManager
 ```
 
 The full surface is in the [API reference](/reference/php-api).

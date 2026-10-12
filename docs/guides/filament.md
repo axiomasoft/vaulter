@@ -24,6 +24,8 @@ resources respect is covered under [Authorization](/concepts/access-model).
 
 ## Installation
 
+<!-- snippet: shell -->
+
 ```bash
 composer require axioma-studio/vaulter-filament
 ```
@@ -31,6 +33,8 @@ composer require axioma-studio/vaulter-filament
 The plugin ships its provider via Laravel package discovery
 (`Vaulter\Filament\VaulterFilamentServiceProvider`). Publish the config when you want to toggle
 resources or rename the navigation group:
+
+<!-- snippet: shell -->
 
 ```bash
 php artisan vendor:publish --tag=vaulter-filament-config
@@ -41,6 +45,8 @@ This writes `config/vaulter-filament.php`.
 ## Registering the plugin
 
 Add `VaulterPlugin::make()` to your panel provider's `plugins()` array:
+
+<!-- snippet: host -->
 
 ```php
 use Filament\Panel;
@@ -58,6 +64,8 @@ public function panel(Panel $panel): Panel
 The plugin id is `vaulter`. If you need the concrete plugin instance back from a panel (for its
 config / toggles), use the typed accessor instead of an inline cast:
 
+<!-- snippet: host -->
+
 ```php
 use Vaulter\Filament\VaulterPlugin;
 
@@ -72,6 +80,8 @@ legacy document surface.
 
 `config/vaulter-filament.php` has two sections:
 
+<!-- snippet: config -->
+
 ```php
 return [
     // The Filament navigation group every Vaulter resource is listed under.
@@ -85,11 +95,6 @@ return [
         'grant'    => true,
         'share'    => true,
         'activity' => true,
-
-        // Legacy document-centric surface.
-        'document'     => true,
-        'folder'       => true,
-        'legacy_share' => true,
     ],
 ];
 ```
@@ -108,6 +113,8 @@ If your host app does not use the legacy document tables, set `document`, `folde
 Every Drive/permissions resource resolves its acting admin through `Vaulter\Filament\Support\PanelActor`
 and works through the handle that admin gets from core. The handle decides what exists for them and what
 they may do, so a change in core access rules reaches the panel without a panel change:
+
+<!-- snippet: host -->
 
 ```php
 use Vaulter\Facades\Vaulter;
@@ -161,6 +168,8 @@ The heart of the panel: the unified `folder | file | document | shortcut` node t
 | Restore | `trash()->restore(...)` (visible only on a trashed node) | `Ability::Restore` |
 | Delete permanently | `trash()->purge(...)` (visible only on a trashed node) | `Ability::Delete` |
 
+<!-- snippet: host -->
+
 ```php
 // Inside NodeResource: the rename row action's handler.
 PanelDrives::handle($driveId)->nodes()->rename(node: $id, name: $name);
@@ -190,6 +199,8 @@ Both mutations go through the handle's `access()` operations and require `Abilit
 - **Create** (the list page's `Create grant` header action) →
   `access()->grant(...)` (idempotent upsert on the grant key).
 - **Revoke** (row action) → `access()->revoke(...)`.
+
+<!-- snippet: host -->
 
 ```php
 // NodeGrantResource::grantFromData — minting through the handle.
@@ -226,6 +237,8 @@ status. The raw token is surfaced **exactly once**, at mint time, via a persiste
 - **Revoke** (row action) → `shares()->revoke(...)`.
 
 Both require `Ability::Share` on the node.
+
+<!-- snippet: host -->
 
 ```php
 $minted = Vaulter::drive($owner)->actingAs($user)->shares()->create($node, new ShareLinkInput(

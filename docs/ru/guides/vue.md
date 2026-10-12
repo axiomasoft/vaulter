@@ -13,6 +13,8 @@ outline: deep
 3. **реестр viewer'ов**, который решает, каким компонентом показать узел, и безопасный запасной вариант;
 4. **composable-функции** и **компоненты**, превращающие клиент в headless-UI Drive (`VaulterDrive`, …).
 
+<!-- snippet: shell -->
+
 ```bash
 npm install @vaulter/vue
 ```
@@ -28,6 +30,8 @@ Peer-зависимости: `vue@^3.4`, `yjs@^13.6` и `@tiptap/pm@^3`. Тра�
 
 Установите плагин один раз. Он собирает клиент из ваших опций, создаёт реестр viewer'ов **этого приложения**,
 предоставляет i18n и регистрирует все компоненты глобально:
+
+<!-- snippet: host -->
 
 ```ts
 import { createApp } from 'vue'
@@ -64,6 +68,8 @@ createApp(App)
 
 Для тестов или SSR-обвязки на запрос соберите клиент сами и предоставьте его:
 
+<!-- snippet: host -->
+
 ```ts
 import { createVaulterClient, provideVaulterClient } from '@vaulter/vue'
 
@@ -78,6 +84,8 @@ provideVaulterClient(app, createVaulterClient({ baseUrl: '/api/vaulter/v1' }))
 руками его не правят. Пакет экспортирует готовые алиасы — `Node`, `Drive`, `FileRevision`, `DocumentRevision`,
 `Grant`, `Share`, `MintedShare`, `Comment`, `Activity`, `Change`, `CollaborationSession`, `Problem`, … — а также
 сырые `components`, `paths` и `operations` для всего остального. Идентификаторы — всегда строки.
+
+<!-- snippet: shell -->
 
 ```bash
 npm run api:generate   # перегенерировать после изменения контракта
@@ -101,6 +109,8 @@ npm run api:check      # CI: падает, если файл устарел ил
 | `shares`, `publicShares` | `list`, `create`, `update`, `rotate`, `revoke`; `get`, `nodes`, `downloadUrl` |
 | `comments`, `activity`, `changes` | обсуждения; ленты активности; `start` и `list` ленты изменений |
 
+<!-- snippet: host -->
+
 ```ts
 const client = useVaulterClient()
 
@@ -121,6 +131,8 @@ const renamed = await client.nodes.update(folder.id, { name: 'Bills' }, { etag: 
 сами. Каждый метод, меняющий узел или документ, принимает его **обязательной** опцией `{ etag }` и отправляет как
 `If-Match`:
 
+<!-- snippet: host -->
+
 ```ts
 await client.nodes.trash(node.id, { etag: node.etag })
 await client.nodes.move(node.id, targetId, { etag: node.etag, onConflict: 'rename' })
@@ -139,6 +151,8 @@ await client.documents.update(node.id, content, { etag: loaded.etag! })
 ### Ошибки
 
 Ответ не из 2xx бросает `VaulterApiError`, разобранный из `application/problem+json` (RFC 9457):
+
+<!-- snippet: host -->
 
 ```ts
 try {
@@ -170,6 +184,8 @@ try {
 `client.files.upload()` — загрузка одним запросом. `client.uploads.start()` возвращает возобновляемую загрузку (tus
 по умолчанию, `protocol: 's3'` для S3 multipart), которая всегда продолжает с серверного смещения:
 
+<!-- snippet: host -->
+
 ```ts
 const upload = client.uploads.start(driveId, file, { parentId, onProgress: (sent, total) => {} })
 const node = await upload.start()   // позже: await upload.abort()
@@ -182,6 +198,8 @@ const node = await upload.start()   // позже: await upload.abort()
 Сервер сообщает, **каким viewer'ом** показать узел, в `node.presentation.viewer.key` (и его `props`). Реестр сопоставляет
 ключи компонентам. Он принадлежит **одному приложению** (`provide/inject`): два приложения или два SSR-запроса никогда
 не видят viewer'ы друг друга.
+
+<!-- snippet: host -->
 
 ```ts
 app.use(VaulterPlugin, {
@@ -223,9 +241,11 @@ app.use(VaulterPlugin, {
 
 **Мутации принимают узел, а не его id**, потому что сервер сравнивает его `etag`:
 
+<!-- snippet: host -->
+
 ```ts
 const { nodes, rename, conflict } = useNodes(driveId)
-await rename(node, 'новое имя')       // отправляет If-Match: node.etag
+await rename(node, 'new name')       // отправляет If-Match: node.etag
 ```
 
 При `412` composable **перечитывает узел** (список уже показывает победившую версию), записывает в `conflict`
@@ -301,6 +321,8 @@ Collaboration из TipTap. Содержимое всегда приходит о
 
 ## Разобранный пример: файловый менеджер
 
+<!-- snippet: host -->
+
 ```vue
 <script setup lang="ts">
 import { shallowRef } from 'vue'
@@ -328,13 +350,13 @@ function onNodeSelected(node: Node) {
   <aside v-if="grantsNode">
     <VaulterGrantsPanel :node-id="grantsNode.id">
       <template #subject="{ setSubject }">
-        <button type="button" @click="setSubject({ type: 'user', id: '42' })">Выдать Алисе</button>
+        <button type="button" @click="setSubject({ type: 'user', id: '42' })">Grant to Alice</button>
       </template>
     </VaulterGrantsPanel>
   </aside>
 
   <dialog v-if="openNode" open>
-    <button type="button" @click="openNode = null">Закрыть</button>
+    <button type="button" @click="openNode = null">Close</button>
     <!-- Тот viewer, который выбрал сервер; неизвестные откатываются на безопасный просмотр «скачать». -->
     <VaulterViewer :node="openNode" />
   </dialog>
@@ -343,6 +365,8 @@ function onNodeSelected(node: Node) {
 
 Зарегистрируйте редактор документов один раз в опциях плагина — viewer получает узел и монтирует ваш TipTap в слоте
 `VaulterDocumentNode`:
+
+<!-- snippet: host -->
 
 ```ts
 app.use(VaulterPlugin, { viewers: { 'vaulter/tiptap': () => import('./AppDocumentViewer.vue') } })

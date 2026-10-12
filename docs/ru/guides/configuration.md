@@ -9,6 +9,8 @@ outline: deep
 Каждый установленный пакет владеет своим файлом и типизированным API конфигурации (AD26).
 Опубликуйте нужные файлы, например:
 
+<!-- snippet: shell -->
+
 ```bash
 php artisan vendor:publish --tag=vaulter-config
 php artisan vendor:publish --tag=vaulter-documents-config
@@ -33,6 +35,8 @@ php artisan vendor:publish --tag=vaulter-documents-config
 Laravel по умолчанию. Имя таблицы состоит из префикса и канонического имени сущности:
 `DatabaseConfig::table('drives')` по умолчанию возвращает `v_drives`. Карта `table_names`
 нужна только для обновления: `DatabaseConfig::legacyTable()` ищет по ней старые физические таблицы.
+
+<!-- snippet: config -->
 
 ```php
 // config/vaulter.php
@@ -104,6 +108,8 @@ preview/download и обработчики установленного Document
 
 ## Маршруты и публичные ссылки
 
+<!-- snippet: config -->
+
 ```php
 // config/vaulter.php
 'routes' => [
@@ -133,6 +139,8 @@ preview/download и обработчики установленного Document
 
 ## Media: контент-адресуемое хранилище
 
+<!-- snippet: config -->
+
 ```php
 // config/vaulter-media.php
 'disk' => env('VAULTER_DISK', 'local'),
@@ -152,6 +160,8 @@ CAS-бакет должен быть без версионирования: уд
 См. [Хранилище и блобы](/ru/concepts/storage-and-blobs).
 
 ## Drive: загрузки, имена и корзина
+
+<!-- snippet: config -->
 
 ```php
 // config/vaulter-drive.php
@@ -187,6 +197,8 @@ CAS-бакет должен быть без версионирования: уд
 См. [Загрузки](/ru/guides/uploads) и [Корзина](/ru/guides/trash).
 
 ## Documents: содержимое, ревизии, комментарии и коллаборация
+
+<!-- snippet: config -->
 
 ```php
 // config/vaulter-documents.php
@@ -237,6 +249,8 @@ CAS-бакет должен быть без версионирования: уд
 Классы конфигурации — `final readonly` singleton поверх
 `Illuminate\Contracts\Config\Repository`. В сервисах используйте конструкторную
 инъекцию; в моделях, миграциях и статических контекстах — `app(...)`.
+
+<!-- snippet: host -->
 
 ```php
 use Vaulter\Configuration\VaulterConfig;

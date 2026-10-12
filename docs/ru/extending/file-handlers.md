@@ -31,6 +31,8 @@ outline: deep
 
 Обработчик реализует `Vaulter\Contracts\Handlers\FileHandler`:
 
+<!-- snippet: signature Vaulter\Contracts\Handlers\FileHandler -->
+
 ```php
 namespace Vaulter\Contracts\Handlers;
 
@@ -66,6 +68,8 @@ interface FileHandler
 файлу. `downloadable` по умолчанию `true` (что угодно можно скачать как байты); более богатые флаги
 включаются явно:
 
+<!-- snippet: host -->
+
 ```php
 new ContentCapabilities(
     editable:      false,
@@ -91,6 +95,8 @@ new ContentCapabilities(
 
 `Vaulter\ValueObjects\Handlers\ViewerDescriptor` сообщает клиенту, какой Vue-компонент монтировать, через
 какой маршрут открывать узел и какие дополнительные сериализуемые props передать:
+
+<!-- snippet: host -->
 
 ```php
 new ViewerDescriptor(
@@ -148,6 +154,8 @@ Vue-клиент направил узел, не прогоняя mime-логи�
 
 Набор по умолчанию регистрируется из конфига (`config('vaulter.handlers')`):
 
+<!-- snippet: config -->
+
 ```php
 // config/vaulter.php
 'handlers' => [
@@ -171,6 +179,8 @@ kind-презентеру, который помечает тегом `vaulter-d
 
 ::: code-group
 
+<!-- snippet: shell -->
+
 ```bash [HTTP]
 # GET {prefix}/v1/nodes/{node}  → data.presentation
 curl https://app.test/api/vaulter/v1/nodes/77
@@ -188,6 +198,8 @@ curl https://app.test/api/vaulter/v1/nodes/77
 #               "viewer": { "key": "vaulter/tiptap", "props": { "preset": "rich-text" } } } } }
 ```
 
+<!-- snippet: host -->
+
 ```php [PHP — the resolver]
 use Vaulter\Contracts\Handlers\NodePresenter;
 
@@ -195,12 +207,13 @@ $descriptor = app(NodePresenter::class)->present($node);
 // NodePresentation: ->id, ->documentType, ->typeAvailable, ->capabilities, ->ui (->toArray() для сериализации)
 ```
 
-```ts [Vue — composable]
-import { useDocumentNode } from '@vaulter/vue'
+<!-- snippet: host -->
 
-const { handler, loadHandler } = useDocumentNode(nodeId)
-await loadHandler()
-// handler.value → { id, capabilities, ui }
+```ts [Vue — composable]
+import { useVaulterClient } from '@vaulter/vue'
+
+const node = await useVaulterClient().nodes.get(nodeId)
+// node.presentation → { handler, document_type, type_available, capabilities, viewer }
 ```
 
 :::
@@ -216,6 +229,8 @@ await loadHandler()
 ядра.
 
 ### 1. Реализуем обработчик
+
+<!-- snippet: host -->
 
 ```php
 <?php
@@ -286,6 +301,8 @@ enum не тронут.
 
 ::: code-group
 
+<!-- snippet: config -->
+
 ```php [config — cache-safe FQCN list]
 // config/vaulter.php — append to the handlers list (FQCN only, config-cache safe)
 'handlers' => [
@@ -295,6 +312,8 @@ enum не тронут.
 ],
 ```
 
+<!-- snippet: host -->
+
 ```php [runtime — Vaulter::handlers()->register]
 // In a service provider's boot() — FQCN or an instance
 use Vaulter\Facades\Vaulter;
@@ -302,6 +321,8 @@ use App\Vaulter\Handlers\CsvHandler;
 
 Vaulter::handlers()->register(CsvHandler::class);
 ```
+
+<!-- snippet: host -->
 
 ```php [tagged container binding]
 // In a service provider's register() — the conditional/host extension channel
@@ -334,72 +355,68 @@ $this->app->tag([App\Vaulter\Handlers\CsvHandler::class], 'vaulter.file_handlers
 
 ## Монтирование подобранного обработчика во Vue
 
-`VaulterDocumentNode` — это мост от дескриптора обработчика к конкретному редактору/превью. Он
-загружает обработчик + head-контент, затем монтирует компонент, на который указывает `ui.key`
-дескриптора. Есть два источника сопоставления, проверяются по порядку:
+`presentation.viewer.key` узла называет **вьюер**, который монтирует клиент. `VaulterViewer`
+(`@vaulter/vue`) ищет ключ в реестре вьюеров приложения и монтирует компонент, передавая ему
+`node`, флаг `readonly` и `viewer.props` обработчика. Узел без ключа, с ключом, который
+приложение не зарегистрировало, или с типом документа, который это приложение не умеет
+обрабатывать (`type_available = false`), уходит во вьюер `vaulter/unsupported` — элемент всё
+равно виден, назван и доступен для скачивания.
 
-1. prop `componentMap` — область действия ограничена одной точкой монтирования `VaulterDocumentNode`;
-2. глобальный реестр `registerEngineComponent` (`@vaulter/vue`) — явная функция, которую хост
-   вызывает один раз при старте, для движков, общих для всех точек монтирования (VLT-CANON P1.2).
+Встроенные ключи (`vaulter/tiptap`, `vaulter/univer`, `vaulter/pdf-preview`,
+`vaulter/image-preview`, `vaulter/download`, `vaulter/unsupported`) ставит плагин. Свои — или
+замену встроенных — добавляет опция плагина `viewers`: явный ES-импорт, а не неявный глобал:
 
-`componentMap` всегда побеждает, если оба источника сопоставляют один и тот же ключ. Ни один из
-них не обязателен — используйте тот, что подходит числу точек монтирования в вашем приложении.
-
-```vue
-<script setup lang="ts">
-import { VaulterDocumentNode } from '@vaulter/vue'
-import AppTipTapEditor from './AppTipTapEditor.vue'   // a TipTap editor the host supplies
-import AppCsvPreview from './AppCsvPreview.vue'
-
-// Map a handler's `ui.key` (or its `id`) to the component to mount.
-const componentMap = {
-  'vaulter/tiptap': AppTipTapEditor,   // the TipTap handler's ui.key
-  'acme/csv-preview': AppCsvPreview,                    // our CSV handler's ui.key
-}
-</script>
-
-<template>
-  <VaulterDocumentNode :node-id="nodeId" :component-map="componentMap">
-    <!-- Fallback for any unmapped handler: a preview/download surface. -->
-    <template #fallback="{ handler }">
-      No editor registered for {{ handler.id }}.
-    </template>
-  </VaulterDocumentNode>
-</template>
-```
-
-Или зарегистрируйте один раз при старте приложения — явный ES-module импорт/вызов, а не
-неявный глобал (тот же урок, что стоит за отходом Nextcloud Viewer от
-`OCA.Viewer.registerHandler`):
+<!-- snippet: host -->
 
 ```ts
 // main.ts — один раз, до монтирования приложения
-import { registerEngineComponent } from '@vaulter/vue'
-import AppTipTapEditor from './AppTipTapEditor.vue'
-import AppCsvPreview from './AppCsvPreview.vue'
+import { createApp } from 'vue'
+import { VaulterPlugin } from '@vaulter/vue'
+import App from './App.vue'
+import AppTipTapEditor from './AppTipTapEditor.vue'   // TipTap-редактор, который поставляет хост
 
-registerEngineComponent('VaulterEditor', AppTipTapEditor)
-registerEngineComponent('AppCsvPreview', AppCsvPreview)
+createApp(App)
+  .use(VaulterPlugin, {
+    baseUrl: '/api/vaulter',
+    viewers: {
+      'vaulter/tiptap': AppTipTapEditor,                        // заменить встроенный ключ
+      'acme/csv-preview': () => import('./AppCsvPreview.vue'),  // ключ вьюера нашего CSV-обработчика
+    },
+  })
+  .mount('#app')
 ```
 
-Теперь каждый `VaulterDocumentNode` на странице подбирает эти компоненты без локального
-`componentMap`. `unregisterEngineComponent(id)` удаляет запись; `registeredEngineComponentIds()`
-перечисляет, что зарегистрировано сейчас (в основном для диагностики/тестов). Подбор из
-реестра **не реактивен**: регистрируйте до монтирования приложения (или как минимум до
-монтирования нужного `VaulterDocumentNode`) — уже смонтированный узел не переподберёт компонент
-только потому, что `registerEngineComponent` для его `ui.key` вызвали позже.
+Запись-функция — загрузчик (ленивый импорт); компонент монтируется напрямую. Отрисовать узел
+вьюером, который выбрал сервер:
 
-В dev-режиме `VaulterDocumentNode` логирует один `console.warn` на каждый несопоставленный
-`ui.key`/`id` (не повторяется для одного и того же ключа В ПРЕДЕЛАХ ОДНОГО инстанса
-компонента), называя оба канала регистрации — тот же пробел, который string-key биндинг
-`Nova.booting` у Nova оставляет молчаливым.
+<!-- snippet: host -->
 
-Если представление **collaborative** (например, документ `vaulter/rich-text`) и совместное редактирование
-включено, `VaulterDocumentNode` открывает Yjs-сессию и запускает редактор в режиме совместного
-редактирования; иначе он использует путь автосохранения, описанный в
-[Узлах-документах](/ru/guides/documents#автосохранение-контента).
+```vue
+<script setup lang="ts">
+import { VaulterViewer } from '@vaulter/vue'
+import type { Node } from '@vaulter/vue'
+
+defineProps<{ node: Node }>()
+</script>
+
+<template>
+  <VaulterViewer :node="node" />
+</template>
+```
+
+`useViewerRegistry()` возвращает реестр для изменений в рантайме (`register`, `unregister`,
+`has`, `keys`). Регистрации принадлежат одному приложению: два приложения на странице не делят
+вьюеры.
+
+Вьюеры `vaulter/tiptap` и `vaulter/univer` — «безголовые» оболочки редактирования
+(`VaulterDocumentNode`, `VaulterSpreadsheet`): они загружают контент, автосохраняют и, когда
+презентация **коллаборативна** и коллаборация включена, открывают Yjs-сессию. Сам движок
+редактора — ваш: замените ключ как выше или заполните слот оболочки по умолчанию. Путь
+автосохранения — в [Узлы-документы](/ru/guides/documents#рабочее-состояние-и-чекпоинты).
 
 ## Генератор
+
+<!-- snippet: shell -->
 
 ```bash
 php artisan vaulter:make:file-handler Csv
@@ -417,5 +434,4 @@ php artisan vaulter:make:file-handler Csv
 - VO — `ContentCapabilities`, `ViewerDescriptor`, `NodePresentation`, `FileDescriptor`
 - Enum — `Vaulter\Enums\Handlers\Capability`
 - Встроенные — `PreviewHandler`, `DownloadOnlyHandler` (документы: см. [Типы документов](./document-types.md))
-- Фронтовый реестр (`@vaulter/vue`) — `registerEngineComponent`, `unregisterEngineComponent`,
-  `resolveEngineComponent`, `registeredEngineComponentIds`, `clearEngineComponents`
+- Фронтовые вьюеры (`@vaulter/vue`) — опция плагина `viewers`, `VaulterViewer`, `createViewerRegistry`, `useViewerRegistry`

@@ -1,54 +1,46 @@
 # Права (abilities) — интеграция с фронтендом
 
-Vaulter вычисляет права на документ на стороне сервера (по [ролям](/ru/concepts/access-model#способности-и-роли) актора; `view` и `download` — отдельные права) и отдаёт их фронтенду, поэтому
+Vaulter вычисляет права на узел на стороне сервера (по [ролям и грантам](/ru/concepts/access-model#способности-и-роли) актора) и отдаёт их фронтенду, поэтому
 ваши Vue-компоненты отрисовывают только те действия, которые пользователю доступны. Никаких
 лишних обращений к API, никакого дублирования логики прав в JavaScript.
 
 ## В ответах API
 
-`DocumentResource` встраивает объект `abilities`, вычисленный вашим `PermissionResolver`:
+Каждый ресурс узла встраивает объект `abilities` — по одному boolean на право, вычисленному
+для авторизованного актора:
 
 ```json
 {
   "data": {
-    "id": 1,
-    "title": "Q3 Proposal",
-    "abilities": { "view": true, "download": true, "comment": true, "edit": true, "manage": false, "delete": false }
+    "id": "01J...",
+    "name": "Q3 Proposal",
+    "abilities": {
+      "view": true, "download": true, "comment": true, "edit": true, "create": true, "move": true,
+      "copy": true, "trash": true, "restore": false, "share": true, "manage": false, "delete": false
+    }
   }
 }
 ```
 
-Vue-редактор читает `document.abilities.edit`, чтобы решить, монтироваться ли в режиме только для чтения.
+`GET /nodes/{node}/abilities` возвращает тот же объект отдельно. Vue-редактор читает
+`abilities.edit`, чтобы решить, монтироваться ли в режиме только чтения.
 
-## Свой DTO прав
+## В PHP
 
-Отнаследуйтесь от `Vaulter\Abilities\AbilitiesDto` и сопоставьте ключи прав с действиями резолвера:
+<!-- recipe: packages/drive/tests/Recipes/DriveRecipeTest.php#abilities-read -->
 
 ```php
-use Vaulter\Abilities\AbilitiesDto;
-use Vaulter\VaulterManager;
-use Vaulter\Models\Document;
-use Illuminate\Contracts\Auth\Authenticatable;
+$abilities = $drive->nodes()->abilities($node);   // NodeAbilities
+$canEdit = $abilities->flags['edit'];             // имя права => разрешено
 
-final readonly class ExportAbilities extends AbilitiesDto
-{
-    public function __construct(public bool $export) {}
-
-    public static function for(?Authenticatable $user, Document $document, VaulterManager $manager): self
-    {
-        $flags = self::resolveFlags($user, $document, $manager, ['export' => 'manage']);
-
-        return new self(export: $flags['export']);
-    }
-
-    public function toArray(): array
-    {
-        return ['export' => $this->export];
-    }
-}
+// Один проход резолвера на весь список вместо вызова на каждую строку.
+$byNode = $drive->nodes()->abilitiesMany([$node, $other]);   // id узла => NodeAbilities
 ```
+
+Без действующего пользователя каждый флаг — `false`: клиент получает оболочку только для
+чтения, а не действия, которые ему нельзя выполнить.
 
 ## Inertia
 
-Прокидывайте права для документов текущей страницы как Inertia-пропсы и биндите их прямо во Vue —
-булевы значения уже вычислены на стороне сервера.
+Передайте права узлов текущей страницы как Inertia-props и привязывайте прямо во Vue —
+булевы значения уже вычислены на сервере.

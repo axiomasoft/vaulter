@@ -20,6 +20,8 @@ PHP `^8.4`, Laravel `^12.0 || ^13.0` и (для UI) Vue `^3.4` / Node `>=20`. П
 Для полного продукта поставьте метапакет. В нём нет собственного кода: он требует
 `axioma-studio/vaulter-core`, `-media`, `-drive` и `-documents` ровно своей версии:
 
+<!-- snippet: shell -->
+
 ```bash
 composer require axioma-studio/vaulter
 ```
@@ -27,6 +29,8 @@ composer require axioma-studio/vaulter
 Сам по себе `axioma-studio/vaulter-core` не даёт ни Drive, ни функций редактирования
 документов — это общее ядро (авторизация, контракты CAS, sharing, панели). Чтобы взять только часть
 продукта, подключите именно те пакеты, которые нужны вашему приложению:
+
+<!-- snippet: shell -->
 
 ```bash
 # Drive (папки/файлы/загрузки) — автоматически подтягивает axioma-studio/vaulter-media (CAS)
@@ -42,6 +46,8 @@ composer require axioma-studio/vaulter-documents
 
 Затем выполните встроенную команду установки — она публикует конфиг каждого установленного
 пакета Vaulter и предлагает запустить миграции:
+
+<!-- snippet: shell -->
 
 ```bash
 php artisan vaulter:install
@@ -65,11 +71,15 @@ php artisan vaulter:install
 
 ::: code-group
 
+<!-- snippet: shell -->
+
 ```bash [публикация + миграции]
 php artisan vendor:publish --tag=vaulter-config
 php artisan vendor:publish --tag=vaulter-migrations
 php artisan migrate
 ```
+
+<!-- snippet: shell -->
 
 ```bash [только конфиг]
 # Миграции Vaulter обнаруживаются и запускаются даже без публикации,
@@ -91,11 +101,15 @@ php artisan migrate
 
 Поставьте компоненты, composable-функции и API-клиент:
 
+<!-- snippet: shell -->
+
 ```bash
 npm install @vaulter/vue
 ```
 
 Зарегистрируйте плагин и укажите ему префикс API (по умолчанию `api/vaulter`):
+
+<!-- snippet: host -->
 
 ```js
 // resources/js/app.js
@@ -118,6 +132,8 @@ app.use(VaulterPlugin, { baseUrl: '/api/vaulter' })
 и небольшой Node.js-хаб Hocuspocus с `Dockerfile` и `docker-compose.yml` в каталоге
 `hocuspocus-server/`:
 
+<!-- snippet: shell -->
+
 ```bash
 cp hocuspocus-server/.env.example hocuspocus-server/.env
 docker compose -f hocuspocus-server/docker-compose.yml up -d
@@ -129,10 +145,12 @@ docker compose -f hocuspocus-server/docker-compose.yml up -d
 
 Быстрая проверка из `tinker`:
 
+<!-- snippet: host -->
+
 ```php
 use Vaulter\Facades\Vaulter;
 
-$drive = Vaulter::for($user);   // любая Eloquent-модель
+$drive = Vaulter::drive($user);   // любая Eloquent-модель
 $drive->root();                 // автоматически созданная корневая папка (Node)
 ```
 

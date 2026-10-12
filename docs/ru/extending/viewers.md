@@ -25,6 +25,8 @@ TipTap, WOPI-класс офисного вьюера (iframe + токен) ил
 [Обработчики документов → разобранный пример CSV](/ru/extending/file-handlers#добавление-нового-формата-—-разобранный-пример).
 Остальная часть гайда предполагает **редактируемый** обработчик — более богатый случай.
 
+<!-- snippet: host -->
+
 ```php
 <?php
 
@@ -124,6 +126,8 @@ mime-only обработчика — экономит один метод, не 
   короткоживущий токен — **не** контент-payload вовсе. Сервер никогда не парсит и не
   валидирует тело документа — только брокерит сессию.
 
+<!-- snippet: host -->
+
 ```php
 // WOPI-класс обработчика — payload у viewer() совсем другой формы.
 public function viewer(FileDescriptor $file): ViewerDescriptor
@@ -169,57 +173,61 @@ public function viewer(FileDescriptor $file): ViewerDescriptor
 
 ## 7. Монтирование на клиенте
 
-См. [Обработчики документов → Монтирование резолвленного обработчика во Vue](/ru/extending/file-handlers#монтирование-подобранного-обработчика-во-vue)
-про два канала регистрации (`componentMap`-проп vs. глобальный
-`registerEngineComponent(id, component)`) — реестр на сервере не предполагает конкретный
-фронтенд-стек. Ниже — сам клиентский скелет: компонент, который монтирует
-`VaulterDocumentNode`, получает один проп `handler` типа `NodePresentation` (экспортируется
-`@vaulter/vue`), несущий вашу карту `viewer.props` без изменений.
+Как `presentation.viewer.key` попадает в компонент — см.
+[Обработчики документов → Монтирование подобранного обработчика во Vue](/ru/extending/file-handlers#монтирование-подобранного-обработчика-во-vue):
+реестр на сервере не предполагает конкретный фронтенд-стек. Дальше — сам клиентский каркас:
+компонент, зарегистрированный под вашим ключом вьюера, получает `node`, `readonly` и каждую
+запись карты `viewer.props`, которую вернул ваш PHP-обработчик, без изменений.
+
+<!-- snippet: host -->
 
 ```vue
-<!-- AppMyEditor.vue — компонент, зарегистрированный для id обработчика "my-editor" -->
+<!-- AppMyEditor.vue — компонент, зарегистрированный под ключом вьюера "acme/my-editor" -->
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { DocumentNodeEditorProps } from '@vaulter/vue'
+import type { Node } from '@vaulter/vue'
 
-// `VaulterDocumentNode` биндит эту форму (`DocumentNodeEditorProps`) — `content`/`onChange`
-// типизированы под TipTap в экспортируемом интерфейсе (встроенный редактор), поэтому
-// не-rich-text-обработчик сужает `handler.ui.props` до своей формы, не полагаясь на `content`.
-// `handler.ui.props` — то, что вернул ваш PHP-обработчик из viewer() (шаг 1/3) — произвольная,
-// решаемая обработчиком карта; контракт её не валидирует.
-interface MyEditorProps {
-  format: string
-  extensions: string[]
-}
+// `viewer.props` — это то, что вернул viewer() вашего PHP-обработчика (шаг 1/3): произвольная
+// карта, форму решает обработчик; контракт её не валидирует. Серверные props идут первыми,
+// поэтому не могут перекрыть `node` или `readonly`.
+const props = defineProps<{
+  node: Node
+  readonly: boolean
+  format?: string
+  extensions?: string[]
+}>()
 
-const props = defineProps<DocumentNodeEditorProps>()
-
-const editorProps = computed(() => props.handler.ui.props as unknown as MyEditorProps)
+const editable = computed(() => !props.readonly && props.node.abilities.edit)
 </script>
 
 <template>
   <div class="app-my-editor">
-    <!-- Читайте editorProps.format / editorProps.extensions здесь; вызывайте onChange(next)
-         на каждое локальное изменение, если не readonly. -->
+    <!-- Читайте props.format / props.extensions здесь; не принимайте правки, пока `editable` не true. -->
   </div>
 </template>
 ```
 
-Зарегистрируйте один раз при старте, так же как и [любой компонент-обработчик](/ru/extending/file-handlers#монтирование-подобранного-обработчика-во-vue):
+Зарегистрируйте один раз при старте — так же, как [вьюер любого обработчика](/ru/extending/file-handlers#монтирование-подобранного-обработчика-во-vue):
+
+<!-- snippet: host -->
 
 ```ts
 // main.ts
-import { registerEngineComponent } from '@vaulter/vue'
+import { createApp } from 'vue'
+import { VaulterPlugin } from '@vaulter/vue'
+import App from './App.vue'
 import AppMyEditor from './AppMyEditor.vue'
 
-registerEngineComponent('my-editor', AppMyEditor)
+createApp(App)
+  .use(VaulterPlugin, { viewers: { 'acme/my-editor': AppMyEditor } })
+  .mount('#app')
 ```
 
-Отдельный фронтенд-пакет не требуется (D8, VLT-CANON P1.1): сторонний движок поставляется как
-обычный код хост-приложения — файл `.vue` плюс один вызов `registerEngineComponent` — так же,
-как сам `@vaulter/vue` бандлит свой редактор TipTap, а не публикует его отдельно.
-Отдельный пакет `@vaulter/vue-engine-<name>` вводится позже, лениво, только когда появится
-реальный внешний потребитель конкретно этого движка.
+Отдельный фронтенд-пакет не нужен: сторонний движок поставляется обычным кодом
+хост-приложения — файл `.vue` плюс одна запись в опции плагина `viewers` — так же, как сам
+`@vaulter/vue` вкладывает свою TipTap-оболочку, а не публикует её отдельно. Выделенный пакет
+`@vaulter/vue-engine-<name>` появится позже, лениво, только когда появится реальный внешний
+потребитель именно этого движка.
 
 ## Чек-лист
 

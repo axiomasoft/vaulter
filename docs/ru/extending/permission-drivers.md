@@ -21,6 +21,8 @@ Core поставляет `database`, `gate` и `spatie`; отдельный м�
 
 `Vaulter\Contracts\Access\PermissionDriver`:
 
+<!-- snippet: signature Vaulter\Contracts\Access\PermissionDriver -->
+
 ```php
 interface PermissionDriver
 {
@@ -39,7 +41,7 @@ interface PermissionDriver
     public function subjectsFor(Authorizable $actor): array;
 
     // May the actor create nodes in a workspace? (folder/upload create path).
-    public function canCreateInWorkspace(Authorizable $actor, string $workspaceType, int|string $workspaceId): bool;
+    public function canCreateIn(Authorizable $actor, AccessScope $scope): bool;
 }
 ```
 
@@ -52,12 +54,16 @@ interface PermissionDriver
 
 Активный драйвер — это один config-ключ (и ENV-переменная):
 
+<!-- recipe: packages/core/tests/Recipes/PermissionDriverRecipeTest.php#permission-driver-select -->
+
 ```php
 // config/vaulter.php
 'access' => [
     'permission_driver' => env('VAULTER_PERMISSION_DRIVER', 'database'),
 ],
 ```
+
+<!-- snippet: shell -->
 
 ```bash
 # .env
@@ -67,13 +73,20 @@ VAULTER_PERMISSION_DRIVER=database   # database | gate | spatie | azgard | null
 Карта ключ → FQCN лежит в `access.permission_drivers`. Зарегистрируйте свой драйвер, добавив FQCN,
 реализующий `PermissionDriver` (безопасно для кэша конфига — только FQCN, без замыканий):
 
+<!-- recipe: packages/core/tests/Recipes/PermissionDriverRecipeTest.php#permission-driver-map -->
+
 ```php
+use Vaulter\Access\Drivers\DatabasePermissionDriver;
+use Vaulter\Access\Drivers\GatePermissionDriver;
+use Vaulter\Access\Drivers\SpatiePermissionDriver;
+use Vaulter\Testing\NullPermissionDriver;
+
 // config/vaulter.php
 'access' => ['permission_drivers' => [
-    'database' => \Vaulter\Access\Drivers\DatabasePermissionDriver::class,
-    'gate'     => \Vaulter\Access\Drivers\GatePermissionDriver::class,
-    'spatie'   => \Vaulter\Access\Drivers\SpatiePermissionDriver::class,
-    'null'     => \Vaulter\Testing\NullPermissionDriver::class, // non-prod only
+    'database' => DatabasePermissionDriver::class,
+    'gate' => GatePermissionDriver::class,
+    'spatie' => SpatiePermissionDriver::class,
+    'null' => NullPermissionDriver::class, // non-prod only
     // 'tenant' => \App\Vaulter\TenantRoleDriver::class,
 ]],
 ```
@@ -93,11 +106,13 @@ VAULTER_PERMISSION_DRIVER=database   # database | gate | spatie | azgard | null
 | `subjectsFor` | `[Subject::ofModel($actor)]` — только сам пользователь. |
 | `override` | `null` — обхода для супер-админа нет. |
 | `resolve` | `null` — ACL является единственной инстанцией власти. |
-| `canCreateInWorkspace` | `true` — гранты `CREATE` на уровне узла на целевой папке всё равно применяются через resolver. |
+| `canCreateIn` | `true` — гранты `CREATE` на уровне узла на целевой папке всё равно применяются через resolver. |
 
 Это та самая полоса «из коробки», благодаря которой Vaulter работает в чистом Laravel-приложении
 без хостовой авторизации. Чтобы добавить субъектов-роли/команды без единого внешнего пакета,
 унаследуйтесь от неё и допишите записи `Subject`:
+
+<!-- snippet: host -->
 
 ```php
 final class TeamAwareRoleDriver extends DatabasePermissionDriver
@@ -126,17 +141,19 @@ final class TeamAwareRoleDriver extends DatabasePermissionDriver
   блокировка).
 - **`resolve`** спрашивает у Gate право каждой сопоставленной роли и
   возвращает как `Decision` **объединение разрешённых ролей**. Проверка Gate не видит узла — она
-  получает `{panel, workspace_type, workspace_id}` из `AccessScope`, но никогда `Node`.
+  получает `{profile, drive_owner, drive_id, tenant_id}` из `AccessScope`, но никогда `Node`.
 - **`subjectsFor`** = только `[Subject(actor)]`. Gate не выставляет перечислимых субъектов-ролей
   / команд, поэтому строки грантов, адресованные роли/команде, этой полосой не совпадают —
   используйте для этого Spatie/AzGuard.
-- **`canCreateInWorkspace`** спрашивает право на создание, передавая ему `[$workspaceType, $workspaceId]`.
+- **`canCreateIn`** спрашивает право на создание, передавая тот же массив контекста.
 
 Каждая проверка идёт через `Gate::forUser($actor)`, поэтому драйвер не хранит состояния.
 Отсутствующее право проглатывается как «не разрешено» — ненастроенный хостовый gate никогда не
 бросает исключение в resolver.
 
 ### Конфигурация
+
+<!-- snippet: config -->
 
 ```php
 // config/vaulter.php — used only when access.permission_driver = 'gate'
@@ -159,15 +176,17 @@ final class TeamAwareRoleDriver extends DatabasePermissionDriver
 бросает `UnknownRoleException`. Реализуйте соответствующие
 политики:
 
+<!-- snippet: host -->
+
 ```php
 // A host policy / Gate definition
 Gate::define('vaulter.edit', fn ($user, array $context) =>
-    $user->isEditorOf($context['workspace_type'], $context['workspace_id']));
+    $user->isEditorOf($context['drive_owner']->type, $context['drive_owner']->id));
 
 Gate::define('vaulter.super', fn ($user) => $user->isAdmin());
 
-Gate::define('vaulter.create', fn ($user, string $type, int|string $id) =>
-    $user->mayCreateIn($type, $id));
+Gate::define('vaulter.create', fn ($user, array $context) =>
+    $user->mayCreateIn($context['drive_owner']->type, $context['drive_owner']->id));
 ```
 
 ## Spatie — роли, разрешения и v8 teams
@@ -179,11 +198,11 @@ Gate::define('vaulter.create', fn ($user, string $type, int|string $id) =>
 - **`subjectsFor`** = актор + его субъекты-роли (+ его субъект-команда, когда teams включены),
   так что строка гранта, адресованная `role`/`team`, совпадает.
 - **`resolve`** проверяет каждое сопоставленное разрешение через `$actor->hasPermissionTo($name)`,
-  **в области команды** для workspace (`setPermissionsTeamId($scope->workspaceId)`), затем
+  **в области команды** для workspace (`setPermissionsTeamId($scope->driveOwner->id)`), затем
   восстанавливает предыдущий team id и загруженные связи актора. Объединение разрешённых ролей
   становится `Decision`.
 - **`override`** спрашивает настраиваемое супер-разрешение.
-- **`canCreateInWorkspace`** спрашивает разрешение на создание в контексте команды workspace.
+- **`canCreateIn`** спрашивает разрешение на создание в контексте команды workspace.
 
 ::: warning Опциональная зависимость
 `spatie/laravel-permission` — **опциональная** хостовая зависимость. Каждое обращение к API Spatie
@@ -193,6 +212,8 @@ Gate::define('vaulter.create', fn ($user, string $type, int|string $id) =>
 :::
 
 ### Конфигурация
+
+<!-- snippet: config -->
 
 ```php
 // config/vaulter.php — used only when access.permission_driver = 'spatie'
@@ -219,11 +240,13 @@ Gate::define('vaulter.create', fn ($user, string $type, int|string $id) =>
 
 ### Переключение команды и шов кэша
 
-Полный танец v8 — захватить текущий team id, `setPermissionsTeamId($workspaceId)`, проверить,
+Полный танец v8 — захватить текущий team id, `setPermissionsTeamId($scope->driveOwner->id)`, проверить,
 восстановить в `finally` — целиком живёт внутри драйвера, поэтому конкурентные панели никогда не
 перетекают друг в друга. После того как хост меняет роли/разрешения актора **вне** собственных
 хелперов assign/remove Spatie, он обязан сбросить кэш, чтобы устаревшее, привязанное к команде
 разрешение не выдало отозванную роль при следующем resolve:
+
+<!-- snippet: host -->
 
 ```php
 use Vaulter\Access\Drivers\SpatiePermissionDriver;
@@ -239,6 +262,8 @@ SpatiePermissionDriver::forgetCachedPermissions($actor);
 `axioma-studio/vaulter-azgard`; ядро не зависит от AzGuard. Мост требует AzGuard v1
 (`axiomasoft/azguard`). Тегированного релиза AzGuard нет, поэтому мост закреплён на коммите:
 `"axiomasoft/azguard": "dev-main#9a6dc0e…"` (полный sha — в `packages/azgard/composer.json`).
+
+<!-- snippet: shell -->
 
 ```bash
 composer require axioma-studio/vaulter-azgard
@@ -264,7 +289,7 @@ composer require axioma-studio/vaulter-azgard
 - **`subjectsFor`** = только `[Subject(actor)]` — AzGuard *отвечает* на проверки, а не перечисляет
   субъектов-роли. Хост, адресующий строки грантов на роли AzGuard, должен унаследоваться и
   дописать эти субъекты.
-- **`canCreateInWorkspace`** спрашивает `hasPermissionIn($type, $id, $createPermission)`.
+- **`canCreateIn`** спрашивает `hasPermissionIn($type, $id, $createPermission)`.
 
 Пробы «роль → определяющее право» таковы: `Previewer → View`, `Reader → Download`,
 `Commenter → Comment`, `Writer → Edit`, `Organizer → Share`, `Owner → Manage`.
@@ -287,6 +312,8 @@ composer require axioma-studio/vaulter-azgard
   зарегистрируйте модели пользователя и workspace в morph map. Владелец диска с типом-не-алиасом
   (например, morph по имени класса) — ошибка конфигурации: AzGuard бросает
   `InvalidAssignmentScopeException`, а не отказывает.
+
+<!-- snippet: host -->
 
 ```php
 use AzGuard\Panels\PanelBuilder;
@@ -316,6 +343,8 @@ final class AppPanel extends PanelProvider
 
 В отличие от Gate/Spatie (с ключами по ключу роли), карта AzGuard **центрирована на действиях** —
 с ключами по `Ability`:
+
+<!-- snippet: config -->
 
 ```php
 // config/vaulter-azgard.php — used only when access.permission_driver = 'azgard'
@@ -355,6 +384,8 @@ return [
 `Vaulter\Azgard\Contracts\AzgardGuard` — это узкий шов, с которым говорит драйвер. Он выставляет
 ровно те два решения AzGuard, которые нужны драйверу, — и ничего из собственного API AzGuard:
 
+<!-- snippet: signature Vaulter\Azgard\Contracts\AzgardGuard -->
+
 ```php
 interface AzgardGuard
 {
@@ -386,6 +417,8 @@ interface AzgardGuard
 его спрашивают, а не за пользователя запроса (пример ниже показывает форму; замыкание на
 пользователя запроса верно, только когда решение касается именно его). Поставляемый адаптер —
 тонкий сквозной проход на AzGuard v1:
+
+<!-- snippet: host -->
 
 ```php
 use AzGuard\Kernel\Identity\AssignmentScopeRef;
@@ -421,6 +454,8 @@ $this->app->bind(\Vaulter\Azgard\Contracts\AzgardGuard::class, function ($app) {
 из `vaulter-azgard`. Установите мост со всеми его Composer-зависимостями даже для
 тестов с фейком; фейк заменяет проверки AzGuard, но не требования установки пакета.
 
+<!-- snippet: host -->
+
 ```php
 use Vaulter\Azgard\Testing\FakeAzgardGuard;
 
@@ -451,6 +486,8 @@ on: AssignmentScopeRef::of('team', $teamId))` и `actingAsSuperAdmin($user)` с�
 
 ## Генератор
 
+<!-- snippet: shell -->
+
 ```bash
 php artisan vaulter:make:permission-driver Workspace
 ```
@@ -464,6 +501,8 @@ php artisan vaulter:make:permission-driver Workspace
 встроенные. Общий фикстур (`PermissionFixture`) строится через Operations: грант writer на
 поддерево для актора на родительской папке и дочерняя папка с ограниченным наследованием и без
 собственного гранта.
+
+<!-- snippet: host -->
 
 ```php
 use Vaulter\Testing\Contracts\PermissionDriverContractTests;

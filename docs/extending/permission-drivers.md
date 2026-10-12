@@ -20,6 +20,8 @@ only an `Authorizable` actor and an `AccessScope` (profile + drive coordinates +
 
 `Vaulter\Contracts\Access\PermissionDriver`:
 
+<!-- snippet: signature Vaulter\Contracts\Access\PermissionDriver -->
+
 ```php
 interface PermissionDriver
 {
@@ -38,7 +40,7 @@ interface PermissionDriver
     public function subjectsFor(Authorizable $actor): array;
 
     // May the actor create nodes in a workspace? (folder/upload create path).
-    public function canCreateInWorkspace(Authorizable $actor, string $workspaceType, int|string $workspaceId): bool;
+    public function canCreateIn(Authorizable $actor, AccessScope $scope): bool;
 }
 ```
 
@@ -51,12 +53,16 @@ grants several roles returns `Decision::union($roles)`. `subjectsFor()` is what 
 
 The active driver is a single config key (and env var):
 
+<!-- recipe: packages/core/tests/Recipes/PermissionDriverRecipeTest.php#permission-driver-select -->
+
 ```php
 // config/vaulter.php
 'access' => [
     'permission_driver' => env('VAULTER_PERMISSION_DRIVER', 'database'),
 ],
 ```
+
+<!-- snippet: shell -->
 
 ```bash
 # .env
@@ -66,13 +72,20 @@ VAULTER_PERMISSION_DRIVER=database   # database | gate | spatie | azgard | null
 The key → FQCN map is `access.permission_drivers`. Register your own driver by adding an FQCN
 that implements `PermissionDriver` (config-cache safe — FQCNs only, no closures):
 
+<!-- recipe: packages/core/tests/Recipes/PermissionDriverRecipeTest.php#permission-driver-map -->
+
 ```php
+use Vaulter\Access\Drivers\DatabasePermissionDriver;
+use Vaulter\Access\Drivers\GatePermissionDriver;
+use Vaulter\Access\Drivers\SpatiePermissionDriver;
+use Vaulter\Testing\NullPermissionDriver;
+
 // config/vaulter.php
 'access' => ['permission_drivers' => [
-    'database' => \Vaulter\Access\Drivers\DatabasePermissionDriver::class,
-    'gate'     => \Vaulter\Access\Drivers\GatePermissionDriver::class,
-    'spatie'   => \Vaulter\Access\Drivers\SpatiePermissionDriver::class,
-    'null'     => \Vaulter\Testing\NullPermissionDriver::class, // non-prod only
+    'database' => DatabasePermissionDriver::class,
+    'gate' => GatePermissionDriver::class,
+    'spatie' => SpatiePermissionDriver::class,
+    'null' => NullPermissionDriver::class, // non-prod only
     // 'tenant' => \App\Vaulter\TenantRoleDriver::class,
 ]],
 ```
@@ -92,11 +105,13 @@ driver only contributes the actor's own identity to the subject-set.
 | `subjectsFor` | `[Subject::ofModel($actor)]` — just the user. |
 | `override` | `null` — no super-admin bypass. |
 | `resolve` | `null` — the ACL is the sole authority. |
-| `canCreateInWorkspace` | `true` — per-node `CREATE` grants on the destination still apply via the resolver. |
+| `canCreateIn` | `true` — per-node `CREATE` grants on the destination still apply via the resolver. |
 
 This is the out-of-the-box lane that makes Vaulter work in a clean Laravel app with no
 host authorization. To add role/team subjects without any external package, subclass it
 and append `Subject` entries:
+
+<!-- snippet: host -->
 
 ```php
 final class TeamAwareRoleDriver extends DatabasePermissionDriver
@@ -125,17 +140,19 @@ dependencies.
   never a block).
 - **`resolve`** asks the Gate each mapped role's ability and returns the **union of the
   roles** it allows as the `Decision`. The Gate check is node-blind — it receives the
-  `AccessScope`'s `{panel, workspace_type, workspace_id}`, never a `Node`.
+  `AccessScope`'s `{profile, drive_owner, drive_id, tenant_id}`, never a `Node`.
 - **`subjectsFor`** = `[Subject(actor)]` only. The Gate exposes no enumerable role/team
   subjects, so grant rows addressed to a role/team are not matched by this lane — use
   Spatie/AzGuard for that.
-- **`canCreateInWorkspace`** asks the create ability, passed `[$workspaceType, $workspaceId]`.
+- **`canCreateIn`** asks the create ability, passed the same context array.
 
 Every check goes through `Gate::forUser($actor)`, so the driver is stateless. A missing
 ability is swallowed as "not allowed" — an unconfigured host gate never throws into the
 resolver.
 
 ### Configuration
+
+<!-- snippet: config -->
 
 ```php
 // config/vaulter.php — used only when access.permission_driver = 'gate'
@@ -156,15 +173,17 @@ resolver.
 The `abilities` map couples a Vaulter role key to a host Gate ability string. Map
 only the roles you actually gate; a key that is not a role throws `UnknownRoleException`. Implement matching policies:
 
+<!-- snippet: host -->
+
 ```php
 // A host policy / Gate definition
 Gate::define('vaulter.edit', fn ($user, array $context) =>
-    $user->isEditorOf($context['workspace_type'], $context['workspace_id']));
+    $user->isEditorOf($context['drive_owner']->type, $context['drive_owner']->id));
 
 Gate::define('vaulter.super', fn ($user) => $user->isAdmin());
 
-Gate::define('vaulter.create', fn ($user, string $type, int|string $id) =>
-    $user->mayCreateIn($type, $id));
+Gate::define('vaulter.create', fn ($user, array $context) =>
+    $user->mayCreateIn($context['drive_owner']->type, $context['drive_owner']->id));
 ```
 
 ## Spatie — roles, permissions, and v8 teams
@@ -176,11 +195,11 @@ entire v8 team-switch dance so it never leaks into the resolver.
 - **`subjectsFor`** = the actor + its role Subjects (+ its team Subject when teams are
   enabled), so a grant row addressed to a `role`/`team` matches.
 - **`resolve`** checks each mapped permission via `$actor->hasPermissionTo($name)`,
-  **team-scoped** to the workspace (`setPermissionsTeamId($scope->workspaceId)`), then
+  **team-scoped** to the workspace (`setPermissionsTeamId($scope->driveOwner->id)`), then
   restores the previous team id and the actor's loaded relations. The union of the
   allowed roles becomes the `Decision`.
 - **`override`** asks a configurable super permission.
-- **`canCreateInWorkspace`** asks the create permission in the workspace's team context.
+- **`canCreateIn`** asks the create permission in the workspace's team context.
 
 ::: warning Optional dependency
 `spatie/laravel-permission` is an **optional** host dependency. Every runtime touch of
@@ -190,6 +209,8 @@ to a safe deny (`null`/`false`), never a fatal error.
 :::
 
 ### Configuration
+
+<!-- snippet: config -->
 
 ```php
 // config/vaulter.php — used only when access.permission_driver = 'spatie'
@@ -216,11 +237,13 @@ is unset — the host's Spatie config is authoritative. `role_subject_type` /
 
 ### The team-switch and the cache seam
 
-The full v8 dance — capture the current team id, `setPermissionsTeamId($workspaceId)`,
+The full v8 dance — capture the current team id, `setPermissionsTeamId($scope->driveOwner->id)`,
 check, restore in a `finally` — lives entirely inside the driver, so concurrent panels
 never bleed into each other. After the host mutates an actor's roles/permissions
 **outside** Spatie's own assign/remove helpers, it must reset the cache so a stale,
 team-scoped permission can't grant a revoked role on the next resolve:
+
+<!-- snippet: host -->
 
 ```php
 use Vaulter\Access\Drivers\SpatiePermissionDriver;
@@ -237,6 +260,8 @@ This is a no-op when Spatie is not installed.
 requires AzGuard v1 (`axiomasoft/azguard`). AzGuard publishes no tagged release, so the
 bridge pins one commit: `"axiomasoft/azguard": "dev-main#9a6dc0e…"` (the full sha is in
 `packages/azgard/composer.json`).
+
+<!-- snippet: shell -->
 
 ```bash
 composer require axioma-studio/vaulter-azgard
@@ -262,7 +287,7 @@ owns the **workspace-scoped role** lane:
 - **`subjectsFor`** = `[Subject(actor)]` only — AzGuard *answers* checks rather than
   enumerating role-subjects. A host that addresses grant rows to AzGuard roles should
   subclass and append those Subjects.
-- **`canCreateInWorkspace`** asks `hasPermissionIn($type, $id, $createPermission)`.
+- **`canCreateIn`** asks `hasPermissionIn($type, $id, $createPermission)`.
 
 The role → defining-ability probes are: `Previewer → View`, `Reader → Download`,
 `Commenter → Comment`, `Writer → Edit`, `Organizer → Share`, `Owner → Manage`.
@@ -285,6 +310,8 @@ The host declares the AzGuard v1 panel that owns Vaulter's permissions:
   register the user and workspace models in the morph map. A drive owner whose type is
   not an alias (e.g. a class-name morph) is a misconfiguration: AzGuard throws
   `InvalidAssignmentScopeException` instead of denying.
+
+<!-- snippet: host -->
 
 ```php
 use AzGuard\Panels\PanelBuilder;
@@ -314,6 +341,8 @@ final class AppPanel extends PanelProvider
 
 Unlike Gate/Spatie (keyed by role key), the AzGuard map is **action-centric** —
 keyed by `Ability`:
+
+<!-- snippet: config -->
 
 ```php
 // config/vaulter-azgard.php — used only when access.permission_driver = 'azgard'
@@ -354,6 +383,8 @@ denies the check.
 exposes exactly the two AzGuard decisions the driver needs — and nothing of AzGuard's own
 API:
 
+<!-- snippet: signature Vaulter\Azgard\Contracts\AzgardGuard -->
+
 ```php
 interface AzgardGuard
 {
@@ -385,6 +416,8 @@ uses the host's guard for every actor, so it must answer for the actor it is ask
 for the request user (the example below shows the shape; closing over the request user is only
 correct when the decision is about that user). The supplied adapter is a thin pass-through onto
 AzGuard v1:
+
+<!-- snippet: host -->
 
 ```php
 use AzGuard\Kernel\Identity\AssignmentScopeRef;
@@ -420,6 +453,8 @@ alias itself.
 `vaulter-azgard`. Install the bridge and its Composer dependencies even for fake-based
 tests; the fake replaces live AzGuard checks, not the package's installation requirements.
 
+<!-- snippet: host -->
+
 ```php
 use Vaulter\Azgard\Testing\FakeAzgardGuard;
 
@@ -450,6 +485,8 @@ grants through AzGuard's change pipeline.
 
 ## Generator
 
+<!-- snippet: shell -->
+
 ```bash
 php artisan vaulter:make:permission-driver Workspace
 ```
@@ -463,6 +500,8 @@ and never edits your config. An existing file is kept unless you pass `--force`.
 built-in ones are proved. The shared fixture (`PermissionFixture`) is built through
 Operations: a writer subtree grant for an actor on a parent folder, and a child below it with
 inheritance restricted and no grant of its own.
+
+<!-- snippet: host -->
 
 ```php
 use Vaulter\Testing\Contracts\PermissionDriverContractTests;

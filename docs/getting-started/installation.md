@@ -20,6 +20,8 @@ PHP `^8.4`, Laravel `^12.0 || ^13.0`, and (for the UI) Vue `^3.4` / Node `>=20`.
 For the full product install the metapackage. It has no code of its own and requires
 `axioma-studio/vaulter-core`, `-media`, `-drive` and `-documents` at exactly its own version:
 
+<!-- snippet: shell -->
+
 ```bash
 composer require axioma-studio/vaulter
 ```
@@ -27,6 +29,8 @@ composer require axioma-studio/vaulter
 `axioma-studio/vaulter-core` alone ships no Drive or document-editing features — it is
 the shared kernel (authorization, CAS contracts, sharing, panels). To take only part of the
 product, require the packages your app actually needs:
+
+<!-- snippet: shell -->
 
 ```bash
 # Drive (folders/files/uploads) — pulls in axioma-studio/vaulter-media (CAS) automatically
@@ -52,6 +56,8 @@ key to adopt the new default. See [Configuration](/guides/configuration#routes).
 Then run the bundled install command, which publishes the config of every installed Vaulter
 package and offers to run the migrations:
 
+<!-- snippet: shell -->
+
 ```bash
 php artisan vaulter:install
 ```
@@ -74,11 +80,15 @@ Prefer to do it step by step? The install command is equivalent to:
 
 ::: code-group
 
+<!-- snippet: shell -->
+
 ```bash [publish + migrate]
 php artisan vendor:publish --tag=vaulter-config
 php artisan vendor:publish --tag=vaulter-migrations
 php artisan migrate
 ```
+
+<!-- snippet: shell -->
 
 ```bash [config only]
 # Vaulter's migrations are auto-discovered and run even without publishing,
@@ -114,11 +124,15 @@ vendor auto-run active alongside a published copy of the same migration.
 
 Install the Vue components, composables and API client:
 
+<!-- snippet: shell -->
+
 ```bash
 npm install @vaulter/vue
 ```
 
 Register the plugin and point it at your API prefix (default `api/vaulter`):
+
+<!-- snippet: host -->
 
 ```js
 // resources/js/app.js
@@ -142,6 +156,8 @@ step beyond your app's own bundler (Vite, etc.). Vue `^3.4` is a peer dependency
 Realtime editing uses the `hocuspocus` driver and a small Node.js Hocuspocus
 hub, shipped with a `Dockerfile` and `docker-compose.yml` under `hocuspocus-server/`:
 
+<!-- snippet: shell -->
+
 ```bash
 cp hocuspocus-server/.env.example hocuspocus-server/.env
 docker compose -f hocuspocus-server/docker-compose.yml up -d
@@ -154,10 +170,12 @@ the full env contract are in [Collaboration → Server](/guides/collaboration).
 
 A quick sanity check from `tinker`:
 
+<!-- snippet: host -->
+
 ```php
 use Vaulter\Facades\Vaulter;
 
-$drive = Vaulter::for($user);   // any Eloquent model
+$drive = Vaulter::drive($user);   // any Eloquent model
 $drive->root();                 // the auto-provisioned root folder Node
 ```
 

@@ -9,6 +9,8 @@ outline: deep
 Each installed package owns one config file and one typed configuration API (AD26).
 Publish only the files you need; for example:
 
+<!-- snippet: shell -->
+
 ```bash
 php artisan vendor:publish --tag=vaulter-config
 php artisan vendor:publish --tag=vaulter-documents-config
@@ -33,6 +35,8 @@ Only core owns schema settings: `database.connection`, `database.table_prefix`,
 default connection. Tables use the prefix plus their canonical entity name:
 `DatabaseConfig::table('drives')` returns `v_drives` by default. `table_names` is an
 upgrade input only, read by `DatabaseConfig::legacyTable()` to locate old physical tables.
+
+<!-- snippet: config -->
 
 ```php
 // config/vaulter.php
@@ -105,6 +109,8 @@ and the installed Documents handlers.
 
 ## Routes and sharing {#routes}
 
+<!-- snippet: config -->
+
 ```php
 // config/vaulter.php
 'routes' => [
@@ -134,6 +140,8 @@ under `webhooks.*`, including the URL guard, timeout, retry/backoff and retentio
 
 ## Media: content-addressed storage
 
+<!-- snippet: config -->
+
 ```php
 // config/vaulter-media.php
 'disk' => env('VAULTER_DISK', 'local'),
@@ -152,6 +160,8 @@ Deduplication uses the stored `scope_key`; changing the scope leaves existing bl
 and affects new uploads. See [Storage & blobs](/concepts/storage-and-blobs).
 
 ## Drive: uploads, names and trash
+
+<!-- snippet: config -->
 
 ```php
 // config/vaulter-drive.php
@@ -186,6 +196,8 @@ per-profile file size limit live in the profile's drive policy (see
 ignored (`E_USER_DEPRECATED`). See [Uploads](/guides/uploads) and [Trash](/guides/trash).
 
 ## Documents: content, revisions, comments and collaboration
+
+<!-- snippet: config -->
 
 ```php
 // config/vaulter-documents.php
@@ -234,6 +246,8 @@ See [Collaboration](/guides/collaboration) and [Export](/guides/export).
 Configuration classes are `final readonly` singletons over
 `Illuminate\Contracts\Config\Repository`. Inject them into services. In models,
 migrations and static contexts, resolve them with `app(...)`.
+
+<!-- snippet: host -->
 
 ```php
 use Vaulter\Configuration\VaulterConfig;

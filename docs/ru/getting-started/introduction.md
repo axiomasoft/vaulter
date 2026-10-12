@@ -15,7 +15,7 @@ Vaulter поставляется набором пакетов — подклю�
 
 - **`axioma-studio/vaulter-core`** — общее ядро (авторизация, контракты CAS, sharing, панели,
   Artisan-команды). Требуется для любого другого backend-пакета.
-- **`axioma-studio/vaulter-drive`** — папки, файлы, загрузки, `Vaulter::for()` / `DriveHandle`.
+- **`axioma-studio/vaulter-drive`** — папки, файлы, загрузки, `Vaulter::drive()` / `DriveHandle`.
   Автоматически подтягивает `axioma-studio/vaulter-media` (движок CAS).
 - **`axioma-studio/vaulter-documents`** — документные узлы TipTap/Yjs, версии, комментарии, экспорт.
 - **`@vaulter/vue`** — компоненты Vue 3 + TypeScript, composable-функции и API-клиент.
@@ -47,7 +47,7 @@ Vaulter уместен, когда нужно **встроить** диск в �
 | Концепция | Что это |
 |---|---|
 | **Drive Profile** | Именованная политика Drive для сущности хоста: флаги функций и гранты поверх общей схемы. |
-| **Storage** | Конкретная строка-диск (`v_storages`) для одной сущности в рамках панели. `Vaulter::for($entity)` находит-или-создаёт её и подготавливает корневую папку. |
+| **Storage** | Конкретная строка-диск (`v_storages`) для одной сущности в рамках панели. `Vaulter::drive($entity)` находит-или-создаёт её и подготавливает корневую папку. |
 | **Node (узел)** | Запись в едином дереве (`v_nodes`): **папка**, **файл**, **документ** или **ярлык**. Одно дерево на хранилище, с корнем в корневой папке. |
 | **Blob (блоб)** | Контент-адресуемые байты за файлом (`v_blobs`). Ключ — `sha256`, дедупликация в настраиваемой области, освобождение двухфазным сборщиком мусора. |
 | **ACL / AccessResolver** | Собственный движок эффективных прав Vaulter. Сворачивает гранты на узлы (`v_node_grants`) со сменным **драйвером ролей хоста** и отвечает «можно ли этому актору это действие?». |
@@ -88,24 +88,27 @@ resolver комбинирует их с грантами на узлы. Реше
 Всё, что обращено к хосту, идёт через фасад `Vaulter` (`Vaulter\Facades\Vaulter`,
 автоматический алиас `Vaulter`). Методы, которые понадобятся чаще всего:
 
+<!-- snippet: host -->
+
 ```php
+use Vaulter\Documents\Facades\Documents;
 use Vaulter\Facades\Vaulter;
 
-// Открыть Drive-хэндл для сущности (находит-или-создаёт её хранилище + корневую папку).
-$drive = Vaulter::for($project);                 // DriveHandle
-$drive = Vaulter::for($project, 'project_drive'); // …в именованной панели
+// Открыть хэндл диска для сущности хоста (находит-или-создаёт диск и корневую папку).
+$drive = Vaulter::drive($project);                  // DriveHandle
+$drive = Vaulter::drive($project, 'project_drive'); // …в именованном профиле
+$drive = Vaulter::findDrive($project);              // null вместо создания
 
-// Резолв панелей.
-Vaulter::profiles()->get('project_drive');                  // Panel
+// Резолв профилей.
+Vaulter::profiles()->get('project_drive');          // Profile
 Vaulter::profiles();                                // ProfileRegistry
 
 // Расширение пакета в рантайме.
-Vaulter::handlers()->register(MyPdfHandler::class);    // новый формат документа
+Vaulter::handlers()->register(MyPdfHandler::class);   // новый формат файла
 Documents::exporters()->register(PdfExporter::class); // новый формат экспорта
-Vaulter::resolvePermissionsWith($resolver);       // легаси-резолвер на документном пути
 
-// Резолв драйвера совместного редактирования.
-Vaulter::driver();                                // CollaborationDriver
+// Драйвер прав.
+Vaulter::permissions();                             // PermissionDriverManager
 ```
 
 Полная поверхность — в [справочнике API](/ru/reference/php-api).

@@ -102,6 +102,8 @@ input is optional. The validated request (`StoreShareLinkRequest`) accepts:
 
 ::: code-group
 
+<!-- snippet: shell -->
+
 ```bash [curl]
 # Mint a read-only, subtree, password-gated link for signed-in users that expires in 7 days.
 curl -X POST https://app.test/api/vaulter/v1/nodes/01J.../shares \
@@ -116,6 +118,8 @@ curl -X POST https://app.test/api/vaulter/v1/nodes/01J.../shares \
         "max_uses": 100
       }'
 ```
+
+<!-- snippet: host -->
 
 ```php [PHP]
 use Vaulter\Data\Sharing\ShareLinkInput;
@@ -137,11 +141,13 @@ $rawToken = $minted->token;   // 43 characters
 $link     = $minted->link;    // ShareLinkSnapshot (no token)
 ```
 
+<!-- snippet: host -->
+
 ```vue [Vue]
 <script setup lang="ts">
-import { useNodeShares } from '@vaulter/vue'
+import { useShares } from '@vaulter/vue'
 
-const { create, lastCreated, clearLastCreated } = useNodeShares(nodeId)
+const { create, lastCreated, clearLastCreated } = useShares(nodeId)
 
 async function mint() {
   const created = await create({
@@ -203,6 +209,8 @@ change is refused (`share_role_not_allowed`) when the stored role does not fit t
 audience. The new expiry obeys the same bounds as at creation. Changing the password or the
 audience ends the link sessions opened before the change.
 
+<!-- snippet: host -->
+
 ```php
 use Vaulter\Data\Sharing\ShareLinkUpdate;
 
@@ -218,6 +226,8 @@ Vaulter::drive($owner)->actingAs($user)->shares()->update($node, $share, new Sha
 resolving the moment the rotation commits**, `token_generation` is raised by one so every
 visit opened with the old token is void, and the new raw token comes back **once**. Role,
 audience, expiry, budget, password and `use_count` stay. Rotating a revoked link is a `404`.
+
+<!-- snippet: host -->
 
 ```php
 $minted = Vaulter::drive($owner)->actingAs($user)->shares()->rotate($node, $share);
@@ -273,6 +283,8 @@ redeemed keeps working after the budget is spent; every *new* visit gets `404`.
 
 ::: code-group
 
+<!-- snippet: shell -->
+
 ```bash [curl]
 # The password travels in a header so the secret stays out of the URL/logs.
 curl -i https://app.test/api/vaulter/v1/shares/<token> \
@@ -288,15 +300,17 @@ curl https://app.test/api/vaulter/v1/shares/<token>/download \
   -H 'X-Share-Password: s3cret' -H 'X-Share-Session: eyJ2MXx...' -o file.bin
 ```
 
+<!-- snippet: host -->
+
 ```vue [Vue]
 <script setup lang="ts">
 import { useVaulterClient } from '@vaulter/vue'
 
 const client = useVaulterClient()
 
-const node      = await client.nodeShares.publicResolve(token)   // GET /share/{token}
-const children  = await client.nodeShares.publicNodes(token)     // GET /share/{token}/nodes
-const dlUrl     = client.nodeShares.publicDownloadUrl(token)     // GET /share/{token}/download
+const node      = await client.publicShares.get(token)           // GET /shares/{token}
+const children  = await client.publicShares.nodes(token)         // GET /shares/{token}/nodes
+const dlUrl     = client.publicShares.downloadUrl(token)         // GET /shares/{token}/download
 </script>
 ```
 
@@ -325,6 +339,8 @@ A link always expires. Without `expires_at` the Action stamps now plus
 `vaulter.sharing.default_ttl_hours`; an explicit value may not pass
 `vaulter.sharing.max_ttl_hours`. On top of that, the drive profile can cap every link of its
 drives:
+
+<!-- snippet: host -->
 
 ```php
 $profile->drivePolicy(fn (DrivePolicyBuilder $policy) => $policy->maxShareLinkTtlDays(7));
@@ -386,6 +402,8 @@ The hardening is in the code, not bolted on:
 
 ## Configuration
 
+<!-- snippet: config -->
+
 ```php
 // config/vaulter.php
 'sharing' => [
@@ -443,4 +461,4 @@ them.
 - [Authorization](/concepts/access-model) — the identity ACL that gates *who may mint* a link.
 - [Uploads](/guides/uploads) — the resumable ingest path that creates the file nodes you share.
 - [Custom share-token generator](/guides/recipes) — swap the token format.
-- [Frontend composables](/guides/vue) — `useNodeShares` and the public client namespace.
+- [Frontend composables](/guides/vue) — `useShares` and the public client namespace.

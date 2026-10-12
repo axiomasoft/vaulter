@@ -24,6 +24,8 @@ Drive-UI для конечных пользователей живёт в [па�
 
 ## Установка
 
+<!-- snippet: shell -->
+
 ```bash
 composer require axioma-studio/vaulter-filament
 ```
@@ -31,6 +33,8 @@ composer require axioma-studio/vaulter-filament
 Плагин поставляет свой провайдер через Laravel package discovery
 (`Vaulter\Filament\VaulterFilamentServiceProvider`). Опубликуйте конфиг, когда захотите
 включать/выключать ресурсы или переименовать навигационную группу:
+
+<!-- snippet: shell -->
 
 ```bash
 php artisan vendor:publish --tag=vaulter-filament-config
@@ -41,6 +45,8 @@ php artisan vendor:publish --tag=vaulter-filament-config
 ## Регистрация плагина
 
 Добавьте `VaulterPlugin::make()` в массив `plugins()` вашего провайдера панели:
+
+<!-- snippet: host -->
 
 ```php
 use Filament\Panel;
@@ -58,6 +64,8 @@ public function panel(Panel $panel): Panel
 Идентификатор плагина — `vaulter`. Если вам нужен сам экземпляр плагина, полученный обратно из панели
 (ради его конфига / переключателей), используйте типизированный аксессор вместо инлайн-приведения:
 
+<!-- snippet: host -->
+
 ```php
 use Vaulter\Filament\VaulterPlugin;
 
@@ -72,6 +80,8 @@ $plugin = VaulterPlugin::current($panel); // возвращает VaulterPlugin
 
 `config/vaulter-filament.php` состоит из двух секций:
 
+<!-- snippet: config -->
+
 ```php
 return [
     // Навигационная группа Filament, под которой перечислены все ресурсы Vaulter.
@@ -85,11 +95,6 @@ return [
         'grant'    => true,
         'share'    => true,
         'activity' => true,
-
-        // Легаси-поверхность вокруг документов.
-        'document'     => true,
-        'folder'       => true,
-        'legacy_share' => true,
     ],
 ];
 ```
@@ -109,6 +114,8 @@ return [
 `Vaulter\Filament\Support\PanelActor` и работает через handle, который ядро выдаёт этому администратору.
 Handle решает, что для него существует и что ему можно, поэтому изменение правил доступа в ядре доходит до
 панели без правок панели:
+
+<!-- snippet: host -->
 
 ```php
 use Vaulter\Facades\Vaulter;
@@ -162,6 +169,8 @@ HTTP API. Drive появляется в панели, если админист�
 | Restore | `trash()->restore(...)` (видно только на узле в корзине) | `Ability::Restore` |
 | Delete permanently | `trash()->purge(...)` (видно только на узле в корзине) | `Ability::Delete` |
 
+<!-- snippet: host -->
+
 ```php
 // Внутри NodeResource: обработчик строкового действия rename.
 PanelDrives::handle($driveId)->nodes()->rename(node: $id, name: $name);
@@ -192,6 +201,8 @@ PanelDrives::handle($driveId)->nodes()->rename(node: $id, name: $name);
 - **Create** (действие в шапке страницы списка — `Create grant`) →
   `access()->grant(...)` (идемпотентный upsert по ключу гранта).
 - **Revoke** (строковое действие) → `access()->revoke(...)`.
+
+<!-- snippet: host -->
 
 ```php
 // NodeGrantResource::grantFromData — создание через handle.
@@ -228,6 +239,8 @@ live/expired/revoked/exhausted. Сырой токен показывается *
 - **Revoke** (строковое действие) → `shares()->revoke(...)`.
 
 Обе требуют `Ability::Share` на узле.
+
+<!-- snippet: host -->
 
 ```php
 $minted = Vaulter::drive($owner)->actingAs($user)->shares()->create($node, new ShareLinkInput(

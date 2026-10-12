@@ -42,6 +42,8 @@ purging; only growth is refused.
 Every revision of a file stays until it is deleted, pruned or the file is purged. The
 drive profile's `RevisionRetentionPolicy` decides what pruning removes:
 
+<!-- snippet: host -->
+
 ```php
 use Vaulter\Profiles\DrivePolicyBuilder;
 use Vaulter\Profiles\RevisionRetentionPolicy;
@@ -66,11 +68,15 @@ Pruning runs as `php artisan vaulter:revisions:prune [--drive=ID ...] [--dry-run
 `Vaulter\Drive\Jobs\PruneFileRevisionsJob` for one drive. Schedule it daily, like
 `vaulter:trash:purge`:
 
+<!-- snippet: host -->
+
 ```php
 Schedule::command('vaulter:revisions:prune')->daily();
 ```
 
 Single revisions are managed through the file API:
+
+<!-- snippet: host -->
 
 ```php
 $drive->files()->setRevisionRetention($file, $revision, keepForever: true); // Edit: pin / unpin
@@ -142,7 +148,7 @@ A session can target one of two shapes (it mirrors `IngestFileInput`):
 Authorization is per-target, enforced through the `AccessResolver` at every byte/state move
 (both at create and on each subsequent op):
 
-- **New file** → `canCreateInWorkspace($actor, $storage)` **and** `Ability::Create` on the
+- **New file** → `canCreateIn($actor, $scope)` **and** `Ability::Create` on the
   destination folder.
 - **New version** → `Ability::Edit` on the target node.
 
@@ -201,6 +207,8 @@ self-contained over Flysystem + the session table) and works on **any disk**.
 
 ::: code-group
 
+<!-- snippet: shell -->
+
 ```bash [curl]
 # 1. Create the session (1 GiB file, into the storage root).
 curl -i -X POST https://app.test/api/vaulter/v1/drives/01J.../uploads \
@@ -224,11 +232,13 @@ curl -X PATCH https://app.test/api/vaulter/v1/uploads/<upload_id> \
 # → 204 Upload-Offset: <new>  (more chunks)  |  201 + node JSON (complete)
 ```
 
+<!-- snippet: host -->
+
 ```vue [Vue]
 <script setup lang="ts">
 import { useUpload } from '@vaulter/vue'
 
-const { uploadResumable, progress, sent, total, abort } = useUpload(storageId)
+const { uploadResumable, progress, sent, total, abort } = useUpload(driveId)
 
 async function onPick(file: File) {
   // Drives the tus session chunk by chunk; progress is reactive.
@@ -262,6 +272,8 @@ handler records each part (`part_no` / `byte_offset` / `size` / `etag`) in `v_up
 a re-upload of a part **replaces** its row (the S3 semantics, encoded in the
 `(session, part_no)` composite primary key) — and on `complete` stitches the parts (ascending
 by `part_no`) into the assembled staged temp.
+
+<!-- snippet: shell -->
 
 ```bash
 # Record part 1 (the body is the part bytes).
@@ -344,10 +356,14 @@ Two paths reclaim a session — both release the protocol-side state (S3
   the **open** sessions (`initiated` | `uploading`) whose `expires_at` has elapsed and reclaims
   each. Schedulable.
 
+<!-- snippet: shell -->
+
 ```bash
 # Reclaim stale sessions past their TTL (staged temp + S3 multipart cleaned).
 php artisan vaulter:uploads:sweep
 ```
+
+<!-- snippet: host -->
 
 ```php
 // Schedule it (e.g. app/Console/Kernel.php or routes/console.php):
@@ -362,6 +378,8 @@ mechanism (the CAS bucket itself stays unversioned, H.3).
 :::
 
 ## Configuration
+
+<!-- snippet: config -->
 
 ```php
 // config/vaulter-drive.php
@@ -380,7 +398,6 @@ mechanism (the CAS bucket itself stays unversioned, H.3).
         ],
     ],
 ],
-'names' => ['max_length' => 255],
 'trash' => ['retention_days' => 30],
 'models' => [
     'upload_session' => \Vaulter\Drive\Models\Uploads\UploadSession::class,
@@ -411,6 +428,8 @@ timeout. It also checks that bytes the scanner cannot read are never reported cl
 
 **Scan lifecycle on your configuration.** `ScanLifecycleContractTests` drives a drive's Operations as
 your actor, `vaulter:scan:reconcile` and a scripted `FakeContentScanner`:
+
+<!-- snippet: host -->
 
 ```php
 use Vaulter\Drive\Testing\Contracts\ScanLifecycleContractTests;

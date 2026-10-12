@@ -13,6 +13,8 @@ outline: deep
 3. a **viewer registry** that decides which component shows a node, with a safe fallback;
 4. **composables** and **components** that turn the client into a headless Drive UI (`VaulterDrive`, …).
 
+<!-- snippet: shell -->
+
 ```bash
 npm install @vaulter/vue
 ```
@@ -28,6 +30,8 @@ npm install @vaulter/vue
 
 Install the plugin once. It builds a client from your options, creates **this application's** viewer registry,
 provides the i18n and registers every component globally:
+
+<!-- snippet: host -->
 
 ```ts
 import { createApp } from 'vue'
@@ -64,6 +68,8 @@ createApp(App)
 
 Build it yourself for tests or per-request SSR wiring, and provide it:
 
+<!-- snippet: host -->
+
 ```ts
 import { createVaulterClient, provideVaulterClient } from '@vaulter/vue'
 
@@ -78,6 +84,8 @@ Inside a component, `useVaulterClient()` resolves it and throws a clear error wh
 it by hand. The package exports ready aliases — `Node`, `Drive`, `FileRevision`, `DocumentRevision`, `Grant`, `Share`,
 `MintedShare`, `Comment`, `Activity`, `Change`, `CollaborationSession`, `Problem`, … — and the raw `components`,
 `paths` and `operations` for everything else. Ids are always strings.
+
+<!-- snippet: shell -->
 
 ```bash
 npm run api:generate   # regenerate after the contract changed
@@ -101,6 +109,8 @@ npm run api:check      # CI: fails when the committed file is stale or not track
 | `shares`, `publicShares` | `list`, `create`, `update`, `rotate`, `revoke`; `get`, `nodes`, `downloadUrl` |
 | `comments`, `activity`, `changes` | threads; the activity feeds; `start` and `list` of the change feed |
 
+<!-- snippet: host -->
+
 ```ts
 const client = useVaulterClient()
 
@@ -120,6 +130,8 @@ total. Pass `meta.next_cursor` back as `{ cursor }`. The change feed uses `{ cur
 A node's `etag` is an **opaque validator** of the representation you hold. Do not parse it, do not build one. Every
 method that changes a node or a document takes it as a **required** `{ etag }` option and sends it as `If-Match`:
 
+<!-- snippet: host -->
+
 ```ts
 await client.nodes.trash(node.id, { etag: node.etag })
 await client.nodes.move(node.id, targetId, { etag: node.etag, onConflict: 'rename' })
@@ -138,6 +150,8 @@ add `ETag` to `Access-Control-Expose-Headers` on a cross-origin API).
 ### Errors
 
 A non-2xx response throws a `VaulterApiError` parsed from `application/problem+json` (RFC 9457):
+
+<!-- snippet: host -->
 
 ```ts
 try {
@@ -169,6 +183,8 @@ another.
 `client.files.upload()` is the one-request path. `client.uploads.start()` returns a resumable upload (tus by default,
 `protocol: 's3'` for S3 multipart) that always resumes from the server's offset:
 
+<!-- snippet: host -->
+
 ```ts
 const upload = client.uploads.start(driveId, file, { parentId, onProgress: (sent, total) => {} })
 const node = await upload.start()   // later: await upload.abort()
@@ -181,6 +197,8 @@ Replacing the content of an existing file needs its tag: `{ replace: { nodeId, e
 The server tells **which viewer** shows a node in `node.presentation.viewer.key` (and its `props`). The registry maps
 keys to components. It belongs to **one application** (`provide/inject`): two apps, or two SSR requests, never see each
 other's viewers.
+
+<!-- snippet: host -->
 
 ```ts
 app.use(VaulterPlugin, {
@@ -222,6 +240,8 @@ methods.
 | `useCollaboration(nodeId)` | the realtime session (below) |
 
 **Mutations take the node, not its id**, because its `etag` is what the server compares:
+
+<!-- snippet: host -->
 
 ```ts
 const { nodes, rename, conflict } = useNodes(driveId)
@@ -301,6 +321,8 @@ Failures — a rejected mutation (`role="alert"`) and a failed upload (`aria-liv
 
 ## Worked example: a file manager
 
+<!-- snippet: host -->
+
 ```vue
 <script setup lang="ts">
 import { shallowRef } from 'vue'
@@ -343,6 +365,8 @@ function onNodeSelected(node: Node) {
 
 Register the editor for documents once, in the plugin options — the viewer receives the node and mounts your TipTap
 inside `VaulterDocumentNode`'s slot:
+
+<!-- snippet: host -->
 
 ```ts
 app.use(VaulterPlugin, { viewers: { 'vaulter/tiptap': () => import('./AppDocumentViewer.vue') } })

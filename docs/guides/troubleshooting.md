@@ -31,6 +31,8 @@ silently open a prod install ([ADR-0007](/adr/0007-pluggable-authorization)).
 
 **Fix.** Pick a real driver in `config/vaulter.php`:
 
+<!-- snippet: config -->
+
 ```php
 // config/vaulter.php
 'access' => [
@@ -120,6 +122,8 @@ within, and it drives **both** the dedup-unique index and the scope-qualified st
 
 **Fix.**
 
+<!-- recipe: packages/media/tests/Recipes/MediaRecipeTest.php#media-dedup-scope -->
+
 ```php
 // config/vaulter-media.php
 'dedup' => [
@@ -149,6 +153,8 @@ slow on MySQL/MariaDB; or an arch test fails with
 `whereHas('descendants')` or `withCount('descendants')` — generates correlated recursive
 subqueries that are fatal on MariaDB and pathological elsewhere, so they are **banned from
 request paths** and enforced by an arch test:
+
+<!-- snippet: host -->
 
 ```php
 // tests/Arch/ArchTest.php
@@ -269,7 +275,7 @@ still referenced.
 
 **Why & fix.** Check that the requested profile is registered:
 
-- **`UnknownProfileException::forName`** — `Vaulter::for($entity, panel: 'x')` (or a route) named a
+- **`UnknownProfileException::forName`** — `Vaulter::drive($entity, profile: 'x')` (or a route) named a
   panel that isn't registered. Register its provider FQCN in `config('vaulter.profiles.providers')`, or use
   the `default` panel.
 

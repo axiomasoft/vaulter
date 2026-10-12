@@ -15,52 +15,54 @@ outline: deep
 ## Привязать Drive к CRM-задаче или проекту {#attach-drive}
 
 Главный сценарий: дать любой сущности хоста собственный файлово-папочный Drive **без миграций**.
-`Vaulter::for($entity)` находит-или-создаёт строку `v_storages` по полиморфной тройке
+`Vaulter::drive($entity)` находит-или-создаёт строку `v_storages` по полиморфной тройке
 `(owner_type, owner_id, panel)` и подготавливает корневую папку — идемпотентно, поэтому двойной
 вызов возвращает то же хранилище.
 
 ::: code-group
 
+<!-- snippet: host -->
+
 ```php [Controller]
+use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Facades\Vaulter;
 
 final class TaskDriveController
 {
     public function index(\App\Models\Task $task)
     {
-        // Authorize through your app, then open the Drive for this task.
-        $drive = Vaulter::for($task);
+        // Authorize through your app, then open the Drive for this task as the signed-in user.
+        $drive = Vaulter::drive($task)->actingAs(request()->user());
 
         return response()->json([
-            'storage' => $drive->model()->id,
-            'nodes'   => $drive->list(), // Collection<Node> of the root's children
+            'storage' => $drive->snapshot()->id,
+            'nodes'   => $drive->nodes()->children()->items, // the root's children, as NodeSnapshot
         ]);
     }
 
     public function store(\App\Models\Task $task, \Illuminate\Http\Request $request)
     {
-        $drive = Vaulter::for($task);
+        $drive = Vaulter::drive($task)->actingAs($request->user());
 
-        $node = $drive->upload(
-            $request->file('document'),
-            actorId: $request->user()->getKey(),
-        );
+        $node = $drive->files()->upload(UploadSource::fromUploadedFile($request->file('document')));
 
         return response()->json(['node' => $node->id], 201);
     }
 }
 ```
 
+<!-- snippet: host -->
+
 ```vue [Vue]
 <script setup lang="ts">
 import { VaulterDrive } from '@vaulter/vue'
 
-// The storage id resolved server-side (e.g. from Vaulter::for($task)->storage()->id).
-const props = defineProps<{ storageId: string }>()
+// The storage id resolved server-side (e.g. from Vaulter::drive($task)->snapshot()->id).
+const props = defineProps<{ driveId: string }>()
 </script>
 
 <template>
-  <VaulterDrive :storage-id="props.storageId" />
+  <VaulterDrive :drive-id="props.driveId" />
 </template>
 ```
 
@@ -69,6 +71,8 @@ const props = defineProps<{ storageId: string }>()
 Для **выделенного** Drive на конкретном типе сущности — со своими фича-флагами и Filament-ресурсом
 — определите Storage Profile вместо панели `default`:
 
+<!-- snippet: shell -->
+
 ```bash
 php artisan vaulter:make:profile task_drive --host="App\\Models\\Task"
 ```
@@ -76,12 +80,16 @@ php artisan vaulter:make:profile task_drive --host="App\\Models\\Task"
 Это создаст `app/Vaulter/Profiles/TaskDriveStoragePanel.php`. Отредактируйте её фича-флаги, затем
 зарегистрируйте FQCN провайдера в `config/vaulter.php`:
 
+<!-- snippet: config -->
+
 ```php
 // config/vaulter.php
 'profiles' => ['providers' => [
     \App\Vaulter\Profiles\TaskDriveStoragePanel::class,
 ]],
 ```
+
+<!-- snippet: host -->
 
 ```php
 // app/Vaulter/Profiles/TaskDriveStoragePanel.php
@@ -103,8 +111,10 @@ final class TaskDriveStoragePanel extends ProfileProvider
 
 Теперь смонтируйте его по id панели:
 
+<!-- snippet: host -->
+
 ```php
-$drive = Vaulter::for($task, panel: 'task_drive');
+$drive = Vaulter::drive($task, profile: 'task_drive');
 ```
 
 ::: tip Без миграций
@@ -121,6 +131,8 @@ Vaulter **не** навязывает мультитенантность — т�
 
 ### 1. Добавьте колонку тенанта
 
+<!-- snippet: config -->
+
 ```php
 // config/vaulter.php
 'tenancy' => [
@@ -133,6 +145,8 @@ Vaulter **не** навязывает мультитенантность — т�
 Vaulter резолвит каждую модель через `config('vaulter.models.*')`. Направьте одну (или все) на
 собственный подкласс, который применяет ваш scope тенанта — сам Vaulter никогда не скоупит по
 `tenant_id`:
+
+<!-- snippet: host -->
 
 ```php
 // app/Models/Vaulter/Node.php
@@ -147,6 +161,8 @@ final class Node extends BaseNode
 }
 ```
 
+<!-- snippet: config -->
+
 ```php
 // config/vaulter.php
 'models' => [
@@ -160,6 +176,8 @@ final class Node extends BaseNode
 
 Дедупликация по тенанту уже стоит по умолчанию, так что глобальная область дедупликации не может
 утечь *самим фактом существования* файла между тенантами ([ADR-0012](/adr/0012-dedup-scope)):
+
+<!-- snippet: config -->
 
 ```php
 // config/vaulter-media.php
@@ -182,11 +200,13 @@ ACL для Drive комбинирует `v_node_grants` со сменной по
 систему ролей вашего приложения, реализуйте
 [`Vaulter\Contracts\Access\PermissionDriver`](/ru/concepts/architecture#авторизация). Он
 **слеп к узлам**: никогда не получает `Node` — только актора `Authorizable` и `AccessScope`
-(панель + координаты workspace + владелец узла).
+(профиль + владелец и id диска + тенант).
 
 Простейший реальный драйвер наследует автономную полосу `database` и просто расширяет
 множество субъектов ролями/командами актора (чтобы применялись строки `v_node_grants`,
 адресованные роли):
+
+<!-- snippet: host -->
 
 ```php
 namespace App\Vaulter;
@@ -213,16 +233,20 @@ final class TeamRoleDriver extends DatabasePermissionDriver
 
 Более полный драйвер также отвечает за полосу ролей и переопределение супер-админа:
 
+<!-- snippet: host -->
+
 ```php
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Decision;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Enums\Access\Effect;
-use Vaulter\Enums\Access\GrantLevel;
+use Vaulter\Access\Roles\RoleRegistry;
 
 final class AppRoleDriver implements PermissionDriver
 {
+    public function __construct(private RoleRegistry $roles) {}
+
     public function override(Authorizable $actor, AccessScope $scope): ?Effect
     {
         return $actor->is_super_admin ? Effect::Allow : null; // absolute, step 1
@@ -232,10 +256,9 @@ final class AppRoleDriver implements PermissionDriver
     {
         // Raise access from a host role — folded as roleAllow into max(aclAllow, roleAllow).
         // It can RAISE access but never override a deny (the final veto still applies).
-        if ($actor->canEditIn($scope->workspaceType, $scope->workspaceId)) {
-            // Decision::allow(level) defaults bits to the level's bitmask;
-            // pass explicit bits only to narrow them.
-            return Decision::allow(GrantLevel::Writer);
+        if ($actor->canEditIn($scope->driveOwner->type, $scope->driveOwner->id)) {
+            // A Decision carries a role from the registry; the abilities come from the role.
+            return new Decision($this->roles->latest(RoleRegistry::WRITER));
         }
 
         return null; // nothing to say — the ACL is the sole authority
@@ -247,14 +270,16 @@ final class AppRoleDriver implements PermissionDriver
         return [Subject::ofModel($actor)];
     }
 
-    public function canCreateInWorkspace(Authorizable $actor, string $workspaceType, int|string $workspaceId): bool
+    public function canCreateIn(Authorizable $actor, AccessScope $scope): bool
     {
-        return $actor->canCreateIn($workspaceType, $workspaceId);
+        return $actor->canCreateIn($scope->driveOwner->type, $scope->driveOwner->id);
     }
 }
 ```
 
 Зарегистрируйте его как именованный драйвер и выберите:
+
+<!-- snippet: config -->
 
 ```php
 // config/vaulter.php
@@ -287,6 +312,8 @@ final class AppRoleDriver implements PermissionDriver
 Добавить
 формат — это **один класс + один вызов регистрации — без миграции, без правки ядра**
 ([H.5 / ADR-0004](/adr/0004-content-format)).
+
+<!-- snippet: host -->
 
 ```php
 namespace App\Vaulter\Handlers;
@@ -336,6 +363,8 @@ final class CadHandler implements FileHandler
 
 ::: code-group
 
+<!-- snippet: config -->
+
 ```php [config]
 // config/vaulter.php
 'handlers' => [
@@ -345,12 +374,16 @@ final class CadHandler implements FileHandler
 ],
 ```
 
+<!-- snippet: host -->
+
 ```php [runtime]
 // A service provider's boot()
 use Vaulter\Facades\Vaulter;
 
 Vaulter::handlers()->register(\App\Vaulter\Handlers\CadHandler::class);
 ```
+
+<!-- snippet: host -->
 
 ```php [tagged]
 // A service provider's register()
@@ -371,6 +404,8 @@ $this->app->tag([\App\Vaulter\Handlers\CadHandler::class], 'vaulter.file_handler
 использовать S3, обычно достаточно поменять конфиг — свой класс не нужен.
 
 ### Направьте Vaulter на диск S3
+
+<!-- snippet: host -->
 
 ```php
 // config/filesystems.php — a standard Laravel S3 disk
@@ -407,6 +442,8 @@ CAS-бакет должен быть **без версионирования**. 
 Если нужно поведение, которого штатный драйвер не покрывает, реализуйте
 `Vaulter\Contracts\Cas\StorageDriver` (или `ContentStore` / `BlobStore`) и привяжите:
 
+<!-- snippet: config -->
+
 ```php
 // config/vaulter-media.php
 'content_store'  => \Vaulter\Media\Cas\Sha256ContentStore::class,
@@ -423,6 +460,8 @@ CAS-бакет должен быть **без версионирования**. 
 Встроенные экспортёры `html` и `markdown` отдают документы rich-text и Markdown. Добавьте свой
 (PDF, DOCX, …), реализовав `Vaulter\Documents\Contracts\DocumentExporter` — заготовка:
 `php artisan vaulter:make:exporter Pdf`:
+
+<!-- snippet: host -->
 
 ```php
 namespace App\Vaulter\Exporters;
@@ -460,6 +499,8 @@ final class PdfExporter implements DocumentExporter
 
 ::: code-group
 
+<!-- snippet: config -->
+
 ```php [config]
 // config/vaulter-documents.php
 'exporters' => [
@@ -468,6 +509,8 @@ final class PdfExporter implements DocumentExporter
     \App\Vaulter\Exporters\PdfExporter::class,
 ],
 ```
+
+<!-- snippet: host -->
 
 ```php [provider]
 use Vaulter\Documents\Facades\Documents;
@@ -478,13 +521,15 @@ Documents::exporters()->register(\App\Vaulter\Exporters\PdfExporter::class);
 :::
 
 После этого он доступен по `GET v1/documents/{node}/export/pdf` и через Vue-composable
-`useDocumentNode(nodeId).exportAs('pdf')`.
+`useDocument(nodeId).exportAs('pdf')`.
 
 ## Своя форма share-токена {#share-token}
 
 По умолчанию share-токены — случайные строки. Чтобы выпускать короткие, хешированные или
 префиксованные токены, реализуйте `Vaulter\Contracts\Sharing\ShareTokenGenerator` (токен должен
 быть уникальным и умещаться в колонку токена, ≤ 64 символов):
+
+<!-- snippet: host -->
 
 ```php
 namespace App\Vaulter;
@@ -499,6 +544,8 @@ final class ShortTokenGenerator implements ShareTokenGenerator
     }
 }
 ```
+
+<!-- snippet: config -->
 
 ```php
 // config/vaulter.php
@@ -520,6 +567,8 @@ final class ShortTokenGenerator implements ShareTokenGenerator
 Удаление в корзину или замена файлов оставляют блобы без ссылок. Двухфазная сборка мусора
 помечает их надгробием (tombstone), затем сметает после окна отсрочки; отдельная задача
 reconcile чинит дрейф `ref_count`.
+
+<!-- snippet: host -->
 
 ```php
 // routes/console.php (Laravel 11+) or app/Console/Kernel.php
@@ -544,6 +593,8 @@ Schedule::command('vaulter:uploads:sweep')->hourly();
 **обязано** быть ≥ вашей худшей задержки commit многочастевой загрузки, чтобы загрузка в полёте
 успела воскресить помеченный надгробием блоб первой.
 
+<!-- snippet: shell -->
+
 ```bash
 # Override the grace window ad hoc, and also clear crashed-staging PENDING rows.
 php artisan vaulter:blobs:gc --grace=48 --pending
@@ -561,6 +612,8 @@ php artisan vaulter:blobs:gc --grace=48 --pending
 Фича `reliability` стейджит каждое доменное событие Drive в `v_outbox` (после коммита), затем
 relay разносит его в подписанные строки `v_webhook_deliveries` по каждому активному подписанному
 эндпоинту:
+
+<!-- snippet: host -->
 
 ```php
 // Нужно только при vaulter.schedule.enabled=false; иначе пакеты планируют это сами.
@@ -582,6 +635,8 @@ Schedule::command('vaulter:webhooks:prune')->daily();        // reclaim settled 
 Разнесённые строки outbox и терминальные доставки вебхуков — это append-only аудит-след, который
 иначе растёт бесконечно. `vaulter:webhooks:prune` освобождает **урегулированные** строки за
 пределами окна хранения — и *только* урегулированные:
+
+<!-- snippet: shell -->
 
 ```bash
 # Prune settled rows older than config('vaulter.webhooks.retention_days') (default 30):
@@ -616,12 +671,14 @@ Vaulter поставляет тестовые дубли под `Vaulter\Testing
 - **`Vaulter\Azgard\Testing\FakeAzgardGuard`** — дубль guard для тестирования `azgard`;
   нужны установленный `vaulter-azgard` и его Composer-зависимости.
 
+<!-- recipe: packages/drive/tests/Recipes/DriveRecipeTest.php#testing-open-driver -->
+
 ```php
 // In a Pest test, force the open driver for the duration of the test.
 config()->set('vaulter.access.permission_driver', 'null'); // non-production only
 
-$drive = Vaulter::for($task);
-$node  = $drive->upload('hello', name: 'note.txt');
+$drive = Vaulter::drive($task)->actingAs($user);
+$node = $drive->files()->upload(UploadSource::fromString('hello', 'note.txt'));
 
 expect($node->name)->toBe('note.txt');
 ```

@@ -1,54 +1,46 @@
 # Abilities (frontend integration)
 
-Vaulter computes per-document permissions server-side (from the actor's [roles](/concepts/access-model#abilities-and-roles); `view` and `download` are separate abilities) and ships them to the front-end, so
+Vaulter computes per-node permissions server-side (from the actor's [roles and grants](/concepts/access-model#abilities-and-roles)) and ships them to the front-end, so
 your Vue components render only the actions the user may perform. No extra API round-trips,
 no permission logic duplicated in JavaScript.
 
 ## In API responses
 
-`DocumentResource` embeds an `abilities` object computed from your `PermissionResolver`:
+Every node resource embeds an `abilities` object — one boolean per ability, resolved for the
+authenticated actor:
 
 ```json
 {
   "data": {
-    "id": 1,
-    "title": "Q3 Proposal",
-    "abilities": { "view": true, "download": true, "comment": true, "edit": true, "manage": false, "delete": false }
+    "id": "01J...",
+    "name": "Q3 Proposal",
+    "abilities": {
+      "view": true, "download": true, "comment": true, "edit": true, "create": true, "move": true,
+      "copy": true, "trash": true, "restore": false, "share": true, "manage": false, "delete": false
+    }
   }
 }
 ```
 
-The Vue editor reads `document.abilities.edit` to decide whether to mount in read-only mode.
+`GET /nodes/{node}/abilities` returns the same object on its own. The Vue editor reads
+`abilities.edit` to decide whether to mount in read-only mode.
 
-## Building your own ability DTO
+## In PHP
 
-Extend `Vaulter\Abilities\AbilitiesDto` and map ability keys to resolver actions:
+<!-- recipe: packages/drive/tests/Recipes/DriveRecipeTest.php#abilities-read -->
 
 ```php
-use Vaulter\Abilities\AbilitiesDto;
-use Vaulter\VaulterManager;
-use Vaulter\Models\Document;
-use Illuminate\Contracts\Auth\Authenticatable;
+$abilities = $drive->nodes()->abilities($node);   // NodeAbilities
+$canEdit = $abilities->flags['edit'];             // ability name => allowed
 
-final readonly class ExportAbilities extends AbilitiesDto
-{
-    public function __construct(public bool $export) {}
-
-    public static function for(?Authenticatable $user, Document $document, VaulterManager $manager): self
-    {
-        $flags = self::resolveFlags($user, $document, $manager, ['export' => 'manage']);
-
-        return new self(export: $flags['export']);
-    }
-
-    public function toArray(): array
-    {
-        return ['export' => $this->export];
-    }
-}
+// One resolver pass for a whole listing instead of one call per row.
+$byNode = $drive->nodes()->abilitiesMany([$node, $other]);   // node id => NodeAbilities
 ```
+
+Without an acting user every flag is `false`: the client gets a read-only shell rather than
+actions it may not run.
 
 ## Inertia
 
-Share abilities for the current page's documents as Inertia props and bind directly in Vue —
+Share the abilities of the current page's nodes as Inertia props and bind directly in Vue —
 the booleans are already resolved server-side.

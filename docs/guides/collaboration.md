@@ -20,6 +20,8 @@ carry comment events with their existing access checks.
 
 All keys live under `config('vaulter-documents.collaboration')`:
 
+<!-- snippet: config -->
+
 ```php
 // config/vaulter-documents.php
 'collaboration' => [
@@ -250,7 +252,7 @@ VAULTER_COLLAB_WEBHOOK_SECRET=<another random>     # shared with the hub, signs 
 
 ## Frontend wiring (`@vaulter/vue`)
 
-`useNodeCollaboration` fetches the session, opens `@hocuspocus/provider` over a fresh
+`useCollaboration` fetches the session, opens `@hocuspocus/provider` over a fresh
 `Y.Doc` and handles the hub's terminal closes:
 
 - **4409 `epoch_changed`** — the provider and the old `Y.Doc` are destroyed, a new session is
@@ -263,13 +265,15 @@ VAULTER_COLLAB_WEBHOOK_SECRET=<another random>     # shared with the hub, signs 
   a new session would be refused again: nothing is reopened, `error` is set and the editor
   stays disconnected.
 
+<!-- snippet: host -->
+
 ```ts
 import { watch } from 'vue'
-import { useNodeCollaboration } from '@vaulter/vue'
+import { useCollaboration } from '@vaulter/vue'
 import { Editor } from '@tiptap/vue-3'
 import Collaboration from '@tiptap/extension-collaboration'
 
-const collab = useNodeCollaboration(nodeId, { supportedSchemaVersion: 1 })
+const collab = useCollaboration(nodeId, { supportedSchemaVersion: 1 })
 await collab.connect()
 
 let editor = makeEditor()
@@ -301,15 +305,16 @@ collab.disconnect()
 ### `VaulterDocumentNode`
 
 When the resolved handler is collaborative (`capabilities.collaborative === true`) and
-collaboration is enabled, `VaulterDocumentNode` opens a session via `useNodeCollaboration`
+collaboration is enabled, `VaulterDocumentNode` opens a session via `useCollaboration`
 and hands the editor `collaborative: true`, `content: null`, `ydoc` (replaced after a
 restore — rebind on change), presence and connection state. Otherwise it uses the autosave
 path.
 
+<!-- snippet: host -->
+
 ```vue
 <VaulterDocumentNode
-  :node-id="nodeId"
-  :component-map="componentMap"
+  :node="node"
   :supported-schema-version="1"
   @collaborating="(readonly) => { /* a session opened */ }"
   @schema-outdated="(version) => { /* ask the user to update the application */ }"
