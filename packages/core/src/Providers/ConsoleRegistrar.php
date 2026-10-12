@@ -6,6 +6,8 @@ namespace Vaulter\Providers;
 
 use Illuminate\Console\Application as Artisan;
 use Illuminate\Contracts\Foundation\Application;
+use Vaulter\Console\CommandsReferenceCommand;
+use Vaulter\Console\ConfigReferenceCommand;
 use Vaulter\Console\DoctorCommand;
 use Vaulter\Console\ErrorsReferenceCommand;
 use Vaulter\Console\EventsReferenceCommand;
@@ -33,6 +35,8 @@ final class ConsoleRegistrar
                 MakePermissionDriverCommand::class,
                 EventsReferenceCommand::class,
                 ErrorsReferenceCommand::class,
+                ConfigReferenceCommand::class,
+                CommandsReferenceCommand::class,
                 RelayWebhooksCommand::class,
                 RetryWebhooksCommand::class,
                 PruneWebhooksCommand::class,

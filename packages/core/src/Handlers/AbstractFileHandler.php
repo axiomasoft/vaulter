@@ -8,7 +8,7 @@ use Vaulter\Contracts\Handlers\FileHandler;
 
 /**
  * Optional DX base for a third-party {@see FileHandler} (P0.5 / §7 level 4,
- * `docs/guide/writing-an-engine.md`). Implementing FileHandler directly is always
+ * `docs/extending/viewers.md`). Implementing FileHandler directly is always
  * enough — this only defaults the one method most handlers don't need to vary:
  * `extensions()`. `key()`, `mimeTypes()`, `priority()`, `capabilities()` and `viewer()`
  * stay handler-specific and are not touched here.

@@ -9,7 +9,7 @@ configure it entirely through environment variables; you never copy its source i
 > (notifications, presence) and is **not** a collaboration transport — the `reverb`
 > collaboration driver was removed. Collaborative editing runs on this hub.
 
-> **📖 The authoritative docs live in [`docs/guide/hocuspocus-server.md`](../docs/guide/hocuspocus-server.md):**
+> **📖 The authoritative docs live in [`docs/guide/hocuspocus-server.md`](../docs/guides/hub.md):**
 > the full environment contract, security hardening (TLS/wss, Origin allowlist, throttle +
 > reverse-proxy IP headers, maxPayload), multi-instance scaling, and graceful shutdown.
 > This README is a quick reference only.
@@ -80,7 +80,7 @@ a numeric value is malformed. The most common variables:
 **The full contract** — security (`MAX_PAYLOAD_BYTES`, `THROTTLE*`, `BAN_TIME`), liveness
 (`TIMEOUT_MS`, `DEBOUNCE_MS`, `MAX_DEBOUNCE_MS`), scaling (`REDIS_URL`, `INSTANCE_NAME`),
 webhook routing (`API_PREFIX`, `LARAVEL_WEBHOOK_URL`, `WEBHOOK_TIMEOUT_MS`) and ops
-(`QUIET`, `LOG`) — is documented in [`docs/guide/hocuspocus-server.md`](../docs/guide/hocuspocus-server.md).
+(`QUIET`, `LOG`) — is documented in [`docs/guide/hocuspocus-server.md`](../docs/guides/hub.md).
 
 On the Laravel side, point the client at this hub with `VAULTER_COLLAB_DRIVER=hocuspocus`
 and `VAULTER_COLLAB_URL=ws://<hub-host>:1234`.

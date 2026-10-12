@@ -72,7 +72,7 @@ it('enforces the head foreign key in the database where the driver supports it',
 
     if ($driver === 'sqlite') {
         // SQLite cannot add the constraint after both tables exist; the writer test above
-        // is the whole guarantee there (docs/guide/database-compatibility.md).
+        // is the whole guarantee there (docs/reference/compatibility.md).
         expect($keys)->not->toHaveKey($documents.'_head_fk');
 
         return;

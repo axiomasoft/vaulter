@@ -85,7 +85,7 @@ final readonly class DocumentsConfig implements CommentsFeature
         if ($value === 'reverb') {
             throw new InvalidConfigurationException(
                 '[Vaulter] The reverb collaboration driver was removed; set vaulter-documents.collaboration.driver to hocuspocus. '
-                .'Docs: https://github.com/axiomasoft/vaulter/blob/main/docs/guide/collaboration.md',
+                .'Docs: https://github.com/axiomasoft/vaulter/blob/main/docs/guides/collaboration.md',
             );
         }
 

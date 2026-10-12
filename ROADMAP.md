@@ -73,7 +73,7 @@ backlog, not built.
 ### `vaulter-filament` — engine-aware resources
 The Filament panel's `Node`/`Document` resources are unaware of the pluggable-engine model
 (`Contracts\Handlers\FileHandler`, `Vaulter\Engines\DocumentHandlerRegistry` — see
-[Document handlers](/guide/document-handlers)): they don't surface which handler resolved a node,
+[Document handlers](/extending/file-handlers)): they don't surface which handler resolved a node,
 let an admin browse registered handlers, or route a row action through a handler-specific
 preview/export. Deliberately deferred — VLT-CANON scoped the engine canon itself and excluded
 Filament from its scope (D6); this is the follow-up once a real consumer needs it.

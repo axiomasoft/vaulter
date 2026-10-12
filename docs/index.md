@@ -10,10 +10,10 @@ hero:
   actions:
     - theme: brand
       text: Quick Start
-      link: /guide/quick-start
+      link: /getting-started/quick-start
     - theme: alt
       text: Why Vaulter?
-      link: /guide/introduction
+      link: /getting-started/introduction
     - theme: alt
       text: GitHub
       link: https://github.com/axioma-studio/vaulter
@@ -21,25 +21,25 @@ hero:
 features:
   - title: Storage Panels
     details: Configure isolated drives per host entity over one shared schema — zero-migration scaffolding.
-    link: /guide/storage-panels
+    link: /concepts/drives-and-profiles
   - title: Unified node tree
     details: Folders, files, documents and shortcuts in one v_nodes tree per storage.
-    link: /guide/drive
+    link: /concepts/nodes-and-revisions
   - title: Content-addressed blobs
     details: sha256 deduplication with a two-phase, race-free garbage collector.
-    link: /guide/storage-and-blobs
+    link: /concepts/storage-and-blobs
   - title: Pluggable authorization
     details: A Vaulter-owned ACL engine plus swappable role drivers (database, Gate, Spatie, AzGuard).
-    link: /guide/authorization
+    link: /concepts/access-model
   - title: Realtime collaboration
     details: TipTap/Yjs editing over Laravel Reverb or an external Hocuspocus hub.
-    link: /guide/collaboration
+    link: /guides/collaboration
   - title: Vue + Filament
     details: The @vaulter/vue Drive UI and a Filament 5 admin plugin, ready to embed.
-    link: /guide/vue
+    link: /guides/vue
 ---
 
 ::: tip New here?
-Start with **[Quick Start](/guide/quick-start)** for the ≤60-second happy path, or read
-**[What is Vaulter?](/guide/introduction)** for the mental model first.
+Start with **[Quick Start](/getting-started/quick-start)** for the ≤60-second happy path, or read
+**[What is Vaulter?](/getting-started/introduction)** for the mental model first.
 :::

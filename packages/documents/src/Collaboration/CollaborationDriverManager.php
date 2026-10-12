@@ -46,7 +46,7 @@ final readonly class CollaborationDriverManager
             throw new VaulterException(
                 sprintf('[Vaulter] Unknown collaboration driver [%s]. ', $name)
                 .'Fix: set config(vaulter-documents.collaboration.driver) to hocuspocus. '
-                .'Docs: https://github.com/axiomasoft/vaulter/blob/main/docs/guide/errors.md#unknown-collaboration-driver',
+                .'Docs: https://github.com/axiomasoft/vaulter/blob/main/docs/guides/errors.md#unknown-collaboration-driver',
             );
         }
 

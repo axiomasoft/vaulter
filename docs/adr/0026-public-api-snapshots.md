@@ -29,7 +29,7 @@ know the documents package: `Contracts\Drive\NodeDocumentHeads` is bound by it, 
 has no head without it.
 
 **3. Models stay where they are, marked `@internal`.** The namespace `Vaulter\Models\*` does not
-change; the compatibility policy ([Compatibility](/guide/compatibility)) excludes models, Actions,
+change; the compatibility policy ([Compatibility](/reference/compatibility)) excludes models, Actions,
 Queries, repositories, tables and columns from the 1.0 contract. Filament tables read models inside
 the package; its actions go through the operations.
 

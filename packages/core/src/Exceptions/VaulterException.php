@@ -13,6 +13,6 @@ class VaulterException extends RuntimeException
 {
     protected static function docs(string $anchor): string
     {
-        return 'https://github.com/axiomasoft/vaulter/blob/main/docs/guide/errors.md#'.$anchor;
+        return 'https://github.com/axiomasoft/vaulter/blob/main/docs/guides/errors.md#'.$anchor;
     }
 }

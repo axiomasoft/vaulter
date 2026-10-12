@@ -267,7 +267,7 @@ document and collaboration routes stay unversioned for now and move in the next 
   `lang/{en,ru}/problems.php` and in the reference page together.
 - `title` and `detail` are localized and may change; branch on `code`.
 - The exception message never reaches a versioned response; read it in the log.
-- The `Docs:` links inside exception messages still point at `docs/guide/errors.md`; the `type` URI of a
+- The `Docs:` links inside exception messages still point at `docs/guides/errors.md`; the `type` URI of a
   problem points at `docs/reference/errors.md#<code>`.
 
 ### Drive change journal (PLAN2.P5.5, D50/D59/D61, D58–D60/D35)
@@ -787,7 +787,7 @@ version. What a type is moved from an enum and file handlers to registered class
   `spreadsheets` flag).
 - **New** `vaulter:make:document-type` and the contract test trait
   `Vaulter\Documents\Testing\Contracts\DocumentTypeContractTests`.
-- **Docs.** [Document Types](docs/guide/document-types.md).
+- **Docs.** [Document Types](docs/extending/document-types.md).
 
 ### Documents API through operations (PLAN2.D34, D35, D38, D44, D45; PLAN2.P4.8)
 
@@ -818,7 +818,7 @@ No schema change. Code that called the documents Actions must move to the operat
   `Documents::in($drive)->collaborationSession($node)` instead. The hub endpoints are unchanged.
 - **Removed** `Vaulter\Http\Support\TrashGuard` (core); its only user, the documents controller, now
   relies on `NodeLocator`, which keeps trashed nodes out.
-- **Docs.** [Document Nodes — The PHP API](docs/guide/documents.md#the-php-api).
+- **Docs.** [Document Nodes — The PHP API](docs/guides/documents.md#the-php-api).
 
 ### Copying documents and content lifecycle registry (PLAN2.D17, D30, D40; PLAN2.P4.2)
 
@@ -875,7 +875,7 @@ results of the operations must switch to snapshots.
   wrap the write in `app(VaulterDatabase::class)->write(fn () => $model->save())`, or set
   `vaulter.database.write_guard` (`VAULTER_DB_WRITE_GUARD`) to `false` in the test environment. Vaulter's
   own suites do the latter by default and run dedicated lanes with `VAULTER_TEST_WRITE_GUARD=1`.
-- **Docs.** [API compatibility](docs/guide/compatibility.md) states what 1.0 freezes and what it does
+- **Docs.** [API compatibility](docs/reference/compatibility.md) states what 1.0 freezes and what it does
   not; [ADR-0026](docs/adr/0026-public-api-snapshots.md) records the decision.
 
 ### File revisions, quota over every revision, no global dedup (PLAN2.D48, D49; PLAN2.P4.12)
@@ -1837,7 +1837,7 @@ order, duplicates, wildcards and third-party names:
 Node document versions and the node's `current_version_id`, `file_id`, `deleted_at`
 remain until P4.1. Historical PostgreSQL bigint and ULID fixtures are supported;
 MySQL fresh installation still has the known generated-column/FK blocker owned by
-P8.1 (see [database compatibility](docs/guide/database-compatibility.md)).
+P8.1 (see [database compatibility](docs/reference/compatibility.md)).
 
 
 ### Canonical PHP API 0.3 (P2.1; AD03, AD04, AD05, AD11, AD14)
@@ -2098,7 +2098,7 @@ Update HTTP clients for these changes:
 - `NodeNameConflictException`: 422 → 409, `code: node_name_conflict`; `errors.name` remains.
 - `UploadContentMismatchException`: 415 → 422, `code: upload_rejected`, `reason: mime_mismatch`.
 - Document, move and lookup exceptions that previously returned 500 now return the
-  4xx statuses listed in [the error reference](docs/guide/errors.md#domain-http-errors).
+  4xx statuses listed in [the error reference](docs/guides/errors.md#domain-http-errors).
 
 `OffsetMismatchException` still returns 409 and the authoritative `Upload-Offset`
 plus `Tus-Resumable: 1.0.0`. New `NodeNotFoundException::forId()` and
@@ -2777,7 +2777,7 @@ that you are re-opening the DoS lever).
 - **MySQL/MariaDB:** the session lock is now `SELECT … FOR UPDATE **NOWAIT**` (it was a plain,
   blocking `FOR UPDATE`). "I could not take the lock" is an immediate answer on every engine now,
   as the contract above already claimed. Needs **MySQL 8** / **MariaDB 10.3+** — both already the
-  floor in [database compatibility](docs/guide/database-compatibility.md).
+  floor in [database compatibility](docs/reference/compatibility.md).
 
 **Why.** The sweeper reclaimed sessions with no lock at all: it could delete the staged object
 between a live `PATCH`'s "read offset" and its "append", after which the `PATCH` wrote its chunk on

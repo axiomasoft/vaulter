@@ -10,10 +10,10 @@ hero:
   actions:
     - theme: brand
       text: Быстрый старт
-      link: /ru/guide/quick-start
+      link: /ru/getting-started/quick-start
     - theme: alt
       text: Зачем Vaulter?
-      link: /ru/guide/introduction
+      link: /ru/getting-started/introduction
     - theme: alt
       text: GitHub
       link: https://github.com/axioma-studio/vaulter
@@ -21,25 +21,25 @@ hero:
 features:
   - title: Storage Panels
     details: Изолированные «диски» на каждую сущность приложения поверх одной общей схемы — без миграций по умолчанию.
-    link: /ru/concepts/storage-panels
+    link: /ru/concepts/drives-and-profiles
   - title: Единое дерево узлов
     details: Папки, файлы, документы и ярлыки в одном дереве v_nodes на каждое хранилище.
-    link: /ru/concepts/storage-panels
+    link: /ru/concepts/drives-and-profiles
   - title: Контент-адресуемые блобы
     details: Дедупликация по sha256 и двухфазный безопасный сборщик мусора.
-    link: /ru/concepts/storage-panels
+    link: /ru/concepts/drives-and-profiles
   - title: Подключаемая авторизация
     details: Собственный ACL-движок Vaulter плюс сменные драйверы ролей (database, Gate, Spatie, AzGuard).
-    link: /ru/concepts/authorization
+    link: /ru/concepts/access-model
   - title: Совместное редактирование
     details: TipTap/Yjs через внешний хаб Hocuspocus.
-    link: /ru/guide/introduction
+    link: /ru/getting-started/introduction
   - title: Vue + Filament
     details: UI-диск @vaulter/vue и админ-плагин для Filament 5, готовые к встраиванию.
-    link: /ru/guide/introduction
+    link: /ru/getting-started/introduction
 ---
 
 ::: tip Впервые здесь?
-Начните с **[Быстрого старта](/ru/guide/quick-start)** — рабочий диск меньше чем за минуту, —
-или прочитайте **[Что такое Vaulter?](/ru/guide/introduction)**, чтобы сперва понять модель.
+Начните с **[Быстрого старта](/ru/getting-started/quick-start)** — рабочий диск меньше чем за минуту, —
+или прочитайте **[Что такое Vaulter?](/ru/getting-started/introduction)**, чтобы сперва понять модель.
 :::

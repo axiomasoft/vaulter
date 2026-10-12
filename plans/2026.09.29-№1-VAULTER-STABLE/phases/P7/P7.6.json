@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P7.6",
   "title": "Структура docs по OPUS §8 (en+ru), генерация reference config/commands, офлайн-проверка ссылок",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "docs перенесены по карте P7-design-docs#Docs в getting-started/concepts/guides/extending/reference/security, VitePress-навигация en+ru обновлена, docs/reference/config.md и commands.md генерируются командами с --check, ссылки и зеркало проверяются scripts/check-doc-links.php.",
   "why": "OPUS 12 §8, D38, D69: структура по потребностям читателя и reference из источника истины. Риски: битые ссылки из src (VaulterException::docs), тесты-сторожа docs на старых путях, рассинхрон en/ru.",
   "scope": {
@@ -239,6 +239,56 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-11T13:58:13Z"
+  "result": {
+    "started_at": "2026-10-12T03:13:24Z",
+    "finished_at": "2026-10-12T03:50:10Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet-5.5",
+      "effort": "medium",
+      "session": "7a3edb72-d092-4dae-9444-a8b409ae558c"
+    },
+    "notes": "Docs moved to OPUS §8 layout (en+ru, git mv), merges per map, VitePress sidebar/nav, generators vaulter:config:reference/commands:reference with tests, scripts/check-doc-links.php (+--mirror), src/test doc paths updated. Grok 4.7 review: findings fixed and verified. Hard risk: none (docs/tooling). Recommend task:review of check-doc-links slug rules. V8 and PG/MySQL: not executed, phase run P7.",
+    "deviations": [
+      "check-profile written late; extra link fixes outside task_files (UPGRADE/ROADMAP/hocuspocus/workflow/ADR-0026); link checker also accepts unfolded Cyrillic anchors; V8 docs:build not run (phase run P7)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-12T03:50:10Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-12T03:50:10Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-12T03:50:10Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-12T03:50:10Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-12T03:50:10Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-12T03:50:10Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-12T03:50:10Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-12T03:50:10Z"
 }
