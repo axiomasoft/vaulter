@@ -423,7 +423,7 @@ in `direct_signed` mode; `403 permission_denied` for a caller who may only view;
 Chunked uploads (`tus` 1.0.0 core or S3-style multipart) that end in the same race-free
 commit as a single-shot upload; the assembled bytes are hashed again, a client checksum or
 part ETag is never the content address. Throttled by `throttle:vaulter-uploads`. See
-[Uploads](/guide/uploads).
+[Uploads](/guides/uploads).
 
 `vaulter-drive.uploads.resumable.enabled = false` keeps the routes registered and refuses
 creating, appending, completing, aborting, `HEAD` and `OPTIONS` with
@@ -508,7 +508,7 @@ operations check the switch, so with comments off — globally (`vaulter-documen
 or in the drive's profile — a node you can see answers `403 profile_restriction` and a node you
 cannot see the usual `404 node_not_found`. A `{comment}` that belongs to another node is
 `404 comment_not_found`. Read needs `view`, create `comment`, resolve `comment` and either
-authorship or `edit`, delete the comment's author or `manage`. See [Comments](/guide/comments).
+authorship or `edit`, delete the comment's author or `manage`. See [Comments](/guides/comments).
 
 #### `GET v1/nodes/{node}/comments` — `comments.index`
 
@@ -541,7 +541,7 @@ authorship or `edit`, delete the comment's author or `manage`. See [Comments](/g
 
 Documents live in a drive next to files and folders (`vaulter-documents`). The routes act on
 the content of a document under `documents/{node}`; a node of another kind answers
-`409 not_a_document`. See [Documents](/guide/documents).
+`409 not_a_document`. See [Documents](/guides/documents).
 
 A document's **content** has its own validator, independent of the node's `sequence`:
 `ETag: "{node}.{collab_epoch}.{state_version}"`. It does not depend on the caller, so a reader
@@ -622,7 +622,7 @@ renders one checkpoint instead of the working state.
 `Content-Security-Policy: sandbox; default-src 'none'`, `Cache-Control: private, no-store`,
 `Content-Length`); `X-Vaulter-Export-Lossy: 1` marks content its type could only read in part.
 A format the type has no exporter for is `422 unknown_export_format` with `meta.allowed`. See
-[Export](/guide/export).
+[Export](/guides/export).
 
 **DocumentRevision:** `id`, `number`, `schema_version`, `label`, `is_autosave`, `keep_forever`,
 `content_hash`, `is_head`, `created_by`, `created_at` (and `content` on a single read).
@@ -632,7 +632,7 @@ A format the type has no exporter for is `422 unknown_export_format` with `meta.
 ## Access: grants and inheritance
 
 Roles granted on a node (`vaulter.features.grants`). Every route needs `manage` on the
-node. See [Grants](/guide/grants).
+node. See [Grants](/guides/grants).
 
 #### `GET v1/nodes/{node}/grants` — `grants.index`
 
@@ -688,7 +688,7 @@ Let grants from above apply again; the node's own grants stay. **Response:** `20
 
 Bearer links to a node (`vaulter.features.share_links`). A link grants exactly its
 role's abilities on its node-set; identity grants play no part on the public routes.
-See [Sharing](/guide/sharing).
+See [Sharing](/guides/sharing).
 
 ### Owner routes
 
@@ -822,7 +822,7 @@ hides it.
 ## Change journal
 
 Follow a drive incrementally instead of re-listing it (`vaulter.features.changes`;
-switched off → `403 profile_restriction`). See [Changes](/guide/changes).
+switched off → `403 profile_restriction`). See [Changes](/concepts/events).
 
 #### `GET v1/drives/{drive}/changes/start` — `changes.start`
 
@@ -862,7 +862,7 @@ pruned: list the drive again and start over.
 
 The global admin surface for webhook subscribers, mounted when `vaulter.features.webhooks`
 is on. Every route is gated by the `WebhookEndpointPolicy` (`vaulter.webhooks.manage_ability`),
-reads included, before the id is looked up. See [Webhooks](/guide/webhooks).
+reads included, before the id is looked up. See [Webhooks](/guides/webhooks).
 
 | Method and path | Name | Response |
 |---|---|---|
@@ -894,7 +894,7 @@ reads included, before the id is looked up. See [Webhooks](/guide/webhooks).
 ## Realtime collaboration
 
 TipTap/Yjs collaboration over documents (`vaulter-documents.collaboration.enabled`). See
-[Collaboration](/guide/collaboration).
+[Collaboration](/guides/collaboration).
 
 #### `POST v1/documents/{node}/collaboration/session` — `documents.collaboration.session`
 
@@ -916,7 +916,7 @@ which requires the room JWT **and** the HMAC signature of the body. They are reg
 while collaboration is on, never take a user session, and answer refusals as problem+json
 (`401 actor_required` for a call that is not signed). The protocol — room, epoch fence, seed,
 `409 collaboration_epoch_mismatch` as a terminal answer — is unchanged; see
-[Collaboration](/guide/collaboration#the-hub-protocol-server-to-server).
+[Collaboration](/guides/collaboration#the-hub-protocol-server-to-server).
 
 | Route | Name | Answers |
 |---|---|---|
@@ -934,7 +934,7 @@ All routes on this page mount under `config('vaulter.routes.prefix')` (default
 default `allowed_origins => ['*']` still applies to every route documented here,
 not just the collaboration hub (which has its own, separate
 `VAULTER_COLLAB_ALLOWED_ORIGINS` CSWSH guard — see
-[Collaboration](/guide/collaboration)).
+[Collaboration](/guides/collaboration)).
 
 With `allowed_origins: ['*']` any origin can read responses from this REST surface
 in a browser. The practical exposure depends on how the host authenticates: a
@@ -976,7 +976,7 @@ golden with `UPDATE_GOLDEN=1` and the examples with `VAULTER_OPENAPI_EXAMPLES_WR
 
 ## See also
 
-- [Drive](/guide/drive) — the `DriveHandle` handle the Drive routes wrap
-- [Trash & restore](/guide/trash) — the trash routes' lifecycle
-- [Uploads](/guide/uploads) · [Sharing](/guide/sharing) · [Collaboration](/guide/collaboration)
-- [Events reference](/reference/events) · [Enums reference](/reference/contracts)
+- [Drive](/concepts/nodes-and-revisions) — the `DriveHandle` handle the Drive routes wrap
+- [Trash & restore](/guides/trash) — the trash routes' lifecycle
+- [Uploads](/guides/uploads) · [Sharing](/guides/sharing) · [Collaboration](/guides/collaboration)
+- [Events reference](/reference/events) · [Enums reference](/reference/php-api)

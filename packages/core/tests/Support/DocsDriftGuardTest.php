@@ -50,7 +50,7 @@ it('has an errors.md heading for every self::docs() anchor actually used in code
 
     expect($anchors)->not->toBeEmpty();
 
-    $errorsDoc = file_get_contents(dirname(__DIR__, 4).'/docs/guide/errors.md');
+    $errorsDoc = file_get_contents(dirname(__DIR__, 4).'/docs/guides/errors.md');
     expect($errorsDoc)->not->toBeFalse();
 
     preg_match_all('/^## ([a-z-]+)$/m', $errorsDoc, $headingMatches);
@@ -64,21 +64,21 @@ it('has an errors.md heading for every self::docs() anchor actually used in code
 });
 
 it('does not document the removed DocumentNotFoundException anchor in errors.md, F-P2.5-03', function (): void {
-    $errorsDoc = file_get_contents(dirname(__DIR__, 4).'/docs/guide/errors.md');
+    $errorsDoc = file_get_contents(dirname(__DIR__, 4).'/docs/guides/errors.md');
 
     expect($errorsDoc)->not->toBeFalse()
         ->and($errorsDoc)->not->toContain('## document-not-found');
 });
 
 it('documents gc.orphan_grace_hours in configuration.md, F-P2.5-05', function (): void {
-    $doc = file_get_contents(dirname(__DIR__, 4).'/docs/reference/configuration.md');
+    $doc = file_get_contents(dirname(__DIR__, 4).'/docs/reference/config.md');
 
     expect($doc)->not->toBeFalse()
         ->and($doc)->toContain('gc.orphan_grace_hours');
 });
 
 it('does not advertise the dead permission_resolver config key, F-P2.4-01', function (): void {
-    $guideConfig = file_get_contents(dirname(__DIR__, 4).'/docs/guide/configuration.md');
+    $guideConfig = file_get_contents(dirname(__DIR__, 4).'/docs/guides/configuration.md');
     $vaulterConfig = file_get_contents(dirname(__DIR__, 4).'/packages/core/config/vaulter.php');
 
     expect($guideConfig)->not->toBeFalse()
@@ -90,8 +90,8 @@ it('does not advertise the dead permission_resolver config key, F-P2.4-01', func
 });
 
 it('does not document the removed legacy PermissionResolver/CollaborationDriver contracts, F-P2.1-02', function (): void {
-    $doc = file_get_contents(dirname(__DIR__, 4).'/docs/reference/contracts.md');
-    $facade = file_get_contents(dirname(__DIR__, 4).'/docs/reference/facade.md');
+    $doc = file_get_contents(dirname(__DIR__, 4).'/docs/reference/php-api.md');
+    $facade = file_get_contents(dirname(__DIR__, 4).'/docs/reference/php-api.md');
 
     expect($doc)->not->toBeFalse()
         ->and($doc)->not->toContain('Vaulter\Contracts\Access\PermissionResolver')
@@ -102,7 +102,7 @@ it('does not document the removed legacy PermissionResolver/CollaborationDriver 
 });
 
 it('documents all 7 previously-undocumented public contracts in contracts.md, F-P2.1-03', function (): void {
-    $doc = file_get_contents(dirname(__DIR__, 4).'/docs/reference/contracts.md');
+    $doc = file_get_contents(dirname(__DIR__, 4).'/docs/reference/php-api.md');
 
     expect($doc)->not->toBeFalse();
 

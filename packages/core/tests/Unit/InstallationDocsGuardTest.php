@@ -17,7 +17,7 @@ declare(strict_types=1);
  * regress out of the docs again.
  */
 it('warns that publishing migrations switches the canonical mode (F-P2.2-02)', function (): void {
-    $docs = file_get_contents(__DIR__.'/../../../../docs/guide/installation.md');
+    $docs = file_get_contents(__DIR__.'/../../../../docs/getting-started/installation.md');
 
     expect($docs)->not->toBeFalse()
         ->and($docs)->toContain('vendor:publish --tag=vaulter-migrations')

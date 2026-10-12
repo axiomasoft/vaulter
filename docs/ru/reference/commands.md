@@ -177,7 +177,7 @@ php artisan vaulter:upgrade:inspect --json   # {"schema":"vaulter.upgrade-inspec
 `weeklyOn:D,HH:MM` (0 — воскресенье) или cron-выражение из пяти полей. Иное значение
 останавливает boot с `InvalidConfigurationException`.
 
-См. [Руководство → Установка](/ru/guide/installation).
+См. [Руководство → Установка](/ru/getting-started/installation).
 
 ## `vaulter:make:profile`
 
@@ -199,7 +199,7 @@ vaulter:make:profile
 php artisan vaulter:make:profile project_drive --host="App\Models\Project"
 ```
 
-См. [Концепции → Storage Panels](/ru/concepts/storage-panels).
+См. [Концепции → Storage Panels](/ru/concepts/drives-and-profiles).
 
 
 ## `vaulter:blobs:gc`
@@ -227,7 +227,7 @@ php artisan vaulter:blobs:gc --pending  # также очистить завис
 фиксации multipart, чтобы незавершённая загрузка успела воскресить tombstoned-блоб.
 :::
 
-См. [Рецепты → Сборка мусора блобов](/ru/guide/recipes).
+См. [Рецепты → Сборка мусора блобов](/ru/guides/recipes).
 
 ## `vaulter:blobs:reconcile`
 
@@ -261,7 +261,7 @@ php artisan vaulter:trash:purge           # использует хранени�
 php artisan vaulter:trash:purge --days=7  # своё окно хранения
 ```
 
-См. [Использование → Поиск и корзина](/ru/guide/search-trash).
+См. [Использование → Поиск и корзина](/ru/guides/trash).
 
 ## `vaulter:drives:purge`
 
@@ -310,7 +310,7 @@ php artisan vaulter:revisions:prune --dry-run
 php artisan vaulter:revisions:prune          # планируйте ежедневно
 ```
 
-См. [Использование → Загрузки → Ретеншн ревизий](/ru/guide/uploads#квота-и-ретеншн-ревизий).
+См. [Использование → Загрузки → Ретеншн ревизий](/ru/guides/uploads#квота-и-ретеншн-ревизий).
 
 ## `vaulter:uploads:sweep`
 
@@ -331,7 +331,7 @@ Sweeper прерывает те незавершённые multipart-загру�
 lifecycle-правило `AbortIncompleteMultipartUpload` как страховку для тех, о которых он не знает.
 :::
 
-См. [Использование → Загрузки](/ru/guide/uploads).
+См. [Использование → Загрузки](/ru/guides/uploads).
 
 ## `vaulter:webhooks:relay`
 
@@ -343,7 +343,7 @@ lifecycle-правило `AbortIncompleteMultipartUpload` как страхов�
 `completed` вместе с последними доставками, поэтому упавший relay продолжает следующий
 запуск, когда аренда истечёт. Несколько relay могут работать одновременно. Гарантия
 at-least-once с экспоненциальным backoff + DLQ. Управляется флагом `features.webhooks`.
-См. [Webhooks → Delivery guarantees](/guide/webhooks#delivery-guarantees).
+См. [Webhooks → Delivery guarantees](/guides/webhooks#delivery-guarantees).
 
 ```
 vaulter:webhooks:relay
@@ -354,7 +354,7 @@ vaulter:webhooks:relay
 php artisan vaulter:webhooks:relay --limit=500
 ```
 
-См. [Рецепты → Надёжность и вебхуки](/ru/guide/recipes).
+См. [Рецепты → Надёжность и вебхуки](/ru/guides/recipes).
 
 ## `vaulter:webhooks:retry`
 
@@ -466,7 +466,7 @@ php artisan vaulter:errors:reference --check
 
 ## `vaulter:changes:prune`
 
-Удаляет записи [журнала изменений](/guide/changes) старше срока хранения — drive за drive, пачками
+Удаляет записи [журнала изменений](/concepts/events) старше срока хранения — drive за drive, пачками
 по 1000. Каждая пачка держит голову журнала drive `FOR UPDATE` и поднимает `pruned_through` в той
 же транзакции, что и `DELETE`, поэтому клиент, чей курсор отстал от удалённых записей, получает
 `410 cursor_expired`, а не тихий пропуск; мутации drive ждут не больше одной пачки. Срок берётся из
@@ -519,6 +519,42 @@ Schedule::command('vaulter:changes:prune')->daily();
 
 ## См. также
 
-- [Справочник по конфигурации](/ru/reference/configuration) — `vaulter-media.gc.*`, `vaulter-drive.trash.*`, `vaulter-drive.uploads.*`, `webhooks.*`, `features.webhooks`
+- [Справочник по конфигурации](/ru/reference/config) — `vaulter-media.gc.*`, `vaulter-drive.trash.*`, `vaulter-drive.uploads.*`, `webhooks.*`, `features.webhooks`
 - [Справочник по событиям](/ru/reference/events) — что разворачивает релей
-- [Фасад и Manager](/ru/reference/facade) — рантайм-API
+- [Фасад и Manager](/ru/reference/php-api) — рантайм-API
+
+## Все команды (генерируется)
+
+<!-- vaulter:commands-reference:start -->
+| Command | Description | Synopsis |
+|---|---|---|
+| `vaulter:blobs:gc` | Garbage-collect unreferenced Vaulter blobs (two-phase, race-safe — H.3) | `[--grace [GRACE]] [--pending]` |
+| `vaulter:blobs:reconcile` | Rebuild blob ref_count from edge counts and report dangling rows; optionally disk-walk for orphan objects (H.3) | `[--orphans] [--disk [DISK]] [--orphan-grace [ORPHAN-GRACE]] [--prune]` |
+| `vaulter:blobs:repair-scopes` | Copy legacy mixed-scope and retired global blobs to their tenant or drive scopes and atomically redirect revision edges | `[--dry-run] [--execute]` |
+| `vaulter:changes:prune` | Delete drive change-journal entries past the retention window. | `[--days [DAYS]] [--drive [DRIVE]]` |
+| `vaulter:changes:reset` | Expire every change-journal cursor of a drive, forcing its clients to resynchronize. | `<drive>` |
+| `vaulter:commands:reference` | Generate the command table in the reference docs. | `[--check] [--path [PATH]]` |
+| `vaulter:config:reference` | Generate the config key table in the reference docs. | `[--check] [--path [PATH]]` |
+| `vaulter:doctor` | Diagnose the Vaulter setup of this host (read-only) | `[--production] [--json] [--check [CHECK]] [--sample [SAMPLE]] [--probe-storage]` |
+| `vaulter:drives:purge` | Purge drives with status deleting: nodes, revisions and blob references, then the drive row. | `[--drive [DRIVE]] [--dry-run] [--sync]` |
+| `vaulter:drives:recount` | Recount the used bytes of drives from their retained file revisions. | `[--drive [DRIVE]] [--dry-run]` |
+| `vaulter:errors:reference` | Generate the problem-code reference in the docs. | `[--check] [--path [PATH]]` |
+| `vaulter:events:reference` | Generate the event catalogue table in the reference docs. | `[--check] [--path [PATH]]` |
+| `vaulter:install` | Publish Vaulter config, show the host settings to apply, optionally migrate and run the doctor | `[--middleware [MIDDLEWARE]] [--driver [DRIVER]] [--migrate] [--force]` |
+| `vaulter:make:document-type` | Scaffold a Vaulter document type | `[--force] [--] <name>` |
+| `vaulter:make:exporter` | Scaffold a Vaulter document exporter | `[--force] [--] <name>` |
+| `vaulter:make:file-handler` | Scaffold a Vaulter file handler with a contract test | `[--force] [--] <name>` |
+| `vaulter:make:permission-driver` | Scaffold a Vaulter permission driver with a contract test | `[--force] [--] <name>` |
+| `vaulter:make:profile` | Scaffold a Vaulter profile provider (zero-migration config envelope) | `[--host [HOST]] [--no-grants] [--force] [--] <name>` |
+| `vaulter:revisions:prune` | Delete non-current file revisions past their profile retention policy. | `[--drive [DRIVE]] [--dry-run]` |
+| `vaulter:scan:reconcile` | Recover bounded scan intents, backfill discovery and committed upload cleanup. | `[--tenant [TENANT]] [--drive [DRIVE]] [--all-tenants] [--reason [REASON]] [--limit [LIMIT]] [--max-seconds [MAX-SECONDS]] [--dry-run] [--json]` |
+| `vaulter:scan:rescan` | Activate scan policy or record bounded durable scan requests. | `[--tenant [TENANT]] [--drive [DRIVE]] [--all-tenants] [--reason [REASON]] [--revision [REVISION]] [--after [AFTER]] [--limit [LIMIT]] [--request-id [REQUEST-ID]] [--rescan] [--retry-failed] [--activate-policy] [--dry-run] [--json]` |
+| `vaulter:trash:purge` | Permanently delete trashed nodes whose retention window has elapsed. | `[--days [DAYS]]` |
+| `vaulter:upgrade:inspect` | Report 0.2 data that blocks the 0.3 schema upgrade (read-only) | `[--json]` |
+| `vaulter:uploads:sweep` | Abort and clean up stale resumable-upload sessions past their TTL (§2.8). | — |
+| `vaulter:webhooks:legacy-fanout` | List or replay legacy outbox rows whose webhook fan-out cannot be proven. | `[--since [SINCE]] [--until [UNTIL]] [--replay] [--dry-run]` |
+| `vaulter:webhooks:prune` | Delete completed outbox rows and terminal webhook deliveries past the retention window. | `[--days [DAYS]] [--dry-run]` |
+| `vaulter:webhooks:redeliver` | Send finished webhook deliveries again (same webhook-id). | `[--endpoint [ENDPOINT]] [--since [SINCE]] [--status [STATUS]] [--] [<delivery>]` |
+| `vaulter:webhooks:relay` | Relay pending outbox events to webhook endpoints and re-dispatch due retries (§2.11). | `[--limit [LIMIT]]` |
+| `vaulter:webhooks:retry` | Re-dispatch webhook deliveries whose backoff window has elapsed (§2.11). | — |
+<!-- vaulter:commands-reference:end -->

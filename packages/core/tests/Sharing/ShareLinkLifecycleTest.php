@@ -274,8 +274,8 @@ it('maps the share exceptions to their stable problem code and status', function
 
     expect([$role->problemCode(), $role->httpStatus()])->toBe(['share_role_not_allowed', 422])
         ->and([$ttl->problemCode(), $ttl->httpStatus()])->toBe(['share_link_ttl_exceeded', 422])
-        ->and($role->getMessage())->toContain('docs/guide/errors.md#share-role-not-allowed')
-        ->and($ttl->getMessage())->toContain('docs/guide/errors.md#share-link-ttl-exceeded');
+        ->and($role->getMessage())->toContain('docs/guides/errors.md#share-role-not-allowed')
+        ->and($ttl->getMessage())->toContain('docs/guides/errors.md#share-link-ttl-exceeded');
 });
 
 it('retries a token collision inside its own savepoint so the caller transaction survives', function (): void {

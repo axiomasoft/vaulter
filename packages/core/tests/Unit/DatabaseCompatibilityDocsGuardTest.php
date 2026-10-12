@@ -6,7 +6,7 @@ declare(strict_types=1);
  * Doc-alignment guard (P3.6 / B23 / F-P2.3-04, D19 green guard — structurally no
  * red-before, no behaviour delta: the fix IS the doc).
  *
- * Before this fix, `docs/guide/database-compatibility.md` described engine
+ * Before this fix, `docs/reference/compatibility.md` described engine
  * COMPATIBILITY (Postgres/SQLite/MySQL) but never stated a policy for how the
  * shipped `v_*` schema is allowed to evolve after the package's first release —
  * grepping `docs/` for "NOT NULL without default|breaking migration|alter
@@ -15,7 +15,7 @@ declare(strict_types=1);
  * that policy so it cannot silently regress out of the docs again.
  */
 it('states the schema change policy for future releases (F-P2.3-04)', function (): void {
-    $docs = file_get_contents(__DIR__.'/../../../../docs/guide/database-compatibility.md');
+    $docs = file_get_contents(__DIR__.'/../../../../docs/reference/compatibility.md');
 
     expect($docs)->not->toBeFalse()
         ->and($docs)->toContain('Schema change policy')
@@ -31,7 +31,7 @@ it('states the schema change policy for future releases (F-P2.3-04)', function (
  * connection, not just leave it discoverable only by reading `config/vaulter.php`.
  */
 it('documents the vaulter.database.connection key for embedding the schema on its own connection (F-P2.3-02)', function (): void {
-    $docs = file_get_contents(__DIR__.'/../../../../docs/guide/database-compatibility.md');
+    $docs = file_get_contents(__DIR__.'/../../../../docs/reference/compatibility.md');
 
     expect($docs)->not->toBeFalse()
         ->and($docs)->toContain("config('vaulter.database.connection')")

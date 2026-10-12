@@ -30,7 +30,7 @@ outline: deep
 (например `http_503`), `title` — стандартная фраза статуса.
 
 Страница генерируется командой `php artisan vaulter:errors:reference`; `--check` завершается с
-кодом 1, если она устарела. Обработка ошибок в PHP — в [руководстве по ошибкам](/ru/guide/errors).
+кодом 1, если она устарела. Обработка ошибок в PHP — в [руководстве по ошибкам](/ru/guides/errors).
 
 <!-- vaulter:errors:start -->
 | Code | HTTP | Package | Exception |

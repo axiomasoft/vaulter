@@ -143,7 +143,7 @@ no-op и повторно не отдаётся слушателям. Две о�
 
 - `DriveDeleted` и `NodePurged` несут идентификаторы, а не модели: их строк уже нет.
 - `NodeShare*` — канал публичных ссылок на узел (`v_node_shares`); см.
-  [ADR-0013](/adr/0013-two-sharing-channels) и [Использование → Публикация](/ru/guide/sharing).
+  [ADR-0013](/adr/0013-two-sharing-channels) и [Использование → Публикация](/ru/guides/sharing).
 
 ## Трансляция комментариев
 
@@ -167,7 +167,7 @@ Echo.private(`vaulter.documents.${nodeId}`)
 
 ## См. также
 
-- [Webhooks](/guide/webhooks) — конверт, доставка и дедупликация (на английском)
+- [Webhooks](/guides/webhooks) — конверт, доставка и дедупликация (на английском)
 - [Справочник команд](/ru/reference/commands) — планируемые relay/retry/GC
-- [Справочник конфигурации](/ru/reference/configuration) — `features.activity`, `features.webhooks`, `webhooks.*`
-- [Справочник контрактов](/ru/reference/contracts) — модели, которые несут эти payload
+- [Справочник конфигурации](/ru/reference/config) — `features.activity`, `features.webhooks`, `webhooks.*`
+- [Справочник контрактов](/ru/reference/php-api) — модели, которые несут эти payload

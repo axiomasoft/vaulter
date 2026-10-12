@@ -10,7 +10,7 @@ require $root.'/vendor/autoload.php';
 $violations = (new ConfigurationArchitectureGuard)->scanPackages($root.'/packages');
 $retired = '/Support\\\\Config\b|GateConfig|SpatieConfig|UploadModels|DocumentsModels|vaulter-cas/';
 
-foreach (['docs/guide', 'docs/reference', 'docs/ru'] as $scope) {
+foreach (['docs/getting-started', 'docs/concepts', 'docs/guides', 'docs/extending', 'docs/reference', 'docs/ru'] as $scope) {
     $directory = $root.'/'.$scope;
     $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory, RecursiveDirectoryIterator::SKIP_DOTS));
     foreach ($files as $file) {

@@ -141,7 +141,7 @@ Every constructor ends with `ActorRef $actor, string $correlationId, ?string $ev
 
 - `DriveDeleted` and `NodePurged` carry ids, not models: their rows no longer exist.
 - `NodeShare*` — the bearer node share-link channel (`v_node_shares`); see
-  [ADR-0013](/adr/0013-two-sharing-channels) and [Usage → Sharing](/guide/sharing).
+  [ADR-0013](/adr/0013-two-sharing-channels) and [Usage → Sharing](/guides/sharing).
 
 ## Comment broadcasts
 
@@ -165,7 +165,7 @@ Echo.private(`vaulter.documents.${nodeId}`)
 
 ## See also
 
-- [Webhooks](/guide/webhooks) — the envelope, delivery and deduplication
+- [Webhooks](/guides/webhooks) — the envelope, delivery and deduplication
 - [Commands reference](/reference/commands) — the relay/retry/GC schedulables
-- [Configuration reference](/reference/configuration) — `features.activity`, `features.webhooks`, `webhooks.*`
-- [Contracts reference](/reference/contracts) — the models these payloads carry
+- [Configuration reference](/reference/config) — `features.activity`, `features.webhooks`, `webhooks.*`
+- [Contracts reference](/reference/php-api) — the models these payloads carry

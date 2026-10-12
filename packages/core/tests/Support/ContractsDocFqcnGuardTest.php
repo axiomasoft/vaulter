@@ -6,7 +6,7 @@ use Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler;
 
 /*
  * P4.6 / F-P2.1-04 (Nit, D19 green guard — docblock-alignment fix, no behaviour
- * delta): `docs/reference/contracts.md` named the FQCN
+ * delta): `docs/reference/php-api.md` named the FQCN
  * `Vaulter\Contracts\Uploads\UploadProtocolHandler` (core-shaped namespace), but
  * the actual interface lives at `Vaulter\Drive\Contracts\Uploads\UploadProtocolHandler`
  * (drive package) — a `use` statement copied from the doc would not compile. This
@@ -18,7 +18,7 @@ it('documents the real FQCN of UploadProtocolHandler, not the stale core-shaped 
     $realFqcn = UploadProtocolHandler::class;
     $staleFqcn = 'Vaulter\\Contracts\\Uploads\\UploadProtocolHandler';
 
-    $doc = file_get_contents(dirname(__DIR__, 4).'/docs/reference/contracts.md');
+    $doc = file_get_contents(dirname(__DIR__, 4).'/docs/reference/php-api.md');
 
     expect($doc)->not->toBeFalse()
         ->and($doc)->toContain($realFqcn)

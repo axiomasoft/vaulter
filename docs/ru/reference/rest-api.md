@@ -416,7 +416,7 @@ Multipart `file`: следующая ревизия. Нужен `edit`. **Отв
 Загрузки частями (ядро `tus` 1.0.0 или S3-style multipart), завершающиеся тем же
 безгоночным коммитом, что и загрузка одним запросом; собранные байты хешируются заново,
 контрольная сумма клиента или ETag части никогда не становятся адресом содержимого.
-Ограничиваются `throttle:vaulter-uploads`. См. [Загрузки](/ru/guide/uploads).
+Ограничиваются `throttle:vaulter-uploads`. См. [Загрузки](/ru/guides/uploads).
 
 `vaulter-drive.uploads.resumable.enabled = false` оставляет маршруты зарегистрированными и
 отклоняет создание, дозапись, завершение, отмену, `HEAD` и `OPTIONS` с
@@ -501,7 +501,7 @@ Multipart `file`: следующая ревизия. Нужен `edit`. **Отв
 или в профиле диска — видимый узел отвечает `403 profile_restriction`, невидимый — как обычно
 `404 node_not_found`. `{comment}` другого узла — `404 comment_not_found`. Чтение — `view`,
 создание — `comment`, resolve — `comment` и авторство либо `edit`, удаление — автор комментария
-или `manage`. См. [Комментарии](/ru/guide/comments).
+или `manage`. См. [Комментарии](/ru/guides/comments).
 
 #### `GET v1/nodes/{node}/comments` — `comments.index`
 
@@ -534,7 +534,7 @@ Multipart `file`: следующая ревизия. Нужен `edit`. **Отв
 
 Документы живут в диске рядом с файлами и папками (`vaulter-documents`). Маршруты работают с
 содержимым документа под `documents/{node}`; узел другого вида отвечает `409 not_a_document`. См.
-[Документы](/ru/guide/documents).
+[Документы](/ru/guides/documents).
 
 У **содержимого** документа свой валидатор, независимый от `sequence` узла:
 `ETag: "{node}.{collab_epoch}.{state_version}"`. От вызывающего он не зависит: читатель и
@@ -613,7 +613,7 @@ DocumentRevision.
 `Content-Security-Policy: sandbox; default-src 'none'`, `Cache-Control: private, no-store`,
 `Content-Length`); `X-Vaulter-Export-Lossy: 1` помечает содержимое, которое тип смог прочитать
 лишь частично. Формат, которого нет у типа, — `422 unknown_export_format` с `meta.allowed`. См.
-[Экспорт](/ru/guide/export).
+[Экспорт](/ru/guides/export).
 
 **DocumentRevision:** `id`, `number`, `schema_version`, `label`, `is_autosave`, `keep_forever`,
 `content_hash`, `is_head`, `created_by`, `created_at` (и `content` при чтении одной ревизии).
@@ -623,7 +623,7 @@ DocumentRevision.
 ## Доступ: гранты и наследование
 
 Роли, выданные на узел (`vaulter.features.grants`). Каждый маршрут требует `manage` на
-узле. См. [Гранты](/ru/guide/grants).
+узле. См. [Гранты](/ru/guides/grants).
 
 #### `GET v1/nodes/{node}/grants` — `grants.index`
 
@@ -679,7 +679,7 @@ DocumentRevision.
 
 Bearer-ссылки на узел (`vaulter.features.share_links`). Ссылка даёт ровно способности
 своей роли на своём наборе узлов; на публичных маршрутах гранты пользователей не
-участвуют. См. [Публичные ссылки](/ru/guide/sharing).
+участвуют. См. [Публичные ссылки](/ru/guides/sharing).
 
 ### Маршруты владельца
 
@@ -811,7 +811,7 @@ Bearer-ссылки на узел (`vaulter.features.share_links`). Ссылка
 ## Журнал изменений
 
 Следить за drive инкрементально вместо повторного обхода (`vaulter.features.changes`;
-выключен → `403 profile_restriction`). См. [Изменения](/ru/guide/changes).
+выключен → `403 profile_restriction`). См. [Изменения](/ru/concepts/events).
 
 #### `GET v1/drives/{drive}/changes/start` — `changes.start`
 
@@ -851,7 +851,7 @@ Bearer-ссылки на узел (`vaulter.features.share_links`). Ссылка
 Глобальная админ-поверхность подписчиков вебхуков, подключается при
 `vaulter.features.webhooks`. Каждый маршрут, включая чтение, проходит
 `WebhookEndpointPolicy` (`vaulter.webhooks.manage_ability`) до поиска по id. См.
-[Вебхуки](/ru/guide/webhooks).
+[Вебхуки](/ru/guides/webhooks).
 
 | Метод и путь | Имя | Ответ |
 |---|---|---|
@@ -883,7 +883,7 @@ Bearer-ссылки на узел (`vaulter.features.share_links`). Ссылка
 ## Совместное редактирование в реальном времени
 
 Совместное редактирование TipTap/Yjs над документами (`vaulter-documents.collaboration.enabled`).
-См. [Совместное редактирование](/ru/guide/collaboration).
+См. [Совместное редактирование](/ru/guides/collaboration).
 
 #### `POST v1/documents/{node}/collaboration/session` — `documents.collaboration.session`
 
@@ -905,7 +905,7 @@ read-only для остальных, кто может его видеть.
 коллаборация, не принимают пользовательскую сессию и отвечают отказами как problem+json
 (`401 actor_required` на неподписанный вызов). Протокол — комната, барьер эпохи, seed,
 `409 collaboration_epoch_mismatch` как терминальный ответ — не изменился; см.
-[Совместное редактирование](/ru/guide/collaboration#протокол-хаба-сервер-к-серверу).
+[Совместное редактирование](/ru/guides/collaboration#протокол-хаба-сервер-к-серверу).
 
 | Маршрут | Имя | Ответ |
 |---|---|---|
@@ -947,7 +947,7 @@ read-only для остальных, кто может его видеть.
 
 ## Смотрите также
 
-- [Drive](/ru/guide/drive) — хэндл `DriveHandle`, который оборачивают маршруты Drive
-- [Корзина и восстановление](/ru/guide/trash) — жизненный цикл маршрутов корзины
-- [Загрузки](/ru/guide/uploads) · [Публичные ссылки](/ru/guide/sharing) · [Совместное редактирование](/ru/guide/collaboration)
-- [Справочник событий](/ru/reference/events) · [Справочник enum'ов](/ru/reference/contracts)
+- [Drive](/ru/concepts/nodes-and-revisions) — хэндл `DriveHandle`, который оборачивают маршруты Drive
+- [Корзина и восстановление](/ru/guides/trash) — жизненный цикл маршрутов корзины
+- [Загрузки](/ru/guides/uploads) · [Публичные ссылки](/ru/guides/sharing) · [Совместное редактирование](/ru/guides/collaboration)
+- [Справочник событий](/ru/reference/events) · [Справочник enum'ов](/ru/reference/php-api)
