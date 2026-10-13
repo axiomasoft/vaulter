@@ -78,13 +78,13 @@ def passes($p; $c; $skel; $nfiles):
         | map(select(. as $e | (($e == "nofast" and ((($g | index("extended")) != null) or (($g | index("stand")) != null)))
                                 or ($e == "nofull" and ($g | index("stand")) != null)) | not))) as $d
       | if $skel or $w <= 1 then
-          [{pass: "single", processes: 1, group: $gs, exclude: ($d + $x), allow_empty: false}]
+          [{pass: "single", processes: 1, group: $gs, exclude: ($d + $x), allow_empty: ((($p.empty_passes // []) | index("parallel")) != null)}]
         elif $c.mode == "full" then
-          [{pass: "parallel", processes: $w, group: $gs, exclude: ($d + ["serial"] + $x), allow_empty: false}]
+          [{pass: "parallel", processes: $w, group: $gs, exclude: ($d + ["serial"] + $x), allow_empty: ((($p.empty_passes // []) | index("parallel")) != null)}]
           + (if ($x | index("serial")) != null or $gs != "" then []
              else [{pass: "serial", processes: 1, group: "serial", exclude: [], allow_empty: ((($p.empty_passes // []) | index("serial")) != null)}] end)
         else
-          [{pass: "parallel", processes: $w, group: $gs, exclude: ($d + $x), allow_empty: false}]
+          [{pass: "parallel", processes: $w, group: $gs, exclude: ($d + $x), allow_empty: ((($p.empty_passes // []) | index("parallel")) != null)}]
         end
     end;
 

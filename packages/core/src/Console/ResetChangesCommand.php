@@ -29,7 +29,12 @@ final class ResetChangesCommand extends Command
     public function handle(ChangeHeadRepository $heads, VaulterDatabase $database, VaulterConfig $config, VaulterManager $manager): int
     {
         $argument = $this->argument('drive');
-        $drive = $manager->withoutTenancy(static fn () => $config->model('drive')::query()->whereKey($argument)->first());
+        $model = $config->model('drive');
+        // A server engine rejects a non-numeric id for an integer key (SQLSTATE 22P02) instead of finding nothing.
+        $wellFormed = (new $model)->getKeyType() !== 'int' || ctype_digit((string) $argument);
+        $drive = $wellFormed
+            ? $manager->withoutTenancy(static fn () => $model::query()->whereKey($argument)->first())
+            : null;
         $driveId = Identity::key($drive?->getKey());
         if ($drive === null || $driveId === null) {
             $this->components->error('Drive ['.$argument.'] not found.');

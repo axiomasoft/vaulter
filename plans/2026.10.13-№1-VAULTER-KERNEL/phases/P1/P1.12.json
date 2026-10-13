@@ -54,35 +54,35 @@
     "status": "not_needed"
   },
   "result": {
-    "started_at": "2026-10-13T18:11:57Z",
-    "finished_at": "2026-10-13T18:26:06Z",
+    "started_at": "2026-10-13T18:34:56Z",
+    "finished_at": "2026-10-13T18:34:57Z",
     "executor": {
       "provider": "anthropic",
       "model": "sonnet-5.5",
       "effort": "medium",
       "session": "d75c9cd8-d44b-44ac-b463-fc6003e7d43e"
     },
-    "notes": "seedBlobRows (61.7->47.8s), 3 pgsql test fixes, 3 sqlite-only skips; report lists remaining failures with base evidence.",
+    "notes": "Pre-existing failures fixed in tests (EventType, ProblemMapping, P83, EventRecorder), ResetChangesCommand id guard, serial-only partition allowed empty in runner.",
     "deviations": [
-      "Product src untouched: pre-existing failures (EventTypeTest, ProblemMappingTest on base too; ResetChangesCommand pgsql bug) recorded, not fixed; P83DocumentsMetricsTest not proven vs base; empty-partition overhead and documents ZERO TESTS partition not addressed."
+      "Product src touched once (ResetChangesCommand, owner-authorized); azgard RealAzgard* left: external azguard repo config mismatch."
     ],
     "checks": [
       {
         "id": "V1",
         "exit": 0,
-        "at": "2026-10-13T18:26:06Z"
+        "at": "2026-10-13T18:34:57Z"
       },
       {
         "id": "V2",
         "exit": 0,
-        "at": "2026-10-13T18:26:06Z"
+        "at": "2026-10-13T18:34:57Z"
       },
       {
         "id": "V3",
         "exit": 0,
-        "at": "2026-10-13T18:26:06Z"
+        "at": "2026-10-13T18:34:57Z"
       }
     ]
   },
-  "updated_at": "2026-10-13T18:26:06Z"
+  "updated_at": "2026-10-13T18:34:57Z"
 }

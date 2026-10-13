@@ -80,7 +80,7 @@ it('records vaulter_collab_snapshot_duration_seconds', function (): void {
     app(PersistCollaborationStateAction::class)->execute(new PersistCollaborationStateInput(
         node: p83DocumentNode(),
         yjsState: 'binary',
-        actorId: 1,
+        actorId: null,
     ));
 
     app(MetricsRecorder::class)->assertHistogram(

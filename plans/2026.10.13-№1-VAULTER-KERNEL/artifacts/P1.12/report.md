@@ -30,3 +30,16 @@
 ## Не сделано
 Накладные расходы пустых партиций (по ~1 с на партицию) — не трогал: выигрыш десятки секунд, риск для инвентаря.
 documents sqlite: партиция `CollaborationEnabledTestCase+DatabaseMigrations` «ZERO TESTS» в быстрой линии — не разбиралась.
+
+## Дополнение: падения исправлены (по решению владельца)
+| Падение | Исправление |
+|---|---|
+| Feature/EventTypeTest | ожидания синхронизированы с enum (+node.updated, access.inheritance_changed, share.updated, share.rotated; 29 webhook / 31 activity) |
+| Operations/ProblemMappingTest | `exception->render()` удалён в P6.2 → тест рендерит через `ProblemRenderer` на версионном пути; имя теста не менялось (baseline) |
+| ObservabilityDocuments/P83DocumentsMetricsTest | актор 1 искал таблицу users, которой нет в партиции → `actorId: null` (метрика от актора не зависит) |
+| Events/EventRecorderTest (mysql) | порядок ключей JSON-колонки не контракт → `toEqualCanonicalizing` |
+| Console/ResetChangesCommand (**product src**) | нечисловой id для int-ключа → «not found» вместо SQLSTATE 22P02 на pgsql; 1 файл, pgsql/sqlite зелёные |
+| documents `CollaborationEnabledTestCase+DatabaseMigrations` ZERO TESTS | партиция целиком serial: `empty_passes: ["parallel","serial"]`, раннер учитывает `parallel` для single/parallel проходов |
+
+Остаётся: azgard RealAzgard* — внешний репозиторий azguard (`/home/vostrikov/projects/packages/azguard`) отвергает неизвестный ключ конфигурации,
+который передаёт vaulter; несовпадение версий двух проектов, вне этого репозитория.

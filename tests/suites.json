@@ -940,6 +940,7 @@
           ],
           "skeleton_writer": false,
           "empty_passes": [
+            "parallel",
             "serial"
           ],
           "files": [

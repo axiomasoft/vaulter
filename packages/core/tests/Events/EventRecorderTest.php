@@ -87,7 +87,8 @@ it('stores the thin envelope as the outbox payload', function (): void {
         return $found;
     };
 
-    expect(array_keys($payload))->toBe(['id', 'type', 'version', 'source', 'time', 'tenant_id', 'drive_id', 'subject', 'sequence', 'actor', 'correlation_id', 'changes', 'data'])
+    // The key set is the contract; MySQL's JSON column returns its keys sorted, so the order is not asserted.
+    expect(array_keys($payload))->toEqualCanonicalizing(['id', 'type', 'version', 'source', 'time', 'tenant_id', 'drive_id', 'subject', 'sequence', 'actor', 'correlation_id', 'changes', 'data'])
         ->and($payload['type'])->toBe('node.renamed')
         ->and($payload['subject'])->toBe(['type' => 'node', 'id' => (string) $this->folder->id])
         ->and($payload['sequence'])->toBe(DriveTestHelpers::model($this->folder->id)->sequence)
