@@ -1,0 +1,108 @@
+{
+    "packages": {
+        "azgard": {
+            "composer": "axioma-studio/vaulter-azgard",
+            "current_require": [
+                "core"
+            ],
+            "dir": "packages/azgard",
+            "exists": true,
+            "psr4": {
+                "Vaulter\\Azgard\\": "src/"
+            },
+            "target_require": [
+                "drive"
+            ]
+        },
+        "collaboration": {
+            "exists": false,
+            "psr4": {
+                "Vaulter\\Collaboration\\": null
+            },
+            "target_require": [
+                "documents"
+            ]
+        },
+        "core": {
+            "composer": "axioma-studio/vaulter-core",
+            "current_require": [],
+            "dir": "packages/core",
+            "exists": true,
+            "psr4": {
+                "Vaulter\\": "src/",
+                "Vaulter\\Database\\Factories\\": "database/factories/"
+            },
+            "target_require": []
+        },
+        "documents": {
+            "composer": "axioma-studio/vaulter-documents",
+            "current_require": [
+                "core",
+                "drive"
+            ],
+            "dir": "packages/documents",
+            "exists": true,
+            "psr4": {
+                "Vaulter\\Documents\\": "src/",
+                "Vaulter\\Documents\\Database\\Factories\\": "database/factories/"
+            },
+            "target_require": [
+                "drive"
+            ]
+        },
+        "drive": {
+            "composer": "axioma-studio/vaulter-drive",
+            "current_require": [
+                "core",
+                "media"
+            ],
+            "dir": "packages/drive",
+            "exists": true,
+            "psr4": {
+                "Vaulter\\Drive\\": "src/"
+            },
+            "target_require": [
+                "core",
+                "media"
+            ]
+        },
+        "filament": {
+            "composer": "axioma-studio/vaulter-filament",
+            "current_require": [
+                "core",
+                "drive"
+            ],
+            "dir": "packages/filament",
+            "exists": true,
+            "psr4": {
+                "Vaulter\\Filament\\": "src/"
+            },
+            "target_require": [
+                "drive"
+            ]
+        },
+        "media": {
+            "composer": "axioma-studio/vaulter-media",
+            "current_require": [
+                "core"
+            ],
+            "dir": "packages/media",
+            "exists": true,
+            "psr4": {
+                "Vaulter\\Media\\": "src/"
+            },
+            "target_require": [
+                "core"
+            ]
+        },
+        "webhooks": {
+            "exists": false,
+            "psr4": {
+                "Vaulter\\Webhooks\\": null
+            },
+            "target_require": [
+                "drive"
+            ]
+        }
+    }
+}

@@ -89,6 +89,20 @@ whose database name ends in `_test`). The lower-level `scripts/test-db.sh` stays
 - Removing or merging a living test needs the owner's decision and a replacement: `scripts/t baseline --compare`
   fails on a missing original name that has no entry in the ledger.
 
+## Inventory (PLAN3 P2)
+
+Architecture inventory of the monorepo: one `SourceIndex` reads every `packages/{core,media,drive,documents,azgard,filament}/{src,database,config,routes}` file, generators turn it into committed fixtures, and thin Pest tests of the `repo` suite assert that nothing drifted.
+
+```bash
+scripts/php84 php scripts/inventory/inventory.php [<name>…] --check    # recompute in memory, compare byte-for-byte; 0 equal, 1 differs, 2 rule/usage error
+scripts/php84 php scripts/inventory/inventory.php [<name>…] --write    # rewrite the generated fixture(s)
+scripts/php84 php scripts/inventory/inventory.php [<name>…] --report   # --check plus a summary (found/new/stale for scans)
+```
+
+- No names runs every generator (`scripts/inventory/generators/*.php`, one file per generator, `name()` = basename); an unknown name exits 2.
+- Fixtures live in `tests/Repo/Arch/Fixtures/`. `packages.json` is hand-written for `dir`, `exists` and `target_require`; `composer`, `psr4` and `current_require` are verified against each `packages/<p>/composer.json` and rewritten by `packages --write`. Never edit generated files by hand: change the rule or the code, then `--write`.
+- Library tests: `scripts/t sqlite -p repo tests/Repo/Arch/InventoryHarnessTest.php`. A new `tests/Repo/Arch/*Test.php` goes into `suites.repo.partitions[0].files` of `tests/suites.json` in the same commit.
+
 ## Run policy
 
 - **While working (local):** SQLite plus one server engine, **pgsql**. `scripts/t --changed --db=pgsql` (`make test-changed`)

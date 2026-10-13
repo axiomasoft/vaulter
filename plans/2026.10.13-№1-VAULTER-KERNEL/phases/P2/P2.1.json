@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P2.1",
   "title": "Каркас инвентаря: scripts/inventory, SourceIndex, Allowlist/Rules и repo-suite tests/Repo/Arch",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "Появляется CLI `scripts/inventory/inventory.php` (генераторы обнаруживаются по файлам, режимы --write/--check/--report), библиотека SourceIndex (объявления и ссылки всех packages/*/{src,database,config,routes}), Allowlist (точное new/stale) и Rules (приоритет, scope, конфликты, устаревшие правила), фикстура packages.json (psr-4, текущий и целевой require D6) с генератором-сверкой и InventoryHarnessTest в repo suite. Продукт не меняется.",
   "why": "Type-map, идентичности и сканы I1–I4 обязаны читать код одним индексом и сравнивать одной семантикой, иначе ручные списки расходятся (pitfall фазы). Жёсткий риск: неверно разрешённое имя (group use, относительное имя, атрибут, union-тип) даёт ложные new/stale в I1/I2 на всех следующих пунктах — поэтому каждый вид ссылки покрыт синтетическим тестом.",
   "scope": {
@@ -184,12 +184,49 @@
   },
   "result": {
     "started_at": "2026-10-13T19:20:36Z",
+    "finished_at": "2026-10-13T20:14:07Z",
     "executor": {
       "provider": "anthropic",
       "model": "claude-sonnet-5-5",
       "effort": "high",
       "session": "cb6924a6-c8f1-4db6-a731-31eceaa0adf5"
-    }
+    },
+    "notes": "scripts/inventory (CLI, Repo/Json/Diff, SourceIndex, Allowlist, Rules, generator packages) + packages.json fixture + InventoryHarnessTest (33 tests) registered in suites.json; TestRunnerTest repo list now from suites.json; README Inventory. Review grok/grok-4.7 high: 6 findings reproduced and fixed, re-review not run. Product unchanged.",
+    "deviations": [
+      "Allowlist removed_in bound exempts category jwt-optional (<=P5): p2-design lists it with P5 while I4 blocks from P3; narrowed SourceIndex kinds after review (table calls, route via ->name only, config receiver heuristic)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-13T20:14:07Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-13T20:14:07Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-13T20:14:07Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-13T20:14:07Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-13T20:14:07Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-13T20:14:07Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-13T19:20:36Z"
+  "updated_at": "2026-10-13T20:14:07Z"
 }
