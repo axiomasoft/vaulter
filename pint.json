@@ -1,6 +1,6 @@
 {
     "preset": "laravel",
-    "exclude": ["plans"],
+    "exclude": ["plans", "scripts/fixtures-strip"],
     "rules": {
         "declare_strict_types": true,
         "final_class": false,

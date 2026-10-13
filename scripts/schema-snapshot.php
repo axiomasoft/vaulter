@@ -22,12 +22,15 @@ declare(strict_types=1);
  */
 
 use Illuminate\Contracts\Console\Kernel;
-use Illuminate\Support\Facades\Artisan;
 use Orchestra\Testbench\Foundation\Application as Testbench;
+use Vaulter\Drive\VaulterDriveServiceProvider;
+use Vaulter\Media\VaulterMediaServiceProvider;
+use Vaulter\Schema\SchemaBuilder;
 use Vaulter\Tests\Support\Schema\SchemaPresets;
 use Vaulter\Tests\Support\Schema\SchemaSnapshot;
 use Vaulter\Tests\Support\SuiteDatabaseConnection;
 use Vaulter\Tests\Tenancy\MutableTenantResolver;
+use Vaulter\VaulterServiceProvider;
 
 $root = dirname(__DIR__);
 require $root.'/vendor/autoload.php';
@@ -68,9 +71,9 @@ if ($driver !== 'sqlite' && !str_ends_with((string) getenv('DB_DATABASE'), '_tes
 try {
     $extra = [
         'providers' => [
-            Vaulter\VaulterServiceProvider::class,
-            Vaulter\Media\VaulterMediaServiceProvider::class,
-            Vaulter\Drive\VaulterDriveServiceProvider::class,
+            VaulterServiceProvider::class,
+            VaulterMediaServiceProvider::class,
+            VaulterDriveServiceProvider::class,
         ],
         'env' => [
             'APP_KEY=base64:tJ4mVwShl8LETWdRtTCwcoKS7MS2ipekchk9seHrIVc=',
@@ -112,7 +115,7 @@ try {
     $mode = (string) ($options['mode'] ?? 'chain');
     if ($mode === 'builder') {
         $app['db']->connection('testing')->getSchemaBuilder()->dropAllTables();
-        $app->make(Vaulter\Schema\SchemaBuilder::class)->createAll();
+        $app->make(SchemaBuilder::class)->createAll();
     } elseif ($mode === 'chain') {
         $migrate('migrate:fresh');
     } else {
@@ -124,13 +127,13 @@ try {
 
     if (isset($options['rollback'])) {
         if ($mode === 'builder') {
-            $app->make(Vaulter\Schema\SchemaBuilder::class)->dropAll();
+            $app->make(SchemaBuilder::class)->dropAll();
         } else {
             $migrate('migrate:rollback');
         }
         $left = array_keys(SchemaSnapshot::capture($connection)['tables']);
         if ($left !== []) {
-            fwrite(STDERR, "schema-snapshot: rollback left tables: ".implode(', ', $left)."\n");
+            fwrite(STDERR, 'schema-snapshot: rollback left tables: '.implode(', ', $left)."\n");
             exit(1);
         }
     }

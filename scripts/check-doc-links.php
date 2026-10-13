@@ -12,7 +12,6 @@ declare(strict_types=1);
  * External links (http, https, mailto) are not fetched. Anchors follow the VitePress
  * slug rule, so a heading and its {#custom-id} both count.
  */
-
 $root = dirname(__DIR__);
 $args = array_slice($argv, 1);
 $mirror = in_array('--mirror', $args, true);

@@ -34,3 +34,12 @@ pgsql: сервер в /dev/shm. Вывод: локально — sqlite + pgsql
 
 ## Что осталось (перенос на закрытие плана)
 V1 полная матрица на трёх движках; замеры до/после на тихой машине; сверка перечисленных падений с base; V5/V6.
+
+## Итог пункта (решение владельца: фазу закрыть без длинных прогонов)
+Дополнительно выполнено без длинных прогонов:
+- V5: pint и phpstan — root (после правки стиля scripts/*.php и исключения scripts/fixtures-strip из pint.json), media, drive, documents, filament: зелёные. azgard: phpstan не стартует — внешний репозиторий azguard изменился (`legacy/0.3` исчез, ключ `scaffold` отвергается его AzGuardConfig); вне этого репозитория.
+- V6: `packages/vue` build/typecheck/api:check и `hocuspocus-server npm run check` — без ошибок.
+- Быстрая линия sqlite по всем пакетам — 275 с (загруженная машина); падения, найденные ею, исправлены в P1.12.
+
+**Перенесено на закрытие плана (обязательно, одним прогоном на тихой машине):** `scripts/t all --full --engines=sqlite,pgsql,mysql` (V1),
+замер «до» на c64bba25 и «после», сверка с baseline. Политика — tests/README.md, Run policy.

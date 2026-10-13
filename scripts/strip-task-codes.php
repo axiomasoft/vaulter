@@ -90,7 +90,7 @@ const DELETE = "\0DEL\0";
 
 function cleanComment(string $comment, array $adr): string
 {
-    if (! hasCode($comment, $adr)) {
+    if (!hasCode($comment, $adr)) {
         return $comment;
     }
 
@@ -172,7 +172,7 @@ function phpComments(string $src): array
     foreach (token_get_all($src) as $token) {
         $text = is_array($token) ? $token[1] : $token;
         if (is_array($token) && ($token[0] === T_COMMENT || $token[0] === T_DOC_COMMENT)) {
-            $out[] = [$offset, strlen(rtrim($text, "\r\n")) ];
+            $out[] = [$offset, strlen(rtrim($text, "\r\n"))];
         }
         $offset += strlen($text);
     }
