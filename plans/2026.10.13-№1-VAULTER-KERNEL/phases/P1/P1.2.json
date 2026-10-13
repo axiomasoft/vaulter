@@ -108,7 +108,7 @@
   "rules": [
     "Пороги `--min` мутаций и команды переносятся байт-в-байт.",
     "Никаких изменений продуктового кода и тестов.",
-    "Все серверные команды идут через schema partitions tests/suites.json (P1.3); per-worker DB сама не разделяет неоднородные TestCase. Не смешивать schema или повторно исполнить serial. Целевые проверки, no full/load/mutate/coverage."
+    "P1.2 не исполняет PHP/DB тестов: suites.json и runner создаёт параллельный P1.3, его выходы здесь не читаются. Проверки — policy-скрипт, его unit tests и actionlint."
   ],
   "guidance": "Если `actionlint` доступен (`docker run --rm -v \"$PWD\":/repo -w /repo rhysd/actionlint:1.7.7`), прогнать его; результат — impact-проверка.",
   "validation": [
@@ -151,5 +151,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T10:06:41Z"
+  "updated_at": "2026-10-13T10:01:20Z"
 }

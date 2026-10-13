@@ -109,8 +109,8 @@
   "validation": [
     {
       "id": "V1",
-      "cmd": "git diff --quiet c64bba25 -- packages/ .github/ scripts/ hocuspocus-server/",
-      "expect": "exit 0",
+      "cmd": "git diff --quiet c64bba25 -- packages/ .github/ scripts/ hocuspocus-server/ && test -z \"$(git status --porcelain --untracked-files=all -- packages/ .github/ scripts/ hocuspocus-server/)\"",
+      "expect": "exit 0; ни tracked, ни untracked изменений",
       "kind": "acceptance"
     },
     {
@@ -146,5 +146,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T10:23:03Z"
+  "updated_at": "2026-10-13T10:01:20Z"
 }

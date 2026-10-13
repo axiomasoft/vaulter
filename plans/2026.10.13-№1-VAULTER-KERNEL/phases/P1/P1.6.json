@@ -133,13 +133,13 @@
     },
     {
       "id": "V2",
-      "cmd": "DB_FAST=1 scripts/t mysql -p drive -- tests/Feature/QuotaReserveTest.php -j 4",
+      "cmd": "DB_FAST=1 scripts/t mysql -p drive -j 4 -- tests/Feature/QuotaReserveTest.php",
       "expect": "exit 0",
       "kind": "acceptance"
     },
     {
       "id": "V3",
-      "cmd": "DB_FAST=1 scripts/t pgsql -p documents -- tests/Schema/DocumentAggregateSchemaTest.php -j 4",
+      "cmd": "DB_FAST=1 scripts/t pgsql -p documents -j 4 -- tests/Schema/DocumentAggregateSchemaTest.php",
       "expect": "exit 0",
       "kind": "acceptance"
     },
@@ -170,5 +170,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T10:08:43Z"
+  "updated_at": "2026-10-13T10:01:20Z"
 }

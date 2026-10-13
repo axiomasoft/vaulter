@@ -12,7 +12,7 @@
       "Снимок ДО исходной 43-chain снимается прежде mutation migrations/SchemaBuilder/config defaults/helper alias: packages/core/tests/Fixtures/Schema/original/<driver>/<preset>.json+metadata(source tree hash,c64bba25,current setup/config). Отдельный commit capture. tests expected/<driver>/<preset>.json initial copy; original readonly. Default feature variants не влияют на schema — sensitivity presets проверяют это.",
       "Snapshot columns raw SQL type/length/nullable/default/collation/generated expression; indexes ordered columns/unique/primary/method/predicate/expression; CHECK definitions; FK onUpdate/onDelete/deferrability/cyclic head refs; engine raw catalog SQL нормализует только nondeterministic names/schema quoting, не семантику. sqlite_master, pg_catalog/pg_indexes/constraints, information_schema+SHOW CREATE. Schema::getColumns/getIndexes только base, не полный oracle.",
       "Replace 43 chain create migrations one table (cycle groups/deferred head FK допускаются), existing schema helpers current definitions сохранить; source tree compare every preset before/after same engine, no cross-engine byte equality. Explicit rollback снимок empty vendor schema отдельно P1.10 target.",
-      "Удалить исключительно historical Upgrade/fixtures/preflight/upgrade inspect/legacy fanout, registrars и тесты; исторические outbox code flags/repository методы (колонка legacy_fanout сохраняется для DDL-паритета P1.10; удаляется при neutral schema D24 в P3); ConfigNormalizer keyMap/translation/deprecation/DeprecatedKeysCheck при сохранении canonical defaults/replacement maps. RepairBlobScopesCommand/LegacyScopesCheck и parsing global/legacy storage/legacy shard только historical scope — remove; сохранить tenant/drive/off и current key format. SchemaBuilder DOCUMENTS_SLOT/old aliases remove без удаления live define/constraints.",
+      "Удалить исключительно historical Upgrade/fixtures/preflight/upgrade inspect/legacy fanout, registrars и тесты; исторические outbox code flags/repository методы (колонка legacy_fanout сохраняется для DDL-паритета P1.10; удаляется при neutral schema D29 в P3); ConfigNormalizer keyMap/translation/deprecation/DeprecatedKeysCheck при сохранении canonical defaults/replacement maps. RepairBlobScopesCommand/LegacyScopesCheck и parsing global/legacy storage/legacy shard только historical scope — remove; сохранить tenant/drive/off и current key format. SchemaBuilder DOCUMENTS_SLOT/old aliases remove без удаления live define/constraints.",
       "Live ScanBackfillReconciler/requests, scanner retry/replay, DocumentType unknown compatibility, rollback/current generation/immutable revisions не legacy 0.x: keep или move live tests. Snapshot serializer извлекает полезный oracle из Upgrade/SchemaParityTest прежде удаления; ни один runtime test после cleanup не читает plans.",
       "SchemaSnapshotTest class registered in root Schema base TestCase, implicit current preset resolves ids/host/prefix/tenancy; groups database before P1.5; runner partitions все engine targets и matrix wrapper применяет отдельные schemas. SnapshotTest покрывает candidate expected; до freeze P3/P4 deliberate additions обновляют expected+identities по D#, original никогда.",
       "Baseline CHANGES structured ledger каждый удалённый full test name/файл, decision D21, replacement live assertion; updated current counts не переписывают original. UPGRADE удалить0.x; CHANGELOG0.x keep historical. Docs/README explicit no migration bridge; unchanged REST/current operation semantics.",
@@ -174,10 +174,18 @@
     "Удалять лишь классифицированные historical adapters; спорное keep/inventory, live assertion имеет replacement.",
     "Изменение candidate snapshot P3/P4 только explicit D#/identities update по D21; original неперезаписываем.",
     "Все server schema presets отдельный process/БД; 48 configs×3 engine — narrow DDL equivalence, не full behavioral acceptance.",
-    "Все серверные команды идут через schema partitions tests/suites.json (P1.3); per-worker DB сама не разделяет неоднородные TestCase. Не смешивать schema или повторно исполнить serial. Целевые проверки, no full/load/mutate/coverage."
+    "Все серверные команды идут через schema partitions tests/suites.json (P1.3); per-worker DB сама не разделяет неоднородные TestCase. Не смешивать schema или повторно исполнить serial. Целевые проверки, no full/load/mutate/coverage.",
+    "scripts/schema-snapshot.sh --write-original отказывает (exit 2), если `git diff --quiet c64bba25 -- packages/*/src packages/*/database packages/*/config` или `git status --porcelain` по этим путям не пусты; результат проверки и HEAD записываются в packages/core/tests/Fixtures/Schema/original/metadata.json (`product_tree_clean_vs: \"c64bba25\"`, `captured_at_head`, `source_tree_sha256`).",
+    "Head FK цикла (files↔revisions, documents↔revisions; SchemaBuilder::addHeadForeignKey:1480) создаётся последним шагом последней create-миграции цикла и снимается первым в её down(); отдельных не-create миграций нет (V8)."
   ],
   "guidance": "Порядок: inventory и capture original с ещё прежними migration/helper/defaults → capture commit → replace chain и bounded historical removals → compare каждой 144 driver/preset строк → current expected mirror и TestCase registration → baseline per-name deletion ledger → targeted contracts. Standalone wrapper provisioning db-test-env.sh, а не попытка передать PHP script в test-db.sh (тот запускает Pest). Metadata не входит в semantic equality. Snapshot mismatch выводит конкретный table/constraint и не auto rewrite. Server parallel _test и fingerprint объяснены runner-contract.",
   "validation": [
+    {
+      "id": "V0",
+      "cmd": "python3 -c \"import json,pathlib; m=json.loads(pathlib.Path('packages/core/tests/Fixtures/Schema/original/metadata.json').read_text()); assert m['product_tree_clean_vs']=='c64bba25' and m['captured_at_head']\"",
+      "expect": "exit 0; original снят с product tree, идентичного c64bba25",
+      "kind": "acceptance"
+    },
     {
       "id": "V1",
       "cmd": "scripts/schema-snapshot.sh --driver=sqlite --all-presets --compare=packages/core/tests/Fixtures/Schema/original",
@@ -248,5 +256,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T10:08:43Z"
+  "updated_at": "2026-10-13T10:01:20Z"
 }

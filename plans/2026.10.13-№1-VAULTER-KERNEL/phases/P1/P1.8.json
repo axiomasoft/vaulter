@@ -99,8 +99,7 @@
   ],
   "deliverables": [
     "tests/README.md",
-    "обновлённые CONTRIBUTING/CLAUDE/AGENTS",
-    "ACTIVE.md"
+    "обновлённые CONTRIBUTING/CLAUDE/AGENTS"
   ],
   "route": {
     "class": "economy",
@@ -117,5 +116,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T10:06:41Z"
+  "updated_at": "2026-10-13T10:01:20Z"
 }

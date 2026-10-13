@@ -3,7 +3,7 @@
   "id": "D24",
   "title": "Нейтральный outbox и независимое состояние каждого consumer",
   "date": "2026-10-13",
-  "status": "accepted",
+  "status": "superseded",
   "question": "Нейтральный outbox и независимое состояние каждого consumer?",
   "options": [
     {
@@ -25,6 +25,7 @@
   "supersedes": [
     "D11"
   ],
+  "superseded_by": "D29",
   "evidence": [
     {
       "kind": "repo",

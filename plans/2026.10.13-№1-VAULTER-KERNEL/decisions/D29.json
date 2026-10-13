@@ -1,0 +1,48 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D29",
+  "title": "Outbox: реестр consumer, строки доставки, reconciliation и явные разрывы",
+  "date": "2026-10-13",
+  "status": "accepted",
+  "question": "Как outbox D24 доказывает отсутствие тихой потери недоставленных событий при disable/re-enable, rolling activation, long transaction и retention?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Сохраняется всё D24: пакет vaulter-webhooks, core vaulter:relay, нейтральный envelope без drive_id/fanout_cursor/isWebhookEligible, chunk cursor у webhooks, HTTP после commit, per-consumer at-least-once, fencing, UNIQUE(event_id,endpoint_id), created_at<=event.created_at, явная ordering policy, независимые consumers. Состояние core: v_outbox (envelope, монотонный outbox_seq, created_at); v_outbox_consumers — одна строка на consumer (delivery_class durable|ephemeral, state active|paused|detached, activation_seq, reconciled_through_seq, paused_at, lease_owner/lease_generation/lease_expires_at); v_outbox_deliveries PK(event_id,consumer_id) (state pending|leased|done|dead, attempts, next_attempt_at, lease_generation, last_error). Строка доставки пишется в транзакции операции для consumers, активных в sealed registry процесса и подписанных на type. Relay reconciliation материализует пропущенные строки для событий с outbox_seq > activation_seq и created_at < now − settle_window; settle_window ≥ максимального времени Vaulter-транзакции (конфиг проверяется против timeout соединения). Продвижение только по seq/id без settle_window запрещено (late commit меньшего seq). Retention удаляет событие лишь без нетерминальных строк и ниже reconciled_through_seq каждого не-detached durable consumer. Raw config=false или managed disable → paused: доставки и reconciliation стоят, retention удерживается не дольше outbox.max_consumer_hold; затем detached с явной gap-записью (диапазон seq, число событий), метрикой vaulter_outbox_consumer_gap_events_total и doctor error. Re-enable из paused продолжает pending и reconciliation; из detached — новый activation_seq, разрыв догоняется только явным vaulter:relay:replay --consumer --from --to в пределах retention. Ephemeral consumers (control/ревокация) retention не держат и стартуют с текущего seq без gap-ошибки. Takeover принимает завершение только текущей lease_generation; terminal/DLQ пишется до удаления; consumer меняет core-таблицы только через relay continuation API."
+    }
+  ],
+  "context": "D24 не задавал, кто удерживает retention за выключенным consumer, как появляются строки доставки при rolling activation (часть процессов ещё без consumer) и при long transaction с меньшим seq, и что происходит при re-enable после retention. Сегодня EventRecorder.php:71–74 пишет outbox только при включённом features.webhooks, поэтому окно отключения просто не имеет событий. С формулировкой D24 «re-enable продолжает pending» и «retention не удаляет незавершённую доставку» события, ещё не материализованные для consumer, могли исчезнуть без записи — отсутствие тихой потери недоказуемо.",
+  "decision": "A — Сохраняется всё D24: пакет vaulter-webhooks, core vaulter:relay, нейтральный envelope без drive_id/fanout_cursor/isWebhookEligible, chunk cursor у webhooks, HTTP после commit, per-consumer at-least-once, fencing, UNIQUE(event_id,endpoint_id), created_at<=event.created_at, явная ordering policy, независимые consumers. Состояние core: v_outbox (envelope, монотонный outbox_seq, created_at); v_outbox_consumers — одна строка на consumer (delivery_class durable|ephemeral, state active|paused|detached, activation_seq, reconciled_through_seq, paused_at, lease_owner/lease_generation/lease_expires_at); v_outbox_deliveries PK(event_id,consumer_id) (state pending|leased|done|dead, attempts, next_attempt_at, lease_generation, last_error). Строка доставки пишется в транзакции операции для consumers, активных в sealed registry процесса и подписанных на type. Relay reconciliation материализует пропущенные строки для событий с outbox_seq > activation_seq и created_at < now − settle_window; settle_window ≥ максимального времени Vaulter-транзакции (конфиг проверяется против timeout соединения). Продвижение только по seq/id без settle_window запрещено (late commit меньшего seq). Retention удаляет событие лишь без нетерминальных строк и ниже reconciled_through_seq каждого не-detached durable consumer. Raw config=false или managed disable → paused: доставки и reconciliation стоят, retention удерживается не дольше outbox.max_consumer_hold; затем detached с явной gap-записью (диапазон seq, число событий), метрикой vaulter_outbox_consumer_gap_events_total и doctor error. Re-enable из paused продолжает pending и reconciliation; из detached — новый activation_seq, разрыв догоняется только явным vaulter:relay:replay --consumer --from --to в пределах retention. Ephemeral consumers (control/ревокация) retention не держат и стартуют с текущего seq без gap-ошибки. Takeover принимает завершение только текущей lease_generation; terminal/DLQ пишется до удаления; consumer меняет core-таблицы только через relay continuation API.",
+  "rationale": "Контрревью ревизии 3: без реестра consumer, reconciliation с settle_window и явной gap-записи формулировка D24 допускает тихую потерю событий при disable/rolling activation/late commit/retention. Решение в пределах делегирования B10/B14; детали нормативны в knowledge/architecture#events.",
+  "consequences": [
+    "Совместимость: установок нет (D21). Меняется будущая create-схема core до freeze P7: v_outbox_deliveries добавлена, v_outbox_consumers меняет зерно на строку consumer. Пакетный граф D6 и выбор D24 не меняются.",
+    "Нормативные детали — knowledge/architecture#events; тесты — I10/I11 и P6 relay coverage."
+  ],
+  "applies_to": [
+    "P3",
+    "P4",
+    "P5",
+    "P6"
+  ],
+  "supersedes": [
+    "D24"
+  ],
+  "evidence": [
+    {
+      "kind": "repo",
+      "ref": "packages/core/src/Events/EventRecorder.php",
+      "note": "71–74: stage только при features.webhooks"
+    },
+    {
+      "kind": "repo",
+      "ref": "packages/core/src/Webhooks/OutboxRelay.php",
+      "note": "67–70: claim и fanout одним relay"
+    }
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

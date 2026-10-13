@@ -36,3 +36,5 @@
 {"v":1,"ts":"2026-10-13T09:41:43Z","type":"decision","actor":{"provider":"codex","model":"gpt-6","effort":"xhigh"},"summary":"D27 supersedes D13","data":{"id":"D27","supersedes":"D13"}}
 {"v":1,"ts":"2026-10-13T09:41:43Z","type":"decision","actor":{"provider":"codex","model":"gpt-6","effort":"xhigh"},"summary":"D28 accepted","data":{"id":"D28","by":"agent","option":"A"}}
 {"v":1,"ts":"2026-10-13T09:41:43Z","type":"decision","actor":{"provider":"codex","model":"gpt-6","effort":"xhigh"},"summary":"D28 supersedes D18","data":{"id":"D28","supersedes":"D18"}}
+{"v":1,"ts":"2026-10-13T09:58:27Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5","effort":"high"},"summary":"D29 accepted","data":{"id":"D29","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-13T09:58:27Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5","effort":"high"},"summary":"D29 supersedes D24","data":{"id":"D29","supersedes":"D24"}}
