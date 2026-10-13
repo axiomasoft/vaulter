@@ -4,7 +4,7 @@
   "title": "Разделение владения: media, drive, webhooks и облегчение core",
   "design": "skeleton",
   "goal": "Разнести владение по пакетам: media получает CAS-схему и контракты, drive — доменную модель (узлы, файлы, ревизии, доступ, шаринг, активность, изменения, квоты, профили) и точку входа Vaulter, новый пакет vaulter-webhooks — вебхуки; чистые create-миграции (P1.10) раскладываются по пакетам-владельцам, каждый пакет получает свой TestCase; core становится ядром.",
-  "context": "Фаза D. Размер: XL — делить на пункты по пакетам-получателям и по слоям (модели+репозитории, операции+HTTP, конфиг+команды+doctor, миграции, тесты). Оракул — type-map P2: каждый перенос сверяется с ним, отклонение — D#. После фазы I1, I2, I3, I5, I6, I9 блокирующие, allowlist пусты (кроме задокументированных адаптеров I4). Порядок: media → drive → webhooks → documents-подстройка → core-очистка → раскладка create-миграций → split/CI. ADR-0030 (владение схемой). Установок нет (D21): переносы FQCN/ключей без шимов, но документация и тесты обновляются в том же коммите.",
+  "context": "Фаза D. Размер: XL — делить на пункты по пакетам-получателям и по слоям (модели+репозитории, операции+HTTP, конфиг+команды+doctor, миграции, тесты). Оракул — type-map P2: каждый перенос сверяется с ним, отклонение — D#. После фазы I1, I2, I3, I5, I6, I9 блокирующие, allowlist пусты (кроме задокументированных адаптеров I4). Порядок: media → drive → webhooks → documents-подстройка → core-очистка → раскладка create-миграций → split/CI. ADR-0030 (владение схемой). Установок нет (D21): переносы FQCN/ключей без шимов, но документация и тесты обновляются в том же коммите.\nD23: media own pins+GC и drive link composition; D28: все текущие scan_* drive. Filament authorized listing/lookup/snapshots API строится перед запретом ORM reads I9. Core generic schema helpers отделяются от всего domain DDL; нельзя оставить giant SchemaBuilder. Core EventKind/OperationKind/HTTP matchNode/manager domain removed, neutral values остаются. P4 начинает blocking clean-consumer harness (I14), P7 квалифицирует каждого archive.",
   "contract": {
     "consumes": [
       "knowledge/architecture#packages",
@@ -18,10 +18,13 @@
       "D6",
       "D21",
       "D10",
-      "D11",
+      "D24",
       "D14",
-      "D18",
-      "D20"
+      "D28",
+      "D20",
+      "D23",
+      "D27",
+      "knowledge/architecture#operation-chains"
     ],
     "produces": [
       "packages/media, packages/drive с полными срезами; packages/webhooks (новый пакет, composer, split-цель, CI)",
@@ -30,11 +33,15 @@
       "Свои TestCase пакетов на Vaulter\\Testing; нет ../core/tests",
       "Фасад Vaulter\\Drive\\Facades\\Vaulter, алиас Vaulter",
       "Матрица активации (фикстуры приложений: core+media, +drive, +documents, +webhooks) для I6",
-      "ADR-0030"
+      "ADR-0030",
+      "media v_blob_references и pin contract, drive dual-write link lifecycle",
+      "Drive scan_* owners без media reverse FK; no migration publish copies",
+      "Clean app consumer harness+matrix install/disable/re-enable/rollback каждого downward-closed set"
     ],
     "boundaries": [
-      "Имена таблиц/колонок, event types, problem codes, REST-пути неизменны",
-      "Каждый пункт оставляет все пакеты зелёными в целевых прогонах"
+      "Каждый пункт оставляет все пакеты зелёными в целевых прогонах",
+      "До P7 identities/schema могут изменяться прямо в create по D21 с decision reason/type-map/snapshot/docs; нет shim/adoption.",
+      "Media inactive/absent drive pins safe; collaboration pending marker не добавляется до P5."
     ]
   },
   "scope": {
@@ -42,24 +49,31 @@
       "packages/{core,media,drive,documents,azgard,filament}/**",
       "packages/webhooks/** (новый)",
       "composer.json корня, monorepo-split.yml, workflows пакетов",
-      "tests/zones.json"
+      "tests/zones.json",
+      "packages/core/database/factories owner move, domain schema/helper split",
+      "Filament ORM read adapters → authorized listing/lookup API",
+      "CI/schema current expected+identity records по D23/D24/D28"
     ],
     "exclude": [
       "Пакет коллаборации (P5)",
       "Новые фичи и изменения семантики операций"
     ]
   },
+  "depends_on": [
+    "P3"
+  ],
   "pitfalls": [
     "Перекрывающиеся PSR-4 префиксы (Vaulter\\ и Vaulter\\Drive\\): тип с FQCN в неймспейсе ядра не может жить в drive — FQCN меняется по type-map",
     "Morph-алиасы/сериализованные FQCN в БД (инвентарь P2) меняются вместе с FQCN — обновить инвентарь и снимки",
     "Фабрики моделей и Testing-хелперы переезжают с моделями",
     "Laravel discovery: aliases фасада объявляет drive, не core",
-    "SQLite не именует FK — снимки схемы сравниваются нормализованно по драйверу"
+    "SQLite не именует FK — снимки схемы сравниваются нормализованно по драйверу",
+    "Любой server validation group/path/full/serial проходит TestCase/schema partitions каждого пакета (test-strategy#runner-contract); worker DB не решает schema changes внутри worker."
   ],
   "validation": [
     {
       "id": "V1",
-      "procedure": "I1, I2, I3, I5, I6, I9 блокирующие с пустыми allowlist; чистая установка каждой комбинации пакетов мигрирует и откатывается на sqlite/pgsql/mysql (I15); суммарная схема совпадает со снимком P1.10, кроме изменений с D#; квалификационный пункт P4 зелёный",
+      "procedure": "I1, I2, I3, I5, I6, I9 блокирующие с пустыми allowlist; чистая установка каждой комбинации пакетов мигрирует и откатывается на sqlite/pgsql/mysql (I15); суммарная схема совпадает со снимком P1.10, с текущими identities по D23/D24/D25/D28; original сохраняется; квалификационный пункт P4 зелёный",
       "expect": "все зелёные",
       "kind": "acceptance"
     }
@@ -77,7 +91,7 @@
     {
       "id": "design-inputs",
       "title": "Обязательные входы детализации",
-      "text": "Сессия детализации P4 читает до создания пунктов (точка входа — `plan.py show 2026.10.13-№1-VAULTER-KERNEL P4`):\n\n```bash\nP='python3 <planner>/scripts/plan.py'; ID=2026.10.13-№1-VAULTER-KERNEL\n$P get $ID knowledge/architecture --section packages\n$P get $ID knowledge/architecture --section ownership-map\n$P get $ID knowledge/architecture --section entry-point\n$P get $ID knowledge/architecture --section persistence\n$P get $ID knowledge/architecture --section module-system\n$P get $ID knowledge/architecture --section operation-chains\n$P get $ID knowledge/architecture --section invariants\n$P get $ID knowledge/p2-findings\n$P get $ID D6\n$P get $ID D21\n$P get $ID D10\n$P get $ID D11\n$P get $ID D14\n$P get $ID D18\n$P get $ID D20\n$P show $ID P3            # что фактически сделала предыдущая фаза, её deviations\n```\n\n**Правила для пунктов этой фазы (обязательны при детализации):**\n1. Каждый пункт имеет точные `validation` только из целевых прогонов (knowledge/test-strategy#run-policy §1): `scripts/t <engine> -p <pkg> <paths>` / `scripts/t --changed`; без мутаций (D3), без load (D4), без coverage.\n2. Последний пункт фазы — «Квалификационный прогон P4» по knowledge/test-strategy#qualification-template; только он гоняет полный набор.\n3. `task_files` точные (параллельные батчи требуют непересекающихся файлов).\n4. Крупные knowledge-документы привязываются к пункту через `reads` с `section`, а не целиком: architecture ~42 KB — читать только нужные секции.\n5. Пункт, добавивший/перенёсший каталог тестов или src, обновляет `tests/zones.json` (I19).\n6. Поправка архитектуры — новое D# с причиной и эффектом совместимости, не молча в пункте."
+      "text": "Сессия детализации P4 читает до создания пунктов (точка входа — `plan.py show 2026.10.13-№1-VAULTER-KERNEL P4`):\n\n```bash\nP='python3 <planner>/scripts/plan.py'; ID=2026.10.13-№1-VAULTER-KERNEL\n$P get $ID knowledge/architecture --section packages\n$P get $ID knowledge/architecture --section ownership-map\n$P get $ID knowledge/architecture --section entry-point\n$P get $ID knowledge/architecture --section persistence\n$P get $ID knowledge/architecture --section module-system\n$P get $ID knowledge/architecture --section operation-chains\n$P get $ID knowledge/architecture --section invariants\n$P get $ID knowledge/p2-findings\n$P get $ID D6\n$P get $ID D21\n$P get $ID D10\n$P get $ID D24\n$P get $ID D14\n$P get $ID D28\n$P get $ID D20\n$P show $ID P3            # что фактически сделала предыдущая фаза, её deviations\n```\n\n**Правила для пунктов этой фазы (обязательны при детализации):**\n1. Каждый пункт имеет точные `validation` только из целевых прогонов (knowledge/test-strategy#run-policy §1): `scripts/t <engine> -p <pkg> <paths>` / `scripts/t --changed`; без мутаций (D3), без load (D4), без coverage.\n2. Последний пункт фазы — «Квалификационный прогон P4» по knowledge/test-strategy#qualification-template; только он гоняет полный набор.\n3. `task_files` точные (параллельные батчи требуют непересекающихся файлов).\n4. Крупные knowledge-документы привязываются к пункту через `reads` с `section`, а не целиком: architecture ~42 KB — читать только нужные секции.\n5. Пункт, добавивший/перенёсший каталог тестов или src, обновляет `tests/zones.json` (I19).\n6. Поправка архитектуры — новое D# с причиной и эффектом совместимости, не молча в пункте.\n\nРевизия 2 — дополнительно читать: knowledge/source-review#code-facts; knowledge/test-strategy#runner-contract; knowledge/architecture#cost; D24, D28, D23, D24, D27, D28. Эти нормы не переопределяются при детализации.\nВсегда сохранять identity/current snapshot amendments до P7 без upgrade 0.x; обязательный qualification последним. Validation paths должны существовать на момент item, suite cwd/partition из runner-contract. SQL/stand skipped не Green. Owner mutations только отдельный явно optional gated item P7, exception к запрету general пунктов; product benchmark acceptance отсутствует."
     }
   ]
 }

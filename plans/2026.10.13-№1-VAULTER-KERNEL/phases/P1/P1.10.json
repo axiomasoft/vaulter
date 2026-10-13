@@ -3,19 +3,20 @@
   "id": "P1.10",
   "title": "Удаление легаси 0.x и чистые create-миграции (схема неизменна)",
   "status": "todo",
-  "summary": "43 миграции 0.x в core заменены чистыми create-миграциями той же итоговой схемы (одна на таблицу); апгрейд-тесты, фикстура 0.2, UpgradePreflight, команды UpgradeInspect/LegacyFanout и прочий код только для данных 0.x удалены; нормализованные снимки схемы на sqlite/pgsql/mysql до и после совпадают и закреплены тестом.",
+  "summary": "Миграции схлопнуты без DDL-разницы в каждой engine/schema-preset строке. Только доказанное 0.x удалено; живые проверки вынесены, immutable schema ДО сохранена, текущий snapshot и test закреплены.",
   "why": "Владелец: установок нет, никакого легаси и переходов миграций (D21, brief M3/M4). Каждый DB-тест сейчас прогоняет цепочку 0.x с backfill и legacy-drop — схлопывание ускоряет все наборы и убирает 21 апгрейд-тест.",
   "scope": {
     "include": [
-      "`scripts/schema-snapshot.php`: на чисто мигрированной БД (Testbench-приложение core + провайдеры media/drive/documents, как `tests.yml`) выводит нормализованный JSON: таблицы → колонки (имя, тип по Schema::getColumns, nullable, default), индексы (колонки, unique, primary), FK (колонки → таблица/колонки, on delete); сортировка детерминированная; имена индексов/FK SQLite игнорируются",
-      "Снимок ДО на sqlite/pgsql/mysql → `packages/core/tests/Fixtures/Schema/{sqlite,pgsql,mysql}.json` (снимается до любых правок миграций)",
-      "Новые create-миграции в `packages/core/database/migrations/`: `0001_01_01_0000NN_create_v_<table>_table.php`, одна на таблицу (side-таблицы могут быть вместе с владельцем), в порядке FK-зависимостей; используют существующие helper'ы `SchemaBuilder`/IdStrategy/host keys (поддержка стратегий id и префиксов таблиц сохраняется)",
-      "Удалить все 43 файла 0.x; миграции с данными/backfill/legacy-drop не переносятся",
-      "Удалить: `packages/core/tests/Upgrade/*`, `uses(FixtureTestCase…)->in($core.'/Upgrade')` в `tests/Pest.php`, `scripts/fixtures/*` (make-v0.2-dump, seed-v0.2), `Schema/UpgradePreflight.php`, `Exceptions/Schema/UpgradePreflightException.php`, `Console/UpgradeInspectCommand.php`, `Console/LegacyFanoutCommand.php` и их регистрацию (`Providers/ConsoleRegistrar`), тесты этих классов",
-      "Ветки кода только для данных/конфига 0.x (legacy-ключи `ConfigNormalizer`, совместимость старых имён таблиц/колонок и т.п.): инвентаризация `grep -rniE 'legacy|0\\.2|v0\\.|docvault|backfill|pre-?1\\.0' packages/*/src`, каждое попадание классифицировать в `plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.10/legacy-inventory.md` (удалить / оставить — не легаси, причина); удалить только классифицированное «легаси»",
-      "`SchemaSnapshotTest` (core, группа `database`): свежая схема = закреплённый снимок своего драйвера — страж от незаметных изменений до P4",
-      "UPGRADE.md: удалить разделы про 0.x, оставить заголовок и пояснение «первая стабильная версия — 1.0»; CHANGELOG.md: раздел 0.x сохранить как историю (не трогать содержимое)",
-      "`tests/baseline/CHANGES.md`: строки об удалённых тестах (Upgrade/*, тесты удалённых команд) с причиной D21; обновить `tests/baseline/core.count`"
+      "Сначала legacy-inventory.md классифицирует все source/test/docs/command/helper hits: remove historical / keep live / move live assertion. 19 Upgrade Test files+2 helpers, не 21 test cases. Remove decisions основываются на intent/data path, не ключевом слове.",
+      "scripts/schema-snapshot.php Testbench bootstraps full current installed schema; flags --driver --preset --output --compare; scripts/schema-snapshot.sh native disposable engine provision с _test guard по db-test-env.sh, serial DB_PARALLEL=0. snapshot-configs.json задаёт matrix id bigint/ulid/uuid7 × host string/bigint/uuid/ulid × prefix v_/custom × tenancy on/off (48 presets ×3), каждый отдельный process/schema. CLI only schema migrations, без behavioral full test.",
+      "Снимок ДО исходной 43-chain снимается прежде mutation migrations/SchemaBuilder/config defaults/helper alias: packages/core/tests/Fixtures/Schema/original/<driver>/<preset>.json+metadata(source tree hash,c64bba25,current setup/config). Отдельный commit capture. tests expected/<driver>/<preset>.json initial copy; original readonly. Default feature variants не влияют на schema — sensitivity presets проверяют это.",
+      "Snapshot columns raw SQL type/length/nullable/default/collation/generated expression; indexes ordered columns/unique/primary/method/predicate/expression; CHECK definitions; FK onUpdate/onDelete/deferrability/cyclic head refs; engine raw catalog SQL нормализует только nondeterministic names/schema quoting, не семантику. sqlite_master, pg_catalog/pg_indexes/constraints, information_schema+SHOW CREATE. Schema::getColumns/getIndexes только base, не полный oracle.",
+      "Replace 43 chain create migrations one table (cycle groups/deferred head FK допускаются), existing schema helpers current definitions сохранить; source tree compare every preset before/after same engine, no cross-engine byte equality. Explicit rollback снимок empty vendor schema отдельно P1.10 target.",
+      "Удалить исключительно historical Upgrade/fixtures/preflight/upgrade inspect/legacy fanout, registrars и тесты; исторические outbox code flags/repository методы (колонка legacy_fanout сохраняется для DDL-паритета P1.10; удаляется при neutral schema D24 в P3); ConfigNormalizer keyMap/translation/deprecation/DeprecatedKeysCheck при сохранении canonical defaults/replacement maps. RepairBlobScopesCommand/LegacyScopesCheck и parsing global/legacy storage/legacy shard только historical scope — remove; сохранить tenant/drive/off и current key format. SchemaBuilder DOCUMENTS_SLOT/old aliases remove без удаления live define/constraints.",
+      "Live ScanBackfillReconciler/requests, scanner retry/replay, DocumentType unknown compatibility, rollback/current generation/immutable revisions не legacy 0.x: keep или move live tests. Snapshot serializer извлекает полезный oracle из Upgrade/SchemaParityTest прежде удаления; ни один runtime test после cleanup не читает plans.",
+      "SchemaSnapshotTest class registered in root Schema base TestCase, implicit current preset resolves ids/host/prefix/tenancy; groups database before P1.5; runner partitions все engine targets и matrix wrapper применяет отдельные schemas. SnapshotTest покрывает candidate expected; до freeze P3/P4 deliberate additions обновляют expected+identities по D#, original никогда.",
+      "Baseline CHANGES structured ledger каждый удалённый full test name/файл, decision D21, replacement live assertion; updated current counts не переписывают original. UPGRADE удалить0.x; CHANGELOG0.x keep historical. Docs/README explicit no migration bridge; unchanged REST/current operation semantics.",
+      "После replacement повторить exact snapshot matrix+diff; mismatch исправить migration/helper, не original. No new schema before P1.10 equivalence доказана; D23/24/25 additions позже P3/P4."
     ],
     "exclude": [
       "Перенос миграций по пакетам (P4)",
@@ -54,13 +55,33 @@
       "required": true
     },
     {
-      "path": ".github/workflows/tests.yml",
-      "why": "какие провайдеры поднимаются для полной схемы",
+      "path": "tests/Pest.php",
+      "why": "регистрация Upgrade TestCase",
       "required": true
     },
     {
-      "path": "tests/Pest.php",
-      "why": "регистрация Upgrade TestCase",
+      "ref": "knowledge/test-strategy#runner-contract",
+      "why": "точные cwd/paths/groups/partitions и baseline",
+      "required": true
+    },
+    {
+      "ref": "knowledge/test-strategy#run-policy",
+      "why": "границы целевых и полных прогонов",
+      "required": true
+    },
+    {
+      "path": "packages/core/tests/Upgrade/SchemaParityTest.php",
+      "why": "oracle включает partial expressions, до удаления перенести serializer",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Schema/HostKeyColumns.php",
+      "why": "четыре host-key type presets",
+      "required": true
+    },
+    {
+      "ref": "knowledge/source-review#code-facts",
+      "why": "проверенные code facts, legacy/probes и partial boundaries",
       "required": true
     }
   ],
@@ -130,51 +151,79 @@
     {
       "path": "@plan/artifacts/P1.10/legacy-inventory.md",
       "change": "create"
+    },
+    {
+      "path": "scripts/schema-snapshot.sh",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Fixtures/Schema/snapshot-configs.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Fixtures/Schema/original/**/*.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Fixtures/Schema/expected/**/*.json",
+      "change": "create"
     }
   ],
   "rules": [
-    "Снимок ДО снимается первым коммитом пункта, до правок миграций.",
-    "Форма схемы не меняется: снимки ПОСЛЕ байт-в-байт равны снимкам ДО на всех трёх движках (V2).",
-    "Стратегии id (bigint/ULID/UUIDv7), префиксы таблиц и host-key колонки работают как прежде (их наборы зелёные).",
-    "Удаляется только то, что существует исключительно ради 0.x; спорное — оставить и записать в inventory.",
-    "Это единственный пункт P1, меняющий продуктовый код (только удаление легаси, D21)."
+    "Original до любых schema/default/helper edits, immutable commit; каждый driver/preset сравнивается со своим ДО.",
+    "Удалять лишь классифицированные historical adapters; спорное keep/inventory, live assertion имеет replacement.",
+    "Изменение candidate snapshot P3/P4 только explicit D#/identities update по D21; original неперезаписываем.",
+    "Все server schema presets отдельный process/БД; 48 configs×3 engine — narrow DDL equivalence, не full behavioral acceptance.",
+    "Все серверные команды идут через schema partitions tests/suites.json (P1.3); per-worker DB сама не разделяет неоднородные TestCase. Не смешивать schema или повторно исполнить serial. Целевые проверки, no full/load/mutate/coverage."
   ],
-  "guidance": "Порядок: (1) scripts/schema-snapshot.php и снимки ДО (коммит); (2) create-миграции рядом со старыми не держать — заменить целиком; (3) снимки ПОСЛЕ, сравнение `diff`; (4) удалить апгрейд-код и тесты; (5) inventory и чистка веток. Если снимок ПОСЛЕ отличается — чинить create-миграцию, не снимок. Для pgsql/mysql — `scripts/test-db.sh` поднимает сервер; снимок запускать через Testbench так же, как TestCase.",
+  "guidance": "Порядок: inventory и capture original с ещё прежними migration/helper/defaults → capture commit → replace chain и bounded historical removals → compare каждой 144 driver/preset строк → current expected mirror и TestCase registration → baseline per-name deletion ledger → targeted contracts. Standalone wrapper provisioning db-test-env.sh, а не попытка передать PHP script в test-db.sh (тот запускает Pest). Metadata не входит в semantic equality. Snapshot mismatch выводит конкретный table/constraint и не auto rewrite. Server parallel _test и fingerprint объяснены runner-contract.",
   "validation": [
     {
       "id": "V1",
-      "cmd": "php scripts/schema-snapshot.php --driver=sqlite | diff - packages/core/tests/Fixtures/Schema/sqlite.json",
+      "cmd": "scripts/schema-snapshot.sh --driver=sqlite --all-presets --compare=packages/core/tests/Fixtures/Schema/original",
       "expect": "exit 0",
       "kind": "acceptance"
     },
     {
       "id": "V2",
-      "cmd": "scripts/t pgsql -p core -- packages/core/tests/Schema && scripts/t mysql -p core -- packages/core/tests/Schema",
-      "expect": "exit 0 (SchemaSnapshotTest на сервере = снимок ДО)",
+      "cmd": "scripts/schema-snapshot.sh --driver=pgsql --all-presets --compare=packages/core/tests/Fixtures/Schema/original && scripts/schema-snapshot.sh --driver=mysql --all-presets --compare=packages/core/tests/Fixtures/Schema/original",
+      "expect": "exit 0",
       "kind": "acceptance"
     },
     {
       "id": "V3",
-      "cmd": "test -z \"$(ls packages/core/database/migrations | grep -v '_create_v_')\" && test ! -e packages/core/tests/Upgrade && test ! -e packages/core/src/Console/LegacyFanoutCommand.php",
+      "cmd": "scripts/t sqlite -p core -- packages/core/tests/Schema/SchemaSnapshotTest.php",
       "expect": "exit 0",
       "kind": "acceptance"
     },
     {
       "id": "V4",
-      "cmd": "scripts/t sqlite -p core,media,drive,documents,filament",
+      "cmd": "scripts/t pgsql -p core -- packages/core/tests/Schema/SchemaSnapshotTest.php && scripts/t mysql -p core -- packages/core/tests/Schema/SchemaSnapshotTest.php",
       "expect": "exit 0",
       "kind": "acceptance"
     },
     {
       "id": "V5",
-      "cmd": "scripts/t pgsql -p core -- packages/core/tests/IdStrategy packages/core/tests/Ulid packages/core/tests/TablePrefix",
+      "cmd": "scripts/t pgsql -p core -- packages/core/tests/IdStrategy packages/core/tests/Ulid packages/core/tests/TablePrefix && scripts/t mysql -p core -- packages/core/tests/HostKeyMysql",
       "expect": "exit 0",
       "kind": "acceptance"
     },
     {
       "id": "V6",
+      "cmd": "scripts/t sqlite -p media -- tests/Cas/BlobFindOrCreateTest.php && scripts/t sqlite -p drive -- tests/Feature/DriveApiTest.php && scripts/t sqlite -p documents -- tests/Schema/DocumentAggregateSchemaTest.php",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V7",
       "cmd": "scripts/t baseline --compare",
-      "expect": "exit 0 (удалённые тесты перечислены в tests/baseline/CHANGES.md)",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V8",
+      "cmd": "python3 -c \"from pathlib import Path; p=Path('packages/core'); assert all('_create_v_' in f.name for f in (p/'database/migrations').glob('*.php')); assert not (p/'tests/Upgrade').exists(); assert not (p/'src/Console/LegacyFanoutCommand.php').exists(); assert Path('plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.10/legacy-inventory.md').stat().st_size\"",
+      "expect": "exit 0",
       "kind": "acceptance"
     }
   ],
@@ -199,5 +248,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T08:28:07Z"
+  "updated_at": "2026-10-13T10:08:43Z"
 }

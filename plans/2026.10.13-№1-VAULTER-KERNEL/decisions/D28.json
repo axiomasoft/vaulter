@@ -1,0 +1,46 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D28",
+  "title": "Сканирование: все существующие scan-таблицы принадлежат drive",
+  "date": "2026-10-13",
+  "status": "accepted",
+  "question": "Сканирование: все существующие scan-таблицы принадлежат drive?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Чистый ContentScanner SPI, scanner adapters и общие content-result values — media. Все существующие v_scan_policy_states/v_scan_obligations/v_scan_backfill_runs/v_scan_requests/v_scan_evidence, lease/retry/admission и карантин ревизий — drive: даже evidence имеет drive/revision/obligation/request FK. Повторное использование evidence остаётся drive-решением; новый blob-only cache в media не вводится без реального независимого consumer. ContentAvailabilityGuard и DownloadGuard — drive. Media GC не опрашивает эти таблицы; retention scan-ссылок обеспечивает drive через media pin API D23."
+    }
+  ],
+  "context": "Правило D18 по blob/sha ошибочно позволяло перенос существующего evidence в media, что породило бы обратные FK media→drive. По коду evidence — доказательство obligation конкретной ревизии, не независимый blob cache.",
+  "decision": "A — Чистый ContentScanner SPI, scanner adapters и общие content-result values — media. Все существующие v_scan_policy_states/v_scan_obligations/v_scan_backfill_runs/v_scan_requests/v_scan_evidence, lease/retry/admission и карантин ревизий — drive: даже evidence имеет drive/revision/obligation/request FK. Повторное использование evidence остаётся drive-решением; новый blob-only cache в media не вводится без реального независимого consumer. ContentAvailabilityGuard и DownloadGuard — drive. Media GC не опрашивает эти таблицы; retention scan-ссылок обеспечивает drive через media pin API D23.",
+  "rationale": "Правило D18 по blob/sha ошибочно позволяло перенос существующего evidence в media, что породило бы обратные FK media→drive. По коду evidence — доказательство obligation конкретной ревизии, не независимый blob cache. Решение в пределах делегирования B10/B14; детали нормативны в knowledge/architecture и knowledge/collaboration.",
+  "consequences": [
+    "Совместимость: установок нет (D21); меняются только будущие API/SPI и create-схема до freeze P7. Исторические записи решений сохраняются."
+  ],
+  "applies_to": [
+    "P2",
+    "P4",
+    "P6"
+  ],
+  "supersedes": [
+    "D18"
+  ],
+  "evidence": [
+    {
+      "kind": "repo",
+      "ref": "packages/core/src/Schema/SchemaBuilder.php",
+      "note": "1552, 1563, 1593–1594, 1607–1610: FK graph"
+    },
+    {
+      "kind": "repo",
+      "ref": "packages/core/src/Models/Content/ScanEvidence.php",
+      "note": "модель evidence ревизии и obligation"
+    }
+  ],
+  "actor": {
+    "provider": "codex",
+    "model": "gpt-6",
+    "effort": "xhigh"
+  },
+  "answered_by": "agent"
+}

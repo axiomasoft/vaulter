@@ -3,7 +3,7 @@
   "id": "D13",
   "title": "Публикация поверхности атрибутами #[Api]/#[Spi]",
   "date": "2026-10-13",
-  "status": "accepted",
+  "status": "superseded",
   "question": "Как помечать поддерживаемую поверхность?",
   "options": [
     {
@@ -26,6 +26,7 @@
     "P3",
     "P7"
   ],
+  "superseded_by": "D27",
   "actor": {
     "provider": "claude-code",
     "model": "claude-opus-5-5"

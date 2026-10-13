@@ -1,0 +1,49 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D26",
+  "title": "Коллаборация: журнал, checkpoint, generation и выключение как единый контракт",
+  "date": "2026-10-13",
+  "status": "accepted",
+  "question": "Коллаборация: журнал, checkpoint, generation и выключение как единый контракт?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Сохраняются buffered по умолчанию и durable, append log/receipts и CAS. Collaboration владеет только side tables updates/receipts/heads (head_seq,checkpoint_seq,checkpoint_version) с FK на documents. Documents владеет generation и нейтральным pending-state marker через публичный state-контракт: append атомарно ставит marker, checkpoint атомарно снимает покрытый marker. Никаких прямых записей collaboration в v_documents. Доступ/текущая generation проверяются при каждом append и token renewal; receipt даёт persisted только после commit. Обычный Yjs sync ack не durable ack: протокол v2 добавляет стабильный update_id, бинарный update, hash, generation, retry очереди клиента и отдельный committed receipt. Receipts живут всю активную generation; очистка только retired generation после документированного окна expiry/retry, не произвольный TTL. Компактация: CAS на C,H,generation; после публикации удалить только покрытие <=H этой generation. Restore/REST replace сериализованы теми же locks, закрывают старую generation; stale checkpoint не публикуется. Single edit/export без active collaboration допускаются лишь с полным checkpoint; pending marker даёт явную document_state_pending, никогда тихое чтение/перезапись устаревшей проекции. Управляемое disable сначала drain+checkpoint; сырое config=false безопасно блокирует только pending документы. Revocation включает ancestor/inherited grants, shares, drive policy и host-driver change invalidation; control потерян — exp<=5мин, backend всё равно проверяет текущие права. Drain имеет собственный pending ledger и deadline, не полагается на destroy для failed stores."
+    }
+  ],
+  "context": "В D16 оставалась развилка чужих колонок/side table и не было пути безопасного отключения при некомпактированном журнале. В Hocuspocus 4.3.0 failed store остаётся в памяти без самостоятельного reschedule; buffered не даёт RPO при kill. Заменяет D16, сохраняет авторитетное состояние в documents и отдельный transport пакет.",
+  "decision": "A — Сохраняются buffered по умолчанию и durable, append log/receipts и CAS. Collaboration владеет только side tables updates/receipts/heads (head_seq,checkpoint_seq,checkpoint_version) с FK на documents. Documents владеет generation и нейтральным pending-state marker через публичный state-контракт: append атомарно ставит marker, checkpoint атомарно снимает покрытый marker. Никаких прямых записей collaboration в v_documents. Доступ/текущая generation проверяются при каждом append и token renewal; receipt даёт persisted только после commit. Обычный Yjs sync ack не durable ack: протокол v2 добавляет стабильный update_id, бинарный update, hash, generation, retry очереди клиента и отдельный committed receipt. Receipts живут всю активную generation; очистка только retired generation после документированного окна expiry/retry, не произвольный TTL. Компактация: CAS на C,H,generation; после публикации удалить только покрытие <=H этой generation. Restore/REST replace сериализованы теми же locks, закрывают старую generation; stale checkpoint не публикуется. Single edit/export без active collaboration допускаются лишь с полным checkpoint; pending marker даёт явную document_state_pending, никогда тихое чтение/перезапись устаревшей проекции. Управляемое disable сначала drain+checkpoint; сырое config=false безопасно блокирует только pending документы. Revocation включает ancestor/inherited grants, shares, drive policy и host-driver change invalidation; control потерян — exp<=5мин, backend всё равно проверяет текущие права. Drain имеет собственный pending ledger и deadline, не полагается на destroy для failed stores.",
+  "rationale": "В D16 оставалась развилка чужих колонок/side table и не было пути безопасного отключения при некомпактированном журнале. В Hocuspocus 4.3.0 failed store остаётся в памяти без самостоятельного reschedule; buffered не даёт RPO при kill. Заменяет D16, сохраняет авторитетное состояние в documents и отдельный transport пакет. Решение в пределах делегирования B10/B14; детали нормативны в knowledge/architecture и knowledge/collaboration.",
+  "consequences": [
+    "Совместимость: установок нет (D21); меняются только будущие API/SPI и create-схема до freeze P7. Исторические записи решений сохраняются."
+  ],
+  "applies_to": [
+    "P5"
+  ],
+  "supersedes": [
+    "D16"
+  ],
+  "evidence": [
+    {
+      "kind": "repo",
+      "ref": "hocuspocus-server/src/index.js",
+      "note": "425–451, 473–484: full state и failure"
+    },
+    {
+      "kind": "repo",
+      "ref": "packages/documents/src/Content/DocumentStateWriter.php",
+      "note": "54–80: CAS/generation, restore/replace"
+    },
+    {
+      "kind": "repo",
+      "ref": "packages/documents/src/Collaboration/CollaborationHub.php",
+      "note": "148–171: CAS только seed"
+    }
+  ],
+  "actor": {
+    "provider": "codex",
+    "model": "gpt-6",
+    "effort": "xhigh"
+  },
+  "answered_by": "agent"
+}

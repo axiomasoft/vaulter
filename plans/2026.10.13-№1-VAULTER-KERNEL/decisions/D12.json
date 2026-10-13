@@ -3,7 +3,7 @@
   "id": "D12",
   "title": "Идемпотентность — механизм ядра с транзакционными квитанциями",
   "date": "2026-10-13",
-  "status": "accepted",
+  "status": "superseded",
   "question": "Как реализовать Idempotency-Key?",
   "options": [
     {
@@ -26,6 +26,7 @@
     "P3",
     "P6"
   ],
+  "superseded_by": "D25",
   "actor": {
     "provider": "claude-code",
     "model": "claude-opus-5-5"

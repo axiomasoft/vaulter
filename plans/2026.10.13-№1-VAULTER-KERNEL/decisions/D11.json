@@ -3,7 +3,7 @@
   "id": "D11",
   "title": "Вебхуки — отдельный пакет vaulter-webhooks, outbox и relay — в ядре",
   "date": "2026-10-13",
-  "status": "accepted",
+  "status": "superseded",
   "question": "Где вебхуки и outbox?",
   "options": [
     {
@@ -30,6 +30,7 @@
     "P3",
     "P4"
   ],
+  "superseded_by": "D24",
   "evidence": [
     {
       "kind": "rag",

@@ -25,3 +25,14 @@
 {"v":1,"ts":"2026-10-13T08:25:48Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D21 supersedes D17","data":{"id":"D21","supersedes":"D17"}}
 {"v":1,"ts":"2026-10-13T08:26:50Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D22 accepted","data":{"id":"D22","by":"agent","option":"A"}}
 {"v":1,"ts":"2026-10-13T08:26:50Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D22 supersedes D7","data":{"id":"D22","supersedes":"D7"}}
+{"v":1,"ts":"2026-10-13T09:41:42Z","type":"decision","actor":{"provider":"codex","model":"gpt-6","effort":"xhigh"},"summary":"D23 accepted","data":{"id":"D23","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-13T09:41:42Z","type":"decision","actor":{"provider":"codex","model":"gpt-6","effort":"xhigh"},"summary":"D24 accepted","data":{"id":"D24","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-13T09:41:42Z","type":"decision","actor":{"provider":"codex","model":"gpt-6","effort":"xhigh"},"summary":"D24 supersedes D11","data":{"id":"D24","supersedes":"D11"}}
+{"v":1,"ts":"2026-10-13T09:41:42Z","type":"decision","actor":{"provider":"codex","model":"gpt-6","effort":"xhigh"},"summary":"D25 accepted","data":{"id":"D25","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-13T09:41:42Z","type":"decision","actor":{"provider":"codex","model":"gpt-6","effort":"xhigh"},"summary":"D25 supersedes D12","data":{"id":"D25","supersedes":"D12"}}
+{"v":1,"ts":"2026-10-13T09:41:42Z","type":"decision","actor":{"provider":"codex","model":"gpt-6","effort":"xhigh"},"summary":"D26 accepted","data":{"id":"D26","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-13T09:41:43Z","type":"decision","actor":{"provider":"codex","model":"gpt-6","effort":"xhigh"},"summary":"D26 supersedes D16","data":{"id":"D26","supersedes":"D16"}}
+{"v":1,"ts":"2026-10-13T09:41:43Z","type":"decision","actor":{"provider":"codex","model":"gpt-6","effort":"xhigh"},"summary":"D27 accepted","data":{"id":"D27","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-13T09:41:43Z","type":"decision","actor":{"provider":"codex","model":"gpt-6","effort":"xhigh"},"summary":"D27 supersedes D13","data":{"id":"D27","supersedes":"D13"}}
+{"v":1,"ts":"2026-10-13T09:41:43Z","type":"decision","actor":{"provider":"codex","model":"gpt-6","effort":"xhigh"},"summary":"D28 accepted","data":{"id":"D28","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-13T09:41:43Z","type":"decision","actor":{"provider":"codex","model":"gpt-6","effort":"xhigh"},"summary":"D28 supersedes D18","data":{"id":"D28","supersedes":"D18"}}

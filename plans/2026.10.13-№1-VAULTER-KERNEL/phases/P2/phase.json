@@ -4,7 +4,7 @@
   "title": "Доказательная база: инвентаризация, идентичности и сверка",
   "design": "skeleton",
   "goal": "Получить проверяемую доказательную базу для переноса: поимённую карту владения каждого типа, инвентарь идентичностей хранения и протоколов (до заморозки P7 — свободных, D21), boundary-сканы в report-режиме и подтверждённые по коду ответы на открытые технические вопросы архитектуры. Продуктовый код не меняется.",
-  "context": "Фаза B архитектуры (knowledge/architecture#transition). Размер: M. Работа только в tests/, resources/ и plans/ артефактах; `git diff -- packages/*/src packages/*/database` пуст на выходе. Оракулы для CI живут в `tests/Arch/Fixtures` (корень) и пакетах, не в plans/ (правило плана). Сканы — report-режим: текущие нарушения = allowlist ровно; новое нарушение красное, исправленное, но оставшееся в allowlist — красное (stale). Открытые вопросы архитектуры, которые P2 закрывает по коду: (1) читает ли GC media таблицы drive (нужен ли `BlobReferenceCounter`); (2) где именно relay/fanout вебхуков — в транзакции записи или в relay; (3) раскладка Content/Scan* по D18; (4) обратные FK; (5) какие конфиг-ключи `vaulter.php` принадлежат модулям; (6) покрытие If-Match/версий по mutable-агрегатам (A21); (7) где сегодня FQCN/morph-типы попадают в БД.",
+  "context": "Только evidence harness/inventory, без product изменений. source-review уже закрывает факты GC/fanout/concurrency, D23/D24/D25/D28 определяют следствия. P2 строит исчерпывающую target-map/identities, таблицы FK/serialized identities/config owners и report scans I1–I4 с exact current allowlists, stale/new нарушения red. Не задаёт заново вопрос «читает ли GC drive» или «где fanout». Type map включает non-src factories/migration owners/schema helpers/testing и Filament текущие model reads. Missing facts разбирать по коду, продуктовая развилка требует explicit replacement decision.",
   "contract": {
     "consumes": [
       "knowledge/architecture#packages",
@@ -17,14 +17,18 @@
       "D5",
       "D6",
       "D21",
-      "D18"
+      "D28",
+      "knowledge/source-review#code-facts",
+      "D23",
+      "D24",
+      "D25"
     ],
     "produces": [
       "type-map: каждый тип packages/*/src → владелец, целевой FQCN, атрибут Api/Spi/Internal, фаза (артефакт плана + машиночитаемая копия tests/Arch/Fixtures/target-map.json)",
       "Инвентарь идентичностей: таблицы/колонки/индексы/FK, migration basenames, конфиг-ключи с владельцем, команды и опции, имена маршрутов и пути REST, event types, problem codes, morph/serialized FQCN, publish tags, env-переменные",
       "Снимки схемы (нормализованный JSON) по sqlite/pgsql/mysql — уже создаются P1.10; P2 сверяет с ними инвентарь",
       "Boundary-сканы I1–I4 в report-режиме с владельческими allowlist",
-      "Ответы на 7 открытых вопросов с доказательствами (knowledge-документ p2-findings)"
+      "Полная поимённая проверка известных code-facts и новых inventory findings (knowledge-документ p2-findings)"
     ],
     "boundaries": [
       "Нет изменений packages/*/src и packages/*/database",
@@ -36,23 +40,29 @@
     "include": [
       "tests/Arch/* корня и пакетов, scripts/inventory/* генераторы",
       "инвентарь идентичностей tests/Arch/Fixtures/identities.json",
-      "knowledge p2-findings через plan.py add-document"
+      "knowledge p2-findings через plan.py add-document",
+      "tests/Repo/Arch inventories root без зависимости на plans; full file/FK completeness fixture",
+      "installed/active config defaults ownership и complete schema presets original baseline"
     ],
     "exclude": [
       "Любые переносы и правки поведения",
       "Атрибуты #[Api]/#[Spi] (P3)"
     ]
   },
+  "depends_on": [
+    "P1"
+  ],
   "pitfalls": [
     "Ручные списки владельцев вместо генерации из type-map быстро расходятся — сканы читают только оракул",
     "FK SQLite не именует — FK-скан на PG и MySQL",
     "Легаси 0.x удалён в P1.10 — апгрейд-фикстуры не строить (D21)",
-    "Строки FQCN в конфиге и payload — тоже ссылки (I1)"
+    "Строки FQCN в конфиге и payload — тоже ссылки (I1)",
+    "Любой server validation group/path/full/serial проходит TestCase/schema partitions каждого пакета (test-strategy#runner-contract); worker DB не решает schema changes внутри worker."
   ],
   "validation": [
     {
       "id": "V1",
-      "procedure": "git diff --quiet <base P2> -- 'packages/*/src' 'packages/*/database'; scripts/t sqlite -p core tests/Arch; сканы I1–I4 зелёные в report-режиме",
+      "procedure": "git diff --quiet <base P2> -- packages/*/src packages/*/database; scripts/t sqlite -p repo -- tests/Repo/Arch; package-local scans named paths. Last qualification full only; сканы report с exact allowlists stale/new red.",
       "expect": "exit 0 везде",
       "kind": "acceptance"
     }
@@ -69,7 +79,7 @@
     {
       "id": "design-inputs",
       "title": "Обязательные входы детализации",
-      "text": "Сессия детализации P2 читает до создания пунктов (точка входа — `plan.py show 2026.10.13-№1-VAULTER-KERNEL P2`):\n\n```bash\nP='python3 <planner>/scripts/plan.py'; ID=2026.10.13-№1-VAULTER-KERNEL\n$P get $ID knowledge/architecture --section packages\n$P get $ID knowledge/architecture --section kernel\n$P get $ID knowledge/architecture --section ownership-map\n$P get $ID knowledge/architecture --section persistence\n$P get $ID knowledge/architecture --section invariants\n$P get $ID knowledge/source-review --section audit-verification\n$P get $ID knowledge/test-strategy --section run-policy\n$P get $ID D5\n$P get $ID D6\n$P get $ID D21\n$P get $ID D18\n$P show $ID P1            # что фактически сделала предыдущая фаза, её deviations\n```\n\n**Правила для пунктов этой фазы (обязательны при детализации):**\n1. Каждый пункт имеет точные `validation` только из целевых прогонов (knowledge/test-strategy#run-policy §1): `scripts/t <engine> -p <pkg> <paths>` / `scripts/t --changed`; без мутаций (D3), без load (D4), без coverage.\n2. Последний пункт фазы — «Квалификационный прогон P2» по knowledge/test-strategy#qualification-template; только он гоняет полный набор.\n3. `task_files` точные (параллельные батчи требуют непересекающихся файлов).\n4. Крупные knowledge-документы привязываются к пункту через `reads` с `section`, а не целиком: architecture ~42 KB — читать только нужные секции.\n5. Пункт, добавивший/перенёсший каталог тестов или src, обновляет `tests/zones.json` (I19).\n6. Поправка архитектуры — новое D# с причиной и эффектом совместимости, не молча в пункте."
+      "text": "Сессия детализации P2 читает до создания пунктов (точка входа — `plan.py show 2026.10.13-№1-VAULTER-KERNEL P2`):\n\n```bash\nP='python3 <planner>/scripts/plan.py'; ID=2026.10.13-№1-VAULTER-KERNEL\n$P get $ID knowledge/architecture --section packages\n$P get $ID knowledge/architecture --section kernel\n$P get $ID knowledge/architecture --section ownership-map\n$P get $ID knowledge/architecture --section persistence\n$P get $ID knowledge/architecture --section invariants\n$P get $ID knowledge/source-review --section audit-verification\n$P get $ID knowledge/test-strategy --section run-policy\n$P get $ID D5\n$P get $ID D6\n$P get $ID D21\n$P get $ID D28\n$P show $ID P1            # что фактически сделала предыдущая фаза, её deviations\n```\n\n**Правила для пунктов этой фазы (обязательны при детализации):**\n1. Каждый пункт имеет точные `validation` только из целевых прогонов (knowledge/test-strategy#run-policy §1): `scripts/t <engine> -p <pkg> <paths>` / `scripts/t --changed`; без мутаций (D3), без load (D4), без coverage.\n2. Последний пункт фазы — «Квалификационный прогон P2» по knowledge/test-strategy#qualification-template; только он гоняет полный набор.\n3. `task_files` точные (параллельные батчи требуют непересекающихся файлов).\n4. Крупные knowledge-документы привязываются к пункту через `reads` с `section`, а не целиком: architecture ~42 KB — читать только нужные секции.\n5. Пункт, добавивший/перенёсший каталог тестов или src, обновляет `tests/zones.json` (I19).\n6. Поправка архитектуры — новое D# с причиной и эффектом совместимости, не молча в пункте.\n\nРевизия 2 — дополнительно читать: knowledge/source-review#code-facts; knowledge/test-strategy#runner-contract; knowledge/architecture#cost; D28, D23, D24, D25, D28. Эти нормы не переопределяются при детализации.\nВсегда сохранять identity/current snapshot amendments до P7 без upgrade 0.x; обязательный qualification последним. Validation paths должны существовать на момент item, suite cwd/partition из runner-contract. SQL/stand skipped не Green. Owner mutations только отдельный явно optional gated item P7, exception к запрету general пунктов; product benchmark acceptance отсутствует."
     }
   ]
 }

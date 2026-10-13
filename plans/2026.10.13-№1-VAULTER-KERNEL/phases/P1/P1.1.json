@@ -1,21 +1,19 @@
 {
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P1.1",
-  "title": "Базовые замеры и инвентаризация тестов (без правок)",
+  "title": "Baseline discovery и целевые замеры без полного прогона",
   "status": "todo",
-  "summary": "Зафиксировано число тестов каждого набора (`tests/baseline/<suite>.count`), время прогонов по наборам и движкам, топ медленных файлов и инвентаризация CI; продуктовый код и тесты не тронуты.",
+  "summary": "Зафиксированы все исходные full test names/counts, CI inventory и целевые замеры representative paths. Полные замеры ДО/ПОСЛЕ выполняются только квалификацией P1.9.",
   "why": "Без цифр «до» нельзя доказать ускорение и сохранность набора (П14); оценки без замера в AzGuard ошибались в 10 раз.",
   "scope": {
     "include": [
-      "Проверка окружения: `php -v` (≥8.4 или scripts/php84), наличие `brianium/paratest` в vendor каждого пакета, `nproc`, `free -g`, `uptime`, доступность docker",
-      "`vendor/bin/pest --list-tests` для: core (корень), media, drive, documents, azgard, filament (в `packages/<p>`), `load/tests` (корень, путь) → `var/quality/baseline/<suite>.list`; число строк-тестов → `tests/baseline/<suite>.count` (одно целое число)",
-      "Node: число тестов `hocuspocus-server` (`npm test -- --reporter=json` или подсчёт) и `packages/vue` → `tests/baseline/{hub,vue}.count`",
-      "Время SQLite по каждому набору: последовательно (`--ci`) и `--parallel --processes=<CPU/2,≤8>`, по 2 замера, JUnit `--log-junit var/quality/baseline/<suite>-<mode>.xml`",
-      "Время серверных линий: `scripts/test-db.sh pgsql …` и `mysql …` для тех же наборов, что гоняет CI (`tests.yml` test-pgsql шаги, `*-pgsql` jobs), `DB_FAST=1`, `DB_PARALLEL` 0 и 8",
-      "Топ-20 медленных файлов по JUnit на каждом движке; доля времени `Concurrency`, `Upgrade`, `Observability/P83–P85`, `OpenApi`, `IdStrategy`, `load/tests`",
-      "Стоимость `VAULTER_OPENAPI_VALIDATE=1`: core `Http` + `OpenApi` с 1 и 0 (только замер)",
-      "Инвентаризация CI: таблица workflow → триггеры → jobs → команды → оценка времени (из `.github/workflows/*`)",
-      "Отчёт `plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.1/baseline.json` (машиночитаемый, схема в artifacts.note) и `plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.1/baseline.md`: окружение, таблицы «набор × движок × режим → тестов, время, самый долгий файл», CI-таблица, выводы-гипотезы для P1.3–P1.7 (без решений)"
+      "Окружение PHP8.4/shim, vendors (только install при необходимости), Node/npm, native PG/MySQL binaries, CPU/RAM/uptime; не путать DB_FAST с tmpfs",
+      "Discovery всех PHP suite через --list-tests в собственном cwd/vendor; core --testsuite=core, load explicit load/tests; hub Node manifest file discovery без исполнения (metric=test_files; runtime cases только P1.9), Vue vitest list. Сохранять exact fully-qualified names/dataset labels в tests/baseline/original/<suite>.list, *.count; current копия tests/baseline/*.list/count",
+      "Target baseline два замера одного файла на SQLite serial/parallel: media tests/Cas/BlobFindOrCreateTest.php, drive tests/Feature/DriveApiTest.php; PG/MySQL media tests/Cas/BlobCommitAtomicityTest.php DB_PARALLEL=0/4, logs distinct. Дополнительный named representative только по реально измеренной причине; никакого all suite",
+      "Core OpenAPI validation target packages/core/tests/Schema/CanonicalSchemaTest.php и packages/core/tests/Http/HttpKernelV1Test.php, compare VAULTER_OPENAPI_VALIDATE 0/1 без coverage",
+      "tests/Pest и всех package bindings/class overrides → inventory suite→file→TestCase/schema fingerprint для P1.3; все unknown заранее перечислены, не переносить вопрос слабому исполнителю",
+      "Inventory каждого workflow trigger/job.if/command/floor/services; media dual-engine union gate, L/TB actual matrix, exact release names",
+      "artifacts/P1.1/baseline.json: env, suites(name/count/discovery_command/names_sha256), targeted_runs(commands/status/skips/engine/seconds/junit), schema_partitions, ci, full_timing_status=\"deferred_to_P1.9\"; baseline.md те же факты, не выдуманный топ всех медленных suites"
     ],
     "exclude": [
       "Любые правки кода, тестов, CI",
@@ -47,9 +45,36 @@
       "path": ".github/workflows/tests.yml",
       "why": "PG-шаги по TestCase",
       "required": true
+    },
+    {
+      "ref": "knowledge/test-strategy#runner-contract",
+      "why": "точные cwd/paths/groups/partitions и baseline",
+      "required": true
+    },
+    {
+      "ref": "knowledge/test-strategy#run-policy",
+      "why": "границы целевых и полных прогонов",
+      "required": true
+    },
+    {
+      "ref": "knowledge/source-review#code-facts",
+      "why": "проверенные code facts, legacy/probes и partial boundaries",
+      "required": true
     }
   ],
   "task_files": [
+    {
+      "path": "tests/baseline/original/*.list",
+      "change": "create"
+    },
+    {
+      "path": "tests/baseline/original/*.count",
+      "change": "create"
+    },
+    {
+      "path": "tests/baseline/*.list",
+      "change": "create"
+    },
     {
       "path": "tests/baseline/*.count",
       "change": "create"
@@ -64,7 +89,7 @@
       "id": "P1.1-baseline",
       "path": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.1/baseline.json",
       "role": "output",
-      "note": "замеры «до» (машиночитаемо): suites{name:{count,sqlite_serial_s[],sqlite_parallel_s[],pgsql_s[],mysql_s[],slowest[]}}, env, ci[], count_command"
+      "note": "Immutable discovery+env+schema_partitions+CI+targeted timings; full_timing_status deferred_to_P1.9. Exact structure in scope."
     },
     {
       "path": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.1/baseline.md",
@@ -76,9 +101,11 @@
     "Не менять ничего под packages/, .github/, scripts/ — проверяется V1.",
     "Каждая цифра с датой, `uptime` до прогона и режимом; минимум два замера на конфигурацию; «не измерено» помечать явно.",
     "Долгие прогоны в фоне, логи в var/quality/baseline.",
-    "Это единственный пункт P1 до P1.9, которому разрешены полные прогоны (замер «до»)."
+    "P1.3 runner ещё не существует. Целевые server замеры через существующий scripts/test-db.sh -C packages/media с единственным named test path, DB_PARALLEL=0/4; внутри selected file однородный TestCase. Discovery каждого неоднородного suite разбита на явные TestCase/schema groups из reads+inventory; не смешивать схемы одним server процессом. tests/suites.json и runner создаёт P1.3. No full/load/mutate/coverage.",
+    "Full до/после не измеряется в этом пункте (D4); отсутствие timing полного набора явно deferred, не ошибка baseline.",
+    "Original baseline immutable, no regex count эвристика без сравнения names: parser подтверждён на dataset examples."
   ],
-  "guidance": "Подсчёт тестов: `vendor/bin/pest --list-tests | grep -cE '^\\s*-|::'` — формат вывода проверить на первом наборе и записать в отчёт точную команду подсчёта, чтобы P1.3 (`scripts/t baseline`) использовал её же. Наборы в `packages/<p>` запускать с `cwd` пакета. Для PG/MySQL core учитывать разбиение по TestCase (шаги `tests.yml`).\n\n**Образцы в соседних репозиториях экосистемы (читать с диска, не копировать в этот публичный репозиторий — AzGuard приватный):**\n- `/home/vostrikov/projects/packages/chatom/plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/handoff/2026-10-13-test-structure-report.md` — образец отчёта и метрик",
+  "guidance": "Discovery не запускает tests. Не `npm test -- --reporter=json` для Node (manifest node --test, Vitest reporter не Node). Engine guard для целевого test явно asserts DB driver; skips не замер. Предложить top candidates по source+targeted JUnit, не объявлять global bottleneck. Доступные upstream examples и их проверенный статус — source-review#sources. Node discovery — только path globs из package.json с проверкой существования; без статического угадывания динамических test names. Кейс-имена hub ДО/ПОСЛЕ фиксируются полным TAP в P1.9. Inventory application skeleton writers не требует менять их здесь.",
   "validation": [
     {
       "id": "V1",
@@ -88,14 +115,14 @@
     },
     {
       "id": "V2",
-      "cmd": "test -s plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.1/baseline.md && python3 -c \"import json;d=json.load(open('plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.1/baseline.json'));assert d['suites'] and d['count_command']\" && ls tests/baseline/{core,media,drive,documents,azgard,filament}.count",
+      "cmd": "python3 -c \"import json,pathlib; p=pathlib.Path('plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.1'); d=json.loads((p/'baseline.json').read_text()); assert d['schema_partitions'] and d['targeted_runs'] and d['full_timing_status']=='deferred_to_P1.9'; assert all(pathlib.Path('tests/baseline/original/'+s+'.list').is_file() for s in ['core','media','drive','documents','azgard','filament','load','hub','vue']); assert (p/'baseline.md').stat().st_size\"",
       "expect": "exit 0",
       "kind": "acceptance"
     },
     {
       "id": "V3",
-      "cmd": "grep -cE 'sqlite|pgsql|mysql' plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.1/baseline.md",
-      "expect": "≥ 3",
+      "cmd": "python3 -c \"import pathlib; p=pathlib.Path('tests/baseline/original'); counts=list(p.glob('*.count')); assert len(counts)==9; assert all(int(x.read_text())>0 for x in counts)\"",
+      "expect": "exit 0",
       "kind": "acceptance"
     }
   ],
@@ -119,5 +146,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T08:13:32Z"
+  "updated_at": "2026-10-13T10:23:03Z"
 }

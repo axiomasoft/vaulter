@@ -7,10 +7,10 @@
   "why": "Единственное место долгого прогона фазы (D4); доказывает, что ускорение не потеряло тестов.",
   "scope": {
     "include": [
-      "`scripts/t all --full --engines=sqlite,pgsql,mysql`",
-      "`scripts/t baseline --compare`",
-      "`scripts/t stand` — если окружение позволяет (иначе отметка «не проверено» с причиной)",
-      "Отчёт `plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.9/report.md` по образцу Chatom test-structure-report: главное, что сделано (коммиты), метрики до/после (2 замера, нагрузка), что проверено/не проверено, решения владельцу (branch protection, тариф Actions, сокращения из P1.7)"
+      "Full matrix current all/engines+Node+quality, baseline names ledger compare. Stand changes test harness only; required schema/functional external coverage не skipped as green.",
+      "Full timing ДО c64bba25 в отдельном temporary clean checkout с original commands/partitions из P1.1 (не копировать products в current); timing ПОСЛЕ current, 2 identical runs/uptime каждый. Setup/install отдельно от test elapsed. Кандидат execution SHA указывает product/harness commit, не поздний docs evidence commit.",
+      "Report до/после commands, passed/skipped/warnings/engine/slow files/JUnit и class partition inventory; existing failures доказать на base и оставить unresolved, не phase GREEN. Регрессии чинить в owner files до fresh qualification, без изменения baseline original.",
+      "Node hub TAP runtime cases base/current и metric=test_files baseline не смешиваются; Vue build/typecheck/api:check и hub npm run check, плюс npm test ровно один раз в all. Ошибочный engine/version/partial seed env — failed qualification, не допустимый warning."
     ],
     "exclude": [
       "Мутации, load, coverage"
@@ -40,13 +40,39 @@
       "ref": "artifact/P1.1-baseline",
       "why": "цифры «до»",
       "required": true
+    },
+    {
+      "ref": "knowledge/test-strategy#runner-contract",
+      "why": "точные cwd/paths/groups/partitions и baseline",
+      "required": true
+    },
+    {
+      "ref": "knowledge/test-strategy#run-policy",
+      "why": "границы целевых и полных прогонов",
+      "required": true
+    },
+    {
+      "ref": "knowledge/source-review#code-facts",
+      "why": "проверенные code facts, legacy/probes и partial boundaries",
+      "required": true
     }
   ],
-  "task_files": [],
-  "rules": [
-    "Регрессия, вызванная P1, чинится в этом пункте; чужая (существовавшая на c64bba25) — фиксируется в отчёте с доказательством, что она была до P1."
+  "task_files": [
+    {
+      "path": "@plan/artifacts/P1.9/report.md",
+      "change": "create"
+    },
+    {
+      "path": "tests/baseline/CHANGES.md",
+      "change": "any",
+      "note": "Создаётся предшествующим пунктом P1; изменить после его результата."
+    }
   ],
-  "guidance": "**Образцы в соседних репозиториях экосистемы (читать с диска, не копировать в этот публичный репозиторий — AzGuard приватный):**\n- `/home/vostrikov/projects/packages/chatom/plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/handoff/2026-10-13-test-structure-report.md` — образец отчёта",
+  "rules": [
+    "Регрессия, вызванная P1, чинится в этом пункте; чужая (существовавшая на c64bba25) — фиксируется в отчёте с доказательством, что она была до P1.",
+    "Это последний исполненный пункт фазы; P1.10 до P1.4/5/6/8/9. Any skipped engine/required line remains pending; benchmark/load/mutation excluded."
+  ],
+  "guidance": "Полная матрица и engines из runner-contract. Полный baseline на c64bba25 и текущая версия измеряются одинаковыми flags/schema partitions. Evidence отличает SHA продуктового кода от позднего коммита отчёта; реальные предупреждения/пропуски/падения не считаются успехом. Мутации, нагрузка и бенчмарки исключены.",
   "validation": [
     {
       "id": "V1",
@@ -64,6 +90,24 @@
       "id": "V3",
       "cmd": "test -s plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.9/report.md",
       "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 scripts/ci/workflow-policy.py && python3 -m unittest discover -s tests/Repo -p WorkflowPolicyTest.py",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "for suite_dir in . packages/media packages/drive packages/documents packages/azgard packages/filament; do (cd \"$suite_dir\" && vendor/bin/pint --test && vendor/bin/phpstan analyse --no-progress --memory-limit=512M) || exit 1; done",
+      "expect": "exit 0; реальные конфиги и vendor каждого набора",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "cmd": "(cd packages/vue && npm run build && npm run typecheck && npm run api:check) && (cd hocuspocus-server && npm run check)",
+      "expect": "exit 0; npm test уже исполнен all, не повторять",
       "kind": "acceptance"
     }
   ],
@@ -86,5 +130,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T08:28:08Z"
+  "updated_at": "2026-10-13T10:23:03Z"
 }

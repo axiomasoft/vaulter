@@ -7,16 +7,11 @@
   "why": "Сегодня тесты и качество разнесены по 8 workflow, серверные шаги последовательные, gate нет (knowledge/test-strategy#ci-target).",
   "scope": {
     "include": [
-      "`.github/workflows/ci.yml`: job `changes` (`scripts/t --changed --dry-run --json --base=${{ github.event.pull_request.base.sha || 'HEAD~1' }}` → matrix пакетов; harness-код 2 → все пакеты)",
-      "quality-matrix (pint `--test`, phpstan пакета, type coverage — если ≤1 мин по замеру P1.1) по затронутым пакетам",
-      "fast-matrix: пакет × (php 8.4 + L12/testbench 10, php 8.4 + L13/testbench 11) `scripts/t sqlite -p <pkg>`",
-      "db-matrix: пакет × (pgsql 16, mysql 8.4) сервисы с `tmpfs` для данных, ослабленные flush (PG: `fsync=off, synchronous_commit=off, full_page_writes=off`; MySQL: `--innodb-flush-log-at-trx-commit=0 --skip-log-bin`), БД на воркера, `scripts/t <engine> -p <pkg> --group=database -j 4`",
-      "serial: PG `scripts/t pgsql -p core --group=serial -j 1` (гонки с проверкой «N passed, 0 skipped» как в нынешнем tests.yml)",
-      "frontend: vue (`api:check`, typecheck, test) и hub (`npm run check`, `npm test`) при изменениях `packages/vue`/`hocuspocus-server`",
-      "`ci-gate`: `if: always()`, `needs` все jobs, падает на failure/cancelled и на skipped, не разрешённый планом `changes`",
-      "`weekly-full.yml`: `schedule: '0 4 * * 1'`, `push: tags: ['v*']`, `workflow_dispatch`: `scripts/t all --full`, coverage `pcov` с порогами пакетов, issue при красном",
-      "Удалить `tests.yml`, `drive.yml`, `media.yml`, `documents.yml`, `filament.yml`, `azgard.yml`, `static-analysis.yml`, `code-style.yml`, `frontend.yml` после переноса каждого job (сопоставление «старый job → новый job» в evidence); `openapi.yml`, `docs.yml`, `pr-check.yml`, `monorepo-split.yml`, `hocuspocus-image.yml`, `release-npm.yml`, `mutation.yml`, `load.yml` остаются",
-      "`scripts/ci/workflow-policy.py` дополнить: `ci-gate.needs` = все остальные jobs `ci.yml`; нет `on.paths` у `ci.yml`; у db-сервисов есть tmpfs"
+      "P1.2 manual mutation/load policy+coverage none на PR, timeouts и cancel-in-progress лишь PR testing (не deploy/release). PyYAML SafeLoader YAML1.2/explicit string on, не YAML1.1 boolean True trap; workflow policy unit tests fixtures.\n\nP1.6 единый ci.yml push/PR/dispatch без path-filter на required workflow. changes использует runner --changed --dry-run JSON и явную base pull_request.base.sha/push.before; missing/zero base→all. Матрица actual PHP support (L12/TB10 и L13/TB11 у core/media/drive/documents/azgard; filament only compatible L13/TB11, load host отдельно), dependency updates выполняются job и проверяются actual versions. Repo harness/selector без Testbench на отдельной line.\n\nfast+quality affected PHP; db database layer affected PG16/MySQL8.4, schema partitions и per-worker DB; serial все affected suites с serial cases, не только core; Node20/22 Vue и Node22 hub preserve frontend build/API/type/test/check. Type coverage по замеру, slow advisory Rector не теряется и не становится blocking. DB services на tmpfs; GitHub services.command не поддерживается, fsync switches задаются поддерживаемым docker entrypoint или оставить CI durability defaults; actionlint smoke policy гарантирует syntax. DB_EXTERNAL=1 runner не поднимает native server поверх CI service.\n\nci-gate if always needs all+quality/openapi results; unexpected failure/cancelled/skipped/empty required matrix=red, intended docs-only skip из changes явен. OpenAPI compatibility smoke сохранён, before P7 breaking-check against old stable информативен (D21); lint/validation blocking. weekly-full schedule0 4 * * 1/manual/tag full+extended+serial/pcov и Node checks, stand явная matrix при пригодном runner; отсутствие required stand не выдаётся зелёным. Mutation floors core95/drive43/documents95/filament95, media existing dual-engine union gate переносятся целиком в manual workflow, не parallel Pest mutate.\n\nmonorepo-split existing verify-release-sha меняется в P1.6 одновременно с check names: требует ci-gate и exact-SHA full qualification. Tag event сначала запускает full qualification/reusable workflow и только после needs publishes; polling «последний зелёный» запрещён. Не добавлять automatic issue/comment отправку без отдельного поручения владельца. Branch protection/API billing внешний факт, не routine mutation репозитория. Release-npm/OCI/deploy concurrency не отменяет publication посередине.",
+      "Сопоставление каждого старого job→новый: quality/fast/db/serial/frontend, existing advisory Rector and npm build/api checks. Пакетные tests workflows удаляются лишь после переноса; mutation floors/engine untouched P1.2.",
+      "scripts/ci/workflow-policy.py + tests/Repo/WorkflowPolicyTest.py и fake changes/gate fixtures: no paths, needs completeness, skipped/empty matrix, exact candidate SHA release handshake и actual support matrix.",
+      "CI db provision поддерживаемым tmpfs command (не services.command); runner DB_EXTERNAL=1, _test+per-worker DB + all package schema partitions; local native test-db remains default.",
+      "monorepo-split verify-release-sha required names меняются вместе с ci.yml; full reusable qualification needs gate предотвращает tag timing race. No push/publication/branch-protection changes."
     ],
     "exclude": [
       "Branch protection (требует тарифа GitHub — решение владельца)",
@@ -45,6 +40,21 @@
     {
       "ref": "artifact/P1.1-baseline",
       "why": "замеры и CI-инвентарь",
+      "required": true
+    },
+    {
+      "ref": "knowledge/test-strategy#runner-contract",
+      "why": "точные cwd/paths/groups/partitions и baseline",
+      "required": true
+    },
+    {
+      "ref": "knowledge/test-strategy#run-policy",
+      "why": "границы целевых и полных прогонов",
+      "required": true
+    },
+    {
+      "ref": "knowledge/source-review#code-facts",
+      "why": "проверенные code facts, legacy/probes и partial boundaries",
       "required": true
     }
   ],
@@ -97,28 +107,44 @@
       "path": "scripts/ci/workflow-policy.py",
       "change": "any",
       "note": "создаётся предыдущим пунктом фазы"
+    },
+    {
+      "path": ".github/workflows/monorepo-split.yml",
+      "change": "modify"
+    },
+    {
+      "path": "tests/Repo/WorkflowPolicyTest.py",
+      "change": "any",
+      "note": "Создаётся предшествующим пунктом P1; изменить после его результата."
     }
   ],
   "rules": [
     "Ни одна проверка, которая сегодня есть на PR (кроме мутаций, coverage и load — D3/D4), не пропадает: таблица соответствия в evidence.",
-    "Не пушить без разрешения владельца; GitHub-запуск — отдельная отметка «не проверено на GitHub», если недоступен."
+    "Не пушить без разрешения владельца; GitHub-запуск — отдельная отметка «не проверено на GitHub», если недоступен.",
+    "Все серверные команды идут через schema partitions tests/suites.json (P1.3); per-worker DB сама не разделяет неоднородные TestCase. Не смешивать schema или повторно исполнить serial. Целевые проверки, no full/load/mutate/coverage."
   ],
-  "guidance": "Локальная эмуляция db-линии: `DB_FAST=1 scripts/t pgsql -p drive --group=database -j 4` и `mysql`; записать время как оценку CI-времени (4 CPU: `-j 4`).\n\n**Образцы в соседних репозиториях экосистемы (читать с диска, не копировать в этот публичный репозиторий — AzGuard приватный):**\n- `/home/vostrikov/projects/packages/chatom/.github/workflows/ci.yml` — образец gate и tmpfs-сервисов\n- `/home/vostrikov/projects/packages/azguard/.github/workflows/tests.yml` — образец db-matrix",
+  "guidance": "CI workflows удаляются после job mapping и fake policy checks, не до. Filament only ^11 Testbench. Required openapi/full checks не считаются заменёнными последним зелёным SHA. Manual dry-run отвечает за reviewable CI, live Actions result отдельный evidence.",
   "validation": [
     {
       "id": "V1",
-      "cmd": "python3 scripts/ci/workflow-policy.py",
+      "cmd": "python3 scripts/ci/workflow-policy.py && python3 -m unittest discover -s tests/Repo -p WorkflowPolicyTest.py",
       "expect": "exit 0",
       "kind": "acceptance"
     },
     {
       "id": "V2",
-      "cmd": "DB_FAST=1 scripts/t mysql -p drive --group=database -j 4",
+      "cmd": "DB_FAST=1 scripts/t mysql -p drive -- tests/Feature/QuotaReserveTest.php -j 4",
       "expect": "exit 0",
       "kind": "acceptance"
     },
     {
       "id": "V3",
+      "cmd": "DB_FAST=1 scripts/t pgsql -p documents -- tests/Schema/DocumentAggregateSchemaTest.php -j 4",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
       "cmd": "docker run --rm -v \"$PWD\":/repo -w /repo rhysd/actionlint:1.7.7",
       "expect": "exit 0",
       "kind": "impact"
@@ -144,5 +170,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T08:13:08Z"
+  "updated_at": "2026-10-13T10:08:43Z"
 }

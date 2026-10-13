@@ -7,14 +7,12 @@
   "why": "Сегодня у каждого пакета свой способ запуска, нет параллели по умолчанию и нет сравнения числа тестов (П12, П14).",
   "scope": {
     "include": [
-      "`scripts/t [sqlite|pgsql|mysql|all] [-p pkg[,pkg]] [--full] [--group=G] [--exclude-group=G] [-j N] [--] [pest args]`; пакеты: core (корень), media, drive, documents, azgard, filament, load; запуск каждого пакета в его каталоге и vendor",
-      "SQLite: `--parallel --processes=N` по умолчанию (N = CPU/2, ≤8; `-j` переопределяет), `-j 1` — последовательно",
-      "pgsql/mysql: делегирует `scripts/test-db.sh [-C packages/<p>] <engine>`; для core — шаги по TestCase как в `tests.yml` (список шагов в одном месте внутри scripts/t)",
-      "По умолчанию `--exclude-group=nofast` (появится в P1.5; до этого группа пуста — Pest не падает), `--full` снимает исключение и добавляет `serial`-проход без параллели",
-      "`scripts/t baseline --write|--compare [-p pkg]`: считает тесты той же командой, что P1.1, сравнивает с `tests/baseline/<suite>.count`; `--compare` падает при уменьшении без строки в `tests/baseline/CHANGES.md`",
-      "Сводка в конце: набор → движок → passed/failed/skipped/время, путь к логам `var/quality/t/…`; ненулевой код при любом падении",
-      "composer.json (корень и пакеты): `test` → `scripts/t sqlite -p <pkg>`; `test:coverage` оставить; Makefile `test` → `scripts/t sqlite`",
-      "`scripts/t --help`"
+      "P1.3 создаёт:\n- `scripts/t [sqlite|pgsql|mysql|all] [-p core,media,drive,documents,azgard,filament,load,repo,hub,vue] [-j N] [--engines=sqlite,pgsql,mysql] [--full] [--group=G] [--exclude-group=G] [--] [paths/runner args]`;\n- `baseline --write|--compare [-p ...]` (discovery lists+counts, full dataset discovery, no test execution); `--help`, `--dry-run [--json]` для любого плана; `stand` добавляет P1.5;\n- P1.4: `--changed --base=<commit/ref> [--quick] [--dry-run] [--json] [--db=pgsql|mysql]`. План diff base...HEAD plus staged/unstaged/untracked, deleted/renamed both paths. Base merge-base valid, shallow checkout fetch exact base; HEAD~1 не default для multi-commit push (before SHA). Harness exit2 означает explicit full affected package+consumers; CI materializes full matrix, пункты не гоняют full вне qualification.\n\nPHP cwd: core/repo/load root vendor; media etc package local vendor. Paths repo-relative for core/load/repo; package-relative для остальных. Один -p при path, many packages только без shared path. `-p repo` включает phpunit testsuite repo, P1.3 creates TestRunnerTest и repo suite. root default core suite принудителен даже после добавления repo. Hub/Vue Node commands через npm manifest (не Pest); all включает их один раз, engines относится только PHP. Отдельный executable script, shell strict, no eval.\n\n`tests/suites.json` — единый machine inventory suite cwd/vendor + schema partitions (file list, TestCase/fingerprint, engine applicability, trait lifecycle). P1.3 строит для **каждого** PHP suite по tests/Pest bindings+local uses/overrides; каждый *Test.php в одном partition, helpers не тесты. Shell не парсит Pest strings эвристически во время запуска. Partition processes serial by schema, внутри partition -jN worker DB; не смешивать RefreshDatabase и committed DatabaseMigrations race lifecycle. Raw wrapper существующий scripts/test-db.sh сейчас всегда добавляет serial pass и exclusion: P1.3 отделяет provision от execution и нормализует groups так, чтобы -j1/group=serial запускает их ровно один раз. Не конфликтовать exclude serial и include serial. CI готовые services выбираются explicit DB_EXTERNAL=1 и _test guard; локально native disposable default; core поддерживает оба режима.\n\n`--group=database` выбирает intersection affected files и database; не заменяет path/group selector и не добавляет union всех tests. Для serial -j1 без default nofast исключения; --full parallel excludes nofull+serial, затем serial once; zero tests error кроме selector доказанного docs-only no-tests или empty partition, помеченного inventory. Во всех отчётах engine реально проверяется, exits/warnings/skips именуются честно, stdin flags не теряются, JUnit уникален для suite/engine/partition/pass.\n\nBaseline: immutable P1.1 original names (tracked tests/baseline/original/<suite>.list/count); current *.list/count generated и compare original + machine CHANGES ledger entries old/new name, reason, decision/grant, replacement. Не разрешать произвольной строкой CHANGES скрыть missing test, не перезаписывать original после удаления. Добавленные cases учитываются отдельно, count alone insufficient. Seed subset сравнивается отдельно с full discovery, P1.5 не удаляет cases без owner grant.",
+      "Создать tests/suites.json для всех suites и schema variants из artifact/P1.1-baseline; no default all server sweep. Обновить scripts/test-db.sh provision/execution groups: existing serial auto pass не дублирует runner serial; DB_EXTERNAL explicit CI mode.",
+      "tests/Repo/TestRunnerTest.php (без Laravel/DB) с fake Pest/Node binaries: path cwd, group forwarding/intersection, partition steps каждого suite, worker suffix, serial once, zero tests, upstream failed exit/warnings, engine mismatches, baseline deletion sensitivity, -p repo selection. phpunit.xml suite repo здесь создаётся, default core сохраняется.",
+      "composer test у root/package и Makefile test вызывают runner с correct relative executable; explicit test:coverage отдельная command, no mutation auto.",
+      "До параллельного исполнения inventory application-path writers из P1.1: выделить Testbench skeleton per process/session для suites, публикующих config/пишущих bootstrap cache; остальных не усложнять. CI/external DB mode provisions worker databases и schema partition процесса явно, не полагаться на Laravel default имя без _test. Negative fixture unknown+known и partial-seed env в full/discovery.",
+      "Repo suite baseline created here: immutable empty original с provenance introduced=P1.3 и current additions/ledger; Node metric/file list и P1.9 runtime cases по runner-contract. tests/baseline/CHANGES.json machine entries + CHANGES.md readable view, compare проверяет ссылки/replacements/грант, не arbitrary prose."
     ],
     "exclude": [
       "`--changed` и зоны (P1.4)",
@@ -49,6 +47,21 @@
       "path": "scripts/test-db.sh",
       "why": "контракт делегирования",
       "required": true
+    },
+    {
+      "ref": "knowledge/test-strategy#runner-contract",
+      "why": "точные cwd/paths/groups/partitions и baseline",
+      "required": true
+    },
+    {
+      "ref": "knowledge/test-strategy#run-policy",
+      "why": "границы целевых и полных прогонов",
+      "required": true
+    },
+    {
+      "ref": "knowledge/source-review#code-facts",
+      "why": "проверенные code facts, legacy/probes и partial boundaries",
+      "required": true
     }
   ],
   "task_files": [
@@ -76,36 +89,80 @@
     {
       "path": "tests/baseline/CHANGES.md",
       "change": "create"
+    },
+    {
+      "path": "tests/suites.json",
+      "change": "create"
+    },
+    {
+      "path": "tests/Repo/TestRunnerTest.php",
+      "change": "create"
+    },
+    {
+      "path": "phpunit.xml",
+      "change": "modify"
+    },
+    {
+      "path": "tests/baseline/CHANGES.json",
+      "change": "create"
+    },
+    {
+      "path": "tests/baseline/original/repo.*",
+      "change": "create"
+    },
+    {
+      "path": "packages/*/tests/TestCase.php",
+      "change": "modify",
+      "note": "только доказанные P1.1 application skeleton writers; DB schema/behavior не менять"
     }
   ],
   "rules": [
     "Один вход: не вводить второго скрипта-обёртки; `scripts/test-db.sh` остаётся движком серверных прогонов.",
-    "Никогда не завершаться 0, если ни одного теста не выполнено.",
-    "Bash со `set -euo pipefail`; shellcheck-чистый, если shellcheck доступен."
+    "Bash со `set -euo pipefail`; shellcheck-чистый, если shellcheck доступен.",
+    "Все серверные команды идут через schema partitions tests/suites.json (P1.3); per-worker DB сама не разделяет неоднородные TestCase. Не смешивать schema или повторно исполнить serial. Целевые проверки, no full/load/mutate/coverage.",
+    "Точечный nofast path smoke может explicit --exclude-group=none только при deliberate classification; группы возникнут P1.5. Runner unit fixtures не поднимают DB."
   ],
-  "guidance": "Параллель Pest на in-memory SQLite: у каждого воркера свой процесс и своя БД — проверить, что `SuiteDatabaseConnection` не конфликтует; если какой-то набор падает только в параллели — пометить файл группой `serial` в P1.5, а в этом пункте временно передать `-j 1` для набора и записать в CHANGES.md.\n\n**Образцы в соседних репозиториях экосистемы (читать с диска, не копировать в этот публичный репозиторий — AzGuard приватный):**\n- `/home/vostrikov/projects/packages/chatom/scripts/t` — образец единого входа",
+  "guidance": "Все PHP suites heterogeneous schemas инвентаризировать уже здесь; прямые run groups по TestCase допустимы, fingerprint trait core сохраняется. Paths conventions в runner-contract; never generate repeated serial. No schema or assertions edits в product tests здесь.",
   "validation": [
     {
       "id": "V1",
-      "cmd": "bash -n scripts/t && scripts/t --help",
+      "cmd": "bash -n scripts/t scripts/test-db.sh && scripts/t --help",
       "expect": "exit 0",
       "kind": "acceptance"
     },
     {
       "id": "V2",
-      "cmd": "scripts/t sqlite -p media,azgard,filament",
+      "cmd": "scripts/t sqlite -p repo -- tests/Repo/TestRunnerTest.php",
       "expect": "exit 0",
       "kind": "acceptance"
     },
     {
       "id": "V3",
-      "cmd": "scripts/t baseline --compare -p media,azgard,filament",
+      "cmd": "scripts/t sqlite -p media -- tests/Cas/BlobFindOrCreateTest.php",
       "expect": "exit 0",
       "kind": "acceptance"
     },
     {
       "id": "V4",
-      "cmd": "scripts/t pgsql -p media -- tests/Cas",
+      "cmd": "scripts/t sqlite -p azgard -- tests/AdapterTest.php",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "scripts/t sqlite -p filament -- tests/Configuration/FilamentConfigTest.php",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "cmd": "scripts/t pgsql -p media -- tests/Cas/BlobCommitAtomicityTest.php",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V7",
+      "cmd": "scripts/t baseline --compare",
       "expect": "exit 0",
       "kind": "acceptance"
     }
@@ -130,5 +187,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T08:13:07Z"
+  "updated_at": "2026-10-13T10:23:03Z"
 }

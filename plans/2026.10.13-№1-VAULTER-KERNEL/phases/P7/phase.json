@@ -4,7 +4,7 @@
   "title": "Квалификация кандидата 1.0 и заморозка",
   "design": "skeleton",
   "goal": "Квалифицировать один коммит-кандидат по всем условиям knowledge/architecture#release-gate и сделать заморозку операционной: release-isolation каждого пакета, матрица чистых установок на трёх СУБД, публикуемые манифесты без dev-предположений, закрытая поверхность API/SPI/REST/событий/схемы как baseline для будущих релизов, документация только про 1.0, AzGuard-адаптер на стабильном теге; мутации — отдельным пунктом только с разрешения владельца.",
-  "context": "Фаза G. Размер: M. Изменения только как исправления, выявленные квалификацией. Пункт мутаций — `authority: owner_gate` (gate MUTATION-RUN), его результат информативен и не является условием выпуска, пока владелец не решит иначе (D3). Нагрузочный прогон — не пункт плана, только ручной запуск по задаче владельца (D4). ROADMAP.md получает всё из D19. Supply chain минимум: pin actions по SHA, composer/npm audit, dependency review — без SBOM/подписей (post-1.0, ROADMAP).",
+  "context": "Фаза G. Размер: M. Изменения только как исправления, выявленные квалификацией. Пункт мутаций — `authority: owner_gate` (gate MUTATION-RUN), его результат информативен и не является условием выпуска, пока владелец не решит иначе (D3). Нагрузочный прогон — не пункт плана, только ручной запуск по задаче владельца (D4). ROADMAP.md получает всё из D19. Supply chain минимум: pin actions по SHA, composer/npm audit, dependency review — без SBOM/подписей (post-1.0, ROADMAP).\nStable AzGuard release — external-gate D20: нет RC fallback без owner change decision. Qualification SHA gates full/stand/distribution/schema/manifest same candidate, не поздний report commit. Optional mutation item без grant не выполняется, не блокирует release как негейтинг; его skip только явным optional amendment, не fake success. Publications/tagging отдельное explicit owner authorization.",
   "contract": {
     "consumes": [
       "knowledge/architecture#release-gate",
@@ -15,18 +15,23 @@
       "все предыдущие фазы",
       "D2",
       "D3",
-      "D13",
+      "D27",
       "D14",
       "D19",
       "D21",
-      "D20"
+      "D20",
+      "D23",
+      "D24",
+      "D25",
+      "D26",
+      "D28"
     ],
     "produces": [
       "release-isolation линия (каждый пакет в пустом каталоге, только объявленные зависимости, composer install --no-dev, smoke-приложение)",
       "Матрица чистых установок (комбинации пакетов × sqlite/pgsql/mysql) и инструмент сравнения схемы/API/событий с замороженным 1.0 для будущих релизов",
       "Манифесты без path repos и minimum-stability dev; azgard на теге AzGuard",
       "Заморозка: манифест API/SPI, OpenAPI, каталог событий, DDL, идентичности = baseline; CI сравнивает с предыдущим стабильным тегом",
-      "docs: README, концепции модулей/слотов, operations runbooks; UPGRADE.md и CHANGELOG начинаются с 1.0",
+      "docs: README, концепции модулей/слотов, operations runbooks; UPGRADE.md описывает только 1.0; CHANGELOG содержит 0.x как историю без migration bridge",
       "ROADMAP.md (D19)",
       "Опционально по разрешению: mutation-отчёт"
     ],
@@ -42,17 +47,22 @@
       "docs/**",
       "ROADMAP.md",
       "UPGRADE.md",
-      "tests/Release/*"
+      "tests/Release/*",
+      "packages/*/tests isolated testkits, npm package manifests+clean pack consumers, release/packages.json+split targets"
     ],
     "exclude": [
       "Нагрузочные бенчмарки как acceptance",
       "Лицензирование"
     ]
   },
+  "depends_on": [
+    "P6"
+  ],
   "pitfalls": [
     "Root autoload монорепо маскирует отсутствие зависимостей — только пустой каталог доказывает изоляцию",
     "self.version допустим только в метапакете и lockstep-пакетах",
-    "GitHub Actions может быть недоступен (биллинг) — эмуляция локально с пометкой в evidence"
+    "GitHub Actions может быть недоступен (биллинг) — эмуляция локально с пометкой в evidence",
+    "Любой server validation group/path/full/serial проходит TestCase/schema partitions каждого пакета (test-strategy#runner-contract); worker DB не решает schema changes внутри worker."
   ],
   "validation": [
     {
@@ -74,7 +84,7 @@
     {
       "id": "design-inputs",
       "title": "Обязательные входы детализации",
-      "text": "Сессия детализации P7 читает до создания пунктов (точка входа — `plan.py show 2026.10.13-№1-VAULTER-KERNEL P7`):\n\n```bash\nP='python3 <planner>/scripts/plan.py'; ID=2026.10.13-№1-VAULTER-KERNEL\n$P get $ID knowledge/architecture --section release-gate\n$P get $ID knowledge/architecture --section api-surface\n$P get $ID knowledge/architecture --section invariants\n$P get $ID knowledge/test-strategy --section lanes\n$P get $ID knowledge/test-strategy --section ci-target\n$P get $ID knowledge/test-strategy --section run-policy\n$P get $ID D2\n$P get $ID D3\n$P get $ID D13\n$P get $ID D14\n$P get $ID D21\n$P get $ID D19\n$P get $ID D20\n$P show $ID P6            # что фактически сделала предыдущая фаза, её deviations\n```\n\n**Правила для пунктов этой фазы (обязательны при детализации):**\n1. Каждый пункт имеет точные `validation` только из целевых прогонов (knowledge/test-strategy#run-policy §1): `scripts/t <engine> -p <pkg> <paths>` / `scripts/t --changed`; без мутаций (D3), без load (D4), без coverage.\n2. Последний пункт фазы — «Квалификационный прогон P7» по knowledge/test-strategy#qualification-template; только он гоняет полный набор.\n3. `task_files` точные (параллельные батчи требуют непересекающихся файлов).\n4. Крупные knowledge-документы привязываются к пункту через `reads` с `section`, а не целиком: architecture ~42 KB — читать только нужные секции.\n5. Пункт, добавивший/перенёсший каталог тестов или src, обновляет `tests/zones.json` (I19).\n6. Поправка архитектуры — новое D# с причиной и эффектом совместимости, не молча в пункте."
+      "text": "Сессия детализации P7 читает до создания пунктов (точка входа — `plan.py show 2026.10.13-№1-VAULTER-KERNEL P7`):\n\n```bash\nP='python3 <planner>/scripts/plan.py'; ID=2026.10.13-№1-VAULTER-KERNEL\n$P get $ID knowledge/architecture --section release-gate\n$P get $ID knowledge/architecture --section api-surface\n$P get $ID knowledge/architecture --section invariants\n$P get $ID knowledge/test-strategy --section lanes\n$P get $ID knowledge/test-strategy --section ci-target\n$P get $ID knowledge/test-strategy --section run-policy\n$P get $ID D2\n$P get $ID D3\n$P get $ID D27\n$P get $ID D14\n$P get $ID D21\n$P get $ID D19\n$P get $ID D20\n$P show $ID P6            # что фактически сделала предыдущая фаза, её deviations\n```\n\n**Правила для пунктов этой фазы (обязательны при детализации):**\n1. Каждый пункт имеет точные `validation` только из целевых прогонов (knowledge/test-strategy#run-policy §1): `scripts/t <engine> -p <pkg> <paths>` / `scripts/t --changed`; без мутаций (D3), без load (D4), без coverage.\n2. Последний пункт фазы — «Квалификационный прогон P7» по knowledge/test-strategy#qualification-template; только он гоняет полный набор.\n3. `task_files` точные (параллельные батчи требуют непересекающихся файлов).\n4. Крупные knowledge-документы привязываются к пункту через `reads` с `section`, а не целиком: architecture ~42 KB — читать только нужные секции.\n5. Пункт, добавивший/перенёсший каталог тестов или src, обновляет `tests/zones.json` (I19).\n6. Поправка архитектуры — новое D# с причиной и эффектом совместимости, не молча в пункте.\n\nРевизия 2 — дополнительно читать: knowledge/source-review#code-facts; knowledge/test-strategy#runner-contract; knowledge/architecture#cost; D27, D23, D24, D25, D26, D27, D28. Эти нормы не переопределяются при детализации.\nВсегда сохранять identity/current snapshot amendments до P7 без upgrade 0.x; обязательный qualification последним. Validation paths должны существовать на момент item, suite cwd/partition из runner-contract. SQL/stand skipped не Green. Owner mutations только отдельный явно optional gated item P7, exception к запрету general пунктов; product benchmark acceptance отсутствует."
     }
   ]
 }

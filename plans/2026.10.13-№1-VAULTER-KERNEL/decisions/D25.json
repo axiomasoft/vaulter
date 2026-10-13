@@ -1,0 +1,50 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D25",
+  "title": "Транзакционная идемпотентность с безопасным replay и точной уникальностью",
+  "date": "2026-10-13",
+  "status": "accepted",
+  "question": "Транзакционная идемпотентность с безопасным replay и точной уникальностью?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Сохраняются SQL claim/receipt в транзакции операции, TTL 24ч, mismatch 422 и ограниченное ожидание 2с затем 409+Retry-After. Ключ — непрозрачные байты (1–255); HTTP принимает одну корректную Structured Field string либо одну plain string без пробелов/контролов; PHP передаёт уже декодированное значение. Не trim/lowercase. Уникальность через NOT NULL scope_digest SHA256 канонического tagged tuple (tenant kind/id, scope kind/id, actor kind/id, operation, key), binary/case-sensitive comparison и сохранение исходного tuple для проверки коллизии. Null tenant/system actor не ослабляют UNIQUE. Канонический hash включает идентификаторы ресурсов, DTO, семантические options и предусловия; не включает correlation/clock. Replay заново проверяет текущие tenancy/авторизацию и восстанавливает сохранённый DTO через versioned codec, без повторной CAS/мутации/events. Для delete квитанция содержит доказуемый исходный authorization scope. Детерминированный 4xx после claim: savepoint откатывает всю попытку и sinks, затем receipt фиксируется внешней транзакцией; auth/validation до admission, 5xx/transient и текущий запрет replay не кэшируются. Конкурент ждёт uncommitted unique claim; не читает невидимый in_progress. PG duplicate/timeout не продолжают aborted transaction: ON CONFLICT либо rollback/retry whole transaction. Вложенные операции имеют один outer receipt и один путь авторизации/событий."
+    }
+  ],
+  "context": "Поле ключа сегодня не потребляется. D12 не задавал NULL-уникальность, authorization на replay и границу rollback для business 4xx; это может дать второй эффект или вернуть данные после отзыва доступа.",
+  "decision": "A — Сохраняются SQL claim/receipt в транзакции операции, TTL 24ч, mismatch 422 и ограниченное ожидание 2с затем 409+Retry-After. Ключ — непрозрачные байты (1–255); HTTP принимает одну корректную Structured Field string либо одну plain string без пробелов/контролов; PHP передаёт уже декодированное значение. Не trim/lowercase. Уникальность через NOT NULL scope_digest SHA256 канонического tagged tuple (tenant kind/id, scope kind/id, actor kind/id, operation, key), binary/case-sensitive comparison и сохранение исходного tuple для проверки коллизии. Null tenant/system actor не ослабляют UNIQUE. Канонический hash включает идентификаторы ресурсов, DTO, семантические options и предусловия; не включает correlation/clock. Replay заново проверяет текущие tenancy/авторизацию и восстанавливает сохранённый DTO через versioned codec, без повторной CAS/мутации/events. Для delete квитанция содержит доказуемый исходный authorization scope. Детерминированный 4xx после claim: savepoint откатывает всю попытку и sinks, затем receipt фиксируется внешней транзакцией; auth/validation до admission, 5xx/transient и текущий запрет replay не кэшируются. Конкурент ждёт uncommitted unique claim; не читает невидимый in_progress. PG duplicate/timeout не продолжают aborted transaction: ON CONFLICT либо rollback/retry whole transaction. Вложенные операции имеют один outer receipt и один путь авторизации/событий.",
+  "rationale": "Поле ключа сегодня не потребляется. D12 не задавал NULL-уникальность, authorization на replay и границу rollback для business 4xx; это может дать второй эффект или вернуть данные после отзыва доступа. Решение в пределах делегирования B10/B14; детали нормативны в knowledge/architecture и knowledge/collaboration.",
+  "consequences": [
+    "Совместимость: установок нет (D21); меняются только будущие API/SPI и create-схема до freeze P7. Исторические записи решений сохраняются."
+  ],
+  "applies_to": [
+    "P3",
+    "P6"
+  ],
+  "supersedes": [
+    "D12"
+  ],
+  "evidence": [
+    {
+      "kind": "repo",
+      "ref": "packages/core/src/Operations/OperationContext.php",
+      "note": "idempotencyKey — декларация без потребителей в src"
+    },
+    {
+      "kind": "repo",
+      "ref": "packages/core/src/Events/EventRecorder.php",
+      "note": "48–49 и 96–107: транзакция и afterCommit"
+    },
+    {
+      "kind": "repo",
+      "ref": "packages/core/src/Schema/HostKeyColumns.php",
+      "note": "13–23: разные host id типы"
+    }
+  ],
+  "actor": {
+    "provider": "codex",
+    "model": "gpt-6",
+    "effort": "xhigh"
+  },
+  "answered_by": "agent"
+}

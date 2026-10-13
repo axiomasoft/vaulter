@@ -1,0 +1,48 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D23",
+  "title": "Жизнеспособность блоба принадлежит media и не зависит от активации drive",
+  "date": "2026-10-13",
+  "status": "accepted",
+  "question": "Жизнеспособность блоба принадлежит media и не зависит от активации drive?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Media владеет v_blob_references: blob_id с FK на v_blobs, непрозрачные owner_type/reference_key, UNIQUE(blob_id,owner_type,reference_key). Drive хранит связи ревизий у себя и через публичный media-контракт атомарно pin/unpin в той же транзакции под общим lock(scope,sha256). GC и ref_count-reconcile читают только таблицы media. Выключенный или удалённый из Composer drive не снимает сохранённые pins. Ref_count — кэш; pins — истина. Удаление pins допускается только владельческим purge/repair с доказанным удалением ссылки. BlobStore::attach/detach с FileRevision переносятся в drive. Никакого callback-счётчика drive для GC."
+    }
+  ],
+  "context": "GC сегодня имеет обратную зависимость: FileRevisionBlobStoreRepository и прямой model(file_revision_blob) запрос. Callback активного модуля не защитил бы данные после disable; нужен принадлежащий media журнал ссылок, а не новая шина расширений.",
+  "decision": "A — Media владеет v_blob_references: blob_id с FK на v_blobs, непрозрачные owner_type/reference_key, UNIQUE(blob_id,owner_type,reference_key). Drive хранит связи ревизий у себя и через публичный media-контракт атомарно pin/unpin в той же транзакции под общим lock(scope,sha256). GC и ref_count-reconcile читают только таблицы media. Выключенный или удалённый из Composer drive не снимает сохранённые pins. Ref_count — кэш; pins — истина. Удаление pins допускается только владельческим purge/repair с доказанным удалением ссылки. BlobStore::attach/detach с FileRevision переносятся в drive. Никакого callback-счётчика drive для GC.",
+  "rationale": "GC сегодня имеет обратную зависимость: FileRevisionBlobStoreRepository и прямой model(file_revision_blob) запрос. Callback активного модуля не защитил бы данные после disable; нужен принадлежащий media журнал ссылок, а не новая шина расширений. Решение в пределах делегирования B10/B14; детали нормативны в knowledge/architecture и knowledge/collaboration.",
+  "consequences": [
+    "Совместимость: установок нет (D21); меняются только будущие API/SPI и create-схема до freeze P7. Исторические записи решений сохраняются."
+  ],
+  "applies_to": [
+    "P2",
+    "P4",
+    "P6"
+  ],
+  "evidence": [
+    {
+      "kind": "repo",
+      "ref": "packages/media/src/Cas/BlobGarbageCollector.php",
+      "note": "54, 326, 356–358: чтение связей drive"
+    },
+    {
+      "kind": "repo",
+      "ref": "packages/media/src/Cas/BlobStore.php",
+      "note": "14–16, 79–86: attach/detach принимает FileRevision"
+    },
+    {
+      "kind": "repo",
+      "ref": "packages/core/src/Repositories/Drive/FileRevisionBlobStoreRepository.php",
+      "note": "14–18, 68–79: edges — источник истины"
+    }
+  ],
+  "actor": {
+    "provider": "codex",
+    "model": "gpt-6",
+    "effort": "xhigh"
+  },
+  "answered_by": "agent"
+}

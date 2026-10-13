@@ -4,15 +4,14 @@
   "title": "CI-триггеры: мутации и нагрузка только вручную, без coverage на PR",
   "status": "todo",
   "summary": "Мутации запускаются только из `mutation.yml` по `workflow_dispatch` с выбором пакета; `load.yml` — только `workflow_dispatch`; PR не гоняет xdebug-coverage; у всех jobs есть `timeout-minutes`, у PR-workflow — `concurrency` с отменой; политику проверяет `scripts/ci/workflow-policy.py`.",
-  "why": "D3 и D4 владельца; mutation-jobs на push/PR и load на PR — главные потребители времени CI (source-review A20).",
+  "why": "D3/D4: мутации уже manual, консолидировать без потери engine/floor gate; убрать automated load и xdebug coverage на PR.",
   "scope": {
     "include": [
-      "Перенести `drive-mutation`, `documents-mutation`, `media-mutation`, `filament-mutation` в `.github/workflows/mutation.yml`: `workflow_dispatch` с input `package` (choice: core, media, drive, documents, filament), пороги `--min` и сервисы (PG у drive) — как были; удалить эти jobs из пакетных workflows",
-      "`load.yml`: `on: workflow_dispatch` (inputs сохранить); убрать `pull_request` и `schedule`",
-      "`tests.yml`: `coverage: none` в setup-php, `vendor/bin/pest --ci --parallel` без `--coverage`; шаг Codecov удалить (coverage переезжает в weekly-full, P1.6)",
-      "`timeout-minutes` на каждом job всех workflow (потолок ≈ 3× замер P1.1, минимум 10)",
-      "`concurrency: {group: ${{ github.workflow }}-${{ github.ref }}, cancel-in-progress: true}` на push/PR-workflow",
-      "`scripts/ci/workflow-policy.py`: загружает все `.github/workflows/*.yml` (PyYAML) и падает, если `--mutate` встречается вне `mutation.yml`; `mutation.yml` или `load.yml` имеет триггер кроме `workflow_dispatch`; у job нет `timeout-minutes`; PR-workflow без `concurrency`; `--coverage` в workflow с триггером `pull_request`"
+      "Консолидировать уже manual package mutation jobs целиком в mutation.yml с choice core/media/drive/documents/filament; core min95, drive PG min43, documents/filament95, media два cold PG/SQLite run с union gate; vendor caches/report parser/helpers сохранить, параллель Pest --mutate запрещён.",
+      "load.yml только dispatch: убрать PR/schedule и обновить job.if smoke/regression/baseline-guard для inputs.run; baseline guard выполняется при ручном выбранном запуске, не остаётся permanently skipped.",
+      "tests.yml SQLite coverage:none, без clover/codecov/coverage min; parallel НЕ включать здесь (partition infrastructure P1.3/P1.5).",
+      "timeout-minutes всех jobs; concurrency cancellation только testing PR, не deploy/release/monorepo-split публикации.",
+      "scripts/ci/workflow-policy.py с YAML1.2 SafeLoader, normalized string on и fixtures: mutation/load manual only, job.if old-PR trap, timeout, test PR concurrency, no PR coverage. Не считать grep comments командами."
     ],
     "exclude": [
       "Объединение workflow и gate (P1.6)",
@@ -45,6 +44,21 @@
     {
       "path": ".github/workflows/drive.yml",
       "why": "mutation-job с PG-сервисом",
+      "required": true
+    },
+    {
+      "ref": "knowledge/test-strategy#runner-contract",
+      "why": "точные cwd/paths/groups/partitions и baseline",
+      "required": true
+    },
+    {
+      "ref": "knowledge/test-strategy#run-policy",
+      "why": "границы целевых и полных прогонов",
+      "required": true
+    },
+    {
+      "ref": "knowledge/source-review#code-facts",
+      "why": "проверенные code facts, legacy/probes и partial boundaries",
       "required": true
     }
   ],
@@ -85,11 +99,16 @@
     {
       "path": "scripts/ci/workflow-policy.py",
       "change": "create"
+    },
+    {
+      "path": "tests/Repo/WorkflowPolicyTest.py",
+      "change": "create"
     }
   ],
   "rules": [
     "Пороги `--min` мутаций и команды переносятся байт-в-байт.",
-    "Никаких изменений продуктового кода и тестов."
+    "Никаких изменений продуктового кода и тестов.",
+    "Все серверные команды идут через schema partitions tests/suites.json (P1.3); per-worker DB сама не разделяет неоднородные TestCase. Не смешивать schema или повторно исполнить serial. Целевые проверки, no full/load/mutate/coverage."
   ],
   "guidance": "Если `actionlint` доступен (`docker run --rm -v \"$PWD\":/repo -w /repo rhysd/actionlint:1.7.7`), прогнать его; результат — impact-проверка.",
   "validation": [
@@ -101,7 +120,7 @@
     },
     {
       "id": "V2",
-      "cmd": "! grep -l -- '--mutate' .github/workflows/*.yml | grep -v mutation.yml",
+      "cmd": "python3 -m unittest discover -s tests/Repo -p WorkflowPolicyTest.py",
       "expect": "exit 0",
       "kind": "acceptance"
     },
@@ -132,5 +151,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-13T08:12:36Z"
+  "updated_at": "2026-10-13T10:06:41Z"
 }

@@ -3,7 +3,7 @@
   "id": "D18",
   "title": "Сканирование содержимого: движок в media, состояние ревизии в drive",
   "date": "2026-10-13",
-  "status": "accepted",
+  "status": "superseded",
   "question": "Кому принадлежит Content/Scan*?",
   "options": [
     {
@@ -25,6 +25,7 @@
     "P2",
     "P4"
   ],
+  "superseded_by": "D28",
   "actor": {
     "provider": "claude-code",
     "model": "claude-opus-5-5"
