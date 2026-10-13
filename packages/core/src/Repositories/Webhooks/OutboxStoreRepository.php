@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Repositories\Webhooks;
 
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Carbon;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Models\Webhooks\Outbox;
-use Vaulter\Models\Webhooks\WebhookDelivery;
 
 /**
  * The write side of transactional-outbox row work.
@@ -86,62 +84,6 @@ final readonly class OutboxStoreRepository
         } while (count($ids) === $batch);
 
         return $deleted;
-    }
-
-    /**
-     * Legacy rows whose fan-out cannot be proven: settled by the pre-1.0 relay, which
-     * marked a row before writing its deliveries, and without any delivery now. They
-     * are either events nobody subscribed to or fan-outs lost to a crash — the data
-     * cannot tell which. Oldest first, optionally within [$since, $until].
-     *
-     * @return Builder<Outbox>
-     */
-    public function ambiguousLegacy(?Carbon $since = null, ?Carbon $until = null): Builder
-    {
-        /** @var class-string<WebhookDelivery> $deliveryModel */
-        $deliveryModel = $this->vaulterConfig->model('webhook_delivery');
-        $query = $this->newQuery();
-        $outbox = $query->getModel();
-        $deliveries = (new $deliveryModel)->getTable();
-
-        return $query
-            ->where('status', 'completed')
-            ->where('legacy_fanout', true)
-            ->where('delivery_count', 0)
-            ->whereNotExists(static fn (QueryBuilder $delivery): QueryBuilder => $delivery
-                ->selectRaw('1')
-                ->from($deliveries)
-                ->whereColumn($deliveries.'.event_id', $outbox->qualifyColumn('event_id')))
-            ->when($since !== null, static fn (Builder $range): Builder => $range->where('created_at', '>=', $since))
-            ->when($until !== null, static fn (Builder $range): Builder => $range->where('created_at', '<=', $until))
-            ->orderBy('created_at')
-            ->orderBy($outbox->getQualifiedKeyName());
-    }
-
-    /**
-     * Put the given legacy rows back in the relay queue: pending, no lease, no
-     * checkpoint, no legacy mark. The relay then fans them out to the endpoints
-     * eligible now (including ones inactive when the event happened); a pair that
-     * already has a delivery is skipped. Only rows still matching ambiguousLegacy()
-     * are touched, so a repeated replay changes nothing.
-     *
-     * @param list<int|string> $ids
-     */
-    public function replayLegacy(array $ids): int
-    {
-        if ($ids === []) {
-            return 0;
-        }
-
-        return $this->ambiguousLegacy()->reorder()->whereKey($ids)->toBase()->update([
-            'status' => 'pending',
-            'legacy_fanout' => false,
-            'fanout_cursor' => null,
-            'fanned_out_at' => null,
-            'claim_token' => null,
-            'claim_until' => null,
-            'updated_at' => now(),
-        ]);
     }
 
     private function keyName(): string

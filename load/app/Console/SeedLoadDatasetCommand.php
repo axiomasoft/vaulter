@@ -39,7 +39,7 @@ use Vaulter\Tests\Fixtures\TestUser;
  * are the two deliberate exceptions, both bounded by the hot-set/blob-count profile
  * knob, not by total row volume.
  *
- * Assumes `vaulter.ids.default = bigint` (LoadServiceProvider) — every id handled
+ * Assumes `vaulter.ids.strategy = bigint` (LoadServiceProvider) — every id handled
  * here is a plain auto-increment integer; a ulid/uuid7 stand cannot use this command
  * as written (guarded in handle()).
  */
@@ -66,7 +66,7 @@ final class SeedLoadDatasetCommand extends Command
     public function handle(BlobStoreContract $blobStore): int
     {
         if (Config::idStrategy() !== 'bigint') {
-            $this->components->error('load:seed assumes vaulter.ids.default=bigint (LoadServiceProvider) — got ['.Config::idStrategy().'].');
+            $this->components->error('load:seed assumes vaulter.ids.strategy=bigint (LoadServiceProvider) — got ['.Config::idStrategy().'].');
 
             return self::FAILURE;
         }

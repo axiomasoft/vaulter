@@ -31,15 +31,6 @@ it('creates host keys independently of entity IDs on a fresh panel', function (s
         expect($columns['subject_id']['type_name'])->toBe($expected)
             ->and($columns['subject_id']['nullable'])->toBeFalse()
             ->and($columns['node_id']['type_name'])->toBe($driver === 'sqlite' ? 'integer' : ($driver === 'pgsql' ? 'int8' : 'bigint'));
-
-        $migration = require __DIR__.'/../../database/migrations/2026_10_01_000003_host_key_columns.php';
-        config()->set('vaulter.database.table_prefix', 'hostkeys_');
-        $queries = [];
-        DB::listen(function ($query) use (&$queries): void {
-            $queries[] = $query->sql;
-        });
-        $migration->up();
-        expect(array_filter($queries, static fn (string $sql): bool => str_starts_with($sql, 'ALTER TABLE')))->toBe([]);
     } finally {
         $builder->dropAll();
     }

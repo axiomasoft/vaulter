@@ -247,7 +247,7 @@ it('leaves the business result unchanged when export fails', function (): void {
 it('resolves the package null recorder when host tracing is disabled', function (): void {
     expect(app(TraceRecorder::class))->toBeInstanceOf(NullTraceRecorder::class)
         ->and(config('vaulter.observability.tracing.enabled'))->toBeFalse()
-        ->and(config('vaulter.middleware'))->not->toContain(OpenTelemetryTraceRecorder::class);
+        ->and(config('vaulter.routes.middleware.authenticated'))->not->toContain(OpenTelemetryTraceRecorder::class);
 });
 
 it('installs the host adapter when tracing is enabled and the sdk is present', function (): void {

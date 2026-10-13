@@ -40,7 +40,6 @@ use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Nodes\StorageNotFoundException;
 use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
-use Vaulter\Exceptions\Schema\UpgradePreflightException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Http\Support\HttpResourceResolver;
 use Vaulter\Naming\NamePolicy;
@@ -404,7 +403,6 @@ test('vaulter-core public API surface matches the frozen golden (VLT-REL P2.2)',
         $blocks[] = $class."\n  ".vaulterSnapshotMethod(new ReflectionMethod($class, $method));
     }
 
-    $blocks[] = vaulterSnapshotInterface(UpgradePreflightException::class);
     $blocks[] = EventType::class."\n".implode("\n", array_map(
         static fn (EventType $case): string => '  '.$case->name.' = '.$case->value,
         EventType::cases(),

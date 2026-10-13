@@ -54,11 +54,8 @@ it('isolates real identifier strategies across dedup scopes and GC', function (s
     app(BlobGarbageCollector::class)->sweep();
     Storage::disk($b->disk)->assertExists($b->storage_key);
     expect(stream_get_contents($store->read($b)))->toBe('same bytes');
-    // The frozen 0.2 rollback maps 'off' to a bare UNIQUE(sha256), which per-upload
-    // blobs of equal bytes cannot satisfy; roll back as a tenant-scoped host would.
-    config()->set('vaulter-media.dedup.scope', 'tenant');
 })->with([
-    ['bigint', 'off'], ['bigint', 'tenant'], ['bigint', 'storage'],
-    ['ulid', 'off'], ['ulid', 'tenant'], ['ulid', 'storage'],
-    ['uuid7', 'off'], ['uuid7', 'tenant'], ['uuid7', 'storage'],
+    ['bigint', 'off'], ['bigint', 'tenant'], ['bigint', 'drive'],
+    ['ulid', 'off'], ['ulid', 'tenant'], ['ulid', 'drive'],
+    ['uuid7', 'off'], ['uuid7', 'tenant'], ['uuid7', 'drive'],
 ]);

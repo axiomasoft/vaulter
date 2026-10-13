@@ -43,7 +43,7 @@
     "core/src/Repositories/Sharing/NodeShareReadRepository.php": 2,
     "core/src/Schema/HostKeyColumns.php": 2,
     "core/src/Schema/IdStrategyResolver.php": 1,
-    "core/src/Schema/SchemaBuilder.php": 39,
+    "core/src/Schema/SchemaBuilder.php": 31,
     "core/src/Schema/VaulterSchema.php": 2,
     "core/src/Sharing/ShareContentGuard.php": 1,
     "core/src/Sharing/ShareResolver.php": 2,
@@ -93,6 +93,5 @@
     "filament/src/Resources/NodeShareResource.php": 10,
     "filament/src/VaulterPlugin.php": 2,
     "media/src/Console/GcBlobsCommand.php": 1,
-    "media/src/Console/ReconcileBlobsCommand.php": 1,
-    "media/src/Console/RepairBlobScopesCommand.php": 1
+    "media/src/Console/ReconcileBlobsCommand.php": 1
 }

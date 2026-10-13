@@ -4,26 +4,11 @@ title: Dedup off, понижение и preflight
 
 # Dedup off, понижение и preflight
 
-`vaulter-media.dedup.scope` — `tenant` (по умолчанию), `drive` или `off`. Переход к более узкой
-области (`drive`, `off`), пока блобы разделены в более широкой, оставил бы общие блобы без владельца,
-поэтому сначала запустите preflight. Он ничего не меняет:
+`vaulter-media.dedup.scope` — `tenant` (по умолчанию), `drive` или `off`. Каждый блоб сохраняет `scope_key`, под
+которым был закоммичен, поэтому смена настройки оставляет существующие блобы валидными и влияет только на новые
+загрузки: при `drive` или `off` байты, уже лежащие в более широкой области, не разделяются с новыми загрузками.
 
-<!-- snippet: shell -->
-
-```bash
-php artisan vaulter:blobs:repair-scopes --dry-run
-```
-
-Если он показывает legacy-блобы смешанной области, скопируйте их в собственные области. Команда
-атомарно перенаправляет рёбра ревизий:
-
-<!-- snippet: shell -->
-
-```bash
-php artisan vaulter:blobs:repair-scopes --execute
-```
-
-Только затем меняйте настройку и проверьте:
+Смените настройку и проверьте доктором:
 
 <!-- snippet: shell -->
 
@@ -31,4 +16,4 @@ php artisan vaulter:blobs:repair-scopes --execute
 php artisan vaulter:doctor --production
 ```
 
-Никогда не понижайте область без чистого preflight.
+Перед понижением области в production смотрите проверку `media.dedup.scope` в отчёте доктора.

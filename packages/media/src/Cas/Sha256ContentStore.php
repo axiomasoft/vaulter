@@ -154,9 +154,8 @@ final readonly class Sha256ContentStore implements ContentStore, ListableContent
     {
         $segment = $scope->segment();
         $a = substr($sha256, 0, 2);
-        $legacyShard = $scope->isLegacy() ? substr($sha256, 2, 2).'/' : '';
 
-        return "{$segment}/{$a}/{$legacyShard}{$sha256}";
+        return "{$segment}/{$a}/{$sha256}";
     }
 
     /**

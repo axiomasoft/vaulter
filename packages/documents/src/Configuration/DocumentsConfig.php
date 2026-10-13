@@ -211,8 +211,7 @@ final readonly class DocumentsConfig implements CommentsFeature
     }
 
     /**
-     * The document exporter classes registered from config. The 0.2 map of
-     * format => class is still read (its classes, in order) with a deprecation.
+     * The document exporter classes registered from config, in order.
      *
      * @return list<string>
      */
@@ -225,16 +224,11 @@ final readonly class DocumentsConfig implements CommentsFeature
         }
 
         $classes = [];
-        $legacyMap = false;
-        foreach ($value as $key => $class) {
+        foreach ($value as $class) {
             if (!is_string($class)) {
                 throw new InvalidConfigurationException('[Vaulter] vaulter-documents.exporters must contain class names only (closures cannot be cached).');
             }
-            $legacyMap = $legacyMap || is_string($key);
             $classes[] = $class;
-        }
-        if ($legacyMap) {
-            trigger_error('[Vaulter] vaulter-documents.exporters as a map of format => class is deprecated; list the exporter classes instead.', E_USER_DEPRECATED);
         }
 
         return array_values(array_unique($classes));

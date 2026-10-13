@@ -219,11 +219,9 @@ Vaulter\Configuration\ChangesConfig
   retentionDays(): int
 
 Vaulter\Configuration\ConfigNormalizer
-  keyMap(): array
   normalize(\Illuminate\Contracts\Config\Repository $config, array $packageDefaults): void
   packageDefaults(): array
   registerDefaults(string $root, string $path): void
-  usedDeprecatedKeys(): array
 
 Vaulter\Configuration\ConfigValidator
   __construct(\Illuminate\Contracts\Config\Repository $config)
@@ -235,7 +233,6 @@ Vaulter\Configuration\ConfigValidator
 Vaulter\Configuration\DatabaseConfig
   __construct(\Illuminate\Contracts\Config\Repository $config)
   connection(): ?string
-  legacyTable(string $legacyEntity): string
   table(string $name): string
   tablePrefix(): string
   writeGuard(): bool
@@ -1100,9 +1097,7 @@ Vaulter\ValueObjects\Cas\BlobScope
   drive(string $id): \self
   forUpload(string $dedupScope, ?string $tenantId, string $storageId): \self
   fromSegment(string $segment): \self
-  isLegacy(): bool
   key(): string
-  legacy(string $segment): \self
   segment(): string
   storageId(): ?string
   tenant(string $id): \self
@@ -1139,22 +1134,6 @@ Vaulter\Exceptions\Nodes\NodeNotFoundException
 
 Vaulter\Exceptions\Nodes\StorageNotFoundException
   forId(int|string $id): \self
-
-Vaulter\Exceptions\Schema\UpgradePreflightException
-  __construct(array $problems)
-  __toString(): string
-  __wakeup()
-  getCode()
-  getFile(): string
-  getLine(): int
-  getMessage(): string
-  getPrevious(): ?\Throwable
-  getTrace(): array
-  getTraceAsString(): string
-  httpStatus(): int
-  problemCode(): string
-  problemDetails(): array
-  problemHeaders(): array
 
 Vaulter\Enums\Events\EventType
   DriveCreated = drive.created

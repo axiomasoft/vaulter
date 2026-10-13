@@ -159,7 +159,6 @@ jobs:
           packages/core/tests/Schema
           packages/core/tests/Sharing
           packages/core/tests/Webhooks
-          packages/core/tests/Upgrade
 
       # The ForkRace harness (P0.2): forked children race on their own connections.
       # always() — a known baseline failure of the suite above must not hide it.

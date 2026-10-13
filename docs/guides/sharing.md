@@ -424,8 +424,7 @@ The hardening is in the code, not bolted on:
 ],
 ```
 
-The swappable `NodeShare` model is bound via `config('vaulter.models.node_share')` and its
-table name via `config('vaulter.table_names.node_shares')`. The default share-token generator
+The swappable `NodeShare` model is bound via `config('vaulter.models.node_share')`. The default share-token generator
 mints 43 characters of `base64url(random_bytes(32))`; swap it by binding your own
 `ShareTokenGenerator` — see [Custom share-token generator](/guides/recipes).
 

@@ -215,9 +215,6 @@ test('non-test src never uses whereHas/withCount on descendants (H.4)', ...);
   'database' => ['table_prefix' => env('VAULTER_TABLE_PREFIX', 'v_')],
   ```
 
-- **Старые имена таблиц.** `vaulter.table_names` — только вход upgrade-миграций.
-  `DatabaseConfig::legacyTable()` находит старые таблицы; модели используют канонические имена.
-
 - **Профили.** Все профили используют общую схему; генерация собственных таблиц удалена.
 
 ## Broadcast / совместное редактирование не подключается {#collaboration}

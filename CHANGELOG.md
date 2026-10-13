@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### No 0.x upgrade path, one create migration per table (PLAN3.P1.10, D21)
+
+- Removed: the 43-migration chain of 0.x (renames, backfills, host-key widening, rollback guards, preflight) — `packages/core/database/migrations` holds 25 `create_v_<table>_table` migrations built from `SchemaBuilder::createTable()`; the installed schema is unchanged per engine, id strategy, host-key type, table prefix and tenancy setting (`scripts/schema-snapshot.sh --compare`).
+- Removed: `vaulter:upgrade:inspect`, `vaulter:webhooks:legacy-fanout`, `vaulter:blobs:repair-scopes`, the `core.config.deprecated_keys` and `media.legacy_scopes` doctor checks, the `upgrade_preflight_failed` problem code, `DatabaseConfig::legacyTable()` with `vaulter.table_names`, and the translation of 0.x configuration keys (`ConfigNormalizer` now only merges package defaults).
+- Removed: parsing of the retired `global` and legacy `s`/`t` CAS scope segments and the legacy shard layout; the dedup scope alias `storage`.
+- Changed: `UPGRADE.md` states there is no migration bridge from 0.x. The history of 0.x stays below.
+- Added: `scripts/schema-snapshot.{php,sh}` and `SchemaSnapshotTest` — a raw-catalog snapshot of the installed schema for 48 configuration presets on SQLite, PostgreSQL and MySQL.
+
 ### README, glossary, runbooks and security docs (PLAN2.P7.8)
 
 - Changed: `README.md` rewritten — requirements, three-command install, a tested quick example (`packages/drive/tests/Recipes/ReadmeRecipeTest.php`), package table and documentation links.

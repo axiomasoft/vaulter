@@ -58,16 +58,6 @@ of it. Register and update endpoints in the tenant they belong to: under strict 
 the endpoint takes the current tenant, and `drive_id` must name a drive of that tenant
 (any other id answers 404).
 
-## Rows from before 1.0
-
-The relay before 1.0 marked a row `dispatched` before writing its deliveries, so a crash
-could lose them. The upgrade marks those rows `completed` with `legacy_fanout = true`.
-A legacy row without any delivery is ambiguous — nobody was subscribed, or the fan-out
-was lost. `php artisan vaulter:webhooks:legacy-fanout` lists them;
-`--replay` (try `--dry-run` first) sends them through the relay again, to the endpoints
-eligible **now**. Nothing is replayed automatically, and no event is invented. See
-[Commands](/reference/commands#vaulter-webhooks-legacy-fanout).
-
 ## The envelope
 
 The outbox payload is the webhook body. It is built once per occurrence and copied

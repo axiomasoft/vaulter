@@ -52,7 +52,6 @@ Module models are configured under `vaulter-drive.models.*` and `vaulter-documen
 
 Tables use canonical names with `database.table_prefix` (default `v_`).
 `database.connection` (`VAULTER_DB_CONNECTION`, default `null`) selects the connection.
-`table_names` is read only by upgrade migrations through `DatabaseConfig::legacyTable()`.
 
 ## Primary keys — `ids.*`
 
@@ -63,7 +62,7 @@ Tables use canonical names with `database.table_prefix` (default `v_`).
 | `ids.strategies.ulid` | — | `Vaulter\Schema\UlidIds` | an `IdStrategy` FQCN |
 | `ids.strategies.uuid7` | — | `Vaulter\Schema\Uuid7Ids` | an `IdStrategy` FQCN |
 
-Choose `ids.strategy` directly. Deprecated `id_type` is normalized (`id` → `bigint`, `ulid` → `ulid`); differing custom canonical values fail boot. Register a custom strategy under `ids.strategies`.
+Choose `ids.strategy` directly. Register a custom strategy under `ids.strategies`.
 
 ## Profiles — `profiles.*`
 
@@ -360,7 +359,7 @@ An invalid value fails boot with `InvalidConfigurationException`; a key a host l
 | Key | Default | Controls |
 |---|---|---|
 | `vaulter-documents.revisions.limit` | `50` | Stored checkpoints per document before pruning (`0` = unlimited) |
-| `vaulter-documents.revisions.checkpoint_interval_seconds` | `300` | Seconds the working state may run ahead of its last autosave checkpoint (`0` = checkpoint every effective save). The 0.2 `autosave_debounce_seconds` key is deprecated and ignored |
+| `vaulter-documents.revisions.checkpoint_interval_seconds` | `300` | Seconds the working state may run ahead of its last autosave checkpoint (`0` = checkpoint every effective save). |
 
 See [Usage → Versions](/guides/documents).
 
@@ -372,11 +371,7 @@ See [Usage → Versions](/guides/documents).
 | `vaulter-documents.default_type` | `'vaulter/rich-text'` — the type `create()` uses when none is named; must be registered |
 | `vaulter-documents.content.max_size_kb` | `5120` — the limit of a codec whose `maxSizeBytes()` is `null` |
 
-The 0.2 keys are normalized with a deprecation: `vaulter.enabled_document_types`
-(`richtext`/`table`/`template` → `RichTextDocumentType`, `markdown` → `MarkdownDocumentType`)
-and `vaulter.features.spreadsheets = true` (adds `SpreadsheetDocumentType`) become
-`vaulter-documents.types`. The mapped list replaces the default one, so a list without a rich-text
-format (`['markdown']`) leaves `vaulter/rich-text` unregistered and the application refuses to boot
+A list without a rich-text type (`['markdown']`) leaves `vaulter/rich-text` unregistered, and the application refuses to boot
 until `vaulter-documents.default_type` names a registered type (`vaulter/markdown`).
 
 ## Export formats — `vaulter-documents.exporters`
@@ -449,9 +444,7 @@ See [Collaboration → Overview](/guides/collaboration) and
 | `webhooks.delivery.max_response_bytes` | `65536` bytes |
 
 Documents are enabled when their package is installed; blobs and file revisions are always enabled.
-Comments now default to true; a legacy `features.comments = false` is preserved by normalization.
-Exporters remain a format → FQCN map. `enabled_document_types` and `features.spreadsheets`
-became `vaulter-documents.types`. See the [migration map](/guides/configuration#migrating-published-0-2-configuration).
+Comments default to true; set `vaulter-documents.comments.enabled = false` to turn them off.
 
 ## All keys (generated)
 

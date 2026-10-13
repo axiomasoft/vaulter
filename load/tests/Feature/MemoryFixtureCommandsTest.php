@@ -8,7 +8,7 @@ use Vaulter\Load\Console\MemoryFixtureSupport;
 
 beforeEach(function (): void {
     Storage::fake('local');
-    config()->set('vaulter.storage.default_disk', 'local');
+    config()->set('vaulter-media.disk', 'local');
     config()->set('filesystems.disks.local', [
         'driver' => 'local',
         'root' => storage_path('framework/testing/disks/local'),

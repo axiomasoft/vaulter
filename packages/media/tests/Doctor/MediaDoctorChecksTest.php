@@ -11,8 +11,6 @@ use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Doctor\DoctorRunner;
 use Vaulter\Doctor\DoctorSeverity;
-use Vaulter\Enums\Cas\BlobStatus;
-use Vaulter\Media\Tests\Cas\CasTestHelpers;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;
 
@@ -143,21 +141,6 @@ it('warns when tenant-wide deduplication spans disks', function (): void {
         config(['vaulter-media.dedup.scope' => $scope]);
         expect(mediaFindings('media.dedup.scope')[0]->code)->toBe('media.dedup.scope_ok');
     }
-});
-
-it('finds blobs with a legacy scope', function (): void {
-    Storage::fake('local');
-    expect(mediaFindings('media.legacy_scopes')[0]->code)->toBe('media.legacy_scopes_none');
-
-    CasTestHelpers::seedBlobRow('fresh bytes', BlobStatus::Committed, scope: 's1');
-    expect(mediaFindings('media.legacy_scopes')[0]->code)->toBe('media.legacy_scopes_none');
-
-    CasTestHelpers::seedBlobRow('legacy bytes', BlobStatus::Committed, scope: 'snull');
-    $finding = mediaFindings('media.legacy_scopes')[0];
-
-    expect($finding->code)->toBe('media.legacy_scopes_found')
-        ->and($finding->evidence['blobs'])->toBe(1)
-        ->and($finding->hint)->toContain('vaulter:blobs:repair-scopes --dry-run');
 });
 
 it('makes no write to the database', function (): void {

@@ -239,7 +239,7 @@ it('uses the configured disk for an orphan walk when no disk is supplied', funct
     config()->set('vaulter-media.disk', 'archive');
     $orphan = CasTestHelpers::seedOrphan(
         bytes: 'configured archive orphan',
-        scope: 't1',
+        scope: 't-1',
         ageHours: 48,
         disk: 'archive',
     );
@@ -259,7 +259,7 @@ it('preserves an explicitly supplied orphan disk', function (): void {
     config()->set('vaulter-media.disk', 'local');
     $orphan = CasTestHelpers::seedOrphan(
         bytes: 'explicit archive orphan',
-        scope: 't1',
+        scope: 't-1',
         ageHours: 48,
         disk: 'archive',
     );
@@ -277,7 +277,7 @@ it('preserves an explicitly supplied orphan disk', function (): void {
 it('keeps an orphan whose timestamp is exactly at the grace cutoff', function (): void {
     $orphan = CasTestHelpers::seedOrphan(
         bytes: 'orphan at exact cutoff',
-        scope: 't1',
+        scope: 't-1',
         ageHours: 0,
     );
     touch(Storage::disk('local')->path($orphan), now()->subHours(24)->getTimestamp());
@@ -314,7 +314,7 @@ it('returns the complete refusal report when orphan listing is unsupported', fun
 it('locks the parsed orphan scope and digest while pruning on PostgreSQL', function (): void {
     $orphan = CasTestHelpers::seedOrphan(
         bytes: 'orphan prune advisory lock',
-        scope: 't161803',
+        scope: 't-161803',
         ageHours: 48,
     );
     $sha256 = basename($orphan);

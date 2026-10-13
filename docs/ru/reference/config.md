@@ -47,7 +47,6 @@ php artisan vendor:publish --tag=vaulter-config
 
 Таблицы используют канонические имена с префиксом `database.table_prefix` (по умолчанию `v_`).
 `database.connection` (`VAULTER_DB_CONNECTION`, по умолчанию `null`) выбирает соединение.
-`table_names` читается только upgrade-миграциями через `DatabaseConfig::legacyTable()`.
 
 ## Первичные ключи — `ids.*`
 
@@ -58,7 +57,7 @@ php artisan vendor:publish --tag=vaulter-config
 | `ids.strategies.ulid` | — | `Vaulter\Schema\UlidIds` | FQCN, реализующий `IdStrategy` |
 | `ids.strategies.uuid7` | — | `Vaulter\Schema\Uuid7Ids` | FQCN, реализующий `IdStrategy` |
 
-Выбирайте `ids.strategy` напрямую. Старый `id_type` нормализуется (`id` → `bigint`, `ulid` → `ulid`); конфликт с изменённым каноническим значением вызывает исключение.
+Выбирайте `ids.strategy` напрямую.
 
 ## Profiles — `profiles.*`
 
@@ -328,7 +327,7 @@ php artisan vendor:publish --tag=vaulter-config
 | Ключ | По умолчанию | Управляет |
 |---|---|---|
 | `vaulter-documents.revisions.limit` | `50` | Хранимых чекпоинтов на документ до обрезки (`0` = без ограничений) |
-| `vaulter-documents.revisions.checkpoint_interval_seconds` | `300` | Сколько секунд рабочее состояние может опережать последний автосохранённый чекпоинт (`0` — чекпоинт на каждое эффективное сохранение). Ключ 0.2 `autosave_debounce_seconds` устарел и игнорируется |
+| `vaulter-documents.revisions.checkpoint_interval_seconds` | `300` | Сколько секунд рабочее состояние может опережать последний автосохранённый чекпоинт (`0` — чекпоинт на каждое эффективное сохранение). |
 
 См. [Использование → Версии](/ru/guides/documents).
 
@@ -340,11 +339,7 @@ php artisan vendor:publish --tag=vaulter-config
 | `vaulter-documents.default_type` | `'vaulter/rich-text'` — тип, который использует `create()`, если тип не указан; обязан быть зарегистрирован |
 | `vaulter-documents.content.max_size_kb` | `5120` — лимит кодека, у которого `maxSizeBytes()` равен `null` |
 
-Ключи 0.2 нормализуются с предупреждением об устаревании: `vaulter.enabled_document_types`
-(`richtext`/`table`/`template` → `RichTextDocumentType`, `markdown` → `MarkdownDocumentType`)
-и `vaulter.features.spreadsheets = true` (добавляет `SpreadsheetDocumentType`) превращаются в
-`vaulter-documents.types`. Перенесённый список заменяет список по умолчанию, поэтому без формата
-rich text (`['markdown']`) тип `vaulter/rich-text` не зарегистрирован, и приложение не загрузится,
+Без типа rich text (`['markdown']`) тип `vaulter/rich-text` не зарегистрирован, и приложение не загрузится,
 пока `vaulter-documents.default_type` не назовёт зарегистрированный тип (`vaulter/markdown`).
 
 ## Форматы экспорта — `vaulter-documents.exporters`
@@ -414,9 +409,7 @@ Yjs — источник истины; TipTap JSON — производная п
 | `webhooks.delivery.max_response_bytes` | `65536` байт |
 
 Документы включены при установке пакета; блобы и ревизии файлов включены всегда.
-Комментарии теперь включены по умолчанию; старый `features.comments = false` переносится.
-Карта экспортёров сохраняет формат → FQCN. `enabled_document_types` и `features.spreadsheets`
-стали `vaulter-documents.types`. См. [карту миграции](/ru/guides/configuration#переход-с-опубликованной-конфигурации-0-2).
+Комментарии включены по умолчанию; отключить: `vaulter-documents.comments.enabled = false`.
 
 ## Все ключи (генерируется)
 

@@ -19,10 +19,9 @@ it('reads repository changes without caching values', function (): void {
     expect($config->database()->connection())->toBe('second');
 });
 
-it('keeps canonical table names separate from upgrade table overrides', function (): void {
-    $config = new DatabaseConfig(new Repository(['vaulter' => ['database' => ['table_prefix' => 'custom_'], 'table_names' => ['storages' => 'old_drives']]]));
-    expect($config->table('drives'))->toBe('custom_drives')
-        ->and($config->legacyTable('storages'))->toBe('custom_old_drives');
+it('names every table by the configured prefix and the canonical entity, ignoring table_names', function (): void {
+    $config = new DatabaseConfig(new Repository(['vaulter' => ['database' => ['table_prefix' => 'custom_'], 'table_names' => ['drives' => 'old_drives']]]));
+    expect($config->table('drives'))->toBe('custom_drives');
 });
 
 it('adds the package middleware exactly once to each route middleware stack', function (): void {

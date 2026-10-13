@@ -4,26 +4,11 @@ title: Dedup off, downgrade and preflight
 
 # Dedup off, downgrade and preflight
 
-`vaulter-media.dedup.scope` is `tenant` (default), `drive` or `off`. Moving to a narrower scope
-(`drive`, `off`) while blobs are shared across the wider scope would orphan the sharing, so run the
-preflight first. It changes nothing:
+`vaulter-media.dedup.scope` is `tenant` (default), `drive` or `off`. Every blob keeps the `scope_key` it was
+committed under, so changing the setting leaves existing blobs valid and affects only new uploads: with `drive` or
+`off`, bytes already stored under a wider scope are not shared with new uploads.
 
-<!-- snippet: shell -->
-
-```bash
-php artisan vaulter:blobs:repair-scopes --dry-run
-```
-
-If it lists legacy mixed-scope blobs, copy them to their own scopes. The command redirects revision
-edges atomically:
-
-<!-- snippet: shell -->
-
-```bash
-php artisan vaulter:blobs:repair-scopes --execute
-```
-
-Only then change the setting, and confirm:
+Change the setting, then confirm with the doctor:
 
 <!-- snippet: shell -->
 
@@ -31,4 +16,4 @@ Only then change the setting, and confirm:
 php artisan vaulter:doctor --production
 ```
 
-Never lower the scope without a clean preflight.
+Check `media.dedup.scope` in the doctor report before lowering the scope in production.

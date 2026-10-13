@@ -83,19 +83,16 @@ final class LoadServiceProvider extends ServiceProvider
         // Must land BEFORE VaulterServiceProvider::boot(), where routes are gated by
         // feature flags (same ordering constraint as E2eServiceProvider).
         config([
-            'vaulter.features.blobs' => true,
-            'vaulter.features.versions' => true,
             'vaulter.features.grants' => true,
             'vaulter.features.activity' => true,
-            'vaulter.features.uploads' => true,
             'vaulter.features.share_links' => true,
-            'vaulter.features.comments' => true,
-            'vaulter.features.document_versions' => true,
-            'vaulter.features.collaboration' => true,
+            'vaulter-drive.uploads.resumable.enabled' => true,
+            'vaulter-documents.comments.enabled' => true,
+            'vaulter-documents.collaboration.enabled' => true,
 
-            'vaulter.drivers.permission' => 'database',
-            'vaulter.ids.default' => env('VAULTER_LOAD_ID_STRATEGY', 'bigint'),
-            'vaulter.middleware' => [
+            'vaulter.access.permission_driver' => 'database',
+            'vaulter.ids.strategy' => env('VAULTER_LOAD_ID_STRATEGY', 'bigint'),
+            'vaulter.routes.middleware.authenticated' => [
                 'api',
                 AssignLoadTier::class,
                 LoadActingAs::class,
@@ -122,7 +119,7 @@ final class LoadServiceProvider extends ServiceProvider
                     'timeout' => (float) env('LOAD_S3_IO_TIMEOUT', 900),
                 ],
             ],
-            'vaulter.storage.default_disk' => 's3',
+            'vaulter-media.disk' => 's3',
 
             'load.health' => [
                 's3_sentinel_key' => env('LOAD_HEALTH_S3_SENTINEL', '.vaulter-health-sentinel'),
@@ -213,9 +210,9 @@ final class LoadServiceProvider extends ServiceProvider
                 static fn (): OpenTelemetryTraceRecorder => OpenTelemetryTraceRecorder::create(),
             );
             config([
-                'vaulter.middleware' => array_merge(
+                'vaulter.routes.middleware.authenticated' => array_merge(
                     [OpenTelemetryTraceRecorder::class],
-                    config('vaulter.middleware', []),
+                    config('vaulter.routes.middleware.authenticated', []),
                 ),
             ]);
         }

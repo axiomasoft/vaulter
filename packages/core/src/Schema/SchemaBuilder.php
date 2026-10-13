@@ -37,9 +37,6 @@ final class SchemaBuilder
         return DB::connection(app(DatabaseConfig::class)->connection());
     }
 
-    /** The entity key the frozen 0.2 migration shells use for the document tables. */
-    private const string DOCUMENTS_SLOT = 'node_document_versions';
-
     /**
      * The base entity keys this builder owns, in dependency order. The generator
      * and createAll()/dropAll() iterate this list independently of runtime features.
@@ -98,21 +95,11 @@ final class SchemaBuilder
     }
 
     /**
-     * Create a single entity's table for this panel. The base default-panel
-     * migrations call these one-per-file so each file stays the canonical column
-     * source for its own table while sharing these definitions with the generated
-     * per-panel schema.
+     * Create a single entity's table. The create migrations call this one table per
+     * file, so each file creates exactly the definition below and nothing else.
      */
     public function createTable(string $entity): void
     {
-        // The frozen 0.2 migration shells still name the document slot by its old
-        // entity key. Creating the aggregate there would be undone: the next frozen
-        // shell drops the excised DocVault v_documents table by that very name. The
-        // 2026_10_01_000005 migration creates the aggregate instead.
-        if ($entity === self::DOCUMENTS_SLOT) {
-            return;
-        }
-
         $ids = $this->ids();
 
         $this->schemaConnection()->create(app(DatabaseConfig::class)->table($entity), function (Blueprint $table) use ($ids, $entity): void {
@@ -155,13 +142,6 @@ final class SchemaBuilder
      */
     public function dropTable(string $entity): void
     {
-        if ($entity === self::DOCUMENTS_SLOT) {
-            $this->dropTable(entity: 'document_revisions');
-            $this->dropTable(entity: 'documents');
-
-            return;
-        }
-
         // An aggregate and its revisions reference each other (head FK one way,
         // owner FK the other), so the head FK goes first whichever side drops.
         match ($entity) {
@@ -1060,28 +1040,8 @@ final class SchemaBuilder
     }
 
     /**
-     * Create the change-journal tables on an existing installation; each step checks
-     * what is already there, so a re-run after a failure finishes the job.
-     */
-    public function addDriveChanges(): void
-    {
-        foreach (['drive_change_heads', 'drive_changes'] as $entity) {
-            if (!$this->schemaConnection()->hasTable($this->table($entity))) {
-                $this->createTable($entity);
-            }
-        }
-    }
-
-    public function removeDriveChanges(): void
-    {
-        foreach (['drive_changes', 'drive_change_heads'] as $entity) {
-            $this->dropTable($entity);
-        }
-    }
-
-    /**
-     * Post-create hooks that cannot be expressed inside the Blueprint, currently
-     * the driver-aware sibling-unique guard on v_nodes.
+     * The v_nodes change sequence: BIGINT NOT NULL DEFAULT 0 with a non-negative CHECK, added after the
+     * table is created because the CHECK is spelled per engine. A step of afterCreate('nodes').
      */
     public function addNodeSequence(): void
     {
@@ -1095,19 +1055,6 @@ final class SchemaBuilder
             ? "CHECK(typeof(sequence) = 'integer' AND sequence >= 0)"
             : 'CONSTRAINT '.$this->dbConnection()->getQueryGrammar()->wrap($name.'_sequence_nonnegative').' CHECK(sequence >= 0)';
         $this->dbConnection()->statement("ALTER TABLE {$wrapped} ADD COLUMN sequence BIGINT NOT NULL DEFAULT 0 {$check}");
-    }
-
-    public function removeNodeSequence(): void
-    {
-        $name = app(DatabaseConfig::class)->table('nodes');
-        if ($this->schemaConnection()->hasColumn($name, 'sequence')) {
-            if ($this->dbConnection()->getDriverName() === 'mysql') {
-                $grammar = $this->dbConnection()->getQueryGrammar();
-                $this->dbConnection()->statement('ALTER TABLE '.$grammar->wrapTable($name).' DROP CHECK '.$grammar->wrap($name.'_sequence_nonnegative'));
-            }
-            // Native DROP COLUMN preserves SQLite FKs without toggling PRAGMA inside an outer transaction.
-            $this->dbConnection()->statement('ALTER TABLE '.$this->dbConnection()->getQueryGrammar()->wrapTable($name).' DROP COLUMN sequence');
-        }
     }
 
     private function afterCreate(string $entity): void
@@ -1658,61 +1605,6 @@ final class SchemaBuilder
         }
         if (str_contains($engine->v, 'MariaDB') || version_compare($engine->v, '8.0.16', '<') || !str_contains($engine->m, 'STRICT_')) {
             throw new \RuntimeException('Schema requires enforced MySQL CHECKs and strict numeric overflow.');
-        }
-    }
-
-    public function addScanEvidenceAndWork(): void
-    {
-        $this->assertEnforcedMysqlChecks();
-        foreach (['drives', 'file_revisions'] as $entity) {
-            $name = app(DatabaseConfig::class)->table($entity);
-            if (!$this->schemaConnection()->hasColumn($name, 'scan_admission_sequence')) {
-                $this->schemaConnection()->table($name, fn (Blueprint $table) => $this->scanInteger($table, 'scan_admission_sequence')->default(0));
-            }
-        }
-        foreach (['file_revisions', 'blobs'] as $entity) {
-            $name = app(DatabaseConfig::class)->table($entity);
-            if (!$this->schemaConnection()->hasColumn($name, 'quarantined_at')) {
-                $this->schemaConnection()->table($name, static fn (Blueprint $table) => $table->timestamp('quarantined_at')->nullable());
-            }
-        }
-        $blobs = app(DatabaseConfig::class)->table('blobs');
-        if (!$this->schemaConnection()->hasColumn($blobs, 'storage_version')) {
-            $this->schemaConnection()->table($blobs, static fn (Blueprint $table) => $table->string('storage_version', 255)->nullable());
-        }
-        $sessions = app(DatabaseConfig::class)->table('upload_sessions');
-        if (!$this->schemaConnection()->hasColumn($sessions, 'cleanup_pending')) {
-            $this->schemaConnection()->table($sessions, fn (Blueprint $table) => $this->defineUploadCleanup($table, $this->ids()));
-        }
-        foreach (['scan_policy_states', 'scan_obligations', 'scan_backfill_runs', 'scan_requests', 'scan_evidence'] as $entity) {
-            if (!$this->schemaConnection()->hasTable(app(DatabaseConfig::class)->table($entity))) {
-                $this->createTable($entity);
-            } elseif ($this->dbConnection()->getDriverName() === 'mysql') {
-                $this->afterCreate($entity);
-            }
-        }
-    }
-
-    public function removeScanEvidenceAndWork(): void
-    {
-        foreach (['scan_evidence', 'scan_requests', 'scan_backfill_runs', 'scan_obligations', 'scan_policy_states'] as $entity) {
-            $this->dropTable($entity);
-        }
-        $sessions = app(DatabaseConfig::class)->table('upload_sessions');
-        if ($this->schemaConnection()->hasColumn($sessions, 'cleanup_pending')) {
-            $this->schemaConnection()->table($sessions, function (Blueprint $table): void {
-                $table->dropForeign(['result_blob_id']);
-                $table->dropIndex($table->getTable().'_result_blob_id_index');
-                $table->dropIndex($table->getTable().'_cleanup_idx');
-                $table->dropColumn(['result_blob_id', 'input_fingerprint', 'cleanup_pending', 'cleanup_attempts', 'cleanup_available_at', 'cleanup_last_reason']);
-            });
-        }
-        foreach (['blobs' => ['quarantined_at', 'storage_version'], 'file_revisions' => ['scan_admission_sequence', 'quarantined_at'], 'drives' => ['scan_admission_sequence']] as $entity => $columns) {
-            $name = app(DatabaseConfig::class)->table($entity);
-            $present = array_values(array_filter($columns, fn (string $column): bool => $this->schemaConnection()->hasColumn($name, $column)));
-            if ($present !== []) {
-                $this->schemaConnection()->table($name, static fn (Blueprint $table) => $table->dropColumn($present));
-            }
         }
     }
 

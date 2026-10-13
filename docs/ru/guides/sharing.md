@@ -423,8 +423,7 @@ $profile->drivePolicy(fn (DrivePolicyBuilder $policy) => $policy->maxShareLinkTt
 ],
 ```
 
-Заменяемая модель `NodeShare` задаётся через `config('vaulter.models.node_share')`, имя таблицы —
-через `config('vaulter.table_names.node_shares')`. Генератор токенов по умолчанию выпускает 43
+Заменяемая модель `NodeShare` задаётся через `config('vaulter.models.node_share')`. Генератор токенов по умолчанию выпускает 43
 символа `base64url(random_bytes(32))`; замените его, привязав свой `ShareTokenGenerator`, — см.
 [Свой генератор share-токенов](/ru/guides/recipes).
 

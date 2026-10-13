@@ -12,7 +12,7 @@ use Vaulter\Tests\TestCase;
 
 uses(TestCase::class);
 
-it('P3 additive migration preserves prior rows and foreign keys with a signed 64-bit sequence', function (string $strategy): void {
+it('creates the node sequence as a signed 64-bit column with enforced foreign keys', function (string $strategy): void {
     $oldPrefix = config('vaulter.database.table_prefix');
     $oldStrategy = config('vaulter.ids.strategy');
     config()->set('vaulter.database.table_prefix', 'sequence_probe_');
@@ -30,32 +30,21 @@ it('P3 additive migration preserves prior rows and foreign keys with a signed 64
         'uuid7' => (string) Str::uuid7(),
     };
     [$drive, $parent, $child, $absent] = array_map($key, [1, 2, 3, 4]);
-    $migration = require __DIR__.'/../../database/migrations/2026_10_06_000001_add_node_operation_sequence.php';
 
     try {
         $builder->createTable('drives');
         $builder->createTable('nodes');
-        $migration->down();
-        expect($schema->hasColumn('sequence_probe_nodes', 'sequence'))->toBeFalse();
+        expect($schema->hasColumn('sequence_probe_nodes', 'sequence'))->toBeTrue();
         $db->table('sequence_probe_drives')->insert([
-            'id' => $drive, 'owner_type' => 'team', 'owner_id' => '1', 'name' => 'prior drive',
+            'id' => $drive, 'owner_type' => 'team', 'owner_id' => '1', 'name' => 'drive',
         ]);
         $db->table('sequence_probe_nodes')->insert([
-            ['id' => $parent, 'drive_id' => $drive, 'parent_id' => null, 'kind' => 'folder', 'name' => 'prior parent', 'name_key' => 'prior parent'],
-            ['id' => $child, 'drive_id' => $drive, 'parent_id' => $parent, 'kind' => 'file', 'name' => 'prior child', 'name_key' => 'prior child'],
+            ['id' => $parent, 'drive_id' => $drive, 'parent_id' => null, 'kind' => 'folder', 'name' => 'parent', 'name_key' => 'parent'],
+            ['id' => $child, 'drive_id' => $drive, 'parent_id' => $parent, 'kind' => 'file', 'name' => 'child', 'name_key' => 'child'],
         ]);
-        $before = $db->table('sequence_probe_nodes')->orderBy('name')->get()->map(fn ($row): array => (array) $row)->all();
-
-        $migration->up();
-        $migration->up();
-        $upgraded = $db->table('sequence_probe_nodes')->orderBy('name')->get()->map(function ($row): array {
+        foreach ($db->table('sequence_probe_nodes')->get() as $row) {
             expect((int) $row->sequence)->toBe(0);
-            $attributes = (array) $row;
-            unset($attributes['sequence']);
-
-            return $attributes;
-        })->all();
-        expect($upgraded)->toBe($before);
+        }
         $column = collect($schema->getColumns('sequence_probe_nodes'))->firstWhere('name', 'sequence');
         expect(strtolower($column['type_name']))->toBeIn(['bigint', 'int8']);
         if ($db->getDriverName() === 'mysql') {
@@ -73,16 +62,6 @@ it('P3 additive migration preserves prior rows and foreign keys with a signed 64
             ->toThrow(QueryException::class);
         expect(fn () => $db->transaction(fn () => $db->table('sequence_probe_nodes')->where('id', $child)->update(['drive_id' => $absent])))
             ->toThrow(QueryException::class);
-
-        $migration->down();
-        expect($schema->hasColumn('sequence_probe_nodes', 'sequence'))->toBeFalse()
-            ->and($db->table('sequence_probe_nodes')->orderBy('name')->get()->map(fn ($row): array => (array) $row)->all())->toBe($before);
-        $db->table('sequence_probe_nodes')->where('id', $parent)->delete();
-        expect($db->table('sequence_probe_nodes')->count())->toBe(0);
-        $migration->up();
-        expect($schema->hasColumn('sequence_probe_nodes', 'sequence'))->toBeTrue();
-        fwrite(STDOUT, 'P38_SEQUENCE_UP_DOWN '.json_encode(['driver' => $db->getDriverName(), 'database' => $db->getDatabaseName(), 'strategy' => $strategy,
-            'up_idempotent' => true, 'down_preserves_rows' => true, 'signed_int64' => true, 'foreign_keys_checked' => true, 'up_restored' => true]).PHP_EOL);
     } finally {
         $builder->dropTable('nodes');
         $builder->dropTable('drives');

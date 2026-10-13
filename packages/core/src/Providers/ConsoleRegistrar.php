@@ -12,7 +12,6 @@ use Vaulter\Console\DoctorCommand;
 use Vaulter\Console\ErrorsReferenceCommand;
 use Vaulter\Console\EventsReferenceCommand;
 use Vaulter\Console\InstallCommand;
-use Vaulter\Console\LegacyFanoutCommand;
 use Vaulter\Console\MakeFileHandlerCommand;
 use Vaulter\Console\MakePermissionDriverCommand;
 use Vaulter\Console\MakeProfileCommand;
@@ -22,7 +21,6 @@ use Vaulter\Console\RedeliverWebhooksCommand;
 use Vaulter\Console\RelayWebhooksCommand;
 use Vaulter\Console\ResetChangesCommand;
 use Vaulter\Console\RetryWebhooksCommand;
-use Vaulter\Console\UpgradeInspectCommand;
 
 final class ConsoleRegistrar
 {
@@ -40,13 +38,11 @@ final class ConsoleRegistrar
                 RelayWebhooksCommand::class,
                 RetryWebhooksCommand::class,
                 PruneWebhooksCommand::class,
-                LegacyFanoutCommand::class,
                 RedeliverWebhooksCommand::class,
                 PruneChangesCommand::class,
                 ResetChangesCommand::class,
                 InstallCommand::class,
                 DoctorCommand::class,
-                UpgradeInspectCommand::class,
             ]);
         });
     }

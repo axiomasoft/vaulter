@@ -75,7 +75,7 @@ final class LoadReadinessRunner
     public function checkS3(): bool
     {
         try {
-            $disk = (string) config('vaulter.storage.default_disk', 's3');
+            $disk = (string) config('vaulter-media.disk', 's3');
             $sentinel = (string) config('load.health.s3_sentinel_key', '.vaulter-health-sentinel');
 
             return Storage::disk($disk)->exists($sentinel);

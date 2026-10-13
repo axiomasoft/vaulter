@@ -18,8 +18,21 @@ serially. Leave coverage enabled for checks that require coverage.
 without starting Testbench's separate migrate/rollback cycle. Server tests sharing
 a TestCase, providers, connection and schema configuration migrate once and roll
 back test data in transactions. Changing the prefix, ID strategy, tenancy or
-features invalidates the schema. SQLite and committed concurrency/upgrade fixtures
+features invalidates the schema. SQLite and the committed concurrency tests
 keep their Testbench lifecycle.
+
+## Schema snapshots
+
+The installed schema is pinned as raw catalog text (SQLite `sqlite_master`/pragmas, PostgreSQL `pg_catalog`, MySQL
+`information_schema` and `SHOW CREATE TABLE`) for 48 configuration presets — id strategy × host-key type × table
+prefix × tenancy (`Fixtures/Schema/snapshot-configs.json`) — on each engine.
+
+- `Fixtures/Schema/original/` is the schema of the 0.x chain before P1.10, captured at `c64bba25` and never rewritten
+  (`metadata.json` lists the 20 PostgreSQL presets the 0.x chain could not migrate; their original is the builder schema).
+- `Fixtures/Schema/expected/` is the current schema. A deliberate schema change updates it together with its decision.
+- `SchemaSnapshotTest` compares the running preset with `expected/`; `scripts/schema-snapshot.sh --driver=<engine>
+  --all-presets --compare=<dir>` migrates an empty database per preset (one process and schema each, on a private
+  disposable server) and prints the table, part and name of every difference. It runs migrations only, no behavioural test.
 
 ## Short measurement, 2026-10-11
 

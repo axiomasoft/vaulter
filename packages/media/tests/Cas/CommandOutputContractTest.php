@@ -75,8 +75,8 @@ it('reports every dangling row identity', function (): void {
 });
 
 it('reports exact orphan walk totals, disk and grace', function (): void {
-    $first = CasTestHelpers::seedOrphan(bytes: 'command orphan one', scope: 't1', ageHours: 48);
-    $second = CasTestHelpers::seedOrphan(bytes: 'command orphan two', scope: 't1', ageHours: 48);
+    $first = CasTestHelpers::seedOrphan(bytes: 'command orphan one', scope: 't-1', ageHours: 48);
+    $second = CasTestHelpers::seedOrphan(bytes: 'command orphan two', scope: 't-1', ageHours: 48);
     Storage::disk('local')->put('foreign/readme.txt', 'not CAS');
 
     $exit = Artisan::call('vaulter:blobs:reconcile', [
@@ -95,7 +95,7 @@ it('reports the explicit orphan disk and the configured grace', function (): voi
     Storage::fake('archive');
     $orphan = CasTestHelpers::seedOrphan(
         bytes: 'archive command orphan',
-        scope: 't1',
+        scope: 't-1',
         ageHours: 48,
         disk: 'archive',
     );
@@ -124,7 +124,7 @@ it('treats an empty disk option as the configured disk', function (): void {
 });
 
 it('reports the exact SQLite prune refusal', function (): void {
-    $orphan = CasTestHelpers::seedOrphan(bytes: 'refused command prune', scope: 't1', ageHours: 48);
+    $orphan = CasTestHelpers::seedOrphan(bytes: 'refused command prune', scope: 't-1', ageHours: 48);
 
     $exit = Artisan::call('vaulter:blobs:reconcile', [
         '--orphans' => true,

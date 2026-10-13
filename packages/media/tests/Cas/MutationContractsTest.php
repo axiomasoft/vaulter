@@ -53,9 +53,9 @@ it('builds the canonical key and promotes the exact checksum and bytes', functio
     $driver = Mockery::mock(StorageDriver::class);
     $store = new Sha256ContentStore($driver);
     $staged = $store->stage($stream);
-    $key = $store->keyFor(BlobScope::legacy('t17'), $sha256);
+    $key = $store->keyFor(BlobScope::tenant('17'), $sha256);
 
-    expect($key)->toBe('t17/'.substr($sha256, 0, 2).'/'.substr($sha256, 2, 2).'/'.$sha256);
+    expect($key)->toBe('t-17/'.substr($sha256, 0, 2).'/'.$sha256);
 
     $driver->shouldReceive('exists')->once()->with($key, 'archive')->andReturn(false);
     $driver->shouldReceive('put')->once()->withArgs(
@@ -217,9 +217,9 @@ it('continues an orphan walk after every skipped object', function (): void {
     Storage::disk('local')->put('foreign/readme.txt', 'foreign');
     $owned = CasTestHelpers::seedBlobRow('owned bytes', BlobStatus::Committed);
     CasTestHelpers::ageObject($owned->storage_key, 48);
-    CasTestHelpers::seedOrphan(bytes: 'fresh candidate', scope: 't1', ageHours: 0);
-    $firstOrphan = CasTestHelpers::seedOrphan(bytes: 'old candidate one', scope: 't1', ageHours: 48);
-    $secondOrphan = CasTestHelpers::seedOrphan(bytes: 'old candidate two', scope: 't1', ageHours: 48);
+    CasTestHelpers::seedOrphan(bytes: 'fresh candidate', scope: 't-1', ageHours: 0);
+    $firstOrphan = CasTestHelpers::seedOrphan(bytes: 'old candidate one', scope: 't-1', ageHours: 48);
+    $secondOrphan = CasTestHelpers::seedOrphan(bytes: 'old candidate two', scope: 't-1', ageHours: 48);
 
     $report = app(BlobReconciler::class)->sweepOrphans(
         disk: 'local',

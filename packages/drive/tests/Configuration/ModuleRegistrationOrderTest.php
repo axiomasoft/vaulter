@@ -13,14 +13,14 @@ use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Media\VaulterMediaServiceProvider;
 use Vaulter\Providers\BindingsRegistrar as CoreBindingsRegistrar;
 
-it('retains module defaults and normalizes legacy settings when modules register before core', function (): void {
+it('retains module defaults and applies host settings when modules register before core', function (): void {
     $previousContainer = Container::getInstance();
     try {
         $app = new Application;
-        $repository = new Repository(['vaulter' => [
-            'uploads' => ['max_bytes' => 2048],
-            'dedup' => ['scope' => 'storage'],
-        ]]);
+        $repository = new Repository([
+            'vaulter-drive' => ['uploads' => ['max_file_size' => 2048]],
+            'vaulter-media' => ['dedup' => ['scope' => 'drive']],
+        ]);
         $app->instance('config', $repository);
 
         (new DriveBindingsRegistrar($app))->register();
@@ -31,26 +31,10 @@ it('retains module defaults and normalizes legacy settings when modules register
         expect($app->make(ConfigNormalizer::class))->toBe($normalizer)
             ->and($normalizer->packageDefaults())->toHaveKeys(['vaulter-drive', 'vaulter-media']);
 
-        $deprecations = [];
-        set_error_handler(static function (int $level, string $message) use (&$deprecations): bool {
-            if ($level !== E_USER_DEPRECATED) {
-                return false;
-            }
-
-            $deprecations[] = $message;
-
-            return true;
-        });
-
-        try {
-            $normalizer->normalize(config: $repository, packageDefaults: $normalizer->packageDefaults());
-        } finally {
-            restore_error_handler();
-        }
+        $normalizer->normalize(config: $repository, packageDefaults: $normalizer->packageDefaults());
 
         expect($app->make(DriveConfig::class)->maxFileSize())->toBe(2048)
-            ->and($app->make(MediaConfig::class)->dedupScope())->toBe(DedupScope::Drive)
-            ->and($deprecations)->toHaveCount(2);
+            ->and($app->make(MediaConfig::class)->dedupScope())->toBe(DedupScope::Drive);
     } finally {
         Container::setInstance($previousContainer);
     }

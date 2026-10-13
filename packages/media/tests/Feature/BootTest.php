@@ -28,5 +28,5 @@ it('refuses to boot with the retired global dedup scope', function (): void {
     config()->set('vaulter-media.dedup.scope', 'global');
 
     expect(fn () => (new VaulterMediaServiceProvider(app()))->packageBooted())
-        ->toThrow(InvalidConfigurationException::class, 'repair-scopes');
+        ->toThrow(InvalidConfigurationException::class, 'must not be shared across tenants');
 });

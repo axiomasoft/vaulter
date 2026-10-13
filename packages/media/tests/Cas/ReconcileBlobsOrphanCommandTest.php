@@ -32,7 +32,7 @@ beforeEach(function (): void {
 });
 
 it('vaulter:blobs:reconcile --orphans с orphan → FAILURE и объект в выводе', function (): void {
-    $orphanKey = CasTestHelpers::seedOrphan(bytes: 'cmd orphan', scope: 't1', ageHours: 48);
+    $orphanKey = CasTestHelpers::seedOrphan(bytes: 'cmd orphan', scope: 't-1', ageHours: 48);
 
     $this->artisan('vaulter:blobs:reconcile', ['--orphans' => true])
         ->expectsOutputToContain('Orphan walk (report-only)')
@@ -44,7 +44,7 @@ it('vaulter:blobs:reconcile --orphans с orphan → FAILURE и объект в �
 });
 
 it('vaulter:blobs:reconcile --orphans --prune на sqlite: отказ, байты живы, FAILURE', function (): void {
-    $orphanKey = CasTestHelpers::seedOrphan(bytes: 'cmd prune refused', scope: 't1', ageHours: 48);
+    $orphanKey = CasTestHelpers::seedOrphan(bytes: 'cmd prune refused', scope: 't-1', ageHours: 48);
 
     $this->artisan('vaulter:blobs:reconcile', ['--orphans' => true, '--prune' => true])
         ->expectsOutputToContain('Orphan pruning needs PostgreSQL/MySQL')
@@ -67,7 +67,7 @@ it('vaulter:blobs:reconcile --orphans на чистом диске → SUCCESS',
 it('vaulter:blobs:reconcile --orphans: не-listable драйвер сообщает "listing unsupported", не падает на этом', function (): void {
     // A genuine aged orphan is present, but the active store cannot enumerate — the
     // walk is skipped cleanly; with no dangling row the command still SUCCEEDs.
-    CasTestHelpers::seedOrphan(bytes: 'unwalkable cmd', scope: 't1', ageHours: 48);
+    CasTestHelpers::seedOrphan(bytes: 'unwalkable cmd', scope: 't-1', ageHours: 48);
     app()->instance(ContentStore::class, new NonListableContentStore);
 
     $this->artisan('vaulter:blobs:reconcile', ['--orphans' => true, '--prune' => true])
@@ -77,7 +77,7 @@ it('vaulter:blobs:reconcile --orphans: не-listable драйвер сообща
 
 it('vaulter:blobs:reconcile --orphan-grace переопределяет окно (свежий объект не orphan)', function (): void {
     // A 2h-old object: past the 1h floor, but a 24h --orphan-grace keeps it fresh.
-    CasTestHelpers::seedOrphan(bytes: 'within override grace', scope: 't1', ageHours: 2);
+    CasTestHelpers::seedOrphan(bytes: 'within override grace', scope: 't-1', ageHours: 2);
 
     $this->artisan('vaulter:blobs:reconcile', ['--orphans' => true, '--orphan-grace' => 24])
         ->expectsOutputToContain('grace 24h')

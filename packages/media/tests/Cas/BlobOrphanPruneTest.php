@@ -38,7 +38,7 @@ beforeEach(function (): void {
 
 // 11. Actual prune deletes the bytes.
 it('prune на pgsql реально удаляет байты осиротевшего объекта', function (): void {
-    $orphanKey = CasTestHelpers::seedOrphan(bytes: 'pg prune me', scope: 't1', ageHours: 48);
+    $orphanKey = CasTestHelpers::seedOrphan(bytes: 'pg prune me', scope: 't-1', ageHours: 48);
 
     $report = app(BlobReconciler::class)->sweepOrphans(disk: 'local', graceHours: 24, prune: true);
 
@@ -50,7 +50,7 @@ it('prune на pgsql реально удаляет байты осиротевш
 
 // 11b. Command-level: a prune that cleaned everything exits SUCCESS.
 it('vaulter:blobs:reconcile --orphans --prune на pgsql очищает orphan и выходит SUCCESS', function (): void {
-    $orphanKey = CasTestHelpers::seedOrphan(bytes: 'pg cmd prune', scope: 't1', ageHours: 48);
+    $orphanKey = CasTestHelpers::seedOrphan(bytes: 'pg cmd prune', scope: 't-1', ageHours: 48);
 
     $this->artisan('vaulter:blobs:reconcile', ['--orphans' => true, '--prune' => true, '--orphan-grace' => 24])
         ->expectsOutputToContain('Orphan walk (pruned)')
@@ -67,7 +67,7 @@ it('lock-then-recheck на pgsql: строка, появившаяся до пе
     // test. We pin the decisive invariant instead: the prune's under-lock probe
     // (findByStorageKey(lock: true)) is what gates the delete — so an owning row
     // present at recheck time means the bytes are NOT deleted.
-    $orphanKey = CasTestHelpers::seedOrphan(bytes: 'commit won', scope: 't1', ageHours: 48);
+    $orphanKey = CasTestHelpers::seedOrphan(bytes: 'commit won', scope: 't-1', ageHours: 48);
 
     // The "commit won" outcome: a committed row now owns this exact storage_key.
     // forceFill (P1.4/F-P1.5-04): Blob is fully guarded — bypassed here exactly

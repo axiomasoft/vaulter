@@ -45,9 +45,7 @@ interface ContentStore
     public function delete(string $key, ?string $disk = null): void;
 
     /**
-     * Build "<scope>/ab/<sha256>" for new scopes, or preserve the legacy
-     * "<scope>/ab/cd/<sha256>" layout for legacy scopes.
-     * the scope segment keeps two dedup scopes from ever sharing one
+     * Build "<scope>/ab/<sha256>". The scope segment keeps two dedup scopes from ever sharing one
      * physical object, so one scope's GC can never delete another's live bytes.
      */
     public function keyFor(BlobScope $scope, string $sha256): string;

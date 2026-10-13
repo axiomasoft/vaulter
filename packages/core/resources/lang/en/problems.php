@@ -190,10 +190,6 @@ return [
         'title' => 'Unsupported node kind',
         'detail' => 'This node kind does not support the operation.',
     ],
-    'upgrade_preflight_failed' => [
-        'title' => 'Upgrade preflight failed',
-        'detail' => 'The data does not meet the upgrade preconditions.',
-    ],
     'validation_failed' => [
         'title' => 'Validation failed',
         'detail' => 'The request data is invalid; see the errors field.',

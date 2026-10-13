@@ -3,11 +3,9 @@
 declare(strict_types=1);
 
 use Carbon\CarbonImmutable;
-use Illuminate\Config\Repository;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Vaulter\Configuration\ConfigNormalizer;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
@@ -71,18 +69,18 @@ it('finds every table and migration of a migrated schema', function (): void {
 it('reports a missing table and a pending migration as errors', function (): void {
     Schema::drop(coreTable('drive_changes'));
     Schema::drop(coreTable('drive_change_heads'));
-    DB::table('migrations')->where('migration', 'like', '%_drive_changes')->delete();
+    DB::table('migrations')->where('migration', 'like', '%_create_v_drive_changes_table')->delete();
 
     $findings = coreFindings('core.schema.tables');
 
     expect(array_map(static fn (DoctorFinding $finding): string => $finding->code, $findings))->toBe(['core.schema.tables_missing', 'core.schema.migrations_pending'])
         ->and($findings[0]->evidence['count'])->toBe(2)
-        ->and($findings[1]->evidence['first'])->toEndWith('_drive_changes')
+        ->and($findings[1]->evidence['first'])->toEndWith('_create_v_drive_changes_table')
         ->and(coreSeverities('core.schema.tables', production: false))->toBe(['error', 'error']);
 });
 
 it('treats a published migration under a new timestamp as applied', function (): void {
-    DB::table('migrations')->where('migration', 'like', '%_drive_changes')->update(['migration' => '2030_01_01_000000_drive_changes']);
+    DB::table('migrations')->where('migration', 'like', '%_create_v_drive_changes_table')->update(['migration' => '2030_01_01_000000_create_v_drive_changes_table']);
 
     expect(coreCodes('core.schema.tables'))->toBe(['core.schema.tables_present', 'core.schema.migrations_applied']);
 });
@@ -174,34 +172,6 @@ it('runs two validators tagged by the same class', function (): void {
     $messages = array_map(static fn (DoctorFinding $finding): string => $finding->message, coreFindings('core.config.valid'));
 
     expect($messages)->toContain('marker-first')->toContain('marker-second');
-});
-
-it('warns about a deprecated key that is still set', function (): void {
-    expect(coreCodes('core.config.deprecated_keys'))->toBe(['core.config.no_deprecated_keys']);
-
-    $normalizer = $this->app->make(ConfigNormalizer::class);
-    $warned = new ReflectionProperty($normalizer, 'warned');
-    $warned->setValue($normalizer, ['vaulter.max_versions' => true, 'vaulter.id_type' => true]);
-
-    $finding = coreFindings('core.config.deprecated_keys')[0];
-
-    expect($finding->severity)->toBe(DoctorSeverity::Warning)
-        ->and($finding->evidence['keys'])->toBe('vaulter.id_type, vaulter.max_versions')
-        ->and(coreSeverities('core.config.deprecated_keys', production: true))->toBe(['warning']);
-});
-
-it('collects the deprecated keys the normalizer saw', function (): void {
-    $config = new Repository(['vaulter' => ['table_prefix' => 'x_']]);
-    $normalizer = new ConfigNormalizer;
-    $normalizer->registerDefaults('vaulter', __DIR__.'/../../config/vaulter.php');
-    $previous = set_error_handler(static fn (): bool => true);
-    try {
-        $normalizer->normalize($config, $normalizer->packageDefaults());
-    } finally {
-        set_error_handler($previous);
-    }
-
-    expect($normalizer->usedDeprecatedKeys())->toBe(['vaulter.table_prefix']);
 });
 
 it('requires an auth middleware with a defined guard on the authenticated routes', function (): void {

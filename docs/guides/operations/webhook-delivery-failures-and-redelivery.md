@@ -24,19 +24,4 @@ deduplicates on it stays correct:
 php artisan vaulter:webhooks:redeliver --endpoint=12 --since="2026-10-01" --status=dead
 ```
 
-Old outbox rows whose fan-out cannot be proven (written before per-endpoint deliveries) are
-listed first and replayed on request:
-
-<!-- snippet: shell -->
-
-```bash
-php artisan vaulter:webhooks:legacy-fanout --since="2026-09-01"
-```
-
-<!-- snippet: shell -->
-
-```bash
-php artisan vaulter:webhooks:legacy-fanout --since="2026-09-01" --replay --dry-run
-```
-
-Drop `--dry-run` only after reading the list. Receivers must accept a repeated event.
+Receivers must accept a repeated event.

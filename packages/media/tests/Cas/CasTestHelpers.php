@@ -100,7 +100,7 @@ final class CasTestHelpers
      * the row — exactly the "promoted bytes then rolled the row back / leaked bytes"
      * hazard the orphan walk hunts (H.3). The disk must already be a Storage::fake.
      */
-    public static function seedOrphan(string $bytes, string $scope = 'tnull', int $ageHours = 48, string $disk = 'local'): string
+    public static function seedOrphan(string $bytes, string $scope = 't-default', int $ageHours = 48, string $disk = 'local'): string
     {
         $key = self::contentStore()->keyFor(scope: BlobScope::fromSegment($scope), sha256: hash('sha256', $bytes));
 
@@ -140,7 +140,7 @@ final class CasTestHelpers
         BlobStatus $status,
         string $disk = 'local',
         ?string $bytesDisk = null,
-        string $scope = 'tnull',
+        string $scope = 't-default',
     ): Blob {
         $sha256 = hash('sha256', $bytes);
         $storageKey = self::contentStore()->keyFor(scope: BlobScope::fromSegment($scope), sha256: $sha256);

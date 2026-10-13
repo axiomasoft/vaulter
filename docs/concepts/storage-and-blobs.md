@@ -102,9 +102,6 @@ The scope segment is derived from the dedup scope:
 - `drive` → `d-{id}`
 - `off` → `o-{ulid}`, a scope of its own for every upload
 
-Objects of the retired install-wide scope (`g`, and the legacy `global` segment) stay readable
-until `vaulter:blobs:repair-scopes` moves them.
-
 `BlobScope` preserves string IDs, including UUIDs, ULIDs and leading zeroes.
 Identifiers contain 1–96 bytes. An ID matching `[A-Za-z0-9_-]{1,64}` is used verbatim;
 other IDs use `~` followed by unpadded base64url. `fromSegment()` reverses this
@@ -146,10 +143,8 @@ The dedup scope decides the boundary a content address is unique within:
 | `off` | `UNIQUE (scope_key, sha256)` | Every upload is stored on its own. |
 
 Deduplication never crosses a tenant (PLAN2.D49): an install-wide scope lets one tenant
-learn that another stored a given file. The former `global` setting is refused at boot with
-`InvalidConfigurationException`; existing `global` blobs are moved to the tenant (or, without
-a tenant, the drive) of every referencing revision by
-`php artisan vaulter:blobs:repair-scopes --dry-run` then `--execute`. Upload responses and the
+learn that another stored a given file. A `global` setting is refused at boot with
+`InvalidConfigurationException`. Upload responses and the
 quota never depend on whether bytes deduplicated.
 
 `BlobScope::forUpload()` selects a `scope_key` from this setting. The schema always
@@ -541,20 +536,7 @@ different, recommended backstop — see the `uploads` config.)
   a custom `ContentStore`.
 - [Recipes › Blob GC & reconcile cron](/guides/recipes) — production operations.
 
-## Repairing historical mixed scopes
-
-Migration №7 fills `scope_key` from historical IDs without moving any object.
-Blobs previously committed without a numeric storage or tenant ID become
-`legacy:snull` or `legacy:tnull`. Inspect them with
-`php artisan vaulter:blobs:repair-scopes --dry-run`, then apply with `--execute`.
-The report shows blob, digest, source scope, storage, edge count, target and action.
-Unreferenced blobs and SHA-256 mismatches are reported without changing their bytes
-or references. Each target runs in its own `VaulterDatabase` transaction: lock the
-affected trees and both CAS addresses, verify source bytes, copy to the target,
-verify target bytes, redirect revision edges and the legacy `blob_id`, and rebuild
-ref-count caches. Existing target blobs retain their authoritative disk/path.
-Old objects remain until GC. Interrupted repairs resume without duplicate moves;
-successes append JSON to `storage/logs/vaulter-repair-scopes.log`.
+## The CAS commit saga
 
 The CAS saga is stage → SHA-256 → `cas:{scope_key}:{sha256}` lock → row lookup or
 resurrection → conditional promotion → edge → SQL commit. SQL rollback after

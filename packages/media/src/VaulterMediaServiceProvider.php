@@ -18,10 +18,8 @@ use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Media\Console\GcBlobsCommand;
 use Vaulter\Media\Console\ReconcileBlobsCommand;
-use Vaulter\Media\Console\RepairBlobScopesCommand;
 use Vaulter\Media\Doctor\DedupScopeCheck;
 use Vaulter\Media\Doctor\DiskProbeCheck;
-use Vaulter\Media\Doctor\LegacyScopesCheck;
 use Vaulter\Media\Providers\SchedulingRegistrar;
 
 /**
@@ -45,8 +43,7 @@ final class VaulterMediaServiceProvider extends PackageServiceProvider
             ->name('vaulter-media')
             ->hasConfigFile()
             ->hasCommand(GcBlobsCommand::class)
-            ->hasCommand(ReconcileBlobsCommand::class)
-            ->hasCommand(RepairBlobScopesCommand::class);
+            ->hasCommand(ReconcileBlobsCommand::class);
     }
 
     public function packageRegistered(): void
@@ -91,7 +88,7 @@ final class VaulterMediaServiceProvider extends PackageServiceProvider
             $config->blobStore();
         });
         $this->app->tag('vaulter.config_validator.media', ConfigValidCheck::TAG);
-        $this->app->tag([DiskProbeCheck::class, DedupScopeCheck::class, LegacyScopesCheck::class], DoctorRegistry::TAG);
+        $this->app->tag([DiskProbeCheck::class, DedupScopeCheck::class], DoctorRegistry::TAG);
     }
 
     public function packageBooted(): void

@@ -54,7 +54,7 @@ abstract class LoadTestCase extends OrchestraTestCase
             'prefix' => '',
         ]);
 
-        $app['config']->set('vaulter.middleware', []);
+        $app['config']->set('vaulter.routes.middleware.authenticated', []);
     }
 
     protected function configureHealthyBaseline(): void
@@ -68,7 +68,7 @@ abstract class LoadTestCase extends OrchestraTestCase
                 'root' => storage_path('framework/testing/disks/s3'),
                 'throw' => false,
             ],
-            'vaulter.storage.default_disk' => 's3',
+            'vaulter-media.disk' => 's3',
             'cache.default' => 'array',
             'queue.default' => 'redis',
             'queue.connections.redis' => [

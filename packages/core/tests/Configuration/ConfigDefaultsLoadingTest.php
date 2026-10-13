@@ -78,11 +78,11 @@ it('reloads a replacement config path while preserving package registration orde
     }
 });
 
-it('keeps cached registration unchanged and normalizes legacy values using exact defaults in either provider order', function (bool $moduleFirst): void {
+it('keeps cached registration unchanged and fills defaults in either provider order', function (bool $moduleFirst): void {
     $previousContainer = Container::getInstance();
     $config = new Repository([
-        'vaulter' => ['table_prefix' => 'host_', 'storage' => ['default_disk' => 'host-disk'], 'uploads' => ['chunk_size' => 543]],
-        'vaulter-media' => require __DIR__.'/../../../media/config/vaulter-media.php',
+        'vaulter' => ['database' => ['table_prefix' => 'host_']],
+        'vaulter-media' => ['disk' => 'host-disk'] + require __DIR__.'/../../../media/config/vaulter-media.php',
     ]);
     $cached = $config->all();
 
@@ -107,30 +107,16 @@ it('keeps cached registration unchanged and normalizes legacy values using exact
         $defaults = $normalizer->packageDefaults();
         expect(array_keys($defaults))->toBe($moduleFirst ? ['vaulter-media', 'vaulter'] : ['vaulter', 'vaulter-media']);
 
-        set_error_handler(static fn (int $severity): bool => $severity === E_USER_DEPRECATED);
-        try {
-            $normalizer->normalize($config, $defaults);
-        } finally {
-            restore_error_handler();
-        }
+        $normalizer->normalize($config, $defaults);
 
         expect($config->get('vaulter.database.table_prefix'))->toBe('host_')
             ->and($config->get('vaulter-media.disk'))->toBe('host-disk')
             ->and($config->get('vaulter.ids.strategy'))->toBe($defaults['vaulter']['ids']['strategy'])
-            ->and($config->get('vaulter.uploads.chunk_size'))->toBe(543)
             ->and($config->has('vaulter-drive'))->toBeFalse();
     } finally {
         Container::setInstance($previousContainer);
     }
 })->with([false, true]);
-
-it('rejects a cached canonical override conflicting with a legacy key after lazy loading', function (): void {
-    $normalizer = new ConfigNormalizer;
-    $normalizer->registerDefaults(root: 'vaulter', path: __DIR__.'/../../config/vaulter.php');
-    $config = new Repository(['vaulter' => ['table_prefix' => 'legacy_', 'database' => ['table_prefix' => 'canonical_']]]);
-
-    $normalizer->normalize($config, $normalizer->packageDefaults());
-})->throws(InvalidConfigurationException::class, 'Conflicting config keys "vaulter.table_prefix" and "vaulter.database.table_prefix"');
 
 it('fills missing nested defaults for partially published uncached config', function (): void {
     $previousContainer = Container::getInstance();

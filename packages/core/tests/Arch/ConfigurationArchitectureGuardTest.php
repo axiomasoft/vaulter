@@ -88,18 +88,15 @@ test('AST configuration guard fails closed on unresolved inventory', function ()
     $path = sys_get_temp_dir().'/vaulter-missing-'.bin2hex(random_bytes(12));
     $violations = (new ConfigurationArchitectureGuard)->scanPackages($path);
 
-    expect($violations)->toHaveCount(19)
+    expect($violations)->toHaveCount(18)
         ->and(implode("\n", $violations))->toContain($path.'/core/src:1: cannot inventory')
         ->toContain($path.'/drive/tests:1: cannot inventory')
-        ->toContain($path.'/media/config:1: cannot inventory')
-        ->toContain($path.'/core/tests/Fixtures/config/vaulter-0.2.php:1: published v0.2 fixture');
+        ->toContain($path.'/media/config:1: cannot inventory');
 });
 
 test('AST inventory covers every package scope and applies only the owning source exception', function (): void {
     $temporary = sys_get_temp_dir().'/vaulter-architecture-'.bin2hex(random_bytes(12));
     $packages = ['core', 'drive', 'documents', 'media', 'filament', 'azgard'];
-    mkdir($temporary.'/core/tests/Fixtures/config', 0777, true);
-    copy(__DIR__.'/../Fixtures/config/vaulter-0.2.php', $temporary.'/core/tests/Fixtures/config/vaulter-0.2.php');
 
     try {
         foreach ($packages as $package) {
@@ -148,34 +145,9 @@ test('AST inventory covers every package scope and applies only the owning sourc
     }
 });
 
-test('published v02 fixture is pinned and mutation is rejected before execution', function (): void {
-    $fixture = __DIR__.'/../Fixtures/config/vaulter-0.2.php';
-    ConfigurationArchitectureGuard::assertPublishedV02Fixture($fixture);
-    $temporary = tempnam(sys_get_temp_dir(), 'vaulter-v02-');
-    $executed = $temporary.'.executed';
-
-    try {
-        $payload = '<?php file_put_contents('.var_export($executed, true).", 'executed'); return [];";
-        file_put_contents($temporary, file_get_contents($fixture)."\n// changed historical artifact\n");
-        expect(fn () => ConfigurationArchitectureGuard::assertPublishedV02Fixture($temporary))
-            ->toThrow(RuntimeException::class, 'published v0.2 fixture must match pinned SHA-256');
-        file_put_contents($temporary, $payload);
-        expect(function () use ($temporary): void {
-            ConfigurationArchitectureGuard::assertPublishedV02Fixture($temporary);
-            require $temporary;
-        })->toThrow(RuntimeException::class, 'published v0.2 fixture must match pinned SHA-256');
-        expect(file_exists($executed))->toBeFalse();
-    } finally {
-        unlink($temporary);
-        if (file_exists($executed)) {
-            unlink($executed);
-        }
-    }
-});
-
 test('core never reads another package\'s configuration keys directly', function (): void {
     // ADR-0019: the package that owns a key answers questions about it through a contract
-    // (ScanWorkSettings, CommentsFeature). ConfigNormalizer alone maps legacy keys by name.
+    // (ScanWorkSettings, CommentsFeature). ConfigNormalizer alone names the replacement-map keys of every package.
     $parser = (new ParserFactory)->createForNewestSupportedVersion();
     $offenders = [];
     foreach ((new Finder)->files()->in(dirname(__DIR__, 2).'/src')->name('*.php') as $file) {

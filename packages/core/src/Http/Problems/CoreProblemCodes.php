@@ -45,7 +45,6 @@ use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Exceptions\Profiles\UnknownProfileException;
 use Vaulter\Exceptions\Registry\DuplicateNodeContentLifecycleException;
 use Vaulter\Exceptions\Registry\RegistryFrozenException;
-use Vaulter\Exceptions\Schema\UpgradePreflightException;
 use Vaulter\Exceptions\Sharing\ShareLinkTtlExceededException;
 use Vaulter\Exceptions\Sharing\ShareNotFoundException;
 use Vaulter\Exceptions\Sharing\SharePasswordRequiredException;
@@ -121,7 +120,6 @@ final class CoreProblemCodes implements ProblemCodeSource
             'unknown_profile' => ['status' => 422, 'exception' => UnknownProfileException::class],
             'unknown_role' => ['status' => 422, 'exception' => UnknownRoleException::class],
             'unsupported_node_kind' => ['status' => 409, 'exception' => UnsupportedNodeKindException::class],
-            'upgrade_preflight_failed' => ['status' => 409, 'exception' => UpgradePreflightException::class],
             'validation_failed' => ['status' => 422, 'exception' => ValidationException::class],
             'webhook_delivery_not_found' => ['status' => 404, 'exception' => WebhookDeliveryNotFoundException::class],
             'webhook_delivery_not_redeliverable' => ['status' => 409, 'exception' => WebhookDeliveryNotRedeliverableException::class],

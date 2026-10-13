@@ -15,7 +15,6 @@ outline: deep
 |---|---|
 | `vaulter:install` | Опубликовать конфиги установленных пакетов, вывести настройки хоста, при желании выполнить миграции |
 | `vaulter:doctor` | Read-only диагностика настройки Vaulter на хосте; `--production` поднимает часть предупреждений до ошибок |
-| `vaulter:upgrade:inspect` | Read-only проверка готовности данных 0.2 к схеме 0.3 |
 | `vaulter:scan:reconcile` | Восстановить scan-намерения, backfill и очистку закоммиченных загрузок (с лимитами) |
 | `vaulter:scan:rescan` | Поставить в очередь повторное сканирование ревизий файлов по tenant, drive или набору ревизий |
 | `vaulter:drives:purge` | Окончательно удалить помеченные на удаление drive |
@@ -29,7 +28,6 @@ outline: deep
 | `vaulter:webhooks:relay` | Передать ожидающие события outbox на эндпоинты вебхуков |
 | `vaulter:webhooks:retry` | Повторно отправить доставки вебхуков, у которых истекла пауза повтора |
 | `vaulter:webhooks:prune` | Удалить завершённые строки outbox и терминальные доставки старше срока хранения |
-| `vaulter:webhooks:legacy-fanout` | Показать или переиграть строки outbox до 1.0, у которых раскрытие нельзя доказать |
 | `vaulter:webhooks:redeliver` | Повторно отправить завершённые доставки вебхуков с тем же `webhook-id` |
 | `vaulter:events:reference` | Перегенерировать (или проверить `--check`) таблицу каталога событий в справке |
 | `vaulter:errors:reference` | Перегенерировать (или проверить `--check`) справку по кодам проблем в документации |
@@ -121,7 +119,6 @@ JSON-документ описан схемой `packages/core/resources/schemas
 | `core.webhooks.deliveries` | Число endpoint, отключённых из-за сбоев, и доставок, исчерпавших повторы (`vaulter:webhooks:redeliver`) | warning → warning |
 | `media.disk.probe` | Запись, чтение и удаление тестового объекта на каждом диске (только с `--probe-storage` или `--production`) | error → error |
 | `media.dedup.scope` | Дедупликация по tenant при профилях на разных дисках | warning → warning |
-| `media.legacy_scopes` | Blob со scope `legacy:snull`/`legacy:tnull` (`vaulter:blobs:repair-scopes`) | warning → warning |
 | `drive.uploads.tmp` | Временный каталог доступен на запись и больше `max_file_size` | error → error |
 | `drive.intl` | Загружен `ext-intl` (имена в NFC) | warning → warning |
 | `drive.scan.scanner` | У включённой политики сканирования есть сканер, который разрешается и отвечает заданным key и version | error → error |
@@ -137,17 +134,6 @@ JSON-документ описан схемой `packages/core/resources/schemas
 Проверки `drive.scan.*` выполняются независимо от `features.webhooks`: сканирование — обязательная
 работа по безопасности контента, а не вебхук. `media.disk.probe` — единственная проверка, которая пишет;
 свой объект она удаляет в любом случае.
-
-## `vaulter:upgrade:inspect`
-
-Read-only отчёт о готовности данных к переходу 0.2 → 0.3: мягко удалённые строки старой схемы,
-документы без ревизий и посторонние собственные таблицы. Та же проверка блокирует миграцию
-обновления.
-
-```bash
-php artisan vaulter:upgrade:inspect          # «ready» и код 0, либо список проблем и код 1
-php artisan vaulter:upgrade:inspect --json   # {"schema":"vaulter.upgrade-inspect/v1","ready":…,"problems":[…]}
-```
 
 ## Планировщик
 
@@ -385,31 +371,6 @@ vaulter:webhooks:prune
     {--dry-run}  Показать, что будет удалено, ничего не удаляя
 ```
 
-## `vaulter:webhooks:legacy-fanout`
-
-Relay до 1.0 помечал строку outbox `dispatched` до записи доставок, и падение могло их
-потерять. Апгрейд превращает такие строки в `completed` с `legacy_fanout = true`. Legacy-
-строка без единой доставки неоднозначна: подписчиков не было или раскрытие потеряно —
-по данным это не различить. Команда печатает такие строки (`event_id`, `event`,
-`created_at`, `drive_id`); с `--replay` возвращает их relay, который раскрывает их на
-эндпоинты, подходящие **сейчас** (эндпоинт, неактивный в момент события, может его
-получить; эндпоинт, у которого доставка уже есть, второй не получит). Строки, удалённые
-prune, не восстанавливаются. Управляется флагом `features.webhooks`.
-
-```
-vaulter:webhooks:legacy-fanout
-    {--since=}   Только строки, созданные не раньше этой даты/времени
-    {--until=}   Только строки, созданные не позже этой даты/времени
-    {--replay}   Вернуть показанные строки в очередь relay
-    {--dry-run}  С --replay — показать, что будет переиграно, ничего не меняя
-```
-
-```bash
-php artisan vaulter:webhooks:legacy-fanout --since=2026-09-01 --replay --dry-run
-php artisan vaulter:webhooks:legacy-fanout --since=2026-09-01 --replay
-```
-
----
 
 ## `vaulter:webhooks:redeliver`
 
@@ -530,7 +491,6 @@ Schedule::command('vaulter:changes:prune')->daily();
 |---|---|---|
 | `vaulter:blobs:gc` | Garbage-collect unreferenced Vaulter blobs (two-phase, race-safe — H.3) | `[--grace [GRACE]] [--pending]` |
 | `vaulter:blobs:reconcile` | Rebuild blob ref_count from edge counts and report dangling rows; optionally disk-walk for orphan objects (H.3) | `[--orphans] [--disk [DISK]] [--orphan-grace [ORPHAN-GRACE]] [--prune]` |
-| `vaulter:blobs:repair-scopes` | Copy legacy mixed-scope and retired global blobs to their tenant or drive scopes and atomically redirect revision edges | `[--dry-run] [--execute]` |
 | `vaulter:changes:prune` | Delete drive change-journal entries past the retention window. | `[--days [DAYS]] [--drive [DRIVE]]` |
 | `vaulter:changes:reset` | Expire every change-journal cursor of a drive, forcing its clients to resynchronize. | `<drive>` |
 | `vaulter:commands:reference` | Generate the command table in the reference docs. | `[--check] [--path [PATH]]` |
@@ -550,9 +510,7 @@ Schedule::command('vaulter:changes:prune')->daily();
 | `vaulter:scan:reconcile` | Recover bounded scan intents, backfill discovery and committed upload cleanup. | `[--tenant [TENANT]] [--drive [DRIVE]] [--all-tenants] [--reason [REASON]] [--limit [LIMIT]] [--max-seconds [MAX-SECONDS]] [--dry-run] [--json]` |
 | `vaulter:scan:rescan` | Activate scan policy or record bounded durable scan requests. | `[--tenant [TENANT]] [--drive [DRIVE]] [--all-tenants] [--reason [REASON]] [--revision [REVISION]] [--after [AFTER]] [--limit [LIMIT]] [--request-id [REQUEST-ID]] [--rescan] [--retry-failed] [--activate-policy] [--dry-run] [--json]` |
 | `vaulter:trash:purge` | Permanently delete trashed nodes whose retention window has elapsed. | `[--days [DAYS]]` |
-| `vaulter:upgrade:inspect` | Report 0.2 data that blocks the 0.3 schema upgrade (read-only) | `[--json]` |
 | `vaulter:uploads:sweep` | Abort and clean up stale resumable-upload sessions past their TTL (§2.8). | — |
-| `vaulter:webhooks:legacy-fanout` | List or replay legacy outbox rows whose webhook fan-out cannot be proven. | `[--since [SINCE]] [--until [UNTIL]] [--replay] [--dry-run]` |
 | `vaulter:webhooks:prune` | Delete completed outbox rows and terminal webhook deliveries past the retention window. | `[--days [DAYS]] [--dry-run]` |
 | `vaulter:webhooks:redeliver` | Send finished webhook deliveries again (same webhook-id). | `[--endpoint [ENDPOINT]] [--since [SINCE]] [--status [STATUS]] [--] [<delivery>]` |
 | `vaulter:webhooks:relay` | Relay pending outbox events to webhook endpoints and re-dispatch due retries (§2.11). | `[--limit [LIMIT]]` |

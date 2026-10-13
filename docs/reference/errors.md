@@ -97,7 +97,6 @@ out of date. For handling errors in PHP see the [error guide](/guides/errors).
 | [`unknown_profile`](#unknown_profile) | 422 | core | `Vaulter\Exceptions\Profiles\UnknownProfileException` |
 | [`unknown_role`](#unknown_role) | 422 | core | `Vaulter\Exceptions\Access\UnknownRoleException` |
 | [`unsupported_node_kind`](#unsupported_node_kind) | 409 | core | `Vaulter\Exceptions\Nodes\UnsupportedNodeKindException` |
-| [`upgrade_preflight_failed`](#upgrade_preflight_failed) | 409 | core | `Vaulter\Exceptions\Schema\UpgradePreflightException` |
 | [`upload_conflict`](#upload_conflict) | 409 | drive | `Vaulter\Drive\Exceptions\Uploads\UploadConflictException` |
 | [`upload_not_found`](#upload_not_found) | 404 | drive | — |
 | [`upload_offset_mismatch`](#upload_offset_mismatch) | 409 | drive | `Vaulter\Drive\Exceptions\Uploads\OffsetMismatchException` |
@@ -479,12 +478,6 @@ out of date. For handling errors in PHP see the [error guide](/guides/errors).
 **409** · core
 
 **Unsupported node kind** — This node kind does not support the operation.
-
-### `upgrade_preflight_failed`
-
-**409** · core
-
-**Upgrade preflight failed** — The data does not meet the upgrade preconditions.
 
 ### `upload_conflict`
 

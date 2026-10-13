@@ -24,19 +24,4 @@ php artisan vaulter:doctor --check=core.webhooks
 php artisan vaulter:webhooks:redeliver --endpoint=12 --since="2026-10-01" --status=dead
 ```
 
-Старые строки outbox, раскладку которых доказать нельзя (записаны до поэндпоинтных доставок),
-сначала выводятся списком, затем переигрываются по запросу:
-
-<!-- snippet: shell -->
-
-```bash
-php artisan vaulter:webhooks:legacy-fanout --since="2026-09-01"
-```
-
-<!-- snippet: shell -->
-
-```bash
-php artisan vaulter:webhooks:legacy-fanout --since="2026-09-01" --replay --dry-run
-```
-
-Уберите `--dry-run` только после чтения списка. Получатели должны принимать повторное событие.
+Получатели должны принимать повторное событие.

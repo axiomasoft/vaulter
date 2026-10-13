@@ -27,8 +27,6 @@ use Throwable;
  */
 final class ConfigurationArchitectureGuard
 {
-    public const PUBLISHED_V02_SHA256 = '72004b4a083bc6ec7510290671de9e1157c15212c9c86279a05366dd80a51ce2';
-
     private const PACKAGES = ['core', 'drive', 'documents', 'media', 'filament', 'azgard'];
 
     private const RETIRED_CLASSES = [
@@ -44,13 +42,6 @@ final class ConfigurationArchitectureGuard
     public function scanPackages(string $packagesDirectory): array
     {
         $violations = [];
-        $fixture = rtrim($packagesDirectory, '/').'/core/tests/Fixtures/config/vaulter-0.2.php';
-        try {
-            self::assertPublishedV02Fixture($fixture);
-        } catch (Throwable $error) {
-            $violations[] = $error->getMessage();
-        }
-
         foreach (self::PACKAGES as $package) {
             $owner = rtrim($packagesDirectory, '/').'/'.$package;
             foreach (['src', 'tests', 'config', 'database', 'routes'] as $scope) {
@@ -109,14 +100,6 @@ final class ConfigurationArchitectureGuard
         sort($violations);
 
         return array_values(array_unique($violations));
-    }
-
-    public static function assertPublishedV02Fixture(string $path): void
-    {
-        $contents = @file_get_contents($path);
-        if ($contents === false || !hash_equals(self::PUBLISHED_V02_SHA256, hash('sha256', $contents))) {
-            throw new RuntimeException($path.':1: published v0.2 fixture must match pinned SHA-256 '.self::PUBLISHED_V02_SHA256);
-        }
     }
 
     /** @return list<string> */

@@ -1,6 +1,6 @@
 ---
 title: Конфигурация
-description: Конфиги по пакетам-владельцам, типизированный доступ и переход с опубликованных ключей 0.2.
+description: Конфиги по пакетам-владельцам и типизированный доступ.
 outline: deep
 ---
 
@@ -33,8 +33,7 @@ php artisan vendor:publish --tag=vaulter-documents-config
 Только core владеет настройками схемы: `database.connection`, `database.table_prefix`,
 `ids.strategy`, `ids.host_keys` и `tenancy.enabled`. Соединение `null` использует соединение
 Laravel по умолчанию. Имя таблицы состоит из префикса и канонического имени сущности:
-`DatabaseConfig::table('drives')` по умолчанию возвращает `v_drives`. Карта `table_names`
-нужна только для обновления: `DatabaseConfig::legacyTable()` ищет по ней старые физические таблицы.
+`DatabaseConfig::table('drives')` по умолчанию возвращает `v_drives`.
 
 <!-- snippet: config -->
 
@@ -153,9 +152,8 @@ preview/download и обработчики установленного Document
 
 CAS-бакет должен быть без версионирования: удалением управляет двухфазный GC.
 Минимальное окно GC — один час. Каноническая область дедупликации — `drive`
-(раньше `storage`). `global` удалён (PLAN2.D49): провайдер отказывает при загрузке с
-`InvalidConfigurationException`; существующие глобальные блобы переносит
-`vaulter:blobs:repair-scopes`. Дедупликация использует сохранённый `scope_key`; смена области
+. `global` удалён (PLAN2.D49): провайдер отказывает при загрузке с
+`InvalidConfigurationException`. Дедупликация использует сохранённый `scope_key`; смена области
 сохраняет старые блобы и влияет на новые загрузки.
 См. [Хранилище и блобы](/ru/concepts/storage-and-blobs).
 
@@ -192,8 +190,6 @@ CAS-бакет должен быть без версионирования: уд
 `resumable.enabled` управляет резюмируемыми маршрутами; таблицы загрузок существуют
 независимо от флага. Правила имён, лимиты папок и лимит размера файла профиля задаёт политика
 диска профиля (см. [Drive → Имена, лимиты, избранное и свойства](/ru/concepts/nodes-and-revisions));
-`vaulter-drive.names.max_length`, `vaulter.drive.name_rules.max_length` и
-`vaulter.extra_data.enabled` устарели и игнорируются (`E_USER_DEPRECATED`).
 См. [Загрузки](/ru/guides/uploads) и [Корзина](/ru/guides/trash).
 
 ## Documents: содержимое, ревизии, комментарии и коллаборация
@@ -225,22 +221,16 @@ CAS-бакет должен быть без версионирования: уд
 ```
 
 Установка `vaulter-documents` включает редактирование документов и ревизии.
-Блобы и ревизии файлов включены всегда; `features.blobs`, `features.versions` и
-`features.document_versions` удалены. Старые `false` игнорируются с предупреждением.
+Блобы и ревизии файлов включены всегда.
 Комментарии теперь по умолчанию **включены**. Для отключения задайте
-`vaulter-documents.comments.enabled = false`. Опубликованный старый
-`features.comments = false` переносится и сохраняет отключение.
+`vaulter-documents.comments.enabled = false`.
 Коллаборация остаётся опциональной. При её включении оба секрета хаба должны быть заданы
 и различаться: иначе production boot завершается исключением, а другие окружения пишут warning.
 
-`exporters` — список имён классов экспортёров (карта формат → FQCN из 0.2 ещё читается, с предупреждением об устаревании). Расширения allow-list TipTap переезжают в
-`vaulter-documents.tiptap.*`. `vaulter.enabled_document_types` и
-`vaulter.features.spreadsheets` превращаются в список классов
-[типов документов](/ru/extending/document-types) `vaulter-documents.types`
-(`richtext`/`table`/`template` → `RichTextDocumentType`, `markdown` → `MarkdownDocumentType`,
-`spreadsheets = true` → `SpreadsheetDocumentType`) с предупреждением об устаревании. Если в
-списке нет формата rich text (`['markdown']`), значение по умолчанию
-`vaulter-documents.default_type` (`vaulter/rich-text`) не зарегистрировано, и загрузка падает, пока
+`exporters` — список имён классов экспортёров. Расширения allow-list TipTap живут в
+`vaulter-documents.tiptap.*`. `vaulter-documents.types` — список классов
+[типов документов](/ru/extending/document-types). Если в списке нет типа rich text (`['markdown']`),
+значение по умолчанию `vaulter-documents.default_type` (`vaulter/rich-text`) не зарегистрировано, и загрузка падает, пока
 не задан зарегистрированный ключ, например `vaulter/markdown`.
 См. [Совместное редактирование](/ru/guides/collaboration) и [Экспорт](/ru/guides/export).
 
@@ -281,84 +271,11 @@ $connection = $database->connection();
 Каждый вызов заново читает репозиторий: `config()->set()` в тестах сразу меняет результат.
 Код пакетов читает ключи Vaulter только в `Configuration`; границу проверяют arch-тесты.
 
-## Переход с опубликованной конфигурации 0.2
+## Ключи, которых нет
 
-Перед boot провайдеров `ConfigNormalizer` переносит старые ключи установленных пакетов.
-Каждый устаревший ключ даёт один `E_USER_DEPRECATED`; повторная нормализация не повторяет
-предупреждения. Если явно изменённый канонический ключ отличается от переведённого
-старого значения, возникает `Vaulter\Exceptions\Configuration\InvalidConfigurationException`.
-Равные значения дают только deprecation. Ключи отсутствующих модулей не затрагиваются.
-Поддержка устаревших ключей заканчивается в 1.0.
-
-| Устаревший ключ | Канонический ключ |
-|---|---|
-| `vaulter.connection` | `vaulter.database.connection` |
-| `vaulter.table_prefix` | `vaulter.database.table_prefix` |
-| `vaulter.id_type / vaulter.ids.default` | `vaulter.ids.strategy` |
-| `vaulter.tenant.enabled` | `vaulter.tenancy.enabled` |
-| `vaulter.panels / vaulter.default_panel` | `vaulter.profiles.providers / vaulter.profiles.default` |
-| `vaulter.features.reliability` | `vaulter.features.webhooks` |
-| `vaulter.drivers.permission` | `vaulter.access.permission_driver` |
-| `vaulter.permission_drivers` | `vaulter.access.permission_drivers` |
-| `vaulter.gate.* / vaulter.spatie.*` | `vaulter.access.gate.* / vaulter.access.spatie.*` |
-| `vaulter.azgard.*` | `vaulter-azgard.*` |
-| `vaulter.route_prefix` | `vaulter.routes.prefix` |
-| `vaulter.middleware` | `vaulter.routes.middleware.authenticated` |
-| `vaulter.rate_limits.{public,uploads}.per_minute` | `vaulter.routes.rate_limits.{public,uploads}` |
-| `vaulter.share_token_generator / vaulter.share.token_generator` | `vaulter.sharing.token_generator` |
-| `vaulter.share.{url_base,prefix_length,default_ttl_hours,max_ttl_hours}` | `vaulter.sharing.{url_base,prefix_length,default_ttl_hours,max_ttl_hours}` |
-| `vaulter.downloads.inline_mime_whitelist` | `vaulter.downloads.inline_mime_types` |
-| `vaulter.storage.default_disk` | `vaulter-media.disk` |
-| `vaulter.dedup.scope` | `vaulter-media.dedup.scope` |
-| `vaulter.gc.*` | `vaulter-media.gc.*` |
-| `vaulter.cas.{content_store,storage_driver,blob_store}` | `vaulter-media.{content_store,storage_driver,blob_store}` |
-| `vaulter.uploads.max_bytes / vaulter.drive.max_upload_kb` | `vaulter-drive.uploads.max_file_size` |
-| `vaulter.drive.allowed_mime` | `vaulter-drive.uploads.allowed_mime_types` |
-| `vaulter.uploads.chunk_size` | `vaulter-drive.uploads.resumable.chunk_size` |
-| `vaulter.uploads.max_chunk_bytes` | `vaulter-drive.uploads.resumable.max_chunk_size` |
-| `vaulter.uploads.session_ttl_hours` | `vaulter-drive.uploads.resumable.session_ttl_hours` |
-| `vaulter.uploads.max_active_sessions` | `vaulter-drive.uploads.resumable.max_active_sessions_per_actor` |
-| `vaulter.uploads.metadata.*` | `vaulter-drive.uploads.resumable.metadata.*` |
-| `vaulter.features.uploads / vaulter.uploads.tus.enabled` | `vaulter-drive.uploads.resumable.enabled` |
-| `vaulter.trash.retention_days` | `vaulter-drive.trash.retention_days` |
-| `vaulter.max_document_size_kb` | `vaulter-documents.content.max_size_kb` |
-| `vaulter.max_versions / vaulter.versions.max` | `vaulter-documents.revisions.limit` |
-| `vaulter.features.comments` | `vaulter-documents.comments.enabled` |
-| `vaulter.features.collaboration` | `vaulter-documents.collaboration.enabled` |
-| `vaulter.collaboration.driver` | `vaulter-documents.collaboration.driver` |
-| `vaulter.collaboration.channel_prefix` | `vaulter-documents.collaboration.broadcast.channel_prefix` |
-| `vaulter.collaboration.webhook_secret` | `vaulter-documents.collaboration.hub.webhook_secret` |
-| `vaulter.collaboration.webhook_timestamp_tolerance` | `vaulter-documents.collaboration.hub.timestamp_tolerance` |
-| `vaulter.collaboration.drivers.hocuspocus.secret` | `vaulter-documents.collaboration.hub.jwt_secret` |
-| `vaulter.collaboration.drivers.hocuspocus.{url,token_ttl}` | `vaulter-documents.collaboration.hub.{url,token_ttl}` |
-| `vaulter.tiptap.*` | `vaulter-documents.tiptap.*` |
-| `vaulter.exporters` | `vaulter-documents.exporters` |
-| `vaulter.models.storage` | `vaulter.models.drive` |
-| `vaulter.models.file_version / vaulter.models.file_version_blob` | `vaulter.models.file_revision / vaulter.models.file_revision_blob` |
-| `vaulter.models.upload_session / vaulter.models.upload_part` | `vaulter-drive.models.upload_session / vaulter-drive.models.upload_part` |
-| `vaulter.models.node_comment` | `vaulter-documents.models.node_comment` |
-| `vaulter.models.node_document_version` | `vaulter-documents.models.document_revision` |
-| `vaulter-filament.resources.storage` | `vaulter-filament.resources.drive` |
-
-`id_type = id` превращается в `ids.strategy = bigint`; `ulid` остаётся `ulid`.
-Старые классы панелей нужно переписать как `ProfileProvider`; исключение подскажет
-`vaulter:make:profile`. Лимиты загрузок сравниваются в байтах (`max_upload_kb × 1024`):
-различающиеся старые лимиты дают warning и используется меньший.
-Старый `false` для uploads или tus отключает `resumable.enabled`.
-
-Когда заданы оба старых ID-ключа, `ids.default` сохраняет приоритет над `id_type`.
-Для старых алиасов share-токена пользовательское значение побеждает поставляемый дефолт;
-два разных пользовательских значения вызывают `InvalidConfigurationException`.
-Оставьте один `sharing.token_generator`.
-
-`tenant.column`, `drive.name_rules.no_separators_pattern` и `migrations.path` игнорируются
-с deprecation: имя колонки тенанта и правила разделителей теперь фиксированы.
-`versions.autosave_debounce_seconds` и `vaulter-documents.revisions.autosave_debounce_seconds`
-игнорируются так же: чекпоинты документа неизменяемы и следуют
-`vaulter-documents.revisions.checkpoint_interval_seconds` (PLAN2.D34).
-Оставьте `table_names` только на время обновления физических таблиц.
-
-Старую публикацию Media перенесите в `config/vaulter-media.php`. Нормализатор переводит
-точные строки FQCN встроенных классов на старых ключах и сохраняет пользовательские FQCN.
-PHP-импорты и объявления собственных классов требуют канонических имён; PHP-алиасов нет.
-См. [UPGRADE.md](https://github.com/axioma-studio/vaulter/blob/main/UPGRADE.md).
+Vaulter 1.0 читает только ключи опубликованных файлов `config/vaulter*.php`. Ключи прежних релизов разработки
+не переводятся, не объявляются устаревшими и не вызывают предупреждений; неизвестный ключ игнорируется. Моста
+миграции нет (см. [UPGRADE.md](https://github.com/axioma-studio/vaulter/blob/main/UPGRADE.md)).
+Умолчания пакета по-прежнему заполняют недостающие вложенные ключи частично опубликованного файла, а заданная
+хостом карта или список (`ids.strategies`, `handlers`, `vaulter-documents.types`, драйверы доступа) заменяет
+умолчание, а не сливается с ним.

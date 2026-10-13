@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P1.10",
   "title": "Удаление легаси 0.x и чистые create-миграции (схема неизменна)",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "Миграции схлопнуты без DDL-разницы в каждой engine/schema-preset строке. Только доказанное 0.x удалено; живые проверки вынесены, immutable schema ДО сохранена, текущий snapshot и test закреплены.",
   "why": "Владелец: установок нет, никакого легаси и переходов миграций (D21, brief M3/M4). Каждый DB-тест сейчас прогоняет цепочку 0.x с backfill и legacy-drop — схлопывание ускоряет все наборы и убирает 21 апгрейд-тест.",
   "scope": {
@@ -257,12 +257,67 @@
   },
   "result": {
     "started_at": "2026-10-13T11:10:47Z",
+    "finished_at": "2026-10-13T12:33:48Z",
     "executor": {
       "provider": "anthropic",
       "model": "claude-sonnet-5-5",
       "effort": "high",
       "session": "67dd0049-af5f-4240-b8a6-1477596cce2d"
-    }
+    },
+    "notes": "43 миграции → 25 create_v_<table>_table; схема неизменна: schema-snapshot ×3 движка × 48 presets == original (+rollback → пустая схема). SchemaSnapshotTest + expected ×144 + SchemaSnapshot/SchemaPresets. Удалено: Upgrade-код/тесты/фикстуры, UpgradePreflight, upgrade:inspect, legacy-fanout, repair-scopes, LegacyScopesCheck, DeprecatedKeysCheck, DatabaseConfig::legacyTable, трансляция 0.x-ключей в ConfigNormalizer, legacy CAS scope parsing, алиас dedup 'storage'. CHANGES ledger: 412 имён (D21). V5 потребовал починить 3 устаревших теста (IdStrategyTest, HostKeys*).",
+    "deviations": [
+      "pgsql: 0.x chain падает на пустой БД в 20/48 presets → original этих строк снят в builder-режиме (original/metadata.json builder_fallback); MySQL SHOW CREATE сравнивается с сортировкой KEY-строк; правки вне task_files: load/*, openapi, vue schema.d.ts, docs/CHANGELOG/CI tests.yml, media/documents/core tests; EventTypeTest, load-сьют, azgard real-AzGuard, ProblemMappingTest, P83DocumentsMetricsTest красные до P1.10 и не тронуты"
+    ],
+    "pending": [
+      "P1.5: serial-группа и parallel-flake (ErrorsReferenceTest/fullProblemCatalog, CompleteUploadIdempotencyTest) в fast-режиме; EventTypeTest/ProblemMappingTest/load stale-тесты — отдельным решением владельца"
+    ],
+    "checks": [
+      {
+        "id": "V0",
+        "exit": 0,
+        "at": "2026-10-13T12:33:48Z"
+      },
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-13T12:33:48Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-13T12:33:48Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-13T12:33:48Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-13T12:33:48Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-13T12:33:48Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-13T12:33:48Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-13T12:33:48Z"
+      },
+      {
+        "id": "V8",
+        "exit": 0,
+        "at": "2026-10-13T12:33:48Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-13T11:10:47Z"
+  "updated_at": "2026-10-13T12:33:48Z"
 }

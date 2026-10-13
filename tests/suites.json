@@ -161,59 +161,6 @@
           ]
         },
         {
-          "key": "FixtureTestCase",
-          "fingerprint": "4a2f0a0f7cf8",
-          "lifecycle": "custom",
-          "database": true,
-          "engines": [
-            "sqlite",
-            "pgsql",
-            "mysql"
-          ],
-          "skeleton_writer": false,
-          "empty_passes": [
-            "serial"
-          ],
-          "files": [
-            "packages/core/tests/Upgrade/FreshFeatureFlagsMigrationTest.php",
-            "packages/core/tests/Upgrade/NodeDataContractUpgradeTest.php",
-            "packages/core/tests/Upgrade/OffDedupRollbackSafetyTest.php",
-            "packages/core/tests/Upgrade/QuotaAllRevisionsUpgradeTest.php",
-            "packages/core/tests/Upgrade/ShareLinksUpgradeTest.php",
-            "packages/core/tests/Upgrade/TrashRootsBackfillTest.php"
-          ]
-        },
-        {
-          "key": "FixtureTestCase+LoadsV02Fixture",
-          "fingerprint": "5fd32d2523d4",
-          "lifecycle": "custom",
-          "database": true,
-          "engines": [
-            "sqlite",
-            "pgsql",
-            "mysql"
-          ],
-          "skeleton_writer": false,
-          "empty_passes": [
-            "serial"
-          ],
-          "files": [
-            "packages/core/tests/Upgrade/AccessUpgradeEquivalenceTest.php",
-            "packages/core/tests/Upgrade/BlobScopeKeyMigrationTest.php",
-            "packages/core/tests/Upgrade/Canon03UpgradeTest.php",
-            "packages/core/tests/Upgrade/DocumentsAggregateUpgradeTest.php",
-            "packages/core/tests/Upgrade/DriveChangesUpgradeTest.php",
-            "packages/core/tests/Upgrade/EventPipelineMigrationTest.php",
-            "packages/core/tests/Upgrade/HostKeyColumnsMigrationTest.php",
-            "packages/core/tests/Upgrade/LegacyTableNamesUpgradeTest.php",
-            "packages/core/tests/Upgrade/NodesCleanupMigrationTest.php",
-            "packages/core/tests/Upgrade/SchemaParityTest.php",
-            "packages/core/tests/Upgrade/UpgradePreflightTest.php",
-            "packages/core/tests/Upgrade/WebhookEndpointsV1UpgradeTest.php",
-            "packages/core/tests/Upgrade/WebhookFanoutUpgradeTest.php"
-          ]
-        },
-        {
           "key": "HostKeyMysqlTestCase",
           "fingerprint": "d4e2b5ee4c67",
           "lifecycle": "custom",
@@ -379,13 +326,11 @@
             "packages/core/tests/Configuration/ConfigDefaultsLoadingTest.php",
             "packages/core/tests/Configuration/ConfigNormalizerTest.php",
             "packages/core/tests/Configuration/ConfigValidatorTest.php",
-            "packages/core/tests/Configuration/PublishedConfigV02Test.php",
             "packages/core/tests/Configuration/ScheduleFrequencyTest.php",
             "packages/core/tests/Configuration/VaulterConfigTest.php",
             "packages/core/tests/Console/CommandsReferenceCommandTest.php",
             "packages/core/tests/Console/ConfigReferenceCommandTest.php",
             "packages/core/tests/Console/SchedulingRegistrarTest.php",
-            "packages/core/tests/Console/UpgradeInspectCommandTest.php",
             "packages/core/tests/Content/EgressInventoryTest.php",
             "packages/core/tests/Content/NodeContentLifecycleRegistryTest.php",
             "packages/core/tests/Content/ScanEvidenceBoundaryTest.php",
@@ -469,6 +414,7 @@
             "packages/core/tests/Schema/NodeSearchLikeEscapingTest.php",
             "packages/core/tests/Schema/NodeShareSchemaTest.php",
             "packages/core/tests/Schema/PanelConnectionTest.php",
+            "packages/core/tests/Schema/SchemaSnapshotTest.php",
             "packages/core/tests/Schema/SiblingUniqueTest.php",
             "packages/core/tests/Sharing/CreateShareLinkTest.php",
             "packages/core/tests/Sharing/PublicShareDownloadHeadersTest.php",
@@ -487,15 +433,12 @@
             "packages/core/tests/Support/ReleaseReadinessGuardTest.php",
             "packages/core/tests/Support/SnapshotResourceTimestampTest.php",
             "packages/core/tests/Support/TenantFootgunGuardTest.php",
-            "packages/core/tests/Support/UpgradeGuideCoverageTest.php",
             "packages/core/tests/Tenancy/StrictTenancyTest.php",
             "packages/core/tests/Tenancy/TenantJobBoundaryTest.php",
             "packages/core/tests/Testing/ContractSuitesTest.php",
             "packages/core/tests/Testing/FactoriesTest.php",
             "packages/core/tests/Webhooks/ConcurrentDeliveryTest.php",
             "packages/core/tests/Webhooks/DeliverWebhookTest.php",
-            "packages/core/tests/Webhooks/DeliveryClaimMigrationTest.php",
-            "packages/core/tests/Webhooks/LegacyFanoutCommandTest.php",
             "packages/core/tests/Webhooks/OutboundUrlGuardTest.php",
             "packages/core/tests/Webhooks/OutboxFanoutTest.php",
             "packages/core/tests/Webhooks/OutboxRelayTest.php",
@@ -676,7 +619,6 @@
           ],
           "files": [
             "packages/media/tests/Cas/BlobScopeKeyTest.php",
-            "packages/media/tests/Cas/RepairBlobScopesCommandTest.php",
             "packages/media/tests/Cas/ScopeKeyReconcileTest.php"
           ]
         },

@@ -1157,7 +1157,6 @@ export interface components {
              * @example unknown_profile
              * @example unknown_role
              * @example unsupported_node_kind
-             * @example upgrade_preflight_failed
              * @example upload_conflict
              * @example upload_not_found
              * @example upload_offset_mismatch

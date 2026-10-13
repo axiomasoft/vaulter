@@ -22,7 +22,7 @@ use Vaulter\Models\Concerns\ResolvesVaulterConnection;
  * endpoint and 'completed' afterwards (fanned_out_at, delivery_count). While a relay
  * worker fans the row out it holds claim_token until claim_until; fanout_cursor is
  * the last endpoint key already materialized, so a successor resumes after it.
- * legacy_fanout marks rows the pre-1.0 relay settled without that guarantee.
+ * legacy_fanout is a retired marker: 1.0 code never sets it, and the column goes with the neutral-schema decision (D29).
  *
  * Swappable — point configuration key vaulter.models.outbox at a subclass for tenant
  * scoping or extra behaviour.

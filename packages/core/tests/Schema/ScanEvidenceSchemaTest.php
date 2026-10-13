@@ -13,7 +13,7 @@ use Vaulter\Tests\TestCase;
 
 uses(TestCase::class);
 
-it('SEC-SCHEMA-fresh SEC-SCHEMA-additive-up-down-data qualifies additive scan up down preserved data and FK checks under every package key strategy', function (string $strategy): void {
+it('creates the scan evidence and work schema with enforced checks and foreign keys under every package key strategy', function (string $strategy): void {
     $oldPrefix = config('vaulter.database.table_prefix');
     $oldStrategy = config('vaulter.ids.strategy');
     config()->set('vaulter.database.table_prefix', 'scan_probe_');
@@ -29,23 +29,16 @@ it('SEC-SCHEMA-fresh SEC-SCHEMA-additive-up-down-data qualifies additive scan up
         'bigint' => $id, 'ulid' => (string) Str::ulid(), 'uuid7' => (string) Str::uuid7(),
     };
     [$drive, $node, $file, $revision, $blob, $missing] = array_map($key, [1, 2, 3, 4, 5, 6]);
-    $migration = require __DIR__.'/../../database/migrations/2026_10_06_000002_add_scan_evidence_and_work.php';
     try {
         $builder->createAll();
-        $migration->down();
-        $db->table('scan_probe_drives')->insert(['id' => $drive, 'owner_type' => 'team', 'owner_id' => '1', 'name' => 'prior']);
+        $db->table('scan_probe_drives')->insert(['id' => $drive, 'owner_type' => 'team', 'owner_id' => '1', 'name' => 'drive']);
         $db->table('scan_probe_nodes')->insert(['id' => $node, 'drive_id' => $drive, 'kind' => 'file', 'name' => 'prior', 'name_key' => 'prior']);
         $db->table('scan_probe_files')->insert(['id' => $file, 'node_id' => $node]);
         $db->table('scan_probe_blobs')->insert(['id' => $blob, 'sha256' => str_repeat('a', 64), 'size_bytes' => 3, 'scope_key' => 'drive:'.$drive, 'storage_key' => 'prior', 'status' => 'committed']);
         $db->table('scan_probe_file_revisions')->insert(['id' => $revision, 'file_id' => $file, 'blob_id' => $blob,
             'number' => 1, 'sha256' => str_repeat('a', 64), 'size_bytes' => 3, 'original_name' => 'prior', 'scan_status' => 'clean', 'status' => 'committed', 'committed_at' => '2026-09-01 00:00:00']);
-        $before = (array) $db->table('scan_probe_file_revisions')->first();
-        $migration->up();
-        $migration->up();
-        $after = (array) $db->table('scan_probe_file_revisions')->first();
-        expect((int) $after['scan_admission_sequence'])->toBe(0)->and($after['quarantined_at'])->toBeNull();
-        unset($after['scan_admission_sequence'], $after['quarantined_at']);
-        expect($after)->toBe($before);
+        $stored = (array) $db->table('scan_probe_file_revisions')->first();
+        expect((int) $stored['scan_admission_sequence'])->toBe(0)->and($stored['quarantined_at'])->toBeNull();
         foreach (['scan_policy_states', 'scan_obligations', 'scan_requests', 'scan_evidence', 'scan_backfill_runs'] as $entity) {
             expect($schema->hasTable('scan_probe_'.$entity))->toBeTrue();
         }
@@ -75,13 +68,6 @@ it('SEC-SCHEMA-fresh SEC-SCHEMA-additive-up-down-data qualifies additive scan up
         $db->table('scan_probe_file_revisions')->where('id', $revision)->delete();
         expect($db->table('scan_probe_scan_obligations')->count())->toBe(0);
         $db->table('scan_probe_blobs')->where('id', $blob)->delete();
-        $migration->down();
-        expect($schema->hasTable('scan_probe_scan_evidence'))->toBeFalse()->and($schema->hasColumn('scan_probe_drives', 'scan_admission_sequence'))->toBeFalse()
-            ->and($db->table('scan_probe_drives')->count())->toBe(1);
-        $migration->up();
-        expect($schema->hasTable('scan_probe_scan_evidence'))->toBeTrue();
-        fwrite(STDOUT, 'P38_SCAN_UP_DOWN '.json_encode(['driver' => $db->getDriverName(), 'database' => $db->getDatabaseName(), 'strategy' => $strategy,
-            'up_idempotent' => true, 'down_preserves_prior_drive' => true, 'prior_revision_preserved' => true, 'foreign_keys_checked' => true, 'up_restored' => true]).PHP_EOL);
     } finally {
         $builder->dropAll();
         config()->set('vaulter.database.table_prefix', $oldPrefix);

@@ -26,14 +26,6 @@ final readonly class DatabaseConfig
         return $this->tablePrefix().$name;
     }
 
-    public function legacyTable(string $legacyEntity): string
-    {
-        $mapped = $this->config->get('vaulter.table_names.'.$legacyEntity);
-        $base = is_string($mapped) && $mapped !== '' ? $mapped : $legacyEntity;
-
-        return $this->tablePrefix().$base;
-    }
-
     public function connection(): ?string
     {
         $value = $this->config->get('vaulter.database.connection');

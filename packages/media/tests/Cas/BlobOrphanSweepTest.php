@@ -23,7 +23,7 @@ use Vaulter\ValueObjects\Cas\BlobScope;
  *
  * These cases pin the SQLite-testable half: detection on every driver, the seven
  * round-trip guards that keep the sweep from EVER touching a non-canonical path,
- * tnull/snull scope, any-status ⇒ owned, the disk-agnostic ownership probe (the
+ * off scope, any-status ⇒ owned, the disk-agnostic ownership probe (the
  * data-loss fix), the orphan grace (fresh / aged / null-mtime), prune REFUSED on
  * sqlite, and the listing-unsupported refusal. The actual destructive prune is
  * PG/MySQL-only and lives in BlobOrphanPruneTest (skipped on sqlite).
@@ -45,7 +45,7 @@ it('обнаруживает настоящий orphan и пропускает �
     $blob = app(BlobStore::class)->commit(CasTestHelpers::streamFor('owned bytes'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), (string) 1, 'unused'));
 
     // A genuine orphan: valid canonical key, no row, aged past grace.
-    $orphanKey = CasTestHelpers::seedOrphan(bytes: 'orphan bytes', scope: 't1', ageHours: 48);
+    $orphanKey = CasTestHelpers::seedOrphan(bytes: 'orphan bytes', scope: 't-1', ageHours: 48);
 
     $report = app(BlobReconciler::class)->sweepOrphans(disk: 'local', graceHours: 24, prune: false);
 
@@ -94,22 +94,8 @@ it('round-trip guard: НЕ канонический путь пропускае�
 ]);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 3. tnull / snull scope — a null-tenant/storage orphan IS detected.
+// 3. off scope — an orphan of its own scope IS detected.
 // ─────────────────────────────────────────────────────────────────────────────
-it('tnull-scope: orphan с null-tenant (tenancy off) обнаруживается', function (): void {
-    // The producer path: a NULL tenant under tenant scope now keeps to its drive
-    // (PLAN2.D49); legacy tnull objects must still be orphan-detected.
-    $produced = app(BlobStore::class)->commit(CasTestHelpers::streamFor('producer'), scope: BlobScope::forUpload((string) config('vaulter-media.dedup.scope'), null, 'unused'));
-    expect($produced->storage_key)->toStartWith('d-unused/');
-
-    $orphanKey = CasTestHelpers::seedOrphan(bytes: 'tnull orphan', scope: 'tnull', ageHours: 48);
-
-    $report = app(BlobReconciler::class)->sweepOrphans(disk: 'local', graceHours: 24, prune: false);
-
-    expect($orphanKey)->toStartWith('tnull/')
-        ->and($report['orphans'])->toContain($orphanKey);
-});
-
 it('off-scope: orphan отдельной загрузки (dedup off) обнаруживается', function (): void {
     $segment = BlobScope::unshared()->segment();
     $orphanKey = CasTestHelpers::seedOrphan(bytes: 'off orphan', scope: $segment, ageHours: 48);
@@ -117,17 +103,6 @@ it('off-scope: orphan отдельной загрузки (dedup off) обнар
     $report = app(BlobReconciler::class)->sweepOrphans(disk: 'local', graceHours: 24, prune: false);
 
     expect($orphanKey)->toStartWith($segment.'/')
-        ->and($report['orphans'])->toContain($orphanKey);
-});
-
-it('snull-scope: orphan с null-storage (storage scope, tenancy off) обнаруживается', function (): void {
-    config()->set('vaulter-media.dedup.scope', 'drive');
-
-    $orphanKey = CasTestHelpers::seedOrphan(bytes: 'snull orphan', scope: 'snull', ageHours: 48);
-
-    $report = app(BlobReconciler::class)->sweepOrphans(disk: 'local', graceHours: 24, prune: false);
-
-    expect($orphanKey)->toStartWith('snull/')
         ->and($report['orphans'])->toContain($orphanKey);
 });
 
@@ -183,7 +158,7 @@ it('owned кросс-диском: строка на disk=other, байты на
 // ─────────────────────────────────────────────────────────────────────────────
 it('grace: свежий row-less объект (mtime=now) пропускается', function (): void {
     // Fresh: no ageing — mtime is "now", inside any grace window.
-    CasTestHelpers::seedOrphan(bytes: 'fresh orphan', scope: 't1', ageHours: 0);
+    CasTestHelpers::seedOrphan(bytes: 'fresh orphan', scope: 't-1', ageHours: 0);
 
     $report = app(BlobReconciler::class)->sweepOrphans(disk: 'local', graceHours: 24, prune: false);
 
@@ -192,7 +167,7 @@ it('grace: свежий row-less объект (mtime=now) пропускаетс
 });
 
 it('grace: тот же объект, состаренный за --orphan-grace, попадает в orphans', function (): void {
-    $orphanKey = CasTestHelpers::seedOrphan(bytes: 'aged orphan', scope: 't1', ageHours: 48);
+    $orphanKey = CasTestHelpers::seedOrphan(bytes: 'aged orphan', scope: 't-1', ageHours: 48);
 
     $report = app(BlobReconciler::class)->sweepOrphans(disk: 'local', graceHours: 24, prune: false);
 
@@ -201,7 +176,7 @@ it('grace: тот же объект, состаренный за --orphan-grace,
 
 it('grace: null-mtime объект (возраст неизвестен) пропускается, не удаляется', function (): void {
     // The real store lays the bytes down (a valid canonical key, no row)...
-    $orphanKey = CasTestHelpers::seedOrphan(bytes: 'null mtime orphan', scope: 't1', ageHours: 48);
+    $orphanKey = CasTestHelpers::seedOrphan(bytes: 'null mtime orphan', scope: 't-1', ageHours: 48);
 
     // ...but the ACTIVE store reports a null lastModified for everything, so the
     // grace gate cannot establish the age ⇒ the object is skipped, never an orphan.
@@ -222,7 +197,7 @@ it('grace: null-mtime объект (возраст неизвестен) про�
 it('prune отказан на sqlite: pruneSupported=false, байты живы, orphan всё ещё в отчёте', function (): void {
     expect(DB::connection()->getDriverName())->toBe('sqlite'); // the gate's premise
 
-    $orphanKey = CasTestHelpers::seedOrphan(bytes: 'survives prune', scope: 't1', ageHours: 48);
+    $orphanKey = CasTestHelpers::seedOrphan(bytes: 'survives prune', scope: 't-1', ageHours: 48);
 
     $report = app(BlobReconciler::class)->sweepOrphans(disk: 'local', graceHours: 24, prune: true);
 
@@ -240,7 +215,7 @@ it('prune отказан на sqlite: pruneSupported=false, байты живы,
 // ─────────────────────────────────────────────────────────────────────────────
 it('listing не поддержан: не-listable store → listingSupported=false, scanned=0, ничего не удаляется', function (): void {
     // Bytes are a genuine, aged orphan — but the active store cannot enumerate.
-    $orphanKey = CasTestHelpers::seedOrphan(bytes: 'unwalkable orphan', scope: 't1', ageHours: 48);
+    $orphanKey = CasTestHelpers::seedOrphan(bytes: 'unwalkable orphan', scope: 't-1', ageHours: 48);
 
     app()->instance(ContentStore::class, new NonListableContentStore);
 

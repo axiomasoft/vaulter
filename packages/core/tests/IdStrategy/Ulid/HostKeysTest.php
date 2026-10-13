@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Data\Activity\RecordActivityCommand;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Access\NodeGrant;
+use Vaulter\Models\Activity\Activity;
 use Vaulter\Profiles\Profile;
 use Vaulter\Repositories\Activity\ActivityStoreRepository;
 use Vaulter\Schema\SchemaBuilder;
@@ -41,12 +43,15 @@ it('round-trips UUID users and bigint projects and Spatie roles with ULID Vaulte
     $node = $drive->actingAs($user)->folders()->create('UUID actor');
     $grant = AccessTestHelpers::grant($node, RoleRegistry::READER, subjectId: $user->getKey(), subjectType: $user->getMorphClass());
     $roleGrant = AccessTestHelpers::grant($node, RoleRegistry::READER, subjectId: $role->getKey(), subjectType: $role->getMorphClass());
-    $activity = app(ActivityStoreRepository::class)->record(new RecordActivityCommand(
+    $eventId = (string) Str::ulid();
+    app(ActivityStoreRepository::class)->record(new RecordActivityCommand(
+        eventId: $eventId,
         verb: EventType::FolderCreated,
         storageId: $storage->getKey(),
         actorType: $user->getMorphClass(),
         actorId: $uuid,
-    ))->refresh();
+    ));
+    $activity = Activity::query()->where('event_id', $eventId)->sole();
 
     expect($storage->owner_id)->toBe('42')
         ->and($node->createdBy)->toBe($uuid)

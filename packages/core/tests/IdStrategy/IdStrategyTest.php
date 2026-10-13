@@ -17,7 +17,10 @@ use Vaulter\Schema\Uuid7Ids;
  */
 function columnFor(Closure $define): ColumnDefinition
 {
-    $table = new Blueprint(DB::connection(), 'probe');
+    $connection = DB::connection();
+    // The schema grammar of a server connection exists once a schema builder has been asked for.
+    $connection->getSchemaBuilder();
+    $table = new Blueprint($connection, 'probe');
     $define($table);
 
     $columns = $table->getColumns();

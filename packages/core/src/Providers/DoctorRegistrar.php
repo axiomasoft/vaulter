@@ -9,7 +9,6 @@ use Vaulter\Doctor\Checks\AccessDriverCheck;
 use Vaulter\Doctor\Checks\CacheCheck;
 use Vaulter\Doctor\Checks\ConfigValidCheck;
 use Vaulter\Doctor\Checks\DatabaseConnectionCheck;
-use Vaulter\Doctor\Checks\DeprecatedKeysCheck;
 use Vaulter\Doctor\Checks\QueueCheck;
 use Vaulter\Doctor\Checks\RoutesAuthCheck;
 use Vaulter\Doctor\Checks\SchedulerCheck;
@@ -33,7 +32,6 @@ final class DoctorRegistrar
             SchemaKeyTypesCheck::class,
             SchemaIntegrityCheck::class,
             ConfigValidCheck::class,
-            DeprecatedKeysCheck::class,
             RoutesAuthCheck::class,
             AccessDriverCheck::class,
             TenancyCheck::class,

@@ -209,9 +209,6 @@ collide with Vaulter's.
   'database' => ['table_prefix' => env('VAULTER_TABLE_PREFIX', 'v_')],
   ```
 
-- **Legacy table names.** `vaulter.table_names` is an upgrade input only.
-  `DatabaseConfig::legacyTable()` locates old physical tables; current models use canonical names.
-
 - **Profiles.** All profiles share the configured schema; own-table generation is removed.
 
 ## Broadcast / collaboration not connecting {#collaboration}

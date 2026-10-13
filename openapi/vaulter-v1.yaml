@@ -4134,7 +4134,6 @@ components:
           - unknown_profile
           - unknown_role
           - unsupported_node_kind
-          - upgrade_preflight_failed
           - upload_conflict
           - upload_not_found
           - upload_offset_mismatch
