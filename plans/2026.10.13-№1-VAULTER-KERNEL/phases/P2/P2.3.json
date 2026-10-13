@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P2.3",
   "title": "Инвентарь идентичностей: схема, конфиг/env/publish, CLI, HTTP, протокол — с владельцами",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "Пять сгенерированных фикстур `tests/Repo/Arch/Fixtures/identities/{schema,config,cli,http,protocol}.json` с владельцем каждой идентичности по ручным `identities/owners/<kind>.json`: таблицы/колонки/индексы/FK по всем 48 preset × 3 engine с variants и сверкой с original, migration basenames, конфиг-ключи с defaults и registerDefaults, env, publish tags, команды и опции, маршруты (с флагами) и OpenAPI paths, event types, problem codes, morph/serialized FQCN и форматы. IdentitiesTest в repo suite.",
   "why": "I16 и каждое изменение идентичностей до P7 опираются на этот инвентарь (D21: изменения свободны, но фиксируются); I1/I3 читают отсюда таблицы/ключи/маршруты и владельцев. Риск: snapshot-только-колонки не доказывает эквивалентность (persistence), а разные preset дают разные колонки — поэтому variants по осям и сверка всех preset/engine, FK только с pgsql=mysql.",
   "scope": {
@@ -224,12 +224,50 @@
   ],
   "result": {
     "started_at": "2026-10-13T20:40:54Z",
+    "finished_at": "2026-10-13T21:45:29Z",
     "executor": {
       "provider": "claude-code",
       "model": "sonnet-5-5",
       "effort": "high",
       "session": "142039b0-1c18-4d78-9ab8-00699881fc7d"
-    }
+    },
+    "notes": "5 fixtures: schema 793 identities (25 tables x 3 engines x 48 presets, variants by ids/host_keys, no table_prefix/tenancy drift, no pg<->mysql FK or original diff), config 244, cli 26 commands, http 81 routes (all matched to OpenAPI), protocol 205. Findings for P2.5: head FKs (v_documents, v_files) absent on SQLite; no morphMap/enforceMorphMap calls in src; Idempotency-Key not in code yet. IdentitiesTest 35 tests, repo suite green, pint/phpstan clean, product unchanged vs 35718fd2. Review grok/grok-4.7 requested by owner: round 1 FINDINGS 3 (all confirmed, fixed), round 2 PASS (artifacts/P2.3/review.md).",
+    "deviations": [
+      "http: one boot per feature flag (parallel processes, flag flipped from its default) instead of two runs; routes get an exact requires:[flag], drift of a route between runs is exit 1",
+      "IdentityOwners: protocol formats are self-owning exact rules; drift of source data exits 1, rule errors 2; Config::defaults/evaluate/featureFlags made public for reuse by Http/Protocol"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-13T21:45:29Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-13T21:45:29Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-13T21:45:29Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-13T21:45:29Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-13T21:45:29Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-13T21:45:29Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-13T20:40:54Z"
+  "updated_at": "2026-10-13T21:45:29Z"
 }

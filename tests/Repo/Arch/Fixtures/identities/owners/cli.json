@@ -1,0 +1,119 @@
+{
+    "kind": "cli",
+    "rules": [
+        {
+            "match": "prefix",
+            "value": "command:vaulter:blobs:",
+            "owner": "media",
+            "why": "GC and reconcile of blobs -> media (architecture#packages)"
+        },
+        {
+            "match": "prefix",
+            "value": "command:vaulter:changes:",
+            "owner": "drive",
+            "why": "Console/{Prune,Reset}ChangesCommand -> drive"
+        },
+        {
+            "match": "prefix",
+            "value": "command:vaulter:drives:",
+            "owner": "drive",
+            "why": "drive maintenance (purge, recount)"
+        },
+        {
+            "match": "prefix",
+            "value": "command:vaulter:revisions:",
+            "owner": "drive",
+            "why": "revision pruning is drive's"
+        },
+        {
+            "match": "prefix",
+            "value": "command:vaulter:scan:",
+            "owner": "drive",
+            "why": "D28: scan reconcile and rescan are drive's"
+        },
+        {
+            "match": "prefix",
+            "value": "command:vaulter:trash:",
+            "owner": "drive",
+            "why": "trash purge is drive's"
+        },
+        {
+            "match": "prefix",
+            "value": "command:vaulter:uploads:",
+            "owner": "drive",
+            "why": "upload session sweep is drive's"
+        },
+        {
+            "match": "prefix",
+            "value": "command:vaulter:webhooks:",
+            "owner": "webhooks",
+            "why": "relay/retry/redeliver/prune of webhooks -> webhooks"
+        },
+        {
+            "match": "exact",
+            "value": "command:vaulter:make:document-type",
+            "owner": "documents",
+            "why": "document types are documents'"
+        },
+        {
+            "match": "exact",
+            "value": "command:vaulter:make:exporter",
+            "owner": "documents",
+            "why": "exporters are documents'"
+        },
+        {
+            "match": "exact",
+            "value": "command:vaulter:make:file-handler",
+            "owner": "drive",
+            "why": "Handlers (6) -> drive"
+        },
+        {
+            "match": "exact",
+            "value": "command:vaulter:make:permission-driver",
+            "owner": "drive",
+            "why": "permission drivers are the drive access model"
+        },
+        {
+            "match": "exact",
+            "value": "command:vaulter:make:profile",
+            "owner": "drive",
+            "why": "Profiles (11) -> drive"
+        },
+        {
+            "match": "exact",
+            "value": "command:vaulter:doctor",
+            "owner": "core",
+            "why": "vaulter:doctor is a kernel command (architecture#packages)"
+        },
+        {
+            "match": "exact",
+            "value": "command:vaulter:install",
+            "owner": "core",
+            "why": "vaulter:install is a kernel command (architecture#packages)"
+        },
+        {
+            "match": "prefix",
+            "value": "command:vaulter:commands:",
+            "owner": "core",
+            "why": "reference commands are kernel (architecture#packages)"
+        },
+        {
+            "match": "prefix",
+            "value": "command:vaulter:config:",
+            "owner": "core",
+            "why": "reference commands are kernel (architecture#packages)"
+        },
+        {
+            "match": "prefix",
+            "value": "command:vaulter:errors:",
+            "owner": "core",
+            "why": "reference commands are kernel (architecture#packages)"
+        },
+        {
+            "match": "prefix",
+            "value": "command:vaulter:events:",
+            "owner": "core",
+            "why": "reference commands are kernel (architecture#packages)"
+        }
+    ]
+}

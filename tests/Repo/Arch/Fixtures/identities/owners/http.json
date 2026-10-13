@@ -1,0 +1,113 @@
+{
+    "kind": "http",
+    "rules": [
+        {
+            "match": "prefix",
+            "value": "route:vaulter.v1.access.",
+            "owner": "drive",
+            "why": "inheritance routes: the node access model"
+        },
+        {
+            "match": "prefix",
+            "value": "route:vaulter.v1.activity.",
+            "owner": "drive",
+            "why": "Activity -> drive"
+        },
+        {
+            "match": "prefix",
+            "value": "route:vaulter.v1.changes.",
+            "owner": "drive",
+            "why": "Changes -> drive"
+        },
+        {
+            "match": "prefix",
+            "value": "route:vaulter.v1.drives.",
+            "owner": "drive",
+            "why": "the disk resource"
+        },
+        {
+            "match": "prefix",
+            "value": "route:vaulter.v1.files.",
+            "owner": "drive",
+            "why": "files and revisions"
+        },
+        {
+            "match": "prefix",
+            "value": "route:vaulter.v1.folders.",
+            "owner": "drive",
+            "why": "the folder resource"
+        },
+        {
+            "match": "prefix",
+            "value": "route:vaulter.v1.grants.",
+            "owner": "drive",
+            "why": "grants are the node access model"
+        },
+        {
+            "match": "prefix",
+            "value": "route:vaulter.v1.nodes.",
+            "owner": "drive",
+            "why": "the node tree"
+        },
+        {
+            "match": "prefix",
+            "value": "route:vaulter.v1.public-shares.",
+            "owner": "drive",
+            "why": "Sharing -> drive"
+        },
+        {
+            "match": "prefix",
+            "value": "route:vaulter.v1.shared.",
+            "owner": "drive",
+            "why": "the shared-with-me listing is a sharing read"
+        },
+        {
+            "match": "prefix",
+            "value": "route:vaulter.v1.shares.",
+            "owner": "drive",
+            "why": "Sharing -> drive"
+        },
+        {
+            "match": "prefix",
+            "value": "route:vaulter.v1.trash.",
+            "owner": "drive",
+            "why": "trash belongs to the tree"
+        },
+        {
+            "match": "prefix",
+            "value": "route:vaulter.v1.uploads.",
+            "owner": "drive",
+            "why": "uploads (Tus and S3 parts) -> drive"
+        },
+        {
+            "match": "prefix",
+            "value": "route:vaulter.v1.comments.",
+            "owner": "documents",
+            "why": "NodeComment -> documents"
+        },
+        {
+            "match": "prefix",
+            "value": "route:vaulter.v1.documents.",
+            "owner": "documents",
+            "why": "the document aggregate -> documents"
+        },
+        {
+            "match": "prefix",
+            "value": "route:vaulter.v1.collaboration.",
+            "owner": "collaboration",
+            "why": "the hub backend endpoints are the collaboration package (knowledge/collaboration)"
+        },
+        {
+            "match": "prefix",
+            "value": "route:vaulter.v1.webhook-",
+            "owner": "webhooks",
+            "why": "webhook admin HTTP -> webhooks"
+        },
+        {
+            "match": "prefix",
+            "value": "route:vaulter.v1.documents.collaboration.",
+            "owner": "collaboration",
+            "why": "the session endpoint of the realtime implementation: its controller is collaboration's in the type-map (Documents\\Http\\Controllers\\Collaboration, P5)"
+        }
+    ]
+}

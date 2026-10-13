@@ -28,8 +28,16 @@
   },
   "mode": "either",
   "instructions": "boot/routes.php — отдельный процесс (proc_open из генератора), два прогона (defaults / все vaulter.features.* = true). Владелец маршрута = владелец контроллера в target-map.json; расхождение с owners/http.json — запись `owner_conflict` (finding), не ошибка. Только свои файлы; общий формат — lib/Identities.php (U1), его изменение — через rework U1.",
-  "status": "todo",
-  "outcome": null,
-  "updated_at": "2026-10-13T19:16:44Z",
+  "status": "accepted",
+  "outcome": {
+    "agent": {
+      "provider": "claude-code",
+      "model": "sonnet-5-5",
+      "effort": "high"
+    },
+    "at": "2026-10-13T21:45:20Z",
+    "notes": "integrated inline; V1-V6 green; grok review PASS"
+  },
+  "updated_at": "2026-10-13T21:45:20Z",
   "kind": "implementation"
 }

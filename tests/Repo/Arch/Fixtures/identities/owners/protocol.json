@@ -1,0 +1,491 @@
+{
+    "kind": "protocol",
+    "rules": [
+        {
+            "match": "prefix",
+            "value": "event:",
+            "owner": "drive",
+            "why": "event types of the disk, nodes, files, access, sharing and uploads are drive concepts"
+        },
+        {
+            "match": "prefix",
+            "value": "event:document.",
+            "owner": "documents",
+            "why": "document events are documents'"
+        },
+        {
+            "match": "prefix",
+            "value": "event:comment.",
+            "owner": "documents",
+            "why": "comment events are documents'"
+        },
+        {
+            "match": "prefix",
+            "value": "problem:",
+            "owner": "drive",
+            "why": "default: a problem code belongs to the concept of its exception; kernel, documents, collaboration and webhooks codes are overridden below"
+        },
+        {
+            "match": "exact",
+            "value": "problem:actor_required",
+            "owner": "core",
+            "why": "kernel concern: Actor, transaction, registry, HTTP frame (architecture#kernel)"
+        },
+        {
+            "match": "exact",
+            "value": "problem:concurrent_update",
+            "owner": "core",
+            "why": "kernel concern: Actor, transaction, registry, HTTP frame (architecture#kernel)"
+        },
+        {
+            "match": "exact",
+            "value": "problem:duplicate_registration",
+            "owner": "core",
+            "why": "kernel concern: Actor, transaction, registry, HTTP frame (architecture#kernel)"
+        },
+        {
+            "match": "exact",
+            "value": "problem:internal_error",
+            "owner": "core",
+            "why": "kernel concern: Actor, transaction, registry, HTTP frame (architecture#kernel)"
+        },
+        {
+            "match": "exact",
+            "value": "problem:method_not_allowed",
+            "owner": "core",
+            "why": "kernel concern: Actor, transaction, registry, HTTP frame (architecture#kernel)"
+        },
+        {
+            "match": "exact",
+            "value": "problem:payload_too_large",
+            "owner": "core",
+            "why": "kernel concern: Actor, transaction, registry, HTTP frame (architecture#kernel)"
+        },
+        {
+            "match": "exact",
+            "value": "problem:precondition_required",
+            "owner": "core",
+            "why": "kernel concern: Actor, transaction, registry, HTTP frame (architecture#kernel)"
+        },
+        {
+            "match": "exact",
+            "value": "problem:rate_limited",
+            "owner": "core",
+            "why": "kernel concern: Actor, transaction, registry, HTTP frame (architecture#kernel)"
+        },
+        {
+            "match": "exact",
+            "value": "problem:permission_denied",
+            "owner": "core",
+            "why": "architecture#errors: permission_denied is a common core code; the 404/403 rule stays in core (architecture#ownership-map)"
+        },
+        {
+            "match": "exact",
+            "value": "problem:registry_frozen",
+            "owner": "core",
+            "why": "kernel concern: Actor, transaction, registry, HTTP frame (architecture#kernel)"
+        },
+        {
+            "match": "exact",
+            "value": "problem:route_not_found",
+            "owner": "core",
+            "why": "kernel concern: Actor, transaction, registry, HTTP frame (architecture#kernel)"
+        },
+        {
+            "match": "exact",
+            "value": "problem:validation_failed",
+            "owner": "core",
+            "why": "kernel concern: Actor, transaction, registry, HTTP frame (architecture#kernel)"
+        },
+        {
+            "match": "exact",
+            "value": "problem:write_outside_operation",
+            "owner": "core",
+            "why": "kernel concern: Actor, transaction, registry, HTTP frame (architecture#kernel)"
+        },
+        {
+            "match": "prefix",
+            "value": "problem:collaboration_",
+            "owner": "collaboration",
+            "why": "realtime codes belong to the collaboration package"
+        },
+        {
+            "match": "prefix",
+            "value": "problem:document",
+            "owner": "documents",
+            "why": "document codes are documents'"
+        },
+        {
+            "match": "exact",
+            "value": "problem:invalid_document_content",
+            "owner": "documents",
+            "why": "document content validation"
+        },
+        {
+            "match": "exact",
+            "value": "problem:not_a_document",
+            "owner": "documents",
+            "why": "document aggregate check"
+        },
+        {
+            "match": "exact",
+            "value": "problem:unknown_document_type",
+            "owner": "documents",
+            "why": "document types are documents'"
+        },
+        {
+            "match": "exact",
+            "value": "problem:unknown_export_format",
+            "owner": "documents",
+            "why": "exporters are documents'"
+        },
+        {
+            "match": "exact",
+            "value": "problem:comment_not_found",
+            "owner": "documents",
+            "why": "NodeComment -> documents"
+        },
+        {
+            "match": "prefix",
+            "value": "problem:webhook_",
+            "owner": "webhooks",
+            "why": "webhook codes"
+        },
+        {
+            "match": "exact",
+            "value": "problem:invalid_webhook_signature",
+            "owner": "webhooks",
+            "why": "webhook verification"
+        },
+        {
+            "match": "prefix",
+            "value": "morph:Vaulter\\Access\\",
+            "owner": "drive",
+            "why": "the node access model"
+        },
+        {
+            "match": "prefix",
+            "value": "morph:Vaulter\\Azgard\\",
+            "owner": "azgard",
+            "why": "azgard adapter"
+        },
+        {
+            "match": "prefix",
+            "value": "morph:Vaulter\\Concerns\\HasDrives",
+            "owner": "drive",
+            "why": "the host trait that owns drives"
+        },
+        {
+            "match": "prefix",
+            "value": "morph:Vaulter\\Documents\\",
+            "owner": "documents",
+            "why": "documents models"
+        },
+        {
+            "match": "prefix",
+            "value": "morph:Vaulter\\Drive\\",
+            "owner": "drive",
+            "why": "drive code"
+        },
+        {
+            "match": "prefix",
+            "value": "morph:Vaulter\\Http\\Controllers\\Activity\\",
+            "owner": "drive",
+            "why": "Activity -> drive"
+        },
+        {
+            "match": "prefix",
+            "value": "morph:Vaulter\\Models\\Drive\\",
+            "owner": "drive",
+            "why": "drive models"
+        },
+        {
+            "match": "prefix",
+            "value": "morph:Vaulter\\Queries\\Activity\\",
+            "owner": "drive",
+            "why": "Activity -> drive"
+        },
+        {
+            "match": "prefix",
+            "value": "morph:Vaulter\\Repositories\\",
+            "owner": "drive",
+            "why": "activity and drive repositories"
+        },
+        {
+            "match": "prefix",
+            "value": "morph:Vaulter\\Rules\\Access\\",
+            "owner": "drive",
+            "why": "Rules/Access -> drive"
+        },
+        {
+            "match": "prefix",
+            "value": "morph:Vaulter\\Tenancy\\",
+            "owner": "core",
+            "why": "kernel Tenancy"
+        },
+        {
+            "match": "prefix",
+            "value": "morph:Vaulter\\Testing\\Contracts\\PermissionFixture",
+            "owner": "drive",
+            "why": "permission-driver contract tests exercise the drive access model"
+        },
+        {
+            "match": "prefix",
+            "value": "morph:Vaulter\\ValueObjects\\Access\\",
+            "owner": "drive",
+            "why": "access values"
+        },
+        {
+            "match": "prefix",
+            "value": "morph:Vaulter\\ValueObjects\\Events\\ActivityTarget",
+            "owner": "drive",
+            "why": "Activity -> drive"
+        },
+        {
+            "match": "prefix",
+            "value": "serialized:queue:Vaulter\\Drive\\",
+            "owner": "drive",
+            "why": "drive jobs"
+        },
+        {
+            "match": "prefix",
+            "value": "serialized:queue:Vaulter\\Jobs\\Webhooks\\",
+            "owner": "webhooks",
+            "why": "Jobs/Webhooks -> webhooks"
+        },
+        {
+            "match": "prefix",
+            "value": "serialized:cast:Vaulter\\Documents\\",
+            "owner": "documents",
+            "why": "documents models"
+        },
+        {
+            "match": "prefix",
+            "value": "serialized:cast:Vaulter\\Drive\\",
+            "owner": "drive",
+            "why": "drive models"
+        },
+        {
+            "match": "prefix",
+            "value": "serialized:cast:Vaulter\\Models\\",
+            "owner": "drive",
+            "why": "Models/{Access,Activity,Content,Drive,Sharing} -> drive"
+        },
+        {
+            "match": "prefix",
+            "value": "serialized:cast:Vaulter\\Models\\Cas\\",
+            "owner": "media",
+            "why": "Models/Cas -> media"
+        },
+        {
+            "match": "prefix",
+            "value": "serialized:config:vaulter.access.",
+            "owner": "drive",
+            "why": "permission drivers -> drive"
+        },
+        {
+            "match": "prefix",
+            "value": "serialized:config:vaulter.ids.",
+            "owner": "core",
+            "why": "id strategies are kernel"
+        },
+        {
+            "match": "prefix",
+            "value": "serialized:config:vaulter.models.",
+            "owner": "drive",
+            "why": "the model registry names drive models"
+        },
+        {
+            "match": "exact",
+            "value": "serialized:config:vaulter.models.blob",
+            "owner": "media",
+            "why": "Models/Cas/Blob -> media"
+        },
+        {
+            "match": "exact",
+            "value": "serialized:config:vaulter.models.outbox",
+            "owner": "core",
+            "why": "Outbox stays in core (D29)"
+        },
+        {
+            "match": "prefix",
+            "value": "serialized:config:vaulter.models.webhook_",
+            "owner": "webhooks",
+            "why": "webhook models"
+        },
+        {
+            "match": "prefix",
+            "value": "serialized:config:vaulter.profiles.",
+            "owner": "drive",
+            "why": "Profiles -> drive"
+        },
+        {
+            "match": "prefix",
+            "value": "serialized:config:vaulter.sharing.",
+            "owner": "drive",
+            "why": "Sharing -> drive"
+        },
+        {
+            "match": "prefix",
+            "value": "serialized:config:vaulter.webhooks.",
+            "owner": "webhooks",
+            "why": "outbound URL guard"
+        },
+        {
+            "match": "prefix",
+            "value": "serialized:config:vaulter-media.",
+            "owner": "media",
+            "why": "media config classes"
+        },
+        {
+            "match": "prefix",
+            "value": "serialized:config:vaulter-drive.",
+            "owner": "drive",
+            "why": "drive config classes"
+        },
+        {
+            "match": "prefix",
+            "value": "serialized:config:vaulter-documents.",
+            "owner": "documents",
+            "why": "documents config classes"
+        },
+        {
+            "match": "prefix",
+            "value": "morph:Vaulter\\ValueObjects\\Access\\Actor::",
+            "owner": "core",
+            "why": "core keeps Actor (architecture#ownership-map)"
+        }
+    ],
+    "formats": [
+        {
+            "id": "format:cas-key",
+            "owner": "media",
+            "format": "<scope segment>/<first two hex chars of sha256>/<sha256 hex> (BlobScope::segment())",
+            "source": {
+                "file": "packages/media/src/Cas/Sha256ContentStore.php",
+                "symbol": "Vaulter\\Media\\Cas\\Sha256ContentStore::keyFor"
+            },
+            "why": "the storage key of a blob in the content-addressed store; stored in v_blobs.storage_key and on disk"
+        },
+        {
+            "id": "format:event-id",
+            "owner": "core",
+            "format": "ULID string (Str::ulid()) assigned when the DomainEvent is built; one value per occurrence (UNIQUE in activity and outbox, with endpoint in deliveries)",
+            "source": {
+                "file": "packages/core/src/Events/DomainEvent.php",
+                "symbol": "Vaulter\\Events\\DomainEvent::__construct"
+            },
+            "why": "the occurrence id that activity, outbox and webhook deliveries key on"
+        },
+        {
+            "id": "format:etag-document",
+            "owner": "documents",
+            "format": "\"<node id>.<collab epoch>.<state version>\" (strong, quoted)",
+            "source": {
+                "file": "packages/core/src/Http/Support/RepresentationTag.php",
+                "symbol": "Vaulter\\Http\\Support\\RepresentationTag::document"
+            },
+            "why": "validator of document content; If-Match on writes"
+        },
+        {
+            "id": "format:etag-node",
+            "owner": "drive",
+            "format": "\"<node id>.<sequence>.<first 16 hex of sha256 of the canonical representation>\" (strong, quoted)",
+            "source": {
+                "file": "packages/core/src/Http/Support/RepresentationTag.php",
+                "symbol": "Vaulter\\Http\\Support\\RepresentationTag::node"
+            },
+            "why": "validator of a node representation; If-Match on writes"
+        },
+        {
+            "id": "format:if-match",
+            "owner": "core",
+            "format": "If-Match header: one or more strong entity tags; weak tags never match; absent -> 428 precondition_required, no match -> 412",
+            "source": {
+                "file": "packages/core/src/Http/Support/Preconditions.php",
+                "symbol": "Vaulter\\Http\\Support\\Preconditions::requireIfMatch"
+            },
+            "why": "generic header parsing stays in the kernel (architecture#kernel)"
+        },
+        {
+            "id": "format:change-cursor",
+            "owner": "drive",
+            "format": "base64url(json{v,t,d,e,a}) \".\" base64url(HMAC-SHA256(json, hmac-sha256('vaulter.changes.cursor', app key))); opaque to clients",
+            "source": {
+                "file": "packages/core/src/Changes/ChangeCursor.php",
+                "symbol": "Vaulter\\Changes\\ChangeCursor::encode"
+            },
+            "why": "position in a drive's change journal"
+        },
+        {
+            "id": "format:header-api-version",
+            "owner": "core",
+            "format": "X-Vaulter-Api-Version response header on every response",
+            "source": {
+                "file": "packages/core/src/Http/Middleware/AddApiVersionHeader.php",
+                "symbol": "Vaulter\\Http\\Middleware\\AddApiVersionHeader::HEADER"
+            },
+            "why": "kernel HTTP frame"
+        },
+        {
+            "id": "format:header-request-id",
+            "owner": "core",
+            "format": "X-Request-Id: an accepted incoming id (also read from X-Correlation-Id) or a new ULID; echoed on every response",
+            "source": {
+                "file": "packages/core/src/Http/Middleware/AssignCorrelationId.php",
+                "symbol": "Vaulter\\Http\\Middleware\\AssignCorrelationId::HEADER"
+            },
+            "why": "kernel correlation id"
+        },
+        {
+            "id": "format:header-collab-signature",
+            "owner": "collaboration",
+            "format": "X-Vaulter-Collab-Timestamp (unix seconds) and X-Vaulter-Collab-Signature (lowercase hex HMAC-SHA256 of \"<timestamp>.<raw body>\" with the hub webhook secret); a replayed signature is refused",
+            "source": {
+                "file": "packages/documents/src/Collaboration/CollaborationCallResolver.php",
+                "symbol": "Vaulter\\Documents\\Collaboration\\CollaborationCallResolver::SIGNATURE_HEADER"
+            },
+            "why": "the hub's call authentication (the collaboration package after P5)"
+        },
+        {
+            "id": "format:header-tus",
+            "owner": "drive",
+            "format": "Tus 1.0.0 resumable uploads: Tus-Resumable, Tus-Version, Tus-Extension (creation,termination), Tus-Max-Size, Upload-Offset, Upload-Length, Upload-Metadata",
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Uploads/TusProtocolController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Uploads\\TusProtocolController"
+            },
+            "why": "the upload protocol headers"
+        },
+        {
+            "id": "format:jwt-claims-room",
+            "owner": "collaboration",
+            "format": "HS256 JWT: sub, node, drive, tenant, epoch, schema_version, mode (rw|ro), room (<channel prefix>.<drive>.<node>.<epoch>), iat, exp",
+            "source": {
+                "file": "packages/documents/src/Collaboration/HocuspocusCollaborationDriver.php",
+                "symbol": "Vaulter\\Documents\\Collaboration\\HocuspocusCollaborationDriver::issueSession"
+            },
+            "why": "the room token the hub verifies"
+        },
+        {
+            "id": "format:webhook-envelope",
+            "owner": "webhooks",
+            "format": "JSON: id (event id), type, version (1), source (vaulter), time (UTC ms Z), tenant_id, drive_id, subject{type,id}, sequence, actor{type,id}, correlation_id, changes{seq}|null, data (object)",
+            "source": {
+                "file": "packages/core/src/Webhooks/EventEnvelope.php",
+                "symbol": "Vaulter\\Webhooks\\EventEnvelope::fromEvent"
+            },
+            "why": "the outbound event payload (a neutral envelope after D29)"
+        },
+        {
+            "id": "format:webhook-signature",
+            "owner": "webhooks",
+            "format": "Standard Webhooks headers webhook-id, webhook-timestamp, webhook-signature (v1,<base64 HMAC-SHA256>), several secrets space separated during rotation",
+            "source": {
+                "file": "packages/core/src/Webhooks/WebhookSigner.php",
+                "symbol": "Vaulter\\Webhooks\\WebhookSigner::signatureHeader"
+            },
+            "why": "outbound delivery signing"
+        }
+    ]
+}

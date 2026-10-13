@@ -1,0 +1,3006 @@
+{
+    "base": "35718fd2",
+    "changes": [],
+    "items": [
+        {
+            "default": {
+                "default": "documents.create",
+                "env": "VAULTER_AZGARD_CREATE_PERMISSION"
+            },
+            "env": "VAULTER_AZGARD_CREATE_PERMISSION",
+            "id": "config:vaulter-azgard.create_permission",
+            "owner": "azgard",
+            "registered_defaults": true,
+            "root": "vaulter-azgard",
+            "source": {
+                "file": "packages/azgard/config/vaulter-azgard.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "env": "VAULTER_AZGARD_PANEL"
+            },
+            "env": "VAULTER_AZGARD_PANEL",
+            "id": "config:vaulter-azgard.panel_id",
+            "owner": "azgard",
+            "registered_defaults": true,
+            "root": "vaulter-azgard",
+            "source": {
+                "file": "packages/azgard/config/vaulter-azgard.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "documents.comment",
+            "id": "config:vaulter-azgard.permissions.comment",
+            "owner": "azgard",
+            "registered_defaults": true,
+            "root": "vaulter-azgard",
+            "source": {
+                "file": "packages/azgard/config/vaulter-azgard.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "documents.update",
+            "id": "config:vaulter-azgard.permissions.copy",
+            "owner": "azgard",
+            "registered_defaults": true,
+            "root": "vaulter-azgard",
+            "source": {
+                "file": "packages/azgard/config/vaulter-azgard.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "documents.create",
+            "id": "config:vaulter-azgard.permissions.create",
+            "owner": "azgard",
+            "registered_defaults": true,
+            "root": "vaulter-azgard",
+            "source": {
+                "file": "packages/azgard/config/vaulter-azgard.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "documents.delete",
+            "id": "config:vaulter-azgard.permissions.delete",
+            "owner": "azgard",
+            "registered_defaults": true,
+            "root": "vaulter-azgard",
+            "source": {
+                "file": "packages/azgard/config/vaulter-azgard.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "documents.download",
+            "id": "config:vaulter-azgard.permissions.download",
+            "owner": "azgard",
+            "registered_defaults": true,
+            "root": "vaulter-azgard",
+            "source": {
+                "file": "packages/azgard/config/vaulter-azgard.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "documents.update",
+            "id": "config:vaulter-azgard.permissions.edit",
+            "owner": "azgard",
+            "registered_defaults": true,
+            "root": "vaulter-azgard",
+            "source": {
+                "file": "packages/azgard/config/vaulter-azgard.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "documents.manage",
+            "id": "config:vaulter-azgard.permissions.manage",
+            "owner": "azgard",
+            "registered_defaults": true,
+            "root": "vaulter-azgard",
+            "source": {
+                "file": "packages/azgard/config/vaulter-azgard.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "documents.update",
+            "id": "config:vaulter-azgard.permissions.move",
+            "owner": "azgard",
+            "registered_defaults": true,
+            "root": "vaulter-azgard",
+            "source": {
+                "file": "packages/azgard/config/vaulter-azgard.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "documents.delete",
+            "id": "config:vaulter-azgard.permissions.restore",
+            "owner": "azgard",
+            "registered_defaults": true,
+            "root": "vaulter-azgard",
+            "source": {
+                "file": "packages/azgard/config/vaulter-azgard.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "documents.manage",
+            "id": "config:vaulter-azgard.permissions.share",
+            "owner": "azgard",
+            "registered_defaults": true,
+            "root": "vaulter-azgard",
+            "source": {
+                "file": "packages/azgard/config/vaulter-azgard.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "documents.delete",
+            "id": "config:vaulter-azgard.permissions.trash",
+            "owner": "azgard",
+            "registered_defaults": true,
+            "root": "vaulter-azgard",
+            "source": {
+                "file": "packages/azgard/config/vaulter-azgard.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "documents.view",
+            "id": "config:vaulter-azgard.permissions.view",
+            "owner": "azgard",
+            "registered_defaults": true,
+            "root": "vaulter-azgard",
+            "source": {
+                "file": "packages/azgard/config/vaulter-azgard.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "vaulter.documents",
+            "id": "config:vaulter-documents.collaboration.broadcast.channel_prefix",
+            "owner": "collaboration",
+            "registered_defaults": true,
+            "root": "vaulter-documents",
+            "source": {
+                "file": "packages/documents/config/vaulter-documents.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": "hocuspocus",
+                "env": "VAULTER_COLLAB_DRIVER"
+            },
+            "env": "VAULTER_COLLAB_DRIVER",
+            "id": "config:vaulter-documents.collaboration.driver",
+            "owner": "collaboration",
+            "registered_defaults": true,
+            "root": "vaulter-documents",
+            "source": {
+                "file": "packages/documents/config/vaulter-documents.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": false,
+            "id": "config:vaulter-documents.collaboration.enabled",
+            "owner": "collaboration",
+            "registered_defaults": true,
+            "root": "vaulter-documents",
+            "source": {
+                "file": "packages/documents/config/vaulter-documents.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "env": "VAULTER_COLLAB_SECRET"
+            },
+            "env": "VAULTER_COLLAB_SECRET",
+            "id": "config:vaulter-documents.collaboration.hub.jwt_secret",
+            "owner": "collaboration",
+            "registered_defaults": true,
+            "root": "vaulter-documents",
+            "source": {
+                "file": "packages/documents/config/vaulter-documents.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 300,
+            "id": "config:vaulter-documents.collaboration.hub.timestamp_tolerance",
+            "owner": "collaboration",
+            "registered_defaults": true,
+            "root": "vaulter-documents",
+            "source": {
+                "file": "packages/documents/config/vaulter-documents.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 3600,
+            "id": "config:vaulter-documents.collaboration.hub.token_ttl",
+            "owner": "collaboration",
+            "registered_defaults": true,
+            "root": "vaulter-documents",
+            "source": {
+                "file": "packages/documents/config/vaulter-documents.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": "ws://localhost:1234",
+                "env": "VAULTER_COLLAB_URL"
+            },
+            "env": "VAULTER_COLLAB_URL",
+            "id": "config:vaulter-documents.collaboration.hub.url",
+            "owner": "collaboration",
+            "registered_defaults": true,
+            "root": "vaulter-documents",
+            "source": {
+                "file": "packages/documents/config/vaulter-documents.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "env": "VAULTER_COLLAB_WEBHOOK_SECRET"
+            },
+            "env": "VAULTER_COLLAB_WEBHOOK_SECRET",
+            "id": "config:vaulter-documents.collaboration.hub.webhook_secret",
+            "owner": "collaboration",
+            "registered_defaults": true,
+            "root": "vaulter-documents",
+            "source": {
+                "file": "packages/documents/config/vaulter-documents.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 16777216,
+            "id": "config:vaulter-documents.collaboration.max_state_bytes",
+            "owner": "collaboration",
+            "registered_defaults": true,
+            "root": "vaulter-documents",
+            "source": {
+                "file": "packages/documents/config/vaulter-documents.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": true,
+            "id": "config:vaulter-documents.comments.enabled",
+            "owner": "documents",
+            "registered_defaults": true,
+            "root": "vaulter-documents",
+            "source": {
+                "file": "packages/documents/config/vaulter-documents.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 5120,
+            "id": "config:vaulter-documents.content.max_size_kb",
+            "owner": "documents",
+            "registered_defaults": true,
+            "root": "vaulter-documents",
+            "source": {
+                "file": "packages/documents/config/vaulter-documents.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "vaulter/rich-text",
+            "id": "config:vaulter-documents.default_type",
+            "owner": "documents",
+            "registered_defaults": true,
+            "root": "vaulter-documents",
+            "source": {
+                "file": "packages/documents/config/vaulter-documents.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": [
+                "Vaulter\\Documents\\Export\\HtmlExporter",
+                "Vaulter\\Documents\\Export\\MarkdownExporter"
+            ],
+            "id": "config:vaulter-documents.exporters",
+            "owner": "documents",
+            "registered_defaults": true,
+            "root": "vaulter-documents",
+            "source": {
+                "file": "packages/documents/config/vaulter-documents.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Documents\\Models\\Revisions\\DocumentRevision",
+            "id": "config:vaulter-documents.models.document_revision",
+            "owner": "documents",
+            "registered_defaults": true,
+            "root": "vaulter-documents",
+            "source": {
+                "file": "packages/documents/config/vaulter-documents.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Documents\\Models\\Comments\\NodeComment",
+            "id": "config:vaulter-documents.models.node_comment",
+            "owner": "documents",
+            "registered_defaults": true,
+            "root": "vaulter-documents",
+            "source": {
+                "file": "packages/documents/config/vaulter-documents.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 300,
+            "id": "config:vaulter-documents.revisions.checkpoint_interval_seconds",
+            "owner": "documents",
+            "registered_defaults": true,
+            "root": "vaulter-documents",
+            "source": {
+                "file": "packages/documents/config/vaulter-documents.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 50,
+            "id": "config:vaulter-documents.revisions.limit",
+            "owner": "documents",
+            "registered_defaults": true,
+            "root": "vaulter-documents",
+            "source": {
+                "file": "packages/documents/config/vaulter-documents.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": [],
+            "id": "config:vaulter-documents.tiptap.extra_attributes",
+            "owner": "documents",
+            "registered_defaults": true,
+            "root": "vaulter-documents",
+            "source": {
+                "file": "packages/documents/config/vaulter-documents.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": [],
+            "id": "config:vaulter-documents.tiptap.extra_marks",
+            "owner": "documents",
+            "registered_defaults": true,
+            "root": "vaulter-documents",
+            "source": {
+                "file": "packages/documents/config/vaulter-documents.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": [],
+            "id": "config:vaulter-documents.tiptap.extra_nodes",
+            "owner": "documents",
+            "registered_defaults": true,
+            "root": "vaulter-documents",
+            "source": {
+                "file": "packages/documents/config/vaulter-documents.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": [],
+            "id": "config:vaulter-documents.tiptap.url_attributes",
+            "owner": "documents",
+            "registered_defaults": true,
+            "root": "vaulter-documents",
+            "source": {
+                "file": "packages/documents/config/vaulter-documents.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": [
+                "Vaulter\\Documents\\Types\\RichTextDocumentType",
+                "Vaulter\\Documents\\Types\\MarkdownDocumentType"
+            ],
+            "id": "config:vaulter-documents.types",
+            "owner": "documents",
+            "registered_defaults": true,
+            "root": "vaulter-documents",
+            "source": {
+                "file": "packages/documents/config/vaulter-documents.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Drive\\Models\\Uploads\\UploadPart",
+            "id": "config:vaulter-drive.models.upload_part",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Drive\\Models\\Uploads\\UploadSession",
+            "id": "config:vaulter-drive.models.upload_session",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "hourlyAt:25",
+            "id": "config:vaulter-drive.schedule.drives_purge",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": null,
+            "id": "config:vaulter-drive.schedule.drives_recount",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "dailyAt:03:40",
+            "id": "config:vaulter-drive.schedule.revisions_prune",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "everyFiveMinutes",
+            "id": "config:vaulter-drive.schedule.scan_reconcile",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "dailyAt:03:30",
+            "id": "config:vaulter-drive.schedule.trash_purge",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "hourlyAt:15",
+            "id": "config:vaulter-drive.schedule.uploads_sweep",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 30,
+            "id": "config:vaulter-drive.trash.retention_days",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": [],
+            "id": "config:vaulter-drive.uploads.allowed_mime_types",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": 5368709120,
+                "env": "VAULTER_UPLOAD_MAX_BYTES"
+            },
+            "env": "VAULTER_UPLOAD_MAX_BYTES",
+            "id": "config:vaulter-drive.uploads.max_file_size",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": 8388608,
+                "env": "VAULTER_UPLOAD_CHUNK_SIZE"
+            },
+            "env": "VAULTER_UPLOAD_CHUNK_SIZE",
+            "id": "config:vaulter-drive.uploads.resumable.chunk_size",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": true,
+                "env": "VAULTER_UPLOAD_TUS_ENABLED"
+            },
+            "env": "VAULTER_UPLOAD_TUS_ENABLED",
+            "id": "config:vaulter-drive.uploads.resumable.enabled",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": 20,
+                "env": "VAULTER_UPLOAD_MAX_ACTIVE_SESSIONS"
+            },
+            "env": "VAULTER_UPLOAD_MAX_ACTIVE_SESSIONS",
+            "id": "config:vaulter-drive.uploads.resumable.max_active_sessions_per_actor",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": 67108864,
+                "env": "VAULTER_UPLOAD_MAX_CHUNK_BYTES"
+            },
+            "env": "VAULTER_UPLOAD_MAX_CHUNK_BYTES",
+            "id": "config:vaulter-drive.uploads.resumable.max_chunk_size",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": [
+                "filename",
+                "filetype",
+                "name",
+                "mime_type"
+            ],
+            "id": "config:vaulter-drive.uploads.resumable.metadata.allowed_keys",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 512,
+            "id": "config:vaulter-drive.uploads.resumable.metadata.max_value_length",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": 24,
+                "env": "VAULTER_UPLOAD_SESSION_TTL_HOURS"
+            },
+            "env": "VAULTER_UPLOAD_SESSION_TTL_HOURS",
+            "id": "config:vaulter-drive.uploads.resumable.session_ttl_hours",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 100,
+            "id": "config:vaulter-drive.uploads.scan.cleanup_batch",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 120,
+            "id": "config:vaulter-drive.uploads.scan.lease_seconds",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 5,
+            "id": "config:vaulter-drive.uploads.scan.max_attempts",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": null,
+            "id": "config:vaulter-drive.uploads.scan.mode",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": null,
+            "id": "config:vaulter-drive.uploads.scan.policy_version",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 30,
+            "id": "config:vaulter-drive.uploads.scan.publish_cooldown_seconds",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "default",
+            "id": "config:vaulter-drive.uploads.scan.queue",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 100,
+            "id": "config:vaulter-drive.uploads.scan.recovery_batch",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": null,
+            "id": "config:vaulter-drive.uploads.scan.required",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": null,
+            "id": "config:vaulter-drive.uploads.scan.rollout_key",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": null,
+            "id": "config:vaulter-drive.uploads.scan.scanner",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": null,
+            "id": "config:vaulter-drive.uploads.scan.scanner_key",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 60,
+            "id": "config:vaulter-drive.uploads.scan.scanner_timeout_seconds",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": null,
+            "id": "config:vaulter-drive.uploads.scan.scanner_version",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter-drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter",
+            "id": "config:vaulter-filament.navigation_group",
+            "owner": "filament",
+            "registered_defaults": true,
+            "root": "vaulter-filament",
+            "source": {
+                "file": "packages/filament/config/vaulter-filament.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": true,
+            "id": "config:vaulter-filament.resources.activity",
+            "owner": "filament",
+            "registered_defaults": true,
+            "root": "vaulter-filament",
+            "source": {
+                "file": "packages/filament/config/vaulter-filament.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": true,
+            "id": "config:vaulter-filament.resources.drive",
+            "owner": "filament",
+            "registered_defaults": true,
+            "root": "vaulter-filament",
+            "source": {
+                "file": "packages/filament/config/vaulter-filament.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": true,
+            "id": "config:vaulter-filament.resources.grant",
+            "owner": "filament",
+            "registered_defaults": true,
+            "root": "vaulter-filament",
+            "source": {
+                "file": "packages/filament/config/vaulter-filament.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": true,
+            "id": "config:vaulter-filament.resources.node",
+            "owner": "filament",
+            "registered_defaults": true,
+            "root": "vaulter-filament",
+            "source": {
+                "file": "packages/filament/config/vaulter-filament.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": true,
+            "id": "config:vaulter-filament.resources.share",
+            "owner": "filament",
+            "registered_defaults": true,
+            "root": "vaulter-filament",
+            "source": {
+                "file": "packages/filament/config/vaulter-filament.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Media\\Cas\\BlobStore",
+            "id": "config:vaulter-media.blob_store",
+            "owner": "media",
+            "registered_defaults": true,
+            "root": "vaulter-media",
+            "source": {
+                "file": "packages/media/config/vaulter-media.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Media\\Cas\\Sha256ContentStore",
+            "id": "config:vaulter-media.content_store",
+            "owner": "media",
+            "registered_defaults": true,
+            "root": "vaulter-media",
+            "source": {
+                "file": "packages/media/config/vaulter-media.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": "tenant",
+                "env": "VAULTER_DEDUP_SCOPE"
+            },
+            "env": "VAULTER_DEDUP_SCOPE",
+            "id": "config:vaulter-media.dedup.scope",
+            "owner": "media",
+            "registered_defaults": true,
+            "root": "vaulter-media",
+            "source": {
+                "file": "packages/media/config/vaulter-media.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": "local",
+                "env": "VAULTER_DISK"
+            },
+            "env": "VAULTER_DISK",
+            "id": "config:vaulter-media.disk",
+            "owner": "media",
+            "registered_defaults": true,
+            "root": "vaulter-media",
+            "source": {
+                "file": "packages/media/config/vaulter-media.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": 24,
+                "env": "VAULTER_GC_GRACE_HOURS"
+            },
+            "env": "VAULTER_GC_GRACE_HOURS",
+            "id": "config:vaulter-media.gc.grace_hours",
+            "owner": "media",
+            "registered_defaults": true,
+            "root": "vaulter-media",
+            "source": {
+                "file": "packages/media/config/vaulter-media.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": {
+                    "default": 24,
+                    "env": "VAULTER_GC_GRACE_HOURS"
+                },
+                "env": "VAULTER_ORPHAN_GRACE_HOURS"
+            },
+            "env": "VAULTER_ORPHAN_GRACE_HOURS",
+            "id": "config:vaulter-media.gc.orphan_grace_hours",
+            "owner": "media",
+            "registered_defaults": true,
+            "root": "vaulter-media",
+            "source": {
+                "file": "packages/media/config/vaulter-media.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "dailyAt:04:00",
+            "id": "config:vaulter-media.schedule.blobs_gc",
+            "owner": "media",
+            "registered_defaults": true,
+            "root": "vaulter-media",
+            "source": {
+                "file": "packages/media/config/vaulter-media.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "weeklyOn:0,04:30",
+            "id": "config:vaulter-media.schedule.blobs_reconcile",
+            "owner": "media",
+            "registered_defaults": true,
+            "root": "vaulter-media",
+            "source": {
+                "file": "packages/media/config/vaulter-media.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Media\\Cas\\FlysystemStorageDriver",
+            "id": "config:vaulter-media.storage_driver",
+            "owner": "media",
+            "registered_defaults": true,
+            "root": "vaulter-media",
+            "source": {
+                "file": "packages/media/config/vaulter-media.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "vaulter.comment",
+            "id": "config:vaulter.access.gate.abilities.commenter",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "vaulter.organize",
+            "id": "config:vaulter.access.gate.abilities.organizer",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "vaulter.manage",
+            "id": "config:vaulter.access.gate.abilities.owner",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "vaulter.preview",
+            "id": "config:vaulter.access.gate.abilities.previewer",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "vaulter.view",
+            "id": "config:vaulter.access.gate.abilities.reader",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "vaulter.edit",
+            "id": "config:vaulter.access.gate.abilities.writer",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": "vaulter.create",
+                "env": "VAULTER_GATE_CREATE_ABILITY"
+            },
+            "env": "VAULTER_GATE_CREATE_ABILITY",
+            "id": "config:vaulter.access.gate.create_ability",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": "vaulter.super",
+                "env": "VAULTER_GATE_SUPER_ABILITY"
+            },
+            "env": "VAULTER_GATE_SUPER_ABILITY",
+            "id": "config:vaulter.access.gate.super_ability",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": "database",
+                "env": "VAULTER_PERMISSION_DRIVER"
+            },
+            "env": "VAULTER_PERMISSION_DRIVER",
+            "id": "config:vaulter.access.permission_driver",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Access\\Drivers\\DatabasePermissionDriver",
+            "id": "config:vaulter.access.permission_drivers.database",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Access\\Drivers\\GatePermissionDriver",
+            "id": "config:vaulter.access.permission_drivers.gate",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Testing\\NullPermissionDriver",
+            "id": "config:vaulter.access.permission_drivers.null",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Access\\Drivers\\SpatiePermissionDriver",
+            "id": "config:vaulter.access.permission_drivers.spatie",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": "vaulter.create",
+                "env": "VAULTER_SPATIE_CREATE_PERMISSION"
+            },
+            "env": "VAULTER_SPATIE_CREATE_PERMISSION",
+            "id": "config:vaulter.access.spatie.create_permission",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "vaulter.comment",
+            "id": "config:vaulter.access.spatie.permissions.commenter",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "vaulter.organize",
+            "id": "config:vaulter.access.spatie.permissions.organizer",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "vaulter.manage",
+            "id": "config:vaulter.access.spatie.permissions.owner",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "vaulter.preview",
+            "id": "config:vaulter.access.spatie.permissions.previewer",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "vaulter.view",
+            "id": "config:vaulter.access.spatie.permissions.reader",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "vaulter.edit",
+            "id": "config:vaulter.access.spatie.permissions.writer",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "role",
+            "id": "config:vaulter.access.spatie.role_subject_type",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": "vaulter.super",
+                "env": "VAULTER_SPATIE_SUPER_PERMISSION"
+            },
+            "env": "VAULTER_SPATIE_SUPER_PERMISSION",
+            "id": "config:vaulter.access.spatie.super_permission",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "team",
+            "id": "config:vaulter.access.spatie.team_subject_type",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": false,
+                "env": "VAULTER_SPATIE_TEAMS"
+            },
+            "env": "VAULTER_SPATIE_TEAMS",
+            "id": "config:vaulter.access.spatie.teams",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 1000,
+            "id": "config:vaulter.changes.max_page_size",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 30,
+            "id": "config:vaulter.changes.retention_days",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "env": "VAULTER_DB_CONNECTION"
+            },
+            "env": "VAULTER_DB_CONNECTION",
+            "id": "config:vaulter.database.connection",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": "v_",
+                "env": "VAULTER_TABLE_PREFIX"
+            },
+            "env": "VAULTER_TABLE_PREFIX",
+            "id": "config:vaulter.database.table_prefix",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": true,
+                "env": "VAULTER_DB_WRITE_GUARD"
+            },
+            "env": "VAULTER_DB_WRITE_GUARD",
+            "id": "config:vaulter.database.write_guard",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "strict",
+            "id": "config:vaulter.downloads.delivery_mode",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 60,
+            "id": "config:vaulter.downloads.direct_ttl_seconds",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": [
+                "image/png",
+                "image/jpeg",
+                "image/gif",
+                "image/webp",
+                "application/pdf",
+                "text/plain"
+            ],
+            "id": "config:vaulter.downloads.inline_mime_types",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": false,
+                "env": "VAULTER_DRIVES_DELETE_WITH_OWNER"
+            },
+            "env": "VAULTER_DRIVES_DELETE_WITH_OWNER",
+            "id": "config:vaulter.drives.delete_with_owner",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": true,
+            "id": "config:vaulter.features.activity",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": true,
+            "id": "config:vaulter.features.changes",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": true,
+            "id": "config:vaulter.features.grants",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": false,
+            "id": "config:vaulter.features.public_listing",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": false,
+            "id": "config:vaulter.features.share_links",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": true,
+            "id": "config:vaulter.features.webhooks",
+            "owner": "webhooks",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": [],
+            "id": "config:vaulter.handlers",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": "string",
+                "env": "VAULTER_HOST_KEYS"
+            },
+            "env": "VAULTER_HOST_KEYS",
+            "id": "config:vaulter.ids.host_keys",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Schema\\AutoIncrementIds",
+            "id": "config:vaulter.ids.strategies.bigint",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Schema\\UlidIds",
+            "id": "config:vaulter.ids.strategies.ulid",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Schema\\Uuid7Ids",
+            "id": "config:vaulter.ids.strategies.uuid7",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": "ulid",
+                "env": "VAULTER_ID_STRATEGY"
+            },
+            "env": "VAULTER_ID_STRATEGY",
+            "id": "config:vaulter.ids.strategy",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 1000,
+            "id": "config:vaulter.listing.scan_budget",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Models\\Activity\\Activity",
+            "id": "config:vaulter.models.activity",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Models\\Cas\\Blob",
+            "id": "config:vaulter.models.blob",
+            "owner": "media",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Models\\Drive\\Drive",
+            "id": "config:vaulter.models.drive",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Models\\Drive\\File",
+            "id": "config:vaulter.models.file",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Models\\Drive\\FileRevision",
+            "id": "config:vaulter.models.file_revision",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Models\\Drive\\FileRevisionBlob",
+            "id": "config:vaulter.models.file_revision_blob",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Models\\Access\\NodeGrant",
+            "id": "config:vaulter.models.grant",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Models\\Drive\\Node",
+            "id": "config:vaulter.models.node",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Models\\Sharing\\NodeShare",
+            "id": "config:vaulter.models.node_share",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Models\\Webhooks\\Outbox",
+            "id": "config:vaulter.models.outbox",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Models\\Content\\ScanBackfillRun",
+            "id": "config:vaulter.models.scan_backfill_run",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Models\\Content\\ScanEvidenceRecord",
+            "id": "config:vaulter.models.scan_evidence",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Models\\Content\\ScanObligation",
+            "id": "config:vaulter.models.scan_obligation",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Models\\Content\\ScanPolicyState",
+            "id": "config:vaulter.models.scan_policy_state",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Models\\Content\\ScanRequest",
+            "id": "config:vaulter.models.scan_request",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Models\\Webhooks\\WebhookDelivery",
+            "id": "config:vaulter.models.webhook_delivery",
+            "owner": "webhooks",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Models\\Webhooks\\WebhookEndpoint",
+            "id": "config:vaulter.models.webhook_endpoint",
+            "owner": "webhooks",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": false,
+                "env": "VAULTER_OBSERVABILITY_ENABLED"
+            },
+            "env": "VAULTER_OBSERVABILITY_ENABLED",
+            "id": "config:vaulter.observability.enabled",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "env": "VAULTER_OBSERVABILITY_RECORDER"
+            },
+            "env": "VAULTER_OBSERVABILITY_RECORDER",
+            "id": "config:vaulter.observability.recorder",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": false,
+                "env": "VAULTER_TRACING_ENABLED"
+            },
+            "env": "VAULTER_TRACING_ENABLED",
+            "id": "config:vaulter.observability.tracing.enabled",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "env": "VAULTER_TRACING_RECORDER"
+            },
+            "env": "VAULTER_TRACING_RECORDER",
+            "id": "config:vaulter.observability.tracing.recorder",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Profiles\\DefaultProfile",
+            "id": "config:vaulter.profiles.default",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": [],
+            "id": "config:vaulter.profiles.providers",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": [
+                "api",
+                "auth:sanctum"
+            ],
+            "id": "config:vaulter.routes.middleware.authenticated",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": [
+                "api"
+            ],
+            "id": "config:vaulter.routes.middleware.hub",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": [
+                "api"
+            ],
+            "id": "config:vaulter.routes.middleware.public",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": "api/vaulter",
+                "env": "VAULTER_ROUTE_PREFIX"
+            },
+            "env": "VAULTER_ROUTE_PREFIX",
+            "id": "config:vaulter.routes.prefix",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": 60,
+                "env": "VAULTER_RATE_LIMIT_PUBLIC_PER_MINUTE"
+            },
+            "env": "VAULTER_RATE_LIMIT_PUBLIC_PER_MINUTE",
+            "id": "config:vaulter.routes.rate_limits.public",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": 120,
+                "env": "VAULTER_RATE_LIMIT_UPLOADS_PER_MINUTE"
+            },
+            "env": "VAULTER_RATE_LIMIT_UPLOADS_PER_MINUTE",
+            "id": "config:vaulter.routes.rate_limits.uploads",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": null,
+            "id": "config:vaulter.scan.mode",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": null,
+            "id": "config:vaulter.scan.policy_version",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": null,
+            "id": "config:vaulter.scan.required",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": null,
+            "id": "config:vaulter.scan.rollout_key",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": null,
+            "id": "config:vaulter.scan.scanner",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": null,
+            "id": "config:vaulter.scan.scanner_key",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": null,
+            "id": "config:vaulter.scan.scanner_version",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "dailyAt:03:20",
+            "id": "config:vaulter.schedule.changes_prune",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": true,
+                "env": "VAULTER_SCHEDULE_ENABLED"
+            },
+            "env": "VAULTER_SCHEDULE_ENABLED",
+            "id": "config:vaulter.schedule.enabled",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "dailyAt:03:10",
+            "id": "config:vaulter.schedule.webhooks_prune",
+            "owner": "webhooks",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "everyMinute",
+            "id": "config:vaulter.schedule.webhooks_relay",
+            "owner": "webhooks",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "everyMinute",
+            "id": "config:vaulter.schedule.webhooks_retry",
+            "owner": "webhooks",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": 72,
+                "env": "VAULTER_SHARE_DEFAULT_TTL_HOURS"
+            },
+            "env": "VAULTER_SHARE_DEFAULT_TTL_HOURS",
+            "id": "config:vaulter.sharing.default_ttl_hours",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": 720,
+                "env": "VAULTER_SHARE_MAX_TTL_HOURS"
+            },
+            "env": "VAULTER_SHARE_MAX_TTL_HOURS",
+            "id": "config:vaulter.sharing.max_ttl_hours",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 8,
+            "id": "config:vaulter.sharing.prefix_length",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Support\\RandomShareTokenGenerator",
+            "id": "config:vaulter.sharing.token_generator",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": "/share",
+                "env": "VAULTER_SHARE_URL_BASE"
+            },
+            "env": "VAULTER_SHARE_URL_BASE",
+            "id": "config:vaulter.sharing.url_base",
+            "owner": "drive",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": false,
+                "env": "VAULTER_TENANT_ENABLED"
+            },
+            "env": "VAULTER_TENANT_ENABLED",
+            "id": "config:vaulter.tenancy.enabled",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": null,
+            "id": "config:vaulter.tenancy.resolver",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": [],
+            "id": "config:vaulter.webhooks.delivery.allowed_ip_ranges",
+            "owner": "webhooks",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": [
+                "http",
+                "https"
+            ],
+            "id": "config:vaulter.webhooks.delivery.allowed_schemes",
+            "owner": "webhooks",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": null,
+            "id": "config:vaulter.webhooks.delivery.blocked_ip_ranges",
+            "owner": "webhooks",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 2,
+            "id": "config:vaulter.webhooks.delivery.connect_timeout",
+            "owner": "webhooks",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 65536,
+            "id": "config:vaulter.webhooks.delivery.max_response_bytes",
+            "owner": "webhooks",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "Vaulter\\Webhooks\\DefaultOutboundUrlGuard",
+            "id": "config:vaulter.webhooks.delivery.url_guard",
+            "owner": "webhooks",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 5,
+            "id": "config:vaulter.webhooks.disable_after_days",
+            "owner": "webhooks",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": {
+                "default": "vaulter.webhooks.manage",
+                "env": "VAULTER_WEBHOOKS_MANAGE_ABILITY"
+            },
+            "env": "VAULTER_WEBHOOKS_MANAGE_ABILITY",
+            "id": "config:vaulter.webhooks.manage_ability",
+            "owner": "webhooks",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 60,
+            "id": "config:vaulter.webhooks.relay.claim_seconds",
+            "owner": "webhooks",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 100,
+            "id": "config:vaulter.webhooks.relay.fanout_chunk",
+            "owner": "webhooks",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 30,
+            "id": "config:vaulter.webhooks.retention_days",
+            "owner": "webhooks",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 60,
+            "id": "config:vaulter.webhooks.retry_claim_seconds",
+            "owner": "webhooks",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 0.1,
+            "id": "config:vaulter.webhooks.retry_jitter",
+            "owner": "webhooks",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": [
+                5,
+                300,
+                1800,
+                7200,
+                18000,
+                36000,
+                50400,
+                72000,
+                86400
+            ],
+            "id": "config:vaulter.webhooks.retry_schedule",
+            "owner": "webhooks",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 86400,
+            "id": "config:vaulter.webhooks.secret_rotation_overlap",
+            "owner": "webhooks",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": 15,
+            "id": "config:vaulter.webhooks.timeout",
+            "owner": "webhooks",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter-azgard.create_permission"
+            ],
+            "defaults": [
+                "documents.create"
+            ],
+            "id": "env:VAULTER_AZGARD_CREATE_PERMISSION",
+            "owner": "azgard",
+            "source": {
+                "file": "packages/azgard/config/vaulter-azgard.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter-azgard.panel_id"
+            ],
+            "defaults": [
+                null
+            ],
+            "id": "env:VAULTER_AZGARD_PANEL",
+            "owner": "azgard",
+            "source": {
+                "file": "packages/azgard/config/vaulter-azgard.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter-documents.collaboration.driver"
+            ],
+            "defaults": [
+                "hocuspocus"
+            ],
+            "id": "env:VAULTER_COLLAB_DRIVER",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/documents/config/vaulter-documents.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter-documents.collaboration.hub.jwt_secret"
+            ],
+            "defaults": [
+                null
+            ],
+            "id": "env:VAULTER_COLLAB_SECRET",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/documents/config/vaulter-documents.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter-documents.collaboration.hub.url"
+            ],
+            "defaults": [
+                "ws://localhost:1234"
+            ],
+            "id": "env:VAULTER_COLLAB_URL",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/documents/config/vaulter-documents.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter-documents.collaboration.hub.webhook_secret"
+            ],
+            "defaults": [
+                null
+            ],
+            "id": "env:VAULTER_COLLAB_WEBHOOK_SECRET",
+            "owner": "collaboration",
+            "source": {
+                "file": "packages/documents/config/vaulter-documents.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter.database.connection"
+            ],
+            "defaults": [
+                null
+            ],
+            "id": "env:VAULTER_DB_CONNECTION",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter.database.write_guard"
+            ],
+            "defaults": [
+                true
+            ],
+            "id": "env:VAULTER_DB_WRITE_GUARD",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter-media.dedup.scope"
+            ],
+            "defaults": [
+                "tenant"
+            ],
+            "id": "env:VAULTER_DEDUP_SCOPE",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/config/vaulter-media.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter-media.disk"
+            ],
+            "defaults": [
+                "local"
+            ],
+            "id": "env:VAULTER_DISK",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/config/vaulter-media.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter.drives.delete_with_owner"
+            ],
+            "defaults": [
+                false
+            ],
+            "id": "env:VAULTER_DRIVES_DELETE_WITH_OWNER",
+            "owner": "drive",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter.access.gate.create_ability"
+            ],
+            "defaults": [
+                "vaulter.create"
+            ],
+            "id": "env:VAULTER_GATE_CREATE_ABILITY",
+            "owner": "drive",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter.access.gate.super_ability"
+            ],
+            "defaults": [
+                "vaulter.super"
+            ],
+            "id": "env:VAULTER_GATE_SUPER_ABILITY",
+            "owner": "drive",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter-media.gc.grace_hours",
+                "vaulter-media.gc.orphan_grace_hours"
+            ],
+            "defaults": [
+                24
+            ],
+            "id": "env:VAULTER_GC_GRACE_HOURS",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/config/vaulter-media.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter.ids.host_keys"
+            ],
+            "defaults": [
+                "string"
+            ],
+            "id": "env:VAULTER_HOST_KEYS",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter.ids.strategy"
+            ],
+            "defaults": [
+                "ulid"
+            ],
+            "id": "env:VAULTER_ID_STRATEGY",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter.observability.enabled"
+            ],
+            "defaults": [
+                false
+            ],
+            "id": "env:VAULTER_OBSERVABILITY_ENABLED",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter.observability.recorder"
+            ],
+            "defaults": [
+                null
+            ],
+            "id": "env:VAULTER_OBSERVABILITY_RECORDER",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter-media.gc.orphan_grace_hours"
+            ],
+            "defaults": [
+                {
+                    "default": 24,
+                    "env": "VAULTER_GC_GRACE_HOURS"
+                }
+            ],
+            "id": "env:VAULTER_ORPHAN_GRACE_HOURS",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/config/vaulter-media.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter.access.permission_driver"
+            ],
+            "defaults": [
+                "database"
+            ],
+            "id": "env:VAULTER_PERMISSION_DRIVER",
+            "owner": "drive",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter.routes.rate_limits.public"
+            ],
+            "defaults": [
+                60
+            ],
+            "id": "env:VAULTER_RATE_LIMIT_PUBLIC_PER_MINUTE",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter.routes.rate_limits.uploads"
+            ],
+            "defaults": [
+                120
+            ],
+            "id": "env:VAULTER_RATE_LIMIT_UPLOADS_PER_MINUTE",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter.routes.prefix"
+            ],
+            "defaults": [
+                "api/vaulter"
+            ],
+            "id": "env:VAULTER_ROUTE_PREFIX",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter.schedule.enabled"
+            ],
+            "defaults": [
+                true
+            ],
+            "id": "env:VAULTER_SCHEDULE_ENABLED",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter.sharing.default_ttl_hours"
+            ],
+            "defaults": [
+                72
+            ],
+            "id": "env:VAULTER_SHARE_DEFAULT_TTL_HOURS",
+            "owner": "drive",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter.sharing.max_ttl_hours"
+            ],
+            "defaults": [
+                720
+            ],
+            "id": "env:VAULTER_SHARE_MAX_TTL_HOURS",
+            "owner": "drive",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter.sharing.url_base"
+            ],
+            "defaults": [
+                "/share"
+            ],
+            "id": "env:VAULTER_SHARE_URL_BASE",
+            "owner": "drive",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter.access.spatie.create_permission"
+            ],
+            "defaults": [
+                "vaulter.create"
+            ],
+            "id": "env:VAULTER_SPATIE_CREATE_PERMISSION",
+            "owner": "drive",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter.access.spatie.super_permission"
+            ],
+            "defaults": [
+                "vaulter.super"
+            ],
+            "id": "env:VAULTER_SPATIE_SUPER_PERMISSION",
+            "owner": "drive",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter.access.spatie.teams"
+            ],
+            "defaults": [
+                false
+            ],
+            "id": "env:VAULTER_SPATIE_TEAMS",
+            "owner": "drive",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter.database.table_prefix"
+            ],
+            "defaults": [
+                "v_"
+            ],
+            "id": "env:VAULTER_TABLE_PREFIX",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter.tenancy.enabled"
+            ],
+            "defaults": [
+                false
+            ],
+            "id": "env:VAULTER_TENANT_ENABLED",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter.observability.tracing.enabled"
+            ],
+            "defaults": [
+                false
+            ],
+            "id": "env:VAULTER_TRACING_ENABLED",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter.observability.tracing.recorder"
+            ],
+            "defaults": [
+                null
+            ],
+            "id": "env:VAULTER_TRACING_RECORDER",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter-drive.uploads.resumable.chunk_size"
+            ],
+            "defaults": [
+                8388608
+            ],
+            "id": "env:VAULTER_UPLOAD_CHUNK_SIZE",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter-drive.uploads.resumable.max_active_sessions_per_actor"
+            ],
+            "defaults": [
+                20
+            ],
+            "id": "env:VAULTER_UPLOAD_MAX_ACTIVE_SESSIONS",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter-drive.uploads.max_file_size"
+            ],
+            "defaults": [
+                5368709120
+            ],
+            "id": "env:VAULTER_UPLOAD_MAX_BYTES",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter-drive.uploads.resumable.max_chunk_size"
+            ],
+            "defaults": [
+                67108864
+            ],
+            "id": "env:VAULTER_UPLOAD_MAX_CHUNK_BYTES",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter-drive.uploads.resumable.session_ttl_hours"
+            ],
+            "defaults": [
+                24
+            ],
+            "id": "env:VAULTER_UPLOAD_SESSION_TTL_HOURS",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter-drive.uploads.resumable.enabled"
+            ],
+            "defaults": [
+                true
+            ],
+            "id": "env:VAULTER_UPLOAD_TUS_ENABLED",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/config/vaulter-drive.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "config_keys": [
+                "vaulter.webhooks.manage_ability"
+            ],
+            "defaults": [
+                "vaulter.webhooks.manage"
+            ],
+            "id": "env:VAULTER_WEBHOOKS_MANAGE_ABILITY",
+            "owner": "webhooks",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "id": "publish:vaulter-azgard-config",
+            "owner": "azgard",
+            "source": {
+                "file": "packages/azgard/src/VaulterAzgardServiceProvider.php",
+                "symbol": "Vaulter\\Azgard\\VaulterAzgardServiceProvider::boot"
+            },
+            "via": "publishes"
+        },
+        {
+            "id": "publish:vaulter-config",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/src/VaulterServiceProvider.php",
+                "symbol": "Vaulter\\VaulterServiceProvider::configurePackage"
+            },
+            "via": "spatie:hasConfigFile"
+        },
+        {
+            "id": "publish:vaulter-documents-config",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/src/VaulterDocumentsServiceProvider.php",
+                "symbol": "Vaulter\\Documents\\VaulterDocumentsServiceProvider::configurePackage"
+            },
+            "via": "spatie:hasConfigFile"
+        },
+        {
+            "id": "publish:vaulter-documents-translations",
+            "owner": "documents",
+            "source": {
+                "file": "packages/documents/src/VaulterDocumentsServiceProvider.php",
+                "symbol": "Vaulter\\Documents\\VaulterDocumentsServiceProvider::configurePackage"
+            },
+            "via": "spatie:hasTranslations"
+        },
+        {
+            "id": "publish:vaulter-drive-config",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/VaulterDriveServiceProvider.php",
+                "symbol": "Vaulter\\Drive\\VaulterDriveServiceProvider::configurePackage"
+            },
+            "via": "spatie:hasConfigFile"
+        },
+        {
+            "id": "publish:vaulter-drive-translations",
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/VaulterDriveServiceProvider.php",
+                "symbol": "Vaulter\\Drive\\VaulterDriveServiceProvider::configurePackage"
+            },
+            "via": "spatie:hasTranslations"
+        },
+        {
+            "id": "publish:vaulter-filament-config",
+            "owner": "filament",
+            "source": {
+                "file": "packages/filament/src/VaulterFilamentServiceProvider.php",
+                "symbol": "Vaulter\\Filament\\VaulterFilamentServiceProvider::configurePackage"
+            },
+            "via": "spatie:hasConfigFile"
+        },
+        {
+            "id": "publish:vaulter-media-config",
+            "owner": "media",
+            "source": {
+                "file": "packages/media/src/VaulterMediaServiceProvider.php",
+                "symbol": "Vaulter\\Media\\VaulterMediaServiceProvider::configurePackage"
+            },
+            "via": "spatie:hasConfigFile"
+        },
+        {
+            "id": "publish:vaulter-migrations",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/src/VaulterServiceProvider.php",
+                "symbol": "Vaulter\\VaulterServiceProvider::configurePackage"
+            },
+            "via": "spatie:discoversMigrations"
+        },
+        {
+            "id": "publish:vaulter-translations",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/src/VaulterServiceProvider.php",
+                "symbol": "Vaulter\\VaulterServiceProvider::configurePackage"
+            },
+            "via": "spatie:hasTranslations"
+        }
+    ],
+    "kind": "config",
+    "roots": [
+        "vaulter",
+        "vaulter-azgard",
+        "vaulter-documents",
+        "vaulter-drive",
+        "vaulter-filament",
+        "vaulter-media"
+    ],
+    "version": 1
+}

@@ -1,0 +1,233 @@
+{
+    "kind": "config",
+    "rules": [
+        {
+            "match": "prefix",
+            "value": "config:vaulter.database.",
+            "owner": "core",
+            "why": "kernel persistence settings: connection, table prefix, write guard (architecture#kernel: VaulterDatabase)"
+        },
+        {
+            "match": "prefix",
+            "value": "config:vaulter.ids.",
+            "owner": "core",
+            "why": "kernel identity: IdStrategy and host keys (architecture#kernel)"
+        },
+        {
+            "match": "prefix",
+            "value": "config:vaulter.tenancy.",
+            "owner": "core",
+            "why": "kernel Tenancy (architecture#kernel)"
+        },
+        {
+            "match": "prefix",
+            "value": "config:vaulter.observability.",
+            "owner": "core",
+            "why": "kernel Observability: metrics and traces (architecture#kernel)"
+        },
+        {
+            "match": "prefix",
+            "value": "config:vaulter.routes.",
+            "owner": "core",
+            "why": "kernel HTTP frame: prefix, middleware stacks, rate limits (architecture#kernel)"
+        },
+        {
+            "match": "exact",
+            "value": "config:vaulter.schedule.enabled",
+            "owner": "core",
+            "why": "the host-scheduler switch is read by every package's schedule keys; the switch itself is kernel"
+        },
+        {
+            "match": "prefix",
+            "value": "config:vaulter.features.",
+            "owner": "drive",
+            "why": "the feature switches of the disk, access, activity, journal and sharing — drive's concepts (architecture#ownership-map)"
+        },
+        {
+            "match": "exact",
+            "value": "config:vaulter.features.webhooks",
+            "owner": "webhooks",
+            "why": "the webhooks feature switch moves with the webhooks package (D29)"
+        },
+        {
+            "match": "prefix",
+            "value": "config:vaulter.profiles.",
+            "owner": "drive",
+            "why": "Profiles (11) -> drive (architecture#ownership-map)"
+        },
+        {
+            "match": "prefix",
+            "value": "config:vaulter.scan.",
+            "owner": "drive",
+            "why": "D28: scan obligations, policy state and rollout are drive's; the scanner binding is the media SPI but the keys feed drive state"
+        },
+        {
+            "match": "prefix",
+            "value": "config:vaulter.drives.",
+            "owner": "drive",
+            "why": "HasDrives owner cleanup belongs to the disk concept"
+        },
+        {
+            "match": "prefix",
+            "value": "config:vaulter.access.",
+            "owner": "drive",
+            "why": "Access, drivers and Gate/Spatie mapping -> drive (architecture#ownership-map)"
+        },
+        {
+            "match": "prefix",
+            "value": "config:vaulter.listing.",
+            "owner": "drive",
+            "why": "Queries (2) -> drive: listing scan budget"
+        },
+        {
+            "match": "prefix",
+            "value": "config:vaulter.sharing.",
+            "owner": "drive",
+            "why": "Sharing (9) -> drive"
+        },
+        {
+            "match": "prefix",
+            "value": "config:vaulter.downloads.",
+            "owner": "drive",
+            "why": "content delivery (ContentAvailabilityGuard, DownloadGuard) -> drive (D28)"
+        },
+        {
+            "match": "prefix",
+            "value": "config:vaulter.changes.",
+            "owner": "drive",
+            "why": "Changes -> drive: the journal is a drive EventSink"
+        },
+        {
+            "match": "exact",
+            "value": "config:vaulter.schedule.changes_prune",
+            "owner": "drive",
+            "why": "vaulter:changes:prune -> drive"
+        },
+        {
+            "match": "prefix",
+            "value": "config:vaulter.schedule.webhooks_",
+            "owner": "webhooks",
+            "why": "relay/retry/prune of webhooks -> webhooks"
+        },
+        {
+            "match": "prefix",
+            "value": "config:vaulter.webhooks.",
+            "owner": "webhooks",
+            "why": "Webhooks (all) -> webhooks (architecture#ownership-map)"
+        },
+        {
+            "match": "prefix",
+            "value": "config:vaulter.handlers",
+            "owner": "drive",
+            "why": "Handlers (6) -> drive (architecture#ownership-map)"
+        },
+        {
+            "match": "prefix",
+            "value": "config:vaulter.models.",
+            "owner": "drive",
+            "why": "the model registry names drive models; blob, outbox and webhooks models are overridden below"
+        },
+        {
+            "match": "exact",
+            "value": "config:vaulter.models.blob",
+            "owner": "media",
+            "why": "Models/Cas/Blob -> media"
+        },
+        {
+            "match": "exact",
+            "value": "config:vaulter.models.outbox",
+            "owner": "core",
+            "why": "Models/Webhooks/Outbox stays in core (D29)"
+        },
+        {
+            "match": "prefix",
+            "value": "config:vaulter.models.webhook_",
+            "owner": "webhooks",
+            "why": "Models/Webhooks/{WebhookEndpoint,WebhookDelivery} -> webhooks"
+        },
+        {
+            "match": "prefix",
+            "value": "config:vaulter-media.",
+            "owner": "media",
+            "why": "architecture#packages: media owns its config root"
+        },
+        {
+            "match": "prefix",
+            "value": "config:vaulter-drive.",
+            "owner": "drive",
+            "why": "architecture#packages: drive owns its config root (uploads, trash, schedule, models)"
+        },
+        {
+            "match": "prefix",
+            "value": "config:vaulter-documents.",
+            "owner": "documents",
+            "why": "architecture#packages: documents owns its config root"
+        },
+        {
+            "match": "prefix",
+            "value": "config:vaulter-documents.collaboration.",
+            "owner": "collaboration",
+            "why": "the realtime implementation (hub, JWT, driver) is the collaboration package (knowledge/collaboration)"
+        },
+        {
+            "match": "prefix",
+            "value": "config:vaulter-azgard.",
+            "owner": "azgard",
+            "why": "architecture#packages: azgard owns its adapter config"
+        },
+        {
+            "match": "prefix",
+            "value": "config:vaulter-filament.",
+            "owner": "filament",
+            "why": "architecture#packages: filament owns its UI config"
+        },
+        {
+            "match": "exact",
+            "value": "publish:vaulter-config",
+            "owner": "core",
+            "why": "the vaulter-config tag publishes the kernel config file"
+        },
+        {
+            "match": "exact",
+            "value": "publish:vaulter-migrations",
+            "owner": "core",
+            "why": "one core migrations tag until P4 splits the migrations per owning package"
+        },
+        {
+            "match": "exact",
+            "value": "publish:vaulter-translations",
+            "owner": "core",
+            "why": "one core translations tag until P4 splits the problem-code translations"
+        },
+        {
+            "match": "prefix",
+            "value": "publish:vaulter-media-",
+            "owner": "media",
+            "why": "tags of the media provider"
+        },
+        {
+            "match": "prefix",
+            "value": "publish:vaulter-drive-",
+            "owner": "drive",
+            "why": "tags of the drive provider"
+        },
+        {
+            "match": "prefix",
+            "value": "publish:vaulter-documents-",
+            "owner": "documents",
+            "why": "tags of the documents provider"
+        },
+        {
+            "match": "prefix",
+            "value": "publish:vaulter-azgard-",
+            "owner": "azgard",
+            "why": "tags of the azgard provider"
+        },
+        {
+            "match": "prefix",
+            "value": "publish:vaulter-filament-",
+            "owner": "filament",
+            "why": "tags of the filament provider"
+        }
+    ]
+}

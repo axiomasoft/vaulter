@@ -1,0 +1,2405 @@
+{
+    "base": "35718fd2",
+    "changes": [],
+    "flags": {
+        "vaulter-documents.collaboration.enabled": false,
+        "vaulter.features.activity": true,
+        "vaulter.features.changes": true,
+        "vaulter.features.grants": true,
+        "vaulter.features.public_listing": false,
+        "vaulter.features.share_links": false,
+        "vaulter.features.webhooks": true
+    },
+    "items": [
+        {
+            "action": "Vaulter\\Http\\Controllers\\Access\\RestoreInheritanceController",
+            "controller": "Vaulter\\Http\\Controllers\\Access\\RestoreInheritanceController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.access.inheritance.restore",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.access.inheritance.restore",
+            "openapi": {
+                "operation_id": "access.inheritance.restore",
+                "path": "/nodes/{node}/inheritance/restore"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/core/src/Http/Controllers/Access/RestoreInheritanceController.php",
+                "symbol": "Vaulter\\Http\\Controllers\\Access\\RestoreInheritanceController"
+            },
+            "uri": "api/vaulter/v1/nodes/{node}/inheritance/restore"
+        },
+        {
+            "action": "Vaulter\\Http\\Controllers\\Access\\RestrictInheritanceController",
+            "controller": "Vaulter\\Http\\Controllers\\Access\\RestrictInheritanceController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.access.inheritance.restrict",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.access.inheritance.restrict",
+            "openapi": {
+                "operation_id": "access.inheritance.restrict",
+                "path": "/nodes/{node}/inheritance/restrict"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/core/src/Http/Controllers/Access/RestrictInheritanceController.php",
+                "symbol": "Vaulter\\Http\\Controllers\\Access\\RestrictInheritanceController"
+            },
+            "uri": "api/vaulter/v1/nodes/{node}/inheritance/restrict"
+        },
+        {
+            "action": "Vaulter\\Http\\Controllers\\Activity\\ListDriveActivityController",
+            "controller": "Vaulter\\Http\\Controllers\\Activity\\ListDriveActivityController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.activity.drive",
+            "methods": [
+                "GET"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.activity.drive",
+            "openapi": {
+                "operation_id": "activity.drive",
+                "path": "/drives/{drive}/activity"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/core/src/Http/Controllers/Activity/ListDriveActivityController.php",
+                "symbol": "Vaulter\\Http\\Controllers\\Activity\\ListDriveActivityController"
+            },
+            "uri": "api/vaulter/v1/drives/{drive}/activity"
+        },
+        {
+            "action": "Vaulter\\Http\\Controllers\\Activity\\ListNodeActivityController",
+            "controller": "Vaulter\\Http\\Controllers\\Activity\\ListNodeActivityController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.activity.node",
+            "methods": [
+                "GET"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.activity.node",
+            "openapi": {
+                "operation_id": "activity.node",
+                "path": "/nodes/{node}/activity"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/core/src/Http/Controllers/Activity/ListNodeActivityController.php",
+                "symbol": "Vaulter\\Http\\Controllers\\Activity\\ListNodeActivityController"
+            },
+            "uri": "api/vaulter/v1/nodes/{node}/activity"
+        },
+        {
+            "action": "Vaulter\\Http\\Controllers\\Changes\\ListChangesController",
+            "controller": "Vaulter\\Http\\Controllers\\Changes\\ListChangesController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.changes.index",
+            "methods": [
+                "GET"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.changes.index",
+            "openapi": {
+                "operation_id": "changes.index",
+                "path": "/drives/{drive}/changes"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/core/src/Http/Controllers/Changes/ListChangesController.php",
+                "symbol": "Vaulter\\Http\\Controllers\\Changes\\ListChangesController"
+            },
+            "uri": "api/vaulter/v1/drives/{drive}/changes"
+        },
+        {
+            "action": "Vaulter\\Http\\Controllers\\Changes\\ShowChangesStartController",
+            "controller": "Vaulter\\Http\\Controllers\\Changes\\ShowChangesStartController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.changes.start",
+            "methods": [
+                "GET"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.changes.start",
+            "openapi": {
+                "operation_id": "changes.start",
+                "path": "/drives/{drive}/changes/start"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/core/src/Http/Controllers/Changes/ShowChangesStartController.php",
+                "symbol": "Vaulter\\Http\\Controllers\\Changes\\ShowChangesStartController"
+            },
+            "uri": "api/vaulter/v1/drives/{drive}/changes/start"
+        },
+        {
+            "action": "Vaulter\\Documents\\Http\\Controllers\\Collaboration\\HubAuthenticateController",
+            "controller": "Vaulter\\Documents\\Http\\Controllers\\Collaboration\\HubAuthenticateController",
+            "default_registered": false,
+            "id": "route:vaulter.v1.collaboration.hub.authenticate",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "throttle:vaulter-public",
+                "Vaulter\\Documents\\Http\\Middleware\\ResolveCollaborationCall"
+            ],
+            "name": "vaulter.v1.collaboration.hub.authenticate",
+            "openapi": {
+                "operation_id": "collaboration.hub.authenticate",
+                "path": "/collaboration/hub/authenticate"
+            },
+            "owner": "collaboration",
+            "requires": [
+                "vaulter-documents.collaboration.enabled"
+            ],
+            "source": {
+                "file": "packages/documents/src/Http/Controllers/Collaboration/HubAuthenticateController.php",
+                "symbol": "Vaulter\\Documents\\Http\\Controllers\\Collaboration\\HubAuthenticateController"
+            },
+            "uri": "api/vaulter/v1/collaboration/hub/authenticate"
+        },
+        {
+            "action": "Vaulter\\Documents\\Http\\Controllers\\Collaboration\\HubLoadController",
+            "controller": "Vaulter\\Documents\\Http\\Controllers\\Collaboration\\HubLoadController",
+            "default_registered": false,
+            "id": "route:vaulter.v1.collaboration.hub.load",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "throttle:vaulter-public",
+                "Vaulter\\Documents\\Http\\Middleware\\ResolveCollaborationCall"
+            ],
+            "name": "vaulter.v1.collaboration.hub.load",
+            "openapi": {
+                "operation_id": "collaboration.hub.load",
+                "path": "/collaboration/hub/load"
+            },
+            "owner": "collaboration",
+            "requires": [
+                "vaulter-documents.collaboration.enabled"
+            ],
+            "source": {
+                "file": "packages/documents/src/Http/Controllers/Collaboration/HubLoadController.php",
+                "symbol": "Vaulter\\Documents\\Http\\Controllers\\Collaboration\\HubLoadController"
+            },
+            "uri": "api/vaulter/v1/collaboration/hub/load"
+        },
+        {
+            "action": "Vaulter\\Documents\\Http\\Controllers\\Collaboration\\HubStoreController",
+            "controller": "Vaulter\\Documents\\Http\\Controllers\\Collaboration\\HubStoreController",
+            "default_registered": false,
+            "id": "route:vaulter.v1.collaboration.hub.store",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "throttle:vaulter-public",
+                "Vaulter\\Documents\\Http\\Middleware\\ResolveCollaborationCall"
+            ],
+            "name": "vaulter.v1.collaboration.hub.store",
+            "openapi": {
+                "operation_id": "collaboration.hub.store",
+                "path": "/collaboration/hub/store"
+            },
+            "owner": "collaboration",
+            "requires": [
+                "vaulter-documents.collaboration.enabled"
+            ],
+            "source": {
+                "file": "packages/documents/src/Http/Controllers/Collaboration/HubStoreController.php",
+                "symbol": "Vaulter\\Documents\\Http\\Controllers\\Collaboration\\HubStoreController"
+            },
+            "uri": "api/vaulter/v1/collaboration/hub/store"
+        },
+        {
+            "action": "Vaulter\\Documents\\Http\\Controllers\\Comments\\DeleteCommentController",
+            "controller": "Vaulter\\Documents\\Http\\Controllers\\Comments\\DeleteCommentController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.comments.destroy",
+            "methods": [
+                "DELETE"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.comments.destroy",
+            "openapi": {
+                "operation_id": "comments.destroy",
+                "path": "/nodes/{node}/comments/{comment}"
+            },
+            "owner": "documents",
+            "requires": [],
+            "source": {
+                "file": "packages/documents/src/Http/Controllers/Comments/DeleteCommentController.php",
+                "symbol": "Vaulter\\Documents\\Http\\Controllers\\Comments\\DeleteCommentController"
+            },
+            "uri": "api/vaulter/v1/nodes/{node}/comments/{comment}"
+        },
+        {
+            "action": "Vaulter\\Documents\\Http\\Controllers\\Comments\\ListCommentsController",
+            "controller": "Vaulter\\Documents\\Http\\Controllers\\Comments\\ListCommentsController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.comments.index",
+            "methods": [
+                "GET"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.comments.index",
+            "openapi": {
+                "operation_id": "comments.index",
+                "path": "/nodes/{node}/comments"
+            },
+            "owner": "documents",
+            "requires": [],
+            "source": {
+                "file": "packages/documents/src/Http/Controllers/Comments/ListCommentsController.php",
+                "symbol": "Vaulter\\Documents\\Http\\Controllers\\Comments\\ListCommentsController"
+            },
+            "uri": "api/vaulter/v1/nodes/{node}/comments"
+        },
+        {
+            "action": "Vaulter\\Documents\\Http\\Controllers\\Comments\\ResolveCommentController",
+            "controller": "Vaulter\\Documents\\Http\\Controllers\\Comments\\ResolveCommentController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.comments.resolve",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.comments.resolve",
+            "openapi": {
+                "operation_id": "comments.resolve",
+                "path": "/nodes/{node}/comments/{comment}/resolve"
+            },
+            "owner": "documents",
+            "requires": [],
+            "source": {
+                "file": "packages/documents/src/Http/Controllers/Comments/ResolveCommentController.php",
+                "symbol": "Vaulter\\Documents\\Http\\Controllers\\Comments\\ResolveCommentController"
+            },
+            "uri": "api/vaulter/v1/nodes/{node}/comments/{comment}/resolve"
+        },
+        {
+            "action": "Vaulter\\Documents\\Http\\Controllers\\Comments\\AddCommentController",
+            "controller": "Vaulter\\Documents\\Http\\Controllers\\Comments\\AddCommentController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.comments.store",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.comments.store",
+            "openapi": {
+                "operation_id": "comments.store",
+                "path": "/nodes/{node}/comments"
+            },
+            "owner": "documents",
+            "requires": [],
+            "source": {
+                "file": "packages/documents/src/Http/Controllers/Comments/AddCommentController.php",
+                "symbol": "Vaulter\\Documents\\Http\\Controllers\\Comments\\AddCommentController"
+            },
+            "uri": "api/vaulter/v1/nodes/{node}/comments"
+        },
+        {
+            "action": "Vaulter\\Documents\\Http\\Controllers\\Collaboration\\CreateCollaborationSessionController",
+            "controller": "Vaulter\\Documents\\Http\\Controllers\\Collaboration\\CreateCollaborationSessionController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.documents.collaboration.session",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.documents.collaboration.session",
+            "openapi": {
+                "operation_id": "documents.collaboration.session",
+                "path": "/documents/{node}/collaboration/session"
+            },
+            "owner": "collaboration",
+            "requires": [],
+            "source": {
+                "file": "packages/documents/src/Http/Controllers/Collaboration/CreateCollaborationSessionController.php",
+                "symbol": "Vaulter\\Documents\\Http\\Controllers\\Collaboration\\CreateCollaborationSessionController"
+            },
+            "uri": "api/vaulter/v1/documents/{node}/collaboration/session"
+        },
+        {
+            "action": "Vaulter\\Documents\\Http\\Controllers\\Documents\\ShowDocumentContentController",
+            "controller": "Vaulter\\Documents\\Http\\Controllers\\Documents\\ShowDocumentContentController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.documents.content.show",
+            "methods": [
+                "GET"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.documents.content.show",
+            "openapi": {
+                "operation_id": "documents.content.show",
+                "path": "/documents/{node}/content"
+            },
+            "owner": "documents",
+            "requires": [],
+            "source": {
+                "file": "packages/documents/src/Http/Controllers/Documents/ShowDocumentContentController.php",
+                "symbol": "Vaulter\\Documents\\Http\\Controllers\\Documents\\ShowDocumentContentController"
+            },
+            "uri": "api/vaulter/v1/documents/{node}/content"
+        },
+        {
+            "action": "Vaulter\\Documents\\Http\\Controllers\\Documents\\UpdateDocumentContentController",
+            "controller": "Vaulter\\Documents\\Http\\Controllers\\Documents\\UpdateDocumentContentController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.documents.content.update",
+            "methods": [
+                "PUT"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.documents.content.update",
+            "openapi": {
+                "operation_id": "documents.content.update",
+                "path": "/documents/{node}/content"
+            },
+            "owner": "documents",
+            "requires": [],
+            "source": {
+                "file": "packages/documents/src/Http/Controllers/Documents/UpdateDocumentContentController.php",
+                "symbol": "Vaulter\\Documents\\Http\\Controllers\\Documents\\UpdateDocumentContentController"
+            },
+            "uri": "api/vaulter/v1/documents/{node}/content"
+        },
+        {
+            "action": "Vaulter\\Documents\\Http\\Controllers\\Documents\\ExportDocumentController",
+            "controller": "Vaulter\\Documents\\Http\\Controllers\\Documents\\ExportDocumentController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.documents.export",
+            "methods": [
+                "GET"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.documents.export",
+            "openapi": {
+                "operation_id": "documents.export",
+                "path": "/documents/{node}/export/{format}"
+            },
+            "owner": "documents",
+            "requires": [],
+            "source": {
+                "file": "packages/documents/src/Http/Controllers/Documents/ExportDocumentController.php",
+                "symbol": "Vaulter\\Documents\\Http\\Controllers\\Documents\\ExportDocumentController"
+            },
+            "uri": "api/vaulter/v1/documents/{node}/export/{format}"
+        },
+        {
+            "action": "Vaulter\\Documents\\Http\\Controllers\\Revisions\\ListDocumentRevisionsController",
+            "controller": "Vaulter\\Documents\\Http\\Controllers\\Revisions\\ListDocumentRevisionsController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.documents.revisions.index",
+            "methods": [
+                "GET"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.documents.revisions.index",
+            "openapi": {
+                "operation_id": "documents.revisions.index",
+                "path": "/documents/{node}/revisions"
+            },
+            "owner": "documents",
+            "requires": [],
+            "source": {
+                "file": "packages/documents/src/Http/Controllers/Revisions/ListDocumentRevisionsController.php",
+                "symbol": "Vaulter\\Documents\\Http\\Controllers\\Revisions\\ListDocumentRevisionsController"
+            },
+            "uri": "api/vaulter/v1/documents/{node}/revisions"
+        },
+        {
+            "action": "Vaulter\\Documents\\Http\\Controllers\\Revisions\\RestoreDocumentRevisionController",
+            "controller": "Vaulter\\Documents\\Http\\Controllers\\Revisions\\RestoreDocumentRevisionController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.documents.revisions.restore",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.documents.revisions.restore",
+            "openapi": {
+                "operation_id": "documents.revisions.restore",
+                "path": "/documents/{node}/revisions/{revision}/restore"
+            },
+            "owner": "documents",
+            "requires": [],
+            "source": {
+                "file": "packages/documents/src/Http/Controllers/Revisions/RestoreDocumentRevisionController.php",
+                "symbol": "Vaulter\\Documents\\Http\\Controllers\\Revisions\\RestoreDocumentRevisionController"
+            },
+            "uri": "api/vaulter/v1/documents/{node}/revisions/{revision}/restore"
+        },
+        {
+            "action": "Vaulter\\Documents\\Http\\Controllers\\Revisions\\ShowDocumentRevisionController",
+            "controller": "Vaulter\\Documents\\Http\\Controllers\\Revisions\\ShowDocumentRevisionController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.documents.revisions.show",
+            "methods": [
+                "GET"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.documents.revisions.show",
+            "openapi": {
+                "operation_id": "documents.revisions.show",
+                "path": "/documents/{node}/revisions/{revision}"
+            },
+            "owner": "documents",
+            "requires": [],
+            "source": {
+                "file": "packages/documents/src/Http/Controllers/Revisions/ShowDocumentRevisionController.php",
+                "symbol": "Vaulter\\Documents\\Http\\Controllers\\Revisions\\ShowDocumentRevisionController"
+            },
+            "uri": "api/vaulter/v1/documents/{node}/revisions/{revision}"
+        },
+        {
+            "action": "Vaulter\\Documents\\Http\\Controllers\\Revisions\\CreateDocumentRevisionController",
+            "controller": "Vaulter\\Documents\\Http\\Controllers\\Revisions\\CreateDocumentRevisionController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.documents.revisions.store",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.documents.revisions.store",
+            "openapi": {
+                "operation_id": "documents.revisions.store",
+                "path": "/documents/{node}/revisions"
+            },
+            "owner": "documents",
+            "requires": [],
+            "source": {
+                "file": "packages/documents/src/Http/Controllers/Revisions/CreateDocumentRevisionController.php",
+                "symbol": "Vaulter\\Documents\\Http\\Controllers\\Revisions\\CreateDocumentRevisionController"
+            },
+            "uri": "api/vaulter/v1/documents/{node}/revisions"
+        },
+        {
+            "action": "Vaulter\\Documents\\Http\\Controllers\\Revisions\\UpdateDocumentRevisionController",
+            "controller": "Vaulter\\Documents\\Http\\Controllers\\Revisions\\UpdateDocumentRevisionController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.documents.revisions.update",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.documents.revisions.update",
+            "openapi": {
+                "operation_id": "documents.revisions.update",
+                "path": "/documents/{node}/revisions/{revision}"
+            },
+            "owner": "documents",
+            "requires": [],
+            "source": {
+                "file": "packages/documents/src/Http/Controllers/Revisions/UpdateDocumentRevisionController.php",
+                "symbol": "Vaulter\\Documents\\Http\\Controllers\\Revisions\\UpdateDocumentRevisionController"
+            },
+            "uri": "api/vaulter/v1/documents/{node}/revisions/{revision}"
+        },
+        {
+            "action": "Vaulter\\Documents\\Http\\Controllers\\Documents\\CreateDocumentController",
+            "controller": "Vaulter\\Documents\\Http\\Controllers\\Documents\\CreateDocumentController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.documents.store",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.documents.store",
+            "openapi": {
+                "operation_id": "documents.store",
+                "path": "/drives/{drive}/documents"
+            },
+            "owner": "documents",
+            "requires": [],
+            "source": {
+                "file": "packages/documents/src/Http/Controllers/Documents/CreateDocumentController.php",
+                "symbol": "Vaulter\\Documents\\Http\\Controllers\\Documents\\CreateDocumentController"
+            },
+            "uri": "api/vaulter/v1/drives/{drive}/documents"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Drives\\ArchiveDriveController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Drives\\ArchiveDriveController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.drives.archive",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.drives.archive",
+            "openapi": {
+                "operation_id": "drives.archive",
+                "path": "/drives/{drive}/archive"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Drives/ArchiveDriveController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Drives\\ArchiveDriveController"
+            },
+            "uri": "api/vaulter/v1/drives/{drive}/archive"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Drives\\DeleteDriveController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Drives\\DeleteDriveController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.drives.destroy",
+            "methods": [
+                "DELETE"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.drives.destroy",
+            "openapi": {
+                "operation_id": "drives.destroy",
+                "path": "/drives/{drive}"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Drives/DeleteDriveController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Drives\\DeleteDriveController"
+            },
+            "uri": "api/vaulter/v1/drives/{drive}"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Drives\\ShowDriveController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Drives\\ShowDriveController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.drives.show",
+            "methods": [
+                "GET"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.drives.show",
+            "openapi": {
+                "operation_id": "drives.show",
+                "path": "/drives/{drive}"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Drives/ShowDriveController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Drives\\ShowDriveController"
+            },
+            "uri": "api/vaulter/v1/drives/{drive}"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Drives\\UnarchiveDriveController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Drives\\UnarchiveDriveController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.drives.unarchive",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.drives.unarchive",
+            "openapi": {
+                "operation_id": "drives.unarchive",
+                "path": "/drives/{drive}/unarchive"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Drives/UnarchiveDriveController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Drives\\UnarchiveDriveController"
+            },
+            "uri": "api/vaulter/v1/drives/{drive}/unarchive"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Files\\DownloadFileController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Files\\DownloadFileController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.files.download",
+            "methods": [
+                "GET"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.files.download",
+            "openapi": {
+                "operation_id": "files.download",
+                "path": "/files/{node}/download"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Files/DownloadFileController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Files\\DownloadFileController"
+            },
+            "uri": "api/vaulter/v1/files/{node}/download"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Files\\DeleteFileRevisionController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Files\\DeleteFileRevisionController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.files.revisions.destroy",
+            "methods": [
+                "DELETE"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.files.revisions.destroy",
+            "openapi": {
+                "operation_id": "files.revisions.destroy",
+                "path": "/files/{node}/revisions/{revision}"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Files/DeleteFileRevisionController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Files\\DeleteFileRevisionController"
+            },
+            "uri": "api/vaulter/v1/files/{node}/revisions/{revision}"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Files\\DownloadFileRevisionController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Files\\DownloadFileRevisionController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.files.revisions.download",
+            "methods": [
+                "GET"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.files.revisions.download",
+            "openapi": {
+                "operation_id": "files.revisions.download",
+                "path": "/files/{node}/revisions/{revision}/download"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Files/DownloadFileRevisionController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Files\\DownloadFileRevisionController"
+            },
+            "uri": "api/vaulter/v1/files/{node}/revisions/{revision}/download"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Files\\ListFileRevisionsController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Files\\ListFileRevisionsController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.files.revisions.index",
+            "methods": [
+                "GET"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.files.revisions.index",
+            "openapi": {
+                "operation_id": "files.revisions.index",
+                "path": "/files/{node}/revisions"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Files/ListFileRevisionsController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Files\\ListFileRevisionsController"
+            },
+            "uri": "api/vaulter/v1/files/{node}/revisions"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Files\\RestoreFileRevisionController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Files\\RestoreFileRevisionController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.files.revisions.restore",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.files.revisions.restore",
+            "openapi": {
+                "operation_id": "files.revisions.restore",
+                "path": "/files/{node}/revisions/{revision}/restore"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Files/RestoreFileRevisionController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Files\\RestoreFileRevisionController"
+            },
+            "uri": "api/vaulter/v1/files/{node}/revisions/{revision}/restore"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Files\\AddFileRevisionController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Files\\AddFileRevisionController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.files.revisions.store",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.files.revisions.store",
+            "openapi": {
+                "operation_id": "files.revisions.store",
+                "path": "/files/{node}/revisions"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Files/AddFileRevisionController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Files\\AddFileRevisionController"
+            },
+            "uri": "api/vaulter/v1/files/{node}/revisions"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Files\\UpdateFileRevisionController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Files\\UpdateFileRevisionController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.files.revisions.update",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.files.revisions.update",
+            "openapi": {
+                "operation_id": "files.revisions.update",
+                "path": "/files/{node}/revisions/{revision}"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Files/UpdateFileRevisionController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Files\\UpdateFileRevisionController"
+            },
+            "uri": "api/vaulter/v1/files/{node}/revisions/{revision}"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Files\\UploadFileController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Files\\UploadFileController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.files.store",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.files.store",
+            "openapi": {
+                "operation_id": "files.store",
+                "path": "/drives/{drive}/files"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Files/UploadFileController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Files\\UploadFileController"
+            },
+            "uri": "api/vaulter/v1/drives/{drive}/files"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Folders\\CreateFolderController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Folders\\CreateFolderController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.folders.store",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.folders.store",
+            "openapi": {
+                "operation_id": "folders.store",
+                "path": "/drives/{drive}/folders"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Folders/CreateFolderController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Folders\\CreateFolderController"
+            },
+            "uri": "api/vaulter/v1/drives/{drive}/folders"
+        },
+        {
+            "action": "Vaulter\\Http\\Controllers\\Access\\RevokeGrantController",
+            "controller": "Vaulter\\Http\\Controllers\\Access\\RevokeGrantController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.grants.destroy",
+            "methods": [
+                "DELETE"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.grants.destroy",
+            "openapi": {
+                "operation_id": "grants.destroy",
+                "path": "/nodes/{node}/grants/{grant}"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/core/src/Http/Controllers/Access/RevokeGrantController.php",
+                "symbol": "Vaulter\\Http\\Controllers\\Access\\RevokeGrantController"
+            },
+            "uri": "api/vaulter/v1/nodes/{node}/grants/{grant}"
+        },
+        {
+            "action": "Vaulter\\Http\\Controllers\\Access\\ListGrantsController",
+            "controller": "Vaulter\\Http\\Controllers\\Access\\ListGrantsController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.grants.index",
+            "methods": [
+                "GET"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.grants.index",
+            "openapi": {
+                "operation_id": "grants.index",
+                "path": "/nodes/{node}/grants"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/core/src/Http/Controllers/Access/ListGrantsController.php",
+                "symbol": "Vaulter\\Http\\Controllers\\Access\\ListGrantsController"
+            },
+            "uri": "api/vaulter/v1/nodes/{node}/grants"
+        },
+        {
+            "action": "Vaulter\\Http\\Controllers\\Access\\CreateGrantController",
+            "controller": "Vaulter\\Http\\Controllers\\Access\\CreateGrantController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.grants.store",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.grants.store",
+            "openapi": {
+                "operation_id": "grants.store",
+                "path": "/nodes/{node}/grants"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/core/src/Http/Controllers/Access/CreateGrantController.php",
+                "symbol": "Vaulter\\Http\\Controllers\\Access\\CreateGrantController"
+            },
+            "uri": "api/vaulter/v1/nodes/{node}/grants"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Nodes\\ShowAbilitiesController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Nodes\\ShowAbilitiesController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.nodes.abilities",
+            "methods": [
+                "GET"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.nodes.abilities",
+            "openapi": {
+                "operation_id": "nodes.abilities",
+                "path": "/nodes/{node}/abilities"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Nodes/ShowAbilitiesController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Nodes\\ShowAbilitiesController"
+            },
+            "uri": "api/vaulter/v1/nodes/{node}/abilities"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Nodes\\CopyNodeController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Nodes\\CopyNodeController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.nodes.copy",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.nodes.copy",
+            "openapi": {
+                "operation_id": "nodes.copy",
+                "path": "/nodes/{node}/copy"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Nodes/CopyNodeController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Nodes\\CopyNodeController"
+            },
+            "uri": "api/vaulter/v1/nodes/{node}/copy"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Nodes\\ListChildrenController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Nodes\\ListChildrenController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.nodes.index",
+            "methods": [
+                "GET"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.nodes.index",
+            "openapi": {
+                "operation_id": "nodes.index",
+                "path": "/drives/{drive}/nodes"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Nodes/ListChildrenController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Nodes\\ListChildrenController"
+            },
+            "uri": "api/vaulter/v1/drives/{drive}/nodes"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Nodes\\MoveNodeController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Nodes\\MoveNodeController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.nodes.move",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.nodes.move",
+            "openapi": {
+                "operation_id": "nodes.move",
+                "path": "/nodes/{node}/move"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Nodes/MoveNodeController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Nodes\\MoveNodeController"
+            },
+            "uri": "api/vaulter/v1/nodes/{node}/move"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Nodes\\UpdateNodePropertiesController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Nodes\\UpdateNodePropertiesController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.nodes.properties.update",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.nodes.properties.update",
+            "openapi": {
+                "operation_id": "nodes.properties.update",
+                "path": "/nodes/{node}/properties"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Nodes/UpdateNodePropertiesController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Nodes\\UpdateNodePropertiesController"
+            },
+            "uri": "api/vaulter/v1/nodes/{node}/properties"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Trash\\PurgeNodeController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Trash\\PurgeNodeController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.nodes.purge",
+            "methods": [
+                "DELETE"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.nodes.purge",
+            "openapi": {
+                "operation_id": "nodes.purge",
+                "path": "/nodes/{node}"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Trash/PurgeNodeController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Trash\\PurgeNodeController"
+            },
+            "uri": "api/vaulter/v1/nodes/{node}"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Trash\\RestoreNodeController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Trash\\RestoreNodeController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.nodes.restore",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.nodes.restore",
+            "openapi": {
+                "operation_id": "nodes.restore",
+                "path": "/nodes/{node}/restore"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Trash/RestoreNodeController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Trash\\RestoreNodeController"
+            },
+            "uri": "api/vaulter/v1/nodes/{node}/restore"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Search\\SearchNodesController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Search\\SearchNodesController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.nodes.search",
+            "methods": [
+                "GET"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.nodes.search",
+            "openapi": {
+                "operation_id": "nodes.search",
+                "path": "/drives/{drive}/search"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Search/SearchNodesController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Search\\SearchNodesController"
+            },
+            "uri": "api/vaulter/v1/drives/{drive}/search"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Nodes\\ShowNodeController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Nodes\\ShowNodeController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.nodes.show",
+            "methods": [
+                "GET"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.nodes.show",
+            "openapi": {
+                "operation_id": "nodes.show",
+                "path": "/nodes/{node}"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Nodes/ShowNodeController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Nodes\\ShowNodeController"
+            },
+            "uri": "api/vaulter/v1/nodes/{node}"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Nodes\\StarNodeController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Nodes\\StarNodeController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.nodes.star",
+            "methods": [
+                "PUT"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.nodes.star",
+            "openapi": {
+                "operation_id": "nodes.star",
+                "path": "/nodes/{node}/star"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Nodes/StarNodeController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Nodes\\StarNodeController"
+            },
+            "uri": "api/vaulter/v1/nodes/{node}/star"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Nodes\\ListStarredController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Nodes\\ListStarredController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.nodes.starred",
+            "methods": [
+                "GET"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.nodes.starred",
+            "openapi": {
+                "operation_id": "nodes.starred",
+                "path": "/drives/{drive}/starred"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Nodes/ListStarredController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Nodes\\ListStarredController"
+            },
+            "uri": "api/vaulter/v1/drives/{drive}/starred"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Trash\\TrashNodeController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Trash\\TrashNodeController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.nodes.trash",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.nodes.trash",
+            "openapi": {
+                "operation_id": "nodes.trash",
+                "path": "/nodes/{node}/trash"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Trash/TrashNodeController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Trash\\TrashNodeController"
+            },
+            "uri": "api/vaulter/v1/nodes/{node}/trash"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Nodes\\UnstarNodeController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Nodes\\UnstarNodeController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.nodes.unstar",
+            "methods": [
+                "DELETE"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.nodes.unstar",
+            "openapi": {
+                "operation_id": "nodes.unstar",
+                "path": "/nodes/{node}/star"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Nodes/UnstarNodeController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Nodes\\UnstarNodeController"
+            },
+            "uri": "api/vaulter/v1/nodes/{node}/star"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Nodes\\UpdateNodeController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Nodes\\UpdateNodeController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.nodes.update",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.nodes.update",
+            "openapi": {
+                "operation_id": "nodes.update",
+                "path": "/nodes/{node}"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Nodes/UpdateNodeController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Nodes\\UpdateNodeController"
+            },
+            "uri": "api/vaulter/v1/nodes/{node}"
+        },
+        {
+            "action": "Vaulter\\Http\\Controllers\\Sharing\\DownloadPublicShareController",
+            "controller": "Vaulter\\Http\\Controllers\\Sharing\\DownloadPublicShareController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.public-shares.download",
+            "methods": [
+                "GET"
+            ],
+            "middleware": [
+                "api",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "throttle:vaulter-public",
+                "Vaulter\\Http\\Middleware\\ResolveShareToken"
+            ],
+            "name": "vaulter.v1.public-shares.download",
+            "openapi": {
+                "operation_id": "public-shares.download",
+                "path": "/shares/{token}/download"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/core/src/Http/Controllers/Sharing/DownloadPublicShareController.php",
+                "symbol": "Vaulter\\Http\\Controllers\\Sharing\\DownloadPublicShareController"
+            },
+            "uri": "api/vaulter/v1/shares/{token}/download"
+        },
+        {
+            "action": "Vaulter\\Http\\Controllers\\Sharing\\ListPublicShareNodesController",
+            "controller": "Vaulter\\Http\\Controllers\\Sharing\\ListPublicShareNodesController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.public-shares.nodes",
+            "methods": [
+                "GET"
+            ],
+            "middleware": [
+                "api",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "throttle:vaulter-public",
+                "Vaulter\\Http\\Middleware\\ResolveShareToken"
+            ],
+            "name": "vaulter.v1.public-shares.nodes",
+            "openapi": {
+                "operation_id": "public-shares.nodes",
+                "path": "/shares/{token}/nodes"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/core/src/Http/Controllers/Sharing/ListPublicShareNodesController.php",
+                "symbol": "Vaulter\\Http\\Controllers\\Sharing\\ListPublicShareNodesController"
+            },
+            "uri": "api/vaulter/v1/shares/{token}/nodes"
+        },
+        {
+            "action": "Vaulter\\Http\\Controllers\\Sharing\\ShowPublicShareController",
+            "controller": "Vaulter\\Http\\Controllers\\Sharing\\ShowPublicShareController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.public-shares.show",
+            "methods": [
+                "GET"
+            ],
+            "middleware": [
+                "api",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "throttle:vaulter-public",
+                "Vaulter\\Http\\Middleware\\ResolveShareToken"
+            ],
+            "name": "vaulter.v1.public-shares.show",
+            "openapi": {
+                "operation_id": "public-shares.show",
+                "path": "/shares/{token}"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/core/src/Http/Controllers/Sharing/ShowPublicShareController.php",
+                "symbol": "Vaulter\\Http\\Controllers\\Sharing\\ShowPublicShareController"
+            },
+            "uri": "api/vaulter/v1/shares/{token}"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Shared\\ListSharedWithMeController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Shared\\ListSharedWithMeController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.shared.index",
+            "methods": [
+                "GET"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.shared.index",
+            "openapi": {
+                "operation_id": "shared.index",
+                "path": "/shared"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Shared/ListSharedWithMeController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Shared\\ListSharedWithMeController"
+            },
+            "uri": "api/vaulter/v1/shared"
+        },
+        {
+            "action": "Vaulter\\Http\\Controllers\\Sharing\\RevokeShareController",
+            "controller": "Vaulter\\Http\\Controllers\\Sharing\\RevokeShareController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.shares.destroy",
+            "methods": [
+                "DELETE"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.shares.destroy",
+            "openapi": {
+                "operation_id": "shares.destroy",
+                "path": "/nodes/{node}/shares/{share}"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/core/src/Http/Controllers/Sharing/RevokeShareController.php",
+                "symbol": "Vaulter\\Http\\Controllers\\Sharing\\RevokeShareController"
+            },
+            "uri": "api/vaulter/v1/nodes/{node}/shares/{share}"
+        },
+        {
+            "action": "Vaulter\\Http\\Controllers\\Sharing\\ListSharesController",
+            "controller": "Vaulter\\Http\\Controllers\\Sharing\\ListSharesController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.shares.index",
+            "methods": [
+                "GET"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.shares.index",
+            "openapi": {
+                "operation_id": "shares.index",
+                "path": "/nodes/{node}/shares"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/core/src/Http/Controllers/Sharing/ListSharesController.php",
+                "symbol": "Vaulter\\Http\\Controllers\\Sharing\\ListSharesController"
+            },
+            "uri": "api/vaulter/v1/nodes/{node}/shares"
+        },
+        {
+            "action": "Vaulter\\Http\\Controllers\\Sharing\\RotateShareController",
+            "controller": "Vaulter\\Http\\Controllers\\Sharing\\RotateShareController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.shares.rotate",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.shares.rotate",
+            "openapi": {
+                "operation_id": "shares.rotate",
+                "path": "/nodes/{node}/shares/{share}/rotate"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/core/src/Http/Controllers/Sharing/RotateShareController.php",
+                "symbol": "Vaulter\\Http\\Controllers\\Sharing\\RotateShareController"
+            },
+            "uri": "api/vaulter/v1/nodes/{node}/shares/{share}/rotate"
+        },
+        {
+            "action": "Vaulter\\Http\\Controllers\\Sharing\\CreateShareController",
+            "controller": "Vaulter\\Http\\Controllers\\Sharing\\CreateShareController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.shares.store",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.shares.store",
+            "openapi": {
+                "operation_id": "shares.store",
+                "path": "/nodes/{node}/shares"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/core/src/Http/Controllers/Sharing/CreateShareController.php",
+                "symbol": "Vaulter\\Http\\Controllers\\Sharing\\CreateShareController"
+            },
+            "uri": "api/vaulter/v1/nodes/{node}/shares"
+        },
+        {
+            "action": "Vaulter\\Http\\Controllers\\Sharing\\UpdateShareController",
+            "controller": "Vaulter\\Http\\Controllers\\Sharing\\UpdateShareController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.shares.update",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.shares.update",
+            "openapi": {
+                "operation_id": "shares.update",
+                "path": "/nodes/{node}/shares/{share}"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/core/src/Http/Controllers/Sharing/UpdateShareController.php",
+                "symbol": "Vaulter\\Http\\Controllers\\Sharing\\UpdateShareController"
+            },
+            "uri": "api/vaulter/v1/nodes/{node}/shares/{share}"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Trash\\EmptyTrashController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Trash\\EmptyTrashController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.trash.empty",
+            "methods": [
+                "DELETE"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.trash.empty",
+            "openapi": {
+                "operation_id": "trash.empty",
+                "path": "/drives/{drive}/trash"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Trash/EmptyTrashController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Trash\\EmptyTrashController"
+            },
+            "uri": "api/vaulter/v1/drives/{drive}/trash"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Trash\\ListTrashController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Trash\\ListTrashController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.trash.index",
+            "methods": [
+                "GET"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.trash.index",
+            "openapi": {
+                "operation_id": "trash.index",
+                "path": "/drives/{drive}/trash"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Trash/ListTrashController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Trash\\ListTrashController"
+            },
+            "uri": "api/vaulter/v1/drives/{drive}/trash"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Uploads\\S3MultipartProtocolController@complete",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Uploads\\S3MultipartProtocolController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.uploads.complete",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "throttle:vaulter-uploads"
+            ],
+            "name": "vaulter.v1.uploads.complete",
+            "openapi": {
+                "operation_id": "uploads.complete",
+                "path": "/uploads/{upload}/complete"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Uploads/S3MultipartProtocolController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Uploads\\S3MultipartProtocolController@complete"
+            },
+            "uri": "api/vaulter/v1/uploads/{upload}/complete"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Uploads\\S3MultipartProtocolController@parts",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Uploads\\S3MultipartProtocolController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.uploads.parts.store",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "throttle:vaulter-uploads"
+            ],
+            "name": "vaulter.v1.uploads.parts.store",
+            "openapi": {
+                "operation_id": "uploads.parts.store",
+                "path": "/uploads/{upload}/parts"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Uploads/S3MultipartProtocolController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Uploads\\S3MultipartProtocolController@parts"
+            },
+            "uri": "api/vaulter/v1/uploads/{upload}/parts"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Uploads\\TusProtocolController@status",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Uploads\\TusProtocolController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.uploads.show",
+            "methods": [
+                "GET"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "throttle:vaulter-uploads"
+            ],
+            "name": "vaulter.v1.uploads.show",
+            "openapi": {
+                "operation_id": "uploads.show",
+                "path": "/uploads/{upload}"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Uploads/TusProtocolController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Uploads\\TusProtocolController@status"
+            },
+            "uri": "api/vaulter/v1/uploads/{upload}"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Uploads\\CreateUploadController",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Uploads\\CreateUploadController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.uploads.store",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "throttle:vaulter-uploads"
+            ],
+            "name": "vaulter.v1.uploads.store",
+            "openapi": {
+                "operation_id": "uploads.store",
+                "path": "/drives/{drive}/uploads"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Uploads/CreateUploadController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Uploads\\CreateUploadController"
+            },
+            "uri": "api/vaulter/v1/drives/{drive}/uploads"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Uploads\\TusProtocolController@abort",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Uploads\\TusProtocolController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.uploads.tus.destroy",
+            "methods": [
+                "DELETE"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "throttle:vaulter-uploads"
+            ],
+            "name": "vaulter.v1.uploads.tus.destroy",
+            "openapi": {
+                "operation_id": "uploads.tus.destroy",
+                "path": "/uploads/{upload}"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Uploads/TusProtocolController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Uploads\\TusProtocolController@abort"
+            },
+            "uri": "api/vaulter/v1/uploads/{upload}"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Uploads\\TusProtocolController@head",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Uploads\\TusProtocolController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.uploads.tus.head",
+            "methods": [
+                "HEAD"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "throttle:vaulter-uploads"
+            ],
+            "name": "vaulter.v1.uploads.tus.head",
+            "openapi": {
+                "operation_id": "uploads.tus.head",
+                "path": "/uploads/{upload}"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Uploads/TusProtocolController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Uploads\\TusProtocolController@head"
+            },
+            "uri": "api/vaulter/v1/uploads/{upload}"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Uploads\\TusProtocolController@options",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Uploads\\TusProtocolController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.uploads.tus.options",
+            "methods": [
+                "OPTIONS"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "throttle:vaulter-uploads"
+            ],
+            "name": "vaulter.v1.uploads.tus.options",
+            "openapi": {
+                "operation_id": "uploads.tus.options",
+                "path": "/uploads/{upload}"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Uploads/TusProtocolController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Uploads\\TusProtocolController@options"
+            },
+            "uri": "api/vaulter/v1/uploads/{upload}"
+        },
+        {
+            "action": "Vaulter\\Drive\\Http\\Controllers\\Uploads\\TusProtocolController@patch",
+            "controller": "Vaulter\\Drive\\Http\\Controllers\\Uploads\\TusProtocolController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.uploads.tus.patch",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+                "throttle:vaulter-uploads"
+            ],
+            "name": "vaulter.v1.uploads.tus.patch",
+            "openapi": {
+                "operation_id": "uploads.tus.patch",
+                "path": "/uploads/{upload}"
+            },
+            "owner": "drive",
+            "requires": [],
+            "source": {
+                "file": "packages/drive/src/Http/Controllers/Uploads/TusProtocolController.php",
+                "symbol": "Vaulter\\Drive\\Http\\Controllers\\Uploads\\TusProtocolController@patch"
+            },
+            "uri": "api/vaulter/v1/uploads/{upload}"
+        },
+        {
+            "action": "Vaulter\\Http\\Controllers\\Webhooks\\ListWebhookDeliveriesController",
+            "controller": "Vaulter\\Http\\Controllers\\Webhooks\\ListWebhookDeliveriesController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.webhook-deliveries.index",
+            "methods": [
+                "GET"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.webhook-deliveries.index",
+            "openapi": {
+                "operation_id": "webhook-deliveries.index",
+                "path": "/webhook-endpoints/{endpoint}/deliveries"
+            },
+            "owner": "webhooks",
+            "requires": [
+                "vaulter.features.webhooks"
+            ],
+            "source": {
+                "file": "packages/core/src/Http/Controllers/Webhooks/ListWebhookDeliveriesController.php",
+                "symbol": "Vaulter\\Http\\Controllers\\Webhooks\\ListWebhookDeliveriesController"
+            },
+            "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}/deliveries"
+        },
+        {
+            "action": "Vaulter\\Http\\Controllers\\Webhooks\\RedeliverWebhookController",
+            "controller": "Vaulter\\Http\\Controllers\\Webhooks\\RedeliverWebhookController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.webhook-deliveries.redeliver",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.webhook-deliveries.redeliver",
+            "openapi": {
+                "operation_id": "webhook-deliveries.redeliver",
+                "path": "/webhook-endpoints/{endpoint}/deliveries/{delivery}/redeliver"
+            },
+            "owner": "webhooks",
+            "requires": [
+                "vaulter.features.webhooks"
+            ],
+            "source": {
+                "file": "packages/core/src/Http/Controllers/Webhooks/RedeliverWebhookController.php",
+                "symbol": "Vaulter\\Http\\Controllers\\Webhooks\\RedeliverWebhookController"
+            },
+            "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}/deliveries/{delivery}/redeliver"
+        },
+        {
+            "action": "Vaulter\\Http\\Controllers\\Webhooks\\DeactivateWebhookEndpointController",
+            "controller": "Vaulter\\Http\\Controllers\\Webhooks\\DeactivateWebhookEndpointController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.webhook-endpoints.deactivate",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.webhook-endpoints.deactivate",
+            "openapi": {
+                "operation_id": "webhook-endpoints.deactivate",
+                "path": "/webhook-endpoints/{endpoint}/deactivate"
+            },
+            "owner": "webhooks",
+            "requires": [
+                "vaulter.features.webhooks"
+            ],
+            "source": {
+                "file": "packages/core/src/Http/Controllers/Webhooks/DeactivateWebhookEndpointController.php",
+                "symbol": "Vaulter\\Http\\Controllers\\Webhooks\\DeactivateWebhookEndpointController"
+            },
+            "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}/deactivate"
+        },
+        {
+            "action": "Vaulter\\Http\\Controllers\\Webhooks\\DeleteWebhookEndpointController",
+            "controller": "Vaulter\\Http\\Controllers\\Webhooks\\DeleteWebhookEndpointController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.webhook-endpoints.destroy",
+            "methods": [
+                "DELETE"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.webhook-endpoints.destroy",
+            "openapi": {
+                "operation_id": "webhook-endpoints.destroy",
+                "path": "/webhook-endpoints/{endpoint}"
+            },
+            "owner": "webhooks",
+            "requires": [
+                "vaulter.features.webhooks"
+            ],
+            "source": {
+                "file": "packages/core/src/Http/Controllers/Webhooks/DeleteWebhookEndpointController.php",
+                "symbol": "Vaulter\\Http\\Controllers\\Webhooks\\DeleteWebhookEndpointController"
+            },
+            "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}"
+        },
+        {
+            "action": "Vaulter\\Http\\Controllers\\Webhooks\\ListWebhookEndpointsController",
+            "controller": "Vaulter\\Http\\Controllers\\Webhooks\\ListWebhookEndpointsController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.webhook-endpoints.index",
+            "methods": [
+                "GET"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.webhook-endpoints.index",
+            "openapi": {
+                "operation_id": "webhook-endpoints.index",
+                "path": "/webhook-endpoints"
+            },
+            "owner": "webhooks",
+            "requires": [
+                "vaulter.features.webhooks"
+            ],
+            "source": {
+                "file": "packages/core/src/Http/Controllers/Webhooks/ListWebhookEndpointsController.php",
+                "symbol": "Vaulter\\Http\\Controllers\\Webhooks\\ListWebhookEndpointsController"
+            },
+            "uri": "api/vaulter/v1/webhook-endpoints"
+        },
+        {
+            "action": "Vaulter\\Http\\Controllers\\Webhooks\\RotateWebhookSecretController",
+            "controller": "Vaulter\\Http\\Controllers\\Webhooks\\RotateWebhookSecretController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.webhook-endpoints.rotate-secret",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.webhook-endpoints.rotate-secret",
+            "openapi": {
+                "operation_id": "webhook-endpoints.rotate-secret",
+                "path": "/webhook-endpoints/{endpoint}/rotate-secret"
+            },
+            "owner": "webhooks",
+            "requires": [
+                "vaulter.features.webhooks"
+            ],
+            "source": {
+                "file": "packages/core/src/Http/Controllers/Webhooks/RotateWebhookSecretController.php",
+                "symbol": "Vaulter\\Http\\Controllers\\Webhooks\\RotateWebhookSecretController"
+            },
+            "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}/rotate-secret"
+        },
+        {
+            "action": "Vaulter\\Http\\Controllers\\Webhooks\\ShowWebhookEndpointController",
+            "controller": "Vaulter\\Http\\Controllers\\Webhooks\\ShowWebhookEndpointController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.webhook-endpoints.show",
+            "methods": [
+                "GET"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.webhook-endpoints.show",
+            "openapi": {
+                "operation_id": "webhook-endpoints.show",
+                "path": "/webhook-endpoints/{endpoint}"
+            },
+            "owner": "webhooks",
+            "requires": [
+                "vaulter.features.webhooks"
+            ],
+            "source": {
+                "file": "packages/core/src/Http/Controllers/Webhooks/ShowWebhookEndpointController.php",
+                "symbol": "Vaulter\\Http\\Controllers\\Webhooks\\ShowWebhookEndpointController"
+            },
+            "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}"
+        },
+        {
+            "action": "Vaulter\\Http\\Controllers\\Webhooks\\RegisterWebhookEndpointController",
+            "controller": "Vaulter\\Http\\Controllers\\Webhooks\\RegisterWebhookEndpointController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.webhook-endpoints.store",
+            "methods": [
+                "POST"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.webhook-endpoints.store",
+            "openapi": {
+                "operation_id": "webhook-endpoints.store",
+                "path": "/webhook-endpoints"
+            },
+            "owner": "webhooks",
+            "requires": [
+                "vaulter.features.webhooks"
+            ],
+            "source": {
+                "file": "packages/core/src/Http/Controllers/Webhooks/RegisterWebhookEndpointController.php",
+                "symbol": "Vaulter\\Http\\Controllers\\Webhooks\\RegisterWebhookEndpointController"
+            },
+            "uri": "api/vaulter/v1/webhook-endpoints"
+        },
+        {
+            "action": "Vaulter\\Http\\Controllers\\Webhooks\\UpdateWebhookEndpointController",
+            "controller": "Vaulter\\Http\\Controllers\\Webhooks\\UpdateWebhookEndpointController",
+            "default_registered": true,
+            "id": "route:vaulter.v1.webhook-endpoints.update",
+            "methods": [
+                "PATCH"
+            ],
+            "middleware": [
+                "api",
+                "auth:sanctum",
+                "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+                "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+                "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+                "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics"
+            ],
+            "name": "vaulter.v1.webhook-endpoints.update",
+            "openapi": {
+                "operation_id": "webhook-endpoints.update",
+                "path": "/webhook-endpoints/{endpoint}"
+            },
+            "owner": "webhooks",
+            "requires": [
+                "vaulter.features.webhooks"
+            ],
+            "source": {
+                "file": "packages/core/src/Http/Controllers/Webhooks/UpdateWebhookEndpointController.php",
+                "symbol": "Vaulter\\Http\\Controllers\\Webhooks\\UpdateWebhookEndpointController"
+            },
+            "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}"
+        }
+    ],
+    "kind": "http",
+    "openapi_prefix": "/api/vaulter/v1",
+    "version": 1
+}

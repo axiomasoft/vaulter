@@ -27,8 +27,16 @@
   },
   "mode": "self",
   "instructions": "Сгенерированные файлы не править руками; при расхождении — rework соответствующего unit.",
-  "status": "todo",
-  "outcome": null,
-  "updated_at": "2026-10-13T19:16:45Z",
+  "status": "accepted",
+  "outcome": {
+    "agent": {
+      "provider": "claude-code",
+      "model": "sonnet-5-5",
+      "effort": "high"
+    },
+    "at": "2026-10-13T21:45:22Z",
+    "notes": "integrated inline; V1-V6 green; grok review PASS"
+  },
+  "updated_at": "2026-10-13T21:45:22Z",
   "kind": "integration"
 }

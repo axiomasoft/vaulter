@@ -1,0 +1,1144 @@
+{
+    "base": "35718fd2",
+    "changes": [],
+    "items": [
+        {
+            "arguments": [],
+            "class": "Vaulter\\Media\\Console\\GcBlobsCommand",
+            "description": "Garbage-collect unreferenced Vaulter blobs (two-phase, race-safe — H.3)",
+            "exit_codes": [
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:blobs:gc",
+            "options": [
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "Override the GC grace window in hours (floored at 1h)",
+                    "name": "grace",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Also sweep crashed-staging PENDING blobs",
+                    "name": "pending",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "media",
+            "parse": "signature",
+            "source": {
+                "file": "packages/media/src/Console/GcBlobsCommand.php",
+                "symbol": "Vaulter\\Media\\Console\\GcBlobsCommand"
+            }
+        },
+        {
+            "arguments": [],
+            "class": "Vaulter\\Media\\Console\\ReconcileBlobsCommand",
+            "description": "Rebuild blob ref_count from edge counts and report dangling rows; optionally disk-walk for orphan objects (H.3)",
+            "exit_codes": [
+                "FAILURE",
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:blobs:reconcile",
+            "options": [
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Also walk the disk for orphan objects (bytes with no blob row)",
+                    "name": "orphans",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "The disk to scan for orphans (defaults to the configured CAS disk)",
+                    "name": "disk",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "Override the orphan grace window in hours (floored at 1h)",
+                    "name": "orphan-grace",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "DELETE the orphans found (PostgreSQL/MySQL only; refused on sqlite). Default: report only",
+                    "name": "prune",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "media",
+            "parse": "signature",
+            "source": {
+                "file": "packages/media/src/Console/ReconcileBlobsCommand.php",
+                "symbol": "Vaulter\\Media\\Console\\ReconcileBlobsCommand"
+            }
+        },
+        {
+            "arguments": [],
+            "class": "Vaulter\\Console\\PruneChangesCommand",
+            "description": "Delete drive change-journal entries past the retention window.",
+            "exit_codes": [
+                "INVALID",
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:changes:prune",
+            "options": [
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "Override the retention window in days (config vaulter.changes.retention_days)",
+                    "name": "days",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": true,
+                    "default": [],
+                    "description": "Only these drive ids",
+                    "name": "drive",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "drive",
+            "parse": "signature",
+            "source": {
+                "file": "packages/core/src/Console/PruneChangesCommand.php",
+                "symbol": "Vaulter\\Console\\PruneChangesCommand"
+            }
+        },
+        {
+            "arguments": [
+                {
+                    "array": false,
+                    "default": null,
+                    "description": "The drive id",
+                    "name": "drive",
+                    "required": true
+                }
+            ],
+            "class": "Vaulter\\Console\\ResetChangesCommand",
+            "description": "Expire every change-journal cursor of a drive, forcing its clients to resynchronize.",
+            "exit_codes": [
+                "FAILURE",
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:changes:reset",
+            "options": [],
+            "owner": "drive",
+            "parse": "signature",
+            "source": {
+                "file": "packages/core/src/Console/ResetChangesCommand.php",
+                "symbol": "Vaulter\\Console\\ResetChangesCommand"
+            }
+        },
+        {
+            "arguments": [],
+            "class": "Vaulter\\Console\\CommandsReferenceCommand",
+            "description": "Generate the command table in the reference docs.",
+            "exit_codes": [
+                "FAILURE",
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:commands:reference",
+            "options": [
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Exit 1 when a page differs from the generated table, without writing",
+                    "name": "check",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": true,
+                    "default": [],
+                    "description": "Pages to update (default: docs/reference/commands.md and docs/ru/reference/commands.md)",
+                    "name": "path",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "core",
+            "parse": "signature",
+            "source": {
+                "file": "packages/core/src/Console/CommandsReferenceCommand.php",
+                "symbol": "Vaulter\\Console\\CommandsReferenceCommand"
+            }
+        },
+        {
+            "arguments": [],
+            "class": "Vaulter\\Console\\ConfigReferenceCommand",
+            "description": "Generate the config key table in the reference docs.",
+            "exit_codes": [
+                "FAILURE",
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:config:reference",
+            "options": [
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Exit 1 when a page differs from the generated table, without writing",
+                    "name": "check",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": true,
+                    "default": [],
+                    "description": "Pages to update (default: docs/reference/config.md and docs/ru/reference/config.md)",
+                    "name": "path",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "core",
+            "parse": "signature",
+            "source": {
+                "file": "packages/core/src/Console/ConfigReferenceCommand.php",
+                "symbol": "Vaulter\\Console\\ConfigReferenceCommand"
+            }
+        },
+        {
+            "arguments": [],
+            "class": "Vaulter\\Console\\DoctorCommand",
+            "description": "Diagnose the Vaulter setup of this host (read-only)",
+            "exit_codes": [],
+            "hidden": false,
+            "id": "command:vaulter:doctor",
+            "options": [
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Check against the production profile: part of the warnings become errors",
+                    "name": "production",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Print one vaulter.doctor/v1 JSON document",
+                    "name": "json",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": true,
+                    "default": [],
+                    "description": "Run only the checks under this key prefix, e.g. core.schema or drive.scan",
+                    "name": "check",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": "1000",
+                    "description": "Row limit of the sampling checks",
+                    "name": "sample",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Allow writing a test object to each storage disk",
+                    "name": "probe-storage",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "core",
+            "parse": "signature",
+            "source": {
+                "file": "packages/core/src/Console/DoctorCommand.php",
+                "symbol": "Vaulter\\Console\\DoctorCommand"
+            }
+        },
+        {
+            "arguments": [],
+            "class": "Vaulter\\Drive\\Console\\PurgeDrivesCommand",
+            "description": "Purge drives with status deleting: nodes, revisions and blob references, then the drive row.",
+            "exit_codes": [
+                "FAILURE",
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:drives:purge",
+            "options": [
+                {
+                    "accepts_value": true,
+                    "array": true,
+                    "default": [],
+                    "description": "Only these drive ids",
+                    "name": "drive",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Print what would be purged",
+                    "name": "dry-run",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Purge in this process instead of queueing",
+                    "name": "sync",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "drive",
+            "parse": "signature",
+            "source": {
+                "file": "packages/drive/src/Console/PurgeDrivesCommand.php",
+                "symbol": "Vaulter\\Drive\\Console\\PurgeDrivesCommand"
+            }
+        },
+        {
+            "arguments": [],
+            "class": "Vaulter\\Drive\\Console\\RecountDrivesCommand",
+            "description": "Recount the used bytes of drives from their retained file revisions.",
+            "exit_codes": [
+                "FAILURE",
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:drives:recount",
+            "options": [
+                {
+                    "accepts_value": true,
+                    "array": true,
+                    "default": [],
+                    "description": "Only these drive ids",
+                    "name": "drive",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Report the drift without correcting it",
+                    "name": "dry-run",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "drive",
+            "parse": "signature",
+            "source": {
+                "file": "packages/drive/src/Console/RecountDrivesCommand.php",
+                "symbol": "Vaulter\\Drive\\Console\\RecountDrivesCommand"
+            }
+        },
+        {
+            "arguments": [],
+            "class": "Vaulter\\Console\\ErrorsReferenceCommand",
+            "description": "Generate the problem-code reference in the docs.",
+            "exit_codes": [
+                "FAILURE",
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:errors:reference",
+            "options": [
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Exit 1 when a page differs from the generated reference, without writing",
+                    "name": "check",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": true,
+                    "default": [],
+                    "description": "Pages to update (default: docs/reference/errors.md and docs/ru/reference/errors.md)",
+                    "name": "path",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "core",
+            "parse": "signature",
+            "source": {
+                "file": "packages/core/src/Console/ErrorsReferenceCommand.php",
+                "symbol": "Vaulter\\Console\\ErrorsReferenceCommand"
+            }
+        },
+        {
+            "arguments": [],
+            "class": "Vaulter\\Console\\EventsReferenceCommand",
+            "description": "Generate the event catalogue table in the reference docs.",
+            "exit_codes": [
+                "FAILURE",
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:events:reference",
+            "options": [
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Exit 1 when a page differs from the generated table, without writing",
+                    "name": "check",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": true,
+                    "default": [],
+                    "description": "Pages to update (default: docs/reference/events.md and docs/ru/reference/events.md)",
+                    "name": "path",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "core",
+            "parse": "signature",
+            "source": {
+                "file": "packages/core/src/Console/EventsReferenceCommand.php",
+                "symbol": "Vaulter\\Console\\EventsReferenceCommand"
+            }
+        },
+        {
+            "arguments": [],
+            "class": "Vaulter\\Console\\InstallCommand",
+            "description": "Publish Vaulter config, show the host settings to apply, optionally migrate and run the doctor",
+            "exit_codes": [
+                "FAILURE",
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:install",
+            "options": [
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "Auth middleware for the authenticated route stack, e.g. auth:sanctum",
+                    "name": "middleware",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "Permission driver: database|gate|spatie|<name from access.permission_drivers>",
+                    "name": "driver",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Run the migrations without asking",
+                    "name": "migrate",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Overwrite config files that are already published",
+                    "name": "force",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "core",
+            "parse": "signature",
+            "source": {
+                "file": "packages/core/src/Console/InstallCommand.php",
+                "symbol": "Vaulter\\Console\\InstallCommand"
+            }
+        },
+        {
+            "arguments": [
+                {
+                    "array": false,
+                    "default": null,
+                    "description": "The type name (StudlyCase or kebab-case), e.g. Kanban",
+                    "name": "name",
+                    "required": true
+                }
+            ],
+            "class": "Vaulter\\Documents\\Console\\MakeDocumentTypeCommand",
+            "description": "Scaffold a Vaulter document type",
+            "exit_codes": [
+                "FAILURE",
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:make:document-type",
+            "options": [
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Overwrite the class if it already exists",
+                    "name": "force",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "documents",
+            "parse": "signature",
+            "source": {
+                "file": "packages/documents/src/Console/MakeDocumentTypeCommand.php",
+                "symbol": "Vaulter\\Documents\\Console\\MakeDocumentTypeCommand"
+            }
+        },
+        {
+            "arguments": [
+                {
+                    "array": false,
+                    "default": null,
+                    "description": "The exporter name (StudlyCase or kebab-case), e.g. Pdf",
+                    "name": "name",
+                    "required": true
+                }
+            ],
+            "class": "Vaulter\\Documents\\Console\\MakeExporterCommand",
+            "description": "Scaffold a Vaulter document exporter",
+            "exit_codes": [
+                "FAILURE",
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:make:exporter",
+            "options": [
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Overwrite the class if it already exists",
+                    "name": "force",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "documents",
+            "parse": "signature",
+            "source": {
+                "file": "packages/documents/src/Console/MakeExporterCommand.php",
+                "symbol": "Vaulter\\Documents\\Console\\MakeExporterCommand"
+            }
+        },
+        {
+            "arguments": [
+                {
+                    "array": false,
+                    "default": null,
+                    "description": "The file handler name (StudlyCase or kebab-case), e.g.",
+                    "name": "name",
+                    "required": true
+                }
+            ],
+            "class": "Vaulter\\Console\\MakeFileHandlerCommand",
+            "description": "Scaffold a Vaulter file handler with a contract test",
+            "exit_codes": [
+                "FAILURE",
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:make:file-handler",
+            "options": [
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Overwrite the class and its test if they already exist",
+                    "name": "force",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "drive",
+            "parse": "signature",
+            "source": {
+                "file": "packages/core/src/Console/MakeFileHandlerCommand.php",
+                "symbol": "Vaulter\\Console\\MakeFileHandlerCommand"
+            }
+        },
+        {
+            "arguments": [
+                {
+                    "array": false,
+                    "default": null,
+                    "description": "The permission driver name (StudlyCase or kebab-case), e.g.",
+                    "name": "name",
+                    "required": true
+                }
+            ],
+            "class": "Vaulter\\Console\\MakePermissionDriverCommand",
+            "description": "Scaffold a Vaulter permission driver with a contract test",
+            "exit_codes": [
+                "FAILURE",
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:make:permission-driver",
+            "options": [
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Overwrite the class and its test if they already exist",
+                    "name": "force",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "drive",
+            "parse": "signature",
+            "source": {
+                "file": "packages/core/src/Console/MakePermissionDriverCommand.php",
+                "symbol": "Vaulter\\Console\\MakePermissionDriverCommand"
+            }
+        },
+        {
+            "arguments": [
+                {
+                    "array": false,
+                    "default": null,
+                    "description": "The profile id (snake/kebab), e.g. project_drive",
+                    "name": "name",
+                    "required": true
+                }
+            ],
+            "class": "Vaulter\\Console\\MakeProfileCommand",
+            "description": "Scaffold a Vaulter profile provider (zero-migration config envelope)",
+            "exit_codes": [
+                "FAILURE",
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:make:profile",
+            "options": [
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "The host model FQCN this storage embeds into",
+                    "name": "host",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Generate a profile without per-node grants",
+                    "name": "no-grants",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Overwrite the provider if it already exists",
+                    "name": "force",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "drive",
+            "parse": "signature",
+            "source": {
+                "file": "packages/core/src/Console/MakeProfileCommand.php",
+                "symbol": "Vaulter\\Console\\MakeProfileCommand"
+            }
+        },
+        {
+            "arguments": [],
+            "class": "Vaulter\\Drive\\Console\\PruneRevisionsCommand",
+            "description": "Delete non-current file revisions past their profile retention policy.",
+            "exit_codes": [
+                "FAILURE",
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:revisions:prune",
+            "options": [
+                {
+                    "accepts_value": true,
+                    "array": true,
+                    "default": [],
+                    "description": "Only these drive ids",
+                    "name": "drive",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Report what would be deleted",
+                    "name": "dry-run",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "drive",
+            "parse": "signature",
+            "source": {
+                "file": "packages/drive/src/Console/PruneRevisionsCommand.php",
+                "symbol": "Vaulter\\Drive\\Console\\PruneRevisionsCommand"
+            }
+        },
+        {
+            "arguments": [],
+            "class": "Vaulter\\Drive\\Console\\ReconcileScanWorkCommand",
+            "description": "Recover bounded scan intents, backfill discovery and committed upload cleanup.",
+            "exit_codes": [],
+            "hidden": false,
+            "id": "command:vaulter:scan:reconcile",
+            "options": [
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "",
+                    "name": "tenant",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "",
+                    "name": "drive",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "",
+                    "name": "all-tenants",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "",
+                    "name": "reason",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": "100",
+                    "description": "",
+                    "name": "limit",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": "30",
+                    "description": "",
+                    "name": "max-seconds",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "",
+                    "name": "dry-run",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "",
+                    "name": "json",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "drive",
+            "parse": "signature",
+            "source": {
+                "file": "packages/drive/src/Console/ReconcileScanWorkCommand.php",
+                "symbol": "Vaulter\\Drive\\Console\\ReconcileScanWorkCommand"
+            }
+        },
+        {
+            "arguments": [],
+            "class": "Vaulter\\Drive\\Console\\RescanFileRevisionsCommand",
+            "description": "Activate scan policy or record bounded durable scan requests.",
+            "exit_codes": [],
+            "hidden": false,
+            "id": "command:vaulter:scan:rescan",
+            "options": [
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "",
+                    "name": "tenant",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "",
+                    "name": "drive",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "",
+                    "name": "all-tenants",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "",
+                    "name": "reason",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": true,
+                    "default": [],
+                    "description": "",
+                    "name": "revision",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "",
+                    "name": "after",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": "100",
+                    "description": "",
+                    "name": "limit",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "",
+                    "name": "request-id",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "",
+                    "name": "rescan",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "",
+                    "name": "retry-failed",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "",
+                    "name": "activate-policy",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "",
+                    "name": "dry-run",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "",
+                    "name": "json",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "drive",
+            "parse": "signature",
+            "source": {
+                "file": "packages/drive/src/Console/RescanFileRevisionsCommand.php",
+                "symbol": "Vaulter\\Drive\\Console\\RescanFileRevisionsCommand"
+            }
+        },
+        {
+            "arguments": [],
+            "class": "Vaulter\\Drive\\Console\\PurgeTrashCommand",
+            "description": "Permanently delete trashed nodes whose retention window has elapsed.",
+            "exit_codes": [
+                "FAILURE",
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:trash:purge",
+            "options": [
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "Override the retention window",
+                    "name": "days",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "drive",
+            "parse": "signature",
+            "source": {
+                "file": "packages/drive/src/Console/PurgeTrashCommand.php",
+                "symbol": "Vaulter\\Drive\\Console\\PurgeTrashCommand"
+            }
+        },
+        {
+            "arguments": [],
+            "class": "Vaulter\\Drive\\Console\\SweepUploadsCommand",
+            "description": "Abort and clean up stale resumable-upload sessions past their TTL (§2.8).",
+            "exit_codes": [
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:uploads:sweep",
+            "options": [],
+            "owner": "drive",
+            "parse": "signature",
+            "source": {
+                "file": "packages/drive/src/Console/SweepUploadsCommand.php",
+                "symbol": "Vaulter\\Drive\\Console\\SweepUploadsCommand"
+            }
+        },
+        {
+            "arguments": [],
+            "class": "Vaulter\\Console\\PruneWebhooksCommand",
+            "description": "Delete completed outbox rows and terminal webhook deliveries past the retention window.",
+            "exit_codes": [
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:webhooks:prune",
+            "options": [
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "Override the retention window in days (config vaulter.webhooks.retention_days)",
+                    "name": "days",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Report what would be pruned without deleting",
+                    "name": "dry-run",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "webhooks",
+            "parse": "signature",
+            "source": {
+                "file": "packages/core/src/Console/PruneWebhooksCommand.php",
+                "symbol": "Vaulter\\Console\\PruneWebhooksCommand"
+            }
+        },
+        {
+            "arguments": [
+                {
+                    "array": false,
+                    "default": null,
+                    "description": "Id of one delivery to send again",
+                    "name": "delivery",
+                    "required": false
+                }
+            ],
+            "class": "Vaulter\\Console\\RedeliverWebhooksCommand",
+            "description": "Send finished webhook deliveries again (same webhook-id).",
+            "exit_codes": [
+                "FAILURE",
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:webhooks:redeliver",
+            "options": [
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "Only deliveries of this endpoint id",
+                    "name": "endpoint",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "Only deliveries created at or after this date/time",
+                    "name": "since",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": "dead",
+                    "description": "delivered or dead",
+                    "name": "status",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "webhooks",
+            "parse": "signature",
+            "source": {
+                "file": "packages/core/src/Console/RedeliverWebhooksCommand.php",
+                "symbol": "Vaulter\\Console\\RedeliverWebhooksCommand"
+            }
+        },
+        {
+            "arguments": [],
+            "class": "Vaulter\\Console\\RelayWebhooksCommand",
+            "description": "Relay pending outbox events to webhook endpoints and re-dispatch due retries (§2.11).",
+            "exit_codes": [
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:webhooks:relay",
+            "options": [
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": null,
+                    "description": "Max outbox rows to drain this tick",
+                    "name": "limit",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "webhooks",
+            "parse": "signature",
+            "source": {
+                "file": "packages/core/src/Console/RelayWebhooksCommand.php",
+                "symbol": "Vaulter\\Console\\RelayWebhooksCommand"
+            }
+        },
+        {
+            "arguments": [],
+            "class": "Vaulter\\Console\\RetryWebhooksCommand",
+            "description": "Re-dispatch webhook deliveries whose backoff window has elapsed (§2.11).",
+            "exit_codes": [
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:webhooks:retry",
+            "options": [],
+            "owner": "webhooks",
+            "parse": "signature",
+            "source": {
+                "file": "packages/core/src/Console/RetryWebhooksCommand.php",
+                "symbol": "Vaulter\\Console\\RetryWebhooksCommand"
+            }
+        }
+    ],
+    "kind": "cli",
+    "version": 1
+}

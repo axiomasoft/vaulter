@@ -1,0 +1,155 @@
+{
+    "kind": "schema",
+    "rules": [
+        {
+            "match": "exact",
+            "value": "table:v_drives",
+            "owner": "drive",
+            "why": "architecture#packages: drive owns the disk/tree/file/access/sharing/activity/journal/upload tables"
+        },
+        {
+            "match": "exact",
+            "value": "table:v_nodes",
+            "owner": "drive",
+            "why": "architecture#packages: drive owns the disk/tree/file/access/sharing/activity/journal/upload tables"
+        },
+        {
+            "match": "exact",
+            "value": "table:v_blobs",
+            "owner": "media",
+            "why": "architecture#packages: media owns v_blobs (D23: the pins v_blob_references join it)"
+        },
+        {
+            "match": "exact",
+            "value": "table:v_files",
+            "owner": "drive",
+            "why": "architecture#packages: drive owns the disk/tree/file/access/sharing/activity/journal/upload tables"
+        },
+        {
+            "match": "exact",
+            "value": "table:v_file_revisions",
+            "owner": "drive",
+            "why": "architecture#packages: drive owns the disk/tree/file/access/sharing/activity/journal/upload tables"
+        },
+        {
+            "match": "exact",
+            "value": "table:v_file_revision_blobs",
+            "owner": "drive",
+            "why": "architecture#packages: drive owns the disk/tree/file/access/sharing/activity/journal/upload tables"
+        },
+        {
+            "match": "exact",
+            "value": "table:v_scan_policy_states",
+            "owner": "drive",
+            "why": "D28: every existing scan table is drive's (evidence has drive/revision/obligation/request FKs)"
+        },
+        {
+            "match": "exact",
+            "value": "table:v_scan_obligations",
+            "owner": "drive",
+            "why": "D28: every existing scan table is drive's"
+        },
+        {
+            "match": "exact",
+            "value": "table:v_scan_backfill_runs",
+            "owner": "drive",
+            "why": "D28: every existing scan table is drive's"
+        },
+        {
+            "match": "exact",
+            "value": "table:v_scan_requests",
+            "owner": "drive",
+            "why": "D28: every existing scan table is drive's"
+        },
+        {
+            "match": "exact",
+            "value": "table:v_scan_evidence",
+            "owner": "drive",
+            "why": "D28: evidence proves the obligation of one revision, it is not a blob cache"
+        },
+        {
+            "match": "exact",
+            "value": "table:v_node_grants",
+            "owner": "drive",
+            "why": "architecture#packages: drive owns the disk/tree/file/access/sharing/activity/journal/upload tables"
+        },
+        {
+            "match": "exact",
+            "value": "table:v_node_shares",
+            "owner": "drive",
+            "why": "architecture#packages: drive owns the disk/tree/file/access/sharing/activity/journal/upload tables"
+        },
+        {
+            "match": "exact",
+            "value": "table:v_node_comments",
+            "owner": "documents",
+            "why": "architecture#packages: comments belong to documents"
+        },
+        {
+            "match": "exact",
+            "value": "table:v_node_user_states",
+            "owner": "drive",
+            "why": "architecture#packages: per-user node state is drive's"
+        },
+        {
+            "match": "exact",
+            "value": "table:v_documents",
+            "owner": "documents",
+            "why": "architecture#packages: documents owns the document aggregate, its revisions and comments"
+        },
+        {
+            "match": "exact",
+            "value": "table:v_document_revisions",
+            "owner": "documents",
+            "why": "architecture#packages: documents owns the document aggregate, its revisions and comments"
+        },
+        {
+            "match": "exact",
+            "value": "table:v_upload_sessions",
+            "owner": "drive",
+            "why": "architecture#packages: drive owns the disk/tree/file/access/sharing/activity/journal/upload tables"
+        },
+        {
+            "match": "exact",
+            "value": "table:v_upload_parts",
+            "owner": "drive",
+            "why": "architecture#packages: drive owns the disk/tree/file/access/sharing/activity/journal/upload tables"
+        },
+        {
+            "match": "exact",
+            "value": "table:v_activity",
+            "owner": "drive",
+            "why": "architecture#packages: drive owns the disk/tree/file/access/sharing/activity/journal/upload tables"
+        },
+        {
+            "match": "exact",
+            "value": "table:v_outbox",
+            "owner": "core",
+            "why": "D29: v_outbox stays in core; webhooks consume it"
+        },
+        {
+            "match": "exact",
+            "value": "table:v_webhook_endpoints",
+            "owner": "webhooks",
+            "why": "architecture#packages: webhooks owns endpoints and deliveries"
+        },
+        {
+            "match": "exact",
+            "value": "table:v_webhook_deliveries",
+            "owner": "webhooks",
+            "why": "architecture#packages: webhooks owns endpoints and deliveries"
+        },
+        {
+            "match": "exact",
+            "value": "table:v_drive_change_heads",
+            "owner": "drive",
+            "why": "architecture#packages: drive owns the disk/tree/file/access/sharing/activity/journal/upload tables"
+        },
+        {
+            "match": "exact",
+            "value": "table:v_drive_changes",
+            "owner": "drive",
+            "why": "architecture#packages: drive owns the disk/tree/file/access/sharing/activity/journal/upload tables"
+        }
+    ]
+}
