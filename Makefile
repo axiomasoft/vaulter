@@ -1,4 +1,4 @@
-.PHONY: help lint lint-check stan rector rector-fix mutate quality quality-fix test ci \
+.PHONY: help lint lint-check stan rector rector-fix mutate quality quality-fix test test-coverage ci \
         e2e-migrate e2e-laravel e2e-hub e2e-smoke e2e-test e2e-up e2e-down
 
 help: ## Show this help
@@ -26,7 +26,10 @@ quality: lint-check stan rector ## Run all quality checks (no fix)
 
 quality-fix: lint rector-fix ## Fix code style and apply Rector
 
-test: ## Run test suite with coverage
+test: ## Run every default suite on SQLite through scripts/t (fast lane, no coverage)
+	scripts/t sqlite
+
+test-coverage: ## Core suite with coverage (xdebug/pcov), explicit — never part of `make test`
 	vendor/bin/pest --coverage --min=80
 
 ci: quality test ## Full CI pass (quality + tests)

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P1.3",
   "title": "Единый вход scripts/t, параллельные SQLite-прогоны и baseline-сравнение",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "`scripts/t` — единственный вход для всех PHP-наборов: движок, пакет(ы), пути/фильтры/группы, параллель по умолчанию на SQLite, серверные движки через `scripts/test-db.sh`, `baseline --write|--compare`, `all --full`; `composer test*` и `make test` вызывают его.",
   "why": "Сегодня у каждого пакета свой способ запуска, нет параллели по умолчанию и нет сравнения числа тестов (П12, П14).",
   "scope": {
@@ -186,6 +186,56 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T10:23:03Z"
+  "result": {
+    "started_at": "2026-10-13T10:42:18Z",
+    "finished_at": "2026-10-13T10:59:02Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "45618a5d-ea81-47d0-bedc-ec8ab50e49fe"
+    },
+    "notes": "scripts/t (planner jq + partitions via generated phpunit config, serial once, skeleton isolation, DB_EXTERNAL), tests/suites.json (все PHP suites + repo), test-db.sh --provision, baseline write/compare + CHANGES ledger, TestRunnerTest (22 cases), composer/Makefile переведены. V6 на одноразовом PG16. --changed/stand отклоняются до P1.4/P1.5.",
+    "deviations": [
+      "scripts/db-test-env.sh изменён вне task_files; shellcheck недоступен"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-13T10:59:02Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-13T10:59:02Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-13T10:59:02Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-13T10:59:02Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-13T10:59:02Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-13T10:59:02Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-13T10:59:02Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-13T10:59:02Z"
 }

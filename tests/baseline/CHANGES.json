@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "entries": [],
+  "additions": {
+    "repo": {
+      "introduced": "P1.3",
+      "count": 22,
+      "names": [
+        "P\\Tests\\Repo\\TestRunnerTest::__pest_evaluable_it_clears_partial_seed_variables_for___full_and_discovery__and_refuses_a_contradicting_full_seed_flag",
+        "P\\Tests\\Repo\\TestRunnerTest::__pest_evaluable_it_compares_discovery_with_the_immutable_original__equal_passes__a_deleted_test_fails__a_ledgered_replacement_passes",
+        "P\\Tests\\Repo\\TestRunnerTest::__pest_evaluable_it_excludes_nofast_by_default__nofull_serial_then_one_serial_pass_for___full__and_merges_user_exclusions_into_one",
+        "P\\Tests\\Repo\\TestRunnerTest::__pest_evaluable_it_forwards_a_group_as_the_selector_of_every_pass__intersection_with_the_selected_files__not_a_union_",
+        "P\\Tests\\Repo\\TestRunnerTest::__pest_evaluable_it_gives_every_skeleton_writing_step_a_skeleton_path_of_its_own",
+        "P\\Tests\\Repo\\TestRunnerTest::__pest_evaluable_it_infers_the_suite_from_a_repo_relative_path_and_refuses_several_suites_for_one_path_list",
+        "P\\Tests\\Repo\\TestRunnerTest::__pest_evaluable_it_keeps_the_repo_suite_baseline__an_empty_immutable_original_with_provenance__current_additions_in_the_ledger",
+        "P\\Tests\\Repo\\TestRunnerTest::__pest_evaluable_it_names_an_upstream_failure_and_skipped_tests_honestly",
+        "P\\Tests\\Repo\\TestRunnerTest::__pest_evaluable_it_plans_exactly_the_inventory_partitions_of_every_PHP_suite__and_the_inventory_covers_every_test_file_once",
+        "P\\Tests\\Repo\\TestRunnerTest::__pest_evaluable_it_prints_help_and_an_empty_argument_dry_run_without_touching_anything",
+        "P\\Tests\\Repo\\TestRunnerTest::__pest_evaluable_it_provisions_per_worker_databases_explicitly_for_an_external_server_and_flags_per_process_databases",
+        "P\\Tests\\Repo\\TestRunnerTest::__pest_evaluable_it_refuses_a_server_engine_without_paths__group_or___full__and_an_engine_that_disagrees_with_the_environment",
+        "P\\Tests\\Repo\\TestRunnerTest::__pest_evaluable_it_refuses_an_unknown_path_together_with_a_known_one_and_runs_nothing",
+        "P\\Tests\\Repo\\TestRunnerTest::__pest_evaluable_it_rejects_a_stale_ledger_entry_and_one_that_names_a_test_the_original_never_had",
+        "P\\Tests\\Repo\\TestRunnerTest::__pest_evaluable_it_runs_Node_suites_once_through_their_manifest_command__whatever_the_engines",
+        "P\\Tests\\Repo\\TestRunnerTest::__pest_evaluable_it_runs_a_package_path_from_the_package_cwd_with_a_generated_config_holding_only_the_selected_files",
+        "P\\Tests\\Repo\\TestRunnerTest::__pest_evaluable_it_runs_one_pass_per_partition__serially_by_schema__and_the_skeleton_writer_alone_with_a_private_skeleton",
+        "P\\Tests\\Repo\\TestRunnerTest::__pest_evaluable_it_runs_serial_exactly_once____group_serial_is_one_pass___j1_never_adds_a_second",
+        "P\\Tests\\Repo\\TestRunnerTest::__pest_evaluable_it_selects_the_repo_suite_and_keeps_the_default_suites_free_of_load",
+        "P\\Tests\\Repo\\TestRunnerTest::__pest_evaluable_it_skips_database_free_partitions_on_a_server_engine_and_names_the_skip",
+        "P\\Tests\\Repo\\TestRunnerTest::__pest_evaluable_it_treats_zero_tests_as_an_error_except_an_empty_serial_pass_the_inventory_allows",
+        "P\\Tests\\Repo\\TestRunnerTest::__pest_evaluable_it_writes_current_lists_and_ledger_additions_without_ever_rewriting_an_original"
+      ]
+    }
+  }
+}

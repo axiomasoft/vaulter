@@ -1,0 +1,642 @@
+#!/usr/bin/env bash
+# scripts/t — the single entry for every test suite of the monorepo (PLAN3 P1.3).
+#
+#   scripts/t [sqlite|pgsql|mysql|all] [-p core,media,drive,documents,azgard,filament,load,repo,hub,vue]
+#             [-j N] [--engines=sqlite,pgsql,mysql] [--full] [--group=G] [--exclude-group=G]
+#             [--junit=DIR] [--no-skips] [--dry-run [--json]] [--] [paths / pest flags]
+#   scripts/t baseline --write|--compare [-p ...]
+#   scripts/t --help
+#
+# Engine: the first word (default sqlite); `all` = sqlite+pgsql+mysql, --engines overrides. -p: suites (default: every
+# default suite, i.e. all but `load`). Paths: repo-relative for core/load/repo, package-relative for the other PHP
+# suites; one suite per path list, the suite is inferred from repo-relative paths when -p is absent. Words after `--`
+# starting with `-` go to Pest, the others are paths.
+#
+# What runs (tests/suites.json = the machine inventory of suites and schema partitions):
+#   * every partition (one TestCase schema) is its own Pest process, serially; -j N ParaTest workers run INSIDE a
+#     partition (default: half the CPUs, at most 8). A partition's files are handed to Pest through a generated
+#     phpunit configuration, so a path list never turns into one pass per path.
+#   * fast (default): `--exclude-group=nofast` (+ yours, ONE exclusion). --full: parallel pass without `nofull,serial`,
+#     then one pass `--group=serial` (-j1 runs everything but `nofull` in one process). --group=serial: that pass only.
+#   * server engines (pgsql, mysql) are provisioned once through scripts/test-db.sh (DB_EXTERNAL=1 = a ready CI
+#     service; the database must end in _test); they need paths, --group or --full — there is no default server sweep.
+#   * partitions that write into the Testbench skeleton run -j1 with a TESTBENCH_APP_BASE_PATH of their own.
+#   * hub/vue run `npm test` through their manifests (engines do not apply); `load` is explicit only.
+#
+# Exit: 0 ok · 1 a pass failed · 2 usage / refused plan / engine mismatch · 3 zero tests where tests were required.
+# `stand` (P1.5) and `--changed` (P1.4) are not part of this item.
+set -euo pipefail
+
+self="${BASH_SOURCE[0]}"
+self_abs="$(cd "$(dirname "$self")" && pwd)/$(basename "$self")"
+root="${T_ROOT:-$(cd "$(dirname "$self")/.." && pwd)}"
+inventory="$root/tests/suites.json"
+baseline_dir="$root/tests/baseline"
+
+die() { printf 'scripts/t: %s\n' "$*" >&2; exit 2; }
+
+usage() { sed -n '2,/^set -euo/{/^set -euo/d;s/^# \{0,1\}//;p}' "$self"; }
+
+command -v jq >/dev/null || die 'jq is required'
+[[ -f "$inventory" ]] || die "missing $inventory"
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Plan: tests/suites.json + the request -> JSON steps. Pure function of its inputs; --dry-run prints it, __exec runs it.
+# ---------------------------------------------------------------------------------------------------------------------
+read -r -d '' PLAN_JQ <<'JQ' || true
+def norm: sub("^\\./"; "") | sub("/+$"; "");
+def resolve($name; $s): norm as $q
+  | if ($q | startswith("packages/")) then $q
+    elif $s.path_base == "package" then "packages/\($name)/\($q)"
+    else $q end;
+def hit($f; $q): $f == $q or ($f | startswith($q + "/"));
+def files($s): [$s.partitions[].files[]];
+def passes($p; $c; $skel; $nfiles):
+  ($c.groups) as $g | ($c.xgroups) as $x | ([$c.workers, $nfiles] | min) as $w
+  | ($g | join(",")) as $gs
+  | if ($g | index("serial")) != null then
+      [{pass: "serial", processes: 1, group: $gs, exclude: $x, allow_empty: ((($p.empty_passes // []) | index("serial")) != null)}]
+    else
+      (if $c.mode == "full" then ["nofull"] else ["nofast"] end) as $d
+      | if $skel or $w <= 1 then
+          [{pass: "single", processes: 1, group: $gs, exclude: ($d + $x), allow_empty: false}]
+        elif $c.mode == "full" then
+          [{pass: "parallel", processes: $w, group: $gs, exclude: (["nofull", "serial"] + $x), allow_empty: false}]
+          + (if ($x | index("serial")) != null or $gs != "" then []
+             else [{pass: "serial", processes: 1, group: "serial", exclude: [], allow_empty: ((($p.empty_passes // []) | index("serial")) != null)}] end)
+        else
+          [{pass: "parallel", processes: $w, group: $gs, exclude: ($d + $x), allow_empty: false}]
+        end
+    end;
+
+. as $inv | $cfg as $c | $inv.suites as $S
+| ([$S | to_entries[] | select(.value.kind == "pest") | .key]) as $pest
+| ($c.paths | map(norm)) as $raw
+| ($c.groups | map(select(. as $g | $c.xgroups | index($g)))) as $conflict
+| if ($conflict | length) > 0 then {error: "group \($conflict | join(",")) is both selected and excluded"}
+  else
+  # suite selection
+  (if $c.suites != null then $c.suites
+   elif ($raw | length) > 0 then
+     [$pest[] | select(. as $n | any($raw[]; . as $q | any(files($S[$n])[]; hit(.; $q))))]
+   else [$S | to_entries[] | select(.value.default) | .key] end) as $sel
+  | if ($sel | map(select($S[.] == null)) | length) > 0 then {error: "unknown suite: \($sel | map(select($S[.] == null)) | join(","))"}
+    elif ($raw | length) > 0 and ($sel | length) == 0 then {error: "cannot infer the suite for: \($raw | join(", ")); pass -p <suite>"}
+    elif ($raw | length) > 0 and ($sel | length) > 1 then {error: "paths with several suites (\($sel | join(","))): use one suite per path list"}
+    elif ($raw | length) > 0 and ($S[$sel[0]].kind != "pest") then {error: "suite \($sel[0]) takes no paths; pass Node arguments after --"}
+    else
+      ($sel | map(select($S[.].kind == "pest"))) as $psel
+      | ([$raw[] | . as $q | select(($psel | map(. as $n | files($S[$n]) | any(.[]; hit(.; ($q | resolve($n; $S[$n]))))) | any) | not)]) as $unknown
+      | if ($unknown | length) > 0 then {error: "no test file in the inventory matches: \($unknown | join(", "))"}
+        else
+          ([$sel[] | . as $n | $S[$n] as $s
+           | if $s.kind == "node" then
+               [{kind: "node", suite: $n, engine: "-", cwd: $s.cwd, command: $s.command}]
+             else
+               ($raw | map(resolve($n; $s))) as $q
+               | [$c.engines[] as $e
+                  | $s.partitions | to_entries[] | . as $pe | $pe.value as $p
+                  | ([$p.files[] | select(($q | length) == 0 or (. as $f | any($q[]; hit($f; .))))]) as $f
+                  | select(($f | length) > 0)
+                  | if ($p.engines | index($e)) == null then
+                      {kind: "skip", suite: $n, engine: $e, partition: $p.key,
+                       reason: (if $p.database then "partition not applicable to \($e)" else "database-free partition, nothing engine-specific to check" end)}
+                    else
+                      passes($p; $c; ($p.skeleton_writer // false); ($f | length)) | to_entries[] | .key as $k | .value as $ps
+                      | {kind: "pest", suite: $n, engine: $e, partition: $p.key, partition_index: $pe.key,
+                         pass: $ps.pass, processes: $ps.processes, cwd: $s.cwd, vendor: $s.vendor, config: $s.config,
+                         files: $f, group: $ps.group, exclude: $ps.exclude, allow_empty: $ps.allow_empty,
+                         skeleton: ($p.skeleton_writer // false),
+                         junit: (if $c.junit == "" then null else "\($c.junit)/\($n)-\($e)-p\($pe.key)-\($ps.pass).xml" end)}
+                    end]
+             end] | add) as $steps
+          | {engines: $c.engines, workers: $c.workers, mode: $c.mode, suites: $sel,
+             steps: ($steps | map(select(.kind != "skip"))), skipped: ($steps | map(select(.kind == "skip")))}
+        end
+    end
+  end
+JQ
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Arguments
+# ---------------------------------------------------------------------------------------------------------------------
+sub=''
+case "${1:-}" in
+    baseline) sub=baseline; shift ;;
+    __exec) sub=__exec; shift ;;
+    stand) die '`stand` arrives with P1.5' ;;
+esac
+
+engine_word=''
+suites_csv=''
+engines_opt=''
+workers=''
+mode=fast
+groups=()
+xgroups=()
+dry=0
+json=0
+junit=''
+no_skips=0
+paths=()
+passthru=()
+baseline_action=''
+
+if [[ "$sub" == __exec ]]; then
+    plan_file="${1:?plan file}"
+    exec_engine="${2:?engine}"
+    NO_ARGS=1
+else
+    NO_ARGS=0
+    after_dashes=0
+    while (( $# )); do
+        arg="$1"
+        shift
+        if (( after_dashes )); then
+            if [[ "$arg" == -* ]]; then passthru+=("$arg"); else paths+=("$arg"); fi
+            continue
+        fi
+        case "$arg" in
+            --) after_dashes=1 ;;
+            -h | --help) usage; exit 0 ;;
+            sqlite | pgsql | mysql | all) [[ -z "$engine_word" ]] || die "second engine word [$arg]"; engine_word="$arg" ;;
+            -p) suites_csv="${1:?-p needs a list}"; shift ;;
+            -p=* | --package=*) suites_csv="${arg#*=}" ;;
+            -j) workers="${1:?-j needs a number}"; shift ;;
+            -j[0-9]*) workers="${arg#-j}" ;;
+            --engines=*) engines_opt="${arg#*=}" ;;
+            --full) mode=full ;;
+            --group=*) IFS=, read -r -a _g <<<"${arg#*=}"; groups+=("${_g[@]}") ;;
+            --exclude-group=*) IFS=, read -r -a _x <<<"${arg#*=}"; xgroups+=("${_x[@]}") ;;
+            --junit=*) junit="${arg#*=}" ;;
+            --no-skips) no_skips=1 ;;
+            --dry-run) dry=1 ;;
+            --json) json=1 ;;
+            --write | --compare) [[ "$sub" == baseline ]] || die "$arg belongs to \`baseline\`"; baseline_action="${arg#--}" ;;
+            --changed | --changed=* | --base=* | --quick) die '--changed arrives with P1.4' ;;
+            -*) passthru+=("$arg") ;;
+            *) paths+=("$arg") ;;
+        esac
+    done
+fi
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Shared helpers
+# ---------------------------------------------------------------------------------------------------------------------
+default_workers() {
+    local cpus n
+    cpus="${T_CPUS:-$(nproc 2>/dev/null || echo 4)}"
+    n=$((cpus / 2))
+    (( n > 8 )) && n=8
+    (( n < 1 )) && n=1
+    echo "$n"
+}
+
+tmp_root="${T_TMP:-$root/var/quality/t}"
+run_tmp=''
+make_tmp() {
+    mkdir -p "$tmp_root"
+    run_tmp="$(mktemp -d "$tmp_root/run.XXXXXX")"
+    trap 'cleanup_tmp' EXIT
+}
+cleanup_tmp() {
+    if [[ -n "$run_tmp" && "$run_tmp" == "$tmp_root"/run.* ]]; then
+        rm -rf -- "$run_tmp"
+    fi
+}
+
+# Discovery and `full` must see the whole seed range: partial-seed variables are cleared, a contradicting
+# VAULTER_FULL_SEEDS is refused, and the real full range is switched on.
+full_seed_env() {
+    case "${VAULTER_FULL_SEEDS:-1}" in
+        1) ;;
+        *) die "VAULTER_FULL_SEEDS=${VAULTER_FULL_SEEDS} contradicts a full/discovery run (unset it or set 1)" ;;
+    esac
+    local name
+    for name in $(compgen -e | grep '^VAULTER_SEED_' || true); do
+        printf 'scripts/t: clearing partial-seed variable %s for a full/discovery run\n' "$name" >&2
+        unset "$name"
+    done
+    export VAULTER_FULL_SEEDS=1
+}
+
+suite_names() { jq -r '.suites | keys_unsorted[]' "$inventory"; }
+
+selected_suites() {
+    local -a out=()
+    if [[ -n "$suites_csv" ]]; then
+        IFS=, read -r -a out <<<"$suites_csv"
+    else
+        mapfile -t out < <(jq -r '.suites | to_entries[] | select(.value.default) | .key' "$inventory")
+    fi
+    printf '%s\n' "${out[@]}"
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# baseline --write | --compare
+# ---------------------------------------------------------------------------------------------------------------------
+discover() { # suite -> sorted names on stdout
+    local name="$1" kind cwd
+    kind="$(jq -r --arg s "$name" '.suites[$s].kind // empty' "$inventory")"
+    [[ -n "$kind" ]] || die "unknown suite [$name]"
+    cwd="$(jq -r --arg s "$name" '.suites[$s].cwd' "$inventory")"
+    if [[ "$kind" == pest ]]; then
+        local -a args
+        mapfile -t args < <(jq -r --arg s "$name" '.suites[$s].discovery[]' "$inventory")
+        (cd "$root/$cwd" && "$root/scripts/php84" php "$(jq -r --arg s "$name" '.suites[$s].vendor' "$inventory")" "${args[@]}") \
+            | sed -n 's/^ - //p' | LC_ALL=C sort
+    elif jq -e --arg s "$name" '.suites[$s].list_glob' "$inventory" >/dev/null; then
+        # Node22 `node --test` has no discovery-only mode: the manifest globs, as file paths (metric = test_files).
+        local pattern
+        while IFS= read -r pattern; do
+            (cd "$root" && compgen -G "$pattern" || true)
+        done < <(jq -r --arg s "$name" '.suites[$s].list_glob[]' "$inventory") | LC_ALL=C sort
+    else
+        local -a args
+        mapfile -t args < <(jq -r --arg s "$name" '.suites[$s].discovery[]' "$inventory")
+        (cd "$root/$cwd" && "${args[@]}") | LC_ALL=C sort
+    fi
+}
+
+baseline_main() {
+    [[ -n "$baseline_action" ]] || die 'baseline needs --write or --compare'
+    full_seed_env
+    make_tmp
+    local name status=0
+    local -a names
+    mapfile -t names < <(selected_suites)
+    local cur="$run_tmp/current"
+    mkdir -p "$cur"
+    for name in "${names[@]}"; do
+        printf 'discover %s\n' "$name" >&2
+        discover "$name" >"$cur/$name.list"
+        [[ -s "$cur/$name.list" || "$name" == repo ]] || die "discovery of [$name] returned nothing"
+        wc -l <"$cur/$name.list" | tr -d ' ' >"$cur/$name.count"
+    done
+    if [[ "$baseline_action" == write ]]; then
+        mkdir -p "$baseline_dir/original"
+        # a suite with no immutable original gets an EMPTY one with provenance (it did not exist at the base) — never rewritten.
+        for name in "${names[@]}"; do
+            if [[ ! -f "$baseline_dir/original/$name.list" ]]; then
+                : >"$baseline_dir/original/$name.list"
+                echo 0 >"$baseline_dir/original/$name.count"
+                jq -n --arg s "$name" '{suite: $s, introduced: "unknown", note: "original created empty by baseline --write"}' >"$baseline_dir/original/$name.json"
+            fi
+            cp "$cur/$name.list" "$baseline_dir/$name.list.tmp" && mv "$baseline_dir/$name.list.tmp" "$baseline_dir/$name.list"
+            cp "$cur/$name.count" "$baseline_dir/$name.count.tmp" && mv "$baseline_dir/$name.count.tmp" "$baseline_dir/$name.count"
+        done
+        write_ledger_additions "${names[@]}"
+        render_changes_md
+        printf 'baseline written for: %s\n' "${names[*]}"
+        return 0
+    fi
+    for name in "${names[@]}"; do
+        compare_suite "$name" "$cur/$name.list" || status=1
+    done
+    return "$status"
+}
+
+ledger="$baseline_dir/CHANGES.json"
+
+# additions = current − original − ledger renames/replacements targets, per suite (count + sha256), rewritten atomically
+write_ledger_additions() {
+    local name orig cur adds
+    [[ -f "$ledger" ]] || echo '{"schema":1,"entries":[],"additions":{}}' >"$ledger"
+    local doc
+    doc="$(cat "$ledger")"
+    for name in "$@"; do
+        orig="$baseline_dir/original/$name.list"
+        cur="$baseline_dir/$name.list"
+        adds="$(LC_ALL=C comm -13 "$orig" "$cur")"
+        doc="$(jq --arg s "$name" --arg adds "$adds" '
+            ($adds | split("\n") | map(select(length > 0))) as $a
+            | .additions = ((.additions // {}) | if type == "array" then {} else . end)
+            | .additions[$s] = ((.additions[$s] // {}) + {count: ($a | length), names: $a})' <<<"$doc")"
+    done
+    printf '%s\n' "$doc" | jq . >"$ledger.tmp" && mv "$ledger.tmp" "$ledger"
+}
+
+render_changes_md() {
+    {
+        echo '# Baseline changes (view of CHANGES.json)'
+        echo
+        echo 'Machine ledger: `tests/baseline/CHANGES.json`. A test name that is in `original/<suite>.list` and not in the current discovery'
+        echo 'must have an entry (`old`, `new` or `replacement[]`, `reason`, `decision` = decision id or owner grant) whose replacement'
+        echo 'exists in the current list; prose alone hides nothing. `original/` is immutable.'
+        echo
+        echo '## Entries'
+        echo
+        if [[ "$(jq '.entries | length' "$ledger")" == 0 ]]; then
+            echo '_none_'
+        else
+            jq -r '.entries[] | "- `\(.suite)` `\(.old)` → \(if .new then "`\(.new)`" else "replacement " + ((.replacement // []) | map("`" + . + "`") | join(", ")) end) — \(.reason) (\(.decision))"' "$ledger"
+        fi
+        echo
+        echo '## Additions (current − original)'
+        echo
+        jq -r '.additions | to_entries[] | "- `\(.key)`: \(.value.count)" + (if .value.introduced then " (introduced \(.value.introduced))" else "" end)' "$ledger"
+    } >"$baseline_dir/CHANGES.md"
+}
+
+compare_suite() { # suite current-list
+    local name="$1" cur="$2" orig="$baseline_dir/original/$1.list" missing added failed=0
+    [[ -f "$orig" ]] || { echo "FAIL $name: no immutable original ($orig)"; return 1; }
+    missing="$(LC_ALL=C comm -23 "$orig" "$cur")"
+    added="$(LC_ALL=C comm -13 "$orig" "$cur")"
+    local n_orig n_cur n_missing n_added
+    n_orig="$(wc -l <"$orig" | tr -d ' ')"
+    n_cur="$(wc -l <"$cur" | tr -d ' ')"
+    n_missing="$(printf '%s' "$missing" | grep -c . || true)"
+    n_added="$(printf '%s' "$added" | grep -c . || true)"
+    local report
+    # every missing name needs a complete ledger entry whose replacement is present; every entry must still be live
+    report="$(jq -r --arg s "$name" --rawfile missing <(printf '%s\n' "$missing") --rawfile cur "$cur" --rawfile orig "$orig" '
+        ($missing | split("\n") | map(select(length > 0))) as $m
+        | ($cur | split("\n") | map(select(length > 0))) as $c
+        | ($orig | split("\n") | map(select(length > 0))) as $o
+        | ([.entries[] | select(.suite == $s)]) as $e
+        | ($c | map({(.): true}) | add // {}) as $cset
+        | ($o | map({(.): true}) | add // {}) as $oset
+        | ([ $m[] | . as $n
+            | ([$e[] | select(.old == $n)] | first) as $x
+            | if $x == null then "missing without ledger entry: \($n)"
+              elif (($x.decision // "") | length) == 0 or (($x.reason // "") | length) == 0 then "ledger entry lacks decision/reason: \($n)"
+              else ([($x.new // empty)] + ($x.replacement // [])) as $r
+                | if ($r | length) == 0 then "ledger entry has no new/replacement: \($n)"
+                  elif ($r | map(select($cset[.] != true)) | length) > 0 then "replacement not in the current list for: \($n)"
+                  else empty end
+              end ]
+          + [ $e[] | select($oset[.old] != true) | "ledger entry for a name not in the original: \(.old)" ]
+          + [ $e[] | select($cset[.old] == true) | "stale ledger entry, the test is still present: \(.old)" ])
+        | .[]' "$ledger" || true)"
+    if [[ -n "$report" ]]; then
+        printf 'FAIL %s: %s original, %s current, %s missing\n' "$name" "$n_orig" "$n_cur" "$n_missing"
+        printf '  %s\n' "$report" | head -n 40
+        failed=1
+    else
+        printf 'ok   %s: original %s, current %s, missing %s (ledgered), added %s\n' "$name" "$n_orig" "$n_cur" "$n_missing" "$n_added"
+    fi
+    if [[ -f "$baseline_dir/$name.list" ]] && ! cmp -s "$baseline_dir/$name.list" "$cur"; then
+        printf 'warn %s: tests/baseline/%s.list is stale against discovery — run `scripts/t baseline --write -p %s`\n' "$name" "$name" "$name"
+    fi
+    return "$failed"
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Executing a plan
+# ---------------------------------------------------------------------------------------------------------------------
+write_config() { # step-json out-file : generated phpunit configuration listing exactly the partition's files
+    local step="$1" out="$2" cwd config line skipping=0 suite
+    cwd="$(jq -r .cwd <<<"$step")"
+    suite="$(jq -r .suite <<<"$step")"
+    config="$root/$cwd/$(jq -r .config <<<"$step")"
+    [[ -f "$config" ]] || die "missing $config"
+    {
+        while IFS= read -r line || [[ -n "$line" ]]; do
+            if (( skipping )); then
+                [[ "$line" == *'</testsuites>'* ]] && skipping=0
+                continue
+            fi
+            if [[ "$line" == *'<testsuites>'* ]]; then
+                printf '    <testsuites>\n        <testsuite name="%s">\n' "$suite"
+                jq -r --arg r "$root" '.files[] | "            <file>\($r)/\(.)</file>"' <<<"$step"
+                printf '        </testsuite>\n    </testsuites>\n'
+                skipping=1
+                continue
+            fi
+            line="${line//bootstrap=\"vendor\/autoload.php\"/bootstrap=\"$root/$cwd/vendor/autoload.php\"}"
+            # the generated configuration has exactly one testsuite: make it the default one
+            if [[ "$line" =~ ^(.*)defaultTestSuite=\"[^\"]*\"(.*)$ ]]; then
+                line="${BASH_REMATCH[1]}defaultTestSuite=\"$suite\"${BASH_REMATCH[2]}"
+            fi
+            printf '%s\n' "$line"
+        done <"$config"
+    } >"$out"
+}
+
+setup_skeleton() { # dest : a private copy of the Testbench skeleton (config/ + bootstrap/cache are written by these tests)
+    local dest="$1" src="${T_SKELETON_SRC:-}"
+    if [[ -z "$src" ]]; then
+        src="$root/vendor/orchestra/testbench-core/laravel"
+        [[ -d "$src" ]] || src="$(cd "$root" && find packages -maxdepth 6 -type d -path '*orchestra/testbench-core/laravel' 2>/dev/null | head -n 1)"
+    fi
+    [[ -d "$src" ]] || die "Testbench skeleton not found (set T_SKELETON_SRC)"
+    cp -a "$src" "$dest"
+}
+
+declare -a RESULTS=()
+overall=0
+
+exec_step() { # step-json
+    local step="$1" kind suite engine part pass idx label out started code=0
+    kind="$(jq -r .kind <<<"$step")"
+    suite="$(jq -r .suite <<<"$step")"
+    engine="$(jq -r .engine <<<"$step")"
+    idx="${#RESULTS[@]}"
+    out="$run_tmp/step-$idx.log"
+    started=$SECONDS
+
+    if [[ "$kind" == node ]]; then
+        label="$suite node"
+        local -a command
+        mapfile -t command < <(jq -r '.command[]' <<<"$step")
+        (cd "$root/$(jq -r .cwd <<<"$step")" && "${command[@]}" "${passthru[@]}") 2>&1 | tee "$out" || code="${PIPESTATUS[0]}"
+        record "$label" "$code" "$out" 0 $((SECONDS - started))
+        return
+    fi
+
+    part="$(jq -r .partition <<<"$step")"
+    pass="$(jq -r .pass <<<"$step")"
+    label="$suite $engine [$part] $pass"
+    local cfg="$run_tmp/cfg-$idx.xml" cwd processes
+    cwd="$root/$(jq -r .cwd <<<"$step")"
+    processes="$(jq -r .processes <<<"$step")"
+    write_config "$step" "$cfg"
+
+    local -a args=(php -d memory_limit=1G "$(jq -r .vendor <<<"$step")")
+    # shellcheck disable=SC2206
+    args+=(${PEST_FLAGS:---ci})
+    args+=("--configuration=$cfg")
+    (( processes > 1 )) && args+=(--parallel "--processes=$processes")
+    [[ "$(jq -r .group <<<"$step")" == "" ]] || args+=("--group=$(jq -r .group <<<"$step")")
+    local exclude
+    exclude="$(jq -r '.exclude | join(",")' <<<"$step")"
+    [[ -z "$exclude" ]] || args+=("--exclude-group=$exclude")
+    local junit
+    junit="$(jq -r '.junit // empty' <<<"$step")"
+    if [[ -n "$junit" ]]; then
+        mkdir -p "$(dirname "$junit")"
+        args+=("--log-junit=$junit")
+    fi
+    args+=("${passthru[@]}")
+
+    local -a envs=(APP_ENV=testing)
+    if [[ "$engine" == sqlite ]]; then
+        envs+=(DB_CONNECTION=sqlite DB_DATABASE=:memory: VAULTER_TEST_DB_PER_PROCESS=0)
+    else
+        envs+=(VAULTER_TEST_DB_PER_PROCESS=$(( processes > 1 ? 1 : 0 )))
+    fi
+    if [[ "$(jq -r .skeleton <<<"$step")" == true ]]; then
+        local skeleton="$run_tmp/skeleton-$idx"
+        setup_skeleton "$skeleton"
+        envs+=("TESTBENCH_APP_BASE_PATH=$skeleton" "APP_BASE_PATH=$skeleton")
+    fi
+
+    printf '>>> %s  files=%s processes=%s\n' "$label" "$(jq '.files | length' <<<"$step")" "$processes" >&2
+    (cd "$cwd" && env "${envs[@]}" "$root/scripts/php84" "${args[@]}") 2>&1 | tee "$out" || code="${PIPESTATUS[0]}"
+    record "$label" "$code" "$out" "$(jq -r '.allow_empty' <<<"$step" | sed 's/true/1/;s/false/0/')" $((SECONDS - started))
+}
+
+record() { # label code logfile allow_empty seconds
+    local label="$1" code="$2" log="$3" allow_empty="$4" seconds="$5" verdict skipped zero=0
+    # human reporter ("2 skipped") and the compact PAO/--ci JSON ("skipped":2) alike
+    skipped="$(grep -Eo '[0-9]+ skipped|"skipped":[0-9]+' "$log" | head -n 1 | grep -Eo '[0-9]+' || echo 0)"
+    grep -Eq 'No tests found|No tests executed' "$log" && zero=1
+    if (( zero )); then
+        if [[ "$allow_empty" == 1 ]]; then verdict='empty (allowed by inventory)'
+        else verdict='ZERO TESTS'; (( overall == 1 )) || overall=3
+        fi
+    elif (( code != 0 )); then
+        verdict='FAIL'; overall=1
+    else
+        verdict=ok
+        if (( skipped > 0 && no_skips )); then verdict='FAIL (skips refused by --no-skips)'; overall=1; fi
+    fi
+    RESULTS+=("$(printf '%-34s exit=%s skipped=%s %ss  %s' "$label" "$code" "$skipped" "$seconds" "$verdict")")
+}
+
+run_pest_steps() { # plan-file engine
+    local plan="$1" engine="$2" step
+    while IFS= read -r step; do
+        exec_step "$step"
+    done < <(jq -c --arg e "$engine" '.steps[] | select(.kind == "pest" and .engine == $e)' "$plan")
+}
+
+run_node_steps() { # plan-file — once per run, whatever the engines
+    local plan="$1" step
+    while IFS= read -r step; do
+        exec_step "$step"
+    done < <(jq -c '.steps[] | select(.kind == "node")' "$plan")
+}
+
+print_summary() {
+    local line
+    printf '\n== scripts/t summary ==\n'
+    for line in "${RESULTS[@]}"; do printf '%s\n' "$line"; done
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------------------------------------------------
+if [[ "$sub" == baseline ]]; then
+    baseline_main
+    exit $?
+fi
+
+if [[ "$sub" == __exec ]]; then
+    make_tmp
+    # inside scripts/test-db.sh --provision: DB_* is exported; the pass list comes from the plan file
+    [[ "${DB_CONNECTION:-}" == "$exec_engine" ]] || die "engine mismatch: asked for $exec_engine, DB_CONNECTION=${DB_CONNECTION:-unset}"
+    [[ "${DB_DATABASE:-}" == *_test ]] || die "DB_DATABASE [${DB_DATABASE:-}] must end in _test"
+    mapfile -t passthru < <(jq -r '.passthru[]' "$plan_file")
+    no_skips="$(jq -r '.no_skips' "$plan_file")"
+    run_pest_steps "$plan_file" "$exec_engine"
+    print_summary
+    exit "$overall"
+fi
+
+# --- engines -----------------------------------------------------------------------------------------------------------
+engines=()
+if [[ -n "$engines_opt" ]]; then
+    IFS=, read -r -a engines <<<"$engines_opt"
+elif [[ "$engine_word" == all ]]; then
+    engines=(sqlite pgsql mysql)
+else
+    engines=("${engine_word:-sqlite}")
+fi
+for e in "${engines[@]}"; do
+    [[ "$e" == sqlite || "$e" == pgsql || "$e" == mysql ]] || die "unknown engine [$e]"
+done
+[[ -z "$workers" ]] && workers="$(default_workers)"
+[[ "$workers" =~ ^[0-9]+$ && "$workers" -ge 1 ]] || die "-j needs a number >= 1, got [$workers]"
+
+suites_json=null
+if [[ -n "$suites_csv" ]]; then
+    suites_json="$(jq -cn --arg s "$suites_csv" '$s | split(",")')"
+fi
+
+# paths: absolute -> repo-relative
+norm_paths=()
+for p in "${paths[@]}"; do norm_paths+=("${p#"$root"/}"); done
+
+has_server=0
+for e in "${engines[@]}"; do [[ "$e" == sqlite ]] || has_server=1; done
+if (( has_server )) && [[ "$mode" != full && ${#paths[@]} -eq 0 && ${#groups[@]} -eq 0 ]]; then
+    # only suites with a PHP database matter here; Node suites do not care
+    only_node=1
+    while IFS= read -r s; do
+        [[ "$(jq -r --arg s "$s" '.suites[$s].kind' "$inventory")" == node ]] || only_node=0
+    done < <(selected_suites)
+    (( only_node )) || die 'a server engine needs paths, --group=<G> or --full: there is no default server sweep'
+fi
+
+if [[ "$mode" == full ]]; then full_seed_env; fi
+
+cfg="$(jq -cn \
+    --argjson engines "$(printf '%s\n' "${engines[@]}" | jq -R . | jq -cs .)" \
+    --argjson suites "$suites_json" \
+    --argjson paths "$(printf '%s\n' "${norm_paths[@]:-}" | jq -R . | jq -cs 'map(select(length > 0))')" \
+    --argjson groups "$(printf '%s\n' "${groups[@]:-}" | jq -R . | jq -cs 'map(select(length > 0))')" \
+    --argjson xgroups "$(printf '%s\n' "${xgroups[@]:-}" | jq -R . | jq -cs 'map(select(length > 0))')" \
+    --argjson workers "$workers" --arg mode "$mode" --arg junit "$junit" \
+    '{engines: $engines, suites: $suites, paths: $paths, groups: $groups, xgroups: $xgroups, workers: $workers, mode: $mode, junit: $junit}')"
+
+plan="$(jq -n --argjson cfg "$cfg" --slurpfile inv "$inventory" '$inv[0] | '"$PLAN_JQ")" || die 'cannot build the plan'
+if jq -e 'has("error")' >/dev/null <<<"$plan"; then
+    die "$(jq -r .error <<<"$plan")"
+fi
+plan="$(jq --argjson pass "$(printf '%s\n' "${passthru[@]:-}" | jq -R . | jq -cs 'map(select(length > 0))')" --argjson ns "$no_skips" \
+    '. + {passthru: $pass, no_skips: $ns}' <<<"$plan")"
+
+if [[ "$(jq '.steps | length' <<<"$plan")" == 0 ]]; then
+    die "the plan is empty: $(jq -r '[.skipped[] | "\(.suite)/\(.engine): \(.reason)"] | join("; ")' <<<"$plan")"
+fi
+
+if (( dry )); then
+    if (( json )); then
+        jq . <<<"$plan"
+    else
+        jq -r '"plan: engines=\(.engines | join(",")) workers=\(.workers) mode=\(.mode) suites=\(.suites | join(","))",
+               (.steps[] | if .kind == "node" then "  \(.suite)  node  \(.command | join(" "))"
+                           else "  \(.suite)  \(.engine)  [\(.partition)]  \(.pass) x\(.processes)  files=\(.files | length)  group=\(.group)  exclude=\(.exclude | join(","))" + (if .skeleton then "  skeleton" else "" end) end),
+               (.skipped[] | "  skipped \(.suite)/\(.engine) [\(.partition)]: \(.reason)")' <<<"$plan"
+    fi
+    exit 0
+fi
+
+make_tmp
+plan_file="$run_tmp/plan.json"
+printf '%s\n' "$plan" >"$plan_file"
+
+if [[ -n "$junit" ]]; then mkdir -p "$junit"; fi
+
+run_node_steps "$plan_file"
+
+while IFS= read -r e; do
+    [[ -n "$e" ]] || continue
+    if [[ "$e" == sqlite ]]; then
+        run_pest_steps "$plan_file" sqlite
+    else
+        # one provisioned server serves every schema partition of the engine; DB_EXTERNAL=1 = a ready CI service
+        status=0
+        need="$(jq -r --arg e "$e" '[.steps[] | select(.kind == "pest" and .engine == $e) | .processes] | max' "$plan_file")"
+        "$root/scripts/test-db.sh" --provision "$e" --workers "$need" -- "$self_abs" __exec "$plan_file" "$e" || status=$?
+        if (( status != 0 )); then
+            (( overall == 1 )) || overall=$(( status > overall ? status : overall ))
+        fi
+    fi
+done < <(jq -r '[.steps[] | select(.kind == "pest") | .engine] | unique[]' "$plan_file")
+
+if (( ${#RESULTS[@]} )); then print_summary; fi
+jq -r '.skipped[] | "skipped \(.suite)/\(.engine) [\(.partition)]: \(.reason)"' "$plan_file" >&2
+exit "$overall"

@@ -1,0 +1,5 @@
+{
+  "suite": "repo",
+  "introduced": "P1.3",
+  "note": "The repo suite does not exist at the base commit c64bba25; its immutable original is empty by construction and every case counts as an addition recorded in CHANGES.json."
+}

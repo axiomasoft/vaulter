@@ -73,7 +73,7 @@
         }
     },
     "scripts": {
-        "test": "vendor/bin/pest",
+        "test": "../../scripts/t sqlite -p azgard",
         "lint": "vendor/bin/pint",
         "lint:check": "vendor/bin/pint --test",
         "analyse": "vendor/bin/phpstan analyse --memory-limit=512M"

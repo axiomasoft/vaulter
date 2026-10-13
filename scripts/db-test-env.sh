@@ -6,6 +6,11 @@
 #                                   export DB_CONNECTION/DB_HOST/DB_PORT/DB_DATABASE/DB_USERNAME/DB_PASSWORD
 #   db_create <name>                one more database (must end in _test), e.g. a lane of its own
 #   db_down                         stop the server and delete its data directory
+#   db_use_external <pgsql|mysql> [workers]
+#                                   DB_EXTERNAL=1 mode (CI services, a server you run yourself): no server is started
+#                                   or stopped; DB_DATABASE must end in _test, the worker databases
+#                                   <base>_w1_test..<base>_wN_test are created when missing. DB_CONNECTION, if set,
+#                                   must match the engine.
 #
 # The server runs as the current user on a free loopback port. Durability is traded for speed — fsync off,
 # no binlog, no doublewrite — which is fine for data that is thrown away with the run; it changes no test
@@ -98,4 +103,32 @@ db_down() {
     fi
     DB_ENGINE_UP=''
     DB_SERVER_DIR=''
+}
+
+db_use_external() {
+    local engine="$1" workers="${2:-0}" base n name
+    case "$engine" in pgsql | mysql) ;; *) echo "db_use_external: unknown engine [$engine]" >&2; return 1 ;; esac
+    if [[ -n "${DB_CONNECTION:-}" && "$DB_CONNECTION" != "$engine" ]]; then
+        echo "db_use_external: DB_CONNECTION=$DB_CONNECTION does not match requested engine $engine" >&2
+        return 2
+    fi
+    base="${DB_DATABASE:-vaulter_test}"
+    [[ "$base" =~ ^[a-z0-9_]+_test$ ]] || { echo "db_use_external: DB_DATABASE [$base] must match [a-z0-9_]+_test" >&2; return 2; }
+    export DB_CONNECTION="$engine" DB_DATABASE="$base"
+    export DB_HOST="${DB_HOST:-127.0.0.1}" DB_USERNAME="${DB_USERNAME:-vaulter}" DB_PASSWORD="${DB_PASSWORD:-secret}"
+    export DB_PORT="${DB_PORT:-$([[ "$engine" == pgsql ]] && echo 5432 || echo 3306)}"
+    for ((n = 1; n <= workers; n++)); do
+        name="${base%_test}_w${n}_test"
+        case "$engine" in
+            pgsql)
+                PGPASSWORD="$DB_PASSWORD" psql -q -X -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USERNAME" -d postgres -tAc \
+                    "SELECT 1 FROM pg_database WHERE datname = '$name'" | grep -q 1 \
+                    || PGPASSWORD="$DB_PASSWORD" psql -q -X -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USERNAME" -d postgres -c "CREATE DATABASE \"$name\"" >/dev/null || return
+                ;;
+            mysql)
+                MYSQL_PWD="$DB_PASSWORD" mysql --no-defaults --protocol=TCP -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USERNAME" \
+                    -e "CREATE DATABASE IF NOT EXISTS \`$name\`" || return
+                ;;
+        esac
+    done
 }

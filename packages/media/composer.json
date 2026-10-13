@@ -67,7 +67,7 @@
         }
     },
     "scripts": {
-        "test": "vendor/bin/pest",
+        "test": "../../scripts/t sqlite -p media",
         "test:types": "vendor/bin/pest --type-coverage --min=100",
         "lint": "vendor/bin/pint",
         "lint:check": "vendor/bin/pint --test",
