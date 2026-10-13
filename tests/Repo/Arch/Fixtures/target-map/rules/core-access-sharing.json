@@ -1,0 +1,355 @@
+{
+    "scope": [
+        "Vaulter\\Access\\",
+        "Vaulter\\Rules\\Access\\",
+        "Vaulter\\Policies\\NodePolicy",
+        "Vaulter\\Actions\\Access\\",
+        "Vaulter\\Actions\\Sharing\\",
+        "Vaulter\\Sharing\\",
+        "Vaulter\\Contracts\\Access\\",
+        "Vaulter\\Contracts\\Sharing\\",
+        "Vaulter\\Models\\Access\\",
+        "Vaulter\\Models\\Sharing\\",
+        "Vaulter\\Repositories\\Access\\",
+        "Vaulter\\Repositories\\Sharing\\",
+        "Vaulter\\Http\\Controllers\\Access\\",
+        "Vaulter\\Http\\Controllers\\Sharing\\",
+        "Vaulter\\Data\\Access\\",
+        "Vaulter\\Data\\Sharing\\",
+        "Vaulter\\Enums\\Access\\",
+        "Vaulter\\Enums\\Sharing\\",
+        "Vaulter\\Exceptions\\Access\\",
+        "Vaulter\\Exceptions\\Sharing\\",
+        "Vaulter\\Exceptions\\Policy\\",
+        "Vaulter\\ValueObjects\\Access\\",
+        "Vaulter\\Events\\Access\\",
+        "Vaulter\\Events\\Sharing\\",
+        "Vaulter\\Operations\\AccessOperations",
+        "Vaulter\\Operations\\ShareOperations",
+        "Vaulter\\Support\\RandomShareTokenGenerator",
+        "Vaulter\\Support\\ShareToken",
+        "Vaulter\\Console\\MakePermissionDriverCommand"
+    ],
+    "rules": [
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Access\\",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Access (16) -> drive (node access model)"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Access\\ValueObjects\\",
+            "owner": "drive",
+            "surface": "Api",
+            "why": "architecture#api-surface: access value objects are visible from PermissionDriver (SPI) and AccessOperations (Api) signatures"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Access\\Roles\\",
+            "owner": "drive",
+            "surface": "Api",
+            "why": "architecture#ownership-map: Access -> drive; Role/RoleRegistry are what hosts register roles through (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Access\\AccessResolver",
+            "owner": "drive",
+            "surface": "Internal",
+            "note": "baseline: public in the 0.x snapshot; hosts reach it through AccessOperations::explain; P3 decides publication (D27)",
+            "why": "architecture#ownership-map: Access -> drive"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Access\\ExactListing",
+            "owner": "drive",
+            "surface": "Internal",
+            "note": "baseline: public in the 0.x snapshot; node listing helper of the access model; P3 decides publication (D27)",
+            "why": "architecture#ownership-map: Access -> drive (ExactListing is listed under Access)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Access\\OperationGuard",
+            "owner": "drive",
+            "surface": "Internal",
+            "note": "baseline: public in the 0.x snapshot; replaced in P3 by an OperationMiddleware/stage of the drive module; P3 decides publication (D27)",
+            "why": "architecture#ownership-map: Access -> drive; core keeps only the OperationRunner pipeline (architecture#kernel), the node-access guard is domain"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Access\\ValueObjects\\NodeAbilities",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Access -> drive; not visible from any Api signature in the baseline"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Access\\Drivers\\",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Access/Drivers -> drive; drivers are selected by configuration (explicit adapter, D20), not referenced by hosts"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Actions\\Access\\",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Actions/Access -> drive"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Actions\\Sharing\\",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Actions/Sharing -> drive"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Http\\Controllers\\Access\\",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Http controllers of Access are domain controllers -> drive (CLI/HTTP are identity surface, not PHP API)"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Http\\Controllers\\Sharing\\",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Http controllers of Sharing -> drive (identity surface, not PHP API)"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Repositories\\Access\\",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Repositories of access -> drive"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Repositories\\Sharing\\",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Repositories/Sharing -> drive"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Models\\Access\\",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Models of access -> drive (Eloquent, D27 internal)"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Models\\Sharing\\",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Models/Sharing -> drive (Eloquent, D27 internal)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Policies\\NodePolicy",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Policies (2) -> drive; NodePolicy guards nodes"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Rules\\Access\\",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Rules/Access -> drive (validation rule of access subjects)"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Sharing\\",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Sharing (9) -> drive"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Support\\RandomShareTokenGenerator",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: share token generation belongs to Sharing -> drive (default implementation of the ShareTokenGenerator SPI)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Support\\ShareToken",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: share token value of Sharing -> drive"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Contracts\\Access\\",
+            "owner": "drive",
+            "surface": "Spi:Implement",
+            "why": "architecture#ownership-map: Contracts/Access/* -> drive; drivers and role enumeration are implemented by hosts and the AzGuard adapter (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Contracts\\Access\\AccessOperations",
+            "owner": "drive",
+            "surface": "Api",
+            "why": "architecture#ownership-map: Contracts/Access -> drive; the typed access Operations a host calls (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Contracts\\Sharing\\",
+            "owner": "drive",
+            "surface": "Spi:Implement",
+            "why": "architecture#ownership-map: Contracts/Sharing/* -> drive; ShareTokenGenerator is implemented by hosts"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Contracts\\Sharing\\ShareOperations",
+            "owner": "drive",
+            "surface": "Api",
+            "why": "architecture#ownership-map: Contracts/Sharing -> drive; the typed share Operations a host calls (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Operations\\AccessOperations",
+            "owner": "drive",
+            "surface": "Api",
+            "why": "architecture#ownership-map: Operations/AccessOperations -> drive (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Operations\\ShareOperations",
+            "owner": "drive",
+            "surface": "Api",
+            "why": "architecture#ownership-map: Operations/ShareOperations -> drive (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Data\\Access\\",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Data by domain owner: access action inputs -> drive; inputs of Actions are not host API"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Data\\Access\\GrantInput",
+            "owner": "drive",
+            "surface": "Api",
+            "why": "architecture#ownership-map: Data/Access -> drive; the grant input of AccessOperations::grant (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Data\\Sharing\\",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Data by domain owner: share action inputs -> drive"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Data\\Sharing\\MintedShareLink",
+            "owner": "drive",
+            "surface": "Api",
+            "why": "architecture#ownership-map: Data/Sharing -> drive; result of ShareOperations (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Data\\Sharing\\ShareLinkInput",
+            "owner": "drive",
+            "surface": "Api",
+            "why": "architecture#ownership-map: Data/Sharing -> drive; input of ShareOperations (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Enums\\Access\\",
+            "owner": "drive",
+            "surface": "Api",
+            "why": "architecture#ownership-map: Enums by domain owner: access enums are visible from Api/SPI signatures (Ability, Effect, Permission)"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Enums\\Sharing\\",
+            "owner": "drive",
+            "surface": "Api",
+            "why": "architecture#ownership-map: Enums by domain owner: ShareAudience is visible from ShareLinkInput (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Events\\Access\\",
+            "owner": "drive",
+            "surface": "Api",
+            "why": "architecture#ownership-map: Events by domain owner: access events consumed by host listeners (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Events\\Sharing\\",
+            "owner": "drive",
+            "surface": "Api",
+            "why": "architecture#ownership-map: Events by domain owner: share events consumed by host listeners (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Exceptions\\Access\\",
+            "owner": "drive",
+            "surface": "Api",
+            "why": "architecture#ownership-map: Exceptions by domain owner: access exceptions a host catches"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Exceptions\\Sharing\\",
+            "owner": "drive",
+            "surface": "Api",
+            "why": "architecture#ownership-map: Exceptions by domain owner: share exceptions a host catches"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Exceptions\\Policy\\",
+            "owner": "drive",
+            "surface": "Api",
+            "why": "architecture#ownership-map: Exceptions by domain owner: profile policy limits (file size, folder children, tree depth) are drive; hosts catch them"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Console\\MakePermissionDriverCommand",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: domain commands -> drive (CLI is identity surface, not PHP API)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\ValueObjects\\Access\\Actor",
+            "owner": "core",
+            "action": "keep",
+            "phase": "P3",
+            "surface": "Api",
+            "why": "architecture#kernel: Actor/ActorRef stay in the kernel (operation context)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\ValueObjects\\Access\\ActorRef",
+            "owner": "core",
+            "action": "keep",
+            "phase": "P3",
+            "surface": "Api",
+            "why": "architecture#kernel: Actor/ActorRef stay in the kernel (operation context)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Exceptions\\Access\\MissingActorException",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#ownership-map: the core keeps Actor, MissingActorException and the 404/403 rule"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\ValueObjects\\Access\\OwnerRef",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "note": "open: only access (AccessScope, GatePermissionDriver) uses it today; core keeps it as a neutral ref unless P3 finds no kernel consumer",
+            "why": "architecture#kernel: OperationContext works with neutral scope/actor refs; OwnerRef is a neutral host-owner reference"
+        }
+    ]
+}

@@ -1,0 +1,2075 @@
+{
+    "scope": [
+        "Vaulter\\",
+        "path:packages/core/"
+    ],
+    "rules": [
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Attributes\\EventSpec",
+            "owner": "core",
+            "action": "keep",
+            "phase": "P3",
+            "surface": "Api",
+            "why": "architecture#kernel: Атрибуты — EventSpec metadata stays (new #[Api]/#[Spi]/#[Internal] come in P3)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Attributes\\Icon",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "undecided",
+            "note": "open: consumed today by HasLabel/HasIcon of enums owned by drive/sharing/etc.; P3 decides core vs drive presentation",
+            "why": "architecture#kernel: Label/Icon stay only if the kernel consumes them, otherwise the owner of presentation"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Attributes\\Label",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "undecided",
+            "note": "open: consumed today by HasLabel/HasIcon of enums owned by drive/sharing/etc.; P3 decides core vs drive presentation",
+            "why": "architecture#kernel: Label/Icon stay only if the kernel consumes them, otherwise the owner of presentation"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Support\\Concerns\\HasIcon",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "undecided",
+            "note": "open: follows Vaulter\\Attributes\\Icon (P3 decides)",
+            "why": "architecture#kernel: Label/Icon helper traits follow the Label/Icon attributes"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Support\\Concerns\\HasLabel",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "undecided",
+            "note": "open: follows Vaulter\\Attributes\\Label (P3 decides)",
+            "why": "architecture#kernel: Label/Icon helper traits follow the Label/Icon attributes"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Support\\EnumCaseAttributeResolver",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "note": "open: follows Label/Icon (P3 decides)",
+            "why": "architecture#kernel: reads Label/Icon attributes of enum cases; follows them"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Support\\Identity",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: Идентичность — id stringify/compare primitives (IdStrategy, host keys)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Support\\Int64Counter",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "note": "throws SequenceOverflowException (kept in core with it)",
+            "why": "architecture#kernel: Идентичность — generic BIGINT counter contract shared by node sequence, document state version and collab epoch"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Support\\LoadTier",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Наблюдаемость — load-stand tier label read by package seams (host middleware sets it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Support\\RequestContext",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "note": "stamped by the drive ActivityRecorder today; the kernel owns the correlation id primitive",
+            "why": "architecture#kernel: Контекст операции — request-scoped correlation/ip/user-agent capture"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Support\\AssembleSizeBucket",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Support helpers -> owner of the concept: multipart assembly metric label belongs to uploads (drive)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\VaulterConfig",
+            "owner": "core",
+            "action": "keep",
+            "phase": "P3",
+            "surface": "Api",
+            "why": "architecture#kernel: Конфиг-каркас — the root typed config (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\ConfigNormalizer",
+            "owner": "core",
+            "action": "keep",
+            "phase": "P3",
+            "surface": "Api",
+            "why": "architecture#kernel: Конфиг-каркас — registerDefaults/normalisation of sections (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\ConfigValidator",
+            "owner": "core",
+            "action": "keep",
+            "phase": "P3",
+            "surface": "Api",
+            "note": "class-string validation stays (I4 config-validation); the ProfileRegistry resolved() probe is host lifecycle",
+            "why": "architecture#kernel: Конфиг-каркас — ConfigValidator (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\DatabaseConfig",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: Конфиг-каркас — connection/table names section stays (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\IdsConfig",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: Конфиг-каркас — id strategy section stays (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\ObservabilityConfig",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: Конфиг-каркас — metrics/tracing section stays (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\RoutesConfig",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: Конфиг-каркас — route prefix/middleware of the HTTP skeleton section stays (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\TenancyConfig",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: Конфиг-каркас — tenancy section stays (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\ScheduleConfig",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "note": "open: the keys of each module move to their owner with the section split (P4)",
+            "why": "architecture#kernel: Конфиг-каркас — schedule section: generic frequency settings every module reads (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\ScheduleFrequency",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: Конфиг-каркас — generic frequency value of ScheduleConfig (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\AccessConfig",
+            "owner": "drive",
+            "surface": "Api",
+            "why": "architecture#ownership-map: Configuration — concrete sections -> owner of the concept: access model (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\ChangesConfig",
+            "owner": "drive",
+            "surface": "Api",
+            "why": "architecture#ownership-map: Configuration — concrete sections -> owner of the concept: change feed (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\DownloadsConfig",
+            "owner": "drive",
+            "surface": "Api",
+            "why": "architecture#ownership-map: Configuration — concrete sections -> owner of the concept: content delivery (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\ListingConfig",
+            "owner": "drive",
+            "surface": "Api",
+            "why": "architecture#ownership-map: Configuration — concrete sections -> owner of the concept: node listing (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\ScanConfig",
+            "owner": "drive",
+            "surface": "Api",
+            "why": "architecture#ownership-map: Configuration — concrete sections -> owner of the concept: scan admission and work (D28) (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\SharingConfig",
+            "owner": "drive",
+            "surface": "Api",
+            "why": "architecture#ownership-map: Configuration — concrete sections -> owner of the concept: sharing (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Configuration\\WebhooksConfig",
+            "owner": "webhooks",
+            "surface": "Api",
+            "note": "open: outbox keys (retention, consumer hold) move to core with D29",
+            "why": "architecture#ownership-map: Configuration — concrete sections -> owner of the concept: webhooks (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Console\\CommandsReferenceCommand",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#packages: kernel commands vaulter:doctor, vaulter:install and the reference commands stay in core (CLI is identity surface)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Console\\ConfigReferenceCommand",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#packages: kernel commands vaulter:doctor, vaulter:install and the reference commands stay in core (CLI is identity surface)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Console\\ErrorsReferenceCommand",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#packages: kernel commands vaulter:doctor, vaulter:install and the reference commands stay in core (CLI is identity surface)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Console\\EventsReferenceCommand",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#packages: kernel commands vaulter:doctor, vaulter:install and the reference commands stay in core (CLI is identity surface)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Console\\DoctorCommand",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#packages: kernel commands vaulter:doctor, vaulter:install and the reference commands stay in core (CLI is identity surface)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Console\\InstallCommand",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#packages: kernel commands vaulter:doctor, vaulter:install and the reference commands stay in core (CLI is identity surface)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Console\\Concerns\\OpensWriteScope",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Транзакция — opens the core WriteScope for commands of every module"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Contracts\\Doctor\\DoctorCheck",
+            "owner": "core",
+            "action": "keep",
+            "phase": "P3",
+            "surface": "Spi:Implement",
+            "why": "architecture#kernel: Диагностика — DoctorCheck SPI implemented by every module (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Contracts\\IdStrategy",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Spi:Implement",
+            "why": "architecture#kernel: Идентичность — IdStrategy (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Contracts\\Observability\\MetricsRecorder",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Spi:Implement",
+            "why": "architecture#kernel: Наблюдаемость — MetricsRecorder (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Contracts\\Observability\\TraceRecorder",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Spi:Implement",
+            "why": "architecture#kernel: Наблюдаемость — TraceRecorder (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Contracts\\Tenancy\\ResolvesOwnerTenant",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Spi:Implement",
+            "why": "architecture#kernel: Tenancy — ResolvesOwnerTenant (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Contracts\\Tenancy\\TenantResolver",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Spi:Implement",
+            "why": "architecture#kernel: Tenancy — TenantResolver (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Data\\Page",
+            "owner": "core",
+            "action": "keep",
+            "phase": "P3",
+            "surface": "Api",
+            "why": "architecture#kernel: Снимки — Page stays (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Database\\VaulterDatabase",
+            "owner": "core",
+            "action": "keep",
+            "phase": "P3",
+            "surface": "Api",
+            "why": "architecture#kernel: Транзакция — VaulterDatabase (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Database\\GuardedBuilder",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Транзакция — statement guard of the Vaulter connection (WriteOutsideOperation)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Database\\GuardedCteBuilder",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Транзакция — statement guard of the Vaulter connection (WriteOutsideOperation)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Database\\GuardsStatements",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Транзакция — statement guard of the Vaulter connection (WriteOutsideOperation)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Database\\WriteScope",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Транзакция — statement guard of the Vaulter connection (WriteOutsideOperation)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Database\\Factories\\VaulterFactory",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#ownership-map: database/factories — the abstract factory base stays with VaulterDatabase in core; module factories extend it (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Database\\Factories\\DriveFactory",
+            "owner": "drive",
+            "surface": "Api",
+            "why": "architecture#ownership-map: database/factories -> module of the model (drive) (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Database\\Factories\\FileRevisionFactory",
+            "owner": "drive",
+            "surface": "Api",
+            "why": "architecture#ownership-map: database/factories -> module of the model (drive) (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Database\\Factories\\NodeFactory",
+            "owner": "drive",
+            "surface": "Api",
+            "why": "architecture#ownership-map: database/factories -> module of the model (drive) (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Database\\Factories\\PinnedOwnerTenantResolver",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: database/factories -> module of the model: tenant pin helper used by the drive factories"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Database\\Factories\\PinnedTenantResolver",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: database/factories -> module of the model: tenant pin helper used by the drive factories"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Doctor\\DoctorCheckResult",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: Диагностика — values visible from the DoctorCheck SPI"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Doctor\\DoctorContext",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: Диагностика — values visible from the DoctorCheck SPI"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Doctor\\DoctorFinding",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: Диагностика — values visible from the DoctorCheck SPI"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Doctor\\DoctorSeverity",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: Диагностика — values visible from the DoctorCheck SPI"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Doctor\\DoctorRegistry",
+            "owner": "core",
+            "action": "keep",
+            "phase": "P3",
+            "surface": "Internal",
+            "why": "architecture#kernel: Диагностика — aggregator of vaulter:doctor"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Doctor\\DoctorReport",
+            "owner": "core",
+            "action": "keep",
+            "phase": "P3",
+            "surface": "Internal",
+            "why": "architecture#kernel: Диагностика — aggregator of vaulter:doctor"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Doctor\\DoctorRunner",
+            "owner": "core",
+            "action": "keep",
+            "phase": "P3",
+            "surface": "Internal",
+            "why": "architecture#kernel: Диагностика — aggregator of vaulter:doctor"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Doctor\\Checks\\CacheCheck",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Диагностика — generic infrastructure check of the kernel (cache/queue/connection/config/routes/scheduler/tenancy)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Doctor\\Checks\\ConfigValidCheck",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Диагностика — generic infrastructure check of the kernel (cache/queue/connection/config/routes/scheduler/tenancy)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Doctor\\Checks\\DatabaseConnectionCheck",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Диагностика — generic infrastructure check of the kernel (cache/queue/connection/config/routes/scheduler/tenancy)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Doctor\\Checks\\QueueCheck",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Диагностика — generic infrastructure check of the kernel (cache/queue/connection/config/routes/scheduler/tenancy)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Doctor\\Checks\\RoutesAuthCheck",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Диагностика — generic infrastructure check of the kernel (cache/queue/connection/config/routes/scheduler/tenancy)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Doctor\\Checks\\SchedulerCheck",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Диагностика — generic infrastructure check of the kernel (cache/queue/connection/config/routes/scheduler/tenancy)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Doctor\\Checks\\TenancyCheck",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Диагностика — generic infrastructure check of the kernel (cache/queue/connection/config/routes/scheduler/tenancy)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Doctor\\Checks\\SchemaKeyTypesCheck",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "note": "open: reads the table list of every module; contributions replace the central list in P3",
+            "why": "architecture#kernel: Идентичность — key-type check of generic id/host-key columns"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Doctor\\Checks\\SchemaTablesCheck",
+            "owner": "core",
+            "action": "split",
+            "phase": "P3",
+            "surface": "Internal",
+            "note": "core keeps the check mechanism; each owner contributes its tables (drive/documents/media/webhooks/outbox)",
+            "why": "architecture#ownership-map: Doctor — concrete checks belong to the owner of the concept"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Doctor\\Checks\\SchemaIntegrityCheck",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Doctor — tree/aggregate structural invariants are drive"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Doctor\\Checks\\AccessDriverCheck",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Doctor — access driver check is drive"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Doctor\\Checks\\WebhooksDeliveriesCheck",
+            "owner": "webhooks",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Doctor — webhook deliveries check is webhooks"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Doctor\\Checks\\WebhooksOutboxLagCheck",
+            "owner": "core",
+            "action": "keep",
+            "phase": "P3",
+            "surface": "Internal",
+            "note": "open: renamed away from Webhooks with the outbox (D29, P3)",
+            "why": "D29 + architecture#kernel: the outbox lag is a property of the core-owned outbox/relay"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Doctor\\Checks\\WebhooksRelayLeasesCheck",
+            "owner": "core",
+            "action": "keep",
+            "phase": "P3",
+            "surface": "Internal",
+            "note": "open: renamed away from Webhooks with the relay (D29, P3)",
+            "why": "D29 + architecture#kernel: relay leases are a property of the core-owned relay"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Events\\DomainEvent",
+            "owner": "core",
+            "action": "keep",
+            "phase": "P3",
+            "surface": "Api",
+            "note": "isWebhookEligible is deleted by D29 (neutral envelope)",
+            "why": "architecture#kernel: События — DomainEvent base (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Events\\EventRecorder",
+            "owner": "core",
+            "action": "keep",
+            "phase": "P3",
+            "surface": "Api",
+            "note": "webhook gate features.webhooks/isWebhookEligible is deleted by D29",
+            "why": "architecture#kernel: События — EventRecorder (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Events\\EventsReference",
+            "owner": "core",
+            "action": "keep",
+            "phase": "P3",
+            "surface": "Internal",
+            "note": "baseline: public in the 0.x snapshot; becomes a reference of the EventCatalog; P3 decides publication (D27)",
+            "why": "architecture#kernel: События — EventCatalog reference generator (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Enums\\Events\\EventType",
+            "owner": "core",
+            "action": "split",
+            "phase": "P3",
+            "surface": "Api",
+            "note": "mechanics (type naming, catalog) stay in core; the concrete event type values are contributed by drive/documents/webhooks (EventCatalog)",
+            "why": "architecture#kernel: События — EventType-механика stays, the catalog is contributions of modules"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Exceptions\\VaulterException",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: Ошибки — base exception of the kernel"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Exceptions\\Contracts\\ProblemException",
+            "owner": "core",
+            "action": "keep",
+            "phase": "P3",
+            "surface": "Api",
+            "why": "architecture#kernel: Ошибки — ProblemException (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Exceptions\\Concerns\\ProvidesProblemDetails",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: Ошибки — RFC 9457 details mechanics used by exceptions of every module"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Exceptions\\Configuration\\InvalidConfigurationException",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: Ошибки — kernel exception (config validation)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Exceptions\\Database\\ConcurrentUpdateException",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: Ошибки — kernel exception (serialization retry)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Exceptions\\Database\\WriteOutsideOperationException",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: Ошибки — kernel exception (statement guard)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Exceptions\\Http\\PreconditionRequiredException",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: Ошибки — kernel exception (HTTP skeleton preconditions)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Exceptions\\Registry\\RegistryFrozenException",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: Ошибки — kernel exception (sealed registries)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Exceptions\\Schema\\UnknownIdStrategyException",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: Ошибки — kernel exception (id strategy)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Exceptions\\Support\\MissingPackageException",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: Ошибки — kernel exception (optional package probe)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Exceptions\\Tenancy\\TenancyMisconfiguredException",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: Ошибки — kernel exception (tenancy)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Exceptions\\Registry\\DuplicateNodeContentLifecycleException",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Exceptions by domain owner: node content lifecycle registry is drive"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Http\\Controllers\\Controller",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: HTTP-каркас — controller base of module controllers"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Http\\Requests\\VaulterFormRequest",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: HTTP-каркас — form request base of module requests"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Http\\Resources\\PageResponse",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: Снимки/HTTP-каркас — generic Page response renderer"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: HTTP-каркас — generic middleware (version header, cache policy, correlation id, request metrics)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: HTTP-каркас — generic middleware (version header, cache policy, correlation id, request metrics)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Http\\Middleware\\AssignCorrelationId",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: HTTP-каркас — generic middleware (version header, cache policy, correlation id, request metrics)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Http\\Middleware\\RecordVaulterRequestMetrics",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: HTTP-каркас — generic middleware (version header, cache policy, correlation id, request metrics)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Http\\Middleware\\VaulterHttpOperationMap",
+            "owner": "core",
+            "action": "split",
+            "phase": "P3",
+            "surface": "Internal",
+            "note": "core keeps the labelling mechanism; route-name and path labels (drive/documents/hub) become module contributions",
+            "why": "architecture#kernel: HTTP-каркас — the labelling mechanism stays, the route-name labels belong to their modules"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Http\\Middleware\\VaulterThrottledRouteMap",
+            "owner": "core",
+            "action": "split",
+            "phase": "P3",
+            "surface": "Internal",
+            "note": "core keeps the throttling mechanism; throttled route names become module contributions",
+            "why": "architecture#kernel: HTTP-каркас — the throttle mechanism stays, route names belong to their modules"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Http\\Middleware\\ResolveShareToken",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Http middleware of Sharing -> drive"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Http\\Problems\\",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Ошибки — ProblemCatalog/Renderer/CoreProblemCodes stay; module problem codes are contributions (ProblemCodeSource)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Http\\Problems\\ProblemCodeSource",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Spi:Implement",
+            "why": "architecture#kernel: Ошибки — ProblemCode registry: modules contribute through this source"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Http\\Support\\DownloadHeaders",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "note": "open: used for downloads only today; moves to drive if the kernel does not consume it (P4)",
+            "why": "architecture#kernel: HTTP-каркас — generic header rendering (Content-Disposition/ETag) shared by owners"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Http\\Support\\ContentResponder",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Http support -> owner of the concept: content responses of file download are drive"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Http\\Support\\HttpOperationContextFactory",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#kernel: HTTP owner adapters do admission and call OperationRunner; the factory reaches the drive handle, AccessResolver and VaulterManager"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Http\\Support\\HttpResourceResolver",
+            "owner": "drive",
+            "surface": "Internal",
+            "note": "baseline: public in the 0.x snapshot; P3 decides publication (D27)",
+            "why": "architecture#ownership-map: Http support -> drive: resolves drives and nodes through drive repositories (I9 authorized lookup)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Http\\Support\\SharedNodeResolver",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Http support of Sharing -> drive"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Http\\Support\\Preconditions",
+            "owner": "core",
+            "action": "split",
+            "phase": "P4",
+            "surface": "Internal",
+            "note": "core keeps header parsing (If-Match/If-None-Match/428); matchNode -> drive; document match mapping -> documents",
+            "why": "architecture#kernel: Preconditions::matchNode — domain parts are drive, document match mapping is documents; core only parses headers"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Http\\Support\\RepresentationTag",
+            "owner": "core",
+            "action": "split",
+            "phase": "P4",
+            "surface": "Internal",
+            "note": "core keeps the generic tag/canonical-json helper; node() -> drive; document() -> documents",
+            "why": "architecture#kernel: HTTP-каркас — generic strong ETag/canonical JSON helper stays; entity tags belong to owners"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Http\\Requests\\Access\\",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Http requests of Access are owned by the concept (identity surface, not PHP API)"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Http\\Requests\\Changes\\",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Http requests of Changes are owned by the concept (identity surface, not PHP API)"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Http\\Requests\\Sharing\\",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Http requests of Sharing are owned by the concept (identity surface, not PHP API)"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Http\\Requests\\Webhooks\\",
+            "owner": "webhooks",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Http requests of Webhooks are owned by the concept (identity surface, not PHP API)"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Http\\Resources\\Access\\",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Http resources of Access are owned by the concept (identity surface, not PHP API)"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Http\\Resources\\Activity\\",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Http resources of Activity are owned by the concept (identity surface, not PHP API)"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Http\\Resources\\Changes\\",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Http resources of Changes are owned by the concept (identity surface, not PHP API)"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Http\\Resources\\Drive\\",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Http resources of Drive are owned by the concept (identity surface, not PHP API)"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Http\\Resources\\Sharing\\",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Http resources of Sharing are owned by the concept (identity surface, not PHP API)"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Http\\Resources\\Webhooks\\",
+            "owner": "webhooks",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Http resources of Webhooks are owned by the concept (identity surface, not PHP API)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Jobs\\Middleware\\RestoreTenantContext",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Tenancy — restores the tenant context in queued jobs of every module"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Models\\Concerns\\GuardsWrites",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: Идентичность/Транзакция — model trait of the Vaulter connection and keys used by module models"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Models\\Concerns\\HasVaulterKeys",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: Идентичность/Транзакция — model trait of the Vaulter connection and keys used by module models"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Models\\Concerns\\ResolvesVaulterConnection",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: Идентичность/Транзакция — model trait of the Vaulter connection and keys used by module models"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Models\\Concerns\\StampsDriveTenant",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Models/Concerns of the drive tenant stamp -> drive"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Observability\\NullMetricsRecorder",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Наблюдаемость — recorders and span vocabulary"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Observability\\NullTraceRecorder",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Наблюдаемость — recorders and span vocabulary"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Observability\\TracingAttributes",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Наблюдаемость — recorders and span vocabulary"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Observability\\TracingSpanNames",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Наблюдаемость — recorders and span vocabulary"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Operations\\OperationContext",
+            "owner": "core",
+            "action": "keep",
+            "phase": "P3",
+            "surface": "Api",
+            "note": "loses Drive ORM inputs in favour of neutral scope/actor refs",
+            "why": "architecture#kernel: Контекст операции — OperationContext (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\VaulterServiceProvider",
+            "owner": "core",
+            "action": "keep",
+            "phase": "P3",
+            "surface": "Api",
+            "note": "registers module slices temporarily inside core (P3 module manifests)",
+            "why": "architecture#kernel: Providers ядра — host-registered provider of the kernel"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Providers\\AccessRegistrar",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Providers — registrars of the concept belong to its owner: access drivers"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Providers\\BindingsRegistrar",
+            "owner": "core",
+            "action": "split",
+            "phase": "P3",
+            "surface": "Internal",
+            "note": "bindings of every slice: core keeps the generic registration mechanism; each owner registers its own (module manifest, P3)",
+            "why": "architecture#ownership-map: Providers — framework in core, per-concept registration by the owner"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Providers\\ConsoleRegistrar",
+            "owner": "core",
+            "action": "split",
+            "phase": "P3",
+            "surface": "Internal",
+            "note": "commands of every slice: core keeps the generic registration mechanism; each owner registers its own (module manifest, P3)",
+            "why": "architecture#ownership-map: Providers — framework in core, per-concept registration by the owner"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Providers\\HttpRegistrar",
+            "owner": "core",
+            "action": "split",
+            "phase": "P3",
+            "surface": "Internal",
+            "note": "routes of every slice: core keeps the generic registration mechanism; each owner registers its own (module manifest, P3)",
+            "why": "architecture#ownership-map: Providers — framework in core, per-concept registration by the owner"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Providers\\SchedulingRegistrar",
+            "owner": "core",
+            "action": "split",
+            "phase": "P3",
+            "surface": "Internal",
+            "note": "schedules of every slice: core keeps the generic registration mechanism; each owner registers its own (module manifest, P3)",
+            "why": "architecture#ownership-map: Providers — framework in core, per-concept registration by the owner"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Providers\\DoctorRegistrar",
+            "owner": "core",
+            "action": "keep",
+            "phase": "P3",
+            "surface": "Internal",
+            "why": "architecture#kernel: Диагностика — registrar of the doctor checks"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Providers\\EventsRegistrar",
+            "owner": "core",
+            "action": "keep",
+            "phase": "P3",
+            "surface": "Internal",
+            "why": "architecture#kernel: События — registrar of listeners and event sinks"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Schema\\AutoIncrementIds",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Идентичность — IdStrategy implementations and generic key-column inspection"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Schema\\UlidIds",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Идентичность — IdStrategy implementations and generic key-column inspection"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Schema\\Uuid7Ids",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Идентичность — IdStrategy implementations and generic key-column inspection"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Schema\\IdStrategyResolver",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Идентичность — IdStrategy implementations and generic key-column inspection"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Schema\\KeyColumnInspector",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Идентичность — IdStrategy implementations and generic key-column inspection"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Schema\\ValueObjects\\KeyColumnExpectation",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Идентичность — IdStrategy implementations and generic key-column inspection"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Schema\\ValueObjects\\KeyColumnMismatch",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Идентичность — IdStrategy implementations and generic key-column inspection"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Schema\\HostKeyColumns",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: Идентичность — host key columns (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Schema\\VaulterSchema",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: Идентичность — static migration helper over the IdStrategy: generic id/host-key columns (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Schema\\SchemaBuilder",
+            "owner": "core",
+            "action": "split",
+            "phase": "P4",
+            "surface": "Internal",
+            "note": "domain define*/afterCreate/createAll/dropAll/addHeadForeignKey go to the owners of the tables; core keeps only generic id/host-key/counter/connection helpers (see the member rules)",
+            "why": "architecture#ownership-map + source-review#code-facts: оставление прежнего giant SchemaBuilder в core запрещено"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Tenancy\\TenancyBoundary",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Tenancy — TenantResolver machinery and withoutTenancy (Tenancy::without)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Tenancy\\TenancyBypass",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Tenancy — TenantResolver machinery and withoutTenancy (Tenancy::without)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Tenancy\\TenantIdentityPredicate",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Tenancy — TenantResolver machinery and withoutTenancy (Tenancy::without)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Tenancy\\ShareTenantContext",
+            "owner": "drive",
+            "surface": "Internal",
+            "note": "open: typed on the Drive model; stays drive unless a neutral scope ref replaces it (P4)",
+            "why": "architecture#ownership-map: Tenancy — token-authorized, drive-limited issuer evaluation for share redemption: Sharing -> drive"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Testing\\FakeMetricsRecorder",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: Тестовый кит — fakes of the kernel SPIs"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Testing\\FakeTraceRecorder",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: Тестовый кит — fakes of the kernel SPIs"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Testing\\InteractsWithVaulter",
+            "owner": "core",
+            "action": "keep",
+            "phase": "P3",
+            "surface": "Api",
+            "note": "must not reference package tests or internal domain types (architecture#ownership-map); P3 splits drive-specific parts",
+            "why": "architecture#kernel: Тестовый кит — the trait hosts use to test against the kernel (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Testing\\Support\\FailingStream",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Тестовый кит — stream failure helper"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Testing\\Fixtures\\",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: Тестовый кит — neutral actor/owner fixtures of the kernel kit"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Testing\\Contracts\\ContentScannerContractTests",
+            "owner": "media",
+            "surface": "Api",
+            "why": "architecture#ownership-map: Testing — snapshots/fixtures belong to the package of the concept: ContentScanner contract tests -> media (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Testing\\FakeContentScanner",
+            "owner": "media",
+            "surface": "Api",
+            "why": "architecture#ownership-map: Testing — fake of the ContentScanner SPI -> media (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Testing\\Contracts\\FileHandlerContractTests",
+            "owner": "drive",
+            "surface": "Api",
+            "why": "architecture#ownership-map: Testing — FileHandler contract tests -> drive (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Testing\\Contracts\\PermissionDriverContractTests",
+            "owner": "drive",
+            "surface": "Api",
+            "why": "architecture#ownership-map: Testing — PermissionDriver contract tests -> drive (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Testing\\Contracts\\PermissionFixture",
+            "owner": "drive",
+            "surface": "Api",
+            "why": "architecture#ownership-map: Testing — fixture of the PermissionDriver contract tests -> drive (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Testing\\NullPermissionDriver",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: Testing — a PermissionDriver implementation -> drive"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\ValueObjects\\Events\\EventScope",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: События — neutral scope of the event envelope"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\ValueObjects\\Events\\EventSubject",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: События — neutral subject of the event envelope"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\ValueObjects\\Events\\ActivityTarget",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: ValueObjects by domain owner: activity target -> drive (Activity)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\ValueObjects\\Events\\JournalEffect",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "architecture#ownership-map: ValueObjects by domain owner: change-journal effect -> drive (Changes)"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/2026_10_13_000001_create_v_drives_table.php",
+            "owner": "drive",
+            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_drives is owned by drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/2026_10_13_000002_create_v_nodes_table.php",
+            "owner": "drive",
+            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_nodes is owned by drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/2026_10_13_000003_create_v_blobs_table.php",
+            "owner": "media",
+            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_blobs is owned by media"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/2026_10_13_000004_create_v_files_table.php",
+            "owner": "drive",
+            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_files is owned by drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/2026_10_13_000005_create_v_file_revisions_table.php",
+            "owner": "drive",
+            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_file_revisions is owned by drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/2026_10_13_000006_create_v_file_revision_blobs_table.php",
+            "owner": "drive",
+            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_file_revision_blobs is owned by drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/2026_10_13_000007_create_v_scan_policy_states_table.php",
+            "owner": "drive",
+            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_scan_policy_states is owned by drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/2026_10_13_000008_create_v_scan_obligations_table.php",
+            "owner": "drive",
+            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_scan_obligations is owned by drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/2026_10_13_000009_create_v_scan_backfill_runs_table.php",
+            "owner": "drive",
+            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_scan_backfill_runs is owned by drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/2026_10_13_000010_create_v_scan_requests_table.php",
+            "owner": "drive",
+            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_scan_requests is owned by drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/2026_10_13_000011_create_v_scan_evidence_table.php",
+            "owner": "drive",
+            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_scan_evidence is owned by drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/2026_10_13_000012_create_v_node_grants_table.php",
+            "owner": "drive",
+            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_node_grants is owned by drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/2026_10_13_000013_create_v_node_shares_table.php",
+            "owner": "drive",
+            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_node_shares is owned by drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/2026_10_13_000014_create_v_node_comments_table.php",
+            "owner": "documents",
+            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_node_comments is owned by documents"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/2026_10_13_000015_create_v_node_user_states_table.php",
+            "owner": "drive",
+            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_node_user_states is owned by drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/2026_10_13_000016_create_v_documents_table.php",
+            "owner": "documents",
+            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_documents is owned by documents"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/2026_10_13_000017_create_v_document_revisions_table.php",
+            "owner": "documents",
+            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_document_revisions is owned by documents"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/2026_10_13_000018_create_v_upload_sessions_table.php",
+            "owner": "drive",
+            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_upload_sessions is owned by drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/2026_10_13_000019_create_v_upload_parts_table.php",
+            "owner": "drive",
+            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_upload_parts is owned by drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/2026_10_13_000020_create_v_activity_table.php",
+            "owner": "drive",
+            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_activity is owned by drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/2026_10_13_000021_create_v_outbox_table.php",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_outbox is owned by core"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/2026_10_13_000022_create_v_webhook_endpoints_table.php",
+            "owner": "webhooks",
+            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_webhook_endpoints is owned by webhooks"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/2026_10_13_000023_create_v_webhook_deliveries_table.php",
+            "owner": "webhooks",
+            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_webhook_deliveries is owned by webhooks"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/2026_10_13_000024_create_v_drive_change_heads_table.php",
+            "owner": "drive",
+            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_drive_change_heads is owned by drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/database/migrations/2026_10_13_000025_create_v_drive_changes_table.php",
+            "owner": "drive",
+            "why": "architecture#packages (+D28 scan_*, D29 outbox): v_drive_changes is owned by drive"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/config/vaulter.php",
+            "owner": "core",
+            "action": "split",
+            "phase": "P4",
+            "note": "sections by owner (drive/media/webhooks/documents); kernel sections stay; details in identities/config (P2.3)",
+            "why": "architecture#packages: the vaulter.* root is split — sections go to their owners, kernel sections stay"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/routes/api.php",
+            "owner": "core",
+            "action": "split",
+            "phase": "P4",
+            "note": "routes by owner of the controller (drive/documents/webhooks); kernel keeps only the registrar; details in identities/http (P2.3)",
+            "why": "architecture#packages: the routes file registers the routes of every domain controller"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::schemaConnection",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: generic id/host-key/counter/connection helpers stay in core (architecture#kernel Идентичность)"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::dbConnection",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: generic id/host-key/counter/connection helpers stay in core (architecture#kernel Идентичность)"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::table",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: generic id/host-key/counter/connection helpers stay in core (architecture#kernel Идентичность)"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::ids",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: generic id/host-key/counter/connection helpers stay in core (architecture#kernel Идентичность)"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::tenant",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: generic id/host-key/counter/connection helpers stay in core (architecture#kernel Идентичность)"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::hasForeignKey",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: generic id/host-key/counter/connection helpers stay in core (architecture#kernel Идентичность)"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::assertEnforcedMysqlChecks",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: generic id/host-key/counter/connection helpers stay in core (architecture#kernel Идентичность)"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::counterColumn",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "note": "generic BIGINT counter column (node sequence, state versions, epochs)",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: generic id/host-key/counter/connection helpers stay in core (architecture#kernel Идентичность)"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::binaryColumn",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "note": "generic binary column (yjs_state)",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: generic id/host-key/counter/connection helpers stay in core (architecture#kernel Идентичность)"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::ipColumn",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "note": "generic column helper (named after the activity ip column)",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: generic id/host-key/counter/connection helpers stay in core (architecture#kernel Идентичность)"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::nameKeyColumn",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "note": "generic collation helper (name_key byte compare); consumed by drive nodes",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: generic id/host-key/counter/connection helpers stay in core (architecture#kernel Идентичность)"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::panelDiscriminator",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "note": "generic helper emitted by several owners tables",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: generic id/host-key/counter/connection helpers stay in core (architecture#kernel Идентичность)"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::scanInteger",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "note": "generic signed-counter helper named after the scan tables (D28); rename in P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: generic id/host-key/counter/connection helpers stay in core (architecture#kernel Идентичность)"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::scanEnum",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "note": "generic enum column helper named after the scan tables (D28); rename in P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: generic id/host-key/counter/connection helpers stay in core (architecture#kernel Идентичность)"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::scanReference",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "note": "generic reference-column helper named after the scan tables (D28); rename in P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: generic id/host-key/counter/connection helpers stay in core (architecture#kernel Идентичность)"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::createAll",
+            "owner": "core",
+            "action": "split",
+            "phase": "P4",
+            "note": "orchestration goes to the owners; core keeps only generic helpers",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: the orchestration over the ENTITIES list moves to the owners"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::dropAll",
+            "owner": "core",
+            "action": "split",
+            "phase": "P4",
+            "note": "orchestration goes to the owners; core keeps only generic helpers",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: the orchestration over the ENTITIES list moves to the owners"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::createTable",
+            "owner": "core",
+            "action": "split",
+            "phase": "P4",
+            "note": "orchestration goes to the owners; core keeps only generic helpers",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: the orchestration over the ENTITIES list moves to the owners"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::dropTable",
+            "owner": "core",
+            "action": "split",
+            "phase": "P4",
+            "note": "orchestration goes to the owners; core keeps only generic helpers",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: the orchestration over the ENTITIES list moves to the owners"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::afterCreate",
+            "owner": "core",
+            "action": "split",
+            "phase": "P4",
+            "note": "per-entity steps go to the owners of their tables; core keeps only generic helpers",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: afterCreate dispatches per-entity steps (indexes, CHECKs, head FKs) of every owner"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::addHeadForeignKey",
+            "owner": "core",
+            "action": "split",
+            "phase": "P4",
+            "note": "split by owner of the cycle: files<->file_revisions drive, documents<->document_revisions documents; create+deferred head FK in the last create migration of the cycle",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: mutual head FKs files<->file_revisions (drive) and documents<->document_revisions (documents) at SchemaBuilder::addHeadForeignKey (source-review#code-facts)"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::dropHeadForeignKey",
+            "owner": "core",
+            "action": "split",
+            "phase": "P4",
+            "note": "split by owner of the cycle: the head FK is dropped before the tables of drive/documents",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: the reverse rollback of the head FKs (source-review#code-facts)"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::defineDrives",
+            "owner": "drive",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::defineNodes",
+            "owner": "drive",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::defineBlobs",
+            "owner": "media",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of media"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::defineFiles",
+            "owner": "drive",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::defineFileRevisions",
+            "owner": "drive",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::defineFileRevisionBlobs",
+            "owner": "drive",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::defineNodeGrants",
+            "owner": "drive",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::defineNodeShares",
+            "owner": "drive",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::defineNodeComments",
+            "owner": "documents",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of documents"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::defineNodeUserStates",
+            "owner": "drive",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::defineDocuments",
+            "owner": "documents",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of documents"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::defineDocumentRevisions",
+            "owner": "documents",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of documents"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::defineUploadSessions",
+            "owner": "drive",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::defineUploadParts",
+            "owner": "drive",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::defineActivity",
+            "owner": "drive",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::defineWebhookEndpoints",
+            "owner": "webhooks",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of webhooks"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::defineWebhookDeliveries",
+            "owner": "webhooks",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of webhooks"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::defineDriveChangeHeads",
+            "owner": "drive",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::defineDriveChanges",
+            "owner": "drive",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::defineScanTable",
+            "owner": "drive",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive (D28 scan_*)"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::defineUploadCleanup",
+            "owner": "drive",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::addNodeSequence",
+            "owner": "drive",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::addActivityCreatedAtIndex",
+            "owner": "drive",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::addActivityContextGinIndex",
+            "owner": "drive",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::addDocumentContentGinIndex",
+            "owner": "documents",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of documents"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::addShareExpiryIndex",
+            "owner": "drive",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::addTrashedAtIndex",
+            "owner": "drive",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::addUploadSweeperIndex",
+            "owner": "drive",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::addGrantUniqueIndex",
+            "owner": "drive",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::addOwnerUniqueIndex",
+            "owner": "drive",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::addSiblingUniqueIndex",
+            "owner": "drive",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::addSingleRootIndex",
+            "owner": "drive",
+            "action": "move",
+            "phase": "P4",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: domain DDL/index of a table of drive"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::defineOutbox",
+            "owner": "core",
+            "action": "keep",
+            "phase": "P3",
+            "note": "D29 reshapes the outbox tables (v_outbox, v_outbox_consumers, v_outbox_deliveries)",
+            "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: v_outbox is core-owned (D29)"
+        }
+    ]
+}

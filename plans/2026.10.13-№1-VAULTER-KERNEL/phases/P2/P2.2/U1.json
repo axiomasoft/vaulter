@@ -1,0 +1,53 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:unit:v1",
+  "id": "U1",
+  "item": "P2.2",
+  "title": "Движок target-map, TargetMapTest и правила не-core пакетов",
+  "goal": "lib/TargetMap.php + generators/target-map.php (--write/--check/--report [--rules=<basename>]), TargetMapTest (rule engine синтетика + реальная сверка), регистрация в suites.json, rules/other-packages.json.",
+  "files": [
+    "scripts/inventory/lib/TargetMap.php",
+    "scripts/inventory/generators/target-map.php",
+    "tests/Repo/Arch/TargetMapTest.php",
+    "tests/suites.json",
+    "tests/Repo/Arch/Fixtures/target-map/rules/other-packages.json"
+  ],
+  "checks": [
+    {
+      "id": "V1",
+      "cmd": "scripts/t sqlite -p repo -- tests/Repo/Arch/TargetMapTest.php --filter=engine",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "scripts/php84 php scripts/inventory/inventory.php target-map --report --rules=other-packages",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "mode": "self",
+  "instructions": "Синтетические тесты назвать `rule engine: …` (их выбирает --filter=engine); реальный тест `matches the committed target-map` до U6 красный — это ожидаемо. other-packages.json `scope`: `Vaulter\\Media\\`, `Vaulter\\Drive\\`, `Vaulter\\Documents\\`, `Vaulter\\Documents\\Database\\Factories\\`, `Vaulter\\Azgard\\`, `Vaulter\\Filament\\`, `path:packages/media/`, `path:packages/drive/`, `path:packages/documents/`, `path:packages/azgard/`, `path:packages/filament/`; правила: prefix каждого namespace keep/stay; исключения из p2-design#type-map и guidance пункта (documents Collaboration/** и JWT → collaboration P5; media BlobStore::attach/detach member split → drive; BlobGarbageCollector/BlobReconciler note D23). Не создавать остальные rules-файлы — их пишут U2–U5.",
+  "status": "accepted",
+  "outcome": {
+    "agent": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high"
+    },
+    "at": "2026-10-13T20:33:11Z",
+    "notes": "rerun: zone report / full checks green",
+    "changed": [
+      "scripts/inventory/lib/TargetMap.php",
+      "scripts/inventory/generators/target-map.php",
+      "tests/Repo/Arch/TargetMapTest.php",
+      "tests/suites.json",
+      "tests/Repo/Arch/Fixtures/target-map/rules/other-packages.json"
+    ]
+  },
+  "updated_at": "2026-10-13T20:33:11Z",
+  "kind": "implementation"
+}

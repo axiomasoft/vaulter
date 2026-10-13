@@ -1591,6 +1591,7 @@
           ],
           "files": [
             "tests/Repo/Arch/InventoryHarnessTest.php",
+            "tests/Repo/Arch/TargetMapTest.php",
             "tests/Repo/TestGroupsTest.php",
             "tests/Repo/TestRunnerTest.php",
             "tests/Repo/TestSelectTest.php",
