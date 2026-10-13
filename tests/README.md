@@ -91,10 +91,15 @@ whose database name ends in `_test`). The lower-level `scripts/test-db.sh` stays
 
 ## Run policy
 
-- **While working:** the named tests of the change, or `scripts/t --changed`, plus Pint/PHPStan of the touched package.
-  A server engine only when the change touches a schema, a query, a transaction or locking (`--db=pgsql|mysql`).
-- **Full** (`--full`, every package, every engine) is a qualification run on frozen code, once per phase, not per change.
-  Run it on a full affected plan only when `--changed` refuses with exit 2.
+- **While working (local):** SQLite plus one server engine, **pgsql**. `scripts/t --changed --db=pgsql` (`make test-changed`)
+  or the named tests of the change, plus Pint/PHPStan of the touched package. The server engine only when the change
+  touches a schema, a query, a transaction or locking. One PHP (8.4), one engine matrix cell, no mysql locally.
+  Why pgsql: its server lives in `/dev/shm` and is 10-20x faster than mysql, whose AppArmor profile forbids tmpfs
+  (core `DatabaseMigrations` partition: pgsql 32 s, mysql 702 s; `OpenApiTestCase`: sqlite 6 s, pgsql 23 s, mysql 411 s).
+- **Before closing a plan (and in CI):** the complete matrix once on frozen code — `scripts/t all --full`
+  (sqlite+pgsql+mysql), Pint/PHPStan of every suite, Node suites. An engine-specific failure found there is fixed then;
+  it is not a reason to run mysql on every change. mysql alone: `scripts/t mysql -p <pkg> --group=database`.
+- **Full** is never run per change. Run it on a full affected plan only when `--changed` refuses with exit 2.
 - **Coverage** runs weekly in CI. **Mutation and load/k6/benchmarks** run only when the owner asks for them.
 - Report what really ran: the engine, the skips and the exit codes. A skipped or failed check is not a pass; a missing
   engine or an unavailable stand makes a qualification incomplete.

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P1.9",
   "title": "Квалификационный прогон P1 и отчёт до/после",
-  "status": "todo",
+  "status": "blocked",
   "summary": "Полный прогон всех наборов на sqlite/pgsql/mysql через `scripts/t all --full`, сравнение числа тестов с baseline, таблица «до/после» по наборам и движкам; регрессии P1 исправлены.",
   "why": "Единственное место долгого прогона фазы (D4); доказывает, что ускорение не потеряло тестов.",
   "scope": {
@@ -129,6 +129,34 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T10:23:03Z"
+  "result": {
+    "started_at": "2026-10-13T15:44:32Z",
+    "finished_at": "2026-10-13T17:47:58Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "sonnet-5.5",
+      "effort": "medium",
+      "session": "d75c9cd8-d44b-44ac-b463-fc6003e7d43e"
+    },
+    "notes": "Local policy (sqlite+pgsql, mysql only at close) documented in tests/README.md + make test-changed; measured pgsql 32s vs mysql 702s on core DatabaseMigrations partition.",
+    "escalation": "Owner stopped the full matrix (V1) after ~1h55m; V5/V6 not run. Full run + before/after timing on a quiet machine deferred to plan closure per owner decision; partial report in artifacts/P1.9/report.md. Needs owner decision: keep P1.9 open for the closing run, or move V1 to a closing item.",
+    "checks": [
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-13T17:47:58Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-13T17:47:58Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-13T17:47:58Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-13T17:47:58Z"
 }

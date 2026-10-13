@@ -1,4 +1,4 @@
-.PHONY: help lint lint-check stan rector rector-fix mutate quality quality-fix test test-coverage ci \
+.PHONY: help test-changed lint lint-check stan rector rector-fix mutate quality quality-fix test test-coverage ci \
         e2e-migrate e2e-laravel e2e-hub e2e-smoke e2e-test e2e-up e2e-down
 
 help: ## Show this help
@@ -28,6 +28,9 @@ quality-fix: lint rector-fix ## Fix code style and apply Rector
 
 test: ## Run every default suite on SQLite through scripts/t (fast lane, no coverage)
 	scripts/t sqlite
+
+test-changed: ## Local lane: affected zones, SQLite + pgsql database tests (see tests/README.md Run policy)
+	scripts/t --changed --db=pgsql
 
 test-coverage: ## Core suite with coverage (xdebug/pcov), explicit — never part of `make test`
 	vendor/bin/pest --coverage --min=80
