@@ -1,0 +1,87 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.11",
+  "title": "Профиль прогонов на pgsql и ускорение локальной линии",
+  "status": "done",
+  "summary": "Профиль времени всех партиций на pgsql, затем ускорение самых дорогих и постоянный pgsql-сервер между прогонами; локальная линия укладывается в минуты.",
+  "why": "Владелец: локальная работа должна быть максимально быстрой (sqlite + pgsql); по P1.9 mysql ~20x медленнее, pgsql по партициям не профилирован.",
+  "scope": {
+    "include": [
+      "scripts/t, scripts/test-db.sh, scripts/db-test-env.sh и tests/suites.json: профиль и ускорение; постоянный pgsql-сервер (DB_EXTERNAL) между прогонами",
+      "TestCase/трейты тестов только для вынесения повторной миграции схемы на партицию; тестов не удалять, baseline names не менять",
+      "tests/README.md: измеренные числа и команды"
+    ],
+    "exclude": [
+      "Полная матрица, mysql, мутации, load, coverage",
+      "Продуктовый код packages/*/src"
+    ]
+  },
+  "guidance": "Профиль на pgsql: scripts/t pgsql -p <pkg> --junit=DIR по пакетам, время по файлам. Затем править только то, что в топе по времени. Не гонять mysql и полный all.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "scripts/t baseline --compare",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "scripts/t sqlite -p repo",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "test -s plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.11/profile.md",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "profile.md: время по партициям pgsql до/после",
+    "ускоренная локальная линия"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-13T17:54:42Z",
+    "finished_at": "2026-10-13T18:08:16Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "sonnet-5.5",
+      "effort": "medium",
+      "session": "d75c9cd8-d44b-44ac-b463-fc6003e7d43e"
+    },
+    "notes": "Scale::pick for 3 scale tests (157s->15s pgsql), persistent pgsql (make db-up, 8.35s->3.5s per run), README policy. BlobGcBatch seeding not optimized.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-13T18:08:16Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-13T18:08:16Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-13T18:08:16Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-13T18:08:16Z"
+}

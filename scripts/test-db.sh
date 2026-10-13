@@ -69,6 +69,14 @@ if [[ "$engine" == sqlite ]]; then
 else
     # shellcheck source=scripts/db-test-env.sh
     source "$root/scripts/db-test-env.sh"
+    # A local server started by scripts/pg-local.sh is reused when it answers (never in CI: DB_EXTERNAL decides there).
+    if [[ "$engine" == pgsql && -z "${DB_EXTERNAL:-}" && -f "$root/var/pg-local.env" ]]; then
+        # shellcheck disable=SC1091
+        source "$root/var/pg-local.env"
+        if "$PG_LOCAL_BIN/pg_isready" -q -h 127.0.0.1 -p "$DB_PORT"; then
+            export DB_EXTERNAL=1 PATH="$PG_LOCAL_BIN:$PATH"
+        fi
+    fi
     if [[ "${DB_EXTERNAL:-0}" == 1 ]]; then
         db_use_external "$engine" "$workers" || exit "$?"
     else

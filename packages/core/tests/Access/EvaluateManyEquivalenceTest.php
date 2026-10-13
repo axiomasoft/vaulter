@@ -15,6 +15,7 @@ use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Support\Identity;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\Access\RoleStubDriver;
+use Vaulter\Tests\Support\Scale;
 
 it('matches individual ACL resolution on 500 seeded random trees', function (): void {
     $seed = 20261002;
@@ -23,7 +24,8 @@ it('matches individual ACL resolution on 500 seeded random trees', function (): 
     $storage = AccessTestHelpers::storage();
     $roles = (new RoleRegistry)->keys();
 
-    for ($tree = 0; $tree < 500; $tree++) {
+    // The same seeded generator; the fast lane walks its first trees, the full run all 500.
+    for ($tree = 0, $trees = Scale::pick(500, 40); $tree < $trees; $tree++) {
         $subjects = array_map(static fn (int $id): Subject => Subject::ofModel(AccessTestHelpers::user($id)), range(1, mt_rand(1, 3)));
         $driver = Mockery::mock(PermissionDriver::class);
         $driver->shouldReceive('subjectsFor')->andReturn($subjects);

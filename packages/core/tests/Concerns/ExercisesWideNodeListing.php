@@ -13,6 +13,7 @@ use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Tests\Support\Scale;
 
 trait ExercisesWideNodeListing
 {
@@ -35,7 +36,8 @@ trait ExercisesWideNodeListing
 
         // Real descendants, not a mocked candidate list. Insert in bounded statements
         // so fixture setup itself stays below PostgreSQL's 65535-parameter limit.
-        $count = 65_540;
+        // Full run: above PostgreSQL's 65535 bind limit. Fast lane: above the 1_000 binding budget asserted below, same code path.
+        $count = Scale::pick(65_540, 2_500);
         $connection = $anchor->getConnection();
         for ($start = 1; $start <= $count; $start += 500) {
             $rows = [];

@@ -81,7 +81,8 @@
     "P1.6",
     "P1.7",
     "P1.8",
-    "P1.9"
+    "P1.9",
+    "P1.11"
   ],
   "batches": [
     {
@@ -147,12 +148,19 @@
         "P1.9"
       ],
       "mode": "recommended"
+    },
+    {
+      "id": "BP1-11",
+      "items": [
+        "P1.11"
+      ],
+      "mode": "recommended"
     }
   ],
   "closed": {
-    "at": "2026-10-13T17:47:58Z",
+    "at": "2026-10-13T18:08:16Z",
     "result": "blocked",
-    "summary": "10 item(s): 3 done, 6 done_with_deviations, 1 blocked"
+    "summary": "11 item(s): 4 done, 6 done_with_deviations, 1 blocked"
   },
   "sections": [
     {

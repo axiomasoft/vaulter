@@ -96,6 +96,9 @@ whose database name ends in `_test`). The lower-level `scripts/test-db.sh` stays
   touches a schema, a query, a transaction or locking. One PHP (8.4), one engine matrix cell, no mysql locally.
   Why pgsql: its server lives in `/dev/shm` and is 10-20x faster than mysql, whose AppArmor profile forbids tmpfs
   (core `DatabaseMigrations` partition: pgsql 32 s, mysql 702 s; `OpenApiTestCase`: sqlite 6 s, pgsql 23 s, mysql 411 s).
+- **Local speed-ups:** `make db-up` keeps one pgsql server in `/dev/shm` between runs (a run drops from ~8 s to ~3.5 s of
+  overhead; `make db-down` stops it). Scale tests (`Scale::pick()` in `packages/core/tests/Support/Scale.php`) run a cheap
+  equivalent of the same code path unless the run is full (`VAULTER_FULL_SEEDS=1`, set by `--full`): 157 s → 15 s on pgsql.
 - **Before closing a plan (and in CI):** the complete matrix once on frozen code — `scripts/t all --full`
   (sqlite+pgsql+mysql), Pint/PHPStan of every suite, Node suites. An engine-specific failure found there is fixed then;
   it is not a reason to run mysql on every change. mysql alone: `scripts/t mysql -p <pkg> --group=database`.
