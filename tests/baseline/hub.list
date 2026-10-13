@@ -1,0 +1,13 @@
+hocuspocus-server/test/collab-expiry.test.js
+hocuspocus-server/test/config.test.js
+hocuspocus-server/test/e2e/restore-epoch.e2e.js
+hocuspocus-server/test/epoch-fence.test.js
+hocuspocus-server/test/load-seed.test.js
+hocuspocus-server/test/on-connect.test.js
+hocuspocus-server/test/readonly.test.js
+hocuspocus-server/test/redis-extension-wiring.test.js
+hocuspocus-server/test/schema-parity.test.js
+hocuspocus-server/test/security.test.js
+hocuspocus-server/test/v1-paths.test.js
+hocuspocus-server/test/webhook.test.js
+hocuspocus-server/test/websocket-hardening.test.js

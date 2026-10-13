@@ -114,3 +114,6 @@ load/gates/__pycache__/
 .claude/maind-*.sh
 .claude/settings.json
 .claude/agent-pack.lock.json
+
+# Local quality/baseline run output (plans VLT-LOAD, KERNEL P1)
+/var/

@@ -1,0 +1,303 @@
+tests/a11y/drive.test.ts > VaulterDrive — keyboard scenarios > Delete trashes the focused node with its etag, then focus lands on the neighbour
+tests/a11y/drive.test.ts > VaulterDrive — keyboard scenarios > Enter on a folder navigates into it
+tests/a11y/drive.test.ts > VaulterDrive — keyboard scenarios > F2 opens the name dialog prefilled; submitting renames with the etag
+tests/a11y/drive.test.ts > VaulterDrive — keyboard scenarios > shows a mutation failure in an alert region
+tests/a11y/drive.test.ts > VaulterUploader — failures are announced > exposes an assertive live region that receives the failure text
+tests/a11y/node-list.test.ts > VaulterNodeList — focus after a mutation > does not steal focus from elsewhere on the page when a row is removed
+tests/a11y/node-list.test.ts > VaulterNodeList — focus after a mutation > keeps one tab stop on the neighbour after the removal
+tests/a11y/node-list.test.ts > VaulterNodeList — focus after a mutation > moves focus to the next row when the focused row is removed
+tests/a11y/node-list.test.ts > VaulterNodeList — focus after a mutation > moves focus to the previous row when the last row is removed
+tests/a11y/node-list.test.ts > VaulterNodeList — keyboard > ArrowDown / ArrowUp move focus between rows and stop at the ends
+tests/a11y/node-list.test.ts > VaulterNodeList — keyboard > Enter opens the focused node, Space selects it
+tests/a11y/node-list.test.ts > VaulterNodeList — keyboard > F2 and Delete do nothing when the caller lacks the ability or the action is not offered
+tests/a11y/node-list.test.ts > VaulterNodeList — keyboard > F2 asks to rename and Delete asks to trash the focused node
+tests/a11y/node-list.test.ts > VaulterNodeList — keyboard > Home and End jump to the first and last row, and the tab stop follows the focus
+tests/a11y/node-list.test.ts > VaulterNodeList — keyboard > ignores keys pressed on a button inside a row
+tests/a11y/node-list.test.ts > VaulterNodeList — keyboard > keeps every row action reachable by keyboard (buttons stay in the tab order)
+tests/a11y/node-list.test.ts > VaulterNodeList — listbox semantics > accepts a custom accessible name
+tests/a11y/node-list.test.ts > VaulterNodeList — listbox semantics > is a labelled listbox of options, with exactly one tab stop
+tests/a11y/node-list.test.ts > VaulterNodeList — listbox semantics > moves the single tab stop to the selected row
+tests/a11y/node-list.test.ts > VaulterNodeList — listbox semantics > reflects the selection in aria-selected
+tests/api/client.test.ts > createVaulterClient — API version guard > accepts the supported major once and stops checking
+tests/api/client.test.ts > createVaulterClient — API version guard > does not decide on a response that names no version
+tests/api/client.test.ts > createVaulterClient — API version guard > rejects a server speaking another major version, and every later call, without fetching again
+tests/api/client.test.ts > createVaulterClient — preconditions (If-Match) > attaches the etag to file revision uploads as multipart
+tests/api/client.test.ts > createVaulterClient — preconditions (If-Match) > does not send If-Match on reads and on non-validated mutations
+tests/api/client.test.ts > createVaulterClient — preconditions (If-Match) > reports a missing ETag header as null instead of inventing one
+tests/api/client.test.ts > createVaulterClient — preconditions (If-Match) > sends the opaque etag verbatim in If-Match for every node mutation
+tests/api/client.test.ts > createVaulterClient — preconditions (If-Match) > takes the document validator from the ETag response header
+tests/api/client.test.ts > createVaulterClient — requests > builds download URLs without fetching
+tests/api/client.test.ts > createVaulterClient — requests > creates a folder with a snake_case body
+tests/api/client.test.ts > createVaulterClient — requests > creates a grant with the subject object and a share with snake_case fields
+tests/api/client.test.ts > createVaulterClient — requests > exports a document with the filename the server sent
+tests/api/client.test.ts > createVaulterClient — requests > honours baseUrl, extra headers and the CSRF token
+tests/api/client.test.ts > createVaulterClient — requests > lists children with the parent and cursor as query and keeps the page meta
+tests/api/client.test.ts > createVaulterClient — requests > maps trash.empty to the purged count
+tests/api/client.test.ts > createVaulterClient — requests > reads the change cursor and pages the feed
+tests/api/client.test.ts > createVaulterClient — requests > resolves a 204 to undefined
+tests/api/client.test.ts > createVaulterClient — requests > returns no page/total fields: lists are cursor-only
+tests/api/client.test.ts > createVaulterClient — requests > sends share access headers for a public share
+tests/api/errors.test.ts > VaulterApiError.fromResponse > flags a 412 as a conflict
+tests/api/errors.test.ts > VaulterApiError.fromResponse > maps a JSON content type with an unparsable or foreign body to http_<status>
+tests/api/errors.test.ts > VaulterApiError.fromResponse > maps an HTML proxy error to http_<status> without throwing a parse error
+tests/api/errors.test.ts > VaulterApiError.fromResponse > maps an empty body (504) to http_504
+tests/api/errors.test.ts > VaulterApiError.fromResponse > parses a problem+json body into code, detail, requestId, meta and errors
+tests/api/errors.test.ts > client error surface > throws VaulterApiError with the problem code from a failed call
+tests/api/uploads.test.ts > resumable uploads — abort during the create request > deletes the tus session that was created after abort() was called, and never uploads
+tests/api/uploads.test.ts > resumable uploads — abort during the create request > refuses an empty file over S3 multipart before creating a session the server cannot complete
+tests/api/uploads.test.ts > resumable uploads — s3-multipart > uploads numbered parts and completes the session
+tests/api/uploads.test.ts > resumable uploads — tus > aborts the session on the server and stops the loop
+tests/api/uploads.test.ts > resumable uploads — tus > creates the session, resumes from the server offset and PATCHes until the node is created
+tests/api/uploads.test.ts > resumable uploads — tus > sends If-Match when replacing the content of an existing file
+tests/components.test.ts > VaulterCommentsPanel > announces a failed load and offers the next page
+tests/components.test.ts > VaulterCommentsPanel > does not auto-load when autoLoad is false
+tests/components.test.ts > VaulterCommentsPanel > mounts and loads the node's comments on mount
+tests/composables.test.ts > useComments > appends a created comment and drops a removed one
+tests/composables.test.ts > useComments > appends the next page
+tests/composables.test.ts > useComments > lists a node's comments into reactive state and keeps the cursor
+tests/contract/fixtures.test.ts > openapi examples are assignable to the generated client types > Drive, Grant, Share, FileRevision and the change feed keep their enums
+tests/contract/fixtures.test.ts > openapi examples are assignable to the generated client types > Node: enum values and the shape of a presentation-less node
+tests/contract/fixtures.test.ts > the client returns what the server sent > documents.content keeps the body keys and adds only the etag
+tests/contract/fixtures.test.ts > the client returns what the server sent > drives.get and shares/grants lists unwrap the data envelope
+tests/contract/fixtures.test.ts > the client returns what the server sent > nodes.get yields an object with exactly the keys of the example
+tests/contract/problem.test.ts > problem+json examples > 412 becomes node_sequence_mismatch with the request id and the node in meta
+tests/contract/problem.test.ts > problem+json examples > 422 keeps the field errors map
+tests/contract/problem.test.ts > problem+json examples > 428 becomes precondition_required naming the missing header
+tests/document-node.test.ts > VaulterDocumentNode > a successful session clears an earlier failure, so the editor is no longer read-only
+tests/document-node.test.ts > VaulterDocumentNode > accepts a host-provided editor component through the slot using h()
+tests/document-node.test.ts > VaulterDocumentNode > autosaves with the loaded ETag and reports a lost race (412) through the conflict slot and event
+tests/document-node.test.ts > VaulterDocumentNode > falls back to the autosave path ONLY when the session endpoint says collaboration_unavailable
+tests/document-node.test.ts > VaulterDocumentNode > is read-only for a caller without the edit ability, and ignores edits
+tests/document-node.test.ts > VaulterDocumentNode > mounts the editor in COLLABORATIVE mode for a collaborative document
+tests/document-node.test.ts > VaulterDocumentNode > mounts the slot editor with the loaded content for a non-collaborative document
+tests/document-node.test.ts > VaulterDocumentNode > opens a document in a newer schema read-only and asks to update the application
+tests/document-node.test.ts > VaulterDocumentNode > renders the fallback note when no editor is mounted in the slot
+tests/document-node.test.ts > VaulterDocumentNode > respects a read-only collaboration session
+tests/document-node.test.ts > VaulterDocumentNode > shows a load failure in the error region
+tests/document-node.test.ts > VaulterDocumentNode > stays read-only (never autosaves over a Yjs state) when the session fails for another reason
+tests/document-node.test.ts > VaulterDocumentNode > two overlapping load() calls: the superseded one is not a failed session, and the editor stays editable
+tests/drive-components.test.ts > VaulterBreadcrumb > renders crumbs and emits navigate(null) for the root and the node id for a crumb
+tests/drive-components.test.ts > VaulterDrive > does NOT rename when the name is unchanged (skips the no-op the backend rejects)
+tests/drive-components.test.ts > VaulterDrive > navigates into a folder on open (folder is handled internally) and loads its breadcrumb
+tests/drive-components.test.ts > VaulterDrive > offers download through the files route
+tests/drive-components.test.ts > VaulterDrive > opens the folder picker for the move action and moves with the node etag (no window.prompt)
+tests/drive-components.test.ts > VaulterDrive > opens the name dialog for "new folder" and creates the folder with the typed name
+tests/drive-components.test.ts > VaulterDrive > opens the name dialog prefilled for "rename" and renames with the new name and the node etag
+tests/drive-components.test.ts > VaulterDrive > renders a node list from the client and emits open-node for a file
+tests/drive-components.test.ts > VaulterDrive > surfaces a failed mutation in the error region instead of swallowing it (dialog dismissed before the await)
+tests/drive-components.test.ts > VaulterDrive > tells the user a stale etag (412) reloaded the item, and shows its current state
+tests/drive-components.test.ts > VaulterDrive > trashes after the confirm gate, with the node etag
+tests/drive-components.test.ts > VaulterDrive — stale answers > a slow breadcrumb of folder A never overwrites the trail of folder B
+tests/drive-components.test.ts > VaulterDrive — stale answers > an in-flight search does not write its hits back after navigating into a folder
+tests/drive-components.test.ts > VaulterDrive — stale answers > an in-flight search does not write its hits back after the query was cleared
+tests/drive-components.test.ts > VaulterFolderPicker > disables "Move here" at the node's CURRENT parent (a no-op move)
+tests/drive-components.test.ts > VaulterFolderPicker > emits close on the Cancel button and does not render when closed
+tests/drive-components.test.ts > VaulterFolderPicker > emits picked(folderId) after navigating into a folder, and picked(null) for the root
+tests/drive-components.test.ts > VaulterFolderPicker > excludes the node being moved from the destination list (its subtree is unreachable)
+tests/drive-components.test.ts > VaulterFolderPicker > ignores a stale folder listing when navigation has moved on (no wrong-destination move)
+tests/drive-components.test.ts > VaulterFolderPicker > keeps the moved folder hidden even when it has descendants (subtree is structurally unreachable)
+tests/drive-components.test.ts > VaulterFolderPicker > lists only folders at the current location (files are filtered out)
+tests/drive-components.test.ts > VaulterNameDialog > accepts a legal name after an illegal one and submits it
+tests/drive-components.test.ts > VaulterNameDialog > blocks ".." with an inline reason (portable-v1)
+tests/drive-components.test.ts > VaulterNameDialog > blocks "CON" with an inline reason (portable-v1)
+tests/drive-components.test.ts > VaulterNameDialog > blocks "a/b" with an inline reason (portable-v1)
+tests/drive-components.test.ts > VaulterNameDialog > blocks "a\\b" with an inline reason (portable-v1)
+tests/drive-components.test.ts > VaulterNameDialog > blocks "desktop.ini" with an inline reason (portable-v1)
+tests/drive-components.test.ts > VaulterNameDialog > blocks "nul.txt" with an inline reason (portable-v1)
+tests/drive-components.test.ts > VaulterNameDialog > blocks "say \"hi\"" with an inline reason (portable-v1)
+tests/drive-components.test.ts > VaulterNameDialog > blocks "tab\there" with an inline reason (portable-v1)
+tests/drive-components.test.ts > VaulterNameDialog > blocks "trailing." with an inline reason (portable-v1)
+tests/drive-components.test.ts > VaulterNameDialog > blocks "what?" with an inline reason (portable-v1)
+tests/drive-components.test.ts > VaulterNameDialog > blocks "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" with an inline reason (portable-v1)
+tests/drive-components.test.ts > VaulterNameDialog > disables confirm while the trimmed value is empty and enables it once non-blank
+tests/drive-components.test.ts > VaulterNameDialog > does not render when closed and seeds the field from initialValue on open
+tests/drive-components.test.ts > VaulterNameDialog > emits close on Cancel, on backdrop click and on Esc (no submit)
+tests/drive-components.test.ts > VaulterNameDialog > emits submit with the TRIMMED value on confirm, and never submits a blank
+tests/drive-components.test.ts > VaulterNameDialog > falls back to the problem detail for an unknown server reason, and ignores other errors
+tests/drive-components.test.ts > VaulterNameDialog > re-seeds from initialValue each time it re-opens (no stale value leaks through)
+tests/drive-components.test.ts > VaulterNameDialog > shows the server reason of a refused name (a drive policy stricter than portable-v1)
+tests/drive-components.test.ts > VaulterNameDialog > submits (trimmed) on Enter in the field
+tests/drive-components.test.ts > VaulterNodeList > emits action with the node when a row action is clicked
+tests/drive-components.test.ts > VaulterNodeList > emits open on dblclick and select on click
+tests/drive-components.test.ts > VaulterNodeList > exposes the document type of a document row
+tests/drive-components.test.ts > VaulterNodeList > falls back to updated_at for a node whose content was never modified
+tests/drive-components.test.ts > VaulterNodeList > gates purge on the delete ability
+tests/drive-components.test.ts > VaulterNodeList > hides actions the actor cannot do (per node abilities)
+tests/drive-components.test.ts > VaulterNodeList > marks starred nodes and shows the content modification time, not the metadata one
+tests/drive-components.test.ts > VaulterNodeList > renders the empty state when there are no nodes
+tests/drive-components.test.ts > VaulterUploader > announces a failed upload in an assertive live region
+tests/drive-components.test.ts > VaulterUploader > uploads a (small) picked file, shows progress and emits uploaded
+tests/drive-components.test.ts > VaulterUploader > uses the resumable path for large files and tracks byte progress
+tests/drive-components.test.ts > nodeDisplay helpers > buckets nodes by kind / mime / extension
+tests/drive-components.test.ts > nodeDisplay helpers > formats byte sizes humanely (and blanks an unsized node)
+tests/drive-composables.test.ts > useActivity > reads the drive feed or the node feed with the cursor
+tests/drive-composables.test.ts > useDocument > a missing precondition (428) is not a conflict
+tests/drive-composables.test.ts > useDocument > a stale save (412) keeps the local edits, re-reads the head and sets conflict
+tests/drive-composables.test.ts > useDocument > debounces autosave: a single save with the loaded etag fires after the debounce window
+tests/drive-composables.test.ts > useDocument > flush() saves the pending content immediately
+tests/drive-composables.test.ts > useDocument > loads the content and keeps its ETag for the next save
+tests/drive-composables.test.ts > useDocument > refuses to save before anything is loaded or set
+tests/drive-composables.test.ts > useDocument > refuses to save without an ETag (the header was not exposed): an integration error
+tests/drive-composables.test.ts > useDocument — overlapping saves > a failed save does not block the ones queued after it
+tests/drive-composables.test.ts > useDocument — overlapping saves > an explicit save supersedes the pending autosave instead of leaving its timer armed
+tests/drive-composables.test.ts > useDocument — overlapping saves > queues a second save behind the first, so it carries the tag the first answered
+tests/drive-composables.test.ts > useDrive > loads the drive
+tests/drive-composables.test.ts > useGrants > lists, prepends a new grant and revokes by id
+tests/drive-composables.test.ts > useNodes > a missing precondition (428) is an integration error: rethrown, no re-read, no conflict
+tests/drive-composables.test.ts > useNodes > a stale etag (412) > clears the conflict on the next mutation
+tests/drive-composables.test.ts > useNodes > a stale etag (412) > drops the row when the re-read finds the node gone
+tests/drive-composables.test.ts > useNodes > a stale etag (412) > re-reads the node, sets conflict and still rejects
+tests/drive-composables.test.ts > useNodes > drops a node from the list after trash, sending its etag
+tests/drive-composables.test.ts > useNodes > loads a folder and updates the reactive list after createFolder
+tests/drive-composables.test.ts > useNodes > navigates into a folder and re-lists with the new parent
+tests/drive-composables.test.ts > useNodes > pages with the cursor and stops at the last page
+tests/drive-composables.test.ts > useNodes > sends the node etag verbatim for rename, move, restore and purge
+tests/drive-composables.test.ts > useNodes > stars and unstars a node in place
+tests/drive-composables.test.ts > useNodes — a late response never rolls a row back > does not bring back a node that was trashed while the listing was in flight
+tests/drive-composables.test.ts > useNodes — a late response never rolls a row back > keeps a starred row when a snapshot from before the star arrives late
+tests/drive-composables.test.ts > useNodes — a late response never rolls a row back > keeps the renamed row (and its etag) when a listing built before the rename arrives after it
+tests/drive-composables.test.ts > useNodes — a late response never rolls a row back > takes the page of the newest listing when an older one answers last
+tests/drive-composables.test.ts > useRevisions > lists, snapshots, sets retention and restores with the document ETag
+tests/drive-composables.test.ts > useShares > rotates a link (new token once) and forgets the token of a revoked link
+tests/drive-composables.test.ts > useShares > surfaces the one-time token via lastCreated and prepends the share
+tests/drive-composables.test.ts > useUpload > captures the error and resets the uploading flag on failure
+tests/drive-composables.test.ts > useUpload > reports progress 0..1 during a resumable upload
+tests/drive-create-abilities.test.ts > VaulterDrive creation abilities > uses the current folder ability (folder, create=false)
+tests/drive-create-abilities.test.ts > VaulterDrive creation abilities > uses the current folder ability (folder, create=true)
+tests/drive-create-abilities.test.ts > VaulterDrive creation abilities > uses the current folder ability (null, create=false)
+tests/drive-create-abilities.test.ts > VaulterDrive creation abilities > uses the current folder ability (null, create=true)
+tests/exports.test.ts > public exports > has a default export: the plugin
+tests/exports.test.ts > public exports > has no leftovers of the pre-v1 surface
+tests/exports.test.ts > public exports > matches the export snapshot
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > .DS_Store → .DS_Store
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > COM digit → COM0
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > LPT superscript digit → LPT¹.log
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > Mongolian vowel separator leading → ᠎file
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > Mongolian vowel separator trailing → file᠎
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > accepts ordinary names
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > angle bracket → a<b
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > asterisk → *.txt
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > base rule: C1 control character → ab
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > base rule: backslash → a\b
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > base rule: control character → ab
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > base rule: empty → 
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > base rule: lone surrogate is not valid UTF-8 → a�b
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > base rule: path alias → ..
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > base rule: separator → a/b
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > base rule: single dot → .
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > base rule: too long (ASCII) → aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > base rule: too long (UTF-8 bytes) → жжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжж
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > checks the base rules before the portable ones, as the server does
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > colon → a:b
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > desktop.ini → Desktop.INI
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > device name any case → con
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > device name with extension → CON.txt
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > device name, several extensions → nul.tar.gz
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > does not treat a byte order mark at the edge as a space (the server accepts it)
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > double quote → say "hi"
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > judges the NFC form, like the server
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > leading space →  a.txt
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > lists exactly the closed set of reasons the server may answer
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > no-break space edge →  a
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > pipe → a|b
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > question mark → why?
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > trailing dot → a.txt.
+tests/naming.test.ts > portableNameReason mirrors the server portable-v1 policy > trailing space → a.txt 
+tests/node-collaboration.test.ts > createCollaborationSession > a server schema newer than the editor supports is read-only with a warning flag
+tests/node-collaboration.test.ts > createCollaborationSession > does not ask for a schema check when the editor declares no version
+tests/node-collaboration.test.ts > createCollaborationSession > opens a ro session read-only, so the editor must be editable: false
+tests/node-collaboration.test.ts > createCollaborationSession > requests the session of the node and opens the transport on a fresh Y.Doc
+tests/node-collaboration.test.ts > openCollaborationTransport > builds a hocuspocus session with mapped params and lifts awareness
+tests/node-collaboration.test.ts > openCollaborationTransport > is read-only for a ro session
+tests/node-collaboration.test.ts > openCollaborationTransport > reads the hub's terminal closes
+tests/node-collaboration.test.ts > useCollaboration > connect() during an epoch reopen leaves exactly one live provider (the reopen is discarded)
+tests/node-collaboration.test.ts > useCollaboration > disconnect() during a reopen cancels it: no provider is opened afterwards
+tests/node-collaboration.test.ts > useCollaboration > does not call onEpochChanged for a token renewal
+tests/node-collaboration.test.ts > useCollaboration > fetches the session and opens the provider on its Y.Doc
+tests/node-collaboration.test.ts > useCollaboration > is read-only for a ro session
+tests/node-collaboration.test.ts > useCollaboration > on 4403 forbidden renews the session (read-only now) on the same Y.Doc
+tests/node-collaboration.test.ts > useCollaboration > on 4409 epoch_changed destroys the provider and Y.Doc and reopens on a NEW Y.Doc
+tests/node-collaboration.test.ts > useCollaboration > on 4422 store_refused does not reopen: it reports an error and stays disconnected
+tests/node-collaboration.test.ts > useCollaboration > on epoch_changed lets the host re-read the content once the new Y.Doc is in place
+tests/node-collaboration.test.ts > useCollaboration > on token expiry renews the session and keeps the Y.Doc of the same room
+tests/node-collaboration.test.ts > useCollaboration > sends the supported schema version and opens a newer schema read-only
+tests/node-collaboration.test.ts > useCollaboration > surfaces a session-fetch error
+tests/node-collaboration.test.ts > useCollaboration — connect() that supersedes an epoch reopen > a superseded connect() rejects with a cancellation the caller can tell from a failure
+tests/node-collaboration.test.ts > useCollaboration — connect() that supersedes an epoch reopen > opens the new room on a NEW Y.Doc and lets the host re-read the content
+tests/ordering.test.ts > late list responses never replace a newer local state > useActivity: an older refresh answering last does not replace the newer one; loadMore is single-flight
+tests/ordering.test.ts > late list responses never replace a newer local state > useComments: a refresh from before an add does not drop the new comment, and loadMore is single-flight
+tests/ordering.test.ts > late list responses never replace a newer local state > useGrants: a list from before a grant keeps the new grant
+tests/ordering.test.ts > late list responses never replace a newer local state > useRevisions: a list from before a snapshot keeps the snapshot
+tests/ordering.test.ts > late list responses never replace a newer local state > useShares: a list from before a create does not hide the new link that lastCreated shows
+tests/ordering.test.ts > useDocument — conflict and load ordering > a save in flight when load() is called finishes first; load() then has the last word
+tests/ordering.test.ts > useDocument — conflict and load ordering > an autosave armed before a 412 never overwrites the other author: it waits for the user
+tests/ordering.test.ts > useDocument — conflict and load ordering > does not autosave while a conflict is open, even for further edits
+tests/ordering.test.ts > useNodes — loadMore > a loadMore started during a refresh neither cancels the refresh nor leaves loading stuck
+tests/ordering.test.ts > useNodes — loadMore > a refresh that starts while loadMore is in flight discards the old page
+tests/ordering.test.ts > useNodes — loadMore > does not append a locally touched row a second time when it is renamed during the page
+tests/ordering.test.ts > useNodes — loadMore > two loadMore calls in a row fetch the page once
+tests/panels.test.ts > VaulterGrantsPanel > lets the host resolve the subject before it is granted
+tests/panels.test.ts > VaulterGrantsPanel > lists grants, adds one with a subject object and revokes one by its id
+tests/panels.test.ts > VaulterGrantsPanel > shows a load failure without an unhandled rejection
+tests/panels.test.ts > VaulterSharePanel > revokes a link and removes its row
+tests/panels.test.ts > VaulterSharePanel > rotates a link from the list and shows the new token once
+tests/panels.test.ts > VaulterSharePanel > sends the commenter role and the chosen audience, never an ability mask
+tests/panels.test.ts > VaulterSharePanel > sends the previewer role and the chosen audience, never an ability mask
+tests/panels.test.ts > VaulterSharePanel > sends the reader role and the chosen audience, never an ability mask
+tests/panels.test.ts > VaulterSharePanel > sends the writer role and the chosen audience, never an ability mask
+tests/panels.test.ts > VaulterSharePanel > shows the one-time token on create and never renders a stored raw token in the list
+tests/plugin.test.ts > VaulterPlugin > end to end: an installed app mounts the built-in download viewer for a node that names it
+tests/plugin.test.ts > VaulterPlugin > falls back to English per key for an unknown locale and fills placeholders
+tests/plugin.test.ts > VaulterPlugin > merges host viewers and replaces a built-in key
+tests/plugin.test.ts > VaulterPlugin > passes i18n options through: the ru locale and message overrides
+tests/plugin.test.ts > VaulterPlugin > provide helpers wire a client and a registry into an app by hand
+tests/plugin.test.ts > VaulterPlugin > provides the client, a per-app viewer registry with the six built-in keys, and i18n
+tests/plugin.test.ts > VaulterPlugin > registers every component globally
+tests/plugin.test.ts > VaulterPlugin > uses the client given in the options instead of building one
+tests/provider-contract.test.ts > @hocuspocus/provider v4 public contract used by defaultHocuspocusProvider > exposes the `isSynced` getter and emits `synced`/`disconnect` by those names
+tests/provider-contract.test.ts > defaultHocuspocusProvider against the real @hocuspocus/provider v4 > builds a live session through the default (non-mocked) path
+tests/recipes/documents.recipe.test.ts > documents guide > autosaves, flushes and saves with the loaded ETag
+tests/recipes/documents.recipe.test.ts > documents guide > creates a document through the client
+tests/recipes/documents.recipe.test.ts > documents guide > lists the revisions
+tests/recipes/documents.recipe.test.ts > documents guide > loads the head content
+tests/recipes/documents.recipe.test.ts > documents guide > restores a revision over the current head
+tests/recipes/documents.recipe.test.ts > documents guide > takes a named snapshot
+tests/recipes/trash.recipe.test.ts > trash guide > lists the trash, trashes, restores and purges through the client
+tests/recipes/trash.recipe.test.ts > trash guide > moves and copies through the client
+tests/recipes/trash.recipe.test.ts > trash guide > restores and purges a trashed node with useNodes
+tests/shared-with-me.test.ts > VaulterSharedWithMe > refreshes on the toolbar affordance
+tests/shared-with-me.test.ts > VaulterSharedWithMe > renders the shared nodes from the client and emits open-node on open
+tests/shared-with-me.test.ts > VaulterSharedWithMe > shows the empty state when nothing is shared
+tests/shared-with-me.test.ts > VaulterSharedWithMe > surfaces a load error and keeps the mount alive
+tests/shared-with-me.test.ts > useSharedNodes > a double-click on loadMore appends the next page only once
+tests/shared-with-me.test.ts > useSharedNodes > a stale earlier refresh never overwrites a later one
+tests/shared-with-me.test.ts > useSharedNodes > a stale in-flight loadMore never clobbers a list a later refresh replaced
+tests/shared-with-me.test.ts > useSharedNodes > captures a load failure into error and clears loading
+tests/shared-with-me.test.ts > useSharedNodes > continues an empty scan-budget page to the next visible node
+tests/shared-with-me.test.ts > useSharedNodes > loads the shared nodes and exposes them on refresh
+tests/shared-with-me.test.ts > useSharedNodes > pages with loadMore when more pages exist, then stops
+tests/spreadsheet.test.ts > VaulterSpreadsheet > ignores edits when the caller cannot edit the node
+tests/spreadsheet.test.ts > VaulterSpreadsheet > loads on mount and exposes the workbook + a save through the default slot
+tests/spreadsheet.test.ts > VaulterSpreadsheet > persists with the ETag of the loaded snapshot
+tests/spreadsheet.test.ts > VaulterSpreadsheet > surfaces a load failure in the error slot
+tests/viewers/fallback.test.ts > VaulterViewer — fallback (V37) > a document whose type is not available shows the fallback with its document_type
+tests/viewers/fallback.test.ts > VaulterViewer — fallback (V37) > a node without a presentation (a folder) falls back too
+tests/viewers/fallback.test.ts > VaulterViewer — fallback (V37) > a null viewer key falls back
+tests/viewers/fallback.test.ts > VaulterViewer — fallback (V37) > an unknown viewer key mounts VaulterUnsupportedNode with the name and a download button
+tests/viewers/fallback.test.ts > VaulterViewer — fallback (V37) > has no download button when abilities.download is false (previewer)
+tests/viewers/fallback.test.ts > VaulterViewer — fallback (V37) > the download button opens the file download URL of the client
+tests/viewers/fallback.test.ts > VaulterViewer — fallback (V37) > the download button says «Скачать» in the ru locale
+tests/viewers/fallback.test.ts > VaulterViewer — fallback (V37) > the host can replace the fallback viewer itself
+tests/viewers/fallback.test.ts > VaulterViewer — registered viewers > mounts a lazily loaded viewer
+tests/viewers/fallback.test.ts > VaulterViewer — registered viewers > mounts the viewer registered under presentation.viewer.key with the node
+tests/viewers/fallback.test.ts > VaulterViewer — registered viewers > never lets server viewer props override the node
+tests/viewers/fallback.test.ts > built-in preview viewers > download viewer links the file only when abilities.download
+tests/viewers/fallback.test.ts > built-in preview viewers > image preview shows the authorised bytes through an object URL, and nothing for a previewer
+tests/viewers/fallback.test.ts > built-in preview viewers > pdf preview reports a failed download
+tests/viewers/registry.test.ts > createViewerRegistry > lists the six built-in keys the server may name
+tests/viewers/registry.test.ts > createViewerRegistry > replaces and unregisters a key
+tests/viewers/registry.test.ts > createViewerRegistry > resolves a registered component, and null for an unknown key
+tests/viewers/registry.test.ts > createViewerRegistry > turns a loader function into one stable async component
+tests/viewers/registry.test.ts > the registry belongs to one application > lets the host replace a built-in key
+tests/viewers/registry.test.ts > the registry belongs to one application > throws a clear error when no registry was provided
+tests/viewers/registry.test.ts > the registry belongs to one application > two apps with different viewers never see each other's registrations

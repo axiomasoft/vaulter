@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P1.1",
   "title": "Baseline discovery и целевые замеры без полного прогона",
-  "status": "todo",
+  "status": "done",
   "summary": "Зафиксированы все исходные full test names/counts, CI inventory и целевые замеры representative paths. Полные замеры ДО/ПОСЛЕ выполняются только квалификацией P1.9.",
   "why": "Без цифр «до» нельзя доказать ускорение и сохранность набора (П14); оценки без замера в AzGuard ошибались в 10 раз.",
   "scope": {
@@ -145,6 +145,33 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T10:01:20Z"
+  "result": {
+    "started_at": "2026-10-13T10:16:53Z",
+    "finished_at": "2026-10-13T10:27:13Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "62b03df0-0e28-40b2-b96c-153c2354a5cd"
+    },
+    "notes": "Discovery lists/counts for 9 suites (core 2002, media 198, drive 1120, documents 799, azgard 59, filament 117, load 56, hub 13 files, vue 303); targeted timings 2 reps (sqlite/pgsql/mysql, DB_PARALLEL 0/4, OPENAPI 0/1); static partition + CI + skeleton-writer inventory; full timing deferred to P1.9. Machine was under load (5-10).",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-13T10:27:13Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-13T10:27:13Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-13T10:27:13Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-13T10:27:13Z"
 }
