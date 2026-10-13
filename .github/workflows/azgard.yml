@@ -16,6 +16,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   azgard:
     # F-P4.4-02: a bare `composer install` here used to resolve exactly ONE Laravel
@@ -24,6 +28,7 @@ jobs:
     # declared Laravel/Testbench combinations to install and run.
     name: vaulter-azgard (SQLite lane, Laravel ${{ matrix.laravel }})
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     strategy:
       fail-fast: false

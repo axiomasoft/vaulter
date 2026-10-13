@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P1.2",
   "title": "CI-триггеры: мутации и нагрузка только вручную, без coverage на PR",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Мутации запускаются только из `mutation.yml` по `workflow_dispatch` с выбором пакета; `load.yml` — только `workflow_dispatch`; PR не гоняет xdebug-coverage; у всех jobs есть `timeout-minutes`, у PR-workflow — `concurrency` с отменой; политику проверяет `scripts/ci/workflow-policy.py`.",
   "why": "D3/D4: мутации уже manual, консолидировать без потери engine/floor gate; убрать automated load и xdebug coverage на PR.",
   "scope": {
@@ -150,6 +150,31 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T10:01:20Z"
+  "result": {
+    "started_at": "2026-10-13T10:42:18Z",
+    "finished_at": "2026-10-13T10:45:34Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "45618a5d-ea81-47d0-bedc-ec8ab50e49fe"
+    },
+    "notes": "mutation.yml: choice core/media/drive/documents/filament, floors/commands перенесены; mutation-jobs удалены из drive/documents/media/filament; load.yml dispatch-only; tests.yml coverage none без codecov; timeouts всех jobs, PR concurrency; workflow-policy.py + 12 unit tests. V3 не выполнен.",
+    "deviations": [
+      "baseline-guard: input rebaseline вместо PR-label; V3 actionlint недоступен (docker permission denied)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-13T10:45:34Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-13T10:45:34Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-13T10:45:34Z"
 }

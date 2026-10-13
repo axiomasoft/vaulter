@@ -7,10 +7,15 @@ on:
     branches: [main]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   vue:
     name: "@vaulter/vue (Node ${{ matrix.node }})"
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     strategy:
       fail-fast: false
@@ -45,6 +50,7 @@ jobs:
   hocuspocus:
     name: "@vaulter/hocuspocus-server (Node ${{ matrix.node }})"
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     strategy:
       fail-fast: false

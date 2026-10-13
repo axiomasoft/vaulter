@@ -1,60 +1,38 @@
 name: Load Gate
 
-# VLT-LOAD P2.6 — the harness (P2.1-P2.5) run on a PR/nightly lane, not only a laptop
-# (D14: SLO are machine-checked, a gate nobody runs does not protect `main`). Two jobs:
+# VLT-LOAD P2.6 harness, manual only (D4 / PLAN3 P1.2): load is started by hand through
+# workflow_dispatch — no PR, push or schedule trigger. Class A (error-rate, checks,
+# streaming throughput, unbounded-scan counters) is BLOCKING; class B (latency) is
+# advisory everywhere outside `lab` (D15/D20). Profile S0 is the ONLY profile that fits
+# ubuntu-latest's 4 vCPU / ~14 GiB disk (D17/D21/Q3; tiers S/M/L run on the lab-box only,
+# `slo-gates.md` §7). Jobs, selected by `inputs.run`:
 #
-#   smoke-perf  — PR + workflow_dispatch. Profile S0 (D17/D21/Q3 — the ONLY profile that
-#                 fits ubuntu-latest's 4 vCPU / ~14 GiB disk; tiers S/M/L run on the
-#                 lab-box only, `slo-gates.md` §7). Class A (error-rate, checks,
-#                 streaming throughput, unbounded-scan counters) is BLOCKING. Class B
-#                 (latency) is advisory everywhere outside `lab` (D15/D20) — it writes
-#                 a report, it never fails this job.
-#   regression  — nightly on `main` (+ workflow_dispatch). Same S0 stand, median-of-3
-#                 runs (slo-gates.md §4.3) so class-B's baseline-vs-current comparison
-#                 is not one noisy sample; updates `load/baselines/*` only through a
-#                 reviewed PR carrying the `perf-rebaseline` label (§4.4 — a silent
-#                 baseline move would make "regression" mean nothing).
-#
-# `baseline-guard` enforces that label: a PR touching `load/baselines/*` without it
-# fails outright, on every PR (cheap — no stand needed).
+#   smoke-perf     — S0 stand, one k6 run.
+#   regression     — S0 stand, median-of-3 runs (slo-gates.md §4.3) so class-B's
+#                    baseline-vs-current comparison is not one noisy sample.
+#   baseline-guard — runs with every manual run (cheap, no stand): `load/baselines/*` may
+#                    differ from the default branch only when `rebaseline` is ticked, the
+#                    manual counterpart of the old `perf-rebaseline` PR label
+#                    (slo-gates.md §4.4 — a silent baseline move would make "regression"
+#                    mean nothing).
 on:
-  pull_request:
-    branches: [main]
-    paths:
-      - 'packages/core/**'
-      - 'packages/drive/**'
-      - 'packages/media/**'
-      - 'packages/documents/**'
-      - 'packages/filament/**'
-      - 'load/**'
-      - 'plans/archive/VLT-LOAD/slo-gates.md'
-      - 'plans/archive/VLT-LOAD/reference-env.md'
-      - '.github/workflows/load.yml'
-  schedule:
-    - cron: '17 3 * * *'
   workflow_dispatch:
     # P2.7 — a dispatch must be able to pick ONE lane: measuring runner CV means five
-    # smoke-perf runs, not five smoke-perf + five 60-minute regressions. The block is
-    # byte-identical to the registration stub on `main` (a workflow is only dispatchable
-    # if a file of that name exists on the default branch — GitHub resolves the workflow
-    # by name there, then runs THIS file from the selected ref); a divergent input list
-    # between the two would fail dispatch validation.
+    # smoke-perf runs, not five smoke-perf + five 60-minute regressions.
     inputs:
       run:
         description: 'Which lane to run'
         type: choice
         options: [smoke-perf, regression, both]
         default: smoke-perf
-
-concurrency:
-  group: load-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+      rebaseline:
+        description: 'Allow load/baselines/* to differ from the default branch (reviewed rebaseline)'
+        type: boolean
+        default: false
 
 jobs:
   smoke-perf:
-    if: >-
-      github.event_name == 'pull_request'
-      || (github.event_name == 'workflow_dispatch' && inputs.run != 'regression')
+    if: inputs.run != 'regression'
     name: smoke-perf (S0, class A blocking)
     runs-on: ubuntu-latest
     # 25, not 15 (P2.6's estimate): on a real runner the job also pays for `composer
@@ -188,10 +166,8 @@ jobs:
           retention-days: 14
 
   regression:
-    if: >-
-      github.event_name == 'schedule'
-      || (github.event_name == 'workflow_dispatch' && inputs.run != 'smoke-perf')
-    name: regression (nightly, median-3)
+    if: inputs.run != 'smoke-perf'
+    name: regression (median-3)
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
@@ -355,8 +331,7 @@ jobs:
           retention-days: 30
 
   baseline-guard:
-    if: github.event_name == 'pull_request'
-    name: 'baseline diff requires the perf-rebaseline label'
+    name: 'baseline diff requires the rebaseline input'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -364,21 +339,22 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Reject a baseline diff without the perf-rebaseline label (slo-gates.md §4.4)
+      - name: Reject a baseline diff without the rebaseline input (slo-gates.md §4.4)
         env:
-          HAS_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'perf-rebaseline') }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          REBASELINE: ${{ inputs.rebaseline }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
-          CHANGED="$(git diff --name-only "${BASE_SHA}"...HEAD -- load/baselines || true)"
+          git fetch --no-tags origin "${DEFAULT_BRANCH}"
+          CHANGED="$(git diff --name-only "origin/${DEFAULT_BRANCH}"...HEAD -- load/baselines || true)"
 
           if [ -n "$CHANGED" ]; then
             echo "Changed baseline file(s):"
             echo "$CHANGED"
 
-            if [ "$HAS_LABEL" != "true" ]; then
-              echo "::error::load/baselines/* changed without the 'perf-rebaseline' PR label — baseline moves need explicit review (slo-gates.md §4.4)."
+            if [ "$REBASELINE" != "true" ]; then
+              echo "::error::load/baselines/* differs from ${DEFAULT_BRANCH} without the 'rebaseline' input — baseline moves need explicit review (slo-gates.md §4.4)."
               exit 1
             fi
 
-            echo "perf-rebaseline label present — baseline diff allowed."
+            echo "rebaseline input set — baseline diff allowed."
           fi

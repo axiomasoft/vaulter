@@ -21,6 +21,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   documents:
     # F-P4.4-02: a bare `composer install` here used to resolve exactly ONE Laravel
@@ -29,6 +33,7 @@ jobs:
     # declared Laravel/Testbench combinations to install and run.
     name: vaulter-documents (SQLite lane, Laravel ${{ matrix.laravel }})
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     strategy:
       fail-fast: false
@@ -73,78 +78,10 @@ jobs:
         working-directory: packages/documents
         run: vendor/bin/pest --type-coverage --min=100
 
-  # VLT-CANON Open risk #4 / ADR-0018 §Consequences: documents carries the XSS
-  # allow-list/decay barrier (TipTapContent, LinkSchemeValidator,
-  # InvalidTipTapContentException — VLT-REMED R-01/R-11/R-12), so unlike the generic
-  # root mutation.yml lane this one GATES the PR: `--min` is set, there is no
-  # `|| true`, and Pest exits non-zero when Score drops below the floor.
-  #
-  # Native Pest mutation, not Infection (VLT-REMED D38 / P5.9): Infection 0.33.3 ships
-  # no Pest adapter — its `testFramework` enum is phpunit/phpspec/codeception/testo, so
-  # it cannot map this suite's tests to mutants at all. Own job (not a matrix step) so
-  # the coverage driver, which the SQLite lane does not need, stays off the fast lanes
-  # and the mutation run happens once rather than once per Laravel cell.
-  # D14: do not start this long --mutate lane on push. The --min floor is unchanged.
-  documents-mutation:
-    if: github.event_name == 'workflow_dispatch'
-    name: vaulter-documents (Postgres mutation gate)
-    runs-on: ubuntu-latest
-
-    env:
-      APP_ENV: testing
-      DB_CONNECTION: pgsql
-      DB_HOST: 127.0.0.1
-      DB_PORT: 5432
-      DB_DATABASE: vaulter_documents_test
-      DB_USERNAME: vaulter
-      DB_PASSWORD: secret
-
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: vaulter
-          POSTGRES_PASSWORD: secret
-          POSTGRES_DB: vaulter_documents_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U vaulter -d vaulter_documents_test"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup PHP 8.4 (with coverage driver)
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.4'
-          extensions: mbstring, pdo, pdo_pgsql, pgsql
-          coverage: xdebug
-          tools: composer:v2
-        env:
-          XDEBUG_MODE: coverage
-
-      - name: Install dependencies
-        working-directory: packages/documents
-        run: composer install --prefer-dist --no-interaction --no-progress
-
-      # R02 proved that pest-plugin-mutate v4.0.1 plus --parallel reports a false
-      # 100%. Documents has PG-only coverage, so its authoritative lane is
-      # PostgreSQL and must stay sequential and cold. The configured floor remains
-      # 95; R17's current-source cold score is measured separately.
-      - name: Mutation testing
-        working-directory: packages/documents
-        run: vendor/bin/pest --mutate --path=src --covered-only --clear-cache --min=95
-        env:
-          XDEBUG_MODE: coverage
-
   documents-pgsql:
     name: vaulter-documents (Postgres yjs/gin lane)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     env:
       DB_CONNECTION: pgsql

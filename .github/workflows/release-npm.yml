@@ -26,6 +26,7 @@ jobs:
     if: github.repository == 'axiomasoft/vaulter'
     name: Changesets release
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout

@@ -38,6 +38,7 @@ jobs:
   verify-release-sha:
     name: Verify release SHA
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
       checks: read
@@ -83,6 +84,7 @@ jobs:
     name: Split packages/${{ matrix.package }}
     needs: verify-release-sha
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     strategy:
       fail-fast: false
@@ -170,6 +172,7 @@ jobs:
     name: Verify split tags
     needs: split
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
     steps:

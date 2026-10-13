@@ -7,10 +7,15 @@ on:
     branches: [main]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   test:
     name: PHP ${{ matrix.php }} / Laravel ${{ matrix.laravel }}
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     strategy:
       fail-fast: false
@@ -32,10 +37,8 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           extensions: mbstring, pdo, pdo_sqlite, sqlite3
-          coverage: xdebug
+          coverage: none
           tools: composer:v2
-        env:
-          XDEBUG_MODE: coverage
 
       - name: Validate composer
         run: |
@@ -61,21 +64,13 @@ jobs:
           composer update --prefer-dist --no-interaction --no-progress
 
       - name: Run tests
-        run: vendor/bin/pest --ci --coverage --min=80 --coverage-clover=coverage.xml
+        run: vendor/bin/pest --ci
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: ':memory:'
-          XDEBUG_MODE: coverage
 
       - name: Type coverage (100%)
         run: composer test:types
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v7
-        with:
-          files: coverage.xml
-          fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
 
   # Postgres lane (master plan P4 #11). The default matrix above runs on in-memory
   # SQLite, where the CAS concurrency backbone is a no-op: pg_advisory_xact_lock,
@@ -99,6 +94,7 @@ jobs:
   test-pgsql:
     name: PHP 8.4 / Postgres (full schema portability lane)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     env:
       DB_CONNECTION: pgsql

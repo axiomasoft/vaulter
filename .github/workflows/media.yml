@@ -17,6 +17,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   media:
     # F-P4.4-02: a bare `composer install` here used to resolve exactly ONE Laravel
@@ -25,6 +29,7 @@ jobs:
     # declared Laravel/Testbench combinations to install and run.
     name: vaulter-media (SQLite lane, Laravel ${{ matrix.laravel }})
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     strategy:
       fail-fast: false
@@ -69,97 +74,10 @@ jobs:
         working-directory: packages/media
         run: vendor/bin/pest --type-coverage --min=100
 
-  # Native Pest mutation, not Infection (VLT-REMED D38 / P5.9): Infection 0.33.3 ships
-  # no Pest adapter, so the step this replaced never ran a single mutant — `|| true`
-  # only hid that. Own job so the coverage driver, which the SQLite lane does not need,
-  # stays off the fast lanes and mutation runs once rather than once per Laravel cell.
-  #
-  # NO `--parallel` (VLT-MUT D2). The flag made this gate incapable of failing: Pest hands each
-  # mutant subprocess the parent's argv, `--parallel` included, so the child re-enters ParaTest,
-  # dies on --mutate/--path without running a test — and a non-zero child is how Pest recognises
-  # a KILLED mutant. Every mutant was "killed"; the 100.00 % this lane reported was an artefact.
-  # Proof: plans/VLT-MUT/findings/P0.1-parallel-defect.md.
-  #
-  # TWO cold runs and one ID-union gate (VLT-MUT D6). media has driver-conditional tests in BOTH directions,
-  # so neither driver alone covers the package and
-  # `--covered-only` would leave the other driver's branches ungated. The final score merges
-  # Pest cache results by mutation ID: killed by either required driver means killed in the union.
-  # D14: do not start this long --mutate lane on push. The union floor is unchanged.
-  media-mutation:
-    if: github.event_name == 'workflow_dispatch'
-    name: vaulter-media (mutation gate)
-    runs-on: ubuntu-latest
-
-    env:
-      DB_DATABASE: vaulter_test
-      DB_USERNAME: vaulter
-      DB_PASSWORD: secret
-
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: vaulter
-          POSTGRES_PASSWORD: secret
-          POSTGRES_DB: vaulter_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U vaulter -d vaulter_test"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup PHP 8.4 (with coverage driver)
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.4'
-          extensions: mbstring, pdo, pdo_sqlite, sqlite3, pdo_pgsql, pgsql
-          coverage: xdebug
-          tools: composer:v2
-        env:
-          XDEBUG_MODE: coverage
-
-      - name: Install dependencies
-        working-directory: packages/media
-        run: composer install --prefer-dist --no-interaction --no-progress
-
-      - name: 'Mutation testing: Postgres'
-        working-directory: packages/media
-        run: |
-          vendor/bin/pest --mutate --path=src --covered-only --clear-cache --min=0
-          cp -a vendor/pestphp/pest-plugin-mutate/.temp/pest-mutate-cache "$RUNNER_TEMP/media-mutate-pgsql"
-        env:
-          DB_CONNECTION: pgsql
-          DB_HOST: 127.0.0.1
-          DB_PORT: 5432
-          XDEBUG_MODE: coverage
-
-      - name: 'Mutation testing: SQLite'
-        working-directory: packages/media
-        run: |
-          vendor/bin/pest --mutate --path=src --covered-only --clear-cache --min=0
-          cp -a vendor/pestphp/pest-plugin-mutate/.temp/pest-mutate-cache "$RUNNER_TEMP/media-mutate-sqlite"
-        env:
-          DB_CONNECTION: sqlite
-          DB_DATABASE: ':memory:'
-          XDEBUG_MODE: coverage
-
-      - name: 'Mutation gate: PostgreSQL + SQLite ID union (95%)'
-        working-directory: packages/media
-        run: >-
-          php bin/assert-mutation-union.php
-          "$RUNNER_TEMP/media-mutate-pgsql"
-          "$RUNNER_TEMP/media-mutate-sqlite"
-          95
-
   media-pgsql:
     name: vaulter-media (Postgres CAS lane)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     env:
       DB_CONNECTION: pgsql

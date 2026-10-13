@@ -9,6 +9,10 @@ on:
     paths: ['openapi/**', '.github/workflows/openapi.yml']
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 env:
   # Pinned: a floating tag would let a new oasdiff rule fail an unrelated PR.
   # Bump deliberately, together with plans/.../artifacts/P6.3/tool-pins.md.
@@ -18,6 +22,7 @@ jobs:
   breaking:
     name: Breaking changes (oasdiff)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
