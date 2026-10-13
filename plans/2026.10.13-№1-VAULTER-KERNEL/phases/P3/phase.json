@@ -1,0 +1,90 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P3",
+  "title": "Контракты ядра на месте: модули, capabilities, слоты, операции, события",
+  "design": "skeleton",
+  "goal": "Ввести финальные механизмы ядра и перевести на них существующий код, не перенося файлы между пакетами: модульная система (манифест, компиляция, seal, capabilities, enable/disable), реестр слотов и контракты слотов, OperationRunner с обязательными стадиями, механизм идемпотентности, каталоги событий и problem codes как вклады модулей, OutboxConsumer и vaulter:relay, атрибуты #[Api]/#[Spi]/#[Internal] и генерируемый манифест, telemetry context. Снять все bound()/class_exists()-переключатели корректности.",
+  "context": "Фаза C (knowledge/architecture#transition). Размер: L. Код остаётся в текущих пакетах (core содержит пока и доменные срезы), поэтому слоты drive/documents временно определены в core-неймспейсе там, где сегодня живёт понятие — перенос FQCN делает P4 по type-map; в P3 важно, чтобы *механизм* и *семантика* стали финальными. Пишутся ADR-0027 (границы ядра и модульная система, заменяет ADR-0019), ADR-0028 (слоты и пайплайн операций), ADR-0029 (идемпотентность). Каждый пакет получает класс-манифест, провайдеры регистрируются через ModuleBuilder. Фикстура стороннего модуля `tests/Fixtures/AcmeModule` использует те же слоты (I8).",
+  "contract": {
+    "consumes": [
+      "knowledge/architecture#kernel",
+      "knowledge/architecture#module-system",
+      "knowledge/architecture#extension-system",
+      "knowledge/architecture#operation-chains",
+      "knowledge/architecture#events",
+      "knowledge/architecture#idempotency-concurrency",
+      "knowledge/architecture#errors",
+      "knowledge/architecture#api-surface",
+      "knowledge/architecture#entry-point",
+      "knowledge/source-review#research-kernel",
+      "knowledge/source-review#research-idempotency",
+      "P2 type-map и p2-findings",
+      "D5",
+      "D22",
+      "D8",
+      "D11",
+      "D12",
+      "D13",
+      "D15"
+    ],
+    "produces": [
+      "Vaulter\\Modules\\{VaulterModule, ModuleBuilder, ModuleRegistry, ModuleId}, Capabilities, ExtensionRegistry, команды vaulter:modules и vaulter:module:uninstall",
+      "OperationRunner + OperationMiddleware, EventSink, OutboxConsumer, vaulter:relay",
+      "IdempotencyStore, v_idempotency_keys (миграция core), middleware Idempotency-Key, PHP через OperationContext",
+      "Реестры EventType и ProblemCode как вклады модулей, vaulter:events/vaulter:errors из реестров",
+      "Атрибуты Api/Spi/SpiKind/Internal на всей поддерживаемой поверхности, генератор манифеста вместо ручных списков",
+      "Манифесты модулей всех пакетов; I4 блокирующий, I7, I8, I10, I11 зелёные",
+      "ADR-0027, 0028, 0029",
+      "правило: packages/vue/src/api без импортов vue"
+    ],
+    "boundaries": [
+      "Нет переноса файлов между пакетами (P4)",
+      "Поведение операций не меняется, кроме отказов на ошибочные вклады и новой идемпотентности по ключу",
+      "Бюджет компиляции реестра < 2 мс/boot при 7 модулях (замер)"
+    ]
+  },
+  "scope": {
+    "include": [
+      "packages/core/src/{Modules,Operations,Events,Idempotency,Attributes,Exceptions,Configuration,Doctor,Observability,Http}",
+      "манифесты и провайдеры всех PHP-пакетов",
+      "Arch-тесты и контрактные наборы",
+      "docs/adr/0027-0029"
+    ],
+    "exclude": [
+      "Перенос моделей/миграций/FQCN по пакетам",
+      "Покрытие идемпотентностью всех операций (P6)",
+      "Коллаборационные изменения хаба (P5)"
+    ]
+  },
+  "pitfalls": [
+    "Валидация реестра в boot() произвольного провайдера — порядок случайный; только booting-колбэк ядра",
+    "Команды миграций должны грузиться даже при неготовой схеме модуля — readiness ленивая",
+    "Laravel package discovery регистрирует провайдер выключенного модуля — провайдер обязан ничего не регистрировать сам",
+    "EventType сейчас enum ядра со значениями всех модулей — строки событий неизменны",
+    "Idempotency claim и receipt — одна транзакция с мутацией; не кэш"
+  ],
+  "validation": [
+    {
+      "id": "V1",
+      "procedure": "Контрактные наборы реестра/слотов/пайплайна/идемпотентности зелёные на sqlite и pgsql; AcmeModule-фикстура проходит; I4 блокирующий без новых allowlist; квалификационный пункт P3 зелёный",
+      "expect": "все зелёные",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "Механизмы ядра и их контрактные тесты",
+    "Манифесты модулей",
+    "Атрибутированная поверхность и генератор манифеста",
+    "ADR-0027–0029",
+    "Документация изменений P3 (docs/)"
+  ],
+  "items": [],
+  "batches": [],
+  "sections": [
+    {
+      "id": "design-inputs",
+      "title": "Обязательные входы детализации",
+      "text": "Сессия детализации P3 читает до создания пунктов (точка входа — `plan.py show 2026.10.13-№1-VAULTER-KERNEL P3`):\n\n```bash\nP='python3 <planner>/scripts/plan.py'; ID=2026.10.13-№1-VAULTER-KERNEL\n$P get $ID knowledge/architecture --section kernel\n$P get $ID knowledge/architecture --section module-system\n$P get $ID knowledge/architecture --section extension-system\n$P get $ID knowledge/architecture --section operation-chains\n$P get $ID knowledge/architecture --section events\n$P get $ID knowledge/architecture --section idempotency-concurrency\n$P get $ID knowledge/architecture --section errors\n$P get $ID knowledge/architecture --section api-surface\n$P get $ID knowledge/architecture --section invariants\n$P get $ID knowledge/source-review --section research-kernel\n$P get $ID knowledge/source-review --section research-idempotency\n$P get $ID knowledge/source-review --section ecosystem-borrowed\n$P get $ID knowledge/p2-findings\n$P get $ID D5\n$P get $ID D22\n$P get $ID D8\n$P get $ID D11\n$P get $ID D12\n$P get $ID D13\n$P get $ID D15\n$P show $ID P2            # что фактически сделала предыдущая фаза, её deviations\n```\n\n**Правила для пунктов этой фазы (обязательны при детализации):**\n1. Каждый пункт имеет точные `validation` только из целевых прогонов (knowledge/test-strategy#run-policy §1): `scripts/t <engine> -p <pkg> <paths>` / `scripts/t --changed`; без мутаций (D3), без load (D4), без coverage.\n2. Последний пункт фазы — «Квалификационный прогон P3» по knowledge/test-strategy#qualification-template; только он гоняет полный набор.\n3. `task_files` точные (параллельные батчи требуют непересекающихся файлов).\n4. Крупные knowledge-документы привязываются к пункту через `reads` с `section`, а не целиком: architecture ~42 KB — читать только нужные секции.\n5. Пункт, добавивший/перенёсший каталог тестов или src, обновляет `tests/zones.json` (I19).\n6. Поправка архитектуры — новое D# с причиной и эффектом совместимости, не молча в пункте."
+    }
+  ]
+}

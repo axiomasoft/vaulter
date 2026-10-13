@@ -1,0 +1,134 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.3",
+  "title": "Единый вход scripts/t, параллельные SQLite-прогоны и baseline-сравнение",
+  "status": "todo",
+  "summary": "`scripts/t` — единственный вход для всех PHP-наборов: движок, пакет(ы), пути/фильтры/группы, параллель по умолчанию на SQLite, серверные движки через `scripts/test-db.sh`, `baseline --write|--compare`, `all --full`; `composer test*` и `make test` вызывают его.",
+  "why": "Сегодня у каждого пакета свой способ запуска, нет параллели по умолчанию и нет сравнения числа тестов (П12, П14).",
+  "scope": {
+    "include": [
+      "`scripts/t [sqlite|pgsql|mysql|all] [-p pkg[,pkg]] [--full] [--group=G] [--exclude-group=G] [-j N] [--] [pest args]`; пакеты: core (корень), media, drive, documents, azgard, filament, load; запуск каждого пакета в его каталоге и vendor",
+      "SQLite: `--parallel --processes=N` по умолчанию (N = CPU/2, ≤8; `-j` переопределяет), `-j 1` — последовательно",
+      "pgsql/mysql: делегирует `scripts/test-db.sh [-C packages/<p>] <engine>`; для core — шаги по TestCase как в `tests.yml` (список шагов в одном месте внутри scripts/t)",
+      "По умолчанию `--exclude-group=nofast` (появится в P1.5; до этого группа пуста — Pest не падает), `--full` снимает исключение и добавляет `serial`-проход без параллели",
+      "`scripts/t baseline --write|--compare [-p pkg]`: считает тесты той же командой, что P1.1, сравнивает с `tests/baseline/<suite>.count`; `--compare` падает при уменьшении без строки в `tests/baseline/CHANGES.md`",
+      "Сводка в конце: набор → движок → passed/failed/skipped/время, путь к логам `var/quality/t/…`; ненулевой код при любом падении",
+      "composer.json (корень и пакеты): `test` → `scripts/t sqlite -p <pkg>`; `test:coverage` оставить; Makefile `test` → `scripts/t sqlite`",
+      "`scripts/t --help`"
+    ],
+    "exclude": [
+      "`--changed` и зоны (P1.4)",
+      "Разметка групп (P1.5)",
+      "CI (P1.6)"
+    ]
+  },
+  "depends_on": [
+    "P1.1"
+  ],
+  "decisions": [
+    "D3",
+    "D4"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/test-strategy#practices",
+      "why": "П3, П6, П11, П12",
+      "required": true
+    },
+    {
+      "ref": "knowledge/test-strategy#lanes",
+      "why": "линии и умолчания",
+      "required": true
+    },
+    {
+      "ref": "artifact/P1.1-baseline",
+      "why": "замеры и команда подсчёта",
+      "required": true
+    },
+    {
+      "path": "scripts/test-db.sh",
+      "why": "контракт делегирования",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "scripts/t",
+      "change": "create"
+    },
+    {
+      "path": "scripts/test-db.sh",
+      "change": "modify"
+    },
+    {
+      "path": "composer.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/*/composer.json",
+      "change": "modify",
+      "note": "только scripts"
+    },
+    {
+      "path": "Makefile",
+      "change": "modify"
+    },
+    {
+      "path": "tests/baseline/CHANGES.md",
+      "change": "create"
+    }
+  ],
+  "rules": [
+    "Один вход: не вводить второго скрипта-обёртки; `scripts/test-db.sh` остаётся движком серверных прогонов.",
+    "Никогда не завершаться 0, если ни одного теста не выполнено.",
+    "Bash со `set -euo pipefail`; shellcheck-чистый, если shellcheck доступен."
+  ],
+  "guidance": "Параллель Pest на in-memory SQLite: у каждого воркера свой процесс и своя БД — проверить, что `SuiteDatabaseConnection` не конфликтует; если какой-то набор падает только в параллели — пометить файл группой `serial` в P1.5, а в этом пункте временно передать `-j 1` для набора и записать в CHANGES.md.\n\n**Образцы в соседних репозиториях экосистемы (читать с диска, не копировать в этот публичный репозиторий — AzGuard приватный):**\n- `/home/vostrikov/projects/packages/chatom/scripts/t` — образец единого входа",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash -n scripts/t && scripts/t --help",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "scripts/t sqlite -p media,azgard,filament",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "scripts/t baseline --compare -p media,azgard,filament",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "scripts/t pgsql -p media -- tests/Cas",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "scripts/t",
+    "baseline write/compare",
+    "composer/Makefile-скрипты"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T08:13:07Z"
+}

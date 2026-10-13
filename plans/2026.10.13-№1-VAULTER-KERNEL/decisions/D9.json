@@ -1,0 +1,42 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D9",
+  "title": "Владение схемой: модульные baseline-миграции 1.0 с adoption",
+  "date": "2026-10-13",
+  "status": "superseded",
+  "question": "Как перенести 43 смешанные миграции core к владельцам?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Каждый пакет — baseline-миграции 1.0 (создать | адоптировать при совпадении формы 0.3-final | отказ), preflight требует 0.3-final, файлы 0.x не поставляются, имена таблиц неизменны (knowledge/architecture#persistence)"
+    },
+    {
+      "id": "B",
+      "text": "Перенести файлы 0.x с прежними именами по владельцам с guard'ами hasTable"
+    },
+    {
+      "id": "C",
+      "text": "Оставить все миграции в core"
+    }
+  ],
+  "context": "Миграции 0.x меняют таблицы разных владельцев (напр. webhook_fanout с FK на drives); пакеты грузят vendor-миграции через runsMigrations().",
+  "decision": "A — Каждый пакет — baseline-миграции 1.0 (создать | адоптировать при совпадении формы 0.3-final | отказ), preflight требует 0.3-final, файлы 0.x не поставляются, имена таблиц неизменны (knowledge/architecture#persistence)",
+  "rationale": "B ломает установку без соседнего модуля и тянет историю 0.x навсегда; C противоречит D5. A — чистая история 1.0, установка без чужих таблиц, безопасный путь для существующих хостов через 0.3-final. Смена имён миграций — явное решение совместимости (эта запись).",
+  "consequences": [
+    "P2 строит DDL-фикстуры 0.3-final по драйверам",
+    "upgrade map: обязательный промежуточный 0.3-final",
+    "I3, I15"
+  ],
+  "applies_to": [
+    "P2",
+    "P4",
+    "P5",
+    "P7"
+  ],
+  "superseded_by": "D21",
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "agent"
+}

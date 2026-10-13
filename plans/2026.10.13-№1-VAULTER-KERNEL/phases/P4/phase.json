@@ -1,0 +1,83 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P4",
+  "title": "Разделение владения: media, drive, webhooks и облегчение core",
+  "design": "skeleton",
+  "goal": "Разнести владение по пакетам: media получает CAS-схему и контракты, drive — доменную модель (узлы, файлы, ревизии, доступ, шаринг, активность, изменения, квоты, профили) и точку входа Vaulter, новый пакет vaulter-webhooks — вебхуки; чистые create-миграции (P1.10) раскладываются по пакетам-владельцам, каждый пакет получает свой TestCase; core становится ядром.",
+  "context": "Фаза D. Размер: XL — делить на пункты по пакетам-получателям и по слоям (модели+репозитории, операции+HTTP, конфиг+команды+doctor, миграции, тесты). Оракул — type-map P2: каждый перенос сверяется с ним, отклонение — D#. После фазы I1, I2, I3, I5, I6, I9 блокирующие, allowlist пусты (кроме задокументированных адаптеров I4). Порядок: media → drive → webhooks → documents-подстройка → core-очистка → раскладка create-миграций → split/CI. ADR-0030 (владение схемой). Установок нет (D21): переносы FQCN/ключей без шимов, но документация и тесты обновляются в том же коммите.",
+  "contract": {
+    "consumes": [
+      "knowledge/architecture#packages",
+      "knowledge/architecture#ownership-map",
+      "knowledge/architecture#entry-point",
+      "knowledge/architecture#persistence",
+      "knowledge/architecture#module-system",
+      "knowledge/architecture#invariants",
+      "P2 type-map, identities; снимки схемы P1.10",
+      "P3 механизмы",
+      "D6",
+      "D21",
+      "D10",
+      "D11",
+      "D14",
+      "D18",
+      "D20"
+    ],
+    "produces": [
+      "packages/media, packages/drive с полными срезами; packages/webhooks (новый пакет, composer, split-цель, CI)",
+      "Облегчённый packages/core (только #kernel)",
+      "Create-миграции каждого пакета (блок номеров на пакет, порядок = граф зависимостей)",
+      "Свои TestCase пакетов на Vaulter\\Testing; нет ../core/tests",
+      "Фасад Vaulter\\Drive\\Facades\\Vaulter, алиас Vaulter",
+      "Матрица активации (фикстуры приложений: core+media, +drive, +documents, +webhooks) для I6",
+      "ADR-0030"
+    ],
+    "boundaries": [
+      "Имена таблиц/колонок, event types, problem codes, REST-пути неизменны",
+      "Каждый пункт оставляет все пакеты зелёными в целевых прогонах"
+    ]
+  },
+  "scope": {
+    "include": [
+      "packages/{core,media,drive,documents,azgard,filament}/**",
+      "packages/webhooks/** (новый)",
+      "composer.json корня, monorepo-split.yml, workflows пакетов",
+      "tests/zones.json"
+    ],
+    "exclude": [
+      "Пакет коллаборации (P5)",
+      "Новые фичи и изменения семантики операций"
+    ]
+  },
+  "pitfalls": [
+    "Перекрывающиеся PSR-4 префиксы (Vaulter\\ и Vaulter\\Drive\\): тип с FQCN в неймспейсе ядра не может жить в drive — FQCN меняется по type-map",
+    "Morph-алиасы/сериализованные FQCN в БД (инвентарь P2) меняются вместе с FQCN — обновить инвентарь и снимки",
+    "Фабрики моделей и Testing-хелперы переезжают с моделями",
+    "Laravel discovery: aliases фасада объявляет drive, не core",
+    "SQLite не именует FK — снимки схемы сравниваются нормализованно по драйверу"
+  ],
+  "validation": [
+    {
+      "id": "V1",
+      "procedure": "I1, I2, I3, I5, I6, I9 блокирующие с пустыми allowlist; чистая установка каждой комбинации пакетов мигрирует и откатывается на sqlite/pgsql/mysql (I15); суммарная схема совпадает со снимком P1.10, кроме изменений с D#; квалификационный пункт P4 зелёный",
+      "expect": "все зелёные",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "Пакеты с полными срезами и пакет vaulter-webhooks",
+    "Create-миграции по пакетам",
+    "Матрица активации",
+    "ADR-0030",
+    "Документация P4"
+  ],
+  "items": [],
+  "batches": [],
+  "sections": [
+    {
+      "id": "design-inputs",
+      "title": "Обязательные входы детализации",
+      "text": "Сессия детализации P4 читает до создания пунктов (точка входа — `plan.py show 2026.10.13-№1-VAULTER-KERNEL P4`):\n\n```bash\nP='python3 <planner>/scripts/plan.py'; ID=2026.10.13-№1-VAULTER-KERNEL\n$P get $ID knowledge/architecture --section packages\n$P get $ID knowledge/architecture --section ownership-map\n$P get $ID knowledge/architecture --section entry-point\n$P get $ID knowledge/architecture --section persistence\n$P get $ID knowledge/architecture --section module-system\n$P get $ID knowledge/architecture --section operation-chains\n$P get $ID knowledge/architecture --section invariants\n$P get $ID knowledge/p2-findings\n$P get $ID D6\n$P get $ID D21\n$P get $ID D10\n$P get $ID D11\n$P get $ID D14\n$P get $ID D18\n$P get $ID D20\n$P show $ID P3            # что фактически сделала предыдущая фаза, её deviations\n```\n\n**Правила для пунктов этой фазы (обязательны при детализации):**\n1. Каждый пункт имеет точные `validation` только из целевых прогонов (knowledge/test-strategy#run-policy §1): `scripts/t <engine> -p <pkg> <paths>` / `scripts/t --changed`; без мутаций (D3), без load (D4), без coverage.\n2. Последний пункт фазы — «Квалификационный прогон P4» по knowledge/test-strategy#qualification-template; только он гоняет полный набор.\n3. `task_files` точные (параллельные батчи требуют непересекающихся файлов).\n4. Крупные knowledge-документы привязываются к пункту через `reads` с `section`, а не целиком: architecture ~42 KB — читать только нужные секции.\n5. Пункт, добавивший/перенёсший каталог тестов или src, обновляет `tests/zones.json` (I19).\n6. Поправка архитектуры — новое D# с причиной и эффектом совместимости, не молча в пункте."
+    }
+  ]
+}

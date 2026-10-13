@@ -1,0 +1,120 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.4",
+  "title": "Карта зон tests/zones.json, селектор --changed и ZonesMapTest",
+  "status": "todo",
+  "summary": "`tests/zones.json` — единственный источник зон (пакеты + подзоны core) и зависимостей; `scripts/test-select.php` выбирает наборы/группы по git diff; `scripts/t --changed [--base] [--quick] [--dry-run] [--json] [--db=<engine>]`; корневой testsuite `repo` с `ZonesMapTest` и тестами селектора.",
+  "why": "Быстрая обратная связь в пунктах плана (run-policy §1) без риска «0 тестов — успех» (П1–П3).",
+  "scope": {
+    "include": [
+      "`tests/zones.json`: `zones{name:{src[],tests[],uses[],suite}}`, `harness[]`, `database[]` (заполняет P1.5), `tail[]`; зоны: `core` с подзонами (`core-kernel`, `core-access`, `core-sharing`, `core-events-webhooks`, `core-http`, `core-schema-upgrade`, `core-observability` — уточнить по импортам), `media`, `drive`, `documents`, `azgard`, `filament`, `load`, `hub`, `vue`; `uses` пакетов = граф Composer (core ← media ← drive ← documents; azgard → core сейчас; filament → drive)",
+      "Группы `zone:<name>` для подзон core в корневом `tests/Pest.php` из карты (код по образцу AzGuard `tests/Pest.php` строки 19–40)",
+      "`scripts/test-select.php --paths=…|--base=<ref> [--quick] [--json]`: diff HEAD + untracked → зоны → транзитивные потребители (`uses` наоборот) → план запуска (набор, группы); harness (`tests/Pest.php`, `*/TestCase.php`, `phpunit.xml*`, `composer.*`, `scripts/t`, `scripts/test-select.php`, `tests/zones.json`) → код 2 и сообщение «запусти scripts/t <движок> -p <пакет> полностью»; неизвестный путь → полный набор; пустой выбор (только docs) → код 0 с явным «тестов не требуется», если все пути в `docs/`, `plans/`, `*.md`",
+      "`scripts/t --changed` вызывает селектор и исполняет план; `--db=pgsql` добавляет `--group=database` выбранных пакетов на движке",
+      "Корневой `phpunit.xml`: testsuite `repo` → `tests/Repo`; `tests/Repo/ZonesMapTest.php` (пути существуют; каждый `src`-каталог 1-го уровня и каждый `*Test.php` каждого пакета в ровно одной зоне; `uses` без самоссылок/неизвестных; каждый пакет с suite в карте); `tests/Repo/TestSelectTest.php` (rename, удаление, неизвестный путь, harness → 2, транзитивные потребители, docs-only)"
+    ],
+    "exclude": [
+      "Разметка database/serial/extended/stand (P1.5)",
+      "CI (P1.6)"
+    ]
+  },
+  "depends_on": [
+    "P1.3",
+    "P1.10"
+  ],
+  "decisions": [
+    "D3",
+    "D4"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/test-strategy#practices",
+      "why": "П1–П3, ограничения карты",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "tests/zones.json",
+      "change": "create"
+    },
+    {
+      "path": "scripts/test-select.php",
+      "change": "create"
+    },
+    {
+      "path": "scripts/t",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом фазы"
+    },
+    {
+      "path": "tests/Pest.php",
+      "change": "modify"
+    },
+    {
+      "path": "phpunit.xml",
+      "change": "modify"
+    },
+    {
+      "path": "tests/Repo/ZonesMapTest.php",
+      "change": "create"
+    },
+    {
+      "path": "tests/Repo/TestSelectTest.php",
+      "change": "create"
+    }
+  ],
+  "rules": [
+    "Карта — единственный источник: не дублировать списки зон в shell/YAML.",
+    "Подзоны core крупные (5–7); дробить только по измерению.",
+    "`ZonesMapTest` проверить в обе стороны: красный на испорченной карте (временная правка, откат), зелёный на исправной — записать в evidence."
+  ],
+  "guidance": "Подзоны core выводить из реальных `use Vaulter\\…` между каталогами `packages/core/src/*` (скрипт-подсказка в var/quality, не в репо); сильно связанные каталоги — одна подзона. Во время P4 подзоны core уходят в пакеты — карта обновляется каждым пунктом переноса.\n\n**Образцы в соседних репозиториях экосистемы (читать с диска, не копировать в этот публичный репозиторий — AzGuard приватный):**\n- `/home/vostrikov/projects/packages/azguard/tests/zones.json` — формат карты\n- `/home/vostrikov/projects/packages/azguard/bin/test-changed.php` — алгоритм селектора\n- `/home/vostrikov/projects/packages/azguard/tests/Arch/ZonesMapTest.php` — проверки полноты\n- `/home/vostrikov/projects/packages/azguard/tests/Pest.php` — группы из карты",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "vendor/bin/pest --testsuite=repo",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "php scripts/test-select.php --paths=packages/media/src/Cas/BlobStore.php --json",
+      "expect": "exit 0; JSON содержит media, drive, documents, filament",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "php scripts/test-select.php --paths=packages/core/tests/TestCase.php",
+      "expect": "exit 2",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "scripts/t --changed --dry-run --base=HEAD",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "tests/zones.json",
+    "scripts/test-select.php",
+    "testsuite repo"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T08:28:08Z"
+}

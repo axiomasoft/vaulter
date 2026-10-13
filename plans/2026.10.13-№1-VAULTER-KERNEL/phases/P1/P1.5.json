@@ -1,0 +1,130 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.5",
+  "title": "Слои database, serial, extended, stand и удешевление дорогого",
+  "status": "todo",
+  "summary": "Драйверозависимые тесты в группе `database` (+ `database:<зона>`), fork-гонки — `serial`, масштаб/все seed — `extended`, внешние сервисы — `stand`, все три — также `nofast`; тесты без БД не поднимают схему; пропускаемые на «чужом» движке файлы не пересобирают схему; число и имена тестов не изменились.",
+  "why": "Серверные линии должны гонять только то, что зависит от движка (П4, П5), а PR — не платить за масштаб и внешние сервисы (П8–П11).",
+  "scope": {
+    "include": [
+      "Классификация каждого тест-каталога/файла по чек-листу knowledge/test-strategy#practices П4 → таблица `plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.5/classification.md` (файл → группа → причина)",
+      "Назначение групп через `uses(...)->group(...)->in(...)` в `tests/Pest.php` и `packages/*/tests/Pest.php` или `->group()` в файле; заполнить `database[]` в `tests/zones.json`",
+      "`serial`: `packages/core/tests/Concurrency/*` и всё, что падает в параллели (по P1.3)",
+      "`extended`: только тесты, у которых есть дешёвый эквивалент той же проверки на PR (П9) — по списку P1.1; если эквивалента нет — тест остаётся в обычной линии и попадает в отчёт P1.7",
+      "`stand`: тесты, требующие Redis/хаб/MinIO/docker/Playwright (в т.ч. `load/tests` по замеру P1.1)",
+      "Seed-матрицы: `VAULTER_FULL_SEEDS=1` — полный диапазон, иначе детерминированный префикс (П10) — только если такие матрицы найдены",
+      "Тесты без БД (`database-free`): не поднимать схему (трейт/базовый класс по образцу Chatom `c746baa3`); файлы, пропускаемые целиком на движке, — `skip` до построения схемы (Chatom `a7ed7a97`)",
+      "`scripts/t`: `--group=database` для серверных линий по умолчанию (`--full` — весь набор), `stand` — отдельная подкоманда `scripts/t stand`"
+    ],
+    "exclude": [
+      "Удаление/сведение тестов и датасетов (P1.7 — только отчёт)",
+      "Изменение утверждений тестов"
+    ]
+  },
+  "depends_on": [
+    "P1.4"
+  ],
+  "decisions": [
+    "D3",
+    "D4"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/test-strategy#practices",
+      "why": "П4, П8–П11 и критерии database",
+      "required": true
+    },
+    {
+      "ref": "artifact/P1.1-baseline",
+      "why": "медленные файлы и стоимость",
+      "required": true
+    },
+    {
+      "path": "packages/core/tests/README.md",
+      "why": "текущая структура наборов core",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "tests/Pest.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/*/tests/Pest.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/*/tests/**/*Test.php",
+      "change": "modify",
+      "note": "только ->group()/skip до схемы"
+    },
+    {
+      "path": "packages/core/tests/TestCase.php",
+      "change": "modify"
+    },
+    {
+      "path": "tests/zones.json",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом фазы"
+    },
+    {
+      "path": "scripts/t",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом фазы"
+    }
+  ],
+  "rules": [
+    "Классифицировать по поведению, не по имени каталога; сомнение → `database` (консервативно).",
+    "Каждый перенос в `extended` сопровождается указанием дешёвого эквивалента на PR в classification.md.",
+    "Число и имена тестов совпадают с baseline (`scripts/t baseline --compare` для всех пакетов)."
+  ],
+  "guidance": "Проверка «группы не меняют набор»: `vendor/bin/pest --list-tests` до/после — одинаковый список имён (diff пуст). Для серверного TestCase-ограничения: `--group=database` внутри шага одного TestCase.\n\n**Образцы в соседних репозиториях экосистемы (читать с диска, не копировать в этот публичный репозиторий — AzGuard приватный):**\n- `/home/vostrikov/projects/packages/chatom/plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/handoff/2026-10-13-test-structure-research/answer-2-db-schema-cost.md` — цена схемы и ловушки",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "scripts/t baseline --compare",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "scripts/t sqlite",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "scripts/t pgsql -p media,drive --group=database",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "vendor/bin/pest --testsuite=repo",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "Группы и classification.md",
+    "database[] в карте",
+    "удешевление схемы для database-free и skip-файлов"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T08:13:08Z"
+}

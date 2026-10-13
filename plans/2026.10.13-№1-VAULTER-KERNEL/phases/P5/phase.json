@@ -1,0 +1,81 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P5",
+  "title": "Пакет коллаборации и сохранность правок",
+  "design": "skeleton",
+  "goal": "Выделить vaulter-collaboration (PHP-пакет, хаб @vaulter/collaboration-hub, @vaulter/vue-collaboration) и закрыть риски сохранности: журнал Yjs-обновлений с receipts и компактацией, CAS/generation-fencing, режимы buffered/durable, ревокация в живой сессии, full-jitter retry, livez/readyz/drain, лимиты и метрики. documents работает без пакета.",
+  "context": "Фаза E. Размер: L. Нормативный документ — knowledge/collaboration (все секции). Хаб — Hocuspocus 4.3; перед изменениями пункт проверяет поведение v4 (удержание документа при сбое store, flush в destroy) тестом, а не по документации. Протокол хаба ↔ backend получает версию 2; хаб и backend отказываются работать с несовместимой версией. ADR-0031 (пакет коллаборации и модель сохранности). Тесты I17: PHP/Node-наборы в обычных линиях, сценарии с несколькими хабами/SIGKILL — группа `stand` (docker: PG + Redis + 2 хаба) в квалификации.",
+  "contract": {
+    "consumes": [
+      "knowledge/collaboration",
+      "knowledge/architecture#packages",
+      "knowledge/architecture#extension-system",
+      "knowledge/architecture#frontend",
+      "knowledge/source-review#research-collaboration",
+      "P3 механизмы (CollaborationDriver как слот, EventSink/OutboxConsumer)",
+      "P4 documents/drive финальные",
+      "D1",
+      "D15",
+      "D16"
+    ],
+    "produces": [
+      "packages/collaboration (composer, манифест, src, migrations, config, hub/, tests)",
+      "packages/vue-collaboration",
+      "documents без Collaboration/* и без firebase/php-jwt; SPI CollaborationDriver/SupportsCollaboration/DocumentStateWriter",
+      "Таблицы журнала и receipts, компактация",
+      "Ревокация (permissions_version, control channel)",
+      "Хаб: retry с jitter, livez/readyz/metrics на management listener, drain",
+      "CI: collaboration.yml, collaboration-hub-image.yml",
+      "ADR-0031"
+    ],
+    "boundaries": [
+      "documents не импортирует Vaulter\\Collaboration",
+      "@vaulter/vue не тянет yjs/@hocuspocus в бандл без коллаборации",
+      "Существующие сильные стороны хаба сохраняются (knowledge/collaboration#current)"
+    ]
+  },
+  "scope": {
+    "include": [
+      "packages/collaboration/**",
+      "packages/vue-collaboration/**",
+      "packages/documents/src/{Collaboration,Contracts}",
+      "hocuspocus-server/** → packages/collaboration/hub",
+      "packages/vue/src/collaboration",
+      ".github/workflows/{frontend,hocuspocus-image}.yml"
+    ],
+    "exclude": [
+      "Изменения модели доступа drive сверх publish permissions_version",
+      "Новые возможности редактора"
+    ]
+  },
+  "pitfalls": [
+    "Yjs-обновления не несут прикладной UUID — нужен конверт update_id или серверный путь подачи",
+    "Удаление payload при компактации удаляет и дедуп — receipts отдельно",
+    "Readiness не останавливает существующие WS-сессии — нужен write-quiescence",
+    "Liveness не должна зависеть от БД",
+    "Проверять и update, и sync-сообщения при ревокации"
+  ],
+  "validation": [
+    {
+      "id": "V1",
+      "procedure": "knowledge/collaboration#tests 1–11 зелёные (2, 3, 10 — stand); documents-набор зелёный без пакета коллаборации; квалификационный пункт P5 зелёный",
+      "expect": "все зелёные",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "vaulter-collaboration + хаб + Vue-пакет",
+    "Модель сохранности и ревокация",
+    "ADR-0031",
+    "Документация P5"
+  ],
+  "items": [],
+  "batches": [],
+  "sections": [
+    {
+      "id": "design-inputs",
+      "title": "Обязательные входы детализации",
+      "text": "Сессия детализации P5 читает до создания пунктов (точка входа — `plan.py show 2026.10.13-№1-VAULTER-KERNEL P5`):\n\n```bash\nP='python3 <planner>/scripts/plan.py'; ID=2026.10.13-№1-VAULTER-KERNEL\n$P get $ID knowledge/collaboration\n$P get $ID knowledge/architecture --section packages\n$P get $ID knowledge/architecture --section extension-system\n$P get $ID knowledge/architecture --section frontend\n$P get $ID knowledge/architecture --section invariants\n$P get $ID knowledge/source-review --section research-collaboration\n$P get $ID D1\n$P get $ID D15\n$P get $ID D16\n$P show $ID P4            # что фактически сделала предыдущая фаза, её deviations\n```\n\n**Правила для пунктов этой фазы (обязательны при детализации):**\n1. Каждый пункт имеет точные `validation` только из целевых прогонов (knowledge/test-strategy#run-policy §1): `scripts/t <engine> -p <pkg> <paths>` / `scripts/t --changed`; без мутаций (D3), без load (D4), без coverage.\n2. Последний пункт фазы — «Квалификационный прогон P5» по knowledge/test-strategy#qualification-template; только он гоняет полный набор.\n3. `task_files` точные (параллельные батчи требуют непересекающихся файлов).\n4. Крупные knowledge-документы привязываются к пункту через `reads` с `section`, а не целиком: architecture ~42 KB — читать только нужные секции.\n5. Пункт, добавивший/перенёсший каталог тестов или src, обновляет `tests/zones.json` (I19).\n6. Поправка архитектуры — новое D# с причиной и эффектом совместимости, не молча в пункте."
+    }
+  ]
+}

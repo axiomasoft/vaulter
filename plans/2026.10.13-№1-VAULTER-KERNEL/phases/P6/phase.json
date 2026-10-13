@@ -1,0 +1,77 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P6",
+  "title": "Надёжность API: идемпотентность, конкуренция, ошибки, целостность CAS",
+  "design": "skeleton",
+  "goal": "Довести надёжность публичного API до 1.0: идемпотентность на всех мутирующих операциях REST и PHP, объявленная политика конкуренции у каждого mutable-агрегата, таблица retryability problem codes в OpenAPI и vaulter:errors, формализованный GC и выборочный integrity scrub CAS, полнота security-матрицы, relay с DLQ и метриками.",
+  "context": "Фаза F. Размер: L. Механизм идемпотентности и реестры уже есть (P3), владение — финальное (P4, P5): пункты делятся по пакетам-владельцам операций. Покрытие и политики — knowledge/architecture#idempotency-concurrency и #errors; GC/scrub — source-review A17/A18. Security-матрица аудита (401/404 чужой tenant/404 без View/403 без Write/истёкшая ссылка/system без reason/move в скрытую папку/move без Create) сверяется с существующими тестами и дополняется. OpenAPI breaking-check (openapi.yml) до заморозки P7 информативен: изменения разрешены (D21), но отражаются в docs.",
+  "contract": {
+    "consumes": [
+      "knowledge/architecture#idempotency-concurrency",
+      "knowledge/architecture#errors",
+      "knowledge/architecture#events",
+      "knowledge/architecture#api-surface",
+      "knowledge/architecture#invariants",
+      "knowledge/source-review#audit-verification",
+      "knowledge/source-review#research-idempotency",
+      "p2-findings (покрытие If-Match)",
+      "D12",
+      "D21"
+    ],
+    "produces": [
+      "Idempotency-Key на всех мутирующих маршрутах и PHP Operations (таблица покрытия в docs)",
+      "Политика конкуренции по агрегатам (реестр + тесты) — I12",
+      "Problem codes с retryability в OpenAPI и vaulter:errors; декодер в @vaulter/vue",
+      "GC: критерии и PG-гонка «GC ∥ новая ревизия» (I18); scrub с выборкой, quarantine, метрики",
+      "Relay: DLQ, бюджет, метрики лага",
+      "Security-матрица по всем операциям"
+    ],
+    "boundaries": [
+      "Не меняются REST-пути и event types",
+      "Новые заголовки опциональны для клиента, кроме уже обязательного If-Match"
+    ]
+  },
+  "scope": {
+    "include": [
+      "Operations/HTTP всех пакетов",
+      "openapi/*",
+      "packages/media/src/Cas, Console",
+      "packages/core/src/{Idempotency,Events}",
+      "packages/vue/src/api (декодер ошибок)"
+    ],
+    "exclude": [
+      "Load shedding, per-tenant квоты нагрузки (D19)",
+      "Новые операции"
+    ]
+  },
+  "pitfalls": [
+    "Кэшировать 5xx в идемпотентности нельзя",
+    "Scope ключа без tenant/drive раскрывает существование чужих операций",
+    "Move проверяет и назначение",
+    "Scrub на S3 дорог — выборка и бюджет"
+  ],
+  "validation": [
+    {
+      "id": "V1",
+      "procedure": "I11, I12, I18 зелёные; изменения OpenAPI отражены в docs; security-матрица полна; квалификационный пункт P6 зелёный",
+      "expect": "все зелёные",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "Покрытие идемпотентности и конкуренции",
+    "Таблица retryability",
+    "GC/scrub",
+    "Security-матрица",
+    "Документация P6"
+  ],
+  "items": [],
+  "batches": [],
+  "sections": [
+    {
+      "id": "design-inputs",
+      "title": "Обязательные входы детализации",
+      "text": "Сессия детализации P6 читает до создания пунктов (точка входа — `plan.py show 2026.10.13-№1-VAULTER-KERNEL P6`):\n\n```bash\nP='python3 <planner>/scripts/plan.py'; ID=2026.10.13-№1-VAULTER-KERNEL\n$P get $ID knowledge/architecture --section idempotency-concurrency\n$P get $ID knowledge/architecture --section errors\n$P get $ID knowledge/architecture --section events\n$P get $ID knowledge/architecture --section api-surface\n$P get $ID knowledge/architecture --section invariants\n$P get $ID knowledge/source-review --section audit-verification\n$P get $ID knowledge/source-review --section research-idempotency\n$P get $ID knowledge/p2-findings\n$P get $ID D12\n$P get $ID D21\n$P show $ID P5            # что фактически сделала предыдущая фаза, её deviations\n```\n\n**Правила для пунктов этой фазы (обязательны при детализации):**\n1. Каждый пункт имеет точные `validation` только из целевых прогонов (knowledge/test-strategy#run-policy §1): `scripts/t <engine> -p <pkg> <paths>` / `scripts/t --changed`; без мутаций (D3), без load (D4), без coverage.\n2. Последний пункт фазы — «Квалификационный прогон P6» по knowledge/test-strategy#qualification-template; только он гоняет полный набор.\n3. `task_files` точные (параллельные батчи требуют непересекающихся файлов).\n4. Крупные knowledge-документы привязываются к пункту через `reads` с `section`, а не целиком: architecture ~42 KB — читать только нужные секции.\n5. Пункт, добавивший/перенёсший каталог тестов или src, обновляет `tests/zones.json` (I19).\n6. Поправка архитектуры — новое D# с причиной и эффектом совместимости, не молча в пункте."
+    }
+  ]
+}

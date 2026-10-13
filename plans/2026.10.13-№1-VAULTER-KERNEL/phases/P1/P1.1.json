@@ -1,0 +1,123 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.1",
+  "title": "Базовые замеры и инвентаризация тестов (без правок)",
+  "status": "todo",
+  "summary": "Зафиксировано число тестов каждого набора (`tests/baseline/<suite>.count`), время прогонов по наборам и движкам, топ медленных файлов и инвентаризация CI; продуктовый код и тесты не тронуты.",
+  "why": "Без цифр «до» нельзя доказать ускорение и сохранность набора (П14); оценки без замера в AzGuard ошибались в 10 раз.",
+  "scope": {
+    "include": [
+      "Проверка окружения: `php -v` (≥8.4 или scripts/php84), наличие `brianium/paratest` в vendor каждого пакета, `nproc`, `free -g`, `uptime`, доступность docker",
+      "`vendor/bin/pest --list-tests` для: core (корень), media, drive, documents, azgard, filament (в `packages/<p>`), `load/tests` (корень, путь) → `var/quality/baseline/<suite>.list`; число строк-тестов → `tests/baseline/<suite>.count` (одно целое число)",
+      "Node: число тестов `hocuspocus-server` (`npm test -- --reporter=json` или подсчёт) и `packages/vue` → `tests/baseline/{hub,vue}.count`",
+      "Время SQLite по каждому набору: последовательно (`--ci`) и `--parallel --processes=<CPU/2,≤8>`, по 2 замера, JUnit `--log-junit var/quality/baseline/<suite>-<mode>.xml`",
+      "Время серверных линий: `scripts/test-db.sh pgsql …` и `mysql …` для тех же наборов, что гоняет CI (`tests.yml` test-pgsql шаги, `*-pgsql` jobs), `DB_FAST=1`, `DB_PARALLEL` 0 и 8",
+      "Топ-20 медленных файлов по JUnit на каждом движке; доля времени `Concurrency`, `Upgrade`, `Observability/P83–P85`, `OpenApi`, `IdStrategy`, `load/tests`",
+      "Стоимость `VAULTER_OPENAPI_VALIDATE=1`: core `Http` + `OpenApi` с 1 и 0 (только замер)",
+      "Инвентаризация CI: таблица workflow → триггеры → jobs → команды → оценка времени (из `.github/workflows/*`)",
+      "Отчёт `plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.1/baseline.json` (машиночитаемый, схема в artifacts.note) и `plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.1/baseline.md`: окружение, таблицы «набор × движок × режим → тестов, время, самый долгий файл», CI-таблица, выводы-гипотезы для P1.3–P1.7 (без решений)"
+    ],
+    "exclude": [
+      "Любые правки кода, тестов, CI",
+      "Мутации, load, coverage-прогоны"
+    ]
+  },
+  "depends_on": [],
+  "decisions": [
+    "D3",
+    "D4"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/test-strategy#current",
+      "why": "что уже известно о наборах и CI",
+      "required": true
+    },
+    {
+      "ref": "knowledge/test-strategy#practices",
+      "why": "П14 честность замеров, ловушки",
+      "required": true
+    },
+    {
+      "path": "scripts/test-db.sh",
+      "why": "движок серверных прогонов и переменные",
+      "required": true
+    },
+    {
+      "path": ".github/workflows/tests.yml",
+      "why": "PG-шаги по TestCase",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "tests/baseline/*.count",
+      "change": "create"
+    },
+    {
+      "path": ".gitignore",
+      "change": "modify"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "P1.1-baseline",
+      "path": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.1/baseline.json",
+      "role": "output",
+      "note": "замеры «до» (машиночитаемо): suites{name:{count,sqlite_serial_s[],sqlite_parallel_s[],pgsql_s[],mysql_s[],slowest[]}}, env, ci[], count_command"
+    },
+    {
+      "path": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.1/baseline.md",
+      "role": "output",
+      "note": "тот же отчёт для людей"
+    }
+  ],
+  "rules": [
+    "Не менять ничего под packages/, .github/, scripts/ — проверяется V1.",
+    "Каждая цифра с датой, `uptime` до прогона и режимом; минимум два замера на конфигурацию; «не измерено» помечать явно.",
+    "Долгие прогоны в фоне, логи в var/quality/baseline.",
+    "Это единственный пункт P1 до P1.9, которому разрешены полные прогоны (замер «до»)."
+  ],
+  "guidance": "Подсчёт тестов: `vendor/bin/pest --list-tests | grep -cE '^\\s*-|::'` — формат вывода проверить на первом наборе и записать в отчёт точную команду подсчёта, чтобы P1.3 (`scripts/t baseline`) использовал её же. Наборы в `packages/<p>` запускать с `cwd` пакета. Для PG/MySQL core учитывать разбиение по TestCase (шаги `tests.yml`).\n\n**Образцы в соседних репозиториях экосистемы (читать с диска, не копировать в этот публичный репозиторий — AzGuard приватный):**\n- `/home/vostrikov/projects/packages/chatom/plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/handoff/2026-10-13-test-structure-report.md` — образец отчёта и метрик",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "git diff --quiet c64bba25 -- packages/ .github/ scripts/ hocuspocus-server/",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "test -s plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.1/baseline.md && python3 -c \"import json;d=json.load(open('plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.1/baseline.json'));assert d['suites'] and d['count_command']\" && ls tests/baseline/{core,media,drive,documents,azgard,filament}.count",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "grep -cE 'sqlite|pgsql|mysql' plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.1/baseline.md",
+      "expect": "≥ 3",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "tests/baseline/*.count",
+    "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.1/baseline.json",
+    "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.1/baseline.md"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T08:13:32Z"
+}

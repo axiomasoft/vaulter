@@ -1,0 +1,37 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D8",
+  "title": "Система расширений: типизированные слоты с правилом dogfooding",
+  "date": "2026-10-13",
+  "status": "accepted",
+  "question": "Какие механизмы расширения предлагает экосистема?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Именованные слоты видов Guard/Restriction/Contributor/Handler/EventSink/OutboxConsumer/Observer/OperationMiddleware; слот определяет модуль-владелец понятия; новый слот только с встроенным потребителем и контрактным тестом; без макросов, строковых хуков, model events, boot-побочек (knowledge/architecture#extension-system)"
+    },
+    {
+      "id": "B",
+      "text": "Laravel events + макросы как основной механизм"
+    }
+  ],
+  "context": "Владелец: хуки, события, плагины — расширяемо, надёжно, не раздуто (B4).",
+  "decision": "A — Именованные слоты видов Guard/Restriction/Contributor/Handler/EventSink/OutboxConsumer/Observer/OperationMiddleware; слот определяет модуль-владелец понятия; новый слот только с встроенным потребителем и контрактным тестом; без макросов, строковых хуков, model events, boot-побочек (knowledge/architecture#extension-system)",
+  "rationale": "Полномочия вклада задаются видом слота; ядро валидирует порядок/уникальность/контракт; AzGuard D8 и исследование №1 показывают, что это расширяемо без второго фреймворка.",
+  "consequences": [
+    "NodeSnapshotContributor заменяет bound(NodeDocumentHeads)",
+    "ProfileOption заменяет Contracts/Profiles/CommentsFeature",
+    "NodeWriteGuard вводится только если квота/карантин ложатся без смены семантики",
+    "I8"
+  ],
+  "applies_to": [
+    "P3",
+    "P4",
+    "P5"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "agent"
+}

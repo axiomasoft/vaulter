@@ -1,0 +1,114 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.8",
+  "title": "Документация тестов и политика прогонов; уборка планов",
+  "status": "todo",
+  "summary": "`tests/README.md` (зоны, группы, линии, команды, «как написать тест», политика прогонов), раздел в `CONTRIBUTING.md`, команды в `CLAUDE.md`/`AGENTS.md`; `plans/ACTIVE.md` указывает на PLAN3; остаток `plans/2026.09.29-№1-VAULTER-STABLE/` удалён.",
+  "why": "Новые участники и агенты следуют правилам, а не догадкам (П13); run-policy D4 должна быть видна вне плана.",
+  "scope": {
+    "include": [
+      "`tests/README.md` по образцу AzGuard `tests/README.md`: таблица зон (src, tests, uses), группы (`zone:*`, `database`, `serial`, `extended`, `stand`, `nofast`), линии и где они бегут, команды `scripts/t`, раздел «Writing a test», политика прогонов (knowledge/test-strategy#run-policy в формулировке для репозитория, без ссылок на plans/)",
+      "`CONTRIBUTING.md`: раздел «Тесты» со ссылкой на tests/README.md",
+      "`CLAUDE.md` и `AGENTS.md` строка «Качество»: `scripts/t --changed`, `scripts/t <engine> -p <pkg>`, запрет мутаций/load без задачи",
+      "`packages/core/tests/README.md` — ссылка на корневой README и актуализация",
+      "`plans/ACTIVE.md` → PLAN3; `git rm -r plans/2026.09.29-№1-VAULTER-STABLE` (остаток context/, архив — в plans/archive)"
+    ],
+    "exclude": [
+      "docs/ (VitePress) — только если там есть страница про тесты"
+    ]
+  },
+  "depends_on": [
+    "P1.6"
+  ],
+  "decisions": [
+    "D3",
+    "D4"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/test-strategy#run-policy",
+      "why": "текст политики",
+      "required": true
+    },
+    {
+      "path": "CLAUDE.md",
+      "why": "текущие правила качества",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "tests/README.md",
+      "change": "create"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "change": "modify"
+    },
+    {
+      "path": "CLAUDE.md",
+      "change": "modify"
+    },
+    {
+      "path": "AGENTS.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/README.md",
+      "change": "modify"
+    },
+    {
+      "path": "plans/ACTIVE.md",
+      "change": "modify"
+    },
+    {
+      "path": "plans/2026.09.29-№1-VAULTER-STABLE",
+      "change": "delete"
+    }
+  ],
+  "rules": [
+    "Документация описывает фактические команды (проверить каждую запуском `--help`/`--dry-run`)."
+  ],
+  "guidance": "**Образцы в соседних репозиториях экосистемы (читать с диска, не копировать в этот публичный репозиторий — AzGuard приватный):**\n- `/home/vostrikov/projects/packages/azguard/tests/README.md` — образец",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "test -s tests/README.md && grep -q 'scripts/t' CONTRIBUTING.md CLAUDE.md AGENTS.md",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "test ! -e 'plans/2026.09.29-№1-VAULTER-STABLE' && grep -q 'VAULTER-KERNEL' plans/ACTIVE.md",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "php scripts/check-doc-links.php",
+      "expect": "exit 0",
+      "kind": "impact"
+    }
+  ],
+  "deliverables": [
+    "tests/README.md",
+    "обновлённые CONTRIBUTING/CLAUDE/AGENTS",
+    "ACTIVE.md"
+  ],
+  "route": {
+    "class": "economy",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T08:13:09Z"
+}

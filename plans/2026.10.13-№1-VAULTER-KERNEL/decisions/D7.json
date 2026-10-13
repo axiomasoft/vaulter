@@ -1,0 +1,40 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D7",
+  "title": "Модульная система: манифест, сеал-реестр, capabilities, активация",
+  "date": "2026-10-13",
+  "status": "superseded",
+  "question": "Как модули объявляются и активируются?",
+  "options": [
+    {
+      "id": "A",
+      "text": "PHP-манифест VaulterModule + ModuleBuilder (декларации), компиляция и seal при boot, capabilities вместо bound()/class_exists(); установленный пакет включён по умолчанию, vaulter.modules.disabled выключает; uninstall — отдельная команда (knowledge/architecture#module-system)"
+    },
+    {
+      "id": "B",
+      "text": "JSON-манифест в extra composer.json"
+    },
+    {
+      "id": "C",
+      "text": "Явный opt-in список как в Chatom (default [])"
+    }
+  ],
+  "context": "Неявная активация: VaulterManager:76, NodeSnapshotMapper:166 и др. (A3).",
+  "decision": "A — PHP-манифест VaulterModule + ModuleBuilder (декларации), компиляция и seal при boot, capabilities вместо bound()/class_exists(); установленный пакет включён по умолчанию, vaulter.modules.disabled выключает; uninstall — отдельная команда (knowledge/architecture#module-system)",
+  "rationale": "PHP-манифест типобезопасен и без I/O; включение по умолчанию сохраняет Laravel-конвенцию discovery (у Vaulter модули — отдельные пакеты, установка уже выражает намерение), выключение даёт гибкость будущих редакций без кода в OSS. Исследование №1: registration as compilation, без last-provider-wins.",
+  "consequences": [
+    "провайдеры пакетов регистрируют всё через ModuleBuilder",
+    "команды vaulter:modules, vaulter:module:uninstall",
+    "I4, I6, I7"
+  ],
+  "applies_to": [
+    "P3",
+    "P4"
+  ],
+  "superseded_by": "D22",
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "agent"
+}

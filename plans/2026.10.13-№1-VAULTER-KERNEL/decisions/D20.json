@@ -1,0 +1,33 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D20",
+  "title": "Сторонние драйверы прав и AzGuard-адаптер",
+  "date": "2026-10-13",
+  "status": "accepted",
+  "question": "Где Spatie/Gate-драйверы и на какой AzGuard ориентируется адаптер?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Database/Gate/Null — drive; Spatie — адаптер drive (spatie/laravel-permission в suggest, class_exists разрешён в allowlist I4); vaulter-azgard → API AzGuard 1.0 (AzGuard\\AzGuard), пин коммита до стабильного тега, в P7 — тег"
+    },
+    {
+      "id": "B",
+      "text": "Spatie — отдельный пакет"
+    }
+  ],
+  "context": "SpatiePermissionDriver в core с class_exists; azgard требует azguard dev-main#9a6dc0e.",
+  "decision": "A — Database/Gate/Null — drive; Spatie — адаптер drive (spatie/laravel-permission в suggest, class_exists разрешён в allowlist I4); vaulter-azgard → API AzGuard 1.0 (AzGuard\\AzGuard), пин коммита до стабильного тега, в P7 — тег",
+  "rationale": "Spatie-адаптер мал и не имеет своей схемы; отдельный пакет — лишняя единица релиза. AzGuard сейчас меняет API (PLAN1 P2), адаптер обязан следовать.",
+  "consequences": [
+    "зависимость P7 от релиза AzGuard 1.0 (риск в #transition)"
+  ],
+  "applies_to": [
+    "P4",
+    "P7"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "agent"
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D18",
+  "title": "Сканирование содержимого: движок в media, состояние ревизии в drive",
+  "date": "2026-10-13",
+  "status": "accepted",
+  "question": "Кому принадлежит Content/Scan*?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Адресуется блобом/sha (движок, ContentScanner, доказательства по содержимому) — media; адресуется ревизией/узлом/диском (scan obligation ревизии, карантин, ContentAvailabilityGuard, доставка и подпись URL) — drive; P2 раскладывает типы по этому правилу"
+    },
+    {
+      "id": "B",
+      "text": "Целиком в drive"
+    }
+  ],
+  "context": "core/src/Content (13), Models/Content (6), Contracts/Content (2).",
+  "decision": "A — Адресуется блобом/sha (движок, ContentScanner, доказательства по содержимому) — media; адресуется ревизией/узлом/диском (scan obligation ревизии, карантин, ContentAvailabilityGuard, доставка и подпись URL) — drive; P2 раскладывает типы по этому правилу",
+  "rationale": "Повторное использование результата скана одинакового содержимого — свойство CAS; политика доступности — свойство дерева.",
+  "consequences": [
+    "DownloadGuard-слот drive для карантина"
+  ],
+  "applies_to": [
+    "P2",
+    "P4"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "agent"
+}

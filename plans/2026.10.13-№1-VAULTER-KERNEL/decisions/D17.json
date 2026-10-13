@@ -1,0 +1,32 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D17",
+  "title": "Один переход 0.3→1.0 и неизменные идентичности",
+  "date": "2026-10-13",
+  "status": "superseded",
+  "question": "Какие поломки допустимы до 1.0?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Одна документированная карта перехода (FQCN, конфиг-ключи, фасад, новые пакеты, промежуточный 0.3-final); идентичности хранения/протоколов (таблицы, колонки, event types, problem codes, маршруты REST, команды) не меняются без строки в карте и решения D#"
+    },
+    {
+      "id": "B",
+      "text": "Сохранять все FQCN через class_alias"
+    }
+  ],
+  "context": "0.2 и 0.3 опубликованы (UPGRADE.md 0.2→0.3).",
+  "decision": "A — Одна документированная карта перехода (FQCN, конфиг-ключи, фасад, новые пакеты, промежуточный 0.3-final); идентичности хранения/протоколов (таблицы, колонки, event types, problem codes, маршруты REST, команды) не меняются без строки в карте и решения D#",
+  "rationale": "Подход AzGuard/Chatom: одна осознанная ломка до freeze; alias-шимы множат поверхность.",
+  "consequences": [
+    "docs/upgrade/0.3-to-1.0.md + resources/upgrade/0.3-1.0.json",
+    "I16"
+  ],
+  "global": true,
+  "superseded_by": "D21",
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "agent"
+}

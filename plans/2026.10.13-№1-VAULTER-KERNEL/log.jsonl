@@ -1,0 +1,27 @@
+{"v":1,"ts":"2026-10-13T07:52:27Z","type":"plan_created","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"plan PLAN3 created","data":{"plan_id":"2026.10.13-№1-VAULTER-KERNEL"}}
+{"v":1,"ts":"2026-10-13T08:07:11Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D1 accepted","data":{"id":"D1","by":"owner","option":"A"}}
+{"v":1,"ts":"2026-10-13T08:07:11Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D2 accepted","data":{"id":"D2","by":"owner","option":"A"}}
+{"v":1,"ts":"2026-10-13T08:07:11Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D3 accepted","data":{"id":"D3","by":"owner","option":"A"}}
+{"v":1,"ts":"2026-10-13T08:07:12Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D4 accepted","data":{"id":"D4","by":"owner","option":"A"}}
+{"v":1,"ts":"2026-10-13T08:07:12Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D5 accepted","data":{"id":"D5","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-13T08:07:13Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D6 accepted","data":{"id":"D6","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-13T08:07:13Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D7 accepted","data":{"id":"D7","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-13T08:07:13Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D8 accepted","data":{"id":"D8","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-13T08:07:14Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D9 accepted","data":{"id":"D9","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-13T08:07:14Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D10 accepted","data":{"id":"D10","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-13T08:07:15Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D11 accepted","data":{"id":"D11","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-13T08:07:15Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D12 accepted","data":{"id":"D12","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-13T08:07:15Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D13 accepted","data":{"id":"D13","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-13T08:07:16Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D14 accepted","data":{"id":"D14","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-13T08:07:16Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D15 accepted","data":{"id":"D15","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-13T08:07:16Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D16 accepted","data":{"id":"D16","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-13T08:07:17Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D17 accepted","data":{"id":"D17","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-13T08:07:17Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D18 accepted","data":{"id":"D18","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-13T08:07:18Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D19 accepted","data":{"id":"D19","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-13T08:07:18Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D20 accepted","data":{"id":"D20","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-13T08:13:19Z","type":"design_done","phase":"P1","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"P1 design done"}
+{"v":1,"ts":"2026-10-13T08:25:48Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D21 accepted","data":{"id":"D21","by":"owner","option":"A"}}
+{"v":1,"ts":"2026-10-13T08:25:48Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D21 supersedes D9","data":{"id":"D21","supersedes":"D9"}}
+{"v":1,"ts":"2026-10-13T08:25:48Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D21 supersedes D17","data":{"id":"D21","supersedes":"D17"}}
+{"v":1,"ts":"2026-10-13T08:26:50Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D22 accepted","data":{"id":"D22","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-13T08:26:50Z","type":"decision","actor":{"provider":"claude-code","model":"claude-opus-5-5"},"summary":"D22 supersedes D7","data":{"id":"D22","supersedes":"D7"}}

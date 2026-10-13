@@ -1,0 +1,33 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D15",
+  "title": "Frontend: @vaulter/vue остаётся, коллаборация отдельно, api/ без Vue",
+  "date": "2026-10-13",
+  "status": "accepted",
+  "question": "Как делить npm-пакеты?",
+  "options": [
+    {
+      "id": "A",
+      "text": "@vaulter/vue — drive+documents UI; src/collaboration → @vaulter/vue-collaboration; src/api без импортов Vue (правило), @vaulter/client — после 1.0 при появлении потребителя"
+    },
+    {
+      "id": "B",
+      "text": "Сразу @vaulter/client + vue-drive + vue-documents + vue-collaboration"
+    }
+  ],
+  "context": "Аудит предлагал 6 npm-пакетов.",
+  "decision": "A — @vaulter/vue — drive+documents UI; src/collaboration → @vaulter/vue-collaboration; src/api без импортов Vue (правило), @vaulter/client — после 1.0 при появлении потребителя",
+  "rationale": "Отдельный пакет оправдан только независимым назначением: коллаборация — да (D1); клиент без Vue — дешёвая отложенная опция при соблюдении правила импорта.",
+  "consequences": [
+    "проверка, что @vaulter/vue не тянет yjs/@hocuspocus в бандл"
+  ],
+  "applies_to": [
+    "P3",
+    "P5"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "agent"
+}

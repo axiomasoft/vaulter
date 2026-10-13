@@ -1,0 +1,203 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.10",
+  "title": "Удаление легаси 0.x и чистые create-миграции (схема неизменна)",
+  "status": "todo",
+  "summary": "43 миграции 0.x в core заменены чистыми create-миграциями той же итоговой схемы (одна на таблицу); апгрейд-тесты, фикстура 0.2, UpgradePreflight, команды UpgradeInspect/LegacyFanout и прочий код только для данных 0.x удалены; нормализованные снимки схемы на sqlite/pgsql/mysql до и после совпадают и закреплены тестом.",
+  "why": "Владелец: установок нет, никакого легаси и переходов миграций (D21, brief M3/M4). Каждый DB-тест сейчас прогоняет цепочку 0.x с backfill и legacy-drop — схлопывание ускоряет все наборы и убирает 21 апгрейд-тест.",
+  "scope": {
+    "include": [
+      "`scripts/schema-snapshot.php`: на чисто мигрированной БД (Testbench-приложение core + провайдеры media/drive/documents, как `tests.yml`) выводит нормализованный JSON: таблицы → колонки (имя, тип по Schema::getColumns, nullable, default), индексы (колонки, unique, primary), FK (колонки → таблица/колонки, on delete); сортировка детерминированная; имена индексов/FK SQLite игнорируются",
+      "Снимок ДО на sqlite/pgsql/mysql → `packages/core/tests/Fixtures/Schema/{sqlite,pgsql,mysql}.json` (снимается до любых правок миграций)",
+      "Новые create-миграции в `packages/core/database/migrations/`: `0001_01_01_0000NN_create_v_<table>_table.php`, одна на таблицу (side-таблицы могут быть вместе с владельцем), в порядке FK-зависимостей; используют существующие helper'ы `SchemaBuilder`/IdStrategy/host keys (поддержка стратегий id и префиксов таблиц сохраняется)",
+      "Удалить все 43 файла 0.x; миграции с данными/backfill/legacy-drop не переносятся",
+      "Удалить: `packages/core/tests/Upgrade/*`, `uses(FixtureTestCase…)->in($core.'/Upgrade')` в `tests/Pest.php`, `scripts/fixtures/*` (make-v0.2-dump, seed-v0.2), `Schema/UpgradePreflight.php`, `Exceptions/Schema/UpgradePreflightException.php`, `Console/UpgradeInspectCommand.php`, `Console/LegacyFanoutCommand.php` и их регистрацию (`Providers/ConsoleRegistrar`), тесты этих классов",
+      "Ветки кода только для данных/конфига 0.x (legacy-ключи `ConfigNormalizer`, совместимость старых имён таблиц/колонок и т.п.): инвентаризация `grep -rniE 'legacy|0\\.2|v0\\.|docvault|backfill|pre-?1\\.0' packages/*/src`, каждое попадание классифицировать в `plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.10/legacy-inventory.md` (удалить / оставить — не легаси, причина); удалить только классифицированное «легаси»",
+      "`SchemaSnapshotTest` (core, группа `database`): свежая схема = закреплённый снимок своего драйвера — страж от незаметных изменений до P4",
+      "UPGRADE.md: удалить разделы про 0.x, оставить заголовок и пояснение «первая стабильная версия — 1.0»; CHANGELOG.md: раздел 0.x сохранить как историю (не трогать содержимое)",
+      "`tests/baseline/CHANGES.md`: строки об удалённых тестах (Upgrade/*, тесты удалённых команд) с причиной D21; обновить `tests/baseline/core.count`"
+    ],
+    "exclude": [
+      "Перенос миграций по пакетам (P4)",
+      "Любое изменение формы схемы (имён, типов, индексов, FK)",
+      "Изменение поведения операций"
+    ]
+  },
+  "depends_on": [
+    "P1.1",
+    "P1.3"
+  ],
+  "decisions": [
+    "D21",
+    "D3",
+    "D4"
+  ],
+  "reads": [
+    {
+      "ref": "D21",
+      "why": "решение владельца: без легаси",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture#persistence",
+      "why": "правила миграций и что удаляется",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Schema/SchemaBuilder.php",
+      "why": "helper'ы колонок, id-стратегии, префиксы",
+      "required": true
+    },
+    {
+      "path": "packages/core/database/migrations/2026_10_01_000005_documents_aggregate.php",
+      "why": "пример смешанной миграции с backfill",
+      "required": true
+    },
+    {
+      "path": ".github/workflows/tests.yml",
+      "why": "какие провайдеры поднимаются для полной схемы",
+      "required": true
+    },
+    {
+      "path": "tests/Pest.php",
+      "why": "регистрация Upgrade TestCase",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "scripts/schema-snapshot.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Fixtures/Schema/*.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Schema/SchemaSnapshotTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/database/migrations/*",
+      "change": "any",
+      "note": "удалить 0.x, создать create-миграции"
+    },
+    {
+      "path": "packages/core/tests/Upgrade",
+      "change": "delete"
+    },
+    {
+      "path": "scripts/fixtures",
+      "change": "delete"
+    },
+    {
+      "path": "packages/core/src/Schema/UpgradePreflight.php",
+      "change": "delete"
+    },
+    {
+      "path": "packages/core/src/Exceptions/Schema/UpgradePreflightException.php",
+      "change": "delete"
+    },
+    {
+      "path": "packages/core/src/Console/UpgradeInspectCommand.php",
+      "change": "delete"
+    },
+    {
+      "path": "packages/core/src/Console/LegacyFanoutCommand.php",
+      "change": "delete"
+    },
+    {
+      "path": "packages/core/src/Providers/ConsoleRegistrar.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/*/src/**",
+      "change": "modify",
+      "note": "только ветки легаси по legacy-inventory"
+    },
+    {
+      "path": "tests/Pest.php",
+      "change": "modify"
+    },
+    {
+      "path": "UPGRADE.md",
+      "change": "modify"
+    },
+    {
+      "path": "tests/baseline/*",
+      "change": "modify"
+    },
+    {
+      "path": "@plan/artifacts/P1.10/legacy-inventory.md",
+      "change": "create"
+    }
+  ],
+  "rules": [
+    "Снимок ДО снимается первым коммитом пункта, до правок миграций.",
+    "Форма схемы не меняется: снимки ПОСЛЕ байт-в-байт равны снимкам ДО на всех трёх движках (V2).",
+    "Стратегии id (bigint/ULID/UUIDv7), префиксы таблиц и host-key колонки работают как прежде (их наборы зелёные).",
+    "Удаляется только то, что существует исключительно ради 0.x; спорное — оставить и записать в inventory.",
+    "Это единственный пункт P1, меняющий продуктовый код (только удаление легаси, D21)."
+  ],
+  "guidance": "Порядок: (1) scripts/schema-snapshot.php и снимки ДО (коммит); (2) create-миграции рядом со старыми не держать — заменить целиком; (3) снимки ПОСЛЕ, сравнение `diff`; (4) удалить апгрейд-код и тесты; (5) inventory и чистка веток. Если снимок ПОСЛЕ отличается — чинить create-миграцию, не снимок. Для pgsql/mysql — `scripts/test-db.sh` поднимает сервер; снимок запускать через Testbench так же, как TestCase.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "php scripts/schema-snapshot.php --driver=sqlite | diff - packages/core/tests/Fixtures/Schema/sqlite.json",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "scripts/t pgsql -p core -- packages/core/tests/Schema && scripts/t mysql -p core -- packages/core/tests/Schema",
+      "expect": "exit 0 (SchemaSnapshotTest на сервере = снимок ДО)",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "test -z \"$(ls packages/core/database/migrations | grep -v '_create_v_')\" && test ! -e packages/core/tests/Upgrade && test ! -e packages/core/src/Console/LegacyFanoutCommand.php",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "scripts/t sqlite -p core,media,drive,documents,filament",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "scripts/t pgsql -p core -- packages/core/tests/IdStrategy packages/core/tests/Ulid packages/core/tests/TablePrefix",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "cmd": "scripts/t baseline --compare",
+      "expect": "exit 0 (удалённые тесты перечислены в tests/baseline/CHANGES.md)",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "create-миграции core",
+    "снимки схемы ×3 и SchemaSnapshotTest",
+    "legacy-inventory.md",
+    "удалённый апгрейд-код и тесты"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T08:28:07Z"
+}

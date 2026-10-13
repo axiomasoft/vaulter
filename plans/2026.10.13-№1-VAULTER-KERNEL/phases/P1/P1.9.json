@@ -1,0 +1,90 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.9",
+  "title": "Квалификационный прогон P1 и отчёт до/после",
+  "status": "todo",
+  "summary": "Полный прогон всех наборов на sqlite/pgsql/mysql через `scripts/t all --full`, сравнение числа тестов с baseline, таблица «до/после» по наборам и движкам; регрессии P1 исправлены.",
+  "why": "Единственное место долгого прогона фазы (D4); доказывает, что ускорение не потеряло тестов.",
+  "scope": {
+    "include": [
+      "`scripts/t all --full --engines=sqlite,pgsql,mysql`",
+      "`scripts/t baseline --compare`",
+      "`scripts/t stand` — если окружение позволяет (иначе отметка «не проверено» с причиной)",
+      "Отчёт `plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.9/report.md` по образцу Chatom test-structure-report: главное, что сделано (коммиты), метрики до/после (2 замера, нагрузка), что проверено/не проверено, решения владельцу (branch protection, тариф Actions, сокращения из P1.7)"
+    ],
+    "exclude": [
+      "Мутации, load, coverage"
+    ]
+  },
+  "depends_on": [
+    "P1.2",
+    "P1.3",
+    "P1.4",
+    "P1.5",
+    "P1.6",
+    "P1.7",
+    "P1.8",
+    "P1.10"
+  ],
+  "decisions": [
+    "D3",
+    "D4"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/test-strategy#qualification-template",
+      "why": "шаблон",
+      "required": true
+    },
+    {
+      "ref": "artifact/P1.1-baseline",
+      "why": "цифры «до»",
+      "required": true
+    }
+  ],
+  "task_files": [],
+  "rules": [
+    "Регрессия, вызванная P1, чинится в этом пункте; чужая (существовавшая на c64bba25) — фиксируется в отчёте с доказательством, что она была до P1."
+  ],
+  "guidance": "**Образцы в соседних репозиториях экосистемы (читать с диска, не копировать в этот публичный репозиторий — AzGuard приватный):**\n- `/home/vostrikov/projects/packages/chatom/plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/handoff/2026-10-13-test-structure-report.md` — образец отчёта",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "scripts/t all --full --engines=sqlite,pgsql,mysql",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "scripts/t baseline --compare",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "test -s plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.9/report.md",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "report.md до/после",
+    "зелёный полный прогон"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T08:28:08Z"
+}

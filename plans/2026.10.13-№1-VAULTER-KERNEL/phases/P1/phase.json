@@ -1,0 +1,148 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P1",
+  "title": "Тестовая инфраструктура и политика прогонов",
+  "design": "detailed",
+  "goal": "Сделать тестовые прогоны быстрыми, параллельными и точечными до архитектурной работы и задать политику прогонов для всего плана: замеры до/после, единый вход `scripts/t`, карта зон и выбор по diff, слои `database`/`serial`/`extended`/`stand`, CI без мутаций и нагрузки на PR с единым gate, удаление легаси 0.x и схлопывание миграций (ускоряет каждый DB-тест), документация. Это «нулевая фаза» владельца (brief M1/B7, B9).",
+  "context": "Нормативный документ — knowledge/test-strategy (все секции); источники практик — AzGuard (коммиты `cd612034..fed259a3`, `tests/zones.json`, `bin/test-changed.php`, `bin/test-db.php`, `tests/README.md`) и Chatom (`scripts/t`, `tests/zones.json`, `2026-10-13-test-structure-report.md`): переносить подход, не код вслепую; код AzGuard/Chatom можно читать как образец (пути в knowledge/source-review#sources).\n\n**Окружение (обязательно каждому пункту P1):**\n- PHP ≥ 8.4: если системный `php` старше, использовать `scripts/php84` (шим) или `php8.4` первым в PATH; проверить `php -v` в начале пункта.\n- Каждый PHP-пакет — свой `composer install` в `packages/<p>` (свой `vendor/`); корень — свой `vendor/` для core и `load/tests`.\n- Серверные СУБД — только через `scripts/test-db.sh` (одноразовый сервер, `DB_FAST=1`, БД на воркера по `TEST_TOKEN`); Docker может требовать `sg docker -c \"…\"`. Чужие контейнеры (`azguard-*`, `chatom-*`) не трогать. Не использовать `pkill -f <скрипт>`.\n- Логи и сырые замеры — `var/quality/…` внутри репо (добавить `var/` в `.gitignore`, если отсутствует); долгие прогоны — в фоне с `TEST_LOG_DIR`.\n- Продуктовый код (`packages/*/src`, `packages/*/database`, `hocuspocus-server/src`, `packages/vue/src`) в P1 не меняется, кроме P1.10 (только удаление легаси 0.x и схлопывание миграций без изменения схемы, D21); семантика тестов не меняется; изоляция и покрытие не ослабляются (удаление апгрейд-тестов 0.x — по D21).\n- Мутации и load не запускаются (D3, D4). Коммиты: Conventional Commits через `plan.py commit`.",
+  "contract": {
+    "consumes": [
+      "knowledge/test-strategy",
+      "knowledge/source-review#ecosystem-borrowed",
+      "D3",
+      "D4"
+    ],
+    "produces": [
+      "tests/baseline/*.count и отчёт замеров до/после",
+      "scripts/t (единый вход), scripts/test-select.php (выбор по diff)",
+      "tests/zones.json + root testsuite `repo` с ZonesMapTest и тестами селектора",
+      "группы database/serial/extended/stand/nofast в наборах",
+      "ci.yml с ci-gate, weekly-full.yml, mutation.yml (только dispatch), load.yml (только dispatch)",
+      "tests/README.md, CONTRIBUTING, CLAUDE.md/AGENTS.md — команды",
+      "отчёт кандидатов на сокращение (без удаления)",
+      "Чистые create-миграции core, снимки схемы ×3 и SchemaSnapshotTest; удалённый легаси 0.x (P1.10)"
+    ],
+    "boundaries": [
+      "Не меняется продуктовый код, кроме удаления легаси в P1.10 (D21); форма схемы неизменна",
+      "Число и имена тестов совпадают с baseline (кроме перечисленных в tests/baseline/CHANGES.md, в т.ч. апгрейд-тесты 0.x по D21)",
+      "Ничего, кроме легаси 0.x, не удаляется без grant владельца"
+    ]
+  },
+  "scope": {
+    "include": [
+      "scripts/t, scripts/test-select.php, scripts/ci/*, scripts/test-db.sh (расширение)",
+      "tests/zones.json, tests/Repo/*, tests/Pest.php, packages/*/tests/Pest.php, phpunit.xml(s)",
+      ".github/workflows/*",
+      "composer.json scripts, Makefile",
+      "tests/README.md, CONTRIBUTING.md, CLAUDE.md, AGENTS.md, plans/ACTIVE.md",
+      "P1.10: packages/core/database/migrations, удаление апгрейд-кода и тестов 0.x"
+    ],
+    "exclude": [
+      "packages/*/src, packages/*/database, hocuspocus-server/src, packages/vue/src — кроме удаления легаси 0.x в P1.10",
+      "Удаление или сведение тестов (только отчёт P1.7)",
+      "Мутации и load-прогоны"
+    ]
+  },
+  "pitfalls": [
+    "Серверная БД: один процесс Pest держит одну схему TestCase (`tests.yml`) — серверные линии группировать по TestCase или БД на воркера",
+    "ParaTest учитывает только первый `--exclude-group` — зонтичная группа `nofast`",
+    "Измерять до того, как строить: оценки стоимости DDL в AzGuard были завышены в 10 раз; минимум два замера, нагрузка машины записана",
+    "MySQL на диске в CI — в 10 раз медленнее tmpfs (Chatom 74,5 → 7,2 мин)",
+    "Селектор: изменение harness → код 2, неизвестный путь → полный набор; никогда «0 тестов — успех»",
+    "GitHub Actions может не запускаться (биллинг) — workflows проверять policy-скриптом и actionlint, отметить «не проверено на GitHub»"
+  ],
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "scripts/t all --full --engines=sqlite,pgsql,mysql && scripts/t baseline --compare",
+      "expect": "exit 0 (запускает только P1.9)",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "Быстрый единый вход и селектор",
+    "Карта зон и слои",
+    "CI-политика",
+    "Документация и отчёт до/после",
+    "Чистые миграции и удалённый легаси"
+  ],
+  "items": [
+    "P1.1",
+    "P1.2",
+    "P1.3",
+    "P1.4",
+    "P1.5",
+    "P1.6",
+    "P1.7",
+    "P1.8",
+    "P1.9",
+    "P1.10"
+  ],
+  "batches": [
+    {
+      "id": "B1",
+      "items": [
+        "P1.1"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B2",
+      "items": [
+        "P1.2",
+        "P1.3"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B3",
+      "items": [
+        "P1.10"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B4",
+      "items": [
+        "P1.4"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B5",
+      "items": [
+        "P1.5"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B6",
+      "items": [
+        "P1.6",
+        "P1.7"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B7",
+      "items": [
+        "P1.8"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B8",
+      "items": [
+        "P1.9"
+      ],
+      "mode": "recommended"
+    }
+  ],
+  "sections": [
+    {
+      "id": "environment",
+      "title": "Окружение и ограничения фазы",
+      "text": "**Окружение (обязательно каждому пункту P1):**\n- PHP ≥ 8.4: если системный `php` старше, использовать `scripts/php84` (шим) или `php8.4` первым в PATH; проверить `php -v` в начале пункта.\n- Каждый PHP-пакет — свой `composer install` в `packages/<p>` (свой `vendor/`); корень — свой `vendor/` для core и `load/tests`.\n- Серверные СУБД — только через `scripts/test-db.sh` (одноразовый сервер, `DB_FAST=1`, БД на воркера по `TEST_TOKEN`); Docker может требовать `sg docker -c \"…\"`. Чужие контейнеры (`azguard-*`, `chatom-*`) не трогать. Не использовать `pkill -f <скрипт>`.\n- Логи и сырые замеры — `var/quality/…` внутри репо (добавить `var/` в `.gitignore`, если отсутствует); долгие прогоны — в фоне с `TEST_LOG_DIR`.\n- Продуктовый код (`packages/*/src`, `packages/*/database`, `hocuspocus-server/src`, `packages/vue/src`) в P1 не меняется, кроме P1.10 (только удаление легаси 0.x и схлопывание миграций без изменения схемы, D21); семантика тестов не меняется; изоляция и покрытие не ослабляются (удаление апгрейд-тестов 0.x — по D21).\n- Мутации и load не запускаются (D3, D4). Коммиты: Conventional Commits через `plan.py commit`."
+    }
+  ]
+}

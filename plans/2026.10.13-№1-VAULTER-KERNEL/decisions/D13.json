@@ -1,0 +1,34 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D13",
+  "title": "Публикация поверхности атрибутами #[Api]/#[Spi]",
+  "date": "2026-10-13",
+  "status": "accepted",
+  "question": "Как помечать поддерживаемую поверхность?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Атрибуты Vaulter\\Attributes\\{Api,Spi,SpiKind,Internal} по образцу AzGuard/Chatom/CoreX; манифест членов генерируется из атрибутов; ручные списки PublicApiSnapshotTest — baseline до P3"
+    },
+    {
+      "id": "B",
+      "text": "Оставить ручные списки"
+    }
+  ],
+  "context": "Экосистема сошлась на атрибутах (AzGuard\\Attributes\\Spi, Chatom\\Attributes\\Spi, CoreX\\Attributes\\SpiKind).",
+  "decision": "A — Атрибуты Vaulter\\Attributes\\{Api,Spi,SpiKind,Internal} по образцу AzGuard/Chatom/CoreX; манифест членов генерируется из атрибутов; ручные списки PublicApiSnapshotTest — baseline до P3",
+  "rationale": "Единый подход экосистемы; генерация убирает ручной дрейф; различает API потребителя и SPI реализатора.",
+  "consequences": [
+    "I13",
+    "именованные аргументы публичных методов — часть API"
+  ],
+  "applies_to": [
+    "P3",
+    "P7"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "agent"
+}

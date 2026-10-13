@@ -1,0 +1,83 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.7",
+  "title": "Отчёт: кандидаты на сокращение и стоимость (без удаления)",
+  "status": "todo",
+  "summary": "Таблица кандидатов «тест/датасет/матрица → что проверяет → дешёвый эквивалент → какой дефект перестанет ловиться → предложение → выигрыш секунд» и открытое решение владельцу; ни один тест не удалён.",
+  "why": "Владелец допускает отказ от части тестов (M1), но правило П7/П14 и D4: удаление только с доказательством и «да» владельца; mutation-доказательства до D3-разрешения нет.",
+  "scope": {
+    "include": [
+      "Датасеты с декартовым произведением (поиск `->with(` с несколькими измерениями) — три вопроса П7 на каждое измерение",
+      "Пересечения наборов: `Feature` vs `Http` vs `PublicApi` vs `Recipes` в core/drive/documents; `OpenApi`-валидация на каждом ответе vs `openapi.yml` breaking-check; `IdStrategy`×3 vs `Ulid`",
+      "Самые долгие файлы (P1.1) и что их удешевит без изменения утверждений",
+      "Отчёт `plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.7/reduction-report.md`; открытое решение через `plan.py add-decision` («Какие сокращения тестов одобрить»), варианты = строки отчёта"
+    ],
+    "exclude": [
+      "Любое удаление/сведение тестов в этом пункте"
+    ]
+  },
+  "depends_on": [
+    "P1.5"
+  ],
+  "decisions": [
+    "D3",
+    "D4"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/test-strategy#practices",
+      "why": "П7, П9, П14",
+      "required": true
+    },
+    {
+      "ref": "artifact/P1.1-baseline",
+      "why": "медленные файлы",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "@plan/artifacts/P1.7/reduction-report.md",
+      "change": "create"
+    }
+  ],
+  "rules": [
+    "Только чтение кода; изменения — в артефактах плана.",
+    "Для каждого кандидата явно: «доказано эквивалентным повтором» или «требует mutation/ревью» — второе не предлагать к удалению до D3-разрешения."
+  ],
+  "guidance": "Эквивалентный повтор: значение измерения не меняет механизм (регистрацию, binding, connection, ветку кода) — проверить по коду ветвления, а не по названию.\n\n**Образцы в соседних репозиториях экосистемы (читать с диска, не копировать в этот публичный репозиторий — AzGuard приватный):**\n- `/home/vostrikov/projects/packages/chatom/plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/handoff/2026-10-13-test-structure-research/answer-3-matrix-redundancy-budget.md` — как оценивать избыточность",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "test -s plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.7/reduction-report.md",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "git diff --quiet HEAD -- packages/ tests/",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "reduction-report.md",
+    "открытое решение владельцу"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T08:13:09Z"
+}

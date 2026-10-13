@@ -1,0 +1,136 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.2",
+  "title": "CI-триггеры: мутации и нагрузка только вручную, без coverage на PR",
+  "status": "todo",
+  "summary": "Мутации запускаются только из `mutation.yml` по `workflow_dispatch` с выбором пакета; `load.yml` — только `workflow_dispatch`; PR не гоняет xdebug-coverage; у всех jobs есть `timeout-minutes`, у PR-workflow — `concurrency` с отменой; политику проверяет `scripts/ci/workflow-policy.py`.",
+  "why": "D3 и D4 владельца; mutation-jobs на push/PR и load на PR — главные потребители времени CI (source-review A20).",
+  "scope": {
+    "include": [
+      "Перенести `drive-mutation`, `documents-mutation`, `media-mutation`, `filament-mutation` в `.github/workflows/mutation.yml`: `workflow_dispatch` с input `package` (choice: core, media, drive, documents, filament), пороги `--min` и сервисы (PG у drive) — как были; удалить эти jobs из пакетных workflows",
+      "`load.yml`: `on: workflow_dispatch` (inputs сохранить); убрать `pull_request` и `schedule`",
+      "`tests.yml`: `coverage: none` в setup-php, `vendor/bin/pest --ci --parallel` без `--coverage`; шаг Codecov удалить (coverage переезжает в weekly-full, P1.6)",
+      "`timeout-minutes` на каждом job всех workflow (потолок ≈ 3× замер P1.1, минимум 10)",
+      "`concurrency: {group: ${{ github.workflow }}-${{ github.ref }}, cancel-in-progress: true}` на push/PR-workflow",
+      "`scripts/ci/workflow-policy.py`: загружает все `.github/workflows/*.yml` (PyYAML) и падает, если `--mutate` встречается вне `mutation.yml`; `mutation.yml` или `load.yml` имеет триггер кроме `workflow_dispatch`; у job нет `timeout-minutes`; PR-workflow без `concurrency`; `--coverage` в workflow с триггером `pull_request`"
+    ],
+    "exclude": [
+      "Объединение workflow и gate (P1.6)",
+      "Изменение порогов мутаций"
+    ]
+  },
+  "depends_on": [
+    "P1.1"
+  ],
+  "decisions": [
+    "D3",
+    "D4"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/test-strategy#ci-target",
+      "why": "целевое состояние CI",
+      "required": true
+    },
+    {
+      "ref": "D3",
+      "why": "мутации только с разрешения",
+      "required": true
+    },
+    {
+      "ref": "D4",
+      "why": "load только вручную",
+      "required": true
+    },
+    {
+      "path": ".github/workflows/drive.yml",
+      "why": "mutation-job с PG-сервисом",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": ".github/workflows/mutation.yml",
+      "change": "modify"
+    },
+    {
+      "path": ".github/workflows/drive.yml",
+      "change": "modify"
+    },
+    {
+      "path": ".github/workflows/documents.yml",
+      "change": "modify"
+    },
+    {
+      "path": ".github/workflows/media.yml",
+      "change": "modify"
+    },
+    {
+      "path": ".github/workflows/filament.yml",
+      "change": "modify"
+    },
+    {
+      "path": ".github/workflows/load.yml",
+      "change": "modify"
+    },
+    {
+      "path": ".github/workflows/tests.yml",
+      "change": "modify"
+    },
+    {
+      "path": ".github/workflows/*.yml",
+      "change": "modify",
+      "note": "только timeout-minutes/concurrency"
+    },
+    {
+      "path": "scripts/ci/workflow-policy.py",
+      "change": "create"
+    }
+  ],
+  "rules": [
+    "Пороги `--min` мутаций и команды переносятся байт-в-байт.",
+    "Никаких изменений продуктового кода и тестов."
+  ],
+  "guidance": "Если `actionlint` доступен (`docker run --rm -v \"$PWD\":/repo -w /repo rhysd/actionlint:1.7.7`), прогнать его; результат — impact-проверка.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/ci/workflow-policy.py",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "! grep -l -- '--mutate' .github/workflows/*.yml | grep -v mutation.yml",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "docker run --rm -v \"$PWD\":/repo -w /repo rhysd/actionlint:1.7.7",
+      "expect": "exit 0",
+      "kind": "impact"
+    }
+  ],
+  "deliverables": [
+    "mutation.yml с выбором пакета",
+    "load.yml только dispatch",
+    "workflow-policy.py"
+  ],
+  "route": {
+    "class": "economy",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T08:12:36Z"
+}
