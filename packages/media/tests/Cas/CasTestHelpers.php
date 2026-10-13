@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Media\Tests\Cas;
 
 use Illuminate\Support\Facades\Storage as StorageFacade;
+use Vaulter\Configuration\IdsConfig;
 use Vaulter\Contracts\Cas\ContentStore;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Cas\BlobStatus;
@@ -15,6 +16,7 @@ use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\ValueObjects\Cas\BlobScope;
 
 /**
@@ -167,6 +169,70 @@ final class CasTestHelpers
         self::write(static fn () => $blob->save());
 
         return $blob;
+    }
+
+    /**
+     * Many blob rows in a few statements instead of one save per row: for tests that need
+     * thousands of candidates. Same row shape as {@see seedBlobRow()} (the model serialises every
+     * attribute, so casts and the id strategy apply); returned in seed order. $attributes are
+     * merged into every row.
+     *
+     * @param  array<string, mixed> $attributes
+     * @return list<Blob>
+     */
+    public static function seedBlobRows(
+        int $count,
+        string $bytesPrefix,
+        BlobStatus $status,
+        array $attributes = [],
+        string $disk = 'local',
+        string $scope = 't-default',
+    ): array {
+        $blobScope = BlobScope::fromSegment($scope);
+        $resolver = app(IdStrategyResolver::class)->resolve(app(IdsConfig::class)->strategy());
+        $rows = [];
+        $hashes = [];
+
+        for ($i = 0; $i < $count; $i++) {
+            $bytes = $bytesPrefix.$i;
+            $sha256 = hash('sha256', $bytes);
+            $storageKey = self::contentStore()->keyFor(scope: $blobScope, sha256: $sha256);
+            StorageFacade::disk($disk)->put($storageKey, $bytes);
+
+            $blob = new Blob;
+            $blob->forceFill([
+                'tenant_id' => null,
+                'drive_id' => null,
+                'hash_algo' => 'sha256',
+                'sha256' => $sha256,
+                'size_bytes' => strlen($bytes),
+                'disk' => $disk,
+                'storage_key' => $storageKey,
+                'status' => $status,
+                'ref_count' => 0,
+                'dedup_scope' => $blobScope->dedupScope(),
+                'scope_key' => $blobScope->key(),
+                'committed_at' => $status === BlobStatus::Committed ? now() : null,
+                ...$attributes,
+            ]);
+            $newId = $resolver->newId();
+            if ($newId !== null) {
+                $blob->setAttribute($blob->getKeyName(), $newId);
+            }
+            $rows[] = $blob->getAttributes();
+            $hashes[] = $sha256;
+        }
+
+        $model = new Blob;
+        self::write(static function () use ($model, $rows): void {
+            foreach (array_chunk($rows, 500) as $chunk) {
+                $model->getConnection()->table($model->getTable())->insert($chunk);
+            }
+        });
+
+        $bySha = Blob::query()->whereIn('sha256', $hashes)->get()->keyBy('sha256');
+
+        return array_map(static fn (string $sha256): Blob => $bySha[$sha256], $hashes);
     }
 
     /** Seed rows through the write scope so the guard lane stays on for the code under test. */

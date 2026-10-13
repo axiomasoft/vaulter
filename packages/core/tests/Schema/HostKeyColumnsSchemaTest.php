@@ -43,7 +43,7 @@ it('rejects unknown host key configuration', function ($value): void {
 
 it('preserves nullable and index conventions for migration helpers', function (): void {
     config()->set('vaulter.tenancy.enabled', true);
-    $table = new Blueprint(DB::connection(), 'host_key_probe');
+    $table = new Blueprint(Schema::getConnection(), 'host_key_probe');
     VaulterSchema::hostKey($table, 'owner_id');
     VaulterSchema::actor($table, 'created_by');
     VaulterSchema::tenant($table);

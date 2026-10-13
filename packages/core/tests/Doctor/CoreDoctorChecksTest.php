@@ -47,7 +47,7 @@ it('reports the sqlite test database as a warning, an error in production', func
     expect(coreCodes('core.database.connection'))->toBe(['core.database.sqlite'])
         ->and(coreSeverities('core.database.connection'))->toBe(['warning'])
         ->and(coreSeverities('core.database.connection', production: true))->toBe(['error']);
-});
+})->skip(fn (): bool => DB::connection()->getDriverName() !== 'sqlite', 'SQLite-only: a server engine is not the sqlite warning');
 
 it('reports an unreachable database by exception class only', function (): void {
     config([
@@ -97,7 +97,7 @@ it('skips the key types where the driver cannot report them', function (): void 
     expect($finding->code)->toBe('core.schema.key_types_skipped')
         ->and($finding->severity)->toBe(DoctorSeverity::Ok)
         ->and($finding->evidence['skipped'])->toBeTrue();
-});
+})->skip(fn (): bool => DB::connection()->getDriverName() !== 'sqlite', 'SQLite-only: a server driver reports its key types (key_types_match)');
 
 it('finds no broken invariant in consistent data', function (): void {
     $drive = DriveTestHelpers::drive();
@@ -123,7 +123,7 @@ it('samples a file node without a file and a foreign head', function (): void {
     DB::table(coreTable('files'))->where('node_id', $node->id)->delete();
     $finding = coreFindings('core.schema.integrity')[0];
     expect($finding->evidence)->toHaveKey('i5_file_nodes_without_file', 1);
-});
+})->skip(fn (): bool => DB::connection()->getDriverName() !== 'sqlite', 'SQLite-only: a server engine\'s foreign key refuses the foreign head this test plants');
 
 it('samples drives without a single root and limits the sample', function (): void {
     foreach (range(1, 3) as $_) {

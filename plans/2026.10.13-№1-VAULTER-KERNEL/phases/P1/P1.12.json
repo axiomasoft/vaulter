@@ -1,0 +1,88 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.12",
+  "title": "Хвосты оптимизации: посев GC, накладные партиций, падения pgsql",
+  "status": "done_with_deviations",
+  "summary": "Закрыть хвосты P1.11: массовый посев BlobGcBatchTest, накладные расходы пустых партиций, разбор падений pgsql (тестовые чинить, продуктовые сверить с base c64bba25 и записать).",
+  "why": "Владелец: без хвостов по оптимизациям; локальная линия должна быть быстрой и зелёной на sqlite+pgsql.",
+  "scope": {
+    "include": [
+      "packages/media/tests, packages/core/tests, packages/drive/tests: ускорение посева и починка тестовых причин падений pgsql, без удаления тестов и смены имён",
+      "scripts/t и tests/suites.json: накладные расходы партиций",
+      "Падения в продуктовом коде: только зафиксировать с доказательством base/не base в отчёте"
+    ],
+    "exclude": [
+      "Полная матрица, mysql, мутации, load, coverage",
+      "Правка packages/*/src"
+    ]
+  },
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "scripts/t baseline --compare",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "scripts/t sqlite -p repo",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "test -s plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.12/report.md",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "report.md: что ускорено, какие падения тестовые/продуктовые, доказательство base"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-13T18:11:57Z",
+    "finished_at": "2026-10-13T18:26:06Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "sonnet-5.5",
+      "effort": "medium",
+      "session": "d75c9cd8-d44b-44ac-b463-fc6003e7d43e"
+    },
+    "notes": "seedBlobRows (61.7->47.8s), 3 pgsql test fixes, 3 sqlite-only skips; report lists remaining failures with base evidence.",
+    "deviations": [
+      "Product src untouched: pre-existing failures (EventTypeTest, ProblemMappingTest on base too; ResetChangesCommand pgsql bug) recorded, not fixed; P83DocumentsMetricsTest not proven vs base; empty-partition overhead and documents ZERO TESTS partition not addressed."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-13T18:26:06Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-13T18:26:06Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-13T18:26:06Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-13T18:26:06Z"
+}

@@ -27,22 +27,10 @@ beforeEach(function (): void {
 /** @return list<Blob> */
 function r21SeedCandidates(int $count, BlobStatus $status = BlobStatus::Committed): array
 {
-    $blobs = [];
-
-    for ($i = 0; $i < $count; $i++) {
-        $blob = CasTestHelpers::seedBlobRow('r21 candidate '.$i, $status);
-
-        if ($status !== BlobStatus::Committed) {
-            CasTestHelpers::write(static fn () => $blob->forceFill([
-                'delete_after_at' => now()->subHour(),
-                'first_seen_at' => now()->subDays(2),
-            ])->save());
-        }
-
-        $blobs[] = $blob;
-    }
-
-    return $blobs;
+    return CasTestHelpers::seedBlobRows($count, 'r21 candidate ', $status, $status === BlobStatus::Committed ? [] : [
+        'delete_after_at' => now()->subHour(),
+        'first_seen_at' => now()->subDays(2),
+    ]);
 }
 
 /** @return list<int|float> */

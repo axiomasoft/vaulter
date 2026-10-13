@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Data\Drive\UploadOptions;
@@ -270,6 +271,14 @@ it("restores to the parent recorded on the locked row, not the caller's stale mo
     expect($drive->trash()->restore($stale)->parentId)->toEqual($b->id);
 });
 
+/** PostgreSQL takes the tree lock as an advisory lock; SQLite and MySQL as the storage row. */
+function treeLockStatement(string $sql): bool
+{
+    return DB::connection()->getDriverName() === 'pgsql'
+        ? str_contains($sql, 'pg_advisory_xact_lock')
+        : str_starts_with($sql, 'select "id" from "v_drives"');
+}
+
 it('takes the tree lock before any node row lock', function (string $operation): void {
     $drive = DriveTestHelpers::drive();
     $folder = $drive->folders()->create('Target');
@@ -288,10 +297,9 @@ it('takes the tree lock before any node row lock', function (string $operation):
         'rename' => $drive->nodes()->rename($folder, 'Renamed'),
     };
 
-    $storageLock = array_key_first(array_filter($queries, static fn (string $sql): bool => str_starts_with($sql, 'select "id" from "v_drives"')));
+    $storageLock = array_key_first(array_filter($queries, static fn (string $sql): bool => treeLockStatement($sql)));
     $nodeLock = array_key_first(array_filter($queries, static fn (string $sql): bool => str_contains($sql, 'from "v_nodes"') && str_contains($sql, 'order by')));
 
-    // SQLite (like MySQL) implements the tree lock as the storage row.
     expect($storageLock)->not->toBeNull()
         ->and($nodeLock)->not->toBeNull()
         ->and($storageLock)->toBeLessThan($nodeLock);
@@ -340,7 +348,7 @@ it('purges trash under the tree lock taken before the trashed root row', functio
 
     $this->artisan('vaulter:trash:purge', ['--days' => 1])->assertSuccessful();
 
-    $treeLock = array_key_first(array_filter($queries, static fn (string $sql): bool => str_starts_with($sql, 'select "id" from "v_drives"')));
+    $treeLock = array_key_first(array_filter($queries, static fn (string $sql): bool => treeLockStatement($sql)));
     $rootLock = array_key_first(array_filter($queries, static fn (string $sql): bool => str_contains($sql, 'from "v_nodes"') && str_contains($sql, '"trashed_at" <=') && str_contains($sql, 'limit 1')));
 
     expect($treeLock)->not->toBeNull()
