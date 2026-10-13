@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P1.10",
   "title": "Удаление легаси 0.x и чистые create-миграции (схема неизменна)",
-  "status": "todo",
+  "status": "in_progress",
   "summary": "Миграции схлопнуты без DDL-разницы в каждой engine/schema-preset строке. Только доказанное 0.x удалено; живые проверки вынесены, immutable schema ДО сохранена, текущий snapshot и test закреплены.",
   "why": "Владелец: установок нет, никакого легаси и переходов миграций (D21, brief M3/M4). Каждый DB-тест сейчас прогоняет цепочку 0.x с backfill и legacy-drop — схлопывание ускоряет все наборы и убирает 21 апгрейд-тест.",
   "scope": {
@@ -255,6 +255,14 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T10:01:20Z"
+  "result": {
+    "started_at": "2026-10-13T11:10:47Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "67dd0049-af5f-4240-b8a6-1477596cce2d"
+    }
+  },
+  "updated_at": "2026-10-13T11:10:47Z"
 }

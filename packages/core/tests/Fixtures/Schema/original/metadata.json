@@ -1,0 +1,110 @@
+{
+  "product_tree_clean_vs": "c64bba25",
+  "captured_at_head": "f23157b609c12906efe9a53e2ec0c75a75fada8b",
+  "source_tree_sha256": "675cac217db1f098b5fcf9478df788423115d51c93417cc97cbbe6df0d431063",
+  "setup": {
+    "php": "8.4.26",
+    "command": "scripts/schema-snapshot.sh --write-original",
+    "config": "packages/core/tests/Fixtures/Schema/snapshot-configs.json"
+  },
+  "engines": {
+    "sqlite": {
+      "version": "3.45.1",
+      "presets": 48
+    },
+    "pgsql": {
+      "version": "16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)",
+      "presets": 48
+    },
+    "mysql": {
+      "version": "8.0.46-0ubuntu0.24.04.4 for Linux on x86_64 ((Ubuntu))",
+      "presets": 48
+    }
+  },
+  "builder_fallback": {
+    "pgsql": [
+      {
+        "preset": "bigint.uuid.v.off",
+        "chain_error": "schema-snapshot: Illuminate\\Database\\QueryException: SQLSTATE[42846]: Cannot coerce: 7 ERROR:  cannot cast type uuid to bigint at character 78 (Connection: testing, Host: 127.0.0.1, Port: 49449, Database: snap_9_test, SQL: ALTER TABLE \"v_drives\" ALTER COLUMN \"tenant_id\" TYPE bigint USING \"tenant_id\""
+      },
+      {
+        "preset": "bigint.uuid.v.on",
+        "chain_error": "schema-snapshot: Illuminate\\Database\\QueryException: SQLSTATE[42846]: Cannot coerce: 7 ERROR:  cannot cast type uuid to bigint at character 78 (Connection: testing, Host: 127.0.0.1, Port: 49449, Database: snap_10_test, SQL: ALTER TABLE \"v_drives\" ALTER COLUMN \"tenant_id\" TYPE bigint USING \"tenant_id"
+      },
+      {
+        "preset": "bigint.uuid.custom.off",
+        "chain_error": "schema-snapshot: Illuminate\\Database\\QueryException: SQLSTATE[42846]: Cannot coerce: 7 ERROR:  cannot cast type uuid to bigint at character 83 (Connection: testing, Host: 127.0.0.1, Port: 49449, Database: snap_11_test, SQL: ALTER TABLE \"custom_drives\" ALTER COLUMN \"tenant_id\" TYPE bigint USING \"tena"
+      },
+      {
+        "preset": "bigint.uuid.custom.on",
+        "chain_error": "schema-snapshot: Illuminate\\Database\\QueryException: SQLSTATE[42846]: Cannot coerce: 7 ERROR:  cannot cast type uuid to bigint at character 83 (Connection: testing, Host: 127.0.0.1, Port: 49449, Database: snap_12_test, SQL: ALTER TABLE \"custom_drives\" ALTER COLUMN \"tenant_id\" TYPE bigint USING \"tena"
+      },
+      {
+        "preset": "uuid7.string.v.off",
+        "chain_error": "schema-snapshot: Illuminate\\Database\\QueryException: SQLSTATE[42883]: Undefined function: 7 ERROR:  function min(uuid) does not exist LINE 1: select \"tenant_id\", \"sha256\", count(*) as copies, min(id) as...                                                           ^ HINT:  No function matches the giv"
+      },
+      {
+        "preset": "uuid7.string.v.on",
+        "chain_error": "schema-snapshot: Illuminate\\Database\\QueryException: SQLSTATE[42883]: Undefined function: 7 ERROR:  function min(uuid) does not exist LINE 1: select \"tenant_id\", \"sha256\", count(*) as copies, min(id) as...                                                           ^ HINT:  No function matches the giv"
+      },
+      {
+        "preset": "uuid7.string.custom.off",
+        "chain_error": "schema-snapshot: Illuminate\\Database\\QueryException: SQLSTATE[42883]: Undefined function: 7 ERROR:  function min(uuid) does not exist LINE 1: select \"tenant_id\", \"sha256\", count(*) as copies, min(id) as...                                                           ^ HINT:  No function matches the giv"
+      },
+      {
+        "preset": "uuid7.string.custom.on",
+        "chain_error": "schema-snapshot: Illuminate\\Database\\QueryException: SQLSTATE[42883]: Undefined function: 7 ERROR:  function min(uuid) does not exist LINE 1: select \"tenant_id\", \"sha256\", count(*) as copies, min(id) as...                                                           ^ HINT:  No function matches the giv"
+      },
+      {
+        "preset": "uuid7.bigint.v.off",
+        "chain_error": "schema-snapshot: Illuminate\\Database\\QueryException: SQLSTATE[42883]: Undefined function: 7 ERROR:  function min(uuid) does not exist LINE 1: select \"tenant_id\", \"sha256\", count(*) as copies, min(id) as...                                                           ^ HINT:  No function matches the giv"
+      },
+      {
+        "preset": "uuid7.bigint.v.on",
+        "chain_error": "schema-snapshot: Illuminate\\Database\\QueryException: SQLSTATE[42883]: Undefined function: 7 ERROR:  function min(uuid) does not exist LINE 1: select \"tenant_id\", \"sha256\", count(*) as copies, min(id) as...                                                           ^ HINT:  No function matches the giv"
+      },
+      {
+        "preset": "uuid7.bigint.custom.off",
+        "chain_error": "schema-snapshot: Illuminate\\Database\\QueryException: SQLSTATE[42883]: Undefined function: 7 ERROR:  function min(uuid) does not exist LINE 1: select \"tenant_id\", \"sha256\", count(*) as copies, min(id) as...                                                           ^ HINT:  No function matches the giv"
+      },
+      {
+        "preset": "uuid7.bigint.custom.on",
+        "chain_error": "schema-snapshot: Illuminate\\Database\\QueryException: SQLSTATE[42883]: Undefined function: 7 ERROR:  function min(uuid) does not exist LINE 1: select \"tenant_id\", \"sha256\", count(*) as copies, min(id) as...                                                           ^ HINT:  No function matches the giv"
+      },
+      {
+        "preset": "uuid7.uuid.v.off",
+        "chain_error": "schema-snapshot: Illuminate\\Database\\QueryException: SQLSTATE[42883]: Undefined function: 7 ERROR:  function min(uuid) does not exist LINE 1: select \"tenant_id\", \"sha256\", count(*) as copies, min(id) as...                                                           ^ HINT:  No function matches the giv"
+      },
+      {
+        "preset": "uuid7.uuid.v.on",
+        "chain_error": "schema-snapshot: Illuminate\\Database\\QueryException: SQLSTATE[42883]: Undefined function: 7 ERROR:  function min(uuid) does not exist LINE 1: select \"tenant_id\", \"sha256\", count(*) as copies, min(id) as...                                                           ^ HINT:  No function matches the giv"
+      },
+      {
+        "preset": "uuid7.uuid.custom.off",
+        "chain_error": "schema-snapshot: Illuminate\\Database\\QueryException: SQLSTATE[42883]: Undefined function: 7 ERROR:  function min(uuid) does not exist LINE 1: select \"tenant_id\", \"sha256\", count(*) as copies, min(id) as...                                                           ^ HINT:  No function matches the giv"
+      },
+      {
+        "preset": "uuid7.uuid.custom.on",
+        "chain_error": "schema-snapshot: Illuminate\\Database\\QueryException: SQLSTATE[42883]: Undefined function: 7 ERROR:  function min(uuid) does not exist LINE 1: select \"tenant_id\", \"sha256\", count(*) as copies, min(id) as...                                                           ^ HINT:  No function matches the giv"
+      },
+      {
+        "preset": "uuid7.ulid.v.off",
+        "chain_error": "schema-snapshot: Illuminate\\Database\\QueryException: SQLSTATE[42883]: Undefined function: 7 ERROR:  function min(uuid) does not exist LINE 1: select \"tenant_id\", \"sha256\", count(*) as copies, min(id) as...                                                           ^ HINT:  No function matches the giv"
+      },
+      {
+        "preset": "uuid7.ulid.v.on",
+        "chain_error": "schema-snapshot: Illuminate\\Database\\QueryException: SQLSTATE[42883]: Undefined function: 7 ERROR:  function min(uuid) does not exist LINE 1: select \"tenant_id\", \"sha256\", count(*) as copies, min(id) as...                                                           ^ HINT:  No function matches the giv"
+      },
+      {
+        "preset": "uuid7.ulid.custom.off",
+        "chain_error": "schema-snapshot: Illuminate\\Database\\QueryException: SQLSTATE[42883]: Undefined function: 7 ERROR:  function min(uuid) does not exist LINE 1: select \"tenant_id\", \"sha256\", count(*) as copies, min(id) as...                                                           ^ HINT:  No function matches the giv"
+      },
+      {
+        "preset": "uuid7.ulid.custom.on",
+        "chain_error": "schema-snapshot: Illuminate\\Database\\QueryException: SQLSTATE[42883]: Undefined function: 7 ERROR:  function min(uuid) does not exist LINE 1: select \"tenant_id\", \"sha256\", count(*) as copies, min(id) as...                                                           ^ HINT:  No function matches the giv"
+      }
+    ],
+    "sqlite": [],
+    "mysql": []
+  }
+}

@@ -1,0 +1,4697 @@
+{
+    "tables": {
+        "custom_activity": {
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "nextval('custom_activity_id_seq'::regclass)",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "tenant_id",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "drive_id",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "actor_id",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "actor_type",
+                    "type": "character varying(255)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "verb",
+                    "type": "character varying(255)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "event_id",
+                    "type": "character varying(26)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "target_id",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "target_type",
+                    "type": "character varying(255)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "context",
+                    "type": "jsonb",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "ip",
+                    "type": "inet",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "user_agent",
+                    "type": "text",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "request_id",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "custom_activity_actor_idx": "CREATE INDEX custom_activity_actor_idx ON public.custom_activity USING btree (actor_type, actor_id, created_at)",
+                "custom_activity_context_gin": "CREATE INDEX custom_activity_context_gin ON public.custom_activity USING gin (context jsonb_path_ops)",
+                "custom_activity_created_idx": "CREATE INDEX custom_activity_created_idx ON public.custom_activity USING btree (created_at)",
+                "custom_activity_drive_id_index": "CREATE INDEX custom_activity_drive_id_index ON public.custom_activity USING btree (drive_id)",
+                "custom_activity_drive_idx": "CREATE INDEX custom_activity_drive_idx ON public.custom_activity USING btree (drive_id, created_at)",
+                "custom_activity_event_id_unique": "CREATE UNIQUE INDEX custom_activity_event_id_unique ON public.custom_activity USING btree (event_id)",
+                "custom_activity_pkey": "CREATE UNIQUE INDEX custom_activity_pkey ON public.custom_activity USING btree (id)",
+                "custom_activity_target_id_index": "CREATE INDEX custom_activity_target_id_index ON public.custom_activity USING btree (target_id)",
+                "custom_activity_target_idx": "CREATE INDEX custom_activity_target_idx ON public.custom_activity USING btree (target_type, target_id, created_at)",
+                "custom_activity_tenant_id_index": "CREATE INDEX custom_activity_tenant_id_index ON public.custom_activity USING btree (tenant_id)",
+                "custom_activity_verb_idx": "CREATE INDEX custom_activity_verb_idx ON public.custom_activity USING btree (verb, created_at)",
+                "custom_activity_verb_index": "CREATE INDEX custom_activity_verb_index ON public.custom_activity USING btree (verb)"
+            },
+            "constraints": {
+                "custom_activity_event_id_unique": {
+                    "type": "u",
+                    "definition": "UNIQUE (event_id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_activity_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "custom_blobs": {
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "nextval('custom_blobs_id_seq'::regclass)",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "tenant_id",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "drive_id",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "hash_algo",
+                    "type": "character varying(16)",
+                    "not_null": true,
+                    "default": "'sha256'::character varying",
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "sha256",
+                    "type": "character(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "size_bytes",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "disk",
+                    "type": "character varying(64)",
+                    "not_null": true,
+                    "default": "'default'::character varying",
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "storage_key",
+                    "type": "character varying(255)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "status",
+                    "type": "character varying(12)",
+                    "not_null": true,
+                    "default": "'pending'::character varying",
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "ref_count",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "dedup_scope",
+                    "type": "character varying(8)",
+                    "not_null": true,
+                    "default": "'tenant'::character varying",
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "quarantined_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "storage_version",
+                    "type": "character varying(255)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "etag",
+                    "type": "character varying(64)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "md5",
+                    "type": "character varying(64)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "crc32c",
+                    "type": "character varying(64)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "chunked",
+                    "type": "boolean",
+                    "not_null": true,
+                    "default": "false",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "encryption_key_id",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "first_seen_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": true,
+                    "default": "CURRENT_TIMESTAMP",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "committed_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "delete_after_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "scope_key",
+                    "type": "character varying(191)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                }
+            ],
+            "indexes": {
+                "custom_blobs_drive_id_index": "CREATE INDEX custom_blobs_drive_id_index ON public.custom_blobs USING btree (drive_id)",
+                "custom_blobs_encryption_key_id_index": "CREATE INDEX custom_blobs_encryption_key_id_index ON public.custom_blobs USING btree (encryption_key_id)",
+                "custom_blobs_gc_idx": "CREATE INDEX custom_blobs_gc_idx ON public.custom_blobs USING btree (status, ref_count, delete_after_at)",
+                "custom_blobs_pkey": "CREATE UNIQUE INDEX custom_blobs_pkey ON public.custom_blobs USING btree (id)",
+                "custom_blobs_scope_sha_uniq": "CREATE UNIQUE INDEX custom_blobs_scope_sha_uniq ON public.custom_blobs USING btree (scope_key, sha256)",
+                "custom_blobs_size_bytes_index": "CREATE INDEX custom_blobs_size_bytes_index ON public.custom_blobs USING btree (size_bytes)",
+                "custom_blobs_storage_key_uniq": "CREATE UNIQUE INDEX custom_blobs_storage_key_uniq ON public.custom_blobs USING btree (storage_key)",
+                "custom_blobs_tenant_id_index": "CREATE INDEX custom_blobs_tenant_id_index ON public.custom_blobs USING btree (tenant_id)"
+            },
+            "constraints": {
+                "custom_blobs_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_blobs_scope_sha_uniq": {
+                    "type": "u",
+                    "definition": "UNIQUE (scope_key, sha256)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_blobs_storage_key_uniq": {
+                    "type": "u",
+                    "definition": "UNIQUE (storage_key)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "custom_document_revisions": {
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "nextval('custom_document_revisions_id_seq'::regclass)",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "tenant_id",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "document_id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "number",
+                    "type": "integer",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "schema_version",
+                    "type": "integer",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "content",
+                    "type": "jsonb",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "content_hash",
+                    "type": "character(64)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "content_size",
+                    "type": "integer",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "yjs_state",
+                    "type": "bytea",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "yjs_state_size",
+                    "type": "integer",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "state_version",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "label",
+                    "type": "character varying(255)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "is_autosave",
+                    "type": "boolean",
+                    "not_null": true,
+                    "default": "false",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "keep_forever",
+                    "type": "boolean",
+                    "not_null": true,
+                    "default": "false",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "status",
+                    "type": "character varying(12)",
+                    "not_null": true,
+                    "default": "'committed'::character varying",
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "restored_from_revision_id",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "created_by",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "custom_document_revisions_content_gin": "CREATE INDEX custom_document_revisions_content_gin ON public.custom_document_revisions USING gin (content jsonb_path_ops)",
+                "custom_document_revisions_document_id_index": "CREATE INDEX custom_document_revisions_document_id_index ON public.custom_document_revisions USING btree (document_id)",
+                "custom_document_revisions_history_idx": "CREATE INDEX custom_document_revisions_history_idx ON public.custom_document_revisions USING btree (document_id, is_autosave, created_at)",
+                "custom_document_revisions_id_doc_uniq": "CREATE UNIQUE INDEX custom_document_revisions_id_doc_uniq ON public.custom_document_revisions USING btree (id, document_id)",
+                "custom_document_revisions_no_uniq": "CREATE UNIQUE INDEX custom_document_revisions_no_uniq ON public.custom_document_revisions USING btree (document_id, number)",
+                "custom_document_revisions_pkey": "CREATE UNIQUE INDEX custom_document_revisions_pkey ON public.custom_document_revisions USING btree (id)",
+                "custom_document_revisions_restored_from_revision_id_index": "CREATE INDEX custom_document_revisions_restored_from_revision_id_index ON public.custom_document_revisions USING btree (restored_from_revision_id)",
+                "custom_document_revisions_tenant_id_index": "CREATE INDEX custom_document_revisions_tenant_id_index ON public.custom_document_revisions USING btree (tenant_id)"
+            },
+            "constraints": {
+                "custom_document_revisions_document_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (document_id) REFERENCES custom_documents(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_document_revisions_id_doc_uniq": {
+                    "type": "u",
+                    "definition": "UNIQUE (id, document_id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_document_revisions_no_uniq": {
+                    "type": "u",
+                    "definition": "UNIQUE (document_id, number)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_document_revisions_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_document_revisions_restored_fk": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (restored_from_revision_id) REFERENCES custom_document_revisions(id) ON DELETE SET NULL",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_document_revisions_state_version_check": {
+                    "type": "c",
+                    "definition": "CHECK ((state_version >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "custom_documents": {
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "nextval('custom_documents_id_seq'::regclass)",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "tenant_id",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "node_id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "type",
+                    "type": "character varying(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "schema_version",
+                    "type": "integer",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "current_revision_id",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "revision_count",
+                    "type": "integer",
+                    "not_null": true,
+                    "default": "0",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "collab_epoch",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "state_version",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "checkpoint_state_version",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "content",
+                    "type": "jsonb",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "content_hash",
+                    "type": "character(64)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "content_size",
+                    "type": "integer",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "yjs_state",
+                    "type": "bytea",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "yjs_state_size",
+                    "type": "integer",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "last_checkpoint_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "created_by",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "updated_by",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "custom_documents_current_revision_id_index": "CREATE INDEX custom_documents_current_revision_id_index ON public.custom_documents USING btree (current_revision_id)",
+                "custom_documents_node_id_index": "CREATE INDEX custom_documents_node_id_index ON public.custom_documents USING btree (node_id)",
+                "custom_documents_node_uniq": "CREATE UNIQUE INDEX custom_documents_node_uniq ON public.custom_documents USING btree (node_id)",
+                "custom_documents_pkey": "CREATE UNIQUE INDEX custom_documents_pkey ON public.custom_documents USING btree (id)",
+                "custom_documents_tenant_id_index": "CREATE INDEX custom_documents_tenant_id_index ON public.custom_documents USING btree (tenant_id)",
+                "custom_documents_type_idx": "CREATE INDEX custom_documents_type_idx ON public.custom_documents USING btree (type)"
+            },
+            "constraints": {
+                "custom_documents_checkpoint_state_version_check": {
+                    "type": "c",
+                    "definition": "CHECK ((checkpoint_state_version >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_documents_collab_epoch_check": {
+                    "type": "c",
+                    "definition": "CHECK ((collab_epoch >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_documents_head_fk": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (current_revision_id, id) REFERENCES custom_document_revisions(id, document_id) ON DELETE RESTRICT",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_documents_node_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (node_id) REFERENCES custom_nodes(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_documents_node_uniq": {
+                    "type": "u",
+                    "definition": "UNIQUE (node_id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_documents_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_documents_state_version_check": {
+                    "type": "c",
+                    "definition": "CHECK ((state_version >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "custom_drive_change_heads": {
+            "columns": [
+                {
+                    "name": "drive_id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "tenant_id",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "last_seq",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "pruned_through",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "epoch",
+                    "type": "integer",
+                    "not_null": true,
+                    "default": "1",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "custom_drive_change_heads_drive_id_index": "CREATE INDEX custom_drive_change_heads_drive_id_index ON public.custom_drive_change_heads USING btree (drive_id)",
+                "custom_drive_change_heads_pkey": "CREATE UNIQUE INDEX custom_drive_change_heads_pkey ON public.custom_drive_change_heads USING btree (drive_id)",
+                "custom_drive_change_heads_tenant_id_index": "CREATE INDEX custom_drive_change_heads_tenant_id_index ON public.custom_drive_change_heads USING btree (tenant_id)"
+            },
+            "constraints": {
+                "custom_drive_change_heads_drive_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (drive_id) REFERENCES custom_drives(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_drive_change_heads_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (drive_id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "custom_drive_changes": {
+            "columns": [
+                {
+                    "name": "drive_id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "seq",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "tenant_id",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "change_id",
+                    "type": "character varying(26)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "event_type",
+                    "type": "character varying(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "node_id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "operation",
+                    "type": "character varying(8)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "reason",
+                    "type": "character varying(16)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "subtree",
+                    "type": "boolean",
+                    "not_null": true,
+                    "default": "false",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "node_sequence",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "occurred_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "custom_drive_changes_change_id_unique": "CREATE UNIQUE INDEX custom_drive_changes_change_id_unique ON public.custom_drive_changes USING btree (change_id)",
+                "custom_drive_changes_drive_id_index": "CREATE INDEX custom_drive_changes_drive_id_index ON public.custom_drive_changes USING btree (drive_id)",
+                "custom_drive_changes_node_id_index": "CREATE INDEX custom_drive_changes_node_id_index ON public.custom_drive_changes USING btree (node_id)",
+                "custom_drive_changes_node_idx": "CREATE INDEX custom_drive_changes_node_idx ON public.custom_drive_changes USING btree (drive_id, node_id)",
+                "custom_drive_changes_occurred_idx": "CREATE INDEX custom_drive_changes_occurred_idx ON public.custom_drive_changes USING btree (drive_id, occurred_at)",
+                "custom_drive_changes_pkey": "CREATE UNIQUE INDEX custom_drive_changes_pkey ON public.custom_drive_changes USING btree (drive_id, seq)",
+                "custom_drive_changes_tenant_id_index": "CREATE INDEX custom_drive_changes_tenant_id_index ON public.custom_drive_changes USING btree (tenant_id)"
+            },
+            "constraints": {
+                "custom_drive_changes_change_id_unique": {
+                    "type": "u",
+                    "definition": "UNIQUE (change_id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_drive_changes_drive_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (drive_id) REFERENCES custom_drives(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_drive_changes_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (drive_id, seq)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "custom_drives": {
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "nextval('custom_drives_id_seq'::regclass)",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "profile",
+                    "type": "character varying(64)",
+                    "not_null": true,
+                    "default": "'default'::character varying",
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "tenant_id",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "owner_id",
+                    "type": "uuid",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "owner_type",
+                    "type": "character varying(255)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "name",
+                    "type": "character varying(255)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "root_node_id",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "disk",
+                    "type": "character varying(64)",
+                    "not_null": true,
+                    "default": "'default'::character varying",
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "quota_bytes",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "used_bytes",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "scan_admission_sequence",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "status",
+                    "type": "character varying(16)",
+                    "not_null": true,
+                    "default": "'active'::character varying",
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "created_by",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "custom_drives_owner_id_index": "CREATE INDEX custom_drives_owner_id_index ON public.custom_drives USING btree (owner_id)",
+                "custom_drives_owner_profile_uniq": "CREATE UNIQUE INDEX custom_drives_owner_profile_uniq ON public.custom_drives USING btree (owner_type, owner_id, profile)",
+                "custom_drives_owner_type_owner_id_index": "CREATE INDEX custom_drives_owner_type_owner_id_index ON public.custom_drives USING btree (owner_type, owner_id)",
+                "custom_drives_pkey": "CREATE UNIQUE INDEX custom_drives_pkey ON public.custom_drives USING btree (id)",
+                "custom_drives_profile_index": "CREATE INDEX custom_drives_profile_index ON public.custom_drives USING btree (profile)",
+                "custom_drives_profile_status_index": "CREATE INDEX custom_drives_profile_status_index ON public.custom_drives USING btree (profile, status)",
+                "custom_drives_root_node_id_index": "CREATE INDEX custom_drives_root_node_id_index ON public.custom_drives USING btree (root_node_id)",
+                "custom_drives_status_index": "CREATE INDEX custom_drives_status_index ON public.custom_drives USING btree (status)",
+                "custom_drives_tenant_id_index": "CREATE INDEX custom_drives_tenant_id_index ON public.custom_drives USING btree (tenant_id)"
+            },
+            "constraints": {
+                "custom_drives_owner_profile_uniq": {
+                    "type": "u",
+                    "definition": "UNIQUE (owner_type, owner_id, profile)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_drives_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_drives_scan_admission_sequence_check": {
+                    "type": "c",
+                    "definition": "CHECK (((scan_admission_sequence IS NULL) OR (scan_admission_sequence >= 0)))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "custom_file_revision_blobs": {
+            "columns": [
+                {
+                    "name": "file_revision_id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "blob_id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "role",
+                    "type": "character varying(12)",
+                    "not_null": true,
+                    "default": "'data'::character varying",
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "ordinal",
+                    "type": "integer",
+                    "not_null": true,
+                    "default": "0",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "offset_bytes",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "length_bytes",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "custom_file_revision_blobs_blob_id_index": "CREATE INDEX custom_file_revision_blobs_blob_id_index ON public.custom_file_revision_blobs USING btree (blob_id)",
+                "custom_file_revision_blobs_file_revision_id_index": "CREATE INDEX custom_file_revision_blobs_file_revision_id_index ON public.custom_file_revision_blobs USING btree (file_revision_id)",
+                "custom_file_revision_blobs_pkey": "CREATE UNIQUE INDEX custom_file_revision_blobs_pkey ON public.custom_file_revision_blobs USING btree (file_revision_id, blob_id, role, ordinal)"
+            },
+            "constraints": {
+                "custom_file_revision_blobs_blob_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (blob_id) REFERENCES custom_blobs(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_file_revision_blobs_file_revision_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (file_revision_id) REFERENCES custom_file_revisions(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_file_revision_blobs_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (file_revision_id, blob_id, role, ordinal)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "custom_file_revisions": {
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "nextval('custom_file_revisions_id_seq'::regclass)",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "tenant_id",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "file_id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "number",
+                    "type": "integer",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "blob_id",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "manifest_blob_id",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "sha256",
+                    "type": "character(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "size_bytes",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "mime_type",
+                    "type": "character varying(191)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "declared_mime_type",
+                    "type": "character varying(191)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "scan_status",
+                    "type": "character varying(16)",
+                    "not_null": true,
+                    "default": "'not_required'::character varying",
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "scan_admission_sequence",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "quarantined_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "original_name",
+                    "type": "character varying(255)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "status",
+                    "type": "character varying(12)",
+                    "not_null": true,
+                    "default": "'pending'::character varying",
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "keep_forever",
+                    "type": "boolean",
+                    "not_null": true,
+                    "default": "false",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "restored_from_revision_id",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "created_by",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "committed_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "superseded_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "client_modified_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "custom_file_revisions_blob_id_index": "CREATE INDEX custom_file_revisions_blob_id_index ON public.custom_file_revisions USING btree (blob_id)",
+                "custom_file_revisions_file_id_index": "CREATE INDEX custom_file_revisions_file_id_index ON public.custom_file_revisions USING btree (file_id)",
+                "custom_file_revisions_file_id_status_index": "CREATE INDEX custom_file_revisions_file_id_status_index ON public.custom_file_revisions USING btree (file_id, status)",
+                "custom_file_revisions_id_file_uniq": "CREATE UNIQUE INDEX custom_file_revisions_id_file_uniq ON public.custom_file_revisions USING btree (id, file_id)",
+                "custom_file_revisions_manifest_blob_id_index": "CREATE INDEX custom_file_revisions_manifest_blob_id_index ON public.custom_file_revisions USING btree (manifest_blob_id)",
+                "custom_file_revisions_no_uniq": "CREATE UNIQUE INDEX custom_file_revisions_no_uniq ON public.custom_file_revisions USING btree (file_id, number)",
+                "custom_file_revisions_pkey": "CREATE UNIQUE INDEX custom_file_revisions_pkey ON public.custom_file_revisions USING btree (id)",
+                "custom_file_revisions_restored_from_revision_id_index": "CREATE INDEX custom_file_revisions_restored_from_revision_id_index ON public.custom_file_revisions USING btree (restored_from_revision_id)",
+                "custom_file_revisions_sha256_index": "CREATE INDEX custom_file_revisions_sha256_index ON public.custom_file_revisions USING btree (sha256)",
+                "custom_file_revisions_status_index": "CREATE INDEX custom_file_revisions_status_index ON public.custom_file_revisions USING btree (status)",
+                "custom_file_revisions_tenant_id_index": "CREATE INDEX custom_file_revisions_tenant_id_index ON public.custom_file_revisions USING btree (tenant_id)"
+            },
+            "constraints": {
+                "custom_file_revisions_file_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (file_id) REFERENCES custom_files(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_file_revisions_id_file_uniq": {
+                    "type": "u",
+                    "definition": "UNIQUE (id, file_id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_file_revisions_no_uniq": {
+                    "type": "u",
+                    "definition": "UNIQUE (file_id, number)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_file_revisions_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_file_revisions_restored_fk": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (restored_from_revision_id) REFERENCES custom_file_revisions(id) ON DELETE SET NULL",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_file_revisions_scan_admission_sequence_check": {
+                    "type": "c",
+                    "definition": "CHECK (((scan_admission_sequence IS NULL) OR (scan_admission_sequence >= 0)))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "custom_files": {
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "nextval('custom_files_id_seq'::regclass)",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "tenant_id",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "node_id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "current_revision_id",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "mime_type",
+                    "type": "character varying(191)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "size_bytes",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "revision_count",
+                    "type": "integer",
+                    "not_null": true,
+                    "default": "0",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "created_by",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "custom_files_current_revision_id_index": "CREATE INDEX custom_files_current_revision_id_index ON public.custom_files USING btree (current_revision_id)",
+                "custom_files_node_id_index": "CREATE INDEX custom_files_node_id_index ON public.custom_files USING btree (node_id)",
+                "custom_files_node_uniq": "CREATE UNIQUE INDEX custom_files_node_uniq ON public.custom_files USING btree (node_id)",
+                "custom_files_pkey": "CREATE UNIQUE INDEX custom_files_pkey ON public.custom_files USING btree (id)",
+                "custom_files_tenant_id_index": "CREATE INDEX custom_files_tenant_id_index ON public.custom_files USING btree (tenant_id)"
+            },
+            "constraints": {
+                "custom_files_head_fk": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (current_revision_id, id) REFERENCES custom_file_revisions(id, file_id) ON DELETE RESTRICT",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_files_node_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (node_id) REFERENCES custom_nodes(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_files_node_uniq": {
+                    "type": "u",
+                    "definition": "UNIQUE (node_id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_files_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "custom_node_comments": {
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "nextval('custom_node_comments_id_seq'::regclass)",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "tenant_id",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "node_id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "parent_id",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "author_id",
+                    "type": "uuid",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "author_type",
+                    "type": "character varying(255)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "body",
+                    "type": "text",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "anchor",
+                    "type": "jsonb",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "resolved_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "resolved_by",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "custom_node_comments_author_id_index": "CREATE INDEX custom_node_comments_author_id_index ON public.custom_node_comments USING btree (author_id)",
+                "custom_node_comments_node_created_idx": "CREATE INDEX custom_node_comments_node_created_idx ON public.custom_node_comments USING btree (node_id, created_at)",
+                "custom_node_comments_node_id_index": "CREATE INDEX custom_node_comments_node_id_index ON public.custom_node_comments USING btree (node_id)",
+                "custom_node_comments_parent_id_index": "CREATE INDEX custom_node_comments_parent_id_index ON public.custom_node_comments USING btree (parent_id)",
+                "custom_node_comments_parent_idx": "CREATE INDEX custom_node_comments_parent_idx ON public.custom_node_comments USING btree (parent_id)",
+                "custom_node_comments_pkey": "CREATE UNIQUE INDEX custom_node_comments_pkey ON public.custom_node_comments USING btree (id)",
+                "custom_node_comments_tenant_id_index": "CREATE INDEX custom_node_comments_tenant_id_index ON public.custom_node_comments USING btree (tenant_id)"
+            },
+            "constraints": {
+                "custom_node_comments_node_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (node_id) REFERENCES custom_nodes(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_node_comments_parent_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (parent_id) REFERENCES custom_node_comments(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_node_comments_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "custom_node_grants": {
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "nextval('custom_node_grants_id_seq'::regclass)",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "tenant_id",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "node_id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "subject_id",
+                    "type": "uuid",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "subject_type",
+                    "type": "character varying(255)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "role_key",
+                    "type": "character varying(32)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "role_version",
+                    "type": "smallint",
+                    "not_null": true,
+                    "default": "'1'::smallint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "scope",
+                    "type": "character varying(8)",
+                    "not_null": true,
+                    "default": "'subtree'::character varying",
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "expires_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "granted_by",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "custom_node_grants_expires_at_index": "CREATE INDEX custom_node_grants_expires_at_index ON public.custom_node_grants USING btree (expires_at)",
+                "custom_node_grants_grant_uniq": "CREATE UNIQUE INDEX custom_node_grants_grant_uniq ON public.custom_node_grants USING btree (node_id, subject_type, subject_id, scope)",
+                "custom_node_grants_node_id_index": "CREATE INDEX custom_node_grants_node_id_index ON public.custom_node_grants USING btree (node_id)",
+                "custom_node_grants_pkey": "CREATE UNIQUE INDEX custom_node_grants_pkey ON public.custom_node_grants USING btree (id)",
+                "custom_node_grants_subject_id_index": "CREATE INDEX custom_node_grants_subject_id_index ON public.custom_node_grants USING btree (subject_id)",
+                "custom_node_grants_subject_idx": "CREATE INDEX custom_node_grants_subject_idx ON public.custom_node_grants USING btree (subject_type, subject_id)",
+                "custom_node_grants_tenant_id_index": "CREATE INDEX custom_node_grants_tenant_id_index ON public.custom_node_grants USING btree (tenant_id)"
+            },
+            "constraints": {
+                "custom_node_grants_grant_uniq": {
+                    "type": "u",
+                    "definition": "UNIQUE (node_id, subject_type, subject_id, scope)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_node_grants_node_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (node_id) REFERENCES custom_nodes(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_node_grants_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "custom_node_shares": {
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "nextval('custom_node_shares_id_seq'::regclass)",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "tenant_id",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "node_id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "token_hash",
+                    "type": "character(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "token_prefix",
+                    "type": "character varying(16)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "role_key",
+                    "type": "character varying(32)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "role_version",
+                    "type": "smallint",
+                    "not_null": true,
+                    "default": "'1'::smallint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "audience",
+                    "type": "character varying(16)",
+                    "not_null": true,
+                    "default": "'anyone'::character varying",
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "token_generation",
+                    "type": "integer",
+                    "not_null": true,
+                    "default": "1",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "scope",
+                    "type": "character varying(8)",
+                    "not_null": true,
+                    "default": "'item'::character varying",
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "password_hash",
+                    "type": "character varying(255)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "expires_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "max_uses",
+                    "type": "integer",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "use_count",
+                    "type": "integer",
+                    "not_null": true,
+                    "default": "0",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "revoked_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "granted_by",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "custom_node_shares_expiry_live_idx": "CREATE INDEX custom_node_shares_expiry_live_idx ON public.custom_node_shares USING btree (expires_at) WHERE (revoked_at IS NULL)",
+                "custom_node_shares_node_id_index": "CREATE INDEX custom_node_shares_node_id_index ON public.custom_node_shares USING btree (node_id)",
+                "custom_node_shares_node_revoked_idx": "CREATE INDEX custom_node_shares_node_revoked_idx ON public.custom_node_shares USING btree (node_id, revoked_at)",
+                "custom_node_shares_pkey": "CREATE UNIQUE INDEX custom_node_shares_pkey ON public.custom_node_shares USING btree (id)",
+                "custom_node_shares_revoked_at_index": "CREATE INDEX custom_node_shares_revoked_at_index ON public.custom_node_shares USING btree (revoked_at)",
+                "custom_node_shares_tenant_id_index": "CREATE INDEX custom_node_shares_tenant_id_index ON public.custom_node_shares USING btree (tenant_id)",
+                "custom_node_shares_token_hash_uniq": "CREATE UNIQUE INDEX custom_node_shares_token_hash_uniq ON public.custom_node_shares USING btree (token_hash)",
+                "custom_node_shares_token_prefix_index": "CREATE INDEX custom_node_shares_token_prefix_index ON public.custom_node_shares USING btree (token_prefix)"
+            },
+            "constraints": {
+                "custom_node_shares_node_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (node_id) REFERENCES custom_nodes(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_node_shares_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_node_shares_token_hash_uniq": {
+                    "type": "u",
+                    "definition": "UNIQUE (token_hash)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "custom_node_user_states": {
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "nextval('custom_node_user_states_id_seq'::regclass)",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "tenant_id",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "node_id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "actor_type",
+                    "type": "character varying(191)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "actor_id",
+                    "type": "uuid",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "starred_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "custom_node_user_states_actor_uniq": "CREATE UNIQUE INDEX custom_node_user_states_actor_uniq ON public.custom_node_user_states USING btree (node_id, actor_type, actor_id)",
+                "custom_node_user_states_node_id_index": "CREATE INDEX custom_node_user_states_node_id_index ON public.custom_node_user_states USING btree (node_id)",
+                "custom_node_user_states_pkey": "CREATE UNIQUE INDEX custom_node_user_states_pkey ON public.custom_node_user_states USING btree (id)",
+                "custom_node_user_states_starred_idx": "CREATE INDEX custom_node_user_states_starred_idx ON public.custom_node_user_states USING btree (actor_type, actor_id, starred_at)",
+                "custom_node_user_states_tenant_id_index": "CREATE INDEX custom_node_user_states_tenant_id_index ON public.custom_node_user_states USING btree (tenant_id)"
+            },
+            "constraints": {
+                "custom_node_user_states_actor_uniq": {
+                    "type": "u",
+                    "definition": "UNIQUE (node_id, actor_type, actor_id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_node_user_states_node_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (node_id) REFERENCES custom_nodes(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_node_user_states_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "custom_nodes": {
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "nextval('custom_nodes_id_seq'::regclass)",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "profile",
+                    "type": "character varying(64)",
+                    "not_null": true,
+                    "default": "'default'::character varying",
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "tenant_id",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "drive_id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "parent_id",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "kind",
+                    "type": "character varying(16)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "name",
+                    "type": "character varying(255)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "name_key",
+                    "type": "character varying(1024)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "mime_type",
+                    "type": "character varying(191)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "extension",
+                    "type": "character varying(32)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "size_bytes",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "inherit_grants",
+                    "type": "boolean",
+                    "not_null": true,
+                    "default": "true",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "shortcut_target_id",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "properties",
+                    "type": "jsonb",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "content_modified_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "content_modified_by",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "trashed_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "trashed_by",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "trashed_from_parent_id",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "trash_root_id",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "created_by",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "updated_by",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "sequence",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "0",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "custom_nodes_drive_id_index": "CREATE INDEX custom_nodes_drive_id_index ON public.custom_nodes USING btree (drive_id)",
+                "custom_nodes_drive_id_kind_trashed_at_index": "CREATE INDEX custom_nodes_drive_id_kind_trashed_at_index ON public.custom_nodes USING btree (drive_id, kind, trashed_at)",
+                "custom_nodes_drive_id_parent_id_index": "CREATE INDEX custom_nodes_drive_id_parent_id_index ON public.custom_nodes USING btree (drive_id, parent_id)",
+                "custom_nodes_drive_id_trash_root_id_index": "CREATE INDEX custom_nodes_drive_id_trash_root_id_index ON public.custom_nodes USING btree (drive_id, trash_root_id)",
+                "custom_nodes_kind_index": "CREATE INDEX custom_nodes_kind_index ON public.custom_nodes USING btree (kind)",
+                "custom_nodes_mime_type_index": "CREATE INDEX custom_nodes_mime_type_index ON public.custom_nodes USING btree (mime_type)",
+                "custom_nodes_parent_id_index": "CREATE INDEX custom_nodes_parent_id_index ON public.custom_nodes USING btree (parent_id)",
+                "custom_nodes_pkey": "CREATE UNIQUE INDEX custom_nodes_pkey ON public.custom_nodes USING btree (id)",
+                "custom_nodes_profile_index": "CREATE INDEX custom_nodes_profile_index ON public.custom_nodes USING btree (profile)",
+                "custom_nodes_root_uniq": "CREATE UNIQUE INDEX custom_nodes_root_uniq ON public.custom_nodes USING btree (drive_id) WHERE (parent_id IS NULL)",
+                "custom_nodes_shortcut_target_id_index": "CREATE INDEX custom_nodes_shortcut_target_id_index ON public.custom_nodes USING btree (shortcut_target_id)",
+                "custom_nodes_sibling_uniq": "CREATE UNIQUE INDEX custom_nodes_sibling_uniq ON public.custom_nodes USING btree (parent_id, name_key COLLATE \"C\") WHERE (trashed_at IS NULL)",
+                "custom_nodes_tenant_id_index": "CREATE INDEX custom_nodes_tenant_id_index ON public.custom_nodes USING btree (tenant_id)",
+                "custom_nodes_trash_root_id_index": "CREATE INDEX custom_nodes_trash_root_id_index ON public.custom_nodes USING btree (trash_root_id)",
+                "custom_nodes_trashed_from_parent_id_index": "CREATE INDEX custom_nodes_trashed_from_parent_id_index ON public.custom_nodes USING btree (trashed_from_parent_id)",
+                "custom_nodes_trashed_idx": "CREATE INDEX custom_nodes_trashed_idx ON public.custom_nodes USING btree (trashed_at) WHERE (trashed_at IS NOT NULL)"
+            },
+            "constraints": {
+                "custom_nodes_drive_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (drive_id) REFERENCES custom_drives(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_nodes_parent_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (parent_id) REFERENCES custom_nodes(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_nodes_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_nodes_sequence_nonnegative": {
+                    "type": "c",
+                    "definition": "CHECK ((sequence >= 0))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "custom_outbox": {
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "nextval('custom_outbox_id_seq'::regclass)",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "event_id",
+                    "type": "character varying(255)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "profile",
+                    "type": "character varying(64)",
+                    "not_null": true,
+                    "default": "'default'::character varying",
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "tenant_id",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "drive_id",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "aggregate_type",
+                    "type": "character varying(32)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "aggregate_id",
+                    "type": "character varying(64)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "sequence",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "topic",
+                    "type": "character varying(255)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "event",
+                    "type": "character varying(255)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "payload",
+                    "type": "json",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "available_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "attempts",
+                    "type": "integer",
+                    "not_null": true,
+                    "default": "0",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "status",
+                    "type": "character varying(255)",
+                    "not_null": true,
+                    "default": "'pending'::character varying",
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "claim_token",
+                    "type": "character varying(32)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "claim_generation",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "claim_until",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "fanout_cursor",
+                    "type": "character varying(64)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "fanned_out_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "delivery_count",
+                    "type": "integer",
+                    "not_null": true,
+                    "default": "0",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "legacy_fanout",
+                    "type": "boolean",
+                    "not_null": true,
+                    "default": "false",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "custom_outbox_drain_idx": "CREATE INDEX custom_outbox_drain_idx ON public.custom_outbox USING btree (status, available_at)",
+                "custom_outbox_drive_id_index": "CREATE INDEX custom_outbox_drive_id_index ON public.custom_outbox USING btree (drive_id)",
+                "custom_outbox_event_id_unique": "CREATE UNIQUE INDEX custom_outbox_event_id_unique ON public.custom_outbox USING btree (event_id)",
+                "custom_outbox_pkey": "CREATE UNIQUE INDEX custom_outbox_pkey ON public.custom_outbox USING btree (id)",
+                "custom_outbox_profile_index": "CREATE INDEX custom_outbox_profile_index ON public.custom_outbox USING btree (profile)",
+                "custom_outbox_prune_idx": "CREATE INDEX custom_outbox_prune_idx ON public.custom_outbox USING btree (status, fanned_out_at)",
+                "custom_outbox_tenant_id_index": "CREATE INDEX custom_outbox_tenant_id_index ON public.custom_outbox USING btree (tenant_id)"
+            },
+            "constraints": {
+                "custom_outbox_event_id_unique": {
+                    "type": "u",
+                    "definition": "UNIQUE (event_id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_outbox_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "custom_scan_backfill_runs": {
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "nextval('custom_scan_backfill_runs_id_seq'::regclass)",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "drive_id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "tenant_id",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "spec_key",
+                    "type": "character(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "request_key",
+                    "type": "character(36)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "target_sequence",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "last_admission_sequence",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "last_revision_id",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "state",
+                    "type": "character varying(16)",
+                    "not_null": true,
+                    "default": "'pending'::character varying",
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "custom_scan_backfill_runs_drive_id_index": "CREATE INDEX custom_scan_backfill_runs_drive_id_index ON public.custom_scan_backfill_runs USING btree (drive_id)",
+                "custom_scan_backfill_runs_drive_id_spec_key_unique": "CREATE UNIQUE INDEX custom_scan_backfill_runs_drive_id_spec_key_unique ON public.custom_scan_backfill_runs USING btree (drive_id, spec_key)",
+                "custom_scan_backfill_runs_last_revision_id_index": "CREATE INDEX custom_scan_backfill_runs_last_revision_id_index ON public.custom_scan_backfill_runs USING btree (last_revision_id)",
+                "custom_scan_backfill_runs_pkey": "CREATE UNIQUE INDEX custom_scan_backfill_runs_pkey ON public.custom_scan_backfill_runs USING btree (id)",
+                "custom_scan_backfill_runs_state_id_index": "CREATE INDEX custom_scan_backfill_runs_state_id_index ON public.custom_scan_backfill_runs USING btree (state, id)",
+                "custom_scan_backfill_runs_tenant_id_index": "CREATE INDEX custom_scan_backfill_runs_tenant_id_index ON public.custom_scan_backfill_runs USING btree (tenant_id)"
+            },
+            "constraints": {
+                "custom_scan_backfill_runs_drive_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (drive_id) REFERENCES custom_drives(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_backfill_runs_drive_id_spec_key_unique": {
+                    "type": "u",
+                    "definition": "UNIQUE (drive_id, spec_key)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_backfill_runs_last_admission_sequence_check": {
+                    "type": "c",
+                    "definition": "CHECK (((last_admission_sequence IS NULL) OR (last_admission_sequence >= 0)))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_backfill_runs_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_backfill_runs_state_check": {
+                    "type": "c",
+                    "definition": "CHECK (((state)::text = ANY ((ARRAY['pending'::character varying, 'completed'::character varying])::text[])))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_backfill_runs_target_sequence_check": {
+                    "type": "c",
+                    "definition": "CHECK (((target_sequence IS NULL) OR (target_sequence >= 0)))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "custom_scan_evidence": {
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "nextval('custom_scan_evidence_id_seq'::regclass)",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "drive_id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "tenant_id",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "spec_key",
+                    "type": "character(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "scanner_key",
+                    "type": "character varying(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "scanner_version",
+                    "type": "character varying(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "policy_version",
+                    "type": "character varying(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "revision_id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "blob_id",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "scope_key",
+                    "type": "character varying(191)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "content_identity",
+                    "type": "character(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "sha256",
+                    "type": "character(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "size_bytes",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "generation",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "attempt",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "reason",
+                    "type": "character varying(32)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "retryable",
+                    "type": "boolean",
+                    "not_null": true,
+                    "default": "false",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "outcome",
+                    "type": "character varying(16)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "obligation_id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "request_id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "observed_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "reused_from_id",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "revoked_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "revocation_reason",
+                    "type": "character varying(191)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                }
+            ],
+            "indexes": {
+                "custom_scan_evidence_blob_id_index": "CREATE INDEX custom_scan_evidence_blob_id_index ON public.custom_scan_evidence USING btree (blob_id)",
+                "custom_scan_evidence_blob_id_outcome_index": "CREATE INDEX custom_scan_evidence_blob_id_outcome_index ON public.custom_scan_evidence USING btree (blob_id, outcome)",
+                "custom_scan_evidence_drive_id_index": "CREATE INDEX custom_scan_evidence_drive_id_index ON public.custom_scan_evidence USING btree (drive_id)",
+                "custom_scan_evidence_obligation_id_index": "CREATE INDEX custom_scan_evidence_obligation_id_index ON public.custom_scan_evidence USING btree (obligation_id)",
+                "custom_scan_evidence_pkey": "CREATE UNIQUE INDEX custom_scan_evidence_pkey ON public.custom_scan_evidence USING btree (id)",
+                "custom_scan_evidence_request_id_attempt_unique": "CREATE UNIQUE INDEX custom_scan_evidence_request_id_attempt_unique ON public.custom_scan_evidence USING btree (request_id, attempt)",
+                "custom_scan_evidence_request_id_index": "CREATE INDEX custom_scan_evidence_request_id_index ON public.custom_scan_evidence USING btree (request_id)",
+                "custom_scan_evidence_reused_from_id_index": "CREATE INDEX custom_scan_evidence_reused_from_id_index ON public.custom_scan_evidence USING btree (reused_from_id)",
+                "custom_scan_evidence_revision_id_index": "CREATE INDEX custom_scan_evidence_revision_id_index ON public.custom_scan_evidence USING btree (revision_id)",
+                "custom_scan_evidence_revision_id_spec_key_outcome_index": "CREATE INDEX custom_scan_evidence_revision_id_spec_key_outcome_index ON public.custom_scan_evidence USING btree (revision_id, spec_key, outcome)",
+                "custom_scan_evidence_tenant_id_index": "CREATE INDEX custom_scan_evidence_tenant_id_index ON public.custom_scan_evidence USING btree (tenant_id)"
+            },
+            "constraints": {
+                "custom_scan_evidence_attempt_check": {
+                    "type": "c",
+                    "definition": "CHECK (((attempt IS NULL) OR (attempt >= 1)))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_evidence_blob_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (blob_id) REFERENCES custom_blobs(id) ON DELETE RESTRICT",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_evidence_check": {
+                    "type": "c",
+                    "definition": "CHECK (COALESCE((((outcome IS NULL) AND (reason IS NULL) AND (retryable = false)) OR (((outcome)::text = ANY ((ARRAY['clean'::character varying, 'infected'::character varying])::text[])) AND (reason IS NULL) AND (retryable = false) AND (blob_id IS NOT NULL)) OR (((outcome)::text = 'failed'::text) AND (reason IS NOT NULL))), false))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_evidence_drive_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (drive_id) REFERENCES custom_drives(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_evidence_generation_check": {
+                    "type": "c",
+                    "definition": "CHECK (((generation IS NULL) OR (generation >= 1)))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_evidence_obligation_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (obligation_id) REFERENCES custom_scan_obligations(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_evidence_outcome_check": {
+                    "type": "c",
+                    "definition": "CHECK (((outcome)::text = ANY ((ARRAY['clean'::character varying, 'infected'::character varying, 'failed'::character varying])::text[])))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_evidence_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_evidence_request_id_attempt_unique": {
+                    "type": "u",
+                    "definition": "UNIQUE (request_id, attempt)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_evidence_request_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (request_id) REFERENCES custom_scan_requests(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_evidence_retryable_check": {
+                    "type": "c",
+                    "definition": "CHECK ((retryable = ANY (ARRAY[false, true])))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_evidence_reused_from_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (reused_from_id) REFERENCES custom_scan_evidence(id) ON DELETE SET NULL",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_evidence_revision_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (revision_id) REFERENCES custom_file_revisions(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_evidence_size_bytes_check": {
+                    "type": "c",
+                    "definition": "CHECK (((size_bytes IS NULL) OR (size_bytes >= 0)))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "custom_scan_obligations": {
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "nextval('custom_scan_obligations_id_seq'::regclass)",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "drive_id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "tenant_id",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "spec_key",
+                    "type": "character(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "scanner_key",
+                    "type": "character varying(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "scanner_version",
+                    "type": "character varying(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "policy_version",
+                    "type": "character varying(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "revision_id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "blob_id",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "scope_key",
+                    "type": "character varying(191)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "content_identity",
+                    "type": "character(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "sha256",
+                    "type": "character(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "size_bytes",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "generation",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "attempt",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "reason",
+                    "type": "character varying(32)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "retryable",
+                    "type": "boolean",
+                    "not_null": true,
+                    "default": "false",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "outcome",
+                    "type": "character varying(16)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "request_key",
+                    "type": "character(36)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "state",
+                    "type": "character varying(16)",
+                    "not_null": true,
+                    "default": "'pending'::character varying",
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "available_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "lease_token",
+                    "type": "character(36)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "lease_expires_at",
+                    "type": "timestamp without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "last_published_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "custom_scan_obligations_blob_id_index": "CREATE INDEX custom_scan_obligations_blob_id_index ON public.custom_scan_obligations USING btree (blob_id)",
+                "custom_scan_obligations_drive_id_id_index": "CREATE INDEX custom_scan_obligations_drive_id_id_index ON public.custom_scan_obligations USING btree (drive_id, id)",
+                "custom_scan_obligations_drive_id_index": "CREATE INDEX custom_scan_obligations_drive_id_index ON public.custom_scan_obligations USING btree (drive_id)",
+                "custom_scan_obligations_pkey": "CREATE UNIQUE INDEX custom_scan_obligations_pkey ON public.custom_scan_obligations USING btree (id)",
+                "custom_scan_obligations_revision_id_index": "CREATE INDEX custom_scan_obligations_revision_id_index ON public.custom_scan_obligations USING btree (revision_id)",
+                "custom_scan_obligations_revision_id_spec_key_unique": "CREATE UNIQUE INDEX custom_scan_obligations_revision_id_spec_key_unique ON public.custom_scan_obligations USING btree (revision_id, spec_key)",
+                "custom_scan_obligations_state_available_at_id_index": "CREATE INDEX custom_scan_obligations_state_available_at_id_index ON public.custom_scan_obligations USING btree (state, available_at, id)",
+                "custom_scan_obligations_state_lease_expires_at_id_index": "CREATE INDEX custom_scan_obligations_state_lease_expires_at_id_index ON public.custom_scan_obligations USING btree (state, lease_expires_at, id)",
+                "custom_scan_obligations_tenant_id_index": "CREATE INDEX custom_scan_obligations_tenant_id_index ON public.custom_scan_obligations USING btree (tenant_id)"
+            },
+            "constraints": {
+                "custom_scan_obligations_attempt_check": {
+                    "type": "c",
+                    "definition": "CHECK (((attempt IS NULL) OR (attempt >= 0)))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_obligations_blob_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (blob_id) REFERENCES custom_blobs(id) ON DELETE RESTRICT",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_obligations_check": {
+                    "type": "c",
+                    "definition": "CHECK (COALESCE((((outcome IS NULL) AND (reason IS NULL) AND (retryable = false)) OR (((outcome)::text = ANY ((ARRAY['clean'::character varying, 'infected'::character varying])::text[])) AND (reason IS NULL) AND (retryable = false) AND (blob_id IS NOT NULL)) OR (((outcome)::text = 'failed'::text) AND (reason IS NOT NULL))), false))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_obligations_check1": {
+                    "type": "c",
+                    "definition": "CHECK (((((state)::text = 'leased'::text) AND (lease_token IS NOT NULL) AND (lease_expires_at IS NOT NULL)) OR (((state)::text <> 'leased'::text) AND (lease_token IS NULL) AND (lease_expires_at IS NULL))))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_obligations_check2": {
+                    "type": "c",
+                    "definition": "CHECK ((((state)::text <> 'settled'::text) OR (outcome IS NOT NULL)))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_obligations_drive_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (drive_id) REFERENCES custom_drives(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_obligations_generation_check": {
+                    "type": "c",
+                    "definition": "CHECK (((generation IS NULL) OR (generation >= 1)))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_obligations_outcome_check": {
+                    "type": "c",
+                    "definition": "CHECK (((outcome)::text = ANY ((ARRAY['clean'::character varying, 'infected'::character varying, 'failed'::character varying])::text[])))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_obligations_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_obligations_retryable_check": {
+                    "type": "c",
+                    "definition": "CHECK ((retryable = ANY (ARRAY[false, true])))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_obligations_revision_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (revision_id) REFERENCES custom_file_revisions(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_obligations_revision_id_spec_key_unique": {
+                    "type": "u",
+                    "definition": "UNIQUE (revision_id, spec_key)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_obligations_size_bytes_check": {
+                    "type": "c",
+                    "definition": "CHECK (((size_bytes IS NULL) OR (size_bytes >= 0)))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_obligations_state_check": {
+                    "type": "c",
+                    "definition": "CHECK (((state)::text = ANY ((ARRAY['pending'::character varying, 'leased'::character varying, 'retry_wait'::character varying, 'settled'::character varying])::text[])))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "custom_scan_policy_states": {
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "nextval('custom_scan_policy_states_id_seq'::regclass)",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "drive_id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "tenant_id",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "spec_key",
+                    "type": "character(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "scanner_key",
+                    "type": "character varying(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "scanner_version",
+                    "type": "character varying(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "policy_version",
+                    "type": "character varying(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "predicate_key",
+                    "type": "character varying(80)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "mode",
+                    "type": "character varying(16)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "config_fingerprint",
+                    "type": "character(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "rollout_key",
+                    "type": "character varying(64)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "boundary_sequence",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "activated_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "custom_scan_policy_states_drive_id_index": "CREATE INDEX custom_scan_policy_states_drive_id_index ON public.custom_scan_policy_states USING btree (drive_id)",
+                "custom_scan_policy_states_drive_id_predicate_key_unique": "CREATE UNIQUE INDEX custom_scan_policy_states_drive_id_predicate_key_unique ON public.custom_scan_policy_states USING btree (drive_id, predicate_key)",
+                "custom_scan_policy_states_pkey": "CREATE UNIQUE INDEX custom_scan_policy_states_pkey ON public.custom_scan_policy_states USING btree (id)",
+                "custom_scan_policy_states_tenant_id_index": "CREATE INDEX custom_scan_policy_states_tenant_id_index ON public.custom_scan_policy_states USING btree (tenant_id)"
+            },
+            "constraints": {
+                "custom_scan_policy_states_boundary_sequence_check": {
+                    "type": "c",
+                    "definition": "CHECK (((boundary_sequence IS NULL) OR (boundary_sequence >= 0)))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_policy_states_drive_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (drive_id) REFERENCES custom_drives(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_policy_states_drive_id_predicate_key_unique": {
+                    "type": "u",
+                    "definition": "UNIQUE (drive_id, predicate_key)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_policy_states_mode_check": {
+                    "type": "c",
+                    "definition": "CHECK (((mode)::text = ANY ((ARRAY['off'::character varying, 'new_content_only'::character varying, 'all_content'::character varying])::text[])))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_policy_states_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "custom_scan_requests": {
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "nextval('custom_scan_requests_id_seq'::regclass)",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "obligation_id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "request_key",
+                    "type": "character(36)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "generation",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "requested_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "reason",
+                    "type": "character varying(191)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "correlation_id",
+                    "type": "character varying(191)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                }
+            ],
+            "indexes": {
+                "custom_scan_requests_obligation_id_generation_unique": "CREATE UNIQUE INDEX custom_scan_requests_obligation_id_generation_unique ON public.custom_scan_requests USING btree (obligation_id, generation)",
+                "custom_scan_requests_obligation_id_index": "CREATE INDEX custom_scan_requests_obligation_id_index ON public.custom_scan_requests USING btree (obligation_id)",
+                "custom_scan_requests_obligation_id_request_key_unique": "CREATE UNIQUE INDEX custom_scan_requests_obligation_id_request_key_unique ON public.custom_scan_requests USING btree (obligation_id, request_key)",
+                "custom_scan_requests_pkey": "CREATE UNIQUE INDEX custom_scan_requests_pkey ON public.custom_scan_requests USING btree (id)"
+            },
+            "constraints": {
+                "custom_scan_requests_generation_check": {
+                    "type": "c",
+                    "definition": "CHECK (((generation IS NULL) OR (generation >= 1)))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_requests_obligation_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (obligation_id) REFERENCES custom_scan_obligations(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_requests_obligation_id_generation_unique": {
+                    "type": "u",
+                    "definition": "UNIQUE (obligation_id, generation)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_requests_obligation_id_request_key_unique": {
+                    "type": "u",
+                    "definition": "UNIQUE (obligation_id, request_key)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_scan_requests_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "custom_upload_parts": {
+            "columns": [
+                {
+                    "name": "upload_session_id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "part_no",
+                    "type": "integer",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "byte_offset",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "size_bytes",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "part_sha256",
+                    "type": "character(64)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "etag",
+                    "type": "character varying(255)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "temp_blob_id",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "received_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "custom_upload_parts_pkey": "CREATE UNIQUE INDEX custom_upload_parts_pkey ON public.custom_upload_parts USING btree (upload_session_id, part_no)",
+                "custom_upload_parts_temp_blob_id_index": "CREATE INDEX custom_upload_parts_temp_blob_id_index ON public.custom_upload_parts USING btree (temp_blob_id)",
+                "custom_upload_parts_upload_session_id_index": "CREATE INDEX custom_upload_parts_upload_session_id_index ON public.custom_upload_parts USING btree (upload_session_id)"
+            },
+            "constraints": {
+                "custom_upload_parts_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (upload_session_id, part_no)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_upload_parts_upload_session_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (upload_session_id) REFERENCES custom_upload_sessions(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "custom_upload_sessions": {
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "nextval('custom_upload_sessions_id_seq'::regclass)",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "tenant_id",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "drive_id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "upload_id",
+                    "type": "uuid",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "target_node_id",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "target_parent_id",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "target_name",
+                    "type": "character varying(255)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "result_node_id",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "result_revision_id",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "result_blob_id",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "input_fingerprint",
+                    "type": "character(64)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "cleanup_pending",
+                    "type": "boolean",
+                    "not_null": true,
+                    "default": "false",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "cleanup_attempts",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "cleanup_available_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "cleanup_last_reason",
+                    "type": "character varying(32)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "protocol",
+                    "type": "character varying(16)",
+                    "not_null": true,
+                    "default": "'tus'::character varying",
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "status",
+                    "type": "character varying(16)",
+                    "not_null": true,
+                    "default": "'initiated'::character varying",
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "expected_sha256",
+                    "type": "character(64)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "total_size_bytes",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "received_bytes",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "'0'::bigint",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "chunk_size",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "mime_type",
+                    "type": "character varying(191)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "parts",
+                    "type": "json",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "assembled_blob_id",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "metadata",
+                    "type": "json",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "expires_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "created_by",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "custom_upload_sessions_assembled_blob_id_index": "CREATE INDEX custom_upload_sessions_assembled_blob_id_index ON public.custom_upload_sessions USING btree (assembled_blob_id)",
+                "custom_upload_sessions_cleanup_idx": "CREATE INDEX custom_upload_sessions_cleanup_idx ON public.custom_upload_sessions USING btree (status, cleanup_pending, cleanup_available_at, id)",
+                "custom_upload_sessions_drive_id_index": "CREATE INDEX custom_upload_sessions_drive_id_index ON public.custom_upload_sessions USING btree (drive_id)",
+                "custom_upload_sessions_drive_idx": "CREATE INDEX custom_upload_sessions_drive_idx ON public.custom_upload_sessions USING btree (drive_id)",
+                "custom_upload_sessions_pkey": "CREATE UNIQUE INDEX custom_upload_sessions_pkey ON public.custom_upload_sessions USING btree (id)",
+                "custom_upload_sessions_result_blob_id_index": "CREATE INDEX custom_upload_sessions_result_blob_id_index ON public.custom_upload_sessions USING btree (result_blob_id)",
+                "custom_upload_sessions_result_node_id_index": "CREATE INDEX custom_upload_sessions_result_node_id_index ON public.custom_upload_sessions USING btree (result_node_id)",
+                "custom_upload_sessions_result_revision_id_index": "CREATE INDEX custom_upload_sessions_result_revision_id_index ON public.custom_upload_sessions USING btree (result_revision_id)",
+                "custom_upload_sessions_sweeper_idx": "CREATE INDEX custom_upload_sessions_sweeper_idx ON public.custom_upload_sessions USING btree (status, expires_at)",
+                "custom_upload_sessions_target_node_id_index": "CREATE INDEX custom_upload_sessions_target_node_id_index ON public.custom_upload_sessions USING btree (target_node_id)",
+                "custom_upload_sessions_target_parent_id_index": "CREATE INDEX custom_upload_sessions_target_parent_id_index ON public.custom_upload_sessions USING btree (target_parent_id)",
+                "custom_upload_sessions_tenant_id_index": "CREATE INDEX custom_upload_sessions_tenant_id_index ON public.custom_upload_sessions USING btree (tenant_id)",
+                "custom_upload_sessions_upload_id_uniq": "CREATE UNIQUE INDEX custom_upload_sessions_upload_id_uniq ON public.custom_upload_sessions USING btree (upload_id)"
+            },
+            "constraints": {
+                "custom_upload_sessions_cleanup_attempts_check": {
+                    "type": "c",
+                    "definition": "CHECK (((cleanup_attempts IS NULL) OR (cleanup_attempts >= 0)))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_upload_sessions_cleanup_pending_check": {
+                    "type": "c",
+                    "definition": "CHECK ((cleanup_pending = ANY (ARRAY[false, true])))",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_upload_sessions_drive_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (drive_id) REFERENCES custom_drives(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_upload_sessions_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_upload_sessions_result_blob_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (result_blob_id) REFERENCES custom_blobs(id) ON DELETE RESTRICT",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_upload_sessions_upload_id_uniq": {
+                    "type": "u",
+                    "definition": "UNIQUE (upload_id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "custom_webhook_deliveries": {
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "nextval('custom_webhook_deliveries_id_seq'::regclass)",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "endpoint_id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "event",
+                    "type": "character varying(255)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "payload",
+                    "type": "json",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "status",
+                    "type": "character varying(255)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "attempts",
+                    "type": "integer",
+                    "not_null": true,
+                    "default": "0",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "next_retry_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "claim_token",
+                    "type": "character varying(32)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "claim_until",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "last_error",
+                    "type": "text",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "event_id",
+                    "type": "character varying(64)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                }
+            ],
+            "indexes": {
+                "custom_webhook_deliveries_endpoint_id_index": "CREATE INDEX custom_webhook_deliveries_endpoint_id_index ON public.custom_webhook_deliveries USING btree (endpoint_id)",
+                "custom_webhook_deliveries_event_endpoint_unique": "CREATE UNIQUE INDEX custom_webhook_deliveries_event_endpoint_unique ON public.custom_webhook_deliveries USING btree (event_id, endpoint_id)",
+                "custom_webhook_deliveries_pkey": "CREATE UNIQUE INDEX custom_webhook_deliveries_pkey ON public.custom_webhook_deliveries USING btree (id)",
+                "custom_webhook_deliveries_prune_idx": "CREATE INDEX custom_webhook_deliveries_prune_idx ON public.custom_webhook_deliveries USING btree (status, updated_at)",
+                "custom_webhook_deliveries_retry_idx": "CREATE INDEX custom_webhook_deliveries_retry_idx ON public.custom_webhook_deliveries USING btree (status, next_retry_at)"
+            },
+            "constraints": {
+                "custom_webhook_deliveries_endpoint_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (endpoint_id) REFERENCES custom_webhook_endpoints(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_webhook_deliveries_event_endpoint_unique": {
+                    "type": "u",
+                    "definition": "UNIQUE (event_id, endpoint_id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_webhook_deliveries_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
+        "custom_webhook_endpoints": {
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "not_null": true,
+                    "default": "nextval('custom_webhook_endpoints_id_seq'::regclass)",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "url",
+                    "type": "character varying(255)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "events",
+                    "type": "json",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "signing_secret",
+                    "type": "text",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "previous_signing_secret",
+                    "type": "text",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "previous_secret_expires_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "is_active",
+                    "type": "boolean",
+                    "not_null": true,
+                    "default": "true",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "last_triggered_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "failure_count",
+                    "type": "integer",
+                    "not_null": true,
+                    "default": "0",
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "failing_since",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "disabled_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "disabled_reason",
+                    "type": "character varying(32)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "tenant_id",
+                    "type": "uuid",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "drive_id",
+                    "type": "bigint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "custom_webhook_endpoints_active_tenant_idx": "CREATE INDEX custom_webhook_endpoints_active_tenant_idx ON public.custom_webhook_endpoints USING btree (is_active, tenant_id)",
+                "custom_webhook_endpoints_drive_id_index": "CREATE INDEX custom_webhook_endpoints_drive_id_index ON public.custom_webhook_endpoints USING btree (drive_id)",
+                "custom_webhook_endpoints_is_active_index": "CREATE INDEX custom_webhook_endpoints_is_active_index ON public.custom_webhook_endpoints USING btree (is_active)",
+                "custom_webhook_endpoints_pkey": "CREATE UNIQUE INDEX custom_webhook_endpoints_pkey ON public.custom_webhook_endpoints USING btree (id)",
+                "custom_webhook_endpoints_tenant_id_index": "CREATE INDEX custom_webhook_endpoints_tenant_id_index ON public.custom_webhook_endpoints USING btree (tenant_id)"
+            },
+            "constraints": {
+                "custom_webhook_endpoints_drive_id_foreign": {
+                    "type": "f",
+                    "definition": "FOREIGN KEY (drive_id) REFERENCES custom_drives(id) ON DELETE CASCADE",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_webhook_endpoints_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        }
+    },
+    "preset": "bigint.uuid.custom.off",
+    "driver": "pgsql",
+    "source": "builder"
+}

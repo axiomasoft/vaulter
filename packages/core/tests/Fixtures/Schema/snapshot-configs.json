@@ -1,0 +1,9 @@
+{
+    "id": "{ids}.{host_keys}.{table_prefix}.{tenancy}",
+    "axes": {
+        "ids": ["bigint", "ulid", "uuid7"],
+        "host_keys": ["string", "bigint", "uuid", "ulid"],
+        "table_prefix": {"v": "v_", "custom": "custom_"},
+        "tenancy": {"off": false, "on": true}
+    }
+}
