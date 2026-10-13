@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P1.8",
   "title": "Документация тестов и политика прогонов",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Фактические команды runner/partitions/zones/groups и политика опубликованы в tests README/CONTRIBUTING/AGENTS/CLAUDE. Старые планы вне PLAN3 не удаляются.",
   "why": "Новые участники и агенты следуют правилам, а не догадкам (П13); run-policy D4 должна быть видна вне плана.",
   "scope": {
@@ -115,6 +115,36 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T10:01:20Z"
+  "result": {
+    "started_at": "2026-10-13T15:06:31Z",
+    "finished_at": "2026-10-13T15:08:09Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "a0d94bee-b946-47b8-b313-810ac90ba63c"
+    },
+    "notes": "tests/README.md created; CONTRIBUTING/CLAUDE/AGENTS/core README updated. Documented modes verified by --help/--dry-run; ZonesMapTest+TestSelectTest green. Editing AGENTS/CLAUDE makes scripts/t --changed refuse (exit 2) by design; zones.json left unchanged.",
+    "deviations": [
+      "V3 command has no arguments (usage exit 2); verified with explicit doc args, exit 0"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-13T15:08:09Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-13T15:08:09Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-13T15:08:09Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-13T15:08:09Z"
 }

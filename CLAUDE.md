@@ -25,6 +25,8 @@
 ## Качество
 
 - Per-package Pest: `packages/<pkg>/tests/`; стиль — существующие тесты пакета.
+- Тесты — только через `scripts/t`: `scripts/t --changed` (затронутые зоны), `scripts/t <engine> -p <pkg> [путь]`;
+  зоны/группы/политика — `tests/README.md`. Мутации, load/k6 и coverage — только по отдельной задаче владельца.
 - Pint / PHPStan — команды пакета или корневой harness; пропуск или падение ≠ успех.
 - Правила провайдеров, публичного API и миграций — `.claude/rules/` (path-scoped).
 

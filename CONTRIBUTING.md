@@ -49,6 +49,20 @@ packages/core/tests/Feature packages/core/tests/Panels \
 packages/core/tests/Schema packages/core/tests/Sharing packages/core/tests/Webhooks
 ```
 
+### Tests
+
+Every suite runs through `scripts/t`; zones, groups, lines and the run policy are in [`tests/README.md`](tests/README.md).
+
+```bash
+scripts/t --changed --dry-run        # what your change affects, nothing runs
+scripts/t --changed                  # the affected zones and their consumers (SQLite)
+scripts/t sqlite -p media            # one package
+scripts/t pgsql -p core --group=database   # engine-dependent tests on a server
+```
+
+Run the named tests of your change, not the whole suite; full, coverage, mutation and load runs are not part of a
+pull request.
+
 ### Concurrency tests
 
 SQLite serialises writes, so a race test on it passes even against defective code.

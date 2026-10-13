@@ -1,6 +1,12 @@
+# Core tests
+
+Zones, groups, the `scripts/t` commands and the run policy are in the repository's [`tests/README.md`](../../../tests/README.md);
+this page keeps what is specific to the core database lane.
+
 # Database test performance
 
-Run commands from the repository root. The database runner starts a private server
+Run commands from the repository root. `scripts/t <engine> -p core --group=database` is the supported entry;
+the raw `scripts/test-db.sh` below is the lower-level runner it uses. The database runner starts a private server
 and gives each parallel worker its own `_test` database and storage directory.
 Start with two workers to limit concurrent database and PHP memory usage:
 
