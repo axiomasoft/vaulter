@@ -1,0 +1,651 @@
+name: CI
+
+# The one pull-request workflow (PLAN3 P1.6, test-strategy#ci-target). It always runs — no path filter —
+# and `changes` decides what is needed from `scripts/t --changed --dry-run --json` against the exact base
+# commit (pull_request.base.sha / push.before). Without a usable base every lane runs. `CI gate` is the only
+# check a branch rule or a release has to require: it needs every other job and is red on a failure, a
+# cancellation, a skipped lane that was expected or an empty required matrix; a docs-only skip is explicit
+# (changes.skip_reason). Mutation and load stay manual (mutation.yml, load.yml, D3/D4); coverage, the extended
+# layer and the stand run in weekly-full.yml.
+#
+# job map from the pre-P1.6 workflows (nothing that ran on a PR was dropped):
+#   tests.yml test (L12/L13, SQLite, composer test:types) .. fast (+ type coverage per cell)
+#   tests.yml test-pgsql (per TestCase schema steps) ....... db (pgsql, schema partitions) + serial (pgsql)
+#   {drive,media,documents}.yml SQLite lane ................ fast, quality (own Pint + PHPStan)
+#   {drive,media,documents}.yml *-pgsql lane ............... db (pgsql) + serial (pgsql)
+#   azgard.yml, filament.yml ............................... fast, quality (filament Rector stays advisory)
+#   code-style.yml (Pint + advisory Rector) ................ quality (core entry = repository-wide Pint)
+#   static-analysis.yml (Larastan) ......................... quality
+#   frontend.yml vue (Node 20, 22) and hocuspocus (22) ..... vue, hub
+#   openapi.yml oasdiff breaking ........................... openapi.yml (unchanged, informative, D21)
+#   new: mysql 8.4 lane (db), repo harness + policy + actionlint (repo), spec validation (openapi)
+on:
+  push:
+    branches: [main, 'feat/**', 'fix/**', 'hotfix/**']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  # The actual PHP support, checked against composer.json/groups.php by scripts/ci/workflow-policy.py.
+  # Laravel 12 pairs with Testbench ^10, Laravel 13 with ^11; filament is Laravel 13 only.
+  PHP_SUPPORT: '{"core":{"dir":".","lines":["12","13"],"serial":true,"types":true,"rector":true,"azguard":false},"media":{"dir":"packages/media","lines":["12","13"],"serial":true,"types":true,"rector":false,"azguard":false},"drive":{"dir":"packages/drive","lines":["12","13"],"serial":true,"types":true,"rector":false,"azguard":false},"documents":{"dir":"packages/documents","lines":["12","13"],"serial":true,"types":true,"rector":false,"azguard":false},"azgard":{"dir":"packages/azgard","lines":["12","13"],"serial":false,"types":false,"rector":false,"azguard":true},"filament":{"dir":"packages/filament","lines":["13"],"serial":false,"types":true,"rector":true,"azguard":false}}'
+
+jobs:
+  changes:
+    name: Changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      skip_reason: ${{ steps.plan.outputs.skip_reason }}
+      mode: ${{ steps.plan.outputs.mode }}
+      has_quality: ${{ steps.plan.outputs.has_quality }}
+      has_fast: ${{ steps.plan.outputs.has_fast }}
+      has_db: ${{ steps.plan.outputs.has_db }}
+      has_serial: ${{ steps.plan.outputs.has_serial }}
+      has_vue: ${{ steps.plan.outputs.has_vue }}
+      has_hub: ${{ steps.plan.outputs.has_hub }}
+      has_repo: ${{ steps.plan.outputs.has_repo }}
+      has_openapi: ${{ steps.plan.outputs.has_openapi }}
+      quality_matrix: ${{ steps.plan.outputs.quality_matrix }}
+      fast_matrix: ${{ steps.plan.outputs.fast_matrix }}
+      db_matrix: ${{ steps.plan.outputs.db_matrix }}
+      serial_matrix: ${{ steps.plan.outputs.serial_matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - name: Plan the lanes
+        id: plan
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          PHP84_BIN="$(command -v php)"
+          export PHP84_BIN
+          base=''
+          case "$EVENT_NAME" in
+            pull_request) base="$PR_BASE_SHA" ;;
+            push) base="$PUSH_BEFORE" ;;
+          esac
+          mode=changed
+          if [[ -z "$base" || "$base" == '0000000000000000000000000000000000000000' ]]; then
+            mode=all
+            echo "::notice::no base commit for $EVENT_NAME: every lane runs"
+          elif ! git cat-file -e "${base}^{commit}" 2>/dev/null; then
+            mode=all
+            echo "::notice::base $base is not in the checkout (force-push?): every lane runs"
+          fi
+
+          args=(--mode "$mode")
+          if [[ "$mode" == changed ]]; then
+            select_plan() {
+              local file="$1" code=0
+              shift
+              scripts/t --changed --base="$base" "$@" --dry-run --json > "$file" || code=$?
+              # 2 = unknown path or harness change: the plan is the full affected set, which is still a plan.
+              if (( code != 0 && code != 2 )); then
+                cat "$file" >&2 || true
+                exit "$code"
+              fi
+            }
+            select_plan "$RUNNER_TEMP/changes.json"
+            select_plan "$RUNNER_TEMP/db-pgsql.json" --db=pgsql
+            select_plan "$RUNNER_TEMP/db-mysql.json" --db=mysql
+            args+=(--changes "$RUNNER_TEMP/changes.json" --db-pgsql "$RUNNER_TEMP/db-pgsql.json" --db-mysql "$RUNNER_TEMP/db-mysql.json")
+          fi
+
+          python3 scripts/ci/workflow-policy.py plan "${args[@]}" | tee "$RUNNER_TEMP/plan.out" >> "$GITHUB_OUTPUT"
+          {
+            echo '### CI plan'
+            echo '```'
+            cat "$RUNNER_TEMP/plan.out"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  quality:
+    name: Quality / ${{ matrix.package }}
+    needs: changes
+    if: needs.changes.outputs.has_quality == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.changes.outputs.quality_matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # The Composer path repo expects axiomasoft/azguard (AzGuard v1) at ../azguard/packages/core. AzGuard has
+      # no tagged release: the bridge pins the commit required in packages/azgard/composer.json (dev-main#<sha>).
+      - name: Checkout pinned AzGuard v1
+        if: matrix.azguard
+        run: |
+          sha=$(jq -r '.require["axiomasoft/azguard"] | split("#")[1]' packages/azgard/composer.json)
+          git init ../azguard
+          git -C ../azguard remote add origin https://github.com/axiomasoft/azguard-private.git
+          git -C ../azguard fetch --depth=1 origin "$sha"
+          git -C ../azguard checkout -B main FETCH_HEAD
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo, pdo_sqlite, sqlite3
+          coverage: none
+          tools: composer:v2
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer
+        uses: actions/cache@v5
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-quality-${{ matrix.package }}-${{ hashFiles('**/composer.json') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-quality-${{ matrix.package }}-
+            ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        working-directory: ${{ matrix.dir }}
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Code style (Pint)
+        working-directory: ${{ matrix.dir }}
+        run: vendor/bin/pint --test
+
+      - name: Static analysis (PHPStan max)
+        working-directory: ${{ matrix.dir }}
+        run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
+
+      # Advisory: the Rector backlog is not part of any change, so a finding must not turn a PR red (F-P4.4-01).
+      - name: Rector (dry-run, advisory)
+        if: matrix.rector
+        continue-on-error: true
+        working-directory: ${{ matrix.dir }}
+        run: vendor/bin/rector process --dry-run --no-progress-bar
+
+  fast:
+    name: Fast / ${{ matrix.package }} / Laravel ${{ matrix.laravel }}
+    needs: changes
+    if: needs.changes.outputs.has_fast == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.changes.outputs.fast_matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Checkout pinned AzGuard v1
+        if: matrix.azguard
+        run: |
+          sha=$(jq -r '.require["axiomasoft/azguard"] | split("#")[1]' packages/azgard/composer.json)
+          git init ../azguard
+          git -C ../azguard remote add origin https://github.com/axiomasoft/azguard-private.git
+          git -C ../azguard fetch --depth=1 origin "$sha"
+          git -C ../azguard checkout -B main FETCH_HEAD
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo, pdo_sqlite, sqlite3, pcntl, posix
+          coverage: none
+          tools: composer:v2
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer
+        uses: actions/cache@v5
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ matrix.package }}-laravel${{ matrix.laravel }}-${{ hashFiles('**/composer.json') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-${{ matrix.package }}-laravel${{ matrix.laravel }}-
+            ${{ runner.os }}-composer-
+
+      # An explicit `composer require` per cell: a bare install resolves ONE Laravel (the constraint's upper bound).
+      - name: Install dependencies (Laravel ${{ matrix.laravel }})
+        working-directory: ${{ matrix.dir }}
+        env:
+          LARAVEL: ${{ matrix.laravel }}
+          TESTBENCH: ${{ matrix.testbench }}
+        run: |
+          composer require "laravel/framework:$LARAVEL" "orchestra/testbench:$TESTBENCH" --dev --no-interaction --no-update
+          composer update --prefer-dist --no-interaction --no-progress
+
+      - name: Verify the installed versions
+        working-directory: ${{ matrix.dir }}
+        env:
+          LARAVEL: ${{ matrix.laravel }}
+          TESTBENCH: ${{ matrix.testbench }}
+        run: |
+          set -euo pipefail
+          laravel="$(composer show laravel/framework --format=json | jq -r '.versions[0]')"
+          testbench="$(composer show orchestra/testbench --format=json | jq -r '.versions[0]')"
+          echo "laravel/framework $laravel, orchestra/testbench $testbench"
+          laravel="${laravel#v}"
+          testbench="${testbench#v}"
+          expected_testbench="${TESTBENCH#^}"
+          if [[ "${laravel%%.*}" != "${LARAVEL%%.*}" ]]; then
+            echo "::error::expected Laravel ${LARAVEL}, installed ${laravel}"
+            exit 1
+          fi
+          if [[ "${testbench%%.*}" != "${expected_testbench%%.*}" ]]; then
+            echo "::error::expected Testbench ${TESTBENCH}, installed ${testbench}"
+            exit 1
+          fi
+
+      - name: Tests (SQLite, parallel)
+        env:
+          PACKAGE: ${{ matrix.package }}
+        run: |
+          PHP84_BIN="$(command -v php)"
+          export PHP84_BIN
+          scripts/t sqlite -p "$PACKAGE" -j 4
+
+      - name: Type coverage (100%)
+        if: matrix.types
+        working-directory: ${{ matrix.dir }}
+        run: vendor/bin/pest --type-coverage --min=100
+
+  db:
+    name: DB / ${{ matrix.engine }} / ${{ matrix.package }}
+    needs: changes
+    if: needs.changes.outputs.has_db == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.changes.outputs.db_matrix) }}
+    env:
+      # A ready CI service: scripts/test-db.sh starts nothing, creates the per-worker databases and
+      # refuses a database that does not end in _test.
+      DB_EXTERNAL: '1'
+      DB_HOST: 127.0.0.1
+      DB_PORT: ${{ matrix.port }}
+      DB_DATABASE: vaulter_test
+      DB_USERNAME: ${{ matrix.username }}
+      DB_PASSWORD: secret
+    # The data directories live on tmpfs (`--tmpfs` is a docker create option; `services.<id>.command` is not
+    # supported by Actions, so server flags such as fsync=off cannot be passed and the image defaults stay).
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: vaulter
+          POSTGRES_PASSWORD: secret
+          POSTGRES_DB: vaulter_test
+        ports:
+          - 5432:5432
+        options: >-
+          --tmpfs /var/lib/postgresql/data
+          --health-cmd "pg_isready -U vaulter -d vaulter_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: secret
+          MYSQL_DATABASE: vaulter_test
+        ports:
+          - 3306:3306
+        options: >-
+          --tmpfs /var/lib/mysql
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -psecret"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Checkout pinned AzGuard v1
+        if: matrix.azguard
+        run: |
+          sha=$(jq -r '.require["axiomasoft/azguard"] | split("#")[1]' packages/azgard/composer.json)
+          git init ../azguard
+          git -C ../azguard remote add origin https://github.com/axiomasoft/azguard-private.git
+          git -C ../azguard fetch --depth=1 origin "$sha"
+          git -C ../azguard checkout -B main FETCH_HEAD
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo, pdo_pgsql, pgsql, pdo_mysql, pdo_sqlite, sqlite3, pcntl, posix
+          coverage: none
+          tools: composer:v2
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer
+        uses: actions/cache@v5
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-db-${{ matrix.package }}-${{ hashFiles('**/composer.json') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-db-${{ matrix.package }}-
+            ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        working-directory: ${{ matrix.dir }}
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      # The database group: every test whose result depends on the engine (CAS locks, upload commit, yjs bytea,
+      # jsonb gin indexes, id strategies, table prefix, ...). The runner splits it into schema partitions, one Pest
+      # process per TestCase schema, with a database per parallel worker.
+      - name: Database tests (${{ matrix.engine }})
+        env:
+          ENGINE: ${{ matrix.engine }}
+          PACKAGE: ${{ matrix.package }}
+        run: |
+          PHP84_BIN="$(command -v php)"
+          export PHP84_BIN
+          scripts/t "$ENGINE" -p "$PACKAGE" --group=database -j 4
+
+  serial:
+    name: Serial / pgsql / ${{ matrix.package }}
+    needs: changes
+    if: needs.changes.outputs.has_serial == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.changes.outputs.serial_matrix) }}
+    env:
+      DB_EXTERNAL: '1'
+      DB_HOST: 127.0.0.1
+      DB_PORT: '5432'
+      DB_DATABASE: vaulter_test
+      DB_USERNAME: vaulter
+      DB_PASSWORD: secret
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: vaulter
+          POSTGRES_PASSWORD: secret
+          POSTGRES_DB: vaulter_test
+        ports:
+          - 5432:5432
+        options: >-
+          --tmpfs /var/lib/postgresql/data
+          --health-cmd "pg_isready -U vaulter -d vaulter_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo, pdo_pgsql, pgsql, pdo_sqlite, sqlite3, pcntl, posix
+          coverage: none
+          tools: composer:v2
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer
+        uses: actions/cache@v5
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-serial-${{ matrix.package }}-${{ hashFiles('**/composer.json') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-serial-${{ matrix.package }}-
+            ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        working-directory: ${{ matrix.dir }}
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      # Forked-process races, tus PATCH at one offset, tenant provisioning: one process, no parallel workers. The
+      # forked harnesses self-skip without pdo_pgsql/pcntl/posix, so a skip here is a failure (--no-skips).
+      - name: Serial tests (pgsql, one process, no skips)
+        env:
+          PACKAGE: ${{ matrix.package }}
+        run: |
+          PHP84_BIN="$(command -v php)"
+          export PHP84_BIN
+          scripts/t pgsql -p "$PACKAGE" --group=serial -j1 --no-skips
+
+  vue:
+    name: "@vaulter/vue (Node ${{ matrix.node }})"
+    needs: changes
+    if: needs.changes.outputs.has_vue == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20', '22']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Install dependencies
+        run: npm install
+
+      # The committed API types must be exactly what openapi/vaulter-v1.yaml generates.
+      - name: Generated API types are current
+        run: npm run api:check --workspace @vaulter/vue
+
+      - name: Type-check
+        run: npm run typecheck --workspace @vaulter/vue
+
+      - name: Test
+        run: npm run test --workspace @vaulter/vue
+
+      - name: Build
+        run: npm run build --workspace @vaulter/vue
+
+  hub:
+    name: "@vaulter/hocuspocus-server (Node ${{ matrix.node }})"
+    needs: changes
+    if: needs.changes.outputs.has_hub == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        # @hocuspocus/server@4 declares engines.node >=22; `npm ci` fails Node 20 under engine-strict.
+        node: ['22']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Install dependencies
+        working-directory: ./hocuspocus-server
+        run: npm ci
+
+      # Syntax gate: every source module parses (mirrors the `check` script).
+      - name: Syntax check
+        working-directory: ./hocuspocus-server
+        run: npm run check
+
+      # Behaviour gate: the node:test suite, incl. websocket-hardening.test.js, so the collab-hub security
+      # invariants (frame cap, Throttle armed, JWT/webhook/Origin/expiry seams) cannot silently regress.
+      - name: Test
+        working-directory: ./hocuspocus-server
+        run: npm test
+
+  repo:
+    name: Repo harness, workflow policy, actionlint
+    needs: changes
+    if: needs.changes.outputs.has_repo == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo, pdo_sqlite, sqlite3, pcntl, posix
+          coverage: none
+          tools: composer:v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer
+        uses: actions/cache@v5
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-repo-${{ hashFiles('**/composer.json') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-repo-
+            ${{ runner.os }}-composer-
+
+      - name: Validate composer
+        run: |
+          composer validate --no-check-publish
+          composer validate packages/core/composer.json --strict
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Workflow policy
+        run: |
+          python3 -m pip install 'pyyaml==6.0.2'
+          python3 scripts/ci/workflow-policy.py
+          python3 -m unittest discover -s tests/Repo -p WorkflowPolicyTest.py
+
+      # The harness is exercised without any Laravel matrix: scripts/t, the selector, the zone map and the groups.
+      - name: Repo harness tests
+        run: |
+          PHP84_BIN="$(command -v php)"
+          export PHP84_BIN
+          scripts/t sqlite -p repo
+
+      - name: actionlint
+        run: docker run --rm -v "$PWD":/repo -w /repo rhysd/actionlint:1.7.7
+
+  openapi:
+    name: OpenAPI spec validation
+    needs: changes
+    if: needs.changes.outputs.has_openapi == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # Blocking validation: the document parses, is OpenAPI 3, every local $ref resolves and operationIds are
+      # unique. The breaking-change comparison against the last stable tag stays informative in openapi.yml (D21).
+      - name: Validate openapi/vaulter-v1.yaml
+        run: |
+          python3 -m pip install 'pyyaml==6.0.2'
+          python3 - <<'PY'
+          import sys
+          import yaml
+
+          spec = yaml.safe_load(open('openapi/vaulter-v1.yaml', encoding='utf-8'))
+          errors = []
+          if not str(spec.get('openapi', '')).startswith('3.'):
+              errors.append(f"openapi version is {spec.get('openapi')!r}, expected 3.x")
+          if not spec.get('paths'):
+              errors.append('no paths')
+          operation_ids = {}
+
+          def resolve(ref):
+              node = spec
+              for part in ref[2:].split('/'):
+                  part = part.replace('~1', '/').replace('~0', '~')
+                  if not isinstance(node, dict) or part not in node:
+                      return False
+                  node = node[part]
+              return True
+
+          def walk(node, where):
+              if isinstance(node, dict):
+                  ref = node.get('$ref')
+                  if isinstance(ref, str) and ref.startswith('#/') and not resolve(ref):
+                      errors.append(f'{where}: unresolved {ref}')
+                  operation_id = node.get('operationId')
+                  if isinstance(operation_id, str):
+                      if operation_id in operation_ids:
+                          errors.append(f'{where}: operationId {operation_id} repeats {operation_ids[operation_id]}')
+                      operation_ids[operation_id] = where
+                  for key, value in node.items():
+                      walk(value, f'{where}/{key}')
+              elif isinstance(node, list):
+                  for index, value in enumerate(node):
+                      walk(value, f'{where}/{index}')
+
+          walk(spec, '')
+          for error in errors:
+              print(f'FAIL {error}', file=sys.stderr)
+          sys.exit(1 if errors else 0)
+          PY
+
+  ci-gate:
+    name: CI gate
+    if: always()
+    needs: [changes, quality, fast, db, serial, vue, hub, repo, openapi]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # The verdict is scripts/ci/workflow-policy.py gate (unit-tested on fake needs fixtures): a skipped lane is
+      # green only when `changes` says it was not needed, and an empty required matrix is red.
+      - name: Verdict
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: python3 scripts/ci/workflow-policy.py gate

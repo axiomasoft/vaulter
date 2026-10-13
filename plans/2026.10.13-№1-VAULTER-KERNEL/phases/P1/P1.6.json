@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P1.6",
   "title": "Единый CI: ci.yml с gate, серверные линии на tmpfs, weekly-full",
-  "status": "todo",
+  "status": "done",
   "summary": "Один PR-workflow `ci.yml`: `changes` → quality и `fast` по затронутым пакетам × L12/L13, `db` (pgsql, mysql на tmpfs, группа database, параллель), `serial` (PG), `frontend`, `ci-gate` — единственный required-check; `weekly-full.yml` по расписанию/тегам гоняет всё с coverage (pcov) и `extended`; пакетные workflow с тестами удалены.",
   "why": "Сегодня тесты и качество разнесены по 8 workflow, серверные шаги последовательные, gate нет (knowledge/test-strategy#ci-target).",
   "scope": {
@@ -169,6 +169,33 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T10:01:20Z"
+  "result": {
+    "started_at": "2026-10-13T14:19:42Z",
+    "finished_at": "2026-10-13T14:30:07Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "1e02539e-9367-4a6c-9490-03f748ef84d1"
+    },
+    "notes": "ci.yml (changes→quality/fast/db/serial/vue/hub/repo/openapi→CI gate), weekly-full.yml (reusable, tag qualification), monorepo-split handshake, 9 workflows removed, policy plan/gate + 33 unit tests, job-mapping artifact. V4 actionlint impact NOT run (docker.sock denied); GitHub run unverified.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-13T14:30:07Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-13T14:30:07Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-13T14:30:07Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-13T14:30:07Z"
 }

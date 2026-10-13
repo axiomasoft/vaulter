@@ -1,0 +1,368 @@
+name: Weekly full
+
+# Full qualification (PLAN3 P1.6): everything ci.yml thins out per change, once and complete — every package on
+# both Laravel lines with `--full` (fast + serial + extended, each exactly once), every package on pgsql and
+# mysql, pcov coverage with its floor, the stand (real processes + the functional load tests), Node and the
+# repository harness. It never mutates (mutation.yml, D3) and never benchmarks (load.yml, D4).
+#
+# Triggers: Monday 04:00 UTC, by hand, and as a reusable workflow. monorepo-split.yml calls it for a release tag,
+# so the exact tagged commit (github.sha of the caller) is qualified first and nothing is published before
+# `Full qualification gate` is green — there is no "latest green run" lookup.
+on:
+  schedule:
+    - cron: '0 4 * * 1'
+  workflow_dispatch:
+  workflow_call:
+
+concurrency:
+  group: weekly-full-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  # The actual PHP support, checked against composer.json/groups.php by scripts/ci/workflow-policy.py.
+  PHP_SUPPORT: '{"core":{"dir":".","lines":["12","13"],"serial":true,"types":true,"rector":true,"azguard":false},"media":{"dir":"packages/media","lines":["12","13"],"serial":true,"types":true,"rector":false,"azguard":false},"drive":{"dir":"packages/drive","lines":["12","13"],"serial":true,"types":true,"rector":false,"azguard":false},"documents":{"dir":"packages/documents","lines":["12","13"],"serial":true,"types":true,"rector":false,"azguard":false},"azgard":{"dir":"packages/azgard","lines":["12","13"],"serial":false,"types":false,"rector":false,"azguard":true},"filament":{"dir":"packages/filament","lines":["13"],"serial":false,"types":true,"rector":true,"azguard":false}}'
+
+jobs:
+  plan:
+    name: Plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      fast_matrix: ${{ steps.plan.outputs.fast_matrix }}
+      db_matrix: ${{ steps.plan.outputs.db_matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Every lane, every package
+        id: plan
+        run: python3 scripts/ci/workflow-policy.py plan --mode all >> "$GITHUB_OUTPUT"
+
+  full:
+    name: Full / ${{ matrix.package }} / Laravel ${{ matrix.laravel }}
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.fast_matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Checkout pinned AzGuard v1
+        if: matrix.azguard
+        run: |
+          sha=$(jq -r '.require["axiomasoft/azguard"] | split("#")[1]' packages/azgard/composer.json)
+          git init ../azguard
+          git -C ../azguard remote add origin https://github.com/axiomasoft/azguard-private.git
+          git -C ../azguard fetch --depth=1 origin "$sha"
+          git -C ../azguard checkout -B main FETCH_HEAD
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo, pdo_sqlite, sqlite3, pcntl, posix
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies (Laravel ${{ matrix.laravel }})
+        working-directory: ${{ matrix.dir }}
+        env:
+          LARAVEL: ${{ matrix.laravel }}
+          TESTBENCH: ${{ matrix.testbench }}
+        run: |
+          composer require "laravel/framework:$LARAVEL" "orchestra/testbench:$TESTBENCH" --dev --no-interaction --no-update
+          composer update --prefer-dist --no-interaction --no-progress
+
+      - name: Verify the installed versions
+        working-directory: ${{ matrix.dir }}
+        env:
+          LARAVEL: ${{ matrix.laravel }}
+          TESTBENCH: ${{ matrix.testbench }}
+        run: |
+          set -euo pipefail
+          laravel="$(composer show laravel/framework --format=json | jq -r '.versions[0]')"
+          testbench="$(composer show orchestra/testbench --format=json | jq -r '.versions[0]')"
+          echo "laravel/framework $laravel, orchestra/testbench $testbench"
+          laravel="${laravel#v}"
+          testbench="${testbench#v}"
+          expected_testbench="${TESTBENCH#^}"
+          if [[ "${laravel%%.*}" != "${LARAVEL%%.*}" ]]; then
+            echo "::error::expected Laravel ${LARAVEL}, installed ${laravel}"
+            exit 1
+          fi
+          if [[ "${testbench%%.*}" != "${expected_testbench%%.*}" ]]; then
+            echo "::error::expected Testbench ${TESTBENCH}, installed ${testbench}"
+            exit 1
+          fi
+
+      # Parallel pass without nofull,serial, then the serial group once; the extended cases run in the first pass.
+      - name: Tests (SQLite, full)
+        env:
+          PACKAGE: ${{ matrix.package }}
+        run: |
+          PHP84_BIN="$(command -v php)"
+          export PHP84_BIN
+          scripts/t sqlite -p "$PACKAGE" --full -j 4
+
+      - name: Type coverage (100%)
+        if: matrix.types
+        working-directory: ${{ matrix.dir }}
+        run: vendor/bin/pest --type-coverage --min=100
+
+  engines:
+    name: Full / ${{ matrix.engine }} / ${{ matrix.package }}
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.db_matrix) }}
+    env:
+      DB_EXTERNAL: '1'
+      DB_HOST: 127.0.0.1
+      DB_PORT: ${{ matrix.port }}
+      DB_DATABASE: vaulter_test
+      DB_USERNAME: ${{ matrix.username }}
+      DB_PASSWORD: secret
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: vaulter
+          POSTGRES_PASSWORD: secret
+          POSTGRES_DB: vaulter_test
+        ports:
+          - 5432:5432
+        options: >-
+          --tmpfs /var/lib/postgresql/data
+          --health-cmd "pg_isready -U vaulter -d vaulter_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: secret
+          MYSQL_DATABASE: vaulter_test
+        ports:
+          - 3306:3306
+        options: >-
+          --tmpfs /var/lib/mysql
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -psecret"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Checkout pinned AzGuard v1
+        if: matrix.azguard
+        run: |
+          sha=$(jq -r '.require["axiomasoft/azguard"] | split("#")[1]' packages/azgard/composer.json)
+          git init ../azguard
+          git -C ../azguard remote add origin https://github.com/axiomasoft/azguard-private.git
+          git -C ../azguard fetch --depth=1 origin "$sha"
+          git -C ../azguard checkout -B main FETCH_HEAD
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo, pdo_pgsql, pgsql, pdo_mysql, pdo_sqlite, sqlite3, pcntl, posix
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies
+        working-directory: ${{ matrix.dir }}
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Tests (${{ matrix.engine }}, full)
+        env:
+          ENGINE: ${{ matrix.engine }}
+          PACKAGE: ${{ matrix.package }}
+        run: |
+          PHP84_BIN="$(command -v php)"
+          export PHP84_BIN
+          scripts/t "$ENGINE" -p "$PACKAGE" --full -j 4
+
+  coverage:
+    name: Coverage (pcov)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4 (pcov)
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo, pdo_sqlite, sqlite3, pcntl, posix
+          coverage: pcov
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      # The floor that existed before P1.6 (core, 80%); coverage is not a PR lane (D3/D4).
+      - name: Core coverage
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+        run: vendor/bin/pest --ci --coverage --min=80
+
+  stand:
+    name: Stand (real processes, functional load tests)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo, pdo_sqlite, sqlite3, pcntl, posix
+          coverage: none
+          tools: composer:v2
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: |
+          composer install --prefer-dist --no-interaction --no-progress
+          npm ci --prefix hocuspocus-server
+
+      # An absent or skipped stand is a failure, not a green run: --no-skips and the job has no continue-on-error.
+      - name: Stand
+        run: |
+          PHP84_BIN="$(command -v php)"
+          export PHP84_BIN
+          scripts/t stand --no-skips
+
+  vue:
+    name: "@vaulter/vue (Node ${{ matrix.node }})"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20', '22']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Generated API types are current
+        run: npm run api:check --workspace @vaulter/vue
+
+      - name: Type-check
+        run: npm run typecheck --workspace @vaulter/vue
+
+      - name: Test
+        run: npm run test --workspace @vaulter/vue
+
+      - name: Build
+        run: npm run build --workspace @vaulter/vue
+
+  hub:
+    name: "@vaulter/hocuspocus-server (Node 22)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        working-directory: ./hocuspocus-server
+        run: npm ci
+
+      - name: Syntax check
+        working-directory: ./hocuspocus-server
+        run: npm run check
+
+      - name: Test
+        working-directory: ./hocuspocus-server
+        run: npm test
+
+  repo:
+    name: Repo harness, workflow policy, actionlint
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo, pdo_sqlite, sqlite3, pcntl, posix
+          coverage: none
+          tools: composer:v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Workflow policy
+        run: |
+          python3 -m pip install 'pyyaml==6.0.2'
+          python3 scripts/ci/workflow-policy.py
+          python3 -m unittest discover -s tests/Repo -p WorkflowPolicyTest.py
+
+      - name: Repo harness tests
+        run: |
+          PHP84_BIN="$(command -v php)"
+          export PHP84_BIN
+          scripts/t sqlite -p repo --full
+
+      - name: actionlint
+        run: docker run --rm -v "$PWD":/repo -w /repo rhysd/actionlint:1.7.7
+
+  full-gate:
+    name: Full qualification gate
+    if: always()
+    needs: [plan, full, engines, coverage, stand, vue, hub, repo]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # Every lane is required: a failed, cancelled or skipped one (a stand that did not run included) is red.
+      - name: Verdict
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          set -euo pipefail
+          bad="$(jq -r 'to_entries[] | select(.value.result != "success") | "\(.key): \(.value.result)"' <<<"$NEEDS")"
+          if [[ -n "$bad" ]]; then
+            echo "$bad" >&2
+            exit 1
+          fi
+          echo 'full qualification OK'

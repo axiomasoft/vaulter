@@ -25,6 +25,10 @@ name: Monorepo split (PHP)
 # The matrix below mirrors release/packages.json (scripts/release/check-versions.php fails on a
 # mismatch). vaulter-azgard is skipped while its AzGuard require is a dev constraint, and the
 # verify-tags job then proves every other split repo carries the tag on the commit just pushed.
+#
+# Release handshake (PLAN3 P1.6): a tag first runs the full qualification (weekly-full.yml as a reusable workflow)
+# on the exact tagged commit; only after it is green does verify-release-sha check that `CI gate` of ci.yml passed
+# on that same SHA, and only after that does anything get split. Nothing waits for or looks up a "latest green run".
 # Until the repos + secret exist this workflow will fail, so it is authored but dormant.
 on:
   push:
@@ -35,29 +39,32 @@ permissions:
   contents: read
 
 jobs:
+  # Full qualification of the exact tagged commit (github.sha of this run): SQLite on both Laravel lines, pgsql and
+  # mysql, pcov coverage, the stand, Node and the repository harness. A failure here stops the release.
+  qualification:
+    name: Full qualification
+    uses: ./.github/workflows/weekly-full.yml
+    permissions:
+      contents: read
+
   verify-release-sha:
     name: Verify release SHA
+    needs: qualification
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
       contents: read
       checks: read
     steps:
-      - name: Require successful CI checks on the tagged commit
+      - name: Require the CI gate on the tagged commit
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_SHA: ${{ github.sha }}
           REPOSITORY: ${{ github.repository }}
         run: |
+          # `CI gate` (ci.yml) needs every lane of the pull-request CI, so one check stands for all of them.
           required_checks=(
-            'Laravel Pint'
-            'Larastan (PHPStan level 8)'
-            'PHP 8.4 / Laravel 12.*'
-            'PHP 8.4 / Laravel 13.*'
-            'PHP 8.4 / Postgres (full schema portability lane)'
-            '@vaulter/vue (Node 20)'
-            '@vaulter/vue (Node 22)'
-            '@vaulter/hocuspocus-server (Node 22)'
+            'CI gate'
           )
 
           comparison="$(gh api "/repos/${REPOSITORY}/compare/${RELEASE_SHA}...main" --jq '.status')"
