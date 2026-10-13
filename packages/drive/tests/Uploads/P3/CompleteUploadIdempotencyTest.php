@@ -121,7 +121,7 @@ it('SEC-CLEANUP-sniff-throw closes the acquired protocol reader and its own prep
         ->and($session->refresh()->status)->toBe(UploadStatus::Assembled)->and(FileRevision::query()->count())->toBe(0);
     Storage::set('local', $disk);
     expect(app(StagedUpload::class)->size($session))->toBe(4);
-})->group('serial');
+})->group('serial', 'nofast');
 
 it('backfills only provable legacy revision pointers and never guesses the newer head', function (): void {
     $session = assembledIdempotencyUpload();

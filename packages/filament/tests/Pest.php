@@ -3,7 +3,14 @@
 declare(strict_types=1);
 
 use Vaulter\Filament\Tests\TestCase;
+use Vaulter\Tests\Support\TestGroups;
 
 uses(TestCase::class)->in('Feature');
 
 uses(TestCase::class)->in('Configuration');
+
+// Test groups (P1.5): database, serial, extended, stand and the engine-only engine:* — see groups.php. This package does not
+// autoload the core test classes, so the helper comes through the path-repo symlink of core.
+require_once dirname(__DIR__).'/vendor/axioma-studio/vaulter-core/tests/Support/TestGroups.php';
+
+TestGroups::bind(__DIR__, 'filament');

@@ -82,6 +82,9 @@ abstract class TestCase extends OrchestraTestCase
 
     protected function defineDatabaseMigrations(): void
     {
+        // A test meant for another engine is skipped here: the application is booted, no schema exists yet (groups engine:*).
+        SuiteDatabaseConnection::skipOnForeignEngine($this);
+
         // The whole v_* schema (incl. v_node_comments/v_documents/v_document_revisions) is
         // owned by core; load its migrations through the path-repo symlink Composer
         // places in this package's vendor dir.

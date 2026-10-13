@@ -6,6 +6,7 @@ use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vaulter\Load\Tests\LoadTestCase;
 use Vaulter\Tests\ActivityGate\ActivityDisabledTestCase;
+use Vaulter\Tests\Concerns\WithoutDatabaseSchema;
 use Vaulter\Tests\Fixtures\HostKeyMysqlTestCase;
 use Vaulter\Tests\IdStrategy\BigintStrategyTestCase;
 use Vaulter\Tests\IdStrategy\UlidStrategyTestCase;
@@ -13,6 +14,7 @@ use Vaulter\Tests\IdStrategy\Uuid7StrategyTestCase;
 use Vaulter\Tests\ObservabilityDocuments\P83DocumentsTestCase;
 use Vaulter\Tests\SpatieTestCase;
 use Vaulter\Tests\Support\OpenApi\OpenApiTestCase;
+use Vaulter\Tests\Support\TestGroups;
 use Vaulter\Tests\TablePrefixTestCase;
 use Vaulter\Tests\TestCase;
 use Vaulter\Tests\UlidTestCase;
@@ -22,11 +24,29 @@ $core = dirname(__DIR__).'/packages/core/tests';
 // Zone groups (tests/zones.json is the single source): every core sub-zone tags its tests `zone:<name>` so that
 // `scripts/t --changed` can select one zone of the core suite. Group-only bindings: the TestCase bindings below
 // stay exactly as they are (a second uses(TestCase) on the same path is forbidden by Pest).
+$leafZones = [];
 foreach (json_decode((string) file_get_contents(__DIR__.'/zones.json'), true, flags: JSON_THROW_ON_ERROR)['zones'] as $zoneName => $zone) {
     if (($zone['parent'] ?? null) === 'core') {
         pest()->group('zone:'.$zoneName)->in(...array_map(static fn (string $path): string => dirname(__DIR__).'/'.$path, $zone['tests']));
+        $leafZones[$zoneName] = array_map(static fn (string $path): string => dirname(__DIR__).'/'.$path, $zone['tests']);
     }
 }
+
+// Test groups (P1.5): `database` (+ `database:<zone>`), `serial`, `extended`, `stand` and the engine-only `engine:*`, declared in
+// <tests>/groups.php of the core suite and of the load suite. The core zone of a `database` path is the leaf zone whose tests[]
+// contains it; the other packages bind their own groups from their own Pest.php (a split package has no tests/zones.json).
+TestGroups::bind($core, static function (string $path) use ($leafZones): string {
+    foreach ($leafZones as $zoneName => $tests) {
+        foreach ($tests as $entry) {
+            if ($path === $entry || str_starts_with($path, $entry.'/')) {
+                return $zoneName;
+            }
+        }
+    }
+
+    throw new LogicException("No core zone owns the database test {$path}; add it to tests/zones.json");
+});
+TestGroups::bind(dirname(__DIR__).'/load/tests', 'load');
 
 // Drive + Uploads suites moved to the vaulter-drive package (P2 #5 / ADR-0015, D1);
 // they run under that package's own Pest suite. The shared DriveTestHelpers stays in
@@ -37,6 +57,17 @@ uses(TestCase::class)->in(
     $core.'/Http',
     $core.'/Observability/Binding',
     $core.'/Observability/Tracing',
+);
+
+// Database-free (P1.5): these files run on the booted application without a schema. A file joins this list only after it
+// stays green under WithoutDatabaseSchema (a test that reaches the database fails there) — see
+// plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.5/classification.md.
+uses(WithoutDatabaseSchema::class)->in(
+    $core.'/Http/Problems',
+    $core.'/Observability/Binding',
+    $core.'/Observability/Tracing/TraceRecorderBindingTest.php',
+    $core.'/Arch/CommandNamingTest.php',
+    $core.'/Unit/NodeNameTest.php',
 );
 
 uses(TestCase::class, RefreshDatabase::class)->in(

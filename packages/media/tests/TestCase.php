@@ -47,6 +47,9 @@ abstract class TestCase extends OrchestraTestCase
 
     protected function defineDatabaseMigrations(): void
     {
+        // A test meant for another engine is skipped here: the application is booted, no schema exists yet (groups engine:*).
+        SuiteDatabaseConnection::skipOnForeignEngine($this);
+
         // The v_blobs (+ Drive) schema is owned by core; load its migrations through
         // the path-repo symlink that Composer places in this package's vendor dir.
         $this->loadMigrationsFrom(__DIR__.'/../vendor/axioma-studio/vaulter-core/database/migrations');

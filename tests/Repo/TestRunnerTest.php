@@ -212,7 +212,7 @@ it('plans exactly the inventory partitions of every PHP suite, and the inventory
 
 it('selects the repo suite and keeps the default suites free of load', function (): void {
     $plan = t_plan(['sqlite', '-p', 'repo']);
-    expect($plan['suites'])->toBe(['repo'])->and($plan['steps'][0]['files'])->toBe(['tests/Repo/TestRunnerTest.php', 'tests/Repo/TestSelectTest.php', 'tests/Repo/ZonesMapTest.php']);
+    expect($plan['suites'])->toBe(['repo'])->and($plan['steps'][0]['files'])->toBe(['tests/Repo/TestGroupsTest.php', 'tests/Repo/TestRunnerTest.php', 'tests/Repo/TestSelectTest.php', 'tests/Repo/ZonesMapTest.php']);
 
     $default = t_plan(['sqlite']);
     expect($default['suites'])->toBe(['core', 'media', 'drive', 'documents', 'azgard', 'filament', 'repo', 'hub', 'vue']);

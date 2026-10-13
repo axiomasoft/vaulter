@@ -11,6 +11,8 @@ use Vaulter\Documents\Tests\Export\ExportTestCase;
 use Vaulter\Documents\Tests\Operations\OperationsTestCase;
 use Vaulter\Documents\Tests\TestCase;
 use Vaulter\Documents\Tests\Types\TypesTestCase;
+use Vaulter\Tests\Concerns\WithoutDatabaseSchema;
+use Vaulter\Tests\Support\TestGroups;
 
 // The v_node_comments/v_documents/v_document_revisions schema is always migrated (core owns
 // it unconditionally); only the ROUTES are feature-gated. Schema + Unit run on the
@@ -71,3 +73,11 @@ uses(TestCase::class)->in('Configuration');
 
 // The HTTP shape checks read the booted route table.
 uses(TestCase::class)->in('Arch');
+
+// Database-free (P1.5): these files run on the booted application without a schema; each one stayed green under
+// WithoutDatabaseSchema (a test that reaches the database fails there) — see
+// plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.5/classification.md.
+uses(WithoutDatabaseSchema::class)->in('Arch', 'Configuration', 'Providers');
+
+// Test groups (P1.5): database, serial, extended, stand and the engine-only engine:* — see groups.php.
+TestGroups::bind(__DIR__, 'documents');

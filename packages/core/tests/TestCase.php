@@ -92,6 +92,9 @@ abstract class TestCase extends OrchestraTestCase
 
     protected function defineDatabaseMigrations(): void
     {
+        // A test meant for another engine is skipped here: the application is booted, no schema exists yet (groups engine:*).
+        SuiteDatabaseConnection::skipOnForeignEngine($this);
+
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
     }
 

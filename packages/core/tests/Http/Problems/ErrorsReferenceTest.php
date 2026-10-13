@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Vaulter\Http\Problems\ErrorsReference;
 
+require_once __DIR__.'/ProblemCatalogHelpers.php';
+
 /**
  * The reference pages carry a block generated from the code catalogue; a page that
  * drifted from the codes fails here and in vaulter:errors:reference --check.

@@ -108,4 +108,4 @@ it('reuses prepared bytes on a serialization retry and discards the temp file', 
         ->and(Blob::query()->count())->toBe(1)
         ->and(Blob::query()->sole()->sha256)->toBe(hash('sha256', 'retry the same bytes'))
         ->and(glob(sys_get_temp_dir().'/vaulter_cas_*') ?: [])->toBe($before);
-})->group('serial');
+})->group('serial', 'nofast');

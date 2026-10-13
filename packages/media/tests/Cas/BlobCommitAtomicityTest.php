@@ -95,7 +95,7 @@ it('staged temp-файл удаляется после успешного ком
     $after = glob(sys_get_temp_dir().'/vaulter_cas_*') ?: [];
 
     expect(count($after))->toBeLessThanOrEqual(count($before));
-})->group('serial');
+})->group('serial', 'nofast');
 
 function stringStream(string $bytes)
 {

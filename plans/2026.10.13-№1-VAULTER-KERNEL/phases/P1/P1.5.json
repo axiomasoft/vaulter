@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P1.5",
   "title": "Слои database, serial, extended, stand и удешевление дорогого",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Драйверозависимые тесты в группе `database` (+ `database:<зона>`), fork-гонки — `serial`, масштаб/все seed — `extended`, внешние сервисы — `stand`, все три — также `nofast`; тесты без БД не поднимают схему; пропускаемые на «чужом» движке файлы не пересобирают схему; число и имена тестов не изменились.",
   "why": "Серверные линии должны гонять только то, что зависит от движка (П4, П5), а PR — не платить за масштаб и внешние сервисы (П8–П11).",
   "scope": {
@@ -156,6 +156,49 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T10:08:43Z"
+  "result": {
+    "started_at": "2026-10-13T13:51:21Z",
+    "finished_at": "2026-10-13T14:15:41Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "6139e456-a71d-443c-a90c-c92e5b5b449e"
+    },
+    "notes": "Слои: groups.php на набор (database 146 файлов: core 69, media 20, drive 34, documents 21, azgard 2; serial 33; engine:* 30; stand = load/tests 19 + collab-e2e); TestGroups выводит nofast/nofull; database[] в zones.json (86 записей) равен объединению; scripts/t stand + неявные исключения extended/stand; пропуск чужого движка до схемы (defineDatabaseMigrations); 40 файлов в TestCase+WithoutDatabaseSchema (схема не строится); extended пуст (нет дешёвого эквивалента WideNodeListing). V1 discovery ok, имена не изменились; TestGroups/ZonesMap/TestRunner 43 passed, TestSelect 32; V3 sqlite, V4 pgsql (2 passed + serial-тест исключён), V5 mysql 7 passed. Длинных прогонов нет (по указанию владельца); Pint ok, PHPStan не затронут (только src). classification.md в artifacts/P1.5.",
+    "deviations": [
+      "Файлы вне task_files: groups.php по наборам, Support/TestGroups.php, Concerns/WithoutDatabaseSchema.php, SuiteDatabaseConnection, TestCase media/drive/documents, tests/Repo/TestRunnerTest.php (список файлов repo), tests/baseline repo.*/CHANGES.*, ProblemCatalogHelpers.php, ключ stand в suites.json"
+    ],
+    "pending": [
+      "Квалификация: полный прогон и stand-линия — P1.9; Operations/ProblemMappingTest красный на базе (вне пункта); packages/drive/tests/Fixtures отсутствует в git (ZonesMapTest красный на свежем клоне)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-13T14:15:41Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-13T14:15:41Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-13T14:15:41Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-13T14:15:41Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-13T14:15:41Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-13T14:15:41Z"
 }

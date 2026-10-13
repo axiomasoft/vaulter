@@ -553,6 +553,26 @@
             "serial"
           ],
           "files": [
+            "packages/core/tests/Observability/Tracing/WebhookPipelineTracingTest.php",
+            "packages/core/tests/Operations/ProblemMappingTest.php",
+            "packages/core/tests/Schema/NodeSequenceSchemaTest.php",
+            "packages/core/tests/Schema/ScanEvidenceSchemaTest.php",
+            "packages/core/tests/Tenancy/TenantIdentifierPredicateTest.php"
+          ]
+        },
+        {
+          "key": "TestCase+WithoutDatabaseSchema",
+          "fingerprint": "ebfe4eb78046",
+          "lifecycle": "none",
+          "database": false,
+          "engines": [
+            "sqlite"
+          ],
+          "skeleton_writer": false,
+          "empty_passes": [
+            "serial"
+          ],
+          "files": [
             "packages/core/tests/Arch/CommandNamingTest.php",
             "packages/core/tests/Http/Problems/ErrorsReferenceTest.php",
             "packages/core/tests/Http/Problems/FrameworkExceptionMappingTest.php",
@@ -562,11 +582,6 @@
             "packages/core/tests/Http/Problems/ProblemRendererTest.php",
             "packages/core/tests/Observability/Binding/MetricsRecorderBindingTest.php",
             "packages/core/tests/Observability/Tracing/TraceRecorderBindingTest.php",
-            "packages/core/tests/Observability/Tracing/WebhookPipelineTracingTest.php",
-            "packages/core/tests/Operations/ProblemMappingTest.php",
-            "packages/core/tests/Schema/NodeSequenceSchemaTest.php",
-            "packages/core/tests/Schema/ScanEvidenceSchemaTest.php",
-            "packages/core/tests/Tenancy/TenantIdentifierPredicateTest.php",
             "packages/core/tests/Unit/NodeNameTest.php"
           ]
         }
@@ -663,14 +678,12 @@
           ]
         },
         {
-          "key": "TestCase",
-          "fingerprint": "20db02f08b7a",
-          "lifecycle": "custom",
-          "database": true,
+          "key": "TestCase+WithoutDatabaseSchema",
+          "fingerprint": "ebfe4eb78046",
+          "lifecycle": "none",
+          "database": false,
           "engines": [
-            "sqlite",
-            "pgsql",
-            "mysql"
+            "sqlite"
           ],
           "skeleton_writer": false,
           "empty_passes": [
@@ -873,14 +886,12 @@
           ]
         },
         {
-          "key": "TestCase",
-          "fingerprint": "20db02f08b7a",
-          "lifecycle": "custom",
-          "database": true,
+          "key": "TestCase+WithoutDatabaseSchema",
+          "fingerprint": "ebfe4eb78046",
+          "lifecycle": "none",
+          "database": false,
           "engines": [
-            "sqlite",
-            "pgsql",
-            "mysql"
+            "sqlite"
           ],
           "skeleton_writer": false,
           "empty_passes": [
@@ -1259,14 +1270,12 @@
           ]
         },
         {
-          "key": "TestCase",
-          "fingerprint": "20db02f08b7a",
-          "lifecycle": "custom",
-          "database": true,
+          "key": "TestCase+WithoutDatabaseSchema",
+          "fingerprint": "ebfe4eb78046",
+          "lifecycle": "none",
+          "database": false,
           "engines": [
-            "sqlite",
-            "pgsql",
-            "mysql"
+            "sqlite"
           ],
           "skeleton_writer": false,
           "empty_passes": [
@@ -1551,7 +1560,8 @@
             "load/tests/Feature/QueueRetryMemorySeamTest.php"
           ]
         }
-      ]
+      ],
+      "stand": true
     },
     "repo": {
       "kind": "pest",
@@ -1579,6 +1589,7 @@
             "serial"
           ],
           "files": [
+            "tests/Repo/TestGroupsTest.php",
             "tests/Repo/TestRunnerTest.php",
             "tests/Repo/TestSelectTest.php",
             "tests/Repo/ZonesMapTest.php"
@@ -1615,5 +1626,16 @@
         "list"
       ]
     }
-  }
+  },
+  "stand": [
+    {
+      "name": "collab-e2e",
+      "cwd": ".",
+      "command": [
+        "bash",
+        "scripts/collab-e2e.sh"
+      ],
+      "note": "Collaboration protocol against real processes: testbench serve + the Hocuspocus hub; needs npm ci in hocuspocus-server"
+    }
+  ]
 }

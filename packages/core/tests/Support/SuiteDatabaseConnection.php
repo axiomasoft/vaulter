@@ -6,6 +6,8 @@ namespace Vaulter\Tests\Support;
 
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Application;
+use PHPUnit\Framework\TestCase;
+use PHPUnit\Metadata\Api\Groups;
 use RuntimeException;
 
 /**
@@ -40,6 +42,38 @@ final class SuiteDatabaseConnection
         register_shutdown_function(static function () use ($storage): void {
             (new Filesystem)->deleteDirectory($storage);
         });
+    }
+
+    /** The engine the suite runs on, decided by the environment alone (no application needed): sqlite|pgsql|mysql|mariadb. */
+    public static function engine(): string
+    {
+        $driver = env('DB_CONNECTION');
+
+        return is_string($driver) && $driver !== '' ? $driver : 'sqlite';
+    }
+
+    /**
+     * Skips a test that cannot say anything on this engine BEFORE the application and its schema exist. A test names the engines it
+     * is meant for with the groups `engine:pgsql`, `engine:mysql` (that engine only; `mariadb` counts as mysql) or `engine:server`
+     * (any server engine, never SQLite). A skip from the test body would come after the schema was migrated for nothing.
+     *
+     * Call it first in every suite TestCase::defineDatabaseMigrations(): the application is booted there (a test's own hooks and
+     * Facades still work when the skip unwinds), and no migration has run yet. A skip from setUp() before the boot breaks them.
+     */
+    public static function skipOnForeignEngine(TestCase $test): void
+    {
+        $engine = self::engine();
+        $family = $engine === 'mariadb' ? 'mysql' : $engine;
+
+        foreach ((new Groups)->groups($test::class, $test->name()) as $group) {
+            if (!str_starts_with($group, 'engine:')) {
+                continue;
+            }
+            $wanted = substr($group, strlen('engine:'));
+            if ($wanted === 'server' ? $family === 'sqlite' : $wanted !== $family) {
+                $test->markTestSkipped("Meant for the {$wanted} engine; this run is on {$engine}.");
+            }
+        }
     }
 
     /** @return array<string, string|bool|null> */

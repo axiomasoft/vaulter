@@ -5,6 +5,7 @@
 #             [-j N] [--engines=sqlite,pgsql,mysql] [--full] [--group=G] [--exclude-group=G]
 #             [--junit=DIR] [--no-skips] [--dry-run [--json]] [--] [paths / pest flags]
 #   scripts/t --changed [--base=<ref>] [--quick] [--db=pgsql|mysql] [--dry-run [--json]] [-j N] [--junit=DIR] [--no-skips] [-- pest flags]
+#   scripts/t stand [-p load,collab-e2e] [--junit=DIR] [--no-skips] [--dry-run [--json]] [--] [paths / pest flags]
 #   scripts/t baseline --write|--compare [-p ...]
 #   scripts/t --help
 #
@@ -23,6 +24,13 @@
 #     service; the database must end in _test); they need paths, --group or --full — there is no default server sweep.
 #   * partitions that write into the Testbench skeleton run -j1 with a TESTBENCH_APP_BASE_PATH of their own.
 #   * hub/vue run `npm test` through their manifests (engines do not apply); `load` is explicit only.
+#   * groups: `database` (+ `database:<zone>`) = the result depends on the engine; `serial` = no parallel workers; `extended` =
+#     scale / the whole seed range; `stand` = external services and the functional load tests. nofast = serial+extended+stand,
+#     nofull = stand: the fast lane excludes nofast, --full excludes nofull (and runs serial once), nothing else is ever hidden.
+#     Selecting `--group=extended` or `--group=stand` drops the exclusion that group implies, so it never selects nothing.
+#   * stand: the stand-group tests (load/tests, SQLite, one process) plus the real-process scripts listed under "stand" in
+#     tests/suites.json (scripts/collab-e2e.sh). It is its own command, never part of fast/full/all; k6 and benchmarks are
+#     not tests of this runner and no command here starts them.
 #
 # --changed: scripts/test-select.php turns `git diff <merge-base of --base (default main)>..HEAD` + staged/unstaged/untracked
 #   files into zones (tests/zones.json) and one `scripts/t` run per affected suite; --quick keeps only the touched zones
@@ -31,7 +39,6 @@
 #   runs. No change / prose-only is a plan of zero runs and says so; it is never reported as a pass of tests.
 #
 # Exit: 0 ok · 1 a pass failed · 2 usage / refused plan / engine mismatch · 3 zero tests where tests were required.
-# `stand` (P1.5) is not part of this item.
 set -euo pipefail
 
 self="${BASH_SOURCE[0]}"
@@ -61,14 +68,19 @@ def files($s): [$s.partitions[].files[]];
 def passes($p; $c; $skel; $nfiles):
   ($c.groups) as $g | ($c.xgroups) as $x | ([$c.workers, $nfiles] | min) as $w
   | ($g | join(",")) as $gs
-  | if ($g | index("serial")) != null then
+  | if $c.mode == "stand" then
+      [{pass: "stand", processes: 1, group: (["stand"] + $g | unique | join(",")), exclude: $x, allow_empty: false}]
+    elif ($g | index("serial")) != null then
       [{pass: "serial", processes: 1, group: $gs, exclude: $x, allow_empty: ((($p.empty_passes // []) | index("serial")) != null)}]
     else
-      (if $c.mode == "full" then ["nofull"] else ["nofast"] end) as $d
+      # the default exclusion of the lane, minus what a selected group implies (extended/stand are nofast, stand is nofull)
+      ((if $c.mode == "full" then ["nofull"] else ["nofast"] end)
+        | map(select(. as $e | (($e == "nofast" and ((($g | index("extended")) != null) or (($g | index("stand")) != null)))
+                                or ($e == "nofull" and ($g | index("stand")) != null)) | not))) as $d
       | if $skel or $w <= 1 then
           [{pass: "single", processes: 1, group: $gs, exclude: ($d + $x), allow_empty: false}]
         elif $c.mode == "full" then
-          [{pass: "parallel", processes: $w, group: $gs, exclude: (["nofull", "serial"] + $x), allow_empty: false}]
+          [{pass: "parallel", processes: $w, group: $gs, exclude: ($d + ["serial"] + $x), allow_empty: false}]
           + (if ($x | index("serial")) != null or $gs != "" then []
              else [{pass: "serial", processes: 1, group: "serial", exclude: [], allow_empty: ((($p.empty_passes // []) | index("serial")) != null)}] end)
         else
@@ -76,7 +88,9 @@ def passes($p; $c; $skel; $nfiles):
         end
     end;
 
-. as $inv | $cfg as $c | $inv.suites as $S
+. as $inv | $cfg as $c
+# the real-process stand scripts are node-kind pseudo-suites of the stand command only (no zone, no baseline)
+| ($inv.suites + (($inv.stand // []) | map({(.name): {kind: "node", cwd: .cwd, command: .command, default: false, stand: true}}) | add // {})) as $S
 | ([$S | to_entries[] | select(.value.kind == "pest") | .key]) as $pest
 | ($c.paths | map(norm)) as $raw
 | ($c.groups | map(select(. as $g | $c.xgroups | index($g)))) as $conflict
@@ -86,6 +100,7 @@ def passes($p; $c; $skel; $nfiles):
   (if $c.suites != null then $c.suites
    elif ($raw | length) > 0 then
      [$pest[] | select(. as $n | any($raw[]; . as $q | any(files($S[$n])[]; hit(.; $q))))]
+   elif $c.mode == "stand" then [$S | to_entries[] | select(.value.stand == true) | .key]
    else [$S | to_entries[] | select(.value.default) | .key] end) as $sel
   | if ($sel | map(select($S[.] == null)) | length) > 0 then {error: "unknown suite: \($sel | map(select($S[.] == null)) | join(","))"}
     elif ($raw | length) > 0 and ($sel | length) == 0 then {error: "cannot infer the suite for: \($raw | join(", ")); pass -p <suite>"}
@@ -131,7 +146,7 @@ sub=''
 case "${1:-}" in
     baseline) sub=baseline; shift ;;
     __exec) sub=__exec; shift ;;
-    stand) die '`stand` arrives with P1.5' ;;
+    stand) sub=stand; shift ;;
 esac
 
 engine_word=''
@@ -139,6 +154,7 @@ suites_csv=''
 engines_opt=''
 workers=''
 mode=fast
+[[ "$sub" == stand ]] && mode=stand
 groups=()
 xgroups=()
 dry=0
@@ -650,6 +666,11 @@ changed_main() {
     done
     return "$final"
 }
+
+if [[ "$sub" == stand ]]; then
+    [[ -z "$engine_word$engines_opt$base$db_engine" && "$mode" == stand && "$changed" -eq 0 && "$quick" -eq 0 ]] \
+        || die '`stand` runs on SQLite, in one process, and takes no engine, --engines, --full, --changed, --base, --quick or --db'
+fi
 
 if (( changed )); then
     [[ -z "$engine_word" && -z "$suites_csv" && -z "$engines_opt" && ${#paths[@]} -eq 0 && ${#groups[@]} -eq 0 && "$mode" == fast ]] \
