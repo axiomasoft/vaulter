@@ -1,0 +1,34 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:unit:v1",
+  "id": "U4",
+  "item": "P2.3",
+  "title": "Команды и опции",
+  "goal": "identities/cli.json сгенерирован, owners/cli.json полон, `identities-cli --check` зелёный.",
+  "files": [
+    "scripts/inventory/lib/Identities/Cli.php",
+    "scripts/inventory/generators/identities-cli.php",
+    "tests/Repo/Arch/Fixtures/identities/cli.json",
+    "tests/Repo/Arch/Fixtures/identities/owners/cli.json"
+  ],
+  "depends_on": [
+    "U1"
+  ],
+  "checks": [
+    {
+      "id": "V1",
+      "cmd": "scripts/php84 php scripts/inventory/inventory.php identities-cli --write && scripts/php84 php scripts/inventory/inventory.php identities-cli --check",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "mode": "either",
+  "instructions": "Классы-наследники Illuminate\\Console\\Command во всех пакетах; Parser::parse; владелец = владелец класса в target-map.json. Только свои файлы; общий формат — lib/Identities.php (U1), его изменение — через rework U1.",
+  "status": "todo",
+  "outcome": null,
+  "updated_at": "2026-10-13T19:16:44Z",
+  "kind": "implementation"
+}

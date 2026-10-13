@@ -1,0 +1,235 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P2.3",
+  "title": "Инвентарь идентичностей: схема, конфиг/env/publish, CLI, HTTP, протокол — с владельцами",
+  "status": "in_progress",
+  "summary": "Пять сгенерированных фикстур `tests/Repo/Arch/Fixtures/identities/{schema,config,cli,http,protocol}.json` с владельцем каждой идентичности по ручным `identities/owners/<kind>.json`: таблицы/колонки/индексы/FK по всем 48 preset × 3 engine с variants и сверкой с original, migration basenames, конфиг-ключи с defaults и registerDefaults, env, publish tags, команды и опции, маршруты (с флагами) и OpenAPI paths, event types, problem codes, morph/serialized FQCN и форматы. IdentitiesTest в repo suite.",
+  "why": "I16 и каждое изменение идентичностей до P7 опираются на этот инвентарь (D21: изменения свободны, но фиксируются); I1/I3 читают отсюда таблицы/ключи/маршруты и владельцев. Риск: snapshot-только-колонки не доказывает эквивалентность (persistence), а разные preset дают разные колонки — поэтому variants по осям и сверка всех preset/engine, FK только с pgsql=mysql.",
+  "scope": {
+    "include": [
+      "scripts/inventory/lib/Identities.php (общий формат записи и owners-правила), scripts/inventory/lib/Identities/{Schema,Config,Cli,Http,Protocol}.php, scripts/inventory/generators/identities-{schema,config,cli,http,protocol}.php, scripts/inventory/boot/routes.php",
+      "tests/Repo/Arch/Fixtures/identities/{schema,config,cli,http,protocol}.json (генерируются) и identities/owners/{schema,config,cli,http,protocol}.json (ручные)",
+      "tests/Repo/Arch/IdentitiesTest.php, tests/suites.json"
+    ],
+    "exclude": [
+      "Изменение идентичностей (только фиксация)",
+      "FK-вердикты и I3 (P2.4)",
+      "Протокол хаба v2 (P5)"
+    ]
+  },
+  "depends_on": [
+    "P2.2"
+  ],
+  "decisions": [
+    "D21",
+    "D23",
+    "D28",
+    "D29"
+  ],
+  "reads": [
+    {
+      "why": "владельцы таблиц",
+      "required": true,
+      "ref": "knowledge/architecture#packages"
+    },
+    {
+      "why": "идентичности хранения, preset-сравнение только внутри engine, CHECK/partial/FK в snapshot",
+      "required": true,
+      "ref": "knowledge/architecture#persistence"
+    },
+    {
+      "why": "problem codes как идентичности",
+      "required": true,
+      "ref": "knowledge/architecture#errors"
+    },
+    {
+      "why": "factories/миграции/SchemaBuilder head FK, webhooks FK",
+      "required": true,
+      "ref": "knowledge/source-review#code-facts"
+    },
+    {
+      "why": "оси preset (ids, host_keys, table_prefix, tenancy)",
+      "required": true,
+      "path": "packages/core/tests/Fixtures/Schema/snapshot-configs.json"
+    },
+    {
+      "why": "как читаются expected/original и SchemaPresets",
+      "required": true,
+      "path": "packages/core/tests/Schema/SchemaSnapshotTest.php"
+    },
+    {
+      "why": "провайдеры для рантайм-перечня маршрутов (без E2eServiceProvider)",
+      "required": true,
+      "path": "testbench.yaml"
+    },
+    {
+      "why": "владельцы классов команд и контроллеров (P2.2)",
+      "required": true,
+      "path": "tests/Repo/Arch/Fixtures/target-map.json"
+    },
+    {
+      "why": "REST paths для сверки с маршрутами",
+      "required": false,
+      "path": "openapi/vaulter-v1.yaml"
+    },
+    {
+      "ref": "knowledge/p2-design",
+      "why": "нормы фазы P2: раскладка, форматы фикстур, модели type-map/identities/scans, контракт findings (секции названы в guidance)",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "scripts/inventory/lib/Identities.php",
+      "change": "create"
+    },
+    {
+      "path": "scripts/inventory/lib/Identities/Schema.php",
+      "change": "create"
+    },
+    {
+      "path": "scripts/inventory/generators/identities-schema.php",
+      "change": "create"
+    },
+    {
+      "path": "scripts/inventory/lib/Identities/Config.php",
+      "change": "create"
+    },
+    {
+      "path": "scripts/inventory/generators/identities-config.php",
+      "change": "create"
+    },
+    {
+      "path": "scripts/inventory/lib/Identities/Cli.php",
+      "change": "create"
+    },
+    {
+      "path": "scripts/inventory/generators/identities-cli.php",
+      "change": "create"
+    },
+    {
+      "path": "scripts/inventory/lib/Identities/Http.php",
+      "change": "create"
+    },
+    {
+      "path": "scripts/inventory/generators/identities-http.php",
+      "change": "create"
+    },
+    {
+      "path": "scripts/inventory/boot/routes.php",
+      "change": "create"
+    },
+    {
+      "path": "scripts/inventory/lib/Identities/Protocol.php",
+      "change": "create"
+    },
+    {
+      "path": "scripts/inventory/generators/identities-protocol.php",
+      "change": "create"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/identities/*.json",
+      "change": "create"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/identities/owners/*.json",
+      "change": "create"
+    },
+    {
+      "path": "tests/Repo/Arch/IdentitiesTest.php",
+      "change": "create"
+    },
+    {
+      "path": "tests/suites.json",
+      "change": "modify",
+      "note": "repo partition files += tests/Repo/Arch/IdentitiesTest.php"
+    }
+  ],
+  "rules": [
+    "Продукт неизменен относительно 35718fd2: никаких правок packages/*/src|database|config|routes|composer.json, корневого composer.json, phpunit.xml, tests/zones.json (p2-design#base).",
+    "PHP запускать только через `scripts/php84 php …` (системный php 8.3).",
+    "Тесты и генераторы не читают plans/; сгенерированные фикстуры — canonical JSON без номеров строк, времени и абсолютных путей (p2-design#layout).",
+    "Только целевые прогоны (knowledge/test-strategy#run-policy): repo suite и названные пути; полная матрица — нет (D31); мутации/load/coverage — нет (D3/D4).",
+    "Найденный продуктовый дефект или архитектурная развилка не чинится и не решается здесь — запись для P2.5 (p2-findings) в отчёт пункта/notes.",
+    "Схема берётся из закоммиченных `packages/core/tests/Fixtures/Schema/{expected,original}` — БД не поднимать; сравнение preset только внутри одного engine.",
+    "FK — только pgsql и mysql (SQLite их не именует); расхождение pgsql↔mysql — finding, не подгонка.",
+    "Конфиг-файлы разбирать php-parser'ом, не include (там env()); рантайм-boot только для маршрутов (`scripts/inventory/boot/routes.php`, отдельный процесс).",
+    "Владельцы идентичностей — ручные правила с why; владелец команды/маршрута выводится из target-map владельца класса, расхождение с правилом — finding."
+  ],
+  "guidance": "**Нормы пункта (knowledge/p2-design, документ целиком в пакете):** §identities (состав каждого kind, источник истины и способ извлечения, правила владельцев), §layout (Generator-интерфейс и canonical JSON).\n\nПорядок: U1 (общий формат + IdentitiesTest + suites.json) → U2–U6 параллельно (каждый — свой kind: lib, generator, owners, сгенерированный json) → U7 (полный --check, REPO).\n\n**Общий формат записи:** `{\"id\": \"table:v_nodes\" | \"column:v_nodes.drive_id\" | \"config:vaulter-media.dedup.scope\" | \"command:vaulter:doctor\" | \"route:vaulter.nodes.show\" | \"event:node.created\" | \"problem:stale_write\" | …, \"owner\": \"drive\", \"source\": {\"file\": \"…\", \"symbol\": \"…\"}, …}`; файл — `{\"version\":1,\"base\":\"35718fd2\",\"kind\":\"schema\",\"changes\":[],\"items\":[…]}`, items отсортированы по id.\n\n**schema:** логическое имя таблицы `v_<t>` (префикс `custom_` → `v_`); детали колонок/индексов/constraints из `expected/<engine>/bigint.string.v.off.json` по каждому engine; затем обход всех 48 preset каждого engine: набор логических таблиц/колонок/индексов/FK обязан совпадать, кроме осей — `tenancy: on` добавляет tenant-колонки/индексы, `host_keys`/`ids` меняют типы: записать `variants: {\"tenancy:on\": {+columns…}, \"ids\": {type per axis}}`. Неожиданное различие — exit 1 с diff. original: тот же набор таблиц и колонок, иначе запись `original_diff` (это finding, не ошибка). Миграции: basename → таблица(ы); владелец миграции = владелец таблицы.\n\n**config:** листья dotted path корней `vaulter`, `vaulter-media`, `vaulter-drive`, `vaulter-documents`, `vaulter-azgard`, `vaulter-filament`; default — константа или `{\"env\":\"X\",\"default\":…}`; `registered_defaults: true`, если корень регистрируется `ConfigNormalizer::registerDefaults`. Env — все `env('X')` в config и src. Publish tags — `publishes(…, 'tag')` и spatie `name()+has*()`.\n\n**cli:** `Illuminate\\\\Console\\\\Parser::parse($signature)` → аргументы/опции; `$name`+`configure()` → `parse: manual` и заполнить по коду; `$hidden`; exit-коды — только если объявлены константами/`return self::…`.\n\n**http:** `boot/routes.php` создаёт `Orchestra\\\\Testbench\\\\Foundation\\\\Application::create(basePath: null, options: ['extra' => ['providers' => [core, media, drive, documents ServiceProviders]]])` (или эквивалент через `Orchestra\\\\Testbench\\\\Concerns\\\\CreatesApplication`), печатает JSON маршрутов (name, methods, uri, middleware, action). Запуск дважды: defaults и все opt-in feature-флаги `vaulter.features.*` = true; маршрут только во втором — `requires: [flag]`. Маршруты без имени — id `route:<METHOD> <uri>`. OpenAPI: каждый path+method → совпадение с маршрутом или запись `openapi_only`/`route_only`.\n\n**protocol:** event types — cases `Vaulter\\\\Enums\\\\Events\\\\EventType` (+ пакетные вклады, если есть); problem codes — `Http/Problems/ProblemCatalog` и вклады (код, статус); morph — вызовы `morphMap/enforceMorphMap` и `getMorphClass`; serialized FQCN — FQCN-строки в config defaults, классы `ShouldQueue`, `$casts` с классами; форматы CAS/event_id/ETag/курсор/заголовки/JWT claims — ручные exact-элементы owners/protocol.json с `format` и `source` (check: source-symbol существует).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "scripts/php84 php scripts/inventory/inventory.php identities-schema identities-config identities-cli identities-http identities-protocol --check",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "scripts/t sqlite -p repo -- tests/Repo/Arch/IdentitiesTest.php",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "scripts/t sqlite -p repo",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "scripts/php84 php vendor/bin/pint --test scripts/inventory tests/Repo/Arch",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "scripts/php84 php vendor/bin/phpstan analyse --no-progress --level=6 --memory-limit=1G scripts/inventory",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "cmd": "git diff --quiet 35718fd2 -- packages/*/src packages/*/database packages/*/config packages/*/routes packages/*/composer.json && test -z \"$(git status --porcelain --untracked-files=all -- packages/*/src packages/*/database packages/*/config packages/*/routes)\"",
+      "expect": "exit 0: продукт неизменен",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "identities/{schema,config,cli,http,protocol}.json + owners + генераторы",
+    "IdentitiesTest зелёный"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "units": [
+    "U1",
+    "U2",
+    "U3",
+    "U4",
+    "U5",
+    "U6",
+    "U7"
+  ],
+  "result": {
+    "started_at": "2026-10-13T20:40:54Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "142039b0-1c18-4d78-9ab8-00699881fc7d"
+    }
+  },
+  "updated_at": "2026-10-13T20:40:54Z"
+}

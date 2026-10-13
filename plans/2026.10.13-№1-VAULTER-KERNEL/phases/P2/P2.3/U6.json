@@ -1,0 +1,34 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:unit:v1",
+  "id": "U6",
+  "item": "P2.3",
+  "title": "Протокол: event types, problem codes, morph/serialized FQCN, форматы",
+  "goal": "identities/protocol.json сгенерирован, owners/protocol.json полон, `identities-protocol --check` зелёный.",
+  "files": [
+    "scripts/inventory/lib/Identities/Protocol.php",
+    "scripts/inventory/generators/identities-protocol.php",
+    "tests/Repo/Arch/Fixtures/identities/protocol.json",
+    "tests/Repo/Arch/Fixtures/identities/owners/protocol.json"
+  ],
+  "depends_on": [
+    "U1"
+  ],
+  "checks": [
+    {
+      "id": "V1",
+      "cmd": "scripts/php84 php scripts/inventory/inventory.php identities-protocol --write && scripts/php84 php scripts/inventory/inventory.php identities-protocol --check",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "mode": "either",
+  "instructions": "Статически по коду; форматы — ручные exact-элементы owners/protocol.json c format и source; check проверяет существование source-symbol. Только свои файлы; общий формат — lib/Identities.php (U1), его изменение — через rework U1.",
+  "status": "todo",
+  "outcome": null,
+  "updated_at": "2026-10-13T19:16:45Z",
+  "kind": "implementation"
+}

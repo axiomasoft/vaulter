@@ -1,0 +1,35 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:unit:v1",
+  "id": "U5",
+  "item": "P2.3",
+  "title": "Маршруты и REST paths",
+  "goal": "identities/http.json сгенерирован, owners/http.json полон, `identities-http --check` зелёный.",
+  "files": [
+    "scripts/inventory/lib/Identities/Http.php",
+    "scripts/inventory/generators/identities-http.php",
+    "tests/Repo/Arch/Fixtures/identities/http.json",
+    "tests/Repo/Arch/Fixtures/identities/owners/http.json",
+    "scripts/inventory/boot/routes.php"
+  ],
+  "depends_on": [
+    "U1"
+  ],
+  "checks": [
+    {
+      "id": "V1",
+      "cmd": "scripts/php84 php scripts/inventory/inventory.php identities-http --write && scripts/php84 php scripts/inventory/inventory.php identities-http --check",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "mode": "either",
+  "instructions": "boot/routes.php — отдельный процесс (proc_open из генератора), два прогона (defaults / все vaulter.features.* = true). Владелец маршрута = владелец контроллера в target-map.json; расхождение с owners/http.json — запись `owner_conflict` (finding), не ошибка. Только свои файлы; общий формат — lib/Identities.php (U1), его изменение — через rework U1.",
+  "status": "todo",
+  "outcome": null,
+  "updated_at": "2026-10-13T19:16:44Z",
+  "kind": "implementation"
+}
