@@ -1579,7 +1579,9 @@
             "serial"
           ],
           "files": [
-            "tests/Repo/TestRunnerTest.php"
+            "tests/Repo/TestRunnerTest.php",
+            "tests/Repo/TestSelectTest.php",
+            "tests/Repo/ZonesMapTest.php"
           ]
         }
       ]

@@ -4,6 +4,7 @@
 #   scripts/t [sqlite|pgsql|mysql|all] [-p core,media,drive,documents,azgard,filament,load,repo,hub,vue]
 #             [-j N] [--engines=sqlite,pgsql,mysql] [--full] [--group=G] [--exclude-group=G]
 #             [--junit=DIR] [--no-skips] [--dry-run [--json]] [--] [paths / pest flags]
+#   scripts/t --changed [--base=<ref>] [--quick] [--db=pgsql|mysql] [--dry-run [--json]] [-j N] [--junit=DIR] [--no-skips] [-- pest flags]
 #   scripts/t baseline --write|--compare [-p ...]
 #   scripts/t --help
 #
@@ -23,8 +24,14 @@
 #   * partitions that write into the Testbench skeleton run -j1 with a TESTBENCH_APP_BASE_PATH of their own.
 #   * hub/vue run `npm test` through their manifests (engines do not apply); `load` is explicit only.
 #
+# --changed: scripts/test-select.php turns `git diff <merge-base of --base (default main)>..HEAD` + staged/unstaged/untracked
+#   files into zones (tests/zones.json) and one `scripts/t` run per affected suite; --quick keeps only the touched zones
+#   (no consumers); --db=<engine> runs only the database-classified tests of the affected zones on that engine. An unknown
+#   path or a harness change is refused with exit 2 — the full affected plan is printed (also by --dry-run) and nothing
+#   runs. No change / prose-only is a plan of zero runs and says so; it is never reported as a pass of tests.
+#
 # Exit: 0 ok · 1 a pass failed · 2 usage / refused plan / engine mismatch · 3 zero tests where tests were required.
-# `stand` (P1.5) and `--changed` (P1.4) are not part of this item.
+# `stand` (P1.5) is not part of this item.
 set -euo pipefail
 
 self="${BASH_SOURCE[0]}"
@@ -138,6 +145,10 @@ dry=0
 json=0
 junit=''
 no_skips=0
+changed=0
+base=''
+quick=0
+db_engine=''
 paths=()
 passthru=()
 baseline_action=''
@@ -173,7 +184,11 @@ else
             --dry-run) dry=1 ;;
             --json) json=1 ;;
             --write | --compare) [[ "$sub" == baseline ]] || die "$arg belongs to \`baseline\`"; baseline_action="${arg#--}" ;;
-            --changed | --changed=* | --base=* | --quick) die '--changed arrives with P1.4' ;;
+            --changed) changed=1 ;;
+            --changed=*) die '--changed takes no value: use --changed --base=<ref>' ;;
+            --base=*) base="${arg#*=}" ;;
+            --quick) quick=1 ;;
+            --db=*) db_engine="${arg#*=}" ;;
             -*) passthru+=("$arg") ;;
             *) paths+=("$arg") ;;
         esac
@@ -544,6 +559,105 @@ if [[ "$sub" == __exec ]]; then
     print_summary
     exit "$overall"
 fi
+
+# ---------------------------------------------------------------------------------------------------------------------
+# --changed: scripts/test-select.php decides, this script only carries it out (one `scripts/t` run per affected suite)
+# ---------------------------------------------------------------------------------------------------------------------
+render_selection() { # selector-json -> human summary
+    jq -r '
+        def line($label; $items): if ($items | length) > 0 then "\($label | . + ":" | (. + "           ")[0:11])\($items | join(", "))" else empty end;
+        "status:    \(.status) (exit \(.exit))" + (if (.reasons // []) | length > 1 then " — " + (.reasons | join(" + ")) else "" end),
+        (if .base then "base:      \(.base)" + (if .merge_base then " (merge-base \(.merge_base[0:10]))" else "" end) else empty end),
+        line("errors"; .errors // []),
+        line("changed"; [(.changed // [])[] | "\(.path) [\(.status)]"]),
+        line("harness"; (.classified.harness // {}) | keys),
+        line("unknown"; .classified.unknown // []),
+        line("docs"; .classified.docs // []),
+        line("touched"; .touched // []),
+        line("consumers"; .consumers // []),
+        line("notes"; .notes // [])' <<<"$1"
+}
+
+changed_main() {
+    local selector php sel_json code=0 status runs i
+    selector="$(dirname "$self_abs")/test-select.php"
+    php="$root/scripts/php84"
+    local -a sel=(--root="$root" --json)
+    [[ -z "$base" ]] || sel+=(--base="$base")
+    (( quick )) && sel+=(--quick)
+    [[ -z "$db_engine" ]] || sel+=(--db="$db_engine")
+    sel_json="$("$php" php "$selector" "${sel[@]}")" || code=$?
+    jq -e 'has("status") and has("exit")' >/dev/null 2>&1 <<<"$sel_json" || die "the selector printed no plan (exit $code)"
+    (( code == 0 || code == 2 )) || die "the selector failed with exit $code"
+    status="$(jq -r .status <<<"$sel_json")"
+    runs="$(jq '.runs | length' <<<"$sel_json")"
+
+    local -a extra=()
+    [[ -z "$workers" ]] || extra+=(-j "$workers")
+    [[ -z "$junit" ]] || extra+=(--junit="$junit")
+    (( no_skips )) && extra+=(--no-skips)
+
+    local -a run_args run_paths
+    load_run() { # index
+        mapfile -t run_args < <(jq -r --argjson i "$1" '.runs[$i].args[]' <<<"$sel_json")
+        mapfile -t run_paths < <(jq -r --argjson i "$1" '.runs[$i].paths[]' <<<"$sel_json")
+    }
+
+    if (( dry )); then
+        # the full planned matrix, also for a refused plan: every run expanded to its partitions, nothing executed
+        local plans='[]' sub sub_code
+        for (( i = 0; i < runs; i++ )); do
+            load_run "$i"
+            sub_code=0
+            sub="$("$self_abs" "${run_args[@]}" "${extra[@]}" --dry-run --json -- "${run_paths[@]}" "${passthru[@]}" 2>&1)" || sub_code=$?
+            if (( sub_code != 0 )); then
+                printf 'scripts/t: the planned run [%s] cannot be planned: %s\n' "$(jq -r --argjson i "$i" '.runs[$i].command' <<<"$sel_json")" "$sub" >&2
+                code=2
+                continue
+            fi
+            plans="$(jq -c --argjson p "$sub" '. + [$p]' <<<"$plans")"
+        done
+        if (( json )); then
+            jq --argjson plans "$plans" '. + {commands: [.runs[].command], plans: $plans}' <<<"$sel_json"
+        else
+            render_selection "$sel_json"
+            for (( i = 0; i < runs; i++ )); do
+                printf 'run:       %s\n' "$(jq -r --argjson i "$i" '.runs[$i].command' <<<"$sel_json")"
+            done
+            jq -r '.[] | "  " + (.suites | join(",")) + ": " + ([.steps[] | select(.kind == "pest")] | length | tostring) + " pass(es), " + ([.steps[] | select(.kind == "pest") | .files | length] | add // 0 | tostring) + " file(s)"' <<<"$plans"
+            (( code == 0 )) || [[ "$status" == invalid_map || "$status" == error ]] || printf 'refused:   dry-run only; the plan above is the full affected set\n'
+        fi
+        return "$code"
+    fi
+
+    render_selection "$sel_json"
+    if (( code == 2 )); then
+        printf 'scripts/t: refused (%s): nothing was run; run the full affected set deliberately, never a subset of it\n' "$status" >&2
+        return 2
+    fi
+    if (( runs == 0 )); then
+        printf 'scripts/t: no tests to run (%s)\n' "$status" >&2
+        return 0
+    fi
+
+    local rc final=0
+    for (( i = 0; i < runs; i++ )); do
+        load_run "$i"
+        printf '\n### %s\n' "$(jq -r --argjson i "$i" '.runs[$i].command' <<<"$sel_json")" >&2
+        rc=0
+        "$self_abs" "${run_args[@]}" "${extra[@]}" -- "${run_paths[@]}" "${passthru[@]}" || rc=$?
+        if (( rc == 1 )); then final=1; elif (( rc != 0 && final != 1 )); then final=$(( rc > final ? rc : final )); fi
+    done
+    return "$final"
+}
+
+if (( changed )); then
+    [[ -z "$engine_word" && -z "$suites_csv" && -z "$engines_opt" && ${#paths[@]} -eq 0 && ${#groups[@]} -eq 0 && "$mode" == fast ]] \
+        || die '--changed picks suites, groups, paths and the engine (--db) itself; do not combine them with -p, paths, an engine word, --engines, --group or --full'
+    changed_main
+    exit $?
+fi
+[[ -z "$base$db_engine" && "$quick" -eq 0 ]] || die '--base, --quick and --db belong to --changed'
 
 # --- engines -----------------------------------------------------------------------------------------------------------
 engines=()

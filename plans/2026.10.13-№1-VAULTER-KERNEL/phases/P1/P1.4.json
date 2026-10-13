@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P1.4",
   "title": "Карта зон tests/zones.json, селектор --changed и ZonesMapTest",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "`tests/zones.json` — единственный источник зон (пакеты + подзоны core) и зависимостей; `scripts/test-select.php` выбирает наборы/группы по git diff; `scripts/t --changed [--base] [--quick] [--dry-run] [--json] [--db=<engine>]`; корневой testsuite `repo` с `ZonesMapTest` и тестами селектора.",
   "why": "Быстрая обратная связь в пунктах плана (run-policy §1) без риска «0 тестов — успех» (П1–П3).",
   "scope": {
@@ -132,6 +132,41 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-13T10:23:03Z"
+  "result": {
+    "started_at": "2026-10-13T12:46:04Z",
+    "finished_at": "2026-10-13T12:58:48Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "0ae73bbe-7aa0-4507-8688-eed49ff75cd8"
+    },
+    "notes": "tests/zones.json (7 подзон core + пакеты, harness/database/tail), scripts/test-select.php, scripts/t --changed, зоновые группы zone:* в tests/Pest.php (сумма = 1644 = baseline core), ZonesMapTest+TestSelectTest: 42 passed; красный на испорченной реальной карте и зелёный после отката подтверждён; V3/V4 ожидают exit 2 (harness).",
+    "deviations": [
+      "TestRunnerTest.php и tests/baseline/repo.* изменены вне task_files (новые тесты repo-сьюта); docs-guard тесты core не покрываются docs-only allowlist"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-13T12:58:48Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-13T12:58:48Z"
+      },
+      {
+        "id": "V3",
+        "exit": 2,
+        "at": "2026-10-13T12:58:48Z"
+      },
+      {
+        "id": "V4",
+        "exit": 2,
+        "at": "2026-10-13T12:58:48Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-13T12:58:48Z"
 }

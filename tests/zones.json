@@ -1,0 +1,258 @@
+{
+    "version": 1,
+    "note": "The single source of test zones (PLAN3 P1.4). A zone is an index over existing directories: it never moves a test. Leaf zones own src[] and tests[] (repo-relative, files or directories, never nested across leaves); `core` is an aggregator of its sub-zones. uses[] = zones whose change affects this one's tests (the Composer graph for packages, a coarse leaf graph inside core). `suite` is the tests/suites.json suite a leaf runs in. `explicit` = never pulled in as a consumer, selected only when touched directly. harness[] = paths whose change means \"run the whole affected set\" (scripts/test-select.php exits 2); database[] = engine-dependent tests (filled by P1.5); tail[] = glob allowlist of prose paths that need no test. This map proves the classification of every source root and test file is complete — not that uses[] is the true dependency graph.",
+    "zones": {
+        "core": {
+            "children": ["core-kernel", "core-access", "core-sharing", "core-events-webhooks", "core-http", "core-schema", "core-observability"],
+            "suite": "core",
+            "uses": []
+        },
+        "core-kernel": {
+            "parent": "core",
+            "suite": "core",
+            "src": [
+                "packages/core/src/VaulterManager.php",
+                "packages/core/src/VaulterServiceProvider.php",
+                "packages/core/src/Actions",
+                "packages/core/src/Attributes",
+                "packages/core/src/Cas",
+                "packages/core/src/Concerns",
+                "packages/core/src/Configuration",
+                "packages/core/src/Content",
+                "packages/core/src/Contracts",
+                "packages/core/src/Data",
+                "packages/core/src/Enums",
+                "packages/core/src/Exceptions",
+                "packages/core/src/Facades",
+                "packages/core/src/Handlers",
+                "packages/core/src/Models",
+                "packages/core/src/Naming",
+                "packages/core/src/Operations",
+                "packages/core/src/Profiles",
+                "packages/core/src/Providers",
+                "packages/core/src/Queries",
+                "packages/core/src/Quota",
+                "packages/core/src/Repositories",
+                "packages/core/src/Support",
+                "packages/core/src/Tenancy",
+                "packages/core/src/Testing",
+                "packages/core/src/ValueObjects",
+                "packages/core/config",
+                "packages/core/database/factories",
+                "packages/core/resources",
+                "packages/core/stubs"
+            ],
+            "tests": [
+                "packages/core/tests/Arch",
+                "packages/core/tests/Configuration",
+                "packages/core/tests/Content",
+                "packages/core/tests/Feature",
+                "packages/core/tests/Naming",
+                "packages/core/tests/Operations",
+                "packages/core/tests/Profiles",
+                "packages/core/tests/Providers",
+                "packages/core/tests/Recipes",
+                "packages/core/tests/Support",
+                "packages/core/tests/Tenancy",
+                "packages/core/tests/Testing",
+                "packages/core/tests/Unit",
+                "packages/core/tests/WriteGuard"
+            ],
+            "uses": []
+        },
+        "core-access": {
+            "parent": "core",
+            "suite": "core",
+            "src": ["packages/core/src/Access", "packages/core/src/Policies"],
+            "tests": ["packages/core/tests/Access", "packages/core/tests/Spatie"],
+            "uses": ["core-kernel"]
+        },
+        "core-sharing": {
+            "parent": "core",
+            "suite": "core",
+            "src": ["packages/core/src/Sharing"],
+            "tests": ["packages/core/tests/Sharing"],
+            "uses": ["core-kernel", "core-access"]
+        },
+        "core-events-webhooks": {
+            "parent": "core",
+            "suite": "core",
+            "src": [
+                "packages/core/src/Activity",
+                "packages/core/src/Changes",
+                "packages/core/src/Events",
+                "packages/core/src/Jobs",
+                "packages/core/src/Webhooks"
+            ],
+            "tests": [
+                "packages/core/tests/Activity",
+                "packages/core/tests/ActivityGate",
+                "packages/core/tests/Changes",
+                "packages/core/tests/Events",
+                "packages/core/tests/Webhooks"
+            ],
+            "uses": ["core-kernel"]
+        },
+        "core-http": {
+            "parent": "core",
+            "suite": "core",
+            "src": ["packages/core/src/Http", "packages/core/src/Rules", "packages/core/routes", "openapi"],
+            "tests": ["packages/core/tests/Http", "packages/core/tests/OpenApi", "packages/core/tests/PublicApi"],
+            "uses": ["core-kernel", "core-access", "core-sharing", "core-events-webhooks"]
+        },
+        "core-schema": {
+            "parent": "core",
+            "suite": "core",
+            "src": ["packages/core/src/Database", "packages/core/src/Schema", "packages/core/database/migrations"],
+            "tests": [
+                "packages/core/tests/Concurrency",
+                "packages/core/tests/Database",
+                "packages/core/tests/HostKeyMysql",
+                "packages/core/tests/IdStrategy",
+                "packages/core/tests/Schema",
+                "packages/core/tests/TablePrefix",
+                "packages/core/tests/Ulid"
+            ],
+            "uses": ["core-kernel"]
+        },
+        "core-observability": {
+            "parent": "core",
+            "suite": "core",
+            "src": ["packages/core/src/Console", "packages/core/src/Doctor", "packages/core/src/Observability"],
+            "tests": [
+                "packages/core/tests/Console",
+                "packages/core/tests/Doctor",
+                "packages/core/tests/Observability",
+                "packages/core/tests/ObservabilityDocuments"
+            ],
+            "uses": ["core-kernel", "core-schema", "core-events-webhooks", "core-http"]
+        },
+        "media": {
+            "suite": "media",
+            "src": ["packages/media/src", "packages/media/config", "packages/media/bin"],
+            "tests": ["packages/media/tests"],
+            "uses": ["core"]
+        },
+        "drive": {
+            "suite": "drive",
+            "src": ["packages/drive/src", "packages/drive/config", "packages/drive/resources", "packages/drive/routes"],
+            "tests": ["packages/drive/tests"],
+            "uses": ["core", "media"]
+        },
+        "documents": {
+            "suite": "documents",
+            "src": [
+                "packages/documents/src",
+                "packages/documents/config",
+                "packages/documents/database",
+                "packages/documents/resources",
+                "packages/documents/routes",
+                "packages/documents/stubs"
+            ],
+            "tests": ["packages/documents/tests"],
+            "uses": ["core", "media", "drive"]
+        },
+        "azgard": {
+            "suite": "azgard",
+            "src": ["packages/azgard/src", "packages/azgard/config"],
+            "tests": ["packages/azgard/tests"],
+            "uses": ["core"]
+        },
+        "filament": {
+            "suite": "filament",
+            "src": ["packages/filament/src", "packages/filament/config"],
+            "tests": ["packages/filament/tests"],
+            "uses": ["core", "media", "drive"]
+        },
+        "load": {
+            "suite": "load",
+            "explicit": true,
+            "src": ["load"],
+            "tests": ["load/tests"],
+            "uses": ["core", "media", "drive", "documents"]
+        },
+        "repo": {
+            "suite": "repo",
+            "src": ["scripts"],
+            "tests": ["tests/Repo"],
+            "uses": []
+        },
+        "hub": {
+            "suite": "hub",
+            "src": ["hocuspocus-server"],
+            "tests": ["hocuspocus-server/test"],
+            "uses": []
+        },
+        "vue": {
+            "suite": "vue",
+            "src": ["packages/vue"],
+            "tests": ["packages/vue/tests"],
+            "uses": []
+        }
+    },
+    "harness": [
+        {"path": "tests/Pest.php", "zones": ["core", "load", "repo"]},
+        {"path": "phpunit.xml", "zones": ["core", "load", "repo"]},
+        {"path": "composer.json", "zones": ["core", "load", "repo"]},
+        {"path": "scripts/t", "zones": ["repo"]},
+        {"path": "scripts/test-select.php", "zones": ["repo"]},
+        {"path": "scripts/test-db.sh", "zones": ["repo"]},
+        {"path": "scripts/db-test-env.sh", "zones": ["repo"]},
+        {"path": "scripts/php84", "zones": ["repo"]},
+        {"path": "tests/zones.json", "zones": ["repo"]},
+        {"path": "tests/suites.json", "zones": ["repo"]},
+        {"path": "tests/baseline", "zones": ["repo"]},
+        {"path": "packages/vaulter/composer.json", "zones": ["core"]},
+        {"path": "packages/core/composer.json", "zones": ["core"]},
+        {"path": "packages/core/tests/TestCase.php", "zones": ["core"]},
+        {"path": "packages/core/tests/SpatieTestCase.php", "zones": ["core"]},
+        {"path": "packages/core/tests/TablePrefixTestCase.php", "zones": ["core"]},
+        {"path": "packages/core/tests/UlidTestCase.php", "zones": ["core"]},
+        {"path": "packages/core/tests/Concerns", "zones": ["core"]},
+        {"path": "packages/core/tests/Drive", "zones": ["core"]},
+        {"path": "packages/core/tests/E2E", "zones": ["core"]},
+        {"path": "packages/core/tests/Fixtures", "zones": ["core"]},
+        {"path": "packages/core/tests/database", "zones": ["core"]},
+        {"path": "packages/media/composer.json", "zones": ["media"]},
+        {"path": "packages/media/phpunit.xml", "zones": ["media"]},
+        {"path": "packages/media/tests/Pest.php", "zones": ["media"]},
+        {"path": "packages/media/tests/TestCase.php", "zones": ["media"]},
+        {"path": "packages/media/tests/Fixtures", "zones": ["media"]},
+        {"path": "packages/drive/composer.json", "zones": ["drive"]},
+        {"path": "packages/drive/phpunit.xml", "zones": ["drive"]},
+        {"path": "packages/drive/tests/Pest.php", "zones": ["drive"]},
+        {"path": "packages/drive/tests/TestCase.php", "zones": ["drive"]},
+        {"path": "packages/drive/tests/PanelTestCase.php", "zones": ["drive"]},
+        {"path": "packages/drive/tests/Fixtures", "zones": ["drive"]},
+        {"path": "packages/documents/composer.json", "zones": ["documents"]},
+        {"path": "packages/documents/phpunit.xml", "zones": ["documents"]},
+        {"path": "packages/documents/tests/Pest.php", "zones": ["documents"]},
+        {"path": "packages/documents/tests/TestCase.php", "zones": ["documents"]},
+        {"path": "packages/documents/tests/Concerns", "zones": ["documents"]},
+        {"path": "packages/documents/tests/Fixtures", "zones": ["documents"]},
+        {"path": "packages/azgard/composer.json", "zones": ["azgard"]},
+        {"path": "packages/azgard/phpunit.xml", "zones": ["azgard"]},
+        {"path": "packages/azgard/tests/Pest.php", "zones": ["azgard"]},
+        {"path": "packages/azgard/tests/TestCase.php", "zones": ["azgard"]},
+        {"path": "packages/azgard/tests/Stubs", "zones": ["azgard"]},
+        {"path": "packages/filament/composer.json", "zones": ["filament"]},
+        {"path": "packages/filament/phpunit.xml", "zones": ["filament"]},
+        {"path": "packages/filament/tests/Pest.php", "zones": ["filament"]},
+        {"path": "packages/filament/tests/TestCase.php", "zones": ["filament"]},
+        {"path": "packages/filament/tests/Fixtures", "zones": ["filament"]},
+        {"path": "load/tests/LoadTestCase.php", "zones": ["load"]},
+        {"path": "hocuspocus-server/package.json", "zones": ["hub"]},
+        {"path": "hocuspocus-server/package-lock.json", "zones": ["hub"]},
+        {"path": "packages/vue/package.json", "zones": ["vue"]},
+        {"path": "packages/vue/vite.config.ts", "zones": ["vue"]},
+        {"path": "packages/vue/tsconfig.json", "zones": ["vue"]},
+        {"path": "packages/vue/tests/support", "zones": ["vue"]}
+    ],
+    "database": [],
+    "tail": [
+        "plans/**",
+        "docs/**",
+        "**/README.md",
+        "CONTRIBUTING.md"
+    ]
+}

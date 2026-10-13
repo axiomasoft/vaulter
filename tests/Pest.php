@@ -19,6 +19,15 @@ use Vaulter\Tests\UlidTestCase;
 
 $core = dirname(__DIR__).'/packages/core/tests';
 
+// Zone groups (tests/zones.json is the single source): every core sub-zone tags its tests `zone:<name>` so that
+// `scripts/t --changed` can select one zone of the core suite. Group-only bindings: the TestCase bindings below
+// stay exactly as they are (a second uses(TestCase) on the same path is forbidden by Pest).
+foreach (json_decode((string) file_get_contents(__DIR__.'/zones.json'), true, flags: JSON_THROW_ON_ERROR)['zones'] as $zoneName => $zone) {
+    if (($zone['parent'] ?? null) === 'core') {
+        pest()->group('zone:'.$zoneName)->in(...array_map(static fn (string $path): string => dirname(__DIR__).'/'.$path, $zone['tests']));
+    }
+}
+
 // Drive + Uploads suites moved to the vaulter-drive package (P2 #5 / ADR-0015, D1);
 // they run under that package's own Pest suite. The shared DriveTestHelpers stays in
 // core/tests/Drive (a plain builder used by many kernel suites), it is not a test case.
