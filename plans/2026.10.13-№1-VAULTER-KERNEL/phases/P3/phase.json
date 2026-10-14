@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:phase:v1",
   "id": "P3",
   "title": "Контракты ядра на месте: модули, capabilities, слоты, операции, события",
-  "design": "skeleton",
+  "design": "detailed",
   "goal": "Ввести финальные механизмы ядра и перевести на них существующий код, не перенося файлы между пакетами: модульная система (манифест, компиляция, seal, capabilities, enable/disable), реестр слотов и контракты слотов, OperationRunner с обязательными стадиями, механизм идемпотентности, каталоги событий и problem codes как вклады модулей, OutboxConsumer и vaulter:relay, атрибуты #[Api]/#[Spi]/#[Internal] и генерируемый манифест, telemetry context. Снять все bound()/class_exists()-переключатели корректности.",
   "context": "Фаза C (knowledge/architecture#transition). Размер: L. Код остаётся в текущих пакетах (core содержит пока и доменные срезы), поэтому слоты drive/documents временно определены в core-неймспейсе там, где сегодня живёт понятие — перенос FQCN делает P4 по type-map; в P3 важно, чтобы *механизм* и *семантика* стали финальными. Пишутся ADR-0027 (границы ядра и модульная система, заменяет ADR-0019), ADR-0028 (слоты и пайплайн операций), ADR-0029 (идемпотентность). Каждый пакет получает класс-манифест, провайдеры регистрируются через ModuleBuilder. Фикстура стороннего модуля `tests/Fixtures/AcmeModule` использует те же слоты (I8).\nЛогические manifests доменных owners пока предлагаются installed core provider; не предполагать split webhooks до P4. D29 neutral outbox/per-consumer и D25 receipt/savepoint/replay дают окончательную семантику на месте. Idempotency/neutral outbox new create definitions требуют обновления current schema snapshot+identity reason (original P1.10 immutable). Cache лишь при измеренной потребности; no mandatory benchmark.",
   "contract": {
@@ -28,7 +28,14 @@
       "D15",
       "D23",
       "D28",
-      "knowledge/architecture#cost"
+      "knowledge/architecture#cost",
+      "knowledge/p3-design",
+      "D32",
+      "D35",
+      "D36",
+      "D37",
+      "D38",
+      "D39"
     ],
     "produces": [
       "Vaulter\\Modules\\{VaulterModule, ModuleBuilder, ModuleRegistry, ModuleId}, Capabilities, ExtensionRegistry, команды vaulter:modules и vaulter:module:uninstall",
@@ -89,8 +96,104 @@
     "ADR-0027–0029",
     "Документация изменений P3 (docs/)"
   ],
-  "items": [],
-  "batches": [],
+  "items": [
+    "P3.1",
+    "P3.2",
+    "P3.3",
+    "P3.4",
+    "P3.5",
+    "P3.6",
+    "P3.7",
+    "P3.8",
+    "P3.9",
+    "P3.10",
+    "P3.11",
+    "P3.12",
+    "P3.13",
+    "P3.14",
+    "P3.15",
+    "P3.16",
+    "P3.17",
+    "P3.18",
+    "P3.19"
+  ],
+  "batches": [
+    {
+      "id": "B1",
+      "items": [
+        "P3.1",
+        "P3.18"
+      ],
+      "mode": "recommended",
+      "note": "Модульное ядро; P3.18 (vue) независим и может идти параллельно с любым батчем"
+    },
+    {
+      "id": "B2",
+      "items": [
+        "P3.2",
+        "P3.3",
+        "P3.4"
+      ],
+      "mode": "recommended",
+      "note": "Манифесты: core+webhooks, media+drive, documents/azgard/filament — строго последовательно"
+    },
+    {
+      "id": "B3",
+      "items": [
+        "P3.5",
+        "P3.6",
+        "P3.7"
+      ],
+      "mode": "recommended",
+      "note": "Activation-пробы (I4 block) и слоты drive/media/documents"
+    },
+    {
+      "id": "B4",
+      "items": [
+        "P3.8",
+        "P3.9",
+        "P3.10"
+      ],
+      "mode": "recommended",
+      "note": "Нейтральный контекст, OperationRunner, перевод операций"
+    },
+    {
+      "id": "B5",
+      "items": [
+        "P3.11",
+        "P3.12"
+      ],
+      "mode": "recommended",
+      "note": "Receipt-политика кодов, затем идемпотентность"
+    },
+    {
+      "id": "B6",
+      "items": [
+        "P3.13",
+        "P3.14",
+        "P3.15"
+      ],
+      "mode": "recommended",
+      "note": "Каталог событий/EventSink, outbox-запись, relay"
+    },
+    {
+      "id": "B7",
+      "items": [
+        "P3.16",
+        "P3.17"
+      ],
+      "mode": "recommended",
+      "note": "I6/I8 матрица и фикстура; затем разметка поверхности по финальным типам"
+    },
+    {
+      "id": "B8",
+      "items": [
+        "P3.19"
+      ],
+      "mode": "recommended",
+      "note": "Квалификация P3 (D31)"
+    }
+  ],
   "sections": [
     {
       "id": "design-inputs",

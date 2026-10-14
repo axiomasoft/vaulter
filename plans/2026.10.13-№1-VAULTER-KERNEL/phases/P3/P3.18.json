@@ -1,0 +1,90 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P3.18",
+  "title": "Правило @vaulter/vue: src/api без импортов vue",
+  "status": "in_progress",
+  "summary": "Тест vitest `packages/vue/tests/arch/api-no-vue.test.ts` сканирует `packages/vue/src/api/**` и падает на любом импорте `vue`, `@vue/*`, `vue-*`, `@tiptap/*`, `yjs`, `@hocuspocus/*` и на импорте из `src/` вне `src/api`; сейчас нарушений нет — правило фиксирует состояние.",
+  "why": "D15: `src/api` без Vue сохраняет дешёвое выделение `@vaulter/client`. Риск — только ложные срабатывания на type-only импортах из `src/api` самого себя.",
+  "scope": {
+    "include": [
+      "packages/vue/tests/arch/api-no-vue.test.ts",
+      "docs/concepts или README vue — одна строка правила"
+    ],
+    "exclude": [
+      "выделение @vaulter/client",
+      "перенос collaboration (P5)"
+    ]
+  },
+  "depends_on": [],
+  "decisions": [
+    "D15"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/architecture",
+      "why": "правило D15",
+      "required": true,
+      "section": "frontend"
+    },
+    {
+      "path": "packages/vue/vite.config.ts",
+      "why": "конфигурация vitest (include tests)",
+      "required": true
+    },
+    {
+      "path": "packages/vue/tests/exports.test.ts",
+      "why": "стиль существующих тестов",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/vue/tests/arch/api-no-vue.test.ts",
+      "change": "create"
+    }
+  ],
+  "rules": [
+    "Тест читает файлы через node:fs и разбирает import/export from/`import()` регулярным выражением по строкам; type-only импорты тоже считаются."
+  ],
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "npm --prefix packages/vue test -- tests/arch/api-no-vue.test.ts",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "npm --prefix packages/vue run typecheck",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "arch-тест src/api"
+  ],
+  "route": {
+    "class": "economy",
+    "effort": "low"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-14T05:53:18Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "session": "66d8c840-5ed8-481e-b55c-782806387a4c"
+    }
+  },
+  "updated_at": "2026-10-14T05:53:18Z"
+}
