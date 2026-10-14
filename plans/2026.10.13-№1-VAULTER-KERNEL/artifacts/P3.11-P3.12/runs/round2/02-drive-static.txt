@@ -1,0 +1,6 @@
+### cd packages/drive && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G
+{"tool":"pint","result":"passed"}Note: Using configuration file /home/vostrikov/projects/packages/vaulter/packages/drive/phpstan.neon.
+
+ [OK] No errors                                                                 
+
+EXIT=0

@@ -1,0 +1,28 @@
+### scripts/t sqlite -p core packages/core/tests/Http/Problems packages/core/tests/OpenApi packages/core/tests/Modules packages/core/tests/Idempotency packages/core/tests/Operations packages/core/tests/Support/DomainExceptionStatusTest.php packages/core/tests/Configuration packages/core/tests/Doctor
+>>> core sqlite [(unbound)] parallel  files=4 processes=4
+{"tool":"pest","result":"passed","tests":70,"passed":70,"assertions":169,"duration_ms":392}
+>>> core sqlite [DatabaseMigrations+TestCase] parallel  files=2 processes=2
+{"tool":"pest","result":"failed","tests":56,"passed":53,"assertions":164,"duration_ms":10799,"failed":3,"failures":[{"test":"P\\Packages\\core\\tests\\Idempotency\\IdempotencyContractTest::__pest_evaluable_it_answers_a_replay_after_the_grant_was_revoked_with_the_current_denial_and_keeps_the_receipt","file":"/home/vostrikov/projects/packages/vaulter/packages/core/tests/Idempotency/IdempotencyContractTest.php","line":220,"message":"Failed asserting that false is true."},{"test":"P\\Packages\\core\\tests\\Idempotency\\IdempotencyContractTest::__pest_evaluable_it_authorizes_a_replay_where_the_node_is_now__not_where_it_was_written","file":"/home/vostrikov/projects/packages/vaulter/packages/core/tests/Idempotency/IdempotencyContractTest.php","line":233,"message":"Failed asserting that false is true."},{"test":"P\\Packages\\core\\tests\\Idempotency\\IdempotencyContractTest::__pest_evaluable_it_falls_back_to_the_recorded_scope_when_the_node_is_gone__and_denies_once_that_scope_is_closed","file":"/home/vostrikov/projects/packages/vaulter/packages/core/tests/Idempotency/IdempotencyContractTest.php","line":249,"message":"Failed asserting that false is true."}]}
+>>> core sqlite [EnablesWebhooksModule+RefreshDatabase+TestCase] single  files=1 processes=1
+{"tool":"pest","result":"passed","tests":24,"passed":24,"assertions":120,"duration_ms":3410}
+>>> core sqlite [OpenApiTestCase] parallel  files=6 processes=6
+{"tool":"pest","result":"failed","tests":44,"passed":42,"assertions":3826,"duration_ms":5033,"failed":1,"failures":[{"test":"P\\Packages\\core\\tests\\OpenApi\\OpenApiExamplesTest::__pest_evaluable_it_keeps_every_example_in_the_shape_the_API_answers_with_today","file":"/home/vostrikov/projects/packages/vaulter/packages/core/tests/OpenApi/OpenApiExamplesTest.php","line":164,"message":"problem-412\nFailed asserting that two arrays are identical.\n--- Expected\n+++ Actual\n@@ @@\n         'node_id' => 'string',\n     ],\n     'request_id' => 'string',\n-    'retryable' => 'string',\n     'status' => 'int',\n     'title' => 'string',\n     'type' => 'string',\n ]"}],"skipped":1}
+>>> core sqlite [RefreshDatabase+TestCase] parallel  files=19 processes=8
+{"tool":"pest","result":"failed","tests":183,"passed":182,"assertions":727,"duration_ms":5104,"failed":1,"failures":[{"test":"P\\Packages\\core\\tests\\Operations\\ModuleReadinessTest::__pest_evaluable_it_splits_the_doctor_tables_by_their_owning_module_without_losing_one","file":"/home/vostrikov/projects/packages/vaulter/packages/core/tests/Operations/ModuleReadinessTest.php","line":68,"message":"Failed asserting that two arrays are identical.\n--- Expected\n+++ Actual\n@@ @@\n     7 => 'file_revision_blobs',\n     8 => 'file_revisions',\n     9 => 'files',\n-    10 => 'node_comments',\n-    11 => 'node_grants',\n-    12 => 'node_shares',\n-    13 => 'node_user_states',\n-    14 => 'nodes',\n-    15 => 'outbox',\n-    16 => 'scan_backfill_runs',\n-    17 => 'scan_evidence',\n-    18 => 'scan_obligations',\n-    19 => 'scan_policy_states',\n-    20 => 'scan_requests',\n-    21 => 'upload_parts',\n-    22 => 'upload_sessions',\n-    23 => 'webhook_deliveries',\n-    24 => 'webhook_endpoints',\n+    10 => 'idempotency_keys',\n+    11 => 'node_comments',\n+    12 => 'node_grants',\n+    13 => 'node_shares',\n+    14 => 'node_user_states',\n+    15 => 'nodes',\n+    16 => 'outbox',\n+    17 => 'scan_backfill_runs',\n+    18 => 'scan_evidence',\n+    19 => 'scan_obligations',\n+    20 => 'scan_policy_states',\n+    21 => 'scan_requests',\n+    22 => 'upload_parts',\n+    23 => 'upload_sessions',\n+    24 => 'webhook_deliveries',\n+    25 => 'webhook_endpoints',\n ]"}]}
+>>> core sqlite [TestCase] single  files=1 processes=1
+{"tool":"pest","result":"passed","tests":4,"passed":4,"assertions":12,"duration_ms":919}
+>>> core sqlite [TestCase+WithoutDatabaseSchema] parallel  files=14 processes=8
+{"tool":"pest","result":"failed","tests":138,"passed":137,"assertions":1594,"duration_ms":1648,"failed":1,"failures":[{"test":"P\\Packages\\core\\tests\\Modules\\OwnershipRegistryTest::__pest_evaluable_it_gives_every_command_the_owner_of_the_inventory","file":"/home/vostrikov/projects/packages/vaulter/packages/core/tests/Modules/OwnershipRegistryTest.php","line":178,"message":"Failed asserting that two strings are equal.\n--- Expected\n+++ Actual\n@@ @@\n-'command:vaulter:blobs:gc'\n+'media'"}]}
+>>> core sqlite [TestCase+WithoutDatabaseSchema#skeleton] single  files=1 processes=1
+{"tool":"pest","result":"passed","tests":3,"passed":3,"assertions":7,"duration_ms":712}
+
+== scripts/t summary ==
+core sqlite [(unbound)] parallel   exit=0 skipped=0 0s  ok
+core sqlite [DatabaseMigrations+TestCase] parallel exit=1 skipped=0 11s  FAIL
+core sqlite [EnablesWebhooksModule+RefreshDatabase+TestCase] single exit=0 skipped=0 4s  ok
+core sqlite [OpenApiTestCase] parallel exit=1 skipped=1 5s  FAIL
+core sqlite [RefreshDatabase+TestCase] parallel exit=1 skipped=0 5s  FAIL
+core sqlite [TestCase] single      exit=0 skipped=0 1s  ok
+core sqlite [TestCase+WithoutDatabaseSchema] parallel exit=1 skipped=0 2s  FAIL
+core sqlite [TestCase+WithoutDatabaseSchema#skeleton] single exit=0 skipped=0 1s  ok
+EXIT=1

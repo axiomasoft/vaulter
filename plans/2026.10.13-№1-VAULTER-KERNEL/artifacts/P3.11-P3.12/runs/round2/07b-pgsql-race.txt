@@ -1,0 +1,8 @@
+### scripts/t pgsql -p core --group=serial packages/core/tests/Concurrency/IdempotencyRaceTest.php
+engine=pgsql workers=1 external=0
+>>> core pgsql [DatabaseMigrations+TestCase] serial  files=1 processes=1
+{"tool":"pest","result":"passed","tests":2,"passed":2,"assertions":8,"duration_ms":6808,"raw":["P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":3004798,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":3004800}]},{\"process_pid\":3004799,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":3004801}]}],\"timed_out\":[]}","P38_FORK_PROOF {\"barrier\":\"all ready files before task execution\",\"participants\":[{\"process_pid\":3005178,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":3005179}]},{\"process_pid\":3005180,\"backends\":[{\"connection\":\"testing\",\"database\":\"vaulter_test\",\"backend_pid\":3005181}]}],\"timed_out\":[]}"]}
+
+== scripts/t summary ==
+core pgsql [DatabaseMigrations+TestCase] serial exit=0 skipped=0 7s  ok
+EXIT=0

@@ -1,0 +1,4 @@
+### scripts/php84 php scripts/check-doc-links.php docs README.md && scripts/php84 php scripts/check-doc-links.php --mirror docs
+links ok: 1022 checked in 146 files
+mirror ok: 58 pages
+EXIT=0

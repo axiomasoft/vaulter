@@ -1,0 +1,15 @@
+### scripts/php84 php scripts/inventory/inventory.php --check && scripts/php84 php vendor/bin/pint --test scripts/inventory tests/Repo/Arch && scripts/php84 php vendor/bin/phpstan analyse --no-progress --level=6 --memory-limit=1G scripts/inventory
+[fk] ok
+[identities-cli] ok
+[identities-config] ok
+[identities-http] ok
+[identities-protocol] ok
+[identities-schema] ok
+[packages] ok
+[scan-i1] ok
+[scan-i2] ok
+[scan-i3] ok
+[scan-i4] ok
+[target-map] ok
+{"tool":"pint","result":"passed"}{"tool":"phpstan","result":"passed","errors":0}
+EXIT=0
