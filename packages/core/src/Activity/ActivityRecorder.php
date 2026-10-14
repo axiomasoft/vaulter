@@ -7,14 +7,13 @@ namespace Vaulter\Activity;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Data\Activity\RecordActivityCommand;
 use Vaulter\Events\DomainEvent;
-use Vaulter\Events\EventRecorder;
 use Vaulter\Repositories\Activity\ActivityStoreRepository;
 use Vaulter\Support\RequestContext;
 
 /**
  * Writes EXACTLY ONE activity row for a domain event. It maps the event into a {@see RecordActivityCommand} (occurrence
  * id, verb, actor, target morph, storage, context) and hands it to the
- * ActivityStoreRepository. Only {@see EventRecorder} calls it, inside the
+ * ActivityStoreRepository. Only {@see ActivitySink} calls it, inside the
  * transaction of the Action that caused the event.
  *
  * ip / user-agent / request-id are captured from the current request via

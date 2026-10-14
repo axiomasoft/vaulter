@@ -7,7 +7,7 @@ namespace Vaulter\Data\Webhooks;
 /**
  * The command DTO for registering a webhook endpoint.
  * Carries the receiver URL and the list of subscribed event names (validated against
- * the EventType enum by the request). The signing_secret is NOT part of this
+ * the event catalogue by the request). The signing_secret is NOT part of this
  * command — it is generated inside the Action and returned ONCE; only its stored form
  * lives on the row. driveId, when set, limits the endpoint to that drive's events;
  * the drive must be visible in the current tenant.

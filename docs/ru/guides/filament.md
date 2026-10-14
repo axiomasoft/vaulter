@@ -272,7 +272,7 @@ $minted = Vaulter::drive($owner)->actingAs($user)->shares()->create($node, new S
 
 - **Модель**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('activity')` (`Vaulter\Models\Activity\Activity`).
 - **Таблица**: бейдж глагола, актор (`type #id`), цель (`type #id`), хранилище, когда. Фильтр: глагол
-  (`SelectFilter` по кейсам `EventType`).
+  (`SelectFilter` по каталогу событий).
 - **Infolist** (страница просмотра): секции Event / Actor / Target / Request (секция Request включает
   `KeyValueEntry` для `context` плюс ip / user-agent / request-id).
 - **Страницы**: `index` (список) и `view` (`/{record}`). Классы: `ListActivities` и `ViewActivity` в

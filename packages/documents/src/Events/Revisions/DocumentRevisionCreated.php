@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Documents\Events\Revisions;
 
 use Carbon\CarbonImmutable;
+use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
-use Vaulter\Enums\Events\EventType;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Identity;
@@ -38,9 +38,9 @@ final readonly class DocumentRevisionCreated extends DomainEvent
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
-    public function type(): EventType
+    public function type(): DocumentEventType
     {
-        return EventType::DocumentRevisionCreated;
+        return DocumentEventType::DocumentRevisionCreated;
     }
 
     public function scope(): EventScope

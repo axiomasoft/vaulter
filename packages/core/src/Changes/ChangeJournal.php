@@ -7,16 +7,15 @@ namespace Vaulter\Changes;
 use LogicException;
 use Vaulter\Enums\Changes\ChangeOperation;
 use Vaulter\Enums\Changes\ChangeReason;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\DomainEvent;
-use Vaulter\Events\EventRecorder;
 use Vaulter\Repositories\Changes\ChangeEntryRepository;
 use Vaulter\Repositories\Changes\ChangeHeadRepository;
 use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
  * Writes the change journal of a drive: one entry per journalled
- * event, numbered by the drive's head row. Only {@see EventRecorder} calls it, as the
+ * event, numbered by the drive's head row. Only {@see ChangeJournalSink} calls it, as the
  * last step of the mutation's transaction.
  *
  * The seq is taken by an UPDATE of the head row, the last lock of the transaction, and
@@ -43,8 +42,8 @@ final readonly class ChangeJournal
     public static function invisibilityReason(string $eventType): ?ChangeReason
     {
         return match ($eventType) {
-            EventType::NodeMoved->value => ChangeReason::MovedOut,
-            EventType::GrantCreated->value, EventType::GrantRevoked->value, EventType::InheritanceChanged->value => ChangeReason::PermissionLost,
+            DriveEventType::NodeMoved->value => ChangeReason::MovedOut,
+            DriveEventType::GrantCreated->value, DriveEventType::GrantRevoked->value, DriveEventType::InheritanceChanged->value => ChangeReason::PermissionLost,
             default => null,
         };
     }
@@ -54,7 +53,7 @@ final readonly class ChangeJournal
     {
         $scope = $event->scope();
         $driveId = $scope->driveId ?? throw new LogicException('[Vaulter] A journalled event needs a drive: '.$event->type()->value.'.');
-        if ($effect->operation->value !== $event->type()->journalOperation()) {
+        if ($effect->operation->value !== $event->type()->spec()->journal) {
             throw new LogicException('[Vaulter] The journal entry of '.$event->type()->value.' does not match its catalogue operation.');
         }
         if ($this->entries->exists($event->eventId)) {
@@ -108,7 +107,7 @@ final readonly class ChangeJournal
     private static function reasonTypes(): array
     {
         return array_values(array_filter(
-            array_map(static fn (EventType $type): string => $type->value, EventType::cases()),
+            array_map(static fn (DriveEventType $type): string => $type->value, DriveEventType::cases()),
             static fn (string $type): bool => self::invisibilityReason($type) !== null,
         ));
     }

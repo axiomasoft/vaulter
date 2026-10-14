@@ -7,7 +7,7 @@ namespace Vaulter\Repositories\Activity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Events\EventTypeContract;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
@@ -35,7 +35,7 @@ final class ActivityReadRepository
      *
      * @return Builder<Activity>
      */
-    public function forStorage(Drive $storage, ?EventType $verb = null): Builder
+    public function forStorage(Drive $storage, ?EventTypeContract $verb = null): Builder
     {
         return $this->base($verb)->where('drive_id', $storage->getKey());
     }
@@ -47,7 +47,7 @@ final class ActivityReadRepository
      *
      * @return Builder<Activity>
      */
-    public function forNode(Node $node, ?EventType $verb = null): Builder
+    public function forNode(Node $node, ?EventTypeContract $verb = null): Builder
     {
         return $this->forTarget($node, $verb);
     }
@@ -58,7 +58,7 @@ final class ActivityReadRepository
      *
      * @return Builder<Activity>
      */
-    public function forTarget(Model $target, ?EventType $verb = null): Builder
+    public function forTarget(Model $target, ?EventTypeContract $verb = null): Builder
     {
         return $this->base($verb)
             ->where('target_type', $target->getMorphClass())
@@ -71,7 +71,7 @@ final class ActivityReadRepository
      *
      * @return Builder<Activity>
      */
-    public function forActor(string $actorType, int|string $actorId, ?EventType $verb = null): Builder
+    public function forActor(string $actorType, int|string $actorId, ?EventTypeContract $verb = null): Builder
     {
         return $this->base($verb)
             ->where('actor_type', $actorType)
@@ -84,7 +84,7 @@ final class ActivityReadRepository
      *
      * @return Builder<Activity>
      */
-    public function byVerb(EventType $verb): Builder
+    public function byVerb(EventTypeContract $verb): Builder
     {
         return $this->base($verb);
     }
@@ -94,7 +94,7 @@ final class ActivityReadRepository
      *
      * @return Builder<Activity>
      */
-    private function base(?EventType $verb): Builder
+    private function base(?EventTypeContract $verb): Builder
     {
         $model = $this->vaulterConfig->model('activity');
 

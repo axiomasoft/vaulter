@@ -6,7 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Drive\Tests\TestCase;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
@@ -29,12 +29,12 @@ it('records file.revision_deleted in the activity feed and the outbox', function
 
     $actor->files()->deleteRevision($file, $first->getKey());
 
-    $outbox = Outbox::query()->where('event', EventType::FileRevisionDeleted->value)->sole();
-    $activity = Activity::query()->where('verb', EventType::FileRevisionDeleted->value)->sole();
+    $outbox = Outbox::query()->where('event', DriveEventType::FileRevisionDeleted->value)->sole();
+    $activity = Activity::query()->where('verb', DriveEventType::FileRevisionDeleted->value)->sole();
 
     expect($outbox->payload['data'])->toBe(['revision_id' => (string) $first->getKey(), 'number' => 1])
         ->and($activity->event_id)->toBe($outbox->event_id)
         ->and($activity->context['size_bytes'])->toBe(2)
         ->and($outbox->payload['sequence'])->toBeInt();
-    EventConformance::assertEnvelope(EventType::FileRevisionDeleted, $outbox->payload);
+    EventConformance::assertEnvelope(DriveEventType::FileRevisionDeleted, $outbox->payload);
 });

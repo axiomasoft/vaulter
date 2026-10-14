@@ -6,7 +6,7 @@ namespace Vaulter\Drive\Events\Uploads;
 
 use Carbon\CarbonImmutable;
 use Vaulter\Drive\Models\Uploads\UploadSession;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\DomainEvent;
 use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Events\EventScope;
@@ -29,9 +29,9 @@ final readonly class UploadExpired extends DomainEvent
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
-    public function type(): EventType
+    public function type(): DriveEventType
     {
-        return EventType::UploadExpired;
+        return DriveEventType::UploadExpired;
     }
 
     public function scope(): EventScope

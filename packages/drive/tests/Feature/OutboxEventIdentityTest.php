@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Str;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\Nodes\NodeRenamed;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Kernel;
 use Vaulter\Models\Activity\Activity;
@@ -29,7 +29,7 @@ it('stages three distinct occurrences for rename A to B to A to B', function ():
     }
 
     $rows = Outbox::query()->where('topic', (string) $node->id)
-        ->where('event', EventType::NodeRenamed->value)->orderBy('id')->get();
+        ->where('event', DriveEventType::NodeRenamed->value)->orderBy('id')->get();
 
     $names = Activity::query()->whereIn('event_id', $rows->pluck('event_id'))->orderBy('id')->get()->pluck('context.to')->all();
 
@@ -54,15 +54,15 @@ it('stages three distinct occurrences for trash restore trash', function (): voi
     $drive->nodes()->trash($node);
 
     $rows = Outbox::query()->where('topic', (string) $node->id)
-        ->whereIn('event', [EventType::NodeTrashed->value, EventType::NodeRestored->value])
+        ->whereIn('event', [DriveEventType::NodeTrashed->value, DriveEventType::NodeRestored->value])
         ->orderBy('id')->get();
 
     expect($rows)->toHaveCount(3)
         ->and($rows->pluck('event_id')->unique())->toHaveCount(3)
         ->and($rows->pluck('event')->all())->toBe([
-            EventType::NodeTrashed->value,
-            EventType::NodeRestored->value,
-            EventType::NodeTrashed->value,
+            DriveEventType::NodeTrashed->value,
+            DriveEventType::NodeRestored->value,
+            DriveEventType::NodeTrashed->value,
         ]);
 
     foreach ($rows as $row) {
@@ -79,7 +79,7 @@ it('stages one row when the same event occurrence is recorded twice', function (
     app(VaulterDatabase::class)->transaction(fn () => app(EventRecorder::class)->record($make()));
     app(VaulterDatabase::class)->transaction(fn () => app(EventRecorder::class)->record($make()));
 
-    $row = Outbox::query()->where('event', EventType::NodeRenamed->value)->sole();
+    $row = Outbox::query()->where('event', DriveEventType::NodeRenamed->value)->sole();
 
     expect($row->event_id)->toBe($eventId)
         ->and($row->payload['id'])->toBe($eventId);

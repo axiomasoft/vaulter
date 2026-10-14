@@ -10,7 +10,7 @@ use Vaulter\Data\Drive\CopyOptions;
 use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Enums\Drive\OnNameConflict;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Activity\Activity;
@@ -99,7 +99,7 @@ it('stores detected MIME separately when the upload source provides no declared 
 
     expect($node->mimeType)->toBe('text/plain')->and(DriveTestHelpers::model($node)->file()->firstOrFail()->currentRevision()->firstOrFail()->declared_mime_type)->toBeNull();
 
-    $activity = Activity::query()->where('verb', EventType::FileUploaded->value)->sole();
+    $activity = Activity::query()->where('verb', DriveEventType::FileUploaded->value)->sole();
 
     expect($activity->context['mime_type'])->toBe('text/plain')
         ->and($activity->context['size_bytes'])->toBe(5);
@@ -181,13 +181,13 @@ it('rename to the same name emits no rename activity or outbox row', function ()
 
     $drive->actingAs(DriveTestHelpers::actor($drive, 17))->nodes()->rename($folder, 'Stable');
 
-    expect(Activity::query()->where('verb', EventType::NodeRenamed->value)->count())->toBe(0)
-        ->and(Outbox::query()->where('event', EventType::NodeRenamed->value)->count())->toBe(0);
+    expect(Activity::query()->where('verb', DriveEventType::NodeRenamed->value)->count())->toBe(0)
+        ->and(Outbox::query()->where('event', DriveEventType::NodeRenamed->value)->count())->toBe(0);
 
     $drive->actingAs(DriveTestHelpers::actor($drive, 17))->nodes()->rename($folder, 'Renamed');
 
-    expect(Activity::query()->where('verb', EventType::NodeRenamed->value)->count())->toBe(1)
-        ->and(Outbox::query()->where('event', EventType::NodeRenamed->value)->count())->toBe(1);
+    expect(Activity::query()->where('verb', DriveEventType::NodeRenamed->value)->count())->toBe(1)
+        ->and(Outbox::query()->where('event', DriveEventType::NodeRenamed->value)->count())->toBe(1);
 });
 
 it('refuses per_page outside 1..200 and serves both bounds', function (): void {

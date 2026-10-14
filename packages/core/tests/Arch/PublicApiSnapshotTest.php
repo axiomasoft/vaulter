@@ -31,9 +31,10 @@ use Vaulter\Enums\Drive\NodeSort;
 use Vaulter\Enums\Drive\OnNameConflict;
 use Vaulter\Enums\Drive\QuotaState;
 use Vaulter\Enums\Drive\ScanStatus;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Enums\Operations\OperationKind;
 use Vaulter\Enums\Sharing\ShareAudience;
+use Vaulter\Events\EventTypeContract;
 use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Exceptions\Access\UnknownRoleException;
 use Vaulter\Exceptions\Contracts\ProblemException;
@@ -406,9 +407,9 @@ test('vaulter-core public API surface matches the frozen golden (VLT-REL P2.2)',
         $blocks[] = $class."\n  ".vaulterSnapshotMethod(new ReflectionMethod($class, $method));
     }
 
-    $blocks[] = EventType::class."\n".implode("\n", array_map(
-        static fn (EventType $case): string => '  '.$case->name.' = '.$case->value,
-        EventType::cases(),
+    $blocks[] = DriveEventType::class."\n".implode("\n", array_map(
+        static fn (EventTypeContract $case): string => '  '.$case->name.' = '.$case->value,
+        DriveEventType::cases(),
     ));
     $blocks[] = vaulterSnapshotFacade(Vaulter::class);
 

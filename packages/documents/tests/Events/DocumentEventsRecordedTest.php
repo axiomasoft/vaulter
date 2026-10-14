@@ -6,12 +6,12 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Documents\Data\Comments\AddCommentInput;
+use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Events\Documents\DocumentContentUpdated;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Operations\OperationsTestCase;
-use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -45,8 +45,8 @@ it('records the document lifecycle with the writer validators', function (): voi
     $documents->restore($node, $named);
 
     $document = Document::query()->where('node_id', $node->id)->sole();
-    $created = Outbox::query()->where('event', EventType::DocumentCreated->value)->sole();
-    $restored = Outbox::query()->where('event', EventType::DocumentRestored->value)->sole();
+    $created = Outbox::query()->where('event', DocumentEventType::DocumentCreated->value)->sole();
+    $restored = Outbox::query()->where('event', DocumentEventType::DocumentRestored->value)->sole();
 
     expect(documentEventsCount(Activity::class))->toEqualCanonicalizing([
         'document.created' => 1, 'document.revision_created' => 2, 'document.restored' => 1,
@@ -57,7 +57,7 @@ it('records the document lifecycle with the writer validators', function (): voi
         ->and($restored->payload['data']['state_version'])->toBe($document->state_version)
         ->and($restored->payload['data']['epoch'])->toBe($document->collab_epoch)
         ->and($restored->payload['sequence'])->toBeNull()
-        ->and(Activity::query()->where('verb', EventType::DocumentCreated->value)->sole()->event_id)->toBe($created->event_id);
+        ->and(Activity::query()->where('verb', DocumentEventType::DocumentCreated->value)->sole()->event_id)->toBe($created->event_id);
 });
 
 it('stages document.updated for a save only when it took a checkpoint', function (): void {
@@ -73,11 +73,11 @@ it('stages document.updated for a save only when it took a checkpoint', function
     });
     $documents->update($node, DocumentTestHelpers::content('three')->toArray());
 
-    $updated = Outbox::query()->where('event', EventType::DocumentUpdated->value)->sole();
+    $updated = Outbox::query()->where('event', DocumentEventType::DocumentUpdated->value)->sole();
 
     expect($updated->payload['data']['checkpoint'])->toBeTrue()
         ->and($updated->payload['data'])->toHaveKey('revision_id')
-        ->and(Activity::query()->where('verb', EventType::DocumentUpdated->value)->exists())->toBeFalse()
+        ->and(Activity::query()->where('verb', DocumentEventType::DocumentUpdated->value)->exists())->toBeFalse()
         // The save without a checkpoint still reaches host listeners.
         ->and($seen)->toBe([false]);
 });
@@ -92,7 +92,7 @@ it('records comment events in both sinks', function (): void {
     Documents::comments($actor)->resolve($node->id, $comment->id);
     Documents::comments($actor)->delete($node->id, $comment->id);
 
-    $added = Outbox::query()->where('event', EventType::CommentAdded->value)->sole();
+    $added = Outbox::query()->where('event', DocumentEventType::CommentAdded->value)->sole();
 
     expect(documentEventsCount(Activity::class))->toEqualCanonicalizing(['comment.added' => 1, 'comment.resolved' => 1, 'comment.deleted' => 1])
         ->and(documentEventsCount(Outbox::class))->toEqualCanonicalizing(['comment.added' => 1, 'comment.resolved' => 1, 'comment.deleted' => 1])
@@ -100,5 +100,5 @@ it('records comment events in both sinks', function (): void {
         ->and($added->payload['data'])->toBe(['comment_id' => (string) $comment->id, 'node_id' => (string) $node->id])
         ->and($added->payload['actor']['id'])->toBe('9')
         ->and(json_encode($added->payload, JSON_THROW_ON_ERROR))->not->toContain('hello')
-        ->and(Activity::query()->where('verb', EventType::CommentAdded->value)->sole()->target_id)->toEqual($node->id);
+        ->and(Activity::query()->where('verb', DocumentEventType::CommentAdded->value)->sole()->target_id)->toEqual($node->id);
 });

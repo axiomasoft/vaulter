@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Tests\Events;
 
 use PHPUnit\Framework\Assert;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Events\EventTypeContract;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Webhooks\Outbox;
 
@@ -24,7 +24,7 @@ final class EventConformance
     /**
      * Assert every outbox row of the given types against its spec.
      *
-     * @param list<EventType> $types
+     * @param list<EventTypeContract> $types
      */
     public static function assertRecorded(array $types): void
     {
@@ -37,18 +37,18 @@ final class EventConformance
         }
     }
 
-    /** @param list<EventType> $types the types that are audited but never staged for webhooks */
+    /** @param list<EventTypeContract> $types the types that are audited but never staged for webhooks */
     public static function assertAuditedOnly(array $types): void
     {
         foreach ($types as $type) {
-            Assert::assertFalse($type->isWebhook());
+            Assert::assertFalse($type->spec()->external);
             Assert::assertTrue(Activity::query()->where('verb', $type->value)->exists(), 'No activity row was recorded for '.$type->value);
             Assert::assertFalse(Outbox::query()->where('event', $type->value)->exists());
         }
     }
 
     /** @param array<string, mixed> $payload */
-    public static function assertEnvelope(EventType $type, array $payload): void
+    public static function assertEnvelope(EventTypeContract $type, array $payload): void
     {
         $spec = $type->spec();
         $data = $payload['data'];
@@ -59,7 +59,7 @@ final class EventConformance
     }
 
     /** @param array<string, mixed> $data */
-    public static function assertData(EventType $type, array $data): void
+    public static function assertData(EventTypeContract $type, array $data): void
     {
         $spec = $type->spec();
         $keys = array_keys($data);

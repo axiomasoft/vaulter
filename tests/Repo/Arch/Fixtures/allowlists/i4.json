@@ -257,6 +257,17 @@
         {
             "category": "config-validation",
             "count": 1,
+            "file": "packages/core/src/Modules/ModuleCompiler.php",
+            "kind": "probe",
+            "reason": "the compiler reads the cases of a declared event enum (D38): a constant table of the manifest, checked like the problem sources — no container, no I/O",
+            "removed_in": "never",
+            "symbol": "Vaulter\\Modules\\ModuleCompiler::eventTypes",
+            "target": "$class",
+            "view": "current"
+        },
+        {
+            "category": "config-validation",
+            "count": 1,
             "file": "packages/core/src/Providers/DriveSliceRegistrar.php",
             "kind": "probe",
             "reason": "проверка явно выбранного DirectContentUrlSigner: переводится в typed required capability без удаления fail-closed проверки (code-facts)",

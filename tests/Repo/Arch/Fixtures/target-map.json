@@ -1641,6 +1641,20 @@
             "target_fqcn": "Vaulter\\Drive\\Activity\\ActivityRecorder"
         },
         {
+            "action": "move",
+            "eloquent": false,
+            "file": "packages/core/src/Activity/ActivitySink.php",
+            "fqcn": "Vaulter\\Activity\\ActivitySink",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "core",
+            "phase": "P4",
+            "rule": "core-drive:prefix:Vaulter\\Activity\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Activity\\ActivitySink"
+        },
+        {
             "action": "keep",
             "eloquent": false,
             "file": "packages/core/src/Attributes/EventSpec.php",
@@ -1891,6 +1905,20 @@
             "rule": "core-drive:prefix:Vaulter\\Changes\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Changes\\ChangeJournal"
+        },
+        {
+            "action": "move",
+            "eloquent": false,
+            "file": "packages/core/src/Changes/ChangeJournalSink.php",
+            "fqcn": "Vaulter\\Changes\\ChangeJournalSink",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "core",
+            "phase": "P4",
+            "rule": "core-drive:prefix:Vaulter\\Changes\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Changes\\ChangeJournalSink"
         },
         {
             "action": "move",
@@ -5279,6 +5307,20 @@
             "rule": "other-packages:fqcn:Vaulter\\Documents\\Enums\\Collaboration\\CollaborationDriverType",
             "surface": "Api",
             "target_fqcn": "Vaulter\\Collaboration\\Enums\\CollaborationDriverType"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/documents/src/Enums/DocumentEventType.php",
+            "fqcn": "Vaulter\\Documents\\Enums\\DocumentEventType",
+            "kind": "enum",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\Enums\\",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Documents\\Enums\\DocumentEventType"
         },
         {
             "action": "keep",
@@ -9313,18 +9355,18 @@
             "target_fqcn": "Vaulter\\Drive\\Enums\\ScanStatus"
         },
         {
-            "action": "split",
+            "action": "move",
             "eloquent": false,
-            "file": "packages/core/src/Enums/Events/EventType.php",
-            "fqcn": "Vaulter\\Enums\\Events\\EventType",
+            "file": "packages/core/src/Enums/Events/DriveEventType.php",
+            "fqcn": "Vaulter\\Enums\\Events\\DriveEventType",
             "kind": "enum",
-            "note": "mechanics (type naming, catalog) stay in core; the concrete event type values are contributed by drive/documents/webhooks (EventCatalog)",
-            "owner": "core",
+            "note": "located in core until P4 moves it to the drive package (D38)",
+            "owner": "drive",
             "package": "core",
-            "phase": "P3",
-            "rule": "core-kernel:fqcn:Vaulter\\Enums\\Events\\EventType",
+            "phase": "P4",
+            "rule": "core-kernel:fqcn:Vaulter\\Enums\\Events\\DriveEventType",
             "surface": "Api",
-            "target_fqcn": "Vaulter\\Enums\\Events\\EventType"
+            "target_fqcn": "Vaulter\\Drive\\Enums\\Events\\DriveEventType"
         },
         {
             "action": "move",
@@ -9413,6 +9455,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/core/src/Events/Concerns/DescribesEvent.php",
+            "fqcn": "Vaulter\\Events\\Concerns\\DescribesEvent",
+            "kind": "trait",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "P3",
+            "rule": "core-kernel:fqcn:Vaulter\\Events\\Concerns\\DescribesEvent",
+            "surface": "Spi:Implement",
+            "target_fqcn": "Vaulter\\Events\\Concerns\\DescribesEvent"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/core/src/Events/DomainEvent.php",
             "fqcn": "Vaulter\\Events\\DomainEvent",
             "kind": "abstract-class",
@@ -9427,6 +9483,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/core/src/Events/EventCatalog.php",
+            "fqcn": "Vaulter\\Events\\EventCatalog",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "P3",
+            "rule": "core-kernel:fqcn:Vaulter\\Events\\EventCatalog",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Events\\EventCatalog"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/core/src/Events/EventRecorder.php",
             "fqcn": "Vaulter\\Events\\EventRecorder",
             "kind": "final-class",
@@ -9437,6 +9507,62 @@
             "rule": "core-kernel:fqcn:Vaulter\\Events\\EventRecorder",
             "surface": "Api",
             "target_fqcn": "Vaulter\\Events\\EventRecorder"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Events/EventSink.php",
+            "fqcn": "Vaulter\\Events\\EventSink",
+            "kind": "interface",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "P3",
+            "rule": "core-kernel:fqcn:Vaulter\\Events\\EventSink",
+            "surface": "Spi:Implement",
+            "target_fqcn": "Vaulter\\Events\\EventSink"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Events/EventSources.php",
+            "fqcn": "Vaulter\\Events\\EventSources",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "P3",
+            "rule": "core-kernel:fqcn:Vaulter\\Events\\EventSources",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Events\\EventSources"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Events/EventTypeCast.php",
+            "fqcn": "Vaulter\\Events\\EventTypeCast",
+            "kind": "final-class",
+            "note": "lives in Vaulter\\Events, which the public API snapshot lists whole; an Eloquent cast of the activity verb, not called by hosts",
+            "owner": "core",
+            "package": "core",
+            "phase": "P3",
+            "rule": "core-kernel:fqcn:Vaulter\\Events\\EventTypeCast",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Events\\EventTypeCast"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Events/EventTypeContract.php",
+            "fqcn": "Vaulter\\Events\\EventTypeContract",
+            "kind": "interface",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "P3",
+            "rule": "core-kernel:fqcn:Vaulter\\Events\\EventTypeContract",
+            "surface": "Spi:Implement",
+            "target_fqcn": "Vaulter\\Events\\EventTypeContract"
         },
         {
             "action": "keep",
@@ -9507,6 +9633,34 @@
             "rule": "core-access-sharing:prefix:Vaulter\\Events\\Sharing\\",
             "surface": "Api",
             "target_fqcn": "Vaulter\\Drive\\Events\\Sharing\\NodeShareUpdated"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Events/SinkResult.php",
+            "fqcn": "Vaulter\\Events\\SinkResult",
+            "kind": "enum",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "P3",
+            "rule": "core-kernel:fqcn:Vaulter\\Events\\SinkResult",
+            "surface": "Spi:Call",
+            "target_fqcn": "Vaulter\\Events\\SinkResult"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Events/SinkWriter.php",
+            "fqcn": "Vaulter\\Events\\SinkWriter",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "P3",
+            "rule": "core-kernel:fqcn:Vaulter\\Events\\SinkWriter",
+            "surface": "Spi:Call",
+            "target_fqcn": "Vaulter\\Events\\SinkWriter"
         },
         {
             "action": "keep",

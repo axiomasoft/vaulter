@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Assert;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Drive\DriveHandle;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Events\EventTypeContract;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Node;
@@ -77,7 +77,7 @@ trait InteractsWithVaulter
     /**
      * @param (callable(Model): bool)|null $where narrows the match to a journal row
      */
-    public function assertVaulterEventRecorded(EventType $type, ?callable $where = null): void
+    public function assertVaulterEventRecorded(EventTypeContract $type, ?callable $where = null): void
     {
         Assert::assertTrue(
             $this->vaulterEvents($type)->contains(static fn (Model $row): bool => $where === null || $where($row)),
@@ -85,7 +85,7 @@ trait InteractsWithVaulter
         );
     }
 
-    public function assertVaulterEventNotRecorded(EventType $type): void
+    public function assertVaulterEventNotRecorded(EventTypeContract $type): void
     {
         Assert::assertTrue($this->vaulterEvents($type)->isEmpty(), sprintf('A "%s" event was recorded.', $type->value));
     }
@@ -101,7 +101,7 @@ trait InteractsWithVaulter
     }
 
     /** @return Collection<int, Model> */
-    private function vaulterEvents(EventType $type): Collection
+    private function vaulterEvents(EventTypeContract $type): Collection
     {
         $activity = App::make(VaulterConfig::class)->model('activity');
 

@@ -684,13 +684,86 @@
         },
         {
             "match": "fqcn",
-            "value": "Vaulter\\Enums\\Events\\EventType",
+            "value": "Vaulter\\Enums\\Events\\DriveEventType",
+            "owner": "drive",
+            "action": "move",
+            "phase": "P4",
+            "surface": "Api",
+            "note": "located in core until P4 moves it to the drive package (D38)",
+            "why": "architecture#events + D38: the event types of the drive, contributed to the EventCatalog by DriveModule"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Events\\EventTypeContract",
             "owner": "core",
-            "action": "split",
+            "action": "keep",
+            "phase": "P3",
+            "surface": "Spi:Implement",
+            "why": "architecture#kernel: События — D38 contract of a module event enum (implemented by modules)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Events\\Concerns\\DescribesEvent",
+            "owner": "core",
+            "action": "keep",
+            "phase": "P3",
+            "surface": "Spi:Implement",
+            "why": "architecture#kernel: События — D38 spec of an event enum case from its EventSpec attribute"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Events\\EventCatalog",
+            "owner": "core",
+            "action": "keep",
             "phase": "P3",
             "surface": "Api",
-            "note": "mechanics (type naming, catalog) stay in core; the concrete event type values are contributed by drive/documents/webhooks (EventCatalog)",
-            "why": "architecture#kernel: События — EventType-механика stays, the catalog is contributions of modules"
+            "why": "architecture#kernel: События — D38 registry of the event types the modules contribute"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Events\\EventSources",
+            "owner": "core",
+            "action": "keep",
+            "phase": "P3",
+            "surface": "Internal",
+            "why": "architecture#kernel: События — D38 where the catalogue reads the module enums"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Events\\EventTypeCast",
+            "owner": "core",
+            "action": "keep",
+            "phase": "P3",
+            "surface": "Internal",
+            "note": "lives in Vaulter\\Events, which the public API snapshot lists whole; an Eloquent cast of the activity verb, not called by hosts",
+            "why": "architecture#kernel: События — D38 stored event type value read back through the catalogue"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Events\\EventSink",
+            "owner": "core",
+            "action": "keep",
+            "phase": "P3",
+            "surface": "Spi:Implement",
+            "why": "architecture#events: EventSink slot of core; activity and changes are sinks of drive (D38)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Events\\SinkResult",
+            "owner": "core",
+            "action": "keep",
+            "phase": "P3",
+            "surface": "Spi:Call",
+            "why": "architecture#events: outcome of an EventSink (new occurrence, replay, skipped)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Events\\SinkWriter",
+            "owner": "core",
+            "action": "keep",
+            "phase": "P3",
+            "surface": "Spi:Call",
+            "why": "architecture#events: the transaction-bound writer of the EventSink slot"
         },
         {
             "match": "fqcn",

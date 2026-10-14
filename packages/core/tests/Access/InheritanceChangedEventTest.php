@@ -6,7 +6,7 @@ use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Data\Access\GrantInput;
 use Vaulter\Enums\Access\InheritanceRestriction;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Operations\AccessOperations;
@@ -32,20 +32,20 @@ it('records access.inheritance_changed for a restriction and its restoration', f
     $this->access->restrictInheritance($this->child->id);
     $this->access->restoreInheritance($this->child->id);
 
-    $events = Outbox::query()->where('event', EventType::InheritanceChanged->value)->orderBy('id')->get();
+    $events = Outbox::query()->where('event', DriveEventType::InheritanceChanged->value)->orderBy('id')->get();
 
     expect($events->map(fn (Outbox $row): array => $row->payload['data'])->all())->toBe([['inherits' => false], ['inherits' => true]])
         ->and($events[0]->payload['subject'])->toBe(['type' => 'node', 'id' => (string) $this->child->id])
         // Access changes are not node versions: a sequence here would look stale next to the node's last mutation.
         ->and($events[0]->payload['sequence'])->toBeNull()
-        ->and(Activity::query()->where('verb', EventType::InheritanceChanged->value)->count())->toBe(2)
-        ->and(Activity::query()->where('verb', EventType::InheritanceChanged->value)->orderBy('id')->first()->event_id)->toBe($events[0]->event_id);
+        ->and(Activity::query()->where('verb', DriveEventType::InheritanceChanged->value)->count())->toBe(2)
+        ->and(Activity::query()->where('verb', DriveEventType::InheritanceChanged->value)->orderBy('id')->first()->event_id)->toBe($events[0]->event_id);
 });
 
 it('records nothing when the node already has the requested inheritance', function (): void {
     $this->access->restoreInheritance($this->child->id);
 
-    expect(Outbox::query()->where('event', EventType::InheritanceChanged->value)->exists())->toBeFalse();
+    expect(Outbox::query()->where('event', DriveEventType::InheritanceChanged->value)->exists())->toBeFalse();
 });
 
 it('keeps copy_current producing grant.created next to the inheritance event', function (): void {

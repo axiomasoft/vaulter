@@ -218,7 +218,7 @@ reads the [change journal](/concepts/events) and uses webhooks only to wake up.
 
 ## Event names
 
-`Vaulter\Enums\Events\EventType` uses the canonical 0.3 names. Upgrade migration
+The event catalogue (`DriveEventType`, `DocumentEventType`) uses the canonical 0.3 names. Upgrade migration
 №9 converts `v_activity.verb`, `v_outbox.event`, `v_webhook_deliveries.event` and
 `v_webhook_endpoints.events` together. Endpoint lists are processed in chunks of
 500; list order, duplicates, `*` and unrecognized third-party names are preserved.

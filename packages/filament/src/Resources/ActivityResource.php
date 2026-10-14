@@ -21,7 +21,8 @@ use Override;
 use UnitEnum;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Data\Drive\ListOptions;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Events\EventCatalog;
+use Vaulter\Events\EventTypeContract;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Filament\Resources\ActivityResource\Pages\ListActivities;
 use Vaulter\Filament\Resources\ActivityResource\Pages\ViewActivity;
@@ -101,7 +102,7 @@ final class ActivityResource extends Resource
             Section::make('Event')->schema([
                 TextEntry::make('verb')
                     ->badge()
-                    ->formatStateUsing(fn (EventType $state): string => $state->label()),
+                    ->formatStateUsing(fn (EventTypeContract $state): string => $state->label()),
                 TextEntry::make('created_at')->dateTime('d.m.Y H:i:s'),
                 TextEntry::make('drive_id')->label('Storage')->placeholder('—'),
             ])->columns(3),
@@ -132,7 +133,7 @@ final class ActivityResource extends Resource
             ->columns([
                 TextColumn::make('verb')
                     ->badge()
-                    ->formatStateUsing(fn (EventType $state): string => $state->label())
+                    ->formatStateUsing(fn (EventTypeContract $state): string => $state->label())
                     ->sortable(),
 
                 TextColumn::make('actor_type')
@@ -201,7 +202,7 @@ final class ActivityResource extends Resource
     {
         $options = [];
 
-        foreach (EventType::cases() as $verb) {
+        foreach (app(EventCatalog::class)->all() as $verb) {
             $options[$verb->value] = $verb->label();
         }
 

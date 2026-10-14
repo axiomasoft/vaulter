@@ -7,7 +7,7 @@ use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\Access\NodeGrantCreated;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Events\EventRecorder;
@@ -44,11 +44,11 @@ it('stages the outbox row INSIDE the active transaction, not after commit', func
         app(EventRecorder::class)->record(outboxTransactionEvent($this));
 
         // Inside the SAME transaction the staged row must already be visible.
-        return Outbox::query()->where('event', EventType::GrantCreated->value)->exists();
+        return Outbox::query()->where('event', DriveEventType::GrantCreated->value)->exists();
     });
 
     expect($stagedInside)->toBeTrue()
-        ->and(Outbox::query()->where('event', EventType::GrantCreated->value)->count())->toBe(1);
+        ->and(Outbox::query()->where('event', DriveEventType::GrantCreated->value)->count())->toBe(1);
 });
 
 it('rolls the staged outbox row back when the mutation transaction rolls back', function (): void {
@@ -60,7 +60,7 @@ it('rolls the staged outbox row back when the mutation transaction rolls back', 
         });
     }, report: false);
 
-    expect(Outbox::query()->where('event', EventType::GrantCreated->value)->exists())->toBeFalse();
+    expect(Outbox::query()->where('event', DriveEventType::GrantCreated->value)->exists())->toBeFalse();
 });
 
 it('lets a staging failure leave the transaction so nothing of the occurrence commits', function (): void {
@@ -78,6 +78,6 @@ it('lets a staging failure leave the transaction so nothing of the occurrence co
 
     expect(fn () => app(VaulterDatabase::class)->transaction(fn () => app(EventRecorder::class)->record($event)))
         ->toThrow(RuntimeException::class, 'outbox insert failed')
-        ->and(Outbox::query()->where('event', EventType::GrantCreated->value)->exists())->toBeFalse()
+        ->and(Outbox::query()->where('event', DriveEventType::GrantCreated->value)->exists())->toBeFalse()
         ->and(Activity::query()->where('event_id', $event->eventId)->exists())->toBeFalse();
 });

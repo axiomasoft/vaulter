@@ -14,7 +14,7 @@ use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Drive\NodeSort;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Events\EventTypeContract;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\DriveContext;
@@ -30,7 +30,7 @@ final readonly class VisibleActivityQuery
     public function __construct(private VaulterConfig $config, private ListingConfig $listing, private OperationGuard $guard, private Repository $repository) {}
 
     /** @return VisibleActivityPaginator<Activity> */
-    public function execute(DriveContext $context, ListOptions $options, ?Node $node = null, ?EventType $verb = null): VisibleActivityPaginator
+    public function execute(DriveContext $context, ListOptions $options, ?Node $node = null, ?EventTypeContract $verb = null): VisibleActivityPaginator
     {
         if ($options->sort !== NodeSort::Default || $options->descending || $options->kinds !== []) {
             throw new InvalidArgumentException('Activity supports only perPage and forward cursor options.');
@@ -75,7 +75,7 @@ final readonly class VisibleActivityQuery
     }
 
     /** @return Builder<Activity> */
-    private function base(DriveContext $context, ?Node $node, ?EventType $verb): Builder
+    private function base(DriveContext $context, ?Node $node, ?EventTypeContract $verb): Builder
     {
         $class = $this->config->model('activity');
         $query = $class::query()->where('drive_id', $context->driveId())->newestFirst();

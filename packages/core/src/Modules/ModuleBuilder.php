@@ -231,7 +231,9 @@ final class ModuleBuilder
     }
 
     /**
-     * The module's event types (consumed by the event catalogue).
+     * The module's event types (D38): a backed string enum implementing `EventTypeContract`, one case per type.
+     * The event catalogue lists them while the module is active, and a value declared by two installed modules
+     * makes the graph invalid.
      *
      * @param class-string $enum
      */

@@ -7,7 +7,7 @@ use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\Nodes\FolderCreated;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\Access\NodeGrantCreated;
 use Vaulter\Events\Access\NodeGrantRevoked;
 use Vaulter\Events\DomainEvent;
@@ -48,7 +48,7 @@ function outboxStagingActor(): ActorRef
 it('stages exactly one outbox row when a storage is provisioned', function (): void {
     $storage = DriveTestHelpers::drive()->model();
 
-    $rows = Outbox::query()->where('event', EventType::DriveCreated->value)->get();
+    $rows = Outbox::query()->where('event', DriveEventType::DriveCreated->value)->get();
 
     expect($rows)->toHaveCount(1)
         ->and($rows->first()->status)->toBe('pending')
@@ -66,7 +66,7 @@ it('stages a folder.created row carrying the actor and a thin payload', function
     $folder = AccessTestHelpers::folder($storage, null, 'reports');
     outboxStagingRecord(new FolderCreated(node: $folder, actor: outboxStagingActor(), correlationId: (string) Str::ulid()));
 
-    $row = Outbox::query()->where('event', EventType::FolderCreated->value)->sole();
+    $row = Outbox::query()->where('event', DriveEventType::FolderCreated->value)->sole();
 
     expect($row->payload['subject'])->toBe(['type' => 'node', 'id' => (string) $folder->getKey()])
         ->and($row->payload['data'])->toBe(['parent_id' => $folder->parent_id === null ? null : (string) $folder->parent_id])
@@ -92,7 +92,7 @@ it('is idempotent by event_id: staging the same occurrence again inserts nothing
 
     expect($first)->toBeTrue()
         ->and($second)->toBeFalse()
-        ->and(Outbox::query()->where('event', EventType::FolderCreated->value)->count())->toBe(1);
+        ->and(Outbox::query()->where('event', DriveEventType::FolderCreated->value)->count())->toBe(1);
 });
 
 it('keeps distinct grant occurrences with identical parameters and deduplicates their replay', function (): void {
@@ -116,8 +116,8 @@ it('keeps distinct grant occurrences with identical parameters and deduplicates 
             ->and($row->payload['id'])->toBe($event->eventId);
     }
 
-    expect(Outbox::query()->where('event', EventType::GrantCreated->value)->count())->toBe(2)
-        ->and(Outbox::query()->where('event', EventType::GrantRevoked->value)->count())->toBe(2)
+    expect(Outbox::query()->where('event', DriveEventType::GrantCreated->value)->count())->toBe(2)
+        ->and(Outbox::query()->where('event', DriveEventType::GrantRevoked->value)->count())->toBe(2)
         ->and(Outbox::query()->distinct()->count('event_id'))->toBe(4);
 });
 
@@ -129,7 +129,7 @@ it('never serializes a share secret, token or token prefix', function (): void {
 
     outboxStagingRecord(new NodeShareCreated(share: $share, actor: outboxStagingActor(), correlationId: (string) Str::ulid()));
 
-    $payload = Outbox::query()->where('event', EventType::ShareCreated->value)->sole()->payload;
+    $payload = Outbox::query()->where('event', DriveEventType::ShareCreated->value)->sole()->payload;
 
     expect(array_keys($payload['data']))->toBe(['node_id', 'role', 'role_version', 'audience', 'scope', 'expires_at'])
         ->and(json_encode($payload, JSON_THROW_ON_ERROR))->not->toContain('tok-outbox')

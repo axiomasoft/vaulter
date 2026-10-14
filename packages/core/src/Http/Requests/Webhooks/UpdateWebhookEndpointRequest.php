@@ -6,7 +6,7 @@ namespace Vaulter\Http\Requests\Webhooks;
 
 use Illuminate\Validation\Rule;
 use Vaulter\Data\Webhooks\UpdateWebhookEndpointInput;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Events\EventCatalog;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /**
@@ -25,7 +25,7 @@ final class UpdateWebhookEndpointRequest extends VaulterFormRequest
         return [
             'url' => ['sometimes', 'url', 'max:2048'],
             'events' => ['sometimes', 'array', 'min:1'],
-            'events.*' => ['string', Rule::in(EventType::names())],
+            'events.*' => ['string', Rule::in(app(EventCatalog::class)->externalValues())],
             'is_active' => ['sometimes', 'boolean'],
             'drive_id' => ['sometimes', 'alpha_dash:ascii', 'max:64'],
         ];

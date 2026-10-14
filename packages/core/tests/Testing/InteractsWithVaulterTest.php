@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\AssertionFailedError;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Testing\Contracts\PermissionFixture;
@@ -29,11 +29,11 @@ it('fakes the disks the profiles write to', function (): void {
 it('asserts the events the journal recorded', function (): void {
     Drive::factory()->for(DriveTestHelpers::host())->create();
 
-    $this->assertVaulterEventRecorded(EventType::DriveCreated);
-    $this->assertVaulterEventRecorded(EventType::DriveCreated, static fn ($row): bool => $row->drive_id !== null);
-    $this->assertVaulterEventNotRecorded(EventType::UploadAborted);
-    expect(fn () => $this->assertVaulterEventRecorded(EventType::UploadAborted))->toThrow(AssertionFailedError::class)
-        ->and(fn () => $this->assertVaulterEventNotRecorded(EventType::DriveCreated))->toThrow(AssertionFailedError::class);
+    $this->assertVaulterEventRecorded(DriveEventType::DriveCreated);
+    $this->assertVaulterEventRecorded(DriveEventType::DriveCreated, static fn ($row): bool => $row->drive_id !== null);
+    $this->assertVaulterEventNotRecorded(DriveEventType::UploadAborted);
+    expect(fn () => $this->assertVaulterEventRecorded(DriveEventType::UploadAborted))->toThrow(AssertionFailedError::class)
+        ->and(fn () => $this->assertVaulterEventNotRecorded(DriveEventType::DriveCreated))->toThrow(AssertionFailedError::class);
 });
 
 it('judges visibility through Operations', function (): void {

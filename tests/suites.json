@@ -145,6 +145,7 @@
             "packages/core/tests/Concurrency/ChangeJournalRaceTest.php",
             "packages/core/tests/Concurrency/ForkRaceTest.php",
             "packages/core/tests/Concurrency/IdempotencyRaceTest.php",
+            "packages/core/tests/Events/EventSinkContractTest.php",
             "packages/core/tests/Idempotency/IdempotencyContractTest.php",
             "packages/core/tests/Operations/OperationRunnerContractTest.php",
             "packages/core/tests/Tenancy/TenantProvisioningRaceTest.php"

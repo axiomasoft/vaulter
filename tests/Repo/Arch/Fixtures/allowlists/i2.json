@@ -2168,50 +2168,6 @@
             "view": "target"
         },
         {
-            "category": "reverse-edge",
-            "count": 1,
-            "file": "packages/core/src/Events/EventRecorder.php",
-            "kind": "use",
-            "reason": "запись событий в ядре использует доменные типы drive: ядру нужен контракт субъекта и контекста события (цель: drive)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Activity\\ActivityRecorder",
-            "view": "target"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 1,
-            "file": "packages/core/src/Events/EventRecorder.php",
-            "kind": "use",
-            "reason": "запись событий в ядре использует доменные типы drive: ядру нужен контракт субъекта и контекста события (цель: drive)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Changes\\ChangeJournal",
-            "view": "target"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 1,
-            "file": "packages/core/src/Events/EventRecorder.php",
-            "kind": "name",
-            "reason": "запись событий в ядре использует доменные типы drive: ядру нужен контракт субъекта и контекста события (цель: drive)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Events\\EventRecorder::record",
-            "target": "Vaulter\\Activity\\ActivityRecorder",
-            "view": "target"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 1,
-            "file": "packages/core/src/Events/EventRecorder.php",
-            "kind": "name",
-            "reason": "запись событий в ядре использует доменные типы drive: ядру нужен контракт субъекта и контекста события (цель: drive)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Events\\EventRecorder::record",
-            "target": "Vaulter\\Changes\\ChangeJournal",
-            "view": "target"
-        },
-        {
             "category": "needs-explicit-require",
             "count": 1,
             "file": "packages/core/src/Exceptions/Webhooks/BlockedOutboundUrlException.php",
@@ -2659,29 +2615,7 @@
             "reason": "webhooks импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer webhooks (architecture#packages)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Enums\\Events\\EventType",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/core/src/Http/Requests/Webhooks/RegisterWebhookEndpointRequest.php",
-            "kind": "use",
-            "reason": "webhooks импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer webhooks (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "<file>",
             "target": "Vaulter\\Http\\Requests\\VaulterFormRequest",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/core/src/Http/Requests/Webhooks/RegisterWebhookEndpointRequest.php",
-            "kind": "name",
-            "reason": "webhooks импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer webhooks (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Http\\Requests\\Webhooks\\RegisterWebhookEndpointRequest::rules",
-            "target": "Vaulter\\Enums\\Events\\EventType",
             "view": "target"
         },
         {
@@ -2693,6 +2627,28 @@
             "removed_in": "P4",
             "symbol": "Vaulter\\Http\\Requests\\Webhooks\\RegisterWebhookEndpointRequest",
             "target": "Vaulter\\Http\\Requests\\VaulterFormRequest",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/core/src/Http/Requests/Webhooks/RegisterWebhookEndpointRequest.php",
+            "kind": "use",
+            "reason": "webhooks импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer webhooks (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "<file>",
+            "target": "Vaulter\\Events\\EventCatalog",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/core/src/Http/Requests/Webhooks/RegisterWebhookEndpointRequest.php",
+            "kind": "name",
+            "reason": "webhooks импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer webhooks (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "Vaulter\\Http\\Requests\\Webhooks\\RegisterWebhookEndpointRequest::rules",
+            "target": "Vaulter\\Events\\EventCatalog",
             "view": "target"
         },
         {
@@ -2725,29 +2681,7 @@
             "reason": "webhooks импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer webhooks (architecture#packages)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Enums\\Events\\EventType",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/core/src/Http/Requests/Webhooks/UpdateWebhookEndpointRequest.php",
-            "kind": "use",
-            "reason": "webhooks импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer webhooks (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "<file>",
             "target": "Vaulter\\Http\\Requests\\VaulterFormRequest",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/core/src/Http/Requests/Webhooks/UpdateWebhookEndpointRequest.php",
-            "kind": "name",
-            "reason": "webhooks импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer webhooks (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Http\\Requests\\Webhooks\\UpdateWebhookEndpointRequest::rules",
-            "target": "Vaulter\\Enums\\Events\\EventType",
             "view": "target"
         },
         {
@@ -2759,6 +2693,28 @@
             "removed_in": "P4",
             "symbol": "Vaulter\\Http\\Requests\\Webhooks\\UpdateWebhookEndpointRequest",
             "target": "Vaulter\\Http\\Requests\\VaulterFormRequest",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/core/src/Http/Requests/Webhooks/UpdateWebhookEndpointRequest.php",
+            "kind": "use",
+            "reason": "webhooks импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer webhooks (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "<file>",
+            "target": "Vaulter\\Events\\EventCatalog",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/core/src/Http/Requests/Webhooks/UpdateWebhookEndpointRequest.php",
+            "kind": "name",
+            "reason": "webhooks импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer webhooks (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "Vaulter\\Http\\Requests\\Webhooks\\UpdateWebhookEndpointRequest::rules",
+            "target": "Vaulter\\Events\\EventCatalog",
             "view": "target"
         },
         {
@@ -5827,17 +5783,6 @@
             "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Enums\\Events\\EventType",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Events/Comments/CommentAdded.php",
-            "kind": "use",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "<file>",
             "target": "Vaulter\\Events\\DomainEvent",
             "view": "target"
         },
@@ -5931,17 +5876,6 @@
         },
         {
             "category": "needs-explicit-require",
-            "count": 2,
-            "file": "packages/documents/src/Events/Comments/CommentAdded.php",
-            "kind": "name",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Documents\\Events\\Comments\\CommentAdded::type",
-            "target": "Vaulter\\Enums\\Events\\EventType",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
             "count": 1,
             "file": "packages/documents/src/Events/Comments/CommentAdded.php",
             "kind": "name",
@@ -5949,17 +5883,6 @@
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Events\\Comments\\CommentAdded",
             "target": "Vaulter\\Events\\DomainEvent",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Events/Comments/CommentDeleted.php",
-            "kind": "use",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Enums\\Events\\EventType",
             "view": "target"
         },
         {
@@ -6063,17 +5986,6 @@
         },
         {
             "category": "needs-explicit-require",
-            "count": 2,
-            "file": "packages/documents/src/Events/Comments/CommentDeleted.php",
-            "kind": "name",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Documents\\Events\\Comments\\CommentDeleted::type",
-            "target": "Vaulter\\Enums\\Events\\EventType",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
             "count": 1,
             "file": "packages/documents/src/Events/Comments/CommentDeleted.php",
             "kind": "name",
@@ -6081,17 +5993,6 @@
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Events\\Comments\\CommentDeleted",
             "target": "Vaulter\\Events\\DomainEvent",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Events/Comments/CommentResolved.php",
-            "kind": "use",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Enums\\Events\\EventType",
             "view": "target"
         },
         {
@@ -6195,17 +6096,6 @@
         },
         {
             "category": "needs-explicit-require",
-            "count": 2,
-            "file": "packages/documents/src/Events/Comments/CommentResolved.php",
-            "kind": "name",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Documents\\Events\\Comments\\CommentResolved::type",
-            "target": "Vaulter\\Enums\\Events\\EventType",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
             "count": 1,
             "file": "packages/documents/src/Events/Comments/CommentResolved.php",
             "kind": "name",
@@ -6213,17 +6103,6 @@
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Events\\Comments\\CommentResolved",
             "target": "Vaulter\\Events\\DomainEvent",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Events/Documents/DocumentContentUpdated.php",
-            "kind": "use",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Enums\\Events\\EventType",
             "view": "target"
         },
         {
@@ -6305,17 +6184,6 @@
         },
         {
             "category": "needs-explicit-require",
-            "count": 2,
-            "file": "packages/documents/src/Events/Documents/DocumentContentUpdated.php",
-            "kind": "name",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Documents\\Events\\Documents\\DocumentContentUpdated::type",
-            "target": "Vaulter\\Enums\\Events\\EventType",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
             "count": 1,
             "file": "packages/documents/src/Events/Documents/DocumentContentUpdated.php",
             "kind": "name",
@@ -6323,17 +6191,6 @@
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Events\\Documents\\DocumentContentUpdated",
             "target": "Vaulter\\Events\\DomainEvent",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Events/Documents/DocumentCreated.php",
-            "kind": "use",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Enums\\Events\\EventType",
             "view": "target"
         },
         {
@@ -6437,17 +6294,6 @@
         },
         {
             "category": "needs-explicit-require",
-            "count": 2,
-            "file": "packages/documents/src/Events/Documents/DocumentCreated.php",
-            "kind": "name",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Documents\\Events\\Documents\\DocumentCreated::type",
-            "target": "Vaulter\\Enums\\Events\\EventType",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
             "count": 1,
             "file": "packages/documents/src/Events/Documents/DocumentCreated.php",
             "kind": "name",
@@ -6455,17 +6301,6 @@
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Events\\Documents\\DocumentCreated",
             "target": "Vaulter\\Events\\DomainEvent",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Events/Revisions/DocumentRestored.php",
-            "kind": "use",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Enums\\Events\\EventType",
             "view": "target"
         },
         {
@@ -6569,17 +6404,6 @@
         },
         {
             "category": "needs-explicit-require",
-            "count": 2,
-            "file": "packages/documents/src/Events/Revisions/DocumentRestored.php",
-            "kind": "name",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Documents\\Events\\Revisions\\DocumentRestored::type",
-            "target": "Vaulter\\Enums\\Events\\EventType",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
             "count": 1,
             "file": "packages/documents/src/Events/Revisions/DocumentRestored.php",
             "kind": "name",
@@ -6587,17 +6411,6 @@
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Events\\Revisions\\DocumentRestored",
             "target": "Vaulter\\Events\\DomainEvent",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Events/Revisions/DocumentRevisionCreated.php",
-            "kind": "use",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Enums\\Events\\EventType",
             "view": "target"
         },
         {
@@ -6697,17 +6510,6 @@
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Events\\Revisions\\DocumentRevisionCreated::subject",
             "target": "Vaulter\\ValueObjects\\Events\\EventSubject",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 2,
-            "file": "packages/documents/src/Events/Revisions/DocumentRevisionCreated.php",
-            "kind": "name",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Documents\\Events\\Revisions\\DocumentRevisionCreated::type",
-            "target": "Vaulter\\Enums\\Events\\EventType",
             "view": "target"
         },
         {
@@ -9050,17 +8852,6 @@
             "reason": "filament импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer filament (architecture#packages)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Enums\\Events\\EventType",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/filament/src/Resources/ActivityResource.php",
-            "kind": "use",
-            "reason": "filament импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer filament (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "<file>",
             "target": "Vaulter\\Exceptions\\VaulterException",
             "view": "target"
         },
@@ -9145,11 +8936,33 @@
             "category": "needs-explicit-require",
             "count": 1,
             "file": "packages/filament/src/Resources/ActivityResource.php",
+            "kind": "use",
+            "reason": "filament импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer filament (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "<file>",
+            "target": "Vaulter\\Events\\EventCatalog",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/filament/src/Resources/ActivityResource.php",
+            "kind": "use",
+            "reason": "filament импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer filament (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "<file>",
+            "target": "Vaulter\\Events\\EventTypeContract",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/filament/src/Resources/ActivityResource.php",
             "kind": "name",
             "reason": "filament импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer filament (architecture#packages)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Filament\\Resources\\ActivityResource::infolist",
-            "target": "Vaulter\\Enums\\Events\\EventType",
+            "target": "Vaulter\\Events\\EventTypeContract",
             "view": "target"
         },
         {
@@ -9160,7 +8973,7 @@
             "reason": "filament импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer filament (architecture#packages)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Filament\\Resources\\ActivityResource::table",
-            "target": "Vaulter\\Enums\\Events\\EventType",
+            "target": "Vaulter\\Events\\EventTypeContract",
             "view": "target"
         },
         {
@@ -9171,7 +8984,7 @@
             "reason": "filament импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer filament (architecture#packages)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Filament\\Resources\\ActivityResource::verbOptions",
-            "target": "Vaulter\\Enums\\Events\\EventType",
+            "target": "Vaulter\\Events\\EventCatalog",
             "view": "target"
         },
         {
@@ -11647,6 +11460,94 @@
             "removed_in": "P4",
             "symbol": "Vaulter\\Webhooks\\WebhooksProblemCodes",
             "target": "Vaulter\\Http\\Problems\\ProblemCodeSource",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/documents/src/Enums/DocumentEventType.php",
+            "kind": "use",
+            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "<file>",
+            "target": "Vaulter\\Attributes\\EventSpec",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/documents/src/Enums/DocumentEventType.php",
+            "kind": "use",
+            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "<file>",
+            "target": "Vaulter\\Attributes\\Label",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/documents/src/Enums/DocumentEventType.php",
+            "kind": "use",
+            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "<file>",
+            "target": "Vaulter\\Events\\Concerns\\DescribesEvent",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/documents/src/Enums/DocumentEventType.php",
+            "kind": "use",
+            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "<file>",
+            "target": "Vaulter\\Events\\EventTypeContract",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 7,
+            "file": "packages/documents/src/Enums/DocumentEventType.php",
+            "kind": "name",
+            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "Vaulter\\Documents\\Enums\\DocumentEventType",
+            "target": "Vaulter\\Attributes\\EventSpec",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 7,
+            "file": "packages/documents/src/Enums/DocumentEventType.php",
+            "kind": "name",
+            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "Vaulter\\Documents\\Enums\\DocumentEventType",
+            "target": "Vaulter\\Attributes\\Label",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/documents/src/Enums/DocumentEventType.php",
+            "kind": "name",
+            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "Vaulter\\Documents\\Enums\\DocumentEventType",
+            "target": "Vaulter\\Events\\Concerns\\DescribesEvent",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/documents/src/Enums/DocumentEventType.php",
+            "kind": "name",
+            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "Vaulter\\Documents\\Enums\\DocumentEventType",
+            "target": "Vaulter\\Events\\EventTypeContract",
             "view": "target"
         },
         {

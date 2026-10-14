@@ -8,14 +8,14 @@ use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\Rule;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
 use Vaulter\Data\Webhooks\RegisterWebhookEndpointInput;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Events\EventCatalog;
 use Vaulter\Exceptions\Webhooks\BlockedOutboundUrlException;
 use Vaulter\Http\Requests\VaulterFormRequest;
 
 /**
  * Validates a register-webhook-endpoint request and
  * assembles its RegisterWebhookEndpointInput command. The url must be a valid http(s)
- * URL; every subscribed event must be one of the closed EventType set; is_active
+ * URL; every subscribed event must be an external type of the event catalogue; is_active
  * defaults true; drive_id optionally limits the endpoint to one drive's events. The
  * signing_secret is NOT accepted from the client — the Action mints it. The
  * controller authorizes the manage ability first.
@@ -35,7 +35,7 @@ final class RegisterWebhookEndpointRequest extends VaulterFormRequest
         return [
             'url' => ['required', 'url', 'max:2048'],
             'events' => ['required', 'array', 'min:1'],
-            'events.*' => ['string', Rule::in(EventType::names())],
+            'events.*' => ['string', Rule::in(app(EventCatalog::class)->externalValues())],
             'is_active' => ['nullable', 'boolean'],
             'drive_id' => ['nullable', 'alpha_dash:ascii', 'max:64'],
         ];

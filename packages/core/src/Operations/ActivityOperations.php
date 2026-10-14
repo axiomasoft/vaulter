@@ -13,7 +13,7 @@ use Vaulter\Data\Snapshots\ActivityEntrySnapshot;
 use Vaulter\Data\Snapshots\Mapping\ActivitySnapshotMapper;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Enums\Access\Ability;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Events\EventTypeContract;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Queries\Activity\VisibleActivityQuery;
@@ -37,7 +37,7 @@ final readonly class ActivityOperations implements Contract
     /** @internal Existing HTTP verb filter, without widening the handle contract.
      * @return CursorPaginator<int, ActivityEntrySnapshot>
      */
-    public function filtered(NodeSnapshot|string|int|null $node = null, ?ListOptions $options = null, ?EventType $verb = null): CursorPaginator
+    public function filtered(NodeSnapshot|string|int|null $node = null, ?ListOptions $options = null, ?EventTypeContract $verb = null): CursorPaginator
     {
         $drive = $this->context->drive->newQuery()->whereKey($this->context->driveId())->first() ?? throw NodeNotFoundException::forId($this->context->driveId());
         $context = DriveContext::for(drive: $drive, actor: $this->context->actor, correlationId: $this->context->correlationId);

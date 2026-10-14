@@ -1345,50 +1345,6 @@
         {
             "category": "kernel-needs-contract",
             "count": 1,
-            "file": "packages/core/src/Events/EventRecorder.php",
-            "kind": "use",
-            "reason": "запись событий в ядре использует доменные типы drive: ядру нужен контракт субъекта и контекста события (цель: drive)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Activity\\ActivityRecorder",
-            "view": "target"
-        },
-        {
-            "category": "kernel-needs-contract",
-            "count": 1,
-            "file": "packages/core/src/Events/EventRecorder.php",
-            "kind": "use",
-            "reason": "запись событий в ядре использует доменные типы drive: ядру нужен контракт субъекта и контекста события (цель: drive)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Changes\\ChangeJournal",
-            "view": "target"
-        },
-        {
-            "category": "kernel-needs-contract",
-            "count": 1,
-            "file": "packages/core/src/Events/EventRecorder.php",
-            "kind": "name",
-            "reason": "запись событий в ядре использует доменные типы drive: ядру нужен контракт субъекта и контекста события (цель: drive)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Events\\EventRecorder::record",
-            "target": "Vaulter\\Activity\\ActivityRecorder",
-            "view": "target"
-        },
-        {
-            "category": "kernel-needs-contract",
-            "count": 1,
-            "file": "packages/core/src/Events/EventRecorder.php",
-            "kind": "name",
-            "reason": "запись событий в ядре использует доменные типы drive: ядру нужен контракт субъекта и контекста события (цель: drive)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Events\\EventRecorder::record",
-            "target": "Vaulter\\Changes\\ChangeJournal",
-            "view": "target"
-        },
-        {
-            "category": "kernel-needs-contract",
-            "count": 1,
             "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
             "kind": "use",
             "reason": "каталог problem-кодов ядра перечисляет коды доменных исключений: коды регистрируются владельцем через контракт ядра (цель: drive)",

@@ -270,7 +270,7 @@ non-deletable (`canCreate`/`canEdit`/`canDelete` all return `false`).
 
 - **Model**: `app(\Vaulter\Configuration\VaulterConfig::class)->model('activity')` (`Vaulter\Models\Activity\Activity`).
 - **Table**: verb badge, actor (`type #id`), target (`type #id`), storage, when. Filter: verb
-  (`SelectFilter` over `EventType` cases).
+  (`SelectFilter` over the event catalogue).
 - **Infolist** (view page): Event / Actor / Target / Request sections (the Request section includes a
   `KeyValueEntry` for `context` plus ip / user-agent / request-id).
 - **Pages**: `index` (list) and `view` (`/{record}`). Classes: `ListActivities` and `ViewActivity`

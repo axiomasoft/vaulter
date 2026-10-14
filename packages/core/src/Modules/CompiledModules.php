@@ -28,7 +28,7 @@ final readonly class CompiledModules
      * @param list<class-string<ModuleSchedule>>                       $schedules
      * @param array<string, class-string>                              $routeMiddleware alias => middleware
      * @param list<class-string<ModuleBindings>>                       $bindings
-     * @param list<class-string>                                       $events
+     * @param array<string, list<class-string>>                        $events          active module id => event type enums (D38)
      * @param array<string, list<string>>                              $problems        active module id => source classes (each checked to be a ProblemCodeSource)
      * @param list<string>                                             $schemaPaths     of every offered module, active or not
      */

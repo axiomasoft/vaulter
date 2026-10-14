@@ -384,7 +384,7 @@ php artisan vaulter:webhooks:retry
 
 Regenerate the event catalogue table between the `<!-- events:start -->` and
 `<!-- events:end -->` markers of `docs/reference/events.md` and
-`docs/ru/reference/events.md` from the `EventSpec` of every `EventType`. With `--check`
+`docs/ru/reference/events.md` from the `EventSpec` of every type in the event catalogue. With `--check`
 nothing is written and the exit code is 1 when a page differs (for CI). It is a
 maintenance command for the Vaulter repository, not for host applications.
 

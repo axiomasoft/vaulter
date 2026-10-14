@@ -41,7 +41,7 @@ Vaulter\Drive\Events\Drives\DriveArchived
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Drive\Drive $drive
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -58,7 +58,7 @@ Vaulter\Drive\Events\Drives\DriveCreated
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Drive\Drive $storage
   readonly \Vaulter\Models\Drive\Node $root
@@ -76,7 +76,7 @@ Vaulter\Drive\Events\Drives\DriveDeleted
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly int|null|string $tenantId
@@ -97,7 +97,7 @@ Vaulter\Drive\Events\Drives\DriveUnarchived
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Drive\Drive $drive
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -114,7 +114,7 @@ Vaulter\Drive\Events\Files\FileRevisionAdded
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Drive\File $file
   readonly \Vaulter\Models\Drive\FileRevision $version
@@ -134,7 +134,7 @@ Vaulter\Drive\Events\Files\FileRevisionDeleted
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Drive\File $file
   readonly \Vaulter\Models\Drive\Node $node
@@ -155,7 +155,7 @@ Vaulter\Drive\Events\Files\FileUploaded
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Drive\File $file
   readonly \Vaulter\Models\Drive\FileRevision $version
@@ -174,7 +174,7 @@ Vaulter\Drive\Events\Nodes\FolderCreated
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Drive\Node $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -191,7 +191,7 @@ Vaulter\Drive\Events\Nodes\NodeCopied
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Drive\Node $copy
   readonly \Vaulter\Models\Drive\Node $source
@@ -209,7 +209,7 @@ Vaulter\Drive\Events\Nodes\NodeMoved
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Drive\Node $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -228,7 +228,7 @@ Vaulter\Drive\Events\Nodes\NodePurged
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly array $nodeIds
@@ -249,7 +249,7 @@ Vaulter\Drive\Events\Nodes\NodeRenamed
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Drive\Node $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -268,7 +268,7 @@ Vaulter\Drive\Events\Nodes\NodeRestored
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Drive\Node $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -285,7 +285,7 @@ Vaulter\Drive\Events\Nodes\NodeTrashed
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Drive\Node $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -302,7 +302,7 @@ Vaulter\Drive\Events\Nodes\NodeUpdated
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Drive\Node $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -319,7 +319,7 @@ Vaulter\Drive\Events\Uploads\UploadAborted
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\Uploads\UploadSession $session
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -336,7 +336,7 @@ Vaulter\Drive\Events\Uploads\UploadExpired
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\Uploads\UploadSession $session
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -353,7 +353,7 @@ Vaulter\Drive\Events\Uploads\UploadInitiated
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Drive\Models\Uploads\UploadSession $session
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor

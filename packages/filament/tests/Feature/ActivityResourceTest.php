@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Enums\Events\DriveEventType;
+use Vaulter\Events\EventCatalog;
 use Vaulter\Filament\Resources\ActivityResource;
 use Vaulter\Filament\Tests\Fixtures\DriveBuilder;
 use Vaulter\Models\Activity\Activity;
@@ -33,13 +34,15 @@ it('surfaces the append-only feed recorded by the core Drive Actions', function 
     $feed = app(ActivityReadRepository::class)->forStorage($storage)->get();
 
     expect($feed)->not->toBeEmpty()
-        ->and($feed->contains(fn (Activity $a): bool => $a->verb === EventType::FolderCreated))->toBeTrue();
+        ->and($feed->contains(fn (Activity $a): bool => $a->verb === DriveEventType::FolderCreated))->toBeTrue();
 });
 
 it('lists every verb the audit filter offers', function (): void {
-    expect(EventType::cases())->not->toBeEmpty();
+    $verbs = app(EventCatalog::class)->all();
+    expect($verbs)->not->toBeEmpty()
+        ->and($verbs)->toContain(DriveEventType::FolderCreated);
 
-    foreach (EventType::cases() as $verb) {
+    foreach ($verbs as $verb) {
         expect($verb->label())->toBeString()->not->toBe('');
     }
 });

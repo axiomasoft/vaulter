@@ -1469,6 +1469,230 @@
             "id": "table:v_idempotency_keys",
             "kind": "schema",
             "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:access.inheritance_changed",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:comment.added",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:comment.deleted",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:comment.resolved",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:document.created",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:document.restored",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:document.revision_created",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:document.updated",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:drive.archived",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:drive.created",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:drive.deleted",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:drive.unarchived",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:file.revision_added",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:file.revision_deleted",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:file.uploaded",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:folder.created",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:grant.created",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:grant.revoked",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:node.copied",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:node.moved",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:node.purged",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:node.renamed",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:node.restored",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:node.trashed",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:node.updated",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:share.created",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:share.revoked",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:share.rotated",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:share.updated",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:upload.aborted",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:upload.expired",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:upload.initiated",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

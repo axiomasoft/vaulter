@@ -6,7 +6,7 @@ namespace Vaulter\Events\Access;
 
 use Carbon\CarbonImmutable;
 use Vaulter\Access\ValueObjects\Subject;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Identity;
@@ -35,9 +35,9 @@ final readonly class NodeGrantRevoked extends DomainEvent
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
-    public function type(): EventType
+    public function type(): DriveEventType
     {
-        return EventType::GrantRevoked;
+        return DriveEventType::GrantRevoked;
     }
 
     public function scope(): EventScope

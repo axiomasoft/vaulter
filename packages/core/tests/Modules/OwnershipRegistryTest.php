@@ -6,6 +6,7 @@ use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Foundation\Application;
 use Illuminate\Routing\Route;
 use Vaulter\Documents\VaulterDocumentsServiceProvider;
+use Vaulter\Events\EventCatalog;
 use Vaulter\Http\Middleware\EnsureModuleActive;
 use Vaulter\Http\Problems\ProblemCatalog;
 use Vaulter\Kernel;
@@ -266,16 +267,19 @@ it('defines every slot and capability in the module that owns its contract', fun
     }
 });
 
-it('expects the event types as module contributions from P3.13', function (): void {
-    // EventType is still one kernel enum with the values of every module (D38): no module declares events yet, so
-    // the owners of the inventory cannot be compared with a registry. P3.13 turns this expectation around.
+it('declares every inventoried event type in the module that owns it', function (): void {
     $events = array_filter(i5Identities('protocol'), static fn (string $id): bool => str_starts_with($id, 'event:'), ARRAY_FILTER_USE_KEY);
-    $owners = array_values(array_unique(array_column($events, 'owner')));
-    sort($owners);
+    $catalog = i5App()->make(EventCatalog::class);
+    $declared = [];
+    foreach ($catalog->values() as $value) {
+        $declared['event:'.$value] = $catalog->owner($value)->value;
+    }
+    $owners = array_map(static fn (array $item): string => $item['owner'], $events);
+    ksort($declared);
+    ksort($owners);
 
-    expect(i5App()->make(Kernel::class)->compiled()->events)->toBe([])
-        ->and($events)->not->toBeEmpty()
-        ->and($owners)->toBe(['documents', 'drive']);
+    expect($events)->toHaveCount(32)
+        ->and($declared)->toBe($owners);
 });
 
 it('installs every table from the core migrations until P4 splits them by owner', function (): void {

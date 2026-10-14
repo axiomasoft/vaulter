@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events\Files;
 
 use Carbon\CarbonImmutable;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\FileRevision;
@@ -36,9 +36,9 @@ final readonly class FileRevisionAdded extends DomainEvent
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
-    public function type(): EventType
+    public function type(): DriveEventType
     {
-        return EventType::FileRevisionAdded;
+        return DriveEventType::FileRevisionAdded;
     }
 
     public function scope(): EventScope

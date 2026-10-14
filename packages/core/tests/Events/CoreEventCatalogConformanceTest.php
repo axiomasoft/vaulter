@@ -8,7 +8,7 @@ use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Data\Access\GrantInput;
 use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Data\Sharing\ShareLinkUpdate;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Operations\AccessOperations;
 use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\ShareOperations;
@@ -41,7 +41,7 @@ it('records the kernel events with the data their specs declare', function (): v
     $shares->revoke($folder->id, $minted->link->id);
 
     EventConformance::assertRecorded([
-        EventType::GrantCreated, EventType::GrantRevoked, EventType::InheritanceChanged,
-        EventType::ShareCreated, EventType::ShareUpdated, EventType::ShareRotated, EventType::ShareRevoked,
+        DriveEventType::GrantCreated, DriveEventType::GrantRevoked, DriveEventType::InheritanceChanged,
+        DriveEventType::ShareCreated, DriveEventType::ShareUpdated, DriveEventType::ShareRotated, DriveEventType::ShareRevoked,
     ]);
 });

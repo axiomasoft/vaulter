@@ -7,7 +7,7 @@ use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Data\Sharing\ShareLinkUpdate;
 use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Operations\ActivityOperations;
@@ -35,8 +35,8 @@ beforeEach(function (): void {
 it('records share.updated with the names of the changed fields only', function (): void {
     $this->shares->update($this->node->id, $this->minted->link->id, new ShareLinkUpdate(expiresAt: now()->addDay()));
 
-    $outbox = Outbox::query()->where('event', EventType::ShareUpdated->value)->sole();
-    $activity = Activity::query()->where('verb', EventType::ShareUpdated->value)->sole();
+    $outbox = Outbox::query()->where('event', DriveEventType::ShareUpdated->value)->sole();
+    $activity = Activity::query()->where('verb', DriveEventType::ShareUpdated->value)->sole();
 
     expect($outbox->payload['data'])->toBe(['node_id' => (string) $this->node->id, 'changed' => ['expires_at']])
         ->and($outbox->payload['subject'])->toBe(['type' => 'share', 'id' => (string) $this->minted->link->id])
@@ -47,8 +47,8 @@ it('records share.updated with the names of the changed fields only', function (
 it('names a password change without carrying the password or its hash', function (): void {
     $this->shares->update($this->node->id, $this->minted->link->id, new ShareLinkUpdate(password: 'open-sesame', maxUses: 3));
 
-    $outbox = Outbox::query()->where('event', EventType::ShareUpdated->value)->sole();
-    $activity = Activity::query()->where('verb', EventType::ShareUpdated->value)->sole();
+    $outbox = Outbox::query()->where('event', DriveEventType::ShareUpdated->value)->sole();
+    $activity = Activity::query()->where('verb', DriveEventType::ShareUpdated->value)->sole();
 
     expect($outbox->payload['data']['changed'])->toBe(['max_uses', 'password'])
         ->and(json_encode([$outbox->payload, $activity->context]))->not->toContain('open-sesame', 'password_hash');
@@ -57,15 +57,15 @@ it('names a password change without carrying the password or its hash', function
 it('records no share.updated when nothing changed', function (): void {
     $this->shares->update($this->node->id, $this->minted->link->id, new ShareLinkUpdate);
 
-    expect(Outbox::query()->where('event', EventType::ShareUpdated->value)->exists())->toBeFalse()
-        ->and(Activity::query()->where('verb', EventType::ShareUpdated->value)->exists())->toBeFalse();
+    expect(Outbox::query()->where('event', DriveEventType::ShareUpdated->value)->exists())->toBeFalse()
+        ->and(Activity::query()->where('verb', DriveEventType::ShareUpdated->value)->exists())->toBeFalse();
 });
 
 it('records share.rotated and keeps the token out of the envelope', function (): void {
     $rotated = $this->shares->rotate($this->node->id, $this->minted->link->id);
 
-    $outbox = Outbox::query()->where('event', EventType::ShareRotated->value)->sole();
-    $activity = Activity::query()->where('verb', EventType::ShareRotated->value)->sole();
+    $outbox = Outbox::query()->where('event', DriveEventType::ShareRotated->value)->sole();
+    $activity = Activity::query()->where('verb', DriveEventType::ShareRotated->value)->sole();
     $row = AccessTestHelpers::shareRow($rotated);
     $json = json_encode($outbox->payload);
 
@@ -100,13 +100,13 @@ it('hides the token prefix of share events from a reader without Share', functio
 
 it('records no share.updated when the requested values are the stored ones', function (): void {
     $this->shares->update($this->node->id, $this->minted->link->id, new ShareLinkUpdate(maxUses: 3));
-    Outbox::query()->where('event', EventType::ShareUpdated->value)->delete();
+    Outbox::query()->where('event', DriveEventType::ShareUpdated->value)->delete();
 
     $this->shares->update($this->node->id, $this->minted->link->id, new ShareLinkUpdate(maxUses: 3));
     $this->shares->update($this->node->id, $this->minted->link->id, new ShareLinkUpdate(removePassword: true));
 
-    expect(Outbox::query()->where('event', EventType::ShareUpdated->value)->exists())->toBeFalse();
+    expect(Outbox::query()->where('event', DriveEventType::ShareUpdated->value)->exists())->toBeFalse();
 
     $this->shares->update($this->node->id, $this->minted->link->id, new ShareLinkUpdate(removeMaxUses: true));
-    expect(Outbox::query()->where('event', EventType::ShareUpdated->value)->sole()->payload['data']['changed'])->toBe(['max_uses']);
+    expect(Outbox::query()->where('event', DriveEventType::ShareUpdated->value)->sole()->payload['data']['changed'])->toBe(['max_uses']);
 });

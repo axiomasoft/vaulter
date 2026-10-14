@@ -574,6 +574,230 @@
             "id": "format:receipt-problem",
             "kind": "protocol",
             "reason": "P3.12: idempotency by key (D25, ADR-0029)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:access.inheritance_changed",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:comment.added",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:comment.deleted",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:comment.resolved",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:document.created",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:document.restored",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:document.revision_created",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:document.updated",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:drive.archived",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:drive.created",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:drive.deleted",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:drive.unarchived",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:file.revision_added",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:file.revision_deleted",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:file.uploaded",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:folder.created",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:grant.created",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:grant.revoked",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:node.copied",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:node.moved",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:node.purged",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:node.renamed",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:node.restored",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:node.trashed",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:node.updated",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:share.created",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:share.revoked",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:share.rotated",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:share.updated",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:upload.aborted",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:upload.expired",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
+        },
+        {
+            "change": "redefined",
+            "decision": "D38",
+            "id": "event:upload.initiated",
+            "kind": "protocol",
+            "reason": "P3.13: the event types are module contributions (DriveEventType, DocumentEventType); the value is unchanged, the source moves and the webhook sink is the neutral external flag"
         }
     ],
     "items": [
@@ -586,12 +810,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": "upsert",
-                "webhook": true
+                "external": true,
+                "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::InheritanceChanged"
+                "file": "packages/core/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::InheritanceChanged"
             },
             "subject": "node"
         },
@@ -605,12 +829,12 @@
             "owner": "documents",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": true
+                "external": true,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::CommentAdded"
+                "file": "packages/documents/src/Enums/DocumentEventType.php",
+                "symbol": "Vaulter\\Documents\\Enums\\DocumentEventType::CommentAdded"
             },
             "subject": "comment"
         },
@@ -624,12 +848,12 @@
             "owner": "documents",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": true
+                "external": true,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::CommentDeleted"
+                "file": "packages/documents/src/Enums/DocumentEventType.php",
+                "symbol": "Vaulter\\Documents\\Enums\\DocumentEventType::CommentDeleted"
             },
             "subject": "comment"
         },
@@ -643,12 +867,12 @@
             "owner": "documents",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": true
+                "external": true,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::CommentResolved"
+                "file": "packages/documents/src/Enums/DocumentEventType.php",
+                "symbol": "Vaulter\\Documents\\Enums\\DocumentEventType::CommentResolved"
             },
             "subject": "comment"
         },
@@ -664,12 +888,12 @@
             "owner": "documents",
             "sinks": {
                 "activity": true,
-                "journal": "upsert",
-                "webhook": true
+                "external": true,
+                "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::DocumentCreated"
+                "file": "packages/documents/src/Enums/DocumentEventType.php",
+                "symbol": "Vaulter\\Documents\\Enums\\DocumentEventType::DocumentCreated"
             },
             "subject": "node"
         },
@@ -685,12 +909,12 @@
             "owner": "documents",
             "sinks": {
                 "activity": true,
-                "journal": "upsert",
-                "webhook": true
+                "external": true,
+                "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::DocumentRestored"
+                "file": "packages/documents/src/Enums/DocumentEventType.php",
+                "symbol": "Vaulter\\Documents\\Enums\\DocumentEventType::DocumentRestored"
             },
             "subject": "node"
         },
@@ -706,12 +930,12 @@
             "owner": "documents",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": true
+                "external": true,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::DocumentRevisionCreated"
+                "file": "packages/documents/src/Enums/DocumentEventType.php",
+                "symbol": "Vaulter\\Documents\\Enums\\DocumentEventType::DocumentRevisionCreated"
             },
             "subject": "node"
         },
@@ -727,12 +951,12 @@
             "owner": "documents",
             "sinks": {
                 "activity": false,
-                "journal": "upsert",
-                "webhook": true
+                "external": true,
+                "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::DocumentUpdated"
+                "file": "packages/documents/src/Enums/DocumentEventType.php",
+                "symbol": "Vaulter\\Documents\\Enums\\DocumentEventType::DocumentUpdated"
             },
             "subject": "node"
         },
@@ -743,12 +967,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": true
+                "external": true,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::DriveArchived"
+                "file": "packages/core/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::DriveArchived"
             },
             "subject": "drive"
         },
@@ -762,12 +986,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": true
+                "external": true,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::DriveCreated"
+                "file": "packages/core/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::DriveCreated"
             },
             "subject": "drive"
         },
@@ -778,12 +1002,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": true
+                "external": true,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::DriveDeleted"
+                "file": "packages/core/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::DriveDeleted"
             },
             "subject": "drive"
         },
@@ -794,12 +1018,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": true
+                "external": true,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::DriveUnarchived"
+                "file": "packages/core/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::DriveUnarchived"
             },
             "subject": "drive"
         },
@@ -814,12 +1038,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": "upsert",
-                "webhook": true
+                "external": true,
+                "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::FileRevisionAdded"
+                "file": "packages/core/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::FileRevisionAdded"
             },
             "subject": "node"
         },
@@ -833,12 +1057,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": true
+                "external": true,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::FileRevisionDeleted"
+                "file": "packages/core/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::FileRevisionDeleted"
             },
             "subject": "node"
         },
@@ -853,12 +1077,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": "upsert",
-                "webhook": true
+                "external": true,
+                "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::FileUploaded"
+                "file": "packages/core/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::FileUploaded"
             },
             "subject": "node"
         },
@@ -871,12 +1095,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": "upsert",
-                "webhook": true
+                "external": true,
+                "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::FolderCreated"
+                "file": "packages/core/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::FolderCreated"
             },
             "subject": "node"
         },
@@ -893,12 +1117,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": "upsert",
-                "webhook": true
+                "external": true,
+                "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::GrantCreated"
+                "file": "packages/core/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::GrantCreated"
             },
             "subject": "node"
         },
@@ -912,12 +1136,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": "upsert",
-                "webhook": true
+                "external": true,
+                "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::GrantRevoked"
+                "file": "packages/core/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::GrantRevoked"
             },
             "subject": "node"
         },
@@ -931,12 +1155,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": "upsert",
-                "webhook": true
+                "external": true,
+                "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::NodeCopied"
+                "file": "packages/core/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::NodeCopied"
             },
             "subject": "node"
         },
@@ -950,12 +1174,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": "upsert",
-                "webhook": true
+                "external": true,
+                "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::NodeMoved"
+                "file": "packages/core/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::NodeMoved"
             },
             "subject": "node"
         },
@@ -970,12 +1194,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": true
+                "external": true,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::NodePurged"
+                "file": "packages/core/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::NodePurged"
             },
             "subject": "drive"
         },
@@ -986,12 +1210,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": "upsert",
-                "webhook": true
+                "external": true,
+                "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::NodeRenamed"
+                "file": "packages/core/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::NodeRenamed"
             },
             "subject": "node"
         },
@@ -1004,12 +1228,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": "upsert",
-                "webhook": true
+                "external": true,
+                "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::NodeRestored"
+                "file": "packages/core/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::NodeRestored"
             },
             "subject": "node"
         },
@@ -1020,12 +1244,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": "remove",
-                "webhook": true
+                "external": true,
+                "journal": "remove"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::NodeTrashed"
+                "file": "packages/core/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::NodeTrashed"
             },
             "subject": "node"
         },
@@ -1038,12 +1262,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": "upsert",
-                "webhook": true
+                "external": true,
+                "journal": "upsert"
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::NodeUpdated"
+                "file": "packages/core/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::NodeUpdated"
             },
             "subject": "node"
         },
@@ -1061,12 +1285,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": true
+                "external": true,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::ShareCreated"
+                "file": "packages/core/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::ShareCreated"
             },
             "subject": "share"
         },
@@ -1079,12 +1303,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": true
+                "external": true,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::ShareRevoked"
+                "file": "packages/core/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::ShareRevoked"
             },
             "subject": "share"
         },
@@ -1097,12 +1321,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": true
+                "external": true,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::ShareRotated"
+                "file": "packages/core/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::ShareRotated"
             },
             "subject": "share"
         },
@@ -1116,12 +1340,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": true
+                "external": true,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::ShareUpdated"
+                "file": "packages/core/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::ShareUpdated"
             },
             "subject": "share"
         },
@@ -1135,12 +1359,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": false
+                "external": false,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::UploadAborted"
+                "file": "packages/core/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::UploadAborted"
             },
             "subject": "upload"
         },
@@ -1154,12 +1378,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": false
+                "external": false,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::UploadExpired"
+                "file": "packages/core/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::UploadExpired"
             },
             "subject": "upload"
         },
@@ -1173,12 +1397,12 @@
             "owner": "drive",
             "sinks": {
                 "activity": true,
-                "journal": null,
-                "webhook": false
+                "external": false,
+                "journal": null
             },
             "source": {
-                "file": "packages/core/src/Enums/Events/EventType.php",
-                "symbol": "Vaulter\\Enums\\Events\\EventType::UploadInitiated"
+                "file": "packages/core/src/Enums/Events/DriveEventType.php",
+                "symbol": "Vaulter\\Enums\\Events\\DriveEventType::UploadInitiated"
             },
             "subject": "upload"
         },
@@ -2583,7 +2807,7 @@
         },
         {
             "attribute": "verb",
-            "cast": "Vaulter\\Enums\\Events\\EventType",
+            "cast": "Vaulter\\Events\\EventTypeCast",
             "id": "serialized:cast:Vaulter\\Models\\Activity\\Activity.verb",
             "model": "Vaulter\\Models\\Activity\\Activity",
             "owner": "drive",

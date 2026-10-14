@@ -8,7 +8,7 @@ use Illuminate\Support\Carbon;
 
 /**
  * Operational Laravel event, dispatched after the commit that disabled an endpoint
- * because its deliveries kept failing. It is not a domain event (no EventType, no
+ * because its deliveries kept failing. It is not a domain event (no event type, no
  * outbox row): hosts listen to it to notify the endpoint's owner.
  */
 final readonly class WebhookEndpointDisabled

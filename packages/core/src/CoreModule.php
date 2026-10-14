@@ -24,6 +24,7 @@ use Vaulter\Doctor\Checks\SchemaIntegrityCheck;
 use Vaulter\Doctor\Checks\SchemaKeyTypesCheck;
 use Vaulter\Doctor\Checks\SchemaTablesCheck;
 use Vaulter\Doctor\Checks\TenancyCheck;
+use Vaulter\Events\EventSink;
 use Vaulter\Http\Middleware\ReadIdempotencyKey;
 use Vaulter\Http\Problems\CoreProblemCodes;
 use Vaulter\Idempotency\IdempotencySchedule;
@@ -41,8 +42,9 @@ use Vaulter\Providers\EventsRegistrar;
 /**
  * The kernel's own module (ADR-0027): the `vaulter` config root, the schema of every create-migration
  * still shipped by core until P4 splits them (D36), the kernel commands and doctor checks, the
- * DoctorCheck slot every module contributes its checks to and the OperationMiddleware slot of the
- * operation pipeline with its telemetry middleware (ADR-0028).
+ * DoctorCheck slot every module contributes its checks to, the OperationMiddleware slot of the
+ * operation pipeline with its telemetry middleware (ADR-0028) and the EventSink slot of the event
+ * recorder (D38).
  */
 final class CoreModule implements VaulterModule
 {
@@ -103,6 +105,7 @@ final class CoreModule implements VaulterModule
             )
             ->defineSlot(DoctorCheck::class, SlotKind::Handler, Cardinality::Many)
             ->defineSlot(OperationMiddleware::class, SlotKind::OperationMiddleware, Cardinality::Many)
+            ->defineSlot(EventSink::class, SlotKind::EventSink, Cardinality::Many)
             ->slot(OperationMiddleware::class, TelemetryMiddleware::class, 'core.telemetry');
 
         foreach (self::DOCTOR_CHECKS as $key => $check) {

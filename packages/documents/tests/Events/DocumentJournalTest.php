@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Facades\Documents;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Operations\OperationsTestCase;
 use Vaulter\Enums\Changes\ChangeOperation;
-use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 
@@ -43,10 +43,10 @@ it('compacts every content save of a document into its latest upsert', function 
     $documents->update($node, DocumentTestHelpers::content('three')->toArray());
 
     expect($created)->toHaveCount(1)
-        ->and($created[0]['event_type'])->toBe(EventType::DocumentCreated->value)
+        ->and($created[0]['event_type'])->toBe(DocumentEventType::DocumentCreated->value)
         ->and($created[0]['node_sequence'])->not->toBeNull()
         ->and(documentJournal($node->id))->toBe([
-            ['seq' => $created[0]['seq'] + 2, 'event_type' => EventType::DocumentUpdated->value, 'operation' => 'upsert', 'node_sequence' => null],
+            ['seq' => $created[0]['seq'] + 2, 'event_type' => DocumentEventType::DocumentUpdated->value, 'operation' => 'upsert', 'node_sequence' => null],
         ]);
 });
 
@@ -56,7 +56,7 @@ it('stamps the checkpoint webhook with the seq of its journal entry', function (
     $node = $documents->create('Spec', content: DocumentTestHelpers::content('one')->toArray());
     $documents->update($node, DocumentTestHelpers::content('two')->toArray());
 
-    $updated = Outbox::query()->where('event', EventType::DocumentUpdated->value)->sole();
+    $updated = Outbox::query()->where('event', DocumentEventType::DocumentUpdated->value)->sole();
 
     expect($updated->payload['changes'])->toBe(['seq' => documentJournal($node->id)[0]['seq']]);
 });
@@ -74,7 +74,7 @@ it('journals a restore as the newest upsert of the document', function (): void 
     $entries = documentJournal($node->id);
     $page = $drive->changes()->list($cursor);
 
-    expect(array_column($entries, 'event_type'))->toBe([EventType::DocumentRestored->value])
+    expect(array_column($entries, 'event_type'))->toBe([DocumentEventType::DocumentRestored->value])
         ->and($page->changes)->toHaveCount(1)
         ->and($page->changes[0]->operation)->toBe(ChangeOperation::Upsert)
         ->and($page->changes[0]->node?->id)->toBe((string) $node->id);

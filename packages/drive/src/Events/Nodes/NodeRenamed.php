@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Events\Nodes;
 
 use Carbon\CarbonImmutable;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Models\Drive\Node;
 use Vaulter\ValueObjects\Access\ActorRef;
@@ -32,9 +32,9 @@ final readonly class NodeRenamed extends DomainEvent
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
-    public function type(): EventType
+    public function type(): DriveEventType
     {
-        return EventType::NodeRenamed;
+        return DriveEventType::NodeRenamed;
     }
 
     public function scope(): EventScope

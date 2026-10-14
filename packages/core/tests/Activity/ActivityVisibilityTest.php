@@ -8,7 +8,7 @@ use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Snapshots\ActivityEntrySnapshot;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Drive\NodeSort;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\ActivityOperations;
@@ -28,7 +28,7 @@ beforeEach(function (): void {
 
 function visibleActivityRow(Node $node, int $order): Activity
 {
-    $row = (new Activity)->forceFill(['drive_id' => $node->drive_id, 'target_type' => $node->getMorphClass(), 'target_id' => $node->id, 'verb' => EventType::NodeRenamed, 'created_at' => now()->startOfSecond()->addSeconds($order)]);
+    $row = (new Activity)->forceFill(['drive_id' => $node->drive_id, 'target_type' => $node->getMorphClass(), 'target_id' => $node->id, 'verb' => DriveEventType::NodeRenamed, 'created_at' => now()->startOfSecond()->addSeconds($order)]);
     $row->save();
 
     return $row;
@@ -40,7 +40,7 @@ it('does not expose hidden unknown deleted or foreign targets under root View', 
     $deleted = AccessTestHelpers::folder($this->drive, null, 'deleted');
     visibleActivityRow($deleted, 2);
     $deleted->delete();
-    $unknown = (new Activity)->forceFill(['drive_id' => $this->drive->id, 'verb' => EventType::NodePurged, 'context' => ['name' => 'secret'], 'created_at' => now()]);
+    $unknown = (new Activity)->forceFill(['drive_id' => $this->drive->id, 'verb' => DriveEventType::NodePurged, 'context' => ['name' => 'secret'], 'created_at' => now()]);
     $unknown->save();
     $other = AccessTestHelpers::folder(AccessTestHelpers::storage(), null, 'foreign');
     $foreign = visibleActivityRow($other, 3);

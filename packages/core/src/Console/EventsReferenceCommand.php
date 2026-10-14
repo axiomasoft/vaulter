@@ -9,7 +9,7 @@ use Vaulter\Events\EventsReference;
 
 /**
  * Regenerates the event catalogue table of the reference docs from the EventSpec of
- * every EventType. With --check nothing is written and the exit code says whether the
+ * every type in the event catalogue. With --check nothing is written and the exit code says whether the
  * docs are current (for CI).
  */
 final class EventsReferenceCommand extends Command
@@ -20,7 +20,7 @@ final class EventsReferenceCommand extends Command
 
     protected $description = 'Generate the event catalogue table in the reference docs.';
 
-    public function handle(): int
+    public function handle(EventsReference $reference): int
     {
         $paths = array_values(array_filter((array) $this->option('path'), is_string(...)));
         if ($paths === []) {
@@ -33,7 +33,7 @@ final class EventsReferenceCommand extends Command
 
         foreach ($paths as $path) {
             $page = is_file($path) ? file_get_contents($path) : false;
-            $next = $page === false ? null : EventsReference::apply($page);
+            $next = $page === false ? null : $reference->apply($page);
             if ($page === false || $next === null) {
                 $this->components->error(sprintf('%s is missing or has no %s / %s markers.', $path, EventsReference::START, EventsReference::END));
                 $stale = true;

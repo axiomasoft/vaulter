@@ -12,9 +12,11 @@ use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Data\Access\GrantInput;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Drive\Events\Nodes\NodeRenamed;
 use Vaulter\Enums\Changes\ChangeReason;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Enums\Events\DriveEventType;
+use Vaulter\Events\EventTypeContract;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -73,7 +75,7 @@ it('provisions a head at zero and numbers entries 1..n per drive with the event 
     $other->folders()->create('gamma');
 
     $entries = journalEntries($this->drive);
-    $outbox = Outbox::query()->where('event', EventType::FolderCreated->value)->get()
+    $outbox = Outbox::query()->where('event', DriveEventType::FolderCreated->value)->get()
         ->sole(static fn (Outbox $row): bool => $row->payload['subject']['id'] === (string) $alpha->id);
 
     expect(array_column($entries, 'seq'))->toBe([1, 2])
@@ -187,15 +189,15 @@ it('writes nothing and leaves changes.seq empty when the journal is switched off
     $this->drive->folders()->create('alpha');
 
     expect(journalEntries($this->drive))->toBe([])
-        ->and(Outbox::query()->where('event', EventType::FolderCreated->value)->sole()->payload['changes'])->toBeNull();
+        ->and(Outbox::query()->where('event', DriveEventType::FolderCreated->value)->sole()->payload['changes'])->toBeNull();
 });
 
 it('matches every journalled catalogue type with the operation of its entry', function (): void {
-    $journalled = array_values(array_filter(EventType::cases(), static fn (EventType $type): bool => $type->journalOperation() !== null));
+    $journalled = array_values(array_filter([...DriveEventType::cases(), ...DocumentEventType::cases()], static fn (EventTypeContract $type): bool => $type->spec()->journal !== null));
 
-    expect(array_map(static fn (EventType $type): string => $type->value, $journalled))->toEqualCanonicalizing([
+    expect(array_map(static fn (EventTypeContract $type): string => (string) $type->value, $journalled))->toEqualCanonicalizing([
         'folder.created', 'file.uploaded', 'file.revision_added', 'node.renamed', 'node.moved', 'node.copied', 'node.updated',
         'node.trashed', 'node.restored', 'document.created', 'document.updated', 'document.restored',
         'grant.created', 'grant.revoked', 'access.inheritance_changed',
-    ])->and(EventType::NodeTrashed->journalOperation())->toBe('remove');
+    ])->and(DriveEventType::NodeTrashed->spec()->journal)->toBe('remove');
 });

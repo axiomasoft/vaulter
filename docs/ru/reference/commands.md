@@ -426,7 +426,7 @@ php artisan vaulter:webhooks:redeliver --endpoint=7 --since=2026-10-01
 
 Перегенерирует таблицу каталога событий между маркерами `<!-- events:start -->` и
 `<!-- events:end -->` в `docs/reference/events.md` и `docs/ru/reference/events.md` из
-`EventSpec` каждого `EventType`. С `--check` ничего не пишет, а код выхода 1 означает,
+`EventSpec` каждого типа каталога событий. С `--check` ничего не пишет, а код выхода 1 означает,
 что страница расходится с кодом (для CI). Это служебная команда репозитория Vaulter, а
 не приложений-хостов.
 

@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage as StorageFacade;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Models\Uploads\UploadSession;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Drive\Node;
@@ -33,7 +33,7 @@ it('initiate пишет activity-строку upload.initiated с актором
         'total_size_bytes' => 4,
     ])->json('data.upload_id');
 
-    $row = ActivityTestHelpers::only(EventType::UploadInitiated->value);
+    $row = ActivityTestHelpers::only(DriveEventType::UploadInitiated->value);
 
     expect($row->actor_id)->toEqual(3)
         ->and($row->drive_id)->toEqual($storage->getKey())
@@ -51,7 +51,7 @@ it('abort пишет activity-строку upload.aborted (F-P1.4-13, red-before
 
     $this->delete('api/vaulter/v1/uploads/'.$uploadId, [], ['Tus-Resumable' => '1.0.0'])->assertNoContent();
 
-    $row = ActivityTestHelpers::only(EventType::UploadAborted->value);
+    $row = ActivityTestHelpers::only(DriveEventType::UploadAborted->value);
 
     expect($row->actor_id)->toEqual(3)
         ->and($row->context['upload_id'])->toBe($uploadId);
@@ -76,7 +76,7 @@ it('sweep-expire пишет activity-строку upload.expired без акто
 
     $this->artisan('vaulter:uploads:sweep')->assertSuccessful();
 
-    $row = ActivityTestHelpers::only(EventType::UploadExpired->value);
+    $row = ActivityTestHelpers::only(DriveEventType::UploadExpired->value);
 
     expect($row->actor_id)->toBeNull()
         ->and($row->actor_type)->toBe(ActorRef::SYSTEM_TYPE)
@@ -103,7 +103,7 @@ it('переезд Uploads morph-безопасен: upload-session activity н�
         'total_size_bytes' => 4,
     ])->json('data.upload_id');
 
-    $row = ActivityTestHelpers::only(EventType::UploadInitiated->value);
+    $row = ActivityTestHelpers::only(DriveEventType::UploadInitiated->value);
 
     expect(UploadSession::class)->toBe(UploadSession::class)
         ->and($row->target_type)->toBeNull()

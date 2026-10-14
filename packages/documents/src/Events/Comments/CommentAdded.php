@@ -9,8 +9,8 @@ use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Vaulter\Documents\Configuration\DocumentsConfig;
+use Vaulter\Documents\Enums\DocumentEventType;
 use Vaulter\Documents\Models\Comments\NodeComment;
-use Vaulter\Enums\Events\EventType;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
@@ -36,9 +36,9 @@ final readonly class CommentAdded extends DomainEvent implements ShouldBroadcast
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
-    public function type(): EventType
+    public function type(): DocumentEventType
     {
-        return EventType::CommentAdded;
+        return DocumentEventType::CommentAdded;
     }
 
     public function scope(): EventScope

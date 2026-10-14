@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Enums\Access\GrantScope;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Enums\Events\DriveEventType;
+use Vaulter\Events\EventTypeContract;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
@@ -35,8 +36,8 @@ it('returns a storage-scoped feed newest-first to a viewer', function (): void {
     Activity::query()->delete();
 
     // Seed two rows with a known order (older, then newer).
-    $older = activityRow($storage->getKey(), EventType::FolderCreated, 'older');
-    $newer = activityRow($storage->getKey(), EventType::NodeRenamed, 'newer');
+    $older = activityRow($storage->getKey(), DriveEventType::FolderCreated, 'older');
+    $newer = activityRow($storage->getKey(), DriveEventType::NodeRenamed, 'newer');
     $older->forceFill(['created_at' => now()->subMinute()])->save();
     $newer->forceFill(['created_at' => now()])->save();
 
@@ -48,8 +49,8 @@ it('returns a storage-scoped feed newest-first to a viewer', function (): void {
 
     $types = array_column($response->json('data'), 'type');
 
-    expect($types[0])->toBe(EventType::NodeRenamed->value)
-        ->and($types[1])->toBe(EventType::FolderCreated->value)
+    expect($types[0])->toBe(DriveEventType::NodeRenamed->value)
+        ->and($types[1])->toBe(DriveEventType::FolderCreated->value)
         // A drive-targeted entry names no node; its context travels as data.
         ->and($response->json('data.0.node_id'))->toBeNull()
         ->and($response->json('data.0.data'))->toBe(['name' => 'newer']);
@@ -61,8 +62,8 @@ it('returns a node-scoped feed (only that node target)', function (): void {
     $nodeB = AccessTestHelpers::folder($storage, null, 'B');
     AccessTestHelpers::grant($nodeA, RoleRegistry::READER, scope: GrantScope::Item, subjectId: 1);
 
-    targetedRow($storage->getKey(), $nodeA, EventType::NodeRenamed);
-    targetedRow($storage->getKey(), $nodeB, EventType::NodeRenamed);
+    targetedRow($storage->getKey(), $nodeA, DriveEventType::NodeRenamed);
+    targetedRow($storage->getKey(), $nodeB, DriveEventType::NodeRenamed);
 
     $response = $this->getJson('api/vaulter/v1/nodes/'.$nodeA->getKey().'/activity')->assertOk();
 
@@ -76,12 +77,12 @@ it('keeps request network details out of the v1 entry', function (): void {
     $node = AccessTestHelpers::folder($storage, null, 'private-details');
     AccessTestHelpers::grant($node, RoleRegistry::READER, scope: GrantScope::Item, subjectId: 1);
 
-    targetedRow($storage->getKey(), $node, EventType::NodeMoved)->forceFill(['ip' => '10.0.0.7', 'user_agent' => 'curl'])->save();
+    targetedRow($storage->getKey(), $node, DriveEventType::NodeMoved)->forceFill(['ip' => '10.0.0.7', 'user_agent' => 'curl'])->save();
 
     $entry = $this->getJson('api/vaulter/v1/nodes/'.$node->getKey().'/activity')->assertOk()->json('data.0');
 
     expect(array_keys($entry))->toBe(['id', 'type', 'node_id', 'actor', 'occurred_at', 'data'])
-        ->and($entry['type'])->toBe(EventType::NodeMoved->value)
+        ->and($entry['type'])->toBe(DriveEventType::NodeMoved->value)
         ->and($entry['occurred_at'])->toEndWith('Z');
 });
 
@@ -91,7 +92,7 @@ it('cursor-paginates the feed', function (): void {
     AccessTestHelpers::grant($node, RoleRegistry::READER, scope: GrantScope::Item, subjectId: 1);
 
     foreach (range(1, 3) as $ignored) {
-        targetedRow($storage->getKey(), $node, EventType::NodeRenamed);
+        targetedRow($storage->getKey(), $node, DriveEventType::NodeRenamed);
     }
 
     $response = $this->getJson('api/vaulter/v1/nodes/'.$node->getKey().'/activity?per_page=2')->assertOk();
@@ -104,7 +105,7 @@ it('403s a node feed for an actor WITHOUT View (opaque404)', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'private');
     // No grant for user 1 → no View.
-    targetedRow($storage->getKey(), $node, EventType::NodeRenamed);
+    targetedRow($storage->getKey(), $node, DriveEventType::NodeRenamed);
 
     $this->getJson('api/vaulter/v1/nodes/'.$node->getKey().'/activity')->assertStatus(404);
 });
@@ -112,7 +113,7 @@ it('403s a node feed for an actor WITHOUT View (opaque404)', function (): void {
 /**
  * A bare activity row in a storage scope (no target) with a verb + name context.
  */
-function activityRow(int|string $storageId, EventType $verb, string $name): Activity
+function activityRow(int|string $storageId, EventTypeContract $verb, string $name): Activity
 {
     $activity = new Activity;
     $activity->forceFill([
@@ -130,7 +131,7 @@ function activityRow(int|string $storageId, EventType $verb, string $name): Acti
 /**
  * An activity row targeting a specific node.
  */
-function targetedRow(int|string $storageId, Node $node, EventType $verb): Activity
+function targetedRow(int|string $storageId, Node $node, EventTypeContract $verb): Activity
 {
     $activity = new Activity;
     $activity->forceFill([

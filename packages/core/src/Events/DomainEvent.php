@@ -7,7 +7,6 @@ namespace Vaulter\Events;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Str;
 use Vaulter\Enums\Drive\NodeKind;
-use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Support\Identity;
 use Vaulter\ValueObjects\Access\ActorRef;
@@ -18,8 +17,8 @@ use Vaulter\ValueObjects\Events\JournalEffect;
 
 /**
  * One occurrence of a change in Vaulter. Actions hand it to {@see EventRecorder}
- * inside their transaction; the recorder writes its activity and outbox rows with the
- * same eventId and dispatches it to host listeners once the transaction commits.
+ * inside their transaction; the recorder hands it to the event sinks and the outbox with
+ * the same eventId and dispatches it to host listeners once the transaction commits.
  *
  * The eventId identifies the occurrence, not the command: two identical renames are
  * two events, while the same event recorded again (a retried job holding the
@@ -41,7 +40,7 @@ abstract readonly class DomainEvent
         $this->occurredAt = ($occurredAt ?? CarbonImmutable::now())->utc();
     }
 
-    abstract public function type(): EventType;
+    abstract public function type(): EventTypeContract;
 
     abstract public function scope(): EventScope;
 
@@ -79,12 +78,12 @@ abstract readonly class DomainEvent
 
     public function isWebhookEligible(): bool
     {
-        return $this->type()->isWebhook();
+        return $this->type()->spec()->external;
     }
 
     /**
      * The change-journal entry of this occurrence, or null when the type is not
-     * journalled. Its operation matches {@see EventType::journalOperation()}.
+     * journalled. Its operation matches the `journal` of the type's spec.
      */
     public function journal(): ?JournalEffect
     {

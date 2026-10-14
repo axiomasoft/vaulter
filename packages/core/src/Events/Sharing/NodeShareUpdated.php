@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Events\Sharing;
 
 use Carbon\CarbonImmutable;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Support\Identity;
@@ -32,9 +32,9 @@ final readonly class NodeShareUpdated extends DomainEvent
         parent::__construct(actor: $actor, correlationId: $correlationId, eventId: $eventId, occurredAt: $occurredAt);
     }
 
-    public function type(): EventType
+    public function type(): DriveEventType
     {
-        return EventType::ShareUpdated;
+        return DriveEventType::ShareUpdated;
     }
 
     public function scope(): EventScope

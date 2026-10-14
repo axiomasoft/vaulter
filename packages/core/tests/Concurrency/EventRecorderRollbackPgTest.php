@@ -8,7 +8,7 @@ use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\Nodes\NodeRenamed;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Webhooks\Outbox;
@@ -63,8 +63,8 @@ it('rolls a rename back on PostgreSQL when its outbox write fails, leaving the c
         ->and($outcomes[0]->value['level'])->toBe(0)
         ->and($outcomes[0]->value['alive'])->toBe(1)
         ->and(DriveTestHelpers::model($this->folder->id)->name)->toBe('alpha')
-        ->and(Activity::query()->where('verb', EventType::NodeRenamed->value)->exists())->toBeFalse()
-        ->and(Outbox::query()->where('event', EventType::NodeRenamed->value)->exists())->toBeFalse();
+        ->and(Activity::query()->where('verb', DriveEventType::NodeRenamed->value)->exists())->toBeFalse()
+        ->and(Outbox::query()->where('event', DriveEventType::NodeRenamed->value)->exists())->toBeFalse();
 });
 
 it('keeps the activity and outbox rows of a rename whose process dies right after the commit', function (): void {
@@ -80,10 +80,10 @@ it('keeps the activity and outbox rows of a rename whose process dies right afte
         throw new LogicException('the listener did not run');
     }]);
 
-    $outbox = Outbox::query()->where('event', EventType::NodeRenamed->value)->sole();
+    $outbox = Outbox::query()->where('event', DriveEventType::NodeRenamed->value)->sole();
 
     expect($outcomes[0]->ok)->toBeFalse()
         ->and(DriveTestHelpers::model($this->folder->id)->name)->toBe('beta')
-        ->and(Activity::query()->where('verb', EventType::NodeRenamed->value)->sole()->event_id)->toBe($outbox->event_id)
+        ->and(Activity::query()->where('verb', DriveEventType::NodeRenamed->value)->sole()->event_id)->toBe($outbox->event_id)
         ->and($outbox->status)->toBe('pending');
 });

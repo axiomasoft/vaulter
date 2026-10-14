@@ -100,6 +100,7 @@ Vaulter\Contracts\Drive\DriveHandle
   trash(): \Vaulter\Contracts\Drive\TrashOperations
   unarchive(): \Vaulter\Data\Snapshots\DriveSnapshot
   withCorrelationId(string $correlationId): \static
+  withIdempotencyKey(string $key, ?string $requestFingerprint = null): \static
 
 Vaulter\Contracts\Drive\DriveHandleFactory
   findForOwner(\Illuminate\Database\Eloquent\Model $owner, string $profile): ?\Vaulter\Contracts\Drive\DriveHandle
@@ -621,14 +622,15 @@ Vaulter\ValueObjects\Access\ActorRef
   readonly int|null|string $id
 
 Vaulter\Operations\OperationContext
-  __construct(\Vaulter\ValueObjects\Access\Actor $actor, \Vaulter\ValueObjects\Operations\ScopeRef $scope, \Vaulter\ValueObjects\Operations\TenantRef $tenant, string $correlationId, ?string $causationId = null, ?string $idempotencyKey = null)
-  for(\Vaulter\ValueObjects\Access\Actor $actor, \Vaulter\ValueObjects\Operations\ScopeRef $scope, \Vaulter\ValueObjects\Operations\TenantRef $tenant, string $correlationId, ?string $causationId = null, ?string $idempotencyKey = null): \self
+  __construct(\Vaulter\ValueObjects\Access\Actor $actor, \Vaulter\ValueObjects\Operations\ScopeRef $scope, \Vaulter\ValueObjects\Operations\TenantRef $tenant, string $correlationId, ?string $causationId = null, ?string $idempotencyKey = null, ?string $requestFingerprint = null)
+  for(\Vaulter\ValueObjects\Access\Actor $actor, \Vaulter\ValueObjects\Operations\ScopeRef $scope, \Vaulter\ValueObjects\Operations\TenantRef $tenant, string $correlationId, ?string $causationId = null, ?string $idempotencyKey = null, ?string $requestFingerprint = null): \self
   system(\Vaulter\ValueObjects\Operations\ScopeRef $scope, \Vaulter\ValueObjects\Operations\TenantRef $tenant, string $reason, ?string $correlationId = null): \self
   telemetry(): array
   withCausation(string $causationId): \self
-  withIdempotencyKey(string $key): \self
+  withIdempotencyKey(string $key, ?string $requestFingerprint = null): \self
   readonly ?string $causationId
   readonly ?string $idempotencyKey
+  readonly ?string $requestFingerprint
   readonly ?string $systemReason
   readonly \Vaulter\ValueObjects\Access\Actor $actor
   readonly \Vaulter\ValueObjects\Operations\ScopeRef $scope
@@ -637,7 +639,7 @@ Vaulter\Operations\OperationContext
 
 Vaulter\Operations\DriveContext
   __construct(\Vaulter\Operations\OperationContext $operation, \Vaulter\Models\Drive\Drive $drive)
-  for(\Vaulter\Models\Drive\Drive $drive, \Vaulter\ValueObjects\Access\Actor $actor, string $correlationId, ?string $idempotencyKey = null): \self
+  for(\Vaulter\Models\Drive\Drive $drive, \Vaulter\ValueObjects\Access\Actor $actor, string $correlationId, ?string $idempotencyKey = null, ?string $requestFingerprint = null): \self
   system(\Vaulter\Models\Drive\Drive $drive, string $reason, ?string $correlationId = null): \self
   readonly ?string $idempotencyKey
   readonly \Vaulter\Models\Drive\Drive $drive
@@ -1031,8 +1033,8 @@ Vaulter\Testing\FakeContentScanner
 Vaulter\Testing\InteractsWithVaulter
   assertNodeNotVisibleTo(\Illuminate\Contracts\Auth\Access\Authorizable $user, \Vaulter\Models\Drive\Node|string $node): void
   assertNodeVisibleTo(\Illuminate\Contracts\Auth\Access\Authorizable $user, \Vaulter\Models\Drive\Node|string $node): void
-  assertVaulterEventNotRecorded(\Vaulter\Enums\Events\EventType $type): void
-  assertVaulterEventRecorded(\Vaulter\Enums\Events\EventType $type, ?callable $where = null): void
+  assertVaulterEventNotRecorded(\Vaulter\Events\EventTypeContract $type): void
+  assertVaulterEventRecorded(\Vaulter\Events\EventTypeContract $type, ?callable $where = null): void
   vaulterActingAs(\Illuminate\Contracts\Auth\Access\Authorizable $user): \Closure
   vaulterFakeStorage(?string $disk = null): \Illuminate\Contracts\Filesystem\Filesystem
 
@@ -1183,7 +1185,7 @@ Vaulter\Exceptions\Nodes\NodeNotFoundException
 Vaulter\Exceptions\Nodes\StorageNotFoundException
   forId(int|string $id): \self
 
-Vaulter\Enums\Events\EventType
+Vaulter\Enums\Events\DriveEventType
   DriveCreated = drive.created
   FolderCreated = folder.created
   FileUploaded = file.uploaded
@@ -1209,13 +1211,6 @@ Vaulter\Enums\Events\EventType
   DriveUnarchived = drive.unarchived
   DriveDeleted = drive.deleted
   FileRevisionDeleted = file.revision_deleted
-  DocumentCreated = document.created
-  DocumentUpdated = document.updated
-  DocumentRevisionCreated = document.revision_created
-  DocumentRestored = document.restored
-  CommentAdded = comment.added
-  CommentResolved = comment.resolved
-  CommentDeleted = comment.deleted
 
 FACADE Vaulter\Facades\Vaulter
   static DriveHandle drive(Model $ownerOrDrive, ?string $profile = null)
@@ -1235,7 +1230,7 @@ Vaulter\Events\Access\NodeGrantCreated
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Access\NodeGrant $grant
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -1252,7 +1247,7 @@ Vaulter\Events\Access\NodeGrantRevoked
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Access\ValueObjects\Subject $subject
   readonly \Vaulter\Models\Drive\Node $node
@@ -1271,7 +1266,7 @@ Vaulter\Events\Access\NodeInheritanceChanged
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Drive\Node $node
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -1289,18 +1284,48 @@ Vaulter\Events\DomainEvent
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Events\EventTypeContract
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly string $correlationId
   readonly string $eventId
 
+Vaulter\Events\EventCatalog
+  __construct(\Closure $active, \Closure $installed)
+  all(): array
+  external(): array
+  externalValues(): array
+  get(string $value): \Vaulter\Events\EventTypeContract
+  has(string $value): bool
+  owner(string $value): \Vaulter\Modules\ModuleId
+  resolve(string $value): ?\Vaulter\Events\EventTypeContract
+  values(): array
+
+
 Vaulter\Events\EventRecorder
-  __construct(\Vaulter\Database\VaulterDatabase $database, \Vaulter\Configuration\VaulterConfig $config, \Illuminate\Contracts\Container\Container $container, \Vaulter\Contracts\Observability\MetricsRecorder $metrics, \Vaulter\Kernel $kernel)
+  __construct(\Vaulter\Database\VaulterDatabase $database, \Illuminate\Contracts\Container\Container $container, \Vaulter\Contracts\Observability\MetricsRecorder $metrics, \Vaulter\Kernel $kernel)
   record(\Vaulter\Events\DomainEvent $event): void
 
 
+Vaulter\Events\EventSink
+  record(\Vaulter\Events\DomainEvent $event, \Vaulter\Events\SinkWriter $writer): \Vaulter\Events\SinkResult
+
+
+Vaulter\Events\EventTypeCast
+  get(\Illuminate\Database\Eloquent\Model $model, string $key, mixed $value, array $attributes): ?\Vaulter\Events\EventTypeContract
+  set(\Illuminate\Database\Eloquent\Model $model, string $key, mixed $value, array $attributes): ?string
+
+
+Vaulter\Events\EventTypeContract
+  cases(): array
+  from(int|string $value): \static
+  label(): string
+  spec(): \Vaulter\Attributes\EventSpec
+  tryFrom(int|string $value): ?\static
+
+
 Vaulter\Events\EventsReference
+  __construct(\Vaulter\Events\EventCatalog $catalog)
   apply(string $page): ?string
   block(): string
   render(): string
@@ -1316,7 +1341,7 @@ Vaulter\Events\Sharing\NodeShareCreated
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Sharing\NodeShare $share
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -1333,7 +1358,7 @@ Vaulter\Events\Sharing\NodeShareRevoked
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Sharing\NodeShare $share
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -1350,7 +1375,7 @@ Vaulter\Events\Sharing\NodeShareRotated
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Sharing\NodeShare $share
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
@@ -1367,10 +1392,25 @@ Vaulter\Events\Sharing\NodeShareUpdated
   scope(): \Vaulter\ValueObjects\Events\EventScope
   sequence(): ?int
   subject(): \Vaulter\ValueObjects\Events\EventSubject
-  type(): \Vaulter\Enums\Events\EventType
+  type(): \Vaulter\Enums\Events\DriveEventType
   readonly \Carbon\CarbonImmutable $occurredAt
   readonly \Vaulter\Models\Sharing\NodeShare $share
   readonly \Vaulter\ValueObjects\Access\ActorRef $actor
   readonly array $changed
   readonly string $correlationId
   readonly string $eventId
+
+Vaulter\Events\SinkResult
+  cases(): array
+  from(int|string $value): \static
+  tryFrom(int|string $value): ?\static
+  readonly string $name
+  readonly string $value
+
+Vaulter\Events\SinkWriter
+  __construct(\Vaulter\Database\VaulterDatabase $database)
+  connection(): \Illuminate\Database\Connection
+  insertOnce(string $table, array $row, string $uniqueColumn): bool
+  share(string $key, int|null|string $value): void
+  shared(string $key): int|null|string
+

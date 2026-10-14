@@ -30,7 +30,7 @@ require_once dirname(__DIR__, 3).'/scripts/inventory/lib/Identities/Protocol.php
 require_once dirname(__DIR__, 3).'/scripts/inventory/lib/Identities/Http.php';
 
 /** The decisions a ledger record may cite: accepted decisions only; a plan item adds one together with its record. */
-const ID_ACCEPTED_DECISIONS = ['D8', 'D21', 'D22', 'D25', 'D29', 'D36', 'D39'];
+const ID_ACCEPTED_DECISIONS = ['D8', 'D21', 'D22', 'D25', 'D29', 'D36', 'D38', 'D39'];
 
 /** @return list<string> the problem codes, sorted */
 function id_codes(array $problems): array
@@ -426,7 +426,7 @@ describe('committed fixtures', function (): void {
 
         expect($count('event:'))->toBe(32)
             ->and($count('problem:'))->toBe(77)
-            ->and($items['event:file.uploaded']['sinks'])->toBe(['activity' => true, 'journal' => 'upsert', 'webhook' => true])
+            ->and($items['event:file.uploaded']['sinks'])->toBe(['activity' => true, 'external' => true, 'journal' => 'upsert'])
             ->and($items['event:file.uploaded']['data'])->toHaveKey('revision_id')
             ->and($items['problem:node_not_found'])->toMatchArray(['status' => 404, 'owner' => 'drive', 'retryable' => 'never', 'receipt' => 'never'])
             ->and($items['problem:node_sequence_mismatch'])->toMatchArray(['status' => 412, 'retryable' => 'after_refetch', 'receipt' => 'cacheable'])

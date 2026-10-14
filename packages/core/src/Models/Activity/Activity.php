@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Vaulter\Configuration\DatabaseConfig;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Events\EventTypeCast;
+use Vaulter\Events\EventTypeContract;
 use Vaulter\Models\Concerns\GuardsWrites;
 use Vaulter\Models\Concerns\HasVaulterKeys;
 use Vaulter\Models\Concerns\ResolvesVaulterConnection;
@@ -35,7 +36,7 @@ use Vaulter\Models\Concerns\StampsDriveTenant;
  * @property int|string|null          $drive_id
  * @property string|null              $actor_type
  * @property int|string|null          $actor_id
- * @property EventType                $verb
+ * @property EventTypeContract        $verb
  * @property string|null              $target_type
  * @property int|string|null          $target_id
  * @property array<string,mixed>|null $context
@@ -91,7 +92,7 @@ class Activity extends Model
     protected function casts(): array
     {
         return [
-            'verb' => EventType::class,
+            'verb' => EventTypeCast::class,
             'context' => 'array',
             'created_at' => 'datetime',
         ];

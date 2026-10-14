@@ -6,7 +6,7 @@ use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Data\Activity\RecordActivityCommand;
-use Vaulter\Enums\Events\EventType;
+use Vaulter\Enums\Events\DriveEventType;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Profiles\Profile;
@@ -46,7 +46,7 @@ it('round-trips UUID users and bigint projects and Spatie roles with ULID Vaulte
     $eventId = (string) Str::ulid();
     app(ActivityStoreRepository::class)->record(new RecordActivityCommand(
         eventId: $eventId,
-        verb: EventType::FolderCreated,
+        verb: DriveEventType::FolderCreated,
         storageId: $storage->getKey(),
         actorType: $user->getMorphClass(),
         actorId: $uuid,

@@ -8,6 +8,8 @@ use ReflectionClass;
 use Vaulter\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Access\Drivers\GatePermissionDriver;
 use Vaulter\Access\Drivers\SpatiePermissionDriver;
+use Vaulter\Activity\ActivitySink;
+use Vaulter\Changes\ChangeJournalSink;
 use Vaulter\Console\MakeFileHandlerCommand;
 use Vaulter\Console\MakePermissionDriverCommand;
 use Vaulter\Console\MakeProfileCommand;
@@ -57,6 +59,8 @@ use Vaulter\Drive\Uploads\Inspection\SizeInspector;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Enums\Drive\NodeKind;
+use Vaulter\Enums\Events\DriveEventType;
+use Vaulter\Events\EventSink;
 use Vaulter\Handlers\Builtin\DownloadOnlyHandler;
 use Vaulter\Handlers\Builtin\PreviewHandler;
 use Vaulter\Handlers\NodePresenter as CoreNodePresenter;
@@ -74,8 +78,8 @@ use Vaulter\VaulterServiceProvider;
 /**
  * The drive module (D22, D39): everything of the drive package, and the drive slices still located in core
  * until P4 moves them — access (grants, permission drivers, policies), the core routes file of grants,
- * shares, activity and the change feed, the change-journal and scaffolding commands, two doctor checks and
- * the drive part of the core bindings. `vaulter.modules.drive = false` removes all of it.
+ * shares, activity and the change feed, the change-journal and scaffolding commands, two doctor checks, the
+ * drive's event types with the activity and change-journal event sinks, and the drive part of the core bindings. `vaulter.modules.drive = false` removes all of it.
  */
 final class DriveModule implements VaulterModule
 {
@@ -123,6 +127,10 @@ final class DriveModule implements VaulterModule
             ->problems(DriveProblemCodes::class)
             // Located in core until P4 (D39).
             ->problems(DriveSliceProblemCodes::class)
+            // Located in core until P4 (D38): the drive's event types and its two event sinks.
+            ->events(DriveEventType::class)
+            ->slot(EventSink::class, ActivitySink::class, 'drive.activity')
+            ->slot(EventSink::class, ChangeJournalSink::class, 'drive.changes')
             ->bindings(DriveSliceRegistrar::class)
             ->bindings(AccessRegistrar::class)
             ->bindings(BindingsRegistrar::class)
