@@ -26,13 +26,15 @@ final readonly class UpdateNodeController
             $expected = $this->nodes->expectedSequence($request, $drive, $node, Ability::Edit);
         } catch (StaleNodeException|NodeNotFoundException $refusal) {
             // A retry under its Idempotency-Key repeats the If-Match of the first request, stale once that one
-            // committed — and its node may be gone since (purged, in the trash). The operation answers it from the
-            // receipt, or — without one — refuses it as stale or missing and stores that refusal (D25). The sequence
-            // PHP_INT_MAX stands for "no live node holds it"; a node that does hold it keeps the 412 right here.
-            if (ReadIdempotencyKey::key($request) === null || ($refusal instanceof StaleNodeException && $drive->nodes()->find($node)->sequence === PHP_INT_MAX)) {
+            // committed — and its node may be in the trash since. The operation answers it from the receipt, or —
+            // without one — refuses it as stale or missing and stores that refusal (D25). It gets a sequence no live
+            // node holds: PHP_INT_MAX, or the one below it for a node that holds PHP_INT_MAX itself. (A purged node
+            // has no drive to resolve from the route: that retry is a 404 before it gets here.)
+            if (ReadIdempotencyKey::key($request) === null) {
                 throw $refusal;
             }
-            $expected = PHP_INT_MAX;
+            $held = $refusal instanceof StaleNodeException ? $drive->nodes()->find($node)->sequence : null;
+            $expected = $held === PHP_INT_MAX ? PHP_INT_MAX - 1 : PHP_INT_MAX;
         }
 
         return $this->nodes->respond($drive, $drive->nodes()->rename($node, $request->name(), $expected));

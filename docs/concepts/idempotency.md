@@ -64,6 +64,9 @@ A replay is answered only after the owner checks the actor's current right, as i
 
 The stored receipt is not changed by a denial.
 
+Over HTTP the route names only the node, so a retry of a request on a node that was **purged** since cannot find its
+drive and answers `404`; a node in the trash still replays.
+
 ## Which refusals are stored
 
 Every [error code](/reference/errors) declares its **receipt** policy. A deterministic refusal of the request
