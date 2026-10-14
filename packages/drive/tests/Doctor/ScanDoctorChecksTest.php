@@ -13,6 +13,7 @@ use Vaulter\Content\ScanResult;
 use Vaulter\Contracts\Cas\ContentScanner;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
+use Vaulter\Doctor\DoctorRegistry;
 use Vaulter\Doctor\DoctorRunner;
 use Vaulter\Doctor\DoctorSeverity;
 use Vaulter\Drive\Actions\Files\IngestFileAction;
@@ -239,7 +240,8 @@ it('runs the scan checks with webhooks disabled', function (): void {
     ]);
 
     expect(scanFindings('drive.scan.obligations')[0]->code)->toBe('drive.scan.obligations_stuck')
-        ->and(scanFindings('core.webhooks.deliveries')[0]->evidence['skipped'])->toBeTrue();
+        // The inactive webhooks module contributes no delivery check at all.
+        ->and(app(DoctorRegistry::class)->unmatched(['core.webhooks.deliveries']))->toBe(['core.webhooks.deliveries']);
 });
 
 it('limits the scope sample', function (): void {

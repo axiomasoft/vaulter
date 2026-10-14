@@ -18,6 +18,7 @@ use Vaulter\Configuration\WebhooksConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Contracts\Observability\TraceRecorder;
 use Vaulter\Contracts\Tenancy\TenantResolver;
+use Vaulter\CoreModule;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Database\WriteScope;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
@@ -30,7 +31,7 @@ use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\Tenancy\TenancyBypass;
 
 /**
- * The container wiring of the core module ({@see \Vaulter\CoreModule}): config, database, ids, tenancy and
+ * The container wiring of the core module ({@see CoreModule}): config, database, ids, tenancy and
  * observability. The drive slices located in core are wired by {@see DriveSliceRegistrar} (D39).
  */
 final class BindingsRegistrar implements ModuleBindings
@@ -161,5 +162,4 @@ final class BindingsRegistrar implements ModuleBindings
             'recorder' => $class,
         ]);
     }
-
 }

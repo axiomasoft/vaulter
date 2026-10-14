@@ -8,11 +8,12 @@ use Illuminate\Console\Scheduling\Event;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Foundation\Application;
 use Vaulter\Configuration\ScheduleFrequency;
+use Vaulter\Modules\ModuleSchedule;
 
 /**
  * The shared scheduling mechanism: {@see self::task()} gives every Vaulter task the same overlap and
  * single-server guards, {@see self::whenScheduling()} defines tasks whenever the scheduler resolves.
- * Modules declare their tasks with a {@see \Vaulter\Modules\ModuleSchedule}.
+ * Modules declare their tasks with a {@see ModuleSchedule}.
  */
 final class SchedulingRegistrar
 {

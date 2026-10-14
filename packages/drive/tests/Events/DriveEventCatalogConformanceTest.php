@@ -13,6 +13,7 @@ use Vaulter\Drive\Tests\TestCase;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Events\EventConformance;
 use Vaulter\Tests\Fixtures\TestUser;
@@ -21,7 +22,7 @@ use Vaulter\Tests\Fixtures\TestUser;
  * The drive events, produced by the real Actions, carry exactly the data their
  * EventSpec declares and nothing an envelope must not hold.
  */
-uses(TestCase::class, RefreshDatabase::class);
+uses(TestCase::class, RefreshDatabase::class, EnablesWebhooksModule::class);
 
 beforeEach(function (): void {
     Storage::fake('local');

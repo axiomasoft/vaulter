@@ -14,6 +14,7 @@ use Throwable;
 use Vaulter\Http\Middleware\AddApiVersionHeader;
 use Vaulter\Http\Middleware\ApplyResponseCachePolicy;
 use Vaulter\Http\Middleware\AssignCorrelationId;
+use Vaulter\Http\Middleware\EnsureModuleActive;
 use Vaulter\Http\Problems\CoreProblemCodes;
 use Vaulter\Http\Problems\ProblemCatalog;
 use Vaulter\Http\Problems\ProblemRenderer;
@@ -62,8 +63,10 @@ final class HttpRegistrar
         if ($kernel instanceof \Illuminate\Foundation\Http\Kernel) {
             // The router sorts prioritized middleware (throttle, auth, bindings) ahead of
             // the rest; these wrap them so a 401 or 429 still carries the request id,
-            // the API version and the cache policy.
-            foreach ([ApplyResponseCachePolicy::class, AddApiVersionHeader::class, AssignCorrelationId::class] as $middleware) {
+            // the API version and the cache policy. The module check goes right after them, ahead of
+            // auth and throttle: a route of an inactive module answers 404 (503 on an invalid graph),
+            // not 401 or 429.
+            foreach ([EnsureModuleActive::class, ApplyResponseCachePolicy::class, AddApiVersionHeader::class, AssignCorrelationId::class] as $middleware) {
                 $kernel->prependToMiddlewarePriority($middleware);
             }
         }

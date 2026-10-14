@@ -15,12 +15,13 @@ use Vaulter\Contracts\Content\ScanPolicyResolver;
 use Vaulter\Contracts\Content\ScanWorkSettings;
 use Vaulter\Contracts\Drive\DriveHandleFactory as DriveHandleFactoryContract;
 use Vaulter\Contracts\Drive\NodeContentLifecycle;
+use Vaulter\Doctor\Checks\ConfigValidCheck;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Content\DocumentPurgeLifecycle;
 use Vaulter\Drive\Content\FileContentLifecycle;
 use Vaulter\Drive\Content\ShortcutPurgeLifecycle;
 use Vaulter\Drive\DriveHandleFactory;
-use Vaulter\Doctor\Checks\ConfigValidCheck;
+use Vaulter\Drive\DriveModule;
 use Vaulter\Drive\DriveProvisioner;
 use Vaulter\Drive\Http\Problems\DriveProblemCodes;
 use Vaulter\Drive\Uploads\Inspection\FilenameInspector;
@@ -36,7 +37,7 @@ use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileRegistry;
 
 /**
- * The container wiring of the drive module ({@see \Vaulter\Drive\DriveModule}): drive config, scan policy and
+ * The container wiring of the drive module ({@see DriveModule}): drive config, scan policy and
  * scanner validation, the drive handle factory, uploads, content lifecycles, the drive problem codes and the
  * drive config validator.
  */

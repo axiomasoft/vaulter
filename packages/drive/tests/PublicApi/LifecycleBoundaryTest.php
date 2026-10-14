@@ -121,7 +121,7 @@ it('rejects duplicate lifecycle registrations without replacing the first handle
     config()->set('vaulter.content_lifecycles', [FileContentLifecycle::class]);
     app()->forgetInstance(NodeContentLifecycleRegistry::class);
     try {
-        expect(fn () => (new BindingsRegistrar(app()))->boot())->toThrow(DuplicateNodeContentLifecycleException::class);
+        expect(fn () => (new BindingsRegistrar)->boot(app()))->toThrow(DuplicateNodeContentLifecycleException::class);
     } finally {
         config()->set('vaulter.content_lifecycles', []);
         app()->forgetInstance(NodeContentLifecycleRegistry::class);

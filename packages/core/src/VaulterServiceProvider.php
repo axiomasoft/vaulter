@@ -125,6 +125,10 @@ final class VaulterServiceProvider extends PackageServiceProvider
             return;
         }
         $prefix = trim($this->app->make(RoutesConfig::class)->prefix(), '/');
+        // An empty prefix would make the catch-all answer 503 for the whole host application.
+        if ($prefix === '') {
+            return;
+        }
         Route::any($prefix.'/{path?}', ModuleGraphInvalidController::class)->where('path', '.*');
     }
 }
