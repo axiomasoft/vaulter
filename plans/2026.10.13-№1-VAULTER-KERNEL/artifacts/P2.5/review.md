@@ -12,3 +12,9 @@
 | 3 | low | morph identities: 20 getMorphClass, 2 morphTo, 1 morphMany, 1 requiresMorphMap | confirmed | wording fixed |
 | 4 | low | OQ5 «Webhooks-namespace (8)» is 7; SchemaKeyTypesCheck is a P3 contribution, not a D29 rename | confirmed | 7 + SchemaKeyTypesCheck as a separate item |
 | 5 | low | «move 407 в P4»: phase P4 = 407 (move 399, replace 4, split 4) | confirmed | wording fixed |
+
+# P2.5 review — round 2
+
+- Same launch (read-only), brief `review-brief-2.md`, stream `review-grok-2.jsonl`; checks fix commit dfd28eb5 and D35.
+- Actual session `01a1389f-d171-7db1-993a-3edcc7cb323b`: model/effort/context from summary.json+signals.json = grok-4.7 high 256000. 15 turns, 9.4 min.
+- Verdict: `PASS`. The 5 corrections match the fixtures. D35 context, options and open status hold. OQ1→D32, OQ2→D33, OQ3→D34, OQ11→D35 are consistent; `inventory.php --check` exit 0.
