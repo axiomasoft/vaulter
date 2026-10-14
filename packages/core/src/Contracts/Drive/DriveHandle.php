@@ -54,6 +54,16 @@ interface DriveHandle
 
     public function withCorrelationId(string $correlationId): static;
 
+    /**
+     * The idempotency key of the writes made through this handle (D25): opaque bytes, 1–255, compared exactly.
+     * Only an operation that declares idempotency accepts it (in 1.0 `folders()->create()` and
+     * `nodes()->rename()`); any other write refuses a key before it runs. A retry with the same key and the same
+     * request returns the stored outcome after a fresh authorization check; another request under the key fails
+     * with `idempotency_key_reused`. `$requestFingerprint` is for a transport that fingerprints its own request
+     * (the HTTP layer); a PHP caller omits it.
+     */
+    public function withIdempotencyKey(string $key, ?string $requestFingerprint = null): static;
+
     public function root(): NodeSnapshot;
 
     public function nodes(): NodeOperations;

@@ -172,6 +172,11 @@ return [
         // The largest page DriveHandle::changes()->list() returns.
         'max_page_size' => 1000,
     ],
+    // Idempotency-Key receipts (D25): how long a retry with the same key gets the stored outcome.
+    // vaulter:idempotency:prune deletes expired receipts.
+    'idempotency' => [
+        'ttl_seconds' => 86400,
+    ],
     // Maintenance tasks put on the host scheduler. Value: null (off) | everyMinute | everyFiveMinutes |
     // hourly | daily | weekly | 'dailyAt:HH:MM' | 'hourlyAt:M' | 'weeklyOn:D,HH:MM' | a 5-field cron
     // expression. Set enabled to false when the host schedules the commands itself.
@@ -181,6 +186,7 @@ return [
         'webhooks_retry' => 'everyMinute',
         'webhooks_prune' => 'dailyAt:03:10',
         'changes_prune' => 'dailyAt:03:20',
+        'idempotency_prune' => 'dailyAt:03:30',
     ],
     'handlers' => [],
     'observability' => [

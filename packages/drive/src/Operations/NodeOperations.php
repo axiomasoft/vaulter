@@ -26,12 +26,15 @@ use Vaulter\Drive\Data\Nodes\MoveNodeInput;
 use Vaulter\Drive\Data\Nodes\RenameNodeInput;
 use Vaulter\Drive\Data\Nodes\SetNodePropertiesInput;
 use Vaulter\Drive\Data\Trash\TrashNodeInput;
+use Vaulter\Drive\Idempotency\NodeReplayAuthorizer;
+use Vaulter\Drive\Idempotency\NodeSnapshotCodec;
 use Vaulter\Drive\Queries\ListChildrenQuery;
 use Vaulter\Drive\Queries\NodePageQuery;
 use Vaulter\Drive\Queries\SearchQuery;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Operations\OperationKind;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Idempotency\IdempotentWrite;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Modules\ModuleId;
 use Vaulter\Operations\DriveContext;
@@ -69,7 +72,15 @@ final readonly class NodeOperations implements Contract
 
     public function rename(NodeSnapshot|string|int $node, string $name, ?int $expectedSequence = null): NodeSnapshot
     {
-        return $this->write('rename', fn (): NodeSnapshot => $this->snapshot($this->renameAction->execute($this->context, new RenameNodeInput($this->authorized($node, Ability::Edit), $name, $expectedSequence))));
+        $nodeId = $node instanceof NodeSnapshot ? $node->id : (string) $node;
+        // Idempotent by key (D25): the receipt is the snapshot; a replay needs Edit on the node where it is now.
+        $idempotency = new IdempotentWrite(
+            codec: new NodeSnapshotCodec,
+            authorizer: NodeReplayAuthorizer::forNode($this->context, $this->locator, $this->guard, Ability::Edit, $nodeId),
+            fingerprint: ['node' => $nodeId, 'name' => $name, 'expected_sequence' => $expectedSequence],
+        );
+
+        return $this->write('rename', fn (): NodeSnapshot => $this->snapshot($this->renameAction->execute($this->context, new RenameNodeInput($this->authorized($node, Ability::Edit), $name, $expectedSequence))), $idempotency);
     }
 
     public function move(NodeSnapshot|string|int $node, NodeSnapshot|string|int|null $destination, ?MoveOptions $options = null): NodeSnapshot
@@ -151,9 +162,9 @@ final readonly class NodeOperations implements Contract
      * @param  Closure(): T $attempt
      * @return T
      */
-    private function write(string $verb, Closure $attempt): mixed
+    private function write(string $verb, Closure $attempt, ?IdempotentWrite $idempotency = null): mixed
     {
-        return $this->runner->write(new OperationSpec('drive.nodes.'.$verb, new ModuleId('drive')), $this->context->operation, $attempt);
+        return $this->runner->write(new OperationSpec('drive.nodes.'.$verb, new ModuleId('drive')), $this->context->operation, $attempt, $idempotency);
     }
 
     private function snapshot(Node $node): NodeSnapshot

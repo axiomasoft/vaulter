@@ -98,6 +98,12 @@
             "why": "the kernel lists the module graph (D22, architecture#module-system)"
         },
         {
+            "match": "exact",
+            "value": "command:vaulter:idempotency:prune",
+            "owner": "core",
+            "why": "D25: the idempotency receipts of the kernel (architecture#idempotency-concurrency, P3.12)"
+        },
+        {
             "match": "prefix",
             "value": "command:vaulter:module:",
             "owner": "core",

@@ -7,7 +7,232 @@
     ],
     "base": "35718fd2",
     "canonical_preset": "bigint.string.v.off",
-    "changes": [],
+    "changes": [
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.actor_id",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.actor_kind",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.auth_scope_id",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.auth_scope_kind",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.codec_version",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.completed_at",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.created_at",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.expires_at",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.http_code",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.id",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.idempotency_key",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.operation",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.receipt_body",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.receipt_headers",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.receipt_kind",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.request_hash",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.resource_id",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.resource_kind",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.scope_digest",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.scope_id",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.scope_kind",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.status",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.tenant_id",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.tenant_kind",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "constraint:v_idempotency_keys.v_idempotency_keys_pkey",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "constraint:v_idempotency_keys.v_idempotency_keys_scope_unique",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "index:v_idempotency_keys.PRIMARY",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "index:v_idempotency_keys.v_idempotency_keys_expires_idx",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "index:v_idempotency_keys.v_idempotency_keys_pkey",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "index:v_idempotency_keys.v_idempotency_keys_scope_unique",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "migration:2026_10_13_000028_create_v_idempotency_keys_table.php",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "table:v_idempotency_keys",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        }
+    ],
     "engines": [
         "pgsql",
         "mysql",
@@ -6034,6 +6259,730 @@
                 "symbol": "v_files"
             },
             "table": "v_files"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "default": null,
+                    "nullable": true,
+                    "type": "varchar(191)"
+                },
+                "pgsql": {
+                    "collation": "default",
+                    "default": null,
+                    "nullable": true,
+                    "type": "character varying(191)"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_idempotency_keys.actor_id",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
+            },
+            "table": "v_idempotency_keys"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "default": null,
+                    "nullable": false,
+                    "type": "varchar(16)"
+                },
+                "pgsql": {
+                    "collation": "default",
+                    "default": null,
+                    "nullable": false,
+                    "type": "character varying(16)"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": false,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_idempotency_keys.actor_kind",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
+            },
+            "table": "v_idempotency_keys"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "default": null,
+                    "nullable": true,
+                    "type": "varchar(191)"
+                },
+                "pgsql": {
+                    "collation": "default",
+                    "default": null,
+                    "nullable": true,
+                    "type": "character varying(191)"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_idempotency_keys.auth_scope_id",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
+            },
+            "table": "v_idempotency_keys"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "default": null,
+                    "nullable": true,
+                    "type": "varchar(32)"
+                },
+                "pgsql": {
+                    "collation": "default",
+                    "default": null,
+                    "nullable": true,
+                    "type": "character varying(32)"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_idempotency_keys.auth_scope_kind",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
+            },
+            "table": "v_idempotency_keys"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "smallint unsigned"
+                },
+                "pgsql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "smallint"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "INTEGER"
+                }
+            },
+            "id": "column:v_idempotency_keys.codec_version",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
+            },
+            "table": "v_idempotency_keys"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "timestamp"
+                },
+                "pgsql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "timestamp(0) without time zone"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "datetime"
+                }
+            },
+            "id": "column:v_idempotency_keys.completed_at",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
+            },
+            "table": "v_idempotency_keys"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": null,
+                    "nullable": false,
+                    "type": "timestamp"
+                },
+                "pgsql": {
+                    "default": null,
+                    "nullable": false,
+                    "type": "timestamp(0) without time zone"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": false,
+                    "type": "datetime"
+                }
+            },
+            "id": "column:v_idempotency_keys.created_at",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
+            },
+            "table": "v_idempotency_keys"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": null,
+                    "nullable": false,
+                    "type": "timestamp"
+                },
+                "pgsql": {
+                    "default": null,
+                    "nullable": false,
+                    "type": "timestamp(0) without time zone"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": false,
+                    "type": "datetime"
+                }
+            },
+            "id": "column:v_idempotency_keys.expires_at",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
+            },
+            "table": "v_idempotency_keys"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "smallint unsigned"
+                },
+                "pgsql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "smallint"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "INTEGER"
+                }
+            },
+            "id": "column:v_idempotency_keys.http_code",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
+            },
+            "table": "v_idempotency_keys"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": null,
+                    "extra": "auto_increment",
+                    "nullable": false,
+                    "type": "bigint unsigned"
+                },
+                "pgsql": {
+                    "default": "nextval('v_idempotency_keys_id_seq'::regclass)",
+                    "nullable": false,
+                    "type": "bigint"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": false,
+                    "primary_key": 1,
+                    "type": "INTEGER"
+                }
+            },
+            "id": "column:v_idempotency_keys.id",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
+            },
+            "table": "v_idempotency_keys",
+            "variants": {
+                "mysql": {
+                    "axes": [
+                        "ids"
+                    ],
+                    "by": {
+                        "ids=ulid": {
+                            "charset": "utf8mb4",
+                            "collation": "utf8mb4_unicode_ci",
+                            "extra": null,
+                            "type": "char(26)"
+                        },
+                        "ids=uuid7": {
+                            "charset": "utf8mb4",
+                            "collation": "utf8mb4_unicode_ci",
+                            "extra": null,
+                            "type": "char(36)"
+                        }
+                    }
+                },
+                "pgsql": {
+                    "axes": [
+                        "ids"
+                    ],
+                    "by": {
+                        "ids=ulid": {
+                            "collation": "default",
+                            "default": null,
+                            "type": "character(26)"
+                        },
+                        "ids=uuid7": {
+                            "default": null,
+                            "type": "uuid"
+                        }
+                    }
+                },
+                "sqlite": {
+                    "axes": [
+                        "ids"
+                    ],
+                    "by": {
+                        "ids=ulid": {
+                            "type": "varchar"
+                        },
+                        "ids=uuid7": {
+                            "type": "varchar"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "default": null,
+                    "nullable": false,
+                    "type": "varchar(344)"
+                },
+                "pgsql": {
+                    "collation": "default",
+                    "default": null,
+                    "nullable": false,
+                    "type": "character varying(344)"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": false,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_idempotency_keys.idempotency_key",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
+            },
+            "table": "v_idempotency_keys"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "default": null,
+                    "nullable": false,
+                    "type": "varchar(64)"
+                },
+                "pgsql": {
+                    "collation": "default",
+                    "default": null,
+                    "nullable": false,
+                    "type": "character varying(64)"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": false,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_idempotency_keys.operation",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
+            },
+            "table": "v_idempotency_keys"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "json"
+                },
+                "pgsql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "json"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "TEXT"
+                }
+            },
+            "id": "column:v_idempotency_keys.receipt_body",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
+            },
+            "table": "v_idempotency_keys"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "json"
+                },
+                "pgsql": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "json"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "TEXT"
+                }
+            },
+            "id": "column:v_idempotency_keys.receipt_headers",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
+            },
+            "table": "v_idempotency_keys"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "default": null,
+                    "nullable": true,
+                    "type": "varchar(64)"
+                },
+                "pgsql": {
+                    "collation": "default",
+                    "default": null,
+                    "nullable": true,
+                    "type": "character varying(64)"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_idempotency_keys.receipt_kind",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
+            },
+            "table": "v_idempotency_keys"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "default": null,
+                    "nullable": false,
+                    "type": "char(64)"
+                },
+                "pgsql": {
+                    "collation": "default",
+                    "default": null,
+                    "nullable": false,
+                    "type": "character(64)"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": false,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_idempotency_keys.request_hash",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
+            },
+            "table": "v_idempotency_keys"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "default": null,
+                    "nullable": true,
+                    "type": "varchar(191)"
+                },
+                "pgsql": {
+                    "collation": "default",
+                    "default": null,
+                    "nullable": true,
+                    "type": "character varying(191)"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_idempotency_keys.resource_id",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
+            },
+            "table": "v_idempotency_keys"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "default": null,
+                    "nullable": true,
+                    "type": "varchar(32)"
+                },
+                "pgsql": {
+                    "collation": "default",
+                    "default": null,
+                    "nullable": true,
+                    "type": "character varying(32)"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_idempotency_keys.resource_kind",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
+            },
+            "table": "v_idempotency_keys"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "default": null,
+                    "nullable": false,
+                    "type": "char(64)"
+                },
+                "pgsql": {
+                    "collation": "default",
+                    "default": null,
+                    "nullable": false,
+                    "type": "character(64)"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": false,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_idempotency_keys.scope_digest",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
+            },
+            "table": "v_idempotency_keys"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "default": null,
+                    "nullable": false,
+                    "type": "varchar(191)"
+                },
+                "pgsql": {
+                    "collation": "default",
+                    "default": null,
+                    "nullable": false,
+                    "type": "character varying(191)"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": false,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_idempotency_keys.scope_id",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
+            },
+            "table": "v_idempotency_keys"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "default": null,
+                    "nullable": false,
+                    "type": "varchar(32)"
+                },
+                "pgsql": {
+                    "collation": "default",
+                    "default": null,
+                    "nullable": false,
+                    "type": "character varying(32)"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": false,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_idempotency_keys.scope_kind",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
+            },
+            "table": "v_idempotency_keys"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "default": null,
+                    "nullable": false,
+                    "type": "varchar(16)"
+                },
+                "pgsql": {
+                    "collation": "default",
+                    "default": null,
+                    "nullable": false,
+                    "type": "character varying(16)"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": false,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_idempotency_keys.status",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
+            },
+            "table": "v_idempotency_keys"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "default": null,
+                    "nullable": true,
+                    "type": "varchar(191)"
+                },
+                "pgsql": {
+                    "collation": "default",
+                    "default": null,
+                    "nullable": true,
+                    "type": "character varying(191)"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_idempotency_keys.tenant_id",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
+            },
+            "table": "v_idempotency_keys"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "default": null,
+                    "nullable": false,
+                    "type": "varchar(16)"
+                },
+                "pgsql": {
+                    "collation": "default",
+                    "default": null,
+                    "nullable": false,
+                    "type": "character varying(16)"
+                },
+                "sqlite": {
+                    "default": null,
+                    "nullable": false,
+                    "type": "varchar"
+                }
+            },
+            "id": "column:v_idempotency_keys.tenant_kind",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
+            },
+            "table": "v_idempotency_keys"
         },
         {
             "engines": {
@@ -16711,6 +17660,36 @@
                     "kind": "primary key"
                 }
             },
+            "id": "constraint:v_idempotency_keys.v_idempotency_keys_pkey",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
+            },
+            "table": "v_idempotency_keys"
+        },
+        {
+            "engines": {
+                "pgsql": {
+                    "definition": "UNIQUE (scope_digest)",
+                    "kind": "unique"
+                }
+            },
+            "id": "constraint:v_idempotency_keys.v_idempotency_keys_scope_unique",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
+            },
+            "table": "v_idempotency_keys"
+        },
+        {
+            "engines": {
+                "pgsql": {
+                    "definition": "PRIMARY KEY (id)",
+                    "kind": "primary key"
+                }
+            },
             "id": "constraint:v_node_comments.v_node_comments_pkey",
             "owner": "documents",
             "source": {
@@ -21354,6 +22333,100 @@
                     "unique": true
                 }
             },
+            "id": "index:v_idempotency_keys.PRIMARY",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
+            },
+            "table": "v_idempotency_keys"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "columns": [
+                        "expires_at"
+                    ],
+                    "method": "BTREE",
+                    "unique": false
+                },
+                "pgsql": {
+                    "definition": "(expires_at)",
+                    "method": "btree",
+                    "unique": false
+                },
+                "sqlite": {
+                    "columns": [
+                        "expires_at"
+                    ],
+                    "origin": "c",
+                    "unique": false
+                }
+            },
+            "id": "index:v_idempotency_keys.v_idempotency_keys_expires_idx",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
+            },
+            "table": "v_idempotency_keys"
+        },
+        {
+            "engines": {
+                "pgsql": {
+                    "definition": "(id)",
+                    "method": "btree",
+                    "unique": true
+                }
+            },
+            "id": "index:v_idempotency_keys.v_idempotency_keys_pkey",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
+            },
+            "table": "v_idempotency_keys"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "columns": [
+                        "scope_digest"
+                    ],
+                    "method": "BTREE",
+                    "unique": true
+                },
+                "pgsql": {
+                    "definition": "(scope_digest)",
+                    "method": "btree",
+                    "unique": true
+                },
+                "sqlite": {
+                    "columns": [
+                        "scope_digest"
+                    ],
+                    "origin": "c",
+                    "unique": true
+                }
+            },
+            "id": "index:v_idempotency_keys.v_idempotency_keys_scope_unique",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
+            },
+            "table": "v_idempotency_keys"
+        },
+        {
+            "engines": {
+                "mysql": {
+                    "columns": [
+                        "id"
+                    ],
+                    "method": "BTREE",
+                    "unique": true
+                }
+            },
             "id": "index:v_node_comments.PRIMARY",
             "owner": "documents",
             "source": {
@@ -25070,6 +26143,17 @@
             ]
         },
         {
+            "id": "migration:2026_10_13_000028_create_v_idempotency_keys_table.php",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "<file>"
+            },
+            "tables": [
+                "v_idempotency_keys"
+            ]
+        },
+        {
             "columns": [
                 "id",
                 "tenant_id",
@@ -25365,6 +26449,200 @@
                         "ref_table": "v_file_revisions"
                     }
                 ]
+            }
+        },
+        {
+            "columns": [
+                "id",
+                "scope_digest",
+                "tenant_kind",
+                "tenant_id",
+                "scope_kind",
+                "scope_id",
+                "actor_kind",
+                "actor_id",
+                "operation",
+                "idempotency_key",
+                "request_hash",
+                "status",
+                "receipt_kind",
+                "codec_version",
+                "receipt_body",
+                "http_code",
+                "receipt_headers",
+                "resource_kind",
+                "resource_id",
+                "auth_scope_kind",
+                "auth_scope_id",
+                "created_at",
+                "completed_at",
+                "expires_at"
+            ],
+            "id": "table:v_idempotency_keys",
+            "logical": "idempotency_keys",
+            "migration": "2026_10_13_000028_create_v_idempotency_keys_table.php",
+            "original_diff": {
+                "mysql": {
+                    "absent_in_original": [
+                        "bigint.bigint.custom.off",
+                        "bigint.bigint.custom.on",
+                        "bigint.bigint.v.off",
+                        "bigint.bigint.v.on",
+                        "bigint.string.custom.off",
+                        "bigint.string.custom.on",
+                        "bigint.string.v.off",
+                        "bigint.string.v.on",
+                        "bigint.ulid.custom.off",
+                        "bigint.ulid.custom.on",
+                        "bigint.ulid.v.off",
+                        "bigint.ulid.v.on",
+                        "bigint.uuid.custom.off",
+                        "bigint.uuid.custom.on",
+                        "bigint.uuid.v.off",
+                        "bigint.uuid.v.on",
+                        "ulid.bigint.custom.off",
+                        "ulid.bigint.custom.on",
+                        "ulid.bigint.v.off",
+                        "ulid.bigint.v.on",
+                        "ulid.string.custom.off",
+                        "ulid.string.custom.on",
+                        "ulid.string.v.off",
+                        "ulid.string.v.on",
+                        "ulid.ulid.custom.off",
+                        "ulid.ulid.custom.on",
+                        "ulid.ulid.v.off",
+                        "ulid.ulid.v.on",
+                        "ulid.uuid.custom.off",
+                        "ulid.uuid.custom.on",
+                        "ulid.uuid.v.off",
+                        "ulid.uuid.v.on",
+                        "uuid7.bigint.custom.off",
+                        "uuid7.bigint.custom.on",
+                        "uuid7.bigint.v.off",
+                        "uuid7.bigint.v.on",
+                        "uuid7.string.custom.off",
+                        "uuid7.string.custom.on",
+                        "uuid7.string.v.off",
+                        "uuid7.string.v.on",
+                        "uuid7.ulid.custom.off",
+                        "uuid7.ulid.custom.on",
+                        "uuid7.ulid.v.off",
+                        "uuid7.ulid.v.on",
+                        "uuid7.uuid.custom.off",
+                        "uuid7.uuid.custom.on",
+                        "uuid7.uuid.v.off",
+                        "uuid7.uuid.v.on"
+                    ]
+                },
+                "pgsql": {
+                    "absent_in_original": [
+                        "bigint.bigint.custom.off",
+                        "bigint.bigint.custom.on",
+                        "bigint.bigint.v.off",
+                        "bigint.bigint.v.on",
+                        "bigint.string.custom.off",
+                        "bigint.string.custom.on",
+                        "bigint.string.v.off",
+                        "bigint.string.v.on",
+                        "bigint.ulid.custom.off",
+                        "bigint.ulid.custom.on",
+                        "bigint.ulid.v.off",
+                        "bigint.ulid.v.on",
+                        "bigint.uuid.custom.off",
+                        "bigint.uuid.custom.on",
+                        "bigint.uuid.v.off",
+                        "bigint.uuid.v.on",
+                        "ulid.bigint.custom.off",
+                        "ulid.bigint.custom.on",
+                        "ulid.bigint.v.off",
+                        "ulid.bigint.v.on",
+                        "ulid.string.custom.off",
+                        "ulid.string.custom.on",
+                        "ulid.string.v.off",
+                        "ulid.string.v.on",
+                        "ulid.ulid.custom.off",
+                        "ulid.ulid.custom.on",
+                        "ulid.ulid.v.off",
+                        "ulid.ulid.v.on",
+                        "ulid.uuid.custom.off",
+                        "ulid.uuid.custom.on",
+                        "ulid.uuid.v.off",
+                        "ulid.uuid.v.on",
+                        "uuid7.bigint.custom.off",
+                        "uuid7.bigint.custom.on",
+                        "uuid7.bigint.v.off",
+                        "uuid7.bigint.v.on",
+                        "uuid7.string.custom.off",
+                        "uuid7.string.custom.on",
+                        "uuid7.string.v.off",
+                        "uuid7.string.v.on",
+                        "uuid7.ulid.custom.off",
+                        "uuid7.ulid.custom.on",
+                        "uuid7.ulid.v.off",
+                        "uuid7.ulid.v.on",
+                        "uuid7.uuid.custom.off",
+                        "uuid7.uuid.custom.on",
+                        "uuid7.uuid.v.off",
+                        "uuid7.uuid.v.on"
+                    ]
+                },
+                "sqlite": {
+                    "absent_in_original": [
+                        "bigint.bigint.custom.off",
+                        "bigint.bigint.custom.on",
+                        "bigint.bigint.v.off",
+                        "bigint.bigint.v.on",
+                        "bigint.string.custom.off",
+                        "bigint.string.custom.on",
+                        "bigint.string.v.off",
+                        "bigint.string.v.on",
+                        "bigint.ulid.custom.off",
+                        "bigint.ulid.custom.on",
+                        "bigint.ulid.v.off",
+                        "bigint.ulid.v.on",
+                        "bigint.uuid.custom.off",
+                        "bigint.uuid.custom.on",
+                        "bigint.uuid.v.off",
+                        "bigint.uuid.v.on",
+                        "ulid.bigint.custom.off",
+                        "ulid.bigint.custom.on",
+                        "ulid.bigint.v.off",
+                        "ulid.bigint.v.on",
+                        "ulid.string.custom.off",
+                        "ulid.string.custom.on",
+                        "ulid.string.v.off",
+                        "ulid.string.v.on",
+                        "ulid.ulid.custom.off",
+                        "ulid.ulid.custom.on",
+                        "ulid.ulid.v.off",
+                        "ulid.ulid.v.on",
+                        "ulid.uuid.custom.off",
+                        "ulid.uuid.custom.on",
+                        "ulid.uuid.v.off",
+                        "ulid.uuid.v.on",
+                        "uuid7.bigint.custom.off",
+                        "uuid7.bigint.custom.on",
+                        "uuid7.bigint.v.off",
+                        "uuid7.bigint.v.on",
+                        "uuid7.string.custom.off",
+                        "uuid7.string.custom.on",
+                        "uuid7.string.v.off",
+                        "uuid7.string.v.on",
+                        "uuid7.ulid.custom.off",
+                        "uuid7.ulid.custom.on",
+                        "uuid7.ulid.v.off",
+                        "uuid7.ulid.v.on",
+                        "uuid7.uuid.custom.off",
+                        "uuid7.uuid.custom.on",
+                        "uuid7.uuid.v.off",
+                        "uuid7.uuid.v.on"
+                    ]
+                }
+            },
+            "owner": "core",
+            "source": {
+                "file": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+                "symbol": "v_idempotency_keys"
             }
         },
         {

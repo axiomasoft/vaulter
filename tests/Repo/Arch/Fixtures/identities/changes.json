@@ -1196,6 +1196,279 @@
             "id": "problem:write_outside_operation",
             "kind": "protocol",
             "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "command:vaulter:idempotency:prune",
+            "kind": "cli",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "config:vaulter.idempotency.ttl_seconds",
+            "kind": "config",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "config:vaulter.schedule.idempotency_prune",
+            "kind": "config",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "format:header-idempotency-key",
+            "kind": "protocol",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "format:idempotency-scope-digest",
+            "kind": "protocol",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "format:receipt-node-snapshot",
+            "kind": "protocol",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "format:receipt-problem",
+            "kind": "protocol",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.actor_id",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.actor_kind",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.auth_scope_id",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.auth_scope_kind",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.codec_version",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.completed_at",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.created_at",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.expires_at",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.http_code",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.id",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.idempotency_key",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.operation",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.receipt_body",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.receipt_headers",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.receipt_kind",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.request_hash",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.resource_id",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.resource_kind",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.scope_digest",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.scope_id",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.scope_kind",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.status",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.tenant_id",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "column:v_idempotency_keys.tenant_kind",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "constraint:v_idempotency_keys.v_idempotency_keys_pkey",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "constraint:v_idempotency_keys.v_idempotency_keys_scope_unique",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "index:v_idempotency_keys.PRIMARY",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "index:v_idempotency_keys.v_idempotency_keys_expires_idx",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "index:v_idempotency_keys.v_idempotency_keys_pkey",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "index:v_idempotency_keys.v_idempotency_keys_scope_unique",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "migration:2026_10_13_000028_create_v_idempotency_keys_table.php",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "table:v_idempotency_keys",
+            "kind": "schema",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029): v_idempotency_keys holds claims and receipts (core table)"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

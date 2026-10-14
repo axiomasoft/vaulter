@@ -9,6 +9,8 @@ use stdClass;
 use Throwable;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Support\InvalidExtensionResult;
+use Vaulter\Idempotency\CachedRefusal;
+use Vaulter\Idempotency\IdempotentWrite;
 use Vaulter\Kernel;
 
 /**
@@ -20,10 +22,13 @@ use Vaulter\Kernel;
  * 3. the root transaction, repeated as a whole attempt after a serialization failure or a deadlock
  *    (never a nested one: a write inside a write runs in the same transaction, with no claim, no
  *    receipt and no own after-commit callbacks);
- * 4. the idempotency claim inside that transaction;
+ * 4. the idempotency claim inside that transaction (D25, ADR-0029): a keyed write with an
+ *    {@see IdempotentWrite} claims its key, or answers from a committed receipt after the owner's
+ *    current authorization; a key without one is refused before the transaction;
  * 5–8. the owner's attempt: load and lock, current authorization, validators and guards, the
  *    mutation with its events, the snapshot built from the locked state;
- * 9. commit, then the after-commit callbacks, then the result already built.
+ * 9. commit, then the after-commit callbacks, then the result already built (or the refusal whose
+ *    receipt the commit stored).
  *
  * Anything with an external effect (content bytes, network) happens before write() or after commit:
  * a repeated attempt repeats only database work.
@@ -44,9 +49,10 @@ final class OperationRunner
      * @template T
      *
      * @param  Closure(Operation): T $attempt
+     * @param  IdempotentWrite|null  $idempotency the codec, replay authorizer and fingerprint that let the write take an idempotency key
      * @return T
      */
-    public function write(OperationSpec $spec, OperationContext $context, Closure $attempt): mixed
+    public function write(OperationSpec $spec, OperationContext $context, Closure $attempt, ?IdempotentWrite $idempotency = null): mixed
     {
         $this->kernel->assertValid();
         $this->readiness->assertReady($spec->module);
@@ -55,7 +61,7 @@ final class OperationRunner
         /** @var list<OperationMiddleware> $middleware */
         $middleware = $this->kernel->extensions()->resolve(OperationMiddleware::class);
 
-        return $this->through($middleware, $operation, fn (Operation $operation): mixed => $this->transact($operation, $attempt));
+        return $this->through($middleware, $operation, fn (Operation $operation): mixed => $this->transact($operation, $attempt, $idempotency));
     }
 
     /** Whether a write is running in this runner's root transaction now (an operation composed into another). */
@@ -105,31 +111,32 @@ final class OperationRunner
      * @param  Closure(Operation): T $attempt
      * @return T
      */
-    private function transact(Operation $operation, Closure $attempt): mixed
+    private function transact(Operation $operation, Closure $attempt, ?IdempotentWrite $idempotency): mixed
     {
+        // A composed write has the one outer receipt of its root (no claim of its own).
         if ($operation->isNested()) {
             return $this->enter(static fn (): mixed => $attempt($operation));
         }
 
-        $this->claim->admit($operation);
+        $this->claim->admit($operation, $idempotency);
         $attemptNo = 0;
 
         // Laravel never retries here (one attempt per transaction() call): a whole attempt is repeated
         // by retryingOutermost() only, once it has fully rolled back. A failure of an after-commit
         // callback comes after the commit: it leaves the retry loop at once, wrapped, and is rethrown as is.
         try {
-            return $this->database->retryingOutermost(function () use ($operation, $attempt, &$attemptNo): mixed {
+            $result = $this->database->retryingOutermost(function () use ($operation, $attempt, $idempotency, &$attemptNo): mixed {
                 $current = $operation->attempt(attemptNo: ++$attemptNo, nested: false);
                 $committed = false;
 
                 try {
-                    return $this->database->transaction(function () use ($current, $attempt, &$committed): mixed {
+                    return $this->database->transaction(function () use ($current, $attempt, $idempotency, &$committed): mixed {
                         $this->database->afterCommit(static function () use (&$committed): void {
                             $committed = true;
                         });
 
                         return $this->enter(
-                            fn (): mixed => $this->claim->around($current, static fn (): mixed => $attempt($current)),
+                            fn (): mixed => $this->claim->around($current, $idempotency, static fn (): mixed => $attempt($current)),
                         );
                     }, attempts: 1);
                 } catch (Throwable $exception) {
@@ -139,6 +146,13 @@ final class OperationRunner
         } catch (AfterCommitFailure $failure) {
             throw $failure->original;
         }
+
+        // The receipt of a deterministic refusal committed with the root transaction; the caller gets the refusal.
+        if ($result instanceof CachedRefusal) {
+            throw $result->refusal;
+        }
+
+        return $result;
     }
 
     /**

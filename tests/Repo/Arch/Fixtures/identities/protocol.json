@@ -546,6 +546,34 @@
             "id": "problem:write_outside_operation",
             "kind": "protocol",
             "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "format:header-idempotency-key",
+            "kind": "protocol",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "format:idempotency-scope-digest",
+            "kind": "protocol",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "format:receipt-node-snapshot",
+            "kind": "protocol",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "format:receipt-problem",
+            "kind": "protocol",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029)"
         }
     ],
     "items": [
@@ -1225,6 +1253,16 @@
             }
         },
         {
+            "format": "Idempotency-Key request header: one Structured Field String (\"…\", \\\" and \\\\ escapes) or one token of visible ASCII without commas; 1-255 bytes, never trimmed or case-folded; Idempotent-Replayed: true on a replayed response",
+            "id": "format:header-idempotency-key",
+            "manual": true,
+            "owner": "core",
+            "source": {
+                "file": "packages/core/src/Http/Middleware/ReadIdempotencyKey.php",
+                "symbol": "Vaulter\\Http\\Middleware\\ReadIdempotencyKey::parse"
+            }
+        },
+        {
             "format": "X-Request-Id: an accepted incoming id (also read from X-Correlation-Id) or a new ULID; echoed on every response",
             "id": "format:header-request-id",
             "manual": true,
@@ -1242,6 +1280,16 @@
             "source": {
                 "file": "packages/drive/src/Http/Controllers/Uploads/TusProtocolController.php",
                 "symbol": "Vaulter\\Drive\\Http\\Controllers\\Uploads\\TusProtocolController"
+            }
+        },
+        {
+            "format": "lowercase hex SHA-256 over tenant_kind, tenant_id, scope_kind, scope_id, actor_kind, actor_id, operation, key, each as <byte length>:<bytes> and a null as ~; request hash = hex SHA-256 of the canonical JSON fingerprint (keys sorted, unescaped slashes/unicode)",
+            "id": "format:idempotency-scope-digest",
+            "manual": true,
+            "owner": "core",
+            "source": {
+                "file": "packages/core/src/Idempotency/IdempotencyDigest.php",
+                "symbol": "Vaulter\\Idempotency\\IdempotencyDigest::scope"
             }
         },
         {
@@ -1272,6 +1320,26 @@
             "source": {
                 "file": "packages/core/src/Operations/OperationSpec.php",
                 "symbol": "Vaulter\\Operations\\OperationSpec::__construct"
+            }
+        },
+        {
+            "format": "receipt kind drive.node-snapshot, version 1: JSON of every NodeSnapshot field (snake_case; times Y-m-d\\TH:i:s.uP; file/document/viewer heads or null)",
+            "id": "format:receipt-node-snapshot",
+            "manual": true,
+            "owner": "drive",
+            "source": {
+                "file": "packages/drive/src/Idempotency/NodeSnapshotCodec.php",
+                "symbol": "Vaulter\\Drive\\Idempotency\\NodeSnapshotCodec::encode"
+            }
+        },
+        {
+            "format": "receipt kind vaulter.problem, version 1: JSON {code, status, details} of a refusal whose code is receipt: cacheable; headers in receipt_headers",
+            "id": "format:receipt-problem",
+            "manual": true,
+            "owner": "core",
+            "source": {
+                "file": "packages/core/src/Idempotency/IdempotencyClaim.php",
+                "symbol": "Vaulter\\Idempotency\\IdempotencyClaim::REFUSAL"
             }
         },
         {

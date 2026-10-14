@@ -70,6 +70,7 @@ final class SchemaBuilder
         'webhook_deliveries',
         'drive_change_heads',
         'drive_changes',
+        'idempotency_keys',
     ];
 
     /**
@@ -129,6 +130,7 @@ final class SchemaBuilder
                 'webhook_deliveries' => $this->defineWebhookDeliveries(table: $table, ids: $ids),
                 'drive_change_heads' => $this->defineDriveChangeHeads(table: $table, ids: $ids),
                 'drive_changes' => $this->defineDriveChanges(table: $table, ids: $ids),
+                'idempotency_keys' => $this->defineIdempotencyKeys(table: $table, ids: $ids),
                 default => throw new InvalidArgumentException(sprintf('Unknown Vaulter panel entity [%s].', $entity)),
             };
         });
@@ -1037,6 +1039,48 @@ final class SchemaBuilder
             ->references('id')
             ->on($this->table('drives'))
             ->cascadeOnDelete();
+    }
+
+    /**
+     * v_idempotency_keys — the claims and receipts of keyed writes (D25, ADR-0029; generic core owner). One row per
+     * scope digest: SHA-256 (lowercase hex) of the tagged tuple tenant/scope/actor/operation/key, which is NOT NULL
+     * and the only UNIQUE key, so a null tenant or a system actor cannot weaken it; the tuple is kept to refuse a
+     * digest collision. The key bytes are stored base64 (opaque, compared exactly). A row is inserted as
+     * `claiming` in the transaction of the write and completed by it; `claiming` never commits. The receipt is the
+     * codec body of the result, or the problem of a cached refusal; resource_* and auth_scope_* are what a replay
+     * authorizes again. expires_at drives vaulter:idempotency:prune.
+     */
+    private function defineIdempotencyKeys(Blueprint $table, IdStrategy $ids): void
+    {
+        $ids->key(table: $table);
+
+        $name = $table->getTable();
+
+        $table->char('scope_digest', 64)->unique($name.'_scope_unique');
+        $table->string('tenant_kind', 16);
+        $table->string('tenant_id', 191)->nullable();
+        $table->string('scope_kind', 32);
+        $table->string('scope_id', 191);
+        $table->string('actor_kind', 16);
+        $table->string('actor_id', 191)->nullable();
+        $table->string('operation', 64);
+        $table->string('idempotency_key', 344);
+        $table->char('request_hash', 64);
+        $table->string('status', 16);
+        $table->string('receipt_kind', 64)->nullable();
+        $table->unsignedSmallInteger('codec_version')->nullable();
+        $table->json('receipt_body')->nullable();
+        $table->unsignedSmallInteger('http_code')->nullable();
+        $table->json('receipt_headers')->nullable();
+        $table->string('resource_kind', 32)->nullable();
+        $table->string('resource_id', 191)->nullable();
+        $table->string('auth_scope_kind', 32)->nullable();
+        $table->string('auth_scope_id', 191)->nullable();
+        $table->timestamp('created_at');
+        $table->timestamp('completed_at')->nullable();
+        $table->timestamp('expires_at');
+
+        $table->index('expires_at', $name.'_expires_idx');
     }
 
     /**

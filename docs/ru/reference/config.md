@@ -522,12 +522,15 @@ Yjs — источник истины; TipTap JSON — производная п
 | `vaulter.webhooks.delivery.max_response_bytes` | — | `65536` | — |
 | `vaulter.changes.retention_days` | — | `30` | Days a journal entry stays readable; vaulter:changes:prune deletes older ones and a cursor behind them expires (410 cursor_expired). |
 | `vaulter.changes.max_page_size` | — | `1000` | The largest page DriveHandle::changes()->list() returns. |
+| `vaulter.idempotency` | — | — | Idempotency-Key receipts (D25): how long a retry with the same key gets the stored outcome. vaulter:idempotency:prune deletes expired receipts. |
+| `vaulter.idempotency.ttl_seconds` | — | `86400` | — |
 | `vaulter.schedule` | — | — | Maintenance tasks put on the host scheduler. Value: null (off) \| everyMinute \| everyFiveMinutes hourly \| daily \| weekly \| 'dailyAt:HH:MM' \| 'hourlyAt:M' \| 'weeklyOn:D,HH:MM' \| a 5-field cron expression. Set enabled to false when the host schedules the commands itself. |
 | `vaulter.schedule.enabled` | `VAULTER_SCHEDULE_ENABLED` | `true` | — |
 | `vaulter.schedule.webhooks_relay` | — | `'everyMinute'` | — |
 | `vaulter.schedule.webhooks_retry` | — | `'everyMinute'` | — |
 | `vaulter.schedule.webhooks_prune` | — | `'dailyAt:03:10'` | — |
 | `vaulter.schedule.changes_prune` | — | `'dailyAt:03:20'` | — |
+| `vaulter.schedule.idempotency_prune` | — | `'dailyAt:03:30'` | — |
 | `vaulter.handlers` | — | `[]` | — |
 | `vaulter.observability.enabled` | `VAULTER_OBSERVABILITY_ENABLED` | `false` | — |
 | `vaulter.observability.recorder` | `VAULTER_OBSERVABILITY_RECORDER` | `null` | — |

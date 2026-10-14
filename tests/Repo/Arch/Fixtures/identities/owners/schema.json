@@ -129,6 +129,12 @@
         },
         {
             "match": "exact",
+            "value": "table:v_idempotency_keys",
+            "owner": "core",
+            "why": "D25: claims and receipts of keyed writes are a kernel table (architecture#persistence)"
+        },
+        {
+            "match": "exact",
             "value": "table:v_webhook_endpoints",
             "owner": "webhooks",
             "why": "architecture#packages: webhooks owns endpoints and deliveries"

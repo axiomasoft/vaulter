@@ -1242,6 +1242,92 @@
             "why": "architecture#kernel: problem module_not_ready of the operation pipeline (P3.9, ADR-0028)"
         },
         {
+            "match": "file",
+            "value": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+            "owner": "core",
+            "why": "architecture#persistence + D25: v_idempotency_keys is owned by core (P3.12)"
+        },
+        {
+            "match": "member",
+            "value": "Vaulter\\Schema\\SchemaBuilder::defineIdempotencyKeys",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "why": "architecture#ownership-map + D25: SchemaBuilder is split by owner of the table: v_idempotency_keys is core-owned (P3.12)"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Idempotency\\",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#idempotency-concurrency + D25: the idempotency mechanism of the kernel — claim, store, digest (P3.12, ADR-0029)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Idempotency\\ReceiptCodec",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Spi:Implement",
+            "why": "D25: the versioned receipt codec an idempotent operation's owner implements (P3.12)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Idempotency\\ReplayAuthorizer",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Spi:Implement",
+            "why": "D25: the owner's current authorization of a replay (P3.12)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Idempotency\\IdempotentWrite",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "D25: what makes OperationRunner::write() idempotent by key (P3.12)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Idempotency\\ResourceRef",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "D25: neutral reference of a receipt's resource and authorization scope (P3.12)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Idempotency\\ReplayedProblemException",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "D25: a deterministic refusal replayed from a receipt, caught by hosts like the original (P3.12)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Http\\Middleware\\ReadIdempotencyKey",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "D25: the Idempotency-Key header of the HTTP skeleton (P3.12)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Console\\PruneIdempotencyKeysCommand",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "D25: retention of idempotency receipts (P3.12)"
+        },
+        {
             "match": "fqcn",
             "value": "Vaulter\\Http\\Problems\\ProblemSpec",
             "owner": "core",

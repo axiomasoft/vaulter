@@ -14,6 +14,13 @@
             "id": "command:vaulter:module:uninstall",
             "kind": "cli",
             "reason": "P3.2: dry-run uninstall plan; --force/--purge refuse until P4"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "command:vaulter:idempotency:prune",
+            "kind": "cli",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029)"
         }
     ],
     "items": [
@@ -463,6 +470,34 @@
             "source": {
                 "file": "packages/core/src/Console/EventsReferenceCommand.php",
                 "symbol": "Vaulter\\Console\\EventsReferenceCommand"
+            }
+        },
+        {
+            "arguments": [],
+            "class": "Vaulter\\Console\\PruneIdempotencyKeysCommand",
+            "description": "Delete expired idempotency receipts.",
+            "exit_codes": [
+                "INVALID",
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:idempotency:prune",
+            "options": [
+                {
+                    "accepts_value": true,
+                    "array": false,
+                    "default": "0",
+                    "description": "Stop after deleting this many receipts (0 = all expired)",
+                    "name": "limit",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "core",
+            "parse": "signature",
+            "source": {
+                "file": "packages/core/src/Console/PruneIdempotencyKeysCommand.php",
+                "symbol": "Vaulter\\Console\\PruneIdempotencyKeysCommand"
             }
         },
         {

@@ -16,6 +16,7 @@ return [
         'Ulid',
         'HostKeyMysql',
         'Database',
+        'Idempotency',
         'Changes/ChangeFeedReadTest.php',
         'Changes/ChangeJournalTest.php',
         'Changes/PruneChangesCommandTest.php',

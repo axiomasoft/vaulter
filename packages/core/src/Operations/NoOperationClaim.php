@@ -6,23 +6,24 @@ namespace Vaulter\Operations;
 
 use Closure;
 use InvalidArgumentException;
+use Vaulter\Idempotency\IdempotentWrite;
 
 /**
- * No operation accepts an idempotency key yet: a key is refused before the transaction, so it is
- * never silently ignored.
+ * A pipeline without idempotency (a runner built by hand in a test): a key is refused before the
+ * transaction, so it is never silently ignored.
  *
  * @internal
  */
 final readonly class NoOperationClaim implements OperationClaim
 {
-    public function admit(Operation $operation): void
+    public function admit(Operation $operation, ?IdempotentWrite $idempotency): void
     {
         if ($operation->context->idempotencyKey !== null) {
             throw new InvalidArgumentException(sprintf('[Vaulter] The operation "%s" does not accept an idempotency key.', $operation->spec->name));
         }
     }
 
-    public function around(Operation $operation, Closure $attempt): mixed
+    public function around(Operation $operation, ?IdempotentWrite $idempotency, Closure $attempt): mixed
     {
         return $attempt();
     }

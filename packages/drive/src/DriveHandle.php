@@ -45,7 +45,7 @@ use Vaulter\ValueObjects\Access\Actor;
 
 final readonly class DriveHandle implements Contract
 {
-    public function __construct(private Drive $drive, private Container $container, private ?Actor $explicitActor = null, private ?string $correlationId = null) {}
+    public function __construct(private Drive $drive, private Container $container, private ?Actor $explicitActor = null, private ?string $correlationId = null, private ?string $idempotencyKey = null, private ?string $requestFingerprint = null) {}
 
     /** @internal The Eloquent row, for Vaulter packages and tests; hosts use snapshot(). */
     public function model(): Drive
@@ -122,12 +122,12 @@ final readonly class DriveHandle implements Contract
 
     public function actingAs(Authorizable $user): static
     {
-        return new self($this->drive, $this->container, Actor::user($user), $this->correlationId);
+        return new self($this->drive, $this->container, Actor::user($user), $this->correlationId, $this->idempotencyKey, $this->requestFingerprint);
     }
 
     public function asSystem(string $reason): static
     {
-        return new self($this->drive, $this->container, Actor::system($reason), $this->correlationId);
+        return new self($this->drive, $this->container, Actor::system($reason), $this->correlationId, $this->idempotencyKey, $this->requestFingerprint);
     }
 
     public function withCorrelationId(string $correlationId): static
@@ -136,13 +136,28 @@ final readonly class DriveHandle implements Contract
             throw new \InvalidArgumentException('Invalid correlation ID.');
         }
 
-        return new self($this->drive, $this->container, $this->explicitActor, $correlationId);
+        return new self($this->drive, $this->container, $this->explicitActor, $correlationId, $this->idempotencyKey, $this->requestFingerprint);
+    }
+
+    public function withIdempotencyKey(string $key, ?string $requestFingerprint = null): static
+    {
+        if ($key === '' || strlen($key) > 255) {
+            throw new \InvalidArgumentException('[Vaulter] An idempotency key must be between 1 and 255 bytes.');
+        }
+
+        return new self($this->drive, $this->container, $this->explicitActor, $this->correlationId, $key, $requestFingerprint);
     }
 
     /** @internal One context and correlation per operation, no cached ACL result. */
     private function context(): DriveContext
     {
-        return DriveContext::for(drive: $this->model(), actor: $this->actor(), correlationId: $this->correlationId ?? (string) Str::ulid());
+        return DriveContext::for(
+            drive: $this->model(),
+            actor: $this->actor(),
+            correlationId: $this->correlationId ?? (string) Str::ulid(),
+            idempotencyKey: $this->idempotencyKey,
+            requestFingerprint: $this->requestFingerprint,
+        );
     }
 
     public function root(): NodeSnapshot

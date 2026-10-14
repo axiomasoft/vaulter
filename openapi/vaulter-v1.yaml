@@ -1386,8 +1386,11 @@ paths:
       tags:
       - nodes
       summary: Create a folder
+      description: Idempotent by Idempotency-Key — a retry with the same key and body returns the stored response with
+        Idempotent-Replayed, after a fresh authorization check.
       parameters:
       - $ref: '#/components/parameters/Drive'
+      - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -1415,6 +1418,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -1579,10 +1584,13 @@ paths:
       - nodes
       summary: Rename a node
       description: 'Requires If-Match with the ETag of the current representation (428 without, 412 when stale). Checked after
-        authorization: a caller without access gets 404/403, never a tag comparison.'
+        authorization: a caller without access gets 404/403, never a tag comparison. Idempotent by Idempotency-Key: a retry
+        with the same key, body and If-Match returns the stored response with Idempotent-Replayed, even once that If-Match
+        went stale because the first request committed.'
       parameters:
       - $ref: '#/components/parameters/Node'
       - $ref: '#/components/parameters/IfMatch'
+      - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -1606,6 +1614,8 @@ paths:
               $ref: '#/components/headers/CacheControlStore'
             ETag:
               $ref: '#/components/headers/ETagRequired'
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
@@ -3564,6 +3574,17 @@ components:
         412. Checked after authorization.'
       schema:
         type: string
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      description: 'One Structured Field String ("…") or one token without spaces, controls or commas; 1–255 bytes, compared
+        exactly. The same key with the same request within 24 hours returns the stored response (Idempotent-Replayed: true)
+        after a fresh authorization check; another request under the key answers 422 idempotency_key_reused; a request still
+        running under the key answers 409 operation_in_progress with Retry-After. Malformed: 422 validation_failed.'
+      schema:
+        type: string
+        minLength: 1
     IfMatchWhenReplacing:
       name: If-Match
       in: header
@@ -3695,6 +3716,12 @@ components:
       schema:
         type: string
   headers:
+    IdempotentReplayed:
+      description: '`true` when the response was answered from the receipt of an earlier request with the same Idempotency-Key;
+        its ETag is historical.'
+      schema:
+        type: string
+        const: 'true'
     ETag:
       description: 'Strong validator of the representation. Opaque: never parse it. Send it back verbatim in If-Match.'
       schema:

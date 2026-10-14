@@ -28,7 +28,7 @@ idempotency key.
 | 1 | Admission: a valid module graph, a ready module, a system actor with a reason | `module_graph_invalid`, `module_not_ready` |
 | 2 | Operation middleware, in contribution order | a veto (an exception before `$next`), `extension_failed` |
 | 3 | The root transaction; a deadlock or serialization failure repeats the whole attempt | `concurrent_update` after three attempts |
-| 4 | The idempotency claim, inside the transaction | a key on an operation that does not accept keys yet |
+| 4 | The idempotency claim, inside the transaction ([idempotency](/concepts/idempotency)); a committed receipt is replayed after the owner's authorization | `idempotency_key_reused`, `operation_in_progress`, a key on an operation that does not accept keys |
 | 5–8 | The owner's attempt: lock, authorize, validate, mutate and record events, build the snapshot | the owner's problems (`permission_denied`, `stale_write`, …) |
 | 9 | Commit, after-commit callbacks, the result already built | — |
 

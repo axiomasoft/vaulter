@@ -15,6 +15,7 @@ use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Nodes\StorageNotFoundException;
 use Vaulter\Http\Middleware\AssignCorrelationId;
+use Vaulter\Http\Middleware\ReadIdempotencyKey;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\OperationContext;
@@ -39,26 +40,42 @@ final readonly class HttpOperationContextFactory
 
     public function forDrive(Request $request, Drive $drive): DriveHandle
     {
-        return $this->vaulter->drive($drive)
+        $handle = $this->vaulter->drive($drive)
             ->actingAs($this->user($request))
             ->withCorrelationId($this->correlationId($request));
+        // Only the routes of idempotent operations read the key (ReadIdempotencyKey); elsewhere it is ignored.
+        $key = ReadIdempotencyKey::key($request);
+
+        return $key === null ? $handle : $handle->withIdempotencyKey($key, ReadIdempotencyKey::requestFingerprint($request));
     }
 
     /** The neutral context of a request acting within a scope that is not a drive. */
     public function operation(Request $request, ScopeRef $scope, TenantRef $tenant): OperationContext
     {
+        $key = ReadIdempotencyKey::key($request);
+
         return OperationContext::for(
             actor: Actor::user($this->user($request)),
             scope: $scope,
             tenant: $tenant,
             correlationId: $this->correlationId($request),
+            idempotencyKey: $key,
+            requestFingerprint: $key === null ? null : ReadIdempotencyKey::requestFingerprint($request),
         );
     }
 
     /** The context of a request acting on one drive, as the drive handle builds it. */
     public function driveContext(Request $request, Drive $drive): DriveContext
     {
-        return DriveContext::for(drive: $drive, actor: Actor::user($this->user($request)), correlationId: $this->correlationId($request));
+        $key = ReadIdempotencyKey::key($request);
+
+        return DriveContext::for(
+            drive: $drive,
+            actor: Actor::user($this->user($request)),
+            correlationId: $this->correlationId($request),
+            idempotencyKey: $key,
+            requestFingerprint: $key === null ? null : ReadIdempotencyKey::requestFingerprint($request),
+        );
     }
 
     /**

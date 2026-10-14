@@ -12,6 +12,7 @@ use Vaulter\Console\EventsReferenceCommand;
 use Vaulter\Console\InstallCommand;
 use Vaulter\Console\ModulesCommand;
 use Vaulter\Console\ModuleUninstallCommand;
+use Vaulter\Console\PruneIdempotencyKeysCommand;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\Checks\CacheCheck;
 use Vaulter\Doctor\Checks\ConfigValidCheck;
@@ -23,7 +24,9 @@ use Vaulter\Doctor\Checks\SchemaIntegrityCheck;
 use Vaulter\Doctor\Checks\SchemaKeyTypesCheck;
 use Vaulter\Doctor\Checks\SchemaTablesCheck;
 use Vaulter\Doctor\Checks\TenancyCheck;
+use Vaulter\Http\Middleware\ReadIdempotencyKey;
 use Vaulter\Http\Problems\CoreProblemCodes;
+use Vaulter\Idempotency\IdempotencySchedule;
 use Vaulter\Modules\Activation;
 use Vaulter\Modules\Cardinality;
 use Vaulter\Modules\ModuleBuilder;
@@ -85,6 +88,8 @@ final class CoreModule implements VaulterModule
             ->bindings(BindingsRegistrar::class)
             ->bindings(EventsRegistrar::class)
             ->problems(CoreProblemCodes::class)
+            ->routeMiddleware(ReadIdempotencyKey::ALIAS, ReadIdempotencyKey::class)
+            ->schedule(IdempotencySchedule::class)
             ->commands(
                 InstallCommand::class,
                 DoctorCommand::class,
@@ -94,6 +99,7 @@ final class CoreModule implements VaulterModule
                 ErrorsReferenceCommand::class,
                 ConfigReferenceCommand::class,
                 CommandsReferenceCommand::class,
+                PruneIdempotencyKeysCommand::class,
             )
             ->defineSlot(DoctorCheck::class, SlotKind::Handler, Cardinality::Many)
             ->defineSlot(OperationMiddleware::class, SlotKind::OperationMiddleware, Cardinality::Many)

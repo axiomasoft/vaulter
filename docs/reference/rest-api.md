@@ -102,6 +102,15 @@ caller.
   The check runs after authorization, and the operation then writes only if the node
   is still at the sequence you matched (an atomic compare-and-set), so two clients
   holding the same tag cannot both win: the second gets `412`.
+- Routes marked **Idempotency-Key** below accept the header
+  ([idempotency](/concepts/idempotency), [ADR-0029](/adr/0029-idempotency)): one Structured Field
+  String (`"…"`) or one token without spaces, controls or commas, 1–255 bytes, compared exactly.
+  The same key with the same request (method, route, parameters, query, body and `If-Match`)
+  within 24 hours returns the stored response with `Idempotent-Replayed: true` — after a fresh
+  authorization check, so a revoked caller gets the current `404`/`403`. Another request under
+  the key → `422 idempotency_key_reused`; the first request still running → `409
+  operation_in_progress` with `Retry-After`; a malformed header → `422 validation_failed` with
+  `errors["header:Idempotency-Key"]`. Other routes ignore the header.
 
 ### Caching
 
@@ -292,7 +301,7 @@ it is stale — see [Validators](#validators-and-preconditions)). The ability a 
 checked first: a caller who sees the node but lacks it gets `403 permission_denied`, never a
 `428` or `412`. Each answers the changed Node with its new `ETag`.
 
-#### `POST v1/drives/{drive}/folders` — `folders.store`
+#### `POST v1/drives/{drive}/folders` — `folders.store` · **Idempotency-Key**
 
 | Field | Rule |
 |---|---|
@@ -301,7 +310,7 @@ checked first: a caller who sees the node but lacks it gets `403 permission_deni
 
 Needs `create` in the parent. **Response:** `201` Node.
 
-#### `PATCH v1/nodes/{node}` — `nodes.update` · **If-Match**
+#### `PATCH v1/nodes/{node}` — `nodes.update` · **If-Match** · **Idempotency-Key**
 
 `name` (required). Needs `edit`. Only the name changes here; properties have their own route.
 

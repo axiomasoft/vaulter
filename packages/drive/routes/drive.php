@@ -37,6 +37,7 @@ use Vaulter\Drive\Http\Controllers\Trash\TrashNodeController;
 use Vaulter\Drive\Http\Controllers\Uploads\CreateUploadController;
 use Vaulter\Drive\Http\Controllers\Uploads\S3MultipartProtocolController;
 use Vaulter\Drive\Http\Controllers\Uploads\TusProtocolController;
+use Vaulter\Http\Middleware\ReadIdempotencyKey;
 
 /*
 |--------------------------------------------------------------------------
@@ -72,13 +73,14 @@ Route::prefix($routes->versionedPrefix())
         Route::get('drives/{drive}/starred', ListStarredController::class)->name('nodes.starred');
         Route::get('drives/{drive}/trash', ListTrashController::class)->name('trash.index');
         Route::delete('drives/{drive}/trash', EmptyTrashController::class)->name('trash.empty');
-        Route::post('drives/{drive}/folders', CreateFolderController::class)->name('folders.store');
+        // Idempotent by Idempotency-Key (D25): the operations declare a receipt codec and a replay authorizer.
+        Route::post('drives/{drive}/folders', CreateFolderController::class)->name('folders.store')->middleware(ReadIdempotencyKey::ALIAS);
         Route::post('drives/{drive}/files', UploadFileController::class)->name('files.store');
 
         Route::get('shared', ListSharedWithMeController::class)->name('shared.index');
 
         Route::get('nodes/{node}', ShowNodeController::class)->name('nodes.show');
-        Route::patch('nodes/{node}', UpdateNodeController::class)->name('nodes.update');
+        Route::patch('nodes/{node}', UpdateNodeController::class)->name('nodes.update')->middleware(ReadIdempotencyKey::ALIAS);
         Route::patch('nodes/{node}/properties', UpdateNodePropertiesController::class)->name('nodes.properties.update');
         Route::put('nodes/{node}/star', StarNodeController::class)->name('nodes.star');
         Route::delete('nodes/{node}/star', UnstarNodeController::class)->name('nodes.unstar');

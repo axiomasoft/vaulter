@@ -70,6 +70,20 @@
             "id": "publish:vaulter-filament-config",
             "kind": "config",
             "reason": "P3.4: published by the module kernel from the FilamentModule config declaration instead of the provider"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "config:vaulter.idempotency.ttl_seconds",
+            "kind": "config",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "config:vaulter.schedule.idempotency_prune",
+            "kind": "config",
+            "reason": "P3.12: idempotency by key (D25, ADR-0029)"
         }
     ],
     "items": [
@@ -1548,6 +1562,17 @@
             }
         },
         {
+            "default": 86400,
+            "id": "config:vaulter.idempotency.ttl_seconds",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
             "default": {
                 "default": "string",
                 "env": "VAULTER_HOST_KEYS"
@@ -2079,6 +2104,17 @@
             },
             "env": "VAULTER_SCHEDULE_ENABLED",
             "id": "config:vaulter.schedule.enabled",
+            "owner": "core",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": "dailyAt:03:30",
+            "id": "config:vaulter.schedule.idempotency_prune",
             "owner": "core",
             "registered_defaults": true,
             "root": "vaulter",

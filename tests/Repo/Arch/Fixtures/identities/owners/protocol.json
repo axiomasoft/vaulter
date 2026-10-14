@@ -532,6 +532,46 @@
                 "symbol": "Vaulter\\Operations\\OperationSpec::__construct"
             },
             "why": "the operation identity of the pipeline: telemetry label and part of the idempotency scope tuple (D25)"
+        },
+        {
+            "id": "format:header-idempotency-key",
+            "source": {
+                "file": "packages/core/src/Http/Middleware/ReadIdempotencyKey.php",
+                "symbol": "Vaulter\\Http\\Middleware\\ReadIdempotencyKey::parse"
+            },
+            "format": "Idempotency-Key request header: one Structured Field String (\"…\", \\\" and \\\\ escapes) or one token of visible ASCII without commas; 1-255 bytes, never trimmed or case-folded; Idempotent-Replayed: true on a replayed response",
+            "owner": "core",
+            "why": "D25: the HTTP spelling of the idempotency key on the routes of idempotent operations"
+        },
+        {
+            "id": "format:idempotency-scope-digest",
+            "source": {
+                "file": "packages/core/src/Idempotency/IdempotencyDigest.php",
+                "symbol": "Vaulter\\Idempotency\\IdempotencyDigest::scope"
+            },
+            "format": "lowercase hex SHA-256 over tenant_kind, tenant_id, scope_kind, scope_id, actor_kind, actor_id, operation, key, each as <byte length>:<bytes> and a null as ~; request hash = hex SHA-256 of the canonical JSON fingerprint (keys sorted, unescaped slashes/unicode)",
+            "owner": "core",
+            "why": "D25: the stored uniqueness key of v_idempotency_keys and the request hash"
+        },
+        {
+            "id": "format:receipt-node-snapshot",
+            "source": {
+                "file": "packages/drive/src/Idempotency/NodeSnapshotCodec.php",
+                "symbol": "Vaulter\\Drive\\Idempotency\\NodeSnapshotCodec::encode"
+            },
+            "format": "receipt kind drive.node-snapshot, version 1: JSON of every NodeSnapshot field (snake_case; times Y-m-d\\TH:i:s.uP; file/document/viewer heads or null)",
+            "owner": "drive",
+            "why": "D25: the stored receipt of folders.create and nodes.rename, decoded on a replay"
+        },
+        {
+            "id": "format:receipt-problem",
+            "source": {
+                "file": "packages/core/src/Idempotency/IdempotencyClaim.php",
+                "symbol": "Vaulter\\Idempotency\\IdempotencyClaim::REFUSAL"
+            },
+            "format": "receipt kind vaulter.problem, version 1: JSON {code, status, details} of a refusal whose code is receipt: cacheable; headers in receipt_headers",
+            "owner": "core",
+            "why": "D25: the stored receipt of a deterministic refusal"
         }
     ]
 }

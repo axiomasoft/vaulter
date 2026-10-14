@@ -40,7 +40,7 @@ final readonly class DriveContext
         $this->idempotencyKey = $operation->idempotencyKey;
     }
 
-    public static function for(Drive $drive, Actor $actor, string $correlationId, ?string $idempotencyKey = null): self
+    public static function for(Drive $drive, Actor $actor, string $correlationId, ?string $idempotencyKey = null, ?string $requestFingerprint = null): self
     {
         return new self(
             operation: new OperationContext(
@@ -49,6 +49,7 @@ final readonly class DriveContext
                 tenant: TenantRef::of($drive->tenant_id),
                 correlationId: $correlationId,
                 idempotencyKey: $idempotencyKey,
+                requestFingerprint: $requestFingerprint,
             ),
             drive: $drive,
         );

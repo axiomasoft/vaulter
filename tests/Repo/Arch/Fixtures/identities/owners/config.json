@@ -51,6 +51,18 @@
         },
         {
             "match": "prefix",
+            "value": "config:vaulter.idempotency.",
+            "owner": "core",
+            "why": "D25: the idempotency receipts of the kernel (architecture#idempotency-concurrency, P3.12)"
+        },
+        {
+            "match": "exact",
+            "value": "config:vaulter.schedule.idempotency_prune",
+            "owner": "core",
+            "why": "vaulter:idempotency:prune -> core (D25)"
+        },
+        {
+            "match": "prefix",
             "value": "config:vaulter.profiles.",
             "owner": "drive",
             "why": "Profiles (11) -> drive (architecture#ownership-map)"

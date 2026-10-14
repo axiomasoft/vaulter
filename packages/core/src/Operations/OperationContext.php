@@ -28,6 +28,7 @@ final readonly class OperationContext
         public string $correlationId,
         public ?string $causationId = null,
         public ?string $idempotencyKey = null,
+        public ?string $requestFingerprint = null,
     ) {
         self::assertTraceId($correlationId, 'Correlation ID');
         if ($causationId !== null) {
@@ -35,6 +36,9 @@ final readonly class OperationContext
         }
         if ($idempotencyKey !== null && ($idempotencyKey === '' || strlen($idempotencyKey) > 255)) {
             throw new InvalidArgumentException('[Vaulter] An idempotency key must be between 1 and 255 bytes.');
+        }
+        if ($requestFingerprint !== null && ($idempotencyKey === null || $requestFingerprint === '')) {
+            throw new InvalidArgumentException('[Vaulter] A request fingerprint travels only with an idempotency key.');
         }
         $this->systemReason = $actor->isSystem() ? $actor->ref()->reason : null;
     }
@@ -46,6 +50,7 @@ final readonly class OperationContext
         string $correlationId,
         ?string $causationId = null,
         ?string $idempotencyKey = null,
+        ?string $requestFingerprint = null,
     ): self {
         return new self(
             actor: $actor,
@@ -54,6 +59,7 @@ final readonly class OperationContext
             correlationId: $correlationId,
             causationId: $causationId,
             idempotencyKey: $idempotencyKey,
+            requestFingerprint: $requestFingerprint,
         );
     }
 
@@ -62,8 +68,12 @@ final readonly class OperationContext
         return new self(actor: Actor::system($reason), scope: $scope, tenant: $tenant, correlationId: $correlationId ?? (string) Str::ulid());
     }
 
-    /** The key arrives already decoded (opaque bytes, compared exactly). */
-    public function withIdempotencyKey(string $key): self
+    /**
+     * The key arrives already decoded (opaque bytes, 1–255, compared exactly: never trimmed or lowercased).
+     * A transport that fingerprints its own request (the HTTP middleware) passes that digest; it then
+     * replaces the operation's own fingerprint in the request hash (D25).
+     */
+    public function withIdempotencyKey(string $key, ?string $requestFingerprint = null): self
     {
         return new self(
             actor: $this->actor,
@@ -72,6 +82,7 @@ final readonly class OperationContext
             correlationId: $this->correlationId,
             causationId: $this->causationId,
             idempotencyKey: $key,
+            requestFingerprint: $requestFingerprint,
         );
     }
 
@@ -84,12 +95,13 @@ final readonly class OperationContext
             correlationId: $this->correlationId,
             causationId: $causationId,
             idempotencyKey: $this->idempotencyKey,
+            requestFingerprint: $this->requestFingerprint,
         );
     }
 
     /**
      * Span and log attributes of this context. Carries no personal data (the actor and
-     * the tenant appear only as tagged kinds) and never the idempotency key's value.
+     * the tenant appear only as tagged kinds) and never the idempotency key's value or fingerprint.
      *
      * @return array<string, string>
      */

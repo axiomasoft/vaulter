@@ -1721,6 +1721,247 @@
                 }
             }
         },
+        "custom_idempotency_keys": {
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "character(26)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "scope_digest",
+                    "type": "character(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "tenant_kind",
+                    "type": "character varying(16)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "tenant_id",
+                    "type": "character varying(191)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "scope_kind",
+                    "type": "character varying(32)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "scope_id",
+                    "type": "character varying(191)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "actor_kind",
+                    "type": "character varying(16)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "actor_id",
+                    "type": "character varying(191)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "operation",
+                    "type": "character varying(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "idempotency_key",
+                    "type": "character varying(344)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "request_hash",
+                    "type": "character(64)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "status",
+                    "type": "character varying(16)",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "receipt_kind",
+                    "type": "character varying(64)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "codec_version",
+                    "type": "smallint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "receipt_body",
+                    "type": "json",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "http_code",
+                    "type": "smallint",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "receipt_headers",
+                    "type": "json",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "resource_kind",
+                    "type": "character varying(32)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "resource_id",
+                    "type": "character varying(191)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "auth_scope_kind",
+                    "type": "character varying(32)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "auth_scope_id",
+                    "type": "character varying(191)",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": "default"
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "completed_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": false,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                },
+                {
+                    "name": "expires_at",
+                    "type": "timestamp(0) without time zone",
+                    "not_null": true,
+                    "default": null,
+                    "identity": "",
+                    "generated": "",
+                    "collation": null
+                }
+            ],
+            "indexes": {
+                "custom_idempotency_keys_expires_idx": "CREATE INDEX custom_idempotency_keys_expires_idx ON public.custom_idempotency_keys USING btree (expires_at)",
+                "custom_idempotency_keys_pkey": "CREATE UNIQUE INDEX custom_idempotency_keys_pkey ON public.custom_idempotency_keys USING btree (id)",
+                "custom_idempotency_keys_scope_unique": "CREATE UNIQUE INDEX custom_idempotency_keys_scope_unique ON public.custom_idempotency_keys USING btree (scope_digest)"
+            },
+            "constraints": {
+                "custom_idempotency_keys_pkey": {
+                    "type": "p",
+                    "definition": "PRIMARY KEY (id)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                },
+                "custom_idempotency_keys_scope_unique": {
+                    "type": "u",
+                    "definition": "UNIQUE (scope_digest)",
+                    "deferrable": false,
+                    "deferred": false,
+                    "validated": true
+                }
+            }
+        },
         "custom_node_comments": {
             "columns": [
                 {

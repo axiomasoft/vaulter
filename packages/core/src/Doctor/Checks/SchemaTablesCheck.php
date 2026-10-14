@@ -31,7 +31,7 @@ final readonly class SchemaTablesCheck implements DoctorCheck
      * @var array<string, list<string>> module id => entity keys
      */
     public const array OWNED_ENTITIES = [
-        'core' => ['outbox'],
+        'core' => ['outbox', 'idempotency_keys'],
         'media' => ['blobs'],
         'drive' => [
             'drives', 'nodes', 'files', 'file_revisions', 'file_revision_blobs',

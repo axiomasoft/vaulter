@@ -526,6 +526,7 @@ Schedule::command('vaulter:changes:prune')->daily();
 | `vaulter:drives:recount` | Recount the used bytes of drives from their retained file revisions. | `[--drive [DRIVE]] [--dry-run]` |
 | `vaulter:errors:reference` | Generate the problem-code reference in the docs. | `[--check] [--path [PATH]]` |
 | `vaulter:events:reference` | Generate the event catalogue table in the reference docs. | `[--check] [--path [PATH]]` |
+| `vaulter:idempotency:prune` | Delete expired idempotency receipts. | `[--limit [LIMIT]]` |
 | `vaulter:install` | Publish Vaulter config, show the host settings to apply, optionally migrate and run the doctor | `[--middleware [MIDDLEWARE]] [--driver [DRIVER]] [--migrate] [--force]` |
 | `vaulter:make:document-type` | Scaffold a Vaulter document type | `[--force] [--] <name>` |
 | `vaulter:make:exporter` | Scaffold a Vaulter document exporter | `[--force] [--] <name>` |

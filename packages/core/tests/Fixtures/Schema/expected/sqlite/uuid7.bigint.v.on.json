@@ -2359,6 +2359,245 @@
             },
             "create_sql": "CREATE TABLE \"v_files\" (\"id\" varchar not null, \"tenant_id\" integer, \"node_id\" varchar not null, \"current_revision_id\" varchar, \"mime_type\" varchar, \"size_bytes\" integer not null default '0', \"revision_count\" integer not null default '0', \"created_by\" integer, \"created_at\" datetime, \"updated_at\" datetime, foreign key(\"node_id\") references \"v_nodes\"(\"id\") on delete cascade, primary key (\"id\"))"
         },
+        "v_idempotency_keys": {
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "varchar",
+                    "notnull": 1,
+                    "default": null,
+                    "pk": 1,
+                    "hidden": 0
+                },
+                {
+                    "name": "scope_digest",
+                    "type": "varchar",
+                    "notnull": 1,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "tenant_kind",
+                    "type": "varchar",
+                    "notnull": 1,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "tenant_id",
+                    "type": "varchar",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "scope_kind",
+                    "type": "varchar",
+                    "notnull": 1,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "scope_id",
+                    "type": "varchar",
+                    "notnull": 1,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "actor_kind",
+                    "type": "varchar",
+                    "notnull": 1,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "actor_id",
+                    "type": "varchar",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "operation",
+                    "type": "varchar",
+                    "notnull": 1,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "idempotency_key",
+                    "type": "varchar",
+                    "notnull": 1,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "request_hash",
+                    "type": "varchar",
+                    "notnull": 1,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "status",
+                    "type": "varchar",
+                    "notnull": 1,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "receipt_kind",
+                    "type": "varchar",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "codec_version",
+                    "type": "INTEGER",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "receipt_body",
+                    "type": "TEXT",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "http_code",
+                    "type": "INTEGER",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "receipt_headers",
+                    "type": "TEXT",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "resource_kind",
+                    "type": "varchar",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "resource_id",
+                    "type": "varchar",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "auth_scope_kind",
+                    "type": "varchar",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "auth_scope_id",
+                    "type": "varchar",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "created_at",
+                    "type": "datetime",
+                    "notnull": 1,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "completed_at",
+                    "type": "datetime",
+                    "notnull": 0,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                },
+                {
+                    "name": "expires_at",
+                    "type": "datetime",
+                    "notnull": 1,
+                    "default": null,
+                    "pk": 0,
+                    "hidden": 0
+                }
+            ],
+            "indexes": {
+                "sqlite_autoindex_v_idempotency_keys_1": {
+                    "unique": 1,
+                    "origin": "pk",
+                    "partial": 0,
+                    "columns": [
+                        {
+                            "name": "id",
+                            "desc": 0,
+                            "collation": "BINARY"
+                        }
+                    ],
+                    "sql": null
+                },
+                "v_idempotency_keys_expires_idx": {
+                    "unique": 0,
+                    "origin": "c",
+                    "partial": 0,
+                    "columns": [
+                        {
+                            "name": "expires_at",
+                            "desc": 0,
+                            "collation": "BINARY"
+                        }
+                    ],
+                    "sql": "CREATE INDEX \"v_idempotency_keys_expires_idx\" on \"v_idempotency_keys\" (\"expires_at\")"
+                },
+                "v_idempotency_keys_scope_unique": {
+                    "unique": 1,
+                    "origin": "c",
+                    "partial": 0,
+                    "columns": [
+                        {
+                            "name": "scope_digest",
+                            "desc": 0,
+                            "collation": "BINARY"
+                        }
+                    ],
+                    "sql": "CREATE UNIQUE INDEX \"v_idempotency_keys_scope_unique\" on \"v_idempotency_keys\" (\"scope_digest\")"
+                }
+            },
+            "foreign_keys": [],
+            "create_sql": "CREATE TABLE \"v_idempotency_keys\" (\"id\" varchar not null, \"scope_digest\" varchar not null, \"tenant_kind\" varchar not null, \"tenant_id\" varchar, \"scope_kind\" varchar not null, \"scope_id\" varchar not null, \"actor_kind\" varchar not null, \"actor_id\" varchar, \"operation\" varchar not null, \"idempotency_key\" varchar not null, \"request_hash\" varchar not null, \"status\" varchar not null, \"receipt_kind\" varchar, \"codec_version\" integer, \"receipt_body\" text, \"http_code\" integer, \"receipt_headers\" text, \"resource_kind\" varchar, \"resource_id\" varchar, \"auth_scope_kind\" varchar, \"auth_scope_id\" varchar, \"created_at\" datetime not null, \"completed_at\" datetime, \"expires_at\" datetime not null, primary key (\"id\"))"
+        },
         "v_node_comments": {
             "columns": [
                 {

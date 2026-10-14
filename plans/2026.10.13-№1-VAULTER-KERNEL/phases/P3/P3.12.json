@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.12",
   "title": "Идемпотентность D25: v_idempotency_keys, claim/receipt в раннере, Idempotency-Key, replay с текущей авторизацией (ADR-0029)",
-  "status": "todo",
+  "status": "in_progress",
   "summary": "Core получает `Vaulter\\Idempotency` (IdempotencyStore, канонизация digest/request hash, ReceiptCodec SPI, ReplayAuthorizer), таблицу `v_idempotency_keys`, стадию 4 раннера, HTTP-middleware `Idempotency-Key`, prune-команду; `folders.create` и `nodes.rename` идемпотентны по ключу из PHP и HTTP; контрактные тесты I11 и PG-гонка зелёные; ADR-0029.",
   "why": "D25 нормативен; I11 строится в P3 (покрытие всех операций — P6). Риски (hard): видимость uncommitted claim, PG aborted transaction после duplicate/timeout, кэширование отказов доступа, replay без текущей авторизации, NULL в UNIQUE, коллизия digest.",
   "scope": {
@@ -309,6 +309,14 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-14T05:47:50Z"
+  "result": {
+    "started_at": "2026-10-14T14:50:14Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "session": "6b735f69-a177-4dc2-91c8-fcb6efc9184a"
+    }
+  },
+  "updated_at": "2026-10-14T14:50:14Z"
 }

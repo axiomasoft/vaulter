@@ -15,6 +15,8 @@ use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Exceptions\Profiles\InvalidProfileException;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
+use Vaulter\Idempotency\IdempotencyClaim;
+use Vaulter\Idempotency\IdempotencySchedule;
 use Vaulter\Kernel;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileRegistry;
@@ -49,7 +51,11 @@ final readonly class ConfigValidator
         $schedule = new ScheduleConfig($this->config);
         $schedule->enabled();
         // changes_prune is the drive's core-located key (D39); the webhooks keys belong to WebhooksModule.
-        $schedule->frequencies('vaulter', ['changes_prune', ...WebhooksSchedule::KEYS]);
+        $schedule->frequencies('vaulter', ['changes_prune', IdempotencySchedule::KEY, ...WebhooksSchedule::KEYS]);
+        $ttl = $this->config->get('vaulter.idempotency.ttl_seconds', IdempotencyClaim::DEFAULT_TTL_SECONDS);
+        if (!is_int($ttl) || $ttl < 1) {
+            throw new InvalidConfigurationException('[Vaulter] vaulter.idempotency.ttl_seconds must be a positive integer (seconds).');
+        }
 
         // The drive sections located in the core config are its active path (D39): validated only while it is active.
         if ($app->make(Kernel::class)->isActive('drive')) {

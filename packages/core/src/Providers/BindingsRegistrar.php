@@ -22,11 +22,13 @@ use Vaulter\CoreModule;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Database\WriteScope;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
+use Vaulter\Idempotency\IdempotencyClaim;
+use Vaulter\Idempotency\IdempotencyOutcome;
+use Vaulter\Idempotency\IdempotencyStore;
 use Vaulter\Modules\ModuleBindings;
 use Vaulter\Observability\NullMetricsRecorder;
 use Vaulter\Observability\NullTraceRecorder;
 use Vaulter\Operations\ModuleReadiness;
-use Vaulter\Operations\NoOperationClaim;
 use Vaulter\Operations\OperationClaim;
 use Vaulter\Operations\OperationRunner;
 use Vaulter\Schema\IdStrategyResolver;
@@ -66,7 +68,10 @@ final class BindingsRegistrar implements ModuleBindings
         // One runner per process: it counts the writes inside its root transaction (nesting).
         $app->scoped(OperationRunner::class);
         $app->singleton(ModuleReadiness::class);
-        $app->singletonIf(OperationClaim::class, NoOperationClaim::class);
+        // Stage 4 of the pipeline (D25): scoped with the runner and the outcome the HTTP middleware reads.
+        $app->scoped(OperationClaim::class, IdempotencyClaim::class);
+        $app->scoped(IdempotencyOutcome::class);
+        $app->singleton(IdempotencyStore::class);
         $app->scoped(WriteScope::class);
         $app->singleton(IdStrategyResolver::class);
 

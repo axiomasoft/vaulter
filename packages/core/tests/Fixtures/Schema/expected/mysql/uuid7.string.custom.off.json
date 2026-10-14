@@ -2814,6 +2814,293 @@
             },
             "create_sql": "CREATE TABLE `custom_files` (\n  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `tenant_id` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `node_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `current_revision_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `mime_type` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `size_bytes` bigint NOT NULL DEFAULT '0',\n  `revision_count` int unsigned NOT NULL DEFAULT '0',\n  `created_by` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `custom_files_node_uniq` (`node_id`),\n  KEY `custom_files_tenant_id_index` (`tenant_id`),\n  KEY `custom_files_node_id_index` (`node_id`),\n  KEY `custom_files_current_revision_id_index` (`current_revision_id`),\n  KEY `custom_files_head_fk` (`current_revision_id`,`id`),\n  CONSTRAINT `custom_files_head_fk` FOREIGN KEY (`current_revision_id`, `id`) REFERENCES `custom_file_revisions` (`id`, `file_id`) ON DELETE RESTRICT,\n  CONSTRAINT `custom_files_node_id_foreign` FOREIGN KEY (`node_id`) REFERENCES `custom_nodes` (`id`) ON DELETE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
         },
+        "custom_idempotency_keys": {
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "char(36)",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "scope_digest",
+                    "type": "char(64)",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "tenant_kind",
+                    "type": "varchar(16)",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "tenant_id",
+                    "type": "varchar(191)",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "scope_kind",
+                    "type": "varchar(32)",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "scope_id",
+                    "type": "varchar(191)",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "actor_kind",
+                    "type": "varchar(16)",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "actor_id",
+                    "type": "varchar(191)",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "operation",
+                    "type": "varchar(64)",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "idempotency_key",
+                    "type": "varchar(344)",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "request_hash",
+                    "type": "char(64)",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "status",
+                    "type": "varchar(16)",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "receipt_kind",
+                    "type": "varchar(64)",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "codec_version",
+                    "type": "smallint unsigned",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "receipt_body",
+                    "type": "json",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "http_code",
+                    "type": "smallint unsigned",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "receipt_headers",
+                    "type": "json",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "resource_kind",
+                    "type": "varchar(32)",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "resource_id",
+                    "type": "varchar(191)",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "auth_scope_kind",
+                    "type": "varchar(32)",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "auth_scope_id",
+                    "type": "varchar(191)",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": "utf8mb4",
+                    "collation": "utf8mb4_unicode_ci",
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "completed_at",
+                    "type": "timestamp",
+                    "nullable": "YES",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                },
+                {
+                    "name": "expires_at",
+                    "type": "timestamp",
+                    "nullable": "NO",
+                    "default": null,
+                    "charset": null,
+                    "collation": null,
+                    "extra": "",
+                    "generation": ""
+                }
+            ],
+            "indexes": {
+                "custom_idempotency_keys_expires_idx": {
+                    "unique": false,
+                    "type": "BTREE",
+                    "visible": "YES",
+                    "parts": [
+                        {
+                            "column": "expires_at",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        }
+                    ]
+                },
+                "custom_idempotency_keys_scope_unique": {
+                    "unique": true,
+                    "type": "BTREE",
+                    "visible": "YES",
+                    "parts": [
+                        {
+                            "column": "scope_digest",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        }
+                    ]
+                },
+                "PRIMARY": {
+                    "unique": true,
+                    "type": "BTREE",
+                    "visible": "YES",
+                    "parts": [
+                        {
+                            "column": "id",
+                            "expression": null,
+                            "sub_part": null,
+                            "direction": "A"
+                        }
+                    ]
+                }
+            },
+            "constraints": [],
+            "create_sql": "CREATE TABLE `custom_idempotency_keys` (\n  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `scope_digest` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `tenant_kind` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `tenant_id` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `scope_kind` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `scope_id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `actor_kind` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `actor_id` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `operation` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `idempotency_key` varchar(344) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `request_hash` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `status` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `receipt_kind` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `codec_version` smallint unsigned DEFAULT NULL,\n  `receipt_body` json DEFAULT NULL,\n  `http_code` smallint unsigned DEFAULT NULL,\n  `receipt_headers` json DEFAULT NULL,\n  `resource_kind` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `resource_id` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `auth_scope_kind` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `auth_scope_id` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_at` timestamp NOT NULL,\n  `completed_at` timestamp NULL DEFAULT NULL,\n  `expires_at` timestamp NOT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `custom_idempotency_keys_scope_unique` (`scope_digest`),\n  KEY `custom_idempotency_keys_expires_idx` (`expires_at`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+        },
         "custom_node_comments": {
             "columns": [
                 {
@@ -4361,7 +4648,7 @@
                     "enforced": "YES"
                 }
             },
-            "create_sql": "CREATE TABLE `custom_nodes` (\n  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `profile` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'default',\n  `tenant_id` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `drive_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `parent_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `kind` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `name_key` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,\n  `mime_type` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `extension` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `size_bytes` bigint NOT NULL DEFAULT '0',\n  `inherit_grants` tinyint(1) NOT NULL DEFAULT '1',\n  `shortcut_target_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `properties` json DEFAULT NULL,\n  `content_modified_at` timestamp NULL DEFAULT NULL,\n  `content_modified_by` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `trashed_at` timestamp NULL DEFAULT NULL,\n  `trashed_by` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `trashed_from_parent_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `trash_root_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_by` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `updated_by` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  `sequence` bigint NOT NULL DEFAULT '0',\n  `name_key_hash` char(64) CHARACTER SET ascii COLLATE ascii_bin GENERATED ALWAYS AS ((case when (`trashed_at` is null) then sha2(`name_key`,256) else NULL end)) STORED,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `custom_nodes_sibling_uniq` (`parent_id`,`name_key_hash`),\n  UNIQUE KEY `custom_nodes_root_uniq` (`drive_id`,((case when (`parent_id` is null) then 1 else NULL end))),\n  KEY `custom_nodes_drive_id_kind_trashed_at_index` (`drive_id`,`kind`,`trashed_at`),\n  KEY `custom_nodes_drive_id_trash_root_id_index` (`drive_id`,`trash_root_id`),\n  KEY `custom_nodes_profile_index` (`profile`),\n  KEY `custom_nodes_tenant_id_index` (`tenant_id`),\n  KEY `custom_nodes_drive_id_index` (`drive_id`),\n  KEY `custom_nodes_parent_id_index` (`parent_id`),\n  KEY `custom_nodes_kind_index` (`kind`),\n  KEY `custom_nodes_mime_type_index` (`mime_type`),\n  KEY `custom_nodes_shortcut_target_id_index` (`shortcut_target_id`),\n  KEY `custom_nodes_trashed_from_parent_id_index` (`trashed_from_parent_id`),\n  KEY `custom_nodes_trash_root_id_index` (`trash_root_id`),\n  KEY `custom_nodes_trashed_idx` (`trashed_at`),\n  KEY `custom_nodes_drive_id_parent_id_index` (`drive_id`,`parent_id`),\n  CONSTRAINT `custom_nodes_drive_id_foreign` FOREIGN KEY (`drive_id`) REFERENCES `custom_drives` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `custom_nodes_parent_id_foreign` FOREIGN KEY (`parent_id`) REFERENCES `custom_nodes` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `custom_nodes_sequence_nonnegative` CHECK ((`sequence` >= 0))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+            "create_sql": "CREATE TABLE `custom_nodes` (\n  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `profile` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'default',\n  `tenant_id` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `drive_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `parent_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `kind` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `name_key` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,\n  `mime_type` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `extension` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `size_bytes` bigint NOT NULL DEFAULT '0',\n  `inherit_grants` tinyint(1) NOT NULL DEFAULT '1',\n  `shortcut_target_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `properties` json DEFAULT NULL,\n  `content_modified_at` timestamp NULL DEFAULT NULL,\n  `content_modified_by` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `trashed_at` timestamp NULL DEFAULT NULL,\n  `trashed_by` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `trashed_from_parent_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `trash_root_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_by` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `updated_by` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `created_at` timestamp NULL DEFAULT NULL,\n  `updated_at` timestamp NULL DEFAULT NULL,\n  `sequence` bigint NOT NULL DEFAULT '0',\n  `name_key_hash` char(64) CHARACTER SET ascii COLLATE ascii_bin GENERATED ALWAYS AS ((case when (`trashed_at` is null) then sha2(`name_key`,256) else NULL end)) STORED,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `custom_nodes_sibling_uniq` (`parent_id`,`name_key_hash`),\n  UNIQUE KEY `custom_nodes_root_uniq` (`drive_id`,((case when (`parent_id` is null) then 1 else NULL end))),\n  KEY `custom_nodes_drive_id_parent_id_index` (`drive_id`,`parent_id`),\n  KEY `custom_nodes_drive_id_kind_trashed_at_index` (`drive_id`,`kind`,`trashed_at`),\n  KEY `custom_nodes_drive_id_trash_root_id_index` (`drive_id`,`trash_root_id`),\n  KEY `custom_nodes_profile_index` (`profile`),\n  KEY `custom_nodes_tenant_id_index` (`tenant_id`),\n  KEY `custom_nodes_drive_id_index` (`drive_id`),\n  KEY `custom_nodes_parent_id_index` (`parent_id`),\n  KEY `custom_nodes_kind_index` (`kind`),\n  KEY `custom_nodes_mime_type_index` (`mime_type`),\n  KEY `custom_nodes_shortcut_target_id_index` (`shortcut_target_id`),\n  KEY `custom_nodes_trashed_from_parent_id_index` (`trashed_from_parent_id`),\n  KEY `custom_nodes_trash_root_id_index` (`trash_root_id`),\n  KEY `custom_nodes_trashed_idx` (`trashed_at`),\n  CONSTRAINT `custom_nodes_drive_id_foreign` FOREIGN KEY (`drive_id`) REFERENCES `custom_drives` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `custom_nodes_parent_id_foreign` FOREIGN KEY (`parent_id`) REFERENCES `custom_nodes` (`id`) ON DELETE CASCADE,\n  CONSTRAINT `custom_nodes_sequence_nonnegative` CHECK ((`sequence` >= 0))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
         },
         "custom_outbox": {
             "columns": [

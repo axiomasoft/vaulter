@@ -93,6 +93,11 @@ final class SpyDriveHandle implements DriveHandle
         return new self($this->inner->withCorrelationId($correlationId), $this->calls);
     }
 
+    public function withIdempotencyKey(string $key, ?string $requestFingerprint = null): static
+    {
+        return new self($this->inner->withIdempotencyKey($key, $requestFingerprint), $this->calls);
+    }
+
     public function root(): NodeSnapshot
     {
         return $this->inner->root();

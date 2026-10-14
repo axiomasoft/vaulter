@@ -68,8 +68,8 @@
         "core-operations": {
             "parent": "core",
             "suite": "core",
-            "src": ["packages/core/src/Operations"],
-            "tests": ["packages/core/tests/Operations"],
+            "src": ["packages/core/src/Operations", "packages/core/src/Idempotency"],
+            "tests": ["packages/core/tests/Operations", "packages/core/tests/Idempotency"],
             "uses": ["core-kernel", "core-modules", "core-schema", "core-events-webhooks"]
         },
         "core-access": {
