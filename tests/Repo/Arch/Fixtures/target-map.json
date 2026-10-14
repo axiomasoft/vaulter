@@ -1668,6 +1668,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/azgard/src/AzgardModule.php",
+            "fqcn": "Vaulter\\Azgard\\AzgardModule",
+            "kind": "final-class",
+            "note": null,
+            "owner": "azgard",
+            "package": "azgard",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Azgard\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Azgard\\AzgardModule"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/azgard/src/AzgardPermissionDriver.php",
             "fqcn": "Vaulter\\Azgard\\AzgardPermissionDriver",
             "kind": "final-class",
@@ -1762,6 +1776,20 @@
             "rule": "other-packages:prefix:Vaulter\\Azgard\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Azgard\\NullAzgardGuard"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/azgard/src/Providers/BindingsRegistrar.php",
+            "fqcn": "Vaulter\\Azgard\\Providers\\BindingsRegistrar",
+            "kind": "final-class",
+            "note": null,
+            "owner": "azgard",
+            "package": "azgard",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Azgard\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Azgard\\Providers\\BindingsRegistrar"
         },
         {
             "action": "keep",
@@ -5138,6 +5166,20 @@
             "target_fqcn": "Vaulter\\Documents\\DocumentsManager"
         },
         {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/documents/src/DocumentsModule.php",
+            "fqcn": "Vaulter\\Documents\\DocumentsModule",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Documents\\DocumentsModule"
+        },
+        {
             "action": "move",
             "eloquent": false,
             "file": "packages/documents/src/Enums/Collaboration/CollaborationDriverType.php",
@@ -6102,20 +6144,6 @@
             "rule": "other-packages:fqcn:Vaulter\\Documents\\Providers\\CollaborationRegistrar",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Collaboration\\Providers\\CollaborationRegistrar"
-        },
-        {
-            "action": "keep",
-            "eloquent": false,
-            "file": "packages/documents/src/Providers/HttpRegistrar.php",
-            "fqcn": "Vaulter\\Documents\\Providers\\HttpRegistrar",
-            "kind": "final-class",
-            "note": null,
-            "owner": "documents",
-            "package": "documents",
-            "phase": "stay",
-            "rule": "other-packages:prefix:Vaulter\\Documents\\",
-            "surface": "Internal",
-            "target_fqcn": "Vaulter\\Documents\\Providers\\HttpRegistrar"
         },
         {
             "action": "keep",
@@ -10162,6 +10190,34 @@
             "rule": "other-packages:prefix:Vaulter\\Filament\\Configuration\\",
             "surface": "Api",
             "target_fqcn": "Vaulter\\Filament\\Configuration\\FilamentConfig"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/filament/src/FilamentModule.php",
+            "fqcn": "Vaulter\\Filament\\FilamentModule",
+            "kind": "final-class",
+            "note": null,
+            "owner": "filament",
+            "package": "filament",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Filament\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Filament\\FilamentModule"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/filament/src/Providers/BindingsRegistrar.php",
+            "fqcn": "Vaulter\\Filament\\Providers\\BindingsRegistrar",
+            "kind": "final-class",
+            "note": null,
+            "owner": "filament",
+            "package": "filament",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Filament\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Filament\\Providers\\BindingsRegistrar"
         },
         {
             "action": "keep",

@@ -34,6 +34,7 @@
             "packages/core/tests/Arch/HttpV1ArchTest.php",
             "packages/core/tests/Arch/NoSoftDeletesTest.php",
             "packages/core/tests/Arch/OperationsBoundaryTest.php",
+            "packages/core/tests/Arch/ProvidersDeclareOnlyTest.php",
             "packages/core/tests/Arch/PublicApiReturnTypesTest.php",
             "packages/core/tests/Arch/PublicApiSnapshotTest.php",
             "packages/core/tests/Arch/ServiceLocatorRatchetTest.php",

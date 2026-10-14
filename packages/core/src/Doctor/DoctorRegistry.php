@@ -10,9 +10,9 @@ use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Kernel;
 
 /**
- * The checks the active modules contribute to the DoctorCheck slot, ordered by key. The contribution key
- * is the check's own key. Until every package declares its checks in its manifest (P3.4), checks tagged
- * `vaulter.doctor_checks` are read too.
+ * The checks the active modules contribute to the DoctorCheck slot, ordered by key; the contribution key
+ * is the check's own key. Checks a host tags `vaulter.doctor_checks` join them (the packages declare
+ * theirs in their manifests).
  */
 final readonly class DoctorRegistry
 {

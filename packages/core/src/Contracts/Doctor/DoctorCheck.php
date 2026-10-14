@@ -8,8 +8,9 @@ use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 
 /**
- * One read-only diagnostic of `vaulter:doctor`. A package contributes checks by tagging
- * them `vaulter.doctor_checks`; a check never writes, publishes or migrates.
+ * One read-only diagnostic of `vaulter:doctor`. A module contributes its checks to the DoctorCheck slot
+ * under their keys (ModuleBuilder::slot()); a host may still tag one `vaulter.doctor_checks`. A check
+ * never writes, publishes or migrates.
  */
 interface DoctorCheck
 {

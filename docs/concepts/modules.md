@@ -18,6 +18,9 @@ module registers nothing at runtime; its database schema is still installed.
 | `core` | `vaulter-core` | auto | — |
 | `media` | `vaulter-media` | auto | `core` |
 | `drive` | `vaulter-drive` (with its slices still located in `vaulter-core`) | auto | `core`, `media` |
+| `documents` | `vaulter-documents` | auto | `core`, `drive` |
+| `azgard` | `vaulter-azgard` | auto (selected with `vaulter.access.permission_driver`) | `core`, `drive` |
+| `filament` | `vaulter-filament` | auto (the panel plugin is added to a panel by the host) | `drive` |
 | `webhooks` | `vaulter-core` (until it gets its own package) | **opt-in** | `core`, `drive` |
 
 *Auto* modules are active unless switched off; *opt-in* modules — the ones that open outbound

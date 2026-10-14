@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Routing\Route;
 use Vaulter\Contracts\Drive\DriveHandleFactory;
+use Vaulter\Documents\VaulterDocumentsServiceProvider;
 use Vaulter\Http\Middleware\EnsureModuleActive;
 use Vaulter\Kernel;
 use Vaulter\Modules\ModuleState;
@@ -67,6 +68,7 @@ it('refuses a graph whose active modules require the switched-off drive', functi
     expect($kernel->isValid())->toBeFalse()
         ->and($kernel->reasons())->toContain($reason);
 })->with([
+    'documents' => [['vaulter.modules' => ['drive' => false]], [VaulterDocumentsServiceProvider::class], 'module "documents" is active but requires "drive", which is not active'],
     'webhooks' => [['vaulter.modules' => ['drive' => false, 'webhooks' => true]], [], 'module "webhooks" is active but requires "drive", which is not active'],
     'media off' => [['vaulter.modules' => ['media' => false]], [], 'module "drive" is active but requires "media", which is not active'],
 ]);

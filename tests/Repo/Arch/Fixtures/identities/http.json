@@ -448,6 +448,125 @@
             "id": "route:vaulter.v1.uploads.tus.patch",
             "kind": "http",
             "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.collaboration.hub.authenticate",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.collaboration.hub.load",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.collaboration.hub.store",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.comments.destroy",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.comments.index",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.comments.resolve",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.comments.store",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.documents.collaboration.session",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.documents.content.show",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.documents.content.update",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.documents.export",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.documents.revisions.index",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.documents.revisions.restore",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.documents.revisions.show",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.documents.revisions.store",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.documents.revisions.update",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.documents.store",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
         }
     ],
     "flags": {
@@ -649,6 +768,7 @@
                 "POST"
             ],
             "middleware": [
+                "vaulter.module:documents",
                 "api",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
                 "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
@@ -681,6 +801,7 @@
                 "POST"
             ],
             "middleware": [
+                "vaulter.module:documents",
                 "api",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
                 "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
@@ -713,6 +834,7 @@
                 "POST"
             ],
             "middleware": [
+                "vaulter.module:documents",
                 "api",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
                 "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
@@ -745,6 +867,7 @@
                 "DELETE"
             ],
             "middleware": [
+                "vaulter.module:documents",
                 "api",
                 "auth:sanctum",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
@@ -774,6 +897,7 @@
                 "GET"
             ],
             "middleware": [
+                "vaulter.module:documents",
                 "api",
                 "auth:sanctum",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
@@ -803,6 +927,7 @@
                 "POST"
             ],
             "middleware": [
+                "vaulter.module:documents",
                 "api",
                 "auth:sanctum",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
@@ -832,6 +957,7 @@
                 "POST"
             ],
             "middleware": [
+                "vaulter.module:documents",
                 "api",
                 "auth:sanctum",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
@@ -861,6 +987,7 @@
                 "POST"
             ],
             "middleware": [
+                "vaulter.module:documents",
                 "api",
                 "auth:sanctum",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
@@ -890,6 +1017,7 @@
                 "GET"
             ],
             "middleware": [
+                "vaulter.module:documents",
                 "api",
                 "auth:sanctum",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
@@ -919,6 +1047,7 @@
                 "PUT"
             ],
             "middleware": [
+                "vaulter.module:documents",
                 "api",
                 "auth:sanctum",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
@@ -948,6 +1077,7 @@
                 "GET"
             ],
             "middleware": [
+                "vaulter.module:documents",
                 "api",
                 "auth:sanctum",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
@@ -977,6 +1107,7 @@
                 "GET"
             ],
             "middleware": [
+                "vaulter.module:documents",
                 "api",
                 "auth:sanctum",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
@@ -1006,6 +1137,7 @@
                 "POST"
             ],
             "middleware": [
+                "vaulter.module:documents",
                 "api",
                 "auth:sanctum",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
@@ -1035,6 +1167,7 @@
                 "GET"
             ],
             "middleware": [
+                "vaulter.module:documents",
                 "api",
                 "auth:sanctum",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
@@ -1064,6 +1197,7 @@
                 "POST"
             ],
             "middleware": [
+                "vaulter.module:documents",
                 "api",
                 "auth:sanctum",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
@@ -1093,6 +1227,7 @@
                 "PATCH"
             ],
             "middleware": [
+                "vaulter.module:documents",
                 "api",
                 "auth:sanctum",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
@@ -1122,6 +1257,7 @@
                 "POST"
             ],
             "middleware": [
+                "vaulter.module:documents",
                 "api",
                 "auth:sanctum",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",

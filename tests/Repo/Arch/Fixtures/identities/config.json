@@ -42,6 +42,27 @@
             "id": "publish:vaulter-media-config",
             "kind": "config",
             "reason": "P3.3: published by the module kernel from the MediaModule config declaration instead of spatie hasConfigFile"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "publish:vaulter-documents-config",
+            "kind": "config",
+            "reason": "P3.4: published by the module kernel from the DocumentsModule config declaration instead of the provider"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "publish:vaulter-azgard-config",
+            "kind": "config",
+            "reason": "P3.4: published by the module kernel from the AzgardModule config declaration instead of the provider"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "publish:vaulter-filament-config",
+            "kind": "config",
+            "reason": "P3.4: published by the module kernel from the FilamentModule config declaration instead of the provider"
         }
     ],
     "items": [
@@ -2949,10 +2970,10 @@
             "id": "publish:vaulter-azgard-config",
             "owner": "azgard",
             "source": {
-                "file": "packages/azgard/src/VaulterAzgardServiceProvider.php",
-                "symbol": "Vaulter\\Azgard\\VaulterAzgardServiceProvider::boot"
+                "file": "packages/azgard/src/AzgardModule.php",
+                "symbol": "Vaulter\\Azgard\\AzgardModule::register"
             },
-            "via": "publishes"
+            "via": "module:config"
         },
         {
             "id": "publish:vaulter-config",
@@ -2967,10 +2988,10 @@
             "id": "publish:vaulter-documents-config",
             "owner": "documents",
             "source": {
-                "file": "packages/documents/src/VaulterDocumentsServiceProvider.php",
-                "symbol": "Vaulter\\Documents\\VaulterDocumentsServiceProvider::configurePackage"
+                "file": "packages/documents/src/DocumentsModule.php",
+                "symbol": "Vaulter\\Documents\\DocumentsModule::register"
             },
-            "via": "spatie:hasConfigFile"
+            "via": "module:config"
         },
         {
             "id": "publish:vaulter-documents-translations",
@@ -3003,10 +3024,10 @@
             "id": "publish:vaulter-filament-config",
             "owner": "filament",
             "source": {
-                "file": "packages/filament/src/VaulterFilamentServiceProvider.php",
-                "symbol": "Vaulter\\Filament\\VaulterFilamentServiceProvider::configurePackage"
+                "file": "packages/filament/src/FilamentModule.php",
+                "symbol": "Vaulter\\Filament\\FilamentModule::register"
             },
-            "via": "spatie:hasConfigFile"
+            "via": "module:config"
         },
         {
             "id": "publish:vaulter-media-config",

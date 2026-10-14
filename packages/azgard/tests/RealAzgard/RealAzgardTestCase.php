@@ -14,6 +14,8 @@ use Vaulter\Azgard\Tests\RealAzgard\Stubs\AzgardUser;
 use Vaulter\Azgard\Tests\RealAzgard\Stubs\DocumentsPanel;
 use Vaulter\Azgard\Tests\RealAzgard\Stubs\WorkspaceModel;
 use Vaulter\Azgard\VaulterAzgardServiceProvider;
+use Vaulter\Drive\VaulterDriveServiceProvider;
+use Vaulter\Media\VaulterMediaServiceProvider;
 use Vaulter\VaulterServiceProvider;
 
 /**
@@ -35,6 +37,8 @@ abstract class RealAzgardTestCase extends Orchestra
             AzGuardServiceProvider::class,
             DocumentsPanel::class,
             VaulterServiceProvider::class,
+            VaulterMediaServiceProvider::class,
+            VaulterDriveServiceProvider::class,
             VaulterAzgardServiceProvider::class,
         ];
     }

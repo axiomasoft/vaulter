@@ -13,9 +13,9 @@ use Vaulter\Documents\Presentation\DocumentPresenter;
 use Vaulter\Documents\Providers\BindingsRegistrar;
 use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
-use Vaulter\Documents\VaulterDocumentsServiceProvider;
 use Vaulter\Handlers\Builtin\DownloadOnlyHandler;
 use Vaulter\Handlers\Builtin\PreviewHandler;
+use Vaulter\Modules\ModuleApplier;
 
 final class ConfigMergeHostNodeComment extends NodeComment {}
 
@@ -41,7 +41,11 @@ it('loads document defaults under their owner and contributes a kind presenter, 
 it('preserves a valid host model subclass when the documents provider registers again (P2.5)', function (): void {
     config(['vaulter-documents.models.node_comment' => ConfigMergeHostNodeComment::class]);
 
-    app()->register(VaulterDocumentsServiceProvider::class, force: true);
+    // A provider cannot offer its module again after boot (the catalogue is sealed): the kernel applies the
+    // module config once, with the host values winning — re-applying it changes nothing.
+    $applier = app(ModuleApplier::class);
+    $applier->config('vaulter-documents', dirname(__DIR__, 2).'/config/vaulter-documents.php');
+    $applier->normalizeConfig();
 
     expect(app(DocumentsConfig::class)->model('node_comment'))->toBe(ConfigMergeHostNodeComment::class)
         ->and(config('vaulter-documents.models.document_revision'))->toBe(DocumentRevision::class);
@@ -58,7 +62,8 @@ it('preserves cached module configuration during registration and adds no file h
     $app->instance('config', $config);
 
     // Shipped defaults are loaded later by the shared normalizer at boot.
-    (new BindingsRegistrar($app))->register();
+    (new ModuleApplier($app))->config('vaulter-documents', dirname(__DIR__, 2).'/config/vaulter-documents.php');
+    (new BindingsRegistrar)->register($app);
 
     expect($config->all())->toBe($values)
         ->and($app->make(DocumentsConfig::class)->model('node_comment'))->toBe(ConfigMergeHostNodeComment::class);

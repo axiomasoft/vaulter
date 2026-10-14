@@ -503,6 +503,146 @@
             "id": "publish:vaulter-media-config",
             "kind": "config",
             "reason": "P3.3: published by the module kernel from the MediaModule config declaration instead of spatie hasConfigFile"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.collaboration.hub.authenticate",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.collaboration.hub.load",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.collaboration.hub.store",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.comments.destroy",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.comments.index",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.comments.resolve",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.comments.store",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.documents.collaboration.session",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.documents.content.show",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.documents.content.update",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.documents.export",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.documents.revisions.index",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.documents.revisions.restore",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.documents.revisions.show",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.documents.revisions.store",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.documents.revisions.update",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "route:vaulter.v1.documents.store",
+            "kind": "http",
+            "reason": "P3.4: mounted by DocumentsModule behind vaulter.module:documents (the collaboration routes still under vaulter-documents.collaboration.enabled until P5, D32)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "publish:vaulter-documents-config",
+            "kind": "config",
+            "reason": "P3.4: published by the module kernel from the DocumentsModule config declaration instead of the provider"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "publish:vaulter-azgard-config",
+            "kind": "config",
+            "reason": "P3.4: published by the module kernel from the AzgardModule config declaration instead of the provider"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "publish:vaulter-filament-config",
+            "kind": "config",
+            "reason": "P3.4: published by the module kernel from the FilamentModule config declaration instead of the provider"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

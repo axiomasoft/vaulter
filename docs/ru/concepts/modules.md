@@ -18,6 +18,9 @@ outline: deep
 | `core` | `vaulter-core` | auto | — |
 | `media` | `vaulter-media` | auto | `core` |
 | `drive` | `vaulter-drive` (со срезами, пока лежащими в `vaulter-core`) | auto | `core`, `media` |
+| `documents` | `vaulter-documents` | auto | `core`, `drive` |
+| `azgard` | `vaulter-azgard` | auto (выбирается через `vaulter.access.permission_driver`) | `core`, `drive` |
+| `filament` | `vaulter-filament` | auto (плагин панели хост подключает сам) | `drive` |
 | `webhooks` | `vaulter-core` (пока у него нет своего пакета) | **opt-in** | `core`, `drive` |
 
 *Auto*-модули активны, пока их не выключили; *opt-in*-модули — те, что открывают исходящую сеть

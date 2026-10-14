@@ -9,6 +9,8 @@ use Illuminate\Foundation\Application;
 use Vaulter\Azgard\Tests\RealAzgard\RealAzgardTestCase;
 use Vaulter\Azgard\Tests\RealAzgardIsolated\Stubs\IsolatedDocumentsPanel;
 use Vaulter\Azgard\VaulterAzgardServiceProvider;
+use Vaulter\Drive\VaulterDriveServiceProvider;
+use Vaulter\Media\VaulterMediaServiceProvider;
 use Vaulter\VaulterServiceProvider;
 
 /**
@@ -27,6 +29,8 @@ abstract class IsolatedRealAzgardTestCase extends RealAzgardTestCase
             AzGuardServiceProvider::class,
             IsolatedDocumentsPanel::class,
             VaulterServiceProvider::class,
+            VaulterMediaServiceProvider::class,
+            VaulterDriveServiceProvider::class,
             VaulterAzgardServiceProvider::class,
         ];
     }

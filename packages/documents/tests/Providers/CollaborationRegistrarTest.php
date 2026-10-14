@@ -16,7 +16,7 @@ it('binds the host user resolver in an isolated container', function (): void {
     Container::setInstance($this->app);
     $app->instance(AuthFactory::class, $this->app->make(AuthFactory::class));
 
-    (new CollaborationRegistrar($app))->register();
+    (new CollaborationRegistrar)->register($app);
 
     expect($app->make(HostUserResolver::class))->toBeInstanceOf(DefaultHostUserResolver::class);
 });
@@ -31,7 +31,7 @@ it('preserves the channel prefix and rejects sessions when collaboration is disa
         return $name === 'host.documents.{roomId}';
     });
 
-    (new CollaborationRegistrar($this->app))->boot();
+    (new CollaborationRegistrar)->boot($this->app);
 
     expect($callback)->toBeInstanceOf(Closure::class)
         ->and($callback(Mockery::mock(Authenticatable::class), 123))->toBeFalse();

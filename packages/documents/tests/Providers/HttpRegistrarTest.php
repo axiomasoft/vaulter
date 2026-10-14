@@ -5,14 +5,15 @@ declare(strict_types=1);
 use Illuminate\Events\Dispatcher;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
-use Spatie\LaravelPackageTools\Package;
+use Vaulter\Documents\DocumentsModule;
 use Vaulter\Documents\Http\Controllers\Documents\UpdateDocumentContentController;
-use Vaulter\Documents\Providers\HttpRegistrar;
+use Vaulter\Modules\ModuleBuilder;
+use Vaulter\Modules\ModuleId;
 
 it('declares the existing route file during package configuration and mounts installed document routes', function (): void {
-    $package = new Package;
-    (new HttpRegistrar)->configure($package);
-    expect($package->routeFileNames)->toBe(['documents']);
+    $module = new ModuleBuilder(new ModuleId('documents'));
+    (new DocumentsModule)->register($module);
+    expect(array_map(realpath(...), $module->routeFiles()))->toBe([realpath(__DIR__.'/../../routes/documents.php')]);
 
     config()->set('vaulter.routes.prefix', 'host/documents');
     config()->set('vaulter.routes.middleware.authenticated', ['host.auth']);

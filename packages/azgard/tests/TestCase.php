@@ -7,6 +7,8 @@ namespace Vaulter\Azgard\Tests;
 use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase as Orchestra;
 use Vaulter\Azgard\VaulterAzgardServiceProvider;
+use Vaulter\Drive\VaulterDriveServiceProvider;
+use Vaulter\Media\VaulterMediaServiceProvider;
 use Vaulter\VaulterServiceProvider;
 
 /**
@@ -26,6 +28,10 @@ abstract class TestCase extends Orchestra
     {
         return [
             VaulterServiceProvider::class,
+            // AzgardModule requires the drive module (D22, D39): the access it extends — permission drivers,
+            // the operation guard, the AccessResolver wiring — is declared by DriveModule, which requires media.
+            VaulterMediaServiceProvider::class,
+            VaulterDriveServiceProvider::class,
             VaulterAzgardServiceProvider::class,
         ];
     }

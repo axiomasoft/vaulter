@@ -7,7 +7,7 @@ namespace Vaulter\Documents\Providers;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Broadcast;
-use Illuminate\Support\ServiceProvider;
+use Illuminate\Contracts\Foundation\Application;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Documents\Collaboration\HostUserResolver as DefaultHostUserResolver;
@@ -15,21 +15,23 @@ use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Contracts\HostUserResolver;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Modules\ModuleBindings;
 
-final class CollaborationRegistrar extends ServiceProvider
+/** The collaboration wiring of the documents module until collaboration becomes its own module (P5, D32). */
+final class CollaborationRegistrar implements ModuleBindings
 {
-    public function register(): void
+    public function register(Application $app): void
     {
         // The host-user resolver seam: the collaboration webhook resolves the
         // acting user by id through the host's auth user-provider. Bound to the
         // default DefaultHostUserResolver; a host (or a test) may swap it. Purely
         // documents machinery — core neither defines nor binds it (finding).
-        $this->app->bind(HostUserResolver::class, DefaultHostUserResolver::class);
+        $app->bind(HostUserResolver::class, DefaultHostUserResolver::class);
     }
 
-    public function boot(): void
+    public function boot(Application $app): void
     {
-        $this->registerBroadcastChannel();
+        self::registerBroadcastChannel();
     }
 
     /**
@@ -41,7 +43,7 @@ final class CollaborationRegistrar extends ServiceProvider
      * editing. The channel preserves the broadcast authorization seam
      * independently of the Hocuspocus room token.
      */
-    private function registerBroadcastChannel(): void
+    private static function registerBroadcastChannel(): void
     {
         Broadcast::channel(
             app(DocumentsConfig::class)->channelPrefix().'.{roomId}',

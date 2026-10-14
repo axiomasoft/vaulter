@@ -9,8 +9,8 @@ use Vaulter\Azgard\AzgardGuardAdapter;
 use Vaulter\Azgard\AzgardPermissionDriver;
 use Vaulter\Azgard\Contracts\AzgardGuard;
 use Vaulter\Azgard\NullAzgardGuard;
+use Vaulter\Azgard\Providers\BindingsRegistrar;
 use Vaulter\Azgard\Tests\Stubs\SpyAzgardUser;
-use Vaulter\Azgard\VaulterAzgardServiceProvider;
 
 /**
  * The provider resolves the AzgardGuard seam from the CURRENT request's user: an
@@ -45,14 +45,14 @@ it('registers its permission driver and keeps a host driver override', function 
     expect(config('vaulter.access.permission_drivers.azgard'))->toBe(AzgardPermissionDriver::class);
 
     config()->set('vaulter.access.permission_drivers.azgard', DatabasePermissionDriver::class);
-    (new VaulterAzgardServiceProvider(app()))->register();
+    (new BindingsRegistrar)->register(app());
 
     expect(config('vaulter.access.permission_drivers.azgard'))->toBe(DatabasePermissionDriver::class);
 });
 
 it('preserves an explicitly configured null driver key', function (): void {
     config()->set('vaulter.access.permission_drivers.azgard', null);
-    (new VaulterAzgardServiceProvider(app()))->register();
+    (new BindingsRegistrar)->register(app());
 
     expect(config('vaulter.access.permission_drivers.azgard'))->toBeNull();
 });
