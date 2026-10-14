@@ -793,6 +793,7 @@
           ],
           "files": [
             "packages/media/tests/Configuration/MediaConfigTest.php",
+            "packages/media/tests/Configuration/StorageDriverCapabilityTest.php",
             "packages/media/tests/Console/SchedulingRegistrarTest.php"
           ]
         }
@@ -1031,6 +1032,7 @@
             "packages/drive/tests/Configuration/UploadFileSizePolicyTest.php",
             "packages/drive/tests/Console/SchedulingRegistrarTest.php",
             "packages/drive/tests/Http/DriveProblemCodesTest.php",
+            "packages/drive/tests/Modules/DriveSlotsTest.php",
             "packages/drive/tests/Providers/BindingsRegistrarTest.php",
             "packages/drive/tests/Providers/HttpRegistrarTest.php"
           ]

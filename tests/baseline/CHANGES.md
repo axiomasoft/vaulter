@@ -442,8 +442,8 @@ exists in the current list; prose alone hides nothing. `original/` is immutable.
 ## Additions (current − original)
 
 - `repo`: 184 (introduced P1.3)
-- `core`: 179
+- `core`: 222
 - `media`: 11
-- `drive`: 8
+- `drive`: 12
 - `documents`: 9
 - `azgard`: 9

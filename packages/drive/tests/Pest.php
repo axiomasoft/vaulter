@@ -32,7 +32,7 @@ uses(TestCase::class)->in('Arch');
 // Database-free (P1.5): these files run on the booted application without a schema; each one stayed green under
 // WithoutDatabaseSchema (a test that reaches the database fails there) — see
 // plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.5/classification.md.
-uses(WithoutDatabaseSchema::class)->in('Arch', 'Configuration', 'Console', 'Providers', 'Http/DriveProblemCodesTest.php');
+uses(WithoutDatabaseSchema::class)->in('Arch', 'Configuration', 'Console', 'Modules', 'Providers', 'Http/DriveProblemCodesTest.php');
 
 // Test groups (P1.5): database, serial, extended, stand and the engine-only engine:* — see groups.php.
 TestGroups::bind(__DIR__, 'drive');

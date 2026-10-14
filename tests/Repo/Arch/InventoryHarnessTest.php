@@ -578,7 +578,7 @@ it('allows never only for the permanent I4 categories and a non-empty list only 
         ->and(fn () => inv_list([inv_entry(['removed_in' => 'never', 'category' => 'activation'])], invariant: 'I4'))->toThrow(InventoryError::class, 'never')
         ->and(inv_list([inv_entry(['removed_in' => 'never', 'category' => 'host-lifecycle'])], invariant: 'I4')->entries())->toHaveCount(1)
         ->and(inv_list([], 'block')->compare([inv_violation()])['new'])->toHaveCount(1)
-        ->and(fn () => inv_list([inv_entry()], 'block'))->toThrow(InventoryError::class, 'empty list');
+        ->and(fn () => inv_list([inv_entry()], 'block'))->toThrow(InventoryError::class, 'admits only');
 });
 
 it('bounds removed_in by the phase an invariant blocks from and requires an I4 category', function (): void {

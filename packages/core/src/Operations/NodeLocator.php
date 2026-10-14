@@ -29,6 +29,10 @@ final readonly class NodeLocator
             throw NodeNotFoundException::forId('unpersisted');
         }
         $query = $this->query($context);
+        if (!$this->plausibleKey($query, $id)) {
+            // A key the id column cannot hold names no node; PostgreSQL would fail the cast instead.
+            throw NodeNotFoundException::forId($id);
+        }
         if (!$includeTrashed) {
             $query->whereNull('trashed_at');
         }
@@ -55,7 +59,12 @@ final readonly class NodeLocator
         if ($keys === []) {
             return [];
         }
-        $found = $this->query($context)->whereKey($keys)->get()->keyBy(fn (Node $node): string => (string) $node->id);
+        $query = $this->query($context);
+        $keys = array_values(array_filter($keys, fn (int|string $key): bool => $this->plausibleKey($query, $key)));
+        if ($keys === []) {
+            return [];
+        }
+        $found = $query->whereKey($keys)->get()->keyBy(fn (Node $node): string => (string) $node->id);
         $result = [];
         foreach ($keys as $key) {
             $node = $found->get((string) $key);
@@ -79,6 +88,12 @@ final readonly class NodeLocator
         }
 
         return $this->boundary->constrain($model->newQuery())->where(column: 'drive_id', operator: '=', value: $context->driveId());
+    }
+
+    /** @param Builder<Node> $query */
+    private function plausibleKey(Builder $query, int|string $key): bool
+    {
+        return $query->getModel()->getKeyType() !== 'int' || preg_match('/^[0-9]{1,19}$/', (string) $key) === 1;
     }
 
     private function key(Node|NodeSnapshot|int|string $key): int|string|null
