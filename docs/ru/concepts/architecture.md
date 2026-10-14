@@ -145,7 +145,7 @@ Vaulter никогда не ссылается на конкретный кла�
 | `axioma-studio/vaulter-media` | `Vaulter\Media\` | Движок CAS: `Cas\{BlobStore,Sha256ContentStore,FlysystemStorageDriver,BlobGarbageCollector,BlobReconciler,StagedTempObject}`. |
 | `axioma-studio/vaulter-filament` | `Vaulter\Filament\` | Админ-плагин для Filament 5. |
 | `axioma-studio/vaulter-azgard` | `Vaulter\Azgard\` | Драйвер прав, контракт guard, карта разрешений, реальный адаптер и тестовый фейк AzGuard. |
-| `@vaulter/vue` | — | Drive UI + composable-функции (npm). |
+| `@vaulter/vue` | — | Drive UI + composable-функции (npm). `src/api` не импортирует Vue, редактор и realtime-пакеты и ничего из `src/` вне `src/api` (arch-тест `packages/vue/tests/arch/api-no-vue.test.ts`). |
 
 Все они — соседние пакеты, строящиеся поверх `vaulter-core`; для функций Drive и
 редактирования документов нужно установить соответствующий пакет (см.
