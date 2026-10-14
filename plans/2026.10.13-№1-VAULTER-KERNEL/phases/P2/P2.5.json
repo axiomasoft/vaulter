@@ -1,0 +1,147 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P2.5",
+  "title": "p2-findings: поимённая сверка code-facts, сводки инвентаря и открытые вопросы",
+  "status": "in_progress",
+  "summary": "Создан knowledge-документ `p2-findings` (plan.py add-document, applies_to P3–P7) с секциями code-facts-verification, type-map-summary, identities-summary, scan-baseline, open-questions, inputs-for-p3-p4; каждое утверждение source-review#code-facts и нужные A-пункты проверены на 35718fd2 по symbol; продуктовые развилки вынесены открытыми D#, не решены.",
+  "why": "P3–P6 детализируются по этому документу, а не по устаревшим номерам строк c64bba25; без явной сверки P3 может снимать probe, который на самом деле config-validation, или переносить тип по ошибочному факту. Риск: агент молча «решает» продуктовую развилку — поэтому только открытый D# с вариантами.",
+  "scope": {
+    "include": [
+      "knowledge/p2-findings через `plan.py add-document` по контракту p2-design#findings-contract",
+      "открытые D# через `plan.py add-decision` для продуктовых развилок (без decide)",
+      "чтение кода packages/** и фикстур tests/Repo/Arch/Fixtures/** (только чтение)"
+    ],
+    "exclude": [
+      "Правки кода, тестов и фикстур",
+      "Принятие решений",
+      "Изменение других knowledge-документов"
+    ]
+  },
+  "depends_on": [
+    "P2.4"
+  ],
+  "decisions": [
+    "D21",
+    "D22",
+    "D23",
+    "D25",
+    "D27",
+    "D28",
+    "D29"
+  ],
+  "reads": [
+    {
+      "why": "каждое утверждение сверяется поимённо",
+      "required": true,
+      "ref": "knowledge/source-review#code-facts"
+    },
+    {
+      "why": "A3/A5/A6/A7/A16/A17/A21/A23 — то, на что опираются P3–P6",
+      "required": true,
+      "ref": "knowledge/source-review#audit-verification"
+    },
+    {
+      "why": "фазы блокировки для scan-baseline",
+      "required": true,
+      "ref": "knowledge/architecture#invariants"
+    },
+    {
+      "why": "результат и notes type-map (open-пункты)",
+      "required": true,
+      "ref": "P2.2"
+    },
+    {
+      "why": "результат и notes идентичностей (original_diff, расхождения pgsql/mysql)",
+      "required": true,
+      "ref": "P2.3"
+    },
+    {
+      "why": "результат и notes сканов (new_since_review I4, v_blobs.drive_id)",
+      "required": true,
+      "ref": "P2.4"
+    },
+    {
+      "why": "числа и поимённые списки",
+      "required": true,
+      "path": "tests/Repo/Arch/Fixtures/target-map.json"
+    },
+    {
+      "why": "числа и расхождения",
+      "required": true,
+      "path": "tests/Repo/Arch/Fixtures/identities"
+    },
+    {
+      "why": "стартовые allowlist I1–I4",
+      "required": true,
+      "path": "tests/Repo/Arch/Fixtures/allowlists"
+    },
+    {
+      "ref": "knowledge/p2-design",
+      "why": "нормы фазы P2: раскладка, форматы фикстур, модели type-map/identities/scans, контракт findings (секции названы в guidance)",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "@plan/knowledge/p2-findings.json",
+      "change": "create",
+      "note": "только через plan.py add-document"
+    }
+  ],
+  "rules": [
+    "Писать план только через plan.py (add-document, add-decision); views не править.",
+    "Каждая строка code-facts-verification: утверждение → статус (подтверждено|изменилось|опровергнуто) → текущий file+symbol → следствие; номера строк c64bba25 заменяются symbol-якорями.",
+    "Технический вопрос, на который отвечает код, закрыть доказательством; продуктовую/архитектурную развилку — открытым D# (question, options, context со ссылкой на finding), не decide.",
+    "Данные фикстур не копировать: сводка = числа, поимённые исключения и пути к фикстурам.",
+    "Продукт, тесты и фикстуры не меняются; найденный дефект — запись, не правка."
+  ],
+  "guidance": "**Нормы пункта (knowledge/p2-design, документ целиком в пакете):** §findings-contract (точные id и состав секций).\n\nСобрать JSON документа в scratchpad: `{\"$schema\":\"urn:swissknifeman:task:plan:document:v1\",\"id\":\"p2-findings\",\"title\":\"P2: результаты доказательной базы\",\"applies_to\":[\"P3\",\"P4\",\"P5\",\"P6\",\"P7\"],\"sections\":[{\"id\":\"code-facts-verification\",…}, …]}` и выполнить `python3 <planner>/scripts/plan.py add-document 2026.10.13-№1-VAULTER-KERNEL --file <json>`.\n\nДля поимённой сверки: `grep -rn` / чтение файла по symbol из code-facts (VaulterManager::drive, NodeSnapshotMapper, DriveHandle::extension, AzgardPermissionDriver, drive BindingsRegistrar ContentScanner, CollaborationCallResolver, HocuspocusCollaborationDriver, Doctor/CollaborationCheck, SpatiePermissionDriver, ConfigValidator, TenancyConfig, core/drive BindingsRegistrar, DocumentTypeRegistry, DocumentExporterRegistry, SchedulingRegistrar, RequestContext, LoadTier, NodeName, EventRecorder outbox gate, BlobGarbageCollector sweep, BlobStore::commitStaged/attach/detach, SchemaBuilder::addHeadForeignKey, VaulterServiceProvider migrations, PanelDriveAccess facade use, CollaborationHub store/seed). Совпадение с allowlist i4 — перекрёстная ссылка.\n\nscan-baseline: таблица invariant × view × category × removed_in → count, плюс итог «что опустошает P3» (I4 activation) и «что опустошает P4» (I1/I2/I3).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "PLAN_PY=\"$(ls -d ~/.claude/plugins/cache/swissknifeman/task/*/scripts/plan.py | sort -V | tail -1)\"; for s in code-facts-verification type-map-summary identities-summary scan-baseline open-questions inputs-for-p3-p4; do python3 \"$PLAN_PY\" get 2026.10.13-№1-VAULTER-KERNEL knowledge/p2-findings --section \"$s\" >/dev/null || exit 1; done",
+      "expect": "exit 0: все шесть секций существуют",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "scripts/php84 php scripts/inventory/inventory.php --check",
+      "expect": "exit 0: фикстуры не изменены",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "git diff --quiet 35718fd2 -- packages/*/src packages/*/database packages/*/config packages/*/routes packages/*/composer.json && test -z \"$(git status --porcelain --untracked-files=all -- packages/*/src packages/*/database packages/*/config packages/*/routes)\"",
+      "expect": "exit 0: продукт неизменен",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "knowledge/p2-findings (6 секций)",
+    "открытые D# для продуктовых развилок (если найдены)"
+  ],
+  "route": {
+    "class": "frontier",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-14T03:41:48Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-opus-5-5",
+      "effort": "medium",
+      "session": "f8acae08-acc4-441b-9949-c9cb156deafd"
+    }
+  },
+  "updated_at": "2026-10-14T03:41:48Z"
+}
