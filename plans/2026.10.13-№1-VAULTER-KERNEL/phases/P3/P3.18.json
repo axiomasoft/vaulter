@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.18",
   "title": "Правило @vaulter/vue: src/api без импортов vue",
-  "status": "in_progress",
+  "status": "done",
   "summary": "Тест vitest `packages/vue/tests/arch/api-no-vue.test.ts` сканирует `packages/vue/src/api/**` и падает на любом импорте `vue`, `@vue/*`, `vue-*`, `@tiptap/*`, `yjs`, `@hocuspocus/*` и на импорте из `src/` вне `src/api`; сейчас нарушений нет — правило фиксирует состояние.",
   "why": "D15: `src/api` без Vue сохраняет дешёвое выделение `@vaulter/client`. Риск — только ложные срабатывания на type-only импортах из `src/api` самого себя.",
   "scope": {
@@ -79,12 +79,26 @@
   },
   "result": {
     "started_at": "2026-10-14T05:53:18Z",
+    "finished_at": "2026-10-14T06:40:26Z",
     "executor": {
       "provider": "anthropic",
       "model": "claude-opus-5-5",
       "effort": "high",
       "session": "66d8c840-5ed8-481e-b55c-782806387a4c"
-    }
+    },
+    "notes": "api-no-vue arch-тест (4 кейса, парсер проверяется на образцах), строка правила в docs EN/RU. Ревью: 2 MED/4 LOW исправлены до коммита.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T06:40:26Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-14T06:40:26Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-14T05:53:18Z"
+  "updated_at": "2026-10-14T06:40:26Z"
 }
