@@ -38,7 +38,7 @@ Vaulter's Actions hand every event to `Vaulter\Events\EventRecorder` as the **la
 of their transaction**, on the Vaulter connection. The recorder:
 
 1. writes the activity row (when `features.activity` is on and the type is audited);
-2. writes the outbox row with the webhook envelope (when `features.webhooks` is on and
+2. writes the outbox row with the webhook envelope (when `vaulter.modules.webhooks` is on and
    the type is a webhook type);
 3. dispatches the Laravel event to your listeners **after the transaction commits**.
 
@@ -167,5 +167,5 @@ Echo.private(`vaulter.documents.${nodeId}`)
 
 - [Webhooks](/guides/webhooks) — the envelope, delivery and deduplication
 - [Commands reference](/reference/commands) — the relay/retry/GC schedulables
-- [Configuration reference](/reference/config) — `features.activity`, `features.webhooks`, `webhooks.*`
+- [Configuration reference](/reference/config) — `features.activity`, `vaulter.modules.webhooks`, `webhooks.*`
 - [Contracts reference](/reference/php-api) — the models these payloads carry

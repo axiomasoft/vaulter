@@ -29,10 +29,6 @@ final readonly class WebhooksOutboxLagCheck implements DoctorCheck
 
     public function run(DoctorContext $context): array
     {
-        if (!$this->config->featureEnabled('webhooks')) {
-            return [DoctorFinding::ok(code: 'core.webhooks.outbox_lag_skipped', message: 'Webhooks are disabled.', evidence: ['skipped' => true])];
-        }
-
         $outbox = $this->config->model('outbox');
         // Rows are written in the application's timezone; compare in it.
         $now = CarbonImmutable::instance($context->now)->setTimezone(date_default_timezone_get());

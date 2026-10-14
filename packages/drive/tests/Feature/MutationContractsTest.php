@@ -12,8 +12,11 @@ use Vaulter\Enums\Events\EventType;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Webhooks\Outbox;
+use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
+
+uses(EnablesWebhooksModule::class);
 
 beforeEach(function (): void {
     StorageFacade::fake('local');

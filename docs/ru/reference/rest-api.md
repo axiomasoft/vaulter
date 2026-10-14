@@ -849,7 +849,7 @@ Bearer-ссылки на узел (`vaulter.features.share_links`). Ссылка
 ## Webhook-эндпоинты
 
 Глобальная админ-поверхность подписчиков вебхуков, подключается при
-`vaulter.features.webhooks`. Каждый маршрут, включая чтение, проходит
+`vaulter.modules.webhooks`. Каждый маршрут, включая чтение, проходит
 `WebhookEndpointPolicy` (`vaulter.webhooks.manage_ability`) до поиска по id. См.
 [Вебхуки](/ru/guides/webhooks).
 

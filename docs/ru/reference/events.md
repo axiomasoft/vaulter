@@ -39,7 +39,7 @@ Actions Vaulter передают каждое событие в `Vaulter\Events\
 шагом своей транзакции** на соединении Vaulter. Рекордер:
 
 1. пишет строку activity (если включён `features.activity` и тип аудируется);
-2. пишет строку outbox с конвертом webhook (если включён `features.webhooks` и тип —
+2. пишет строку outbox с конвертом webhook (если включён `vaulter.modules.webhooks` и тип —
    webhook-тип);
 3. отдаёт Laravel-событие вашим слушателям **после фиксации транзакции**.
 
@@ -169,5 +169,5 @@ Echo.private(`vaulter.documents.${nodeId}`)
 
 - [Webhooks](/guides/webhooks) — конверт, доставка и дедупликация (на английском)
 - [Справочник команд](/ru/reference/commands) — планируемые relay/retry/GC
-- [Справочник конфигурации](/ru/reference/config) — `features.activity`, `features.webhooks`, `webhooks.*`
+- [Справочник конфигурации](/ru/reference/config) — `features.activity`, `vaulter.modules.webhooks`, `webhooks.*`
 - [Справочник контрактов](/ru/reference/php-api) — модели, которые несут эти payload

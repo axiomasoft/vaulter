@@ -10,13 +10,14 @@ use Vaulter\Documents\Tests\Operations\OperationsTestCase;
 use Vaulter\Enums\Changes\ChangeOperation;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Webhooks\Outbox;
+use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 
 /**
  * Document events in the drive change journal (PLAN2.D59, D35): every content save is
  * an upsert, compacted to one entry per document, whether or not it took a checkpoint;
  * content events carry no node sequence, a restore is the newest state.
  */
-uses(OperationsTestCase::class, RefreshDatabase::class);
+uses(OperationsTestCase::class, RefreshDatabase::class, EnablesWebhooksModule::class);
 
 /** @return list<array{seq: int, event_type: string, operation: string, node_sequence: ?int}> */
 function documentJournal(int|string $nodeId): array

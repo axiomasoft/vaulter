@@ -12,9 +12,9 @@ use Vaulter\Configuration\ScheduleFrequency;
 use Vaulter\Configuration\VaulterConfig;
 
 /**
- * Puts the core maintenance commands on the host scheduler. Sibling packages reuse
- * {@see self::task()} so every Vaulter task carries the same overlap and
- * single-server guards.
+ * The shared scheduling mechanism: {@see self::task()} gives every Vaulter task the same overlap and
+ * single-server guards, {@see self::whenScheduling()} defines tasks whenever the scheduler resolves.
+ * Modules declare their tasks with a {@see \Vaulter\Modules\ModuleSchedule}.
  */
 final class SchedulingRegistrar
 {
@@ -23,7 +23,8 @@ final class SchedulingRegistrar
 
     public const int DEFAULT_EXPIRY = 120;
 
-    public const array KEYS = ['webhooks_relay', 'webhooks_retry', 'webhooks_prune', 'changes_prune'];
+    // P3.3 moves to DriveModule (D39).
+    public const array KEYS = ['changes_prune'];
 
     /** @param list<string> $arguments */
     public static function task(Schedule $schedule, string $command, ScheduleFrequency $frequency, int $expiry, array $arguments = []): Event
@@ -42,6 +43,7 @@ final class SchedulingRegistrar
         }
     }
 
+    // P3.3 moves to DriveModule (D39).
     public function register(Application $app): void
     {
         // Fail at boot on a bad value; the tasks themselves read the config when the scheduler resolves.
@@ -53,19 +55,9 @@ final class SchedulingRegistrar
                 return;
             }
 
-            $frequencies = $schedule->frequencies('vaulter', self::KEYS);
-            $vaulter = $app->make(VaulterConfig::class);
-            $tasks = [
-                'webhooks_relay' => ['vaulter:webhooks:relay', self::RECOVERY_EXPIRY, 'webhooks'],
-                'webhooks_retry' => ['vaulter:webhooks:retry', self::RECOVERY_EXPIRY, 'webhooks'],
-                'webhooks_prune' => ['vaulter:webhooks:prune', self::DEFAULT_EXPIRY, 'webhooks'],
-                'changes_prune' => ['vaulter:changes:prune', self::DEFAULT_EXPIRY, 'changes'],
-            ];
-            foreach ($tasks as $key => [$command, $expiry, $feature]) {
-                $frequency = $frequencies[$key] ?? null;
-                if ($frequency !== null && $vaulter->featureEnabled($feature)) {
-                    self::task($scheduler, $command, $frequency, $expiry);
-                }
+            $frequency = $schedule->frequencies('vaulter', self::KEYS)['changes_prune'] ?? null;
+            if ($frequency !== null && $app->make(VaulterConfig::class)->featureEnabled('changes')) {
+                self::task($scheduler, 'vaulter:changes:prune', $frequency, self::DEFAULT_EXPIRY);
             }
         });
     }

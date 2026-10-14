@@ -148,10 +148,10 @@ it('rejects an unknown --status and an invalid --since', function (): void {
 });
 
 it('does nothing when the webhooks feature is off', function (): void {
-    config()->set('vaulter.features.webhooks', false);
     $delivery = deadDelivery();
+    WebhookTestHelpers::switchModule($this->app, false);
 
-    $this->artisan('vaulter:webhooks:redeliver')->expectsOutputToContain('Webhooks feature is off')->assertSuccessful();
+    $this->artisan('vaulter:webhooks:redeliver')->expectsOutputToContain('Webhooks module is inactive')->assertSuccessful();
 
     expect($delivery->refresh()->status)->toBe('dead');
 });

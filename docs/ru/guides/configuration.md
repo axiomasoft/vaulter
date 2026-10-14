@@ -132,7 +132,8 @@ preview/download и обработчики установленного Document
 Старый `middleware` влияет только на `authenticated`; публичный стек настройте отдельно.
 Установите Sanctum или замените `auth:sanctum` аутентификацией хоста.
 
-`features.webhooks` управляет поведением вебхуков. Настройки доставки сохраняются в
+Вебхуки — opt-in модуль: `vaulter.modules.webhooks` (по умолчанию `false`) подключает их маршруты,
+команды, расписания и проверки doctor (см. [Модули](/ru/concepts/modules)). Настройки доставки сохраняются в
 `webhooks.*`: URL guard, таймауты, повторы и сроки хранения. `listing.scan_budget`,
 `downloads.inline_mime_types` и `observability.*` также принадлежат core.
 

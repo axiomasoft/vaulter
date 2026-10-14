@@ -143,6 +143,19 @@ final class ModuleCompiler
         $this->unique($builders, static fn (ModuleBuilder $b): array => array_keys($b->translationDirs()), 'translation namespace', $reasons);
         $this->unique($builders, static fn (ModuleBuilder $b): array => array_keys($b->routeMiddlewareAliases()), 'route middleware alias', $reasons);
         $this->unique($builders, static fn (ModuleBuilder $b): array => $b->commandClasses(), 'command', $reasons);
+        $this->unique($builders, static fn (ModuleBuilder $b): array => $b->bindingClasses(), 'bindings class', $reasons);
+        foreach ($builders as $id => $builder) {
+            foreach ($builder->bindingClasses() as $class) {
+                if (!is_a($class, ModuleBindings::class, true)) {
+                    $reasons[] = sprintf('module "%s" declares the bindings %s, which does not implement %s', $id, $class, ModuleBindings::class);
+                }
+            }
+            foreach ($builder->schedules() as $class) {
+                if (!is_a($class, ModuleSchedule::class, true)) {
+                    $reasons[] = sprintf('module "%s" declares the schedule %s, which does not implement %s', $id, $class, ModuleSchedule::class);
+                }
+            }
+        }
 
         $requires = static fn (string $module, string $owner): bool => $module === $owner || isset($known[$module]['requires'][$owner]);
 
@@ -261,7 +274,7 @@ final class ModuleCompiler
         // 5. The sealed state: the declarations of the active modules, the schema of all of them.
         $states = [];
         $configs = $translations = $routeMiddleware = [];
-        $routes = $commands = $listeners = $schedules = $events = $problems = $schemaPaths = [];
+        $routes = $commands = $listeners = $schedules = $bindings = $events = $problems = $schemaPaths = [];
         foreach ($known as $id => $module) {
             $builder = $builders[$id];
             $states[] = new ModuleState(
@@ -286,6 +299,7 @@ final class ModuleCompiler
             array_push($commands, ...$builder->commandClasses());
             array_push($listeners, ...$builder->listeners());
             array_push($schedules, ...$builder->schedules());
+            array_push($bindings, ...$builder->bindingClasses());
             array_push($events, ...$builder->eventSources());
             array_push($problems, ...$builder->problemSources());
         }
@@ -303,6 +317,7 @@ final class ModuleCompiler
             listeners: $listeners,
             schedules: $schedules,
             routeMiddleware: $routeMiddleware,
+            bindings: $bindings,
             events: $events,
             problems: $problems,
             schemaPaths: $schemaPaths,

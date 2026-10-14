@@ -7,8 +7,8 @@ title: Webhooks
 ## How an event reaches the outbox
 
 Every Vaulter change records its event through the `EventRecorder` as the last step of
-its own database transaction (see [Events](/reference/events)). With `features.webhooks`
-on, the recorder writes one `v_outbox` row for the occurrence **in that transaction**:
+its own database transaction (see [Events](/reference/events)). With the opt-in webhooks module
+active (`vaulter.modules.webhooks` = `true`, off by default), the recorder writes one `v_outbox` row for the occurrence **in that transaction**:
 
 - the change and its outbox row commit together, so a committed change is never
   missing its webhook, even if the process dies right after the commit;
@@ -185,7 +185,7 @@ Only deliveries still inside `webhooks.retention_days` can be redelivered.
 ## Managing endpoints over HTTP
 
 The admin routes of the [REST API v1](/reference/rest-api#webhook-endpoints) are mounted when
-`features.webhooks` is on. They are a global surface, not a drive resource: every route —
+`vaulter.modules.webhooks` is on. They are a global surface, not a drive resource: every route —
 reads included — is authorized by the `WebhookEndpointPolicy` against
 `webhooks.manage_ability` before the id is even looked up, so a caller who may not manage
 webhooks learns nothing about which endpoints exist.

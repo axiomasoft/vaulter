@@ -494,10 +494,19 @@
             "role": "migration"
         },
         {
-            "action": "split",
-            "file": "packages/core/routes/api.php",
-            "note": "routes by owner of the controller (drive/documents/webhooks); kernel keeps only the registrar; details in identities/http (P2.3)",
-            "owner": "core",
+            "action": "move",
+            "file": "packages/core/routes/drive.php",
+            "note": "the drive routes located in core, declared by DriveModule (D39); P4 moves the file into the drive package",
+            "owner": "drive",
+            "package": "core",
+            "phase": "P4",
+            "role": "routes"
+        },
+        {
+            "action": "move",
+            "file": "packages/core/routes/webhooks.php",
+            "note": "the routes of the logical webhooks module (D39); P4 moves the file with the webhooks package",
+            "owner": "webhooks",
             "package": "core",
             "phase": "P4",
             "role": "routes"
@@ -2217,6 +2226,34 @@
             "target_fqcn": "Vaulter\\Drive\\Console\\MakeProfileCommand"
         },
         {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Console/ModuleUninstallCommand.php",
+            "fqcn": "Vaulter\\Console\\ModuleUninstallCommand",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Console\\ModuleUninstallCommand",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Console\\ModuleUninstallCommand"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Console/ModulesCommand.php",
+            "fqcn": "Vaulter\\Console\\ModulesCommand",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Console\\ModulesCommand",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Console\\ModulesCommand"
+        },
+        {
             "action": "move",
             "eloquent": false,
             "file": "packages/core/src/Console/PruneChangesCommand.php",
@@ -3055,6 +3092,20 @@
             "rule": "core-content-media-webhooks:prefix:Vaulter\\Contracts\\Webhooks\\",
             "surface": "Spi:Implement",
             "target_fqcn": "Vaulter\\Webhooks\\Contracts\\OutboundUrlGuard"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/CoreModule.php",
+            "fqcn": "Vaulter\\CoreModule",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\CoreModule",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\CoreModule"
         },
         {
             "action": "move",
@@ -3923,6 +3974,20 @@
             "rule": "core-kernel:fqcn:Vaulter\\Doctor\\Checks\\DatabaseConnectionCheck",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Doctor\\Checks\\DatabaseConnectionCheck"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Doctor/Checks/ModuleCacheFreshnessCheck.php",
+            "fqcn": "Vaulter\\Doctor\\Checks\\ModuleCacheFreshnessCheck",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Doctor\\Checks\\ModuleCacheFreshnessCheck",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Doctor\\Checks\\ModuleCacheFreshnessCheck"
         },
         {
             "action": "keep",
@@ -10589,6 +10654,20 @@
             "target_fqcn": "Vaulter\\Http\\Controllers\\Controller"
         },
         {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Http/Controllers/ModuleGraphInvalidController.php",
+            "fqcn": "Vaulter\\Http\\Controllers\\ModuleGraphInvalidController",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Http\\Controllers\\ModuleGraphInvalidController",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Http\\Controllers\\ModuleGraphInvalidController"
+        },
+        {
             "action": "move",
             "eloquent": false,
             "file": "packages/core/src/Http/Controllers/Sharing/CreateShareController.php",
@@ -10867,6 +10946,20 @@
             "rule": "core-kernel:fqcn:Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Http\\Middleware\\AssignCorrelationId"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Http/Middleware/EnsureModuleActive.php",
+            "fqcn": "Vaulter\\Http\\Middleware\\EnsureModuleActive",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Http\\Middleware\\EnsureModuleActive",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Http\\Middleware\\EnsureModuleActive"
         },
         {
             "action": "keep",
@@ -12071,6 +12164,34 @@
             "rule": "core-kernel:fqcn:Vaulter\\Modules\\MissingExtensionException",
             "surface": "Api",
             "target_fqcn": "Vaulter\\Modules\\MissingExtensionException"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Modules/ModuleApplier.php",
+            "fqcn": "Vaulter\\Modules\\ModuleApplier",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Modules\\ModuleApplier",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Modules\\ModuleApplier"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Modules/ModuleBindings.php",
+            "fqcn": "Vaulter\\Modules\\ModuleBindings",
+            "kind": "interface",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Modules\\ModuleBindings",
+            "surface": "Spi:Implement",
+            "target_fqcn": "Vaulter\\Modules\\ModuleBindings"
         },
         {
             "action": "keep",
@@ -14213,6 +14334,48 @@
             "rule": "core-content-media-webhooks:prefix:Vaulter\\Webhooks\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Webhooks\\WebhookSigner"
+        },
+        {
+            "action": "move",
+            "eloquent": false,
+            "file": "packages/core/src/Webhooks/WebhooksBindings.php",
+            "fqcn": "Vaulter\\Webhooks\\WebhooksBindings",
+            "kind": "final-class",
+            "note": null,
+            "owner": "webhooks",
+            "package": "core",
+            "phase": "P4",
+            "rule": "core-content-media-webhooks:prefix:Vaulter\\Webhooks\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Webhooks\\WebhooksBindings"
+        },
+        {
+            "action": "move",
+            "eloquent": false,
+            "file": "packages/core/src/Webhooks/WebhooksModule.php",
+            "fqcn": "Vaulter\\Webhooks\\WebhooksModule",
+            "kind": "final-class",
+            "note": null,
+            "owner": "webhooks",
+            "package": "core",
+            "phase": "P4",
+            "rule": "core-content-media-webhooks:prefix:Vaulter\\Webhooks\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Webhooks\\WebhooksModule"
+        },
+        {
+            "action": "move",
+            "eloquent": false,
+            "file": "packages/core/src/Webhooks/WebhooksSchedule.php",
+            "fqcn": "Vaulter\\Webhooks\\WebhooksSchedule",
+            "kind": "final-class",
+            "note": null,
+            "owner": "webhooks",
+            "package": "core",
+            "phase": "P4",
+            "rule": "core-content-media-webhooks:prefix:Vaulter\\Webhooks\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Webhooks\\WebhooksSchedule"
         }
     ],
     "version": 1

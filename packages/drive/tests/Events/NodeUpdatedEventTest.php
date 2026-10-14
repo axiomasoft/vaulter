@@ -7,13 +7,14 @@ use Vaulter\Drive\Tests\TestCase;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Webhooks\Outbox;
+use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /**
  * Changing a node's properties is a node.updated event (PLAN2.D41); the values are
  * host data, so only the fact of the change is published.
  */
-uses(TestCase::class, RefreshDatabase::class);
+uses(TestCase::class, RefreshDatabase::class, EnablesWebhooksModule::class);
 
 beforeEach(function (): void {
     $this->drive = DriveTestHelpers::drive();

@@ -24,6 +24,7 @@ const guideSidebar = [
     items: [
       { text: 'Architecture', link: '/concepts/architecture' },
       { text: 'Glossary', link: '/concepts/glossary' },
+      { text: 'Modules', link: '/concepts/modules' },
       { text: 'Storage Panels', link: '/concepts/drives-and-profiles' },
       { text: 'Drive — storages, folders & nodes', link: '/concepts/nodes-and-revisions' },
       { text: 'Storage & Blobs', link: '/concepts/storage-and-blobs' },
@@ -145,6 +146,7 @@ const ruGuideSidebar = [
     items: [
       { text: 'Архитектура', link: '/ru/concepts/architecture' },
       { text: 'Глоссарий', link: '/ru/concepts/glossary' },
+      { text: 'Модули', link: '/ru/concepts/modules' },
       { text: 'Storage Panels', link: '/ru/concepts/drives-and-profiles' },
       { text: 'Drive — хранилища, папки и узлы', link: '/ru/concepts/nodes-and-revisions' },
       { text: 'Хранилище и блобы', link: '/ru/concepts/storage-and-blobs' },

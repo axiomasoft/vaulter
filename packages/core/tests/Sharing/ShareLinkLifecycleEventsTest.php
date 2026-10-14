@@ -14,7 +14,10 @@ use Vaulter\Operations\ActivityOperations;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Operations\ShareOperations;
 use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\ValueObjects\Access\Actor;
+
+uses(EnablesWebhooksModule::class);
 
 /**
  * Updating and rotating a share link are events of their own (PLAN2.D47): both reach

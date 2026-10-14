@@ -44,6 +44,9 @@ final class ModuleBuilder
     /** @var array<string, class-string> alias => middleware */
     private array $routeMiddleware = [];
 
+    /** @var list<class-string<ModuleBindings>> */
+    private array $bindings = [];
+
     /** @var list<CapabilityDefinition> */
     private array $capabilityDefinitions = [];
 
@@ -140,6 +143,19 @@ final class ModuleBuilder
     {
         $this->guard();
         $this->routeMiddleware[$this->nonEmpty($alias, 'middleware alias')] = $middleware;
+
+        return $this;
+    }
+
+    /**
+     * Container wiring that no declaration expresses; registered and booted only while the module is active.
+     *
+     * @param class-string<ModuleBindings> $bindings
+     */
+    public function bindings(string $bindings): self
+    {
+        $this->guard();
+        $this->bindings[] = $bindings;
 
         return $this;
     }
@@ -292,6 +308,12 @@ final class ModuleBuilder
     public function routeMiddlewareAliases(): array
     {
         return $this->routeMiddleware;
+    }
+
+    /** @return list<class-string<ModuleBindings>> */
+    public function bindingClasses(): array
+    {
+        return $this->bindings;
     }
 
     /** @return list<CapabilityDefinition> */

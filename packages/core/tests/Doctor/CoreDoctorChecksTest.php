@@ -11,12 +11,17 @@ use Vaulter\Data\Drive\UploadOptions;
 use Vaulter\Data\Drive\UploadSource;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
+use Vaulter\Doctor\DoctorRegistry;
 use Vaulter\Doctor\DoctorRunner;
 use Vaulter\Doctor\DoctorSeverity;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Testing\NullPermissionDriver;
+use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Tenancy\MutableTenantResolver;
+use Vaulter\Tests\Webhooks\WebhookTestHelpers;
+
+uses(EnablesWebhooksModule::class);
 
 /** @return list<DoctorFinding> */
 function coreFindings(string $key, bool $production = false): array
@@ -251,8 +256,8 @@ it('measures the webhook outbox lag and skips it with webhooks off', function ()
         ->and($finding->severity)->toBe(DoctorSeverity::Warning)
         ->and(coreSeverities('core.webhooks.outbox_lag', production: true))->toBe(['warning']);
 
-    config(['vaulter.features.webhooks' => false]);
-    expect(coreFindings('core.webhooks.outbox_lag')[0]->evidence['skipped'])->toBeTrue();
+    WebhookTestHelpers::switchModule($this->app, false);
+    expect(app(DoctorRegistry::class)->unmatched(['core.webhooks']))->toBe(['core.webhooks']);
 });
 
 it('does not count a row that is not due yet as lag', function (): void {

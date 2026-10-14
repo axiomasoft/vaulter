@@ -15,6 +15,7 @@ use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
@@ -23,7 +24,7 @@ use Vaulter\Tests\Fixtures\TestUser;
  * types, one outbox row with the same event id. Commands are distinct occurrences even
  * when they repeat a state (V06).
  */
-uses(TestCase::class, RefreshDatabase::class);
+uses(TestCase::class, RefreshDatabase::class, EnablesWebhooksModule::class);
 
 beforeEach(function (): void {
     Storage::fake('local');

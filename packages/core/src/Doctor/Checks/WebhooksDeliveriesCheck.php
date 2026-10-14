@@ -25,10 +25,6 @@ final readonly class WebhooksDeliveriesCheck implements DoctorCheck
 
     public function run(DoctorContext $context): array
     {
-        if (!$this->config->featureEnabled('webhooks')) {
-            return [DoctorFinding::ok(code: 'core.webhooks.deliveries_skipped', message: 'Webhooks are disabled.', evidence: ['skipped' => true])];
-        }
-
         $endpoints = $this->config->model('webhook_endpoint');
         $deliveries = $this->config->model('webhook_delivery');
         // An owner who switches an endpoint off ('manual') also parks its open deliveries as dead

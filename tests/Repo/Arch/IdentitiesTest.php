@@ -29,6 +29,9 @@ require_once dirname(__DIR__, 3).'/scripts/inventory/lib/Identities/Config.php';
 require_once dirname(__DIR__, 3).'/scripts/inventory/lib/Identities/Protocol.php';
 require_once dirname(__DIR__, 3).'/scripts/inventory/lib/Identities/Http.php';
 
+/** The decisions a ledger record may cite: accepted decisions only; a plan item adds one together with its record. */
+const ID_ACCEPTED_DECISIONS = ['D21', 'D22', 'D25', 'D29', 'D36', 'D39'];
+
 /** @return list<string> the problem codes, sorted */
 function id_codes(array $problems): array
 {
@@ -140,6 +143,29 @@ describe('owner rules', function (): void {
             ->and($built['data'])->toMatchArray(['version' => 1, 'base' => '35718fd2', 'kind' => 'x', 'changes' => []])
             ->and(id_codes($built['problems']))->toBe(['duplicate-id', 'unclassified'])
             ->and(Identities::exitCode($built['problems']))->toBe(2);
+    });
+});
+
+describe('ledger', function (): void {
+    it('accepts records that match the items and reports stale or malformed ones', function (): void {
+        $items = ['k:new' => [], 'k:changed' => [], 'k:renamed' => []];
+        $record = static fn (string $id, string $change, array $extra = []): array => $extra + ['kind' => 'x', 'id' => $id, 'change' => $change, 'reason' => 'r', 'decision' => 'D22'];
+
+        expect(Identities::checkChanges('x', [
+            $record('k:new', 'added'),
+            $record('k:changed', 'redefined'),
+            $record('k:gone', 'removed'),
+            $record('k:renamed', 'renamed', ['from' => 'k:old']),
+        ], $items))->toBe([])
+            ->and(id_codes(Identities::checkChanges('x', [
+                $record('k:missing', 'added'),
+                $record('k:new', 'removed'),
+                $record('k:renamed', 'renamed', ['from' => 'k:new']),
+                $record('k:renamed', 'renamed'),
+                $record('k:new', 'moved'),
+                $record('k:new', 'added', ['decision' => 'owner']),
+                $record('k:new', 'added', ['reason' => ' ']),
+            ], $items)))->toBe(['invalid-change', 'invalid-change', 'invalid-change', 'stale-change', 'stale-change', 'stale-change', 'stale-change']);
     });
 });
 
@@ -280,13 +306,13 @@ describe('committed fixtures', function (): void {
         expect(implode("\n", $outcome['lines']))->toBe('')->and($outcome['code'])->toBe(0);
     })->with(Identities::KINDS);
 
-    it('have the file format: base, no changes in P2, items sorted by id with an owner and a source', function (string $kind): void {
+    it('have the file format: base, the ledger records of the kind, items sorted by id with an owner and a source', function (string $kind): void {
         $fixture = id_fixture($kind);
         $ids = array_column($fixture['items'], 'id');
         $sorted = $ids;
         usort($sorted, strcmp(...));
 
-        expect($fixture)->toMatchArray(['version' => 1, 'base' => '35718fd2', 'kind' => $kind, 'changes' => []])
+        expect($fixture)->toMatchArray(['version' => 1, 'base' => '35718fd2', 'kind' => $kind, 'changes' => Identities::ledger(Repo::discover(), $kind)])
             ->and($ids)->toBe($sorted)
             ->and(array_unique($ids))->toBe($ids);
         foreach ($fixture['items'] as $item) {
@@ -295,6 +321,16 @@ describe('committed fixtures', function (): void {
             expect(Repo::discover()->exists($item['source']['file']))->toBeTrue($item['id'].' -> '.$item['source']['file']);
         }
     })->with(Identities::KINDS);
+
+    it('cite only accepted decisions in the ledger', function (): void {
+        $ledger = Repo::discover()->readJson(Identities::LEDGER);
+
+        expect($ledger['changes'])->not->toBe([]);
+        foreach ($ledger['changes'] as $change) {
+            expect(Identities::KINDS)->toContain($change['kind'])
+                ->and(ID_ACCEPTED_DECISIONS)->toContain($change['decision']);
+        }
+    });
 
     it('hold no absolute path and no line number', function (string $kind): void {
         $text = (string) file_get_contents(Repo::discover()->path(Identities::fixture($kind)));
@@ -345,7 +381,9 @@ describe('committed fixtures', function (): void {
             ->and($items['env:VAULTER_TABLE_PREFIX']['config_keys'])->toBe(['vaulter.database.table_prefix'])
             ->and($items['env:VAULTER_ORPHAN_GRACE_HOURS']['config_keys'])->toBe(['vaulter-media.gc.orphan_grace_hours'])
             ->and($items['config:vaulter.models.blob']['owner'])->toBe('media')
-            ->and($items['publish:vaulter-config']['owner'])->toBe('core')
+            ->and($items['publish:vaulter-config'])->toMatchArray(['owner' => 'core', 'via' => 'module:config'])
+            ->and($items['config:vaulter.modules'])->toMatchArray(['default' => [], 'owner' => 'core'])
+            ->and($items)->not->toHaveKey('config:vaulter.features.webhooks')
             ->and($items)->toHaveKeys(['publish:vaulter-media-config', 'publish:vaulter-drive-translations', 'publish:vaulter-azgard-config']);
     });
 
@@ -353,7 +391,7 @@ describe('committed fixtures', function (): void {
         $items = array_column(id_fixture('cli')['items'], null, 'id');
         $doctor = $items['command:vaulter:doctor'];
 
-        expect(count($items))->toBe(26)
+        expect(count($items))->toBe(28)
             ->and($doctor['parse'])->toBe('signature')
             ->and(array_column($doctor['options'], 'name'))->toBe(['production', 'json', 'check', 'sample', 'probe-storage'])
             ->and(array_column($doctor['options'], 'accepts_value', 'name')['sample'])->toBeTrue()
@@ -367,9 +405,11 @@ describe('committed fixtures', function (): void {
         $http = id_fixture('http');
         $items = array_column($http['items'], null, 'id');
 
-        expect($http['flags'])->toHaveKeys(['vaulter.features.webhooks', 'vaulter.features.share_links', 'vaulter-documents.collaboration.enabled'])
-            ->and($items['route:vaulter.v1.webhook-endpoints.index']['requires'])->toBe(['vaulter.features.webhooks'])
-            ->and($items['route:vaulter.v1.webhook-endpoints.index']['default_registered'])->toBeTrue()
+        expect($http['flags'])->toHaveKeys(['vaulter.modules.webhooks', 'vaulter.features.share_links', 'vaulter-documents.collaboration.enabled'])
+            ->and($http['flags'])->not->toHaveKey('vaulter.features.webhooks')
+            ->and($items['route:vaulter.v1.webhook-endpoints.index']['requires'])->toBe(['vaulter.modules.webhooks'])
+            ->and($items['route:vaulter.v1.webhook-endpoints.index']['default_registered'] ?? false)->toBeFalse()
+            ->and($items['route:vaulter.v1.webhook-endpoints.index']['middleware'])->toContain('vaulter.module:webhooks')
             ->and($items['route:vaulter.v1.collaboration.hub.load']['requires'])->toBe(['vaulter-documents.collaboration.enabled'])
             ->and($items['route:vaulter.v1.collaboration.hub.load']['default_registered'] ?? false)->toBeFalse()
             ->and($items['route:vaulter.v1.grants.index'])->toMatchArray(['methods' => ['GET'], 'owner' => 'drive', 'openapi' => ['path' => '/nodes/{node}/grants', 'operation_id' => 'grants.index']])

@@ -1,6 +1,35 @@
 {
     "base": "35718fd2",
-    "changes": [],
+    "changes": [
+        {
+            "change": "added",
+            "decision": "D22",
+            "id": "config:vaulter.modules",
+            "kind": "config",
+            "reason": "P3.2: module activation overrides (module id => bool)"
+        },
+        {
+            "change": "removed",
+            "decision": "D22",
+            "id": "config:vaulter.features.webhooks",
+            "kind": "config",
+            "reason": "P3.2: webhooks are an opt-in module, switched by vaulter.modules.webhooks (default false)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "publish:vaulter-config",
+            "kind": "config",
+            "reason": "P3.2: published by the module kernel from CoreModule::config instead of spatie hasConfigFile"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "publish:vaulter-migrations",
+            "kind": "config",
+            "reason": "P3.2: published by the module kernel from CoreModule::schema instead of spatie discoversMigrations"
+        }
+    ],
     "items": [
         {
             "default": {
@@ -1455,17 +1484,6 @@
             }
         },
         {
-            "default": true,
-            "id": "config:vaulter.features.webhooks",
-            "owner": "webhooks",
-            "registered_defaults": true,
-            "root": "vaulter",
-            "source": {
-                "file": "packages/core/config/vaulter.php",
-                "symbol": "<file>"
-            }
-        },
-        {
             "default": [],
             "id": "config:vaulter.handlers",
             "owner": "drive",
@@ -1730,6 +1748,17 @@
             "default": "Vaulter\\Models\\Webhooks\\WebhookEndpoint",
             "id": "config:vaulter.models.webhook_endpoint",
             "owner": "webhooks",
+            "registered_defaults": true,
+            "root": "vaulter",
+            "source": {
+                "file": "packages/core/config/vaulter.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": [],
+            "id": "config:vaulter.modules",
+            "owner": "core",
             "registered_defaults": true,
             "root": "vaulter",
             "source": {
@@ -2915,10 +2944,10 @@
             "id": "publish:vaulter-config",
             "owner": "core",
             "source": {
-                "file": "packages/core/src/VaulterServiceProvider.php",
-                "symbol": "Vaulter\\VaulterServiceProvider::configurePackage"
+                "file": "packages/core/src/CoreModule.php",
+                "symbol": "Vaulter\\CoreModule::register"
             },
-            "via": "spatie:hasConfigFile"
+            "via": "module:config"
         },
         {
             "id": "publish:vaulter-documents-config",
@@ -2978,10 +3007,10 @@
             "id": "publish:vaulter-migrations",
             "owner": "core",
             "source": {
-                "file": "packages/core/src/VaulterServiceProvider.php",
-                "symbol": "Vaulter\\VaulterServiceProvider::configurePackage"
+                "file": "packages/core/src/CoreModule.php",
+                "symbol": "Vaulter\\CoreModule::register"
             },
-            "via": "spatie:discoversMigrations"
+            "via": "module:schema"
         },
         {
             "id": "publish:vaulter-translations",

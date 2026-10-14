@@ -214,20 +214,17 @@ final class ScanLifecycleContractTests
         Assert::assertSame($scansBefore + 1, count($this->scanner->scans), 'Recovery scans the bytes exactly once.');
     }
 
-    /** (d) Webhooks are an unrelated feature: switching them off must not switch scanning off. */
+    /**
+     * (d) Webhooks are an unrelated, opt-in module (D22): scanning works whether the host activated it or not
+     * (a default installation has it off).
+     */
     private function assertWebhooksDoNotSwitchScanning(Model&Authorizable $actor): void
     {
-        $previous = Config::get('vaulter.features.webhooks');
-        Config::set('vaulter.features.webhooks', false);
-        try {
-            [$drive, $node] = $this->uploaded($actor, 'webhooks proof '.bin2hex(random_bytes(4)));
-            Assert::assertNotEmpty($this->obligations($node), 'With webhooks off, uploads must still create scan work.');
-            Assert::assertFalse($this->readable($drive, $node), 'With webhooks off, new content must still wait for its verdict.');
-            $this->settle();
-            Assert::assertTrue($this->readable($drive, $node), 'With webhooks off, scanning must still settle the work.');
-        } finally {
-            Config::set('vaulter.features.webhooks', $previous);
-        }
+        [$drive, $node] = $this->uploaded($actor, 'webhooks proof '.bin2hex(random_bytes(4)));
+        Assert::assertNotEmpty($this->obligations($node), 'Whatever the webhooks module, uploads must create scan work.');
+        Assert::assertFalse($this->readable($drive, $node), 'Whatever the webhooks module, new content must wait for its verdict.');
+        $this->settle();
+        Assert::assertTrue($this->readable($drive, $node), 'Whatever the webhooks module, scanning must settle the work.');
     }
 
     /** @return array{DriveHandle, NodeSnapshot} */

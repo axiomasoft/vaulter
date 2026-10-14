@@ -15,6 +15,7 @@ use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 
 /**
  * Document and comment events go through the EventRecorder like every other event:
@@ -22,7 +23,7 @@ use Vaulter\Tests\Access\AccessTestHelpers;
  * validators from the writer. Content saves are not audited, and only the saves that
  * took a checkpoint reach webhooks.
  */
-uses(OperationsTestCase::class, RefreshDatabase::class);
+uses(OperationsTestCase::class, RefreshDatabase::class, EnablesWebhooksModule::class);
 
 /** @return array<string, int> event type => rows */
 function documentEventsCount(string $model): array

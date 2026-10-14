@@ -45,9 +45,9 @@
         },
         {
             "match": "exact",
-            "value": "config:vaulter.features.webhooks",
-            "owner": "webhooks",
-            "why": "the webhooks feature switch moves with the webhooks package (D29)"
+            "value": "config:vaulter.modules",
+            "owner": "core",
+            "why": "kernel module activation overrides: module id => bool (D22, architecture#module-system)"
         },
         {
             "match": "prefix",

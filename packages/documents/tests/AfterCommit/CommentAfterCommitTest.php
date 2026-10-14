@@ -18,6 +18,9 @@ use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Tests\Concerns\EnablesWebhooksModule;
+
+uses(EnablesWebhooksModule::class);
 
 /**
  * PLAN2.F15: comment events leave an Action as part of its unit of work — their

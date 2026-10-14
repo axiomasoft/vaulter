@@ -3708,6 +3708,15 @@
       ],
       "reason": "the 0.2 exporter map form is removed",
       "decision": "D21"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Providers\\ConsoleRegistrarTest::__pest_evaluable_it_registers_profile_scaffolding_and_webhook_commands",
+      "replacement": [
+        "P\\Packages\\core\\tests\\Providers\\ConsoleRegistrarTest::__pest_evaluable_it_registers_the_drive_commands_still_located_in_core__not_the_webhook_commands"
+      ],
+      "reason": "P3.2: the webhook commands are declared by WebhooksModule (opt-in) and no longer registered by the core registrar",
+      "decision": "D39"
     }
   ],
   "additions": {

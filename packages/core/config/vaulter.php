@@ -53,10 +53,12 @@ return [
         'mode' => null, 'required' => null, 'scanner' => null, 'scanner_key' => null,
         'scanner_version' => null, 'policy_version' => null, 'rollout_key' => null,
     ],
+    // Module activation overrides (D22): module id => true|false. Auto modules (media, drive, documents…)
+    // are active unless switched off; opt-in modules (webhooks) only when switched on.
+    'modules' => [],
     'features' => [
         'grants' => true,
         'activity' => true,
-        'webhooks' => true,
         // The drive change journal behind DriveHandle::changes() (PLAN2.D50).
         'changes' => true,
         'share_links' => false,

@@ -1,6 +1,21 @@
 {
     "base": "35718fd2",
-    "changes": [],
+    "changes": [
+        {
+            "change": "added",
+            "decision": "D22",
+            "id": "command:vaulter:modules",
+            "kind": "cli",
+            "reason": "P3.2: the kernel lists the module graph, activation, schema and contributions"
+        },
+        {
+            "change": "added",
+            "decision": "D36",
+            "id": "command:vaulter:module:uninstall",
+            "kind": "cli",
+            "reason": "P3.2: dry-run uninstall plan; --force/--purge refuse until P4"
+        }
+    ],
     "items": [
         {
             "arguments": [],
@@ -234,7 +249,9 @@
             "arguments": [],
             "class": "Vaulter\\Console\\DoctorCommand",
             "description": "Diagnose the Vaulter setup of this host (read-only)",
-            "exit_codes": [],
+            "exit_codes": [
+                "FAILURE"
+            ],
             "hidden": false,
             "id": "command:vaulter:doctor",
             "options": [
@@ -699,6 +716,79 @@
             "source": {
                 "file": "packages/core/src/Console/MakeProfileCommand.php",
                 "symbol": "Vaulter\\Console\\MakeProfileCommand"
+            }
+        },
+        {
+            "arguments": [
+                {
+                    "array": false,
+                    "default": null,
+                    "description": "The module id",
+                    "name": "module",
+                    "required": true
+                }
+            ],
+            "class": "Vaulter\\Console\\ModuleUninstallCommand",
+            "description": "Plan (dry run) or perform the removal of a Vaulter module's schema",
+            "exit_codes": [
+                "FAILURE",
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:module:uninstall",
+            "options": [
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Roll back the module's migrations",
+                    "name": "force",
+                    "shortcut": null,
+                    "value_required": false
+                },
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Also delete the module's rows and its own media pins",
+                    "name": "purge",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "core",
+            "parse": "signature",
+            "source": {
+                "file": "packages/core/src/Console/ModuleUninstallCommand.php",
+                "symbol": "Vaulter\\Console\\ModuleUninstallCommand"
+            }
+        },
+        {
+            "arguments": [],
+            "class": "Vaulter\\Console\\ModulesCommand",
+            "description": "List the Vaulter modules, their activation and what they contribute",
+            "exit_codes": [
+                "FAILURE",
+                "SUCCESS"
+            ],
+            "hidden": false,
+            "id": "command:vaulter:modules",
+            "options": [
+                {
+                    "accepts_value": false,
+                    "array": false,
+                    "default": false,
+                    "description": "Print one JSON document",
+                    "name": "json",
+                    "shortcut": null,
+                    "value_required": false
+                }
+            ],
+            "owner": "core",
+            "parse": "signature",
+            "source": {
+                "file": "packages/core/src/Console/ModulesCommand.php",
+                "symbol": "Vaulter\\Console\\ModulesCommand"
             }
         },
         {

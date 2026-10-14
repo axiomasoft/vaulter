@@ -9,9 +9,12 @@ use Vaulter\Jobs\Webhooks\DeliverWebhook;
 use Vaulter\Observability\TracingAttributes;
 use Vaulter\Observability\TracingSpanNames;
 use Vaulter\Testing\FakeTraceRecorder;
+use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 use Vaulter\Webhooks\OutboxRelay;
 use Vaulter\Webhooks\WebhookRetryDispatcher;
+
+uses(EnablesWebhooksModule::class);
 
 beforeEach(function (): void {
     config()->set('vaulter.observability.tracing.enabled', true);

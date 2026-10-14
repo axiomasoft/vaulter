@@ -6,10 +6,13 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Vaulter\Models\Webhooks\WebhookDelivery;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
+use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Concurrency\ForkRace;
 use Vaulter\Tests\Concurrency\RaceOutcome;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 use Vaulter\Webhooks\Events\WebhookEndpointDisabled;
+
+uses(EnablesWebhooksModule::class);
 
 /**
  * Two workers settle a FAILED attempt of two different deliveries of one endpoint at the

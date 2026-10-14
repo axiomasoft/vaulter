@@ -30,8 +30,6 @@ use Vaulter\Contracts\Observability\TraceRecorder;
 use Vaulter\Contracts\Profiles\CommentsFeature;
 use Vaulter\Contracts\Sharing\ShareTokenGenerator;
 use Vaulter\Contracts\Tenancy\TenantResolver;
-use Vaulter\Contracts\Webhooks\HostResolver;
-use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Database\WriteScope;
 use Vaulter\Enums\Cas\ScanMode;
@@ -40,6 +38,7 @@ use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
 use Vaulter\Handlers\Builtin\DownloadOnlyHandler;
 use Vaulter\Handlers\Builtin\PreviewHandler;
 use Vaulter\Handlers\FileHandlerRegistry;
+use Vaulter\Modules\ModuleBindings;
 use Vaulter\Observability\NullMetricsRecorder;
 use Vaulter\Observability\NullTraceRecorder;
 use Vaulter\Operations\NodeLocator;
@@ -53,9 +52,12 @@ use Vaulter\Tenancy\ShareTenantContext;
 use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\Tenancy\TenancyBypass;
 use Vaulter\VaulterManager;
-use Vaulter\Webhooks\SystemHostResolver;
 
-final class BindingsRegistrar
+/**
+ * The container wiring of the core module ({@see \Vaulter\CoreModule}). Its drive part (profiles, scan, sharing,
+ * listing, handlers, the drive read repository): P3.3 moves to DriveModule (D39).
+ */
+final class BindingsRegistrar implements ModuleBindings
 {
     public function register(Application $app): void
     {
@@ -136,19 +138,6 @@ final class BindingsRegistrar
             }
 
             return $generator;
-        });
-
-        // Outbound webhook SSRF guard: the host resolver is
-        // the injectable DNS seam (A + AAAA), and the guard is host-swappable via
-        // delivery path (DeliverWebhook) and — as an early reject — at registration.
-        $app->bind(HostResolver::class, SystemHostResolver::class);
-        $app->bind(OutboundUrlGuard::class, static function (Application $app): OutboundUrlGuard {
-            $guard = $app->make($app->make(WebhooksConfig::class)->urlGuard());
-            if (!$guard instanceof OutboundUrlGuard) {
-                throw new InvalidConfigurationException('[Vaulter] Outbound URL guard binding must return an OutboundUrlGuard.');
-            }
-
-            return $guard;
         });
 
         // CAS services — the concrete ContentStore/StorageDriver/BlobStore

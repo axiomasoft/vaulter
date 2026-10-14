@@ -63,6 +63,32 @@ php artisan vaulter:install
 [`vaulter:doctor`](#vaulter-doctor). Установка не является барьером: код выхода `0`, что бы ни нашёл
 doctor.
 
+## `vaulter:modules`
+
+```bash
+php artisan vaulter:modules [--json]
+```
+
+Показывает каждый установленный (предложенный) модуль: пакет, протокол, политику активации
+(`auto` / `opt-in`), активен ли он и почему (`default` или `override` из `vaulter.modules`),
+миграции схемы, ещё не выполненные базой, и capabilities и слоты, которые модуль определяет
+или в которые вносит вклад. Код `0` при валидном графе модулей, `1` при невалидном — причины
+печатаются, ни один модуль не активен. Команда регистрируется при любом графе. См.
+[Модули](/ru/concepts/modules).
+
+## `vaulter:module:uninstall`
+
+```bash
+php artisan vaulter:module:uninstall <module> [--force] [--purge]
+```
+
+По умолчанию — dry run: план удаления схемы модуля — его миграции и таблицы, установленные
+модули, которые его требуют, внешние ключи других владельцев на его таблицы — и причины
+отказа. Код `1`, если что-то отказывает. Пока create-миграции не разложены по владельцам (P4),
+`--force` (откат миграций владельца) и `--purge` (удаление его строк и собственных media pins)
+отказывают с «owner migrations are not split yet (P4)». Выключение модуля никогда не
+удаляет его схему.
+
 ## `vaulter:doctor`
 
 Read-only диагностика настройки Vaulter на хосте. Каждый установленный пакет добавляет свои
@@ -131,7 +157,7 @@ JSON-документ описан схемой `packages/core/resources/schemas
 | `documents.collaboration` | При включённой совместной работе: оба секрета заданы и различны, URL хаба (`wss://` в production), срок токена ≤ 3600 с, установлен `firebase/php-jwt` | error → error |
 | `azgard.dependency` | AzGuard установлен и guard моста разрешается | error → error |
 
-Проверки `drive.scan.*` выполняются независимо от `features.webhooks`: сканирование — обязательная
+Проверки `drive.scan.*` выполняются независимо от `vaulter.modules.webhooks`: сканирование — обязательная
 работа по безопасности контента, а не вебхук. `media.disk.probe` — единственная проверка, которая пишет;
 свой объект она удаляет в любом случае.
 
@@ -145,9 +171,9 @@ JSON-документ описан схемой `packages/core/resources/schemas
 
 | Ключ конфига | Команда | По умолчанию |
 |---|---|---|
-| `vaulter.schedule.webhooks_relay` | `vaulter:webhooks:relay` (нужен `features.webhooks`) | `everyMinute` |
-| `vaulter.schedule.webhooks_retry` | `vaulter:webhooks:retry` (нужен `features.webhooks`) | `everyMinute` |
-| `vaulter.schedule.webhooks_prune` | `vaulter:webhooks:prune` (нужен `features.webhooks`) | `dailyAt:03:10` |
+| `vaulter.schedule.webhooks_relay` | `vaulter:webhooks:relay` (нужен `vaulter.modules.webhooks`) | `everyMinute` |
+| `vaulter.schedule.webhooks_retry` | `vaulter:webhooks:retry` (нужен `vaulter.modules.webhooks`) | `everyMinute` |
+| `vaulter.schedule.webhooks_prune` | `vaulter:webhooks:prune` (нужен `vaulter.modules.webhooks`) | `dailyAt:03:10` |
 | `vaulter.schedule.changes_prune` | `vaulter:changes:prune` (нужен `features.changes`) | `dailyAt:03:20` |
 | `vaulter-drive.schedule.uploads_sweep` | `vaulter:uploads:sweep` | `hourlyAt:15` |
 | `vaulter-drive.schedule.trash_purge` | `vaulter:trash:purge` | `dailyAt:03:30` |
@@ -328,7 +354,7 @@ lifecycle-правило `AbortIncompleteMultipartUpload` как страхов�
 и пишет по `webhooks.relay.fanout_chunk` эндпоинтов за транзакцию; строка становится
 `completed` вместе с последними доставками, поэтому упавший relay продолжает следующий
 запуск, когда аренда истечёт. Несколько relay могут работать одновременно. Гарантия
-at-least-once с экспоненциальным backoff + DLQ. Управляется флагом `features.webhooks`.
+at-least-once с экспоненциальным backoff + DLQ. Управляется флагом `vaulter.modules.webhooks`.
 См. [Webhooks → Delivery guarantees](/guides/webhooks#delivery-guarantees).
 
 ```
@@ -346,7 +372,7 @@ php artisan vaulter:webhooks:relay --limit=500
 
 Повторно отправить доставки вебхуков, у которых истекло окно backoff, и ожидающие
 доставки, чей первый job потерян (никем не взяты через `webhooks.relay.claim_seconds`
-после срока). Управляется флагом `features.webhooks`.
+после срока). Управляется флагом `vaulter.modules.webhooks`.
 
 ```
 vaulter:webhooks:retry
@@ -361,7 +387,7 @@ php artisan vaulter:webhooks:retry
 Удалить ЗАВЕРШЁННЫЕ строки outbox (`completed`, `fanned_out_at` старше срока хранения) и
 ТЕРМИНАЛЬНЫЕ доставки (`delivered`/`dead`, старше срока хранения). Строка outbox в
 `pending` — даже раскрытая наполовину — и доставка `pending`/`failed` не удаляются никогда,
-сколько бы им ни было. Управляется флагом `features.webhooks`. Срок берётся из
+сколько бы им ни было. Управляется флагом `vaulter.modules.webhooks`. Срок берётся из
 `config('vaulter.webhooks.retention_days')` (по умолчанию 30), если не задан `--days`.
 Удалённые строки нельзя восстановить или переиграть.
 
@@ -379,7 +405,7 @@ vaulter:webhooks:prune
 возвращается в `pending` с `attempts = 0`, поэтому получатель видит **тот же `webhook-id`**;
 доставка неактивного эндпоинта или всё ещё `pending`/`failed` пропускается с сообщением. Доступны
 только строки в пределах `webhooks.retention_days`. Код выхода не нулевой, если не ушло ни одной.
-Управляется флагом `features.webhooks`.
+Управляется флагом `vaulter.modules.webhooks`.
 
 ```
 vaulter:webhooks:redeliver
@@ -480,7 +506,7 @@ Schedule::command('vaulter:changes:prune')->daily();
 
 ## См. также
 
-- [Справочник по конфигурации](/ru/reference/config) — `vaulter-media.gc.*`, `vaulter-drive.trash.*`, `vaulter-drive.uploads.*`, `webhooks.*`, `features.webhooks`
+- [Справочник по конфигурации](/ru/reference/config) — `vaulter-media.gc.*`, `vaulter-drive.trash.*`, `vaulter-drive.uploads.*`, `webhooks.*`, `vaulter.modules.webhooks`
 - [Справочник по событиям](/ru/reference/events) — что разворачивает релей
 - [Фасад и Manager](/ru/reference/php-api) — рантайм-API
 
@@ -506,6 +532,8 @@ Schedule::command('vaulter:changes:prune')->daily();
 | `vaulter:make:file-handler` | Scaffold a Vaulter file handler with a contract test | `[--force] [--] <name>` |
 | `vaulter:make:permission-driver` | Scaffold a Vaulter permission driver with a contract test | `[--force] [--] <name>` |
 | `vaulter:make:profile` | Scaffold a Vaulter profile provider (zero-migration config envelope) | `[--host [HOST]] [--no-grants] [--force] [--] <name>` |
+| `vaulter:module:uninstall` | Plan (dry run) or perform the removal of a Vaulter module's schema | `[--force] [--purge] [--] <module>` |
+| `vaulter:modules` | List the Vaulter modules, their activation and what they contribute | `[--json]` |
 | `vaulter:revisions:prune` | Delete non-current file revisions past their profile retention policy. | `[--drive [DRIVE]] [--dry-run]` |
 | `vaulter:scan:reconcile` | Recover bounded scan intents, backfill discovery and committed upload cleanup. | `[--tenant [TENANT]] [--drive [DRIVE]] [--all-tenants] [--reason [REASON]] [--limit [LIMIT]] [--max-seconds [MAX-SECONDS]] [--dry-run] [--json]` |
 | `vaulter:scan:rescan` | Activate scan policy or record bounded durable scan requests. | `[--tenant [TENANT]] [--drive [DRIVE]] [--all-tenants] [--reason [REASON]] [--revision [REVISION]] [--after [AFTER]] [--limit [LIMIT]] [--request-id [REQUEST-ID]] [--rescan] [--retry-failed] [--activate-policy] [--dry-run] [--json]` |

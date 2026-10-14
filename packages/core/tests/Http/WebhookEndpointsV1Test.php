@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Gate;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Jobs\Webhooks\DeliverWebhook;
+use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Http\V1;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 
@@ -15,7 +16,7 @@ use Vaulter\Tests\Webhooks\WebhookTestHelpers;
  * only by register and rotate-secret, deliveries paged per endpoint and re-sent on
  * request.
  */
-uses(RefreshDatabase::class);
+uses(RefreshDatabase::class, EnablesWebhooksModule::class);
 
 /** Fixture rows are written the way the operations write them, so the write guard accepts them. */
 function webhookFixture(Closure $create): mixed

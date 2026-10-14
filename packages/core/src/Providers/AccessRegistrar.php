@@ -12,9 +12,7 @@ use Vaulter\Configuration\AccessConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Models\Webhooks\WebhookEndpoint;
 use Vaulter\Policies\NodePolicy;
-use Vaulter\Policies\WebhookEndpointPolicy;
 
 final class AccessRegistrar
 {
@@ -57,14 +55,6 @@ final class AccessRegistrar
         // subclass) still hits the policy.
         if (app(VaulterConfig::class)->model('node') !== Node::class) {
             Gate::policy(Node::class, NodePolicy::class);
-        }
-
-        // The webhook-endpoint management surface is a global
-        // admin resource, authorized by the WebhookEndpointPolicy (manage ability).
-        Gate::policy(WebhookEndpoint::class, WebhookEndpointPolicy::class);
-
-        if (app(VaulterConfig::class)->model('webhook_endpoint') !== WebhookEndpoint::class) {
-            Gate::policy(app(VaulterConfig::class)->model('webhook_endpoint'), WebhookEndpointPolicy::class);
         }
     }
 }

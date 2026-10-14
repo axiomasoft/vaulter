@@ -92,6 +92,18 @@
             "why": "vaulter:install is a kernel command (architecture#packages)"
         },
         {
+            "match": "exact",
+            "value": "command:vaulter:modules",
+            "owner": "core",
+            "why": "the kernel lists the module graph (D22, architecture#module-system)"
+        },
+        {
+            "match": "prefix",
+            "value": "command:vaulter:module:",
+            "owner": "core",
+            "why": "module lifecycle commands of the kernel: uninstall plan (D36)"
+        },
+        {
             "match": "prefix",
             "value": "command:vaulter:commands:",
             "owner": "core",

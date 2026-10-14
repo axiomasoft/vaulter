@@ -21,6 +21,7 @@ use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Data\Files\IngestFileInput;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Enums\Cas\ScanVerdict;
+use Vaulter\Kernel;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
@@ -232,7 +233,7 @@ it('finds an unavailable content scope under a policy that scans everything', fu
 
 it('runs the scan checks with webhooks disabled', function (): void {
     [, $work] = scanFixture();
-    config()->set('vaulter.features.webhooks', false);
+    expect(app(Kernel::class)->isActive('webhooks'))->toBeFalse();
     DB::table(scanTable('scan_obligations'))->where('id', $work->getKey())->update([
         'state' => 'leased', 'lease_token' => (string) Str::uuid(), 'lease_expires_at' => now('UTC')->subMinutes(5),
     ]);

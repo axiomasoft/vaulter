@@ -1608,12 +1608,21 @@
         },
         {
             "match": "file",
-            "value": "packages/core/routes/api.php",
-            "owner": "core",
-            "action": "split",
+            "value": "packages/core/routes/drive.php",
+            "owner": "drive",
+            "action": "move",
             "phase": "P4",
-            "note": "routes by owner of the controller (drive/documents/webhooks); kernel keeps only the registrar; details in identities/http (P2.3)",
-            "why": "architecture#packages: the routes file registers the routes of every domain controller"
+            "note": "the drive routes located in core, declared by DriveModule (D39); P4 moves the file into the drive package",
+            "why": "architecture#packages + D39: routes of the drive controllers located in core (P3.2 split of routes/api.php)"
+        },
+        {
+            "match": "file",
+            "value": "packages/core/routes/webhooks.php",
+            "owner": "webhooks",
+            "action": "move",
+            "phase": "P4",
+            "note": "the routes of the logical webhooks module (D39); P4 moves the file with the webhooks package",
+            "why": "architecture#packages + D39: webhook endpoint routes (P3.2 split of routes/api.php)"
         },
         {
             "match": "member",
@@ -2268,6 +2277,78 @@
             "phase": "stay",
             "surface": "Api",
             "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\CoreModule",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.2, ADR-0027) — the core module manifest (P3.2, D22): kernel config, schema, commands, doctor checks"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\ModuleApplier",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.2, ADR-0027)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\ModuleBindings",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Spi:Implement",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.2, ADR-0027)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Http\\Middleware\\EnsureModuleActive",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.2, ADR-0027) — vaulter.module:<id> route middleware (revision 3: route cache, InvalidModuleGraph)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Http\\Controllers\\ModuleGraphInvalidController",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.2, ADR-0027) — catch-all 503 module_graph_invalid while the graph is invalid (revision 3)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Console\\ModulesCommand",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.2, ADR-0027) — vaulter:modules (P3.2)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Console\\ModuleUninstallCommand",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.2, ADR-0027) — vaulter:module:uninstall dry run (P3.2, D36)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Doctor\\Checks\\ModuleCacheFreshnessCheck",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.2, ADR-0027) — core.modules.cache doctor check (revision 3: route cache fingerprint)"
         }
     ]
 }

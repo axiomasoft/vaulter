@@ -7,6 +7,9 @@ namespace Vaulter\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Symfony\Component\Console\Command\Command as SymfonyCommand;
+use Vaulter\Modules\ModuleBuilder;
+use Vaulter\Modules\ModuleCatalog;
+use Vaulter\Modules\VaulterModule;
 
 /**
  * Regenerates the command table of the reference docs from the registered vaulter:*
@@ -25,7 +28,10 @@ final class CommandsReferenceCommand extends Command
 
     protected $description = 'Generate the command table in the reference docs.';
 
-    /** The markdown table of every registered vaulter:* command, without the markers. */
+    /**
+     * The markdown table of every vaulter:* command, without the markers: the registered ones and those of the
+     * offered modules that are not active here (an opt-in module documents its commands too).
+     */
     public static function render(): string
     {
         /** @var array<string, SymfonyCommand> $registered */
@@ -35,6 +41,12 @@ final class CommandsReferenceCommand extends Command
             static fn (string $name): bool => str_starts_with($name, 'vaulter:'),
             ARRAY_FILTER_USE_KEY,
         );
+        foreach (self::declaredCommands() as $class) {
+            $command = app($class);
+            if ($command instanceof SymfonyCommand && str_starts_with((string) $command->getName(), 'vaulter:')) {
+                $commands[(string) $command->getName()] ??= $command;
+            }
+        }
         ksort($commands);
 
         $lines = ['| Command | Description | Synopsis |', '|---|---|---|'];
@@ -49,6 +61,27 @@ final class CommandsReferenceCommand extends Command
         }
 
         return implode("\n", $lines);
+    }
+
+    /**
+     * The command classes every offered manifest declares, active or not.
+     *
+     * @return list<class-string>
+     */
+    private static function declaredCommands(): array
+    {
+        $classes = [];
+        foreach (ModuleCatalog::of(app())->offered() as $manifest) {
+            if (!is_a($manifest, VaulterModule::class, true)) {
+                continue;
+            }
+            $module = new $manifest;
+            $builder = new ModuleBuilder($module->id());
+            $module->register($builder);
+            array_push($classes, ...$builder->commandClasses());
+        }
+
+        return $classes;
     }
 
     /** The block between the markers, markers included. */

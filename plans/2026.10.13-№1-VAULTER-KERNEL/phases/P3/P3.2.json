@@ -1,0 +1,337 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P3.2",
+  "title": "Манифест ядра и логический webhooks: активация, vaulter.modules, module-middleware, InvalidModuleGraph, vaulter:modules",
+  "status": "in_progress",
+  "summary": "Core-провайдер предлагает CoreModule и логический WebhooksModule (OptIn); декларации active-модулей применяются (config, bindings, routes с middleware `vaulter.module:<id>`, commands, listeners, schedules, translations, schema); `features.webhooks` заменён `vaulter.modules.webhooks` (false); InvalidModuleGraph не роняет artisan и отвечает 503; есть `vaulter:modules`, `vaulter:module:uninstall` (dry-run, D36), doctor-проверка свежести route cache; введён ledger идентичностей.",
+  "why": "D22/D39: активация становится декларативной, webhooks — OptIn; ревизия 3 требует module-middleware против route:cache и безопасного InvalidModuleGraph. Ledger нужен всем последующим изменениям идентичностей (D21: изменения фиксируются с причиной). Риск: смена default webhooks выключает маршруты/outbox-путь вебхуков в тестах — тесты вебхуков включают модуль явно, не через глобальный default.",
+  "scope": {
+    "include": [
+      "Vaulter\\CoreModule, Vaulter\\Webhooks\\WebhooksModule (core) по knowledge/p3-modules#manifests",
+      "Применение деклараций в booting/boot core-провайдера (#module-system «Жизненный цикл»): ConfigNormalizer defaults, provides, middleware aliases, listeners, commands, schedules, routes, translations, loadMigrationsFrom для всех offered",
+      "packages/core/routes/api.php → routes/drive.php + routes/webhooks.php (drive.php пока подключается старым путём core до P3.3; webhooks.php — WebhooksModule)",
+      "core-часть registrar'ов (Bindings/Console/Http/Scheduling/Doctor/Events) → декларации CoreModule/WebhooksModule; drive-часть остаётся в registrar'ах до P3.3",
+      "Vaulter\\Http\\Middleware\\EnsureModuleActive (alias vaulter.module) + fingerprint в defaults маршрутов; catch-all 503 при InvalidModuleGraph",
+      "Команды vaulter:modules, vaulter:module:uninstall (D36); doctor ModuleCacheFreshnessCheck",
+      "config: vaulter.modules (array<string,bool>), удаление features.webhooks; ConfigValidator strict bool/unknown key; EventRecorder пока читает активность модуля webhooks вместо features.webhooks (D29-полностью — P3.14)",
+      "DoctorCheck: тег DoctorRegistry::TAG → слот DoctorCheck (DoctorRunner читает ExtensionRegistry)",
+      "Ledger идентичностей identities/changes.json + Identities::assemble + IdentitiesTest (#base)",
+      "Тесты: InvalidModuleGraph в console (artisan list/doctor/modules работают, прочие vaulter-команды exit 1) и HTTP (503), route:cache до смены активации (404 неактивного), vaulter:modules --json, uninstall dry-run/отказы",
+      "docs: reference commands/config (генерация), страница docs/concepts о модулях (новая) + ru-зеркало"
+    ],
+    "exclude": [
+      "Манифесты media/drive/documents/azgard/filament (P3.3, P3.4)",
+      "Outbox D29 (P3.14)",
+      "Перенос config-ключей drive/webhooks из vaulter.php (P4)"
+    ]
+  },
+  "depends_on": [
+    "P3.1"
+  ],
+  "decisions": [
+    "D22",
+    "D29",
+    "D36",
+    "D39",
+    "D21"
+  ],
+  "skills": [
+    "php-packages:laravel-package-service-provider",
+    "php-packages:laravel-package-testing"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p3-modules",
+      "why": "жизненный цикл, InvalidModuleGraph, middleware, команды, конфиг",
+      "required": true,
+      "section": "module-system"
+    },
+    {
+      "ref": "knowledge/p3-modules",
+      "why": "CoreModule/WebhooksModule и порядок перевода",
+      "required": true,
+      "section": "manifests"
+    },
+    {
+      "ref": "knowledge/p3-design",
+      "why": "ledger идентичностей и правила тестов",
+      "required": true,
+      "section": "base"
+    },
+    {
+      "ref": "knowledge/architecture",
+      "why": "ревизия 3: route cache, InvalidModuleGraph, uninstall",
+      "required": true,
+      "section": "module-system"
+    },
+    {
+      "ref": "knowledge/p2-findings",
+      "why": "что меняется в cli/config/http identities (vaulter:modules, features.webhooks)",
+      "required": true,
+      "section": "identities-summary"
+    },
+    {
+      "path": "packages/core/src/Providers/HttpRegistrar.php",
+      "why": "текущие маршруты/middleware/rate limiters",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Providers/ConsoleRegistrar.php",
+      "why": "команды core и их владельцы",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Providers/SchedulingRegistrar.php",
+      "why": "расписания; whenScheduling — host-lifecycle probe never",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Providers/DoctorRegistrar.php",
+      "why": "тег doctor-проверок",
+      "required": true
+    },
+    {
+      "path": "packages/core/routes/api.php",
+      "why": "26 маршрутов: drive 17, webhooks 9",
+      "required": true
+    },
+    {
+      "path": "scripts/inventory/lib/Identities.php",
+      "why": "assemble: куда встраивается ledger",
+      "required": true
+    },
+    {
+      "path": "tests/Repo/Arch/IdentitiesTest.php",
+      "why": "проверки фикстур идентичностей",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/core/src/CoreModule.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Webhooks/WebhooksModule.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/VaulterServiceProvider.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Modules/**",
+      "change": "modify",
+      "note": "применение деклараций"
+    },
+    {
+      "path": "packages/core/src/Providers/*.php",
+      "change": "modify",
+      "note": "core/webhooks-часть уходит в манифесты"
+    },
+    {
+      "path": "packages/core/src/Http/Middleware/EnsureModuleActive.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Console/ModulesCommand.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Console/ModuleUninstallCommand.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Doctor/Checks/ModuleCacheFreshnessCheck.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Doctor/DoctorRunner.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Doctor/DoctorRegistry.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Configuration/*.php",
+      "change": "modify",
+      "note": "vaulter.modules, без features.webhooks"
+    },
+    {
+      "path": "packages/core/src/Events/EventRecorder.php",
+      "change": "modify",
+      "note": "featureEnabled('webhooks') → активность модуля webhooks"
+    },
+    {
+      "path": "packages/core/config/vaulter.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/routes/api.php",
+      "change": "delete"
+    },
+    {
+      "path": "packages/core/routes/drive.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/routes/webhooks.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Modules/**",
+      "change": "create",
+      "note": "ActivationTest, InvalidModuleGraphConsoleTest, InvalidModuleGraphHttpTest, RouteCacheActivationTest (skeleton_writer), ModulesCommandTest, ModuleUninstallCommandTest"
+    },
+    {
+      "path": "packages/core/tests/Providers/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/Webhooks/WebhookTestHelpers.php",
+      "change": "modify",
+      "note": "vaulter.modules.webhooks=true"
+    },
+    {
+      "path": "packages/core/tests/Webhooks/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/Doctor/*.php",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/inventory/lib/Identities.php",
+      "change": "modify"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/identities/changes.json",
+      "change": "create"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/identities/*.json",
+      "change": "modify",
+      "note": "inventory --write"
+    },
+    {
+      "path": "tests/Repo/Arch/IdentitiesTest.php",
+      "change": "modify"
+    },
+    {
+      "path": "tests/suites.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/baseline/CHANGES.json",
+      "change": "modify",
+      "note": "переименованные/переписанные тесты registrar'ов и features.webhooks"
+    },
+    {
+      "path": "docs/**",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Провайдер core в register() не регистрирует ничего вне ModuleCatalog/booting-колбэка; drive-часть старых registrar'ов остаётся временно и помечается комментарием `P3.3 moves to DriveModule (D39)`.",
+    "Маршруты каждого модуля — только через группу с middleware `vaulter.module:<id>` и defaults `_vaulter_module_fp`.",
+    "vaulter.modules: только bool-значения и известные id; ошибка — reason InvalidModuleGraph, не исключение в boot.",
+    "Тесты вебхуков включают модуль в своём TestCase/хелпере; глобальный default не меняется ради тестов (`.claude/rules/tests.md` — test fairness).",
+    "Каждое изменение идентичности (cli vaulter:modules/vaulter:module:uninstall added, config vaulter.modules added, features.webhooks removed, http routes requires изменился) — запись ledger с decision D22/D36/D39.",
+    "Route cache тест — partition skeleton_writer (-j1, свой TESTBENCH_APP_BASE_PATH), не пишет в общий skeleton."
+  ],
+  "guidance": "Порядок: (1) ledger идентичностей (harness-код + пустой changes.json, тест); (2) CoreModule/WebhooksModule + применение деклараций; (3) деление api.php; (4) middleware + catch-all; (5) команды и doctor; (6) config; (7) перевод тестов и `inventory.php --write` + ledger; (8) docs. Проверка I/O на boot: тест поднимает приложение с DB::listen и утверждает 0 запросов до первого запроса/операции. InvalidModuleGraph: фикстурный манифест с циклом предлагается в TestCase-наследнике.\n\nВладелец/целевой FQCN любого типа — адресно, не читая фикстуру целиком: `jq '.types[] | select(.fqcn==\"Vaulter\\\\Providers\\\\BindingsRegistrar\")' tests/Repo/Arch/Fixtures/target-map.json`; владельцы маршрутов — `jq '.items[] | select(.owner!=\"core\") | {id, owner, source}' tests/Repo/Arch/Fixtures/identities/http.json`.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "scripts/t sqlite -p core packages/core/tests/Modules packages/core/tests/Providers packages/core/tests/Doctor packages/core/tests/Console packages/core/tests/Configuration",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "scripts/t sqlite -p core",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "scripts/t sqlite -p drive",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "scripts/t sqlite -p documents",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "scripts/php84 php vendor/bin/pint --test packages/core && scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "cmd": "scripts/php84 php scripts/inventory/inventory.php --check",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V7",
+      "cmd": "scripts/t sqlite -p repo",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V8",
+      "cmd": "scripts/php84 php vendor/bin/pint --test scripts/inventory tests/Repo/Arch && scripts/php84 php vendor/bin/phpstan analyse --no-progress --level=6 --memory-limit=1G scripts/inventory",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V9",
+      "cmd": "scripts/t baseline --compare",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V10",
+      "cmd": "scripts/php84 php scripts/check-doc-links.php docs README.md && scripts/php84 php scripts/check-doc-links.php --mirror docs",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "CoreModule, WebhooksModule",
+    "module-middleware и InvalidModuleGraph-поведение",
+    "vaulter:modules, vaulter:module:uninstall (dry-run)",
+    "ledger идентичностей",
+    "тесты активации/route cache/InvalidModuleGraph"
+  ],
+  "route": {
+    "class": "frontier",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-14T06:46:42Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "session": "c9a095c1-f4c9-4fdb-b0f4-d3b24367faf5"
+    }
+  },
+  "updated_at": "2026-10-14T06:46:57Z"
+}

@@ -12,6 +12,9 @@ use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Operations\AccessOperations;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Tests\Concerns\EnablesWebhooksModule;
+
+uses(EnablesWebhooksModule::class);
 
 /**
  * Opening or closing a node to grants from above is an access.inheritance_changed

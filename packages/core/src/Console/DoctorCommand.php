@@ -13,6 +13,7 @@ use Vaulter\Doctor\DoctorRegistry;
 use Vaulter\Doctor\DoctorReport;
 use Vaulter\Doctor\DoctorRunner;
 use Vaulter\Doctor\DoctorSeverity;
+use Vaulter\Kernel;
 
 /**
  * Read-only diagnosis of the host's Vaulter setup. It never repairs anything; a finding's
@@ -29,8 +30,11 @@ final class DoctorCommand extends Command
 
     protected $description = 'Diagnose the Vaulter setup of this host (read-only)';
 
-    public function handle(DoctorRunner $runner, DoctorRegistry $registry): int
+    public function handle(DoctorRunner $runner, DoctorRegistry $registry, Kernel $kernel): int
     {
+        if (!$kernel->isValid()) {
+            return $this->invalidGraph($kernel->reasons());
+        }
         $sample = filter_var($this->option('sample'), FILTER_VALIDATE_INT);
         if ($sample === false || $sample < 1) {
             return $this->usage('--sample must be a positive integer.');
@@ -59,6 +63,27 @@ final class DoctorCommand extends Command
         }
 
         return $report->exitCode();
+    }
+
+    /**
+     * No module is active, so no module check can run: the reasons are the whole diagnosis.
+     *
+     * @param list<string> $reasons
+     */
+    private function invalidGraph(array $reasons): int
+    {
+        if ($this->option('json') === true) {
+            $this->output->writeln(json_encode(['schema' => DoctorReport::SCHEMA, 'module_graph' => 'invalid', 'reasons' => $reasons], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), OutputInterface::OUTPUT_RAW);
+
+            return self::FAILURE;
+        }
+        $this->line('<fg=red>FAIL</> The module graph is invalid, no module is active <fg=gray>[module_graph_invalid]</>');
+        foreach ($reasons as $reason) {
+            $this->line('       '.OutputFormatter::escape($reason));
+        }
+        $this->line('       <fg=gray>hint: fix the manifests or vaulter.modules; php artisan vaulter:modules lists the modules</>');
+
+        return self::FAILURE;
     }
 
     private function usage(string $message): int

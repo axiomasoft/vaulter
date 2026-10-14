@@ -6,10 +6,10 @@ namespace Vaulter\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Configuration\WebhooksConfig;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Kernel;
 use Vaulter\Repositories\Webhooks\OutboxStoreRepository;
 use Vaulter\Repositories\Webhooks\WebhookDeliveryStoreRepository;
 
@@ -48,8 +48,8 @@ final class PruneWebhooksCommand extends Command
         WebhookDeliveryStoreRepository $deliveries,
         MetricsRecorder $metrics,
     ): int {
-        if (!app(VaulterConfig::class)->featureEnabled('webhooks')) {
-            $this->components->info('Reliability feature is off — nothing to prune.');
+        if (!app(Kernel::class)->isActive('webhooks')) {
+            $this->components->info('Webhooks module is inactive — nothing to prune.');
 
             return self::SUCCESS;
         }

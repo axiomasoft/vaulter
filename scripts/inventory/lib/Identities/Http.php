@@ -32,7 +32,7 @@ final class Http
     public const OPENAPI = 'openapi/vaulter-v1.yaml';
 
     /** Switches besides `vaulter.features.*` that mount routes; their default is read from the package config. */
-    public const EXTRA_FLAGS = ['vaulter-documents.collaboration.enabled' => false];
+    public const EXTRA_FLAGS = ['vaulter.modules.webhooks' => false, 'vaulter-documents.collaboration.enabled' => false];
 
     private const OPENAPI_METHODS = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options'];
 
@@ -192,7 +192,7 @@ final class Http
     {
         $class = explode('@', $action)[0];
         if (!str_contains($class, '\\')) {
-            return 'packages/core/routes/api.php';
+            return 'packages/core/src/VaulterServiceProvider.php';
         }
         foreach (SourceIndex::forRepo($repo)->declarations() as $declaration) {
             if ($declaration['fqcn'] === $class) {
@@ -200,7 +200,7 @@ final class Http
             }
         }
 
-        return 'packages/core/routes/api.php';
+        return 'packages/core/src/VaulterServiceProvider.php';
     }
 
     /**

@@ -1,0 +1,32 @@
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Contracts\Http\Kernel as HttpKernel;
+use Illuminate\Http\Request;
+use Vaulter\Tests\Concerns\FreshApplication;
+use Vaulter\Tests\Concerns\WithoutDatabaseSchema;
+use Vaulter\Tests\TestCase;
+
+uses(TestCase::class, WithoutDatabaseSchema::class);
+
+// Revision 3 (D22): with an invalid module graph no module mounts a route; one catch-all under the Vaulter
+// prefix answers 503 module_graph_invalid. Routes outside the prefix are the host's.
+
+it('answers every route under the Vaulter prefix 503 module_graph_invalid', function (string $method, string $uri): void {
+    $app = FreshApplication::boot(['vaulter.modules' => ['nope' => true]]);
+    $response = $app->make(HttpKernel::class)->handle(Request::create($uri, $method, server: ['HTTP_ACCEPT' => 'application/json']));
+
+    expect($response->getStatusCode())->toBe(503)
+        ->and(json_decode((string) $response->getContent(), true))->toMatchArray(['code' => 'module_graph_invalid', 'status' => 503]);
+})->with([
+    'a drive route' => ['GET', '/api/vaulter/v1/nodes/n1/grants'],
+    'a webhooks route' => ['POST', '/api/vaulter/v1/webhook-endpoints'],
+    'an unknown route' => ['GET', '/api/vaulter/v1/whatever/else'],
+]);
+
+it('leaves the routes outside the Vaulter prefix to the host', function (): void {
+    $app = FreshApplication::boot(['vaulter.modules' => ['nope' => true]]);
+
+    expect($app->make(HttpKernel::class)->handle(Request::create('/elsewhere'))->getStatusCode())->toBe(404);
+});

@@ -34,9 +34,12 @@ use Vaulter\Sharing\ShareResolver;
 use Vaulter\Sharing\ShareSession;
 use Vaulter\Sharing\ShareTokenMinter;
 use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 use Vaulter\Tests\Tenancy\MutableTenantResolver;
+
+uses(EnablesWebhooksModule::class);
 
 /**
  * The share link lifecycle of PLAN2.D47 (P4-I22): create → open → rotate/update/revoke,

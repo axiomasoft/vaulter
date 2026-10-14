@@ -18,10 +18,11 @@ use Vaulter\Drive\Http\Controllers\Drives\ShowDriveController;
 use Vaulter\Drive\Http\Controllers\Uploads\CreateUploadController;
 use Vaulter\Drive\Http\Controllers\Uploads\S3MultipartProtocolController;
 use Vaulter\Drive\Providers\HttpRegistrar;
+use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 
 it('registers no event subscriber: events are recorded by the EventRecorder', function (bool $activity, bool $webhooks): void {
     config()->set('vaulter.features.activity', $activity);
-    config()->set('vaulter.features.webhooks', $webhooks);
+    WebhookTestHelpers::switchModule($this->app, $webhooks);
 
     expect(Event::hasListeners(FolderCreated::class))->toBeFalse()
         ->and(Event::hasListeners(UploadInitiated::class))->toBeFalse();

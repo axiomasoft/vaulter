@@ -13,10 +13,13 @@ use Vaulter\Events\DomainEvent;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Schema\IdStrategyResolver;
+use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Concurrency\ForkRace;
 use Vaulter\Tests\Concurrency\RaceOutcome;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Webhooks\OutboxRecorder;
+
+uses(EnablesWebhooksModule::class);
 
 /**
  * V07 on PostgreSQL, where a failed statement aborts the whole transaction: a failed

@@ -8,11 +8,12 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Jobs\Webhooks\DeliverWebhook;
+use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\TestCase;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 use Vaulter\Webhooks\Events\WebhookEndpointDisabled;
 
-uses(TestCase::class, DatabaseMigrations::class);
+uses(TestCase::class, DatabaseMigrations::class, EnablesWebhooksModule::class);
 
 it('never announces an auto-disable whose commit failed, even after a later commit', function (string $error): void {
     config()->set('vaulter.webhooks.disable_after_days', 5);

@@ -4,15 +4,20 @@ declare(strict_types=1);
 
 namespace Vaulter\Tests\Webhooks;
 
+use Illuminate\Foundation\Application;
 use Illuminate\Support\Str;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Configuration\WebhooksConfig;
 use Vaulter\Contracts\Webhooks\OutboundUrlGuard;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Events\EventRecorder;
 use Vaulter\Jobs\Webhooks\DeliverWebhook;
+use Vaulter\Kernel;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Models\Webhooks\WebhookDelivery;
 use Vaulter\Models\Webhooks\WebhookEndpoint;
+use Vaulter\Modules\ModuleCatalog;
+use Vaulter\Modules\ModuleCompiler;
 use Vaulter\Webhooks\WebhookSigner;
 
 /**
@@ -24,6 +29,29 @@ final class WebhookTestHelpers
 {
     /** whsec_ + base64 of 32 bytes (0x01..0x20): any valid secret works, this one is easy to recognise. */
     public const string SECRET = 'whsec_AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyA=';
+
+    /** Switches the opt-in webhooks module on before the application boots (a TestCase's defineEnvironment). */
+    public static function enableModule(Application $app): void
+    {
+        $app['config']->set('vaulter.modules.webhooks', true);
+    }
+
+    /**
+     * Reseals the kernel of a booted application with the webhooks module switched `$active`, like a process
+     * that read another `vaulter.modules` without a restart: the runtime gates (event recorder, commands, doctor
+     * slot) follow the new state; routes, bindings and schedules applied at boot stay. A test seam only.
+     */
+    public static function switchModule(Application $app, bool $active): void
+    {
+        $overrides = (array) $app['config']->get('vaulter.modules', []);
+        $overrides['webhooks'] = $active;
+        $app['config']->set('vaulter.modules', $overrides);
+
+        $kernel = new Kernel($app);
+        $kernel->seal((new ModuleCompiler)->compileOffered(ModuleCatalog::of($app)->offered(), $overrides));
+        $app->instance(Kernel::class, $kernel);
+        $app->forgetInstance(EventRecorder::class);
+    }
 
     /**
      * @param array<string, mixed> $attributes

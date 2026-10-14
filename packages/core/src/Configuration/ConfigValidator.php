@@ -18,6 +18,7 @@ use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Providers\SchedulingRegistrar;
+use Vaulter\Webhooks\WebhooksSchedule;
 
 final readonly class ConfigValidator
 {
@@ -29,6 +30,10 @@ final readonly class ConfigValidator
             if ($root === 'vaulter' || str_starts_with((string) $root, 'vaulter-')) {
                 $this->assertNoClosures($values, (string) $root);
             }
+        }
+
+        if ($this->config->has('vaulter.features.webhooks')) {
+            throw new InvalidConfigurationException('[Vaulter] vaulter.features.webhooks was removed: webhooks are a module, switch them with vaulter.modules.webhooks (D22).');
         }
 
         if ($config->tenancy()->enabled()) {
@@ -55,7 +60,7 @@ final readonly class ConfigValidator
         $config->changes()->maxPageSize();
         $schedule = new ScheduleConfig($this->config);
         $schedule->enabled();
-        $schedule->frequencies('vaulter', SchedulingRegistrar::KEYS);
+        $schedule->frequencies('vaulter', [...SchedulingRegistrar::KEYS, ...WebhooksSchedule::KEYS]);
         $config->sharing()->tokenGenerator();
         foreach ([
             'drive',

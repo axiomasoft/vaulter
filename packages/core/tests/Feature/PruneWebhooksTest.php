@@ -10,7 +10,10 @@ use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Models\Webhooks\WebhookDelivery;
 use Vaulter\Repositories\Webhooks\OutboxStoreRepository;
 use Vaulter\Repositories\Webhooks\WebhookDeliveryStoreRepository;
+use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
+
+uses(EnablesWebhooksModule::class);
 
 /**
  * vaulter:webhooks:prune (master plan §2.11 / D14 / M3b): the reliability-channel
@@ -340,10 +343,10 @@ it('12) no-ops with a notice and SUCCESS when the reliability feature is off, to
     $terminal = WebhookTestHelpers::delivery($endpoint, ['status' => 'delivered', 'attempts' => 1]);
     forceDeliveryTimestamps($terminal, updatedAt: Carbon::now()->subDays(99));
 
-    config()->set('vaulter.features.webhooks', false);
+    WebhookTestHelpers::switchModule($this->app, false);
 
     $this->artisan('vaulter:webhooks:prune', ['--days' => '0'])
-        ->expectsOutputToContain('Reliability feature is off')
+        ->expectsOutputToContain('Webhooks module is inactive')
         ->assertExitCode(Command::SUCCESS);
 
     // Even a clearly-prunable settled/terminal pair is left untouched.
@@ -352,7 +355,7 @@ it('12) no-ops with a notice and SUCCESS when the reliability feature is off, to
 });
 
 it('12b) does not error when reliability is off and there is nothing seeded', function (): void {
-    config()->set('vaulter.features.webhooks', false);
+    WebhookTestHelpers::switchModule($this->app, false);
 
     expect(runPrune())->toContain('nothing to prune');
 });

@@ -133,7 +133,8 @@ collaboration callbacks use `hub`. Request metrics are appended automatically. T
 `middleware` setting affects only the authenticated stack; configure public middleware
 explicitly. Install Sanctum or replace `auth:sanctum` with your host's guard.
 
-`features.webhooks` controls webhook runtime behavior. Existing delivery settings remain
+Webhooks are an opt-in module: `vaulter.modules.webhooks` (default `false`) mounts their routes,
+commands, schedules and doctor checks (see [Modules](/concepts/modules)). Delivery settings remain
 under `webhooks.*`, including the URL guard, timeout, retry/backoff and retention controls.
 `listing.scan_budget`, `downloads.inline_mime_types` and `observability.*` remain core-owned.
 

@@ -1,6 +1,70 @@
 {
     "base": "35718fd2",
-    "changes": [],
+    "changes": [
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.webhook-endpoints.index",
+            "kind": "http",
+            "reason": "P3.2: routes/webhooks.php of WebhooksModule behind vaulter.module:webhooks; mounted by vaulter.modules.webhooks (opt-in) instead of vaulter.features.webhooks"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.webhook-endpoints.store",
+            "kind": "http",
+            "reason": "P3.2: routes/webhooks.php of WebhooksModule behind vaulter.module:webhooks; mounted by vaulter.modules.webhooks (opt-in) instead of vaulter.features.webhooks"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.webhook-endpoints.show",
+            "kind": "http",
+            "reason": "P3.2: routes/webhooks.php of WebhooksModule behind vaulter.module:webhooks; mounted by vaulter.modules.webhooks (opt-in) instead of vaulter.features.webhooks"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.webhook-endpoints.update",
+            "kind": "http",
+            "reason": "P3.2: routes/webhooks.php of WebhooksModule behind vaulter.module:webhooks; mounted by vaulter.modules.webhooks (opt-in) instead of vaulter.features.webhooks"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.webhook-endpoints.deactivate",
+            "kind": "http",
+            "reason": "P3.2: routes/webhooks.php of WebhooksModule behind vaulter.module:webhooks; mounted by vaulter.modules.webhooks (opt-in) instead of vaulter.features.webhooks"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.webhook-endpoints.rotate-secret",
+            "kind": "http",
+            "reason": "P3.2: routes/webhooks.php of WebhooksModule behind vaulter.module:webhooks; mounted by vaulter.modules.webhooks (opt-in) instead of vaulter.features.webhooks"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.webhook-endpoints.destroy",
+            "kind": "http",
+            "reason": "P3.2: routes/webhooks.php of WebhooksModule behind vaulter.module:webhooks; mounted by vaulter.modules.webhooks (opt-in) instead of vaulter.features.webhooks"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.webhook-deliveries.index",
+            "kind": "http",
+            "reason": "P3.2: routes/webhooks.php of WebhooksModule behind vaulter.module:webhooks; mounted by vaulter.modules.webhooks (opt-in) instead of vaulter.features.webhooks"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.webhook-deliveries.redeliver",
+            "kind": "http",
+            "reason": "P3.2: routes/webhooks.php of WebhooksModule behind vaulter.module:webhooks; mounted by vaulter.modules.webhooks (opt-in) instead of vaulter.features.webhooks"
+        }
+    ],
     "flags": {
         "vaulter-documents.collaboration.enabled": false,
         "vaulter.features.activity": true,
@@ -8,7 +72,7 @@
         "vaulter.features.grants": true,
         "vaulter.features.public_listing": false,
         "vaulter.features.share_links": false,
-        "vaulter.features.webhooks": true
+        "vaulter.modules.webhooks": false
     },
     "items": [
         {
@@ -2122,12 +2186,13 @@
         {
             "action": "Vaulter\\Http\\Controllers\\Webhooks\\ListWebhookDeliveriesController",
             "controller": "Vaulter\\Http\\Controllers\\Webhooks\\ListWebhookDeliveriesController",
-            "default_registered": true,
+            "default_registered": false,
             "id": "route:vaulter.v1.webhook-deliveries.index",
             "methods": [
                 "GET"
             ],
             "middleware": [
+                "vaulter.module:webhooks",
                 "api",
                 "auth:sanctum",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
@@ -2142,7 +2207,7 @@
             },
             "owner": "webhooks",
             "requires": [
-                "vaulter.features.webhooks"
+                "vaulter.modules.webhooks"
             ],
             "source": {
                 "file": "packages/core/src/Http/Controllers/Webhooks/ListWebhookDeliveriesController.php",
@@ -2153,12 +2218,13 @@
         {
             "action": "Vaulter\\Http\\Controllers\\Webhooks\\RedeliverWebhookController",
             "controller": "Vaulter\\Http\\Controllers\\Webhooks\\RedeliverWebhookController",
-            "default_registered": true,
+            "default_registered": false,
             "id": "route:vaulter.v1.webhook-deliveries.redeliver",
             "methods": [
                 "POST"
             ],
             "middleware": [
+                "vaulter.module:webhooks",
                 "api",
                 "auth:sanctum",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
@@ -2173,7 +2239,7 @@
             },
             "owner": "webhooks",
             "requires": [
-                "vaulter.features.webhooks"
+                "vaulter.modules.webhooks"
             ],
             "source": {
                 "file": "packages/core/src/Http/Controllers/Webhooks/RedeliverWebhookController.php",
@@ -2184,12 +2250,13 @@
         {
             "action": "Vaulter\\Http\\Controllers\\Webhooks\\DeactivateWebhookEndpointController",
             "controller": "Vaulter\\Http\\Controllers\\Webhooks\\DeactivateWebhookEndpointController",
-            "default_registered": true,
+            "default_registered": false,
             "id": "route:vaulter.v1.webhook-endpoints.deactivate",
             "methods": [
                 "POST"
             ],
             "middleware": [
+                "vaulter.module:webhooks",
                 "api",
                 "auth:sanctum",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
@@ -2204,7 +2271,7 @@
             },
             "owner": "webhooks",
             "requires": [
-                "vaulter.features.webhooks"
+                "vaulter.modules.webhooks"
             ],
             "source": {
                 "file": "packages/core/src/Http/Controllers/Webhooks/DeactivateWebhookEndpointController.php",
@@ -2215,12 +2282,13 @@
         {
             "action": "Vaulter\\Http\\Controllers\\Webhooks\\DeleteWebhookEndpointController",
             "controller": "Vaulter\\Http\\Controllers\\Webhooks\\DeleteWebhookEndpointController",
-            "default_registered": true,
+            "default_registered": false,
             "id": "route:vaulter.v1.webhook-endpoints.destroy",
             "methods": [
                 "DELETE"
             ],
             "middleware": [
+                "vaulter.module:webhooks",
                 "api",
                 "auth:sanctum",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
@@ -2235,7 +2303,7 @@
             },
             "owner": "webhooks",
             "requires": [
-                "vaulter.features.webhooks"
+                "vaulter.modules.webhooks"
             ],
             "source": {
                 "file": "packages/core/src/Http/Controllers/Webhooks/DeleteWebhookEndpointController.php",
@@ -2246,12 +2314,13 @@
         {
             "action": "Vaulter\\Http\\Controllers\\Webhooks\\ListWebhookEndpointsController",
             "controller": "Vaulter\\Http\\Controllers\\Webhooks\\ListWebhookEndpointsController",
-            "default_registered": true,
+            "default_registered": false,
             "id": "route:vaulter.v1.webhook-endpoints.index",
             "methods": [
                 "GET"
             ],
             "middleware": [
+                "vaulter.module:webhooks",
                 "api",
                 "auth:sanctum",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
@@ -2266,7 +2335,7 @@
             },
             "owner": "webhooks",
             "requires": [
-                "vaulter.features.webhooks"
+                "vaulter.modules.webhooks"
             ],
             "source": {
                 "file": "packages/core/src/Http/Controllers/Webhooks/ListWebhookEndpointsController.php",
@@ -2277,12 +2346,13 @@
         {
             "action": "Vaulter\\Http\\Controllers\\Webhooks\\RotateWebhookSecretController",
             "controller": "Vaulter\\Http\\Controllers\\Webhooks\\RotateWebhookSecretController",
-            "default_registered": true,
+            "default_registered": false,
             "id": "route:vaulter.v1.webhook-endpoints.rotate-secret",
             "methods": [
                 "POST"
             ],
             "middleware": [
+                "vaulter.module:webhooks",
                 "api",
                 "auth:sanctum",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
@@ -2297,7 +2367,7 @@
             },
             "owner": "webhooks",
             "requires": [
-                "vaulter.features.webhooks"
+                "vaulter.modules.webhooks"
             ],
             "source": {
                 "file": "packages/core/src/Http/Controllers/Webhooks/RotateWebhookSecretController.php",
@@ -2308,12 +2378,13 @@
         {
             "action": "Vaulter\\Http\\Controllers\\Webhooks\\ShowWebhookEndpointController",
             "controller": "Vaulter\\Http\\Controllers\\Webhooks\\ShowWebhookEndpointController",
-            "default_registered": true,
+            "default_registered": false,
             "id": "route:vaulter.v1.webhook-endpoints.show",
             "methods": [
                 "GET"
             ],
             "middleware": [
+                "vaulter.module:webhooks",
                 "api",
                 "auth:sanctum",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
@@ -2328,7 +2399,7 @@
             },
             "owner": "webhooks",
             "requires": [
-                "vaulter.features.webhooks"
+                "vaulter.modules.webhooks"
             ],
             "source": {
                 "file": "packages/core/src/Http/Controllers/Webhooks/ShowWebhookEndpointController.php",
@@ -2339,12 +2410,13 @@
         {
             "action": "Vaulter\\Http\\Controllers\\Webhooks\\RegisterWebhookEndpointController",
             "controller": "Vaulter\\Http\\Controllers\\Webhooks\\RegisterWebhookEndpointController",
-            "default_registered": true,
+            "default_registered": false,
             "id": "route:vaulter.v1.webhook-endpoints.store",
             "methods": [
                 "POST"
             ],
             "middleware": [
+                "vaulter.module:webhooks",
                 "api",
                 "auth:sanctum",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
@@ -2359,7 +2431,7 @@
             },
             "owner": "webhooks",
             "requires": [
-                "vaulter.features.webhooks"
+                "vaulter.modules.webhooks"
             ],
             "source": {
                 "file": "packages/core/src/Http/Controllers/Webhooks/RegisterWebhookEndpointController.php",
@@ -2370,12 +2442,13 @@
         {
             "action": "Vaulter\\Http\\Controllers\\Webhooks\\UpdateWebhookEndpointController",
             "controller": "Vaulter\\Http\\Controllers\\Webhooks\\UpdateWebhookEndpointController",
-            "default_registered": true,
+            "default_registered": false,
             "id": "route:vaulter.v1.webhook-endpoints.update",
             "methods": [
                 "PATCH"
             ],
             "middleware": [
+                "vaulter.module:webhooks",
                 "api",
                 "auth:sanctum",
                 "Vaulter\\Http\\Middleware\\AssignCorrelationId",
@@ -2390,7 +2463,7 @@
             },
             "owner": "webhooks",
             "requires": [
-                "vaulter.features.webhooks"
+                "vaulter.modules.webhooks"
             ],
             "source": {
                 "file": "packages/core/src/Http/Controllers/Webhooks/UpdateWebhookEndpointController.php",

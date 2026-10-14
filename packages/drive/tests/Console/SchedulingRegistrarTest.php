@@ -6,6 +6,7 @@ use Illuminate\Console\Scheduling\Event;
 use Illuminate\Console\Scheduling\Schedule;
 use Vaulter\Drive\Providers\SchedulingRegistrar;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Vaulter\Kernel;
 
 /** @return array<string, Event> keyed by the task name */
 function bootDriveSchedule(array $config = []): array
@@ -40,9 +41,10 @@ it('schedules the drive maintenance tasks with overlap and single-server guards'
 });
 
 it('schedules scan reconcile without the webhooks feature', function (): void {
-    $tasks = bootDriveSchedule(['vaulter.scan.mode' => 'all_content', 'vaulter.features.webhooks' => false]);
+    $tasks = bootDriveSchedule(['vaulter.scan.mode' => 'all_content']);
 
-    expect($tasks)->toHaveKey('vaulter:scan:reconcile');
+    expect(app(Kernel::class)->isActive('webhooks'))->toBeFalse()
+        ->and($tasks)->toHaveKey('vaulter:scan:reconcile');
 });
 
 it('does not schedule scan reconcile while scanning is off', function (): void {

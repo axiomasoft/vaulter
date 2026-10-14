@@ -491,9 +491,9 @@ Comments default to true; set `vaulter-documents.comments.enabled = false` to tu
 | `vaulter.scan.scanner_version` | — | `null` | — |
 | `vaulter.scan.policy_version` | — | `null` | — |
 | `vaulter.scan.rollout_key` | — | `null` | — |
+| `vaulter.modules` | — | `[]` | Module activation overrides (D22): module id => true\|false. Auto modules (media, drive, documents…) are active unless switched off; opt-in modules (webhooks) only when switched on. |
 | `vaulter.features.grants` | — | `true` | — |
 | `vaulter.features.activity` | — | `true` | — |
-| `vaulter.features.webhooks` | — | `true` | — |
 | `vaulter.features.changes` | — | `true` | The drive change journal behind DriveHandle::changes() (PLAN2.D50). |
 | `vaulter.features.share_links` | — | `false` | — |
 | `vaulter.features.public_listing` | — | `false` | — |

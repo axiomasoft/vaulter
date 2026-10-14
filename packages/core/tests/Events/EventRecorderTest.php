@@ -18,6 +18,7 @@ use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Testing\FakeMetricsRecorder;
+use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\TestCase;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
@@ -30,7 +31,7 @@ use Vaulter\Webhooks\OutboxRecorder;
  * roll back together, and host listeners see the event once, after the commit. No
  * wrapping test transaction, so a commit here is a real one.
  */
-uses(TestCase::class, DatabaseMigrations::class);
+uses(TestCase::class, DatabaseMigrations::class, EnablesWebhooksModule::class);
 
 beforeEach(function (): void {
     $this->drive = DriveTestHelpers::drive();
@@ -172,7 +173,7 @@ it('does not notify listeners of an attempt whose commit failed and was retried'
 
 it('writes only the sinks whose feature is enabled', function (bool $activity, bool $webhooks): void {
     config()->set('vaulter.features.activity', $activity);
-    config()->set('vaulter.features.webhooks', $webhooks);
+    WebhookTestHelpers::switchModule($this->app, $webhooks);
 
     eventRecorderRename($this, 'beta');
 

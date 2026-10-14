@@ -341,6 +341,28 @@
             "symbol": "Vaulter\\Drive\\Providers\\BindingsRegistrar::validateScanner",
             "target": "\\Vaulter\\Contracts\\Cas\\ContentScanner::class",
             "view": "current"
+        },
+        {
+            "category": "host-lifecycle",
+            "count": 1,
+            "file": "packages/core/src/Modules/ModuleApplier.php",
+            "kind": "probe",
+            "reason": "ядро модулей применяет декларации к уже разрешённому сервису хоста (resolved): состояние контейнера, не выбор модуля",
+            "removed_in": "never",
+            "symbol": "Vaulter\\Modules\\ModuleApplier::afterResolving",
+            "target": "$abstract",
+            "view": "current"
+        },
+        {
+            "category": "host-lifecycle",
+            "count": 1,
+            "file": "packages/core/src/Modules/ModuleApplier.php",
+            "kind": "probe",
+            "reason": "resolved Schedule — состояние контейнера хоста при регистрации расписания",
+            "removed_in": "never",
+            "symbol": "Vaulter\\Modules\\ModuleApplier::schedules",
+            "target": "\\Illuminate\\Console\\Scheduling\\Schedule::class",
+            "view": "current"
         }
     ],
     "invariant": "I4",

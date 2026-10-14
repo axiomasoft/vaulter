@@ -30,10 +30,6 @@ final readonly class WebhooksRelayLeasesCheck implements DoctorCheck
 
     public function run(DoctorContext $context): array
     {
-        if (!$this->config->featureEnabled('webhooks')) {
-            return [DoctorFinding::ok(code: 'core.webhooks.relay_leases_skipped', message: 'Webhooks are disabled.', evidence: ['skipped' => true])];
-        }
-
         $cutoff = CarbonImmutable::instance($context->now)->setTimezone(date_default_timezone_get())->subSeconds(self::GRACE);
         $outbox = $this->config->model('outbox');
         $stuck = $outbox::query()->where('status', 'pending')->whereNotNull('claim_until')->where('claim_until', '<', $cutoff)->count();

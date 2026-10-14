@@ -62,6 +62,32 @@ does not migrate unless `--migrate` is given. It prints the lines to apply
 [`vaulter:doctor`](#vaulter-doctor) report. The install is not a gate: it exits `0` whatever the
 doctor finds.
 
+## `vaulter:modules`
+
+```bash
+php artisan vaulter:modules [--json]
+```
+
+Lists every installed (offered) module: package, protocol, activation policy (`auto` /
+`opt-in`), whether it is active and why (`default` or `override` from `vaulter.modules`), the
+schema migrations the database has not run, and the capabilities and slots it defines or
+contributes to. Exit `0` for a valid module graph, `1` for an invalid one — the reasons are
+printed and no module is active. It is registered whatever the graph. See
+[Modules](/concepts/modules).
+
+## `vaulter:module:uninstall`
+
+```bash
+php artisan vaulter:module:uninstall <module> [--force] [--purge]
+```
+
+A dry run by default: plans the removal of the module's schema — its migrations and tables,
+the installed modules that require it, the foreign keys other owners hold on its tables — and
+prints why it would be refused. Exit `1` when anything refuses. Until the create-migrations
+are split by owner (P4), `--force` (roll the owner's migrations back) and `--purge` (delete its
+rows and its own media pins) refuse with "owner migrations are not split yet (P4)". Disabling
+a module never uninstalls it.
+
 ## `vaulter:doctor`
 
 Read-only diagnosis of the host's Vaulter setup. Every installed package contributes checks; a
@@ -130,7 +156,7 @@ The JSON document is described by `packages/core/resources/schemas/doctor-v1.sch
 | `documents.collaboration` | With collaboration on: both secrets set and different, hub URL (`wss://` in production), token lifetime ≤ 3600 s, `firebase/php-jwt` installed | error → error |
 | `azgard.dependency` | AzGuard is installed and the bridge guard resolves | error → error |
 
-The `drive.scan.*` checks run whether or not `features.webhooks` is on: scan work is mandatory
+The `drive.scan.*` checks run whether or not `vaulter.modules.webhooks` is on: scan work is mandatory
 content-safety work, not a webhook. `media.disk.probe` is the only check that writes; it removes
 its object in every case.
 
@@ -144,9 +170,9 @@ existing ones to avoid double runs). A host still has to run `schedule:run` ever
 
 | Config key | Command | Default |
 |---|---|---|
-| `vaulter.schedule.webhooks_relay` | `vaulter:webhooks:relay` (needs `features.webhooks`) | `everyMinute` |
-| `vaulter.schedule.webhooks_retry` | `vaulter:webhooks:retry` (needs `features.webhooks`) | `everyMinute` |
-| `vaulter.schedule.webhooks_prune` | `vaulter:webhooks:prune` (needs `features.webhooks`) | `dailyAt:03:10` |
+| `vaulter.schedule.webhooks_relay` | `vaulter:webhooks:relay` (needs `vaulter.modules.webhooks`) | `everyMinute` |
+| `vaulter.schedule.webhooks_retry` | `vaulter:webhooks:retry` (needs `vaulter.modules.webhooks`) | `everyMinute` |
+| `vaulter.schedule.webhooks_prune` | `vaulter:webhooks:prune` (needs `vaulter.modules.webhooks`) | `dailyAt:03:10` |
 | `vaulter.schedule.changes_prune` | `vaulter:changes:prune` (needs `features.changes`) | `dailyAt:03:20` |
 | `vaulter-drive.schedule.uploads_sweep` | `vaulter:uploads:sweep` | `hourlyAt:15` |
 | `vaulter-drive.schedule.trash_purge` | `vaulter:trash:purge` | `dailyAt:03:30` |
@@ -325,7 +351,7 @@ for `webhooks.relay.claim_seconds` and writes `webhooks.relay.fanout_chunk` endp
 per transaction; the row becomes `completed` together with its last deliveries, so a
 relay that dies is resumed by the next run once the lease lapses. Several relays may
 run at once. At-least-once with exponential backoff + DLQ. Gated by
-`features.webhooks`. See [Webhooks → Delivery guarantees](/guides/webhooks#delivery-guarantees).
+`vaulter.modules.webhooks`. See [Webhooks → Delivery guarantees](/guides/webhooks#delivery-guarantees).
 
 ```
 vaulter:webhooks:relay
@@ -342,7 +368,7 @@ See [Recipes → Reliability & webhooks](/guides/recipes).
 
 Re-dispatch webhook deliveries whose backoff window has elapsed, and pending
 deliveries whose first job was lost (still unclaimed `webhooks.relay.claim_seconds`
-after they became due). Gated by `features.webhooks`.
+after they became due). Gated by `vaulter.modules.webhooks`.
 
 ```
 vaulter:webhooks:retry
@@ -390,7 +416,7 @@ Delete COMPLETED outbox rows (`completed`, `fanned_out_at` older than the retent
 window) and TERMINAL webhook deliveries (`delivered`/`dead`, older than the retention
 window). A `pending` outbox row — even one whose fan-out stopped half way — and a
 `pending`/`failed` delivery are never touched, however old. Gated by
-`features.webhooks` (no-ops with a notice when off). The window comes from
+`vaulter.modules.webhooks` (the command exists only while the webhooks module is active). The window comes from
 `config('vaulter.webhooks.retention_days')` (default 30) unless `--days` overrides it.
 Pruned rows cannot be restored or replayed.
 
@@ -416,7 +442,7 @@ filtered by endpoint and age. Each goes through `RedeliverWebhookAction`: the sa
 `pending` with `attempts = 0`, so the receiver gets the **same `webhook-id`**; a delivery whose
 endpoint is inactive, or that is still `pending`/`failed`, is reported and skipped. Only rows still
 inside `webhooks.retention_days` exist to redeliver. Exit code is non-zero when nothing could be
-sent. Gated by `features.webhooks`. See [Webhooks → Redelivery](/guides/webhooks#redelivery).
+sent. Gated by `vaulter.modules.webhooks`. See [Webhooks → Redelivery](/guides/webhooks#redelivery).
 
 ```
 vaulter:webhooks:redeliver
@@ -489,7 +515,7 @@ Schedule::command('vaulter:changes:prune')->daily();
 
 ## See also
 
-- [Configuration reference](/reference/config) — `vaulter-media.gc.*`, `vaulter-drive.trash.*`, `vaulter-drive.uploads.*`, `webhooks.*`, `features.webhooks`
+- [Configuration reference](/reference/config) — `vaulter-media.gc.*`, `vaulter-drive.trash.*`, `vaulter-drive.uploads.*`, `webhooks.*`, `vaulter.modules.webhooks`
 - [Events reference](/reference/events) — what the relay fans out
 - [Facade & Manager](/reference/php-api) — the runtime API
 
@@ -515,6 +541,8 @@ Schedule::command('vaulter:changes:prune')->daily();
 | `vaulter:make:file-handler` | Scaffold a Vaulter file handler with a contract test | `[--force] [--] <name>` |
 | `vaulter:make:permission-driver` | Scaffold a Vaulter permission driver with a contract test | `[--force] [--] <name>` |
 | `vaulter:make:profile` | Scaffold a Vaulter profile provider (zero-migration config envelope) | `[--host [HOST]] [--no-grants] [--force] [--] <name>` |
+| `vaulter:module:uninstall` | Plan (dry run) or perform the removal of a Vaulter module's schema | `[--force] [--purge] [--] <module>` |
+| `vaulter:modules` | List the Vaulter modules, their activation and what they contribute | `[--json]` |
 | `vaulter:revisions:prune` | Delete non-current file revisions past their profile retention policy. | `[--drive [DRIVE]] [--dry-run]` |
 | `vaulter:scan:reconcile` | Recover bounded scan intents, backfill discovery and committed upload cleanup. | `[--tenant [TENANT]] [--drive [DRIVE]] [--all-tenants] [--reason [REASON]] [--limit [LIMIT]] [--max-seconds [MAX-SECONDS]] [--dry-run] [--json]` |
 | `vaulter:scan:rescan` | Activate scan policy or record bounded durable scan requests. | `[--tenant [TENANT]] [--drive [DRIVE]] [--all-tenants] [--reason [REASON]] [--revision [REVISION]] [--after [AFTER]] [--limit [LIMIT]] [--request-id [REQUEST-ID]] [--rescan] [--retry-failed] [--activate-policy] [--dry-run] [--json]` |

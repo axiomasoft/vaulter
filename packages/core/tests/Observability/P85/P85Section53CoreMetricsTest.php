@@ -21,11 +21,14 @@ use Vaulter\Load\Listeners\RecordCommandPeakMemory;
 use Vaulter\Load\Listeners\RecordFailedJob;
 use Vaulter\Load\Observability\LoadStateMetrics;
 use Vaulter\Testing\FakeMetricsRecorder;
+use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 use Vaulter\Webhooks\OutboxRelay;
 use Vaulter\Webhooks\WebhookRetryDispatcher;
 use Vaulter\Webhooks\WebhookSigner;
+
+uses(EnablesWebhooksModule::class);
 
 beforeEach(function (): void {
     config()->set('vaulter.observability.enabled', true);
@@ -135,7 +138,6 @@ it('records vaulter_command_peak_memory_bytes for vaulter artisan commands', fun
 });
 
 it('records prune webhook metrics when rows are reclaimed', function (): void {
-    config()->set('vaulter.features.webhooks', true);
     config()->set('vaulter.webhooks.retention_days', 0);
 
     $threshold = now()->subDay();

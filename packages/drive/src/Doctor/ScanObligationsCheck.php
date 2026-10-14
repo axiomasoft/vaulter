@@ -13,7 +13,7 @@ use Vaulter\Doctor\DoctorFinding;
 
 /**
  * The durable scan obligations of uploaded content. A lease nobody renews, work that never became due
- * and work that settled as failed all leave a revision unscanned, whichever way features.webhooks is set.
+ * and work that settled as failed all leave a revision unscanned, whether the webhooks module is active or not.
  */
 final readonly class ScanObligationsCheck implements DoctorCheck
 {

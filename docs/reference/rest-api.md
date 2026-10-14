@@ -860,7 +860,7 @@ pruned: list the drive again and start over.
 
 ## Webhook endpoints
 
-The global admin surface for webhook subscribers, mounted when `vaulter.features.webhooks`
+The global admin surface for webhook subscribers, mounted when `vaulter.modules.webhooks`
 is on. Every route is gated by the `WebhookEndpointPolicy` (`vaulter.webhooks.manage_ability`),
 reads included, before the id is looked up. See [Webhooks](/guides/webhooks).
 

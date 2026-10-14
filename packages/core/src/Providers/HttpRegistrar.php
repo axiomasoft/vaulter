@@ -71,6 +71,7 @@ final class HttpRegistrar
         }
     }
 
+    // P3.3 moves to DriveModule (D39): the public-share and upload limiters throttle drive routes.
     private function registerRateLimiters(): void
     {
         if (RateLimiter::limiter('vaulter-public') === null) {

@@ -27,6 +27,7 @@ final readonly class CompiledModules
      * @param list<array{event: class-string, listener: class-string}> $listeners
      * @param list<class-string<ModuleSchedule>>                       $schedules
      * @param array<string, class-string>                              $routeMiddleware alias => middleware
+     * @param list<class-string<ModuleBindings>>                       $bindings
      * @param list<class-string>                                       $events
      * @param list<class-string<ProblemCodeSource>>                    $problems
      * @param list<string>                                             $schemaPaths     of every offered module, active or not
@@ -44,6 +45,7 @@ final readonly class CompiledModules
         public array $listeners,
         public array $schedules,
         public array $routeMiddleware,
+        public array $bindings,
         public array $events,
         public array $problems,
         public array $schemaPaths,
@@ -59,6 +61,19 @@ final readonly class CompiledModules
         }
 
         return null;
+    }
+
+    /** @return list<string> the ids of the active modules, sorted */
+    public function activeIds(): array
+    {
+        $ids = [];
+        foreach ($this->modules as $module) {
+            if ($module->active) {
+                $ids[] = $module->id->value;
+            }
+        }
+
+        return $ids;
     }
 
     public function isActive(string $id): bool

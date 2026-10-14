@@ -1,0 +1,111 @@
+{
+    "changes": [
+        {
+            "change": "added",
+            "decision": "D22",
+            "id": "command:vaulter:modules",
+            "kind": "cli",
+            "reason": "P3.2: the kernel lists the module graph, activation, schema and contributions"
+        },
+        {
+            "change": "added",
+            "decision": "D36",
+            "id": "command:vaulter:module:uninstall",
+            "kind": "cli",
+            "reason": "P3.2: dry-run uninstall plan; --force/--purge refuse until P4"
+        },
+        {
+            "change": "added",
+            "decision": "D22",
+            "id": "config:vaulter.modules",
+            "kind": "config",
+            "reason": "P3.2: module activation overrides (module id => bool)"
+        },
+        {
+            "change": "removed",
+            "decision": "D22",
+            "id": "config:vaulter.features.webhooks",
+            "kind": "config",
+            "reason": "P3.2: webhooks are an opt-in module, switched by vaulter.modules.webhooks (default false)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "publish:vaulter-config",
+            "kind": "config",
+            "reason": "P3.2: published by the module kernel from CoreModule::config instead of spatie hasConfigFile"
+        },
+        {
+            "change": "redefined",
+            "decision": "D22",
+            "id": "publish:vaulter-migrations",
+            "kind": "config",
+            "reason": "P3.2: published by the module kernel from CoreModule::schema instead of spatie discoversMigrations"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.webhook-endpoints.index",
+            "kind": "http",
+            "reason": "P3.2: routes/webhooks.php of WebhooksModule behind vaulter.module:webhooks; mounted by vaulter.modules.webhooks (opt-in) instead of vaulter.features.webhooks"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.webhook-endpoints.store",
+            "kind": "http",
+            "reason": "P3.2: routes/webhooks.php of WebhooksModule behind vaulter.module:webhooks; mounted by vaulter.modules.webhooks (opt-in) instead of vaulter.features.webhooks"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.webhook-endpoints.show",
+            "kind": "http",
+            "reason": "P3.2: routes/webhooks.php of WebhooksModule behind vaulter.module:webhooks; mounted by vaulter.modules.webhooks (opt-in) instead of vaulter.features.webhooks"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.webhook-endpoints.update",
+            "kind": "http",
+            "reason": "P3.2: routes/webhooks.php of WebhooksModule behind vaulter.module:webhooks; mounted by vaulter.modules.webhooks (opt-in) instead of vaulter.features.webhooks"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.webhook-endpoints.deactivate",
+            "kind": "http",
+            "reason": "P3.2: routes/webhooks.php of WebhooksModule behind vaulter.module:webhooks; mounted by vaulter.modules.webhooks (opt-in) instead of vaulter.features.webhooks"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.webhook-endpoints.rotate-secret",
+            "kind": "http",
+            "reason": "P3.2: routes/webhooks.php of WebhooksModule behind vaulter.module:webhooks; mounted by vaulter.modules.webhooks (opt-in) instead of vaulter.features.webhooks"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.webhook-endpoints.destroy",
+            "kind": "http",
+            "reason": "P3.2: routes/webhooks.php of WebhooksModule behind vaulter.module:webhooks; mounted by vaulter.modules.webhooks (opt-in) instead of vaulter.features.webhooks"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.webhook-deliveries.index",
+            "kind": "http",
+            "reason": "P3.2: routes/webhooks.php of WebhooksModule behind vaulter.module:webhooks; mounted by vaulter.modules.webhooks (opt-in) instead of vaulter.features.webhooks"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.webhook-deliveries.redeliver",
+            "kind": "http",
+            "reason": "P3.2: routes/webhooks.php of WebhooksModule behind vaulter.module:webhooks; mounted by vaulter.modules.webhooks (opt-in) instead of vaulter.features.webhooks"
+        }
+    ],
+    "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",
+    "version": 1
+}

@@ -33,6 +33,11 @@ final class Identities
 
     public const BASE = '35718fd2';
 
+    /** The hand-written ledger of identity changes since BASE (P3.2): one record per changed identity. */
+    public const LEDGER = self::DIR.'/changes.json';
+
+    public const CHANGES = ['added', 'removed', 'renamed', 'redefined'];
+
     public static function fixture(string $kind): string
     {
         return self::DIR.'/'.$kind.'.json';
@@ -83,9 +88,73 @@ final class Identities
             $done[$id] = $item;
         }
         ksort($done, SORT_STRING);
-        $problems = [...$problems, ...$owners->stale()];
+        $problems = [...$problems, ...$owners->stale(), ...self::checkChanges($kind, $owners->changes(), $done)];
 
-        return ['data' => ['version' => 1, 'base' => self::BASE, 'kind' => $kind, 'changes' => [], ...$extra, 'items' => array_values($done)], 'problems' => $problems];
+        return ['data' => ['version' => 1, 'base' => self::BASE, 'kind' => $kind, 'changes' => $owners->changes(), ...$extra, 'items' => array_values($done)], 'problems' => $problems];
+    }
+
+    /**
+     * The ledger records of one kind, in file order: `{kind, id, change, from?, reason, decision}`. A missing ledger
+     * file is an empty ledger.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public static function ledger(Repo $repo, string $kind): array
+    {
+        if (!$repo->exists(self::LEDGER)) {
+            return [];
+        }
+        $changes = $repo->readJson(self::LEDGER)['changes'] ?? null;
+        if (!is_array($changes) || !array_is_list($changes)) {
+            throw new InventoryError(self::LEDGER.': "changes" must be a list');
+        }
+        $records = [];
+        foreach ($changes as $i => $change) {
+            if (!is_array($change)) {
+                throw new InventoryError(self::LEDGER.": change #{$i} must be an object");
+            }
+            if (($change['kind'] ?? null) === $kind) {
+                /** @var array<string, mixed> $change */
+                $records[] = $change;
+            }
+        }
+
+        return $records;
+    }
+
+    /**
+     * A ledger record must name an existing identity for added/redefined/renamed, a gone one for removed and for the
+     * old id of a rename; the reason and a decision `D<n>` are required.
+     *
+     * @param  list<array<string, mixed>>  $changes
+     * @param  array<string, mixed>        $items   id => item
+     * @return list<Problem>
+     */
+    public static function checkChanges(string $kind, array $changes, array $items): array
+    {
+        $problems = [];
+        foreach ($changes as $change) {
+            $id = $change['id'] ?? null;
+            $type = $change['change'] ?? null;
+            $label = $kind.' ledger: '.(is_string($id) ? $id : '?');
+            if (!is_string($id) || $id === '' || !in_array($type, self::CHANGES, true) || !is_string($change['reason'] ?? null) || trim($change['reason']) === '' || !is_string($change['decision'] ?? null) || preg_match('/^D\d+$/', $change['decision']) !== 1) {
+                $problems[] = ['code' => 'invalid-change', 'message' => "{$label}: needs id, change (".implode('|', self::CHANGES).'), reason and decision D<n>', 'exit' => 2];
+
+                continue;
+            }
+            $exists = isset($items[$id]);
+            $from = $change['from'] ?? null;
+            $wrong = match ($type) {
+                'added', 'redefined' => $exists ? null : 'names an identity that does not exist',
+                'removed' => $exists ? 'names an identity that still exists' : null,
+                default => !$exists ? 'names an identity that does not exist' : (!is_string($from) || $from === '' ? 'has no "from"' : (isset($items[$from]) ? 'renames from an identity that still exists' : null)),
+            };
+            if ($wrong !== null) {
+                $problems[] = ['code' => 'stale-change', 'message' => "{$label} ({$type}) {$wrong}", 'exit' => 1];
+            }
+        }
+
+        return $problems;
     }
 
     /**
@@ -166,6 +235,9 @@ final class IdentityOwners
     /** @var array<string, true> */
     private array $won = [];
 
+    /** @var list<array<string, mixed>> the ledger records of this kind */
+    private array $changes = [];
+
     /**
      * @param array<string, mixed> $data
      * @param list<string>         $owners
@@ -220,7 +292,16 @@ final class IdentityOwners
 
     public static function load(Repo $repo, string $kind): self
     {
-        return new self($kind, $repo->readJson(Identities::ownersFile($kind)), TargetMap::OWNERS);
+        $owners = new self($kind, $repo->readJson(Identities::ownersFile($kind)), TargetMap::OWNERS);
+        $owners->changes = Identities::ledger($repo, $kind);
+
+        return $owners;
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function changes(): array
+    {
+        return $this->changes;
     }
 
     /** The owner of the winning rule for a key; marks the rule as used. */

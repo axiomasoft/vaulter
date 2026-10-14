@@ -23,7 +23,10 @@ use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Testing\FakeMetricsRecorder;
 use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Drive\DriveTestHelpers;
+
+uses(EnablesWebhooksModule::class);
 
 beforeEach(function (): void {
     Storage::fake('local');

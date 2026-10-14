@@ -11,12 +11,13 @@ use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Operations\OperationsTestCase;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Webhooks\Outbox;
+use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 
 /**
  * Document events carry the validators of the writer's result (state_version, epoch),
  * not those of the possibly older head checkpoint.
  */
-uses(OperationsTestCase::class, RefreshDatabase::class);
+uses(OperationsTestCase::class, RefreshDatabase::class, EnablesWebhooksModule::class);
 
 it('takes state_version and epoch of every save from the writer, not from the checkpoint', function (): void {
     config()->set('vaulter-documents.revisions.checkpoint_interval_seconds', 3600);

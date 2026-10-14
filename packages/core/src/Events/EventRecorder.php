@@ -13,6 +13,7 @@ use Vaulter\Changes\ChangeJournal;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Observability\MetricsRecorder;
 use Vaulter\Database\VaulterDatabase;
+use Vaulter\Kernel;
 use Vaulter\Webhooks\EventEnvelope;
 use Vaulter\Webhooks\OutboxRecorder;
 use WeakMap;
@@ -39,6 +40,7 @@ final readonly class EventRecorder
         private VaulterConfig $config,
         private Container $container,
         private MetricsRecorder $metrics,
+        private Kernel $kernel,
     ) {
         $this->recorded = new WeakMap;
     }
@@ -68,7 +70,8 @@ final readonly class EventRecorder
                 return $seq !== null;
             };
         }
-        if ($this->config->featureEnabled('webhooks') && $event->isWebhookEligible()) {
+        // The outbox row follows the webhooks module until the outbox is written always (D29, P3.14).
+        if ($this->kernel->isActive('webhooks') && $event->isWebhookEligible()) {
             $sinks[] = function () use ($event, &$seq): bool {
                 return $this->container->make(OutboxRecorder::class)->stage($event, EventEnvelope::fromEvent($event, $seq));
             };

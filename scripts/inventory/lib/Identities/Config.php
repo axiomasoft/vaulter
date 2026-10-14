@@ -169,7 +169,8 @@ final class Config
     }
 
     /**
-     * The roots that call `ConfigNormalizer::registerDefaults` (`root:` named or first positional string).
+     * The roots that call `ConfigNormalizer::registerDefaults` (`root:` named or first positional string), and the
+     * roots a module manifest declares with `ModuleBuilder::config('root', $file)` (the kernel registers their defaults).
      *
      * @return array<string, string> root => file
      */
@@ -177,7 +178,13 @@ final class Config
     {
         $roots = [];
         foreach (self::srcFiles($repo) as $file) {
-            AstFiles::walk(AstFiles::parse($repo, $file), static function (Node $node) use (&$roots, $file): void {
+            AstFiles::walk(AstFiles::parse($repo, $file), static function (Node $node, string $symbol) use (&$roots, $file): void {
+                $root = self::manifestCall($node, $symbol, 'config');
+                if ($root !== null) {
+                    $roots[$root] = $file;
+
+                    return;
+                }
                 if (!$node instanceof Expr\MethodCall || !$node->name instanceof Node\Identifier || $node->name->toString() !== 'registerDefaults') {
                     return;
                 }
@@ -330,8 +337,10 @@ final class Config
     }
 
     /**
-     * Publish tags: `publishes([...], 'tag')` calls and spatie/laravel-package-tools chains
-     * (`->name('x')->hasConfigFile()…` publishes `x-config`, `x-migrations`, `x-translations`, `x-views`).
+     * Publish tags: `publishes([...], 'tag')` calls, spatie/laravel-package-tools chains
+     * (`->name('x')->hasConfigFile()…` publishes `x-config`, `x-migrations`, `x-translations`, `x-views`), and the
+     * declarations of module manifests the kernel publishes: `config('root', …)` as `root-config`, `schema(…)` as
+     * `vaulter-migrations` for the core module and `vaulter-<id>-migrations` for another.
      *
      * @return array<string, array{file: string, symbol: string, via: string}>
      */
@@ -339,7 +348,22 @@ final class Config
     {
         $tags = [];
         foreach (self::srcFiles($repo) as $file) {
-            AstFiles::walk(AstFiles::parse($repo, $file), static function (Node $node, string $symbol) use (&$tags, $file): void {
+            $stmts = AstFiles::parse($repo, $file);
+            $moduleIds = self::moduleIds($stmts);
+            AstFiles::walk($stmts, static function (Node $node, string $symbol) use (&$tags, $file, $moduleIds): void {
+                $root = self::manifestCall($node, $symbol, 'config');
+                if ($root !== null) {
+                    $tags[$root.'-config'] ??= ['file' => $file, 'symbol' => $symbol, 'via' => 'module:config'];
+
+                    return;
+                }
+                $class = explode('::', $symbol)[0];
+                if (self::manifestCall($node, $symbol, 'schema', literal: false) !== null && isset($moduleIds[$class])) {
+                    $id = $moduleIds[$class];
+                    $tags[$id === 'core' ? 'vaulter-migrations' : 'vaulter-'.$id.'-migrations'] ??= ['file' => $file, 'symbol' => $symbol, 'via' => 'module:schema'];
+
+                    return;
+                }
                 if (!$node instanceof Expr\MethodCall || !$node->name instanceof Node\Identifier) {
                     return;
                 }
@@ -376,5 +400,52 @@ final class Config
         ksort($tags, SORT_STRING);
 
         return $tags;
+    }
+
+    /**
+     * A `$method(…)` declaration inside a module manifest's `register()` (a class named `*Module`): the first
+     * argument when it is a string literal, `''` for any first argument when `$literal` is false, null otherwise.
+     */
+    private static function manifestCall(Node $node, string $symbol, string $method, bool $literal = true): ?string
+    {
+        if (!$node instanceof Expr\MethodCall || !$node->name instanceof Node\Identifier || $node->name->toString() !== $method) {
+            return null;
+        }
+        [$class, $function] = array_pad(explode('::', $symbol, 2), 2, null);
+        if ($function !== 'register' || !str_ends_with($class, 'Module')) {
+            return null;
+        }
+        $first = $node->args[0] ?? null;
+        if (!$first instanceof Node\Arg) {
+            return null;
+        }
+        if (!$literal) {
+            return $first->value instanceof Scalar\String_ ? $first->value->value : '';
+        }
+
+        return $first->value instanceof Scalar\String_ ? $first->value->value : null;
+    }
+
+    /**
+     * Class => module id of the manifests in a file: the literal of `new ModuleId('<id>')` in their `id()`.
+     *
+     * @param  list<Node\Stmt>        $stmts
+     * @return array<string, string>
+     */
+    private static function moduleIds(array $stmts): array
+    {
+        $ids = [];
+        AstFiles::walk($stmts, static function (Node $node, string $symbol) use (&$ids): void {
+            [$class, $function] = array_pad(explode('::', $symbol, 2), 2, null);
+            if ($function !== 'id' || !$node instanceof Expr\New_ || !$node->class instanceof Node\Name || $node->class->getLast() !== 'ModuleId') {
+                return;
+            }
+            $arg = $node->args[0] ?? null;
+            if ($arg instanceof Node\Arg && $arg->value instanceof Scalar\String_) {
+                $ids[$class] = $arg->value->value;
+            }
+        });
+
+        return $ids;
     }
 }

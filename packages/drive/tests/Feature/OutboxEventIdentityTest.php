@@ -3,18 +3,21 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Str;
-use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Events\Nodes\NodeRenamed;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Events\EventRecorder;
+use Vaulter\Kernel;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Webhooks\Outbox;
+use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\ValueObjects\Access\Actor;
 
+uses(EnablesWebhooksModule::class);
+
 beforeEach(function (): void {
-    expect(app(VaulterConfig::class)->featureEnabled('webhooks'))->toBeTrue();
+    expect(app(Kernel::class)->isActive('webhooks'))->toBeTrue();
 });
 
 it('stages three distinct occurrences for rename A to B to A to B', function (): void {

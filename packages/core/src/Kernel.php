@@ -73,6 +73,12 @@ final class Kernel
         return $this->state instanceof CompiledModules ? $this->state->modules : [];
     }
 
+    /** Whether the module `$id` is offered and active; false for an invalid or not yet compiled graph. */
+    public function isActive(string $id): bool
+    {
+        return $this->state instanceof CompiledModules && $this->state->isActive($id);
+    }
+
     public function fingerprint(): ?string
     {
         return $this->state instanceof CompiledModules ? $this->state->fingerprint : null;
