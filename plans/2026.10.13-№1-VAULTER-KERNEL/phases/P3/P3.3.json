@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.3",
   "title": "Манифесты media и drive; drive объявляет свои срезы, лежащие в core (D39)",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "MediaModule и DriveModule заменяют provider/registrar-регистрацию media и drive; DriveModule также объявляет drive-срезы из core (AccessRegistrar, routes/drive.php, changes/make-команды, core-located doctor-проверки drive, drive-часть core registrar'ов). При `vaulter.modules.drive=false` ни один drive-маршрут/биндинг/команда не регистрируется.",
   "why": "D39: владелец объявляет свои срезы независимо от физического места, иначе I6 недоказуем. Риск: AccessRegistrar сейчас биндит контракты, которые core-код (OperationGuard, AccessResolver) резолвит — при выключенном drive core-путь не должен их требовать (core сам не вызывает drive-операции).",
   "scope": {
@@ -231,12 +231,82 @@
   },
   "result": {
     "started_at": "2026-10-14T06:46:42Z",
+    "finished_at": "2026-10-14T08:19:33Z",
     "executor": {
       "provider": "anthropic",
       "model": "claude-opus-5-5",
       "effort": "high",
       "session": "c9a095c1-f4c9-4fdb-b0f4-d3b24367faf5"
-    }
+    },
+    "registered_by": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium"
+    },
+    "notes": "V1–V11 зелёные. Ревью R2 — нативный субагент (Grok 4.7 недоступен).",
+    "deviations": [
+      "Fix-коммит dfdf3486: тесты drive (ScanDoctorChecksTest без inactive webhooks-check, LifecycleBoundaryTest под boot($app), DriveEventCatalogConformance с EnablesWebhooksModule), pint drive/core Providers."
+    ],
+    "pending": [
+      "Открыто владельцу: R2 F1 HIGH — ModuleBindings применяются в booting-фазе, register()-биндинги хоста на seam'ы drive/media/documents перекрываются (bindIf либо документировать «хост подменяет в boot()»); F2 LOW media→ProfileRegistry при drive=false."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T08:19:33Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-14T08:19:33Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-14T08:19:33Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-14T08:19:33Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-14T08:19:33Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-14T08:19:33Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-14T08:19:33Z"
+      },
+      {
+        "id": "V8",
+        "exit": 0,
+        "at": "2026-10-14T08:19:33Z"
+      },
+      {
+        "id": "V9",
+        "exit": 0,
+        "at": "2026-10-14T08:19:33Z"
+      },
+      {
+        "id": "V10",
+        "exit": 0,
+        "at": "2026-10-14T08:19:33Z"
+      },
+      {
+        "id": "V11",
+        "exit": 0,
+        "at": "2026-10-14T08:19:33Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-14T06:46:57Z"
+  "updated_at": "2026-10-14T08:19:33Z"
 }
