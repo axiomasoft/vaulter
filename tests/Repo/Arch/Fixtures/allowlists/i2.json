@@ -12297,6 +12297,28 @@
             "symbol": "Vaulter\\Filament\\VaulterFilamentServiceProvider",
             "target": "Vaulter\\Modules\\OffersModules",
             "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/core/src/Console/RedeliverWebhooksCommand.php",
+            "reason": "webhooks импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer webhooks (architecture#packages)",
+            "removed_in": "P4",
+            "target": "Vaulter\\Configuration\\VaulterConfig",
+            "view": "target",
+            "kind": "use",
+            "symbol": "<file>"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/core/src/Console/RedeliverWebhooksCommand.php",
+            "reason": "webhooks импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer webhooks (architecture#packages)",
+            "removed_in": "P4",
+            "target": "Vaulter\\Configuration\\VaulterConfig",
+            "view": "target",
+            "kind": "name",
+            "symbol": "Vaulter\\Console\\RedeliverWebhooksCommand::handle"
         }
     ],
     "invariant": "I2",

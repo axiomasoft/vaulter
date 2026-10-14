@@ -3,7 +3,8 @@
         "azgard": {
             "composer": "axioma-studio/vaulter-azgard",
             "current_require": [
-                "core"
+                "core",
+                "drive"
             ],
             "dir": "packages/azgard",
             "exists": true,

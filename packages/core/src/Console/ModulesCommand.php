@@ -125,7 +125,11 @@ final class ModulesCommand extends Command
         ];
     }
 
-    /** The Composer package whose install path holds the manifest; looked up only when the command runs. */
+    /**
+     * The Composer package whose install path holds the manifest; looked up only when the command runs.
+     *
+     * @param class-string $manifest
+     */
     private static function package(string $manifest): ?string
     {
         try {

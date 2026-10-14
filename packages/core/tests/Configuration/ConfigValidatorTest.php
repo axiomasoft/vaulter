@@ -7,8 +7,13 @@ use Illuminate\Contracts\Foundation\Application;
 use Vaulter\Configuration\ConfigValidator;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Configuration\WebhooksConfig;
+use Vaulter\CoreModule;
+use Vaulter\Drive\DriveModule;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Vaulter\Kernel;
+use Vaulter\Media\MediaModule;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Modules\ModuleCompiler;
 use Vaulter\Tests\Fixtures\Panels\OverrideDefaultProfile;
 
 it('validates canonical configuration defaults', function (): void {
@@ -88,6 +93,10 @@ it('rejects the null permission driver at production boot', function (): void {
     $repository->set('vaulter.access.permission_driver', 'null');
     $application = Mockery::mock(Application::class);
     $application->shouldReceive('environment')->with('production')->andReturn(true);
+    // The drive sections are validated while the drive module is active (D39).
+    $kernel = new Kernel($application);
+    $kernel->seal((new ModuleCompiler)->compile([new CoreModule, new MediaModule, new DriveModule], []));
+    $application->shouldReceive('make')->with(Kernel::class)->andReturn($kernel);
     (new ConfigValidator($repository))->validate(new VaulterConfig($repository), $application);
 })->throws(InvalidConfigurationException::class, 'forbidden in production');
 

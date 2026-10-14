@@ -429,7 +429,7 @@ final class Config
     /**
      * Class => module id of the manifests in a file: the literal of `new ModuleId('<id>')` in their `id()`.
      *
-     * @param  list<Node\Stmt>        $stmts
+     * @param  list<Node\Stmt>       $stmts
      * @return array<string, string>
      */
     private static function moduleIds(array $stmts): array

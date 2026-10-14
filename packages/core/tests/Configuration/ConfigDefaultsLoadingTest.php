@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 use Illuminate\Config\Repository;
 use Illuminate\Container\Container;
+use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Exceptions\Handler;
 use Vaulter\Configuration\ConfigNormalizer;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Media\VaulterMediaServiceProvider;
@@ -101,11 +104,16 @@ it('keeps cached registration unchanged and fills defaults in either provider or
         foreach ($providers as $provider) {
             $application->register($provider);
         }
+        // Registering a provider only offers its module: the cached config is not touched.
         expect($config->all())->toBe($cached);
 
+        // The defaults are registered when the module graph is applied, after every provider registered.
+        $application->singleton(Kernel::class, Illuminate\Foundation\Http\Kernel::class);
+        $application->singleton(ExceptionHandler::class, Handler::class);
+        $application->boot();
         $normalizer = $application->make(ConfigNormalizer::class);
         $defaults = $normalizer->packageDefaults();
-        expect(array_keys($defaults))->toBe($moduleFirst ? ['vaulter-media', 'vaulter'] : ['vaulter', 'vaulter-media']);
+        expect(array_keys($defaults))->toEqualCanonicalizing(['vaulter', 'vaulter-media']);
 
         $normalizer->normalize($config, $defaults);
 
@@ -126,6 +134,9 @@ it('fills missing nested defaults for partially published uncached config', func
         $config = new Repository(['vaulter' => ['database' => ['table_prefix' => 'host_']]]);
         $application->instance('config', $config);
         $application->register(VaulterServiceProvider::class);
+        $application->singleton(Kernel::class, Illuminate\Foundation\Http\Kernel::class);
+        $application->singleton(ExceptionHandler::class, Handler::class);
+        $application->boot();
         $normalizer = $application->make(ConfigNormalizer::class);
         $defaults = $normalizer->packageDefaults();
         $normalizer->normalize($config, $defaults);

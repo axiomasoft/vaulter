@@ -1248,7 +1248,7 @@ Vaulter\Events\DomainEvent
   readonly string $eventId
 
 Vaulter\Events\EventRecorder
-  __construct(\Vaulter\Database\VaulterDatabase $database, \Vaulter\Configuration\VaulterConfig $config, \Illuminate\Contracts\Container\Container $container, \Vaulter\Contracts\Observability\MetricsRecorder $metrics)
+  __construct(\Vaulter\Database\VaulterDatabase $database, \Vaulter\Configuration\VaulterConfig $config, \Illuminate\Contracts\Container\Container $container, \Vaulter\Contracts\Observability\MetricsRecorder $metrics, \Vaulter\Kernel $kernel)
   record(\Vaulter\Events\DomainEvent $event): void
 
 

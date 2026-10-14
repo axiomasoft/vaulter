@@ -49,9 +49,11 @@ it('shows the slots a module defines and the contributions it makes', function (
 });
 
 it('prints a table with the fingerprint', function (): void {
-    $this->artisan('vaulter:modules')
-        ->expectsOutputToContain('webhooks')
-        ->expectsOutputToContain('opt-in')
-        ->expectsOutputToContain('fingerprint '.app(Kernel::class)->fingerprint())
-        ->assertSuccessful();
+    // expectsOutputToContain consumes one written line per expectation: assert the table as a whole.
+    $exit = Artisan::call('vaulter:modules');
+    $output = Artisan::output();
+
+    expect($exit)->toBe(0)
+        ->and($output)->toMatch('/webhooks\s*\|[^\n]*opt-in[^\n]*no \(default\)/')
+        ->and($output)->toContain('fingerprint '.app(Kernel::class)->fingerprint());
 });

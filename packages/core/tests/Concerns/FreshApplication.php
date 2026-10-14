@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Vaulter\Tests\Concerns;
 
+use Illuminate\Console\Application as Artisan;
 use Illuminate\Container\Container;
+use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Facade;
@@ -13,7 +15,8 @@ use Vaulter\Tests\TestCase;
 /**
  * Boots a separate application of the core suite with extra config and providers, for a test about what
  * happens at boot (module activation, schedules, routes). The application of the running test is left as it
- * was: the container instance and the facade root are restored.
+ * was: the container instance and the facade root are restored. Artisan's `starting()` callbacks are
+ * process-wide, so the fresh application gets an artisan of its own, built while only its callbacks exist.
  */
 final class FreshApplication
 {
@@ -60,9 +63,16 @@ final class FreshApplication
         $case::$after = $after;
 
         $current = Container::getInstance();
+        $bootstrappers = new \ReflectionProperty(Artisan::class, 'bootstrappers');
+        $kept = $bootstrappers->getValue();
         try {
-            return $case->createApplication();
+            $bootstrappers->setValue(null, []);
+            $app = $case->createApplication();
+            $app->make(ConsoleKernel::class)->all();
+
+            return $app;
         } finally {
+            $bootstrappers->setValue(null, $kept);
             Container::setInstance($current);
             Facade::clearResolvedInstances();
             Facade::setFacadeApplication($current);

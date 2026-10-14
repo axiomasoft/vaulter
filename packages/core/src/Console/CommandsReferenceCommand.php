@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Console;
 
 use Illuminate\Console\Command;
+use Illuminate\Container\Container as ContainerInstance;
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Facades\Artisan;
 use Symfony\Component\Console\Command\Command as SymfonyCommand;
 use Vaulter\Modules\ModuleBuilder;
@@ -41,8 +43,9 @@ final class CommandsReferenceCommand extends Command
             static fn (string $name): bool => str_starts_with($name, 'vaulter:'),
             ARRAY_FILTER_USE_KEY,
         );
-        foreach (self::declaredCommands() as $class) {
-            $command = app($class);
+        $container = Artisan::getFacadeApplication() ?? ContainerInstance::getInstance();
+        foreach (self::declaredCommands($container) as $class) {
+            $command = $container->make($class);
             if ($command instanceof SymfonyCommand && str_starts_with((string) $command->getName(), 'vaulter:')) {
                 $commands[(string) $command->getName()] ??= $command;
             }
@@ -68,10 +71,10 @@ final class CommandsReferenceCommand extends Command
      *
      * @return list<class-string>
      */
-    private static function declaredCommands(): array
+    private static function declaredCommands(Container $container): array
     {
         $classes = [];
-        foreach (ModuleCatalog::of(app())->offered() as $manifest) {
+        foreach (ModuleCatalog::of($container)->offered() as $manifest) {
             if (!is_a($manifest, VaulterModule::class, true)) {
                 continue;
             }

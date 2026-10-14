@@ -63,11 +63,13 @@ final class ConfigNormalizer
     public function normalize(Repository $config, array $packageDefaults): void
     {
         $defaults = $this->stringKeyedEntries(Arr::dot($packageDefaults));
+        // Decided before any default is written: filling a map's first key must not make the map look host-configured.
+        $configuredMaps = array_filter(self::REPLACEMENT_MAPS, static fn (string $map): bool => $config->has($map));
 
         foreach ($defaults as $key => $value) {
             $insideReplacementMap = false;
-            foreach (self::REPLACEMENT_MAPS as $map) {
-                if ($config->has($map) && str_starts_with($key, $map.'.')) {
+            foreach ($configuredMaps as $map) {
+                if (str_starts_with($key, $map.'.')) {
                     $insideReplacementMap = true;
                     break;
                 }

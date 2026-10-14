@@ -191,7 +191,7 @@ it('states the zone graph as the Composer graph for packages', function (): void
     expect($declared('media'))->toBe(['core'])
         ->and($declared('drive'))->toBe(['core', 'media'])
         ->and($declared('documents'))->toContain('core', 'media', 'drive')
-        ->and($declared('azgard'))->toBe(['core'])
+        ->and($declared('azgard'))->toBe(['core', 'media', 'drive'])
         ->and($declared('filament'))->toContain('core', 'drive');
 
     foreach (['media', 'drive', 'documents', 'azgard', 'filament'] as $package) {

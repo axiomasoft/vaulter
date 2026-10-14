@@ -2,16 +2,22 @@
 
 declare(strict_types=1);
 
+use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
+use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Artisan;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Vaulter\CoreModule;
 use Vaulter\Doctor\DoctorRegistry;
+use Vaulter\Drive\DriveModule;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Http\Middleware\EnsureModuleActive;
 use Vaulter\Kernel;
+use Vaulter\Media\MediaModule;
 use Vaulter\Modules\ModuleApplier;
 use Vaulter\Modules\ModuleCompiler;
 use Vaulter\Modules\ModuleGraphException;
@@ -27,7 +33,7 @@ uses(TestCase::class, WithoutDatabaseSchema::class);
 // route, registers no command, contributes no doctor check; its schema is still installed.
 
 /** @return list<Route> the routes of the module `$id` */
-function routesOfModule(\Illuminate\Foundation\Application $app, string $id): array
+function routesOfModule(Application $app, string $id): array
 {
     return array_values(array_filter(
         $app['router']->getRoutes()->getRoutes(),
@@ -35,10 +41,10 @@ function routesOfModule(\Illuminate\Foundation\Application $app, string $id): ar
     ));
 }
 
-function sealedKernel(\Illuminate\Foundation\Application $app, array $overrides): Kernel
+function sealedKernel(Application $app, array $overrides): Kernel
 {
     $kernel = new Kernel($app);
-    $kernel->seal((new ModuleCompiler)->compile([new CoreModule, new WebhooksModule], $overrides));
+    $kernel->seal((new ModuleCompiler)->compile([new CoreModule, new MediaModule, new DriveModule, new WebhooksModule], $overrides));
 
     return $kernel;
 }
@@ -95,7 +101,7 @@ it('refuses the removed vaulter.features.webhooks switch at boot', function (): 
 
 it('answers a module route of an inactive module 404 and of an invalid graph 503, from the sealed kernel only', function (): void {
     $request = Request::create('/api/vaulter/v1/webhook-endpoints');
-    $next = static fn (): Illuminate\Http\Response => new Illuminate\Http\Response('ok');
+    $next = static fn (): Response => new Response('ok');
 
     expect(fn () => (new EnsureModuleActive(sealedKernel($this->app, [])))->handle($request, $next, 'webhooks'))
         ->toThrow(NotFoundHttpException::class)
@@ -112,7 +118,7 @@ it('hides the fingerprint default from the route action', function (): void {
     $request->setRouteResolver(static fn (): Route => $route);
 
     (new EnsureModuleActive(sealedKernel($this->app, ['webhooks' => true])))
-        ->handle($request, static fn (): Illuminate\Http\Response => new Illuminate\Http\Response('ok'), 'webhooks');
+        ->handle($request, static fn (): Response => new Response('ok'), 'webhooks');
 
     expect($route->parameters())->toBe(['id' => '1']);
 });
@@ -121,4 +127,14 @@ it('reports a fresh module route set in the doctor', function (): void {
     $this->artisan('vaulter:doctor', ['--check' => ['core.modules.cache'], '--json' => true])
         ->expectsOutputToContain('core.modules.cache_fresh')
         ->assertSuccessful();
+});
+
+it('checks the module before auth and throttle: an inactive module answers 404 to a guest', function (): void {
+    $priority = $this->app->make(Illuminate\Contracts\Http\Kernel::class)->getMiddlewarePriority();
+    $position = static fn (string $class): int|false => array_search($class, $priority, true);
+
+    expect($position(EnsureModuleActive::class))->toBeInt()
+        ->and($position(AuthenticatesRequests::class))->toBeInt()
+        ->and($position(EnsureModuleActive::class))->toBeLessThan($position(AuthenticatesRequests::class))
+        ->and($position(EnsureModuleActive::class))->toBeLessThan($position(ThrottleRequests::class));
 });

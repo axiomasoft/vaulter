@@ -38,13 +38,13 @@ final class ModuleBuilder
     /** @var list<array{event: class-string, listener: class-string}> */
     private array $listeners = [];
 
-    /** @var list<class-string<ModuleSchedule>> */
+    /** @var list<string> declared as given; the compiler checks them */
     private array $schedules = [];
 
     /** @var array<string, class-string> alias => middleware */
     private array $routeMiddleware = [];
 
-    /** @var list<class-string<ModuleBindings>> */
+    /** @var list<string> declared as given; the compiler checks them */
     private array $bindings = [];
 
     /** @var list<CapabilityDefinition> */
@@ -298,7 +298,7 @@ final class ModuleBuilder
         return $this->listeners;
     }
 
-    /** @return list<class-string<ModuleSchedule>> */
+    /** @return list<string> */
     public function schedules(): array
     {
         return $this->schedules;
@@ -310,7 +310,7 @@ final class ModuleBuilder
         return $this->routeMiddleware;
     }
 
-    /** @return list<class-string<ModuleBindings>> */
+    /** @return list<string> */
     public function bindingClasses(): array
     {
         return $this->bindings;

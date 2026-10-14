@@ -6,6 +6,7 @@
         ],
         "uri": "api/vaulter/v1/nodes/{node}/inheritance/restore",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -19,6 +20,7 @@
         ],
         "uri": "api/vaulter/v1/nodes/{node}/inheritance/restrict",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -33,6 +35,7 @@
         ],
         "uri": "api/vaulter/v1/drives/{drive}/activity",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -47,6 +50,7 @@
         ],
         "uri": "api/vaulter/v1/nodes/{node}/activity",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -61,6 +65,7 @@
         ],
         "uri": "api/vaulter/v1/drives/{drive}/changes",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -75,6 +80,7 @@
         ],
         "uri": "api/vaulter/v1/drives/{drive}/changes/start",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -88,6 +94,7 @@
         ],
         "uri": "api/vaulter/v1/collaboration/hub/authenticate",
         "middleware": [
+            "vaulter.module:documents",
             "api",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
@@ -104,6 +111,7 @@
         ],
         "uri": "api/vaulter/v1/collaboration/hub/load",
         "middleware": [
+            "vaulter.module:documents",
             "api",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
@@ -120,6 +128,7 @@
         ],
         "uri": "api/vaulter/v1/collaboration/hub/store",
         "middleware": [
+            "vaulter.module:documents",
             "api",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
@@ -136,6 +145,7 @@
         ],
         "uri": "api/vaulter/v1/nodes/{node}/comments/{comment}",
         "middleware": [
+            "vaulter.module:documents",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -150,6 +160,7 @@
         ],
         "uri": "api/vaulter/v1/nodes/{node}/comments",
         "middleware": [
+            "vaulter.module:documents",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -163,6 +174,7 @@
         ],
         "uri": "api/vaulter/v1/nodes/{node}/comments/{comment}/resolve",
         "middleware": [
+            "vaulter.module:documents",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -176,6 +188,7 @@
         ],
         "uri": "api/vaulter/v1/nodes/{node}/comments",
         "middleware": [
+            "vaulter.module:documents",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -189,6 +202,7 @@
         ],
         "uri": "api/vaulter/v1/documents/{node}/collaboration/session",
         "middleware": [
+            "vaulter.module:documents",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -203,6 +217,7 @@
         ],
         "uri": "api/vaulter/v1/documents/{node}/content",
         "middleware": [
+            "vaulter.module:documents",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -216,6 +231,7 @@
         ],
         "uri": "api/vaulter/v1/documents/{node}/content",
         "middleware": [
+            "vaulter.module:documents",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -230,6 +246,7 @@
         ],
         "uri": "api/vaulter/v1/documents/{node}/export/{format}",
         "middleware": [
+            "vaulter.module:documents",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -244,6 +261,7 @@
         ],
         "uri": "api/vaulter/v1/documents/{node}/revisions",
         "middleware": [
+            "vaulter.module:documents",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -257,6 +275,7 @@
         ],
         "uri": "api/vaulter/v1/documents/{node}/revisions/{revision}/restore",
         "middleware": [
+            "vaulter.module:documents",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -271,6 +290,7 @@
         ],
         "uri": "api/vaulter/v1/documents/{node}/revisions/{revision}",
         "middleware": [
+            "vaulter.module:documents",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -284,6 +304,7 @@
         ],
         "uri": "api/vaulter/v1/documents/{node}/revisions",
         "middleware": [
+            "vaulter.module:documents",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -297,6 +318,7 @@
         ],
         "uri": "api/vaulter/v1/documents/{node}/revisions/{revision}",
         "middleware": [
+            "vaulter.module:documents",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -310,6 +332,7 @@
         ],
         "uri": "api/vaulter/v1/drives/{drive}/documents",
         "middleware": [
+            "vaulter.module:documents",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -323,6 +346,7 @@
         ],
         "uri": "api/vaulter/v1/drives/{drive}/archive",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -336,6 +360,7 @@
         ],
         "uri": "api/vaulter/v1/drives/{drive}",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -350,6 +375,7 @@
         ],
         "uri": "api/vaulter/v1/drives/{drive}",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -363,6 +389,7 @@
         ],
         "uri": "api/vaulter/v1/drives/{drive}/unarchive",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -377,6 +404,7 @@
         ],
         "uri": "api/vaulter/v1/files/{node}/download",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -390,6 +418,7 @@
         ],
         "uri": "api/vaulter/v1/files/{node}/revisions/{revision}",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -404,6 +433,7 @@
         ],
         "uri": "api/vaulter/v1/files/{node}/revisions/{revision}/download",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -418,6 +448,7 @@
         ],
         "uri": "api/vaulter/v1/files/{node}/revisions",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -431,6 +462,7 @@
         ],
         "uri": "api/vaulter/v1/files/{node}/revisions/{revision}/restore",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -444,6 +476,7 @@
         ],
         "uri": "api/vaulter/v1/files/{node}/revisions",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -457,6 +490,7 @@
         ],
         "uri": "api/vaulter/v1/files/{node}/revisions/{revision}",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -470,6 +504,7 @@
         ],
         "uri": "api/vaulter/v1/drives/{drive}/files",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -483,6 +518,7 @@
         ],
         "uri": "api/vaulter/v1/drives/{drive}/folders",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -496,6 +532,7 @@
         ],
         "uri": "api/vaulter/v1/nodes/{node}/grants/{grant}",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -510,6 +547,7 @@
         ],
         "uri": "api/vaulter/v1/nodes/{node}/grants",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -523,6 +561,7 @@
         ],
         "uri": "api/vaulter/v1/nodes/{node}/grants",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -537,6 +576,7 @@
         ],
         "uri": "api/vaulter/v1/nodes/{node}/abilities",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -550,6 +590,7 @@
         ],
         "uri": "api/vaulter/v1/nodes/{node}/copy",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -564,6 +605,7 @@
         ],
         "uri": "api/vaulter/v1/drives/{drive}/nodes",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -577,6 +619,7 @@
         ],
         "uri": "api/vaulter/v1/nodes/{node}/move",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -590,6 +633,7 @@
         ],
         "uri": "api/vaulter/v1/nodes/{node}/properties",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -603,6 +647,7 @@
         ],
         "uri": "api/vaulter/v1/nodes/{node}",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -616,6 +661,7 @@
         ],
         "uri": "api/vaulter/v1/nodes/{node}/restore",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -630,6 +676,7 @@
         ],
         "uri": "api/vaulter/v1/drives/{drive}/search",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -644,6 +691,7 @@
         ],
         "uri": "api/vaulter/v1/nodes/{node}",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -657,6 +705,7 @@
         ],
         "uri": "api/vaulter/v1/nodes/{node}/star",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -671,6 +720,7 @@
         ],
         "uri": "api/vaulter/v1/drives/{drive}/starred",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -684,6 +734,7 @@
         ],
         "uri": "api/vaulter/v1/nodes/{node}/trash",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -697,6 +748,7 @@
         ],
         "uri": "api/vaulter/v1/nodes/{node}/star",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -710,6 +762,7 @@
         ],
         "uri": "api/vaulter/v1/nodes/{node}",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -724,6 +777,7 @@
         ],
         "uri": "api/vaulter/v1/shares/{token}/download",
         "middleware": [
+            "vaulter.module:drive",
             "api",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
@@ -741,6 +795,7 @@
         ],
         "uri": "api/vaulter/v1/shares/{token}/nodes",
         "middleware": [
+            "vaulter.module:drive",
             "api",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
@@ -758,6 +813,7 @@
         ],
         "uri": "api/vaulter/v1/shares/{token}",
         "middleware": [
+            "vaulter.module:drive",
             "api",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
@@ -775,6 +831,7 @@
         ],
         "uri": "api/vaulter/v1/shared",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -788,6 +845,7 @@
         ],
         "uri": "api/vaulter/v1/nodes/{node}/shares/{share}",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -802,6 +860,7 @@
         ],
         "uri": "api/vaulter/v1/nodes/{node}/shares",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -815,6 +874,7 @@
         ],
         "uri": "api/vaulter/v1/nodes/{node}/shares/{share}/rotate",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -828,6 +888,7 @@
         ],
         "uri": "api/vaulter/v1/nodes/{node}/shares",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -841,6 +902,7 @@
         ],
         "uri": "api/vaulter/v1/nodes/{node}/shares/{share}",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -854,6 +916,7 @@
         ],
         "uri": "api/vaulter/v1/drives/{drive}/trash",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -868,6 +931,7 @@
         ],
         "uri": "api/vaulter/v1/drives/{drive}/trash",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -881,6 +945,7 @@
         ],
         "uri": "api/vaulter/v1/uploads/{upload}/complete",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -895,6 +960,7 @@
         ],
         "uri": "api/vaulter/v1/uploads/{upload}/parts",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -910,6 +976,7 @@
         ],
         "uri": "api/vaulter/v1/uploads/{upload}",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -924,6 +991,7 @@
         ],
         "uri": "api/vaulter/v1/drives/{drive}/uploads",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -938,6 +1006,7 @@
         ],
         "uri": "api/vaulter/v1/uploads/{upload}",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -952,6 +1021,7 @@
         ],
         "uri": "api/vaulter/v1/uploads/{upload}",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -966,6 +1036,7 @@
         ],
         "uri": "api/vaulter/v1/uploads/{upload}",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -980,6 +1051,7 @@
         ],
         "uri": "api/vaulter/v1/uploads/{upload}",
         "middleware": [
+            "vaulter.module:drive",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -995,6 +1067,7 @@
         ],
         "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}/deliveries",
         "middleware": [
+            "vaulter.module:webhooks",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -1008,6 +1081,7 @@
         ],
         "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}/deliveries/{delivery}/redeliver",
         "middleware": [
+            "vaulter.module:webhooks",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -1021,6 +1095,7 @@
         ],
         "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}/deactivate",
         "middleware": [
+            "vaulter.module:webhooks",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -1034,6 +1109,7 @@
         ],
         "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}",
         "middleware": [
+            "vaulter.module:webhooks",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -1048,6 +1124,7 @@
         ],
         "uri": "api/vaulter/v1/webhook-endpoints",
         "middleware": [
+            "vaulter.module:webhooks",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -1061,6 +1138,7 @@
         ],
         "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}/rotate-secret",
         "middleware": [
+            "vaulter.module:webhooks",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -1075,6 +1153,7 @@
         ],
         "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}",
         "middleware": [
+            "vaulter.module:webhooks",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -1088,6 +1167,7 @@
         ],
         "uri": "api/vaulter/v1/webhook-endpoints",
         "middleware": [
+            "vaulter.module:webhooks",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",
@@ -1101,6 +1181,7 @@
         ],
         "uri": "api/vaulter/v1/webhook-endpoints/{endpoint}",
         "middleware": [
+            "vaulter.module:webhooks",
             "Vaulter\\Http\\Middleware\\AssignCorrelationId",
             "Vaulter\\Http\\Middleware\\AddApiVersionHeader",
             "Vaulter\\Http\\Middleware\\ApplyResponseCachePolicy",

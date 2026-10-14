@@ -425,7 +425,7 @@ describe('committed fixtures', function (): void {
         $count = static fn (string $prefix): int => count(array_filter(array_keys($items), static fn (string $id): bool => str_starts_with($id, $prefix)));
 
         expect($count('event:'))->toBe(32)
-            ->and($count('problem:'))->toBe(71)
+            ->and($count('problem:'))->toBe(72)
             ->and($items['event:file.uploaded']['sinks'])->toBe(['activity' => true, 'journal' => 'upsert', 'webhook' => true])
             ->and($items['event:file.uploaded']['data'])->toHaveKey('revision_id')
             ->and($items['problem:node_not_found'])->toMatchArray(['status' => 404, 'owner' => 'drive'])

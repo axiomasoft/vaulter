@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Vaulter\Http\Controllers\ModuleGraphInvalidController;
+use Vaulter\Kernel;
 use Vaulter\Tests\Concerns\FreshApplication;
 use Vaulter\Tests\Concerns\WithoutDatabaseSchema;
 use Vaulter\Tests\TestCase;
@@ -29,4 +32,17 @@ it('leaves the routes outside the Vaulter prefix to the host', function (): void
     $app = FreshApplication::boot(['vaulter.modules' => ['nope' => true]]);
 
     expect($app->make(HttpKernel::class)->handle(Request::create('/elsewhere'))->getStatusCode())->toBe(404);
+});
+
+it('registers no catch-all under an empty prefix, which would swallow the whole host', function (): void {
+    $app = FreshApplication::boot(['vaulter.modules' => ['nope' => true], 'vaulter.routes.prefix' => '']);
+
+    expect($app->make(HttpKernel::class)->handle(Request::create('/elsewhere'))->getStatusCode())->toBe(404);
+});
+
+it('answers 404, not 503, from a catch-all left in a route cache once the graph is valid', function (): void {
+    $app = FreshApplication::boot();
+
+    expect(fn () => $app->make(ModuleGraphInvalidController::class)($app->make(Kernel::class)))
+        ->toThrow(NotFoundHttpException::class);
 });

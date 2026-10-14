@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 use Illuminate\Config\Repository;
 use Illuminate\Container\Container;
+use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Exceptions\Handler;
 use Vaulter\Configuration\ConfigNormalizer;
 use Vaulter\Media\VaulterMediaServiceProvider;
 use Vaulter\VaulterServiceProvider;
@@ -82,11 +85,13 @@ it('retains module defaults registered before the core provider', function (): v
         $application = new Application(__DIR__);
         $application->instance('config', new Repository);
         $application->register(VaulterMediaServiceProvider::class);
-        $earlyNormalizer = $application->make(ConfigNormalizer::class);
         $application->register(VaulterServiceProvider::class);
+        // Module defaults are registered when the module graph is applied, after every provider registered.
+        $application->singleton(Kernel::class, Illuminate\Foundation\Http\Kernel::class);
+        $application->singleton(ExceptionHandler::class, Handler::class);
+        $application->boot();
 
-        expect($application->make(ConfigNormalizer::class))->toBe($earlyNormalizer)
-            ->and(array_keys($earlyNormalizer->packageDefaults()))->toBe(['vaulter-media', 'vaulter']);
+        expect(array_keys($application->make(ConfigNormalizer::class)->packageDefaults()))->toEqualCanonicalizing(['vaulter-media', 'vaulter']);
     } finally {
         Container::setInstance($previousContainer);
     }

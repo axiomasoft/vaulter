@@ -30,9 +30,13 @@ it('boots artisan and runs the framework commands', function (): void {
 it('prints the reasons with vaulter:modules and exits 1', function (): void {
     $console = invalidGraphApplication()->make(ConsoleKernel::class);
 
-    expect($console->call('vaulter:modules'))->toBe(1)
-        ->and($console->output())->toContain('vaulter.modules.nope names no installed module')
-        ->and($console->output())->toContain('vaulter.modules.webhooks must be true or false, string given');
+    $exit = $console->call('vaulter:modules');
+    // output() drains the buffer: read it once.
+    $output = $console->output();
+
+    expect($exit)->toBe(1)
+        ->and($output)->toContain('vaulter.modules.nope names no installed module')
+        ->and($output)->toContain('vaulter.modules.webhooks must be true or false, string given');
 
     expect($console->call('vaulter:modules', ['--json' => true]))->toBe(1)
         ->and(json_decode(trim($console->output()), true))->toMatchArray(['valid' => false, 'fingerprint' => null, 'modules' => []]);
@@ -41,9 +45,12 @@ it('prints the reasons with vaulter:modules and exits 1', function (): void {
 it('prints the reasons with vaulter:doctor and exits 1', function (): void {
     $console = invalidGraphApplication()->make(ConsoleKernel::class);
 
-    expect($console->call('vaulter:doctor'))->toBe(1)
-        ->and($console->output())->toContain('module_graph_invalid')
-        ->and($console->output())->toContain('vaulter.modules.nope names no installed module');
+    $exit = $console->call('vaulter:doctor');
+    $output = $console->output();
+
+    expect($exit)->toBe(1)
+        ->and($output)->toContain('module_graph_invalid')
+        ->and($output)->toContain('vaulter.modules.nope names no installed module');
 });
 
 it('does not define the other vaulter commands', function (string $command): void {

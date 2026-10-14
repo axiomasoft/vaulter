@@ -298,8 +298,17 @@ final class ModuleCompiler
             }
             array_push($commands, ...$builder->commandClasses());
             array_push($listeners, ...$builder->listeners());
-            array_push($schedules, ...$builder->schedules());
-            array_push($bindings, ...$builder->bindingClasses());
+            // Classes that do not implement the contract are already reasons of an invalid graph.
+            foreach ($builder->schedules() as $class) {
+                if (is_subclass_of($class, ModuleSchedule::class)) {
+                    $schedules[] = $class;
+                }
+            }
+            foreach ($builder->bindingClasses() as $class) {
+                if (is_subclass_of($class, ModuleBindings::class)) {
+                    $bindings[] = $class;
+                }
+            }
             array_push($events, ...$builder->eventSources());
             array_push($problems, ...$builder->problemSources());
         }

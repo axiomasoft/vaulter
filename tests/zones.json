@@ -63,7 +63,7 @@
         "core-modules": {
             "parent": "core",
             "suite": "core",
-            "src": ["packages/core/src/Modules", "packages/core/src/Kernel.php"],
+            "src": ["packages/core/src/Modules", "packages/core/src/Kernel.php", "packages/core/src/CoreModule.php"],
             "tests": ["packages/core/tests/Modules"],
             "uses": ["core-kernel"]
         },
@@ -163,7 +163,7 @@
             "suite": "azgard",
             "src": ["packages/azgard/src", "packages/azgard/config"],
             "tests": ["packages/azgard/tests"],
-            "uses": ["core"]
+            "uses": ["core", "media", "drive"]
         },
         "filament": {
             "suite": "filament",

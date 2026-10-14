@@ -137,7 +137,7 @@ final class ModuleUninstallCommand extends Command
     /**
      * Foreign keys of other tables that reference one of `$tables`; null when the database cannot be read.
      *
-     * @param  list<string>                                       $tables
+     * @param  list<string>                                        $tables
      * @return list<array{table: string, references: string}>|null
      */
     private static function incomingForeignKeys(array $tables, ?string $connection): ?array

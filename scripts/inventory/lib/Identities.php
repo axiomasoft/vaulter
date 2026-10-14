@@ -126,8 +126,8 @@ final class Identities
      * A ledger record must name an existing identity for added/redefined/renamed, a gone one for removed and for the
      * old id of a rename; the reason and a decision `D<n>` are required.
      *
-     * @param  list<array<string, mixed>>  $changes
-     * @param  array<string, mixed>        $items   id => item
+     * @param  list<array<string, mixed>> $changes
+     * @param  array<string, mixed>       $items   id => item
      * @return list<Problem>
      */
     public static function checkChanges(string $kind, array $changes, array $items): array

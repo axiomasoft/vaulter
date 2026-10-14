@@ -89,8 +89,9 @@ final readonly class ModuleCacheFreshnessCheck implements DoctorCheck
     /** The module a route belongs to: the argument of its `vaulter.module:<id>` middleware. */
     private static function module(Route $route): ?string
     {
-        foreach ($route->middleware() as $middleware) {
-            if (is_string($middleware) && str_starts_with($middleware, EnsureModuleActive::ALIAS.':')) {
+        // A route may carry closure middleware: only the named ones can be the module's.
+        foreach (array_filter($route->middleware(), is_string(...)) as $middleware) {
+            if (str_starts_with($middleware, EnsureModuleActive::ALIAS.':')) {
                 return substr($middleware, strlen(EnsureModuleActive::ALIAS) + 1);
             }
         }

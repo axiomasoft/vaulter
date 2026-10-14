@@ -4102,6 +4102,7 @@ components:
           - invalid_properties
           - invalid_webhook_signature
           - method_not_allowed
+          - module_graph_invalid
           - node_move_cycle
           - node_name_conflict
           - node_not_found

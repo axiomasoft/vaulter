@@ -19,6 +19,7 @@ final readonly class ModuleState
      */
     public function __construct(
         public ModuleId $id,
+        /** @var class-string<VaulterModule> */
         public string $manifest,
         public string $version,
         public Activation $activation,

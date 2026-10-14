@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Throwable;
 use Vaulter\Actions\Webhooks\RedeliverWebhookAction;
+use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Console\Concerns\OpensWriteScope;
 use Vaulter\Exceptions\Webhooks\WebhookDeliveryNotRedeliverableException;
 use Vaulter\Kernel;
@@ -34,7 +35,7 @@ final class RedeliverWebhooksCommand extends Command
 
     protected $description = 'Send finished webhook deliveries again (same webhook-id).';
 
-    public function handle(RedeliverWebhookAction $redeliver, Kernel $kernel): int
+    public function handle(RedeliverWebhookAction $redeliver, Kernel $kernel, VaulterConfig $config): int
     {
         if (!$kernel->isActive('webhooks')) {
             $this->components->info('Webhooks module is inactive — nothing to redeliver.');

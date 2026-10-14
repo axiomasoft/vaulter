@@ -190,7 +190,12 @@ final class ModuleApplier
                 throw MissingExtensionException::capability($provider->contract);
             }
 
-            return $app->make($class);
+            $instance = $app->make($class);
+            if (!$instance instanceof $provider->contract) {
+                throw MissingExtensionException::capability($provider->contract);
+            }
+
+            return $instance;
         });
     }
 
@@ -251,7 +256,10 @@ final class ModuleApplier
     {
         $this->app->afterResolving($abstract, $callback);
         if ($this->app->resolved($abstract)) {
-            $callback($this->app->make($abstract));
+            $resolved = $this->app->make($abstract);
+            if (is_object($resolved)) {
+                $callback($resolved);
+            }
         }
     }
 }
