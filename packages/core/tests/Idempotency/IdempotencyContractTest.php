@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
@@ -397,4 +398,34 @@ it('decodes the snapshot it encoded', function (): void {
     expect($codec->decode($codec->encode($snapshot), 1))->toEqual($snapshot)
         ->and($codec->resource($snapshot)->id)->toBe($snapshot->id)
         ->and(fn () => $codec->encode('not a snapshot'))->toThrow(InvalidArgumentException::class);
+});
+
+it('reads SQLITE_BUSY and the lock timeouts of the other engines as a lock timeout, and nothing else', function (): void {
+    $isLockTimeout = new ReflectionMethod(IdempotencyStore::class, 'isLockTimeout');
+    $exception = static fn (string $message, array $info): QueryException => (function () use ($message, $info): QueryException {
+        $previous = new PDOException($message);
+        $previous->errorInfo = $info;
+        $query = new QueryException('default', 'insert', [], $previous);
+
+        return $query;
+    })();
+
+    expect($isLockTimeout->invoke(null, $exception('database is locked', ['HY000', 5, 'database is locked'])))->toBeTrue()
+        ->and($isLockTimeout->invoke(null, $exception('lock timeout', ['55P03', 7, 'lock timeout'])))->toBeTrue()
+        ->and($isLockTimeout->invoke(null, $exception('Lock wait timeout', ['HY000', 1205, 'Lock wait timeout'])))->toBeTrue()
+        ->and($isLockTimeout->invoke(null, $exception('constraint', ['23000', 19, 'UNIQUE constraint failed'])))->toBeFalse()
+        ->and($isLockTimeout->invoke(null, $exception('table is locked', ['HY000', 5, 'database table is locked: x'])))->toBeFalse();
+});
+
+it('bounds the SQLite wait of a claim to two seconds and puts the previous busy timeout back', function (): void {
+    $connection = app(VaulterDatabase::class)->connection();
+    if ($connection->getDriverName() !== 'sqlite') {
+        $this->markTestSkipped('The busy timeout is a SQLite setting.');
+    }
+    $before = $connection->selectOne('select timeout as v from pragma_busy_timeout')->v;
+
+    [$drive] = idemDrive();
+    idemHandle($drive, 'busy-1')->folders()->create('Busy');
+
+    expect($connection->selectOne('select timeout as v from pragma_busy_timeout')->v)->toBe($before);
 });
