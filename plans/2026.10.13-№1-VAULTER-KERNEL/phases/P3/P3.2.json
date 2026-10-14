@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.2",
   "title": "Манифест ядра и логический webhooks: активация, vaulter.modules, module-middleware, InvalidModuleGraph, vaulter:modules",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "Core-провайдер предлагает CoreModule и логический WebhooksModule (OptIn); декларации active-модулей применяются (config, bindings, routes с middleware `vaulter.module:<id>`, commands, listeners, schedules, translations, schema); `features.webhooks` заменён `vaulter.modules.webhooks` (false); InvalidModuleGraph не роняет artisan и отвечает 503; есть `vaulter:modules`, `vaulter:module:uninstall` (dry-run, D36), doctor-проверка свежести route cache; введён ledger идентичностей.",
   "why": "D22/D39: активация становится декларативной, webhooks — OptIn; ревизия 3 требует module-middleware против route:cache и безопасного InvalidModuleGraph. Ledger нужен всем последующим изменениям идентичностей (D21: изменения фиксируются с причиной). Риск: смена default webhooks выключает маршруты/outbox-путь вебхуков в тестах — тесты вебхуков включают модуль явно, не через глобальный default.",
   "scope": {
@@ -326,12 +326,77 @@
   },
   "result": {
     "started_at": "2026-10-14T06:46:42Z",
+    "finished_at": "2026-10-14T08:19:32Z",
     "executor": {
       "provider": "anthropic",
       "model": "claude-opus-5-5",
       "effort": "high",
       "session": "c9a095c1-f4c9-4fdb-b0f4-d3b24367faf5"
-    }
+    },
+    "registered_by": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium"
+    },
+    "notes": "Проверки V1–V10 зелёные после fix-коммита dc407a53 (core/drive/documents полные, repo, inventory, baseline --compare, pint/phpstan, doc-links). Ревью R1/R3 — нативные субагенты (Grok 4.7 недоступен).",
+    "deviations": [
+      "Fix-коммит dc407a53 затронул файлы вне task_files: ConfigNormalizer (replacement-map решалась после записи первого ключа), CommandsReferenceCommand (без app()), RedeliverWebhooksCommand (потерянный $config), ModuleGraphInvalidController, openapi/vaulter-v1.yaml (module_graph_invalid), golden routes-v1.json и public-api.txt (EventRecorder::__construct получил Kernel; регенерация — MINOR/AMEND-шаги владельцу), tests/zones.json (CoreModule.php в core-modules, azgard uses drive/media), tests/suites.json (P83DocumentsTestCase пуст в fast-полосе → empty_passes parallel), allowlists i2, fixtures packages.json, ConfigurationBoundary-тесты всех пакетов (regex исключает ->config() манифеста), FreshApplication (изолированный artisan)."
+    ],
+    "pending": [
+      "Открыто владельцу: F4 R1 (конфиг vaulter мёрджится в booting, а не в register() — отметить в UPGRADE/docs); публичная поверхность: vaulter.modules, удалён features.webhooks, EventRecorder ctor + Kernel (CHANGELOG MINOR/D#)."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T08:19:32Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-14T08:19:32Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-14T08:19:32Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-14T08:19:32Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-14T08:19:32Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-14T08:19:32Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-14T08:19:32Z"
+      },
+      {
+        "id": "V8",
+        "exit": 0,
+        "at": "2026-10-14T08:19:32Z"
+      },
+      {
+        "id": "V9",
+        "exit": 0,
+        "at": "2026-10-14T08:19:32Z"
+      },
+      {
+        "id": "V10",
+        "exit": 0,
+        "at": "2026-10-14T08:19:32Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-14T06:46:57Z"
+  "updated_at": "2026-10-14T08:19:32Z"
 }
