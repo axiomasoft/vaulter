@@ -12,9 +12,11 @@ use Vaulter\Configuration\AccessConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Modules\ModuleBindings;
 use Vaulter\Policies\NodePolicy;
 
-final class AccessRegistrar
+/** Drive access located in core (D39), declared by DriveModule: permission drivers, the operation guard and the node policy. */
+final class AccessRegistrar implements ModuleBindings
 {
     public function register(Application $app): void
     {

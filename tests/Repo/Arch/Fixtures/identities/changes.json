@@ -104,6 +104,405 @@
             "id": "route:vaulter.v1.webhook-deliveries.redeliver",
             "kind": "http",
             "reason": "P3.2: routes/webhooks.php of WebhooksModule behind vaulter.module:webhooks; mounted by vaulter.modules.webhooks (opt-in) instead of vaulter.features.webhooks"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.access.inheritance.restore",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.access.inheritance.restrict",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.activity.drive",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.activity.node",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.changes.index",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.changes.start",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.drives.archive",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.drives.destroy",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.drives.show",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.drives.unarchive",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.files.download",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.files.revisions.destroy",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.files.revisions.download",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.files.revisions.index",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.files.revisions.restore",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.files.revisions.store",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.files.revisions.update",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.files.store",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.folders.store",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.grants.destroy",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.grants.index",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.grants.store",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.nodes.abilities",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.nodes.copy",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.nodes.index",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.nodes.move",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.nodes.properties.update",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.nodes.purge",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.nodes.restore",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.nodes.search",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.nodes.show",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.nodes.star",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.nodes.starred",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.nodes.trash",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.nodes.unstar",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.nodes.update",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.public-shares.download",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.public-shares.nodes",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.public-shares.show",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.shared.index",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.shares.destroy",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.shares.index",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.shares.rotate",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.shares.store",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.shares.update",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.trash.empty",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.trash.index",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.uploads.complete",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.uploads.parts.store",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.uploads.show",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.uploads.store",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.uploads.tus.destroy",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.uploads.tus.head",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.uploads.tus.options",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "route:vaulter.v1.uploads.tus.patch",
+            "kind": "http",
+            "reason": "P3.3: mounted by DriveModule behind vaulter.module:drive (the drive package routes and the drive routes located in core, D39)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "publish:vaulter-drive-config",
+            "kind": "config",
+            "reason": "P3.3: published by the module kernel from the DriveModule config declaration instead of spatie hasConfigFile"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "publish:vaulter-media-config",
+            "kind": "config",
+            "reason": "P3.3: published by the module kernel from the MediaModule config declaration instead of spatie hasConfigFile"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

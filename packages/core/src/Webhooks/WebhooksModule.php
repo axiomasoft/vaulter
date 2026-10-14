@@ -20,7 +20,8 @@ use Vaulter\Modules\VaulterModule;
 /**
  * The webhooks module (D22, D39): a logical manifest offered by the core provider until P4 moves the
  * webhooks code into its own package. Opt-in, because it opens outbound network traffic; it needs no
- * secret configuration, so activating it without any is not an error.
+ * secret configuration, so activating it without any is not an error. It relays drive events, so it
+ * requires the drive module.
  */
 final class WebhooksModule implements VaulterModule
 {
@@ -41,7 +42,7 @@ final class WebhooksModule implements VaulterModule
 
     public function requires(): array
     {
-        return ['core' => '^1.0'];
+        return ['core' => '^1.0', 'drive' => '^1.0'];
     }
 
     public function register(ModuleBuilder $module): void

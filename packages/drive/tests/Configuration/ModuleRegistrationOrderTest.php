@@ -2,40 +2,23 @@
 
 declare(strict_types=1);
 
-use Illuminate\Config\Repository;
-use Illuminate\Container\Container;
-use Illuminate\Foundation\Application;
-use Vaulter\Configuration\ConfigNormalizer;
 use Vaulter\Drive\Configuration\DriveConfig;
-use Vaulter\Drive\Providers\BindingsRegistrar as DriveBindingsRegistrar;
+use Vaulter\Drive\VaulterDriveServiceProvider;
 use Vaulter\Media\Configuration\DedupScope;
 use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Media\VaulterMediaServiceProvider;
-use Vaulter\Providers\BindingsRegistrar as CoreBindingsRegistrar;
+use Vaulter\Tests\Concerns\FreshApplication;
+
+// The module kernel compiles after every provider registered: a package provider listed before the core
+// one only offers its manifest, and the module config is merged and normalized once the graph is sealed.
 
 it('retains module defaults and applies host settings when modules register before core', function (): void {
-    $previousContainer = Container::getInstance();
-    try {
-        $app = new Application;
-        $repository = new Repository([
-            'vaulter-drive' => ['uploads' => ['max_file_size' => 2048]],
-            'vaulter-media' => ['dedup' => ['scope' => 'drive']],
-        ]);
-        $app->instance('config', $repository);
+    $app = FreshApplication::boot(
+        ['vaulter-drive' => ['uploads' => ['max_file_size' => 2048]], 'vaulter-media' => ['dedup' => ['scope' => 'drive']]],
+        before: [VaulterDriveServiceProvider::class, VaulterMediaServiceProvider::class],
+    );
 
-        (new DriveBindingsRegistrar($app))->register();
-        $normalizer = $app->make(ConfigNormalizer::class);
-        (new VaulterMediaServiceProvider($app))->register();
-        (new CoreBindingsRegistrar)->register($app);
-
-        expect($app->make(ConfigNormalizer::class))->toBe($normalizer)
-            ->and($normalizer->packageDefaults())->toHaveKeys(['vaulter-drive', 'vaulter-media']);
-
-        $normalizer->normalize(config: $repository, packageDefaults: $normalizer->packageDefaults());
-
-        expect($app->make(DriveConfig::class)->maxFileSize())->toBe(2048)
-            ->and($app->make(MediaConfig::class)->dedupScope())->toBe(DedupScope::Drive);
-    } finally {
-        Container::setInstance($previousContainer);
-    }
+    expect($app->make(DriveConfig::class)->maxFileSize())->toBe(2048)
+        ->and($app->make(MediaConfig::class)->dedupScope())->toBe(DedupScope::Drive)
+        ->and($app['config']->get('vaulter-drive.models.upload_part'))->not->toBeNull();
 });

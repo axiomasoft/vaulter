@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Providers;
 
+use Closure;
 use Illuminate\Contracts\Container\Container;
-use Illuminate\Support\ServiceProvider;
-use Vaulter\Configuration\ConfigNormalizer;
+use Illuminate\Contracts\Foundation\Application;
 use Vaulter\Configuration\ScanConfig;
+use Vaulter\Configuration\ScheduleConfig;
 use Vaulter\Content\NodeContentLifecycleRegistry;
 use Vaulter\Contracts\Cas\ContentScanner;
 use Vaulter\Contracts\Content\ScanPolicyResolver;
@@ -19,7 +20,9 @@ use Vaulter\Drive\Content\DocumentPurgeLifecycle;
 use Vaulter\Drive\Content\FileContentLifecycle;
 use Vaulter\Drive\Content\ShortcutPurgeLifecycle;
 use Vaulter\Drive\DriveHandleFactory;
+use Vaulter\Doctor\Checks\ConfigValidCheck;
 use Vaulter\Drive\DriveProvisioner;
+use Vaulter\Drive\Http\Problems\DriveProblemCodes;
 use Vaulter\Drive\Uploads\Inspection\FilenameInspector;
 use Vaulter\Drive\Uploads\Inspection\MimeConsistencyInspector;
 use Vaulter\Drive\Uploads\Inspection\ScanDispatchInspector;
@@ -27,37 +30,49 @@ use Vaulter\Drive\Uploads\Inspection\SizeInspector;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Cas\ScanMode;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Vaulter\Http\Problems\ProblemCatalog;
+use Vaulter\Modules\ModuleBindings;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileRegistry;
 
-final class BindingsRegistrar extends ServiceProvider
+/**
+ * The container wiring of the drive module ({@see \Vaulter\Drive\DriveModule}): drive config, scan policy and
+ * scanner validation, the drive handle factory, uploads, content lifecycles, the drive problem codes and the
+ * drive config validator.
+ */
+final class BindingsRegistrar implements ModuleBindings
 {
-    public function register(): void
+    public function register(Application $app): void
     {
-        $path = __DIR__.'/../../config/vaulter-drive.php';
-        $this->mergeConfigFrom(path: $path, key: 'vaulter-drive');
-        $this->app->singleton(DriveConfig::class, fn (Container $app): DriveConfig => new DriveConfig($app->make('config')));
-        $this->app->bind(ScanWorkSettings::class, DriveConfig::class);
-        $this->app->singletonIf(ConfigNormalizer::class);
-        $this->app->make(ConfigNormalizer::class)->registerDefaults(root: 'vaulter-drive', path: $path);
+        $app->singleton(DriveConfig::class, static fn (Container $app): DriveConfig => new DriveConfig($app->make('config')));
+        $app->bind(ScanWorkSettings::class, DriveConfig::class);
 
-        $this->app->singleton(ScanPolicyResolver::class, \Vaulter\Drive\Content\ScanPolicyResolver::class);
-        $this->app->singleton(\Vaulter\Drive\Content\ScanPolicyResolver::class);
-        $this->app->booted(function (): void {
-            $this->validateScanner();
-            (new ConsoleRegistrar)->boot($this->app);
+        $app->singleton(ScanPolicyResolver::class, \Vaulter\Drive\Content\ScanPolicyResolver::class);
+        $app->singleton(\Vaulter\Drive\Content\ScanPolicyResolver::class);
+        // After every provider booted: a host may bind its ContentScanner from its own provider.
+        $app->booted(function () use ($app): void {
+            $this->validateScanner($app);
         });
-        $this->app->bind(DriveHandleFactoryContract::class, DriveHandleFactory::class);
-        $this->app->singleton(DriveProvisioner::class);
-        $this->app->singleton(UploadSessionManager::class);
-        $this->app->tag([FilenameInspector::class, SizeInspector::class, MimeConsistencyInspector::class, ScanDispatchInspector::class], 'vaulter.upload_inspectors');
-        $this->app->singleton(NodeContentLifecycleRegistry::class, function (Container $app): NodeContentLifecycleRegistry {
+        $app->bind(DriveHandleFactoryContract::class, DriveHandleFactory::class);
+        $app->singleton(DriveProvisioner::class);
+        $app->singleton(UploadSessionManager::class);
+        $app->tag([FilenameInspector::class, SizeInspector::class, MimeConsistencyInspector::class, ScanDispatchInspector::class], 'vaulter.upload_inspectors');
+        $app->singleton(DriveProblemCodes::class);
+        $app->tag(DriveProblemCodes::class, ProblemCatalog::TAG);
+        $app->bind('vaulter.config_validator.drive', static fn (Container $app): Closure => static function () use ($app): void {
+            $config = $app->make(DriveConfig::class);
+            $config->model('upload_session');
+            $config->model('upload_part');
+            $config->validateScanWork();
+        });
+        $app->tag('vaulter.config_validator.drive', ConfigValidCheck::TAG);
+        $app->singleton(NodeContentLifecycleRegistry::class, static function (Container $app): NodeContentLifecycleRegistry {
             $configured = $app->make('config')->get('vaulter.content_lifecycles', []);
             if (!is_array($configured) || !array_is_list($configured)) {
                 throw new \LogicException('Content lifecycles configuration must be a list of lifecycle classes.');
             }
             $registry = new NodeContentLifecycleRegistry;
-            $resolve = function (mixed $class) use ($app): NodeContentLifecycle {
+            $resolve = static function (mixed $class) use ($app): NodeContentLifecycle {
                 if (is_string($class) && (!class_exists($class) || !is_a($class, NodeContentLifecycle::class, true))) {
                     throw new \LogicException('Content lifecycle class must implement NodeContentLifecycle.');
                 }
@@ -80,13 +95,13 @@ final class BindingsRegistrar extends ServiceProvider
         });
     }
 
-    private function validateScanner(): void
+    private function validateScanner(Application $app): void
     {
-        $this->app->make(DriveConfig::class)->validateScanWork();
-        $config = $this->app->make(ScanConfig::class);
-        $policy = $this->app->make(ProfilePolicy::class);
+        $app->make(DriveConfig::class)->validateScanWork();
+        $config = $app->make(ScanConfig::class);
+        $policy = $app->make(ProfilePolicy::class);
         $enabled = false;
-        foreach ($this->app->make(ProfileRegistry::class)->all() as $profile) {
+        foreach ($app->make(ProfileRegistry::class)->all() as $profile) {
             foreach ($policy->scanSpecs($profile) as $spec) {
                 $enabled = $enabled || $spec->mode !== ScanMode::Off;
             }
@@ -96,19 +111,19 @@ final class BindingsRegistrar extends ServiceProvider
             if (!class_exists($class) || !is_a($class, ContentScanner::class, true)) {
                 throw new InvalidConfigurationException('Scanner must implement ContentScanner.');
             }
-            if (!$this->app->bound(ContentScanner::class)) {
-                $this->app->singleton(ContentScanner::class, $class);
+            if (!$app->bound(ContentScanner::class)) {
+                $app->singleton(ContentScanner::class, $class);
             }
         }
-        if (!$this->app->bound(ContentScanner::class)) {
+        if (!$app->bound(ContentScanner::class)) {
             if ($enabled) {
                 throw new InvalidConfigurationException('Enabled scan policy requires a configured scanner.');
             }
 
             return;
         }
-        $this->app->make(DriveConfig::class)->validateScanWork(requireBroker: true);
-        $scanner = $this->app->make(ContentScanner::class);
+        $app->make(DriveConfig::class)->validateScanWork(requireBroker: true);
+        $scanner = $app->make(ContentScanner::class);
         $spec = $config->globalSpec();
         if (($class !== null && !$scanner instanceof $class)
             || $scanner->key() !== $spec->scannerKey || $scanner->version() !== $spec->scannerVersion) {
@@ -116,9 +131,14 @@ final class BindingsRegistrar extends ServiceProvider
         }
     }
 
-    public function boot(): void
+    public function boot(Application $app): void
     {
+        $config = $app->make(DriveConfig::class);
+        $config->model('upload_session');
+        $config->model('upload_part');
+        // Fail at boot on a bad value; the tasks themselves read the config when the scheduler resolves.
+        (new ScheduleConfig($app->make('config')))->frequencies('vaulter-drive', SchedulingRegistrar::KEYS);
         // Invalid or duplicate registrations fail at application boot.
-        $this->app->make(NodeContentLifecycleRegistry::class);
+        $app->make(NodeContentLifecycleRegistry::class);
     }
 }

@@ -4,25 +4,24 @@ declare(strict_types=1);
 
 namespace Vaulter\Providers;
 
-use Illuminate\Cache\RateLimiting\Limit;
-use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Contracts\Translation\Translator;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\RateLimiter;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
-use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Http\Middleware\AddApiVersionHeader;
 use Vaulter\Http\Middleware\ApplyResponseCachePolicy;
 use Vaulter\Http\Middleware\AssignCorrelationId;
 use Vaulter\Http\Problems\CoreProblemCodes;
 use Vaulter\Http\Problems\ProblemCatalog;
 use Vaulter\Http\Problems\ProblemRenderer;
-use Vaulter\Support\Identity;
 
+/**
+ * The kernel's HTTP diagnostics, applied whatever the module graph: the problem catalogue and renderer and the
+ * priority of the response middleware.
+ */
 final class HttpRegistrar
 {
     public function register(Application $app): void
@@ -39,7 +38,6 @@ final class HttpRegistrar
     public function boot(Application $app): void
     {
         $this->registerResourceMiddlewarePriority($app->make(Kernel::class));
-        $this->registerRateLimiters();
         $this->registerProblemRenderer($app);
     }
 
@@ -68,27 +66,6 @@ final class HttpRegistrar
             foreach ([ApplyResponseCachePolicy::class, AddApiVersionHeader::class, AssignCorrelationId::class] as $middleware) {
                 $kernel->prependToMiddlewarePriority($middleware);
             }
-        }
-    }
-
-    // P3.3 moves to DriveModule (D39): the public-share and upload limiters throttle drive routes.
-    private function registerRateLimiters(): void
-    {
-        if (RateLimiter::limiter('vaulter-public') === null) {
-            RateLimiter::for('vaulter-public', static fn (Request $request): Limit => Limit::perMinute(
-                app(RoutesConfig::class)->publicRateLimit(),
-            )->by($request->ip() ?? 'unknown'));
-        }
-
-        if (RateLimiter::limiter('vaulter-uploads') === null) {
-            RateLimiter::for('vaulter-uploads', static function (Request $request): Limit {
-                $user = $request->user();
-                $key = $user instanceof Authorizable
-                    ? 'actor:'.Identity::stringify($user->getAuthIdentifier())
-                    : 'ip:'.($request->ip() ?? 'unknown');
-
-                return Limit::perMinute(app(RoutesConfig::class)->uploadsRateLimit())->by($key);
-            });
         }
     }
 }

@@ -170,7 +170,7 @@ it('SEC-R05 trash restoration preserves admission while current scan policy bloc
 
 it('SEC-POLICY missing scanner and conflicting required aliases fail scanner boot validation', function (): void {
     config()->set('vaulter.scan.mode', 'all_content');
-    expect(fn () => (new BindingsRegistrar(app()))->register())
+    expect(fn () => (new BindingsRegistrar)->register(app()))
         ->toThrow(InvalidConfigurationException::class);
     config()->set('vaulter.scan.mode', null);
     config()->set('vaulter.scan.required', true);

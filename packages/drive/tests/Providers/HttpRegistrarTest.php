@@ -6,18 +6,19 @@ use Illuminate\Events\Dispatcher;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
-use Spatie\LaravelPackageTools\Package;
 use Vaulter\Drive\Console\PruneRevisionsCommand;
 use Vaulter\Drive\Console\PurgeDrivesCommand;
 use Vaulter\Drive\Console\PurgeTrashCommand;
 use Vaulter\Drive\Console\RecountDrivesCommand;
 use Vaulter\Drive\Console\SweepUploadsCommand;
+use Vaulter\Drive\DriveModule;
 use Vaulter\Drive\Events\Nodes\FolderCreated;
 use Vaulter\Drive\Events\Uploads\UploadInitiated;
 use Vaulter\Drive\Http\Controllers\Drives\ShowDriveController;
 use Vaulter\Drive\Http\Controllers\Uploads\CreateUploadController;
 use Vaulter\Drive\Http\Controllers\Uploads\S3MultipartProtocolController;
-use Vaulter\Drive\Providers\HttpRegistrar;
+use Vaulter\Modules\ModuleBuilder;
+use Vaulter\Modules\ModuleId;
 use Vaulter\Tests\Webhooks\WebhookTestHelpers;
 
 it('registers no event subscriber: events are recorded by the EventRecorder', function (bool $activity, bool $webhooks): void {
@@ -36,20 +37,19 @@ it('declares the v1 routes and commands, registered whatever the feature flags s
     config()->set('vaulter.routes.middleware.authenticated', ['host.auth']);
     config()->set('vaulter-drive.uploads.resumable.enabled', $uploads);
     config()->set('vaulter.features.grants', $grants);
-    $package = new Package;
-    (new HttpRegistrar)->configure($package);
+    $module = new ModuleBuilder(new ModuleId('drive'));
+    (new DriveModule)->register($module);
+    $driveRoutes = realpath(__DIR__.'/../../routes/drive.php');
 
-    expect($package->routeFileNames)->toBe(['drive'])
-        ->and($package->commands)->toBe([PurgeTrashCommand::class, PurgeDrivesCommand::class, RecountDrivesCommand::class, PruneRevisionsCommand::class, SweepUploadsCommand::class]);
+    expect(array_map(realpath(...), $module->routeFiles()))->toContain($driveRoutes)
+        ->and($module->commandClasses())->toContain(PurgeTrashCommand::class, PurgeDrivesCommand::class, RecountDrivesCommand::class, PruneRevisionsCommand::class, SweepUploadsCommand::class);
 
     $original = Route::getFacadeRoot();
     $router = new Router(new Dispatcher($this->app), $this->app);
     Route::swap($router);
 
     try {
-        foreach ($package->routeFileNames as $file) {
-            require __DIR__.'/../../routes/'.$file.'.php';
-        }
+        require $driveRoutes;
 
         $routes = collect($router->getRoutes()->getRoutes());
         $show = $routes->first(fn ($route): bool => $route->uri() === 'host/drive/v1/drives/{drive}');

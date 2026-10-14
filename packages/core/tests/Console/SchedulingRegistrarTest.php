@@ -7,8 +7,8 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Vaulter\Configuration\ConfigValidator;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Drive\Providers\SchedulingRegistrar as DriveSchedulingRegistrar;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
-use Vaulter\Providers\SchedulingRegistrar;
 use Vaulter\Tests\Concerns\FreshApplication;
 
 /** @return array<string, Event> keyed by the task name */
@@ -78,5 +78,6 @@ it('fails boot validation on an invalid frequency', function (): void {
 it('fails registration on an invalid frequency', function (): void {
     config(['vaulter.schedule.changes_prune' => 'sometimes']);
 
-    (new SchedulingRegistrar)->register(app());
+    // The change-journal prune is a drive task located in core (D39): DriveModule schedules it.
+    (new DriveSchedulingRegistrar)->define(app(Schedule::class), app('config'));
 })->throws(InvalidConfigurationException::class);

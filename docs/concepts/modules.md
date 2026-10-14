@@ -16,7 +16,9 @@ module registers nothing at runtime; its database schema is still installed.
 | Module | Package | Policy | Requires |
 |---|---|---|---|
 | `core` | `vaulter-core` | auto | — |
-| `webhooks` | `vaulter-core` (until it gets its own package) | **opt-in** | `core` |
+| `media` | `vaulter-media` | auto | `core` |
+| `drive` | `vaulter-drive` (with its slices still located in `vaulter-core`) | auto | `core`, `media` |
+| `webhooks` | `vaulter-core` (until it gets its own package) | **opt-in** | `core`, `drive` |
 
 *Auto* modules are active unless switched off; *opt-in* modules — the ones that open outbound
 network traffic or need secrets — only when switched on. One config key overrides the policy:
@@ -30,7 +32,8 @@ network traffic or need secrets — only when switched on. One config key overri
 
 Values must be `true` or `false`, and keys must name installed modules. A module that is active
 while a module it requires is not makes the graph invalid — a dependency is never switched on
-silently. Run `php artisan vaulter:modules` to see every module, its policy, whether it is active
+silently. Switching the drive off (`'drive' => false`) removes all of it, its routes, commands and
+bindings located in `vaulter-core` included; every module that requires it must be switched off too. Run `php artisan vaulter:modules` to see every module, its policy, whether it is active
 and why. `vaulter.features.webhooks` no longer exists; a host config that still sets it fails at
 boot with a pointer to `vaulter.modules.webhooks`.
 

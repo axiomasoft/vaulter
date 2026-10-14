@@ -67,17 +67,6 @@
             "view": "current"
         },
         {
-            "category": "host-lifecycle",
-            "count": 1,
-            "file": "packages/core/src/Configuration/ConfigValidator.php",
-            "kind": "probe",
-            "reason": "проверка resolved ProfileRegistry — состояние контейнера хоста, не выбор модуля",
-            "removed_in": "never",
-            "symbol": "Vaulter\\Configuration\\ConfigValidator::validate",
-            "target": "\\Vaulter\\Profiles\\ProfileRegistry::class",
-            "view": "current"
-        },
-        {
             "category": "config-validation",
             "count": 1,
             "file": "packages/core/src/Configuration/TenancyConfig.php",
@@ -108,17 +97,6 @@
             "removed_in": "never",
             "symbol": "Vaulter\\Doctor\\Checks\\AccessDriverCheck::run",
             "target": "$class",
-            "view": "current"
-        },
-        {
-            "category": "config-validation",
-            "count": 1,
-            "file": "packages/core/src/Providers/BindingsRegistrar.php",
-            "kind": "probe",
-            "reason": "проверка явно выбранного DirectContentUrlSigner: переводится в typed required capability без удаления fail-closed проверки (code-facts)",
-            "removed_in": "never",
-            "symbol": "Vaulter\\Providers\\BindingsRegistrar::boot",
-            "target": "\\Vaulter\\Contracts\\Cas\\DirectContentUrlSigner::class",
             "view": "current"
         },
         {
@@ -362,6 +340,28 @@
             "removed_in": "never",
             "symbol": "Vaulter\\Modules\\ModuleApplier::schedules",
             "target": "\\Illuminate\\Console\\Scheduling\\Schedule::class",
+            "view": "current"
+        },
+        {
+            "category": "host-lifecycle",
+            "count": 1,
+            "file": "packages/core/src/Configuration/ConfigValidator.php",
+            "kind": "probe",
+            "reason": "проверка resolved ProfileRegistry — состояние контейнера хоста, не выбор модуля",
+            "removed_in": "never",
+            "symbol": "Vaulter\\Configuration\\ConfigValidator::validateDrive",
+            "target": "\\Vaulter\\Profiles\\ProfileRegistry::class",
+            "view": "current"
+        },
+        {
+            "category": "config-validation",
+            "count": 1,
+            "file": "packages/core/src/Providers/DriveSliceRegistrar.php",
+            "kind": "probe",
+            "reason": "проверка явно выбранного DirectContentUrlSigner: переводится в typed required capability без удаления fail-closed проверки (code-facts)",
+            "removed_in": "never",
+            "symbol": "Vaulter\\Providers\\DriveSliceRegistrar::boot",
+            "target": "\\Vaulter\\Contracts\\Cas\\DirectContentUrlSigner::class",
             "view": "current"
         }
     ],

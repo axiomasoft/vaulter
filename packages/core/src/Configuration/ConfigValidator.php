@@ -15,9 +15,9 @@ use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Exceptions\Profiles\InvalidProfileException;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
+use Vaulter\Kernel;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileRegistry;
-use Vaulter\Providers\SchedulingRegistrar;
 use Vaulter\Webhooks\WebhooksSchedule;
 
 final readonly class ConfigValidator
@@ -40,6 +40,25 @@ final readonly class ConfigValidator
             $config->tenancy()->resolver();
             $this->validateTenantResolver($app->make(TenantResolver::class));
         }
+        // These accessors validate the untrusted class strings before returning them.
+        $config->webhooks()->assertNoRemovedKeys();
+        $config->webhooks()->urlGuard();
+        $config->webhooks()->retrySchedule();
+        $config->webhooks()->retryJitter();
+        $config->webhooks()->relayFanoutChunk();
+        $schedule = new ScheduleConfig($this->config);
+        $schedule->enabled();
+        // changes_prune is the drive's core-located key (D39); the webhooks keys belong to WebhooksModule.
+        $schedule->frequencies('vaulter', ['changes_prune', ...WebhooksSchedule::KEYS]);
+
+        // The drive sections located in the core config are its active path (D39): validated only while it is active.
+        if ($app->make(Kernel::class)->isActive('drive')) {
+            $this->validateDrive($config, $app);
+        }
+    }
+
+    private function validateDrive(VaulterConfig $config, Application $app): void
+    {
         $access = $config->access();
         $key = $access->permissionDriver();
         $drivers = $access->permissionDrivers();
@@ -50,17 +69,8 @@ final readonly class ConfigValidator
         if ($app->environment('production') && is_a($drivers[$key], NonProductionPermissionDriver::class, true)) {
             throw new InvalidConfigurationException('[Vaulter] Non-production permission driver "'.$key.'" is forbidden in production.');
         }
-        // These accessors validate the untrusted class strings before returning them.
-        $config->webhooks()->assertNoRemovedKeys();
-        $config->webhooks()->urlGuard();
-        $config->webhooks()->retrySchedule();
-        $config->webhooks()->retryJitter();
-        $config->webhooks()->relayFanoutChunk();
         $config->changes()->retentionDays();
         $config->changes()->maxPageSize();
-        $schedule = new ScheduleConfig($this->config);
-        $schedule->enabled();
-        $schedule->frequencies('vaulter', [...SchedulingRegistrar::KEYS, ...WebhooksSchedule::KEYS]);
         $config->sharing()->tokenGenerator();
         foreach ([
             'drive',

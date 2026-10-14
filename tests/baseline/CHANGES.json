@@ -3713,9 +3713,28 @@
       "suite": "core",
       "old": "P\\Packages\\core\\tests\\Providers\\ConsoleRegistrarTest::__pest_evaluable_it_registers_profile_scaffolding_and_webhook_commands",
       "replacement": [
-        "P\\Packages\\core\\tests\\Providers\\ConsoleRegistrarTest::__pest_evaluable_it_registers_the_drive_commands_still_located_in_core__not_the_webhook_commands"
+        "P\\Packages\\core\\tests\\Modules\\DriveDisabledTest::__pest_evaluable_it_registers_the_drive_commands_only_while_the_drive_is_active",
+        "P\\Packages\\core\\tests\\Modules\\ActivationTest::__pest_evaluable_it_activates_the_webhooks_module_with_vaulter_modules_webhooks_and_stamps_its_routes_with_the_fingerprint"
       ],
-      "reason": "P3.2: the webhook commands are declared by WebhooksModule (opt-in) and no longer registered by the core registrar",
+      "reason": "P3.2/P3.3: ConsoleRegistrar is gone — DriveModule declares the drive commands (also those located in core) and WebhooksModule the webhook commands",
+      "decision": "D39"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Providers\\HttpRegistrarTest::__pest_evaluable_it_preserves_host_rate_limiters_when_booted_again",
+      "replacement": [
+        "P\\Packages\\core\\tests\\Providers\\DriveSliceRegistrarTest::__pest_evaluable_it_preserves_host_rate_limiters_when_booted_again"
+      ],
+      "reason": "P3.3: the public-share and upload limiters are drive slices located in core, booted by DriveSliceRegistrar (DriveModule)",
+      "decision": "D39"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_registers_the_manager_and_file_presentation_seams",
+      "replacement": [
+        "P\\Packages\\core\\tests\\Providers\\DriveSliceRegistrarTest::__pest_evaluable_it_registers_the_manager_and_file_presentation_seams"
+      ],
+      "reason": "P3.3: the Vaulter manager and the file handler/presentation seams are drive slices located in core, registered by DriveSliceRegistrar (DriveModule)",
       "decision": "D39"
     }
   ],

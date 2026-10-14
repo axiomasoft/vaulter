@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Console\Scheduling\Event;
 use Illuminate\Console\Scheduling\Schedule;
-use Vaulter\Drive\Providers\SchedulingRegistrar;
+use Vaulter\Drive\Providers\BindingsRegistrar;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Kernel;
 
@@ -70,5 +70,5 @@ it('turns a task off with null', function (): void {
 it('rejects an invalid frequency at boot', function (): void {
     config(['vaulter-drive.schedule.uploads_sweep' => 'often']);
 
-    (new SchedulingRegistrar)->boot(app());
+    (new BindingsRegistrar)->boot(app());
 })->throws(InvalidConfigurationException::class);

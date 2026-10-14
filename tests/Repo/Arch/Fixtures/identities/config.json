@@ -28,6 +28,20 @@
             "id": "publish:vaulter-migrations",
             "kind": "config",
             "reason": "P3.2: published by the module kernel from CoreModule::schema instead of spatie discoversMigrations"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "publish:vaulter-drive-config",
+            "kind": "config",
+            "reason": "P3.3: published by the module kernel from the DriveModule config declaration instead of spatie hasConfigFile"
+        },
+        {
+            "change": "redefined",
+            "decision": "D39",
+            "id": "publish:vaulter-media-config",
+            "kind": "config",
+            "reason": "P3.3: published by the module kernel from the MediaModule config declaration instead of spatie hasConfigFile"
         }
     ],
     "items": [
@@ -2971,10 +2985,10 @@
             "id": "publish:vaulter-drive-config",
             "owner": "drive",
             "source": {
-                "file": "packages/drive/src/VaulterDriveServiceProvider.php",
-                "symbol": "Vaulter\\Drive\\VaulterDriveServiceProvider::configurePackage"
+                "file": "packages/drive/src/DriveModule.php",
+                "symbol": "Vaulter\\Drive\\DriveModule::register"
             },
-            "via": "spatie:hasConfigFile"
+            "via": "module:config"
         },
         {
             "id": "publish:vaulter-drive-translations",
@@ -2998,10 +3012,10 @@
             "id": "publish:vaulter-media-config",
             "owner": "media",
             "source": {
-                "file": "packages/media/src/VaulterMediaServiceProvider.php",
-                "symbol": "Vaulter\\Media\\VaulterMediaServiceProvider::configurePackage"
+                "file": "packages/media/src/MediaModule.php",
+                "symbol": "Vaulter\\Media\\MediaModule::register"
             },
-            "via": "spatie:hasConfigFile"
+            "via": "module:config"
         },
         {
             "id": "publish:vaulter-migrations",

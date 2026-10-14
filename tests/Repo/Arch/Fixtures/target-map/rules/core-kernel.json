@@ -1143,22 +1143,19 @@
         },
         {
             "match": "fqcn",
+            "value": "Vaulter\\Providers\\DriveSliceRegistrar",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "D39 + architecture#ownership-map: the drive part of the core bindings, HTTP limiters and access, declared by DriveModule until P4 moves it (P3.3 split of BindingsRegistrar/HttpRegistrar)"
+        },
+        {
+            "match": "fqcn",
             "value": "Vaulter\\Providers\\BindingsRegistrar",
             "owner": "core",
             "action": "split",
             "phase": "P3",
             "surface": "Internal",
             "note": "bindings of every slice: core keeps the generic registration mechanism; each owner registers its own (module manifest, P3)",
-            "why": "architecture#ownership-map: Providers — framework in core, per-concept registration by the owner"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Providers\\ConsoleRegistrar",
-            "owner": "core",
-            "action": "split",
-            "phase": "P3",
-            "surface": "Internal",
-            "note": "commands of every slice: core keeps the generic registration mechanism; each owner registers its own (module manifest, P3)",
             "why": "architecture#ownership-map: Providers — framework in core, per-concept registration by the owner"
         },
         {
@@ -1180,15 +1177,6 @@
             "surface": "Internal",
             "note": "schedules of every slice: core keeps the generic registration mechanism; each owner registers its own (module manifest, P3)",
             "why": "architecture#ownership-map: Providers — framework in core, per-concept registration by the owner"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Providers\\DoctorRegistrar",
-            "owner": "core",
-            "action": "keep",
-            "phase": "P3",
-            "surface": "Internal",
-            "why": "architecture#kernel: Диагностика — registrar of the doctor checks"
         },
         {
             "match": "fqcn",

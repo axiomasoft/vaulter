@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-use Vaulter\Contracts\Handlers\FileHandlerRegistry;
-use Vaulter\Contracts\Handlers\NodePresenter;
+use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Contracts\Observability\MetricsRecorder;
+use Vaulter\Database\VaulterDatabase;
 use Vaulter\Providers\BindingsRegistrar;
-use Vaulter\VaulterManager;
 
-it('registers the manager and file presentation seams', function (): void {
+it('registers the kernel config, database and observability seams', function (): void {
     (new BindingsRegistrar)->register($this->app);
 
-    expect(app(VaulterManager::class))->toBe(app('vaulter'))
-        ->and(app(FileHandlerRegistry::class))->toBeInstanceOf(FileHandlerRegistry::class)
-        ->and(app(NodePresenter::class))->toBeInstanceOf(NodePresenter::class);
+    expect(app(VaulterConfig::class))->toBe(app(VaulterConfig::class))
+        ->and(app(VaulterDatabase::class))->toBe(app(VaulterDatabase::class))
+        ->and(app(MetricsRecorder::class))->toBeInstanceOf(MetricsRecorder::class);
 });

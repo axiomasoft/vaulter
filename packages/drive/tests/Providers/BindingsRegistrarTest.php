@@ -11,13 +11,29 @@ use Vaulter\Contracts\Drive\DriveHandleFactory as DriveHandleFactoryContract;
 use Vaulter\Contracts\Profiles\CommentsFeature;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\DriveHandleFactory;
+use Vaulter\Drive\DriveModule;
 use Vaulter\Drive\DriveProvisioner;
 use Vaulter\Drive\Models\Uploads\UploadPart;
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Providers\BindingsRegistrar;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Events\EventRecorder;
+use Vaulter\Modules\ModuleApplier;
+use Vaulter\Modules\ModuleBuilder;
+use Vaulter\Modules\ModuleId;
 use Vaulter\Profiles\DisabledCommentsFeature;
+
+/** What the module kernel does with the drive module's config declaration. */
+function applyDriveConfig(Application $app): void
+{
+    $builder = new ModuleBuilder(new ModuleId('drive'));
+    (new DriveModule)->register($builder);
+    $applier = new ModuleApplier($app);
+    foreach ($builder->configs() as $root => $file) {
+        $applier->config($root, $file);
+    }
+    $applier->normalizeConfig();
+}
 
 it('fills upload model defaults during normalization without replacing host overrides', function (): void {
     $app = new Application;
@@ -27,12 +43,10 @@ it('fills upload model defaults during normalization without replacing host over
         'vaulter' => ['models' => ['node' => 'Host\\Node']],
     ]);
     $app->instance('config', $config);
+    $app->singleton(ConfigNormalizer::class);
 
-    (new BindingsRegistrar($app))->register();
-
-    // Core runs the shared normalizer after every provider registers its defaults.
-    $normalizer = $app->make(ConfigNormalizer::class);
-    $normalizer->normalize(config: $config, packageDefaults: $normalizer->packageDefaults());
+    // The module kernel merges the drive module's config and runs the shared normalizer once the graph is sealed.
+    applyDriveConfig($app);
 
     expect($config->get('vaulter-drive.models.upload_session'))->toBe('Host\\UploadSession')
         ->and($config->get('vaulter-drive.models.upload_part'))->toBe(UploadPart::class)
@@ -48,8 +62,10 @@ it('registers the factory and preserves singleton service lifetimes in a fresh c
     $app->instance(EventRecorder::class, $this->app->make(EventRecorder::class));
     $app->instance(StorageDriver::class, $this->app->make(StorageDriver::class));
     $app->instance(CommentsFeature::class, new DisabledCommentsFeature);
+    $app->singleton(ConfigNormalizer::class);
 
-    (new BindingsRegistrar($app))->register();
+    applyDriveConfig($app);
+    (new BindingsRegistrar)->register($app);
 
     $factory = $app->make(DriveHandleFactoryContract::class);
     $provisioner = $app->make(DriveProvisioner::class);

@@ -5,11 +5,14 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schema;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Vaulter\Kernel;
+use Vaulter\Media\Providers\BindingsRegistrar;
 use Vaulter\Media\VaulterMediaServiceProvider;
 
 it('boots the media provider on top of core', function (): void {
     expect(app()->getProvider(VaulterMediaServiceProvider::class))
-        ->not->toBeNull();
+        ->not->toBeNull()
+        ->and(app(Kernel::class)->isActive('media'))->toBeTrue();
 });
 
 it('migrates the core-owned blob schema through the path-repo', function (): void {
@@ -27,6 +30,6 @@ it('registers the canonical CAS command names without legacy aliases', function 
 it('refuses to boot with the retired global dedup scope', function (): void {
     config()->set('vaulter-media.dedup.scope', 'global');
 
-    expect(fn () => (new VaulterMediaServiceProvider(app()))->packageBooted())
+    expect(fn () => (new BindingsRegistrar)->boot(app()))
         ->toThrow(InvalidConfigurationException::class, 'must not be shared across tenants');
 });

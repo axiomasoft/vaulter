@@ -19,11 +19,7 @@ use Vaulter\Modules\ModuleApplier;
 use Vaulter\Modules\ModuleCatalog;
 use Vaulter\Modules\ModuleCompiler;
 use Vaulter\Modules\OffersModules;
-use Vaulter\Providers\AccessRegistrar;
-use Vaulter\Providers\ConsoleRegistrar;
-use Vaulter\Providers\DoctorRegistrar;
 use Vaulter\Providers\HttpRegistrar;
-use Vaulter\Providers\SchedulingRegistrar;
 use Vaulter\Webhooks\WebhooksModule;
 
 /**
@@ -88,10 +84,6 @@ final class VaulterServiceProvider extends PackageServiceProvider
                 return;
             }
             $applier->register($kernel->compiled());
-            // P3.3 moves to DriveModule (D39).
-            (new AccessRegistrar)->register($this->app);
-            (new ConsoleRegistrar)->register($this->app);
-            (new DoctorRegistrar)->register($this->app);
         });
     }
 
@@ -115,10 +107,6 @@ final class VaulterServiceProvider extends PackageServiceProvider
                 $this->publishesMigrations($paths, $tag);
             },
         );
-        // P3.3 moves to DriveModule (D39).
-        $this->loadRoutesFrom(dirname(__DIR__).'/routes/drive.php');
-        (new AccessRegistrar)->boot($this->app);
-        (new SchedulingRegistrar)->register($this->app);
     }
 
     private function registerDiagnosticCommands(): void

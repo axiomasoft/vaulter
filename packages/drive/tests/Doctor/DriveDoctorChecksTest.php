@@ -12,7 +12,7 @@ use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Doctor\DoctorRunner;
 use Vaulter\Doctor\DoctorSeverity;
 use Vaulter\Drive\Configuration\DriveConfig;
-use Vaulter\Drive\VaulterDriveServiceProvider;
+use Vaulter\Drive\Providers\BindingsRegistrar;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
 beforeEach(fn () => DriveTestHelpers::insideOperation());
@@ -120,6 +120,6 @@ it('validates the drive configuration as one of the config validators', function
     $finding = driveFindings('core.config.valid')[0];
 
     expect($finding->severity)->toBe(DoctorSeverity::Error)
-        ->and($finding->evidence['validator'])->toBe(VaulterDriveServiceProvider::class)
+        ->and($finding->evidence['validator'])->toBe(BindingsRegistrar::class)
         ->and(app(DriveConfig::class))->toBeInstanceOf(DriveConfig::class);
 });
