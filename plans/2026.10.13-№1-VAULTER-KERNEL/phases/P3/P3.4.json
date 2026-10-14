@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.4",
   "title": "Манифесты documents, azgard, filament; провайдеры только предлагают манифест",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "DocumentsModule, AzgardModule, FilamentModule заменяют регистрацию в провайдерах; arch-тест `ProvidersDeclareOnlyTest` доказывает, что ни один `*ServiceProvider` пакетов не регистрирует биндинги/маршруты/команды/теги вне манифеста.",
   "why": "Завершает перевод registrar-цепочек (architecture#cost: manifest заменяет registrar цепочки). Риск: documents CollaborationRegistrar регистрирует маршруты по `collaboration.enabled` — до P5 поведение сохраняется (D32), но регистрация идёт через манифест.",
   "scope": {
@@ -203,12 +203,77 @@
   },
   "result": {
     "started_at": "2026-10-14T06:46:42Z",
+    "finished_at": "2026-10-14T08:19:33Z",
     "executor": {
       "provider": "anthropic",
       "model": "claude-opus-5-5",
       "effort": "high",
       "session": "c9a095c1-f4c9-4fdb-b0f4-d3b24367faf5"
-    }
+    },
+    "registered_by": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium"
+    },
+    "notes": "V3 красный вне зоны P3; остальные проверки зелёные.",
+    "deviations": [
+      "V3 (azgard) exit 1: 10 тестов RealAzgard*/RealAzgardIsolated падают из-за дрейфа внешнего ../azguard (PanelBuilder::scopes() удалён в PLAN1.P2.7), не из-за P3; остальные 43 зелёные. Fix-коммит fd999732: azgard require vaulter-drive (было require-dev), строгий ProvidersDeclareOnlyTest, тесты documents; composer update в packages/azgard выполнен."
+    ],
+    "pending": [
+      "Владельцу: перевести IsolatedDocumentsPanel/real-azgard стабы на assignmentScopes() нового azguard (или зафиксировать совместимый checkout) — иначе V3 красный; R2 F1/F2 (порядок биндингов хоста)."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T08:19:33Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-14T08:19:33Z"
+      },
+      {
+        "id": "V3",
+        "exit": 1,
+        "at": "2026-10-14T08:19:33Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-14T08:19:33Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-14T08:19:33Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-14T08:19:33Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-14T08:19:33Z"
+      },
+      {
+        "id": "V8",
+        "exit": 0,
+        "at": "2026-10-14T08:19:33Z"
+      },
+      {
+        "id": "V9",
+        "exit": 0,
+        "at": "2026-10-14T08:19:33Z"
+      },
+      {
+        "id": "V10",
+        "exit": 0,
+        "at": "2026-10-14T08:19:33Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-14T06:46:57Z"
+  "updated_at": "2026-10-14T08:19:33Z"
 }
