@@ -42,6 +42,10 @@
             "packages/core/tests/Events/EventCatalogTest.php",
             "packages/core/tests/Events/EventPipelineArchTest.php",
             "packages/core/tests/Events/EventsReferenceTest.php",
+            "packages/core/tests/Modules/CapabilitiesTest.php",
+            "packages/core/tests/Modules/ExtensionRegistryTest.php",
+            "packages/core/tests/Modules/ModuleCompilerTest.php",
+            "packages/core/tests/Modules/SealTest.php",
             "packages/core/tests/PublicApi/OperationsContractTest.php",
             "packages/core/tests/PublicApi/OptionsTest.php",
             "packages/core/tests/PublicApi/SequenceOptionContractTest.php",
@@ -580,6 +584,7 @@
             "packages/core/tests/Http/Problems/ProblemCatalogLangTest.php",
             "packages/core/tests/Http/Problems/ProblemMetaRedactionTest.php",
             "packages/core/tests/Http/Problems/ProblemRendererTest.php",
+            "packages/core/tests/Modules/ModuleKernelBootTest.php",
             "packages/core/tests/Observability/Binding/MetricsRecorderBindingTest.php",
             "packages/core/tests/Observability/Tracing/TraceRecorderBindingTest.php",
             "packages/core/tests/Unit/NodeNameTest.php"

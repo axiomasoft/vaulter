@@ -19,7 +19,7 @@ Records of the significant architectural decisions behind Vaulter.
 - [ADR-0016 — Trash retention & purge erasure](/adr/0016-trash-retention-erasure)
 - [ADR-0017 — Internal package structure canon (layer-first + domain sub-namespace)](/adr/0017-package-structure-canon)
 - [ADR-0018 — Pluggable editor-engine canon (kind-neutral handler contract)](/adr/0018-editor-engine-canon)
-- [ADR-0019 — Kernel ownership](/adr/0019-kernel-ownership) — _accepted_
+- [ADR-0019 — Kernel ownership](/adr/0019-kernel-ownership) — _superseded by ADR-0027_
 - [ADR-0020 — Authorized public API](/adr/0020-authorized-public-api) — _accepted; amended by ADR-0026_
 - [ADR-0021 — Profiles](/adr/0021-profiles) — _accepted; amends ADR-0009_
 - [ADR-0022 — Revisions & documents aggregate](/adr/0022-revisions-and-documents-aggregate) — _proposed; amends ADR-0018_
@@ -27,3 +27,4 @@ Records of the significant architectural decisions behind Vaulter.
 - [ADR-0024 — REST v1 & errors](/adr/0024-rest-v1-and-errors) — _proposed_
 - [ADR-0025 — Access model 1.0](/adr/0025-access-model-v1) — _accepted; supersedes ADR-0007 in part_
 - [ADR-0026 — Public API on snapshots; Eloquent is internal](/adr/0026-public-api-snapshots) — _accepted; amends ADR-0020_
+- [ADR-0027 — Kernel boundaries and the module system](/adr/0027-kernel-boundaries-and-modules) — _accepted; supersedes ADR-0019_

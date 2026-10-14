@@ -65,6 +65,7 @@ outline: deep
 | [`invalid_properties`](#invalid_properties) | 422 | core | `Vaulter\Exceptions\Nodes\InvalidPropertiesException` |
 | [`invalid_webhook_signature`](#invalid_webhook_signature) | 400 | core | `Vaulter\Exceptions\Webhooks\InvalidWebhookSignatureException` |
 | [`method_not_allowed`](#method_not_allowed) | 405 | core | `Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException` |
+| [`module_graph_invalid`](#module_graph_invalid) | 503 | core | `Vaulter\Modules\ModuleGraphException` |
 | [`node_move_cycle`](#node_move_cycle) | 409 | drive | `Vaulter\Drive\Exceptions\Nodes\NodeCycleException` |
 | [`node_name_conflict`](#node_name_conflict) | 409 | core | `Vaulter\Exceptions\Nodes\NodeNameConflictException` |
 | [`node_not_found`](#node_not_found) | 404 | core | `Vaulter\Exceptions\Nodes\NodeNotFoundException` |
@@ -286,6 +287,12 @@ outline: deep
 **405** · core
 
 **Метод не разрешён** — Точка API не поддерживает этот HTTP-метод; см. заголовок Allow.
+
+### `module_graph_invalid`
+
+**503** · core
+
+**Граф модулей некорректен** — Установленные модули не образуют корректный граф; ни один модуль не активен.
 
 ### `node_move_cycle`
 

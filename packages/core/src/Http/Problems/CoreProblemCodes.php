@@ -53,6 +53,7 @@ use Vaulter\Exceptions\Webhooks\InvalidWebhookSignatureException;
 use Vaulter\Exceptions\Webhooks\WebhookDeliveryNotFoundException;
 use Vaulter\Exceptions\Webhooks\WebhookDeliveryNotRedeliverableException;
 use Vaulter\Exceptions\Webhooks\WebhookEndpointNotFoundException;
+use Vaulter\Modules\ModuleGraphException;
 
 /**
  * The problem codes of the core package: a stable public contract, so a code is added
@@ -92,6 +93,7 @@ final class CoreProblemCodes implements ProblemCodeSource
             'invalid_properties' => ['status' => 422, 'exception' => InvalidPropertiesException::class],
             'invalid_webhook_signature' => ['status' => 400, 'exception' => InvalidWebhookSignatureException::class],
             'method_not_allowed' => ['status' => 405, 'exception' => MethodNotAllowedHttpException::class],
+            'module_graph_invalid' => ['status' => 503, 'exception' => ModuleGraphException::class],
             'node_name_conflict' => ['status' => 409, 'exception' => NodeNameConflictException::class],
             'node_not_found' => ['status' => 404, 'exception' => NodeNotFoundException::class],
             'node_not_trashed' => ['status' => 409, 'exception' => NodeNotTrashedException::class],

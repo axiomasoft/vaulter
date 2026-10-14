@@ -45,6 +45,7 @@ Codes are a stable public contract (AD29).
 | `document_content_degraded` | 409 | `Vaulter\Documents\Exceptions\DocumentContentDegradedException` |
 | `duplicate_registration` | 500 (boot) | `Vaulter\Documents\Exceptions\DuplicateDocumentTypeException` |
 | `registry_frozen` | 500 (boot) | `Vaulter\Exceptions\Registry\RegistryFrozenException` |
+| `module_graph_invalid` | 503 | `Vaulter\Modules\ModuleGraphException` |
 | `invalid_document_content` | 422 | `Vaulter\Documents\Exceptions\InvalidDocumentContentException` |
 | `document_revision_not_found` | 404 | `Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException` |
 | `comment_not_found` | 404 | `Vaulter\Documents\Exceptions\CommentNotFoundException` |
@@ -167,6 +168,15 @@ would delete them; the document is read-only until the extension is enabled agai
 `RegistryFrozenException` (`registry_frozen`) — something registered a document type after the
 application booted. Register types from a service provider (config, a container tag, or
 `register()` before the application has booted).
+
+## module-graph-invalid
+
+`ModuleGraphException` (503 `module_graph_invalid`) — the installed module manifests do not compile:
+a duplicate id, an unknown or non-boolean `vaulter.modules` key, an active module whose dependency
+is inactive, a missing or doubled capability provider, a contribution to an unknown slot. Nothing is
+activated; `vaulter:modules` and `vaulter:doctor` print every reason. Fix the manifests or
+`vaulter.modules`, then rebuild the caches and restart the workers
+([ADR-0027](/adr/0027-kernel-boundaries-and-modules)).
 
 ## duplicate-registration
 

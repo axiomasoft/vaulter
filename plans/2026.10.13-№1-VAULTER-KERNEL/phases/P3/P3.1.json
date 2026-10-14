@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.1",
   "title": "Модульное ядро: манифест, компилятор, seal, capabilities, реестр слотов (ADR-0027)",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "В core появляется `Vaulter\\Modules` (ModuleId, Activation, Cardinality, SlotKind, VaulterModule, ModuleBuilder, ModuleCatalog, ModuleCompiler, CompiledModules/InvalidModuleGraph, Capabilities, ExtensionRegistry) и `Vaulter\\Kernel`; core-провайдер компилирует предложенные манифесты в booting-колбэке и запечатывает реестр. Контрактные тесты I7 зелёные; ADR-0027 заменяет ADR-0019.",
   "why": "Фундамент всех пунктов P3: без компиляции/seal манифестов нельзя снять registrar-цепочки и bound()-переключатели (D5, D22, D8). Риски: порядок booting-колбэков относительно provider boot (pitfall «валидация в boot() произвольного провайдера»), частичная активация при ошибке графа, closures/stateful значения в sealed registry.",
   "scope": {
@@ -200,12 +200,52 @@
   },
   "result": {
     "started_at": "2026-10-14T05:53:18Z",
+    "finished_at": "2026-10-14T06:40:47Z",
     "executor": {
       "provider": "anthropic",
       "model": "claude-opus-5-5",
       "effort": "high",
       "session": "66d8c840-5ed8-481e-b55c-782806387a4c"
-    }
+    },
+    "notes": "Модульное ядро проверено: Modules 76 тестов, Providers/Arch, pint+phpstan 0, zones/groups, scan-i4, doc-links; доп. Problems/DomainExceptionStatus зелёные.",
+    "deviations": [
+      "Файлы вне task_files: CoreProblemCodes, lang en/ru problems.php, docs guides/reference errors (EN/RU), DomainExceptionStatusTest, target-map.json + rules/core-kernel.json, identities protocol/owners, phpstan.neon, tests/Repo/ZonesMapTest.php"
+    ],
+    "pending": [
+      "Ревью MED→P3.2/владельцу: Capabilities резолвит implementation вместо contract; vaulter.modules нет в config/vaulter.php; undefined capability/unknown slot для неактивных модулей; D22 OptIn-без-config не реализовано"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T06:40:47Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-14T06:40:47Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-14T06:40:47Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-14T06:40:47Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-14T06:40:47Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-14T06:40:47Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-14T05:53:18Z"
+  "updated_at": "2026-10-14T06:40:47Z"
 }

@@ -65,6 +65,7 @@ out of date. For handling errors in PHP see the [error guide](/guides/errors).
 | [`invalid_properties`](#invalid_properties) | 422 | core | `Vaulter\Exceptions\Nodes\InvalidPropertiesException` |
 | [`invalid_webhook_signature`](#invalid_webhook_signature) | 400 | core | `Vaulter\Exceptions\Webhooks\InvalidWebhookSignatureException` |
 | [`method_not_allowed`](#method_not_allowed) | 405 | core | `Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException` |
+| [`module_graph_invalid`](#module_graph_invalid) | 503 | core | `Vaulter\Modules\ModuleGraphException` |
 | [`node_move_cycle`](#node_move_cycle) | 409 | drive | `Vaulter\Drive\Exceptions\Nodes\NodeCycleException` |
 | [`node_name_conflict`](#node_name_conflict) | 409 | core | `Vaulter\Exceptions\Nodes\NodeNameConflictException` |
 | [`node_not_found`](#node_not_found) | 404 | core | `Vaulter\Exceptions\Nodes\NodeNotFoundException` |
@@ -286,6 +287,12 @@ out of date. For handling errors in PHP see the [error guide](/guides/errors).
 **405** · core
 
 **Method not allowed** — The endpoint does not support this HTTP method; see the Allow header.
+
+### `module_graph_invalid`
+
+**503** · core
+
+**Module graph invalid** — The installed modules do not form a valid graph; no module is active.
 
 ### `node_move_cycle`
 

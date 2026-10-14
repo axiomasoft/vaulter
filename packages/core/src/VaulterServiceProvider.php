@@ -9,6 +9,8 @@ use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Vaulter\Configuration\ConfigNormalizer;
 use Vaulter\Configuration\ConfigValidator;
 use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Modules\ModuleCatalog;
+use Vaulter\Modules\ModuleCompiler;
 use Vaulter\Providers\AccessRegistrar;
 use Vaulter\Providers\BindingsRegistrar;
 use Vaulter\Providers\ConsoleRegistrar;
@@ -39,6 +41,7 @@ final class VaulterServiceProvider extends PackageServiceProvider
             $normalizer = $this->app->make(ConfigNormalizer::class);
             $normalizer->normalize($this->app->make('config'), $normalizer->packageDefaults());
         });
+        $this->registerModuleKernel();
         (new AccessRegistrar)->register($this->app);
         (new EventsRegistrar)->register($this->app);
         (new ConsoleRegistrar)->register($this->app);
@@ -53,5 +56,25 @@ final class VaulterServiceProvider extends PackageServiceProvider
         (new AccessRegistrar)->boot($this->app);
         (new BindingsRegistrar)->boot($this->app);
         (new SchedulingRegistrar)->register($this->app);
+    }
+
+    /**
+     * The module graph is compiled and sealed in a booting callback: Laravel runs it after every
+     * provider registered and before any provider boots, so the order of package discovery does not
+     * matter and no provider's boot() validates the registry. Compilation never throws — an invalid
+     * graph is sealed as such and reported by the kernel.
+     */
+    private function registerModuleKernel(): void
+    {
+        ModuleCatalog::of($this->app);
+        $this->app->singletonIf(Kernel::class);
+        $this->app->booting(function (): void {
+            $catalog = ModuleCatalog::of($this->app);
+            $catalog->seal();
+            $this->app->make(Kernel::class)->seal((new ModuleCompiler)->compileOffered(
+                $catalog->offered(),
+                $this->app->make('config')->get('vaulter.modules', []),
+            ));
+        });
     }
 }

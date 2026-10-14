@@ -2070,6 +2070,204 @@
             "phase": "P3",
             "note": "D29 reshapes the outbox tables (v_outbox, v_outbox_consumers, v_outbox_deliveries)",
             "why": "architecture#ownership-map + source-review#code-facts: SchemaBuilder is split by owner of the table: v_outbox is core-owned (D29)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Kernel",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\ModuleId",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\Activation",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\Cardinality",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\SlotKind",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\VaulterModule",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Spi:Implement",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\ModuleSchedule",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Spi:Implement",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\OffersModules",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Spi:Implement",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\ModuleBuilder",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\ModuleCatalog",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\ModuleCompiler",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\CompiledModules",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\InvalidModuleGraph",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\CapabilityDefinition",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\CapabilityProvider",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\SlotDefinition",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\ModuleState",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\Capabilities",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\ExtensionRegistry",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\SlotContribution",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\ModuleGraphException",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Modules\\MissingExtensionException",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel + knowledge/p3-modules#module-system: module system of the kernel (P3.1, ADR-0027)"
         }
     ]
 }

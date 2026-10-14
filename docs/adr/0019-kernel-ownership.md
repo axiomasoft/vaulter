@@ -1,6 +1,6 @@
 # ADR-0019 — Kernel ownership
 
-**Status:** accepted
+**Status:** superseded by [ADR-0027](/adr/0027-kernel-boundaries-and-modules)
 
 > Transfers decision D02 and the ownership table §2 of the 2026-09-29 stable audit
 > (`audits/2026-09-29-stable-audit/opus/02-decisions.md#d02`,

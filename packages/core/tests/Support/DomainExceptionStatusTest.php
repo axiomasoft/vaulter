@@ -20,6 +20,7 @@ use Vaulter\Exceptions\Sharing\ShareLinkTtlExceededException;
 use Vaulter\Exceptions\Sharing\ShareRoleNotAllowedException;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Http\Problems\ProblemCatalog;
+use Vaulter\Modules\ModuleGraphException;
 use Vaulter\Tests\Support\ProblemProbeRoutes;
 
 it('renders the documented domain code and HTTP status', function (VaulterException $exception, string $code, int $status): void {
@@ -51,5 +52,6 @@ it('renders the documented domain code and HTTP status', function (VaulterExcept
     'share TTL' => [ShareLinkTtlExceededException::forLimit(1), 'share_link_ttl_exceeded', 422],
     'duplicate lifecycle at boot' => [DuplicateNodeContentLifecycleException::forKind(NodeKind::Document), 'duplicate_registration', 500],
     'frozen registry at boot' => [RegistryFrozenException::forRegistry('example'), 'registry_frozen', 500],
+    'invalid module graph' => [ModuleGraphException::invalid(['example']), 'module_graph_invalid', 503],
     'integration write' => [new WriteOutsideOperationException('Node'), 'write_outside_operation', 500],
 ]);

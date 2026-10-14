@@ -66,6 +66,15 @@
 приложения. Регистрируйте типы из сервис-провайдера (конфиг, тег контейнера или `register()` до
 окончания загрузки).
 
+## module-graph-invalid
+
+`ModuleGraphException` (503 `module_graph_invalid`) — манифесты установленных модулей не
+компилируются: повторяющийся id, неизвестный или небулев ключ `vaulter.modules`, активный модуль с
+неактивной зависимостью, отсутствующий или лишний поставщик capability, вклад в неизвестный слот.
+Ничего не активируется; `vaulter:modules` и `vaulter:doctor` печатают все причины. Исправьте
+манифесты или `vaulter.modules`, затем пересоберите кэши и перезапустите воркеры
+([ADR-0027](/adr/0027-kernel-boundaries-and-modules)).
+
 ## duplicate-registration
 
 `DuplicateDocumentTypeException` (`duplicate_registration`) — один ключ типа документа

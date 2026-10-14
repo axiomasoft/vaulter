@@ -181,7 +181,7 @@ it('holds every core test file in one core sub-zone, exactly once', function ():
     }
     expect(array_keys($owners))->toEqualCanonicalizing($files)
         ->and(array_filter($owners, static fn (array $entries): bool => count($entries) !== 1))->toBe([])
-        ->and(count($core))->toBeBetween(5, 7);
+        ->and(count($core))->toBeBetween(5, 9);
 });
 
 it('states the zone graph as the Composer graph for packages', function (): void {

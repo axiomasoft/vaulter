@@ -47,3 +47,9 @@ parameters:
         -
             identifier: trait.unused
             path: packages/core/src/Testing/InteractsWithVaulter.php
+
+        # Offered to package providers (the manifest is declared from their register()); the
+        # package's own providers adopt it in their own items, the fixture provider in tests.
+        -
+            identifier: trait.unused
+            path: packages/core/src/Modules/OffersModules.php

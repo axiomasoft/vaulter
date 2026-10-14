@@ -1278,6 +1278,16 @@
             "status": 405
         },
         {
+            "exception": "Vaulter\\Modules\\ModuleGraphException",
+            "id": "problem:module_graph_invalid",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+            },
+            "status": 503
+        },
+        {
             "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\NodeCycleException",
             "id": "problem:node_move_cycle",
             "owner": "drive",

@@ -78,6 +78,10 @@ return [
         'title' => 'Method not allowed',
         'detail' => 'The endpoint does not support this HTTP method; see the Allow header.',
     ],
+    'module_graph_invalid' => [
+        'title' => 'Module graph invalid',
+        'detail' => 'The installed modules do not form a valid graph; no module is active.',
+    ],
     'node_name_conflict' => [
         'title' => 'Node name conflict',
         'detail' => 'A node with this name already exists in the folder.',

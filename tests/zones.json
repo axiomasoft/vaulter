@@ -3,7 +3,7 @@
     "note": "The single source of test zones (PLAN3 P1.4). A zone is an index over existing directories: it never moves a test. Leaf zones own src[] and tests[] (repo-relative, files or directories, never nested across leaves); `core` is an aggregator of its sub-zones. uses[] = zones whose change affects this one's tests (the Composer graph for packages, a coarse leaf graph inside core). `suite` is the tests/suites.json suite a leaf runs in. `explicit` = never pulled in as a consumer, selected only when touched directly. harness[] = paths whose change means \"run the whole affected set\" (scripts/test-select.php exits 2); database[] = engine-dependent tests (P1.5; the union of the database lists of every packages/*/tests/groups.php, kept equal by tests/Repo/TestGroupsTest.php); tail[] = glob allowlist of prose paths that need no test. This map proves the classification of every source root and test file is complete — not that uses[] is the true dependency graph.",
     "zones": {
         "core": {
-            "children": ["core-kernel", "core-access", "core-sharing", "core-events-webhooks", "core-http", "core-schema", "core-observability"],
+            "children": ["core-kernel", "core-modules", "core-access", "core-sharing", "core-events-webhooks", "core-http", "core-schema", "core-observability"],
             "suite": "core",
             "uses": []
         },
@@ -59,6 +59,13 @@
                 "packages/core/tests/WriteGuard"
             ],
             "uses": []
+        },
+        "core-modules": {
+            "parent": "core",
+            "suite": "core",
+            "src": ["packages/core/src/Modules", "packages/core/src/Kernel.php"],
+            "tests": ["packages/core/tests/Modules"],
+            "uses": ["core-kernel"]
         },
         "core-access": {
             "parent": "core",

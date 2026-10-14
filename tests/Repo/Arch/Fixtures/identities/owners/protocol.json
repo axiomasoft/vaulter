@@ -81,6 +81,12 @@
         },
         {
             "match": "exact",
+            "value": "problem:module_graph_invalid",
+            "owner": "core",
+            "why": "kernel concern: the module graph is compiled and sealed by the kernel (ADR-0027)"
+        },
+        {
+            "match": "exact",
             "value": "problem:registry_frozen",
             "owner": "core",
             "why": "kernel concern: Actor, transaction, registry, HTTP frame (architecture#kernel)"
