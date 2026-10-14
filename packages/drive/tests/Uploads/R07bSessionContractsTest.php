@@ -27,7 +27,7 @@ use Vaulter\Events\EventRecorder;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\Actor;
@@ -84,7 +84,7 @@ it('R07b: initiate stores the tenant_id from the storage row (L307 AlwaysReturnN
     $tenantId = 99887766;
     $storage = r07bReqTenantStorage($tenantId);
 
-    $session = app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
+    $session = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
         targetName: 'tenant.bin',
@@ -97,7 +97,7 @@ it('R07b: initiate stores the tenant_id from the storage row (L307 AlwaysReturnN
 
 it('R07b: initiate upload_id is stored as a non-empty string (L66 RemoveStringCast)', function (): void {
     $storage = UploadTestHelpers::storage();
-    $session = app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
+    $session = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
         targetName: 'uid.bin',
@@ -109,7 +109,7 @@ it('R07b: initiate upload_id is stored as a non-empty string (L66 RemoveStringCa
 
 it('R07b: initiate target_name stored from UploadInitData (L74 RemoveArrayItem target_name)', function (): void {
     $storage = UploadTestHelpers::storage();
-    $session = app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
+    $session = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
         targetName: 'specific-name.bin',
@@ -133,7 +133,7 @@ it('R07b: initiate node_id stored from UploadInitData targetNode (L71 RemoveArra
     ]);
     app(VaulterDatabase::class)->write(fn () => $node->save());
 
-    $session = app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
+    $session = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
         targetNode: $node,
         totalSizeBytes: 4,
@@ -144,7 +144,7 @@ it('R07b: initiate node_id stored from UploadInitData targetNode (L71 RemoveArra
 
 it('R07b: initiate metadata=[] retains server owner identity (L77 RemoveArrayItem metadata coalesce)', function (): void {
     $storage = UploadTestHelpers::storage();
-    $session = app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
+    $session = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
         targetName: 'meta-empty.bin',
@@ -157,7 +157,7 @@ it('R07b: initiate metadata=[] retains server owner identity (L77 RemoveArrayIte
 
 it('R07b: initiate non-empty metadata retains client values and server identity (L77 sanity)', function (): void {
     $storage = UploadTestHelpers::storage();
-    $session = app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
+    $session = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
         targetName: 'meta-set.bin',
@@ -177,7 +177,7 @@ it('R07b: max_bytes=0 bypasses the ceiling for any total_size_bytes (L263 Boolea
     // With BooleanOr: max===0 && totalSizeBytes===null = false → tries comparison → null > 0 = false → ok
     // With BooleanOr and totalSizeBytes=999: max===0 && 999===null = false → 999 > 0 → throws
     // Original: max===0 || ... = true → returns (no error)
-    $session = app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
+    $session = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
         targetName: 'big.bin',
@@ -193,7 +193,7 @@ it('R07b: max_bytes=1 blocks total_size_bytes=2 (L263 ±1 IncrementInteger)', fu
 
     // With IncrementInteger on 0: max <= 1 → 1 <= 1 = true → returns early → no error
     // Original: 1 <= 0 = false → checks 2 > 1 → throws
-    expect(fn () => app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
+    expect(fn () => app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
         targetName: 'over.bin',
@@ -205,7 +205,7 @@ it('R07b: max_bytes=1 allows total_size_bytes=1 exactly (L263 ±1 boundary)', fu
     config()->set('vaulter-drive.uploads.max_file_size', 1);
     $storage = UploadTestHelpers::storage();
 
-    $session = app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
+    $session = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
         targetName: 'exact.bin',
@@ -225,7 +225,7 @@ it('R07b: null actorId bypasses the active session cap (L269 RemoveArrayItem act
 
     // Both sessions have actorId=null — should succeed even with cap=1
     foreach (['null-a.bin', 'null-b.bin'] as $name) {
-        $manager->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
+        $manager->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
             protocol: UploadProtocol::Tus,
             targetParent: $root,
             targetName: $name,
@@ -243,7 +243,7 @@ it('R07b: max_active_sessions=0 disables the cap for any actorId (L269 RemoveArr
     $manager = app(UploadSessionManager::class);
 
     foreach (range(1, 3) as $i) {
-        $manager->initiate(context: new OperationContext(drive: $storage, actor: Actor::user((new TestUser)->forceFill(['id' => 88])), correlationId: (string) Str::ulid()), data: new InitiateUploadInput(
+        $manager->initiate(context: DriveContext::for(drive: $storage, actor: Actor::user((new TestUser)->forceFill(['id' => 88])), correlationId: (string) Str::ulid()), data: new InitiateUploadInput(
             protocol: UploadProtocol::Tus,
             targetParent: $root,
             targetName: sprintf('unlimited-%s.bin', $i),

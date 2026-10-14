@@ -9,14 +9,14 @@ use Vaulter\Data\Drive\NodePage;
 use Vaulter\Data\Drive\SearchOptions;
 use Vaulter\Enums\Drive\NodeSort;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 
 final readonly class SearchQuery
 {
     public function __construct(private NodePageQuery $pages, private NodeReadRepository $nodes) {}
 
-    public function execute(OperationContext $context, string $term, SearchOptions $options, ?Node $within = null): NodePage
+    public function execute(DriveContext $context, string $term, SearchOptions $options, ?Node $within = null): NodePage
     {
         $query = $this->nodes->search(storage: $context->drive, term: $term)->whereNull('trashed_at');
         if ($within !== null) {

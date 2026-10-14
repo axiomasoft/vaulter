@@ -17,8 +17,8 @@ use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Drive\QuotaExceededException as CoreQuotaExceededException;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
-use Vaulter\Operations\OperationContext;
 use Vaulter\Profiles\DrivePolicyEnforcer;
 use Vaulter\Repositories\Drive\DriveStoreRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
@@ -41,7 +41,7 @@ final readonly class CopyNodeAction
         private EventRecorder $recorder,
     ) {}
 
-    public function execute(OperationContext $context, CopyNodeInput $data): Node
+    public function execute(DriveContext $context, CopyNodeInput $data): Node
     {
         $source = app(NodeLocator::class)->find(context: $context, key: $data->node);
         // "Copy as" is a new name; without one the copy keeps the source's stored name.
@@ -125,7 +125,7 @@ final readonly class CopyNodeAction
      *
      * @param array<string, Node> $sources the live members being copied, root included
      */
-    private function assertLimits(OperationContext $context, Node $root, Node $destination, array $sources): void
+    private function assertLimits(DriveContext $context, Node $root, Node $destination, array $sources): void
     {
         $this->policy->assertChildren(drive: $context->drive, parentId: $destination->id);
 
@@ -160,7 +160,7 @@ final readonly class CopyNodeAction
     }
 
     /** @param array<string, Node> $sources */
-    private function copyNode(OperationContext $context, Node $source, int|string $parentId, string $name, array $sources, int &$addedBytes): Node
+    private function copyNode(DriveContext $context, Node $source, int|string $parentId, string $name, array $sources, int &$addedBytes): Node
     {
         $copy = $this->nodeStore->create([
             'drive_id' => $context->driveId(),

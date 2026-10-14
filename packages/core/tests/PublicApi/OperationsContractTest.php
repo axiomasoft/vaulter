@@ -33,7 +33,7 @@ use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Sharing\NodeShare;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 
 function p32Type(?ReflectionType $type): string
 {
@@ -62,7 +62,9 @@ function p32ExpectedType(string $type, bool $snapshots = false): string
         return '';
     }
     $symbols = [
-        'OperationContext' => OperationContext::class,
+        // The audit literal (AD17) predates the P3.8 split: its `OperationContext` is today's DriveContext.
+        'OperationContext' => DriveContext::class,
+        'DriveContext' => DriveContext::class,
         'Node' => Node::class,
         'FileRevision' => FileRevision::class,
         'NodeGrant' => NodeGrant::class,

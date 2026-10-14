@@ -23,7 +23,7 @@ use Vaulter\Drive\Content\ScanWorkReconciler;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Kernel;
 use Vaulter\Models\Drive\Drive;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Repositories\Content\ScanEvidenceRepository;
@@ -170,7 +170,7 @@ final class RescanFileRevisionsCommand extends Command
                         $database->transaction(function () use ($database, $drive, $policies, $activate, $scope): void {
                             $database->lockTree($drive->id);
                             $fresh = $drive->newQuery()->whereKey($drive->id)->lockForUpdate()->firstOrFail();
-                            $context = OperationContext::system($fresh, $scope['reason']);
+                            $context = DriveContext::system($fresh, $scope['reason']);
                             foreach ($policies->desired($fresh) as $spec) {
                                 $activate->execute($fresh, $spec, $spec->rolloutKey, $context);
                             }
@@ -211,7 +211,7 @@ final class RescanFileRevisionsCommand extends Command
                             $database->lockTreeShared($drive->id);
                             $snapshot = $snapshots->load($revision, true);
                             $policies->forDrive($snapshot['drive']);
-                            $context = OperationContext::system($snapshot['drive'], $scope['reason']);
+                            $context = DriveContext::system($snapshot['drive'], $scope['reason']);
                             $result = $this->option('rescan') || ($this->option('retry-failed') && $existing?->outcome === 'failed')
                                 ? $requestWork->requestRescan($snapshot['revision'], $spec, $request, $context)
                                 : $requestWork->ensure($snapshot['revision'], $spec, $request, $context);

@@ -11,7 +11,7 @@ use Vaulter\Drive\Events\Files\FileRevisionDeleted;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\FileRevisionBlob;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\ValueObjects\Access\Actor;
@@ -24,8 +24,8 @@ it('refuses a late revision deletion after trash without changing history, quota
     $stale = DriveTestHelpers::model($file);
     $revision = $stale->file()->firstOrFail()->versions()->orderBy('number')->firstOrFail();
     $context = $system
-        ? OperationContext::system($drive->model(), 'unrelated-maintenance')
-        : new OperationContext(drive: $drive->model(), actor: Actor::user(AccessTestHelpers::user(5)), correlationId: (string) Str::ulid());
+        ? DriveContext::system($drive->model(), 'unrelated-maintenance')
+        : DriveContext::for(drive: $drive->model(), actor: Actor::user(AccessTestHelpers::user(5)), correlationId: (string) Str::ulid());
     $drive->nodes()->trash($file);
     $used = $drive->model()->fresh()->used_bytes;
     $edges = FileRevisionBlob::query()->count();

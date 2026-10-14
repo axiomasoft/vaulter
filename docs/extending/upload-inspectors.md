@@ -18,7 +18,7 @@ interface UploadInspector
     // Lower runs first.
     public function priority(): int;
 
-    public function inspect(UploadFacts $facts, UploadPolicy $policy, OperationContext $context): void;
+    public function inspect(UploadFacts $facts, UploadPolicy $policy, DriveContext $context): void;
 }
 ```
 

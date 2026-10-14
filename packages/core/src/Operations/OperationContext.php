@@ -6,37 +6,112 @@ namespace Vaulter\Operations;
 
 use Illuminate\Support\Str;
 use InvalidArgumentException;
-use Vaulter\Models\Drive\Drive;
 use Vaulter\ValueObjects\Access\Actor;
+use Vaulter\ValueObjects\Operations\ScopeRef;
+use Vaulter\ValueObjects\Operations\TenantRef;
 
+/**
+ * Who runs an operation, for which tenant, within which scope and under which
+ * correlation. Neutral: it references the scope instead of holding a domain model,
+ * so the kernel's operation pipeline needs no module's ORM. Drive paths receive a
+ * DriveContext, which pairs this context with the bound drive.
+ */
 final readonly class OperationContext
 {
-    private int|string $driveKey;
+    /** The reason a system actor runs this operation; null for any other actor. */
+    public ?string $systemReason;
 
     public function __construct(
-        public Drive $drive,
         public Actor $actor,
+        public ScopeRef $scope,
+        public TenantRef $tenant,
         public string $correlationId,
+        public ?string $causationId = null,
         public ?string $idempotencyKey = null,
     ) {
-        if (trim($correlationId) === '' || strlen($correlationId) > 191 || preg_match('/[\x00-\x1F\x7F]/', $correlationId) === 1) {
-            throw new InvalidArgumentException('[Vaulter] Correlation ID must be nonempty, at most 191 bytes and contain no control characters.');
+        self::assertTraceId($correlationId, 'Correlation ID');
+        if ($causationId !== null) {
+            self::assertTraceId($causationId, 'Causation ID');
         }
-        $key = $drive->getRawOriginal($drive->getKeyName());
-        if (!$drive->exists || (!is_int($key) && !is_string($key)) || $key === '') {
-            throw new InvalidArgumentException('[Vaulter] An operation context requires a persisted drive.');
+        if ($idempotencyKey !== null && ($idempotencyKey === '' || strlen($idempotencyKey) > 255)) {
+            throw new InvalidArgumentException('[Vaulter] An idempotency key must be between 1 and 255 bytes.');
         }
-        $this->driveKey = $key;
+        $this->systemReason = $actor->isSystem() ? $actor->ref()->reason : null;
     }
 
-    public static function system(Drive $drive, string $reason, ?string $correlationId = null): self
-    {
-        return new self(drive: $drive, actor: Actor::system($reason), correlationId: $correlationId ?? (string) Str::ulid());
+    public static function for(
+        Actor $actor,
+        ScopeRef $scope,
+        TenantRef $tenant,
+        string $correlationId,
+        ?string $causationId = null,
+        ?string $idempotencyKey = null,
+    ): self {
+        return new self(
+            actor: $actor,
+            scope: $scope,
+            tenant: $tenant,
+            correlationId: $correlationId,
+            causationId: $causationId,
+            idempotencyKey: $idempotencyKey,
+        );
     }
 
-    /** @internal The bound identity must survive edits to the caller's model. */
-    public function driveId(): int|string
+    public static function system(ScopeRef $scope, TenantRef $tenant, string $reason, ?string $correlationId = null): self
     {
-        return $this->driveKey;
+        return new self(actor: Actor::system($reason), scope: $scope, tenant: $tenant, correlationId: $correlationId ?? (string) Str::ulid());
+    }
+
+    /** The key arrives already decoded (opaque bytes, compared exactly). */
+    public function withIdempotencyKey(string $key): self
+    {
+        return new self(
+            actor: $this->actor,
+            scope: $this->scope,
+            tenant: $this->tenant,
+            correlationId: $this->correlationId,
+            causationId: $this->causationId,
+            idempotencyKey: $key,
+        );
+    }
+
+    public function withCausation(string $causationId): self
+    {
+        return new self(
+            actor: $this->actor,
+            scope: $this->scope,
+            tenant: $this->tenant,
+            correlationId: $this->correlationId,
+            causationId: $causationId,
+            idempotencyKey: $this->idempotencyKey,
+        );
+    }
+
+    /**
+     * Span and log attributes of this context. Carries no personal data (the actor and
+     * the tenant appear only as tagged kinds) and never the idempotency key's value.
+     *
+     * @return array<string, string>
+     */
+    public function telemetry(): array
+    {
+        $attributes = [
+            'vaulter.correlation_id' => $this->correlationId,
+            'vaulter.scope.kind' => $this->scope->kind,
+            'vaulter.tenant' => $this->tenant->kind,
+            'vaulter.actor.kind' => $this->actor->isSystem() ? 'system' : 'user',
+        ];
+        if ($this->causationId !== null) {
+            $attributes['vaulter.causation_id'] = $this->causationId;
+        }
+
+        return $attributes;
+    }
+
+    private static function assertTraceId(string $id, string $label): void
+    {
+        if (trim($id) === '' || strlen($id) > 191 || preg_match('/[\x00-\x1F\x7F]/', $id) === 1) {
+            throw new InvalidArgumentException("[Vaulter] {$label} must be nonempty, at most 191 bytes and contain no control characters.");
+        }
     }
 }

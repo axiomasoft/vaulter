@@ -17,8 +17,8 @@ use Vaulter\Events\Sharing\NodeShareUpdated;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Sharing\ShareRoleNotAllowedException;
 use Vaulter\Models\Sharing\NodeShare;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
-use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Sharing\NodeShareStoreRepository;
 use Vaulter\Sharing\ShareLinkRules;
 
@@ -42,7 +42,7 @@ final readonly class UpdateShareLinkAction
         private EventRecorder $recorder,
     ) {}
 
-    public function execute(OperationContext $context, UpdateShareLinkInput $input): NodeShare
+    public function execute(DriveContext $context, UpdateShareLinkInput $input): NodeShare
     {
         $changes = $input->changes;
         $now = Carbon::now();

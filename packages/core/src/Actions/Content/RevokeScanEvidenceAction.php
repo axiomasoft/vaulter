@@ -7,7 +7,7 @@ namespace Vaulter\Actions\Content;
 use LogicException;
 use Vaulter\Content\ScanSnapshot;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Repositories\Content\ScanAuthorityRepository;
 use Vaulter\Repositories\Content\ScanEvidenceRepository;
 
@@ -20,7 +20,7 @@ final readonly class RevokeScanEvidenceAction
 {
     public function __construct(private ScanAuthorityRepository $authority, private VaulterDatabase $database, private ScanSnapshot $snapshots, private ScanEvidenceRepository $evidence) {}
 
-    public function execute(int|string $evidenceId, string $reason, OperationContext $context): void
+    public function execute(int|string $evidenceId, string $reason, DriveContext $context): void
     {
         if (!$context->actor->isSystem() || trim($reason) === '' || strlen($reason) > 191) {
             throw new LogicException('Evidence revocation requires trusted scoped maintenance and an audit reason.');

@@ -11,9 +11,9 @@ use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\NodeSequence;
-use Vaulter\Operations\OperationContext;
 use Vaulter\Profiles\DrivePolicyEnforcer;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
@@ -40,7 +40,7 @@ final readonly class RenameNodeAction
         private EventRecorder $recorder,
     ) {}
 
-    public function execute(OperationContext $context, RenameNodeInput $data): Node
+    public function execute(DriveContext $context, RenameNodeInput $data): Node
     {
         $node = app(NodeLocator::class)->find(context: $context, key: $data->node);
         // A rename is a new name: it passes the policy even when the old one would not.

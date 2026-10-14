@@ -27,7 +27,7 @@ use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\Actor;
@@ -53,7 +53,7 @@ it('initiate persists the full server-built session shape from UploadInitData', 
     ]);
     app(VaulterDatabase::class)->write(fn () => $folder->save());
 
-    $session = app(UploadSessionManager::class)->initiate(context: new OperationContext(drive: $storage, actor: Actor::user((new TestUser)->forceFill(['id' => 42])), correlationId: (string) Str::ulid()), data: new InitiateUploadInput(
+    $session = app(UploadSessionManager::class)->initiate(context: DriveContext::for(drive: $storage, actor: Actor::user((new TestUser)->forceFill(['id' => 42])), correlationId: (string) Str::ulid()), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
         targetParent: $folder,
         targetName: 'shape.bin',
@@ -101,7 +101,7 @@ it('initiate persists the full server-built session shape from UploadInitData', 
 it('initiate stores server owner identity even when client metadata is empty', function (): void {
     $storage = UploadTestHelpers::storage();
 
-    $session = app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
+    $session = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
         targetName: 'empty-meta.bin',
@@ -115,7 +115,7 @@ it('initiate stores server owner identity even when client metadata is empty', f
 it('initiate leaves a tus session ready for PATCH after handler initialise', function (): void {
     $storage = UploadTestHelpers::storage();
 
-    $session = app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
+    $session = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
         targetName: 'init.bin',
@@ -140,7 +140,7 @@ it('accepts initiate total_size_bytes exactly on max_bytes and rejects one byte 
     $root = $storage->rootNode()->first();
     $manager = app(UploadSessionManager::class);
 
-    $exact = $manager->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
+    $exact = $manager->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
         targetParent: $root,
         targetName: 'exact.bin',
@@ -149,7 +149,7 @@ it('accepts initiate total_size_bytes exactly on max_bytes and rejects one byte 
 
     expect($exact->total_size_bytes)->toBe(10);
 
-    expect(fn () => $manager->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
+    expect(fn () => $manager->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
         targetParent: $root,
         targetName: 'over.bin',
@@ -169,10 +169,10 @@ it('active-session cap allows max minus one and rejects at the ceiling', functio
         totalSizeBytes: 4,
     );
 
-    $manager->initiate(context: new OperationContext(drive: $storage, actor: Actor::user((new TestUser)->forceFill(['id' => 9001])), correlationId: 'cap-test'), data: $data('one.bin'));
-    $manager->initiate(context: new OperationContext(drive: $storage, actor: Actor::user((new TestUser)->forceFill(['id' => 9001])), correlationId: 'cap-test'), data: $data('two.bin'));
+    $manager->initiate(context: DriveContext::for(drive: $storage, actor: Actor::user((new TestUser)->forceFill(['id' => 9001])), correlationId: 'cap-test'), data: $data('one.bin'));
+    $manager->initiate(context: DriveContext::for(drive: $storage, actor: Actor::user((new TestUser)->forceFill(['id' => 9001])), correlationId: 'cap-test'), data: $data('two.bin'));
 
-    expect(fn () => $manager->initiate(context: new OperationContext(drive: $storage, actor: Actor::user((new TestUser)->forceFill(['id' => 9001])), correlationId: 'cap-test'), data: $data('three.bin')))
+    expect(fn () => $manager->initiate(context: DriveContext::for(drive: $storage, actor: Actor::user((new TestUser)->forceFill(['id' => 9001])), correlationId: 'cap-test'), data: $data('three.bin')))
         ->toThrow(TooManyRequestsHttpException::class);
 });
 
@@ -219,7 +219,7 @@ it('commit commits PNG bytes when declared mime matches and discards staged temp
     app(TusUploadHandler::class)->patch($session->refresh(), UploadTestHelpers::streamFor($png), 0);
     app(UploadSessionManager::class)->markAssembled($session->refresh());
 
-    $node = app(CompleteUploadAction::class)->execute(context: OperationContext::system($session->storage, 'test fixture'), session: $session->refresh());
+    $node = app(CompleteUploadAction::class)->execute(context: DriveContext::system($session->storage, 'test fixture'), session: $session->refresh());
 
     expect($node->kind)->toBe(NodeKind::File)
         ->and(Blob::query()->count())->toBe(1)
@@ -252,7 +252,7 @@ it('commit places a new file under the session target_parent_id, not implicit ro
     app(TusUploadHandler::class)->patch($session->refresh(), UploadTestHelpers::streamFor($bytes), 0);
     app(UploadSessionManager::class)->markAssembled($session->refresh());
 
-    $node = app(CompleteUploadAction::class)->execute(context: OperationContext::system($session->storage, 'test fixture'), session: $session->refresh());
+    $node = app(CompleteUploadAction::class)->execute(context: DriveContext::system($session->storage, 'test fixture'), session: $session->refresh());
 
     expect($node->parent_id)->toEqual($folder->getKey())
         ->and($node->parent_id)->not->toEqual($root->getKey());
@@ -274,7 +274,7 @@ it('commit fails loud when the session storage row is missing', function (): voi
     UploadSession::query()->whereKey($session->getKey())->update(['drive_id' => $missingStorageId]);
     $session = $session->fresh();
 
-    expect(fn () => app(CompleteUploadAction::class)->execute(context: OperationContext::system($storage, 'test fixture'), session: $session))
+    expect(fn () => app(CompleteUploadAction::class)->execute(context: DriveContext::system($storage, 'test fixture'), session: $session))
         ->toThrow(NodeNotFoundException::class);
 });
 
@@ -287,7 +287,7 @@ it('commit rejects image/jpg declared when magic bytes are PNG', function (): vo
     app(TusUploadHandler::class)->patch($session->refresh(), UploadTestHelpers::streamFor($png), 0);
     app(UploadSessionManager::class)->markAssembled($session->refresh());
 
-    expect(fn () => app(CompleteUploadAction::class)->execute(context: OperationContext::system($session->storage, 'test fixture'), session: $session->refresh()))
+    expect(fn () => app(CompleteUploadAction::class)->execute(context: DriveContext::system($session->storage, 'test fixture'), session: $session->refresh()))
         ->toThrow(UploadContentMismatchException::class);
 
     expect(Blob::query()->count())->toBe(0);

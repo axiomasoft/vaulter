@@ -21,8 +21,8 @@ use Vaulter\Exceptions\Nodes\SequenceOverflowException;
 use Vaulter\Exceptions\Nodes\StaleNodeException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeSequence;
-use Vaulter\Operations\OperationContext;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
 beforeEach(function (): void {
@@ -34,7 +34,7 @@ function sequenceContractState(): array
 {
     $db = app(VaulterDatabase::class)->connection();
 
-    return array_map(static fn (string $table): array => $db->table($table)->orderBy('id')->get()->map(fn ($row): array => (array) $row)->all(), [
+    return array_map(static fn (string $table): array => $db->table($table)->orderBy($table === 'v_file_revision_blobs' ? 'blob_id' : 'id')->get()->map(fn ($row): array => (array) $row)->all(), [
         'v_nodes', 'v_files', 'v_file_revisions', 'v_blobs', 'v_file_revision_blobs', 'v_drives', 'v_activity', 'v_outbox',
     ]);
 }
@@ -122,7 +122,7 @@ it('SEC-R19-replay returns the committed result without ingesting or comparing t
     app(VaulterDatabase::class)->write(fn () => Node::query()->whereKey($node->id)->update(['sequence' => 7]));
     $bytes = 'committed session bytes';
     $manager = app(UploadSessionManager::class);
-    $session = $manager->initiate(context: OperationContext::system($this->drive->model(), 'test fixture'), data: new InitiateUploadInput(
+    $session = $manager->initiate(context: DriveContext::system($this->drive->model(), 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::S3Multipart,
         targetNode: $node, targetName: 'replay.txt', totalSizeBytes: strlen($bytes),
         mimeType: 'text/plain', expectedSequence: 7,
@@ -136,7 +136,7 @@ it('SEC-R19-replay returns the committed result without ingesting or comparing t
     }
     $handler->complete($session->refresh());
     $manager->markAssembled($session->refresh());
-    $context = OperationContext::system($this->drive->model(), 'session replay acceptance');
+    $context = DriveContext::system($this->drive->model(), 'session replay acceptance');
     $complete = app(CompleteUploadAction::class);
     $commit = static fn (UploadSession $locked): Node => $complete->execute(context: $context, session: $locked);
     $committed = $manager->commitAssembled($session->refresh(), $commit);

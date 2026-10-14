@@ -7,7 +7,7 @@ namespace Vaulter\Contracts\Drive;
 use Vaulter\Exceptions\Files\ContentUnavailableException;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Sharing\ShareContext;
 
 /**
@@ -18,5 +18,5 @@ use Vaulter\Sharing\ShareContext;
 interface DownloadGuard
 {
     /** @throws ContentUnavailableException to deny; the caller's own context decides the lane */
-    public function check(OperationContext|ShareContext $context, Node $node, FileRevision $revision): void;
+    public function check(DriveContext|ShareContext $context, Node $node, FileRevision $revision): void;
 }

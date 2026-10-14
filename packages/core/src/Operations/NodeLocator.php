@@ -22,7 +22,7 @@ final readonly class NodeLocator
         private TenancyBoundary $boundary,
     ) {}
 
-    public function find(OperationContext $context, Node|NodeSnapshot|int|string $key, bool $includeTrashed = false): Node
+    public function find(DriveContext $context, Node|NodeSnapshot|int|string $key, bool $includeTrashed = false): Node
     {
         $id = $this->key($key);
         if ($id === null) {
@@ -43,7 +43,7 @@ final readonly class NodeLocator
      * @param  iterable<Node|NodeSnapshot|int|string> $nodes
      * @return list<Node>
      */
-    public function findMany(OperationContext $context, iterable $nodes): array
+    public function findMany(DriveContext $context, iterable $nodes): array
     {
         $keys = [];
         foreach ($nodes as $node) {
@@ -68,7 +68,7 @@ final readonly class NodeLocator
     }
 
     /** @return Builder<Node> */
-    private function query(OperationContext $context): Builder
+    private function query(DriveContext $context): Builder
     {
         $class = $this->config->model('node');
         $model = new $class;

@@ -35,6 +35,10 @@ return [
         'title' => 'Duplicate registration',
         'detail' => 'The same key was registered twice.',
     ],
+    'extension_failed' => [
+        'title' => 'Extension failed',
+        'detail' => 'An installed module\'s extension broke its contract; the operation did not run or was rolled back.',
+    ],
     'file_size_limit_exceeded' => [
         'title' => 'File too large',
         'detail' => 'The file exceeds the limit of :limit bytes.',
@@ -81,6 +85,10 @@ return [
     'module_graph_invalid' => [
         'title' => 'Module graph invalid',
         'detail' => 'The installed modules do not form a valid graph; no module is active.',
+    ],
+    'module_not_ready' => [
+        'title' => 'Module not ready',
+        'detail' => 'The module serving this operation is inactive or its schema is not installed yet.',
     ],
     'node_name_conflict' => [
         'title' => 'Node name conflict',

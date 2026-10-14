@@ -1,6 +1,28 @@
 {
     "base": "35718fd2",
-    "changes": [],
+    "changes": [
+        {
+            "change": "added",
+            "decision": "D8",
+            "id": "problem:extension_failed",
+            "kind": "protocol",
+            "reason": "P3.9: an extension broke its slot contract (operation middleware next/result, snapshot fragments) — 500, never retried or cached"
+        },
+        {
+            "change": "added",
+            "decision": "D8",
+            "id": "problem:module_not_ready",
+            "kind": "protocol",
+            "reason": "P3.9: a write of an inactive module or one without its tables is refused before the transaction — 503"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "format:operation-name",
+            "kind": "protocol",
+            "reason": "P3.10: every mutating operation runs through OperationRunner under a stable OperationSpec name"
+        }
+    ],
     "items": [
         {
             "case": "InheritanceChanged",
@@ -718,6 +740,16 @@
             }
         },
         {
+            "format": "<module>.<resource>.<verb>, dotted lowercase segments, at most 64 bytes (OperationSpec::NAME_PATTERN); one name per mutating operation: documents.comments.add, documents.comments.delete, documents.comments.resolve, documents.documents.create, documents.documents.restore, documents.documents.set_retention, documents.documents.snapshot, documents.documents.update, documents.documents.update_content, drive.access.grant, drive.access.restore_inheritance, drive.access.restrict_inheritance, drive.access.revoke, drive.files.add_revision, drive.files.delete_revision, drive.files.restore_revision, drive.files.set_revision_retention, drive.files.upload, drive.folders.create, drive.nodes.copy, drive.nodes.move, drive.nodes.rename, drive.nodes.set_properties, drive.nodes.star, drive.nodes.trash, drive.nodes.unstar, drive.shares.create, drive.shares.revoke, drive.shares.rotate, drive.shares.update, drive.trash.purge, drive.trash.restore, drive.uploads.abort, drive.uploads.complete, drive.uploads.initiate, webhooks.endpoints.deactivate, webhooks.endpoints.delete, webhooks.endpoints.redeliver, webhooks.endpoints.register, webhooks.endpoints.rotate_secret, webhooks.endpoints.update",
+            "id": "format:operation-name",
+            "manual": true,
+            "owner": "core",
+            "source": {
+                "file": "packages/core/src/Operations/OperationSpec.php",
+                "symbol": "Vaulter\\Operations\\OperationSpec::__construct"
+            }
+        },
+        {
             "format": "JSON: id (event id), type, version (1), source (vaulter), time (UTC ms Z), tenant_id, drive_id, subject{type,id}, sequence, actor{type,id}, correlation_id, changes{seq}|null, data (object)",
             "id": "format:webhook-envelope",
             "manual": true,
@@ -1158,6 +1190,16 @@
             "status": 500
         },
         {
+            "exception": "Vaulter\\Exceptions\\Support\\InvalidExtensionResult",
+            "id": "problem:extension_failed",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+            },
+            "status": 500
+        },
+        {
             "exception": "Vaulter\\Exceptions\\Policy\\FileSizeLimitExceededException",
             "id": "problem:file_size_limit_exceeded",
             "owner": "drive",
@@ -1280,6 +1322,16 @@
         {
             "exception": "Vaulter\\Modules\\ModuleGraphException",
             "id": "problem:module_graph_invalid",
+            "owner": "core",
+            "source": {
+                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+            },
+            "status": 503
+        },
+        {
+            "exception": "Vaulter\\Exceptions\\Modules\\ModuleNotReadyException",
+            "id": "problem:module_not_ready",
             "owner": "core",
             "source": {
                 "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",

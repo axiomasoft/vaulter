@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Operations;
 
+use Closure;
 use Vaulter\Access\OperationGuard;
 use Vaulter\Access\ValueObjects\NodeAbilities;
 use Vaulter\Contracts\Drive\NodeOperations as Contract;
@@ -32,14 +33,17 @@ use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Operations\OperationKind;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Modules\ModuleId;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\OperationRunner;
+use Vaulter\Operations\OperationSpec;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Support\TreeGuard;
 
 final readonly class NodeOperations implements Contract
 {
-    public function __construct(private OperationContext $context, private NodeLocator $locator, private OperationGuard $guard, private TreeGuard $tree, private ListChildrenQuery $childrenQuery, private SearchQuery $searchQuery, private RenameNodeAction $renameAction, private MoveNodeAction $moveAction, private CopyNodeAction $copyAction, private TrashNodeAction $trashAction, private NodeReadRepository $nodes, private StarNodeAction $starAction, private SetNodePropertiesAction $propertiesAction, private NodePageQuery $pages, private NodeSnapshotMapper $mapper) {}
+    public function __construct(private DriveContext $context, private NodeLocator $locator, private OperationGuard $guard, private TreeGuard $tree, private ListChildrenQuery $childrenQuery, private SearchQuery $searchQuery, private RenameNodeAction $renameAction, private MoveNodeAction $moveAction, private CopyNodeAction $copyAction, private TrashNodeAction $trashAction, private NodeReadRepository $nodes, private StarNodeAction $starAction, private SetNodePropertiesAction $propertiesAction, private NodePageQuery $pages, private NodeSnapshotMapper $mapper, private OperationRunner $runner) {}
 
     public function find(NodeSnapshot|string|int $node): NodeSnapshot
     {
@@ -65,36 +69,40 @@ final readonly class NodeOperations implements Contract
 
     public function rename(NodeSnapshot|string|int $node, string $name, ?int $expectedSequence = null): NodeSnapshot
     {
-        return $this->snapshot($this->renameAction->execute($this->context, new RenameNodeInput($this->authorized($node, Ability::Edit), $name, $expectedSequence)));
+        return $this->write('rename', fn (): NodeSnapshot => $this->snapshot($this->renameAction->execute($this->context, new RenameNodeInput($this->authorized($node, Ability::Edit), $name, $expectedSequence))));
     }
 
     public function move(NodeSnapshot|string|int $node, NodeSnapshot|string|int|null $destination, ?MoveOptions $options = null): NodeSnapshot
     {
-        $node = $this->authorized($node, Ability::Move);
-        $parent = $this->destination($destination);
-        $options ??= new MoveOptions;
+        return $this->write('move', function () use ($node, $destination, $options): NodeSnapshot {
+            $node = $this->authorized($node, Ability::Move);
+            $parent = $this->destination($destination);
+            $options ??= new MoveOptions;
 
-        return $this->snapshot($this->moveAction->execute($this->context, new MoveNodeInput($node, $parent, $options->expectedSequence, $options->onConflict)));
+            return $this->snapshot($this->moveAction->execute($this->context, new MoveNodeInput($node, $parent, $options->expectedSequence, $options->onConflict)));
+        });
     }
 
     public function copy(NodeSnapshot|string|int $node, NodeSnapshot|string|int|null $destination = null, ?CopyOptions $options = null): NodeSnapshot
     {
-        $node = $this->authorized($node, Ability::Copy);
-        $parent = $this->destination($destination);
-        $options ??= new CopyOptions;
-        $authorized = $this->guard->copyableSubtree($this->context, $node, $this->nodes->subtree($node));
+        return $this->write('copy', function () use ($node, $destination, $options): NodeSnapshot {
+            $node = $this->authorized($node, Ability::Copy);
+            $parent = $this->destination($destination);
+            $options ??= new CopyOptions;
+            $authorized = $this->guard->copyableSubtree($this->context, $node, $this->nodes->subtree($node));
 
-        return $this->snapshot($this->copyAction->execute($this->context, new CopyNodeInput($node, $parent, $options->name, $options->onConflict, $authorized)));
+            return $this->snapshot($this->copyAction->execute($this->context, new CopyNodeInput($node, $parent, $options->name, $options->onConflict, $authorized)));
+        });
     }
 
     public function star(NodeSnapshot|string|int $node): NodeSnapshot
     {
-        return $this->snapshot($this->starAction->execute($this->context, $this->authorized($node, Ability::View), starred: true));
+        return $this->write('star', fn (): NodeSnapshot => $this->snapshot($this->starAction->execute($this->context, $this->authorized($node, Ability::View), starred: true)));
     }
 
     public function unstar(NodeSnapshot|string|int $node): NodeSnapshot
     {
-        return $this->snapshot($this->starAction->execute($this->context, $this->authorized($node, Ability::View), starred: false));
+        return $this->write('unstar', fn (): NodeSnapshot => $this->snapshot($this->starAction->execute($this->context, $this->authorized($node, Ability::View), starred: false)));
     }
 
     /** @return Page<NodeSnapshot> */
@@ -115,12 +123,12 @@ final readonly class NodeOperations implements Contract
      */
     public function setProperties(NodeSnapshot|string|int $node, string $namespace, array $set, array $unset = [], ?int $expectedSequence = null): NodeSnapshot
     {
-        return $this->snapshot($this->propertiesAction->execute($this->context, new SetNodePropertiesInput($this->authorized($node, Ability::Edit), $namespace, $set, $unset, $expectedSequence)));
+        return $this->write('set_properties', fn (): NodeSnapshot => $this->snapshot($this->propertiesAction->execute($this->context, new SetNodePropertiesInput($this->authorized($node, Ability::Edit), $namespace, $set, $unset, $expectedSequence))));
     }
 
     public function trash(NodeSnapshot|string|int $node, ?int $expectedSequence = null): NodeSnapshot
     {
-        return $this->snapshot($this->trashAction->execute($this->context, new TrashNodeInput($this->authorized($node, Ability::Trash), $expectedSequence)));
+        return $this->write('trash', fn (): NodeSnapshot => $this->snapshot($this->trashAction->execute($this->context, new TrashNodeInput($this->authorized($node, Ability::Trash), $expectedSequence))));
     }
 
     public function abilities(NodeSnapshot|string|int $node): NodeAbilities
@@ -135,6 +143,17 @@ final readonly class NodeOperations implements Contract
     public function abilitiesMany(array $nodes): array
     {
         return $this->guard->abilitiesMany($this->context, $nodes);
+    }
+
+    /**
+     * @template T
+     *
+     * @param  Closure(): T $attempt
+     * @return T
+     */
+    private function write(string $verb, Closure $attempt): mixed
+    {
+        return $this->runner->write(new OperationSpec('drive.nodes.'.$verb, new ModuleId('drive')), $this->context->operation, $attempt);
     }
 
     private function snapshot(Node $node): NodeSnapshot

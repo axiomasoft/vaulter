@@ -25,6 +25,10 @@ use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
 use Vaulter\Modules\ModuleBindings;
 use Vaulter\Observability\NullMetricsRecorder;
 use Vaulter\Observability\NullTraceRecorder;
+use Vaulter\Operations\ModuleReadiness;
+use Vaulter\Operations\NoOperationClaim;
+use Vaulter\Operations\OperationClaim;
+use Vaulter\Operations\OperationRunner;
 use Vaulter\Schema\IdStrategyResolver;
 use Vaulter\Support\EnumCaseAttributeResolver;
 use Vaulter\Tenancy\TenancyBoundary;
@@ -59,6 +63,10 @@ final class BindingsRegistrar implements ModuleBindings
         $app->singleton(ConfigValidator::class);
 
         $app->singleton(VaulterDatabase::class);
+        // One runner per process: it counts the writes inside its root transaction (nesting).
+        $app->scoped(OperationRunner::class);
+        $app->singleton(ModuleReadiness::class);
+        $app->singletonIf(OperationClaim::class, NoOperationClaim::class);
         $app->scoped(WriteScope::class);
         $app->singleton(IdStrategyResolver::class);
 

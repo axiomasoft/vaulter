@@ -27,7 +27,7 @@ use Vaulter\Enums\Cas\ScanVerdict;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Exceptions\Files\ContentUnavailableException;
 use Vaulter\Kernel;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileRegistry;
@@ -40,7 +40,7 @@ it('SEC-POLICY rejects enabled unactivated drives without allocating admission',
     config()->set('vaulter.scan.mode', 'all_content');
     $stream = UploadTestHelpers::streamFor('policy test');
     try {
-        expect(fn () => app(IngestFileAction::class)->execute(OperationContext::system($drive, 'fixture'),
+        expect(fn () => app(IngestFileAction::class)->execute(DriveContext::system($drive, 'fixture'),
             new IngestFileInput($drive, $stream, 'p.txt', 'text/plain')))->toThrow(InvalidConfigurationException::class);
         expect($drive->refresh()->scan_admission_sequence)->toBe(0);
     } finally {
@@ -53,7 +53,7 @@ it('SEC-POLICY preserves first new content boundary across reactivation and off'
     app(VaulterDatabase::class)->write(fn () => $drive->forceFill(['scan_admission_sequence' => 7])->save());
     config()->set('vaulter.scan.mode', 'new_content_only');
     config()->set('vaulter.scan.rollout_key', 'first');
-    $context = OperationContext::system($drive, 'fixture');
+    $context = DriveContext::system($drive, 'fixture');
     app(VaulterDatabase::class)->transaction(fn () => app(ScanPolicyResolver::class)->initialize($drive, $context));
     $class = app(VaulterConfig::class)->model('scan_policy_state');
     expect($class::query()->where('drive_id', $drive->id)->pluck('boundary_sequence')->all())->toBe([7, 7]);
@@ -69,7 +69,7 @@ it('SEC-R01 all content blocks legacy bytes until versioned rescan evidence is c
     Storage::fake('local');
     Bus::fake();
     $drive = UploadTestHelpers::storage();
-    $context = OperationContext::system($drive, 'fixture');
+    $context = DriveContext::system($drive, 'fixture');
     $stream = UploadTestHelpers::streamFor('legacy');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
@@ -97,7 +97,7 @@ it('SEC-R02 forged timestamps cannot exempt a new admission and failures remain 
     config()->set('vaulter.scan.scanner_key', 'fixture');
     config()->set('vaulter.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
-    $context = OperationContext::system($drive, 'fixture');
+    $context = DriveContext::system($drive, 'fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     $stream = UploadTestHelpers::streamFor('fresh');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
@@ -132,7 +132,7 @@ it('SEC-POLICY-two-boundaries evaluates global and profile eligibility independe
     };
     $bind(ScanMode::Off);
     $drive = UploadTestHelpers::storage();
-    $context = OperationContext::system($drive, 'fixture');
+    $context = DriveContext::system($drive, 'fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     $stream = UploadTestHelpers::streamFor('between');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
@@ -150,7 +150,7 @@ it('SEC-POLICY-two-boundaries evaluates global and profile eligibility independe
 it('SEC-R05 trash restoration preserves admission while current scan policy blocks bytes', function (): void {
     Storage::fake('local');
     $drive = UploadTestHelpers::storage();
-    $context = OperationContext::system($drive, 'fixture');
+    $context = DriveContext::system($drive, 'fixture');
     $stream = UploadTestHelpers::streamFor('restore');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);

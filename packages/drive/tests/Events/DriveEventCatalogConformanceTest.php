@@ -12,7 +12,7 @@ use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Tests\TestCase;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Events\EventType;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Events\EventConformance;
@@ -59,7 +59,7 @@ it('records every drive event with the data its spec declares', function (): voi
 
 it('records drive.deleted and the upload sessions with their specs', function (): void {
     $drive = DriveTestHelpers::drive();
-    $context = OperationContext::system(drive: $drive->model(), reason: 'conformance');
+    $context = DriveContext::system(drive: $drive->model(), reason: 'conformance');
     $session = app(UploadSessionManager::class)->initiate($context, new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
         targetName: 'big.bin',

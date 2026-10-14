@@ -6,13 +6,13 @@ namespace Vaulter\Drive\Actions\Uploads;
 
 use Vaulter\Drive\Models\Uploads\UploadSession;
 use Vaulter\Drive\Uploads\UploadSessionManager;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 
 final readonly class AbortUploadAction
 {
     public function __construct(private UploadSessionManager $manager, private CompleteUploadAction $complete) {}
 
-    public function execute(OperationContext $context, UploadSession $session): void
+    public function execute(DriveContext $context, UploadSession $session): void
     {
         $this->manager->withSession($session, function (UploadSession $locked) use ($context): void {
             $this->complete->authorizeSession(context: $context, session: $locked);

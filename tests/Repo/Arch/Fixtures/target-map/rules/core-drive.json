@@ -35,6 +35,7 @@
         "Vaulter\\ValueObjects\\Handlers\\",
         "Vaulter\\Operations\\ActivityOperations",
         "Vaulter\\Operations\\ChangeOperations",
+        "Vaulter\\Operations\\DriveContext",
         "Vaulter\\Operations\\NodeLocator",
         "Vaulter\\Operations\\NodeSequence",
         "Vaulter\\Concerns\\HasDrives",
@@ -494,6 +495,13 @@
             "owner": "drive",
             "surface": "Api",
             "why": "architecture#ownership-map: Operations/ActivityOperations -> drive (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Operations\\DriveContext",
+            "owner": "drive",
+            "surface": "Api",
+            "why": "architecture#kernel: the drive-bound operation context (OperationContext + Drive) is owned by drive; core namespace until P4 (P3.8)"
         },
         {
             "match": "fqcn",

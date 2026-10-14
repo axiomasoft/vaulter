@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Operations;
 
+use Closure;
 use Illuminate\Pagination\CursorPaginator;
 use Vaulter\Access\OperationGuard;
 use Vaulter\Contracts\Drive\DriveExtension;
@@ -51,8 +52,11 @@ use Vaulter\Enums\Operations\OperationKind;
 use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Modules\ModuleId;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\OperationRunner;
+use Vaulter\Operations\OperationSpec;
 use Vaulter\Profiles\ProfilePolicy;
 
 /**
@@ -78,7 +82,7 @@ use Vaulter\Profiles\ProfilePolicy;
 final readonly class DocumentOperations implements DriveExtension
 {
     public function __construct(
-        private OperationContext $context,
+        private DriveContext $context,
         private NodeLocator $locator,
         private OperationGuard $guard,
         private ProfilePolicy $profiles,
@@ -95,6 +99,7 @@ final readonly class DocumentOperations implements DriveExtension
         private DocumentQuery $query,
         private DocumentSnapshotMapper $mapper,
         private NodeSnapshotMapper $nodes,
+        private OperationRunner $runner,
     ) {}
 
     /**
@@ -108,22 +113,24 @@ final readonly class DocumentOperations implements DriveExtension
      */
     public function create(string $name, ?string $type = null, ?array $content = null, NodeSnapshot|string|int|null $parent = null, ?CreateFolderOptions $options = null): NodeSnapshot
     {
-        $parent = $this->locator->find($this->context, $parent ?? $this->context->drive->root_node_id ?? throw NodeNotFoundException::forId('root'));
-        $this->guard->authorizeCreate($this->context, $parent);
-        $documentType = $this->types->get($type ?? $this->config->defaultType());
-        $this->profiles->assertDocumentType(drive: $this->context->drive, type: $documentType->key());
+        return $this->write('create', function () use ($name, $type, $content, $parent, $options): NodeSnapshot {
+            $parent = $this->locator->find($this->context, $parent ?? $this->context->drive->root_node_id ?? throw NodeNotFoundException::forId('root'));
+            $this->guard->authorizeCreate($this->context, $parent);
+            $documentType = $this->types->get($type ?? $this->config->defaultType());
+            $this->profiles->assertDocumentType(drive: $this->context->drive, type: $documentType->key());
 
-        $node = $this->create->execute($this->context, new CreateDocumentInput(
-            storage: $this->context->drive,
-            name: $name,
-            content: $this->decoder->decode($documentType, $content),
-            parent: $parent,
-            type: $documentType->key(),
-            schemaVersion: $documentType->schemaVersion(),
-            onConflict: ($options ?? new CreateFolderOptions)->onConflict,
-        ));
+            $node = $this->create->execute($this->context, new CreateDocumentInput(
+                storage: $this->context->drive,
+                name: $name,
+                content: $this->decoder->decode($documentType, $content),
+                parent: $parent,
+                type: $documentType->key(),
+                schemaVersion: $documentType->schemaVersion(),
+                onConflict: ($options ?? new CreateFolderOptions)->onConflict,
+            ));
 
-        return $this->nodes->map($node, $this->context->actor->ref());
+            return $this->nodes->map($node, $this->context->actor->ref());
+        });
     }
 
     /** The working state, or the content of one checkpoint when $revision is given. */
@@ -149,7 +156,7 @@ final readonly class DocumentOperations implements DriveExtension
      */
     public function update(NodeSnapshot|string|int $document, array $content, ?int $expectedStateVersion = null): DocumentSnapshot
     {
-        return $this->updateContent($document, $content, null, $expectedStateVersion);
+        return $this->write('update', fn (): DocumentSnapshot => $this->writeContent($document, $content, null, $expectedStateVersion));
     }
 
     /**
@@ -158,6 +165,12 @@ final readonly class DocumentOperations implements DriveExtension
      * @param array<string, mixed> $content
      */
     public function updateContent(NodeSnapshot|string|int $document, array $content, ?string $yjsState = null, ?int $expectedStateVersion = null): DocumentSnapshot
+    {
+        return $this->write('update_content', fn (): DocumentSnapshot => $this->writeContent($document, $content, $yjsState, $expectedStateVersion));
+    }
+
+    /** @param array<string, mixed> $content */
+    private function writeContent(NodeSnapshot|string|int $document, array $content, ?string $yjsState, ?int $expectedStateVersion): DocumentSnapshot
     {
         $node = $this->document($document, Ability::Edit, OperationKind::Mutation);
         // Checked here so a degraded document answers before its payload is validated,
@@ -177,11 +190,13 @@ final readonly class DocumentOperations implements DriveExtension
     /** Checkpoint the working state as a named revision; it becomes the head. */
     public function snapshot(NodeSnapshot|string|int $document, ?string $label = null, bool $keepForever = false): DocumentRevisionSnapshot
     {
-        $node = $this->document($document, Ability::Edit, OperationKind::Mutation);
-        $this->installedType($node);
-        $revision = $this->snapshot->execute($this->context, new CreateNamedRevisionInput(node: $node, label: $label, keepForever: $keepForever));
+        return $this->write('snapshot', function () use ($document, $label, $keepForever): DocumentRevisionSnapshot {
+            $node = $this->document($document, Ability::Edit, OperationKind::Mutation);
+            $this->installedType($node);
+            $revision = $this->snapshot->execute($this->context, new CreateNamedRevisionInput(node: $node, label: $label, keepForever: $keepForever));
 
-        return $this->mapper->revision($revision, $this->query->document($node));
+            return $this->mapper->revision($revision, $this->query->document($node));
+        });
     }
 
     /** @return Page<DocumentRevisionSnapshot> newest first */
@@ -222,28 +237,32 @@ final readonly class DocumentOperations implements DriveExtension
      */
     public function restore(NodeSnapshot|string|int $document, DocumentRevisionSnapshot|string|int $revision, ?int $expectedStateVersion = null): DocumentSnapshot
     {
-        $node = $this->document($document, Ability::Edit, OperationKind::Mutation);
-        $this->installedType($node);
-        $this->restore->execute($this->context, new RestoreDocumentRevisionInput(
-            node: $node,
-            revision: $revision instanceof DocumentRevisionSnapshot ? $revision->id : $revision,
-            expectedStateVersion: $expectedStateVersion,
-        ));
+        return $this->write('restore', function () use ($document, $revision, $expectedStateVersion): DocumentSnapshot {
+            $node = $this->document($document, Ability::Edit, OperationKind::Mutation);
+            $this->installedType($node);
+            $this->restore->execute($this->context, new RestoreDocumentRevisionInput(
+                node: $node,
+                revision: $revision instanceof DocumentRevisionSnapshot ? $revision->id : $revision,
+                expectedStateVersion: $expectedStateVersion,
+            ));
 
-        return $this->current($node);
+            return $this->current($node);
+        });
     }
 
     /** Pin a checkpoint out of pruning, or release the pin. */
     public function setRetention(NodeSnapshot|string|int $document, DocumentRevisionSnapshot|string|int $revision, bool $keepForever): DocumentRevisionSnapshot
     {
-        $node = $this->document($document, Ability::Edit, OperationKind::Mutation);
-        $changed = $this->retention->execute($this->context, new UpdateRevisionRetentionInput(
-            node: $node,
-            revision: $revision instanceof DocumentRevisionSnapshot ? $revision->id : $revision,
-            keepForever: $keepForever,
-        ));
+        return $this->write('set_retention', function () use ($document, $revision, $keepForever): DocumentRevisionSnapshot {
+            $node = $this->document($document, Ability::Edit, OperationKind::Mutation);
+            $changed = $this->retention->execute($this->context, new UpdateRevisionRetentionInput(
+                node: $node,
+                revision: $revision instanceof DocumentRevisionSnapshot ? $revision->id : $revision,
+                keepForever: $keepForever,
+            ));
 
-        return $this->mapper->revision($changed, $this->query->document($node));
+            return $this->mapper->revision($changed, $this->query->document($node));
+        });
     }
 
     /**
@@ -309,6 +328,17 @@ final readonly class DocumentOperations implements DriveExtension
             writable: $writable,
             actorId: $actor,
         );
+    }
+
+    /**
+     * @template T
+     *
+     * @param  Closure(): T $attempt
+     * @return T
+     */
+    private function write(string $verb, Closure $attempt): mixed
+    {
+        return $this->runner->write(new OperationSpec('documents.documents.'.$verb, new ModuleId('documents')), $this->context->operation, $attempt);
     }
 
     private function document(NodeSnapshot|string|int $key, Ability $ability, OperationKind $operation): Node

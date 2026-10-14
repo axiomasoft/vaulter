@@ -14,7 +14,7 @@ use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Access\UnknownRoleException;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Operations\AccessOperations;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\Actor;
@@ -34,7 +34,7 @@ beforeEach(function (): void {
 
 function accessV1(TestUser $actor, mixed $drive): AccessOperations
 {
-    return app()->makeWith(AccessOperations::class, ['context' => new OperationContext($drive, Actor::user($actor), 'access-v1')]);
+    return app()->makeWith(AccessOperations::class, ['context' => DriveContext::for($drive, Actor::user($actor), 'access-v1')]);
 }
 
 function accessV1Can(int $user, Ability $ability, mixed $node): bool

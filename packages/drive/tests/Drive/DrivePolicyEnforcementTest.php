@@ -23,7 +23,7 @@ use Vaulter\Exceptions\Policy\TreeDepthLimitExceededException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Naming\PermissiveNamePolicy;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Profiles\DrivePolicyBuilder;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;
@@ -139,7 +139,7 @@ it('enforces maxFolderDepth on create, upload, move, copy and restore', function
 
 it('checks the declared, streamed and final file size against maxFileBytes', function (): void {
     $drive = policyDrive(static fn (DrivePolicyBuilder $p) => $p->maxFileBytes(4));
-    $context = OperationContext::system($drive->model(), 'policy fixture');
+    $context = DriveContext::system($drive->model(), 'policy fixture');
 
     expect(fn () => $drive->files()->upload(UploadSource::fromString('12345', 'big.txt')))->toThrow(FileSizeLimitExceededException::class)
         ->and(fn () => app(InitiateUploadAction::class)->execute($context, new InitiateUploadInput(protocol: UploadProtocol::Tus, targetParent: null, targetName: 'big.txt', totalSizeBytes: 5)))

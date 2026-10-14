@@ -22,7 +22,7 @@ use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Content\ContentQuarantinedException;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 
 it('SEC-R03 COPY owns fresh admission and clean evidence without copying a source lease', function (): void {
     Storage::fake('local');
@@ -30,7 +30,7 @@ it('SEC-R03 COPY owns fresh admission and clean evidence without copying a sourc
     config()->set('vaulter.scan.scanner_key', 'fixture');
     config()->set('vaulter.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
-    $context = OperationContext::system($drive, 'fixture');
+    $context = DriveContext::system($drive, 'fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     $stream = UploadTestHelpers::streamFor('copy bytes');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
@@ -50,7 +50,7 @@ it('SEC-R03 exempt legacy COPY receives required destination work and fresh admi
     Storage::fake('local');
     Bus::fake();
     $drive = UploadTestHelpers::storage();
-    $context = OperationContext::system($drive, 'fixture');
+    $context = DriveContext::system($drive, 'fixture');
     $stream = UploadTestHelpers::streamFor('legacy copy');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
@@ -71,7 +71,7 @@ it('SEC-R04 revision restore creates fresh admission and its own destination wor
     Storage::fake('local');
     Bus::fake();
     $drive = UploadTestHelpers::storage();
-    $context = OperationContext::system($drive, 'fixture');
+    $context = DriveContext::system($drive, 'fixture');
     $stream = UploadTestHelpers::streamFor('historical');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
@@ -91,7 +91,7 @@ it('SEC-R04 revision restore creates fresh admission and its own destination wor
 it('SEC-R06 legacy infected source refuses COPY and same blob reupload atomically', function (): void {
     Storage::fake('local');
     $drive = UploadTestHelpers::storage();
-    $context = OperationContext::system($drive, 'fixture');
+    $context = DriveContext::system($drive, 'fixture');
     $stream = UploadTestHelpers::streamFor('infected legacy');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
@@ -113,7 +113,7 @@ it('SEC-R03 folder COPY creates every child obligation and later failure rolls b
     Storage::fake('local');
     Bus::fake();
     $drive = UploadTestHelpers::storage();
-    $context = OperationContext::system($drive, 'fixture');
+    $context = DriveContext::system($drive, 'fixture');
     $folder = new Node;
     app(VaulterDatabase::class)->write(fn () => $folder->forceFill(['drive_id' => $drive->id, 'parent_id' => $drive->root_node_id, 'kind' => NodeKind::Folder, 'name' => 'folder', 'size_bytes' => 0])->save());
     foreach (['a', 'b'] as $name) {

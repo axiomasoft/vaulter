@@ -12,18 +12,23 @@ use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Drive\Actions\Nodes\CreateFolderAction;
 use Vaulter\Drive\Data\Nodes\CreateFolderInput;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Modules\ModuleId;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\OperationRunner;
+use Vaulter\Operations\OperationSpec;
 
 final readonly class FolderOperations implements Contract
 {
-    public function __construct(private OperationContext $context, private NodeLocator $locator, private OperationGuard $guard, private CreateFolderAction $createAction, private NodeSnapshotMapper $mapper) {}
+    public function __construct(private DriveContext $context, private NodeLocator $locator, private OperationGuard $guard, private CreateFolderAction $createAction, private NodeSnapshotMapper $mapper, private OperationRunner $runner) {}
 
     public function create(string $name, NodeSnapshot|string|int|null $parent = null, ?CreateFolderOptions $options = null): NodeSnapshot
     {
-        $parent = $this->locator->find($this->context, $parent ?? $this->context->drive->root_node_id ?? throw NodeNotFoundException::forId('root'));
-        $this->guard->authorizeCreate($this->context, $parent);
+        return $this->runner->write(new OperationSpec('drive.folders.create', new ModuleId('drive')), $this->context->operation, function () use ($name, $parent, $options): NodeSnapshot {
+            $parent = $this->locator->find($this->context, $parent ?? $this->context->drive->root_node_id ?? throw NodeNotFoundException::forId('root'));
+            $this->guard->authorizeCreate($this->context, $parent);
 
-        return $this->mapper->map($this->createAction->execute($this->context, new CreateFolderInput($this->context->drive, $name, $parent, ($options ?? new CreateFolderOptions)->onConflict)), $this->context->actor->ref());
+            return $this->mapper->map($this->createAction->execute($this->context, new CreateFolderInput($this->context->drive, $name, $parent, ($options ?? new CreateFolderOptions)->onConflict)), $this->context->actor->ref());
+        });
     }
 }

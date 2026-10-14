@@ -18,8 +18,8 @@ use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
-use Vaulter\Operations\OperationContext;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Tenancy\TenancyBoundary;
 
@@ -36,7 +36,7 @@ final readonly class OperationGuard
         private TenancyBoundary $boundary,
     ) {}
 
-    public function authorize(OperationContext $context, Ability $ability, Node $node, OperationKind $operation = OperationKind::Metadata): void
+    public function authorize(DriveContext $context, Ability $ability, Node $node, OperationKind $operation = OperationKind::Metadata): void
     {
         $node = $this->scoped(context: $context, node: $node);
         $drive = $this->assertDriveLifecycle(context: $context, node: $node, operation: $operation);
@@ -53,7 +53,7 @@ final readonly class OperationGuard
     }
 
     /** Grant management uses the grants feature, independently of bearer links. */
-    public function authorizeGrants(OperationContext $context, Node $node): void
+    public function authorizeGrants(DriveContext $context, Node $node): void
     {
         $node = $this->scoped(context: $context, node: $node);
         $drive = $this->assertDriveLifecycle(context: $context, node: $node, operation: OperationKind::Metadata);
@@ -70,12 +70,12 @@ final readonly class OperationGuard
     }
 
     /** Grant and share-link changes are mutations: an archived drive refuses them. */
-    public function assertMutable(OperationContext $context, Node $node): void
+    public function assertMutable(DriveContext $context, Node $node): void
     {
         $this->assertDriveLifecycle(context: $context, node: $this->scoped(context: $context, node: $node), operation: OperationKind::Mutation);
     }
 
-    public function authorizeCreate(OperationContext $context, Node $parent): void
+    public function authorizeCreate(DriveContext $context, Node $parent): void
     {
         $parent = $this->scoped(context: $context, node: $parent);
         $drive = $this->assertDriveLifecycle(context: $context, node: $parent, operation: OperationKind::Mutation);
@@ -96,7 +96,7 @@ final readonly class OperationGuard
     /** @param iterable<Node> $nodes
      * @return list<Node>
      */
-    public function visible(OperationContext $context, iterable $nodes): array
+    public function visible(DriveContext $context, iterable $nodes): array
     {
         return array_map(static fn (array $decision): Node => $decision[0], $this->decide($context, $nodes));
     }
@@ -108,7 +108,7 @@ final readonly class OperationGuard
      * @param  iterable<Node>      $nodes
      * @return array<string, bool> visible node key => holds $ability
      */
-    public function visibleWith(OperationContext $context, iterable $nodes, Ability $ability): array
+    public function visibleWith(DriveContext $context, iterable $nodes, Ability $ability): array
     {
         $holds = [];
         foreach ($this->decide($context, $nodes) as [$node, $set]) {
@@ -121,7 +121,7 @@ final readonly class OperationGuard
     /** @param iterable<Node> $nodes
      * @return list<array{Node, ?GrantSet}> visible nodes with their ACL set (null for a system actor)
      */
-    private function decide(OperationContext $context, iterable $nodes): array
+    private function decide(DriveContext $context, iterable $nodes): array
     {
         $nodes = $this->locator->findMany(context: $context, nodes: $nodes);
         $this->tenantBoundaryMany($nodes);
@@ -155,7 +155,7 @@ final readonly class OperationGuard
      * @param  iterable<Node>    $subtree the root and its descendants, any order
      * @return list<string>|null
      */
-    public function copyableSubtree(OperationContext $context, Node $root, iterable $subtree): ?array
+    public function copyableSubtree(DriveContext $context, Node $root, iterable $subtree): ?array
     {
         $active = [];
         foreach ($subtree as $node) {
@@ -190,7 +190,7 @@ final readonly class OperationGuard
         return array_map(static fn (Node $node): string => (string) $node->id, $nodes);
     }
 
-    public function abilities(OperationContext $context, Node $node): NodeAbilities
+    public function abilities(DriveContext $context, Node $node): NodeAbilities
     {
         $node = $this->scoped(context: $context, node: $node);
         $grants = $context->actor->isSystem() ? GrantSet::superAllowed() : $this->grants(context: $context, node: $node);
@@ -216,7 +216,7 @@ final readonly class OperationGuard
      * @param  iterable<Node|NodeSnapshot|int|string> $nodes models, snapshots or ids
      * @return array<string, NodeAbilities>           node key => abilities, in input order
      */
-    public function abilitiesMany(OperationContext $context, iterable $nodes): array
+    public function abilitiesMany(DriveContext $context, iterable $nodes): array
     {
         $nodes = $this->locator->findMany(context: $context, nodes: $nodes);
         if ($nodes === []) {
@@ -253,7 +253,7 @@ final readonly class OperationGuard
      * The drive lifecycle: a drive being deleted does not exist for anyone
      * but the system purge; an archived drive refuses every non-system mutation.
      */
-    private function assertDriveLifecycle(OperationContext $context, Node $node, OperationKind $operation): Drive
+    private function assertDriveLifecycle(DriveContext $context, Node $node, OperationKind $operation): Drive
     {
         $drive = $node->storage()->first() ?? throw NodeNotFoundException::forId($node->id);
         $purging = $context->actor->isSystem() && $context->actor->ref()->reason === self::PURGE_REASON;
@@ -268,7 +268,7 @@ final readonly class OperationGuard
         return $drive;
     }
 
-    private function scoped(OperationContext $context, Node $node): Node
+    private function scoped(DriveContext $context, Node $node): Node
     {
         // Trash operations pass an explicitly located trashed node to the guard.
         $node = $this->locator->find(context: $context, key: $node, includeTrashed: true);
@@ -277,7 +277,7 @@ final readonly class OperationGuard
         return $node;
     }
 
-    private function grants(OperationContext $context, Node $node): GrantSet
+    private function grants(DriveContext $context, Node $node): GrantSet
     {
         $actor = $context->actor->authorizable();
 
@@ -316,7 +316,7 @@ final readonly class OperationGuard
         }
     }
 
-    private function profileAllows(OperationContext $context, Node $node, Ability $ability, OperationKind $operation, ?Drive $drive = null): bool
+    private function profileAllows(DriveContext $context, Node $node, Ability $ability, OperationKind $operation, ?Drive $drive = null): bool
     {
         $drive ??= $node->storage()->first() ?? throw NodeNotFoundException::forId($node->id);
 

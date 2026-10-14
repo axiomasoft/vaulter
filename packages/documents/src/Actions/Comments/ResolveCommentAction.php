@@ -12,7 +12,7 @@ use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Repositories\Comments\NodeCommentStoreRepository;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\TreeGuard;
 
@@ -32,7 +32,7 @@ final readonly class ResolveCommentAction
         private EventRecorder $recorder,
     ) {}
 
-    public function execute(OperationContext $context, ResolveCommentInput $data): NodeComment
+    public function execute(DriveContext $context, ResolveCommentInput $data): NodeComment
     {
         $resolvedBy = $context->actor->ref()->id;
 

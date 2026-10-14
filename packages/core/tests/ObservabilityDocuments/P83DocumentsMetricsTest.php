@@ -15,7 +15,7 @@ use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Support\LoadTier;
 use Vaulter\Testing\FakeMetricsRecorder;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -44,7 +44,7 @@ it('records vaulter_export_duration_seconds', function (): void {
     LoadTier::set('L');
 
     $node = p83DocumentNode();
-    app(ExportDocumentAction::class)->execute(OperationContext::system($node->storage()->firstOrFail(), 'metrics fixture'), new ExportDocumentInput($node, 'html'));
+    app(ExportDocumentAction::class)->execute(DriveContext::system($node->storage()->firstOrFail(), 'metrics fixture'), new ExportDocumentInput($node, 'html'));
 
     app(MetricsRecorder::class)->assertHistogram(
         name: 'vaulter_export_duration_seconds',

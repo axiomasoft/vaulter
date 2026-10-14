@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Operations;
 
+use Closure;
 use Illuminate\Pagination\CursorPaginator;
 use Vaulter\Access\OperationGuard;
 use Vaulter\Actions\Sharing\CreateShareLinkAction;
@@ -26,10 +27,11 @@ use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Sharing\NodeShare;
+use Vaulter\Modules\ModuleId;
 
 final readonly class ShareOperations implements Contract
 {
-    public function __construct(private OperationContext $context, private NodeLocator $locator, private OperationGuard $guard, private VaulterConfig $config, private CreateShareLinkAction $createLink, private RevokeShareLinkAction $deleteLink, private UpdateShareLinkAction $updateLink, private RotateShareLinkAction $rotateLink, private AccessSnapshotMapper $mapper) {}
+    public function __construct(private DriveContext $context, private NodeLocator $locator, private OperationGuard $guard, private VaulterConfig $config, private CreateShareLinkAction $createLink, private RevokeShareLinkAction $deleteLink, private UpdateShareLinkAction $updateLink, private RotateShareLinkAction $rotateLink, private AccessSnapshotMapper $mapper, private OperationRunner $runner) {}
 
     /** @return list<ShareLinkSnapshot> */
     public function list(NodeSnapshot|string|int $node): array
@@ -42,31 +44,39 @@ final readonly class ShareOperations implements Contract
 
     public function create(NodeSnapshot|string|int $node, ShareLinkInput $input): MintedShareLink
     {
-        $node = $this->authorized($node);
-        $minted = $this->createLink->execute(context: $this->context, input: new CreateShareLinkInput(node: $node, link: $input));
+        return $this->write('create', function () use ($node, $input): MintedShareLink {
+            $node = $this->authorized($node);
+            $minted = $this->createLink->execute(context: $this->context, input: new CreateShareLinkInput(node: $node, link: $input));
 
-        return new MintedShareLink(link: $this->mapper->share($minted->share), token: $minted->token);
+            return new MintedShareLink(link: $this->mapper->share($minted->share), token: $minted->token);
+        });
     }
 
     public function update(NodeSnapshot|string|int $node, ShareLinkSnapshot|string|int $share, ShareLinkUpdate $changes): ShareLinkSnapshot
     {
-        $node = $this->authorized($node);
+        return $this->write('update', function () use ($node, $share, $changes): ShareLinkSnapshot {
+            $node = $this->authorized($node);
 
-        return $this->mapper->share($this->updateLink->execute(context: $this->context, input: new UpdateShareLinkInput(node: $node, share: $this->owned($node, $share), changes: $changes)));
+            return $this->mapper->share($this->updateLink->execute(context: $this->context, input: new UpdateShareLinkInput(node: $node, share: $this->owned($node, $share), changes: $changes)));
+        });
     }
 
     public function rotate(NodeSnapshot|string|int $node, ShareLinkSnapshot|string|int $share): MintedShareLink
     {
-        $node = $this->authorized($node);
-        $minted = $this->rotateLink->execute(context: $this->context, input: new RotateShareLinkInput(node: $node, share: $this->owned($node, $share)));
+        return $this->write('rotate', function () use ($node, $share): MintedShareLink {
+            $node = $this->authorized($node);
+            $minted = $this->rotateLink->execute(context: $this->context, input: new RotateShareLinkInput(node: $node, share: $this->owned($node, $share)));
 
-        return new MintedShareLink(link: $this->mapper->share($minted->share), token: $minted->token);
+            return new MintedShareLink(link: $this->mapper->share($minted->share), token: $minted->token);
+        });
     }
 
     public function revoke(NodeSnapshot|string|int $node, ShareLinkSnapshot|string|int $share): void
     {
-        $node = $this->authorized($node);
-        $this->deleteLink->execute(context: $this->context, input: new RevokeShareInput(node: $node, share: $this->owned($node, $share)));
+        $this->write('revoke', function () use ($node, $share): void {
+            $node = $this->authorized($node);
+            $this->deleteLink->execute(context: $this->context, input: new RevokeShareInput(node: $node, share: $this->owned($node, $share)));
+        });
     }
 
     /** @internal Existing HTTP list pagination.
@@ -78,6 +88,17 @@ final readonly class ShareOperations implements Contract
         $class = $this->config->model('node_share');
 
         return $class::query()->where('node_id', $node->id)->orderByDesc('created_at')->orderByDesc('id')->cursorPaginate(perPage: $perPage)->through(fn (NodeShare $share): ShareLinkSnapshot => $this->mapper->share($share));
+    }
+
+    /**
+     * @template T
+     *
+     * @param  Closure(): T $attempt
+     * @return T
+     */
+    private function write(string $verb, Closure $attempt): mixed
+    {
+        return $this->runner->write(new OperationSpec('drive.shares.'.$verb, new ModuleId('drive')), $this->context->operation, $attempt);
     }
 
     /** The link, provided it hangs on this node; any other id looks like a missing node. */

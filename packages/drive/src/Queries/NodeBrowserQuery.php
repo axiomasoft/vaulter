@@ -23,8 +23,8 @@ use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
-use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Drive\DriveReadRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Support\Identity;
@@ -144,8 +144,8 @@ final readonly class NodeBrowserQuery
         return $options;
     }
 
-    private function context(DriveHandle $handle): OperationContext
+    private function context(DriveHandle $handle): DriveContext
     {
-        return new OperationContext(drive: $handle->model(), actor: $handle->actor(), correlationId: (string) Str::ulid());
+        return DriveContext::for(drive: $handle->model(), actor: $handle->actor(), correlationId: (string) Str::ulid());
     }
 }

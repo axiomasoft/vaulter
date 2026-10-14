@@ -19,7 +19,7 @@ use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Media\Configuration\MediaConfig;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Repositories\Changes\ChangeHeadRepository;
@@ -108,7 +108,7 @@ final readonly class DriveProvisioner
             }
             $storage = $this->store->create($attributes);
 
-            app(ScanPolicyResolver::class)->initialize($storage, OperationContext::system($storage, 'drive provisioning'));
+            app(ScanPolicyResolver::class)->initialize($storage, DriveContext::system($storage, 'drive provisioning'));
 
             $root = $this->nodes->create([
                 'drive_id' => $storage->id,

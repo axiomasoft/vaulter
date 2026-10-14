@@ -15,8 +15,8 @@ use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
-use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Access\GrantReadRepository;
 use Vaulter\Repositories\Access\GrantStoreRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
@@ -46,7 +46,7 @@ final readonly class SetNodeInheritanceAction
         private EventRecorder $recorder,
     ) {}
 
-    public function execute(OperationContext $context, Node $node, bool $inherit, InheritanceRestriction $mode = InheritanceRestriction::Empty): Node
+    public function execute(DriveContext $context, Node $node, bool $inherit, InheritanceRestriction $mode = InheritanceRestriction::Empty): Node
     {
         $node = $this->locator->find(context: $context, key: $node);
 
@@ -70,7 +70,7 @@ final readonly class SetNodeInheritanceAction
     }
 
     /** @return list<NodeGrant> the grants written on the node */
-    private function copyInherited(OperationContext $context, Node $node): array
+    private function copyInherited(DriveContext $context, Node $node): array
     {
         if ($node->parent_id === null) {
             return [];

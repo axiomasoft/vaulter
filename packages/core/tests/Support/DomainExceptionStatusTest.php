@@ -8,6 +8,7 @@ use Vaulter\Exceptions\Access\UnknownRoleException;
 use Vaulter\Exceptions\Database\WriteOutsideOperationException;
 use Vaulter\Exceptions\Drive\CannotDeleteHeadRevisionException;
 use Vaulter\Exceptions\Drive\RevisionPinnedException;
+use Vaulter\Exceptions\Modules\ModuleNotReadyException;
 use Vaulter\Exceptions\Nodes\InvalidNodeNameException;
 use Vaulter\Exceptions\Nodes\InvalidPropertiesException;
 use Vaulter\Exceptions\Nodes\UnsupportedNodeKindException;
@@ -18,6 +19,7 @@ use Vaulter\Exceptions\Registry\DuplicateNodeContentLifecycleException;
 use Vaulter\Exceptions\Registry\RegistryFrozenException;
 use Vaulter\Exceptions\Sharing\ShareLinkTtlExceededException;
 use Vaulter\Exceptions\Sharing\ShareRoleNotAllowedException;
+use Vaulter\Exceptions\Support\InvalidExtensionResult;
 use Vaulter\Exceptions\VaulterException;
 use Vaulter\Http\Problems\ProblemCatalog;
 use Vaulter\Modules\ModuleGraphException;
@@ -54,4 +56,6 @@ it('renders the documented domain code and HTTP status', function (VaulterExcept
     'frozen registry at boot' => [RegistryFrozenException::forRegistry('example'), 'registry_frozen', 500],
     'invalid module graph' => [ModuleGraphException::invalid(['example']), 'module_graph_invalid', 503],
     'integration write' => [new WriteOutsideOperationException('Node'), 'write_outside_operation', 500],
+    'module not ready' => [ModuleNotReadyException::missingTables('drive', ['v_nodes']), 'module_not_ready', 503],
+    'broken extension' => [InvalidExtensionResult::nextCalls('Acme\\Middleware', 'drive.folders.create', 2), 'extension_failed', 500],
 ]);

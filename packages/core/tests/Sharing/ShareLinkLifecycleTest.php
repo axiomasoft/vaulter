@@ -25,7 +25,7 @@ use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Sharing\NodeShare;
 use Vaulter\Models\Webhooks\Outbox;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\ShareOperations;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;
@@ -50,7 +50,7 @@ beforeEach(function (): void {
     config()->set('vaulter.features.share_links', true);
     $this->drive = AccessTestHelpers::storage();
     $this->node = AccessTestHelpers::folder($this->drive, null, 'lifecycle');
-    $this->shares = fn (): ShareOperations => app()->makeWith(ShareOperations::class, ['context' => OperationContext::system($this->drive, 'lifecycle fixture')]);
+    $this->shares = fn (): ShareOperations => app()->makeWith(ShareOperations::class, ['context' => DriveContext::system($this->drive, 'lifecycle fixture')]);
 });
 
 /** Replace the default profile with one carrying a share link TTL limit. */
@@ -91,7 +91,7 @@ it('keeps archived shares readable but hides deleting drives from new and existi
     $fileSession = $this->getJson('api/vaulter/v1/shares/'.$fileLink->token)->assertOk()->headers->get(ShareSession::HEADER);
     $resolver = app(ShareResolver::class);
     $resolved = $resolver->resolve($fileLink->token, session: $fileSession)->context;
-    $context = OperationContext::system($this->drive, 'lifecycle fixture');
+    $context = DriveContext::system($this->drive, 'lifecycle fixture');
 
     app(ArchiveDriveAction::class)->execute($context);
     $this->getJson('api/vaulter/v1/shares/'.$folderLink->token.'/nodes', [ShareSession::HEADER => $folderSession])->assertOk();
@@ -203,7 +203,7 @@ it('does not let update change what a link may carry', function (): void {
 it('refuses a previewer link the original while it shows the node', function (): void {
     $drive = Vaulter::drive(DriveTestHelpers::host())->asSystem('fixture');
     $file = $drive->files()->upload(UploadSource::fromStream(DriveTestHelpers::streamFor('bytes'), 'p.txt'));
-    $preview = app()->makeWith(ShareOperations::class, ['context' => OperationContext::system($drive->model(), 'fixture')])
+    $preview = app()->makeWith(ShareOperations::class, ['context' => DriveContext::system($drive->model(), 'fixture')])
         ->create($file->id, new ShareLinkInput(role: RoleRegistry::PREVIEWER));
 
     $this->getJson('api/vaulter/v1/shares/'.$preview->token)->assertOk();
@@ -217,7 +217,7 @@ it('keeps a foreign tenant out of a tenant link with an opaque 404', function ()
     app()->instance(TenantResolver::class, $resolver);
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($drive, null, 'tenant-only');
-    $minted = app()->makeWith(ShareOperations::class, ['context' => OperationContext::system($drive, 'fixture')])
+    $minted = app()->makeWith(ShareOperations::class, ['context' => DriveContext::system($drive, 'fixture')])
         ->create($node->id, new ShareLinkInput(audience: ShareAudience::Tenant));
     $actor = (new TestUser)->forceFill(['id' => 9]);
     $resolve = fn (?TestUser $who) => app(ShareResolver::class)->resolve($minted->token, actor: $who)->resolution;

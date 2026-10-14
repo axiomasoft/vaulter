@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.8",
   "title": "Нейтральный OperationContext и DriveContext; telemetry context",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "`Vaulter\\Operations\\OperationContext` больше не содержит Drive: actor, tenant, scope, correlation/causation, idempotency key, system reason, telemetry(); drive-пути получают `Vaulter\\Operations\\DriveContext` (owner drive, временно в core-неймспейсе) с теми же свойствами `drive`/`actor`. Поведение и все тесты без изменения ожиданий.",
   "why": "architecture#kernel: ядро без Drive ORM входов; OperationRunner (P3.9) и idempotency scope (D25) нуждаются в нейтральном контексте (tenant/scope/actor tagged). Риск: широкий механический рефакторинг (≈150 src-файлов, 67 тест-файлов) — только типы, без изменения логики.",
   "scope": {
@@ -199,6 +199,74 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-14T05:47:50Z"
+  "result": {
+    "started_at": "2026-10-14T10:16:15Z",
+    "finished_at": "2026-10-14T12:01:49Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium"
+    },
+    "deviations": [
+      "V5 (azgard RealAzgard*) красный вне диффа: дрейф ../azguard (P3.4/P3.5); V11 baseline --compare: exit 0, предупреждения stale core/drive/vue (list не перезаписан); красное вне диффа в repo/pgsql подтверждено на чистой базе 04aa3640 (worktree)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T12:01:49Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-14T12:01:49Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-14T12:01:49Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-14T12:01:49Z"
+      },
+      {
+        "id": "V5",
+        "exit": 2,
+        "at": "2026-10-14T12:01:49Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-14T12:01:49Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-14T12:01:49Z"
+      },
+      {
+        "id": "V8",
+        "exit": 0,
+        "at": "2026-10-14T12:01:49Z"
+      },
+      {
+        "id": "V9",
+        "exit": 0,
+        "at": "2026-10-14T12:01:49Z"
+      },
+      {
+        "id": "V10",
+        "exit": 0,
+        "at": "2026-10-14T12:01:49Z"
+      },
+      {
+        "id": "V11",
+        "exit": 0,
+        "at": "2026-10-14T12:01:49Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T12:01:49Z"
 }

@@ -13,7 +13,7 @@ use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
@@ -27,7 +27,7 @@ beforeEach(function (): void {
 
 function r07InitiateS3(int $totalBytes, string $name = 'contract.bin'): UploadSession
 {
-    return app(UploadSessionManager::class)->initiate(context: OperationContext::system(UploadTestHelpers::storage(), 'test fixture'), data: new InitiateUploadInput(
+    return app(UploadSessionManager::class)->initiate(context: DriveContext::system(UploadTestHelpers::storage(), 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::S3Multipart,
         targetParent: UploadTestHelpers::storage()->rootNode()->first(),
         targetName: $name,

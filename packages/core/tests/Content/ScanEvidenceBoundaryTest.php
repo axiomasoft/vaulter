@@ -26,7 +26,7 @@ use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\FileRevisionBlob;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Repositories\Content\ScanEvidenceRepository;
 use Vaulter\Repositories\Content\ScanObligationRepository;
 
@@ -60,7 +60,7 @@ function scanBoundaryFixture(?Blob $sharedBlob = null, ?Drive $drive = null): ar
     (new FileRevisionBlob)->forceFill(['file_revision_id' => $revision->id, 'blob_id' => $blob->id, 'role' => 'data', 'ordinal' => 0])->save();
     $file->forceFill(['current_revision_id' => $revision->id])->save();
 
-    return [$drive, $revision, $blob, OperationContext::system($drive, 'scan boundary fixture'), app(ScanConfig::class)->globalSpec()];
+    return [$drive, $revision, $blob, DriveContext::system($drive, 'scan boundary fixture'), app(ScanConfig::class)->globalSpec()];
 }
 
 it('persists work and request atomically and preserves explicit rescan request dedup across generations', function (): void {

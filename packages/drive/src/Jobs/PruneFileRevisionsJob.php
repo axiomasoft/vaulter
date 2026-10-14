@@ -20,7 +20,7 @@ use Vaulter\Exceptions\Drive\RevisionPinnedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Profiles\RevisionRetentionPolicy;
 use Vaulter\Support\Identity;
@@ -78,7 +78,7 @@ final class PruneFileRevisionsJob implements ShouldBeUnique, ShouldQueue
                 return $report;
             }
 
-            $context = OperationContext::system(drive: $drive, reason: self::ACTOR);
+            $context = DriveContext::system(drive: $drive, reason: self::ACTOR);
             $now = CarbonImmutable::now();
             $after = null;
             do {

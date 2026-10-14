@@ -23,8 +23,8 @@ use Vaulter\Exceptions\Nodes\NotAFileException;
 use Vaulter\Http\Middleware\AssignCorrelationId;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
-use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Drive\FileRevisionReadRepository;
 use Vaulter\Sharing\ShareContext;
 use Vaulter\Support\LoadTier;
@@ -97,7 +97,7 @@ final readonly class ContentResponder
 
     private function redirect(Request $request, DriveHandle $drive, string $nodeId, ?string $revisionId): RedirectResponse
     {
-        $context = new OperationContext(drive: $drive->model(), actor: $drive->actor(), correlationId: AssignCorrelationId::of($request) ?? (string) Str::ulid());
+        $context = DriveContext::for(drive: $drive->model(), actor: $drive->actor(), correlationId: AssignCorrelationId::of($request) ?? (string) Str::ulid());
         $node = $this->locator->find($context, $nodeId);
         // Match strict egress: View and Download precede kind and revision lookup.
         $this->guard->authorize($context, Ability::Download, $node, OperationKind::ContentEgress);

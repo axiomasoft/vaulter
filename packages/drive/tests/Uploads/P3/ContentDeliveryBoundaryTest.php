@@ -21,7 +21,7 @@ use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Handlers\FileDescriptorFactory;
 use Vaulter\Models\Content\ScanObligation;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Repositories\Content\ScanObligationRepository;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -29,7 +29,7 @@ use Vaulter\Tests\Drive\DriveTestHelpers;
 beforeEach(function (): void {
     Storage::fake('local');
     $this->system = Vaulter::drive(DriveTestHelpers::host())->asSystem('content egress fixture');
-    $this->context = OperationContext::system($this->system->model(), 'content egress fixture');
+    $this->context = DriveContext::system($this->system->model(), 'content egress fixture');
 });
 
 function p37DeliveryRequireScan($test): void

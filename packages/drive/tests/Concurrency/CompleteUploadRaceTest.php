@@ -17,7 +17,7 @@ use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Concurrency\ForkRace;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
@@ -42,7 +42,7 @@ it('V19 two complete calls commit one node revision edge quota update and event'
     $task = static function () use ($session): array {
         $fresh = $session->fresh();
         try {
-            $node = app(CompleteUploadAction::class)->execute(context: OperationContext::system($fresh->storage, 'complete race'), session: $fresh);
+            $node = app(CompleteUploadAction::class)->execute(context: DriveContext::system($fresh->storage, 'complete race'), session: $fresh);
 
             return ['node' => (string) $node->id, 'conflict' => false, 'pid' => DB::selectOne('SELECT pg_backend_pid() AS pid')->pid];
         } catch (UploadConflictException) {
@@ -59,7 +59,7 @@ it('V19 two complete calls commit one node revision edge quota update and event'
         ->and(Blob::query()->count())->toBe(1)->and($session->storage()->firstOrFail()->used_bytes)->toBe(4)
         ->and(DB::table('v_file_revision_blobs')->count())->toBe(1)
         ->and(DB::table('v_activity')->where('verb', 'file.uploaded')->count())->toBe(1);
-    $replay = app(CompleteUploadAction::class)->execute(context: OperationContext::system($session->storage, 'complete replay'), session: $session);
+    $replay = app(CompleteUploadAction::class)->execute(context: DriveContext::system($session->storage, 'complete replay'), session: $session);
     expect((string) $replay->id)->toBe((string) $session->result_node_id)->and(FileRevision::query()->count())->toBe(1);
 });
 
@@ -89,7 +89,7 @@ it('SEC-CLEANUP-commit-kill surviving independent worker discovers durable clean
                     });
                 });
                 $database->transaction(function () use ($session): void {
-                    app(CompleteUploadAction::class)->execute(context: OperationContext::system($session->storage, 'crash upload'), session: $session);
+                    app(CompleteUploadAction::class)->execute(context: DriveContext::system($session->storage, 'crash upload'), session: $session);
                 }, attempts: 1);
             },
             static function () use ($session, $barrier): array {
@@ -127,7 +127,7 @@ it('SEC-CLEANUP-mutex holds the session lock through the outer commit against ab
         $outcomes = ForkRace::run([
             static function () use ($session, $barrier): string {
                 return app(VaulterDatabase::class)->transaction(function () use ($session, $barrier): string {
-                    $node = app(CompleteUploadAction::class)->execute(context: OperationContext::system($session->storage, 'locked upload'), session: $session);
+                    $node = app(CompleteUploadAction::class)->execute(context: DriveContext::system($session->storage, 'locked upload'), session: $session);
                     if (app(StagedUpload::class)->size($session->fresh()) !== 4) {
                         throw new RuntimeException('Protocol staging disappeared before outer commit.');
                     }

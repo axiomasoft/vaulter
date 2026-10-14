@@ -17,7 +17,7 @@ use Vaulter\Enums\Drive\NodeSort;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 
 /**
  * @internal Bounded exact scan; cursors advance over every examined candidate.
@@ -30,7 +30,7 @@ final readonly class VisibleActivityQuery
     public function __construct(private VaulterConfig $config, private ListingConfig $listing, private OperationGuard $guard, private Repository $repository) {}
 
     /** @return VisibleActivityPaginator<Activity> */
-    public function execute(OperationContext $context, ListOptions $options, ?Node $node = null, ?EventType $verb = null): VisibleActivityPaginator
+    public function execute(DriveContext $context, ListOptions $options, ?Node $node = null, ?EventType $verb = null): VisibleActivityPaginator
     {
         if ($options->sort !== NodeSort::Default || $options->descending || $options->kinds !== []) {
             throw new InvalidArgumentException('Activity supports only perPage and forward cursor options.');
@@ -75,7 +75,7 @@ final readonly class VisibleActivityQuery
     }
 
     /** @return Builder<Activity> */
-    private function base(OperationContext $context, ?Node $node, ?EventType $verb): Builder
+    private function base(DriveContext $context, ?Node $node, ?EventType $verb): Builder
     {
         $class = $this->config->model('activity');
         $query = $class::query()->where('drive_id', $context->driveId())->newestFirst();
@@ -90,7 +90,7 @@ final readonly class VisibleActivityQuery
     }
 
     /** @param array<string, bool> $allowed */
-    private function visible(OperationContext $context, Activity $event, array $allowed): bool
+    private function visible(DriveContext $context, Activity $event, array $allowed): bool
     {
         if ($event->target_type === $context->drive->getMorphClass()) {
             return (string) $event->target_id === (string) $context->driveId();

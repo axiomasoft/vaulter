@@ -11,8 +11,8 @@ use Vaulter\Events\EventRecorder;
 use Vaulter\Events\Sharing\NodeShareRotated;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Sharing\NodeShare;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
-use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Sharing\NodeShareStoreRepository;
 use Vaulter\Sharing\ShareTokenMinter;
 
@@ -34,7 +34,7 @@ final readonly class RotateShareLinkAction
         private EventRecorder $recorder,
     ) {}
 
-    public function execute(OperationContext $context, RotateShareLinkInput $input): MintedShareLink
+    public function execute(DriveContext $context, RotateShareLinkInput $input): MintedShareLink
     {
         return $this->database->transaction(function () use ($context, $input): MintedShareLink {
             $node = $this->locator->find(context: $context, key: $input->node);

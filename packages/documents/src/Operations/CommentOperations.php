@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Operations;
 
+use Closure;
 use Vaulter\Access\OperationGuard;
 use Vaulter\Contracts\Drive\DriveExtension;
 use Vaulter\Data\Drive\ListOptions;
@@ -22,8 +23,11 @@ use Vaulter\Documents\Queries\DocumentQuery;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Operations\OperationKind;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Modules\ModuleId;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\OperationRunner;
+use Vaulter\Operations\OperationSpec;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Support\Identity;
 
@@ -38,7 +42,7 @@ use Vaulter\Support\Identity;
 final readonly class CommentOperations implements DriveExtension
 {
     public function __construct(
-        private OperationContext $context,
+        private DriveContext $context,
         private NodeLocator $locator,
         private OperationGuard $guard,
         private ProfilePolicy $profiles,
@@ -47,6 +51,7 @@ final readonly class CommentOperations implements DriveExtension
         private AddCommentAction $add,
         private ResolveCommentAction $resolve,
         private DeleteCommentAction $delete,
+        private OperationRunner $runner,
     ) {}
 
     /** @return Page<CommentSnapshot> oldest first */
@@ -63,36 +68,53 @@ final readonly class CommentOperations implements DriveExtension
 
     public function add(NodeSnapshot|string|int $node, AddCommentInput $input): CommentSnapshot
     {
-        $node = $this->node($node, Ability::Comment, OperationKind::Mutation);
-        if ($input->parentId !== null) {
-            // A reply threads only under a comment of the same node.
-            $this->query->comment($node, $input->parentId);
-        }
+        return $this->write('add', function () use ($node, $input): CommentSnapshot {
+            $node = $this->node($node, Ability::Comment, OperationKind::Mutation);
+            if ($input->parentId !== null) {
+                // A reply threads only under a comment of the same node.
+                $this->query->comment($node, $input->parentId);
+            }
 
-        return $this->mapper->comment($this->add->execute($this->context, $node, $input));
+            return $this->mapper->comment($this->add->execute($this->context, $node, $input));
+        });
     }
 
     public function resolve(NodeSnapshot|string|int $node, CommentSnapshot|string|int $comment): CommentSnapshot
     {
-        $node = $this->node($node, Ability::Comment, OperationKind::Mutation);
-        $row = $this->query->comment($node, $comment);
-        if (!$this->isAuthor($row)) {
-            $this->guard->authorize($this->context, Ability::Edit, $node, OperationKind::Mutation);
-        }
+        return $this->write('resolve', function () use ($node, $comment): CommentSnapshot {
+            $node = $this->node($node, Ability::Comment, OperationKind::Mutation);
+            $row = $this->query->comment($node, $comment);
+            if (!$this->isAuthor($row)) {
+                $this->guard->authorize($this->context, Ability::Edit, $node, OperationKind::Mutation);
+            }
 
-        return $this->mapper->comment($this->resolve->execute($this->context, new ResolveCommentInput($row)));
+            return $this->mapper->comment($this->resolve->execute($this->context, new ResolveCommentInput($row)));
+        });
     }
 
     public function delete(NodeSnapshot|string|int $node, CommentSnapshot|string|int $comment): void
     {
-        // Deleting is a mutation even for the author, so an archived drive refuses it.
-        $node = $this->node($node, Ability::View, OperationKind::Mutation);
-        $row = $this->query->comment($node, $comment);
-        if (!$this->isAuthor($row)) {
-            $this->guard->authorize($this->context, Ability::Manage, $node, OperationKind::Mutation);
-        }
+        $this->write('delete', function () use ($node, $comment): void {
+            // Deleting is a mutation even for the author, so an archived drive refuses it.
+            $node = $this->node($node, Ability::View, OperationKind::Mutation);
+            $row = $this->query->comment($node, $comment);
+            if (!$this->isAuthor($row)) {
+                $this->guard->authorize($this->context, Ability::Manage, $node, OperationKind::Mutation);
+            }
 
-        $this->delete->execute($this->context, new DeleteCommentInput($row));
+            $this->delete->execute($this->context, new DeleteCommentInput($row));
+        });
+    }
+
+    /**
+     * @template T
+     *
+     * @param  Closure(): T $attempt
+     * @return T
+     */
+    private function write(string $verb, Closure $attempt): mixed
+    {
+        return $this->runner->write(new OperationSpec('documents.comments.'.$verb, new ModuleId('documents')), $this->context->operation, $attempt);
     }
 
     private function node(NodeSnapshot|string|int $key, Ability $ability, OperationKind $operation): Node

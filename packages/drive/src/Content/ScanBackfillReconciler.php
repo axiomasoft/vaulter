@@ -11,7 +11,7 @@ use Vaulter\Content\ScanSnapshot;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Models\Drive\Drive;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tenancy\TenancyBoundary;
 
 final readonly class ScanBackfillReconciler
@@ -84,7 +84,7 @@ final readonly class ScanBackfillReconciler
                         $obligation = null;
                         if ($selected !== null) {
                             $snapshot = $this->snapshots->load($selected, true);
-                            $context = OperationContext::system($snapshot['drive'], 'scan policy backfill');
+                            $context = DriveContext::system($snapshot['drive'], 'scan policy backfill');
                             $this->policies->forDrive($snapshot['drive']);
                             $obligation = $this->request->ensure($snapshot['revision'], $spec, $run->request_key, $context);
                         }

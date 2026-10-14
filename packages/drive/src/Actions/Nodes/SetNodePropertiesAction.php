@@ -10,9 +10,9 @@ use Vaulter\Drive\Events\Nodes\NodeUpdated;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\NodeSequence;
-use Vaulter\Operations\OperationContext;
 use Vaulter\Profiles\DrivePolicyEnforcer;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\DriveLifecycle;
@@ -39,7 +39,7 @@ final readonly class SetNodePropertiesAction
         private EventRecorder $recorder,
     ) {}
 
-    public function execute(OperationContext $context, SetNodePropertiesInput $data): Node
+    public function execute(DriveContext $context, SetNodePropertiesInput $data): Node
     {
         $node = $this->locator->find(context: $context, key: $data->node);
 

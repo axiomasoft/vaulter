@@ -16,7 +16,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Nodes\InvalidCursorException;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Support\Identity;
 use WeakMap;
 
@@ -41,9 +41,9 @@ final readonly class ExactListing
      * @param Builder<Node>                                      $candidates
      * @param list<array{column:string, direction:'asc'|'desc'}> $order
      */
-    public function page(Authorizable|OperationContext|null $actor, Builder $candidates, array $order, int $perPage, ?string $cursor, string $context): NodePage
+    public function page(Authorizable|DriveContext|null $actor, Builder $candidates, array $order, int $perPage, ?string $cursor, string $context): NodePage
     {
-        $operation = $actor instanceof OperationContext ? $actor : null;
+        $operation = $actor instanceof DriveContext ? $actor : null;
         if ($operation !== null) {
             $candidates = (clone $candidates)->where('drive_id', $operation->driveId());
             $actor = $operation->actor->authorizable();

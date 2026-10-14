@@ -34,7 +34,7 @@ use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Enums\Access\Permission;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Support\LoadTier;
 use Vaulter\Testing\FakeMetricsRecorder;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -223,7 +223,7 @@ it('rejects an unstatable chunk when the ceiling is 1 byte and stages nothing', 
 it('rejects an s3 part of 2 bytes when the ceiling is 1 byte', function (): void {
     config()->set('vaulter-drive.uploads.resumable.max_chunk_size', 1);
     $storage = UploadTestHelpers::storage();
-    $session = app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
+    $session = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::S3Multipart,
         targetParent: $storage->rootNode()->first(),
         targetName: 'one.bin',
@@ -244,7 +244,7 @@ it('rejects an s3 part of 2 bytes when the ceiling is 1 byte', function (): void
 it('records an assemble duration of a few seconds, not the nanosecond product', function (): void {
     r07dMetrics();
     $storage = UploadTestHelpers::storage();
-    $session = app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
+    $session = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::S3Multipart,
         targetParent: $storage->rootNode()->first(),
         targetName: 'asm.bin',

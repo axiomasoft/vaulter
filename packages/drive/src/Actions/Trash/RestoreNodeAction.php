@@ -17,9 +17,9 @@ use Vaulter\Exceptions\Nodes\NodeTrashedByAncestorException;
 use Vaulter\Exceptions\Nodes\RestoreDestinationChangedException;
 use Vaulter\Exceptions\Nodes\RestoreDestinationRequiredException;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\NodeSequence;
-use Vaulter\Operations\OperationContext;
 use Vaulter\Profiles\DrivePolicyEnforcer;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
@@ -47,7 +47,7 @@ final readonly class RestoreNodeAction
      * the explicit one, else the original parent. A restore never moves a
      * node silently to the root.
      */
-    public function resolveDestination(OperationContext $context, Node $node, Node|NodeSnapshot|int|string|null $explicit = null): Node
+    public function resolveDestination(DriveContext $context, Node $node, Node|NodeSnapshot|int|string|null $explicit = null): Node
     {
         $node = $this->locator->find(context: $context, key: $node, includeTrashed: true);
         if ($node->trashed_at === null) {
@@ -74,7 +74,7 @@ final readonly class RestoreNodeAction
         return $original;
     }
 
-    public function execute(OperationContext $context, RestoreNodeInput $data): Node
+    public function execute(DriveContext $context, RestoreNodeInput $data): Node
     {
         $node = $this->locator->find(context: $context, key: $data->node, includeTrashed: true);
 

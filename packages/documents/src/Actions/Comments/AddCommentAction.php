@@ -13,7 +13,7 @@ use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\TreeGuard;
 
@@ -40,7 +40,7 @@ final readonly class AddCommentAction
         private EventRecorder $recorder,
     ) {}
 
-    public function execute(OperationContext $context, Node $node, AddCommentInput $data): NodeComment
+    public function execute(DriveContext $context, Node $node, AddCommentInput $data): NodeComment
     {
         $author = $context->actor->ref();
         if ($context->actor->isSystem() || $author->type === null || $author->id === null) {

@@ -29,13 +29,16 @@ use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleId;
 use Vaulter\Modules\SlotKind;
 use Vaulter\Modules\VaulterModule;
+use Vaulter\Observability\TelemetryMiddleware;
+use Vaulter\Operations\OperationMiddleware;
 use Vaulter\Providers\BindingsRegistrar;
 use Vaulter\Providers\EventsRegistrar;
 
 /**
  * The kernel's own module (ADR-0027): the `vaulter` config root, the schema of every create-migration
- * still shipped by core until P4 splits them (D36), the kernel commands and doctor checks, and the
- * DoctorCheck slot every module contributes its checks to.
+ * still shipped by core until P4 splits them (D36), the kernel commands and doctor checks, the
+ * DoctorCheck slot every module contributes its checks to and the OperationMiddleware slot of the
+ * operation pipeline with its telemetry middleware (ADR-0028).
  */
 final class CoreModule implements VaulterModule
 {
@@ -90,7 +93,9 @@ final class CoreModule implements VaulterModule
                 ConfigReferenceCommand::class,
                 CommandsReferenceCommand::class,
             )
-            ->defineSlot(DoctorCheck::class, SlotKind::Handler, Cardinality::Many);
+            ->defineSlot(DoctorCheck::class, SlotKind::Handler, Cardinality::Many)
+            ->defineSlot(OperationMiddleware::class, SlotKind::OperationMiddleware, Cardinality::Many)
+            ->slot(OperationMiddleware::class, TelemetryMiddleware::class, 'core.telemetry');
 
         foreach (self::DOCTOR_CHECKS as $key => $check) {
             $module->slot(DoctorCheck::class, $check, $key, key: $key);

@@ -16,7 +16,12 @@ use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Nodes\StorageNotFoundException;
 use Vaulter\Http\Middleware\AssignCorrelationId;
 use Vaulter\Models\Drive\Drive;
+use Vaulter\Operations\DriveContext;
+use Vaulter\Operations\OperationContext;
 use Vaulter\Support\Identity;
+use Vaulter\ValueObjects\Access\Actor;
+use Vaulter\ValueObjects\Operations\ScopeRef;
+use Vaulter\ValueObjects\Operations\TenantRef;
 use Vaulter\VaulterManager;
 
 /**
@@ -36,7 +41,24 @@ final readonly class HttpOperationContextFactory
     {
         return $this->vaulter->drive($drive)
             ->actingAs($this->user($request))
-            ->withCorrelationId(AssignCorrelationId::of($request) ?? (string) Str::ulid());
+            ->withCorrelationId($this->correlationId($request));
+    }
+
+    /** The neutral context of a request acting within a scope that is not a drive. */
+    public function operation(Request $request, ScopeRef $scope, TenantRef $tenant): OperationContext
+    {
+        return OperationContext::for(
+            actor: Actor::user($this->user($request)),
+            scope: $scope,
+            tenant: $tenant,
+            correlationId: $this->correlationId($request),
+        );
+    }
+
+    /** The context of a request acting on one drive, as the drive handle builds it. */
+    public function driveContext(Request $request, Drive $drive): DriveContext
+    {
+        return DriveContext::for(drive: $drive, actor: Actor::user($this->user($request)), correlationId: $this->correlationId($request));
     }
 
     /**
@@ -140,6 +162,11 @@ final readonly class HttpOperationContextFactory
 
             throw $missing;
         }
+    }
+
+    private function correlationId(Request $request): string
+    {
+        return AssignCorrelationId::of($request) ?? (string) Str::ulid();
     }
 
     public function user(Request $request): Authorizable

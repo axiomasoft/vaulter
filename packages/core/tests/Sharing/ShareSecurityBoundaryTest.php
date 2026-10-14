@@ -17,7 +17,7 @@ use Vaulter\Exceptions\Sharing\ShareRoleNotAllowedException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Sharing\NodeShare;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\ShareOperations;
 use Vaulter\Sharing\ShareResolver;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -39,7 +39,7 @@ it('rejects foreign share identity even when a model claims own node membership'
     $share = ShareTestHelpers::share($other);
     $forged = clone $share;
     $forged->node_id = $node->id;
-    $operation = app()->makeWith(ShareOperations::class, ['context' => new OperationContext($drive, Actor::user(AccessTestHelpers::user()), 'foreign-test')]);
+    $operation = app()->makeWith(ShareOperations::class, ['context' => DriveContext::for($drive, Actor::user(AccessTestHelpers::user()), 'foreign-test')]);
     expect(fn () => $operation->revoke($node->id, $forged->getKey()))->toThrow(NodeNotFoundException::class)
         ->and($share->fresh()->revoked_at)->toBeNull();
 });
@@ -47,7 +47,7 @@ it('rejects foreign share identity even when a model claims own node membership'
 it('rejects invalid direct share inputs before minting or recording', function (): void {
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($drive, null, 'validation');
-    $operation = app()->makeWith(ShareOperations::class, ['context' => OperationContext::system($drive, 'fixture')]);
+    $operation = app()->makeWith(ShareOperations::class, ['context' => DriveContext::system($drive, 'fixture')]);
     foreach ([new ShareLinkInput(maxUses: 0), new ShareLinkInput(expiresAt: now()->subSecond()), new ShareLinkInput(expiresAt: now()->addYears(10)), new ShareLinkInput(audience: ShareAudience::Tenant)] as $input) {
         expect(fn () => $operation->create($node->id, $input))->toThrow(InvalidArgumentException::class);
     }
@@ -66,7 +66,7 @@ it('denies every new resolution after revoke commit on independent connections',
     }
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($drive, null, 'linearization');
-    $operation = app()->makeWith(ShareOperations::class, ['context' => OperationContext::system($drive, 'fixture')]);
+    $operation = app()->makeWith(ShareOperations::class, ['context' => DriveContext::system($drive, 'fixture')]);
     $minted = $operation->create($node->id, new ShareLinkInput);
     expect(app(ShareResolver::class)->resolve($minted->token)->isOk())->toBeTrue();
     if (DB::connection()->getDriverName() === 'pgsql') {
@@ -74,7 +74,7 @@ it('denies every new resolution after revoke commit on independent connections',
         try {
             $outcomes = ForkRace::run([
                 function () use ($drive, $node, $minted, $marker): array {
-                    app()->makeWith(ShareOperations::class, ['context' => OperationContext::system($drive, 'race revoke')])->revoke($node->id, $minted->link->id);
+                    app()->makeWith(ShareOperations::class, ['context' => DriveContext::system($drive, 'race revoke')])->revoke($node->id, $minted->link->id);
                     file_put_contents($marker, 'committed');
 
                     return ['pid' => getmypid(), 'backend' => DB::selectOne('select pg_backend_pid() as pid')->pid];
@@ -115,7 +115,7 @@ it('checks the public download availability hook before opening bytes and keeps 
     config()->set('vaulter.scan.mode', 'all_content');
     config()->set('vaulter.scan.scanner_key', 'fixture');
     config()->set('vaulter.scan.scanner_version', '1');
-    app(ScanPolicyResolver::class)->initialize($drive->model(), OperationContext::system($drive->model(), 'share availability fixture'));
+    app(ScanPolicyResolver::class)->initialize($drive->model(), DriveContext::system($drive->model(), 'share availability fixture'));
     ShareTestHelpers::share($node, token: 'pending-hook');
     $storage = Mockery::mock(StorageDriver::class);
     $storage->shouldNotReceive('get');

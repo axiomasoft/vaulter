@@ -4150,39 +4150,6 @@
         {
             "category": "reverse-edge",
             "count": 1,
-            "file": "packages/core/src/Operations/OperationContext.php",
-            "kind": "use",
-            "reason": "контекст операции ядра ссылается на доменный тип drive: нужен контракт субъекта операции (цель: drive)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Models\\Drive\\Drive",
-            "view": "target"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 1,
-            "file": "packages/core/src/Operations/OperationContext.php",
-            "kind": "name",
-            "reason": "контекст операции ядра ссылается на доменный тип drive: нужен контракт субъекта операции (цель: drive)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Operations\\OperationContext::__construct",
-            "target": "Vaulter\\Models\\Drive\\Drive",
-            "view": "target"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 1,
-            "file": "packages/core/src/Operations/OperationContext.php",
-            "kind": "name",
-            "reason": "контекст операции ядра ссылается на доменный тип drive: нужен контракт субъекта операции (цель: drive)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Operations\\OperationContext::system",
-            "target": "Vaulter\\Models\\Drive\\Drive",
-            "view": "target"
-        },
-        {
-            "category": "reverse-edge",
-            "count": 1,
             "file": "packages/core/src/Providers/BindingsRegistrar.php",
             "kind": "use",
             "reason": "провайдер ядра биндит доменные контракты и реализации: биндинги переезжают в провайдеры владельцев (цель: webhooks)",
@@ -5339,17 +5306,6 @@
             "category": "needs-explicit-require",
             "count": 1,
             "file": "packages/documents/src/Actions/Comments/AddCommentAction.php",
-            "kind": "use",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Operations\\OperationContext",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Actions/Comments/AddCommentAction.php",
             "kind": "name",
             "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
             "removed_in": "P4",
@@ -5382,17 +5338,6 @@
         {
             "category": "needs-explicit-require",
             "count": 1,
-            "file": "packages/documents/src/Actions/Comments/AddCommentAction.php",
-            "kind": "name",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Documents\\Actions\\Comments\\AddCommentAction::execute",
-            "target": "Vaulter\\Operations\\OperationContext",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
             "file": "packages/documents/src/Actions/Comments/DeleteCommentAction.php",
             "kind": "use",
             "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
@@ -5410,17 +5355,6 @@
             "removed_in": "P4",
             "symbol": "<file>",
             "target": "Vaulter\\Events\\EventRecorder",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Actions/Comments/DeleteCommentAction.php",
-            "kind": "use",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Operations\\OperationContext",
             "view": "target"
         },
         {
@@ -5448,17 +5382,6 @@
         {
             "category": "needs-explicit-require",
             "count": 1,
-            "file": "packages/documents/src/Actions/Comments/DeleteCommentAction.php",
-            "kind": "name",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Documents\\Actions\\Comments\\DeleteCommentAction::execute",
-            "target": "Vaulter\\Operations\\OperationContext",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
             "file": "packages/documents/src/Actions/Comments/ResolveCommentAction.php",
             "kind": "use",
             "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
@@ -5476,17 +5399,6 @@
             "removed_in": "P4",
             "symbol": "<file>",
             "target": "Vaulter\\Events\\EventRecorder",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Actions/Comments/ResolveCommentAction.php",
-            "kind": "use",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Operations\\OperationContext",
             "view": "target"
         },
         {
@@ -5514,17 +5426,6 @@
         {
             "category": "needs-explicit-require",
             "count": 1,
-            "file": "packages/documents/src/Actions/Comments/ResolveCommentAction.php",
-            "kind": "name",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Documents\\Actions\\Comments\\ResolveCommentAction::execute",
-            "target": "Vaulter\\Operations\\OperationContext",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
             "file": "packages/documents/src/Actions/Documents/CreateDocumentAction.php",
             "kind": "use",
             "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
@@ -5542,17 +5443,6 @@
             "removed_in": "P4",
             "symbol": "<file>",
             "target": "Vaulter\\Events\\EventRecorder",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Actions/Documents/CreateDocumentAction.php",
-            "kind": "use",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Operations\\OperationContext",
             "view": "target"
         },
         {
@@ -5586,17 +5476,6 @@
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Actions\\Documents\\CreateDocumentAction::__construct",
             "target": "Vaulter\\Events\\EventRecorder",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Actions/Documents/CreateDocumentAction.php",
-            "kind": "name",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Documents\\Actions\\Documents\\CreateDocumentAction::execute",
-            "target": "Vaulter\\Operations\\OperationContext",
             "view": "target"
         },
         {
@@ -5636,17 +5515,6 @@
             "category": "needs-explicit-require",
             "count": 1,
             "file": "packages/documents/src/Actions/Documents/UpdateDocumentContentAction.php",
-            "kind": "use",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Operations\\OperationContext",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Actions/Documents/UpdateDocumentContentAction.php",
             "kind": "name",
             "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
             "removed_in": "P4",
@@ -5668,34 +5536,12 @@
         {
             "category": "needs-explicit-require",
             "count": 1,
-            "file": "packages/documents/src/Actions/Documents/UpdateDocumentContentAction.php",
-            "kind": "name",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Documents\\Actions\\Documents\\UpdateDocumentContentAction::execute",
-            "target": "Vaulter\\Operations\\OperationContext",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
             "file": "packages/documents/src/Actions/Export/ExportDocumentAction.php",
             "kind": "use",
             "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
             "removed_in": "P4",
             "symbol": "<file>",
             "target": "Vaulter\\Contracts\\Observability\\MetricsRecorder",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Actions/Export/ExportDocumentAction.php",
-            "kind": "use",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Operations\\OperationContext",
             "view": "target"
         },
         {
@@ -5739,17 +5585,6 @@
             "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Actions\\Export\\ExportDocumentAction::execute",
-            "target": "Vaulter\\Operations\\OperationContext",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Actions/Export/ExportDocumentAction.php",
-            "kind": "name",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Documents\\Actions\\Export\\ExportDocumentAction::execute",
             "target": "Vaulter\\Support\\Identity",
             "view": "target"
         },
@@ -5790,17 +5625,6 @@
             "category": "needs-explicit-require",
             "count": 1,
             "file": "packages/documents/src/Actions/Revisions/CreateNamedRevisionAction.php",
-            "kind": "use",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Operations\\OperationContext",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Actions/Revisions/CreateNamedRevisionAction.php",
             "kind": "name",
             "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
             "removed_in": "P4",
@@ -5817,17 +5641,6 @@
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Actions\\Revisions\\CreateNamedRevisionAction::__construct",
             "target": "Vaulter\\Events\\EventRecorder",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Actions/Revisions/CreateNamedRevisionAction.php",
-            "kind": "name",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Documents\\Actions\\Revisions\\CreateNamedRevisionAction::execute",
-            "target": "Vaulter\\Operations\\OperationContext",
             "view": "target"
         },
         {
@@ -5850,17 +5663,6 @@
             "removed_in": "P4",
             "symbol": "<file>",
             "target": "Vaulter\\Events\\EventRecorder",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Actions/Revisions/RestoreDocumentRevisionAction.php",
-            "kind": "use",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Operations\\OperationContext",
             "view": "target"
         },
         {
@@ -5888,34 +5690,12 @@
         {
             "category": "needs-explicit-require",
             "count": 1,
-            "file": "packages/documents/src/Actions/Revisions/RestoreDocumentRevisionAction.php",
-            "kind": "name",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Documents\\Actions\\Revisions\\RestoreDocumentRevisionAction::execute",
-            "target": "Vaulter\\Operations\\OperationContext",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
             "file": "packages/documents/src/Actions/Revisions/UpdateRevisionRetentionAction.php",
             "kind": "use",
             "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
             "removed_in": "P4",
             "symbol": "<file>",
             "target": "Vaulter\\Database\\VaulterDatabase",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Actions/Revisions/UpdateRevisionRetentionAction.php",
-            "kind": "use",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Operations\\OperationContext",
             "view": "target"
         },
         {
@@ -5927,17 +5707,6 @@
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Actions\\Revisions\\UpdateRevisionRetentionAction::__construct",
             "target": "Vaulter\\Database\\VaulterDatabase",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Actions/Revisions/UpdateRevisionRetentionAction.php",
-            "kind": "name",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Documents\\Actions\\Revisions\\UpdateRevisionRetentionAction::execute",
-            "target": "Vaulter\\Operations\\OperationContext",
             "view": "target"
         },
         {
@@ -6510,39 +6279,6 @@
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Configuration\\DocumentsConfig::types",
             "target": "Vaulter\\Exceptions\\Configuration\\InvalidConfigurationException",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Content/DocumentContentLifecycle.php",
-            "kind": "use",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Operations\\OperationContext",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Content/DocumentContentLifecycle.php",
-            "kind": "name",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Documents\\Content\\DocumentContentLifecycle::copy",
-            "target": "Vaulter\\Operations\\OperationContext",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Content/DocumentContentLifecycle.php",
-            "kind": "name",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Documents\\Content\\DocumentContentLifecycle::purge",
-            "target": "Vaulter\\Operations\\OperationContext",
             "view": "target"
         },
         {
@@ -9699,29 +9435,7 @@
             "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Operations\\OperationContext",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Operations/CommentOperations.php",
-            "kind": "use",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "<file>",
             "target": "Vaulter\\Support\\Identity",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Operations/CommentOperations.php",
-            "kind": "name",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Documents\\Operations\\CommentOperations::__construct",
-            "target": "Vaulter\\Operations\\OperationContext",
             "view": "target"
         },
         {
@@ -9744,6 +9458,72 @@
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Operations\\CommentOperations::list",
             "target": "Vaulter\\Data\\Page",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/documents/src/Operations/CommentOperations.php",
+            "kind": "use",
+            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "<file>",
+            "target": "Vaulter\\Modules\\ModuleId",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/documents/src/Operations/CommentOperations.php",
+            "kind": "use",
+            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "<file>",
+            "target": "Vaulter\\Operations\\OperationRunner",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/documents/src/Operations/CommentOperations.php",
+            "kind": "use",
+            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "<file>",
+            "target": "Vaulter\\Operations\\OperationSpec",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/documents/src/Operations/CommentOperations.php",
+            "kind": "name",
+            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "Vaulter\\Documents\\Operations\\CommentOperations::__construct",
+            "target": "Vaulter\\Operations\\OperationRunner",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/documents/src/Operations/CommentOperations.php",
+            "kind": "name",
+            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "Vaulter\\Documents\\Operations\\CommentOperations::write",
+            "target": "Vaulter\\Modules\\ModuleId",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/documents/src/Operations/CommentOperations.php",
+            "kind": "name",
+            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "Vaulter\\Documents\\Operations\\CommentOperations::write",
+            "target": "Vaulter\\Operations\\OperationSpec",
             "view": "target"
         },
         {
@@ -9791,17 +9571,6 @@
             "view": "target"
         },
         {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Operations/DocumentOperations.php",
-            "kind": "use",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Operations\\OperationContext",
-            "view": "target"
-        },
-        {
             "category": "reverse-edge",
             "count": 1,
             "file": "packages/documents/src/Operations/DocumentOperations.php",
@@ -9810,17 +9579,6 @@
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Operations\\DocumentOperations::__construct",
             "target": "Vaulter\\Documents\\Collaboration\\CollaborationSessionService",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/documents/src/Operations/DocumentOperations.php",
-            "kind": "name",
-            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Documents\\Operations\\DocumentOperations::__construct",
-            "target": "Vaulter\\Operations\\OperationContext",
             "view": "target"
         },
         {
@@ -9854,6 +9612,72 @@
             "removed_in": "P4",
             "symbol": "Vaulter\\Documents\\Operations\\DocumentOperations::revisions",
             "target": "Vaulter\\Data\\Page",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/documents/src/Operations/DocumentOperations.php",
+            "kind": "use",
+            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "<file>",
+            "target": "Vaulter\\Modules\\ModuleId",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/documents/src/Operations/DocumentOperations.php",
+            "kind": "use",
+            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "<file>",
+            "target": "Vaulter\\Operations\\OperationRunner",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/documents/src/Operations/DocumentOperations.php",
+            "kind": "use",
+            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "<file>",
+            "target": "Vaulter\\Operations\\OperationSpec",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/documents/src/Operations/DocumentOperations.php",
+            "kind": "name",
+            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "Vaulter\\Documents\\Operations\\DocumentOperations::__construct",
+            "target": "Vaulter\\Operations\\OperationRunner",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/documents/src/Operations/DocumentOperations.php",
+            "kind": "name",
+            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "Vaulter\\Documents\\Operations\\DocumentOperations::write",
+            "target": "Vaulter\\Modules\\ModuleId",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/documents/src/Operations/DocumentOperations.php",
+            "kind": "name",
+            "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "Vaulter\\Documents\\Operations\\DocumentOperations::write",
+            "target": "Vaulter\\Operations\\OperationSpec",
             "view": "target"
         },
         {
@@ -10040,17 +9864,6 @@
             "reason": "filament импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer filament (architecture#packages)",
             "removed_in": "P4",
             "symbol": "<file>",
-            "target": "Vaulter\\Operations\\OperationContext",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/filament/src/Resources/ActivityResource.php",
-            "kind": "use",
-            "reason": "filament импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer filament (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "<file>",
             "target": "Vaulter\\Tenancy\\TenancyBoundary",
             "view": "target"
         },
@@ -10085,17 +9898,6 @@
             "removed_in": "P4",
             "symbol": "Vaulter\\Filament\\Resources\\ActivityResource::getEloquentQuery",
             "target": "Vaulter\\Exceptions\\VaulterException",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/filament/src/Resources/ActivityResource.php",
-            "kind": "name",
-            "reason": "filament импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer filament (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Filament\\Resources\\ActivityResource::getEloquentQuery",
-            "target": "Vaulter\\Operations\\OperationContext",
             "view": "target"
         },
         {
@@ -10217,17 +10019,6 @@
             "removed_in": "P4",
             "symbol": "<file>",
             "target": "Vaulter\\Exceptions\\VaulterException",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/filament/src/Resources/NodeGrantResource.php",
-            "kind": "use",
-            "reason": "filament импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer filament (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Operations\\OperationContext",
             "view": "target"
         },
         {
@@ -10392,17 +10183,6 @@
             "reason": "filament импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer filament (architecture#packages)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Filament\\Resources\\NodeGrantResource::operations",
-            "target": "Vaulter\\Operations\\OperationContext",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/filament/src/Resources/NodeGrantResource.php",
-            "kind": "name",
-            "reason": "filament импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer filament (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Filament\\Resources\\NodeGrantResource::operations",
             "target": "Vaulter\\ValueObjects\\Access\\Actor",
             "view": "target"
         },
@@ -10492,17 +10272,6 @@
             "removed_in": "P4",
             "symbol": "<file>",
             "target": "Vaulter\\Exceptions\\VaulterException",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/filament/src/Resources/NodeShareResource.php",
-            "kind": "use",
-            "reason": "filament импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer filament (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Operations\\OperationContext",
             "view": "target"
         },
         {
@@ -10657,17 +10426,6 @@
             "removed_in": "P4",
             "symbol": "Vaulter\\Filament\\Resources\\NodeShareResource::operations",
             "target": "Vaulter\\Exceptions\\Access\\MissingActorException",
-            "view": "target"
-        },
-        {
-            "category": "needs-explicit-require",
-            "count": 1,
-            "file": "packages/filament/src/Resources/NodeShareResource.php",
-            "kind": "name",
-            "reason": "filament импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer filament (architecture#packages)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Filament\\Resources\\NodeShareResource::operations",
-            "target": "Vaulter\\Operations\\OperationContext",
             "view": "target"
         },
         {
@@ -11493,6 +11251,138 @@
             "removed_in": "P4",
             "symbol": "Vaulter\\Webhooks\\WebhooksSchedule",
             "target": "Vaulter\\Providers\\SchedulingRegistrar",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/core/src/Webhooks/WebhookEndpointWrites.php",
+            "kind": "use",
+            "reason": "webhooks импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer webhooks (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "<file>",
+            "target": "Vaulter\\Modules\\ModuleId",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/core/src/Webhooks/WebhookEndpointWrites.php",
+            "kind": "use",
+            "reason": "webhooks импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer webhooks (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "<file>",
+            "target": "Vaulter\\Operations\\OperationRunner",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/core/src/Webhooks/WebhookEndpointWrites.php",
+            "kind": "use",
+            "reason": "webhooks импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer webhooks (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "<file>",
+            "target": "Vaulter\\Operations\\OperationSpec",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/core/src/Webhooks/WebhookEndpointWrites.php",
+            "kind": "use",
+            "reason": "webhooks импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer webhooks (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "<file>",
+            "target": "Vaulter\\Tenancy\\TenancyBoundary",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/core/src/Webhooks/WebhookEndpointWrites.php",
+            "kind": "use",
+            "reason": "webhooks импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer webhooks (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "<file>",
+            "target": "Vaulter\\ValueObjects\\Operations\\ScopeRef",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/core/src/Webhooks/WebhookEndpointWrites.php",
+            "kind": "use",
+            "reason": "webhooks импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer webhooks (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "<file>",
+            "target": "Vaulter\\ValueObjects\\Operations\\TenantRef",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/core/src/Webhooks/WebhookEndpointWrites.php",
+            "kind": "name",
+            "reason": "webhooks импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer webhooks (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "Vaulter\\Webhooks\\WebhookEndpointWrites::__construct",
+            "target": "Vaulter\\Operations\\OperationRunner",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/core/src/Webhooks/WebhookEndpointWrites.php",
+            "kind": "name",
+            "reason": "webhooks импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer webhooks (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "Vaulter\\Webhooks\\WebhookEndpointWrites::__construct",
+            "target": "Vaulter\\Tenancy\\TenancyBoundary",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/core/src/Webhooks/WebhookEndpointWrites.php",
+            "kind": "name",
+            "reason": "webhooks импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer webhooks (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "Vaulter\\Webhooks\\WebhookEndpointWrites::write",
+            "target": "Vaulter\\Modules\\ModuleId",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 1,
+            "file": "packages/core/src/Webhooks/WebhookEndpointWrites.php",
+            "kind": "name",
+            "reason": "webhooks импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer webhooks (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "Vaulter\\Webhooks\\WebhookEndpointWrites::write",
+            "target": "Vaulter\\Operations\\OperationSpec",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 2,
+            "file": "packages/core/src/Webhooks/WebhookEndpointWrites.php",
+            "kind": "name",
+            "reason": "webhooks импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer webhooks (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "Vaulter\\Webhooks\\WebhookEndpointWrites::write",
+            "target": "Vaulter\\ValueObjects\\Operations\\ScopeRef",
+            "view": "target"
+        },
+        {
+            "category": "needs-explicit-require",
+            "count": 2,
+            "file": "packages/core/src/Webhooks/WebhookEndpointWrites.php",
+            "kind": "name",
+            "reason": "webhooks импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer webhooks (architecture#packages)",
+            "removed_in": "P4",
+            "symbol": "Vaulter\\Webhooks\\WebhookEndpointWrites::write",
+            "target": "Vaulter\\ValueObjects\\Operations\\TenantRef",
             "view": "target"
         },
         {

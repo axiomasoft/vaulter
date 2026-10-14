@@ -14,7 +14,7 @@ use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\FileRevisionBlob;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Repositories\Drive\FileRevisionStoreRepository;
 use Vaulter\Repositories\Drive\FileStoreRepository;
 
@@ -94,7 +94,7 @@ final readonly class FileContentLifecycle implements NodeContentLifecycle
         return $pairs;
     }
 
-    public function copy(OperationContext $context, Node $source, Node $copy): CopyResult
+    public function copy(DriveContext $context, Node $source, Node $copy): CopyResult
     {
         $sourceFile = $source->file()->first();
         $head = $sourceFile?->currentRevision()->first();
@@ -146,7 +146,7 @@ final readonly class FileContentLifecycle implements NodeContentLifecycle
         return new CopyResult(addedBytes: $copy->size_bytes);
     }
 
-    public function purge(OperationContext $context, Node $node): void
+    public function purge(DriveContext $context, Node $node): void
     {
         $file = $node->file()->first();
         if (!$file instanceof File) {

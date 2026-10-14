@@ -650,6 +650,27 @@
             "id": "publish:vaulter-filament-config",
             "kind": "config",
             "reason": "P3.4: published by the module kernel from the FilamentModule config declaration instead of the provider"
+        },
+        {
+            "change": "added",
+            "decision": "D8",
+            "id": "problem:extension_failed",
+            "kind": "protocol",
+            "reason": "P3.9: an extension broke its slot contract (operation middleware next/result, snapshot fragments) — 500, never retried or cached"
+        },
+        {
+            "change": "added",
+            "decision": "D8",
+            "id": "problem:module_not_ready",
+            "kind": "protocol",
+            "reason": "P3.9: a write of an inactive module or one without its tables is refused before the transaction — 503"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "format:operation-name",
+            "kind": "protocol",
+            "reason": "P3.10: every mutating operation runs through OperationRunner under a stable OperationSpec name"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

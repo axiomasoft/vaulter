@@ -47,6 +47,7 @@ use Vaulter\Naming\PermissiveNamePolicy;
 use Vaulter\Naming\PortableNamePolicy;
 use Vaulter\Operations\AccessOperations;
 use Vaulter\Operations\ActivityOperations;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Operations\ShareOperations;
@@ -69,6 +70,8 @@ use Vaulter\ValueObjects\Access\Actor;
 use Vaulter\ValueObjects\Access\ActorRef;
 use Vaulter\ValueObjects\Access\OwnerRef;
 use Vaulter\ValueObjects\Cas\BlobScope;
+use Vaulter\ValueObjects\Operations\ScopeRef;
+use Vaulter\ValueObjects\Operations\TenantRef;
 
 /**
  * VLT-REL P2.2 — executable freeze of the public composer surface for the `0.1.0`
@@ -345,7 +348,7 @@ test('vaulter-core public API surface matches the frozen golden (VLT-REL P2.2)',
     }
 
     $driveValues = array_filter(vaulterSnapshotContracts(__DIR__.'/../../src/Data/Drive', 'Vaulter\Data\Drive'), static fn (string $class): bool => $class !== NodePage::class);
-    foreach (array_merge($driveValues, [GrantInput::class, Role::class, Decision::class, GrantSet::class, AccessExplanation::class, AccessSource::class, UnknownRoleException::class, ShareLinkInput::class, MintedShareLink::class, AccessOperations::class, ShareOperations::class, ActivityOperations::class, AccessScope::class, OwnerRef::class, Actor::class, ActorRef::class, OperationContext::class, NodeLocator::class, OperationGuard::class, MissingActorException::class, ProfileRestrictionException::class, Profile::class, ProfileRegistry::class, ProfileProvider::class, UploadPolicy::class, DrivePolicy::class, DrivePolicyBuilder::class, RevisionRetentionPolicy::class, NamePolicy::class, PortableNamePolicy::class, PermissiveNamePolicy::class, ScanPolicySpec::class]) as $class) {
+    foreach (array_merge($driveValues, [GrantInput::class, Role::class, Decision::class, GrantSet::class, AccessExplanation::class, AccessSource::class, UnknownRoleException::class, ShareLinkInput::class, MintedShareLink::class, AccessOperations::class, ShareOperations::class, ActivityOperations::class, AccessScope::class, OwnerRef::class, Actor::class, ActorRef::class, OperationContext::class, DriveContext::class, ScopeRef::class, TenantRef::class, NodeLocator::class, OperationGuard::class, MissingActorException::class, ProfileRestrictionException::class, Profile::class, ProfileRegistry::class, ProfileProvider::class, UploadPolicy::class, DrivePolicy::class, DrivePolicyBuilder::class, RevisionRetentionPolicy::class, NamePolicy::class, PortableNamePolicy::class, PermissiveNamePolicy::class, ScanPolicySpec::class]) as $class) {
         $reflection = new ReflectionClass($class);
         $properties = [];
         foreach ($reflection->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {

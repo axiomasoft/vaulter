@@ -53,6 +53,7 @@ outline: deep
 | [`drive_archived`](#drive_archived) | 409 | core | `Vaulter\Exceptions\Drive\DriveArchivedException` |
 | [`drive_not_found`](#drive_not_found) | 404 | core | `Vaulter\Exceptions\Nodes\StorageNotFoundException` |
 | [`duplicate_registration`](#duplicate_registration) | 500 | core | `Vaulter\Exceptions\Registry\DuplicateNodeContentLifecycleException` |
+| [`extension_failed`](#extension_failed) | 500 | core | `Vaulter\Exceptions\Support\InvalidExtensionResult` |
 | [`file_size_limit_exceeded`](#file_size_limit_exceeded) | 413 | core | `Vaulter\Exceptions\Policy\FileSizeLimitExceededException` |
 | [`folder_children_limit_exceeded`](#folder_children_limit_exceeded) | 409 | core | `Vaulter\Exceptions\Policy\FolderChildrenLimitExceededException` |
 | [`grant_not_found`](#grant_not_found) | 404 | core | — |
@@ -66,6 +67,7 @@ outline: deep
 | [`invalid_webhook_signature`](#invalid_webhook_signature) | 400 | core | `Vaulter\Exceptions\Webhooks\InvalidWebhookSignatureException` |
 | [`method_not_allowed`](#method_not_allowed) | 405 | core | `Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException` |
 | [`module_graph_invalid`](#module_graph_invalid) | 503 | core | `Vaulter\Modules\ModuleGraphException` |
+| [`module_not_ready`](#module_not_ready) | 503 | core | `Vaulter\Exceptions\Modules\ModuleNotReadyException` |
 | [`node_move_cycle`](#node_move_cycle) | 409 | drive | `Vaulter\Drive\Exceptions\Nodes\NodeCycleException` |
 | [`node_name_conflict`](#node_name_conflict) | 409 | core | `Vaulter\Exceptions\Nodes\NodeNameConflictException` |
 | [`node_not_found`](#node_not_found) | 404 | core | `Vaulter\Exceptions\Nodes\NodeNotFoundException` |
@@ -216,6 +218,12 @@ outline: deep
 
 **Повторная регистрация** — Один и тот же ключ зарегистрирован дважды.
 
+### `extension_failed`
+
+**500** · core
+
+**Сбой расширения** — Расширение установленного модуля нарушило свой контракт; операция не выполнена или откачена.
+
 ### `file_size_limit_exceeded`
 
 **413** · core
@@ -293,6 +301,12 @@ outline: deep
 **503** · core
 
 **Граф модулей некорректен** — Установленные модули не образуют корректный граф; ни один модуль не активен.
+
+### `module_not_ready`
+
+**503** · core
+
+**Модуль не готов** — Модуль, выполняющий операцию, неактивен или его схема ещё не установлена.
 
 ### `node_move_cycle`
 

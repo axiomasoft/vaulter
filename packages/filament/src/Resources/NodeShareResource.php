@@ -38,7 +38,7 @@ use Vaulter\Filament\Resources\NodeShareResource\Pages\ListNodeShares;
 use Vaulter\Filament\Support\PanelActor;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Sharing\NodeShare;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\ShareOperations;
 use Vaulter\Support\Identity;
 use Vaulter\Tenancy\TenancyBoundary;
@@ -397,7 +397,7 @@ final class NodeShareResource extends Resource
         $actor = PanelActor::current() ?? throw MissingActorException::required();
         $drive = $node->storage()->first() ?? throw NodeNotFoundException::forId($node->id);
 
-        return app()->makeWith(ShareOperations::class, ['context' => new OperationContext(drive: $drive, actor: Actor::user($actor), correlationId: (string) Str::ulid())]);
+        return app()->makeWith(ShareOperations::class, ['context' => DriveContext::for(drive: $drive, actor: Actor::user($actor), correlationId: (string) Str::ulid())]);
     }
 
     private static function resolveNode(int|string|null $id): ?Node

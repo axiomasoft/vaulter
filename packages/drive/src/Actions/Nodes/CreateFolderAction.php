@@ -12,7 +12,7 @@ use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Profiles\DrivePolicyEnforcer;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\DriveLifecycle;
@@ -42,7 +42,7 @@ final readonly class CreateFolderAction
         private EventRecorder $recorder,
     ) {}
 
-    public function execute(OperationContext $context, CreateFolderInput $data): Node
+    public function execute(DriveContext $context, CreateFolderInput $data): Node
     {
         $name = $this->policy->name(drive: $context->drive, name: $data->name);
         $parentId = $this->tree->destinationId(storage: $data->storage, into: $data->parent);

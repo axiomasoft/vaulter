@@ -2333,39 +2333,6 @@
             "view": "target"
         },
         {
-            "category": "kernel-needs-contract",
-            "count": 1,
-            "file": "packages/core/src/Operations/OperationContext.php",
-            "kind": "use",
-            "reason": "контекст операции ядра ссылается на доменный тип drive: нужен контракт субъекта операции (цель: drive)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Models\\Drive\\Drive",
-            "view": "target"
-        },
-        {
-            "category": "kernel-needs-contract",
-            "count": 1,
-            "file": "packages/core/src/Operations/OperationContext.php",
-            "kind": "name",
-            "reason": "контекст операции ядра ссылается на доменный тип drive: нужен контракт субъекта операции (цель: drive)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Operations\\OperationContext::__construct",
-            "target": "Vaulter\\Models\\Drive\\Drive",
-            "view": "target"
-        },
-        {
-            "category": "kernel-needs-contract",
-            "count": 1,
-            "file": "packages/core/src/Operations/OperationContext.php",
-            "kind": "name",
-            "reason": "контекст операции ядра ссылается на доменный тип drive: нужен контракт субъекта операции (цель: drive)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Operations\\OperationContext::system",
-            "target": "Vaulter\\Models\\Drive\\Drive",
-            "view": "target"
-        },
-        {
             "category": "domain-in-core",
             "count": 1,
             "file": "packages/core/src/Providers/BindingsRegistrar.php",

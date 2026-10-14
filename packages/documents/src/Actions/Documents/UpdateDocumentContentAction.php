@@ -20,7 +20,7 @@ use Vaulter\Documents\Exceptions\NotADocumentException;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\TreeGuard;
 
@@ -53,7 +53,7 @@ final readonly class UpdateDocumentContentAction
      * @throws DocumentTypeUnavailableException
      * @throws DocumentContentDegradedException
      */
-    public function execute(OperationContext $context, UpdateDocumentContentInput $data): DocumentStateResult
+    public function execute(DriveContext $context, UpdateDocumentContentInput $data): DocumentStateResult
     {
         $node = $data->node;
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Operations;
 
+use Closure;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -27,14 +28,17 @@ use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Nodes\RestoreDestinationChangedException;
 use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Modules\ModuleId;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\OperationRunner;
+use Vaulter\Operations\OperationSpec;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 
 final readonly class TrashOperations implements Contract
 {
     public function __construct(
-        private OperationContext $context,
+        private DriveContext $context,
         private NodeLocator $locator,
         private OperationGuard $guard,
         private NodeReadRepository $nodes,
@@ -42,6 +46,7 @@ final readonly class TrashOperations implements Contract
         private RestoreNodeAction $restoreAction,
         private PurgeNodeAction $purgeAction,
         private NodeSnapshotMapper $mapper,
+        private OperationRunner $runner,
     ) {}
 
     /** @return Page<NodeSnapshot> */
@@ -54,17 +59,20 @@ final readonly class TrashOperations implements Contract
     {
         $options ??= new RestoreOptions;
         for ($attempt = 0; $attempt < 3; $attempt++) {
-            $source = $this->locator->find(context: $this->context, key: $node, includeTrashed: true);
-            $this->guard->authorize(context: $this->context, ability: Ability::Restore, node: $source, operation: OperationKind::Mutation);
-            $destination = $this->restoreAction->resolveDestination(context: $this->context, node: $source, explicit: $options->destination);
-            $this->guard->authorize(context: $this->context, ability: Ability::View, node: $destination);
-            $originalId = $source->trashed_from_parent_id;
-            if ($originalId === null || (string) $destination->id !== (string) $originalId) {
-                $this->guard->authorizeCreate(context: $this->context, parent: $destination);
-            }
             try {
-                return $this->mapper->map($this->restoreAction->execute(context: $this->context,
-                    data: new RestoreNodeInput(node: $source, destination: $destination, onConflict: $options->onConflict, expectedSequence: $options->expectedSequence)), $this->context->actor->ref());
+                return $this->write('restore', function () use ($node, $options): NodeSnapshot {
+                    $source = $this->locator->find(context: $this->context, key: $node, includeTrashed: true);
+                    $this->guard->authorize(context: $this->context, ability: Ability::Restore, node: $source, operation: OperationKind::Mutation);
+                    $destination = $this->restoreAction->resolveDestination(context: $this->context, node: $source, explicit: $options->destination);
+                    $this->guard->authorize(context: $this->context, ability: Ability::View, node: $destination);
+                    $originalId = $source->trashed_from_parent_id;
+                    if ($originalId === null || (string) $destination->id !== (string) $originalId) {
+                        $this->guard->authorizeCreate(context: $this->context, parent: $destination);
+                    }
+
+                    return $this->mapper->map($this->restoreAction->execute(context: $this->context,
+                        data: new RestoreNodeInput(node: $source, destination: $destination, onConflict: $options->onConflict, expectedSequence: $options->expectedSequence)), $this->context->actor->ref());
+                });
             } catch (RestoreDestinationChangedException $exception) {
                 if ($attempt === 2) {
                     throw $exception;
@@ -76,37 +84,47 @@ final readonly class TrashOperations implements Contract
 
     public function purge(NodeSnapshot|string|int $node, ?int $expectedSequence = null): void
     {
-        $source = $this->locator->find(context: $this->context, key: $node, includeTrashed: true);
-        $this->guard->authorize(context: $this->context, ability: Ability::Delete, node: $source, operation: OperationKind::Purge);
+        $source = null;
         try {
-            $this->purgeAction->execute(context: $this->context, data: new PurgeNodeInput(node: $source, expectedSequence: $expectedSequence));
+            $this->write('purge', function () use ($node, $expectedSequence, &$source): void {
+                $source = null;
+                $located = $this->locator->find(context: $this->context, key: $node, includeTrashed: true);
+                $this->guard->authorize(context: $this->context, ability: Ability::Delete, node: $located, operation: OperationKind::Purge);
+                $source = $located;
+                $this->purgeAction->execute(context: $this->context, data: new PurgeNodeInput(node: $located, expectedSequence: $expectedSequence));
+            });
         } catch (Throwable $exception) {
-            $this->reportFailure($source, $exception);
+            // Only a failure of the purge itself is logged: a node that is not found or
+            // not allowed answers the caller without an error log.
+            if ($source instanceof Node) {
+                $this->reportFailure($source, $exception);
+            }
             throw $exception;
         }
     }
 
     public function empty(): int
     {
-        // Materialize before commits remove rows; every root owns one atomic action.
+        // Materialize before commits remove rows; every root owns one atomic operation.
         $roots = $this->nodes->trashedBefore(Carbon::now())->where('drive_id', $this->context->driveId())->get();
         $count = 0;
         $firstFailure = null;
         foreach ($roots as $root) {
+            $authorized = false;
             try {
-                $source = $this->locator->find(context: $this->context, key: $root, includeTrashed: true);
-                $this->guard->authorize(context: $this->context, ability: Ability::Delete, node: $source, operation: OperationKind::Purge);
-            } catch (PermissionDeniedException|NodeNotFoundException|ProfileRestrictionException) {
-                continue;
-            } catch (Throwable $exception) {
-                $this->reportFailure($root, $exception);
-                $firstFailure ??= $exception;
-
-                continue;
-            }
-            try {
-                $this->purgeAction->execute(context: $this->context, data: new PurgeNodeInput(node: $source));
+                $this->write('purge', function () use ($root, &$authorized): void {
+                    $authorized = false;
+                    $source = $this->locator->find(context: $this->context, key: $root, includeTrashed: true);
+                    $this->guard->authorize(context: $this->context, ability: Ability::Delete, node: $source, operation: OperationKind::Purge);
+                    $authorized = true;
+                    $this->purgeAction->execute(context: $this->context, data: new PurgeNodeInput(node: $source));
+                });
                 $count++;
+            } catch (PermissionDeniedException|NodeNotFoundException|ProfileRestrictionException $refused) {
+                if ($authorized) {
+                    $this->reportFailure($root, $refused);
+                    $firstFailure ??= $refused;
+                }
             } catch (Throwable $exception) {
                 $this->reportFailure($root, $exception);
                 $firstFailure ??= $exception;
@@ -117,6 +135,17 @@ final readonly class TrashOperations implements Contract
         }
 
         return $count;
+    }
+
+    /**
+     * @template T
+     *
+     * @param  Closure(): T $attempt
+     * @return T
+     */
+    private function write(string $verb, Closure $attempt): mixed
+    {
+        return $this->runner->write(new OperationSpec('drive.trash.'.$verb, new ModuleId('drive')), $this->context->operation, $attempt);
     }
 
     private function reportFailure(Node $root, Throwable $exception): void

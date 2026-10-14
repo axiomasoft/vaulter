@@ -10,7 +10,7 @@ use Vaulter\Enums\Drive\DriveStatus;
 use Vaulter\Exceptions\Drive\DriveArchivedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\Drive;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 
 /**
  * The drive status as a writer sees it once it holds the tree lock (F05/F06).
@@ -26,7 +26,7 @@ final readonly class DriveLifecycle
     public function __construct(private VaulterConfig $config) {}
 
     /** Call right after lockTree()/lockTreeShared(), inside the Action's transaction. */
-    public function assertWritable(OperationContext $context): void
+    public function assertWritable(DriveContext $context): void
     {
         $system = $context->actor->isSystem();
         $this->assertState(

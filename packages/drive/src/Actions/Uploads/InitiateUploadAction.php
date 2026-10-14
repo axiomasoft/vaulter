@@ -12,8 +12,8 @@ use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Nodes\NotAFileException;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
-use Vaulter\Operations\OperationContext;
 use Vaulter\Profiles\DrivePolicyEnforcer;
 use Vaulter\Support\NodeName;
 
@@ -21,7 +21,7 @@ final readonly class InitiateUploadAction
 {
     public function __construct(private NodeLocator $locator, private OperationGuard $guard, private UploadSessionManager $manager, private DrivePolicyEnforcer $policy) {}
 
-    public function execute(OperationContext $context, InitiateUploadInput $input): UploadSession
+    public function execute(DriveContext $context, InitiateUploadInput $input): UploadSession
     {
         $node = $input->targetNode === null ? null : $this->locator->find(context: $context, key: $input->targetNode);
         $parent = $node === null ? $this->locator->find(context: $context, key: $input->targetParent ?? $context->drive->root_node_id ?? throw NodeNotFoundException::forId('root')) : null;

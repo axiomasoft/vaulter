@@ -14,7 +14,7 @@ use Vaulter\Drive\Data\Files\IngestFileInput;
 use Vaulter\Drive\Jobs\Uploads\ScanFileRevision;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Enums\Cas\ScanVerdict;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 
 it('SEC-R12 refuses wrong scoped jobs before scanner reads and closes the trusted stream', function (): void {
     Storage::fake('local');
@@ -49,7 +49,7 @@ it('SEC-R12 refuses wrong scoped jobs before scanner reads and closes the truste
     config()->set('vaulter.scan.scanner_key', 'fixture');
     config()->set('vaulter.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
-    $context = OperationContext::system($drive, 'fixture');
+    $context = DriveContext::system($drive, 'fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     $stream = UploadTestHelpers::streamFor('scan bytes');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
@@ -94,7 +94,7 @@ it('SEC-R12 corrupted immutable identity fails terminally before scanner bytes',
     config()->set('vaulter.scan.scanner_key', 'fixture');
     config()->set('vaulter.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
-    $context = OperationContext::system($drive, 'fixture');
+    $context = DriveContext::system($drive, 'fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     $stream = UploadTestHelpers::streamFor('identity');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));

@@ -8,7 +8,7 @@ use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Data\Export\ExportDocumentInput;
 use Vaulter\Documents\Export\DocumentExporterRegistry;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /**
@@ -27,7 +27,7 @@ beforeEach(function (): void {
 });
 
 it('exports a document node to HTML through the registered exporter', function (): void {
-    $export = app(ExportDocumentAction::class)->execute(OperationContext::system($this->node->storage()->firstOrFail(), 'export fixture'), new ExportDocumentInput($this->node, 'html'));
+    $export = app(ExportDocumentAction::class)->execute(DriveContext::system($this->node->storage()->firstOrFail(), 'export fixture'), new ExportDocumentInput($this->node, 'html'));
 
     expect($export->format)->toBe('html')
         ->and($export->mimeType)->toBe('text/html')
@@ -36,7 +36,7 @@ it('exports a document node to HTML through the registered exporter', function (
 });
 
 it('exports a document node to Markdown through the registered exporter', function (): void {
-    $export = app(ExportDocumentAction::class)->execute(OperationContext::system($this->node->storage()->firstOrFail(), 'export fixture'), new ExportDocumentInput($this->node, 'markdown'));
+    $export = app(ExportDocumentAction::class)->execute(DriveContext::system($this->node->storage()->firstOrFail(), 'export fixture'), new ExportDocumentInput($this->node, 'markdown'));
 
     expect($export->format)->toBe('markdown')
         ->and($export->bytes)->toContain('Exportable body')

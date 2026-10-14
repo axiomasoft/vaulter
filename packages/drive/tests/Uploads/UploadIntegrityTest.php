@@ -14,7 +14,7 @@ use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Models\Cas\Blob;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
 // These tests drive handlers and repositories directly; Vaulter's entry points open the write scope, these calls do not.
@@ -144,7 +144,7 @@ it('commit отклоняет объект с mime image/png и magic-bytes ZIP,
     app(TusUploadHandler::class)->patch($session->refresh(), UploadTestHelpers::streamFor($zipBytes), 0);
     app(UploadSessionManager::class)->markAssembled($session->refresh());
 
-    expect(fn () => app(CompleteUploadAction::class)->execute(context: OperationContext::system($session->storage, 'test fixture'), session: $session->refresh()))
+    expect(fn () => app(CompleteUploadAction::class)->execute(context: DriveContext::system($session->storage, 'test fixture'), session: $session->refresh()))
         ->toThrow(UploadContentMismatchException::class);
 
     // Nothing was committed — the type-confused object is refused before the blob.

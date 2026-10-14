@@ -10,7 +10,7 @@ use Vaulter\Enums\Drive\DriveStatus;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Drive\InvalidDriveStateException;
 use Vaulter\Models\Drive\Drive;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Repositories\Drive\DriveStoreRepository;
 
 /** active → archived: the drive becomes read-only. */
@@ -18,7 +18,7 @@ final readonly class ArchiveDriveAction
 {
     public function __construct(private VaulterDatabase $database, private DriveStoreRepository $drives, private EventRecorder $recorder) {}
 
-    public function execute(OperationContext $context): Drive
+    public function execute(DriveContext $context): Drive
     {
         return $this->database->transaction(function () use ($context): Drive {
             // T exclusive: no tree write of this drive is in flight when the status flips.

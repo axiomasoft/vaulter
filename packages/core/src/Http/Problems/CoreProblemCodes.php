@@ -23,6 +23,7 @@ use Vaulter\Exceptions\Drive\QuotaExceededException;
 use Vaulter\Exceptions\Drive\RevisionPinnedException;
 use Vaulter\Exceptions\Files\ContentUnavailableException;
 use Vaulter\Exceptions\Http\PreconditionRequiredException;
+use Vaulter\Exceptions\Modules\ModuleNotReadyException;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Exceptions\Nodes\InvalidNodeNameException;
 use Vaulter\Exceptions\Nodes\InvalidPropertiesException;
@@ -49,6 +50,7 @@ use Vaulter\Exceptions\Sharing\ShareLinkTtlExceededException;
 use Vaulter\Exceptions\Sharing\ShareNotFoundException;
 use Vaulter\Exceptions\Sharing\SharePasswordRequiredException;
 use Vaulter\Exceptions\Sharing\ShareRoleNotAllowedException;
+use Vaulter\Exceptions\Support\InvalidExtensionResult;
 use Vaulter\Exceptions\Webhooks\InvalidWebhookSignatureException;
 use Vaulter\Exceptions\Webhooks\WebhookDeliveryNotFoundException;
 use Vaulter\Exceptions\Webhooks\WebhookDeliveryNotRedeliverableException;
@@ -82,6 +84,7 @@ final class CoreProblemCodes implements ProblemCodeSource
             'drive_archived' => ['status' => 409, 'exception' => DriveArchivedException::class],
             'drive_not_found' => ['status' => 404, 'exception' => StorageNotFoundException::class],
             'duplicate_registration' => ['status' => 500, 'exception' => DuplicateNodeContentLifecycleException::class],
+            'extension_failed' => ['status' => 500, 'exception' => InvalidExtensionResult::class],
             'file_size_limit_exceeded' => ['status' => 413, 'exception' => FileSizeLimitExceededException::class],
             'folder_children_limit_exceeded' => ['status' => 409, 'exception' => FolderChildrenLimitExceededException::class],
             'grant_not_found' => ['status' => 404, 'exception' => null],
@@ -94,6 +97,7 @@ final class CoreProblemCodes implements ProblemCodeSource
             'invalid_webhook_signature' => ['status' => 400, 'exception' => InvalidWebhookSignatureException::class],
             'method_not_allowed' => ['status' => 405, 'exception' => MethodNotAllowedHttpException::class],
             'module_graph_invalid' => ['status' => 503, 'exception' => ModuleGraphException::class],
+            'module_not_ready' => ['status' => 503, 'exception' => ModuleNotReadyException::class],
             'node_name_conflict' => ['status' => 409, 'exception' => NodeNameConflictException::class],
             'node_not_found' => ['status' => 404, 'exception' => NodeNotFoundException::class],
             'node_not_trashed' => ['status' => 409, 'exception' => NodeNotTrashedException::class],

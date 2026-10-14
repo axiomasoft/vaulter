@@ -14,7 +14,7 @@ use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Repositories\Documents\DocumentStoreRepository;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 
 /**
  * Content of a kind=document node for copy and purge. Both run inside the Vaulter
@@ -45,7 +45,7 @@ final readonly class DocumentContentLifecycle implements NodeContentLifecycle
      * revision. History, the collaboration epoch and comments stay with the source: a
      * copy is a new document, not a fork of the old one's timeline.
      */
-    public function copy(OperationContext $context, Node $source, Node $copy): CopyResult
+    public function copy(DriveContext $context, Node $source, Node $copy): CopyResult
     {
         $original = Document::query()->where('node_id', $source->getKey())->sharedLock()->first();
         if (!$original instanceof Document) {
@@ -77,7 +77,7 @@ final readonly class DocumentContentLifecycle implements NodeContentLifecycle
         return new CopyResult(addedBytes: 0);
     }
 
-    public function purge(OperationContext $context, Node $node): void
+    public function purge(DriveContext $context, Node $node): void
     {
         $document = Document::query()->where('node_id', $node->getKey())->lockForUpdate()->first();
         if (!$document instanceof Document) {

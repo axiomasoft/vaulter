@@ -15,7 +15,7 @@ use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Operations\AccessOperations;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\ShareOperations;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;
@@ -31,7 +31,7 @@ beforeEach(function (): void {
     config()->set('vaulter.features.share_links', true);
     $this->drive = AccessTestHelpers::storage();
     $this->node = AccessTestHelpers::folder($this->drive, null, 'secured');
-    $this->context = new OperationContext($this->drive, Actor::user(AccessTestHelpers::user()), 'explicit-correlation');
+    $this->context = DriveContext::for($this->drive, Actor::user(AccessTestHelpers::user()), 'explicit-correlation');
 });
 
 it('conceals hidden grants and shares before checking their management ability', function (): void {
@@ -103,7 +103,7 @@ it('uses the grants feature independently of disabled bearer links', function ()
 it('records explicit system actor and correlation without ambient auth attribution', function (): void {
     $this->actingAs(AccessTestHelpers::user(99));
     app('request')->headers->set('X-Request-Id', '9e85b5d9-7519-41f1-82cc-7aafac3e8396');
-    $system = new OperationContext($this->drive, Actor::system('import fixture'), 'system-correlation');
+    $system = DriveContext::for($this->drive, Actor::system('import fixture'), 'system-correlation');
     $operations = app()->makeWith(ShareOperations::class, ['context' => $system]);
     app(VaulterDatabase::class)->write(fn () => Activity::query()->delete());
     $minted = $operations->create($this->node->id, new ShareLinkInput);
@@ -145,7 +145,7 @@ it('applies the same guard on HTTP grants and conceals hidden nodes', function (
 
 it('preserves request UUID and ULID correlation for every grant and share mutation', function (): void {
     app('request')->headers->set('X-Request-Id', '9e85b5d9-7519-41f1-82cc-7aafac3e8396');
-    $context = OperationContext::system($this->drive, 'audit fixture');
+    $context = DriveContext::system($this->drive, 'audit fixture');
     $access = app()->makeWith(AccessOperations::class, ['context' => $context]);
     $shares = app()->makeWith(ShareOperations::class, ['context' => $context]);
     app(VaulterDatabase::class)->write(fn () => Activity::query()->delete());

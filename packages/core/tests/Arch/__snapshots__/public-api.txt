@@ -74,7 +74,7 @@ Vaulter\Contracts\Doctor\DoctorCheck
   title(): string
 
 Vaulter\Contracts\Drive\DownloadGuard
-  check(\Vaulter\Operations\OperationContext|\Vaulter\Sharing\ShareContext $context, \Vaulter\Models\Drive\Node $node, \Vaulter\Models\Drive\FileRevision $revision): void
+  check(\Vaulter\Operations\DriveContext|\Vaulter\Sharing\ShareContext $context, \Vaulter\Models\Drive\Node $node, \Vaulter\Models\Drive\FileRevision $revision): void
 
 Vaulter\Contracts\Drive\DriveExtension
 
@@ -119,9 +119,9 @@ Vaulter\Contracts\Drive\FolderOperations
   create(string $name, \Vaulter\Data\Snapshots\NodeSnapshot|int|null|string $parent = null, ?\Vaulter\Data\Drive\CreateFolderOptions $options = null): \Vaulter\Data\Snapshots\NodeSnapshot
 
 Vaulter\Contracts\Drive\NodeContentLifecycle
-  copy(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node $source, \Vaulter\Models\Drive\Node $copy): \Vaulter\Data\Drive\CopyResult
+  copy(\Vaulter\Operations\DriveContext $context, \Vaulter\Models\Drive\Node $source, \Vaulter\Models\Drive\Node $copy): \Vaulter\Data\Drive\CopyResult
   kind(): \Vaulter\Enums\Drive\NodeKind
-  purge(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node $node): void
+  purge(\Vaulter\Operations\DriveContext $context, \Vaulter\Models\Drive\Node $node): void
 
 Vaulter\Contracts\Drive\NodeOperations
   abilities(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): \Vaulter\Access\ValueObjects\NodeAbilities
@@ -377,7 +377,7 @@ Vaulter\Access\Roles\RoleRegistry
 Vaulter\Access\ExactListing
   __construct(\Vaulter\Configuration\ListingConfig $listingConfig, \Vaulter\Access\AccessResolver $access, \Vaulter\Database\VaulterDatabase $database, \Illuminate\Contracts\Encryption\Encrypter $encrypter)
   grantSetFor(\Vaulter\Models\Drive\Node $node): \Vaulter\Access\ValueObjects\GrantSet
-  page(\Illuminate\Contracts\Auth\Access\Authorizable|\Vaulter\Operations\OperationContext|null $actor, \Illuminate\Database\Eloquent\Builder $candidates, array $order, int $perPage, ?string $cursor, string $context): \Vaulter\Data\Drive\NodePage
+  page(\Illuminate\Contracts\Auth\Access\Authorizable|\Vaulter\Operations\DriveContext|null $actor, \Illuminate\Database\Eloquent\Builder $candidates, array $order, int $perPage, ?string $cursor, string $context): \Vaulter\Data\Drive\NodePage
 
 Vaulter\Data\Drive\NodePage
   __construct(array $items, ?string $nextCursor, int $scanned)
@@ -571,7 +571,7 @@ Vaulter\Data\Sharing\MintedShareLink
   readonly string $token
 
 Vaulter\Operations\AccessOperations
-  __construct(\Vaulter\Operations\OperationContext $context, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Access\OperationGuard $guard, \Vaulter\Access\AccessResolver $resolver, \Vaulter\Configuration\VaulterConfig $config, \Vaulter\Actions\Access\GrantNodeAccessAction $create, \Vaulter\Actions\Access\RevokeNodeAccessAction $delete, \Vaulter\Actions\Access\SetNodeInheritanceAction $inheritance, \Vaulter\Data\Snapshots\Mapping\AccessSnapshotMapper $grantMapper, \Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper $nodeMapper)
+  __construct(\Vaulter\Operations\DriveContext $context, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Access\OperationGuard $guard, \Vaulter\Access\AccessResolver $resolver, \Vaulter\Configuration\VaulterConfig $config, \Vaulter\Actions\Access\GrantNodeAccessAction $create, \Vaulter\Actions\Access\RevokeNodeAccessAction $delete, \Vaulter\Actions\Access\SetNodeInheritanceAction $inheritance, \Vaulter\Data\Snapshots\Mapping\AccessSnapshotMapper $grantMapper, \Vaulter\Data\Snapshots\Mapping\NodeSnapshotMapper $nodeMapper, \Vaulter\Operations\OperationRunner $runner)
   explain(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Enums\Access\Ability $ability, ?\Illuminate\Contracts\Auth\Access\Authorizable $subject = null): \Vaulter\Access\ValueObjects\AccessExplanation
   grant(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Data\Access\GrantInput $grant): \Vaulter\Data\Snapshots\GrantSnapshot
   grants(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): array
@@ -580,7 +580,7 @@ Vaulter\Operations\AccessOperations
   revoke(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Data\Snapshots\GrantSnapshot|int|string $grant): void
 
 Vaulter\Operations\ShareOperations
-  __construct(\Vaulter\Operations\OperationContext $context, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Access\OperationGuard $guard, \Vaulter\Configuration\VaulterConfig $config, \Vaulter\Actions\Sharing\CreateShareLinkAction $createLink, \Vaulter\Actions\Sharing\RevokeShareLinkAction $deleteLink, \Vaulter\Actions\Sharing\UpdateShareLinkAction $updateLink, \Vaulter\Actions\Sharing\RotateShareLinkAction $rotateLink, \Vaulter\Data\Snapshots\Mapping\AccessSnapshotMapper $mapper)
+  __construct(\Vaulter\Operations\DriveContext $context, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Access\OperationGuard $guard, \Vaulter\Configuration\VaulterConfig $config, \Vaulter\Actions\Sharing\CreateShareLinkAction $createLink, \Vaulter\Actions\Sharing\RevokeShareLinkAction $deleteLink, \Vaulter\Actions\Sharing\UpdateShareLinkAction $updateLink, \Vaulter\Actions\Sharing\RotateShareLinkAction $rotateLink, \Vaulter\Data\Snapshots\Mapping\AccessSnapshotMapper $mapper, \Vaulter\Operations\OperationRunner $runner)
   create(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Data\Sharing\ShareLinkInput $input): \Vaulter\Data\Snapshots\MintedShareLink
   list(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): array
   revoke(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Data\Snapshots\ShareLinkSnapshot|int|string $share): void
@@ -588,7 +588,7 @@ Vaulter\Operations\ShareOperations
   update(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Data\Snapshots\ShareLinkSnapshot|int|string $share, \Vaulter\Data\Sharing\ShareLinkUpdate $changes): \Vaulter\Data\Snapshots\ShareLinkSnapshot
 
 Vaulter\Operations\ActivityOperations
-  __construct(\Vaulter\Operations\OperationContext $context, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Access\OperationGuard $guard, \Vaulter\Queries\Activity\VisibleActivityQuery $query, \Vaulter\Data\Snapshots\Mapping\ActivitySnapshotMapper $mapper)
+  __construct(\Vaulter\Operations\DriveContext $context, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Access\OperationGuard $guard, \Vaulter\Queries\Activity\VisibleActivityQuery $query, \Vaulter\Data\Snapshots\Mapping\ActivitySnapshotMapper $mapper)
   forDrive(?\Vaulter\Data\Drive\ListOptions $options = null): \Vaulter\Data\Page
   forNode(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, ?\Vaulter\Data\Drive\ListOptions $options = null): \Vaulter\Data\Page
 
@@ -621,28 +621,61 @@ Vaulter\ValueObjects\Access\ActorRef
   readonly int|null|string $id
 
 Vaulter\Operations\OperationContext
-  __construct(\Vaulter\Models\Drive\Drive $drive, \Vaulter\ValueObjects\Access\Actor $actor, string $correlationId, ?string $idempotencyKey = null)
+  __construct(\Vaulter\ValueObjects\Access\Actor $actor, \Vaulter\ValueObjects\Operations\ScopeRef $scope, \Vaulter\ValueObjects\Operations\TenantRef $tenant, string $correlationId, ?string $causationId = null, ?string $idempotencyKey = null)
+  for(\Vaulter\ValueObjects\Access\Actor $actor, \Vaulter\ValueObjects\Operations\ScopeRef $scope, \Vaulter\ValueObjects\Operations\TenantRef $tenant, string $correlationId, ?string $causationId = null, ?string $idempotencyKey = null): \self
+  system(\Vaulter\ValueObjects\Operations\ScopeRef $scope, \Vaulter\ValueObjects\Operations\TenantRef $tenant, string $reason, ?string $correlationId = null): \self
+  telemetry(): array
+  withCausation(string $causationId): \self
+  withIdempotencyKey(string $key): \self
+  readonly ?string $causationId
+  readonly ?string $idempotencyKey
+  readonly ?string $systemReason
+  readonly \Vaulter\ValueObjects\Access\Actor $actor
+  readonly \Vaulter\ValueObjects\Operations\ScopeRef $scope
+  readonly \Vaulter\ValueObjects\Operations\TenantRef $tenant
+  readonly string $correlationId
+
+Vaulter\Operations\DriveContext
+  __construct(\Vaulter\Operations\OperationContext $operation, \Vaulter\Models\Drive\Drive $drive)
+  for(\Vaulter\Models\Drive\Drive $drive, \Vaulter\ValueObjects\Access\Actor $actor, string $correlationId, ?string $idempotencyKey = null): \self
   system(\Vaulter\Models\Drive\Drive $drive, string $reason, ?string $correlationId = null): \self
   readonly ?string $idempotencyKey
   readonly \Vaulter\Models\Drive\Drive $drive
+  readonly \Vaulter\Operations\OperationContext $operation
   readonly \Vaulter\ValueObjects\Access\Actor $actor
   readonly string $correlationId
 
+Vaulter\ValueObjects\Operations\ScopeRef
+  __construct(string $kind, string $id)
+  drive(int|string $id): \self
+  equals(\self $other): bool
+  readonly string $id
+  readonly string $kind
+
+Vaulter\ValueObjects\Operations\TenantRef
+  equals(\self $other): bool
+  id(int|string $id): \self
+  isNone(): bool
+  none(): \self
+  of(mixed $key): \self
+  readonly ?string $id
+  readonly string $kind
+
 Vaulter\Operations\NodeLocator
   __construct(\Vaulter\Configuration\VaulterConfig $config, \Vaulter\Database\VaulterDatabase $database, \Vaulter\Configuration\TenancyConfig $tenancy, \Vaulter\Tenancy\TenancyBoundary $boundary)
-  find(\Vaulter\Operations\OperationContext $context, \Vaulter\Data\Snapshots\NodeSnapshot|\Vaulter\Models\Drive\Node|int|string $key, bool $includeTrashed = false): \Vaulter\Models\Drive\Node
+  find(\Vaulter\Operations\DriveContext $context, \Vaulter\Data\Snapshots\NodeSnapshot|\Vaulter\Models\Drive\Node|int|string $key, bool $includeTrashed = false): \Vaulter\Models\Drive\Node
 
 Vaulter\Access\OperationGuard
   __construct(\Vaulter\Access\AccessResolver $resolver, \Vaulter\Operations\NodeLocator $locator, \Vaulter\Profiles\ProfilePolicy $profiles, \Vaulter\Configuration\TenancyConfig $tenancy, \Vaulter\Tenancy\TenancyBoundary $boundary)
-  abilities(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node $node): \Vaulter\Access\ValueObjects\NodeAbilities
-  abilitiesMany(\Vaulter\Operations\OperationContext $context, iterable $nodes): array
-  assertMutable(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node $node): void
-  authorize(\Vaulter\Operations\OperationContext $context, \Vaulter\Enums\Access\Ability $ability, \Vaulter\Models\Drive\Node $node, \Vaulter\Enums\Operations\OperationKind $operation = Vaulter\Enums\Operations\OperationKind::Metadata): void
-  authorizeCreate(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node $parent): void
-  authorizeGrants(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node $node): void
-  copyableSubtree(\Vaulter\Operations\OperationContext $context, \Vaulter\Models\Drive\Node $root, iterable $subtree): ?array
-  visible(\Vaulter\Operations\OperationContext $context, iterable $nodes): array
-  visibleWith(\Vaulter\Operations\OperationContext $context, iterable $nodes, \Vaulter\Enums\Access\Ability $ability): array
+  abilities(\Vaulter\Operations\DriveContext $context, \Vaulter\Models\Drive\Node $node): \Vaulter\Access\ValueObjects\NodeAbilities
+  abilitiesMany(\Vaulter\Operations\DriveContext $context, iterable $nodes): array
+  assertMutable(\Vaulter\Operations\DriveContext $context, \Vaulter\Models\Drive\Node $node): void
+  authorize(\Vaulter\Operations\DriveContext $context, \Vaulter\Enums\Access\Ability $ability, \Vaulter\Models\Drive\Node $node, \Vaulter\Enums\Operations\OperationKind $operation = Vaulter\Enums\Operations\OperationKind::Metadata): void
+  authorizeCreate(\Vaulter\Operations\DriveContext $context, \Vaulter\Models\Drive\Node $parent): void
+  authorizeGrants(\Vaulter\Operations\DriveContext $context, \Vaulter\Models\Drive\Node $node): void
+  copyableSubtree(\Vaulter\Operations\DriveContext $context, \Vaulter\Models\Drive\Node $root, iterable $subtree): ?array
+  visible(\Vaulter\Operations\DriveContext $context, iterable $nodes): array
+  visibleWith(\Vaulter\Operations\DriveContext $context, iterable $nodes, \Vaulter\Enums\Access\Ability $ability): array
 
 Vaulter\Exceptions\Access\MissingActorException
   __construct(string $message = '', int $code = 0, ?\Throwable $previous = null)

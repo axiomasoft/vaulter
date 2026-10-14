@@ -10,7 +10,7 @@ use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Operations\AccessOperations;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 
@@ -23,7 +23,7 @@ uses(EnablesWebhooksModule::class);
 beforeEach(function (): void {
     config()->set('vaulter.access.permission_driver', 'database');
     $this->drive = AccessTestHelpers::storage();
-    $this->access = app()->makeWith(AccessOperations::class, ['context' => OperationContext::system($this->drive, 'inheritance events')]);
+    $this->access = app()->makeWith(AccessOperations::class, ['context' => DriveContext::system($this->drive, 'inheritance events')]);
     $this->parent = AccessTestHelpers::folder($this->drive, null, 'parent');
     $this->child = AccessTestHelpers::folder($this->drive, $this->parent, 'child');
 });

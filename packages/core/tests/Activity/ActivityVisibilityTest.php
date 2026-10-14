@@ -12,7 +12,7 @@ use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\ActivityOperations;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\ValueObjects\Access\Actor;
 
@@ -21,7 +21,7 @@ beforeEach(function (): void {
     $this->drive = AccessTestHelpers::storage();
     $this->root = $this->drive->rootNode()->firstOrFail();
     AccessTestHelpers::grant($this->root, RoleRegistry::READER, scope: GrantScope::Item);
-    $this->context = new OperationContext($this->drive, Actor::user(AccessTestHelpers::user()), 'visibility');
+    $this->context = DriveContext::for($this->drive, Actor::user(AccessTestHelpers::user()), 'visibility');
     $this->operation = app()->makeWith(ActivityOperations::class, ['context' => $this->context]);
     Activity::query()->delete();
 });
@@ -46,7 +46,7 @@ it('does not expose hidden unknown deleted or foreign targets under root View', 
     $foreign = visibleActivityRow($other, 3);
     $foreign->forceFill(['drive_id' => $this->drive->id])->save();
     expect($this->operation->forDrive()->items)->toBe([]);
-    $system = app()->makeWith(ActivityOperations::class, ['context' => OperationContext::system($this->drive, 'audit')]);
+    $system = app()->makeWith(ActivityOperations::class, ['context' => DriveContext::system($this->drive, 'audit')]);
     expect($system->forDrive()->items)->toHaveCount(4);
 });
 
@@ -125,7 +125,7 @@ it('SEC-I7-projection withholds request fingerprint and access details from a re
     $full = $seen[(string) $managed->id];
     expect($full->ip)->toBe('203.0.113.9')->and($full->actorId)->toBe('42')->and($full->context)->toHaveKeys(['subject_id', 'permissions', 'token_prefix']);
 
-    $system = app()->makeWith(ActivityOperations::class, ['context' => OperationContext::system($this->drive, 'audit')]);
+    $system = app()->makeWith(ActivityOperations::class, ['context' => DriveContext::system($this->drive, 'audit')]);
     foreach ($system->forDrive()->items as $row) {
         expect($row->ip)->toBe('203.0.113.9')->and($row->context)->toHaveKey('subject_id');
     }

@@ -7,13 +7,13 @@ namespace Vaulter\Drive\Queries;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Drive\NodePage;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 
 final readonly class ListChildrenQuery
 {
     public function __construct(private NodePageQuery $pages) {}
 
-    public function execute(OperationContext $context, Node $folder, ListOptions $options): NodePage
+    public function execute(DriveContext $context, Node $folder, ListOptions $options): NodePage
     {
         return $this->pages->page($context, $this->pages->candidates($context)->where('parent_id', $folder->id), $options, 'children', [(string) $folder->id]);
     }

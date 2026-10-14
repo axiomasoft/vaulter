@@ -22,7 +22,7 @@ use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Profiles\DrivePolicyEnforcer;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
@@ -62,7 +62,7 @@ final readonly class CreateDocumentAction
         private EventRecorder $recorder,
     ) {}
 
-    public function execute(OperationContext $context, CreateDocumentInput $data): Node
+    public function execute(DriveContext $context, CreateDocumentInput $data): Node
     {
         if (Identity::stringify($data->storage->getKey()) !== Identity::stringify($context->driveId())) {
             throw NodeNotFoundException::forId('drive');

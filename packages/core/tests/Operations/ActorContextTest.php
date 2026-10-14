@@ -7,7 +7,7 @@ use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Vaulter\Models\Drive\Drive;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 use Vaulter\Tests\TestCase;
@@ -71,22 +71,22 @@ it('rejects inconsistent system references', function (): void {
 
 it('creates system context with ULID fallback and stable drive identity', function (): void {
     $drive = AccessTestHelpers::storage();
-    $context = OperationContext::system(drive: $drive, reason: 'import');
+    $context = DriveContext::system(drive: $drive, reason: 'import');
     $key = $drive->id;
     $drive->id = 'forged';
     expect($context->correlationId)->toMatch('/^[0-9A-HJKMNP-TV-Z]{26}$/')
         ->and($context->driveId())->toBe($key)
         ->and($context->actor->ref()->reason)->toBe('import');
-    expect(fn () => OperationContext::system(drive: new Drive, reason: 'import'))->toThrow(InvalidArgumentException::class);
+    expect(fn () => DriveContext::system(drive: new Drive, reason: 'import'))->toThrow(InvalidArgumentException::class);
 });
 
 it('validates correlation identifiers and retains idempotency keys', function (string $id, bool $valid): void {
     $drive = AccessTestHelpers::storage();
     if (!$valid) {
-        expect(fn () => new OperationContext(drive: $drive, actor: Actor::system('import'), correlationId: $id))->toThrow(InvalidArgumentException::class);
+        expect(fn () => DriveContext::for(drive: $drive, actor: Actor::system('import'), correlationId: $id))->toThrow(InvalidArgumentException::class);
 
         return;
     }
-    $context = new OperationContext(drive: $drive, actor: Actor::system('import'), correlationId: $id, idempotencyKey: 'replay-1');
+    $context = DriveContext::for(drive: $drive, actor: Actor::system('import'), correlationId: $id, idempotencyKey: 'replay-1');
     expect($context->correlationId)->toBe($id)->and($context->idempotencyKey)->toBe('replay-1');
 })->with(['empty' => ['', false], 'blank' => ['  ', false], 'newline' => ["req\n1", false], 'DEL' => ["req\x7f", false], 'long' => [str_repeat('x', 192), false], 'valid' => ['job-123', true], 'limit' => [str_repeat('x', 191), true]]);

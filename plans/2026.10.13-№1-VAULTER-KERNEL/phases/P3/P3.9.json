@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.9",
   "title": "OperationRunner, OperationMiddleware, ModuleReadiness и телеметрия; контракт I8 (ADR-0028)",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Core получает `OperationRunner::write()` со стадиями architecture#operation-chains, слот OperationMiddleware со встроенным `core.telemetry`, ленивую `ModuleReadiness`, коды `extension_failed`/`module_not_ready`; контрактные тесты I8 пайплайна зелёные; ADR-0028 описывает слоты и пайплайн.",
   "why": "Обязательные стадии сегодня размазаны по Operations/Actions; без раннера слот не может гарантировать context/transaction/claim/events/receipt (I8 блокирует с P3). Риски: nested-транзакции и retry только root-уровня; I/O внутри повторяемой попытки; подмена результата middleware.",
   "scope": {
@@ -217,6 +217,54 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-14T05:47:50Z"
+  "result": {
+    "started_at": "2026-10-14T10:16:15Z",
+    "finished_at": "2026-10-14T13:29:22Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high"
+    },
+    "deviations": [
+      "Ревью R2: приняты F1–F3 и очистка PDO-транзакции после сбоя commit; F4–F8, Q1–Q3 не меняли код (F4 — требование к P3.12, остальное LOW/вопросы); ожидания тестов обновлены (IdentitiesTest 72→74, зона core-operations, алиас AD17, allow-list ArchTest)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T13:29:22Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-14T13:29:22Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-14T13:29:22Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-14T13:29:22Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-14T13:29:22Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-14T13:29:22Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-14T13:29:22Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T13:29:22Z"
 }

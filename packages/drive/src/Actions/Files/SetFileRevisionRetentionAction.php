@@ -8,7 +8,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Repositories\Drive\FileRevisionStoreRepository;
 use Vaulter\Repositories\Drive\FileStoreRepository;
 use Vaulter\Support\DriveLifecycle;
@@ -33,7 +33,7 @@ final readonly class SetFileRevisionRetentionAction
         private DriveLifecycle $lifecycle,
     ) {}
 
-    public function execute(OperationContext $context, Node $node, FileRevision|int|string $revision, bool $keepForever): FileRevision
+    public function execute(DriveContext $context, Node $node, FileRevision|int|string $revision, bool $keepForever): FileRevision
     {
         $revisionId = $revision instanceof FileRevision ? $revision->getRawOriginal($revision->getKeyName()) : $revision;
 

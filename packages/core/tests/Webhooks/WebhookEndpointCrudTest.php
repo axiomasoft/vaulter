@@ -142,3 +142,15 @@ it('allows management when the configured manage ability grants', function (): v
         'events' => ['folder.created'],
     ])->assertCreated();
 });
+
+it('answers an oversized endpoint id after the ability check: 403 without manage, 404 with it', function (): void {
+    $oversized = str_repeat('9', 200);
+    config()->set('vaulter.webhooks.manage_ability', 'vaulter.webhooks.manage');
+
+    Gate::define('vaulter.webhooks.manage', fn (): bool => false);
+    $this->patchJson('api/vaulter/v1/webhook-endpoints/'.$oversized, ['is_active' => false])->assertForbidden();
+
+    Gate::define('vaulter.webhooks.manage', fn (): bool => true);
+    $this->patchJson('api/vaulter/v1/webhook-endpoints/'.$oversized, ['is_active' => false])
+        ->assertNotFound()->assertJsonPath('code', 'webhook_endpoint_not_found');
+});

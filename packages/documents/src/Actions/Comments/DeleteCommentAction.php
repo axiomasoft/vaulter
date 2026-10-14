@@ -11,7 +11,7 @@ use Vaulter\Documents\Exceptions\CommentNotFoundException;
 use Vaulter\Documents\Repositories\Comments\NodeCommentStoreRepository;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\TreeGuard;
 
@@ -32,7 +32,7 @@ final readonly class DeleteCommentAction
         private EventRecorder $recorder,
     ) {}
 
-    public function execute(OperationContext $context, DeleteCommentInput $data): void
+    public function execute(DriveContext $context, DeleteCommentInput $data): void
     {
         $this->database->transaction(function () use ($context, $data): void {
             $driveId = $context->driveId();

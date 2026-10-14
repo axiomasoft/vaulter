@@ -12,7 +12,7 @@ use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Drive\DriveHandle;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 use Vaulter\ValueObjects\Access\Actor;
@@ -70,7 +70,7 @@ final class DocumentTestHelpers
      * The operation context a direct Action call runs under: the drive of $target, as
      * the system, or as the test user $actorId when given.
      */
-    public static function context(Drive|Node|DriveHandle $target, int|string|null $actorId = null): OperationContext
+    public static function context(Drive|Node|DriveHandle $target, int|string|null $actorId = null): DriveContext
     {
         $drive = match (true) {
             $target instanceof Node => $target->storage()->firstOrFail(),
@@ -78,12 +78,12 @@ final class DocumentTestHelpers
             default => $target,
         };
         if ($actorId === null) {
-            return OperationContext::system($drive, 'test fixture');
+            return DriveContext::system($drive, 'test fixture');
         }
         $user = new TestUser;
         $user->forceFill(['id' => $actorId]);
         $user->exists = true;
 
-        return new OperationContext($drive, Actor::user($user), (string) Str::ulid());
+        return DriveContext::for($drive, Actor::user($user), (string) Str::ulid());
     }
 }

@@ -11,7 +11,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Cas\ScanMode;
 use Vaulter\Models\Content\ScanPolicyState;
 use Vaulter\Models\Drive\Drive;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Repositories\Content\ScanAuthorityRepository;
 use Vaulter\Repositories\Content\ScanPolicyStateRepository;
 use Vaulter\Support\Identity;
@@ -25,7 +25,7 @@ final readonly class ActivateScanPolicyAction
 {
     public function __construct(private VaulterDatabase $database, private ScanAuthorityRepository $authority, private ScanPolicyStateRepository $states) {}
 
-    public function execute(Drive $drive, ScanPolicySpec $spec, ?string $rolloutKey, OperationContext $context): ScanPolicyState
+    public function execute(Drive $drive, ScanPolicySpec $spec, ?string $rolloutKey, DriveContext $context): ScanPolicyState
     {
         return $this->database->transaction(function () use ($drive, $spec, $rolloutKey, $context): ScanPolicyState {
             if (Identity::stringify($drive->getRawOriginal($drive->getKeyName())) !== (string) $context->driveId() || $rolloutKey !== $spec->rolloutKey) {

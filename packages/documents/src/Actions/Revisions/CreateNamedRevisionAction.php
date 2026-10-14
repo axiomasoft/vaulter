@@ -13,7 +13,7 @@ use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\TreeGuard;
 
@@ -36,7 +36,7 @@ final readonly class CreateNamedRevisionAction
         private EventRecorder $recorder,
     ) {}
 
-    public function execute(OperationContext $context, CreateNamedRevisionInput $data): DocumentRevision
+    public function execute(DriveContext $context, CreateNamedRevisionInput $data): DocumentRevision
     {
         $node = $data->node;
 

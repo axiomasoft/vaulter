@@ -61,6 +61,7 @@ return [
         'Concurrency/QuotaRecountRaceTest.php',
         'Concurrency/RevisionNumberRaceTest.php',
         'Concurrency/RevisionPruneRaceTest.php',
+        'Concurrency/RootTransactionSnapshotTest.php',
         'Concurrency/SameNameUploadRaceTest.php',
         'Concurrency/ScanWorkRecoveryRaceTest.php',
         'Concurrency/TreeLockRaceTest.php',

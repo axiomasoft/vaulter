@@ -11,7 +11,7 @@ use Vaulter\Exceptions\Files\ContentUnavailableException;
 use Vaulter\Kernel;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Sharing\ShareContext;
 
 /**
@@ -24,7 +24,7 @@ final readonly class DownloadGuards
 {
     public function __construct(private Kernel $kernel) {}
 
-    public function check(OperationContext|ShareContext $context, Node $node, FileRevision $revision): void
+    public function check(DriveContext|ShareContext $context, Node $node, FileRevision $revision): void
     {
         foreach ($this->kernel->extensions()->resolve(DownloadGuard::class) as $guard) {
             try {

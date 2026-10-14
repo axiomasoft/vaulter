@@ -23,7 +23,7 @@ use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Enums\Cas\ScanVerdict;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Repositories\Content\ScanObligationRepository;
 use Vaulter\Tests\Concurrency\ForkRace;
 
@@ -38,7 +38,7 @@ it('SEC-R11 concurrent claims acquire one live lease and late old token cannot s
     config()->set('vaulter.scan.scanner_key', 'fixture');
     config()->set('vaulter.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
-    $context = OperationContext::system($drive, 'fixture');
+    $context = DriveContext::system($drive, 'fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     $stream = UploadTestHelpers::streamFor('race bytes');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
@@ -78,7 +78,7 @@ it('SEC-R09 killed committed publisher leaves intent recoverable by an independe
     config()->set('vaulter.scan.scanner_key', 'fixture');
     config()->set('vaulter.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
-    $context = OperationContext::system($drive, 'fixture');
+    $context = DriveContext::system($drive, 'fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     $outcomes = ForkRace::run([function () use ($drive, $context): void {
         app(VaulterDatabase::class)->transaction(function () use ($drive, $context): void {
@@ -111,7 +111,7 @@ it('SEC-R11 killed lease owner is fenced while a surviving process recovers', fu
     config()->set('vaulter.scan.scanner_key', 'fixture');
     config()->set('vaulter.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
-    $context = OperationContext::system($drive, 'fixture');
+    $context = DriveContext::system($drive, 'fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     $stream = UploadTestHelpers::streamFor('killed worker');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
@@ -138,7 +138,7 @@ it('SEC-R11 killed lease owner is fenced while a surviving process recovers', fu
 
 it('SEC-POLICY-activation-race captures an admitted writer before exclusive activation', function (): void {
     $drive = UploadTestHelpers::storage();
-    $context = OperationContext::system($drive, 'fixture');
+    $context = DriveContext::system($drive, 'fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     $ready = tempnam(sys_get_temp_dir(), 'vaulter_activation_');
     unlink($ready);
@@ -198,7 +198,7 @@ it('SEC-R12 purge and settlement serialize without resurrecting a head or work',
     config()->set('vaulter.scan.scanner_key', 'fixture');
     config()->set('vaulter.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
-    $context = OperationContext::system($drive, 'fixture');
+    $context = DriveContext::system($drive, 'fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     $stream = UploadTestHelpers::streamFor('purge race');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));

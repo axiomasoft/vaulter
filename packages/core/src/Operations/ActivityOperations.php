@@ -20,7 +20,7 @@ use Vaulter\Queries\Activity\VisibleActivityQuery;
 
 final readonly class ActivityOperations implements Contract
 {
-    public function __construct(private OperationContext $context, private NodeLocator $locator, private OperationGuard $guard, private VisibleActivityQuery $query, private ActivitySnapshotMapper $mapper) {}
+    public function __construct(private DriveContext $context, private NodeLocator $locator, private OperationGuard $guard, private VisibleActivityQuery $query, private ActivitySnapshotMapper $mapper) {}
 
     /** @return Page<ActivityEntrySnapshot> */
     public function forDrive(?ListOptions $options = null): Page
@@ -40,7 +40,7 @@ final readonly class ActivityOperations implements Contract
     public function filtered(NodeSnapshot|string|int|null $node = null, ?ListOptions $options = null, ?EventType $verb = null): CursorPaginator
     {
         $drive = $this->context->drive->newQuery()->whereKey($this->context->driveId())->first() ?? throw NodeNotFoundException::forId($this->context->driveId());
-        $context = new OperationContext(drive: $drive, actor: $this->context->actor, correlationId: $this->context->correlationId);
+        $context = DriveContext::for(drive: $drive, actor: $this->context->actor, correlationId: $this->context->correlationId);
         $target = $node === null ? null : $this->locator->find(context: $context, key: $node);
         $root = $target ?? $this->locator->find(context: $context, key: $drive->root_node_id ?? 'missing-root');
         if ($root->trashed_at !== null) {

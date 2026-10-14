@@ -1,5 +1,5 @@
 Vaulter\Drive\Contracts\Uploads\UploadInspector
-  inspect(\Vaulter\Drive\Data\Files\UploadFacts $facts, \Vaulter\Profiles\UploadPolicy $policy, \Vaulter\Operations\OperationContext $context): void
+  inspect(\Vaulter\Drive\Data\Files\UploadFacts $facts, \Vaulter\Profiles\UploadPolicy $policy, \Vaulter\Operations\DriveContext $context): void
   key(): string
   priority(): int
 

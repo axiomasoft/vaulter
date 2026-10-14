@@ -20,7 +20,7 @@ use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Webhooks\Outbox;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Testing\FakeMetricsRecorder;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
@@ -159,7 +159,7 @@ it('upload session initiated activity carries the exact lifecycle context', func
     $drive = DriveTestHelpers::drive();
     app(VaulterDatabase::class)->write(fn () => Activity::query()->delete());
 
-    $context = OperationContext::system($drive->model(), 'test fixture');
+    $context = DriveContext::system($drive->model(), 'test fixture');
     $session = app(UploadSessionManager::class)->initiate(context: $context, data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
         targetParent: $drive->root(),

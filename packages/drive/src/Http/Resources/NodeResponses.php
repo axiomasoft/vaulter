@@ -22,8 +22,8 @@ use Vaulter\Http\Resources\Drive\NodeResource;
 use Vaulter\Http\Resources\PageResponse;
 use Vaulter\Http\Support\HttpOperationContextFactory;
 use Vaulter\Http\Support\Preconditions;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
-use Vaulter\Operations\OperationContext;
 
 /**
  * How the drive routes answer with nodes. Every node goes out as the caller's own
@@ -142,8 +142,8 @@ final readonly class NodeResponses
         );
     }
 
-    private function context(Request $request, DriveHandle $drive): OperationContext
+    private function context(Request $request, DriveHandle $drive): DriveContext
     {
-        return new OperationContext(drive: $drive->model(), actor: $drive->actor(), correlationId: AssignCorrelationId::of($request) ?? (string) Str::ulid());
+        return DriveContext::for(drive: $drive->model(), actor: $drive->actor(), correlationId: AssignCorrelationId::of($request) ?? (string) Str::ulid());
     }
 }

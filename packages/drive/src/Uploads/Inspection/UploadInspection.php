@@ -8,7 +8,7 @@ use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\Uploads\UploadInspector;
 use Vaulter\Drive\Data\Files\UploadFacts;
 use Vaulter\Kernel;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Profiles\UploadPolicy;
 
@@ -17,7 +17,7 @@ final readonly class UploadInspection
 {
     public function __construct(private DriveConfig $config, private ProfileRegistry $profiles) {}
 
-    public function maximum(OperationContext $context): ?int
+    public function maximum(DriveContext $context): ?int
     {
         $global = $this->config->maxFileSize();
         $profile = $this->profiles->get($context->drive->profile)->getDrivePolicy()->maxFileBytes;
@@ -26,7 +26,7 @@ final readonly class UploadInspection
         return $limits === [] ? null : min($limits);
     }
 
-    public function inspect(UploadFacts $facts, OperationContext $context): void
+    public function inspect(UploadFacts $facts, DriveContext $context): void
     {
         $inspectors = app(Kernel::class)->extensions()->resolve(UploadInspector::class);
         $keys = [];

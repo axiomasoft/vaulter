@@ -17,7 +17,7 @@ use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Repositories\Changes\ChangeEntryRepository;
 use Vaulter\Repositories\Changes\ChangeHeadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
@@ -57,7 +57,7 @@ final readonly class PurgeDriveStepAction
             if (!$drive instanceof Drive || $drive->status !== DriveStatus::Deleting) {
                 return true;
             }
-            $context = OperationContext::system(drive: $drive, reason: OperationGuard::PURGE_REASON);
+            $context = DriveContext::system(drive: $drive, reason: OperationGuard::PURGE_REASON);
             $this->abortUploads($context, $drive);
 
             $nodeClass = $this->config->model('node');
@@ -81,7 +81,7 @@ final readonly class PurgeDriveStepAction
         });
     }
 
-    private function abortUploads(OperationContext $context, Drive $drive): void
+    private function abortUploads(DriveContext $context, Drive $drive): void
     {
         $class = $this->driveConfig->model('upload_session');
         foreach ($class::query()->where('drive_id', $drive->getKey())->whereIn('status', ['initiated', 'uploading', 'assembled'])->cursor() as $session) {
@@ -95,7 +95,7 @@ final readonly class PurgeDriveStepAction
      *
      * @return bool true when nothing is left to do, false when children appeared
      */
-    private function finish(OperationContext $context, ?Node $root): bool
+    private function finish(DriveContext $context, ?Node $root): bool
     {
         return $this->database->transaction(function () use ($context, $root): bool {
             $this->database->lockTree($context->driveId());

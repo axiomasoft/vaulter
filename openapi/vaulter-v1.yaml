@@ -4090,6 +4090,7 @@ components:
           - drive_archived
           - drive_not_found
           - duplicate_registration
+          - extension_failed
           - file_size_limit_exceeded
           - folder_children_limit_exceeded
           - grant_not_found
@@ -4103,6 +4104,7 @@ components:
           - invalid_webhook_signature
           - method_not_allowed
           - module_graph_invalid
+          - module_not_ready
           - node_move_cycle
           - node_name_conflict
           - node_not_found

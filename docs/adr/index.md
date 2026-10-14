@@ -28,3 +28,4 @@ Records of the significant architectural decisions behind Vaulter.
 - [ADR-0025 — Access model 1.0](/adr/0025-access-model-v1) — _accepted; supersedes ADR-0007 in part_
 - [ADR-0026 — Public API on snapshots; Eloquent is internal](/adr/0026-public-api-snapshots) — _accepted; amends ADR-0020_
 - [ADR-0027 — Kernel boundaries and the module system](/adr/0027-kernel-boundaries-and-modules) — _accepted; supersedes ADR-0019_
+- [ADR-0028 — Extension slots and the operation pipeline](/adr/0028-extension-slots-and-operation-pipeline) — _accepted; builds on ADR-0027_

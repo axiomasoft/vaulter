@@ -14,7 +14,7 @@ use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\S3MultipartHandler;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Support\LoadTier;
 use Vaulter\Testing\FakeMetricsRecorder;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -34,7 +34,7 @@ beforeEach(function (): void {
 
 it('records tus upload bytes and chunk duration on PATCH', function (): void {
     $storage = UploadTestHelpers::storage();
-    $session = app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
+    $session = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
         targetName: 'chunk.bin',
@@ -60,7 +60,7 @@ it('records tus upload bytes and chunk duration on PATCH', function (): void {
 
 it('records tus upload conflict on offset mismatch', function (): void {
     $storage = UploadTestHelpers::storage();
-    $session = app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
+    $session = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
         targetParent: $storage->rootNode()->first(),
         targetName: 'conflict.bin',
@@ -89,7 +89,7 @@ it('records s3 upload bytes, chunk duration, and assemble metrics on complete', 
     $whole = $part1.$part2;
 
     $storage = UploadTestHelpers::storage();
-    $session = app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
+    $session = app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::S3Multipart,
         targetParent: $storage->rootNode()->first(),
         targetName: 'multi.bin',
@@ -125,7 +125,7 @@ it('records single-shot upload bytes and chunk duration', function (): void {
     $storage = $drive->model();
     $root = $drive->root();
 
-    $context = new OperationContext(
+    $context = DriveContext::for(
         drive: $storage,
         actor: Actor::user(DriveTestHelpers::actor($drive, 1)),
         correlationId: 'single-shot-metrics',

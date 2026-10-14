@@ -11,7 +11,7 @@ use Vaulter\Data\Access\GrantInput;
 use Vaulter\Data\Access\GrantNodeAccessInput;
 use Vaulter\Exceptions\Access\UnenumerableGrantSubjectException;
 use Vaulter\Models\Access\NodeGrant;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Fixtures\Access\SubclassedRoleDriver;
 
@@ -40,7 +40,7 @@ it('warns and throws when a role grant is written under the gate driver, F-P1.2-
 
     $action = grantAction();
 
-    expect(fn (): NodeGrant => $action->execute(OperationContext::system($folder->storage()->firstOrFail(), 'fixture'), new GrantNodeAccessInput(node: $folder, grant: new GrantInput(
+    expect(fn (): NodeGrant => $action->execute(DriveContext::system($folder->storage()->firstOrFail(), 'fixture'), new GrantNodeAccessInput(node: $folder, grant: new GrantInput(
         subject: new Subject(type: 'role', id: '7'),
         role: RoleRegistry::READER,
     ))))->toThrow(UnenumerableGrantSubjectException::class);
@@ -57,7 +57,7 @@ it('throws for a team subject under the gate driver, F-P1.2-01', function (): vo
 
     $action = grantAction();
 
-    expect(fn (): NodeGrant => $action->execute(OperationContext::system($folder->storage()->firstOrFail(), 'fixture'), new GrantNodeAccessInput(node: $folder, grant: new GrantInput(
+    expect(fn (): NodeGrant => $action->execute(DriveContext::system($folder->storage()->firstOrFail(), 'fixture'), new GrantNodeAccessInput(node: $folder, grant: new GrantInput(
         subject: new Subject(type: 'team', id: '3'),
         role: RoleRegistry::READER,
     ))))->toThrow(UnenumerableGrantSubjectException::class);
@@ -72,7 +72,7 @@ it('does not throw for a plain user subject under the gate driver, F-P1.2-01', f
 
     $action = grantAction();
 
-    $grant = $action->execute(OperationContext::system($folder->storage()->firstOrFail(), 'fixture'), new GrantNodeAccessInput(node: $folder, grant: new GrantInput(
+    $grant = $action->execute(DriveContext::system($folder->storage()->firstOrFail(), 'fixture'), new GrantNodeAccessInput(node: $folder, grant: new GrantInput(
         subject: new Subject(type: 'user', id: '1'),
         role: RoleRegistry::READER,
     )));
@@ -95,7 +95,7 @@ it('does not throw for a role grant under an unmarked subclass that overrides su
 
     $action = grantAction();
 
-    $grant = $action->execute(OperationContext::system($folder->storage()->firstOrFail(), 'fixture'), new GrantNodeAccessInput(node: $folder, grant: new GrantInput(
+    $grant = $action->execute(DriveContext::system($folder->storage()->firstOrFail(), 'fixture'), new GrantNodeAccessInput(node: $folder, grant: new GrantInput(
         subject: new Subject(type: 'role', id: '7'),
         role: RoleRegistry::READER,
     )));
@@ -113,7 +113,7 @@ it('does not throw when a role grant is written under the spatie driver, F-P1.2-
 
     $action = grantAction();
 
-    $grant = $action->execute(OperationContext::system($folder->storage()->firstOrFail(), 'fixture'), new GrantNodeAccessInput(node: $folder, grant: new GrantInput(
+    $grant = $action->execute(DriveContext::system($folder->storage()->firstOrFail(), 'fixture'), new GrantNodeAccessInput(node: $folder, grant: new GrantInput(
         subject: new Subject(type: 'role', id: '9'),
         role: RoleRegistry::READER,
     )));

@@ -14,7 +14,7 @@ use Vaulter\Exceptions\Drive\DriveArchivedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Concurrency\ForkRace;
 use Vaulter\Tests\Concurrency\RaceOutcome;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -36,9 +36,9 @@ it('an archive does not hold back a system create racing it: both land', functio
     $count = Node::query()->where('drive_id', $driveId)->count();
 
     $outcomes = ForkRace::run([
-        static fn (): string => (string) app(ArchiveDriveAction::class)->execute(OperationContext::system(Drive::query()->findOrFail($driveId), 'test fixture'))->status->value,
+        static fn (): string => (string) app(ArchiveDriveAction::class)->execute(DriveContext::system(Drive::query()->findOrFail($driveId), 'test fixture'))->status->value,
         static fn (): string => (string) app(CreateFolderAction::class)->execute(
-            OperationContext::system(Drive::query()->findOrFail($driveId), 'race-system'),
+            DriveContext::system(Drive::query()->findOrFail($driveId), 'race-system'),
             new CreateFolderInput(storage: Drive::query()->findOrFail($driveId), name: 'late', parent: Node::query()->findOrFail($rootId)),
         )->getKey(),
     ]);
@@ -61,14 +61,14 @@ it('a user rename racing an archive lands before it or is refused after it, neve
     $userClass = $user::class;
 
     $outcomes = ForkRace::run([
-        static fn (): string => (string) app(ArchiveDriveAction::class)->execute(OperationContext::system(Drive::query()->findOrFail($driveId), 'test fixture'))->status->value,
+        static fn (): string => (string) app(ArchiveDriveAction::class)->execute(DriveContext::system(Drive::query()->findOrFail($driveId), 'test fixture'))->status->value,
         static function () use ($driveId, $folderId, $userClass): string {
             $actor = new $userClass;
             $actor->forceFill(['id' => 61]);
             $actor->exists = true;
 
             return (string) app(RenameNodeAction::class)->execute(
-                new OperationContext(Drive::query()->findOrFail($driveId), Actor::user($actor), 'race'),
+                DriveContext::for(Drive::query()->findOrFail($driveId), Actor::user($actor), 'race'),
                 new RenameNodeInput(node: Node::query()->findOrFail($folderId), name: 'new'),
             )->getKey();
         },
@@ -96,14 +96,14 @@ it('a user rename racing a delete lands before it or finds the drive gone', func
     Queue::fake();
 
     $outcomes = ForkRace::run([
-        static fn (): string => (string) app(DeleteDriveAction::class)->execute(OperationContext::system(Drive::query()->findOrFail($driveId), 'test fixture'))->status->value,
+        static fn (): string => (string) app(DeleteDriveAction::class)->execute(DriveContext::system(Drive::query()->findOrFail($driveId), 'test fixture'))->status->value,
         static function () use ($driveId, $folderId, $userClass): string {
             $actor = new $userClass;
             $actor->forceFill(['id' => 62]);
             $actor->exists = true;
 
             return (string) app(RenameNodeAction::class)->execute(
-                new OperationContext(Drive::query()->findOrFail($driveId), Actor::user($actor), 'race'),
+                DriveContext::for(Drive::query()->findOrFail($driveId), Actor::user($actor), 'race'),
                 new RenameNodeInput(node: Node::query()->findOrFail($folderId), name: 'new'),
             )->getKey();
         },

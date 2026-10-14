@@ -17,8 +17,8 @@ use Vaulter\Events\EventRecorder;
 use Vaulter\Events\Sharing\NodeShareCreated;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
-use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Sharing\NodeShareStoreRepository;
 use Vaulter\Sharing\ShareLinkRules;
 use Vaulter\Sharing\ShareTokenMinter;
@@ -53,7 +53,7 @@ final readonly class CreateShareLinkAction
         private EventRecorder $recorder,
     ) {}
 
-    public function execute(OperationContext $context, CreateShareLinkInput $input): MintedShareLink
+    public function execute(DriveContext $context, CreateShareLinkInput $input): MintedShareLink
     {
         $node = $this->locator->find(context: $context, key: $input->node);
         $data = $input->link;

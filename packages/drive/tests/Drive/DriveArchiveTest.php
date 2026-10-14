@@ -43,7 +43,7 @@ use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Nodes\StorageNotFoundException;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
@@ -147,7 +147,7 @@ it('a drive being deleted is absent for users and the handle', function (): void
 
     expect(fn () => $actor->root())->toThrow(StorageNotFoundException::class)
         ->and(fn () => $system->snapshot())->toThrow(StorageNotFoundException::class);
-    $context = OperationContext::system($model, 'test fixture');
+    $context = DriveContext::system($model, 'test fixture');
     expect(fn () => app(OperationGuard::class)->authorize($context, Ability::View, DriveTestHelpers::model($folder)))
         ->toThrow(NodeNotFoundException::class);
 });
@@ -185,7 +185,7 @@ it('every drive writer re-checks the status under its lock: a user context on an
     $fixture['file'] = DriveTestHelpers::model($file);
     $fixture['oldRevision'] = $fixture['file']->file()->firstOrFail()->versions()->orderBy('number')->firstOrFail();
     $user = DriveTestHelpers::actor($system, 71);
-    $context = new OperationContext($system->model(), Actor::user($user), 'archived-writer');
+    $context = DriveContext::for($system->model(), Actor::user($user), 'archived-writer');
     $before = [Node::query()->count(), Node::query()->whereNotNull('trashed_at')->count(), FileRevision::query()->count(), $fixture['folder']->refresh()->name];
     $system->archive();
 

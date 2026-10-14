@@ -15,9 +15,9 @@ use Vaulter\Exceptions\Content\ContentQuarantinedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\FileRevisionBlob;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\NodeSequence;
-use Vaulter\Operations\OperationContext;
 use Vaulter\Profiles\DrivePolicyEnforcer;
 use Vaulter\Repositories\Drive\DriveStoreRepository;
 use Vaulter\Repositories\Drive\FileRevisionStoreRepository;
@@ -30,7 +30,7 @@ final readonly class RestoreFileRevisionAction
 {
     public function __construct(private VaulterDatabase $database, private TreeGuard $tree, private NodeLocator $locator, private NodeSequence $sequence, private FileStoreRepository $files, private FileRevisionStoreRepository $revisions, private NodeStoreRepository $nodes, private DriveStoreRepository $drives, private BlobStore $blobs, private CopyDestinationAdmission $admission, private DrivePolicyEnforcer $policy, private DriveLifecycle $lifecycle, private EventRecorder $recorder) {}
 
-    public function execute(OperationContext $context, RestoreFileRevisionInput $data): FileRevision
+    public function execute(DriveContext $context, RestoreFileRevisionInput $data): FileRevision
     {
         $node = $this->locator->find($context, $data->node);
 

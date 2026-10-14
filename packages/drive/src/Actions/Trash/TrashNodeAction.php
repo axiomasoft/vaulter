@@ -10,9 +10,9 @@ use Vaulter\Drive\Events\Nodes\NodeTrashed;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\NodeSequence;
-use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
 use Vaulter\Support\DriveLifecycle;
@@ -30,7 +30,7 @@ final readonly class TrashNodeAction
         private EventRecorder $recorder,
     ) {}
 
-    public function execute(OperationContext $context, TrashNodeInput $data): Node
+    public function execute(DriveContext $context, TrashNodeInput $data): Node
     {
         $node = app(NodeLocator::class)->find(context: $context, key: $data->node, includeTrashed: true);
 

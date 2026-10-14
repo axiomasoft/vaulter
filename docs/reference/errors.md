@@ -53,6 +53,7 @@ out of date. For handling errors in PHP see the [error guide](/guides/errors).
 | [`drive_archived`](#drive_archived) | 409 | core | `Vaulter\Exceptions\Drive\DriveArchivedException` |
 | [`drive_not_found`](#drive_not_found) | 404 | core | `Vaulter\Exceptions\Nodes\StorageNotFoundException` |
 | [`duplicate_registration`](#duplicate_registration) | 500 | core | `Vaulter\Exceptions\Registry\DuplicateNodeContentLifecycleException` |
+| [`extension_failed`](#extension_failed) | 500 | core | `Vaulter\Exceptions\Support\InvalidExtensionResult` |
 | [`file_size_limit_exceeded`](#file_size_limit_exceeded) | 413 | core | `Vaulter\Exceptions\Policy\FileSizeLimitExceededException` |
 | [`folder_children_limit_exceeded`](#folder_children_limit_exceeded) | 409 | core | `Vaulter\Exceptions\Policy\FolderChildrenLimitExceededException` |
 | [`grant_not_found`](#grant_not_found) | 404 | core | — |
@@ -66,6 +67,7 @@ out of date. For handling errors in PHP see the [error guide](/guides/errors).
 | [`invalid_webhook_signature`](#invalid_webhook_signature) | 400 | core | `Vaulter\Exceptions\Webhooks\InvalidWebhookSignatureException` |
 | [`method_not_allowed`](#method_not_allowed) | 405 | core | `Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException` |
 | [`module_graph_invalid`](#module_graph_invalid) | 503 | core | `Vaulter\Modules\ModuleGraphException` |
+| [`module_not_ready`](#module_not_ready) | 503 | core | `Vaulter\Exceptions\Modules\ModuleNotReadyException` |
 | [`node_move_cycle`](#node_move_cycle) | 409 | drive | `Vaulter\Drive\Exceptions\Nodes\NodeCycleException` |
 | [`node_name_conflict`](#node_name_conflict) | 409 | core | `Vaulter\Exceptions\Nodes\NodeNameConflictException` |
 | [`node_not_found`](#node_not_found) | 404 | core | `Vaulter\Exceptions\Nodes\NodeNotFoundException` |
@@ -216,6 +218,12 @@ out of date. For handling errors in PHP see the [error guide](/guides/errors).
 
 **Duplicate registration** — The same key was registered twice.
 
+### `extension_failed`
+
+**500** · core
+
+**Extension failed** — An installed module's extension broke its contract; the operation did not run or was rolled back.
+
 ### `file_size_limit_exceeded`
 
 **413** · core
@@ -293,6 +301,12 @@ out of date. For handling errors in PHP see the [error guide](/guides/errors).
 **503** · core
 
 **Module graph invalid** — The installed modules do not form a valid graph; no module is active.
+
+### `module_not_ready`
+
+**503** · core
+
+**Module not ready** — The module serving this operation is inactive or its schema is not installed yet.
 
 ### `node_move_cycle`
 

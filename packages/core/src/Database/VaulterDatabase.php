@@ -120,6 +120,12 @@ final class VaulterDatabase
                 if ($this->connection()->transactionLevel() !== 0 || !$this->isConcurrencyFailure($exception)) {
                     throw $exception;
                 }
+                // A commit that failed on a concurrency error with no attempt left to Laravel leaves the
+                // server transaction open under a level-0 connection: close it before the next attempt.
+                $pdo = $this->connection()->getPdo();
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
                 if ($attempt >= $attempts) {
                     throw new ConcurrentUpdateException($exception);
                 }

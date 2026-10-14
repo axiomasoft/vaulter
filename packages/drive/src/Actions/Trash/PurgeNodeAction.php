@@ -15,9 +15,9 @@ use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Nodes\InvalidDestinationException;
 use Vaulter\Exceptions\Nodes\NodeNotTrashedException;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\NodeSequence;
-use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Drive\DriveStoreRepository;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
@@ -38,7 +38,7 @@ final readonly class PurgeNodeAction
         private EventRecorder $recorder,
     ) {}
 
-    public function execute(OperationContext $context, PurgeNodeInput $data): void
+    public function execute(DriveContext $context, PurgeNodeInput $data): void
     {
         if ($data->bypassTrashRequirement && (!$context->actor->isSystem() || $context->actor->ref()->reason !== OperationGuard::PURGE_REASON)) {
             throw new InvalidArgumentException('[Vaulter] Only the system actor "'.OperationGuard::PURGE_REASON.'" may purge a node that is not in the trash.');

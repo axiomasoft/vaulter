@@ -8,7 +8,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Jobs\PurgeDriveJob;
 use Vaulter\Enums\Drive\DriveStatus;
 use Vaulter\Models\Drive\Drive;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Repositories\Drive\DriveStoreRepository;
 
 /**
@@ -21,7 +21,7 @@ final readonly class DeleteDriveAction
 {
     public function __construct(private VaulterDatabase $database, private DriveStoreRepository $drives) {}
 
-    public function execute(OperationContext $context): Drive
+    public function execute(DriveContext $context): Drive
     {
         return $this->database->transaction(function () use ($context): Drive {
             $this->database->lockTree($context->driveId());

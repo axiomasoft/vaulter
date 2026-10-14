@@ -27,7 +27,7 @@ use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Tests\Collaboration\HubTestHelpers;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /*
@@ -80,7 +80,7 @@ function matrixYjs(Node $node, string $state = 'yjs-state', bool $seed = false):
  */
 function matrixWriters(): array
 {
-    $ctx = static fn (Node $node): OperationContext => DocumentTestHelpers::context($node);
+    $ctx = static fn (Node $node): DriveContext => DocumentTestHelpers::context($node);
     $update = static fn (Node $node, string $text): mixed => app(UpdateDocumentContentAction::class)->execute(
         $ctx($node), new UpdateDocumentContentInput(node: $node, content: DocumentTestHelpers::content($text)),
     );

@@ -18,8 +18,8 @@ use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
-use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Content\ScanEvidenceRepository;
 use Vaulter\Sharing\ShareContext;
 use Vaulter\Sharing\ShareResolver;
@@ -29,7 +29,7 @@ final readonly class ContentDelivery
 {
     public function __construct(private NodeLocator $locator, private OperationGuard $access, private ContentAvailabilityGuard $availability, private DownloadGuards $guards, private BlobStore $blobs, private DownloadsConfig $downloads, private ScanEvidenceRepository $evidence, private FileRevisionSnapshotMapper $revisions) {}
 
-    public function stream(OperationContext $context, Node $node, FileRevision $revision): FileStream
+    public function stream(DriveContext $context, Node $node, FileRevision $revision): FileStream
     {
         $node = $this->authorize($context, $node);
         $this->guards->check($context, $node, $revision);
@@ -45,7 +45,7 @@ final readonly class ContentDelivery
         return $this->open($node, $revision);
     }
 
-    public function directUrl(OperationContext $context, Node $node, FileRevision $revision, int $ttlSeconds): SignedContentUrl
+    public function directUrl(DriveContext $context, Node $node, FileRevision $revision, int $ttlSeconds): SignedContentUrl
     {
         $node = $this->authorize($context, $node);
         $this->guards->check($context, $node, $revision);
@@ -68,7 +68,7 @@ final readonly class ContentDelivery
         return $url;
     }
 
-    private function authorize(OperationContext $context, Node $node): Node
+    private function authorize(DriveContext $context, Node $node): Node
     {
         $node = $this->locator->find($context, $node);
         $this->access->authorize($context, Ability::Download, $node, OperationKind::ContentEgress);

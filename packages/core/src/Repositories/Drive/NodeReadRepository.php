@@ -495,6 +495,12 @@ final class NodeReadRepository
         if ($ignoreId !== null) {
             $query->whereKeyNot($ignoreId);
         }
+        if ($query->getModel()->getConnection()->getDriverName() === 'mysql') {
+            // The caller holds the tree lock, but its transaction began earlier: a plain read on MySQL
+            // (REPEATABLE READ) would answer from a snapshot older than that lock. A locking read sees
+            // the committed state, as every read after the lock does on PostgreSQL.
+            $query->sharedLock();
+        }
 
         return $query;
     }

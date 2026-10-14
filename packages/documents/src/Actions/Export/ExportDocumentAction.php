@@ -11,7 +11,7 @@ use Vaulter\Documents\Data\Export\ExportDocumentInput;
 use Vaulter\Documents\Export\DocumentExporterRegistry;
 use Vaulter\Documents\Queries\DocumentQuery;
 use Vaulter\Documents\ValueObjects\DocumentExport;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Support\Identity;
 use Vaulter\Support\LoadTier;
 
@@ -50,7 +50,7 @@ final readonly class ExportDocumentAction
         return 'unknown';
     }
 
-    public function execute(OperationContext $context, ExportDocumentInput $data): DocumentExport
+    public function execute(DriveContext $context, ExportDocumentInput $data): DocumentExport
     {
         return $this->metrics->timing(
             name: 'vaulter_export_duration_seconds',

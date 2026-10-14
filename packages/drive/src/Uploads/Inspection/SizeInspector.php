@@ -7,7 +7,7 @@ namespace Vaulter\Drive\Uploads\Inspection;
 use Vaulter\Drive\Contracts\Uploads\UploadInspector;
 use Vaulter\Drive\Data\Files\UploadFacts;
 use Vaulter\Exceptions\Policy\FileSizeLimitExceededException;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Profiles\UploadPolicy;
 
 final readonly class SizeInspector implements UploadInspector
@@ -22,7 +22,7 @@ final readonly class SizeInspector implements UploadInspector
         return 90;
     }
 
-    public function inspect(UploadFacts $facts, UploadPolicy $policy, OperationContext $context): void
+    public function inspect(UploadFacts $facts, UploadPolicy $policy, DriveContext $context): void
     {
         if ($policy->maxFileSize !== null && $facts->size > $policy->maxFileSize) {
             throw FileSizeLimitExceededException::forLimit($policy->maxFileSize);

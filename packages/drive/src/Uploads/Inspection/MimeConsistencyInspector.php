@@ -8,7 +8,7 @@ use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\Uploads\UploadInspector;
 use Vaulter\Drive\Data\Files\UploadFacts;
 use Vaulter\Drive\Exceptions\Files\UploadRejectedException;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Profiles\UploadPolicy;
 
 final readonly class MimeConsistencyInspector implements UploadInspector
@@ -23,7 +23,7 @@ final readonly class MimeConsistencyInspector implements UploadInspector
         return 80;
     }
 
-    public function inspect(UploadFacts $facts, UploadPolicy $policy, OperationContext $context): void
+    public function inspect(UploadFacts $facts, UploadPolicy $policy, DriveContext $context): void
     {
         $detected = $facts->detectedMimeType;
         if ($policy->allowedMimeTypes !== [] && ($detected === null || !array_any($policy->allowedMimeTypes, static fn (string $allowed): bool => $allowed === $detected || (str_ends_with($allowed, '/*') && str_starts_with($detected, substr($allowed, 0, -1)))))) {

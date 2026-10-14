@@ -36,8 +36,8 @@ use Vaulter\Kernel;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Modules\MissingExtensionException;
 use Vaulter\Operations\ChangeOperations;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
-use Vaulter\Operations\OperationContext;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Tenancy\TenancyBoundary;
@@ -92,7 +92,7 @@ final readonly class DriveHandle implements Contract
     }
 
     /** Manage on the root, or the system actor; an archived drive still allows its own lifecycle. */
-    private function authorizedLifecycle(): OperationContext
+    private function authorizedLifecycle(): DriveContext
     {
         $context = $this->context();
         $rootId = $context->drive->root_node_id ?? throw NodeNotFoundException::forId('root');
@@ -140,9 +140,9 @@ final readonly class DriveHandle implements Contract
     }
 
     /** @internal One context and correlation per operation, no cached ACL result. */
-    private function context(): OperationContext
+    private function context(): DriveContext
     {
-        return new OperationContext(drive: $this->model(), actor: $this->actor(), correlationId: $this->correlationId ?? (string) Str::ulid());
+        return DriveContext::for(drive: $this->model(), actor: $this->actor(), correlationId: $this->correlationId ?? (string) Str::ulid());
     }
 
     public function root(): NodeSnapshot

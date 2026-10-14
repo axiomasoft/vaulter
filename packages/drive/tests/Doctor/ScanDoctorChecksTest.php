@@ -23,7 +23,7 @@ use Vaulter\Drive\Data\Files\IngestFileInput;
 use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Enums\Cas\ScanVerdict;
 use Vaulter\Kernel;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Testing\FakeContentScanner;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
@@ -69,7 +69,7 @@ function scanFixture(): array
     config()->set('vaulter.scan.scanner_key', 'fixture');
     config()->set('vaulter.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
-    $context = OperationContext::system($drive, 'fixture');
+    $context = DriveContext::system($drive, 'fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     $stream = UploadTestHelpers::streamFor('payload');
     app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'a.txt', 'text/plain'));

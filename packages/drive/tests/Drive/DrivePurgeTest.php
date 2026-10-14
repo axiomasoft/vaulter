@@ -26,7 +26,7 @@ use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\ValueObjects\Access\Actor;
 
@@ -52,7 +52,7 @@ function drivePurgeFixture(): array
 it('delete marks the drive deleting once and queues one purge', function (): void {
     Queue::fake();
     [$drive, $id] = drivePurgeFixture();
-    $context = OperationContext::system($drive->model(), 'test fixture');
+    $context = DriveContext::system($drive->model(), 'test fixture');
 
     app(DeleteDriveAction::class)->execute($context);
     app(DeleteDriveAction::class)->execute($context); // a repeat is a no-op; the unique job is queued once
@@ -110,7 +110,7 @@ it('aborts open upload sessions of the drive', function (): void {
     Queue::fake();
     $drive = DriveTestHelpers::drive();
     $model = $drive->model();
-    $session = app(UploadSessionManager::class)->initiate(context: OperationContext::system($model, 'test fixture'), data: new InitiateUploadInput(
+    $session = app(UploadSessionManager::class)->initiate(context: DriveContext::system($model, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::Tus, targetParent: $model->rootNode()->first(), targetName: 'big.bin', totalSizeBytes: 10, mimeType: 'application/octet-stream',
     ));
     $drive->delete();
@@ -125,13 +125,13 @@ it('bypassing the trash requirement is reserved for the system drive-purge actor
     $node = DriveTestHelpers::model($file);
     $before = Node::query()->count();
 
-    foreach ([OperationContext::system($drive->model(), 'something-else'), new OperationContext(drive: $drive->model(), actor: Actor::user(DriveTestHelpers::actor($drive, 41)), correlationId: 'x')] as $context) {
+    foreach ([DriveContext::system($drive->model(), 'something-else'), DriveContext::for(drive: $drive->model(), actor: Actor::user(DriveTestHelpers::actor($drive, 41)), correlationId: 'x')] as $context) {
         expect(fn () => app(PurgeNodeAction::class)->execute($context, new PurgeNodeInput(node: $node, bypassTrashRequirement: true)))
             ->toThrow(InvalidArgumentException::class);
     }
     expect(Node::query()->count())->toBe($before);
     // Without the flag a live node is still refused.
-    expect(fn () => app(PurgeNodeAction::class)->execute(OperationContext::system($drive->model(), 'drive-purge'), new PurgeNodeInput(node: $node)))
+    expect(fn () => app(PurgeNodeAction::class)->execute(DriveContext::system($drive->model(), 'drive-purge'), new PurgeNodeInput(node: $node)))
         ->toThrow(NodeNotTrashedException::class);
 });
 

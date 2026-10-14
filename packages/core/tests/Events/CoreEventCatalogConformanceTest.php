@@ -10,7 +10,7 @@ use Vaulter\Data\Sharing\ShareLinkInput;
 use Vaulter\Data\Sharing\ShareLinkUpdate;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Operations\AccessOperations;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\ShareOperations;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
@@ -26,7 +26,7 @@ uses(TestCase::class, RefreshDatabase::class, EnablesWebhooksModule::class);
 it('records the kernel events with the data their specs declare', function (): void {
     config()->set('vaulter.features.share_links', true);
     $drive = AccessTestHelpers::storage();
-    $context = OperationContext::system($drive, 'conformance');
+    $context = DriveContext::system($drive, 'conformance');
     $access = app()->makeWith(AccessOperations::class, ['context' => $context]);
     $shares = app()->makeWith(ShareOperations::class, ['context' => $context]);
     $folder = AccessTestHelpers::folder($drive, null, 'secret-name');

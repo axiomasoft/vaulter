@@ -11,7 +11,7 @@ use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Webhooks\Outbox;
 use Vaulter\Operations\ActivityOperations;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\ShareOperations;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
@@ -28,7 +28,7 @@ beforeEach(function (): void {
     config()->set('vaulter.access.permission_driver', 'database');
     $this->drive = AccessTestHelpers::storage();
     $this->node = AccessTestHelpers::folder($this->drive, null, 'shared');
-    $this->shares = app()->makeWith(ShareOperations::class, ['context' => OperationContext::system($this->drive, 'lifecycle events')]);
+    $this->shares = app()->makeWith(ShareOperations::class, ['context' => DriveContext::system($this->drive, 'lifecycle events')]);
     $this->minted = $this->shares->create($this->node->id, new ShareLinkInput);
 });
 
@@ -82,9 +82,9 @@ it('hides the token prefix of share events from a reader without Share', functio
     AccessTestHelpers::grant($this->drive->rootNode()->firstOrFail(), RoleRegistry::READER, scope: GrantScope::Item);
     AccessTestHelpers::grant($this->node, RoleRegistry::READER, scope: GrantScope::Item);
     $reader = app()->makeWith(ActivityOperations::class, [
-        'context' => new OperationContext($this->drive, Actor::user(AccessTestHelpers::user()), 'reader'),
+        'context' => DriveContext::for($this->drive, Actor::user(AccessTestHelpers::user()), 'reader'),
     ]);
-    $system = app()->makeWith(ActivityOperations::class, ['context' => OperationContext::system($this->drive, 'audit')]);
+    $system = app()->makeWith(ActivityOperations::class, ['context' => DriveContext::system($this->drive, 'audit')]);
 
     $seen = array_filter($reader->forDrive(new ListOptions)->items, static fn ($row): bool => in_array($row->verb, ['share.updated', 'share.rotated'], true));
     $audited = array_filter($system->forDrive(new ListOptions)->items, static fn ($row): bool => in_array($row->verb, ['share.updated', 'share.rotated'], true));

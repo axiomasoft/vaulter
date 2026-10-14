@@ -1130,8 +1130,116 @@
             "action": "keep",
             "phase": "P3",
             "surface": "Api",
-            "note": "loses Drive ORM inputs in favour of neutral scope/actor refs",
+            "note": "neutral since P3.8: actor, tenant, scope, correlation/causation, idempotency key; drive paths use DriveContext",
             "why": "architecture#kernel: Контекст операции — OperationContext (baseline (core PublicApiSnapshot) lists it)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\ValueObjects\\Operations\\ScopeRef",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: neutral scope reference of OperationContext (P3.8)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\ValueObjects\\Operations\\TenantRef",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: tagged tenant reference of OperationContext (P3.8)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Operations\\OperationRunner",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel + knowledge/p3-operations#operation-runner: the operation pipeline (P3.9, ADR-0028)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Operations\\OperationSpec",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: the operation identity of the pipeline (P3.9, ADR-0028)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Operations\\Operation",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: one run of an operation handed to middleware and the attempt (P3.9, ADR-0028)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Operations\\OperationMiddleware",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Spi:Implement",
+            "why": "knowledge/p3-modules#slots: the OperationMiddleware slot defined by core (P3.9, D8)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Operations\\OperationClaim",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "knowledge/p3-operations#idempotency: stage 4 seam of the pipeline, filled by the idempotency store (P3.9/P3.12, D25)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Operations\\AfterCommitFailure",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "knowledge/p3-operations#operation-runner: carries a failed after-commit callback out of the retry loop so a committed attempt is never repeated"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Operations\\NoOperationClaim",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "knowledge/p3-operations#operation-runner: the claim step until operations accept idempotency keys (P3.9)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Operations\\ModuleReadiness",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: lazy per-process readiness of a module before its writes (P3.9, ADR-0028)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Observability\\TelemetryMiddleware",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Internal",
+            "why": "architecture#kernel: telemetry of the kernel, the built-in core.telemetry operation middleware (P3.9)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Exceptions\\Modules\\ModuleNotReadyException",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: problem module_not_ready of the operation pipeline (P3.9, ADR-0028)"
         },
         {
             "match": "fqcn",

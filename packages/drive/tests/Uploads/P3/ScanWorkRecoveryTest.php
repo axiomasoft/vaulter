@@ -29,7 +29,7 @@ use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Enums\Cas\ScanVerdict;
 use Vaulter\Exceptions\Files\ContentUnavailableException;
 use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Repositories\Content\ScanObligationRepository;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
@@ -39,7 +39,7 @@ beforeEach(fn () => DriveTestHelpers::insideOperation());
 it('SEC-BACKFILL materializes bounded durable activation work and checkpoints it', function (): void {
     Storage::fake('local');
     $drive = UploadTestHelpers::storage();
-    $context = OperationContext::system($drive, 'fixture');
+    $context = DriveContext::system($drive, 'fixture');
     foreach (['a.txt', 'b.txt'] as $name) {
         $stream = UploadTestHelpers::streamFor($name);
         app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, $name, 'text/plain'));
@@ -77,7 +77,7 @@ it('SEC-R09 committed work survives missing delivery and reconciles publication 
     config()->set('vaulter.scan.scanner_key', 'fixture');
     config()->set('vaulter.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
-    $context = OperationContext::system($drive, 'fixture');
+    $context = DriveContext::system($drive, 'fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     $stream = UploadTestHelpers::streamFor('durable');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
@@ -104,7 +104,7 @@ it('SEC-R13 outer rollback removes admission work revision and queued publicatio
     config()->set('vaulter.scan.scanner_key', 'fixture');
     config()->set('vaulter.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
-    $context = OperationContext::system($drive, 'fixture');
+    $context = DriveContext::system($drive, 'fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     $stream = UploadTestHelpers::streamFor('rollback');
     try {
@@ -128,7 +128,7 @@ it('SEC-RECOVERY ledger deduplicates old requests and terminal exhaustion requir
     config()->set('vaulter.scan.scanner_key', 'fixture');
     config()->set('vaulter.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
-    $context = OperationContext::system($drive, 'fixture');
+    $context = DriveContext::system($drive, 'fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     $stream = UploadTestHelpers::streamFor('dedup');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
@@ -178,7 +178,7 @@ it('SEC-RECOVERY-bounds signed cursors resume one revision and reject signature 
     config()->set('vaulter.scan.scanner_key', 'fixture');
     config()->set('vaulter.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
-    $context = OperationContext::system($drive, 'fixture');
+    $context = DriveContext::system($drive, 'fixture');
     foreach (['a', 'b'] as $name) {
         $stream = UploadTestHelpers::streamFor($name);
         app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, $name.'.txt', 'text/plain'));
@@ -203,7 +203,7 @@ it('SEC-BACKFILL new content preparation retains legacy work at same spec all co
     Storage::fake('local');
     Bus::fake();
     $drive = UploadTestHelpers::storage();
-    $context = OperationContext::system($drive, 'fixture');
+    $context = DriveContext::system($drive, 'fixture');
     $stream = UploadTestHelpers::streamFor('pre-cutover');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
     fclose($stream);
@@ -235,7 +235,7 @@ it('SEC-POLICY-superseded replacement activation terminates old work while confi
     config()->set('vaulter.scan.scanner_key', 'fixture');
     config()->set('vaulter.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
-    $context = OperationContext::system($drive, 'fixture');
+    $context = DriveContext::system($drive, 'fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     $stream = UploadTestHelpers::streamFor('versions');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'p.txt', 'text/plain'));
@@ -295,7 +295,7 @@ it('SEC-RECOVERY-UTC selects due work and expired leases by UTC in either app ti
     date_default_timezone_set($timezone);
     try {
         $drive = UploadTestHelpers::storage();
-        $context = OperationContext::system($drive, 'UTC recovery fixture');
+        $context = DriveContext::system($drive, 'UTC recovery fixture');
         app(ScanPolicyResolver::class)->initialize($drive, $context);
         $stream = UploadTestHelpers::streamFor('UTC recovery');
         $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'utc.txt', 'text/plain'));
@@ -331,7 +331,7 @@ it('SEC-C03-db-clock decides which scan work is due regardless of application cl
     config()->set('vaulter.scan.scanner_key', 'fixture');
     config()->set('vaulter.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
-    $context = OperationContext::system($drive, 'clock skew fixture');
+    $context = DriveContext::system($drive, 'clock skew fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     $stream = UploadTestHelpers::streamFor('clock skew');
     $node = app(IngestFileAction::class)->execute($context, new IngestFileInput($drive, $stream, 'skew.txt', 'text/plain'));
@@ -387,7 +387,7 @@ it('SEC-RECOVERY-remaining-due counts all still-due work whatever the batch limi
     config()->set('vaulter.scan.scanner_key', 'fixture');
     config()->set('vaulter.scan.scanner_version', '1');
     $drive = UploadTestHelpers::storage();
-    $context = OperationContext::system($drive, 'remaining fixture');
+    $context = DriveContext::system($drive, 'remaining fixture');
     app(ScanPolicyResolver::class)->initialize($drive, $context);
     foreach (['a', 'b', 'c'] as $name) {
         $stream = UploadTestHelpers::streamFor($name);

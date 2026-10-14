@@ -7,8 +7,8 @@ use Vaulter\Access\OperationGuard;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Operations\OperationKind;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
-use Vaulter\Operations\OperationContext;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\TestCase;
 
@@ -18,7 +18,7 @@ it('SEC-R14 system bypasses ACL within scope for each public operation category'
     config()->set('vaulter.access.permission_driver', 'database');
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder(storage: $drive, parent: null, name: 'own');
-    $context = OperationContext::system(drive: $drive, reason: 'maintenance');
+    $context = DriveContext::system(drive: $drive, reason: 'maintenance');
     app(OperationGuard::class)->authorize(context: $context, ability: $ability, node: $node, operation: $kind);
     expect($context->actor->ref()->reason)->toBe('maintenance');
 })->with(['metadata' => [OperationKind::Metadata, Ability::View], 'mutation' => [OperationKind::Mutation, Ability::Edit], 'egress seam' => [OperationKind::ContentEgress, Ability::Download], 'purge' => [OperationKind::Purge, Ability::Delete]]);
@@ -27,7 +27,7 @@ it('SEC-R14 foreign locator and every system guard surface reject forged scope',
     $drive = AccessTestHelpers::storage();
     $foreign = AccessTestHelpers::folder(storage: AccessTestHelpers::storage(), parent: null, name: 'foreign');
     $foreign->drive_id = $drive->id;
-    $context = OperationContext::system(drive: $drive, reason: 'maintenance');
+    $context = DriveContext::system(drive: $drive, reason: 'maintenance');
     $guard = app(OperationGuard::class);
     expect(fn () => app(NodeLocator::class)->find(context: $context, key: $foreign))->toThrow(NodeNotFoundException::class);
     foreach (OperationKind::cases() as $kind) {
@@ -41,7 +41,7 @@ it('SEC-R14 foreign locator and every system guard surface reject forged scope',
 it('SEC-R14 metadata and purge do not invent upload or scanner dependencies', function (): void {
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder(storage: $drive, parent: null, name: 'own');
-    $context = OperationContext::system(drive: $drive, reason: 'maintenance');
+    $context = DriveContext::system(drive: $drive, reason: 'maintenance');
     $guard = app(OperationGuard::class);
     $guard->authorizeCreate(context: $context, parent: $node);
     expect($guard->abilities(context: $context, node: $node)->flags)->toMatchArray(['view' => true, 'create' => true, 'delete' => true, 'share' => false, 'comment' => false]);

@@ -46,6 +46,8 @@ Codes are a stable public contract (AD29).
 | `duplicate_registration` | 500 (boot) | `Vaulter\Documents\Exceptions\DuplicateDocumentTypeException` |
 | `registry_frozen` | 500 (boot) | `Vaulter\Exceptions\Registry\RegistryFrozenException` |
 | `module_graph_invalid` | 503 | `Vaulter\Modules\ModuleGraphException` |
+| `module_not_ready` | 503 | `Vaulter\Exceptions\Modules\ModuleNotReadyException` |
+| `extension_failed` | 500 | `Vaulter\Exceptions\Support\InvalidExtensionResult` |
 | `invalid_document_content` | 422 | `Vaulter\Documents\Exceptions\InvalidDocumentContentException` |
 | `document_revision_not_found` | 404 | `Vaulter\Documents\Exceptions\DocumentRevisionNotFoundException` |
 | `comment_not_found` | 404 | `Vaulter\Documents\Exceptions\CommentNotFoundException` |
@@ -177,6 +179,23 @@ is inactive, a missing or doubled capability provider, a contribution to an unkn
 activated; `vaulter:modules` and `vaulter:doctor` print every reason. Fix the manifests or
 `vaulter.modules`, then rebuild the caches and restart the workers
 ([ADR-0027](/adr/0027-kernel-boundaries-and-modules)).
+
+## module-not-ready
+
+`ModuleNotReadyException` (503 `module_not_ready`) — a write reached a module that is inactive or
+whose tables do not exist yet (migrations not run). The operation is refused before any transaction
+opens; run `php artisan migrate` (or enable the module and its dependencies in `vaulter.modules`) and
+retry. A ready module is remembered for the life of the worker process
+([ADR-0028](/adr/0028-extension-slots-and-operation-pipeline)).
+
+## extension-failed
+
+`InvalidExtensionResult` (500 `extension_failed`) — a module's contribution to a slot broke the
+slot's contract: an operation middleware that did not call `$next` exactly once, passed another
+operation, or returned something other than `$next`'s result; a snapshot contributor with a reserved
+or duplicate fragment key. The operation did not run or was rolled back. It is an integration error:
+it is never retried and never cached. Fix or deactivate the contributing module
+([ADR-0028](/adr/0028-extension-slots-and-operation-pipeline)).
 
 ## duplicate-registration
 

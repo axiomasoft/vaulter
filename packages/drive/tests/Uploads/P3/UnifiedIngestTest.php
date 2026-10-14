@@ -20,7 +20,7 @@ use Vaulter\Exceptions\Policy\FileSizeLimitExceededException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
 
@@ -38,7 +38,7 @@ it('V05 rejects an executable disguised as PDF before SQL and CAS', function ():
 it('I9 persists detected MIME separately from the declared generic MIME', function (): void {
     $drive = UploadTestHelpers::storage();
     $stream = UploadTestHelpers::streamFor('plain text');
-    $node = app(IngestFileAction::class)->execute(OperationContext::system($drive, 'test fixture'), new IngestFileInput($drive, $stream, 'note.txt', 'application/octet-stream'));
+    $node = app(IngestFileAction::class)->execute(DriveContext::system($drive, 'test fixture'), new IngestFileInput($drive, $stream, 'note.txt', 'application/octet-stream'));
     $revision = $node->file()->firstOrFail()->currentRevision()->firstOrFail();
     expect($revision->mime_type)->toBe('text/plain')->and($revision->declared_mime_type)->toBe('application/octet-stream')->and($revision->sha256)->toBe(hash('sha256', 'plain text'));
     fclose($stream);

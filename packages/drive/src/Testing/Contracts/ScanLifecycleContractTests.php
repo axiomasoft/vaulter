@@ -41,7 +41,7 @@ use Vaulter\Exceptions\Files\ContentUnavailableException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Content\ScanObligation;
 use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Testing\FakeContentScanner;
 use Vaulter\Testing\Fixtures\FixtureOwner;
 use Vaulter\Testing\InteractsWithVaulter;
@@ -170,7 +170,7 @@ final class ScanLifecycleContractTests
         Assert::assertSame(ScanStatus::NotRequired->value, $this->status($legacy), 'Legacy content could not be created: the suite switches vaulter.scan.mode off for it, so the host must read the mode from there.');
 
         $model = $legacyDrive->model();
-        App::make(VaulterDatabase::class)->write(static fn () => App::make(ScanPolicyResolver::class)->initialize($model, OperationContext::system($model, 'scan lifecycle contract')));
+        App::make(VaulterDatabase::class)->write(static fn () => App::make(ScanPolicyResolver::class)->initialize($model, DriveContext::system($model, 'scan lifecycle contract')));
 
         if ($mode === ScanMode::AllContent) {
             Assert::assertFalse($this->readable($legacyDrive, $legacy), 'Under all_content, legacy content must stay unreadable until it is clean.');

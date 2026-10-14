@@ -6,7 +6,7 @@ use Vaulter\Drive\Actions\Nodes\MoveNodeAction;
 use Vaulter\Drive\Data\Nodes\MoveNodeInput;
 use Vaulter\Drive\Exceptions\Nodes\NodeCycleException;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Concurrency\ForkRace;
 use Vaulter\Tests\Concurrency\RaceOutcome;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -23,7 +23,7 @@ beforeEach(function (): void {
 
 function raceMove(int|string $nodeId, int|string $intoId): Closure
 {
-    return static fn (): string => (string) app(MoveNodeAction::class)->execute(OperationContext::system(Node::query()->findOrFail($nodeId)->storage, 'test fixture'), new MoveNodeInput(
+    return static fn (): string => (string) app(MoveNodeAction::class)->execute(DriveContext::system(Node::query()->findOrFail($nodeId)->storage, 'test fixture'), new MoveNodeInput(
         node: Node::query()->findOrFail($nodeId),
         into: Node::query()->findOrFail($intoId),
     ))->getKey();

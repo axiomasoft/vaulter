@@ -13,7 +13,7 @@ use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionStoreRepository;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\TreeGuard;
 
@@ -37,7 +37,7 @@ final readonly class UpdateRevisionRetentionAction
         private DriveLifecycle $lifecycle,
     ) {}
 
-    public function execute(OperationContext $context, UpdateRevisionRetentionInput $data): DocumentRevision
+    public function execute(DriveContext $context, UpdateRevisionRetentionInput $data): DocumentRevision
     {
         $node = $data->node;
         $versionId = $data->revision instanceof DocumentRevision ? $data->revision->getKey() : $data->revision;

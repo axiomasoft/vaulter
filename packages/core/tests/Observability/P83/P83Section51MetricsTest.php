@@ -17,7 +17,7 @@ use Vaulter\Enums\Access\GrantScope;
 use Vaulter\Http\Middleware\RecordVaulterRequestMetrics;
 use Vaulter\Load\Listeners\RecordBroadcastQueueWait;
 use Vaulter\Load\Observability\CollaborationRoomMetrics;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Support\LoadTier;
 use Vaulter\Testing\FakeMetricsRecorder;
@@ -130,7 +130,7 @@ it('records vaulter_subtree_nodes_touched during move cycle guard', function ():
     $parent = $drive->folders()->create('parent');
     $child = $drive->folders()->create('child', $parent);
 
-    $context = new OperationContext(
+    $context = DriveContext::for(
         drive: $drive->model(),
         actor: Actor::user(DriveTestHelpers::actor($drive, 1)),
         correlationId: 'subtree-metrics',

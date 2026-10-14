@@ -15,7 +15,7 @@ use Vaulter\Drive\Actions\Trash\PurgeNodeAction;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Data\Trash\PurgeNodeInput;
 use Vaulter\Exceptions\Contracts\ProblemException;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Repositories\Drive\NodeReadRepository;
 use Vaulter\Repositories\Drive\NodeStoreRepository;
@@ -59,7 +59,7 @@ final class PurgeTrashCommand extends Command
                     if ($drive === null) {
                         continue;
                     }
-                    $context = OperationContext::system(drive: $drive, reason: 'purge-trash');
+                    $context = DriveContext::system(drive: $drive, reason: 'purge-trash');
                     $override = $this->option('days');
                     $days = (is_string($override) || is_int($override)) && is_numeric($override)
                         ? max((int) $override, 0)

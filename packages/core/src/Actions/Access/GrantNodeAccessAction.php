@@ -16,8 +16,8 @@ use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Access\UnenumerableGrantSubjectException;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
-use Vaulter\Operations\OperationContext;
 use Vaulter\Repositories\Access\GrantStoreRepository;
 
 /**
@@ -40,7 +40,7 @@ final readonly class GrantNodeAccessAction
         private EventRecorder $recorder,
     ) {}
 
-    public function execute(OperationContext $context, GrantNodeAccessInput $input): NodeGrant
+    public function execute(DriveContext $context, GrantNodeAccessInput $input): NodeGrant
     {
         $node = $this->locator->find(context: $context, key: $input->node);
         $data = $input->grant;

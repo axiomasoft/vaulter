@@ -20,7 +20,7 @@ use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
 // These tests drive handlers and repositories directly; Vaulter's entry points open the write scope, these calls do not.
@@ -181,7 +181,7 @@ it('коммит реклеймленной сессии отбивается, �
     // commit — одно и то же окно; на реальной гонке байты исчезают ПОСЕРЕДИНЕ стрима).
     UploadSession::query()->whereKey($session->getKey())->update(['status' => UploadStatus::Expired->value]);
 
-    expect(fn () => app(CompleteUploadAction::class)->execute(context: OperationContext::system($session->storage, 'test fixture'), session: $session->refresh()))
+    expect(fn () => app(CompleteUploadAction::class)->execute(context: DriveContext::system($session->storage, 'test fixture'), session: $session->refresh()))
         ->toThrow(UploadConflictException::class);
 
     $after = UploadSession::query()->findOrFail($session->getKey());

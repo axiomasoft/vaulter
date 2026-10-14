@@ -30,7 +30,7 @@ require_once dirname(__DIR__, 3).'/scripts/inventory/lib/Identities/Protocol.php
 require_once dirname(__DIR__, 3).'/scripts/inventory/lib/Identities/Http.php';
 
 /** The decisions a ledger record may cite: accepted decisions only; a plan item adds one together with its record. */
-const ID_ACCEPTED_DECISIONS = ['D21', 'D22', 'D25', 'D29', 'D36', 'D39'];
+const ID_ACCEPTED_DECISIONS = ['D8', 'D21', 'D22', 'D25', 'D29', 'D36', 'D39'];
 
 /** @return list<string> the problem codes, sorted */
 function id_codes(array $problems): array
@@ -425,7 +425,7 @@ describe('committed fixtures', function (): void {
         $count = static fn (string $prefix): int => count(array_filter(array_keys($items), static fn (string $id): bool => str_starts_with($id, $prefix)));
 
         expect($count('event:'))->toBe(32)
-            ->and($count('problem:'))->toBe(72)
+            ->and($count('problem:'))->toBe(74)
             ->and($items['event:file.uploaded']['sinks'])->toBe(['activity' => true, 'journal' => 'upsert', 'webhook' => true])
             ->and($items['event:file.uploaded']['data'])->toHaveKey('revision_id')
             ->and($items['problem:node_not_found'])->toMatchArray(['status' => 404, 'owner' => 'drive'])

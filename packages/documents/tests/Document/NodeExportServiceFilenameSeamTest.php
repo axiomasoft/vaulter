@@ -10,7 +10,7 @@ use Vaulter\Documents\Data\Export\ExportDocumentInput;
 use Vaulter\Documents\Export\DefaultExportFilenameResolver;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
 /*
@@ -32,7 +32,7 @@ beforeEach(function (): void {
 it('binds ExportFilenameResolver to the default scheme', function (): void {
     expect(app(ExportFilenameResolver::class))->toBeInstanceOf(DefaultExportFilenameResolver::class);
 
-    $export = app(ExportDocumentAction::class)->execute(OperationContext::system($this->node->storage()->firstOrFail(), 'export fixture'), new ExportDocumentInput($this->node, 'html'));
+    $export = app(ExportDocumentAction::class)->execute(DriveContext::system($this->node->storage()->firstOrFail(), 'export fixture'), new ExportDocumentInput($this->node, 'html'));
 
     expect($export->filename)->toBe('Report.html');
 });
@@ -51,7 +51,7 @@ it('lets a host rebind ExportFilenameResolver to override the export filename sc
     // resolver, proving the seam is read from the container, not hardcoded.
     app()->forgetInstance(ExportDocumentAction::class);
 
-    $export = app(ExportDocumentAction::class)->execute(OperationContext::system($this->node->storage()->firstOrFail(), 'export fixture'), new ExportDocumentInput($this->node, 'html'));
+    $export = app(ExportDocumentAction::class)->execute(DriveContext::system($this->node->storage()->firstOrFail(), 'export fixture'), new ExportDocumentInput($this->node, 'html'));
 
     expect($export->filename)->toBe('custom-Report.html');
 });

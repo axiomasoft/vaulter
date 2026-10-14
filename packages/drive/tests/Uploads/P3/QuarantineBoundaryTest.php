@@ -13,7 +13,7 @@ use Vaulter\Enums\Cas\ScanVerdict;
 use Vaulter\Exceptions\Files\ContentUnavailableException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Content\ScanObligation;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Repositories\Content\ScanObligationRepository;
 use Vaulter\Sharing\ShareResolver;
 use Vaulter\Tests\Drive\DriveTestHelpers;
@@ -23,7 +23,7 @@ beforeEach(function (): void {
     Storage::fake('local');
     config()->set('vaulter.features.share_links', true);
     $this->system = Vaulter::drive(DriveTestHelpers::host())->asSystem('quarantine fixture');
-    $this->context = OperationContext::system($this->system->model(), 'quarantine fixture');
+    $this->context = DriveContext::system($this->system->model(), 'quarantine fixture');
 });
 
 it('SEC-R01 legacy not_required and bare clean cannot authorize required public bytes', function (): void {

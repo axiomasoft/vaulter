@@ -14,7 +14,7 @@ use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Models\Activity\Activity;
 use Vaulter\Models\Webhooks\Outbox;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\TestUser;
@@ -97,7 +97,7 @@ it('records drive.deleted when the purge of a deleted drive finishes', function 
 
 it('audits upload sessions without staging webhooks', function (): void {
     $drive = DriveTestHelpers::drive();
-    $context = OperationContext::system(drive: $drive->model(), reason: 'test upload');
+    $context = DriveContext::system(drive: $drive->model(), reason: 'test upload');
     $session = app(UploadSessionManager::class)->initiate($context, new InitiateUploadInput(
         protocol: UploadProtocol::Tus,
         targetName: 'big.bin',

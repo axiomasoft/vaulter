@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Operations;
 
+use Closure;
 use Vaulter\Access\OperationGuard;
 use Vaulter\Contracts\Drive\DriveHandle;
 use Vaulter\Drive\Actions\Uploads\AbortUploadAction;
@@ -23,14 +24,17 @@ use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Modules\ModuleId;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\OperationRunner;
+use Vaulter\Operations\OperationSpec;
 
 final readonly class UploadOperations
 {
     public function __construct(
         DriveHandle $handle,
-        private OperationContext $context,
+        private DriveContext $context,
         private InitiateUploadAction $initiation,
         private CompleteUploadAction $completion,
         private AbortUploadAction $abortion,
@@ -41,6 +45,7 @@ final readonly class UploadOperations
         private DriveConfig $config,
         private NodeLocator $locator,
         private OperationGuard $guard,
+        private OperationRunner $runner,
     ) {
         $drive = $handle->model();
         $key = $drive->getRawOriginal($drive->getKeyName());
@@ -51,25 +56,27 @@ final readonly class UploadOperations
 
     public function initiate(InitiateUploadInput $input): UploadSession
     {
-        if (!$this->config->resumableEnabled()) {
-            // The target is looked up first, so a disabled feature does not tell a
-            // caller which ids exist: invisible → 404, visible → 403.
-            $target = $this->locator->find(context: $this->context, key: $input->targetNode ?? $input->targetParent ?? $this->context->drive->root_node_id ?? throw NodeNotFoundException::forId('root'));
-            $this->guard->authorize(context: $this->context, ability: Ability::View, node: $target);
+        return $this->write('initiate', function () use ($input): UploadSession {
+            if (!$this->config->resumableEnabled()) {
+                // The target is looked up first, so a disabled feature does not tell a
+                // caller which ids exist: invisible → 404, visible → 403.
+                $target = $this->locator->find(context: $this->context, key: $input->targetNode ?? $input->targetParent ?? $this->context->drive->root_node_id ?? throw NodeNotFoundException::forId('root'));
+                $this->guard->authorize(context: $this->context, ability: Ability::View, node: $target);
 
-            throw ProfileRestrictionException::forOperation('resumable_upload');
-        }
+                throw ProfileRestrictionException::forOperation('resumable_upload');
+            }
 
-        return $this->initiation->execute(context: $this->context, input: $input);
+            return $this->initiation->execute(context: $this->context, input: $input);
+        });
     }
 
     public function complete(UploadSession|int|string $session): Node
     {
         $session = $this->find($session);
 
-        // Outermost retry (bounded): the staged protocol bytes survive a rollback, so a
-        // deadlock/serialization failure anywhere below re-runs the whole completion.
-        return $this->manager->withSession($session, function (UploadSession $locked): Node {
+        // The runner repeats the whole completion after a deadlock or serialization
+        // failure (bounded): the staged protocol bytes survive a rollback.
+        return $this->write('complete', fn (): Node => $this->manager->withSession($session, function (UploadSession $locked): Node {
             if ($locked->status === UploadStatus::Committed) {
                 return $this->completion->execute(context: $this->context, session: $locked);
             }
@@ -84,15 +91,17 @@ final readonly class UploadOperations
             }
 
             return $this->manager->commitAssembled(session: $locked, commit: fn (UploadSession $assembled): Node => $this->completion->execute(context: $this->context, session: $assembled));
-        }, attempts: 3);
+        }));
     }
 
     public function abort(UploadSession|int|string $session): void
     {
         $session = $this->find($session);
-        $this->completion->authorizeSession(context: $this->context, session: $session);
-        $this->assertResumable();
-        $this->abortion->execute(context: $this->context, session: $session);
+        $this->write('abort', function () use ($session): void {
+            $this->completion->authorizeSession(context: $this->context, session: $session);
+            $this->assertResumable();
+            $this->abortion->execute(context: $this->context, session: $session);
+        });
     }
 
     /** @internal Protocol adapters use the same current ownership/ACL boundary. */
@@ -138,6 +147,17 @@ final readonly class UploadOperations
 
             return $this->s3->putPart(session: $locked, partNo: $partNo, byteOffset: $byteOffset, chunk: $chunk);
         });
+    }
+
+    /**
+     * @template T
+     *
+     * @param  Closure(): T $attempt
+     * @return T
+     */
+    private function write(string $verb, Closure $attempt): mixed
+    {
+        return $this->runner->write(new OperationSpec('drive.uploads.'.$verb, new ModuleId('drive')), $this->context->operation, $attempt);
     }
 
     /**

@@ -14,7 +14,7 @@ use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\FileRevisionBlob;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Repositories\Drive\DriveStoreRepository;
 use Vaulter\Repositories\Drive\FileRevisionStoreRepository;
 use Vaulter\Repositories\Drive\FileStoreRepository;
@@ -49,7 +49,7 @@ final readonly class DeleteFileRevisionAction
         private EventRecorder $recorder,
     ) {}
 
-    public function execute(OperationContext $context, Node $node, FileRevision|int|string $revision): void
+    public function execute(DriveContext $context, Node $node, FileRevision|int|string $revision): void
     {
         $revisionId = $revision instanceof FileRevision ? $revision->getRawOriginal($revision->getKeyName()) : $revision;
 

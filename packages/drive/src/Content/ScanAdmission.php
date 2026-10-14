@@ -11,7 +11,7 @@ use Vaulter\Actions\Content\ReuseScanEvidenceAction;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Exceptions\Content\ContentQuarantinedException;
 use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Repositories\Content\ScanEvidenceRepository;
 
 final readonly class ScanAdmission
@@ -20,7 +20,7 @@ final readonly class ScanAdmission
         private ScanEvidenceRepository $evidence, private RequestScanWorkAction $request, private ReuseScanEvidenceAction $reuse,
         private ScanWorkReconciler $publisher) {}
 
-    public function next(OperationContext $context): int
+    public function next(DriveContext $context): int
     {
         if ($this->database->connection()->transactionLevel() === 0) {
             throw new LogicException('Scan admission requires the creation transaction.');
@@ -36,7 +36,7 @@ final readonly class ScanAdmission
         return $sequence;
     }
 
-    public function admit(OperationContext $context, FileRevision $revision, ?FileRevision $source = null): void
+    public function admit(DriveContext $context, FileRevision $revision, ?FileRevision $source = null): void
     {
         if ($this->evidence->infected($revision) || ($source !== null && $this->evidence->infected($source))) {
             throw new ContentQuarantinedException;

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Contracts\Uploads;
 
 use Vaulter\Drive\Data\Files\UploadFacts;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Profiles\UploadPolicy;
 
 interface UploadInspector
@@ -14,5 +14,5 @@ interface UploadInspector
 
     public function priority(): int;
 
-    public function inspect(UploadFacts $facts, UploadPolicy $policy, OperationContext $context): void;
+    public function inspect(UploadFacts $facts, UploadPolicy $policy, DriveContext $context): void;
 }

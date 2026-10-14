@@ -9,7 +9,7 @@ use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Operations\OperationKind;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Profiles\UploadPolicy;
@@ -40,8 +40,8 @@ it('SEC-R14 user and system both obey frozen share policy after user View', func
     $node = AccessTestHelpers::folder($drive, null, 'visible');
     AccessTestHelpers::grant($node, RoleRegistry::OWNER);
     $guard = app(OperationGuard::class);
-    $user = new OperationContext($drive, Actor::user(AccessTestHelpers::user()), 'profile-test');
-    $system = OperationContext::system($drive, 'maintenance');
+    $user = DriveContext::for($drive, Actor::user(AccessTestHelpers::user()), 'profile-test');
+    $system = DriveContext::system($drive, 'maintenance');
     foreach ([$user, $system] as $context) {
         expect(fn () => $guard->authorize($context, Ability::Share, $node))->toThrow(ProfileRestrictionException::class);
         expect($guard->abilities($context, $node)->flags)->toMatchArray(['view' => true, 'share' => false, 'comment' => false]);
@@ -56,7 +56,7 @@ it('SEC-R14 system bypasses only ACL and never the owner policy on any guard sur
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($drive, null, 'existing');
     guardProfile((new Profile)->key('default')->owners(TestUser::class));
-    $context = OperationContext::system($drive, 'maintenance');
+    $context = DriveContext::system($drive, 'maintenance');
     $guard = app(OperationGuard::class);
     expect(fn () => $guard->authorize($context, Ability::View, $node))->toThrow(ProfileRestrictionException::class)
         ->and(fn () => $guard->authorizeCreate($context, $node))->toThrow(ProfileRestrictionException::class)
@@ -69,7 +69,7 @@ it('SEC-R14 allows system denied by ACL when profile allows and keeps foreign sc
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($drive, null, 'own');
     $foreign = AccessTestHelpers::folder(AccessTestHelpers::storage(), null, 'foreign');
-    $context = OperationContext::system($drive, 'maintenance');
+    $context = DriveContext::system($drive, 'maintenance');
     $guard = app(OperationGuard::class);
     $guard->authorize($context, Ability::Share, $node);
     expect(fn () => $guard->authorize($context, Ability::Share, $foreign))->toThrow(NodeNotFoundException::class)
@@ -86,7 +86,7 @@ it('SEC-R14 purge and metadata do not require upload MIME scan or public egress'
         ->uploads(new UploadPolicy(maxFileSize: 0, allowedMimeTypes: ['image/png'], requireScan: true)));
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($drive, null, 'cleanup');
-    $context = OperationContext::system($drive, 'purge infected');
+    $context = DriveContext::system($drive, 'purge infected');
     app(OperationGuard::class)->authorize($context, Ability::Delete, $node, OperationKind::Purge);
     app(OperationGuard::class)->authorize($context, Ability::View, $node);
     expect(app(OperationGuard::class)->visible($context, [$node]))->toHaveCount(1);
@@ -97,7 +97,7 @@ it('SEC-R14 disabling grants removes scalar and batch ACL contributions without 
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($drive, null, 'grant-only');
     AccessTestHelpers::grant($node, RoleRegistry::OWNER);
-    $user = new OperationContext($drive, Actor::user(AccessTestHelpers::user()), 'no-grants');
+    $user = DriveContext::for($drive, Actor::user(AccessTestHelpers::user()), 'no-grants');
     $guard = app(OperationGuard::class);
     expect(fn () => $guard->authorize($user, Ability::View, $node))->toThrow(NodeNotFoundException::class)
         ->and($guard->visible($user, [$node]))->toBe([]);

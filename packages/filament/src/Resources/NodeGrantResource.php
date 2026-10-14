@@ -35,7 +35,7 @@ use Vaulter\Filament\Support\PanelActor;
 use Vaulter\Models\Access\NodeGrant;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\AccessOperations;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Support\Identity;
 use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\ValueObjects\Access\Actor;
@@ -298,7 +298,7 @@ final class NodeGrantResource extends Resource
         $actor = PanelActor::current() ?? throw MissingActorException::required();
         $drive = $node->storage()->first() ?? throw NodeNotFoundException::forId($node->id);
 
-        return app()->makeWith(AccessOperations::class, ['context' => new OperationContext(drive: $drive, actor: Actor::user($actor), correlationId: (string) Str::ulid())]);
+        return app()->makeWith(AccessOperations::class, ['context' => DriveContext::for(drive: $drive, actor: Actor::user($actor), correlationId: (string) Str::ulid())]);
     }
 
     private static function resolveNode(int|string|null $id): ?Node

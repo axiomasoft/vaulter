@@ -20,7 +20,7 @@ use Vaulter\Documents\Repositories\Documents\DocumentReadRepository;
 use Vaulter\Documents\Repositories\Revisions\DocumentRevisionReadRepository;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Support\DriveLifecycle;
 use Vaulter\Support\TreeGuard;
 
@@ -47,7 +47,7 @@ final readonly class RestoreDocumentRevisionAction
         private EventRecorder $recorder,
     ) {}
 
-    public function execute(OperationContext $context, RestoreDocumentRevisionInput $data): DocumentRevision
+    public function execute(DriveContext $context, RestoreDocumentRevisionInput $data): DocumentRevision
     {
         $node = $data->node;
         $versionId = $data->revision instanceof DocumentRevision ? $data->revision->getKey() : $data->revision;

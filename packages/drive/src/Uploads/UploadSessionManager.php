@@ -31,7 +31,7 @@ use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Kernel;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tenancy\TenancyBoundary;
 use Vaulter\ValueObjects\Access\Actor;
 use Vaulter\ValueObjects\Access\ActorRef;
@@ -70,7 +70,7 @@ final readonly class UploadSessionManager
      * a UNIQUE upload_id, stamps the TTL, and lets the protocol handler initialise
      * its side (S3 CreateMultipartUpload; a no-op for tus).
      */
-    public function initiate(OperationContext $context, InitiateUploadInput $data): UploadSession
+    public function initiate(DriveContext $context, InitiateUploadInput $data): UploadSession
     {
         $this->assertWithinMaxBytes($data->totalSizeBytes);
         $this->assertWithinActiveSessionCap($context->actor->ref()->id);

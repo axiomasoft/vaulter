@@ -15,7 +15,7 @@ use Vaulter\Enums\Sharing\ShareAudience;
 use Vaulter\Events\Sharing\NodeShareCreated;
 use Vaulter\Events\Sharing\NodeShareRevoked;
 use Vaulter\Models\Sharing\NodeShare;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Support\ShareToken;
 use Vaulter\Tests\Access\AccessTestHelpers;
 
@@ -31,7 +31,7 @@ it('returns the raw token once and persists ONLY its hash + prefix', function ()
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'shared');
 
-    $minted = app(CreateShareLinkAction::class)->execute(context: OperationContext::system($node->storage()->firstOrFail(), 'fixture'), input: new CreateShareLinkInput(node: $node, link: new ShareLinkInput));
+    $minted = app(CreateShareLinkAction::class)->execute(context: DriveContext::system($node->storage()->firstOrFail(), 'fixture'), input: new CreateShareLinkInput(node: $node, link: new ShareLinkInput));
 
     // The raw token is surfaced exactly once, on the result.
     expect($minted->token)->toBeString()->not->toBe('');
@@ -49,7 +49,7 @@ it('hashes a share password — the plaintext never lands in the row', function 
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'protected');
 
-    app(CreateShareLinkAction::class)->execute(context: OperationContext::system($node->storage()->firstOrFail(), 'fixture'), input: new CreateShareLinkInput(node: $node, link: new ShareLinkInput(password: 's3cret')));
+    app(CreateShareLinkAction::class)->execute(context: DriveContext::system($node->storage()->firstOrFail(), 'fixture'), input: new CreateShareLinkInput(node: $node, link: new ShareLinkInput(password: 's3cret')));
 
     $row = NodeShare::query()->firstOrFail();
 
@@ -62,7 +62,7 @@ it('defaults to a reader link for anyone on the item, born at generation 1', fun
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'plain');
 
-    $minted = app(CreateShareLinkAction::class)->execute(context: OperationContext::system($node->storage()->firstOrFail(), 'fixture'), input: new CreateShareLinkInput(node: $node, link: new ShareLinkInput));
+    $minted = app(CreateShareLinkAction::class)->execute(context: DriveContext::system($node->storage()->firstOrFail(), 'fixture'), input: new CreateShareLinkInput(node: $node, link: new ShareLinkInput));
 
     expect($minted->share->role_key)->toBe(RoleRegistry::READER)
         ->and($minted->share->role_version)->toBe(1)
@@ -79,7 +79,7 @@ it('emits NodeShareCreated on mint', function (): void {
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'evented');
 
-    app(CreateShareLinkAction::class)->execute(context: OperationContext::system($node->storage()->firstOrFail(), 'fixture'), input: new CreateShareLinkInput(node: $node, link: new ShareLinkInput));
+    app(CreateShareLinkAction::class)->execute(context: DriveContext::system($node->storage()->firstOrFail(), 'fixture'), input: new CreateShareLinkInput(node: $node, link: new ShareLinkInput));
 
     Event::assertDispatched(NodeShareCreated::class);
 });
@@ -90,9 +90,9 @@ it('revokes a share (stamps revoked_at) and emits NodeShareRevoked', function ()
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'revocable');
 
-    $minted = app(CreateShareLinkAction::class)->execute(context: OperationContext::system($node->storage()->firstOrFail(), 'fixture'), input: new CreateShareLinkInput(node: $node, link: new ShareLinkInput));
+    $minted = app(CreateShareLinkAction::class)->execute(context: DriveContext::system($node->storage()->firstOrFail(), 'fixture'), input: new CreateShareLinkInput(node: $node, link: new ShareLinkInput));
 
-    $revoked = app(RevokeShareLinkAction::class)->execute(context: OperationContext::system($storage, 'fixture'), input: new RevokeShareInput(node: $node, share: $minted->share));
+    $revoked = app(RevokeShareLinkAction::class)->execute(context: DriveContext::system($storage, 'fixture'), input: new RevokeShareInput(node: $node, share: $minted->share));
 
     expect($revoked)->toBeTrue()
         ->and($minted->share->refresh()->revoked_at)->not->toBeNull();
@@ -106,12 +106,12 @@ it('is a no-op (and emits nothing) when revoking an already-revoked share', func
     $storage = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder($storage, null, 'twice');
 
-    $minted = app(CreateShareLinkAction::class)->execute(context: OperationContext::system($node->storage()->firstOrFail(), 'fixture'), input: new CreateShareLinkInput(node: $node, link: new ShareLinkInput(role: RoleRegistry::READER)));
+    $minted = app(CreateShareLinkAction::class)->execute(context: DriveContext::system($node->storage()->firstOrFail(), 'fixture'), input: new CreateShareLinkInput(node: $node, link: new ShareLinkInput(role: RoleRegistry::READER)));
 
-    app(RevokeShareLinkAction::class)->execute(context: OperationContext::system($storage, 'fixture'), input: new RevokeShareInput(node: $node, share: $minted->share));
+    app(RevokeShareLinkAction::class)->execute(context: DriveContext::system($storage, 'fixture'), input: new RevokeShareInput(node: $node, share: $minted->share));
     Event::assertDispatchedTimes(NodeShareRevoked::class, 1);
 
-    $secondRevoke = app(RevokeShareLinkAction::class)->execute(context: OperationContext::system($storage, 'fixture'), input: new RevokeShareInput(node: $node, share: $minted->share->refresh()));
+    $secondRevoke = app(RevokeShareLinkAction::class)->execute(context: DriveContext::system($storage, 'fixture'), input: new RevokeShareInput(node: $node, share: $minted->share->refresh()));
 
     expect($secondRevoke)->toBeFalse();
     Event::assertDispatchedTimes(NodeShareRevoked::class, 1);

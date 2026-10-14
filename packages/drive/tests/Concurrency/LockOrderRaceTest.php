@@ -12,7 +12,7 @@ use Vaulter\Drive\Actions\Nodes\MoveNodeAction;
 use Vaulter\Drive\Data\Nodes\MoveNodeInput;
 use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Concurrency\ForkRace;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
@@ -31,7 +31,7 @@ it('V21 completes ten overlapping move/upload races with an acyclic tree and exa
                         $attempts++;
                     }
                 });
-                $node = app(MoveNodeAction::class)->execute(OperationContext::system($drive->model(), 'test fixture'), new MoveNodeInput(node: DriveTestHelpers::model($moving), into: DriveTestHelpers::model($folder)));
+                $node = app(MoveNodeAction::class)->execute(DriveContext::system($drive->model(), 'test fixture'), new MoveNodeInput(node: DriveTestHelpers::model($moving), into: DriveTestHelpers::model($folder)));
 
                 return ['id' => $node->id, 'attempts' => $attempts];
             },

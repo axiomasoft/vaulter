@@ -75,6 +75,22 @@
 манифесты или `vaulter.modules`, затем пересоберите кэши и перезапустите воркеры
 ([ADR-0027](/adr/0027-kernel-boundaries-and-modules)).
 
+## module-not-ready
+
+`ModuleNotReadyException` (503 `module_not_ready`) — запись пришла в модуль, который неактивен или
+чьих таблиц ещё нет (миграции не выполнены). Операция отклоняется до открытия транзакции; выполните
+`php artisan migrate` (или включите модуль и его зависимости в `vaulter.modules`) и повторите.
+Готовность модуля запоминается на время жизни процесса воркера
+([ADR-0028](/adr/0028-extension-slots-and-operation-pipeline)).
+
+## extension-failed
+
+`InvalidExtensionResult` (500 `extension_failed`) — вклад модуля в слот нарушил контракт слота:
+middleware операции вызвал `$next` не ровно один раз, передал другую операцию или вернул не результат
+`$next`; контрибьютор снимка вернул зарезервированный или повторяющийся ключ фрагмента. Операция не
+выполнена или откачена. Это ошибка интеграции: она не повторяется и не кэшируется. Исправьте или
+отключите модуль, внёсший вклад ([ADR-0028](/adr/0028-extension-slots-and-operation-pipeline)).
+
 ## duplicate-registration
 
 `DuplicateDocumentTypeException` (`duplicate_registration`) — один ключ типа документа

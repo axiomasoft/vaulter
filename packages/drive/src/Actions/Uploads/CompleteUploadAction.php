@@ -23,8 +23,8 @@ use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
-use Vaulter\Operations\OperationContext;
 use Vaulter\Support\NodeName;
 
 final readonly class CompleteUploadAction
@@ -39,7 +39,7 @@ final readonly class CompleteUploadAction
         private UploadCleanupReconciler $cleanup,
     ) {}
 
-    public function execute(OperationContext $context, UploadSession $session): Node
+    public function execute(DriveContext $context, UploadSession $session): Node
     {
         // This transaction owns the staged-byte readers, so it never retries itself, and
         // the transactions nested below cannot either (Laravel retries only the outermost
@@ -110,7 +110,7 @@ final readonly class CompleteUploadAction
     }
 
     /** Authorize freshly reloaded ownership, tenant and the current target. */
-    public function authorizeSession(OperationContext $context, UploadSession $session): void
+    public function authorizeSession(DriveContext $context, UploadSession $session): void
     {
         $this->assertOwnership(context: $context, session: $session);
         if ($session->status === UploadStatus::Committed) {
@@ -122,7 +122,7 @@ final readonly class CompleteUploadAction
     }
 
     /** The right the original request needed: Edit on the target file, or Create in the parent. */
-    private function authorizeMutation(OperationContext $context, UploadSession $session): void
+    private function authorizeMutation(DriveContext $context, UploadSession $session): void
     {
         $drive = $context->drive->newQuery()->whereKey($context->driveId())->first() ?? throw NodeNotFoundException::forId('drive');
         if ($session->isNewVersion()) {
@@ -132,7 +132,7 @@ final readonly class CompleteUploadAction
         }
     }
 
-    private function assertOwnership(OperationContext $context, UploadSession $session): void
+    private function assertOwnership(DriveContext $context, UploadSession $session): void
     {
         $drive = $context->drive->newQuery()->whereKey($context->driveId())->first() ?? throw NodeNotFoundException::forId('drive');
         if ((string) $session->drive_id !== (string) $context->driveId() || (string) $session->tenant_id !== (string) $drive->tenant_id) {
@@ -146,7 +146,7 @@ final readonly class CompleteUploadAction
         }
     }
 
-    private function backfillLegacy(OperationContext $context, UploadSession $session): void
+    private function backfillLegacy(DriveContext $context, UploadSession $session): void
     {
         if ($session->result_node_id === null || $session->result_revision_id === null || $session->assembled_blob_id === null) {
             throw UploadConflictException::forClosedSession($session->upload_id);
@@ -166,7 +166,7 @@ final readonly class CompleteUploadAction
             'cleanup_pending' => true, 'cleanup_available_at' => now()])->save();
     }
 
-    private function result(OperationContext $context, UploadSession $session): Node
+    private function result(DriveContext $context, UploadSession $session): Node
     {
         if ($session->result_node_id === null || $session->result_revision_id === null || $session->result_blob_id === null || (string) $session->result_blob_id !== (string) $session->assembled_blob_id) {
             throw UploadConflictException::forClosedSession($session->upload_id);
@@ -220,7 +220,7 @@ final readonly class CompleteUploadAction
     }
 
     /** @param resource $stream */
-    private function input(OperationContext $context, UploadSession $session, mixed $stream, ?PreparedUpload $prepared = null): IngestFileInput
+    private function input(DriveContext $context, UploadSession $session, mixed $stream, ?PreparedUpload $prepared = null): IngestFileInput
     {
         $target = $session->target_node_id === null ? null : $this->locator->find(context: $context, key: $session->target_node_id);
         $parent = $target !== null ? null : $this->locator->find(context: $context, key: $session->target_parent_id ?? $context->drive->root_node_id ?? throw NodeNotFoundException::forId('root'));

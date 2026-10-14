@@ -21,7 +21,7 @@ use Vaulter\Exceptions\Access\MissingPermissionDriverException;
 use Vaulter\Exceptions\Access\UnenumerableGrantSubjectException;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Models\Drive\Drive;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Repositories\Drive\NodeReadRepository;
@@ -117,8 +117,8 @@ it('uses each selected subject lane for shared candidates and role grant inserti
         ->and(app(NodeReadRepository::class)->candidateNodeIds($actor))->toContain($a->id)->not->toContain($b->id)
         ->and(app(NodeReadRepository::class)->sharedWith($actor)->modelKeys())->toContain($a->id)->not->toContain($b->id);
     $data = new GrantInput(subject: new Subject(type: 'role', id: 8), role: RoleRegistry::READER);
-    expect(app(GrantNodeAccessAction::class)->execute(OperationContext::system($a->storage()->firstOrFail(), 'fixture'), new GrantNodeAccessInput(node: $a, grant: $data))->subject_id)->toBe(8)
-        ->and(fn () => app(GrantNodeAccessAction::class)->execute(OperationContext::system($b->storage()->firstOrFail(), 'fixture'), new GrantNodeAccessInput(node: $b, grant: $data)))->toThrow(UnenumerableGrantSubjectException::class);
+    expect(app(GrantNodeAccessAction::class)->execute(DriveContext::system($a->storage()->firstOrFail(), 'fixture'), new GrantNodeAccessInput(node: $a, grant: $data))->subject_id)->toBe(8)
+        ->and(fn () => app(GrantNodeAccessAction::class)->execute(DriveContext::system($b->storage()->firstOrFail(), 'fixture'), new GrantNodeAccessInput(node: $b, grant: $data)))->toThrow(UnenumerableGrantSubjectException::class);
 });
 
 it('keeps the host block when grants are disabled', function (): void {

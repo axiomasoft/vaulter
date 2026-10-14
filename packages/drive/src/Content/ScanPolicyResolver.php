@@ -13,7 +13,7 @@ use Vaulter\Enums\Cas\ScanMode;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Repositories\Content\ScanPolicyStateRepository;
@@ -67,7 +67,7 @@ final readonly class ScanPolicyResolver implements Resolver
         return $spec->requiresScan($snapshot['revision']->scan_admission_sequence, $state?->boundary_sequence);
     }
 
-    public function initialize(Drive $drive, OperationContext $context): void
+    public function initialize(Drive $drive, DriveContext $context): void
     {
         if (app(TenancyConfig::class)->enabled()) {
             $drive = app(TenancyBoundary::class)->assertDrive($drive);

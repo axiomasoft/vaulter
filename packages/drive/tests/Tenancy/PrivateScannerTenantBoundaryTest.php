@@ -23,7 +23,7 @@ use Vaulter\Enums\Cas\ScanVerdict;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException;
 use Vaulter\Facades\Vaulter;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Repositories\Content\ScanObligationRepository;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Tenancy\MutableTenantResolver;
@@ -70,7 +70,7 @@ beforeEach(function (): void {
     $this->drive = Vaulter::drive(DriveTestHelpers::host())->model();
     $stream = UploadTestHelpers::streamFor('scan bytes');
     try {
-        $this->node = app(IngestFileAction::class)->execute(OperationContext::system($this->drive, 'fixture'), new IngestFileInput($this->drive, $stream, 'private.txt', 'text/plain'));
+        $this->node = app(IngestFileAction::class)->execute(DriveContext::system($this->drive, 'fixture'), new IngestFileInput($this->drive, $stream, 'private.txt', 'text/plain'));
     } finally {
         fclose($stream);
     }

@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Gate;
 use Vaulter\Access\OperationGuard;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Contracts\Tenancy\TenantResolver;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Tests\Access\AccessTestHelpers;
@@ -77,7 +77,7 @@ it('keeps visible() one batch under strict tenancy', function (): void {
     foreach (range(1, 20) as $i) {
         $nodes[] = DriveTestHelpers::model(V1::folder($drive, 'v'.$i, $parent->id));
     }
-    $context = new OperationContext($drive->model(), Actor::user(V1::user(1)), 'abilities-many');
+    $context = DriveContext::for($drive->model(), Actor::user(V1::user(1)), 'abilities-many');
     $guard = app(OperationGuard::class);
 
     $small = abilityQueries(fn () => $guard->visible($context, array_slice($nodes, 0, 2)));

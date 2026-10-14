@@ -11,7 +11,7 @@ use Vaulter\Kernel;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Concerns\FreshApplication;
 use Vaulter\Tests\Content\Fixtures\DownloadGuardProvider;
 use Vaulter\Tests\Content\Fixtures\FirstDownloadGuard;
@@ -32,7 +32,7 @@ function checkDownload(DownloadGuards $guards): void
     $drive->exists = true;
     $drive->setRawAttributes(['id' => 1], true);
 
-    $guards->check(OperationContext::system($drive, 'download guard test'), new Node, new FileRevision);
+    $guards->check(DriveContext::system($drive, 'download guard test'), new Node, new FileRevision);
 }
 
 it('contributes the drive content availability check as the built-in download guard', function (): void {

@@ -29,7 +29,7 @@ use Vaulter\Enums\Drive\OnNameConflict;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
@@ -116,7 +116,7 @@ it('SEC-D30-copy-subtree lets a system actor copy everything but still stays in 
 
 it('SEC-D30-copy-subtree refuses a descendant outside the authorised key set at the locked copy', function (): void {
     [$folder, $visible, , $destination] = copySubtreeFixture($this);
-    $context = OperationContext::system($this->system->model(), 'late descendant');
+    $context = DriveContext::system($this->system->model(), 'late descendant');
     $nodes = Node::query()->count();
 
     expect(fn () => app(CopyNodeAction::class)->execute(

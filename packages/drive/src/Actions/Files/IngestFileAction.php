@@ -30,9 +30,9 @@ use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\File;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\NodeSequence;
-use Vaulter\Operations\OperationContext;
 use Vaulter\Profiles\DrivePolicyEnforcer;
 use Vaulter\Repositories\Drive\DriveStoreRepository;
 use Vaulter\Repositories\Drive\FileRevisionStoreRepository;
@@ -85,13 +85,13 @@ final readonly class IngestFileAction
         private EventRecorder $recorder,
     ) {}
 
-    public function execute(OperationContext $context, IngestFileInput $data): Node
+    public function execute(DriveContext $context, IngestFileInput $data): Node
     {
         return $this->receipt($context, $data)->node;
     }
 
     /** Like {@see execute()}, plus the revision this call created (the shared head may already have moved on). */
-    public function receipt(OperationContext $context, IngestFileInput $data): IngestReceipt
+    public function receipt(DriveContext $context, IngestFileInput $data): IngestReceipt
     {
         return $this->metrics->timing(
             name: 'vaulter_upload_chunk_duration_seconds',
@@ -103,7 +103,7 @@ final readonly class IngestFileAction
         );
     }
 
-    public function prepare(OperationContext $context, IngestFileInput $data): PreparedUpload
+    public function prepare(DriveContext $context, IngestFileInput $data): PreparedUpload
     {
         $source = $data->stream instanceof StreamInterface
             ? UploadSource::fromPsrStream($data->stream, $data->originalName)
@@ -119,7 +119,7 @@ final readonly class IngestFileAction
         }
     }
 
-    private function executeUpload(OperationContext $context, IngestFileInput $data): IngestReceipt
+    private function executeUpload(DriveContext $context, IngestFileInput $data): IngestReceipt
     {
         $name = $data->isNewVersion() ? null : $this->policy->name(drive: $context->drive, name: $data->resolvedName());
         $parentId = $data->isNewVersion() ? null : $this->tree->destinationId(storage: $data->storage, into: $data->into);
@@ -208,7 +208,7 @@ final readonly class IngestFileAction
     /**
      * New-file path: node(kind=file) → file → number=1 → edge → repoint.
      */
-    private function commitNewFile(OperationContext $context, IngestFileInput $data, Blob $blob, int $size, string $name, int|string $parentId, int $admissionSequence): IngestReceipt
+    private function commitNewFile(DriveContext $context, IngestFileInput $data, Blob $blob, int $size, string $name, int|string $parentId, int $admissionSequence): IngestReceipt
     {
         $node = $this->nodeStore->create([
             'drive_id' => $data->storage->id,
@@ -253,7 +253,7 @@ final readonly class IngestFileAction
      * New-version path: bump number, new version + edge against the
      * (deduped) blob, mark the prior head superseded, repoint file + node heads.
      */
-    private function commitNewVersion(OperationContext $context, IngestFileInput $data, File $file, ?FileRevision $previousHead, Blob $blob, int $size, int $admissionSequence): IngestReceipt
+    private function commitNewVersion(DriveContext $context, IngestFileInput $data, File $file, ?FileRevision $previousHead, Blob $blob, int $size, int $admissionSequence): IngestReceipt
     {
         $node = $data->targetNode;
 
@@ -309,7 +309,7 @@ final readonly class IngestFileAction
     }
 
     private function makeVersion(
-        OperationContext $context,
+        DriveContext $context,
         IngestFileInput $data,
         File $file,
         Blob $blob,
@@ -362,7 +362,7 @@ final readonly class IngestFileAction
      * be trashed or replaced by a file between the check and the insert, nor fill
      * past the drive policy's children limit.
      */
-    private function assertDestination(OperationContext $context, IngestFileInput $data, int|string $parentId): void
+    private function assertDestination(DriveContext $context, IngestFileInput $data, int|string $parentId): void
     {
         $parent = $this->tree->locked($this->tree->lock([$parentId]), $parentId);
         if (!$this->tree->sameStorage($parent, $data->storage->id)) {

@@ -7,7 +7,7 @@ namespace Vaulter\Drive\Uploads\Inspection;
 use Vaulter\Configuration\ScanConfig;
 use Vaulter\Drive\Contracts\Uploads\UploadInspector;
 use Vaulter\Drive\Data\Files\UploadFacts;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Profiles\UploadPolicy;
 
 final readonly class ScanDispatchInspector implements UploadInspector
@@ -22,7 +22,7 @@ final readonly class ScanDispatchInspector implements UploadInspector
         return 0;
     }
 
-    public function inspect(UploadFacts $facts, UploadPolicy $policy, OperationContext $context): void
+    public function inspect(UploadFacts $facts, UploadPolicy $policy, DriveContext $context): void
     {
         // Admission owns durable work and publication after the outer commit.
         app(ScanConfig::class)->globalSpec();

@@ -484,7 +484,7 @@ it('refuses a core TestCase change with the whole of core and its consumers', fu
     [$code, $plan] = s_select(['--paths=packages/core/tests/TestCase.php']);
 
     expect($code)->toBe(2)->and($plan['status'])->toBe('harness')
-        ->and($plan['affected'])->toBe(['core-kernel', 'core-modules', 'core-access', 'core-sharing', 'core-events-webhooks', 'core-http', 'core-schema', 'core-observability', 'media', 'drive', 'documents', 'azgard', 'filament'])
+        ->and($plan['affected'])->toBe(['core-kernel', 'core-modules', 'core-operations', 'core-access', 'core-sharing', 'core-events-webhooks', 'core-http', 'core-schema', 'core-observability', 'media', 'drive', 'documents', 'azgard', 'filament'])
         ->and(s_runs($plan)[0])->toBe('scripts/t sqlite -p core');
 });
 

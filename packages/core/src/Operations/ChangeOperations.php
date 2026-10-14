@@ -43,7 +43,7 @@ use Vaulter\Tenancy\TenancyBoundary;
 final readonly class ChangeOperations
 {
     public function __construct(
-        private OperationContext $context,
+        private DriveContext $context,
         private ChangeHeadRepository $heads,
         private ChangeEntryRepository $entries,
         private OperationGuard $guard,
@@ -121,7 +121,7 @@ final readonly class ChangeOperations
      */
     private function project(Drive $drive, array $rows): array
     {
-        $context = new OperationContext(drive: $drive, actor: $this->context->actor, correlationId: $this->context->correlationId);
+        $context = DriveContext::for(drive: $drive, actor: $this->context->actor, correlationId: $this->context->correlationId);
         $ids = [];
         foreach ($rows as $row) {
             if ($row->operation === ChangeOperation::Upsert->value) {

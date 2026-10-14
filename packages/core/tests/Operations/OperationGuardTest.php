@@ -13,7 +13,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Exceptions\Access\PermissionDeniedException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\TestCase;
 use Vaulter\ValueObjects\Access\Actor;
@@ -25,7 +25,7 @@ beforeEach(fn () => config()->set('vaulter.access.permission_driver', 'database'
 it('conceals a hidden node before checking the requested ability', function (): void {
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder(storage: $drive, parent: null, name: 'hidden');
-    $context = new OperationContext(drive: $drive, actor: Actor::user(AccessTestHelpers::user()), correlationId: 'test');
+    $context = DriveContext::for(drive: $drive, actor: Actor::user(AccessTestHelpers::user()), correlationId: 'test');
     expect(fn () => app(OperationGuard::class)->authorize(context: $context, ability: Ability::Edit, node: $node))->toThrow(NodeNotFoundException::class)
         ->and(fn () => app(OperationGuard::class)->abilities(context: $context, node: $node))->toThrow(NodeNotFoundException::class)
         ->and(fn () => app(OperationGuard::class)->authorizeCreate(context: $context, parent: $node))->toThrow(NodeNotFoundException::class);
@@ -35,7 +35,7 @@ it('allows View and returns 403 for a visible node without the requested ability
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder(storage: $drive, parent: null, name: 'reader');
     AccessTestHelpers::grant(node: $node, role: RoleRegistry::READER);
-    $context = new OperationContext(drive: $drive, actor: Actor::user(AccessTestHelpers::user()), correlationId: 'test');
+    $context = DriveContext::for(drive: $drive, actor: Actor::user(AccessTestHelpers::user()), correlationId: 'test');
     $guard = app(OperationGuard::class);
     $guard->authorize(context: $context, ability: Ability::View, node: $node);
     expect(fn () => $guard->authorize(context: $context, ability: Ability::Edit, node: $node))->toThrow(PermissionDeniedException::class);
@@ -46,7 +46,7 @@ it('requires both the workspace gate and parent Create permission', function ():
     $drive = AccessTestHelpers::storage();
     $node = AccessTestHelpers::folder(storage: $drive, parent: null, name: 'parent');
     $grant = AccessTestHelpers::grant(node: $node, role: RoleRegistry::READER);
-    $context = new OperationContext(drive: $drive, actor: Actor::user(AccessTestHelpers::user()), correlationId: 'test');
+    $context = DriveContext::for(drive: $drive, actor: Actor::user(AccessTestHelpers::user()), correlationId: 'test');
     $guard = app(OperationGuard::class);
     expect(fn () => $guard->authorizeCreate(context: $context, parent: $node))->toThrow(PermissionDeniedException::class);
     app(VaulterDatabase::class)->write(fn () => $grant->forceFill(['role_key' => RoleRegistry::WRITER])->save());
@@ -72,7 +72,7 @@ it('batches visibility in input order and re-evaluates ACL on every call', funct
     $foreign = AccessTestHelpers::folder(storage: AccessTestHelpers::storage(), parent: null, name: 'foreign');
     $grant = AccessTestHelpers::grant(node: $a, role: RoleRegistry::READER);
     AccessTestHelpers::grant(node: $b, role: RoleRegistry::WRITER);
-    $context = new OperationContext(drive: $drive, actor: Actor::user(AccessTestHelpers::user()), correlationId: 'test');
+    $context = DriveContext::for(drive: $drive, actor: Actor::user(AccessTestHelpers::user()), correlationId: 'test');
     $guard = app(OperationGuard::class);
     $visible = $guard->visible(context: $context, nodes: (function () use ($b, $foreign, $hidden, $a) {
         yield $b;

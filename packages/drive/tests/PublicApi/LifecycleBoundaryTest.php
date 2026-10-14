@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Events\TransactionRolledBack;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -32,7 +33,7 @@ use Vaulter\Exceptions\Registry\DuplicateNodeContentLifecycleException;
 use Vaulter\Facades\Vaulter;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
@@ -50,12 +51,12 @@ final readonly class LifecycleBoundaryFailingFile implements NodeContentLifecycl
         return NodeKind::File;
     }
 
-    public function copy(OperationContext $context, Node $source, Node $copy): CopyResult
+    public function copy(DriveContext $context, Node $source, Node $copy): CopyResult
     {
         return $this->actual->copy($context, $source, $copy);
     }
 
-    public function purge(OperationContext $context, Node $node): void
+    public function purge(DriveContext $context, Node $node): void
     {
         $this->actual->purge($context, $node);
         if ((string) $node->id === (string) $this->failedNodeId) {
@@ -74,7 +75,7 @@ function lifecycleBoundaryState(): array
 {
     $db = app(VaulterDatabase::class)->connection();
 
-    return array_map(static fn (string $table): array => $db->table($table)->orderBy('id')->get()->map(fn ($row): array => (array) $row)->all(), [
+    return array_map(static fn (string $table): array => $db->table($table)->orderBy($table === 'v_file_revision_blobs' ? 'blob_id' : 'id')->get()->map(fn ($row): array => (array) $row)->all(), [
         'v_nodes', 'v_files', 'v_file_revisions', 'v_file_revision_blobs', 'v_blobs', 'v_drives', 'v_activity', 'v_outbox',
     ]);
 }
@@ -184,7 +185,7 @@ it('uses fresh destination admission without inheriting a legacy scan exemption'
     config()->set('vaulter.scan.rollout_key', 'legacy-copy');
     config()->set('vaulter.scan.scanner_key', 'fixture');
     config()->set('vaulter.scan.scanner_version', '1');
-    app(ScanPolicyResolver::class)->initialize($this->system->model(), OperationContext::system($this->system->model(), 'lifecycle acceptance fixture'));
+    app(ScanPolicyResolver::class)->initialize($this->system->model(), DriveContext::system($this->system->model(), 'lifecycle acceptance fixture'));
     $copy = $this->system->nodes()->copy($node);
     $copied = DriveTestHelpers::model($copy)->file()->firstOrFail()->currentRevision()->firstOrFail();
 
@@ -336,12 +337,24 @@ it('repeats public destination authorization when the original parent changes af
     AccessTestHelpers::grant($root, $allowFallback ? RoleRegistry::WRITER : RoleRegistry::READER, scope: GrantScope::Item, subjectId: 85);
     $this->system->nodes()->trash($source);
     $db = app(VaulterDatabase::class)->connection();
-    $baselineLevel = $db->transactionLevel();
+    // The restore runs in the operation's root transaction (OperationRunner, P3.10): one level above the test's.
+    $operationLevel = $db->transactionLevel() + 1;
+    $baseLevel = $db->transactionLevel();
     $parentReads = 0;
     $raced = false;
+    $reapplied = false;
+    $trashParent = fn () => app(VaulterDatabase::class)->write(fn () => Node::query()->whereKey($parent->id)->update(['trashed_at' => Carbon::now(), 'trash_root_id' => DB::raw('id')]));
+    // A real concurrent writer commits on its own, so its change survives the rollback of the attempt it
+    // raced: the operation's root transaction undoes this simulated one, which is then applied again.
+    app('events')->listen(TransactionRolledBack::class, function (TransactionRolledBack $event) use ($baseLevel, &$raced, &$reapplied, $trashParent): void {
+        if ($raced && !$reapplied && $event->connection->transactionLevel() === $baseLevel) {
+            $reapplied = true;
+            $trashParent();
+        }
+    });
     // Fire outside the Action savepoint after parent resolution + public View precheck.
-    Node::retrieved(function (Node $model) use ($parent, $source, $db, $baselineLevel, &$parentReads, &$raced): void {
-        if ($raced || $db->transactionLevel() !== $baselineLevel) {
+    Node::retrieved(function (Node $model) use ($parent, $source, $db, $operationLevel, $trashParent, &$parentReads, &$raced): void {
+        if ($raced || $db->transactionLevel() !== $operationLevel) {
             return;
         }
         if ((string) $model->id === (string) $parent->id) {
@@ -349,7 +362,7 @@ it('repeats public destination authorization when the original parent changes af
         }
         if ((string) $model->id === (string) $source->id && $parentReads >= 2) {
             $raced = true;
-            app(VaulterDatabase::class)->write(fn () => Node::query()->whereKey($parent->id)->update(['trashed_at' => Carbon::now(), 'trash_root_id' => DB::raw('id')]));
+            $trashParent();
         }
     });
     $actor = Vaulter::drive($this->system->model())->actingAs($user);
@@ -358,5 +371,5 @@ it('repeats public destination authorization when the original parent changes af
         ->and(DriveTestHelpers::model($source)->trashed_at)->not->toBeNull()
         ->and(DriveTestHelpers::model($source)->sequence)->toBe(1)
         ->and(DriveTestHelpers::model($source)->parent_id)->toEqual($parent->id);
-    expect($raced)->toBeTrue()->and(DriveTestHelpers::model($parent)->trashed_at)->not->toBeNull();
+    expect($raced)->toBeTrue()->and($reapplied)->toBeTrue()->and(DriveTestHelpers::model($parent)->trashed_at)->not->toBeNull();
 })->with([false, true]);

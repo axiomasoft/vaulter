@@ -14,7 +14,7 @@ use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Repositories\Content\ScanEvidenceRepository;
 use Vaulter\Sharing\ShareContext;
 use Vaulter\Tenancy\TenancyBoundary;
@@ -29,14 +29,14 @@ final readonly class ContentAvailabilityGuard implements DownloadGuard
 {
     public function __construct(private VaulterConfig $config, private ScanPolicyResolver $policies, private ScanEvidenceRepository $evidence) {}
 
-    public function check(OperationContext|ShareContext $context, Node $node, FileRevision $revision): void
+    public function check(DriveContext|ShareContext $context, Node $node, FileRevision $revision): void
     {
         $context instanceof ShareContext
             ? $this->assertAvailableForShare($context, $node, $revision)
             : $this->assertAvailable($context, $node, $revision);
     }
 
-    public function assertAvailable(OperationContext $context, Node $node, FileRevision $revision): void
+    public function assertAvailable(DriveContext $context, Node $node, FileRevision $revision): void
     {
         [, $actualRevision, $drive] = $this->selection($node, $revision);
         if ((string) $drive->id !== (string) $context->driveId()) {

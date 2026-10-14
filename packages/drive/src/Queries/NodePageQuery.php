@@ -13,14 +13,14 @@ use Vaulter\Data\Drive\NodePage;
 use Vaulter\Enums\Drive\NodeSort;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Drive\NodeUserState;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 
 final readonly class NodePageQuery
 {
     public function __construct(private ExactListing $listing, private VaulterConfig $config) {}
 
     /** @return Builder<Node> */
-    public function candidates(OperationContext $context, bool $trash = false): Builder
+    public function candidates(DriveContext $context, bool $trash = false): Builder
     {
         $class = $this->config->model('node');
         $query = $class::query()->where('drive_id', $context->driveId());
@@ -39,7 +39,7 @@ final readonly class NodePageQuery
      * @param Builder<Node>         $query
      * @param list<int|string|null> $filter
      */
-    public function page(OperationContext $context, Builder $query, ListOptions $options, string $kind, array $filter = []): NodePage
+    public function page(DriveContext $context, Builder $query, ListOptions $options, string $kind, array $filter = []): NodePage
     {
         if ($options->kinds !== []) {
             $query->whereIn('kind', array_map(static fn ($kind): string => $kind->value, $options->kinds));
@@ -59,7 +59,7 @@ final readonly class NodePageQuery
      * newest star first. The star joins in under the node table's own name, so the
      * listing paginates over starred_at like over any node column.
      */
-    public function starred(OperationContext $context, ListOptions $options): NodePage
+    public function starred(DriveContext $context, ListOptions $options): NodePage
     {
         if ($options->sort !== NodeSort::Default || $options->descending || $options->kinds !== []) {
             throw new InvalidArgumentException('Starred lists support perPage and cursor only.');

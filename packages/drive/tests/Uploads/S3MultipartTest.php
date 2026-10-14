@@ -19,7 +19,7 @@ use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Cas\Blob;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Tests\Access\AccessTestHelpers;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 use Vaulter\Tests\Fixtures\Access\ProfileCreateGate;
@@ -43,7 +43,7 @@ function initiateS3(int $totalBytes, string $name = 'multi.bin', ?Drive $storage
 {
     $storage ??= UploadTestHelpers::storage();
 
-    return app(UploadSessionManager::class)->initiate(context: OperationContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
+    return app(UploadSessionManager::class)->initiate(context: DriveContext::system($storage, 'test fixture'), data: new InitiateUploadInput(
         protocol: UploadProtocol::S3Multipart,
         targetParent: $storage->rootNode()->first(),
         targetName: $name,
@@ -70,7 +70,7 @@ it('initiate → parts → complete → server-recompute → commit', function (
     $handler->complete($session->refresh());
 
     app(UploadSessionManager::class)->markAssembled($session->refresh());
-    $node = app(CompleteUploadAction::class)->execute(context: OperationContext::system($session->storage, 'test fixture'), session: $session->refresh());
+    $node = app(CompleteUploadAction::class)->execute(context: DriveContext::system($session->storage, 'test fixture'), session: $session->refresh());
 
     expect($node->kind)->toBe(NodeKind::File)
         ->and($node->size_bytes)->toBe(20)
@@ -95,7 +95,7 @@ it('re-upload части ЗАМЕНЯЕТ (PK part_no) — S3 семантика
 
     $handler->complete($session->refresh());
     app(UploadSessionManager::class)->markAssembled($session->refresh());
-    $node = app(CompleteUploadAction::class)->execute(context: OperationContext::system($session->storage, 'test fixture'), session: $session->refresh());
+    $node = app(CompleteUploadAction::class)->execute(context: DriveContext::system($session->storage, 'test fixture'), session: $session->refresh());
 
     // The committed bytes are the REPLACEMENT (bbbbb), not the original.
     $version = $node->file()->firstOrFail()->currentRevision()->first();
@@ -113,7 +113,7 @@ it('лживый ETag не используется как адрес — сер
     // the server-recomputed content sha256 — they are unrelated.
     $handler->complete($session->refresh());
     app(UploadSessionManager::class)->markAssembled($session->refresh());
-    $node = app(CompleteUploadAction::class)->execute(context: OperationContext::system($session->storage, 'test fixture'), session: $session->refresh());
+    $node = app(CompleteUploadAction::class)->execute(context: DriveContext::system($session->storage, 'test fixture'), session: $session->refresh());
 
     $version = $node->file()->firstOrFail()->currentRevision()->first();
     expect($version->sha256)->toBe(hash('sha256', $bytes))
@@ -179,7 +179,7 @@ it('дедуп: multipart-сборка против идентичной пре�
         $handler->putPart($session->refresh(), partNo: 1, byteOffset: 0, chunk: UploadTestHelpers::streamFor($bytes));
         $handler->complete($session->refresh());
         app(UploadSessionManager::class)->markAssembled($session->refresh());
-        app(CompleteUploadAction::class)->execute(context: OperationContext::system($session->storage, 'test fixture'), session: $session->refresh());
+        app(CompleteUploadAction::class)->execute(context: DriveContext::system($session->storage, 'test fixture'), session: $session->refresh());
     }
 
     // Two file nodes + two versions, but ONE physical blob (drive dedup).

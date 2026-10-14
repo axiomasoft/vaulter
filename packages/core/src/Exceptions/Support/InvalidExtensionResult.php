@@ -4,14 +4,19 @@ declare(strict_types=1);
 
 namespace Vaulter\Exceptions\Support;
 
+use Vaulter\Exceptions\Concerns\ProvidesProblemDetails;
+use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\VaulterException;
 
 /**
  * A module's contribution to a slot returned something its slot does not allow (a reserved or duplicate
- * fragment key, a fragment of the wrong type). An integration error, never a silent skip.
+ * fragment key, a fragment of the wrong type, a middleware that skipped or repeated the operation or
+ * replaced its result). An integration error, never a silent skip; never retried, never cached.
  */
-final class InvalidExtensionResult extends VaulterException
+final class InvalidExtensionResult extends VaulterException implements ProblemException
 {
+    use ProvidesProblemDetails;
+
     public static function reservedKey(string $slot, string $key): self
     {
         return new self(sprintf(
@@ -38,5 +43,43 @@ final class InvalidExtensionResult extends VaulterException
             $key,
             $expected,
         ));
+    }
+
+    public static function nextCalls(string $middleware, string $operation, int $calls): self
+    {
+        return new self(sprintf(
+            '[Vaulter] The operation middleware %s called next %d time(s) for "%s". Why: a middleware runs the operation exactly once. Fix: call $next once and return its result.',
+            $middleware,
+            $calls,
+            $operation,
+        ));
+    }
+
+    public static function foreignOperation(string $middleware, string $operation): self
+    {
+        return new self(sprintf(
+            '[Vaulter] The operation middleware %s passed another operation to next for "%s". Why: a middleware cannot change the operation or its context. Fix: pass the operation it was given.',
+            $middleware,
+            $operation,
+        ));
+    }
+
+    public static function replacedResult(string $middleware, string $operation): self
+    {
+        return new self(sprintf(
+            '[Vaulter] The operation middleware %s replaced the result of "%s". Why: the result is built by the operation from its locked state. Fix: return exactly what $next returned.',
+            $middleware,
+            $operation,
+        ));
+    }
+
+    public function problemCode(): string
+    {
+        return 'extension_failed';
+    }
+
+    public function httpStatus(): int
+    {
+        return 500;
     }
 }

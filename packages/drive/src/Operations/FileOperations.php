@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vaulter\Drive\Operations;
 
+use Closure;
 use InvalidArgumentException;
 use Psr\Http\Message\StreamInterface;
 use Vaulter\Access\OperationGuard;
@@ -38,13 +39,16 @@ use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Nodes\NotAFileException;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Modules\ModuleId;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Operations\NodeLocator;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\OperationRunner;
+use Vaulter\Operations\OperationSpec;
 use Vaulter\Support\TreeGuard;
 
 final readonly class FileOperations implements Contract
 {
-    public function __construct(private OperationContext $context, private NodeLocator $locator, private OperationGuard $guard, private IngestFileAction $ingest, private RestoreFileRevisionAction $restore, private ContentDelivery $delivery, private VaulterDatabase $database, private TreeGuard $tree, private NameConflictResolver $names, private DeleteFileRevisionAction $deleteRevision, private SetFileRevisionRetentionAction $retention, private NodeSnapshotMapper $nodes, private FileRevisionSnapshotMapper $revisions) {}
+    public function __construct(private DriveContext $context, private NodeLocator $locator, private OperationGuard $guard, private IngestFileAction $ingest, private RestoreFileRevisionAction $restore, private ContentDelivery $delivery, private VaulterDatabase $database, private TreeGuard $tree, private NameConflictResolver $names, private DeleteFileRevisionAction $deleteRevision, private SetFileRevisionRetentionAction $retention, private NodeSnapshotMapper $nodes, private FileRevisionSnapshotMapper $revisions, private OperationRunner $runner) {}
 
     public function upload(UploadSource $source, ?UploadOptions $options = null): NodeSnapshot
     {
@@ -61,18 +65,18 @@ final readonly class FileOperations implements Contract
                 }
                 $target = $this->file($target, Ability::Edit);
 
-                return $this->nodes->map($this->ingestSource($source, null, $target, null, $options->declaredMimeType, null, OnNameConflict::Fail, $options->clientModifiedAt)->node, $this->context->actor->ref());
+                return $this->nodes->map($this->ingestSource('upload', $source, null, $target, null, $options->declaredMimeType, null, OnNameConflict::Fail, $options->clientModifiedAt)->node, $this->context->actor->ref());
             }
         }
 
-        return $this->nodes->map($this->ingestSource($source, $parent, null, $options->name, $options->declaredMimeType, null, $options->onConflict, $options->clientModifiedAt)->node, $this->context->actor->ref());
+        return $this->nodes->map($this->ingestSource('upload', $source, $parent, null, $options->name, $options->declaredMimeType, null, $options->onConflict, $options->clientModifiedAt)->node, $this->context->actor->ref());
     }
 
     public function addRevision(NodeSnapshot|string|int $file, UploadSource $source, ?RevisionOptions $options = null): FileRevisionSnapshot
     {
         $node = $this->file($file, Ability::Edit);
         $options ??= new RevisionOptions;
-        $receipt = $this->ingestSource($source, null, $node, null, $options->declaredMimeType, $options->expectedSequence, OnNameConflict::Fail);
+        $receipt = $this->ingestSource('add_revision', $source, null, $node, null, $options->declaredMimeType, $options->expectedSequence, OnNameConflict::Fail);
 
         return $this->revisions->map($this->revision($receipt->node, $receipt->revision), $receipt->node->file()->firstOrFail());
     }
@@ -97,24 +101,30 @@ final readonly class FileOperations implements Contract
 
     public function restoreRevision(NodeSnapshot|string|int $file, FileRevisionSnapshot|string|int $revision, ?int $expectedSequence = null): FileRevisionSnapshot
     {
-        $node = $this->file($file, Ability::Edit);
+        return $this->write('restore_revision', function () use ($file, $revision, $expectedSequence): FileRevisionSnapshot {
+            $node = $this->file($file, Ability::Edit);
 
-        return $this->revisions->map($this->restore->execute($this->context, new RestoreFileRevisionInput($node, $this->revision($node, $revision), $expectedSequence)), $node->file()->firstOrFail());
+            return $this->revisions->map($this->restore->execute($this->context, new RestoreFileRevisionInput($node, $this->revision($node, $revision), $expectedSequence)), $node->file()->firstOrFail());
+        });
     }
 
     public function deleteRevision(NodeSnapshot|string|int $file, FileRevisionSnapshot|string|int $revision): void
     {
-        // Permanent removal of stored data: authorized like a purge, without the
-        // upload/egress profile gates.
-        $node = $this->file($file, Ability::Manage, OperationKind::Purge);
-        $this->deleteRevision->execute($this->context, $node, $this->revision($node, $revision));
+        $this->write('delete_revision', function () use ($file, $revision): void {
+            // Permanent removal of stored data: authorized like a purge, without the
+            // upload/egress profile gates.
+            $node = $this->file($file, Ability::Manage, OperationKind::Purge);
+            $this->deleteRevision->execute($this->context, $node, $this->revision($node, $revision));
+        });
     }
 
     public function setRevisionRetention(NodeSnapshot|string|int $file, FileRevisionSnapshot|string|int $revision, bool $keepForever): FileRevisionSnapshot
     {
-        $node = $this->file($file, Ability::Edit);
+        return $this->write('set_revision_retention', function () use ($file, $revision, $keepForever): FileRevisionSnapshot {
+            $node = $this->file($file, Ability::Edit);
 
-        return $this->revisions->map($this->retention->execute($this->context, $node, $this->revision($node, $revision), $keepForever), $node->file()->firstOrFail());
+            return $this->revisions->map($this->retention->execute($this->context, $node, $this->revision($node, $revision), $keepForever), $node->file()->firstOrFail());
+        });
     }
 
     public function read(NodeSnapshot|string|int $file, FileRevisionSnapshot|string|int|null $revision = null): FileStream
@@ -123,6 +133,17 @@ final readonly class FileOperations implements Contract
         $revision = $this->revision($node, $revision);
 
         return $this->delivery->stream($this->context, $node, $revision);
+    }
+
+    /**
+     * @template T
+     *
+     * @param  Closure(): T $attempt
+     * @return T
+     */
+    private function write(string $verb, Closure $attempt): mixed
+    {
+        return $this->runner->write(new OperationSpec('drive.files.'.$verb, new ModuleId('drive')), $this->context->operation, $attempt);
     }
 
     private function file(Node|NodeSnapshot|int|string $key, Ability $ability, ?OperationKind $operation = null): Node
@@ -166,7 +187,11 @@ final readonly class FileOperations implements Contract
         });
     }
 
-    private function ingestSource(UploadSource $source, ?Node $parent, ?Node $target, ?string $name, ?string $mime, ?int $expected, OnNameConflict $conflict, ?\DateTimeInterface $clientModifiedAt = null): IngestReceipt
+    /**
+     * The content is staged and inspected before the write, so a repeated attempt never
+     * reads the bytes again; only the commit runs as the operation.
+     */
+    private function ingestSource(string $verb, UploadSource $source, ?Node $parent, ?Node $target, ?string $name, ?string $mime, ?int $expected, OnNameConflict $conflict, ?\DateTimeInterface $clientModifiedAt = null): IngestReceipt
     {
         $reader = $source->openForReading();
         $prepared = null;
@@ -177,23 +202,37 @@ final readonly class FileOperations implements Contract
             $input = new IngestFileInput(storage: $this->context->drive, stream: $reader, originalName: $source->name(), mimeType: $mime ?? $source->declaredMimeType(), into: $parent, name: $name, targetNode: $target, expectedSequence: $expected, onConflict: $conflict, clientModifiedAt: $clientModifiedAt);
             $prepared = $this->ingest->prepare($this->context, $input);
             $input = new IngestFileInput(storage: $this->context->drive, stream: $reader, originalName: $source->name(), mimeType: $mime ?? $source->declaredMimeType(), into: $parent, name: $name, targetNode: $target, expectedSequence: $expected, onConflict: $conflict, prepared: $prepared, clientModifiedAt: $clientModifiedAt);
-            try {
-                return $this->ingest->receipt($this->context, $input);
-            } catch (NodeNameConflictException $exception) {
-                if ($conflict !== OnNameConflict::AddRevision || $parent === null) {
-                    throw $exception;
-                }
-                $sibling = $this->uploadSibling($parent, $name ?? $source->name());
-                if ($sibling !== null) {
-                    $this->assertSiblingVisible($sibling, $name ?? $source->name());
-                }
-                if ($sibling === null || $sibling->kind !== NodeKind::File) {
-                    throw $exception;
-                }
-                $target = $this->file($sibling, Ability::Edit);
 
-                return $this->ingest->receipt($this->context, new IngestFileInput(storage: $this->context->drive, stream: $reader, originalName: $source->name(), mimeType: $mime ?? $source->declaredMimeType(), targetNode: $target, prepared: $prepared, clientModifiedAt: $clientModifiedAt));
-            }
+            // One logical call is one operation: the fallback to a new revision of the name's current
+            // owner runs inside the same attempt, never as a second write(). The actor is authorized
+            // again here, in the attempt: the check before staging only spares denied callers the
+            // bytes, and a grant revoked while the content was staged must not commit.
+            return $this->write($verb, function () use ($parent, $target, $input, $conflict, $source, $name, $mime, $reader, $prepared, $clientModifiedAt): IngestReceipt {
+                if ($parent !== null) {
+                    $this->guard->authorizeCreate($this->context, $this->locator->find($this->context, $parent->id));
+                }
+                if ($target !== null) {
+                    $this->file($target->id, Ability::Edit);
+                }
+
+                try {
+                    return $this->ingest->receipt($this->context, $input);
+                } catch (NodeNameConflictException $exception) {
+                    if ($conflict !== OnNameConflict::AddRevision || $parent === null) {
+                        throw $exception;
+                    }
+                    $sibling = $this->uploadSibling($parent, $name ?? $source->name());
+                    if ($sibling !== null) {
+                        $this->assertSiblingVisible($sibling, $name ?? $source->name());
+                    }
+                    if ($sibling === null || $sibling->kind !== NodeKind::File) {
+                        throw $exception;
+                    }
+                    $revision = new IngestFileInput(storage: $this->context->drive, stream: $reader, originalName: $source->name(), mimeType: $mime ?? $source->declaredMimeType(), targetNode: $this->file($sibling, Ability::Edit), prepared: $prepared, clientModifiedAt: $clientModifiedAt);
+
+                    return $this->ingest->receipt($this->context, $revision);
+                }
+            });
         } finally {
             $prepared?->discard();
             $source->releaseIfOwned($reader);

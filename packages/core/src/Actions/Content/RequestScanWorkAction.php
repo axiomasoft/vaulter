@@ -15,7 +15,7 @@ use Vaulter\Database\VaulterDatabase;
 use Vaulter\Enums\Cas\ScanVerdict;
 use Vaulter\Models\Content\ScanObligation;
 use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Repositories\Content\ScanAuthorityRepository;
 use Vaulter\Repositories\Content\ScanEvidenceRepository;
 use Vaulter\Repositories\Content\ScanObligationRepository;
@@ -30,17 +30,17 @@ final readonly class RequestScanWorkAction
 {
     public function __construct(private ScanAuthorityRepository $authority, private VaulterDatabase $database, private ScanSnapshot $snapshots, private ScanEvidenceRepository $evidence, private ReuseScanEvidenceAction $reuse, private TenancyConfig $tenancy, private TenancyBoundary $boundary, private ScanObligationRepository $work, private ScanWorkTransitions $transitions) {}
 
-    public function ensure(FileRevision $revision, ScanPolicySpec $spec, string $requestKey, OperationContext $context): ScanObligation
+    public function ensure(FileRevision $revision, ScanPolicySpec $spec, string $requestKey, DriveContext $context): ScanObligation
     {
         return $this->request($revision, $spec, $requestKey, $context, false);
     }
 
-    public function requestRescan(FileRevision $revision, ScanPolicySpec $spec, string $requestKey, OperationContext $context): ScanObligation
+    public function requestRescan(FileRevision $revision, ScanPolicySpec $spec, string $requestKey, DriveContext $context): ScanObligation
     {
         return $this->request($revision, $spec, $requestKey, $context, true);
     }
 
-    private function request(FileRevision $revision, ScanPolicySpec $spec, string $requestKey, OperationContext $context, bool $rescan): ScanObligation
+    private function request(FileRevision $revision, ScanPolicySpec $spec, string $requestKey, DriveContext $context, bool $rescan): ScanObligation
     {
         if ($this->database->connection()->transactionLevel() === 0 || !Str::isUuid($requestKey)) {
             throw new LogicException('Scan requests require an owning transaction and UUID request key.');

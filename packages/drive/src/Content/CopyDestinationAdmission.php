@@ -7,7 +7,7 @@ namespace Vaulter\Drive\Content;
 use Vaulter\Enums\Cas\ScanMode;
 use Vaulter\Exceptions\Content\ContentQuarantinedException;
 use Vaulter\Models\Drive\FileRevision;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Repositories\Content\ScanEvidenceRepository;
@@ -23,7 +23,7 @@ final readonly class CopyDestinationAdmission
         }
     }
 
-    public function status(OperationContext $context): string
+    public function status(DriveContext $context): string
     {
         foreach ($this->policy->scanSpecs($this->profiles->get($context->drive->profile)) as $spec) {
             if ($spec->mode !== ScanMode::Off) {

@@ -10,7 +10,7 @@ use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Exceptions\Nodes\UnsupportedNodeKindException;
 use Vaulter\Exceptions\Registry\DuplicateNodeContentLifecycleException;
 use Vaulter\Models\Drive\Node;
-use Vaulter\Operations\OperationContext;
+use Vaulter\Operations\DriveContext;
 
 function registryLifecycle(NodeKind $kind, bool $purgeOnly = false): NodeContentLifecycle
 {
@@ -28,12 +28,12 @@ class RegistryTestLifecycle implements NodeContentLifecycle
         return $this->kind;
     }
 
-    public function copy(OperationContext $context, Node $source, Node $copy): CopyResult
+    public function copy(DriveContext $context, Node $source, Node $copy): CopyResult
     {
         return new CopyResult(addedBytes: 0);
     }
 
-    public function purge(OperationContext $context, Node $node): void {}
+    public function purge(DriveContext $context, Node $node): void {}
 }
 
 it('resolves the registered lifecycle of a kind', function (): void {
