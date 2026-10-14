@@ -248,7 +248,7 @@ AzGuard **не зависит** — и задаёт вопросы в облас
 ::: info Установите мост AzGuard
 `composer require axioma-studio/vaulter-azgard` устанавливает драйвер, реальный
 адаптер и `Vaulter\Azgard\Testing\FakeAzgardGuard`. Provider сам регистрирует
-драйвер и привязывает guard; модель пользователя должна реализовать
+драйвер; guard выбирается ключом конфига `vaulter-azgard.guard`; модель пользователя должна реализовать
 `Vaulter\Azgard\Contracts\AzgardBackedUser`. Для тестов с фейком нужны установленные
 зависимости моста. См. [Драйверы прав](/ru/extending/permission-drivers) и конфиг `vaulter-azgard.*`.
 :::

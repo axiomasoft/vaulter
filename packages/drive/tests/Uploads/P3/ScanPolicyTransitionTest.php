@@ -12,7 +12,6 @@ use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ContentAvailabilityGuard;
 use Vaulter\Content\ScanResult;
 use Vaulter\Content\ScanSnapshot;
-use Vaulter\Contracts\Profiles\CommentsFeature;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Actions\Files\IngestFileAction;
 use Vaulter\Drive\Actions\Trash\RestoreNodeAction;
@@ -27,6 +26,7 @@ use Vaulter\Enums\Cas\ScanMode;
 use Vaulter\Enums\Cas\ScanVerdict;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Exceptions\Files\ContentUnavailableException;
+use Vaulter\Kernel;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfilePolicy;
@@ -125,7 +125,7 @@ it('SEC-POLICY-two-boundaries evaluates global and profile eligibility independe
     $bind = function (ScanMode $mode): void {
         $registry = new ProfileRegistry;
         $registry->register((new Profile)->key('default')->uploads(new UploadPolicy(scanMode: $mode, scanPolicyVersion: 'profile-v1')));
-        $policy = new ProfilePolicy(app(VaulterConfig::class), app('config'), $registry, app(ScanConfig::class), app(CommentsFeature::class));
+        $policy = new ProfilePolicy(app(VaulterConfig::class), app('config'), $registry, app(ScanConfig::class), app(Kernel::class));
         $resolver = new ScanPolicyResolver($policy, $registry, app(ScanPolicyStateRepository::class), app(ScanSnapshot::class), app(ActivateScanPolicyAction::class));
         app()->instance(ScanPolicyResolver::class, $resolver);
         app()->instance(Vaulter\Contracts\Content\ScanPolicyResolver::class, $resolver);

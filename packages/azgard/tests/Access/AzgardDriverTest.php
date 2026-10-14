@@ -12,6 +12,7 @@ use Vaulter\Azgard\AzgardPermissionMap;
 use Vaulter\Azgard\Contracts\AzgardGuard;
 use Vaulter\Azgard\Testing\FakeAzgardGuard;
 use Vaulter\Azgard\Tests\Access\AccessTestHelpers;
+use Vaulter\Azgard\Tests\Stubs\HostGuard;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantScope;
 use Vaulter\ValueObjects\Access\OwnerRef;
@@ -32,12 +33,12 @@ beforeEach(function (): void {
 });
 
 /**
- * Bind a FakeAzgardGuard as the host's AzgardGuard adapter (the container path the
- * driver falls to when the actor itself does not implement the seam).
+ * Name a FakeAzgardGuard as the host's explicit guard (the path the driver falls to when
+ * the actor itself does not implement the seam).
  */
 function bindAzgardGuard(AzgardGuard $guard): void
 {
-    app()->instance(AzgardGuard::class, $guard);
+    HostGuard::bind($guard);
 }
 
 it('maps abilities to AzGuard permissions with the master-plan defaults', function (): void {
@@ -161,8 +162,8 @@ it('returns no role decision when the workspace grants nothing (pass-through wit
         ->and($driver->override($actor, $scope))->toBeNull();
 });
 
-it('is a safe pass-through (no fatal) when no AzgardGuard is bound', function (): void {
-    app()->offsetUnset(AzgardGuard::class);
+it('is a safe pass-through (no fatal) when no explicit guard is configured', function (): void {
+    HostGuard::clear();
     $driver = app(AzgardPermissionDriver::class);
     $actor = AccessTestHelpers::user();
     $scope = new AccessScope(profile: 'default', driveOwner: new OwnerRef(type: 'project', id: 1), driveId: 1);

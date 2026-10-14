@@ -10,16 +10,19 @@ use Vaulter\Contracts\Handlers\FileHandler;
 use Vaulter\Contracts\Handlers\FileHandlerRegistry as FileHandlerRegistryContract;
 use Vaulter\Enums\Handlers\Capability;
 use Vaulter\Handlers\Builtin\DownloadOnlyHandler;
+use Vaulter\Kernel;
 use Vaulter\ValueObjects\Handlers\FileDescriptor;
 
 /**
  * THE format-extensibility engine. Resolves the best
  * {@see FileHandler} for a {@see FileDescriptor} and a requested {@see
- * Capability}, from three cache-safe sources merged once:
+ * Capability}, from four cache-safe sources merged once:
  *
- *   1. the tagged container binding 'vaulter.file_handlers' (FQCN-tagged, no closures);
- *   2. configuration key vaulter.handlers — an FQCN list (config-cache safe);
- *   3. runtime registrations via Vaulter::handlers()->register()/register().
+ *   1. the contributions of the active modules to the {@see FileHandler} slot (the drive's preview and
+ *      download-only baseline);
+ *   2. the tagged container binding 'vaulter.file_handlers' (FQCN-tagged, no closures) — the host's channel;
+ *   3. configuration key vaulter.handlers — an FQCN list (config-cache safe);
+ *   4. runtime registrations via Vaulter::handlers()->register()/register().
  *
  * Resolution order: mime-first → extension-fallback → capability-filter →
  * priority-sort → the DownloadOnlyHandler null-object (so a resolution NEVER returns
@@ -240,6 +243,11 @@ final class FileHandlerRegistry implements FileHandlerRegistryContract
         }
 
         $byClass = [];
+
+        foreach ($this->container->make(Kernel::class)->extensions()->resolve(FileHandler::class) as $handler) {
+            $this->assertKey($handler);
+            $byClass[$handler::class] = $handler;
+        }
 
         foreach ($this->taggedHandlers() as $handler) {
             $byClass[$handler::class] = $handler;

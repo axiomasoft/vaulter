@@ -2,59 +2,59 @@
 
 declare(strict_types=1);
 
-use Illuminate\Foundation\Auth\User;
 use Vaulter\Access\Drivers\DatabasePermissionDriver;
+use Vaulter\Access\PermissionDriverCatalog;
 use Vaulter\Access\PermissionDriverManager;
-use Vaulter\Azgard\AzgardGuardAdapter;
 use Vaulter\Azgard\AzgardPermissionDriver;
+use Vaulter\Azgard\Configuration\AzgardConfig;
 use Vaulter\Azgard\Contracts\AzgardGuard;
-use Vaulter\Azgard\NullAzgardGuard;
 use Vaulter\Azgard\Providers\BindingsRegistrar;
-use Vaulter\Azgard\Tests\Stubs\SpyAzgardUser;
+use Vaulter\Azgard\Testing\FakeAzgardGuard;
+use Vaulter\Azgard\Tests\Stubs\HostGuard;
+use Vaulter\Contracts\Access\PermissionDriver;
+use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Vaulter\Kernel;
+use Vaulter\Modules\MissingExtensionException;
 
 /**
- * The provider resolves the AzgardGuard seam from the CURRENT request's user: an
- * AzGuard-backed user yields a real adapter, anything else the deny-all guard — so the
- * host wires nothing beyond selecting the driver and adding the trait to its User.
+ * The bridge binds no guard of its own: the seam is the optional capability the host names in
+ * `vaulter-azgard.guard`, validated at boot; without it the driver builds an adapter per actor.
  */
-it('binds an adapter over the authenticated AzGuard-backed user', function (): void {
-    $user = SpyAzgardUser::make()->makeSuperAdmin();
-    $this->actingAs($user);
+it('provides no guard until the host names one', function (): void {
+    $capabilities = app(Kernel::class)->capabilities();
 
-    $guard = app(AzgardGuard::class);
-
-    expect($guard)->toBeInstanceOf(AzgardGuardAdapter::class)
-        // The adapter really wraps THIS user — its super-admin decisions surface.
-        ->and($guard->hasPermissionIn('project', 1, 'documents.manage'))->toBeTrue();
+    expect($capabilities->has(AzgardGuard::class))->toBeFalse()
+        ->and(fn () => $capabilities->require(AzgardGuard::class))->toThrow(MissingExtensionException::class);
 });
 
-it('binds the deny-all null guard for a guest', function (): void {
-    expect(app(AzgardGuard::class))->toBeInstanceOf(NullAzgardGuard::class);
+it('provides the configured guard class as the capability', function (): void {
+    HostGuard::bind($guard = FakeAzgardGuard::grantingWorkspace('project', 1, 'documents.view'));
+    $capabilities = app(Kernel::class)->capabilities();
+
+    expect($capabilities->has(AzgardGuard::class))->toBeTrue()
+        ->and($capabilities->require(AzgardGuard::class))->toBe($guard);
 });
 
-it('binds the deny-all null guard for a user that is not AzGuard-backed', function (): void {
-    $this->actingAs(new class extends User
-    {
-        protected $guarded = [];
-    });
+it('refuses a guard class that does not implement the seam', function (): void {
+    config()->set('vaulter-azgard.guard', stdClass::class);
 
-    expect(app(AzgardGuard::class))->toBeInstanceOf(NullAzgardGuard::class);
+    expect(fn () => app(AzgardConfig::class)->guard())->toThrow(InvalidConfigurationException::class, 'vaulter-azgard.guard')
+        ->and(fn () => (new BindingsRegistrar)->boot(app()))->toThrow(InvalidConfigurationException::class);
+
+    config()->set('vaulter-azgard.guard', 'No\\Such\\Guard');
+
+    expect(fn () => app(AzgardConfig::class)->guard())->toThrow(InvalidConfigurationException::class);
 });
 
-it('registers its permission driver and keeps a host driver override', function (): void {
-    expect(config('vaulter.access.permission_drivers.azgard'))->toBe(AzgardPermissionDriver::class);
+it('contributes its permission driver to the drive slot and lets the host map override the key', function (): void {
+    $catalog = app(PermissionDriverCatalog::class);
+
+    expect(app(Kernel::class)->extensions()->handlerClass(PermissionDriver::class, 'azgard'))->toBe(AzgardPermissionDriver::class)
+        ->and($catalog->class('azgard'))->toBe(AzgardPermissionDriver::class);
 
     config()->set('vaulter.access.permission_drivers.azgard', DatabasePermissionDriver::class);
-    (new BindingsRegistrar)->register(app());
 
-    expect(config('vaulter.access.permission_drivers.azgard'))->toBe(DatabasePermissionDriver::class);
-});
-
-it('preserves an explicitly configured null driver key', function (): void {
-    config()->set('vaulter.access.permission_drivers.azgard', null);
-    (new BindingsRegistrar)->register(app());
-
-    expect(config('vaulter.access.permission_drivers.azgard'))->toBeNull();
+    expect($catalog->class('azgard'))->toBe(DatabasePermissionDriver::class);
 });
 
 it('keeps its actor-only driver non-enumerating through the core manager', function (): void {

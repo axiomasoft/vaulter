@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Drive\Tests\Uploads;
 
 use Illuminate\Support\Str;
+use Vaulter\Contracts\Cas\ContentScanner;
 use Vaulter\Database\VaulterDatabase;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
 use Vaulter\Drive\Enums\Uploads\UploadStatus;
@@ -19,6 +20,19 @@ use Vaulter\Models\Drive\Node;
  */
 final class UploadTestHelpers
 {
+    /**
+     * The host's scanner: the capability reads the class from `vaulter.scan.scanner` and the container
+     * hands out this very object.
+     */
+    public static function scanner(ContentScanner $scanner): ContentScanner
+    {
+        config()->set('vaulter.scan.scanner', $scanner::class);
+        app()->instance($scanner::class, $scanner);
+        app()->instance(ContentScanner::class, $scanner);
+
+        return $scanner;
+    }
+
     /**
      * A fresh storage with a kind=folder root node (the mount the upload targets).
      * One per call (the owner-unique index forbids two storages for one owner+panel).

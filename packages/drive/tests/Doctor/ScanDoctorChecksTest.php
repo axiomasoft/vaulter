@@ -24,6 +24,7 @@ use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Enums\Cas\ScanVerdict;
 use Vaulter\Kernel;
 use Vaulter\Operations\OperationContext;
+use Vaulter\Testing\FakeContentScanner;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
 // The fixtures drive Vaulter's own actions directly; its entry points open the write scope, these calls do not.
@@ -39,7 +40,7 @@ function scanFindings(string $key, bool $production = false, int $sample = 1000)
 
 function scanScanner(string $key = 'fixture', string $version = '1'): void
 {
-    app()->instance(ContentScanner::class, new class($key, $version) implements ContentScanner
+    UploadTestHelpers::scanner(new class($key, $version) implements ContentScanner
     {
         public function __construct(private readonly string $key, private readonly string $version) {}
 
@@ -126,6 +127,7 @@ it('reports a scanner that cannot be built without quoting its message', functio
     config()->set('vaulter.scan.mode', 'all_content');
     config()->set('vaulter.scan.scanner_key', 'fixture');
     config()->set('vaulter.scan.scanner_version', '1');
+    config()->set('vaulter.scan.scanner', FakeContentScanner::class);
     app()->bind(ContentScanner::class, static fn (): never => throw new RuntimeException('api key=hunter2'));
 
     $finding = scanFindings('drive.scan.scanner')[0];

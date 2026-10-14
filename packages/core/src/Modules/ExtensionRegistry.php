@@ -71,6 +71,27 @@ final readonly class ExtensionRegistry
     }
 
     /**
+     * The implementation class of the contribution under `$key`, for a consumer that builds it with
+     * its own arguments (a drive extension takes the handle and the operation context).
+     *
+     * @param class-string $slot
+     *
+     * @throws MissingExtensionException for a key no active module contributes
+     *
+     * @return class-string
+     */
+    public function handlerClass(string $slot, string $key): string
+    {
+        foreach ($this->contributions($slot) as $contribution) {
+            if ($contribution->key === $key) {
+                return $contribution->implementation;
+            }
+        }
+
+        throw MissingExtensionException::handler($slot, $key);
+    }
+
+    /**
      * @template T of object
      *
      * @param  class-string<T> $slot

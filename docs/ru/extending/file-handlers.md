@@ -171,7 +171,7 @@ Vue-клиент направил узел, не прогоняя mime-логи�
 
 Узел-документ несёт mime документа Vaulter (`application/vnd.vaulter.document+json`), но через
 этот реестр не маршрутизируется: `NodePresenter` ядра передаёт каждый узел вида `document`
-kind-презентеру, который помечает тегом `vaulter-documents` (`vaulter.kind_presenters`).
+kind-презентеру, который модуль documents вносит в слот `KindPresenter` drive (ключ — вид узла, `document`).
 
 ## Подбор обработчика для узла
 

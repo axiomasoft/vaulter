@@ -27,12 +27,12 @@ use Vaulter\Sharing\ShareResolver;
 /** Every new byte or capability request enters fresh authorization and availability. */
 final readonly class ContentDelivery
 {
-    public function __construct(private NodeLocator $locator, private OperationGuard $access, private ContentAvailabilityGuard $availability, private BlobStore $blobs, private DownloadsConfig $downloads, private ScanEvidenceRepository $evidence, private FileRevisionSnapshotMapper $revisions) {}
+    public function __construct(private NodeLocator $locator, private OperationGuard $access, private ContentAvailabilityGuard $availability, private DownloadGuards $guards, private BlobStore $blobs, private DownloadsConfig $downloads, private ScanEvidenceRepository $evidence, private FileRevisionSnapshotMapper $revisions) {}
 
     public function stream(OperationContext $context, Node $node, FileRevision $revision): FileStream
     {
         $node = $this->authorize($context, $node);
-        $this->availability->assertAvailable($context, $node, $revision);
+        $this->guards->check($context, $node, $revision);
 
         return $this->open($node, $revision);
     }
@@ -40,7 +40,7 @@ final readonly class ContentDelivery
     public function streamForShare(ShareContext $context, Node $node, FileRevision $revision): FileStream
     {
         $context = app(ShareResolver::class)->refresh($context);
-        $this->availability->assertAvailableForShare($context, $node, $revision);
+        $this->guards->check($context, $node, $revision);
 
         return $this->open($node, $revision);
     }
@@ -48,7 +48,7 @@ final readonly class ContentDelivery
     public function directUrl(OperationContext $context, Node $node, FileRevision $revision, int $ttlSeconds): SignedContentUrl
     {
         $node = $this->authorize($context, $node);
-        $this->availability->assertAvailable($context, $node, $revision);
+        $this->guards->check($context, $node, $revision);
         if ($this->downloads->deliveryMode() !== 'direct_signed') {
             throw ProfileRestrictionException::forOperation('direct_content_url');
         }

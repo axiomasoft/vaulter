@@ -21,6 +21,7 @@ use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Content\ScanPolicyResolver;
 use Vaulter\Drive\Content\ScanWorkReconciler;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Vaulter\Kernel;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Profiles\ProfilePolicy;
@@ -119,7 +120,7 @@ final class RescanFileRevisionsCommand extends Command
                 throw new InvalidArgumentException('Contradictory scan flags.');
             }
             if (!$activating) {
-                if (!app()->bound(ContentScanner::class)) {
+                if (!app(Kernel::class)->capabilities()->has(ContentScanner::class)) {
                     throw new InvalidArgumentException('Rescan requires a configured scanner.');
                 }
                 app(DriveConfig::class)->validateScanWork(requireBroker: true);

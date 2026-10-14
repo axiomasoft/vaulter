@@ -6,14 +6,13 @@ namespace Vaulter\Documents\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
 use Vaulter\Configuration\ConfigValidator;
-use Vaulter\Contracts\Profiles\CommentsFeature;
 use Vaulter\Documents\Data\Collaboration\RoomRef;
 use Vaulter\Documents\Models\Comments\NodeComment;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Support\Identity;
 
-final readonly class DocumentsConfig implements CommentsFeature
+final readonly class DocumentsConfig
 {
     public function __construct(private Repository $config) {}
 
@@ -301,11 +300,6 @@ final readonly class DocumentsConfig implements CommentsFeature
         }
 
         return $strings;
-    }
-
-    public function enabled(): bool
-    {
-        return $this->commentsEnabled();
     }
 
     public function commentsEnabled(): bool

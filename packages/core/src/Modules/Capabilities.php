@@ -45,7 +45,14 @@ final readonly class Capabilities
             throw MissingExtensionException::capability($contract);
         }
 
-        return $this->make($contract, $classes[0]);
+        // A single capability is a container singleton under its contract (ModuleApplier::provide): the one
+        // instance every consumer shares, and the seam a host or test decorates with extend().
+        $instance = $this->container->make($contract);
+        if (!$instance instanceof $contract) {
+            throw MissingExtensionException::capability($contract);
+        }
+
+        return $instance;
     }
 
     /**

@@ -20,17 +20,12 @@ use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\OffScanPolicyResolver;
 use Vaulter\Contracts\Cas\DirectContentUrlSigner;
 use Vaulter\Contracts\Content\ScanPolicyResolver;
-use Vaulter\Contracts\Handlers\NodePresenter;
-use Vaulter\Contracts\Profiles\CommentsFeature;
 use Vaulter\Contracts\Sharing\ShareTokenGenerator;
 use Vaulter\Enums\Cas\ScanMode;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
-use Vaulter\Handlers\Builtin\DownloadOnlyHandler;
-use Vaulter\Handlers\Builtin\PreviewHandler;
 use Vaulter\Handlers\FileHandlerRegistry;
 use Vaulter\Modules\ModuleBindings;
 use Vaulter\Operations\NodeLocator;
-use Vaulter\Profiles\DisabledCommentsFeature;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Repositories\Drive\DriveReadRepository;
@@ -49,7 +44,6 @@ final class DriveSliceRegistrar implements ModuleBindings
     {
         $app->singleton(ScanConfig::class);
         $app->bind(ProfilePolicy::class);
-        $app->bindIf(CommentsFeature::class, DisabledCommentsFeature::class);
         $app->bindIf(ScanPolicyResolver::class, OffScanPolicyResolver::class);
         $app->scoped(ShareTenantContext::class);
         $app->singleton(AccessConfig::class);
@@ -102,20 +96,9 @@ final class DriveSliceRegistrar implements ModuleBindings
         $app->singleton(FileHandlerRegistry::class);
         $app->bind(\Vaulter\Contracts\Handlers\FileHandlerRegistry::class, FileHandlerRegistry::class);
 
-        // The baseline is TAGGED, not merely config-defaulted (review, HIGH-1).
-        // `hasConfigFile()` merges via Laravel's shallow, existing-wins mergeConfigFrom:
-        // a host that ran `vendor:publish --tag=vaulter-config` BEFORE carries a
-        // literal `'handlers' => []` in its own config, which would WIN over core's new
-        // default and silently drop PreviewHandler (exactly the drive-only host
-        // exists for). The tag is a second, config-independent source the registry
-        // merges and de-duplicates by FQCN, so the baseline survives a stale or emptied
-        // config — and the merge stops depending on provider-registration order.
-        $app->tag([PreviewHandler::class, DownloadOnlyHandler::class], 'vaulter.file_handlers');
+        // The preview and download-only baseline is the drive module's contribution to the FileHandler slot,
+        // so a stale or emptied host `handlers` config cannot drop it; `vaulter.file_handlers` stays the host's tag.
 
-        // NodeResource resolves this seam to embed the handler descriptor on every
-        // leaf node — unconditionally bound, so Drive-only serialisation gets a real
-        // preview/download descriptor instead of degrading to null.
-        $app->bind(NodePresenter::class, \Vaulter\Handlers\NodePresenter::class);
     }
 
     private static function resolveContract(Application $app, string $contract): mixed

@@ -588,17 +588,6 @@
             "count": 1,
             "file": "packages/core/src/Configuration/ConfigValidator.php",
             "kind": "use",
-            "reason": "валидатор конфигурации ядра проверяет доменные классы: проверка секций переезжает к владельцу (цель: documents)",
-            "removed_in": "P4",
-            "symbol": "<file>",
-            "target": "Vaulter\\Contracts\\Profiles\\CommentsFeature",
-            "view": "target"
-        },
-        {
-            "category": "domain-in-core",
-            "count": 1,
-            "file": "packages/core/src/Configuration/ConfigValidator.php",
-            "kind": "use",
             "reason": "валидатор конфигурации ядра проверяет доменные классы: проверка секций переезжает к владельцу (цель: drive)",
             "removed_in": "P4",
             "symbol": "<file>",
@@ -3745,17 +3734,6 @@
             "count": 1,
             "file": "packages/core/src/Configuration/ConfigValidator.php",
             "kind": "name",
-            "reason": "валидатор конфигурации ядра проверяет доменные классы: проверка секций переезжает к владельцу (цель: documents)",
-            "removed_in": "P4",
-            "symbol": "Vaulter\\Configuration\\ConfigValidator::validateDrive",
-            "target": "Vaulter\\Contracts\\Profiles\\CommentsFeature",
-            "view": "target"
-        },
-        {
-            "category": "domain-in-core",
-            "count": 1,
-            "file": "packages/core/src/Configuration/ConfigValidator.php",
-            "kind": "name",
             "reason": "валидатор конфигурации ядра проверяет доменные классы: проверка секций переезжает к владельцу (цель: drive)",
             "removed_in": "P4",
             "symbol": "Vaulter\\Configuration\\ConfigValidator::validateDrive",
@@ -3782,6 +3760,50 @@
             "removed_in": "P4",
             "symbol": "Vaulter\\Configuration\\ConfigValidator::validateDrive",
             "target": "Vaulter\\Profiles\\ProfileRegistry",
+            "view": "target"
+        },
+        {
+            "category": "domain-in-core",
+            "count": 1,
+            "file": "packages/core/src/Configuration/ConfigValidator.php",
+            "kind": "use",
+            "reason": "валидатор конфигурации ядра проверяет доменные классы: проверка секций переезжает к владельцу (цель: drive)",
+            "removed_in": "P4",
+            "symbol": "<file>",
+            "target": "Vaulter\\Access\\PermissionDriverCatalog",
+            "view": "target"
+        },
+        {
+            "category": "domain-in-core",
+            "count": 1,
+            "file": "packages/core/src/Configuration/ConfigValidator.php",
+            "kind": "name",
+            "reason": "валидатор конфигурации ядра проверяет доменные классы: проверка секций переезжает к владельцу (цель: drive)",
+            "removed_in": "P4",
+            "symbol": "Vaulter\\Configuration\\ConfigValidator::validateDrive",
+            "target": "Vaulter\\Access\\PermissionDriverCatalog",
+            "view": "target"
+        },
+        {
+            "category": "domain-in-core",
+            "count": 1,
+            "file": "packages/core/src/Console/InstallCommand.php",
+            "kind": "use",
+            "reason": "установщик ядра перечисляет ключи драйверов прав через PermissionDriverCatalog (владелец drive): P4 переносит каталог и выбор драйвера в drive",
+            "removed_in": "P4",
+            "symbol": "<file>",
+            "target": "Vaulter\\Access\\PermissionDriverCatalog",
+            "view": "target"
+        },
+        {
+            "category": "domain-in-core",
+            "count": 1,
+            "file": "packages/core/src/Console/InstallCommand.php",
+            "kind": "name",
+            "reason": "установщик ядра перечисляет ключи драйверов прав через PermissionDriverCatalog (владелец drive): P4 переносит каталог и выбор драйвера в drive",
+            "removed_in": "P4",
+            "symbol": "Vaulter\\Console\\InstallCommand::permissionDrivers",
+            "target": "Vaulter\\Access\\PermissionDriverCatalog",
             "view": "target"
         }
     ],

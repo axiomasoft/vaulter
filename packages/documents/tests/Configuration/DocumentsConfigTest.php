@@ -3,13 +3,15 @@
 declare(strict_types=1);
 
 use Illuminate\Config\Repository;
-use Vaulter\Contracts\Profiles\CommentsFeature;
+use Vaulter\Contracts\Profiles\ProfileOption;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Data\Collaboration\RoomRef;
 use Vaulter\Documents\Export\HtmlExporter;
 use Vaulter\Documents\Export\MarkdownExporter;
 use Vaulter\Documents\Models\Revisions\DocumentRevision;
+use Vaulter\Documents\Profiles\CommentsProfileOption;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Vaulter\Kernel;
 
 it('enables installed documents and comments while leaving collaboration opt in', function (): void {
     $repository = new Repository(['vaulter-documents' => require __DIR__.'/../../config/vaulter-documents.php']);
@@ -102,14 +104,14 @@ it('rejects incompatible document model overrides', function (): void {
     expect(fn () => $config->model('node_comment'))->toThrow(InvalidConfigurationException::class);
 });
 
-it('answers core\'s comments feature question from its own config instead of core reading it', function (): void {
-    $feature = app(CommentsFeature::class);
+it('answers core\'s comments question through its profile option from its own config', function (): void {
+    $option = app(Kernel::class)->extensions()->handler(ProfileOption::class, 'comments');
 
-    expect($feature)->toBeInstanceOf(DocumentsConfig::class)->and($feature->enabled())->toBeTrue();
+    expect($option)->toBeInstanceOf(CommentsProfileOption::class)->and($option->enabled())->toBeTrue();
 
     config()->set('vaulter-documents.comments.enabled', false);
 
-    expect(app(CommentsFeature::class)->enabled())->toBeFalse();
+    expect(app(Kernel::class)->extensions()->handler(ProfileOption::class, 'comments')->enabled())->toBeFalse();
 });
 
 it('refuses an exporter list that is not class names', function (): void {

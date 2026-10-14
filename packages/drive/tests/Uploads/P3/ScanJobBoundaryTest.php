@@ -44,7 +44,7 @@ it('SEC-R12 refuses wrong scoped jobs before scanner reads and closes the truste
             return new ScanResult(ScanVerdict::Clean);
         }
     };
-    app()->instance(ContentScanner::class, $scanner);
+    UploadTestHelpers::scanner($scanner);
     config()->set('vaulter.scan.mode', 'all_content');
     config()->set('vaulter.scan.scanner_key', 'fixture');
     config()->set('vaulter.scan.scanner_version', '1');
@@ -89,7 +89,7 @@ it('SEC-R12 corrupted immutable identity fails terminally before scanner bytes',
             return new ScanResult(ScanVerdict::Clean);
         }
     };
-    app()->instance(ContentScanner::class, $scanner);
+    UploadTestHelpers::scanner($scanner);
     config()->set('vaulter.scan.mode', 'all_content');
     config()->set('vaulter.scan.scanner_key', 'fixture');
     config()->set('vaulter.scan.scanner_version', '1');

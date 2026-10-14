@@ -8,9 +8,9 @@ use Closure;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Log;
+use Vaulter\Access\PermissionDriverCatalog;
 use Vaulter\Contracts\Access\NonProductionPermissionDriver;
 use Vaulter\Contracts\Access\PermissionDriver;
-use Vaulter\Contracts\Profiles\CommentsFeature;
 use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Exceptions\Profiles\InvalidProfileException;
@@ -61,7 +61,7 @@ final readonly class ConfigValidator
     {
         $access = $config->access();
         $key = $access->permissionDriver();
-        $drivers = $access->permissionDrivers();
+        $drivers = (new PermissionDriverCatalog($access, $app->make(Kernel::class)))->classes();
         if (!isset($drivers[$key])) {
             throw new InvalidConfigurationException('[Vaulter] Unknown vaulter.access.permission_driver "'.$key.'".');
         }
@@ -101,7 +101,7 @@ final readonly class ConfigValidator
                 $registry = ProfileRegistry::fromConfig($config->profileProviders(), $config->defaultProfile(), $app);
                 $app->instance(ProfileRegistry::class, $registry);
             }
-            $policy = new ProfilePolicy($config, $this->config, $registry, new ScanConfig($this->config), $app->make(CommentsFeature::class));
+            $policy = new ProfilePolicy($config, $this->config, $registry, new ScanConfig($this->config), $app->make(Kernel::class));
             foreach ($registry->all() as $profile) {
                 $policy->validate($profile);
                 $profileKey = $profile->getPermissionDriver() ?? $access->permissionDriver();

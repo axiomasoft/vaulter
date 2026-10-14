@@ -9,12 +9,12 @@ use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Contracts\CollaborationDriver;
 use Vaulter\Documents\Enums\Collaboration\CollaborationDriverType;
 use Vaulter\Exceptions\VaulterException;
+use Vaulter\Kernel;
 
 /**
- * Resolves the active node-collaboration transport from
- * the configuration key ('vaulter-documents.collaboration.driver'). The driver class map is keyed by the
- * CollaborationDriverType so adding a transport is one enum case + one binding, no
- * stringly-typed lookup. Distinct from VaulterManager::driver(), which resolves the
+ * Resolves the active node-collaboration transport: the configuration key ('vaulter-documents.collaboration.driver')
+ * is validated against the CollaborationDriverType, and the transport is the capability the documents module provides
+ * (Hocuspocus until collaboration becomes a module of its own, P5). Distinct from VaulterManager::driver(), which resolves the
  * LEGACY Document-bound collaboration driver — this is the node-tree lane.
  */
 final readonly class CollaborationDriverManager
@@ -29,13 +29,10 @@ final readonly class CollaborationDriverManager
      */
     public function driver(?string $name = null): CollaborationDriver
     {
-        $type = $this->type($name ?? $this->documentsConfig->collaborationDriver());
+        // The name is validated whatever the transport; the transport itself is the module's capability.
+        $this->type($name ?? $this->documentsConfig->collaborationDriver());
 
-        $class = match ($type) {
-            CollaborationDriverType::Hocuspocus => HocuspocusCollaborationDriver::class,
-        };
-
-        return $this->container->make($class);
+        return $this->container->make(Kernel::class)->capabilities()->require(CollaborationDriver::class);
     }
 
     private function type(string $name): CollaborationDriverType

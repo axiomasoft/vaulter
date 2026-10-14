@@ -11,7 +11,7 @@ use Vaulter\Tests\Support\TestGroups;
 
 uses(TestCase::class, RefreshDatabase::class)->in('Drive', 'Uploads', 'Feature', 'Observability', 'PublicApi', 'WriteGuard', 'Doctor', 'Testing');
 
-uses(TestCase::class)->in('Providers', 'Http', 'Console');
+uses(TestCase::class)->in('Providers', 'Http', 'Console', 'Modules');
 
 uses(TestCase::class, RefreshDatabase::class)->in('Recipes');
 

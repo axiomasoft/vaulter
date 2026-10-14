@@ -31,6 +31,16 @@ function capabilitiesOf(Cardinality $cardinality, ?Closure $provide, array $conf
 
     $container = new Container;
     $container->instance(RepositoryContract::class, new Repository($config));
+    // What ModuleApplier::provide binds for a single capability: the contract is one container singleton.
+    if ($cardinality !== Cardinality::Many) {
+        $container->singleton(Greeter::class, static function (Container $c) use ($compiled): object {
+            $provider = $compiled->providers[Greeter::class][0];
+            $configured = $provider->configKey === null ? null : $c->make(RepositoryContract::class)->get($provider->configKey);
+            $class = is_string($configured) && $configured !== '' ? $configured : ($provider->implementation ?? $provider->default);
+
+            return $c->make((string) $class);
+        });
+    }
 
     return new Capabilities($compiled, $container);
 }

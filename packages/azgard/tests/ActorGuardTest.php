@@ -7,8 +7,8 @@ use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Azgard\AzgardPermissionDriver;
-use Vaulter\Azgard\Contracts\AzgardGuard;
 use Vaulter\Azgard\Testing\FakeAzgardGuard;
+use Vaulter\Azgard\Tests\Stubs\HostGuard;
 use Vaulter\Azgard\Tests\Stubs\SpyAzgardUser;
 use Vaulter\ValueObjects\Access\OwnerRef;
 
@@ -72,15 +72,15 @@ it('asks AzGuard in the configured panel', function (): void {
     expect(array_unique(array_column($carol->permissionCalls, 'guard')))->toBe(['documents-panel']);
 });
 
-it('still uses the request-bound guard for the request user itself', function (): void {
+it('answers the request user through an adapter over that very actor', function (): void {
     $me = SpyAzgardUser::make(5)->grantInWorkspace('project', 9, ['documents.update']);
     $this->actingAs($me);
 
     expect(app(AzgardPermissionDriver::class)->resolve(Subject::ofModel($me), $me, actorScope())?->role->key)->toBe(RoleRegistry::WRITER);
 });
 
-it('keeps honouring a guard the host bound itself, for any actor', function (): void {
-    app()->instance(AzgardGuard::class, FakeAzgardGuard::grantingWorkspace('project', 9, 'documents.update'));
+it('keeps honouring the guard the host configured, for any actor', function (): void {
+    HostGuard::bind(FakeAzgardGuard::grantingWorkspace('project', 9, 'documents.update'));
     $anyone = SpyAzgardUser::make(6);
 
     expect(app(AzgardPermissionDriver::class)->resolve(Subject::ofModel($anyone), $anyone, actorScope())?->role->key)->toBe(RoleRegistry::WRITER);

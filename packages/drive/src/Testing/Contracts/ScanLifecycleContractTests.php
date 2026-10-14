@@ -88,6 +88,9 @@ final class ScanLifecycleContractTests
         Assert::assertNotSame(ScanMode::Off, $spec->mode, 'Scanning is off in the host configuration, so there is no lifecycle to prove.');
 
         $this->scanner = new FakeContentScanner($spec->scannerKey, $spec->scannerVersion);
+        // The scanner is the capability the host names in config: the class, and the very object behind it.
+        Config::set('vaulter.scan.scanner', FakeContentScanner::class);
+        App::instance(FakeContentScanner::class, $this->scanner);
         App::instance(ContentScanner::class, $this->scanner);
         (new class
         {

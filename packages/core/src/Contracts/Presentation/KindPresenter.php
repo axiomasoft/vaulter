@@ -10,9 +10,9 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\ValueObjects\Handlers\NodePresentation;
 
 /**
- * Presents every node of one kind instead of the file handler registry. A module that
- * owns a kind's content (documents) tags its implementation `vaulter.kind_presenters`;
- * core never imports the module.
+ * Presents every node of one kind instead of the file handler registry (slot `drive`, Handler keyed by the
+ * kind). A module that owns a kind's content (documents) contributes its implementation under the kind's
+ * value; core never imports the module.
  */
 interface KindPresenter
 {

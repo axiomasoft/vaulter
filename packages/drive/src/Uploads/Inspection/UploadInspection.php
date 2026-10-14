@@ -7,6 +7,7 @@ namespace Vaulter\Drive\Uploads\Inspection;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Contracts\Uploads\UploadInspector;
 use Vaulter\Drive\Data\Files\UploadFacts;
+use Vaulter\Kernel;
 use Vaulter\Operations\OperationContext;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Profiles\UploadPolicy;
@@ -27,10 +28,10 @@ final readonly class UploadInspection
 
     public function inspect(UploadFacts $facts, OperationContext $context): void
     {
-        $inspectors = iterator_to_array(app()->tagged('vaulter.upload_inspectors'));
+        $inspectors = app(Kernel::class)->extensions()->resolve(UploadInspector::class);
         $keys = [];
         foreach ($inspectors as $inspector) {
-            if (!$inspector instanceof UploadInspector || $inspector->key() === '' || isset($keys[$inspector->key()])) {
+            if ($inspector->key() === '' || isset($keys[$inspector->key()])) {
                 throw new \LogicException('Upload inspectors must have distinct nonempty keys.');
             }
             $keys[$inspector->key()] = true;

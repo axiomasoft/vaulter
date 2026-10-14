@@ -4,26 +4,19 @@ declare(strict_types=1);
 
 namespace Vaulter\Azgard\Providers;
 
-use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Foundation\Application;
 use Vaulter\Azgard\AzgardGuardAdapter;
-use Vaulter\Azgard\AzgardPermissionDriver;
+use Vaulter\Azgard\AzgardModule;
 use Vaulter\Azgard\Configuration\AzgardConfig;
-use Vaulter\Azgard\Contracts\AzgardBackedUser;
-use Vaulter\Azgard\Contracts\AzgardGuard;
-use Vaulter\Azgard\NullAzgardGuard;
 use Vaulter\Modules\ModuleBindings;
 
 /**
- * Wires the AzGuard v1 permission bridge. It binds the Vaulter {@see AzgardGuard} seam to an
- * {@see AzgardGuardAdapter} built from the CURRENT request's AzGuard-backed user, so that once the host
- * selects the `azgard` permission driver (`vaulter.access.permission_driver = 'azgard'`) the driver resolves
- * real AzGuard checks with no further wiring.
- *
- * When the request has no AzGuard-backed user (a guest, or a User that does not implement
- * {@see AzgardBackedUser}) the bound guard is the deny-all {@see NullAzgardGuard} — a safe pass-through that
- * raises no access, never a fatal.
+ * Wires the AzGuard v1 permission bridge: the config accessor. The `azgard` permission driver is the module's
+ * contribution to the PermissionDriver slot, and the guard seam is not bound here: a host that wants one guard
+ * for every actor names its class in `vaulter-azgard.guard` (the optional capability of {@see AzgardModule});
+ * otherwise the driver builds an {@see AzgardGuardAdapter} over each AzGuard-backed actor and
+ * passes through for the rest.
  *
  * The host still owns the AzGuard panel this bridge cannot declare for it: the User is a subject model of the
  * panel, the workspace (drive owner) morph aliases are assignment scope types of the panel, and the User adds
@@ -34,26 +27,11 @@ final class BindingsRegistrar implements ModuleBindings
     public function register(Application $app): void
     {
         $app->singleton(AzgardConfig::class, static fn (Container $app): AzgardConfig => new AzgardConfig($app->make('config')));
-
-        // A host driver map that names the key keeps it, null included.
-        $config = $app->make('config');
-        if (!$config->has('vaulter.access.permission_drivers.azgard')) {
-            $config->set('vaulter.access.permission_drivers.azgard', AzgardPermissionDriver::class);
-        }
-
-        $app->bind(AzgardGuard::class, static function (Container $app): AzgardGuard {
-            $user = $app->make(AuthFactory::class)->guard()->user();
-
-            if (!$user instanceof AzgardBackedUser) {
-                return new NullAzgardGuard;
-            }
-
-            return new AzgardGuardAdapter(
-                user: $user,
-                panelId: $app->make(AzgardConfig::class)->panelId(),
-            );
-        });
     }
 
-    public function boot(Application $app): void {}
+    public function boot(Application $app): void
+    {
+        // Fail at boot on a guard class that does not implement the seam.
+        $app->make(AzgardConfig::class)->guard();
+    }
 }

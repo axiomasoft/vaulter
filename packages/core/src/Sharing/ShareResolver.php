@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Hash;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Configuration\TenancyConfig;
-use Vaulter\Content\ContentAvailabilityGuard;
+use Vaulter\Content\DownloadGuards;
 use Vaulter\Contracts\Tenancy\TenantResolver;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Drive\DriveStatus;
@@ -164,7 +164,7 @@ final readonly class ShareResolver
     public function assertContentAvailable(Node $node, FileRevision $revision, ?ShareContext $context = null): void
     {
         if ($context !== null) {
-            app(ContentAvailabilityGuard::class)->assertAvailableForShare($context, $node, $revision);
+            app(DownloadGuards::class)->check($context, $node, $revision);
 
             return;
         }

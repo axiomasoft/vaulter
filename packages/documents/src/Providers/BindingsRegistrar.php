@@ -14,27 +14,21 @@ use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
 use Vaulter\Configuration\ConfigValidator;
 use Vaulter\Configuration\DatabaseConfig;
 use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Contracts\Drive\NodeDocumentHeads;
-use Vaulter\Contracts\Profiles\CommentsFeature;
 use Vaulter\Doctor\Checks\ConfigValidCheck;
 use Vaulter\Documents\Configuration\DocumentsConfig;
-use Vaulter\Documents\Content\DocumentContentLifecycle;
 use Vaulter\Documents\Contracts\DocumentExporter;
 use Vaulter\Documents\Contracts\DocumentType;
-use Vaulter\Documents\Contracts\ExportFilenameResolver;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\DocumentsModule;
-use Vaulter\Documents\Export\DefaultExportFilenameResolver;
 use Vaulter\Documents\Export\DocumentExporterRegistry;
 use Vaulter\Documents\Http\Problems\DocumentsProblemCodes;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
-use Vaulter\Documents\Presentation\DocumentPresenter;
-use Vaulter\Documents\Support\DocumentHeads;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Http\Problems\ProblemCatalog;
+use Vaulter\Kernel;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Modules\ModuleBindings;
 
@@ -48,7 +42,6 @@ final class BindingsRegistrar implements ModuleBindings
     public function register(Application $app): void
     {
         $app->singleton(DocumentsConfig::class, static fn (Container $app): DocumentsConfig => new DocumentsConfig($app->make('config')));
-        $app->bind(CommentsFeature::class, DocumentsConfig::class);
         $app->singleton(DocumentsProblemCodes::class);
         $app->tag(DocumentsProblemCodes::class, ProblemCatalog::TAG);
         $app->bind('vaulter.config_validator.documents', static fn (Container $app): Closure => static function () use ($app): void {
@@ -66,17 +59,11 @@ final class BindingsRegistrar implements ModuleBindings
         // Operations carry the handle's context, so every resolution is a new instance.
         $app->bind(DocumentOperations::class);
         $app->bind(CommentOperations::class);
-        $app->bind(NodeDocumentHeads::class, DocumentHeads::class);
         $app->alias(DocumentsManager::class, 'vaulter.documents');
-        // Drive's registry collects this tag and prefers it to its own purge-only stand-in.
-        $app->tag([DocumentContentLifecycle::class], 'vaulter.content_lifecycles');
-        // Core presents document nodes through this tag; files keep the file handlers.
-        $app->tag([DocumentPresenter::class], 'vaulter.kind_presenters');
 
-        // The export filename seam: ExportDocumentAction is final, so a host wanting a
-        // different scheme rebinds this contract instead of forking the action. The
-        // default is the node's basename plus the exporter's extension.
-        $app->bind(ExportFilenameResolver::class, DefaultExportFilenameResolver::class);
+        // The export filename seam is a capability of DocumentsModule (the node's basename plus the exporter's
+        // extension): ExportDocumentAction is final, so a host wanting a different scheme rebinds the contract
+        // instead of forking the action.
 
         // Second echelon of the stored-XSS fix: TipTapRenderer takes
         // the sanitizer through its constructor (never resolved inline from the
@@ -115,14 +102,22 @@ final class BindingsRegistrar implements ModuleBindings
     }
 
     /**
-     * Config and tagged types join the ones providers registered; the set freezes once
+     * The modules' contributions, config and tagged types join the ones providers registered; the set freezes once
      * every provider has booted, and only then can the default type be checked.
      */
     private static function bootDocumentTypes(Application $app, DocumentsConfig $config): void
     {
         $types = $app->make(DocumentTypeRegistry::class);
+        $contributed = [];
+        foreach ($app->make(Kernel::class)->extensions()->resolve(DocumentType::class) as $type) {
+            $types->register($type);
+            $contributed[$type::class] = true;
+        }
         foreach ($config->types() as $class) {
-            $types->register($class);
+            // The shipped config list names the built-ins the modules already contributed: only the host's own are new.
+            if (!isset($contributed[$class])) {
+                $types->register($class);
+            }
         }
         foreach ($app->tagged('vaulter.document_types') as $type) {
             // Refused like a class name that does not resolve to a type, never skipped.
@@ -140,12 +135,19 @@ final class BindingsRegistrar implements ModuleBindings
         });
     }
 
-    /** Config and tagged exporters join the ones providers registered; the set freezes after boot. */
+    /** The modules' contributions, config and tagged exporters join the ones providers registered; the set freezes after boot. */
     private static function bootDocumentExporters(Application $app, DocumentsConfig $config): void
     {
         $exporters = $app->make(DocumentExporterRegistry::class);
+        $contributed = [];
+        foreach ($app->make(Kernel::class)->extensions()->resolve(DocumentExporter::class) as $exporter) {
+            $exporters->register($exporter);
+            $contributed[$exporter::class] = true;
+        }
         foreach ($config->exporters() as $class) {
-            $exporters->register($class);
+            if (!isset($contributed[$class])) {
+                $exporters->register($class);
+            }
         }
         foreach ($app->tagged('vaulter.exporters') as $exporter) {
             if (!$exporter instanceof DocumentExporter && !is_string($exporter)) {

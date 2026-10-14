@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Config\Repository;
 use Illuminate\Foundation\Application;
+use Vaulter\Contracts\Handlers\FileHandler;
+use Vaulter\Contracts\Presentation\KindPresenter;
 use Vaulter\Documents\Configuration\DocumentsConfig;
 use Vaulter\Documents\Export\HtmlExporter;
 use Vaulter\Documents\Export\MarkdownExporter;
@@ -15,7 +17,9 @@ use Vaulter\Documents\Types\MarkdownDocumentType;
 use Vaulter\Documents\Types\RichTextDocumentType;
 use Vaulter\Handlers\Builtin\DownloadOnlyHandler;
 use Vaulter\Handlers\Builtin\PreviewHandler;
+use Vaulter\Kernel;
 use Vaulter\Modules\ModuleApplier;
+use Vaulter\Modules\SlotContribution;
 
 final class ConfigMergeHostNodeComment extends NodeComment {}
 
@@ -31,10 +35,11 @@ it('loads document defaults under their owner and contributes a kind presenter, 
         ->and(config('vaulter.handlers'))->toBe([])
         ->and(config('vaulter-documents.exporters'))->toBe([HtmlExporter::class, MarkdownExporter::class]);
 
-    $tagged = array_map(static fn (object $handler): string => $handler::class, iterator_to_array(app()->tagged('vaulter.file_handlers')));
-    expect($tagged)->toEqualCanonicalizing([PreviewHandler::class, DownloadOnlyHandler::class]);
+    // The drive contributes the file handlers; the documents module only a presenter for its kind.
+    $handlers = array_map(static fn (SlotContribution $c): string => $c->implementation, app(Kernel::class)->extensions()->contributions(FileHandler::class));
+    expect($handlers)->toEqualCanonicalizing([PreviewHandler::class, DownloadOnlyHandler::class]);
 
-    $presenters = array_map(static fn (object $presenter): string => $presenter::class, iterator_to_array(app()->tagged('vaulter.kind_presenters')));
+    $presenters = array_map(static fn (SlotContribution $c): string => $c->implementation, app(Kernel::class)->extensions()->contributions(KindPresenter::class));
     expect($presenters)->toBe([DocumentPresenter::class]);
 });
 

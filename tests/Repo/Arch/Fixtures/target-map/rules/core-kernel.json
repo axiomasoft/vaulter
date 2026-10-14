@@ -775,6 +775,15 @@
         },
         {
             "match": "fqcn",
+            "value": "Vaulter\\Exceptions\\Support\\InvalidExtensionResult",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#kernel: Ошибки — kernel exception (slot contribution returned an invalid result)"
+        },
+        {
+            "match": "fqcn",
             "value": "Vaulter\\Exceptions\\Support\\MissingPackageException",
             "owner": "core",
             "action": "keep",

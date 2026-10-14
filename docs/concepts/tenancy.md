@@ -248,8 +248,8 @@ For those identities to match, the host aligns three things:
 
 ::: info Install the AzGuard bridge
 `composer require axioma-studio/vaulter-azgard` installs the driver, real adapter and
-`Vaulter\Azgard\Testing\FakeAzgardGuard`. Its provider registers the driver and binds
-the guard; the user model must implement `Vaulter\Azgard\Contracts\AzgardBackedUser`.
+`Vaulter\Azgard\Testing\FakeAzgardGuard`. Its provider registers the driver; the guard
+is selected by the `vaulter-azgard.guard` config key; the user model must implement `Vaulter\Azgard\Contracts\AzgardBackedUser`.
 Fake-based tests require the bridge's installed dependencies too. See
 [Permission drivers](/extending/permission-drivers) and the `vaulter-azgard.*` configuration.
 :::

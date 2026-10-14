@@ -9,12 +9,13 @@ use Vaulter\Contracts\Handlers\NodePresenter as NodePresenterContract;
 use Vaulter\Contracts\Presentation\KindPresenter;
 use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Enums\Handlers\Capability;
+use Vaulter\Kernel;
 use Vaulter\Models\Drive\Node;
 use Vaulter\ValueObjects\Handlers\NodePresentation;
 
 /**
  * A READ-ONLY evaluator that resolves how the client shows a node. A kind whose
- * module tagged a {@see KindPresenter} (`vaulter.kind_presenters`) is presented by
+ * module contributed a {@see KindPresenter} (slot key = the kind) is presented by
  * it — documents by their document type. Every other node goes through the file
  * handler registry: the descriptor is built from the node (server-trusted mime, never
  * claimed), the registry picks the best handler at the broadest capability (Download —
@@ -31,10 +32,9 @@ final class NodePresenter implements NodePresenterContract
 
     public function present(Node|NodeSnapshot $node): NodePresentation
     {
-        foreach ($this->container->tagged('vaulter.kind_presenters') as $presenter) {
-            if ($presenter instanceof KindPresenter && $presenter->kind() === $node->kind) {
-                return $presenter->present($node);
-            }
+        $presenters = $this->container->make(Kernel::class)->extensions();
+        if (in_array($node->kind->value, $presenters->handlerKeys(KindPresenter::class), true)) {
+            return $presenters->handler(KindPresenter::class, $node->kind->value)->present($node);
         }
 
         $descriptor = $this->descriptors->forNode($node);

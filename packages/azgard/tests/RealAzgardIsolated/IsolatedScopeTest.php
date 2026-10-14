@@ -9,9 +9,9 @@ use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Azgard\AzgardGuardAdapter;
 use Vaulter\Azgard\AzgardPermissionDriver;
-use Vaulter\Azgard\Contracts\AzgardGuard;
 use Vaulter\Azgard\Tests\RealAzgard\Stubs\AzgardUser;
 use Vaulter\Azgard\Tests\RealAzgard\Stubs\WorkspaceModel;
+use Vaulter\Azgard\Tests\Stubs\HostGuard;
 use Vaulter\ValueObjects\Access\OwnerRef;
 
 /**
@@ -21,7 +21,7 @@ use Vaulter\ValueObjects\Access\OwnerRef;
  */
 function isolatedDriverFor(AzgardUser $user): AzgardPermissionDriver
 {
-    app()->instance(AzgardGuard::class, new AzgardGuardAdapter($user));
+    HostGuard::bind(new AzgardGuardAdapter($user));
 
     return app(AzgardPermissionDriver::class);
 }

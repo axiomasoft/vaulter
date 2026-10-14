@@ -14,6 +14,7 @@ use Vaulter\Contracts\Drive\DriveHandleFactory;
 use Vaulter\Contracts\Handlers\FileHandlerRegistry;
 use Vaulter\Exceptions\Support\MissingPackageException;
 use Vaulter\Models\Drive\Drive;
+use Vaulter\Modules\MissingExtensionException;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Tenancy\TenancyBypass;
 
@@ -73,10 +74,10 @@ final readonly class VaulterManager
 
     private function driveFactory(): DriveHandleFactory
     {
-        if (!$this->container->bound(DriveHandleFactory::class)) {
+        try {
+            return $this->container->make(Kernel::class)->capabilities()->require(DriveHandleFactory::class);
+        } catch (MissingExtensionException) {
             throw MissingPackageException::forContract(DriveHandleFactory::class, 'axioma-studio/vaulter-drive');
         }
-
-        return $this->container->make(DriveHandleFactory::class);
     }
 }

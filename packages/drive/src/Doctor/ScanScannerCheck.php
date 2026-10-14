@@ -11,6 +11,7 @@ use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
 use Vaulter\Enums\Cas\ScanMode;
+use Vaulter\Kernel;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileRegistry;
 
@@ -43,8 +44,8 @@ final readonly class ScanScannerCheck implements DoctorCheck
             return [DoctorFinding::ok(code: 'drive.scan.scanner_not_required', message: 'No scan policy is enabled.', evidence: ['mode' => ScanMode::Off->value])];
         }
 
-        if (!$this->container->bound(ContentScanner::class)) {
-            return [DoctorFinding::error(code: 'drive.scan.scanner_missing', message: 'A scan policy is enabled but no ContentScanner is bound.', hint: 'set vaulter.scan.scanner to a ContentScanner class', evidence: ['policies' => count($enabled)])];
+        if (!$this->container->make(Kernel::class)->capabilities()->has(ContentScanner::class)) {
+            return [DoctorFinding::error(code: 'drive.scan.scanner_missing', message: 'A scan policy is enabled but no ContentScanner is configured.', hint: 'set vaulter.scan.scanner to a ContentScanner class', evidence: ['policies' => count($enabled)])];
         }
         try {
             $scanner = $this->container->make(ContentScanner::class);

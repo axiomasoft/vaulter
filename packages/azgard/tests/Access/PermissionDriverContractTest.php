@@ -9,8 +9,8 @@ use Vaulter\Access\Drivers\DatabasePermissionDriver;
 use Vaulter\Access\PermissionDriverManager;
 use Vaulter\Access\Roles\RoleRegistry;
 use Vaulter\Azgard\AzgardPermissionDriver;
-use Vaulter\Azgard\Contracts\AzgardGuard;
 use Vaulter\Azgard\Tests\Access\AccessTestHelpers;
+use Vaulter\Azgard\Tests\Stubs\HostGuard;
 use Vaulter\Contracts\Access\PermissionDriver;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Access\GrantScope;
@@ -77,8 +77,7 @@ function sharedFixtureTruth(): array
  * byte identical to the database lane on the shared ACL fixture.
  */
 it('yields the shared-fixture truth for the moved driver in pass-through', function (): void {
-    app()->forgetInstance(AzgardGuard::class);
-    app()->offsetUnset(AzgardGuard::class);
+    HostGuard::clear();
 
     $databaseDecisions = decisionsOver(bindDriver(new DatabasePermissionDriver));
     $bridgeDecisions = decisionsOver(bindDriver(app(AzgardPermissionDriver::class)));

@@ -7,26 +7,29 @@ namespace Vaulter\Profiles;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Vaulter\Access\PermissionDriverCatalog;
 use Vaulter\Configuration\ScanConfig;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Content\ScanPolicySpec;
-use Vaulter\Contracts\Profiles\CommentsFeature;
+use Vaulter\Contracts\Profiles\ProfileOption;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Cas\ScanMode;
 use Vaulter\Enums\Operations\OperationKind;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
+use Vaulter\Kernel;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
 
 final readonly class ProfilePolicy
 {
-    public function __construct(private VaulterConfig $config, private Repository $repository, private ProfileRegistry $profiles, private ScanConfig $scan, private CommentsFeature $comments) {}
+    public function __construct(private VaulterConfig $config, private Repository $repository, private ProfileRegistry $profiles, private ScanConfig $scan, private Kernel $kernel) {}
 
     public function featureEnabled(Profile $profile, string $feature): bool
     {
+        // A feature a module owns is on only while that module contributes the option and has it on.
         $global = $feature === 'comments'
-            ? $this->comments->enabled()
+            ? $this->option('comments')?->enabled() === true
             : $this->config->featureEnabled($feature);
 
         return $global && ($profile->featureFlag($feature) ?? true);
@@ -42,10 +45,24 @@ final readonly class ProfilePolicy
         if ($profile->getDisk() !== null && !is_array($this->repository->get('filesystems.disks.'.$profile->getDisk()))) {
             throw new InvalidConfigurationException('Unknown profile disk '.$profile->getDisk().'.');
         }
-        if ($profile->getPermissionDriver() !== null && !isset($this->config->access()->permissionDrivers()[$profile->getPermissionDriver()])) {
+        if ($profile->getPermissionDriver() !== null && !(new PermissionDriverCatalog($this->config->access(), $this->kernel))->has($profile->getPermissionDriver())) {
             throw new InvalidConfigurationException('Unknown profile permission driver.');
         }
+        foreach ($this->kernel->extensions()->resolve(ProfileOption::class) as $option) {
+            $option->validate($profile);
+        }
         $this->scanSpecs($profile);
+    }
+
+    private function option(string $name): ?ProfileOption
+    {
+        foreach ($this->kernel->extensions()->resolve(ProfileOption::class) as $option) {
+            if ($option->name() === $name) {
+                return $option;
+            }
+        }
+
+        return null;
     }
 
     public function ownerAllowed(Profile $profile, Model $owner): bool

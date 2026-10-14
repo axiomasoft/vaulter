@@ -3736,20 +3736,175 @@
       ],
       "reason": "P3.3: the Vaulter manager and the file handler/presentation seams are drive slices located in core, registered by DriveSliceRegistrar (DriveModule)",
       "decision": "D39"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Feature\\VaulterManagerExporterHandlerSeamTest::__pest_evaluable_it_drive___fails_loud_with_an_install_hint_when_vaulter_drive_is_absent_from_a_bare_container__F_P3_5_01",
+      "replacement": [
+        "P\\Packages\\core\\tests\\Feature\\VaulterManagerExporterHandlerSeamTest::__pest_evaluable_it_drive___fails_loud_with_an_install_hint_when_no_active_module_provides_the_drive_factory__F_P3_5_01"
+      ],
+      "reason": "renamed: the drive factory is a capability of the drive module, absent while the module is off (P3.5)",
+      "decision": "D8"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Profiles\\ProfilePolicyTest::__pest_evaluable_it_conjoins_every_explicit_profile_flag_with_the_global_policy\"('comments')\"",
+      "replacement": [
+        "P\\Packages\\core\\tests\\Profiles\\ProfilePolicyTest::__pest_evaluable_it_conjoins_the_comments_flag_with_the_option_of_the_module_that_owns_comments"
+      ],
+      "reason": "the comments flag is conjoined with the ProfileOption of the module that owns comments, not with CommentsFeature (P3.6)",
+      "decision": "D8"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Profiles\\ProfilePolicyTest::__pest_evaluable_it_treats_comments_as_globally_off_when_no_package_owns_them_and_leaves_the_other_flags_untouched",
+      "replacement": [
+        "P\\Packages\\core\\tests\\Profiles\\ProfilePolicyTest::__pest_evaluable_it_treats_comments_as_globally_off_when_no_module_contributes_the_option_and_leaves_the_other_flags_untouched"
+      ],
+      "reason": "renamed: CommentsFeature is replaced by the ProfileOption slot (P3.6)",
+      "decision": "D8"
+    },
+    {
+      "suite": "drive",
+      "old": "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_registers_the_factory_and_preserves_singleton_service_lifetimes_in_a_fresh_container",
+      "replacement": [
+        "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_preserves_singleton_service_lifetimes_in_a_fresh_container"
+      ],
+      "reason": "renamed: the handle factory is the drive module capability (DriveModule::provides), not a registrar binding (P3.5)",
+      "decision": "D8"
+    },
+    {
+      "suite": "documents",
+      "old": "P\\Tests\\Configuration\\DocumentsConfigTest::__pest_evaluable_it_answers_core_s_comments_feature_question_from_its_own_config_instead_of_core_reading_it",
+      "replacement": [
+        "P\\Tests\\Configuration\\DocumentsConfigTest::__pest_evaluable_it_answers_core_s_comments_question_through_its_profile_option_from_its_own_config"
+      ],
+      "reason": "renamed: the comments answer is the documents ProfileOption (P3.6)",
+      "decision": "D8"
+    },
+    {
+      "suite": "documents",
+      "old": "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_binds_the_filename_seam_and_shares_the_sanitizer_with_the_existing_scheme_allow_list",
+      "replacement": [
+        "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_shares_the_sanitizer_with_the_existing_scheme_allow_list",
+        "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_provides_the_filename_seam_and_the_collaboration_transport_as_the_capabilities_of_the_module"
+      ],
+      "reason": "split: the sanitizer assertion stays, the filename seam is now a module capability asserted separately (P3.7)",
+      "decision": "D8"
+    },
+    {
+      "suite": "documents",
+      "old": "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_tags_the_document_presenter_and_no_file_handler__PLAN2_P4_3_",
+      "replacement": [
+        "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_contributes_the_document_presenter_and_lifecycle_to_the_drive_slots__and_no_file_handler__PLAN2_P4_3_"
+      ],
+      "reason": "renamed: the presenter and lifecycle are contributions to the drive slots, not tags (P3.6)",
+      "decision": "D8"
+    },
+    {
+      "suite": "azgard",
+      "old": "P\\Tests\\Access\\AzgardDriverTest::__pest_evaluable_it_is_a_safe_pass_through__no_fatal__when_no_AzgardGuard_is_bound",
+      "replacement": [
+        "P\\Tests\\Access\\AzgardDriverTest::__pest_evaluable_it_is_a_safe_pass_through__no_fatal__when_no_explicit_guard_is_configured"
+      ],
+      "reason": "renamed: the explicit guard is the vaulter-azgard.guard config key (P3.5)",
+      "decision": "D8"
+    },
+    {
+      "suite": "azgard",
+      "old": "P\\Tests\\ActorGuardTest::__pest_evaluable_it_keeps_honouring_a_guard_the_host_bound_itself__for_any_actor",
+      "replacement": [
+        "P\\Tests\\ActorGuardTest::__pest_evaluable_it_keeps_honouring_the_guard_the_host_configured__for_any_actor"
+      ],
+      "reason": "renamed: the host names its guard in vaulter-azgard.guard (P3.5)",
+      "decision": "D8"
+    },
+    {
+      "suite": "azgard",
+      "old": "P\\Tests\\ActorGuardTest::__pest_evaluable_it_still_uses_the_request_bound_guard_for_the_request_user_itself",
+      "replacement": [
+        "P\\Tests\\ActorGuardTest::__pest_evaluable_it_answers_the_request_user_through_an_adapter_over_that_very_actor"
+      ],
+      "reason": "renamed: no request-bound guard is bound any more; the driver builds an adapter over the actor (P3.5)",
+      "decision": "D8"
+    },
+    {
+      "suite": "azgard",
+      "old": "P\\Tests\\Doctor\\AzgardDoctorCheckTest::__pest_evaluable_it_reports_a_guard_that_cannot_be_built_as_an_error_in_both_modes",
+      "replacement": [
+        "P\\Tests\\Doctor\\AzgardDoctorCheckTest::__pest_evaluable_it_reports_a_configured_guard_that_cannot_be_built_as_an_error_in_both_modes"
+      ],
+      "reason": "renamed: only a configured guard can fail to build (P3.5)",
+      "decision": "D8"
+    },
+    {
+      "suite": "azgard",
+      "old": "P\\Tests\\Doctor\\AzgardDoctorCheckTest::__pest_evaluable_it_resolves_the_bridge_guard_for_a_console_run_without_a_user",
+      "replacement": [
+        "P\\Tests\\Doctor\\AzgardDoctorCheckTest::__pest_evaluable_it_is_ok_without_an_explicit_guard__the_driver_builds_one_per_actor"
+      ],
+      "reason": "renamed: without an explicit guard the driver builds one per actor (P3.5)",
+      "decision": "D8"
+    },
+    {
+      "suite": "azgard",
+      "old": "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_binds_an_adapter_over_the_authenticated_AzGuard_backed_user",
+      "replacement": [
+        "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_provides_the_configured_guard_class_as_the_capability"
+      ],
+      "reason": "the request-bound AzgardGuard binding is removed; the guard is the vaulter-azgard.guard capability (P3.5)",
+      "decision": "D8"
+    },
+    {
+      "suite": "azgard",
+      "old": "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_binds_the_deny_all_null_guard_for_a_guest",
+      "replacement": [
+        "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_provides_no_guard_until_the_host_names_one"
+      ],
+      "reason": "the request-bound AzgardGuard binding is removed; no guard is provided until the host names one (P3.5)",
+      "decision": "D8"
+    },
+    {
+      "suite": "azgard",
+      "old": "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_binds_the_deny_all_null_guard_for_a_user_that_is_not_AzGuard_backed",
+      "replacement": [
+        "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_provides_no_guard_until_the_host_names_one"
+      ],
+      "reason": "the request-bound AzgardGuard binding is removed; no guard is provided until the host names one (P3.5)",
+      "decision": "D8"
+    },
+    {
+      "suite": "azgard",
+      "old": "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_preserves_an_explicitly_configured_null_driver_key",
+      "replacement": [
+        "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_refuses_a_guard_class_that_does_not_implement_the_seam"
+      ],
+      "reason": "the permission driver map is not written by the registrar any more; the guard key is validated instead (P3.5)",
+      "decision": "D8"
+    },
+    {
+      "suite": "azgard",
+      "old": "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_registers_its_permission_driver_and_keeps_a_host_driver_override",
+      "replacement": [
+        "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_contributes_its_permission_driver_to_the_drive_slot_and_lets_the_host_map_override_the_key"
+      ],
+      "reason": "renamed: azgard contributes its driver to the PermissionDriver slot; the host map still overrides the key (P3.5)",
+      "decision": "D8"
     }
   ],
   "additions": {
     "repo": {
       "introduced": "P1.3",
-      "count": 181,
+      "count": 184,
       "names": [
-        "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_keeps_every_committed_allowlist_entry_reasoned__categorised_and_no_later_than_the_invariant_blocks",
+        "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_keeps_every_committed_allowlist_entry_reasoned__categorised_and_no_later_than_the_invariant_blocks__I4_blocks__I1–I3_report_",
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_keeps_fk_map_json_equal_to_the_foreign_keys_of_the_schema_identities",
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_matches_the_committed_allowlist_of_every_scan_to_the_current_tree__exactly\"('scan-i1')\"",
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_matches_the_committed_allowlist_of_every_scan_to_the_current_tree__exactly\"('scan-i2')\"",
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_matches_the_committed_allowlist_of_every_scan_to_the_current_tree__exactly\"('scan-i3')\"",
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_matches_the_committed_allowlist_of_every_scan_to_the_current_tree__exactly\"('scan-i4')\"",
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_scan__I4_needs_a_category_and_keeps__never__for_the_permanent_ones",
+        "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_scan__a_blocking_list_admits_only_never_and_late_category_entries",
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_scan__a_kernel_that_names_a_drive_type_is_a_violation_of_I1_and_of_I2__a_probe_one_of_I4",
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_scan__a_red_scan_names_the_command_that_reports_and_seeds_it",
         "P\\Tests\\Repo\\Arch\\BoundaryScanTest::__pest_evaluable_it_scan__an_I3_reverse_foreign_key_of_a_synthetic_fk_map_is_new__an_ok_one_is_not",
@@ -3769,13 +3924,14 @@
         "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__committed_fixtures__→_it_are_what_the_generators_produce_from_the_owners_files_and_the_code\"('http')\"",
         "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__committed_fixtures__→_it_are_what_the_generators_produce_from_the_owners_files_and_the_code\"('protocol')\"",
         "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__committed_fixtures__→_it_are_what_the_generators_produce_from_the_owners_files_and_the_code\"('schema')\"",
+        "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__committed_fixtures__→_it_cite_only_accepted_decisions_in_the_ledger",
         "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__committed_fixtures__→_it_fail_loudly_when_the_owners_file_is_unusable",
         "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__committed_fixtures__→_it_give_every_table__column__index__constraint_and_foreign_key_of_the_schema_an_owner_of_its_table",
-        "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__committed_fixtures__→_it_have_the_file_format__base__no_changes_in_P2__items_sorted_by_id_with_an_owner_and_a_source\"('cli')\"",
-        "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__committed_fixtures__→_it_have_the_file_format__base__no_changes_in_P2__items_sorted_by_id_with_an_owner_and_a_source\"('config')\"",
-        "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__committed_fixtures__→_it_have_the_file_format__base__no_changes_in_P2__items_sorted_by_id_with_an_owner_and_a_source\"('http')\"",
-        "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__committed_fixtures__→_it_have_the_file_format__base__no_changes_in_P2__items_sorted_by_id_with_an_owner_and_a_source\"('protocol')\"",
-        "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__committed_fixtures__→_it_have_the_file_format__base__no_changes_in_P2__items_sorted_by_id_with_an_owner_and_a_source\"('schema')\"",
+        "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__committed_fixtures__→_it_have_the_file_format__base__the_ledger_records_of_the_kind__items_sorted_by_id_with_an_owner_and_a_source\"('cli')\"",
+        "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__committed_fixtures__→_it_have_the_file_format__base__the_ledger_records_of_the_kind__items_sorted_by_id_with_an_owner_and_a_source\"('config')\"",
+        "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__committed_fixtures__→_it_have_the_file_format__base__the_ledger_records_of_the_kind__items_sorted_by_id_with_an_owner_and_a_source\"('http')\"",
+        "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__committed_fixtures__→_it_have_the_file_format__base__the_ledger_records_of_the_kind__items_sorted_by_id_with_an_owner_and_a_source\"('protocol')\"",
+        "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__committed_fixtures__→_it_have_the_file_format__base__the_ledger_records_of_the_kind__items_sorted_by_id_with_an_owner_and_a_source\"('schema')\"",
         "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__committed_fixtures__→_it_hold_no_absolute_path_and_no_line_number\"('cli')\"",
         "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__committed_fixtures__→_it_hold_no_absolute_path_and_no_line_number\"('config')\"",
         "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__committed_fixtures__→_it_hold_no_absolute_path_and_no_line_number\"('http')\"",
@@ -3789,6 +3945,7 @@
         "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__config_extractor__→_it_normalizes_defaults_to_JSON_able_data",
         "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__http_extractor__→_it_attributes_routes_to_the_flag_that_mounts_or_unmounts_them",
         "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__http_extractor__→_it_treats_a_run_that_changes_a_route_besides_mounting_it_as_drift__exit_1_",
+        "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__ledger__→_it_accepts_records_that_match_the_items_and_reports_stale_or_malformed_ones",
         "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__owner_rules__→_it_classifies_a_hand_written_format_by_its_own_owner",
         "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__owner_rules__→_it_prefers_exact_over_the_longest_prefix_over_glob_and_marks_only_winners_as_used",
         "P\\Tests\\Repo\\Arch\\IdentitiesTest::__pest_evaluable__owner_rules__→_it_reports_a_rule_that_never_wins_as_stale_and_a_malformed_rule_as_invalid",
@@ -3927,8 +4084,20 @@
       ]
     },
     "core": {
-      "count": 34,
+      "count": 179,
       "names": [
+        "P\\Packages\\core\\tests\\Arch\\ProvidersDeclareOnlyTest::__pest_evaluable_it_finds_the_provider_of_every_package",
+        "P\\Packages\\core\\tests\\Arch\\ProvidersDeclareOnlyTest::__pest_evaluable_it_lets_a_package_provider_only_offer_its_module_manifest\"dataset \"VaulterAzgardServiceProvider.php\"\"",
+        "P\\Packages\\core\\tests\\Arch\\ProvidersDeclareOnlyTest::__pest_evaluable_it_lets_a_package_provider_only_offer_its_module_manifest\"dataset \"VaulterDocumentsServiceProvider.php\"\"",
+        "P\\Packages\\core\\tests\\Arch\\ProvidersDeclareOnlyTest::__pest_evaluable_it_lets_a_package_provider_only_offer_its_module_manifest\"dataset \"VaulterDriveServiceProvider.php\"\"",
+        "P\\Packages\\core\\tests\\Arch\\ProvidersDeclareOnlyTest::__pest_evaluable_it_lets_a_package_provider_only_offer_its_module_manifest\"dataset \"VaulterFilamentServiceProvider.php\"\"",
+        "P\\Packages\\core\\tests\\Arch\\ProvidersDeclareOnlyTest::__pest_evaluable_it_lets_a_package_provider_only_offer_its_module_manifest\"dataset \"VaulterMediaServiceProvider.php\"\"",
+        "P\\Packages\\core\\tests\\Arch\\ProvidersDeclareOnlyTest::__pest_evaluable_it_lets_a_package_provider_only_offer_its_module_manifest\"dataset \"VaulterServiceProvider.php\"\"",
+        "P\\Packages\\core\\tests\\Arch\\ProvidersDeclareOnlyTest::__pest_evaluable_it_refuses_a_provider_that_registers_anything_itself",
+        "P\\Packages\\core\\tests\\Arch\\ProvidersDeclareOnlyTest::__pest_evaluable_it_refuses_the_spatie_hooks_and_any_helper_method_a_provider_declares",
+        "P\\Packages\\core\\tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_CoreModule_never_uses_the_Testing_namespaces",
+        "P\\Packages\\core\\tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Kernel_never_uses_the_Testing_namespaces",
+        "P\\Packages\\core\\tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Modules_never_uses_the_Testing_namespaces",
         "P\\Packages\\core\\tests\\Configuration\\ConfigDefaultsLoadingTest::__pest_evaluable_it_keeps_cached_registration_unchanged_and_fills_defaults_in_either_provider_order\"(false)\"",
         "P\\Packages\\core\\tests\\Configuration\\ConfigDefaultsLoadingTest::__pest_evaluable_it_keeps_cached_registration_unchanged_and_fills_defaults_in_either_provider_order\"(true)\"",
         "P\\Packages\\core\\tests\\Configuration\\ConfigNormalizerTest::__pest_evaluable_it_fills_the_missing_nested_defaults_and_keeps_what_the_host_set",
@@ -3938,10 +4107,142 @@
         "P\\Packages\\core\\tests\\Configuration\\ConfigNormalizerTest::__pest_evaluable_it_retains_default_exporter_formats_alongside_host_overrides\"(['Host\\HtmlExporter'])\"",
         "P\\Packages\\core\\tests\\Configuration\\ConfigNormalizerTest::__pest_evaluable_it_retains_default_exporter_formats_alongside_host_overrides\"([])\"",
         "P\\Packages\\core\\tests\\Configuration\\VaulterConfigTest::__pest_evaluable_it_names_every_table_by_the_configured_prefix_and_the_canonical_entity__ignoring_table__names",
+        "P\\Packages\\core\\tests\\Content\\DownloadGuardsTest::__pest_evaluable_it_contributes_the_drive_content_availability_check_as_the_built_in_download_guard",
+        "P\\Packages\\core\\tests\\Content\\DownloadGuardsTest::__pest_evaluable_it_denies_the_delivery_when_a_guard_throws__and_a_guard_after_the_denial_never_runs",
+        "P\\Packages\\core\\tests\\Content\\DownloadGuardsTest::__pest_evaluable_it_lets_a_problem_a_guard_throws_reach_the_caller_unchanged",
+        "P\\Packages\\core\\tests\\Content\\DownloadGuardsTest::__pest_evaluable_it_runs_every_active_guard_in_the_order_of_the_slot__the_fixtures_ahead_of_the_built_in_availability_guard",
+        "P\\Packages\\core\\tests\\Content\\DownloadGuardsTest::__pest_evaluable_it_sends_every_delivery_path_of_the_core_through_the_guards__not_through_the_availability_check",
+        "P\\Packages\\core\\tests\\Content\\DownloadGuardsTest::__pest_evaluable_it_treats_any_other_exception_of_a_guard_as_a_denial__never_a_pass__fail_closed_",
+        "P\\Packages\\core\\tests\\Feature\\VaulterManagerExporterHandlerSeamTest::__pest_evaluable_it_drive___fails_loud_with_an_install_hint_when_no_active_module_provides_the_drive_factory__F_P3_5_01",
         "P\\Packages\\core\\tests\\HostKeyMysql\\HostKeyColumnsMysqlTest::__pest_evaluable_it_creates_each_configured_MySQL_host_type_with_its_nullability_and_index\"('bigint')\"",
         "P\\Packages\\core\\tests\\HostKeyMysql\\HostKeyColumnsMysqlTest::__pest_evaluable_it_creates_each_configured_MySQL_host_type_with_its_nullability_and_index\"('string')\"",
         "P\\Packages\\core\\tests\\HostKeyMysql\\HostKeyColumnsMysqlTest::__pest_evaluable_it_creates_each_configured_MySQL_host_type_with_its_nullability_and_index\"('ulid')\"",
         "P\\Packages\\core\\tests\\HostKeyMysql\\HostKeyColumnsMysqlTest::__pest_evaluable_it_creates_each_configured_MySQL_host_type_with_its_nullability_and_index\"('uuid')\"",
+        "P\\Packages\\core\\tests\\Modules\\ActivationTest::__pest_evaluable_it_activates_the_webhooks_module_with_vaulter_modules_webhooks_and_stamps_its_routes_with_the_fingerprint",
+        "P\\Packages\\core\\tests\\Modules\\ActivationTest::__pest_evaluable_it_answers_a_module_route_of_an_inactive_module_404_and_of_an_invalid_graph_503__from_the_sealed_kernel_only",
+        "P\\Packages\\core\\tests\\Modules\\ActivationTest::__pest_evaluable_it_boots_without_a_query_whatever_the_activation\"dataset \"defaults\"\"",
+        "P\\Packages\\core\\tests\\Modules\\ActivationTest::__pest_evaluable_it_boots_without_a_query_whatever_the_activation\"dataset \"webhooks off\"\"",
+        "P\\Packages\\core\\tests\\Modules\\ActivationTest::__pest_evaluable_it_boots_without_a_query_whatever_the_activation\"dataset \"webhooks on\"\"",
+        "P\\Packages\\core\\tests\\Modules\\ActivationTest::__pest_evaluable_it_checks_the_module_before_auth_and_throttle__an_inactive_module_answers_404_to_a_guest",
+        "P\\Packages\\core\\tests\\Modules\\ActivationTest::__pest_evaluable_it_hides_the_fingerprint_default_from_the_route_action",
+        "P\\Packages\\core\\tests\\Modules\\ActivationTest::__pest_evaluable_it_installs_the_schema_of_every_offered_module__active_or_not",
+        "P\\Packages\\core\\tests\\Modules\\ActivationTest::__pest_evaluable_it_keeps_the_opt_in_webhooks_module_off_by_default__no_route__command_or_doctor_check",
+        "P\\Packages\\core\\tests\\Modules\\ActivationTest::__pest_evaluable_it_refuses_the_removed_vaulter_features_webhooks_switch_at_boot",
+        "P\\Packages\\core\\tests\\Modules\\ActivationTest::__pest_evaluable_it_reports_a_fresh_module_route_set_in_the_doctor",
+        "P\\Packages\\core\\tests\\Modules\\CapabilitiesTest::__pest_evaluable_it_drops_the_provider_of_an_inactive_module",
+        "P\\Packages\\core\\tests\\Modules\\CapabilitiesTest::__pest_evaluable_it_has_no_capability_that_no_active_module_defines",
+        "P\\Packages\\core\\tests\\Modules\\CapabilitiesTest::__pest_evaluable_it_reads_a_config_chosen_provider_when_resolved__falling_back_to_its_default",
+        "P\\Packages\\core\\tests\\Modules\\CapabilitiesTest::__pest_evaluable_it_resolves_every_provider_of_a_many_capability_and_refuses_require__",
+        "P\\Packages\\core\\tests\\Modules\\CapabilitiesTest::__pest_evaluable_it_resolves_the_single_provider_of_a_capability",
+        "P\\Packages\\core\\tests\\Modules\\DriveDisabledTest::__pest_evaluable_it_lists_the_drive_as_inactive_by_override",
+        "P\\Packages\\core\\tests\\Modules\\DriveDisabledTest::__pest_evaluable_it_mounts_no_drive_route__binds_no_drive_service_and_still_boots_without_a_query",
+        "P\\Packages\\core\\tests\\Modules\\DriveDisabledTest::__pest_evaluable_it_mounts_the_core_located_drive_routes_behind_vaulter_module_drive_while_the_drive_is_active",
+        "P\\Packages\\core\\tests\\Modules\\DriveDisabledTest::__pest_evaluable_it_refuses_a_graph_whose_active_modules_require_the_switched_off_drive\"dataset \"documents\"\"",
+        "P\\Packages\\core\\tests\\Modules\\DriveDisabledTest::__pest_evaluable_it_refuses_a_graph_whose_active_modules_require_the_switched_off_drive\"dataset \"media off\"\"",
+        "P\\Packages\\core\\tests\\Modules\\DriveDisabledTest::__pest_evaluable_it_refuses_a_graph_whose_active_modules_require_the_switched_off_drive\"dataset \"webhooks\"\"",
+        "P\\Packages\\core\\tests\\Modules\\DriveDisabledTest::__pest_evaluable_it_registers_the_drive_commands_only_while_the_drive_is_active",
+        "P\\Packages\\core\\tests\\Modules\\ExtensionRegistryTest::__pest_evaluable_it_has_no_contributions_for_a_slot_no_active_module_defines",
+        "P\\Packages\\core\\tests\\Modules\\ExtensionRegistryTest::__pest_evaluable_it_lists_the_active_contributions_of_a_slot_in_order",
+        "P\\Packages\\core\\tests\\Modules\\ExtensionRegistryTest::__pest_evaluable_it_resolves_the_contributions_in_the_same_order",
+        "P\\Packages\\core\\tests\\Modules\\ExtensionRegistryTest::__pest_evaluable_it_serves_a_handler_by_key_and_lists_the_keys",
+        "P\\Packages\\core\\tests\\Modules\\InvalidModuleGraphConsoleTest::__pest_evaluable_it_boots_artisan_and_runs_the_framework_commands",
+        "P\\Packages\\core\\tests\\Modules\\InvalidModuleGraphConsoleTest::__pest_evaluable_it_does_not_define_the_other_vaulter_commands\"('vaulter:changes:prune')\"",
+        "P\\Packages\\core\\tests\\Modules\\InvalidModuleGraphConsoleTest::__pest_evaluable_it_does_not_define_the_other_vaulter_commands\"('vaulter:config:reference')\"",
+        "P\\Packages\\core\\tests\\Modules\\InvalidModuleGraphConsoleTest::__pest_evaluable_it_does_not_define_the_other_vaulter_commands\"('vaulter:install')\"",
+        "P\\Packages\\core\\tests\\Modules\\InvalidModuleGraphConsoleTest::__pest_evaluable_it_does_not_define_the_other_vaulter_commands\"('vaulter:module:uninstall')\"",
+        "P\\Packages\\core\\tests\\Modules\\InvalidModuleGraphConsoleTest::__pest_evaluable_it_does_not_define_the_other_vaulter_commands\"('vaulter:webhooks:relay')\"",
+        "P\\Packages\\core\\tests\\Modules\\InvalidModuleGraphConsoleTest::__pest_evaluable_it_prints_the_reasons_with_vaulter_doctor_and_exits_1",
+        "P\\Packages\\core\\tests\\Modules\\InvalidModuleGraphConsoleTest::__pest_evaluable_it_prints_the_reasons_with_vaulter_modules_and_exits_1",
+        "P\\Packages\\core\\tests\\Modules\\InvalidModuleGraphHttpTest::__pest_evaluable_it_answers_404__not_503__from_a_catch_all_left_in_a_route_cache_once_the_graph_is_valid",
+        "P\\Packages\\core\\tests\\Modules\\InvalidModuleGraphHttpTest::__pest_evaluable_it_answers_every_route_under_the_Vaulter_prefix_503_module__graph__invalid\"dataset \"a drive route\"\"",
+        "P\\Packages\\core\\tests\\Modules\\InvalidModuleGraphHttpTest::__pest_evaluable_it_answers_every_route_under_the_Vaulter_prefix_503_module__graph__invalid\"dataset \"a webhooks route\"\"",
+        "P\\Packages\\core\\tests\\Modules\\InvalidModuleGraphHttpTest::__pest_evaluable_it_answers_every_route_under_the_Vaulter_prefix_503_module__graph__invalid\"dataset \"an unknown route\"\"",
+        "P\\Packages\\core\\tests\\Modules\\InvalidModuleGraphHttpTest::__pest_evaluable_it_leaves_the_routes_outside_the_Vaulter_prefix_to_the_host",
+        "P\\Packages\\core\\tests\\Modules\\InvalidModuleGraphHttpTest::__pest_evaluable_it_registers_no_catch_all_under_an_empty_prefix__which_would_swallow_the_whole_host",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_accepts_an_inactive_module_whose_dependency_is_inactive",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_activates_by_policy_and_lets_an_override_win_either_way\"dataset \"auto by default\"\"",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_activates_by_policy_and_lets_an_override_win_either_way\"dataset \"auto confirmed\"\"",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_activates_by_policy_and_lets_an_override_win_either_way\"dataset \"auto switched off\"\"",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_activates_by_policy_and_lets_an_override_win_either_way\"dataset \"opt-in by default\"\"",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_activates_by_policy_and_lets_an_override_win_either_way\"dataset \"opt-in confirmed off\"\"",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_activates_by_policy_and_lets_an_override_win_either_way\"dataset \"opt-in switched on\"\"",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_checks_the_protocol_against__MAJOR_MINOR_only\"dataset \"newer minor\"\"",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_checks_the_protocol_against__MAJOR_MINOR_only\"dataset \"older minor\"\"",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_checks_the_protocol_against__MAJOR_MINOR_only\"dataset \"other major\"\"",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_checks_the_protocol_against__MAJOR_MINOR_only\"dataset \"patch form\"\"",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_checks_the_protocol_against__MAJOR_MINOR_only\"dataset \"range form\"\"",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_checks_the_protocol_against__MAJOR_MINOR_only\"dataset \"same minor\"\"",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_checks_the_protocol_against__MAJOR_MINOR_only\"dataset \"tilde form\"\"",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_collects_every_reason_and_activates_nothing",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_compiles_an_empty_set_into_a_valid_graph_with_nothing_active",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_compiles_the_fixture_manifests__states__providers_and_ordered_contributions",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_compiles_without_a_container_or_facades",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_counts_a_config_chosen_provider_and_validates_its_default",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_counts_only_active_providers",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_keeps_the_fingerprint_stable_across_offers_and_changes_it_with_the_active_set",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_only_takes_class_strings__a_closure_is_a_type_error",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_orders_contributions_by_priority__then_id__whatever_the_order_of_the_offers",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_rejects_a_capability_defined_twice",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_rejects_a_contribution_that_does_not_implement_the_slot_contract",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_rejects_a_contribution_to_an_unknown_slot",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_rejects_a_contributor_that_does_not_require_the_slot_owner",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_rejects_a_dependency_that_is_not_installed",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_rejects_a_duplicate_contribution_id_in_a_slot",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_rejects_a_duplicate_module_id",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_rejects_a_duplicate_or_missing_handler_key",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_rejects_a_malformed_module_id_and_protocol\"dataset \"bare major protocol\"\"",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_rejects_a_malformed_module_id_and_protocol\"dataset \"one character id\"\"",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_rejects_a_malformed_module_id_and_protocol\"dataset \"semver protocol\"\"",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_rejects_a_malformed_module_id_and_protocol\"dataset \"upper case id\"\"",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_rejects_a_name_owned_by_two_modules",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_rejects_a_provider_of_an_undefined_capability",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_rejects_a_provider_that_does_not_require_the_defining_module",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_rejects_a_requires_cycle_among_active_modules",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_rejects_a_slot_defined_twice",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_rejects_an_active_module_whose_dependency_is_inactive__and_never_enables_the_dependency",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_rejects_an_implementation_that_does_not_implement_the_contract",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_rejects_an_offered_class_that_is_not_a_manifest",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_rejects_an_override_for_a_module_that_is_not_installed",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_rejects_an_override_that_is_not_strictly_boolean\"dataset \"null\"\"",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_rejects_an_override_that_is_not_strictly_boolean\"dataset \"one\"\"",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_rejects_an_override_that_is_not_strictly_boolean\"dataset \"the string false\"\"",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_rejects_an_overrides_value_that_is_not_an_array",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_reports_a_manifest_that_fails_while_declaring",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_requires_exactly_one_provider_of_a_required_single_capability\"dataset \"none\"\"",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_requires_exactly_one_provider_of_a_required_single_capability\"dataset \"two\"\"",
+        "P\\Packages\\core\\tests\\Modules\\ModuleCompilerTest::__pest_evaluable_it_takes_at_most_one_provider_of_an_optional_single_capability",
+        "P\\Packages\\core\\tests\\Modules\\ModuleKernelBootTest::__pest_evaluable_it_applies_vaulter_modules_overrides",
+        "P\\Packages\\core\\tests\\Modules\\ModuleKernelBootTest::__pest_evaluable_it_boots_with_an_invalid_graph__activates_nothing_and_reports_why\"dataset \"dependency off\"\"",
+        "P\\Packages\\core\\tests\\Modules\\ModuleKernelBootTest::__pest_evaluable_it_boots_with_an_invalid_graph__activates_nothing_and_reports_why\"dataset \"string false\"\"",
+        "P\\Packages\\core\\tests\\Modules\\ModuleKernelBootTest::__pest_evaluable_it_boots_with_an_invalid_graph__activates_nothing_and_reports_why\"dataset \"unknown key\"\"",
+        "P\\Packages\\core\\tests\\Modules\\ModuleKernelBootTest::__pest_evaluable_it_compiles_before_any_provider_boots__and_without_a_query",
+        "P\\Packages\\core\\tests\\Modules\\ModuleKernelBootTest::__pest_evaluable_it_compiles_the_offered_manifests_whichever_side_of_the_core_provider_offers_them\"dataset \"after\"\"",
+        "P\\Packages\\core\\tests\\Modules\\ModuleKernelBootTest::__pest_evaluable_it_compiles_the_offered_manifests_whichever_side_of_the_core_provider_offers_them\"dataset \"before\"\"",
+        "P\\Packages\\core\\tests\\Modules\\ModuleKernelBootTest::__pest_evaluable_it_refuses_a_module_offered_after_the_application_booted",
+        "P\\Packages\\core\\tests\\Modules\\ModuleKernelBootTest::__pest_evaluable_it_seals_a_valid_graph_of_the_offered_modules_for_the_suite_application",
+        "P\\Packages\\core\\tests\\Modules\\ModuleUninstallCommandTest::__pest_evaluable_it_plans_the_removal_of_a_module_that_ships_no_migration_of_its_own",
+        "P\\Packages\\core\\tests\\Modules\\ModuleUninstallCommandTest::__pest_evaluable_it_refuses___force_and___purge_until_the_owner_migrations_are_split__P4_\"('--force')\"",
+        "P\\Packages\\core\\tests\\Modules\\ModuleUninstallCommandTest::__pest_evaluable_it_refuses___force_and___purge_until_the_owner_migrations_are_split__P4_\"('--purge')\"",
+        "P\\Packages\\core\\tests\\Modules\\ModuleUninstallCommandTest::__pest_evaluable_it_refuses_an_unknown_module",
+        "P\\Packages\\core\\tests\\Modules\\ModuleUninstallCommandTest::__pest_evaluable_it_refuses_the_core__it_cannot_be_uninstalled_and_other_modules_require_it",
+        "P\\Packages\\core\\tests\\Modules\\ModulesCommandTest::__pest_evaluable_it_lists_every_offered_module_with_its_policy__activation_and_reason",
+        "P\\Packages\\core\\tests\\Modules\\ModulesCommandTest::__pest_evaluable_it_prints_a_table_with_the_fingerprint",
+        "P\\Packages\\core\\tests\\Modules\\ModulesCommandTest::__pest_evaluable_it_shows_the_schema_migrations_the_database_has_not_run",
+        "P\\Packages\\core\\tests\\Modules\\ModulesCommandTest::__pest_evaluable_it_shows_the_slots_a_module_defines_and_the_contributions_it_makes",
+        "P\\Packages\\core\\tests\\Modules\\RouteCacheActivationTest::__pest_evaluable_it_accepts_a_route_cache_built_under_the_running_activation",
+        "P\\Packages\\core\\tests\\Modules\\RouteCacheActivationTest::__pest_evaluable_it_answers_404_for_a_cached_route_of_a_module_switched_off_after_the_cache_was_built",
+        "P\\Packages\\core\\tests\\Modules\\RouteCacheActivationTest::__pest_evaluable_it_reports_an_active_module_missing_from_a_route_cache_built_before_it_was_switched_on",
+        "P\\Packages\\core\\tests\\Modules\\SealTest::__pest_evaluable_it_freezes_every_builder_once_compiled__valid_or_not\"dataset \"invalid graph\"\"",
+        "P\\Packages\\core\\tests\\Modules\\SealTest::__pest_evaluable_it_freezes_every_builder_once_compiled__valid_or_not\"dataset \"valid graph\"\"",
+        "P\\Packages\\core\\tests\\Modules\\SealTest::__pest_evaluable_it_refuses_an_offer_after_the_catalogue_is_sealed_and_keeps_one_offer_per_class",
+        "P\\Packages\\core\\tests\\Modules\\SealTest::__pest_evaluable_it_refuses_reads_before_the_graph_is_compiled",
+        "P\\Packages\\core\\tests\\Modules\\SealTest::__pest_evaluable_it_reports_an_invalid_graph_on_every_read",
+        "P\\Packages\\core\\tests\\Modules\\SealTest::__pest_evaluable_it_seals_the_kernel_once",
+        "P\\Packages\\core\\tests\\Profiles\\ProfilePolicyTest::__pest_evaluable_it_conjoins_the_comments_flag_with_the_option_of_the_module_that_owns_comments",
+        "P\\Packages\\core\\tests\\Profiles\\ProfilePolicyTest::__pest_evaluable_it_treats_comments_as_globally_off_when_no_module_contributes_the_option_and_leaves_the_other_flags_untouched",
+        "P\\Packages\\core\\tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_registers_the_kernel_config__database_and_observability_seams",
+        "P\\Packages\\core\\tests\\Providers\\DriveSliceRegistrarTest::__pest_evaluable_it_preserves_host_rate_limiters_when_booted_again",
+        "P\\Packages\\core\\tests\\Providers\\DriveSliceRegistrarTest::__pest_evaluable_it_registers_the_manager_and_file_presentation_seams",
         "P\\Packages\\core\\tests\\Schema\\NodeSequenceSchemaTest::__pest_evaluable_it_creates_the_node_sequence_as_a_signed_64_bit_column_with_enforced_foreign_keys\"('bigint')\"",
         "P\\Packages\\core\\tests\\Schema\\NodeSequenceSchemaTest::__pest_evaluable_it_creates_the_node_sequence_as_a_signed_64_bit_column_with_enforced_foreign_keys\"('ulid')\"",
         "P\\Packages\\core\\tests\\Schema\\NodeSequenceSchemaTest::__pest_evaluable_it_creates_the_node_sequence_as_a_signed_64_bit_column_with_enforced_foreign_keys\"('uuid7')\"",
@@ -3956,6 +4257,7 @@
         "P\\Packages\\core\\tests\\Schema\\SchemaSnapshotTest::__pest_evaluable_it_keeps_one_expected_and_one_original_snapshot_for_every_preset_on_every_engine\"('pgsql')\"",
         "P\\Packages\\core\\tests\\Schema\\SchemaSnapshotTest::__pest_evaluable_it_keeps_one_expected_and_one_original_snapshot_for_every_preset_on_every_engine\"('sqlite')\"",
         "P\\Packages\\core\\tests\\Schema\\SchemaSnapshotTest::__pest_evaluable_it_names_the_table__part_and_constraint_that_differ__and_rewrites_nothing",
+        "P\\Packages\\core\\tests\\Support\\DomainExceptionStatusTest::__pest_evaluable_it_renders_the_documented_domain_code_and_HTTP_status\"dataset \"invalid module graph\"\"",
         "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('g')\"",
         "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('global')\"",
         "P\\Packages\\core\\tests\\Unit\\BlobScopeTest::__pest_evaluable_it_rejects_invalid_and_noncanonical_scope_segments\"('s001')\"",
@@ -3966,8 +4268,9 @@
       ]
     },
     "media": {
-      "count": 8,
+      "count": 11,
       "names": [
+        "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Media_MediaModule_never_uses_the_Testing_namespaces",
         "P\\Tests\\Cas\\BlobScopeKeyTest::__pest_evaluable_it_isolates_real_identifier_strategies_across_dedup_scopes_and_GC\"('bigint', 'drive')\"",
         "P\\Tests\\Cas\\BlobScopeKeyTest::__pest_evaluable_it_isolates_real_identifier_strategies_across_dedup_scopes_and_GC\"('ulid', 'drive')\"",
         "P\\Tests\\Cas\\BlobScopeKeyTest::__pest_evaluable_it_isolates_real_identifier_strategies_across_dedup_scopes_and_GC\"('uuid7', 'drive')\"",
@@ -3975,18 +4278,51 @@
         "P\\Tests\\Configuration\\MediaConfigTest::__pest_evaluable_it_reads_the_dedup_scope_from_the_canonical_media_environment_setting",
         "P\\Tests\\Configuration\\MediaConfigTest::__pest_evaluable_it_refuses_the_global_scope_and_unknown_scopes\"dataset \"global\"\"",
         "P\\Tests\\Configuration\\MediaConfigTest::__pest_evaluable_it_refuses_the_global_scope_and_unknown_scopes\"dataset \"not a string\"\"",
-        "P\\Tests\\Configuration\\MediaConfigTest::__pest_evaluable_it_refuses_the_global_scope_and_unknown_scopes\"dataset \"unknown\"\""
+        "P\\Tests\\Configuration\\MediaConfigTest::__pest_evaluable_it_refuses_the_global_scope_and_unknown_scopes\"dataset \"unknown\"\"",
+        "P\\Tests\\Configuration\\StorageDriverCapabilityTest::__pest_evaluable_it_defines_the_storage_driver_as_a_required_single_capability_resolved_from_config__Flysystem_by_default",
+        "P\\Tests\\Configuration\\StorageDriverCapabilityTest::__pest_evaluable_it_keeps_the_content_scanner_optional__none_is_configured__none_is_available"
       ]
     },
     "drive": {
-      "count": 1,
+      "count": 8,
       "names": [
-        "P\\Tests\\Configuration\\ModuleRegistrationOrderTest::__pest_evaluable_it_retains_module_defaults_and_applies_host_settings_when_modules_register_before_core"
+        "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Drive_DriveModule_never_uses_the_Testing_namespaces",
+        "P\\Tests\\Configuration\\ModuleRegistrationOrderTest::__pest_evaluable_it_retains_module_defaults_and_applies_host_settings_when_modules_register_before_core",
+        "P\\Tests\\Modules\\DriveSlotsTest::__pest_evaluable_it_contributes_the_four_built_in_permission_drivers_by_key",
+        "P\\Tests\\Modules\\DriveSlotsTest::__pest_evaluable_it_contributes_the_preview_and_download_only_handlers__the_file_and_shortcut_lifecycles_and_the_availability_guard",
+        "P\\Tests\\Modules\\DriveSlotsTest::__pest_evaluable_it_declares_the_handle_factory_and_the_node_presenter_as_the_drive_capabilities",
+        "P\\Tests\\Modules\\DriveSlotsTest::__pest_evaluable_it_keeps_the_inspectors_in_the_order_they_ran_before_the_slot_existed__priority_descending_",
+        "P\\Tests\\Modules\\DriveSlotsTest::__pest_evaluable_it_serves_the_upload_protocols_by_key__the_one_shot_direct_upload_through_the_tus_handler",
+        "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_preserves_singleton_service_lifetimes_in_a_fresh_container"
       ]
     },
     "documents": {
-      "count": 0,
-      "names": []
+      "count": 9,
+      "names": [
+        "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Documents_DocumentsModule_never_uses_the_Testing_namespaces",
+        "P\\Tests\\Arch\\TestingBoundaryTest::__pest_evaluable_Vaulter_Documents_Profiles_never_uses_the_Testing_namespaces",
+        "P\\Tests\\Configuration\\DocumentsConfigTest::__pest_evaluable_it_answers_core_s_comments_question_through_its_profile_option_from_its_own_config",
+        "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_contributes_the_document_presenter_and_lifecycle_to_the_drive_slots__and_no_file_handler__PLAN2_P4_3_",
+        "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_fills_the_type_and_exporter_registries_from_the_module_contributions__once",
+        "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_provides_the_filename_seam_and_the_collaboration_transport_as_the_capabilities_of_the_module",
+        "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_refuses_a_graph_in_which_two_modules_contribute_the_same_document_type_or_exporter_key\"dataset \"exporter\"\"",
+        "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_refuses_a_graph_in_which_two_modules_contribute_the_same_document_type_or_exporter_key\"dataset \"type\"\"",
+        "P\\Tests\\Providers\\BindingsRegistrarTest::__pest_evaluable_it_shares_the_sanitizer_with_the_existing_scheme_allow_list"
+      ]
+    },
+    "azgard": {
+      "count": 9,
+      "names": [
+        "P\\Tests\\Access\\AzgardDriverTest::__pest_evaluable_it_is_a_safe_pass_through__no_fatal__when_no_explicit_guard_is_configured",
+        "P\\Tests\\ActorGuardTest::__pest_evaluable_it_answers_the_request_user_through_an_adapter_over_that_very_actor",
+        "P\\Tests\\ActorGuardTest::__pest_evaluable_it_keeps_honouring_the_guard_the_host_configured__for_any_actor",
+        "P\\Tests\\Doctor\\AzgardDoctorCheckTest::__pest_evaluable_it_is_ok_without_an_explicit_guard__the_driver_builds_one_per_actor",
+        "P\\Tests\\Doctor\\AzgardDoctorCheckTest::__pest_evaluable_it_reports_a_configured_guard_that_cannot_be_built_as_an_error_in_both_modes",
+        "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_contributes_its_permission_driver_to_the_drive_slot_and_lets_the_host_map_override_the_key",
+        "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_provides_no_guard_until_the_host_names_one",
+        "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_provides_the_configured_guard_class_as_the_capability",
+        "P\\Tests\\ProviderBindingTest::__pest_evaluable_it_refuses_a_guard_class_that_does_not_implement_the_seam"
+      ]
     }
   }
 }

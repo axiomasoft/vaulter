@@ -28,6 +28,7 @@ use Vaulter\Drive\Repositories\Uploads\UploadSessionStoreRepository;
 use Vaulter\Events\DomainEvent;
 use Vaulter\Events\EventRecorder;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
+use Vaulter\Kernel;
 use Vaulter\Models\Drive\Drive;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\OperationContext;
@@ -105,7 +106,7 @@ final readonly class UploadSessionManager
 
     /**
      * The per-protocol handler for a session, resolved from the container by
-     * the session's protocol enum so a host may swap either implementation.
+     * the session's protocol key in the UploadProtocolHandler slot.
      */
     public function handlerFor(UploadSession $session): UploadProtocolHandler
     {
@@ -117,10 +118,10 @@ final readonly class UploadSessionManager
      */
     public function handlerForProtocol(UploadProtocol $protocol): UploadProtocolHandler
     {
-        return match ($protocol) {
-            UploadProtocol::Tus, UploadProtocol::Direct => $this->container->make(TusUploadHandler::class),
-            UploadProtocol::S3Multipart => $this->container->make(S3MultipartHandler::class),
-        };
+        // The one-shot direct protocol is staged and committed like a tus upload.
+        $key = $protocol === UploadProtocol::Direct ? UploadProtocol::Tus->value : $protocol->value;
+
+        return $this->container->make(Kernel::class)->extensions()->handler(UploadProtocolHandler::class, $key);
     }
 
     /**

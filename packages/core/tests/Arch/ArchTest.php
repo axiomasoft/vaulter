@@ -688,6 +688,7 @@ arch('domain exceptions implement the HTTP problem contract')
         'Vaulter\Exceptions\Access\MissingPermissionDriverException',
         'Vaulter\Exceptions\Profiles\InvalidProfileException',
         'Vaulter\Exceptions\Schema\UnknownIdStrategyException',
+        'Vaulter\Exceptions\Support\InvalidExtensionResult',
         'Vaulter\Exceptions\Support\MissingPackageException',
         'Vaulter\Exceptions\Tenancy\TenancyMisconfiguredException',
         'Vaulter\Exceptions\Webhooks\WebhookResponseTooLargeException',

@@ -8,9 +8,7 @@ use Illuminate\Foundation\Application;
 use Vaulter\Configuration\ConfigNormalizer;
 use Vaulter\Contracts\Cas\StorageDriver;
 use Vaulter\Contracts\Drive\DriveHandleFactory as DriveHandleFactoryContract;
-use Vaulter\Contracts\Profiles\CommentsFeature;
 use Vaulter\Database\VaulterDatabase;
-use Vaulter\Drive\DriveHandleFactory;
 use Vaulter\Drive\DriveModule;
 use Vaulter\Drive\DriveProvisioner;
 use Vaulter\Drive\Models\Uploads\UploadPart;
@@ -21,7 +19,6 @@ use Vaulter\Events\EventRecorder;
 use Vaulter\Modules\ModuleApplier;
 use Vaulter\Modules\ModuleBuilder;
 use Vaulter\Modules\ModuleId;
-use Vaulter\Profiles\DisabledCommentsFeature;
 
 /** What the module kernel does with the drive module's config declaration. */
 function applyDriveConfig(Application $app): void
@@ -53,7 +50,7 @@ it('fills upload model defaults during normalization without replacing host over
         ->and($config->get('vaulter.models.node'))->toBe('Host\\Node');
 });
 
-it('registers the factory and preserves singleton service lifetimes in a fresh container', function (): void {
+it('preserves singleton service lifetimes in a fresh container', function (): void {
     $app = new Application;
     Container::setInstance($this->app);
     $config = new Repository;
@@ -61,18 +58,16 @@ it('registers the factory and preserves singleton service lifetimes in a fresh c
     $app->instance(VaulterDatabase::class, $this->app->make(VaulterDatabase::class));
     $app->instance(EventRecorder::class, $this->app->make(EventRecorder::class));
     $app->instance(StorageDriver::class, $this->app->make(StorageDriver::class));
-    $app->instance(CommentsFeature::class, new DisabledCommentsFeature);
     $app->singleton(ConfigNormalizer::class);
 
     applyDriveConfig($app);
     (new BindingsRegistrar)->register($app);
 
-    $factory = $app->make(DriveHandleFactoryContract::class);
     $provisioner = $app->make(DriveProvisioner::class);
     $uploads = $app->make(UploadSessionManager::class);
 
-    expect($factory)->toBeInstanceOf(DriveHandleFactory::class)
-        ->and($app->make(DriveHandleFactoryContract::class))->not->toBe($factory)
+    // The drive handle factory is the drive module's capability (DriveModule::provides), not the registrar's binding.
+    expect($app->bound(DriveHandleFactoryContract::class))->toBeFalse()
         ->and($provisioner)->toBeInstanceOf(DriveProvisioner::class)
         ->and($app->make(DriveProvisioner::class))->toBe($provisioner)
         ->and($uploads)->toBeInstanceOf(UploadSessionManager::class)

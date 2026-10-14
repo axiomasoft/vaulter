@@ -454,6 +454,7 @@ Comments default to true; set `vaulter-documents.comments.enabled = false` to tu
 | Key | Env | Default | Description |
 |---|---|---|---|
 | `vaulter-azgard.panel_id` | `VAULTER_AZGARD_PANEL` | `null` | AzGuard panel The AzGuard v1 panel the adapter passes as `guard:` to every check. null (the default) lets AzGuard select the panel — by a full name (`app:documents.view`) or a panel prefix in the permission, else the panel of the request, else the panel of the user model. The default map below names local keys (`documents.view`) of that panel, so the panel's resource prefix must not be `documents` (AzGuard refuses such a panel with PrefixConflictException): give the panel another resourcePrefix() or map the abilities below to other permissions. Set an explicit panel id when the user model belongs to several panels or the checks must not depend on the request panel; AzGuard throws when no panel can be selected. |
+| `vaulter-azgard.guard` | — | `null` | Explicit guard A class implementing `Vaulter\Azgard\Contracts\AzgardGuard` that answers for EVERY actor (it is asked about the actor of each decision, not about the request user). null (the default) uses the actor itself when it is a guard, else an adapter over the actor when it is AzGuard-backed, else the lane passes through and grants nothing. |
 | `vaulter-azgard.permissions.view` | — | `'documents.view'` | — |
 | `vaulter-azgard.permissions.download` | — | `'documents.download'` | — |
 | `vaulter-azgard.permissions.comment` | — | `'documents.comment'` | — |

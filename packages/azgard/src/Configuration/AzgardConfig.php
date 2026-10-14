@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Vaulter\Azgard\Configuration;
 
 use Illuminate\Contracts\Config\Repository;
+use Vaulter\Azgard\Contracts\AzgardGuard;
+use Vaulter\Configuration\ConfigValidator;
+use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 
 final readonly class AzgardConfig
 {
@@ -15,6 +18,25 @@ final readonly class AzgardConfig
         $value = $this->config->get('vaulter-azgard.panel_id');
 
         return is_string($value) && $value !== '' ? $value : null;
+    }
+
+    /**
+     * The explicit guard class the host configured, validated; null when none.
+     *
+     * @return class-string<AzgardGuard>|null
+     */
+    public function guard(): ?string
+    {
+        $value = $this->config->get('vaulter-azgard.guard');
+        if ($value === null || $value === '') {
+            return null;
+        }
+        if (!is_string($value)) {
+            throw new InvalidConfigurationException('[Vaulter] Config key "vaulter-azgard.guard" must be a class-string or null.');
+        }
+        ConfigValidator::assertImplements('vaulter-azgard.guard', $value, AzgardGuard::class);
+
+        return $value;
     }
 
     /** @return array<string, string> */

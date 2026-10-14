@@ -11,7 +11,7 @@ use Illuminate\Support\ServiceProvider;
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\select;
 
-use Vaulter\Configuration\VaulterConfig;
+use Vaulter\Access\PermissionDriverCatalog;
 
 /**
  * Publishes the config of every installed Vaulter package and prints the host
@@ -31,7 +31,7 @@ final class InstallCommand extends Command
 
     protected $description = 'Publish Vaulter config, show the host settings to apply, optionally migrate and run the doctor';
 
-    public function __construct(private readonly Filesystem $files, private readonly VaulterConfig $config)
+    public function __construct(private readonly Filesystem $files)
     {
         parent::__construct();
     }
@@ -102,7 +102,7 @@ final class InstallCommand extends Command
     /** @return list<string> */
     private function permissionDrivers(): array
     {
-        $names = array_map(strval(...), array_keys($this->config->access()->permissionDrivers()));
+        $names = array_map(strval(...), array_keys($this->laravel->make(PermissionDriverCatalog::class)->classes()));
 
         return array_values(array_unique([...['database', 'gate', 'spatie'], ...$names]));
     }

@@ -73,6 +73,12 @@ Vaulter\Contracts\Doctor\DoctorCheck
   run(\Vaulter\Doctor\DoctorContext $context): array
   title(): string
 
+Vaulter\Contracts\Drive\DownloadGuard
+  check(\Vaulter\Operations\OperationContext|\Vaulter\Sharing\ShareContext $context, \Vaulter\Models\Drive\Node $node, \Vaulter\Models\Drive\FileRevision $revision): void
+
+Vaulter\Contracts\Drive\DriveExtension
+
+
 Vaulter\Contracts\Drive\DriveHandle
   access(): \Vaulter\Contracts\Access\AccessOperations
   actingAs(\Illuminate\Contracts\Auth\Access\Authorizable $user): \static
@@ -133,6 +139,10 @@ Vaulter\Contracts\Drive\NodeOperations
   trash(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, ?int $expectedSequence = null): \Vaulter\Data\Snapshots\NodeSnapshot
   unstar(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node): \Vaulter\Data\Snapshots\NodeSnapshot
 
+Vaulter\Contracts\Drive\NodeSnapshotContributor
+  contribute(array $nodes): array
+  key(): string
+
 Vaulter\Contracts\Drive\TrashOperations
   empty(): int
   list(?\Vaulter\Data\Drive\ListOptions $options = null): \Vaulter\Data\Page
@@ -175,6 +185,11 @@ Vaulter\Contracts\Observability\TraceRecorder
 Vaulter\Contracts\Presentation\KindPresenter
   kind(): \Vaulter\Enums\Drive\NodeKind
   present(\Vaulter\Data\Snapshots\NodeSnapshot|\Vaulter\Models\Drive\Node $node): \Vaulter\ValueObjects\Handlers\NodePresentation
+
+Vaulter\Contracts\Profiles\ProfileOption
+  enabled(): bool
+  name(): string
+  validate(\Vaulter\Profiles\Profile $profile): void
 
 Vaulter\Contracts\Sharing\ShareOperations
   create(\Vaulter\Data\Snapshots\NodeSnapshot|int|string $node, \Vaulter\Data\Sharing\ShareLinkInput $input): \Vaulter\Data\Snapshots\MintedShareLink

@@ -6,7 +6,8 @@ namespace Vaulter\Inventory;
 
 /**
  * An exact allowlist of known violations. found − allowed is new, allowed − found (or a different count) is stale;
- * both are red, so the list can neither grow silently nor keep an entry that no longer exists.
+ * both are red, so the list can neither grow silently nor keep an entry that no longer exists. A list in mode
+ * `block` keeps only the entries that may outlive the blocking phase.
  *
  * @phpstan-type Violation array{invariant: string, view: string, file: string, symbol: string, kind: string, target: string, target_owner?: string, count?: int}
  * @phpstan-type Entry array{view: string, file: string, symbol: string, kind: string, target: string, count: int, reason: string, removed_in: string, category?: string}
@@ -46,8 +47,14 @@ final class Allowlist
             }
             $this->entries[$key] = ['count' => $entry['count'], 'entry' => $entry];
         }
-        if ($mode === 'block' && $this->entries !== []) {
-            throw new InventoryError("{$invariant} allowlist: mode \"block\" requires an empty list, found ".count($this->entries).' entries');
+        if ($mode === 'block') {
+            // A blocking list keeps only what may outlive the blocking phase: permanent entries and late categories.
+            foreach ($this->entries as $key => $item) {
+                $entry = $item['entry'];
+                if ($entry['removed_in'] !== 'never' && !in_array($entry['category'] ?? null, self::LATE_CATEGORIES, true)) {
+                    throw new InventoryError("{$invariant} allowlist: mode \"block\" admits only \"never\" and ".implode(', ', self::LATE_CATEGORIES).' entries, found '.$key);
+                }
+            }
         }
     }
 

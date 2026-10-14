@@ -298,25 +298,10 @@
         },
         {
             "match": "fqcn",
-            "value": "Vaulter\\Contracts\\Profiles\\CommentsFeature",
-            "owner": "documents",
-            "action": "replace",
-            "phase": "P4",
-            "surface": "Internal",
-            "target": null,
-            "note": "replaced by a typed ProfileOption of documents (drive owns ProfileOption); no one-to-one successor type",
-            "why": "architecture#ownership-map: Contracts/Profiles/CommentsFeature is replaced by a typed profile option declared by documents (architecture#extension-system ProfileOption, source-review#code-facts probes)"
-        },
-        {
-            "match": "fqcn",
-            "value": "Vaulter\\Profiles\\DisabledCommentsFeature",
+            "value": "Vaulter\\Contracts\\Profiles\\ProfileOption",
             "owner": "drive",
-            "action": "replace",
-            "phase": "P4",
-            "surface": "Internal",
-            "target": null,
-            "note": "disappears with CommentsFeature: the typed profile option has its own default (architecture#extension-system)",
-            "why": "architecture#ownership-map: Profiles -> drive; the default of the CommentsFeature shim, replaced together with it by the typed option default"
+            "surface": "Spi:Implement",
+            "why": "architecture#extension-system: ProfileOption is the drive slot (Handler keyed by option name) that replaced Contracts/Profiles/CommentsFeature; documents implements it"
         },
         {
             "match": "prefix",

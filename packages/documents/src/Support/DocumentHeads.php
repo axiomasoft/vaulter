@@ -4,27 +4,41 @@ declare(strict_types=1);
 
 namespace Vaulter\Documents\Support;
 
-use Vaulter\Contracts\Drive\NodeDocumentHeads;
+use Vaulter\Contracts\Drive\NodeSnapshotContributor;
 use Vaulter\Data\Snapshots\DocumentHeadSnapshot;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
+use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Models\Drive\Node;
 
 /**
- * Supplies NodeSnapshot::$document for document nodes: one query for the whole page.
+ * The `documents.heads` contribution to the drive's node snapshots: the `document` fragment of
+ * document nodes, one query for the whole page.
  *
  * @internal
  */
-final readonly class DocumentHeads implements NodeDocumentHeads
+final readonly class DocumentHeads implements NodeSnapshotContributor
 {
+    public const string KEY = 'document';
+
     public function __construct(private DocumentTypeRegistry $types) {}
 
+    public function key(): string
+    {
+        return self::KEY;
+    }
+
     /**
-     * @param  list<Node>                          $documents
+     * @param  list<Node>                          $nodes
      * @return array<string, DocumentHeadSnapshot>
      */
-    public function heads(array $documents): array
+    public function contribute(array $nodes): array
     {
+        $documents = array_values(array_filter($nodes, static fn (Node $node): bool => $node->kind === NodeKind::Document));
+        if ($documents === []) {
+            return [];
+        }
+
         $heads = [];
         $rows = Document::query()->whereIn('node_id', array_map(static fn (Node $node): int|string => $node->id, $documents))->get();
         foreach ($rows as $row) {

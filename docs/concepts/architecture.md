@@ -310,7 +310,7 @@ Every seam a host plugs into, and where it is documented:
 |---|---|---|
 | `Contracts\Access\PermissionDriver` | `config('vaulter.access.permission_driver')` | [Recipes — custom permission driver](/guides/recipes#permission-driver) |
 | `Contracts\Access\PermissionResolver` (legacy) | `Vaulter::resolvePermissionsWith()` / `config('vaulter.permission_resolver')` | [ADR-0002](/adr/0002-authorization-delegation) |
-| `Vaulter\Azgard\Contracts\AzgardGuard` | binding supplied by `vaulter-azgard` | [Troubleshooting — Azgard morphs](/guides/troubleshooting#azgard-morphs) |
+| `Vaulter\Azgard\Contracts\AzgardGuard` | config key `vaulter-azgard.guard` (default: the bridge's adapter) | [Troubleshooting — Azgard morphs](/guides/troubleshooting#azgard-morphs) |
 | `Contracts\Cas\StorageDriver` / `ContentStore` / `BlobStore` | `config('vaulter-media.*')` | [Recipes — swap to S3](/guides/recipes#s3-disk) |
 | `Contracts\Collaboration\CollaborationDriver` | `config('vaulter-documents.collaboration.driver')` | [ADR-0001](/adr/0001-collaboration-transport) |
 | `Contracts\Handlers\FileHandler` | `config('vaulter.handlers')` / `Vaulter::handlers()->register()` | [Recipes — custom format handler](/guides/recipes#format-handler) |

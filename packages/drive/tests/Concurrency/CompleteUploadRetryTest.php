@@ -12,6 +12,7 @@ use Vaulter\Drive\Tests\Uploads\UploadTestHelpers;
 use Vaulter\Drive\Uploads\StagedUpload;
 use Vaulter\Drive\Uploads\TusUploadHandler;
 use Vaulter\Drive\Uploads\UploadSessionManager;
+use Vaulter\Drive\Uploads\UploadsOf;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Exceptions\Database\ConcurrentUpdateException;
 use Vaulter\Models\Drive\FileRevision;
@@ -35,7 +36,7 @@ function retryAssembledUpload(): UploadSession
 
 function retryUploadOperations(UploadSession $session): UploadOperations
 {
-    return app(DriveHandleFactory::class)->forDrive($session->storage)->asSystem('complete retry')->extension(UploadOperations::class);
+    return UploadsOf::handle(app(DriveHandleFactory::class)->forDrive($session->storage)->asSystem('complete retry'));
 }
 
 /** The first $failures CAS commits fail like a deadlock victim; every other call is real. */

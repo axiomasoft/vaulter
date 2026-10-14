@@ -317,7 +317,7 @@ Yjs — источник истины; TipTap JSON — производная п
 |---|---|---|
 | `Contracts\Access\PermissionDriver` | `config('vaulter.access.permission_driver')` | [Рецепты — кастомный драйвер прав](/ru/guides/recipes#permission-driver) |
 | `Contracts\Access\PermissionResolver` (легаси) | `Vaulter::resolvePermissionsWith()` / `config('vaulter.permission_resolver')` | [ADR-0002](/adr/0002-authorization-delegation) |
-| `Vaulter\Azgard\Contracts\AzgardGuard` | привязка из `vaulter-azgard` | [Устранение неполадок — морфы Azgard](/ru/guides/troubleshooting#azgard-morphs) |
+| `Vaulter\Azgard\Contracts\AzgardGuard` | ключ конфига `vaulter-azgard.guard` (по умолчанию — адаптер моста) | [Устранение неполадок — морфы Azgard](/ru/guides/troubleshooting#azgard-morphs) |
 | `Contracts\Cas\StorageDriver` / `ContentStore` / `BlobStore` | `config('vaulter-media.*')` | [Рецепты — переход на S3](/ru/guides/recipes#s3-disk) |
 | `Contracts\Collaboration\CollaborationDriver` | `config('vaulter-documents.collaboration.driver')` | [ADR-0001](/adr/0001-collaboration-transport) |
 | `Contracts\Handlers\FileHandler` | `config('vaulter.handlers')` / `Vaulter::handlers()->register()` | [Рецепты — кастомный обработчик формата](/ru/guides/recipes#format-handler) |

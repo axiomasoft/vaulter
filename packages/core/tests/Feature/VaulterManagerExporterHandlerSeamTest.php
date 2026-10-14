@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Illuminate\Container\Container;
 use Vaulter\Contracts\Handlers\FileHandler;
 use Vaulter\Contracts\Handlers\FileHandlerRegistry;
 use Vaulter\Documents\DocumentsManager;
@@ -11,6 +10,7 @@ use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Exceptions\Support\MissingPackageException;
 use Vaulter\Handlers\Builtin\DownloadOnlyHandler;
 use Vaulter\Models\Drive\Node;
+use Vaulter\Tests\Concerns\FreshApplication;
 use Vaulter\Tests\Fixtures\Documents\FakeExporter;
 use Vaulter\ValueObjects\Handlers\ContentCapabilities;
 use Vaulter\ValueObjects\Handlers\FileDescriptor;
@@ -51,8 +51,8 @@ it('the exporter registry still accepts a ready instance', function (): void {
  * "fails loud when absent" — see the tests below, which pin the OPPOSITE: it
  * always resolves.
  */
-it('drive() fails loud with an install hint when vaulter-drive is absent from a bare container, F-P3.5-01', function (): void {
-    $manager = new VaulterManager(new Container);
+it('drive() fails loud with an install hint when no active module provides the drive factory, F-P3.5-01', function (): void {
+    $manager = new VaulterManager(FreshApplication::boot(['vaulter.modules' => ['drive' => false]]));
 
     expect(fn () => $manager->drive(new Node, 'default'))
         ->toThrow(MissingPackageException::class, 'axioma-studio/vaulter-drive');

@@ -66,7 +66,7 @@ beforeEach(function (): void {
             return new ScanResult(ScanVerdict::Clean);
         }
     };
-    app()->instance(ContentScanner::class, $this->scanner);
+    UploadTestHelpers::scanner($this->scanner);
     $this->drive = Vaulter::drive(DriveTestHelpers::host())->model();
     $stream = UploadTestHelpers::streamFor('scan bytes');
     try {

@@ -1,28 +1,6 @@
 {
     "entries": [
         {
-            "category": "activation",
-            "count": 1,
-            "file": "packages/azgard/src/AzgardPermissionDriver.php",
-            "kind": "probe",
-            "reason": "выбор guard-реализации по class_exists: переводится на sealed declarations (code-facts, P3)",
-            "removed_in": "P3",
-            "symbol": "Vaulter\\Azgard\\AzgardPermissionDriver::guardFor",
-            "target": "\\Vaulter\\Azgard\\Contracts\\AzgardGuard::class",
-            "view": "current"
-        },
-        {
-            "category": "activation",
-            "count": 1,
-            "file": "packages/azgard/src/AzgardPermissionDriver.php",
-            "kind": "probe",
-            "reason": "выбор panel-конфигурации по class_exists: переводится на sealed declarations (code-facts, P3)",
-            "removed_in": "P3",
-            "symbol": "Vaulter\\Azgard\\AzgardPermissionDriver::panelId",
-            "target": "\\Vaulter\\Azgard\\Configuration\\AzgardConfig::class",
-            "view": "current"
-        },
-        {
             "category": "config-validation",
             "count": 1,
             "file": "packages/azgard/src/Doctor/AzgardDependencyCheck.php",
@@ -75,17 +53,6 @@
             "removed_in": "never",
             "symbol": "Vaulter\\Configuration\\TenancyConfig::resolver",
             "target": "$class",
-            "view": "current"
-        },
-        {
-            "category": "activation",
-            "count": 1,
-            "file": "packages/core/src/Data/Snapshots/Mapping/NodeSnapshotMapper.php",
-            "kind": "probe",
-            "reason": "вклад documents в снимок включается по interface_exists: переводится на sealed declarations (code-facts, P3)",
-            "removed_in": "P3",
-            "symbol": "Vaulter\\Data\\Snapshots\\Mapping\\NodeSnapshotMapper::documents",
-            "target": "\\Vaulter\\Contracts\\Drive\\NodeDocumentHeads::class",
             "view": "current"
         },
         {
@@ -166,17 +133,6 @@
             "view": "current"
         },
         {
-            "category": "activation",
-            "count": 1,
-            "file": "packages/core/src/VaulterManager.php",
-            "kind": "probe",
-            "reason": "доступность drive определяется по interface_exists: переводится на sealed declarations (code-facts, P3)",
-            "removed_in": "P3",
-            "symbol": "Vaulter\\VaulterManager::driveFactory",
-            "target": "\\Vaulter\\Contracts\\Drive\\DriveHandleFactory::class",
-            "view": "current"
-        },
-        {
             "category": "jwt-optional",
             "count": 1,
             "file": "packages/documents/src/Collaboration/CollaborationCallResolver.php",
@@ -232,28 +188,6 @@
             "view": "current"
         },
         {
-            "category": "activation",
-            "count": 1,
-            "file": "packages/drive/src/Console/ReconcileScanWorkCommand.php",
-            "kind": "probe",
-            "reason": "команда включается по наличию ContentScanner: переводится на sealed declarations (code-facts, P3)",
-            "removed_in": "P3",
-            "symbol": "Vaulter\\Drive\\Console\\ReconcileScanWorkCommand::handle",
-            "target": "\\Vaulter\\Contracts\\Cas\\ContentScanner::class",
-            "view": "current"
-        },
-        {
-            "category": "activation",
-            "count": 1,
-            "file": "packages/drive/src/Console/RescanFileRevisionsCommand.php",
-            "kind": "probe",
-            "reason": "команда включается по наличию ContentScanner: переводится на sealed declarations (code-facts, P3)",
-            "removed_in": "P3",
-            "symbol": "Vaulter\\Drive\\Console\\RescanFileRevisionsCommand::handle",
-            "target": "\\Vaulter\\Contracts\\Cas\\ContentScanner::class",
-            "view": "current"
-        },
-        {
             "category": "host-lifecycle",
             "count": 1,
             "file": "packages/drive/src/Doctor/IntlCheck.php",
@@ -263,28 +197,6 @@
             "removed_in": "never",
             "symbol": "Vaulter\\Drive\\Doctor\\IntlCheck::run",
             "target": "'intl'",
-            "view": "current"
-        },
-        {
-            "category": "activation",
-            "count": 1,
-            "file": "packages/drive/src/Doctor/ScanScannerCheck.php",
-            "kind": "probe",
-            "reason": "проверка включается по наличию ContentScanner: runtime selection переводится на sealed declarations, диагностика остаётся doctor (code-facts, P3)",
-            "removed_in": "P3",
-            "symbol": "Vaulter\\Drive\\Doctor\\ScanScannerCheck::run",
-            "target": "\\Vaulter\\Contracts\\Cas\\ContentScanner::class",
-            "view": "current"
-        },
-        {
-            "category": "activation",
-            "count": 2,
-            "file": "packages/drive/src/DriveHandle.php",
-            "kind": "probe",
-            "reason": "доступность расширения операций определяется по bound: переводится на sealed declarations (code-facts, P3)",
-            "removed_in": "P3",
-            "symbol": "Vaulter\\Drive\\DriveHandle::extension",
-            "target": "$operations",
             "view": "current"
         },
         {
@@ -307,17 +219,6 @@
             "removed_in": "never",
             "symbol": "Vaulter\\Drive\\Providers\\BindingsRegistrar::validateScanner",
             "target": "$class",
-            "view": "current"
-        },
-        {
-            "category": "activation",
-            "count": 2,
-            "file": "packages/drive/src/Providers/BindingsRegistrar.php",
-            "kind": "probe",
-            "reason": "выбор ContentScanner по наличию контракта: переводится на sealed declarations (code-facts, P3)",
-            "removed_in": "P3",
-            "symbol": "Vaulter\\Drive\\Providers\\BindingsRegistrar::validateScanner",
-            "target": "\\Vaulter\\Contracts\\Cas\\ContentScanner::class",
             "view": "current"
         },
         {
@@ -366,5 +267,5 @@
         }
     ],
     "invariant": "I4",
-    "mode": "report"
+    "mode": "block"
 }

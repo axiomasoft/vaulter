@@ -6,7 +6,7 @@ namespace Vaulter\Data\Snapshots\Mapping;
 
 use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Collection;
-use Vaulter\Contracts\Drive\NodeDocumentHeads;
+use Vaulter\Contracts\Drive\NodeSnapshotContributor;
 use Vaulter\Data\Drive\NodePage;
 use Vaulter\Data\Page;
 use Vaulter\Data\Snapshots\DocumentHeadSnapshot;
@@ -15,6 +15,8 @@ use Vaulter\Data\Snapshots\NodeSnapshot;
 use Vaulter\Data\Snapshots\ViewerStateSnapshot;
 use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Enums\Drive\ScanStatus;
+use Vaulter\Exceptions\Support\InvalidExtensionResult;
+use Vaulter\Kernel;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Models\Drive\NodeUserState;
 use Vaulter\Support\Identity;
@@ -26,6 +28,9 @@ use Vaulter\ValueObjects\Access\ActorRef;
  */
 final readonly class NodeSnapshotMapper
 {
+    /** The fragment the snapshot has a place for; every other key is a core key of the snapshot or unknown to it. */
+    private const string DOCUMENT = 'document';
+
     public function __construct(private Container $container) {}
 
     public function map(Node $node, ?ActorRef $viewer = null): NodeSnapshot
@@ -51,7 +56,7 @@ final readonly class NodeSnapshotMapper
         }
         $this->loadHeads($nodes);
         $stars = $this->stars($nodes, $viewer);
-        $documents = $this->documents($nodes);
+        $fragments = $this->fragments($nodes);
 
         $snapshots = [];
         foreach ($nodes as $node) {
@@ -79,7 +84,7 @@ final readonly class NodeSnapshotMapper
                 trashRoot: $node->trashed_at !== null && $node->trash_root_id !== null
                     && SnapshotValue::id($node->trash_root_id) === $id,
                 file: $node->kind === NodeKind::File ? $this->fileHead($node) : null,
-                document: $documents[$id] ?? null,
+                document: $fragments[self::DOCUMENT][$id] ?? null,
                 viewer: $stars === null ? null : new ViewerStateSnapshot(starred: isset($stars[$id])),
             );
         }
@@ -157,17 +162,34 @@ final readonly class NodeSnapshotMapper
     }
 
     /**
-     * @param  list<Node>                          $nodes
-     * @return array<string, DocumentHeadSnapshot>
+     * The fragments of the active contributors, one batch call each (no N+1): key => node id => fragment.
+     * A reserved or duplicate key, or a fragment of the wrong shape, is an error, never a silent skip.
+     *
+     * @param  list<Node>                                         $nodes
+     * @return array<string, array<string, DocumentHeadSnapshot>>
      */
-    private function documents(array $nodes): array
+    private function fragments(array $nodes): array
     {
-        $documents = array_values(array_filter($nodes, static fn (Node $node): bool => $node->kind === NodeKind::Document));
-        if ($documents === [] || !$this->container->bound(NodeDocumentHeads::class)) {
-            return [];
+        $fragments = [];
+        $ids = array_map(static fn (Node $node): string => SnapshotValue::id($node->getKey()), $nodes);
+        foreach ($this->container->make(Kernel::class)->extensions()->resolve(NodeSnapshotContributor::class) as $contributor) {
+            $key = $contributor->key();
+            if ($key !== self::DOCUMENT) {
+                throw InvalidExtensionResult::reservedKey(NodeSnapshotContributor::class, $key);
+            }
+            if (isset($fragments[$key])) {
+                throw InvalidExtensionResult::duplicateKey(NodeSnapshotContributor::class, $key);
+            }
+            $fragments[$key] = [];
+            foreach ($contributor->contribute($nodes) as $id => $fragment) {
+                if (!$fragment instanceof DocumentHeadSnapshot || !in_array((string) $id, $ids, true)) {
+                    throw InvalidExtensionResult::invalidFragment(NodeSnapshotContributor::class, $key, DocumentHeadSnapshot::class);
+                }
+                $fragments[$key][(string) $id] = $fragment;
+            }
         }
 
-        return $this->container->make(NodeDocumentHeads::class)->heads($documents);
+        return $fragments;
     }
 
     /**

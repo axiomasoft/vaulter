@@ -16,9 +16,9 @@ use Vaulter\Drive\Http\Requests\Uploads\CreateUploadSessionRequest;
 use Vaulter\Drive\Http\Resources\NodeResponses;
 use Vaulter\Drive\Http\Resources\Uploads\UploadSessionResource;
 use Vaulter\Drive\Models\Uploads\UploadSession;
-use Vaulter\Drive\Operations\UploadOperations;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
 use Vaulter\Drive\Uploads\TusUploadHandler;
+use Vaulter\Drive\Uploads\UploadsOf;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Nodes\StorageNotFoundException;
 use Vaulter\Exceptions\Profiles\ProfileRestrictionException;
@@ -62,7 +62,7 @@ final class TusProtocolController
     /** Create a session (tus Creation): 201 with the tus Location of the session. */
     public function create(CreateUploadSessionRequest $request, DriveHandle $drive): JsonResponse
     {
-        $session = $drive->extension(UploadOperations::class)->initiate(new InitiateUploadInput(
+        $session = UploadsOf::handle($drive)->initiate(new InitiateUploadInput(
             protocol: $request->protocol(), targetParent: $request->parentId(), targetName: $request->name(),
             targetNode: $request->targetNodeId(), expectedSha256: $request->expectedSha256(),
             totalSizeBytes: $request->totalSizeBytes(), mimeType: $request->mimeType(), metadata: $request->allowedMetadata($this->driveConfig, $this->decodeUploadMetadata($request)),
@@ -107,7 +107,7 @@ final class TusProtocolController
         $this->assertOffsetOctetStreamContentType($request);
         $this->assertContentLengthWithinLimit($request);
 
-        $uploads = $drive->extension(UploadOperations::class);
+        $uploads = UploadsOf::handle($drive);
         $result = $uploads->patch(session: $session, chunk: $this->chunkStream($request), offset: (int) $request->header('Upload-Offset', '0'));
 
         if (!$result['complete']) {
@@ -130,7 +130,7 @@ final class TusProtocolController
     {
         [$drive, $session] = $this->session($request, $upload);
         $this->assertTusResumableHeader($request);
-        $drive->extension(UploadOperations::class)->abort($session);
+        UploadsOf::handle($drive)->abort($session);
 
         return new Response(status: 204, headers: ['Tus-Resumable' => self::TUS_VERSION]);
     }
@@ -179,7 +179,7 @@ final class TusProtocolController
             throw NodeNotFoundException::forId('upload');
         }
 
-        return [$drive, $drive->extension(UploadOperations::class)->status($found)];
+        return [$drive, UploadsOf::handle($drive)->status($found)];
     }
 
     /**

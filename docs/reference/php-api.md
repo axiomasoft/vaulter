@@ -116,7 +116,7 @@ signatures and the binding point you swap it through.
 | Domain | Contract | Swap via |
 |---|---|---|
 | Access | `PermissionDriver` | `config('vaulter.access.permission_driver')` + `access.permission_drivers` map |
-| Access | `AzgardGuard` (azgard) | binding supplied by `vaulter-azgard` |
+| Access | `AzgardGuard` (azgard) | config key `vaulter-azgard.guard` (default: the bridge's adapter) |
 | Access | `AzgardBackedUser` (azgard) | implemented by the host `User` model when `drivers.permission=azgard` |
 | Access | `GrantAuthoritativeDriver` | opt-in capability a `PermissionDriver` implements |
 | Cas | `BlobStore` | `config('vaulter-media.blob_store')` |
@@ -207,7 +207,7 @@ interface AzgardGuard
 
 The contract ships in `axioma-studio/vaulter-azgard`, alongside the real
 `AzgardGuardAdapter` and `Vaulter\Azgard\Testing\FakeAzgardGuard` test double.
-Its provider registers the driver and adapter automatically.
+Its provider registers the driver and adapter automatically; select a custom guard with `vaulter-azgard.guard`.
 
 **Use when** `config('vaulter.access.permission_driver') = 'azgard'`: install with
 `composer require axioma-studio/vaulter-azgard`, add
@@ -723,5 +723,7 @@ interface NodeOperations
 }
 ```
 
-`Vaulter\Contracts\Drive\NodeDocumentHeads` (internal) lets the documents package fill
-`NodeSnapshot::$document`; without it a document node has no head in its snapshot.
+`Vaulter\Contracts\Drive\NodeSnapshotContributor` is the `drive` slot (Contributor) the documents module
+fills with `documents.heads` to supply `NodeSnapshot::$document`; without an active contributor a document node
+has no head in its snapshot. `Vaulter\Contracts\Drive\DriveExtension` marks the operations a module adds to a
+drive handle, declared in the `drive` slot under the operations' FQCN and resolved by `DriveHandle::extension()`.

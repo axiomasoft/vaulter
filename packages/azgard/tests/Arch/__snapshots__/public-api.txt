@@ -27,11 +27,12 @@ Vaulter\Azgard\Contracts\AzgardGuard
 Vaulter\Azgard\Configuration\AzgardConfig
   __construct(\Illuminate\Contracts\Config\Repository $config)
   createPermission(): string
+  guard(): ?string
   panelId(): ?string
   permissions(): array
 
 Vaulter\Azgard\AzgardPermissionDriver
-  __construct(\Illuminate\Contracts\Container\Container $container, \Vaulter\Azgard\AzgardPermissionMap $permissions, \Vaulter\Access\Roles\RoleRegistry $roles)
+  __construct(\Vaulter\Kernel $kernel, \Vaulter\Azgard\Configuration\AzgardConfig $config, \Vaulter\Azgard\AzgardPermissionMap $permissions, \Vaulter\Access\Roles\RoleRegistry $roles)
   canCreateIn(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Access\ValueObjects\AccessScope $scope): bool
   override(\Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Access\ValueObjects\AccessScope $scope): ?\Vaulter\Enums\Access\Effect
   resolve(\Vaulter\Access\ValueObjects\Subject $subject, \Illuminate\Contracts\Auth\Access\Authorizable $actor, \Vaulter\Access\ValueObjects\AccessScope $scope): ?\Vaulter\Access\ValueObjects\Decision

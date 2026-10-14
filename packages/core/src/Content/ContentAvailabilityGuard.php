@@ -6,6 +6,7 @@ namespace Vaulter\Content;
 
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Contracts\Content\ScanPolicyResolver;
+use Vaulter\Contracts\Drive\DownloadGuard;
 use Vaulter\Enums\Cas\BlobStatus;
 use Vaulter\Exceptions\Files\ContentUnavailableException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
@@ -18,10 +19,22 @@ use Vaulter\Repositories\Content\ScanEvidenceRepository;
 use Vaulter\Sharing\ShareContext;
 use Vaulter\Tenancy\TenancyBoundary;
 
-/** @internal Availability never grants ACL or a private scanner capability. */
-final readonly class ContentAvailabilityGuard
+/**
+ * The drive's `drive.content-availability` contribution to the DownloadGuard slot. Availability never grants
+ * ACL or a private scanner capability.
+ *
+ * @internal
+ */
+final readonly class ContentAvailabilityGuard implements DownloadGuard
 {
     public function __construct(private VaulterConfig $config, private ScanPolicyResolver $policies, private ScanEvidenceRepository $evidence) {}
+
+    public function check(OperationContext|ShareContext $context, Node $node, FileRevision $revision): void
+    {
+        $context instanceof ShareContext
+            ? $this->assertAvailableForShare($context, $node, $revision)
+            : $this->assertAvailable($context, $node, $revision);
+    }
 
     public function assertAvailable(OperationContext $context, Node $node, FileRevision $revision): void
     {
@@ -30,7 +43,7 @@ final readonly class ContentAvailabilityGuard
             throw NodeNotFoundException::forId($node->id);
         }
         app(TenancyBoundary::class)->assertDrive($drive);
-        $this->check($actualRevision, $drive);
+        $this->assertClean($actualRevision, $drive);
     }
 
     public function assertAvailableForShare(ShareContext $context, Node $node, FileRevision $revision): void
@@ -39,7 +52,7 @@ final readonly class ContentAvailabilityGuard
         if (!$context->containsNode($actualNode) || (string) $context->share->tenant_id !== (string) $drive->tenant_id) {
             throw NodeNotFoundException::forId($node->id);
         }
-        $this->check($actualRevision, $drive);
+        $this->assertClean($actualRevision, $drive);
     }
 
     /** @return array{Node,FileRevision,Drive,Blob} */
@@ -68,7 +81,7 @@ final readonly class ContentAvailabilityGuard
         return [$actualNode, $actualRevision, $drive, $blob];
     }
 
-    private function check(FileRevision $revision, Drive $drive): void
+    private function assertClean(FileRevision $revision, Drive $drive): void
     {
         if ($this->evidence->infected($revision)) {
             throw new ContentUnavailableException;

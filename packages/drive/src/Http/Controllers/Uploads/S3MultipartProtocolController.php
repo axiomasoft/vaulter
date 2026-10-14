@@ -16,8 +16,8 @@ use Vaulter\Drive\Http\Requests\Uploads\CreateUploadSessionRequest;
 use Vaulter\Drive\Http\Resources\NodeResponses;
 use Vaulter\Drive\Http\Resources\Uploads\UploadSessionResource;
 use Vaulter\Drive\Models\Uploads\UploadSession;
-use Vaulter\Drive\Operations\UploadOperations;
 use Vaulter\Drive\Repositories\Uploads\UploadSessionReadRepository;
+use Vaulter\Drive\Uploads\UploadsOf;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Nodes\StorageNotFoundException;
 use Vaulter\Http\Support\HttpOperationContextFactory;
@@ -47,7 +47,7 @@ final class S3MultipartProtocolController
 
     public function create(CreateUploadSessionRequest $request, DriveHandle $drive): JsonResponse
     {
-        $session = $drive->extension(UploadOperations::class)->initiate(new InitiateUploadInput(
+        $session = UploadsOf::handle($drive)->initiate(new InitiateUploadInput(
             protocol: UploadProtocol::S3Multipart, targetParent: $request->parentId(), targetName: $request->name(),
             targetNode: $request->targetNodeId(), expectedSha256: $request->expectedSha256(),
             totalSizeBytes: $request->totalSizeBytes(), mimeType: $request->mimeType(), metadata: $request->allowedMetadata($this->driveConfig),
@@ -69,7 +69,7 @@ final class S3MultipartProtocolController
             ? $request->integer('part_no')
             : (int) $request->header('X-Part-Number', '1');
 
-        $result = $drive->extension(UploadOperations::class)->putPart(
+        $result = UploadsOf::handle($drive)->putPart(
             session: $session,
             partNo: $partNo,
             byteOffset: $request->integer('byte_offset'),
@@ -87,7 +87,7 @@ final class S3MultipartProtocolController
     public function complete(Request $request, string $upload): JsonResponse
     {
         [$drive, $session] = $this->session($request, $upload);
-        $node = $this->snapshots->map($drive->extension(UploadOperations::class)->complete($session), $drive->actor()->ref());
+        $node = $this->snapshots->map(UploadsOf::handle($drive)->complete($session), $drive->actor()->ref());
 
         return $this->nodes->respond($drive, $node, 201);
     }
@@ -102,7 +102,7 @@ final class S3MultipartProtocolController
             throw NodeNotFoundException::forId('upload');
         }
 
-        return [$drive, $drive->extension(UploadOperations::class)->status($found)];
+        return [$drive, UploadsOf::handle($drive)->status($found)];
     }
 
     /**

@@ -7,7 +7,7 @@ use Vaulter\Access\ValueObjects\AccessScope;
 use Vaulter\Access\ValueObjects\Subject;
 use Vaulter\Azgard\AzgardGuardAdapter;
 use Vaulter\Azgard\AzgardPermissionDriver;
-use Vaulter\Azgard\Contracts\AzgardGuard;
+use Vaulter\Azgard\Tests\Stubs\HostGuard;
 use Vaulter\Azgard\Tests\Stubs\SpyAzgardUser;
 use Vaulter\ValueObjects\Access\OwnerRef;
 
@@ -19,7 +19,7 @@ use Vaulter\ValueObjects\Access\OwnerRef;
  */
 function bindAdapterFor(SpyAzgardUser $user): void
 {
-    app()->instance(AzgardGuard::class, new AzgardGuardAdapter($user));
+    HostGuard::bind(new AzgardGuardAdapter($user));
 }
 
 function azgardDriver(): AzgardPermissionDriver

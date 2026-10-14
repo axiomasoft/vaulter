@@ -6,6 +6,7 @@ namespace Vaulter\Documents\Operations;
 
 use Illuminate\Pagination\CursorPaginator;
 use Vaulter\Access\OperationGuard;
+use Vaulter\Contracts\Drive\DriveExtension;
 use Vaulter\Data\Drive\CreateFolderOptions;
 use Vaulter\Data\Drive\ListOptions;
 use Vaulter\Data\Page;
@@ -74,7 +75,7 @@ use Vaulter\Profiles\ProfilePolicy;
  * room is read-only. Content that reads only partly under its type
  * (DocumentSnapshot::$editable = false) is not overwritten: 409 document_content_degraded.
  */
-final readonly class DocumentOperations
+final readonly class DocumentOperations implements DriveExtension
 {
     public function __construct(
         private OperationContext $context,

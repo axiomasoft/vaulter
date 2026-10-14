@@ -12,6 +12,7 @@ use Vaulter\Azgard\Contracts\AzgardGuard;
 use Vaulter\Contracts\Doctor\DoctorCheck;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorFinding;
+use Vaulter\Kernel;
 
 final readonly class AzgardDependencyCheck implements DoctorCheck
 {
@@ -37,10 +38,13 @@ final readonly class AzgardDependencyCheck implements DoctorCheck
         }
 
         try {
-            // A console run has no user, so the bridge answers with its deny-all guard; what matters is that it builds.
-            $this->container->make(AzgardGuard::class);
+            // Without an explicit guard the driver builds one per actor; a configured guard class must build.
+            $capabilities = $this->container->make(Kernel::class)->capabilities();
+            if ($capabilities->has(AzgardGuard::class)) {
+                $capabilities->require(AzgardGuard::class);
+            }
         } catch (Throwable $exception) {
-            return [DoctorFinding::error(code: 'azgard.guard_unresolvable', message: 'The AzgardGuard binding cannot be built.', hint: 'check the auth guard and the AzGuard panel id', evidence: $evidence + ['exception' => $exception::class])];
+            return [DoctorFinding::error(code: 'azgard.guard_unresolvable', message: 'The configured AzgardGuard cannot be built.', hint: 'check vaulter-azgard.guard and its dependencies', evidence: $evidence + ['exception' => $exception::class])];
         }
 
         return [DoctorFinding::ok(code: 'azgard.dependency_ok', message: 'AzGuard is installed and the guard resolves.', evidence: $evidence)];

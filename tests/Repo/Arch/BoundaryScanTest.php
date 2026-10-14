@@ -15,7 +15,7 @@ use Vaulter\Inventory\Scans\ScanGenerator;
 use Vaulter\Inventory\SourceIndex;
 
 /*
- * The boundary scans I1–I4 in report mode: today's violations are listed in tests/Repo/Arch/Fixtures/allowlists/iN.json
+ * The boundary scans I1–I4 (I4 blocks since P3, I1–I3 report until P4): today's violations are listed in tests/Repo/Arch/Fixtures/allowlists/iN.json
  * and must match them exactly (key and count), a new or a stale entry is red. The `scan:` tests run the same code on
  * synthetic sources, so they prove the red as well as the green.
  * Seed or refresh an allowlist from: scripts/php84 php scripts/inventory/inventory.php scan-iN --report --proposals=<path>
@@ -181,6 +181,16 @@ it('scan: I4 needs a category and keeps `never` for the permanent ones', functio
         ->and(Allowlist::fromArray($with(['removed_in' => 'never', 'category' => 'config-validation']))->entries()[0]['removed_in'])->toBe('never');
 });
 
+it('scan: a blocking list admits only never and late-category entries', function (): void {
+    $found = bs_found('I4', bs_context(bs_sources()));
+    $entry = bs_allowlist('I4', $found)->entries()[0];
+    $block = static fn (array $change): array => ['invariant' => 'I4', 'mode' => 'block', 'entries' => [[...$entry, ...$change]]];
+
+    expect(fn () => Allowlist::fromArray($block([])))->toThrow(InventoryError::class, 'mode "block" admits only')
+        ->and(Allowlist::fromArray($block(['removed_in' => 'never', 'category' => 'config-validation']))->mode)->toBe('block')
+        ->and(Allowlist::fromArray($block(['removed_in' => 'P5', 'category' => 'jwt-optional']))->mode)->toBe('block');
+});
+
 it('scan: a red scan names the command that reports and seeds it', function (): void {
     $found = bs_found('I1', bs_context(bs_sources()));
     $outcome = ScanGenerator::evaluate('I1', $found, Allowlist::fromArray(['invariant' => 'I1', 'mode' => 'report', 'entries' => []]));
@@ -249,7 +259,7 @@ it('keeps fk-map.json equal to the foreign keys of the schema identities', funct
         ->and(array_column(array_filter($map['fks'], static fn (array $fk): bool => $fk['head']), 'name'))->toBe(['v_documents_head_fk', 'v_files_head_fk']);
 });
 
-it('keeps every committed allowlist entry reasoned, categorised and no later than the invariant blocks', function (): void {
+it('keeps every committed allowlist entry reasoned, categorised and no later than the invariant blocks (I4 blocks, I1–I3 report)', function (): void {
     $repo = Repo::discover();
     $count = 0;
     foreach (['I1', 'I2', 'I3', 'I4'] as $invariant) {
@@ -259,7 +269,10 @@ it('keeps every committed allowlist entry reasoned, categorised and no later tha
             expect($entry['reason'])->not->toBe('')->and($entry)->toHaveKey('category');
             $count++;
         }
-        expect($allowlist->mode)->toBe('report');
+        expect($allowlist->mode)->toBe($invariant === 'I4' ? 'block' : 'report');
+        if ($invariant === 'I4') {
+            expect(array_unique(array_column($allowlist->entries(), 'category')))->not->toContain('activation');
+        }
     }
 
     expect($count)->toBeGreaterThan(0);

@@ -52,7 +52,6 @@ Vaulter\Documents\Configuration\DocumentsConfig
   collaborationRoom(mixed $driveId, mixed $nodeId, int $epoch): string
   commentsEnabled(): bool
   defaultType(): string
-  enabled(): bool
   exporters(): array
   hubJwtSecret(): ?string
   hubTimestampTolerance(): int

@@ -21,7 +21,8 @@ use Vaulter\Exceptions\Access\MissingPermissionDriverException;
 use Vaulter\Profiles\ProfileRegistry;
 
 /**
- * Resolves the active {@see PermissionDriver} from config, keyed by the driver
+ * Resolves the active {@see PermissionDriver} from the driver catalog (the module slot and the host's
+ * config map), keyed by the driver
  * key so a per-panel resolved-state never leaks across panels. It is the
  * single seam the AccessResolver obtains its role lane through, and the place the
  * null-driver fail-loud guard lives: the open NullPermissionDriver is rejected in
@@ -134,12 +135,17 @@ final class PermissionDriverManager
             || ($parent !== false && $parent->implementsInterface(NonEnumeratingPermissionDriver::class));
     }
 
+    private function catalog(): PermissionDriverCatalog
+    {
+        return $this->container->make(PermissionDriverCatalog::class);
+    }
+
     /**
      * @return class-string<PermissionDriver>
      */
     private function classFor(string $key): string
     {
-        $drivers = $this->accessConfig->permissionDrivers();
+        $drivers = $this->catalog()->classes();
 
         if (isset($drivers[$key]) && is_a($drivers[$key], PermissionDriver::class, allow_string: true)) {
             return $drivers[$key];

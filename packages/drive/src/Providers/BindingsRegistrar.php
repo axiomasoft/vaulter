@@ -13,32 +13,25 @@ use Vaulter\Content\NodeContentLifecycleRegistry;
 use Vaulter\Contracts\Cas\ContentScanner;
 use Vaulter\Contracts\Content\ScanPolicyResolver;
 use Vaulter\Contracts\Content\ScanWorkSettings;
-use Vaulter\Contracts\Drive\DriveHandleFactory as DriveHandleFactoryContract;
 use Vaulter\Contracts\Drive\NodeContentLifecycle;
 use Vaulter\Doctor\Checks\ConfigValidCheck;
 use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Content\DocumentPurgeLifecycle;
-use Vaulter\Drive\Content\FileContentLifecycle;
-use Vaulter\Drive\Content\ShortcutPurgeLifecycle;
-use Vaulter\Drive\DriveHandleFactory;
 use Vaulter\Drive\DriveModule;
 use Vaulter\Drive\DriveProvisioner;
 use Vaulter\Drive\Http\Problems\DriveProblemCodes;
-use Vaulter\Drive\Uploads\Inspection\FilenameInspector;
-use Vaulter\Drive\Uploads\Inspection\MimeConsistencyInspector;
-use Vaulter\Drive\Uploads\Inspection\ScanDispatchInspector;
-use Vaulter\Drive\Uploads\Inspection\SizeInspector;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Cas\ScanMode;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Http\Problems\ProblemCatalog;
+use Vaulter\Kernel;
 use Vaulter\Modules\ModuleBindings;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileRegistry;
 
 /**
  * The container wiring of the drive module ({@see DriveModule}): drive config, scan policy and
- * scanner validation, the drive handle factory, uploads, content lifecycles, the drive problem codes and the
+ * scanner validation, uploads, content lifecycles, the drive problem codes and the
  * drive config validator.
  */
 final class BindingsRegistrar implements ModuleBindings
@@ -50,14 +43,12 @@ final class BindingsRegistrar implements ModuleBindings
 
         $app->singleton(ScanPolicyResolver::class, \Vaulter\Drive\Content\ScanPolicyResolver::class);
         $app->singleton(\Vaulter\Drive\Content\ScanPolicyResolver::class);
-        // After every provider booted: a host may bind its ContentScanner from its own provider.
+        // After every provider booted: the scanner is the capability the media module provides from config.
         $app->booted(function () use ($app): void {
             $this->validateScanner($app);
         });
-        $app->bind(DriveHandleFactoryContract::class, DriveHandleFactory::class);
         $app->singleton(DriveProvisioner::class);
         $app->singleton(UploadSessionManager::class);
-        $app->tag([FilenameInspector::class, SizeInspector::class, MimeConsistencyInspector::class, ScanDispatchInspector::class], 'vaulter.upload_inspectors');
         $app->singleton(DriveProblemCodes::class);
         $app->tag(DriveProblemCodes::class, ProblemCatalog::TAG);
         $app->bind('vaulter.config_validator.drive', static fn (Container $app): Closure => static function () use ($app): void {
@@ -84,11 +75,13 @@ final class BindingsRegistrar implements ModuleBindings
 
                 return $handler;
             };
-            // Drive owns the stand-in document purge: with the documents package installed
-            // its lifecycle, collected from the tag, takes the kind over.
+            // Drive owns the stand-in document purge: with the documents module active its
+            // contribution to the NodeContentLifecycle slot takes the kind over.
             $registry->registerFallback($resolve(DocumentPurgeLifecycle::class));
-            foreach ([FileContentLifecycle::class, ShortcutPurgeLifecycle::class,
-                ...$configured, ...$app->tagged('vaulter.content_lifecycles')] as $class) {
+            foreach ($app->make(Kernel::class)->extensions()->contributions(NodeContentLifecycle::class) as $contribution) {
+                $registry->register($resolve($contribution->implementation));
+            }
+            foreach ([...$configured, ...$app->tagged('vaulter.content_lifecycles')] as $class) {
                 $registry->register($resolve($class));
             }
 
@@ -109,14 +102,18 @@ final class BindingsRegistrar implements ModuleBindings
         }
         $class = $config->scanner();
         if ($class !== null) {
+            // The configured class-string is validated, never probed for activation (config-validation).
             if (!class_exists($class) || !is_a($class, ContentScanner::class, true)) {
                 throw new InvalidConfigurationException('Scanner must implement ContentScanner.');
             }
-            if (!$app->bound(ContentScanner::class)) {
-                $app->singleton(ContentScanner::class, $class);
+            // The `vaulter-drive.uploads.scan.scanner` alias is folded into the key the capability reads.
+            $repository = $app->make('config');
+            if ($repository->get('vaulter.scan.scanner') === null) {
+                $repository->set('vaulter.scan.scanner', $class);
             }
         }
-        if (!$app->bound(ContentScanner::class)) {
+        $capabilities = $app->make(Kernel::class)->capabilities();
+        if (!$capabilities->has(ContentScanner::class)) {
             if ($enabled) {
                 throw new InvalidConfigurationException('Enabled scan policy requires a configured scanner.');
             }
@@ -124,6 +121,7 @@ final class BindingsRegistrar implements ModuleBindings
             return;
         }
         $app->make(DriveConfig::class)->validateScanWork(requireBroker: true);
+        // The instance jobs and doctor resolve: the container singleton, not a second `Capabilities::require()` build.
         $scanner = $app->make(ContentScanner::class);
         $spec = $config->globalSpec();
         if (($class !== null && !$scanner instanceof $class)

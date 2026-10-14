@@ -267,9 +267,8 @@ bridge pins one commit: `"axiomasoft/azguard": "dev-main#9a6dc0e…"` (the full 
 composer require axioma-studio/vaulter-azgard
 ```
 
-Its Laravel-discovered provider registers `azgard` in `vaulter.access.permission_drivers`,
-preserving an explicit host override, and binds
-`Vaulter\Azgard\Contracts\AzgardGuard` to the real adapter. Then select
+Its Laravel-discovered provider offers the `azgard` module, which registers `azgard` in
+`vaulter.access.permission_drivers`, preserving an explicit host override. Then select
 `VAULTER_PERMISSION_DRIVER=azgard`. Without the installed bridge, the key is unknown
 and throws `MissingPermissionDriverException`.
 
@@ -399,23 +398,22 @@ interface AzgardGuard
 The driver always answers for the decision's **actor**, never for whoever the request is:
 
 1. If the actor itself implements `AzgardGuard`, the driver uses it directly.
-2. Otherwise, a guard the **host** bound in the container is used (see the override below).
+2. Otherwise, the guard class the **host** named in `vaulter-azgard.guard` is used (see the override below).
 3. Otherwise, for an actor implementing `Vaulter\Azgard\Contracts\AzgardBackedUser`, the
    driver builds an `AzgardGuardAdapter` over that actor, in the `vaulter-azgard.panel_id` panel.
 4. Any other actor gets no AzGuard lane (nothing is raised, `canCreateIn` is `false`).
 
-The binding of `AzgardGuard` that the bridge provider registers (an adapter over the **request**
-user, `NullAzgardGuard` for a guest) is for code that asks the seam about the request user. The
-driver never lends it to another actor: an acting-as or preview check does not inherit the
-request user's rights, and a call without a request user — the collaboration hub resolves the
-token subject itself — is decided by the actor's own AzGuard rights.
+The bridge binds no guard of its own: no guard is ever built from the **request** user for a
+decision about another actor. An acting-as or preview check does not inherit the request user's
+rights, and a call without a request user — the collaboration hub resolves the token subject
+itself — is decided by the actor's own AzGuard rights.
 
-::: details Optionally overriding the supplied adapter
-The bridge already binds a real adapter. A host can override `AzgardGuard`; the driver then
-uses the host's guard for every actor, so it must answer for the actor it is asked about, not
-for the request user (the example below shows the shape; closing over the request user is only
-correct when the decision is about that user). The supplied adapter is a thin pass-through onto
-AzGuard v1:
+::: details Optionally naming one guard for every actor
+Set `vaulter-azgard.guard` to a class implementing `AzgardGuard` (validated at boot; `null` by
+default). The driver then uses that guard for every actor, so it must answer for the actor it is
+asked about, not for the request user (the example below closes over the request user, which is
+correct only when the decision is about that user). The supplied `AzgardGuardAdapter` is a thin
+pass-through onto AzGuard v1:
 
 <!-- snippet: host -->
 
@@ -423,24 +421,28 @@ AzGuard v1:
 use AzGuard\Kernel\Identity\AssignmentScopeRef;
 use Illuminate\Database\Eloquent\Model;
 
-// In a host service provider
-$this->app->bind(\Vaulter\Azgard\Contracts\AzgardGuard::class, function ($app) {
-    $actor = $app['auth']->user(); // implements AzgardBackedUser
+// config/vaulter-azgard.php: 'guard' => \App\Support\HostAzgardGuard::class,
+final class HostAzgardGuard implements \Vaulter\Azgard\Contracts\AzgardGuard
+{
+    public function __construct(private \Illuminate\Contracts\Auth\Factory $auth) {}
 
-    return new class ($actor) implements \Vaulter\Azgard\Contracts\AzgardGuard {
-        public function __construct(private \Vaulter\Azgard\Contracts\AzgardBackedUser $actor) {}
+    public function hasScopedPermission(string $permission, object $entity): bool
+    {
+        return $entity instanceof Model && $this->actor()?->hasPermission($permission, on: $entity) === true;
+    }
 
-        public function hasScopedPermission(string $permission, object $entity): bool
-        {
-            return $entity instanceof Model && $this->actor->hasPermission($permission, on: $entity);
-        }
+    public function hasPermissionIn(string $contextType, int|string $contextId, string $permission): bool
+    {
+        return $this->actor()?->hasPermission($permission, on: AssignmentScopeRef::of($contextType, $contextId)) === true;
+    }
 
-        public function hasPermissionIn(string $contextType, int|string $contextId, string $permission): bool
-        {
-            return $this->actor->hasPermission($permission, on: AssignmentScopeRef::of($contextType, $contextId));
-        }
-    };
-});
+    private function actor(): ?\Vaulter\Azgard\Contracts\AzgardBackedUser
+    {
+        $user = $this->auth->guard()->user(); // implements AzgardBackedUser
+
+        return $user instanceof \Vaulter\Azgard\Contracts\AzgardBackedUser ? $user : null;
+    }
+}
 ```
 
 The driver passes the workspace type string through untouched — it never resolves the
@@ -458,13 +460,14 @@ tests; the fake replaces live AzGuard checks, not the package's installation req
 ```php
 use Vaulter\Azgard\Testing\FakeAzgardGuard;
 
+// name the fake as the host's explicit guard, then hand out the configured instance
+config()->set('vaulter-azgard.guard', FakeAzgardGuard::class);
+
 // grant one workspace permission
-app()->bind(\Vaulter\Azgard\Contracts\AzgardGuard::class,
-    fn () => FakeAzgardGuard::grantingWorkspace('team', $teamId, 'documents.update'));
+app()->instance(FakeAzgardGuard::class, FakeAzgardGuard::grantingWorkspace('team', $teamId, 'documents.update'));
 
 // or a super-admin (every check allowed → owner role)
-app()->bind(\Vaulter\Azgard\Contracts\AzgardGuard::class,
-    fn () => FakeAzgardGuard::superAdmin());
+app()->instance(FakeAzgardGuard::class, FakeAzgardGuard::superAdmin());
 ```
 
 For end-to-end tests against the real engine, use AzGuard's own helpers

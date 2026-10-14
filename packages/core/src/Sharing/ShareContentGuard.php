@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vaulter\Sharing;
 
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Vaulter\Content\ContentAvailabilityGuard;
+use Vaulter\Content\DownloadGuards;
 use Vaulter\Models\Drive\FileRevision;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Operations\OperationContext;
@@ -16,6 +16,6 @@ class ShareContentGuard
     public function assertAvailable(Node $node, FileRevision $revision): void
     {
         $drive = $node->storage()->first() ?? throw new NotFoundHttpException;
-        app(ContentAvailabilityGuard::class)->assertAvailable(OperationContext::system($drive, 'share availability evaluation'), $node, $revision);
+        app(DownloadGuards::class)->check(OperationContext::system($drive, 'share availability evaluation'), $node, $revision);
     }
 }

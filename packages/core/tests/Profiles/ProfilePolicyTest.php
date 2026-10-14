@@ -5,23 +5,25 @@ declare(strict_types=1);
 use Illuminate\Database\Eloquent\Model;
 use Vaulter\Configuration\ConfigValidator;
 use Vaulter\Configuration\VaulterConfig;
-use Vaulter\Contracts\Profiles\CommentsFeature;
+use Vaulter\Contracts\Profiles\ProfileOption;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
 use Vaulter\Exceptions\Profiles\InvalidProfileException;
-use Vaulter\Profiles\DisabledCommentsFeature;
+use Vaulter\Kernel;
 use Vaulter\Profiles\Profile;
 use Vaulter\Profiles\ProfilePolicy;
 use Vaulter\Profiles\ProfileProvider;
 use Vaulter\Profiles\ProfileRegistry;
 use Vaulter\Profiles\UploadPolicy;
+use Vaulter\Tests\Concerns\FreshApplication;
 use Vaulter\Tests\Fixtures\Panels\FakeProject;
 use Vaulter\Tests\Fixtures\TestUser;
+use Vaulter\Tests\Profiles\Fixtures\CommentsOptionProvider;
 
-it('treats comments as globally off when no package owns them and leaves the other flags untouched', function (): void {
+it('treats comments as globally off when no module contributes the option and leaves the other flags untouched', function (): void {
     $profile = (new Profile)->key('p');
     $policy = app(ProfilePolicy::class);
 
-    expect(app(CommentsFeature::class))->toBeInstanceOf(DisabledCommentsFeature::class)
+    expect(app(Kernel::class)->extensions()->handlerKeys(ProfileOption::class))->not->toContain('comments')
         ->and($policy->featureEnabled($profile, 'comments'))->toBeFalse()
         ->and($policy->featureEnabled($profile, 'grants'))->toBeTrue();
 });
@@ -37,20 +39,22 @@ it('inherits global flags and cannot enable a globally disabled feature', functi
 
 it('conjoins every explicit profile flag with the global policy', function (string $feature): void {
     config()->set('vaulter.features.'.$feature, true);
-    // Core does not read the documents package's config: the owner of comments answers.
-    app()->instance(CommentsFeature::class, new class implements CommentsFeature
-    {
-        public function enabled(): bool
-        {
-            return true;
-        }
-    });
-    $setter = ['grants' => 'grants', 'share_links' => 'shareLinks', 'comments' => 'comments'][$feature];
+    $setter = ['grants' => 'grants', 'share_links' => 'shareLinks'][$feature];
     $profile = (new Profile)->key('p');
     expect(app(ProfilePolicy::class)->featureEnabled($profile, $feature))->toBeTrue();
     $profile->$setter(false);
     expect(app(ProfilePolicy::class)->featureEnabled($profile, $feature))->toBeFalse();
-})->with(['grants', 'share_links', 'comments']);
+})->with(['grants', 'share_links']);
+
+it('conjoins the comments flag with the option of the module that owns comments', function (): void {
+    // Core does not read the documents package's config: the contributing module answers.
+    $policy = FreshApplication::boot(after: [CommentsOptionProvider::class])->make(ProfilePolicy::class);
+    $profile = (new Profile)->key('p');
+
+    expect($policy->featureEnabled($profile, 'comments'))->toBeTrue();
+    $profile->comments(false);
+    expect($policy->featureEnabled($profile, 'comments'))->toBeFalse();
+});
 
 it('rejects malformed profile values', function (Closure $build): void {
     $build();

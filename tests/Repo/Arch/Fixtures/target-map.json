@@ -1122,6 +1122,20 @@
         {
             "action": "move",
             "eloquent": false,
+            "file": "packages/core/src/Access/PermissionDriverCatalog.php",
+            "fqcn": "Vaulter\\Access\\PermissionDriverCatalog",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "core",
+            "phase": "P4",
+            "rule": "core-access-sharing:prefix:Vaulter\\Access\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Access\\PermissionDriverCatalog"
+        },
+        {
+            "action": "move",
+            "eloquent": false,
             "file": "packages/core/src/Access/PermissionDriverManager.php",
             "fqcn": "Vaulter\\Access\\PermissionDriverManager",
             "kind": "final-class",
@@ -2396,6 +2410,20 @@
         {
             "action": "move",
             "eloquent": false,
+            "file": "packages/core/src/Content/DownloadGuards.php",
+            "fqcn": "Vaulter\\Content\\DownloadGuards",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "core",
+            "phase": "P4",
+            "rule": "core-content-media-webhooks:prefix:Vaulter\\Content\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Content\\DownloadGuards"
+        },
+        {
+            "action": "move",
+            "eloquent": false,
             "file": "packages/core/src/Content/ImmutableContentIdentity.php",
             "fqcn": "Vaulter\\Content\\ImmutableContentIdentity",
             "kind": "final-class",
@@ -2802,6 +2830,34 @@
         {
             "action": "move",
             "eloquent": false,
+            "file": "packages/core/src/Contracts/Drive/DownloadGuard.php",
+            "fqcn": "Vaulter\\Contracts\\Drive\\DownloadGuard",
+            "kind": "interface",
+            "note": null,
+            "owner": "drive",
+            "package": "core",
+            "phase": "P4",
+            "rule": "core-drive:prefix:Vaulter\\Contracts\\Drive\\",
+            "surface": "Spi:Implement",
+            "target_fqcn": "Vaulter\\Drive\\Contracts\\DownloadGuard"
+        },
+        {
+            "action": "move",
+            "eloquent": false,
+            "file": "packages/core/src/Contracts/Drive/DriveExtension.php",
+            "fqcn": "Vaulter\\Contracts\\Drive\\DriveExtension",
+            "kind": "interface",
+            "note": null,
+            "owner": "drive",
+            "package": "core",
+            "phase": "P4",
+            "rule": "core-drive:prefix:Vaulter\\Contracts\\Drive\\",
+            "surface": "Spi:Implement",
+            "target_fqcn": "Vaulter\\Drive\\Contracts\\DriveExtension"
+        },
+        {
+            "action": "move",
+            "eloquent": false,
             "file": "packages/core/src/Contracts/Drive/DriveHandle.php",
             "fqcn": "Vaulter\\Contracts\\Drive\\DriveHandle",
             "kind": "interface",
@@ -2872,20 +2928,6 @@
         {
             "action": "move",
             "eloquent": false,
-            "file": "packages/core/src/Contracts/Drive/NodeDocumentHeads.php",
-            "fqcn": "Vaulter\\Contracts\\Drive\\NodeDocumentHeads",
-            "kind": "interface",
-            "note": null,
-            "owner": "drive",
-            "package": "core",
-            "phase": "P4",
-            "rule": "core-drive:prefix:Vaulter\\Contracts\\Drive\\",
-            "surface": "Spi:Implement",
-            "target_fqcn": "Vaulter\\Drive\\Contracts\\NodeDocumentHeads"
-        },
-        {
-            "action": "move",
-            "eloquent": false,
             "file": "packages/core/src/Contracts/Drive/NodeOperations.php",
             "fqcn": "Vaulter\\Contracts\\Drive\\NodeOperations",
             "kind": "interface",
@@ -2896,6 +2938,20 @@
             "rule": "core-drive:fqcn:Vaulter\\Contracts\\Drive\\NodeOperations",
             "surface": "Api",
             "target_fqcn": "Vaulter\\Drive\\Contracts\\NodeOperations"
+        },
+        {
+            "action": "move",
+            "eloquent": false,
+            "file": "packages/core/src/Contracts/Drive/NodeSnapshotContributor.php",
+            "fqcn": "Vaulter\\Contracts\\Drive\\NodeSnapshotContributor",
+            "kind": "interface",
+            "note": null,
+            "owner": "drive",
+            "package": "core",
+            "phase": "P4",
+            "rule": "core-drive:prefix:Vaulter\\Contracts\\Drive\\",
+            "surface": "Spi:Implement",
+            "target_fqcn": "Vaulter\\Drive\\Contracts\\NodeSnapshotContributor"
         },
         {
             "action": "move",
@@ -3024,18 +3080,18 @@
             "target_fqcn": "Vaulter\\Drive\\Contracts\\Presentation\\KindPresenter"
         },
         {
-            "action": "replace",
+            "action": "move",
             "eloquent": false,
-            "file": "packages/core/src/Contracts/Profiles/CommentsFeature.php",
-            "fqcn": "Vaulter\\Contracts\\Profiles\\CommentsFeature",
+            "file": "packages/core/src/Contracts/Profiles/ProfileOption.php",
+            "fqcn": "Vaulter\\Contracts\\Profiles\\ProfileOption",
             "kind": "interface",
-            "note": "replaced by a typed ProfileOption of documents (drive owns ProfileOption); no one-to-one successor type",
-            "owner": "documents",
+            "note": null,
+            "owner": "drive",
             "package": "core",
             "phase": "P4",
-            "rule": "core-drive:fqcn:Vaulter\\Contracts\\Profiles\\CommentsFeature",
-            "surface": "Internal",
-            "target_fqcn": null
+            "rule": "core-drive:fqcn:Vaulter\\Contracts\\Profiles\\ProfileOption",
+            "surface": "Spi:Implement",
+            "target_fqcn": "Vaulter\\Drive\\Contracts\\Profiles\\ProfileOption"
         },
         {
             "action": "move",
@@ -6120,6 +6176,34 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/documents/src/Profiles/AllowedDocumentTypesProfileOption.php",
+            "fqcn": "Vaulter\\Documents\\Profiles\\AllowedDocumentTypesProfileOption",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Documents\\Profiles\\AllowedDocumentTypesProfileOption"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/documents/src/Profiles/CommentsProfileOption.php",
+            "fqcn": "Vaulter\\Documents\\Profiles\\CommentsProfileOption",
+            "kind": "final-class",
+            "note": null,
+            "owner": "documents",
+            "package": "documents",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Documents\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Documents\\Profiles\\CommentsProfileOption"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/documents/src/Providers/BindingsRegistrar.php",
             "fqcn": "Vaulter\\Documents\\Providers\\BindingsRegistrar",
             "kind": "final-class",
@@ -8920,6 +9004,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/drive/src/Uploads/UploadsOf.php",
+            "fqcn": "Vaulter\\Drive\\Uploads\\UploadsOf",
+            "kind": "final-class",
+            "note": null,
+            "owner": "drive",
+            "package": "drive",
+            "phase": "stay",
+            "rule": "other-packages:prefix:Vaulter\\Drive\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Drive\\Uploads\\UploadsOf"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/drive/src/VaulterDriveServiceProvider.php",
             "fqcn": "Vaulter\\Drive\\VaulterDriveServiceProvider",
             "kind": "final-class",
@@ -10036,6 +10134,20 @@
             "rule": "core-access-sharing:prefix:Vaulter\\Exceptions\\Sharing\\",
             "surface": "Api",
             "target_fqcn": "Vaulter\\Drive\\Exceptions\\Sharing\\ShareRoleNotAllowedException"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
+            "file": "packages/core/src/Exceptions/Support/InvalidExtensionResult.php",
+            "fqcn": "Vaulter\\Exceptions\\Support\\InvalidExtensionResult",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:fqcn:Vaulter\\Exceptions\\Support\\InvalidExtensionResult",
+            "surface": "Api",
+            "target_fqcn": "Vaulter\\Exceptions\\Support\\InvalidExtensionResult"
         },
         {
             "action": "keep",
@@ -12668,20 +12780,6 @@
             "rule": "core-drive:prefix:Vaulter\\Profiles\\",
             "surface": "Internal",
             "target_fqcn": "Vaulter\\Drive\\Profiles\\DefaultProfile"
-        },
-        {
-            "action": "replace",
-            "eloquent": false,
-            "file": "packages/core/src/Profiles/DisabledCommentsFeature.php",
-            "fqcn": "Vaulter\\Profiles\\DisabledCommentsFeature",
-            "kind": "final-class",
-            "note": "disappears with CommentsFeature: the typed profile option has its own default (architecture#extension-system)",
-            "owner": "drive",
-            "package": "core",
-            "phase": "P4",
-            "rule": "core-drive:fqcn:Vaulter\\Profiles\\DisabledCommentsFeature",
-            "surface": "Internal",
-            "target_fqcn": null
         },
         {
             "action": "move",

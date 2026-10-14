@@ -269,9 +269,8 @@ SpatiePermissionDriver::forgetCachedPermissions($actor);
 composer require axioma-studio/vaulter-azgard
 ```
 
-Обнаруживаемый Laravel provider сам регистрирует ключ `azgard` в
-`vaulter.access.permission_drivers`, сохраняя явное переопределение хоста, и привязывает
-`Vaulter\Azgard\Contracts\AzgardGuard` к реальному адаптеру. Затем выберите
+Обнаруживаемый Laravel provider предлагает модуль `azgard`, который регистрирует ключ `azgard` в
+`vaulter.access.permission_drivers`, сохраняя явное переопределение хоста. Затем выберите
 `VAULTER_PERMISSION_DRIVER=azgard`. Без установленного моста этот ключ неизвестен
 и вызывает `MissingPermissionDriverException`.
 
@@ -400,23 +399,22 @@ interface AzgardGuard
 Драйвер всегда отвечает за **актора** решения, а не за того, кто сейчас делает запрос:
 
 1. Если актор сам реализует `AzgardGuard`, драйвер использует его напрямую.
-2. Иначе используется guard, который **хост** привязал в контейнере (см. переопределение ниже).
+2. Иначе используется класс guard, который **хост** назвал в `vaulter-azgard.guard` (см. переопределение ниже).
 3. Иначе для актора, реализующего `Vaulter\Azgard\Contracts\AzgardBackedUser`, драйвер строит
    `AzgardGuardAdapter` над этим актором в панели `vaulter-azgard.panel_id`.
 4. Любой другой актор не получает полосу AzGuard (ничего не повышается, `canCreateIn` — `false`).
 
-Привязка `AzgardGuard`, которую регистрирует provider моста (адаптер над пользователем
-**запроса**, `NullAzgardGuard` для гостя), нужна коду, который спрашивает шов о пользователе
-запроса. Драйвер никогда не одалживает её другому актору: проверка от имени другого пользователя
-или предпросмотр прав не наследуют права пользователя запроса, а вызов без пользователя запроса
-— хаб коллаборации сам определяет субъекта токена — решается собственными правами актора в AzGuard.
+Мост не привязывает собственный guard: guard никогда не строится из пользователя **запроса** для
+решения о другом акторе. Проверка от имени другого пользователя или предпросмотр прав не наследуют
+права пользователя запроса, а вызов без пользователя запроса — хаб коллаборации сам определяет
+субъекта токена — решается собственными правами актора в AzGuard.
 
-::: details Необязательное переопределение адаптера
-Мост уже привязывает настоящий адаптер. Хост может переопределить `AzgardGuard`; тогда драйвер
-использует guard хоста для любого актора, поэтому он обязан отвечать за того актора, о котором
-его спрашивают, а не за пользователя запроса (пример ниже показывает форму; замыкание на
-пользователя запроса верно, только когда решение касается именно его). Поставляемый адаптер —
-тонкий сквозной проход на AzGuard v1:
+::: details Необязательное назначение одного guard для всех акторов
+Задайте в `vaulter-azgard.guard` класс, реализующий `AzgardGuard` (проверяется на boot; по умолчанию
+`null`). Тогда драйвер использует этот guard для любого актора, поэтому он обязан отвечать за того
+актора, о котором его спрашивают, а не за пользователя запроса (пример ниже замыкается на
+пользователя запроса, что верно, только когда решение касается именно его). Поставляемый
+`AzgardGuardAdapter` — тонкий сквозной проход на AzGuard v1:
 
 <!-- snippet: host -->
 
@@ -424,24 +422,28 @@ interface AzgardGuard
 use AzGuard\Kernel\Identity\AssignmentScopeRef;
 use Illuminate\Database\Eloquent\Model;
 
-// In a host service provider
-$this->app->bind(\Vaulter\Azgard\Contracts\AzgardGuard::class, function ($app) {
-    $actor = $app['auth']->user(); // implements AzgardBackedUser
+// config/vaulter-azgard.php: 'guard' => \App\Support\HostAzgardGuard::class,
+final class HostAzgardGuard implements \Vaulter\Azgard\Contracts\AzgardGuard
+{
+    public function __construct(private \Illuminate\Contracts\Auth\Factory $auth) {}
 
-    return new class ($actor) implements \Vaulter\Azgard\Contracts\AzgardGuard {
-        public function __construct(private \Vaulter\Azgard\Contracts\AzgardBackedUser $actor) {}
+    public function hasScopedPermission(string $permission, object $entity): bool
+    {
+        return $entity instanceof Model && $this->actor()?->hasPermission($permission, on: $entity) === true;
+    }
 
-        public function hasScopedPermission(string $permission, object $entity): bool
-        {
-            return $entity instanceof Model && $this->actor->hasPermission($permission, on: $entity);
-        }
+    public function hasPermissionIn(string $contextType, int|string $contextId, string $permission): bool
+    {
+        return $this->actor()?->hasPermission($permission, on: AssignmentScopeRef::of($contextType, $contextId)) === true;
+    }
 
-        public function hasPermissionIn(string $contextType, int|string $contextId, string $permission): bool
-        {
-            return $this->actor->hasPermission($permission, on: AssignmentScopeRef::of($contextType, $contextId));
-        }
-    };
-});
+    private function actor(): ?\Vaulter\Azgard\Contracts\AzgardBackedUser
+    {
+        $user = $this->auth->guard()->user(); // implements AzgardBackedUser
+
+        return $user instanceof \Vaulter\Azgard\Contracts\AzgardBackedUser ? $user : null;
+    }
+}
 ```
 
 Драйвер передаёт строку типа workspace насквозь без изменений — он никогда не резолвит
@@ -459,13 +461,14 @@ $this->app->bind(\Vaulter\Azgard\Contracts\AzgardGuard::class, function ($app) {
 ```php
 use Vaulter\Azgard\Testing\FakeAzgardGuard;
 
+// name the fake as the host's explicit guard, then hand out the configured instance
+config()->set('vaulter-azgard.guard', FakeAzgardGuard::class);
+
 // grant one workspace permission
-app()->bind(\Vaulter\Azgard\Contracts\AzgardGuard::class,
-    fn () => FakeAzgardGuard::grantingWorkspace('team', $teamId, 'documents.update'));
+app()->instance(FakeAzgardGuard::class, FakeAzgardGuard::grantingWorkspace('team', $teamId, 'documents.update'));
 
 // or a super-admin (every check allowed → owner role)
-app()->bind(\Vaulter\Azgard\Contracts\AzgardGuard::class,
-    fn () => FakeAzgardGuard::superAdmin());
+app()->instance(FakeAzgardGuard::class, FakeAzgardGuard::superAdmin());
 ```
 
 Для end-to-end тестов на настоящем движке используйте собственные хелперы AzGuard

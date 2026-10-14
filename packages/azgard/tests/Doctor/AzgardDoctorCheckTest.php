@@ -3,8 +3,7 @@
 declare(strict_types=1);
 
 use Carbon\CarbonImmutable;
-use Vaulter\Azgard\Contracts\AzgardGuard;
-use Vaulter\Azgard\NullAzgardGuard;
+use Vaulter\Azgard\Testing\FakeAzgardGuard;
 use Vaulter\Doctor\DoctorContext;
 use Vaulter\Doctor\DoctorRunner;
 use Vaulter\Doctor\DoctorSeverity;
@@ -14,17 +13,17 @@ function azgardFindings(bool $production = false): array
     return app(DoctorRunner::class)->run(new DoctorContext(production: $production, probeStorage: false, sampleLimit: 1000, now: CarbonImmutable::now('UTC')), ['azgard'])->checks[0]->findings;
 }
 
-it('resolves the bridge guard for a console run without a user', function (): void {
+it('is ok without an explicit guard, the driver builds one per actor', function (): void {
     $finding = azgardFindings()[0];
 
     expect($finding->code)->toBe('azgard.dependency_ok')
         ->and($finding->severity)->toBe(DoctorSeverity::Ok)
-        ->and($finding->evidence['driver_selected'])->toBeTrue()
-        ->and(app(AzgardGuard::class))->toBeInstanceOf(NullAzgardGuard::class);
+        ->and($finding->evidence['driver_selected'])->toBeTrue();
 });
 
-it('reports a guard that cannot be built as an error in both modes', function (): void {
-    $this->app->bind(AzgardGuard::class, static fn (): never => throw new RuntimeException('panel secret=hunter2'));
+it('reports a configured guard that cannot be built as an error in both modes', function (): void {
+    config()->set('vaulter-azgard.guard', FakeAzgardGuard::class);
+    $this->app->bind(FakeAzgardGuard::class, static fn (): never => throw new RuntimeException('panel secret=hunter2'));
 
     foreach ([false, true] as $production) {
         $finding = azgardFindings($production)[0];

@@ -158,7 +158,7 @@ it('SEC-RECOVERY-bounds signed cursors resume one revision and reject signature 
     config()->set('queue.connections.database.retry_after', 180);
     Storage::fake('local');
     Bus::fake();
-    app()->instance(ContentScanner::class, new class implements ContentScanner
+    UploadTestHelpers::scanner(new class implements ContentScanner
     {
         public function key(): string
         {
@@ -254,7 +254,7 @@ it('SEC-POLICY-superseded replacement activation terminates old work while confi
 
 it('SEC-RECOVERY-bounds optional off rescan rejects sync before SQL or publication', function (): void {
     Bus::fake();
-    app()->instance(ContentScanner::class, new class implements ContentScanner
+    UploadTestHelpers::scanner(new class implements ContentScanner
     {
         public function key(): string
         {

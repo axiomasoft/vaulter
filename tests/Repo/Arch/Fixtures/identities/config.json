@@ -16,6 +16,13 @@
             "reason": "P3.2: webhooks are an opt-in module, switched by vaulter.modules.webhooks (default false)"
         },
         {
+            "change": "added",
+            "decision": "D22",
+            "id": "config:vaulter-azgard.guard",
+            "kind": "config",
+            "reason": "P3.5: explicit AzgardGuard class (providesFromConfig); replaces the container-bound probe of AzgardPermissionDriver::guardFor"
+        },
+        {
             "change": "redefined",
             "decision": "D22",
             "id": "publish:vaulter-config",
@@ -73,6 +80,17 @@
             },
             "env": "VAULTER_AZGARD_CREATE_PERMISSION",
             "id": "config:vaulter-azgard.create_permission",
+            "owner": "azgard",
+            "registered_defaults": true,
+            "root": "vaulter-azgard",
+            "source": {
+                "file": "packages/azgard/config/vaulter-azgard.php",
+                "symbol": "<file>"
+            }
+        },
+        {
+            "default": null,
+            "id": "config:vaulter-azgard.guard",
             "owner": "azgard",
             "registered_defaults": true,
             "root": "vaulter-azgard",

@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use Vaulter\Access\OperationGuard;
 use Vaulter\Contracts\Access\AccessOperations;
 use Vaulter\Contracts\Activity\ActivityOperations;
+use Vaulter\Contracts\Drive\DriveExtension;
 use Vaulter\Contracts\Drive\DriveHandle as Contract;
 use Vaulter\Contracts\Drive\FileOperations;
 use Vaulter\Contracts\Drive\FolderOperations;
@@ -25,13 +26,15 @@ use Vaulter\Data\Snapshots\QuotaSnapshot;
 use Vaulter\Drive\Actions\Drives\ArchiveDriveAction;
 use Vaulter\Drive\Actions\Drives\DeleteDriveAction;
 use Vaulter\Drive\Actions\Drives\UnarchiveDriveAction;
+use Vaulter\Drive\Operations\UploadOperations;
 use Vaulter\Enums\Access\Ability;
 use Vaulter\Enums\Drive\DriveStatus;
 use Vaulter\Exceptions\Access\MissingActorException;
 use Vaulter\Exceptions\Nodes\NodeNotFoundException;
 use Vaulter\Exceptions\Nodes\StorageNotFoundException;
-use Vaulter\Exceptions\Support\MissingPackageException;
+use Vaulter\Kernel;
 use Vaulter\Models\Drive\Drive;
+use Vaulter\Modules\MissingExtensionException;
 use Vaulter\Operations\ChangeOperations;
 use Vaulter\Operations\NodeLocator;
 use Vaulter\Operations\OperationContext;
@@ -192,7 +195,16 @@ final readonly class DriveHandle implements Contract
         return $this->operations(ChangeOperations::class);
     }
 
+    /** The resumable-upload operations of the drive: the drive module's own, not an extension. */
+    public function uploads(): UploadOperations
+    {
+        return $this->container->makeWith(UploadOperations::class, ['handle' => $this, 'context' => $this->context()]);
+    }
+
     /**
+     * The operations a module declared in the `drive` slot under the FQCN `$operations`; a key no active
+     * module declares throws {@see MissingExtensionException}, however the class is bound.
+     *
      * @template T of object
      *
      * @param  class-string<T> $operations
@@ -200,11 +212,9 @@ final readonly class DriveHandle implements Contract
      */
     public function extension(string $operations): object
     {
-        if (!$this->container->bound($operations) && !class_exists($operations)) {
-            throw MissingPackageException::forContract($operations, 'the extension');
-        }
+        $class = $this->container->make(Kernel::class)->extensions()->handlerClass(DriveExtension::class, $operations);
 
-        $instance = $this->container->makeWith($operations, ['handle' => $this, 'context' => $this->context()]);
+        $instance = $this->container->makeWith($class, ['handle' => $this, 'context' => $this->context()]);
         if (!$instance instanceof $operations) {
             throw new \LogicException('An extension binding must implement its requested class or contract.');
         }

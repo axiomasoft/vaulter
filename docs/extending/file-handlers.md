@@ -171,7 +171,7 @@ The default set is registered from config (`config('vaulter.handlers')`):
 
 A document node carries the Vaulter document mime (`application/vnd.vaulter.document+json`)
 but is never routed through this registry: core's `NodePresenter` hands every `document` node
-to the kind presenter `vaulter-documents` tags (`vaulter.kind_presenters`).
+to the kind presenter the documents module contributes to the drive's `KindPresenter` slot (the key is the node kind, `document`).
 
 ## Resolving a node's handler
 

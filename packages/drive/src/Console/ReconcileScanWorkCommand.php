@@ -13,6 +13,7 @@ use Vaulter\Drive\Content\ScanBackfillReconciler;
 use Vaulter\Drive\Content\ScanWorkReconciler;
 use Vaulter\Drive\Content\UploadCleanupReconciler;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
+use Vaulter\Kernel;
 use Vaulter\VaulterManager;
 
 final class ReconcileScanWorkCommand extends Command
@@ -31,7 +32,7 @@ final class ReconcileScanWorkCommand extends Command
         $started = microtime(true);
         try {
             $scope = RescanFileRevisionsCommand::scope($this);
-            $config->validateScanWork(requireBroker: app()->bound(ContentScanner::class));
+            $config->validateScanWork(requireBroker: app(Kernel::class)->capabilities()->has(ContentScanner::class));
             if ($scope['all'] && !$this->withinMaintenanceScope) {
                 $this->withinMaintenanceScope = true;
                 try {
