@@ -671,6 +671,531 @@
             "id": "format:operation-name",
             "kind": "protocol",
             "reason": "P3.10: every mutating operation runs through OperationRunner under a stable OperationSpec name"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "problem:dependency_unavailable",
+            "kind": "protocol",
+            "reason": "P3.11: a dependency of the request is unavailable — 503, retry with backoff, never cached"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "problem:idempotency_key_reused",
+            "kind": "protocol",
+            "reason": "P3.11: the idempotency key was used with a different request — 422, never cached (used by P3.12)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "problem:operation_in_progress",
+            "kind": "protocol",
+            "reason": "P3.11: a request with the same idempotency key is still running — 409 + Retry-After, never cached (used by P3.12)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:actor_required",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:cannot_delete_head_revision",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:collaboration_epoch_mismatch",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:collaboration_seed_conflict",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:collaboration_unavailable",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:comment_not_found",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:concurrent_update",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:content_unavailable",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:cross_drive_operation",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:cursor_expired",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:document_content_degraded",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:document_revision_not_found",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:document_state_mismatch",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:document_state_too_large",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:document_type_unavailable",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:drive_archived",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:drive_not_found",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:duplicate_registration",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:file_size_limit_exceeded",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:folder_children_limit_exceeded",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:grant_not_found",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:internal_error",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:invalid_cursor",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:invalid_destination",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:invalid_document_content",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:invalid_drive_state",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:invalid_node_name",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:invalid_properties",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:invalid_webhook_signature",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:method_not_allowed",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:module_graph_invalid",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:node_move_cycle",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:node_name_conflict",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:node_not_found",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:node_not_trashed",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:node_sequence_exhausted",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:node_sequence_mismatch",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:node_trashed_by_ancestor",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:not_a_document",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:not_a_file",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:payload_too_large",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:permission_denied",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:precondition_required",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:profile_restriction",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:quota_exceeded",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:rate_limited",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:registry_frozen",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:restore_destination_changed",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:restore_destination_required",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:revision_not_found",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:revision_pinned",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:route_not_found",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:share_link_ttl_exceeded",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:share_not_found",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:share_password_required",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:share_role_not_allowed",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:tree_depth_limit_exceeded",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:tree_traversal_incomplete",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:unknown_document_type",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:unknown_export_format",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:unknown_profile",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:unknown_role",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:unsupported_node_kind",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:upload_conflict",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:upload_not_found",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:upload_offset_mismatch",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:upload_rejected",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:validation_failed",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:webhook_delivery_not_found",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:webhook_delivery_not_redeliverable",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:webhook_endpoint_not_found",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:write_outside_operation",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
         }
     ],
     "note": "Hand-written ledger of identity changes since the P2 base (knowledge/p3-design#base): {kind, id, change: added|removed|renamed|redefined, from?, reason, decision}. inventory.php copies the records of each kind into the changes of identities/<kind>.json.",

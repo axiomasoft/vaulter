@@ -1243,6 +1243,49 @@
         },
         {
             "match": "fqcn",
+            "value": "Vaulter\\Http\\Problems\\ProblemSpec",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#errors: the spec of a problem code (status, exception, retryable, receipt) a module declares (P3.11, D25)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Http\\Problems\\Retryable",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#errors: retryability of a problem code (P3.11)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Http\\Problems\\ReceiptPolicy",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#errors + D25: whether an idempotency receipt caches a problem code (P3.11)"
+        },
+        {
+            "match": "fqcn",
+            "value": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes",
+            "owner": "drive",
+            "surface": "Internal",
+            "why": "D39 + architecture#ownership-map: the problem codes of the drive concepts located in core, declared by DriveModule until P4 moves them (P3.11)"
+        },
+        {
+            "match": "prefix",
+            "value": "Vaulter\\Exceptions\\Idempotency\\",
+            "owner": "core",
+            "action": "keep",
+            "phase": "stay",
+            "surface": "Api",
+            "why": "architecture#idempotency-concurrency + D25: the idempotency refusals of the kernel a host catches (P3.11)"
+        },
+        {
+            "match": "fqcn",
             "value": "Vaulter\\VaulterServiceProvider",
             "owner": "core",
             "action": "keep",

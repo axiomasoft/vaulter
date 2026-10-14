@@ -6,6 +6,9 @@ use Vaulter\Documents\Http\Problems\DocumentsProblemCodes;
 use Vaulter\Drive\Http\Problems\DriveProblemCodes;
 use Vaulter\Exceptions\Contracts\ProblemException;
 use Vaulter\Http\Problems\CoreProblemCodes;
+use Vaulter\Http\Problems\DriveSliceProblemCodes;
+use Vaulter\Http\Problems\ProblemCatalog;
+use Vaulter\Webhooks\WebhooksProblemCodes;
 
 require_once __DIR__.'/ProblemCatalogHelpers.php';
 
@@ -20,8 +23,8 @@ it('has an English and a Russian title for every code', function (string $locale
     }
 })->with(['en', 'ru']);
 
-it('keeps the lang files of a package in step with its code list', function (string $package, string $source): void {
-    $codes = array_keys((new $source)->codes());
+it('keeps the lang files of a package in step with its code list', function (string $package, array $sources): void {
+    $codes = array_merge(...array_map(static fn (string $source): array => array_keys((new $source)->codes()), $sources));
     sort($codes);
 
     foreach (['en', 'ru'] as $locale) {
@@ -32,9 +35,10 @@ it('keeps the lang files of a package in step with its code list', function (str
         expect($keys)->toBe($codes);
     }
 })->with([
-    'core' => ['core', CoreProblemCodes::class],
-    'drive' => ['drive', DriveProblemCodes::class],
-    'documents' => ['documents', DocumentsProblemCodes::class],
+    // The drive and webhooks codes located in core keep their lines in the core lang files until P4 (D39).
+    'core' => ['core', [CoreProblemCodes::class, DriveSliceProblemCodes::class, WebhooksProblemCodes::class]],
+    'drive' => ['drive', [DriveProblemCodes::class]],
+    'documents' => ['documents', [DocumentsProblemCodes::class]],
 ]);
 
 it('lists the code and status of every ProblemException in the source tree', function (): void {
@@ -58,7 +62,7 @@ it('lists the code and status of every ProblemException in the source tree', fun
     expect($seen)->toBeGreaterThan(50);
 });
 
-it('claims a code once, core first', function (): void {
+it('lists the codes sorted, each under the module that declares it', function (): void {
     $catalog = fullProblemCatalog()->all();
 
     $codes = array_keys($catalog);
@@ -66,7 +70,18 @@ it('claims a code once, core first', function (): void {
     sort($sorted);
 
     expect($codes)->toBe($sorted)
-        ->and($catalog['duplicate_registration']['package'])->toBe('core')
-        ->and($catalog['upload_conflict']['package'])->toBe('drive')
-        ->and($catalog['document_state_mismatch']['package'])->toBe('documents');
+        ->and($catalog['duplicate_registration']['module'])->toBe('core')
+        ->and($catalog['node_name_conflict']['module'])->toBe('drive')
+        ->and($catalog['upload_conflict']['module'])->toBe('drive')
+        ->and($catalog['webhook_endpoint_not_found']['module'])->toBe('webhooks')
+        ->and($catalog['document_state_mismatch']['module'])->toBe('documents');
+});
+
+it('refuses a code declared by two modules of a hand-built catalogue', function (): void {
+    $catalog = new ProblemCatalog(
+        static fn (): array => ['core' => [new CoreProblemCodes], 'acme' => [new CoreProblemCodes]],
+        app('translator'),
+    );
+
+    expect(fn () => $catalog->all())->toThrow(InvalidArgumentException::class, 'declared by both the module "core" and the module "acme"');
 });

@@ -23,6 +23,10 @@ return [
         'title' => 'Cursor expired',
         'detail' => 'The cursor is older than the retained change feed; restart from a fresh listing.',
     ],
+    'dependency_unavailable' => [
+        'title' => 'Dependency unavailable',
+        'detail' => 'A service the request depends on is unavailable; retry later.',
+    ],
     'drive_archived' => [
         'title' => 'Drive is archived',
         'detail' => 'An archived drive is read-only.',
@@ -50,6 +54,10 @@ return [
     'grant_not_found' => [
         'title' => 'Grant not found',
         'detail' => 'The grant does not exist or is not visible to you.',
+    ],
+    'idempotency_key_reused' => [
+        'title' => 'Idempotency key reused',
+        'detail' => 'The idempotency key was already used for a different request; send a new key.',
     ],
     'internal_error' => [
         'title' => 'Internal server error',
@@ -117,6 +125,10 @@ return [
     'not_a_file' => [
         'title' => 'Not a file',
         'detail' => 'The operation needs a file node.',
+    ],
+    'operation_in_progress' => [
+        'title' => 'Operation in progress',
+        'detail' => 'A request with the same idempotency key is still running; retry later.',
     ],
     'payload_too_large' => [
         'title' => 'Payload too large',

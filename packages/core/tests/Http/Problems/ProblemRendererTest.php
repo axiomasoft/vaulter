@@ -6,9 +6,12 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Vaulter\Configuration\RoutesConfig;
 use Vaulter\Exceptions\Database\ConcurrentUpdateException;
 use Vaulter\Exceptions\Http\PreconditionRequiredException;
+use Vaulter\Exceptions\Idempotency\IdempotencyKeyReusedException;
+use Vaulter\Exceptions\Idempotency\OperationInProgressException;
 use Vaulter\Exceptions\Nodes\NodeNameConflictException;
 use Vaulter\Exceptions\Policy\FileSizeLimitExceededException;
 use Vaulter\Http\Problems\ProblemCatalog;
@@ -35,7 +38,8 @@ it('renders a domain exception as problem+json with the catalogue title and a re
     expect($response->headers->get('Cache-Control'))->toContain('no-store')
         ->and($response->json('request_id'))->toBe($response->headers->get('X-Request-Id'))
         ->and($response->json('meta'))->toBe([])
-        ->and(array_keys($response->json()))->toBe(['type', 'title', 'status', 'code', 'detail', 'request_id', 'errors', 'meta']);
+        ->and($response->json('retryable'))->toBe('never')
+        ->and(array_keys($response->json()))->toBe(['type', 'title', 'status', 'code', 'detail', 'retryable', 'request_id', 'errors', 'meta']);
     // The exception message is written for logs; it must never reach a client.
     expect($response->getContent())->not->toContain('[Vaulter]')->not->toContain('contract.pdf');
 });
@@ -168,6 +172,30 @@ it('maps an authentication failure to actor_required', function (): void {
     $this->getJson(ProblemProbeRoutes::path('guest'))
         ->assertStatus(401)
         ->assertJsonPath('code', 'actor_required');
+});
+
+it('says whether the request may be retried and when', function (Throwable $exception, string $retryable, ?string $retryAfter): void {
+    ProblemProbeRoutes::register(['case' => $exception]);
+
+    $response = $this->getJson(ProblemProbeRoutes::path('case'))->assertJsonPath('retryable', $retryable);
+
+    expect($response->headers->get('Retry-After'))->toBe($retryAfter);
+})->with([
+    'in progress' => [new OperationInProgressException(3), 'with_backoff', '3'],
+    'concurrent update' => [new ConcurrentUpdateException, 'with_backoff', '1'],
+    'throttled' => [new ThrottleRequestsException(headers: ['Retry-After' => '7']), 'with_backoff', '7'],
+    'precondition required' => [PreconditionRequiredException::missing('If-Match'), 'after_refetch', null],
+    'key reused' => [IdempotencyKeyReusedException::forOperation('drive.folders.create'), 'never', null],
+    'unexpected' => [new RuntimeException('boom'), 'never', null],
+]);
+
+it('answers an unknown status code as not retryable', function (): void {
+    ProblemProbeRoutes::register(['teapot' => new HttpException(418)]);
+
+    $this->getJson(ProblemProbeRoutes::path('teapot'))
+        ->assertStatus(418)
+        ->assertJsonPath('code', 'http_418')
+        ->assertJsonPath('retryable', 'never');
 });
 
 it('knows every status it can answer with in the catalogue', function (): void {

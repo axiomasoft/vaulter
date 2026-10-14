@@ -29,7 +29,7 @@ final readonly class CompiledModules
      * @param array<string, class-string>                              $routeMiddleware alias => middleware
      * @param list<class-string<ModuleBindings>>                       $bindings
      * @param list<class-string>                                       $events
-     * @param list<class-string<ProblemCodeSource>>                    $problems
+     * @param array<string, list<class-string<ProblemCodeSource>>>     $problems        active module id => sources
      * @param list<string>                                             $schemaPaths     of every offered module, active or not
      */
     public function __construct(

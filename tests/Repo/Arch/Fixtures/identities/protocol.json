@@ -21,6 +21,531 @@
             "id": "format:operation-name",
             "kind": "protocol",
             "reason": "P3.10: every mutating operation runs through OperationRunner under a stable OperationSpec name"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "problem:dependency_unavailable",
+            "kind": "protocol",
+            "reason": "P3.11: a dependency of the request is unavailable — 503, retry with backoff, never cached"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "problem:idempotency_key_reused",
+            "kind": "protocol",
+            "reason": "P3.11: the idempotency key was used with a different request — 422, never cached (used by P3.12)"
+        },
+        {
+            "change": "added",
+            "decision": "D25",
+            "id": "problem:operation_in_progress",
+            "kind": "protocol",
+            "reason": "P3.11: a request with the same idempotency key is still running — 409 + Retry-After, never cached (used by P3.12)"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:actor_required",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:cannot_delete_head_revision",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:collaboration_epoch_mismatch",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:collaboration_seed_conflict",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:collaboration_unavailable",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:comment_not_found",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:concurrent_update",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:content_unavailable",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:cross_drive_operation",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:cursor_expired",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:document_content_degraded",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:document_revision_not_found",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:document_state_mismatch",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:document_state_too_large",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:document_type_unavailable",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:drive_archived",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:drive_not_found",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:duplicate_registration",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:file_size_limit_exceeded",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:folder_children_limit_exceeded",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:grant_not_found",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:internal_error",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:invalid_cursor",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:invalid_destination",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:invalid_document_content",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:invalid_drive_state",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:invalid_node_name",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:invalid_properties",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:invalid_webhook_signature",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:method_not_allowed",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:module_graph_invalid",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:node_move_cycle",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:node_name_conflict",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:node_not_found",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:node_not_trashed",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:node_sequence_exhausted",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:node_sequence_mismatch",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:node_trashed_by_ancestor",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:not_a_document",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:not_a_file",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:payload_too_large",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:permission_denied",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:precondition_required",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:profile_restriction",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:quota_exceeded",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:rate_limited",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:registry_frozen",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:restore_destination_changed",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:restore_destination_required",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:revision_not_found",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:revision_pinned",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:route_not_found",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:share_link_ttl_exceeded",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:share_not_found",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:share_password_required",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:share_role_not_allowed",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:tree_depth_limit_exceeded",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:tree_traversal_incomplete",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:unknown_document_type",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:unknown_export_format",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:unknown_profile",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:unknown_role",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:unsupported_node_kind",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:upload_conflict",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:upload_not_found",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:upload_offset_mismatch",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:upload_rejected",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:validation_failed",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:webhook_delivery_not_found",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:webhook_delivery_not_redeliverable",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:webhook_endpoint_not_found",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
+        },
+        {
+            "change": "redefined",
+            "decision": "D25",
+            "id": "problem:write_outside_operation",
+            "kind": "protocol",
+            "reason": "P3.11: the code declares retryable/receipt (ProblemSpec) and is contributed by its owning module through ModuleBuilder::problems"
         }
     ],
     "items": [
@@ -1013,6 +1538,8 @@
             "exception": "Vaulter\\Exceptions\\Access\\MissingActorException",
             "id": "problem:actor_required",
             "owner": "core",
+            "receipt": "never",
+            "retryable": "never",
             "source": {
                 "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
                 "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
@@ -1023,9 +1550,11 @@
             "exception": "Vaulter\\Exceptions\\Drive\\CannotDeleteHeadRevisionException",
             "id": "problem:cannot_delete_head_revision",
             "owner": "drive",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -1033,6 +1562,8 @@
             "exception": "Vaulter\\Documents\\Exceptions\\CollaborationEpochMismatchException",
             "id": "problem:collaboration_epoch_mismatch",
             "owner": "collaboration",
+            "receipt": "cacheable",
+            "retryable": "after_refetch",
             "source": {
                 "file": "packages/documents/src/Http/Problems/DocumentsProblemCodes.php",
                 "symbol": "Vaulter\\Documents\\Http\\Problems\\DocumentsProblemCodes::codes"
@@ -1043,6 +1574,8 @@
             "exception": "Vaulter\\Documents\\Exceptions\\CollaborationSeedConflictException",
             "id": "problem:collaboration_seed_conflict",
             "owner": "collaboration",
+            "receipt": "cacheable",
+            "retryable": "after_refetch",
             "source": {
                 "file": "packages/documents/src/Http/Problems/DocumentsProblemCodes.php",
                 "symbol": "Vaulter\\Documents\\Http\\Problems\\DocumentsProblemCodes::codes"
@@ -1053,6 +1586,8 @@
             "exception": "Vaulter\\Documents\\Exceptions\\CollaborationUnavailableException",
             "id": "problem:collaboration_unavailable",
             "owner": "collaboration",
+            "receipt": "never",
+            "retryable": "with_backoff",
             "source": {
                 "file": "packages/documents/src/Http/Problems/DocumentsProblemCodes.php",
                 "symbol": "Vaulter\\Documents\\Http\\Problems\\DocumentsProblemCodes::codes"
@@ -1063,6 +1598,8 @@
             "exception": "Vaulter\\Documents\\Exceptions\\CommentNotFoundException",
             "id": "problem:comment_not_found",
             "owner": "documents",
+            "receipt": "never",
+            "retryable": "never",
             "source": {
                 "file": "packages/documents/src/Http/Problems/DocumentsProblemCodes.php",
                 "symbol": "Vaulter\\Documents\\Http\\Problems\\DocumentsProblemCodes::codes"
@@ -1073,6 +1610,8 @@
             "exception": "Vaulter\\Exceptions\\Database\\ConcurrentUpdateException",
             "id": "problem:concurrent_update",
             "owner": "core",
+            "receipt": "never",
+            "retryable": "with_backoff",
             "source": {
                 "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
                 "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
@@ -1083,9 +1622,11 @@
             "exception": "Vaulter\\Exceptions\\Files\\ContentUnavailableException",
             "id": "problem:content_unavailable",
             "owner": "drive",
+            "receipt": "never",
+            "retryable": "with_backoff",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 423
         },
@@ -1093,6 +1634,8 @@
             "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\CrossDriveOperationException",
             "id": "problem:cross_drive_operation",
             "owner": "drive",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
                 "file": "packages/drive/src/Http/Problems/DriveProblemCodes.php",
                 "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveProblemCodes::codes"
@@ -1103,16 +1646,32 @@
             "exception": "Vaulter\\Exceptions\\Changes\\CursorExpiredException",
             "id": "problem:cursor_expired",
             "owner": "drive",
+            "receipt": "never",
+            "retryable": "after_refetch",
+            "source": {
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+            },
+            "status": 410
+        },
+        {
+            "exception": null,
+            "id": "problem:dependency_unavailable",
+            "owner": "core",
+            "receipt": "never",
+            "retryable": "with_backoff",
             "source": {
                 "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
                 "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
             },
-            "status": 410
+            "status": 503
         },
         {
             "exception": "Vaulter\\Documents\\Exceptions\\DocumentContentDegradedException",
             "id": "problem:document_content_degraded",
             "owner": "documents",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
                 "file": "packages/documents/src/Http/Problems/DocumentsProblemCodes.php",
                 "symbol": "Vaulter\\Documents\\Http\\Problems\\DocumentsProblemCodes::codes"
@@ -1123,6 +1682,8 @@
             "exception": "Vaulter\\Documents\\Exceptions\\DocumentRevisionNotFoundException",
             "id": "problem:document_revision_not_found",
             "owner": "documents",
+            "receipt": "never",
+            "retryable": "never",
             "source": {
                 "file": "packages/documents/src/Http/Problems/DocumentsProblemCodes.php",
                 "symbol": "Vaulter\\Documents\\Http\\Problems\\DocumentsProblemCodes::codes"
@@ -1133,6 +1694,8 @@
             "exception": "Vaulter\\Documents\\Exceptions\\StaleDocumentStateException",
             "id": "problem:document_state_mismatch",
             "owner": "documents",
+            "receipt": "cacheable",
+            "retryable": "after_refetch",
             "source": {
                 "file": "packages/documents/src/Http/Problems/DocumentsProblemCodes.php",
                 "symbol": "Vaulter\\Documents\\Http\\Problems\\DocumentsProblemCodes::codes"
@@ -1143,6 +1706,8 @@
             "exception": "Vaulter\\Documents\\Exceptions\\DocumentStateTooLargeException",
             "id": "problem:document_state_too_large",
             "owner": "documents",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
                 "file": "packages/documents/src/Http/Problems/DocumentsProblemCodes.php",
                 "symbol": "Vaulter\\Documents\\Http\\Problems\\DocumentsProblemCodes::codes"
@@ -1153,6 +1718,8 @@
             "exception": "Vaulter\\Documents\\Exceptions\\DocumentTypeUnavailableException",
             "id": "problem:document_type_unavailable",
             "owner": "documents",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
                 "file": "packages/documents/src/Http/Problems/DocumentsProblemCodes.php",
                 "symbol": "Vaulter\\Documents\\Http\\Problems\\DocumentsProblemCodes::codes"
@@ -1163,9 +1730,11 @@
             "exception": "Vaulter\\Exceptions\\Drive\\DriveArchivedException",
             "id": "problem:drive_archived",
             "owner": "drive",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -1173,9 +1742,11 @@
             "exception": "Vaulter\\Exceptions\\Nodes\\StorageNotFoundException",
             "id": "problem:drive_not_found",
             "owner": "drive",
+            "receipt": "never",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 404
         },
@@ -1183,6 +1754,8 @@
             "exception": "Vaulter\\Exceptions\\Registry\\DuplicateNodeContentLifecycleException",
             "id": "problem:duplicate_registration",
             "owner": "core",
+            "receipt": "never",
+            "retryable": "never",
             "source": {
                 "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
                 "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
@@ -1193,6 +1766,8 @@
             "exception": "Vaulter\\Exceptions\\Support\\InvalidExtensionResult",
             "id": "problem:extension_failed",
             "owner": "core",
+            "receipt": "never",
+            "retryable": "never",
             "source": {
                 "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
                 "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
@@ -1203,9 +1778,11 @@
             "exception": "Vaulter\\Exceptions\\Policy\\FileSizeLimitExceededException",
             "id": "problem:file_size_limit_exceeded",
             "owner": "drive",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 413
         },
@@ -1213,9 +1790,11 @@
             "exception": "Vaulter\\Exceptions\\Policy\\FolderChildrenLimitExceededException",
             "id": "problem:folder_children_limit_exceeded",
             "owner": "drive",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -1223,16 +1802,32 @@
             "exception": null,
             "id": "problem:grant_not_found",
             "owner": "drive",
+            "receipt": "never",
+            "retryable": "never",
+            "source": {
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+            },
+            "status": 404
+        },
+        {
+            "exception": "Vaulter\\Exceptions\\Idempotency\\IdempotencyKeyReusedException",
+            "id": "problem:idempotency_key_reused",
+            "owner": "core",
+            "receipt": "never",
+            "retryable": "never",
             "source": {
                 "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
                 "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
             },
-            "status": 404
+            "status": 422
         },
         {
             "exception": null,
             "id": "problem:internal_error",
             "owner": "core",
+            "receipt": "never",
+            "retryable": "never",
             "source": {
                 "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
                 "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
@@ -1243,9 +1838,11 @@
             "exception": "Vaulter\\Exceptions\\Changes\\InvalidCursorException",
             "id": "problem:invalid_cursor",
             "owner": "drive",
+            "receipt": "never",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 400
         },
@@ -1253,9 +1850,11 @@
             "exception": "Vaulter\\Exceptions\\Nodes\\InvalidDestinationException",
             "id": "problem:invalid_destination",
             "owner": "drive",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -1263,6 +1862,8 @@
             "exception": "Vaulter\\Documents\\Exceptions\\InvalidDocumentContentException",
             "id": "problem:invalid_document_content",
             "owner": "documents",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
                 "file": "packages/documents/src/Http/Problems/DocumentsProblemCodes.php",
                 "symbol": "Vaulter\\Documents\\Http\\Problems\\DocumentsProblemCodes::codes"
@@ -1273,9 +1874,11 @@
             "exception": "Vaulter\\Exceptions\\Drive\\InvalidDriveStateException",
             "id": "problem:invalid_drive_state",
             "owner": "drive",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -1283,9 +1886,11 @@
             "exception": "Vaulter\\Exceptions\\Nodes\\InvalidNodeNameException",
             "id": "problem:invalid_node_name",
             "owner": "drive",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 422
         },
@@ -1293,9 +1898,11 @@
             "exception": "Vaulter\\Exceptions\\Nodes\\InvalidPropertiesException",
             "id": "problem:invalid_properties",
             "owner": "drive",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 422
         },
@@ -1303,9 +1910,11 @@
             "exception": "Vaulter\\Exceptions\\Webhooks\\InvalidWebhookSignatureException",
             "id": "problem:invalid_webhook_signature",
             "owner": "webhooks",
+            "receipt": "never",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Webhooks/WebhooksProblemCodes.php",
+                "symbol": "Vaulter\\Webhooks\\WebhooksProblemCodes::codes"
             },
             "status": 400
         },
@@ -1313,6 +1922,8 @@
             "exception": "Symfony\\Component\\HttpKernel\\Exception\\MethodNotAllowedHttpException",
             "id": "problem:method_not_allowed",
             "owner": "core",
+            "receipt": "never",
+            "retryable": "never",
             "source": {
                 "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
                 "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
@@ -1323,6 +1934,8 @@
             "exception": "Vaulter\\Modules\\ModuleGraphException",
             "id": "problem:module_graph_invalid",
             "owner": "core",
+            "receipt": "never",
+            "retryable": "never",
             "source": {
                 "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
                 "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
@@ -1333,6 +1946,8 @@
             "exception": "Vaulter\\Exceptions\\Modules\\ModuleNotReadyException",
             "id": "problem:module_not_ready",
             "owner": "core",
+            "receipt": "never",
+            "retryable": "never",
             "source": {
                 "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
                 "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
@@ -1343,6 +1958,8 @@
             "exception": "Vaulter\\Drive\\Exceptions\\Nodes\\NodeCycleException",
             "id": "problem:node_move_cycle",
             "owner": "drive",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
                 "file": "packages/drive/src/Http/Problems/DriveProblemCodes.php",
                 "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveProblemCodes::codes"
@@ -1353,9 +1970,11 @@
             "exception": "Vaulter\\Exceptions\\Nodes\\NodeNameConflictException",
             "id": "problem:node_name_conflict",
             "owner": "drive",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -1363,9 +1982,11 @@
             "exception": "Vaulter\\Exceptions\\Nodes\\NodeNotFoundException",
             "id": "problem:node_not_found",
             "owner": "drive",
+            "receipt": "never",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 404
         },
@@ -1373,9 +1994,11 @@
             "exception": "Vaulter\\Exceptions\\Nodes\\NodeNotTrashedException",
             "id": "problem:node_not_trashed",
             "owner": "drive",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -1383,9 +2006,11 @@
             "exception": "Vaulter\\Exceptions\\Nodes\\SequenceOverflowException",
             "id": "problem:node_sequence_exhausted",
             "owner": "drive",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -1393,9 +2018,11 @@
             "exception": "Vaulter\\Exceptions\\Nodes\\StaleNodeException",
             "id": "problem:node_sequence_mismatch",
             "owner": "drive",
+            "receipt": "cacheable",
+            "retryable": "after_refetch",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 412
         },
@@ -1403,9 +2030,11 @@
             "exception": "Vaulter\\Exceptions\\Nodes\\NodeTrashedByAncestorException",
             "id": "problem:node_trashed_by_ancestor",
             "owner": "drive",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -1413,6 +2042,8 @@
             "exception": "Vaulter\\Documents\\Exceptions\\NotADocumentException",
             "id": "problem:not_a_document",
             "owner": "documents",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
                 "file": "packages/documents/src/Http/Problems/DocumentsProblemCodes.php",
                 "symbol": "Vaulter\\Documents\\Http\\Problems\\DocumentsProblemCodes::codes"
@@ -1423,16 +2054,32 @@
             "exception": "Vaulter\\Exceptions\\Nodes\\NotAFileException",
             "id": "problem:not_a_file",
             "owner": "drive",
+            "receipt": "cacheable",
+            "retryable": "never",
+            "source": {
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
+            },
+            "status": 422
+        },
+        {
+            "exception": "Vaulter\\Exceptions\\Idempotency\\OperationInProgressException",
+            "id": "problem:operation_in_progress",
+            "owner": "core",
+            "receipt": "never",
+            "retryable": "with_backoff",
             "source": {
                 "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
                 "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
             },
-            "status": 422
+            "status": 409
         },
         {
             "exception": "Illuminate\\Http\\Exceptions\\PostTooLargeException",
             "id": "problem:payload_too_large",
             "owner": "core",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
                 "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
                 "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
@@ -1443,6 +2090,8 @@
             "exception": "Vaulter\\Exceptions\\Access\\PermissionDeniedException",
             "id": "problem:permission_denied",
             "owner": "core",
+            "receipt": "never",
+            "retryable": "never",
             "source": {
                 "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
                 "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
@@ -1453,6 +2102,8 @@
             "exception": "Vaulter\\Exceptions\\Http\\PreconditionRequiredException",
             "id": "problem:precondition_required",
             "owner": "core",
+            "receipt": "never",
+            "retryable": "after_refetch",
             "source": {
                 "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
                 "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
@@ -1463,9 +2114,11 @@
             "exception": "Vaulter\\Exceptions\\Profiles\\ProfileRestrictionException",
             "id": "problem:profile_restriction",
             "owner": "drive",
+            "receipt": "never",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 403
         },
@@ -1473,9 +2126,11 @@
             "exception": "Vaulter\\Exceptions\\Drive\\QuotaExceededException",
             "id": "problem:quota_exceeded",
             "owner": "drive",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 413
         },
@@ -1483,6 +2138,8 @@
             "exception": "Illuminate\\Http\\Exceptions\\ThrottleRequestsException",
             "id": "problem:rate_limited",
             "owner": "core",
+            "receipt": "never",
+            "retryable": "with_backoff",
             "source": {
                 "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
                 "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
@@ -1493,6 +2150,8 @@
             "exception": "Vaulter\\Exceptions\\Registry\\RegistryFrozenException",
             "id": "problem:registry_frozen",
             "owner": "core",
+            "receipt": "never",
+            "retryable": "never",
             "source": {
                 "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
                 "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
@@ -1503,9 +2162,11 @@
             "exception": "Vaulter\\Exceptions\\Nodes\\RestoreDestinationChangedException",
             "id": "problem:restore_destination_changed",
             "owner": "drive",
+            "receipt": "cacheable",
+            "retryable": "after_refetch",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -1513,9 +2174,11 @@
             "exception": "Vaulter\\Exceptions\\Nodes\\RestoreDestinationRequiredException",
             "id": "problem:restore_destination_required",
             "owner": "drive",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -1523,9 +2186,11 @@
             "exception": null,
             "id": "problem:revision_not_found",
             "owner": "drive",
+            "receipt": "never",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 404
         },
@@ -1533,9 +2198,11 @@
             "exception": "Vaulter\\Exceptions\\Drive\\RevisionPinnedException",
             "id": "problem:revision_pinned",
             "owner": "drive",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -1543,6 +2210,8 @@
             "exception": "Symfony\\Component\\HttpKernel\\Exception\\NotFoundHttpException",
             "id": "problem:route_not_found",
             "owner": "core",
+            "receipt": "never",
+            "retryable": "never",
             "source": {
                 "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
                 "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
@@ -1553,9 +2222,11 @@
             "exception": "Vaulter\\Exceptions\\Sharing\\ShareLinkTtlExceededException",
             "id": "problem:share_link_ttl_exceeded",
             "owner": "drive",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 422
         },
@@ -1563,9 +2234,11 @@
             "exception": "Vaulter\\Exceptions\\Sharing\\ShareNotFoundException",
             "id": "problem:share_not_found",
             "owner": "drive",
+            "receipt": "never",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 404
         },
@@ -1573,9 +2246,11 @@
             "exception": "Vaulter\\Exceptions\\Sharing\\SharePasswordRequiredException",
             "id": "problem:share_password_required",
             "owner": "drive",
+            "receipt": "never",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 401
         },
@@ -1583,9 +2258,11 @@
             "exception": "Vaulter\\Exceptions\\Sharing\\ShareRoleNotAllowedException",
             "id": "problem:share_role_not_allowed",
             "owner": "drive",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 422
         },
@@ -1593,9 +2270,11 @@
             "exception": "Vaulter\\Exceptions\\Policy\\TreeDepthLimitExceededException",
             "id": "problem:tree_depth_limit_exceeded",
             "owner": "drive",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -1603,9 +2282,11 @@
             "exception": "Vaulter\\Exceptions\\Nodes\\TreeTraversalIncompleteException",
             "id": "problem:tree_traversal_incomplete",
             "owner": "drive",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -1613,6 +2294,8 @@
             "exception": "Vaulter\\Documents\\Exceptions\\UnknownDocumentTypeException",
             "id": "problem:unknown_document_type",
             "owner": "documents",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
                 "file": "packages/documents/src/Http/Problems/DocumentsProblemCodes.php",
                 "symbol": "Vaulter\\Documents\\Http\\Problems\\DocumentsProblemCodes::codes"
@@ -1623,6 +2306,8 @@
             "exception": "Vaulter\\Documents\\Exceptions\\UnknownExportFormatException",
             "id": "problem:unknown_export_format",
             "owner": "documents",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
                 "file": "packages/documents/src/Http/Problems/DocumentsProblemCodes.php",
                 "symbol": "Vaulter\\Documents\\Http\\Problems\\DocumentsProblemCodes::codes"
@@ -1633,9 +2318,11 @@
             "exception": "Vaulter\\Exceptions\\Profiles\\UnknownProfileException",
             "id": "problem:unknown_profile",
             "owner": "drive",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 422
         },
@@ -1643,9 +2330,11 @@
             "exception": "Vaulter\\Exceptions\\Access\\UnknownRoleException",
             "id": "problem:unknown_role",
             "owner": "drive",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 422
         },
@@ -1653,9 +2342,11 @@
             "exception": "Vaulter\\Exceptions\\Nodes\\UnsupportedNodeKindException",
             "id": "problem:unsupported_node_kind",
             "owner": "drive",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",
+                "symbol": "Vaulter\\Http\\Problems\\DriveSliceProblemCodes::codes"
             },
             "status": 409
         },
@@ -1663,6 +2354,8 @@
             "exception": "Vaulter\\Drive\\Exceptions\\Uploads\\UploadConflictException",
             "id": "problem:upload_conflict",
             "owner": "drive",
+            "receipt": "never",
+            "retryable": "after_refetch",
             "source": {
                 "file": "packages/drive/src/Http/Problems/DriveProblemCodes.php",
                 "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveProblemCodes::codes"
@@ -1673,6 +2366,8 @@
             "exception": null,
             "id": "problem:upload_not_found",
             "owner": "drive",
+            "receipt": "never",
+            "retryable": "never",
             "source": {
                 "file": "packages/drive/src/Http/Problems/DriveProblemCodes.php",
                 "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveProblemCodes::codes"
@@ -1683,6 +2378,8 @@
             "exception": "Vaulter\\Drive\\Exceptions\\Uploads\\OffsetMismatchException",
             "id": "problem:upload_offset_mismatch",
             "owner": "drive",
+            "receipt": "never",
+            "retryable": "after_refetch",
             "source": {
                 "file": "packages/drive/src/Http/Problems/DriveProblemCodes.php",
                 "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveProblemCodes::codes"
@@ -1693,6 +2390,8 @@
             "exception": "Vaulter\\Drive\\Exceptions\\Files\\UploadRejectedException",
             "id": "problem:upload_rejected",
             "owner": "drive",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
                 "file": "packages/drive/src/Http/Problems/DriveProblemCodes.php",
                 "symbol": "Vaulter\\Drive\\Http\\Problems\\DriveProblemCodes::codes"
@@ -1703,6 +2402,8 @@
             "exception": "Illuminate\\Validation\\ValidationException",
             "id": "problem:validation_failed",
             "owner": "core",
+            "receipt": "never",
+            "retryable": "never",
             "source": {
                 "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
                 "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
@@ -1713,9 +2414,11 @@
             "exception": "Vaulter\\Exceptions\\Webhooks\\WebhookDeliveryNotFoundException",
             "id": "problem:webhook_delivery_not_found",
             "owner": "webhooks",
+            "receipt": "never",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Webhooks/WebhooksProblemCodes.php",
+                "symbol": "Vaulter\\Webhooks\\WebhooksProblemCodes::codes"
             },
             "status": 404
         },
@@ -1723,9 +2426,11 @@
             "exception": "Vaulter\\Exceptions\\Webhooks\\WebhookDeliveryNotRedeliverableException",
             "id": "problem:webhook_delivery_not_redeliverable",
             "owner": "webhooks",
+            "receipt": "cacheable",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Webhooks/WebhooksProblemCodes.php",
+                "symbol": "Vaulter\\Webhooks\\WebhooksProblemCodes::codes"
             },
             "status": 409
         },
@@ -1733,9 +2438,11 @@
             "exception": "Vaulter\\Exceptions\\Webhooks\\WebhookEndpointNotFoundException",
             "id": "problem:webhook_endpoint_not_found",
             "owner": "webhooks",
+            "receipt": "never",
+            "retryable": "never",
             "source": {
-                "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
-                "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"
+                "file": "packages/core/src/Webhooks/WebhooksProblemCodes.php",
+                "symbol": "Vaulter\\Webhooks\\WebhooksProblemCodes::codes"
             },
             "status": 404
         },
@@ -1743,6 +2450,8 @@
             "exception": "Vaulter\\Exceptions\\Database\\WriteOutsideOperationException",
             "id": "problem:write_outside_operation",
             "owner": "core",
+            "receipt": "never",
+            "retryable": "never",
             "source": {
                 "file": "packages/core/src/Http/Problems/CoreProblemCodes.php",
                 "symbol": "Vaulter\\Http\\Problems\\CoreProblemCodes::codes"

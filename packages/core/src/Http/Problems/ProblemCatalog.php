@@ -6,22 +6,23 @@ namespace Vaulter\Http\Problems;
 
 use Closure;
 use Illuminate\Contracts\Translation\Translator;
+use InvalidArgumentException;
 
 /**
- * Every problem code the HTTP surface can answer with. The single source of the
- * reference docs and of the localized `title`/`detail` of a problem body.
+ * Every problem code the HTTP surface can answer with: the codes the active modules declare with
+ * `ModuleBuilder::problems()` (architecture#errors). The single source of the reference docs, of the
+ * `retryable` hint of a problem body, of the receipt policy of idempotent operations (D25) and of the
+ * localized `title`/`detail`.
  */
 final class ProblemCatalog
 {
-    public const string TAG = 'vaulter.problem_codes';
-
     public const string TYPE_BASE = 'https://github.com/axiomasoft/vaulter/blob/main/docs/reference/errors.md#';
 
-    /** @var array<string, array{status: int, exception: class-string|null, package: string, namespace: string}>|null */
+    /** @var array<string, array{spec: ProblemSpec, module: string, namespace: string}>|null */
     private ?array $entries = null;
 
     /**
-     * @param Closure(): iterable<mixed> $sources Resolves the {@see ProblemCodeSource}s lazily, once all providers have registered
+     * @param Closure(): iterable<string, iterable<ProblemCodeSource>> $sources Resolves the sources lazily, by declaring module id
      */
     public function __construct(
         private readonly Closure $sources,
@@ -29,13 +30,19 @@ final class ProblemCatalog
     ) {}
 
     /**
-     * @return array<string, array{status: int, exception: class-string|null, package: string}>
+     * @return array<string, array{status: int, exception: class-string|null, module: string, retryable: Retryable, receipt: ReceiptPolicy}>
      */
     public function all(): array
     {
         $all = [];
         foreach ($this->entries() as $code => $entry) {
-            $all[$code] = ['status' => $entry['status'], 'exception' => $entry['exception'], 'package' => $entry['package']];
+            $all[$code] = [
+                'status' => $entry['spec']->status,
+                'exception' => $entry['spec']->exception,
+                'module' => $entry['module'],
+                'retryable' => $entry['spec']->retryable,
+                'receipt' => $entry['spec']->receipt,
+            ];
         }
 
         return $all;
@@ -44,6 +51,27 @@ final class ProblemCatalog
     public function has(string $code): bool
     {
         return isset($this->entries()[$code]);
+    }
+
+    /** The spec of `$code`, or null when no active module declares it. */
+    public function spec(string $code): ?ProblemSpec
+    {
+        return $this->entries()[$code]['spec'] ?? null;
+    }
+
+    /** The module that declares `$code`, or null when no active module declares it. */
+    public function module(string $code): ?string
+    {
+        return $this->entries()[$code]['module'] ?? null;
+    }
+
+    /**
+     * Whether an idempotent operation stores a failure with `$code` as its receipt (D25). An unknown code is
+     * never cached: only a declared deterministic outcome is.
+     */
+    public function isCacheable(string $code): bool
+    {
+        return $this->spec($code)?->receipt === ReceiptPolicy::Cacheable;
     }
 
     public function type(string $code): string
@@ -96,7 +124,7 @@ final class ProblemCatalog
     }
 
     /**
-     * @return array<string, array{status: int, exception: class-string|null, package: string, namespace: string}>
+     * @return array<string, array{spec: ProblemSpec, module: string, namespace: string}>
      */
     private function entries(): array
     {
@@ -105,13 +133,15 @@ final class ProblemCatalog
         }
 
         $entries = [];
-        foreach (($this->sources)() as $source) {
-            if (!$source instanceof ProblemCodeSource) {
-                continue;
-            }
-            foreach ($source->codes() as $code => $spec) {
-                // Sources register in tag order, core first; a code is claimed once.
-                $entries[$code] ??= $spec + ['package' => $source->package(), 'namespace' => $source->translationNamespace()];
+        foreach (($this->sources)() as $module => $sources) {
+            foreach ($sources as $source) {
+                foreach ($source->codes() as $code => $spec) {
+                    // The module compiler refuses such a graph; a catalogue built by hand refuses it too.
+                    if (isset($entries[$code])) {
+                        throw new InvalidArgumentException(sprintf('[Vaulter] The problem code "%s" is declared by both the module "%s" and the module "%s".', $code, $entries[$code]['module'], $module));
+                    }
+                    $entries[$code] = ['spec' => $spec, 'module' => (string) $module, 'namespace' => $source->translationNamespace()];
+                }
             }
         }
         ksort($entries);

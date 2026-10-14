@@ -122,6 +122,24 @@
             "why": "kernel concern: Actor, transaction, registry, HTTP frame (architecture#kernel)"
         },
         {
+            "match": "exact",
+            "value": "problem:dependency_unavailable",
+            "owner": "core",
+            "why": "kernel concern: idempotency of the operation pipeline and its dependencies (architecture#errors, D25)"
+        },
+        {
+            "match": "exact",
+            "value": "problem:idempotency_key_reused",
+            "owner": "core",
+            "why": "kernel concern: idempotency of the operation pipeline and its dependencies (architecture#errors, D25)"
+        },
+        {
+            "match": "exact",
+            "value": "problem:operation_in_progress",
+            "owner": "core",
+            "why": "kernel concern: idempotency of the operation pipeline and its dependencies (architecture#errors, D25)"
+        },
+        {
             "match": "prefix",
             "value": "problem:collaboration_",
             "owner": "collaboration",

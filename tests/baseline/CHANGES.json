@@ -3890,6 +3890,15 @@
       ],
       "reason": "renamed: azgard contributes its driver to the PermissionDriver slot; the host map still overrides the key (P3.5)",
       "decision": "D8"
+    },
+    {
+      "suite": "core",
+      "old": "P\\Packages\\core\\tests\\Http\\Problems\\ProblemCatalogLangTest::__pest_evaluable_it_claims_a_code_once__core_first",
+      "replacement": [
+        "P\\Packages\\core\\tests\\Http\\Problems\\ProblemCatalogLangTest::__pest_evaluable_it_lists_the_codes_sorted__each_under_the_module_that_declares_it"
+      ],
+      "reason": "renamed: a code is declared once by its owning module (compile-time refusal of duplicates) instead of claimed first by core (P3.11)",
+      "decision": "D25"
     }
   ],
   "additions": {

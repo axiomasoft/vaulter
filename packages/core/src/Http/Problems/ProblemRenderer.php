@@ -29,7 +29,9 @@ use Vaulter\Exceptions\Contracts\ProblemException;
 /**
  * Answers every failure of a versioned route as RFC 9457 `application/problem+json`.
  * The body never carries an exception message: `detail` comes from lang and `meta`
- * passes an allowlist, so internals cannot leak to a client.
+ * passes an allowlist, so internals cannot leak to a client. The `retryable` extension
+ * member comes from the code's spec (architecture#errors); a `with_backoff` code carries
+ * `Retry-After` when its exception names the delay.
  */
 final readonly class ProblemRenderer
 {
@@ -92,6 +94,8 @@ final readonly class ProblemRenderer
             $errors = array_map(static fn (): array => $detail === null ? [] : [$detail], $errors);
         }
         $title = $this->catalog->title($code) ?? (Response::$statusTexts[$status] ?? 'Error');
+        // An unknown code (a bare http_<status>) promises nothing: the client must not retry it blindly.
+        $retryable = $this->catalog->spec($code)?->retryable ?? Retryable::Never;
 
         return new JsonResponse(
             [
@@ -100,6 +104,7 @@ final readonly class ProblemRenderer
                 'status' => $status,
                 'code' => $code,
                 'detail' => $detail,
+                'retryable' => $retryable->value,
                 'request_id' => $requestId,
                 'errors' => $errors === [] ? null : $errors,
                 'meta' => $meta === [] ? new \stdClass : $meta,

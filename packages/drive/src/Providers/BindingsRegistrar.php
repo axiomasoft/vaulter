@@ -19,11 +19,9 @@ use Vaulter\Drive\Configuration\DriveConfig;
 use Vaulter\Drive\Content\DocumentPurgeLifecycle;
 use Vaulter\Drive\DriveModule;
 use Vaulter\Drive\DriveProvisioner;
-use Vaulter\Drive\Http\Problems\DriveProblemCodes;
 use Vaulter\Drive\Uploads\UploadSessionManager;
 use Vaulter\Enums\Cas\ScanMode;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
-use Vaulter\Http\Problems\ProblemCatalog;
 use Vaulter\Kernel;
 use Vaulter\Modules\ModuleBindings;
 use Vaulter\Profiles\ProfilePolicy;
@@ -31,7 +29,7 @@ use Vaulter\Profiles\ProfileRegistry;
 
 /**
  * The container wiring of the drive module ({@see DriveModule}): drive config, scan policy and
- * scanner validation, uploads, content lifecycles, the drive problem codes and the
+ * scanner validation, uploads, content lifecycles, the
  * drive config validator.
  */
 final class BindingsRegistrar implements ModuleBindings
@@ -49,8 +47,6 @@ final class BindingsRegistrar implements ModuleBindings
         });
         $app->singleton(DriveProvisioner::class);
         $app->singleton(UploadSessionManager::class);
-        $app->singleton(DriveProblemCodes::class);
-        $app->tag(DriveProblemCodes::class, ProblemCatalog::TAG);
         $app->bind('vaulter.config_validator.drive', static fn (Container $app): Closure => static function () use ($app): void {
             $config = $app->make(DriveConfig::class);
             $config->model('upload_session');

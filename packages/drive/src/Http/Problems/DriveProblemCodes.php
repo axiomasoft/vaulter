@@ -10,6 +10,9 @@ use Vaulter\Drive\Exceptions\Nodes\NodeCycleException;
 use Vaulter\Drive\Exceptions\Uploads\OffsetMismatchException;
 use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Http\Problems\ProblemCodeSource;
+use Vaulter\Http\Problems\ProblemSpec;
+use Vaulter\Http\Problems\ReceiptPolicy;
+use Vaulter\Http\Problems\Retryable;
 
 /**
  * The problem codes of the drive package: a stable public contract, so a code is added
@@ -17,11 +20,6 @@ use Vaulter\Http\Problems\ProblemCodeSource;
  */
 final class DriveProblemCodes implements ProblemCodeSource
 {
-    public function package(): string
-    {
-        return 'drive';
-    }
-
     public function translationNamespace(): string
     {
         return 'vaulter-drive';
@@ -30,12 +28,12 @@ final class DriveProblemCodes implements ProblemCodeSource
     public function codes(): array
     {
         return [
-            'cross_drive_operation' => ['status' => 409, 'exception' => CrossDriveOperationException::class],
-            'node_move_cycle' => ['status' => 409, 'exception' => NodeCycleException::class],
-            'upload_conflict' => ['status' => 409, 'exception' => UploadConflictException::class],
-            'upload_not_found' => ['status' => 404, 'exception' => null],
-            'upload_offset_mismatch' => ['status' => 409, 'exception' => OffsetMismatchException::class],
-            'upload_rejected' => ['status' => 422, 'exception' => UploadRejectedException::class],
+            'cross_drive_operation' => new ProblemSpec(409, CrossDriveOperationException::class, receipt: ReceiptPolicy::Cacheable),
+            'node_move_cycle' => new ProblemSpec(409, NodeCycleException::class, receipt: ReceiptPolicy::Cacheable),
+            'upload_conflict' => new ProblemSpec(409, UploadConflictException::class, Retryable::AfterRefetch),
+            'upload_not_found' => new ProblemSpec(404),
+            'upload_offset_mismatch' => new ProblemSpec(409, OffsetMismatchException::class, Retryable::AfterRefetch),
+            'upload_rejected' => new ProblemSpec(422, UploadRejectedException::class, receipt: ReceiptPolicy::Cacheable),
         ];
     }
 }

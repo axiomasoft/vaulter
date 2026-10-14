@@ -21,20 +21,18 @@ use Vaulter\Documents\Contracts\DocumentType;
 use Vaulter\Documents\DocumentsManager;
 use Vaulter\Documents\DocumentsModule;
 use Vaulter\Documents\Export\DocumentExporterRegistry;
-use Vaulter\Documents\Http\Problems\DocumentsProblemCodes;
 use Vaulter\Documents\Models\Documents\Document;
 use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
 use Vaulter\Documents\Types\DocumentTypeRegistry;
 use Vaulter\Exceptions\Configuration\InvalidConfigurationException;
-use Vaulter\Http\Problems\ProblemCatalog;
 use Vaulter\Kernel;
 use Vaulter\Models\Drive\Node;
 use Vaulter\Modules\ModuleBindings;
 
 /**
  * The container wiring of the documents module ({@see DocumentsModule}): config, types,
- * exporters, operations, presentation, the sanitizer, the documents problem codes and config validator, and
+ * exporters, operations, presentation, the sanitizer, and config validator, and
  * at boot the document relation of the node model and the frozen type and exporter registries.
  */
 final class BindingsRegistrar implements ModuleBindings
@@ -42,8 +40,6 @@ final class BindingsRegistrar implements ModuleBindings
     public function register(Application $app): void
     {
         $app->singleton(DocumentsConfig::class, static fn (Container $app): DocumentsConfig => new DocumentsConfig($app->make('config')));
-        $app->singleton(DocumentsProblemCodes::class);
-        $app->tag(DocumentsProblemCodes::class, ProblemCatalog::TAG);
         $app->bind('vaulter.config_validator.documents', static fn (Container $app): Closure => static function () use ($app): void {
             $config = $app->make(DocumentsConfig::class);
             $config->model('document_revision');

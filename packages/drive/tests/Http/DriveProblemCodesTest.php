@@ -10,6 +10,7 @@ use Vaulter\Drive\Exceptions\Uploads\StagedUploadMissingException;
 use Vaulter\Drive\Exceptions\Uploads\UploadConflictException;
 use Vaulter\Drive\Exceptions\Uploads\UploadContentMismatchException;
 use Vaulter\Drive\Http\Problems\DriveProblemCodes;
+use Vaulter\Http\Problems\DriveSliceProblemCodes;
 use Vaulter\Http\Problems\ProblemCatalog;
 use Vaulter\Tests\Support\ProblemProbeRoutes;
 
@@ -55,11 +56,26 @@ it('registers the drive codes with the catalogue and the drive lang namespace', 
     expect($codes)->not->toBeEmpty();
     foreach ($codes as $code) {
         expect($catalog->all())->toHaveKey($code)
-            ->and($catalog->all()[$code]['package'])->toBe('drive');
+            ->and($catalog->all()[$code]['module'])->toBe('drive');
         foreach (['en', 'ru'] as $locale) {
             expect($catalog->title($code, $locale))->toBeString($locale.' '.$code);
         }
     }
+});
+
+it('declares the drive codes located in core under the drive module (D39)', function (): void {
+    $catalog = $this->app->make(ProblemCatalog::class);
+
+    foreach (array_keys((new DriveSliceProblemCodes)->codes()) as $code) {
+        expect($catalog->module($code))->toBe('drive', $code);
+    }
+});
+
+it('says whether a drive refusal may be retried', function (): void {
+    ProblemProbeRoutes::register(['offset' => new OffsetMismatchException(serverOffset: 7), 'cycle' => NodeCycleException::forMove(1, 2)]);
+
+    $this->getJson(ProblemProbeRoutes::path('offset'))->assertJsonPath('retryable', 'after_refetch');
+    $this->getJson(ProblemProbeRoutes::path('cycle'))->assertJsonPath('retryable', 'never');
 });
 
 it('does not render a drive exception as problem+json outside the versioned prefix', function (): void {

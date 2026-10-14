@@ -23,6 +23,7 @@ use Vaulter\Documents\Doctor\DocumentTypesCheck;
 use Vaulter\Documents\Export\DefaultExportFilenameResolver;
 use Vaulter\Documents\Export\HtmlExporter;
 use Vaulter\Documents\Export\MarkdownExporter;
+use Vaulter\Documents\Http\Problems\DocumentsProblemCodes;
 use Vaulter\Documents\Operations\CommentOperations;
 use Vaulter\Documents\Operations\DocumentOperations;
 use Vaulter\Documents\Presentation\DocumentPresenter;
@@ -73,6 +74,7 @@ final class DocumentsModule implements VaulterModule
         $module
             ->config('vaulter-documents', dirname(__DIR__).'/config/vaulter-documents.php')
             ->routes(dirname(__DIR__).'/routes/documents.php')
+            ->problems(DocumentsProblemCodes::class)
             ->bindings(BindingsRegistrar::class)
             ->bindings(CollaborationRegistrar::class)
             ->commands(MakeDocumentTypeCommand::class, MakeExporterCommand::class)

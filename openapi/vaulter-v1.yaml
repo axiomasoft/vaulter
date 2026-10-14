@@ -4082,6 +4082,7 @@ components:
           - content_unavailable
           - cross_drive_operation
           - cursor_expired
+          - dependency_unavailable
           - document_content_degraded
           - document_revision_not_found
           - document_state_mismatch
@@ -4094,6 +4095,7 @@ components:
           - file_size_limit_exceeded
           - folder_children_limit_exceeded
           - grant_not_found
+          - idempotency_key_reused
           - internal_error
           - invalid_cursor
           - invalid_destination
@@ -4114,6 +4116,7 @@ components:
           - node_trashed_by_ancestor
           - not_a_document
           - not_a_file
+          - operation_in_progress
           - payload_too_large
           - permission_denied
           - precondition_required
@@ -4151,6 +4154,13 @@ components:
           - string
           - 'null'
           description: Localized explanation; never storage paths, tokens or SQL.
+        retryable:
+          type: string
+          enum:
+          - never
+          - after_refetch
+          - with_backoff
+          description: Whether the request may be repeated — never as is, after refetching the resource (stale precondition), or later with backoff honouring Retry-After. Declared per code in docs/reference/errors.md.
         request_id:
           type: string
           description: Equals the X-Request-Id response header.

@@ -49,6 +49,7 @@ final class WebhooksModule implements VaulterModule
     {
         $module
             ->routes(dirname(__DIR__, 2).'/routes/webhooks.php')
+            ->problems(WebhooksProblemCodes::class)
             ->commands(
                 RelayWebhooksCommand::class,
                 RetryWebhooksCommand::class,

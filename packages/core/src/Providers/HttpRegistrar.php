@@ -15,9 +15,10 @@ use Vaulter\Http\Middleware\AddApiVersionHeader;
 use Vaulter\Http\Middleware\ApplyResponseCachePolicy;
 use Vaulter\Http\Middleware\AssignCorrelationId;
 use Vaulter\Http\Middleware\EnsureModuleActive;
-use Vaulter\Http\Problems\CoreProblemCodes;
+use Vaulter\Http\Problems\ErrorsReference;
 use Vaulter\Http\Problems\ProblemCatalog;
 use Vaulter\Http\Problems\ProblemRenderer;
+use Vaulter\Http\Problems\ProblemSources;
 
 /**
  * The kernel's HTTP diagnostics, applied whatever the module graph: the problem catalogue and renderer and the
@@ -28,12 +29,15 @@ final class HttpRegistrar
     public function register(Application $app): void
     {
         $app->singleton(ProblemCatalog::class, static fn (Application $app): ProblemCatalog => new ProblemCatalog(
-            static fn (): iterable => $app->tagged(ProblemCatalog::TAG),
+            static fn (): array => ProblemSources::active($app),
             $app->make(Translator::class),
         ));
         $app->singleton(ProblemRenderer::class);
-        $app->singleton(CoreProblemCodes::class);
-        $app->tag(CoreProblemCodes::class, ProblemCatalog::TAG);
+        // The reference docs list the codes of every offered module, an opt-in one included.
+        $app->bind(ErrorsReference::class, static fn (Application $app): ErrorsReference => new ErrorsReference(new ProblemCatalog(
+            static fn (): array => ProblemSources::offered($app),
+            $app->make(Translator::class),
+        )));
     }
 
     public function boot(Application $app): void

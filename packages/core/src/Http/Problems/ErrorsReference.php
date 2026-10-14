@@ -6,8 +6,9 @@ namespace Vaulter\Http\Problems;
 
 /**
  * Renders the error reference of the docs from the {@see ProblemCatalog}, so the docs
- * cannot drift from the codes: one summary table, then a heading per code, which is the
- * anchor the `type` URI of a problem body points at.
+ * cannot drift from the codes: one summary table (status, declaring module, retryability
+ * and idempotency receipt policy), then a heading per code, which is the anchor the
+ * `type` URI of a problem body points at.
  */
 final readonly class ErrorsReference
 {
@@ -21,15 +22,24 @@ final readonly class ErrorsReference
     public function render(string $locale): string
     {
         $summary = [
-            '| Code | HTTP | Package | Exception |',
-            '|---|---|---|---|',
+            '| Code | HTTP | Module | Retryable | Receipt | Exception |',
+            '|---|---|---|---|---|---|',
         ];
         $sections = [];
         foreach ($this->catalog->all() as $code => $entry) {
             $exception = $entry['exception'] === null ? '—' : '`'.$entry['exception'].'`';
-            $summary[] = sprintf('| [`%s`](#%s) | %d | %s | %s |', $code, $code, $entry['status'], $entry['package'], $exception);
+            $summary[] = sprintf(
+                '| [`%s`](#%s) | %d | %s | `%s` | `%s` | %s |',
+                $code,
+                $code,
+                $entry['status'],
+                $entry['module'],
+                $entry['retryable']->value,
+                $entry['receipt']->value,
+                $exception,
+            );
 
-            $section = ['### `'.$code.'`', '', sprintf('**%d** · %s', $entry['status'], $entry['package'])];
+            $section = ['### `'.$code.'`', '', sprintf('**%d** · %s · retryable `%s` · receipt `%s`', $entry['status'], $entry['module'], $entry['retryable']->value, $entry['receipt']->value)];
             $title = $this->catalog->title($code, $locale);
             $detail = $this->catalog->detail($code, [], $locale);
             if ($title !== null) {

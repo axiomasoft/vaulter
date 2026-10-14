@@ -91,6 +91,20 @@ middleware операции вызвал `$next` не ровно один раз
 выполнена или откачена. Это ошибка интеграции: она не повторяется и не кэшируется. Исправьте или
 отключите модуль, внёсший вклад ([ADR-0028](/adr/0028-extension-slots-and-operation-pipeline)).
 
+## idempotency-key-reused
+
+`IdempotencyKeyReusedException` (422 `idempotency_key_reused`) — тот же актор уже использовал
+`Idempotency-Key` для этой операции с другим запросом (другие идентификаторы, поля или предусловия).
+Ничего не выполнено; сохранённый результат принадлежит первому запросу. Для нового запроса отправьте
+новый ключ ([идемпотентность](/ru/concepts/idempotency), [ADR-0029](/adr/0029-idempotency)).
+
+## operation-in-progress
+
+`OperationInProgressException` (409 `operation_in_progress`, `Retry-After`) — запрос с тем же
+`Idempotency-Key` ещё выполняется и не завершился за ограниченное ожидание (2 секунды). Ничего не
+выполнено; повторите запрос через `Retry-After`, чтобы получить результат первого
+([идемпотентность](/ru/concepts/idempotency)).
+
 ## duplicate-registration
 
 `DuplicateDocumentTypeException` (`duplicate_registration`) — один ключ типа документа

@@ -152,16 +152,57 @@ final class Protocol
             if (!$entry->key instanceof Scalar\String_) {
                 continue;
             }
-            $spec = Config::evaluate($entry->value);
+            $spec = self::problemSpec($entry->value);
             $items[] = [
                 'id' => 'problem:'.$entry->key->value,
                 'source' => ['file' => $file, 'symbol' => $class.'::codes'],
-                'status' => is_array($spec) ? ($spec['status'] ?? null) : null,
-                'exception' => is_array($spec) ? ($spec['exception'] ?? null) : null,
+                'status' => $spec['status'],
+                'exception' => $spec['exception'],
+                'retryable' => $spec['retryable'],
+                'receipt' => $spec['receipt'],
             ];
         }
 
         return $items;
+    }
+
+    /**
+     * Reads `new ProblemSpec(status, exception, retryable, receipt)` with positional or named arguments; an
+     * omitted retryable or receipt is the constructor default `never`. Anything else yields nulls, which the
+     * fixture then shows.
+     *
+     * @return array{status: mixed, exception: mixed, retryable: string|null, receipt: string|null}
+     */
+    private static function problemSpec(Expr $value): array
+    {
+        $spec = ['status' => null, 'exception' => null, 'retryable' => null, 'receipt' => null];
+        if (!$value instanceof Expr\New_ || !$value->class instanceof Node\Name || $value->class->getLast() !== 'ProblemSpec') {
+            return $spec;
+        }
+        $spec['retryable'] = $spec['receipt'] = 'never';
+        $positions = ['status', 'exception', 'retryable', 'receipt'];
+        foreach ($value->args as $position => $arg) {
+            if (!$arg instanceof Node\Arg) {
+                continue;
+            }
+            $name = $arg->name?->toString() ?? $positions[$position] ?? null;
+            if ($name === null || !array_key_exists($name, $spec)) {
+                continue;
+            }
+            $spec[$name] = in_array($name, ['retryable', 'receipt'], true) ? self::enumCase($arg->value) : Config::evaluate($arg->value);
+        }
+
+        return $spec;
+    }
+
+    /** `Retryable::AfterRefetch` → `after_refetch`; the backed values are the snake case of the case names. */
+    private static function enumCase(Expr $value): ?string
+    {
+        if (!$value instanceof Expr\ClassConstFetch || !$value->name instanceof Node\Identifier) {
+            return null;
+        }
+
+        return strtolower((string) preg_replace('/(?<!^)[A-Z]/', '_$0', $value->name->toString()));
     }
 
     /** @return list<array<string, mixed>> */

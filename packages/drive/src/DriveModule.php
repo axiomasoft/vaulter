@@ -47,6 +47,7 @@ use Vaulter\Drive\Doctor\ScanScannerCheck;
 use Vaulter\Drive\Doctor\ScanScopeCheck;
 use Vaulter\Drive\Doctor\UploadsTmpCheck;
 use Vaulter\Drive\Enums\Uploads\UploadProtocol;
+use Vaulter\Drive\Http\Problems\DriveProblemCodes;
 use Vaulter\Drive\Providers\BindingsRegistrar;
 use Vaulter\Drive\Providers\SchedulingRegistrar;
 use Vaulter\Drive\Uploads\Inspection\FilenameInspector;
@@ -59,6 +60,7 @@ use Vaulter\Enums\Drive\NodeKind;
 use Vaulter\Handlers\Builtin\DownloadOnlyHandler;
 use Vaulter\Handlers\Builtin\PreviewHandler;
 use Vaulter\Handlers\NodePresenter as CoreNodePresenter;
+use Vaulter\Http\Problems\DriveSliceProblemCodes;
 use Vaulter\Modules\Activation;
 use Vaulter\Modules\Cardinality;
 use Vaulter\Modules\ModuleBuilder;
@@ -118,6 +120,9 @@ final class DriveModule implements VaulterModule
             ->config('vaulter-drive', dirname(__DIR__).'/config/vaulter-drive.php')
             ->routes(dirname(__DIR__).'/routes/drive.php')
             ->routes(self::coreRoutes())
+            ->problems(DriveProblemCodes::class)
+            // Located in core until P4 (D39).
+            ->problems(DriveSliceProblemCodes::class)
             ->bindings(DriveSliceRegistrar::class)
             ->bindings(AccessRegistrar::class)
             ->bindings(BindingsRegistrar::class)

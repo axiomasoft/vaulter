@@ -244,7 +244,8 @@ final class ModuleBuilder
     }
 
     /**
-     * The module's problem codes (consumed by the problem catalogue).
+     * The module's problem codes (architecture#errors): the catalogue lists them while the module is active, and a
+     * code declared by two installed modules makes the graph invalid.
      *
      * @param class-string<ProblemCodeSource> $source
      */

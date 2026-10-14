@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vaulter\Modules;
 
 use Throwable;
+use Vaulter\Http\Problems\ProblemCodeSource;
+use Vaulter\Http\Problems\ProblemSpec;
 
 /**
  * Compiles the offered manifests into one sealed module graph (architecture#module-system, steps 1–5).
@@ -12,7 +14,8 @@ use Throwable;
  * `vaulter.modules` overrides come in as a value. Any defect yields {@see InvalidModuleGraph} with every
  * reason; nothing is activated partially.
  *
- * The only probes are `is_a()` checks of declared class-strings: config validation, never activation.
+ * The only probes are `is_a()` checks of declared class-strings and the constant code tables of the declared
+ * problem sources: config validation, never activation.
  *
  * @internal
  */
@@ -23,6 +26,8 @@ final class ModuleCompiler
     private const string VERSION = '/^(\d+)\.(\d+)$/';
 
     private const string CONTRIBUTION_ID = '/^[a-z0-9][a-z0-9._-]*$/';
+
+    private const string PROBLEM_CODE = '/^[a-z][a-z0-9_]*$/';
 
     /**
      * Instantiates the offered manifest classes, then compiles them.
@@ -144,6 +149,8 @@ final class ModuleCompiler
         $this->unique($builders, static fn (ModuleBuilder $b): array => array_keys($b->routeMiddlewareAliases()), 'route middleware alias', $reasons);
         $this->unique($builders, static fn (ModuleBuilder $b): array => $b->commandClasses(), 'command', $reasons);
         $this->unique($builders, static fn (ModuleBuilder $b): array => $b->bindingClasses(), 'bindings class', $reasons);
+        $problemCodes = $this->problemCodes($builders, $reasons);
+        $this->unique($builders, static fn (ModuleBuilder $b): array => $problemCodes[$b->module()->value] ?? [], 'problem code', $reasons);
         foreach ($builders as $id => $builder) {
             foreach ($builder->bindingClasses() as $class) {
                 if (!is_a($class, ModuleBindings::class, true)) {
@@ -310,7 +317,9 @@ final class ModuleCompiler
                 }
             }
             array_push($events, ...$builder->eventSources());
-            array_push($problems, ...$builder->problemSources());
+            if ($builder->problemSources() !== []) {
+                $problems[$id] = $builder->problemSources();
+            }
         }
 
         return new CompiledModules(
@@ -474,6 +483,50 @@ final class ModuleCompiler
                 $owner[$name] = $id;
             }
         }
+    }
+
+    /**
+     * The problem codes each module declares. A source is a value object without constructor arguments whose
+     * `codes()` is a constant table, so reading it here keeps the compiler free of container and I/O.
+     *
+     * @param  array<string, ModuleBuilder> $builders
+     * @param  list<string>                 $reasons
+     * @return array<string, list<string>>  module id => codes
+     */
+    private function problemCodes(array $builders, array &$reasons): array
+    {
+        $codes = [];
+        foreach ($builders as $id => $builder) {
+            foreach ($builder->problemSources() as $class) {
+                if (!is_a($class, ProblemCodeSource::class, true)) {
+                    $reasons[] = sprintf('module "%s" declares the problem source %s, which does not implement %s', $id, $class, ProblemCodeSource::class);
+
+                    continue;
+                }
+                try {
+                    $table = (new $class)->codes();
+                } catch (Throwable $e) {
+                    $reasons[] = sprintf('module "%s" declares the problem source %s, which cannot be read: %s', $id, $class, $e->getMessage());
+
+                    continue;
+                }
+                foreach ($table as $code => $spec) {
+                    if (!is_string($code) || preg_match(self::PROBLEM_CODE, $code) !== 1) {
+                        $reasons[] = sprintf('problem source %s declares the malformed code "%s"', $class, (string) $code);
+
+                        continue;
+                    }
+                    if (!$spec instanceof ProblemSpec) {
+                        $reasons[] = sprintf('problem source %s declares "%s" without a %s', $class, $code, ProblemSpec::class);
+
+                        continue;
+                    }
+                    $codes[$id][] = $code;
+                }
+            }
+        }
+
+        return $codes;
     }
 
     /**

@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Container\Container;
+use Vaulter\Http\Problems\ProblemCodeSource;
+use Vaulter\Http\Problems\ProblemSpec;
 use Vaulter\Modules\Activation;
 use Vaulter\Modules\Cardinality;
 use Vaulter\Modules\CompiledModules;
@@ -16,9 +18,11 @@ use Vaulter\Modules\SlotKind;
 use Vaulter\Modules\VaulterModule;
 use Vaulter\Tests\Modules\Fixtures\FirstStep;
 use Vaulter\Tests\Modules\Fixtures\FixtureModule;
+use Vaulter\Tests\Modules\Fixtures\FixtureProblemCodes;
 use Vaulter\Tests\Modules\Fixtures\Greeter;
 use Vaulter\Tests\Modules\Fixtures\HostModule;
 use Vaulter\Tests\Modules\Fixtures\LoudGreeter;
+use Vaulter\Tests\Modules\Fixtures\MalformedProblemCodes;
 use Vaulter\Tests\Modules\Fixtures\NotAGreeter;
 use Vaulter\Tests\Modules\Fixtures\OptionalModule;
 use Vaulter\Tests\Modules\Fixtures\PlainGreeter;
@@ -394,4 +398,41 @@ it('only takes class-strings: a closure is a type error', function (): void {
     $builder = new ModuleBuilder(new ModuleId('host'));
 
     expect(fn () => $builder->provides(Greeter::class, static fn (): PlainGreeter => new PlainGreeter))->toThrow(TypeError::class);
+});
+
+it('refuses a problem code declared by two installed modules', function (): void {
+    $reasons = invalidReasons([
+        fixtureHost(static fn (ModuleBuilder $m) => $m->provides(Greeter::class, PlainGreeter::class)->problems(FixtureProblemCodes::class)),
+        fixturePlugin('optional', static fn (ModuleBuilder $m) => $m->problems(FixtureProblemCodes::class), Activation::OptIn, requires: []),
+    ]);
+
+    expect($reasons)->toContain('problem code "fixture_conflict" is declared by both "host" and "optional"')
+        ->and($reasons)->toContain('problem code "fixture_missing" is declared by both "host" and "optional"');
+});
+
+it('refuses a problem source that is not one, a malformed code and an entry without a spec', function (): void {
+    $reasons = invalidReasons([
+        fixtureHost(static fn (ModuleBuilder $m) => $m->provides(Greeter::class, PlainGreeter::class)
+            ->problems(MalformedProblemCodes::class)
+            ->problems(PlainGreeter::class)),
+    ]);
+
+    expect($reasons)->toContain(sprintf('module "host" declares the problem source %s, which does not implement %s', PlainGreeter::class, ProblemCodeSource::class))
+        ->and($reasons)->toContain(sprintf('problem source %s declares the malformed code "Not-A-Code"', MalformedProblemCodes::class))
+        ->and($reasons)->toContain(sprintf('problem source %s declares "fixture_raw" without a %s', MalformedProblemCodes::class, ProblemSpec::class));
+});
+
+it('keeps the problem sources of an inactive module out of the sealed state', function (): void {
+    $result = compileModules([
+        fixtureHost(static fn (ModuleBuilder $m) => $m->provides(Greeter::class, PlainGreeter::class)),
+        fixturePlugin('optional', static fn (ModuleBuilder $m) => $m->problems(FixtureProblemCodes::class), Activation::OptIn, requires: []),
+    ]);
+    $enabled = compileModules([
+        fixtureHost(static fn (ModuleBuilder $m) => $m->provides(Greeter::class, PlainGreeter::class)),
+        fixturePlugin('optional', static fn (ModuleBuilder $m) => $m->problems(FixtureProblemCodes::class), Activation::OptIn, requires: []),
+    ], ['optional' => true]);
+
+    assert($result instanceof CompiledModules && $enabled instanceof CompiledModules);
+    expect($result->problems)->toBe([])
+        ->and($enabled->problems)->toBe(['optional' => [FixtureProblemCodes::class]]);
 });

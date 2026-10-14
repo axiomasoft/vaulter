@@ -23,6 +23,7 @@ use Vaulter\Doctor\Checks\SchemaIntegrityCheck;
 use Vaulter\Doctor\Checks\SchemaKeyTypesCheck;
 use Vaulter\Doctor\Checks\SchemaTablesCheck;
 use Vaulter\Doctor\Checks\TenancyCheck;
+use Vaulter\Http\Problems\CoreProblemCodes;
 use Vaulter\Modules\Activation;
 use Vaulter\Modules\Cardinality;
 use Vaulter\Modules\ModuleBuilder;
@@ -83,6 +84,7 @@ final class CoreModule implements VaulterModule
             ->schema(dirname(__DIR__).'/database/migrations')
             ->bindings(BindingsRegistrar::class)
             ->bindings(EventsRegistrar::class)
+            ->problems(CoreProblemCodes::class)
             ->commands(
                 InstallCommand::class,
                 DoctorCommand::class,

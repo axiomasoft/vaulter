@@ -13,13 +13,23 @@ export type VaulterErrorCode =
   | 'invalid_node_name'
   | 'permission_denied'
   | 'node_not_found'
+  | 'idempotency_key_reused'
+  | 'operation_in_progress'
   | (string & {})
+
+/**
+ * Whether the server says the request may be repeated (the `retryable` member of the problem):
+ * never as is, after refetching the resource, or later with backoff (honouring `Retry-After`).
+ * A body without the member decodes as `never`. The client does not retry on its own.
+ */
+export type VaulterRetryable = 'never' | 'after_refetch' | 'with_backoff'
 
 export interface VaulterApiErrorInit {
   status: number
   code: VaulterErrorCode
   title?: string
   detail?: string | null
+  retryable?: VaulterRetryable
   requestId?: string | null
   meta?: Record<string, unknown>
   errors?: Record<string, string[]> | null
@@ -32,6 +42,7 @@ export class VaulterApiError extends Error {
   readonly code: VaulterErrorCode
   readonly title: string
   readonly detail: string | null
+  readonly retryable: VaulterRetryable
   readonly requestId: string | null
   readonly meta: Record<string, unknown>
   readonly errors: Record<string, string[]> | null
@@ -45,6 +56,7 @@ export class VaulterApiError extends Error {
     this.code = init.code
     this.title = title
     this.detail = init.detail ?? null
+    this.retryable = init.retryable ?? 'never'
     this.requestId = init.requestId ?? null
     this.meta = init.meta ?? {}
     this.errors = init.errors ?? null
@@ -89,6 +101,7 @@ export class VaulterApiError extends Error {
       code: body.code,
       title: typeof body.title === 'string' ? body.title : undefined,
       detail: typeof body.detail === 'string' ? body.detail : null,
+      retryable: isRetryable(body.retryable) ? body.retryable : 'never',
       requestId: typeof body.request_id === 'string' ? body.request_id : fallback.requestId,
       meta: isRecord(body.meta) ? body.meta : {},
       errors: isRecord(body.errors) ? (body.errors as Record<string, string[]>) : null,
@@ -108,6 +121,10 @@ export class VaulterApiError extends Error {
       response,
     })
   }
+}
+
+function isRetryable(value: unknown): value is VaulterRetryable {
+  return value === 'never' || value === 'after_refetch' || value === 'with_backoff'
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

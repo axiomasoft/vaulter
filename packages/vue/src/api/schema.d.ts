@@ -1105,6 +1105,7 @@ export interface components {
              * @example content_unavailable
              * @example cross_drive_operation
              * @example cursor_expired
+             * @example dependency_unavailable
              * @example document_content_degraded
              * @example document_revision_not_found
              * @example document_state_mismatch
@@ -1113,9 +1114,11 @@ export interface components {
              * @example drive_archived
              * @example drive_not_found
              * @example duplicate_registration
+             * @example extension_failed
              * @example file_size_limit_exceeded
              * @example folder_children_limit_exceeded
              * @example grant_not_found
+             * @example idempotency_key_reused
              * @example internal_error
              * @example invalid_cursor
              * @example invalid_destination
@@ -1125,6 +1128,8 @@ export interface components {
              * @example invalid_properties
              * @example invalid_webhook_signature
              * @example method_not_allowed
+             * @example module_graph_invalid
+             * @example module_not_ready
              * @example node_move_cycle
              * @example node_name_conflict
              * @example node_not_found
@@ -1134,6 +1139,7 @@ export interface components {
              * @example node_trashed_by_ancestor
              * @example not_a_document
              * @example not_a_file
+             * @example operation_in_progress
              * @example payload_too_large
              * @example permission_denied
              * @example precondition_required
@@ -1170,6 +1176,11 @@ export interface components {
             code: string;
             /** @description Localized explanation; never storage paths, tokens or SQL. */
             detail?: string | null;
+            /**
+             * @description Whether the request may be repeated — never as is, after refetching the resource (stale precondition), or later with backoff honouring Retry-After. Declared per code in docs/reference/errors.md.
+             * @enum {string}
+             */
+            retryable?: "never" | "after_refetch" | "with_backoff";
             /** @description Equals the X-Request-Id response header. */
             request_id: string;
             /** @description Laravel field map for validation_failed and field-bound errors. */

@@ -197,6 +197,20 @@ or duplicate fragment key. The operation did not run or was rolled back. It is a
 it is never retried and never cached. Fix or deactivate the contributing module
 ([ADR-0028](/adr/0028-extension-slots-and-operation-pipeline)).
 
+## idempotency-key-reused
+
+`IdempotencyKeyReusedException` (422 `idempotency_key_reused`) — the same actor already used the
+`Idempotency-Key` for this operation with a different request (other ids, fields or preconditions).
+Nothing ran; the stored outcome belongs to the first request. Send a new key for a new request
+([idempotency](/concepts/idempotency), [ADR-0029](/adr/0029-idempotency)).
+
+## operation-in-progress
+
+`OperationInProgressException` (409 `operation_in_progress`, `Retry-After`) — a request with the same
+`Idempotency-Key` is still running and did not finish within the bounded wait (2 seconds). Nothing ran;
+repeat the request after `Retry-After` to receive the outcome of the first one
+([idempotency](/concepts/idempotency)).
+
 ## duplicate-registration
 
 `DuplicateDocumentTypeException` (`duplicate_registration`) — one document type key was
