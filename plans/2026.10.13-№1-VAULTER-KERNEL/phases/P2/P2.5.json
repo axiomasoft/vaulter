@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P2.5",
   "title": "p2-findings: поимённая сверка code-facts, сводки инвентаря и открытые вопросы",
-  "status": "in_progress",
+  "status": "done_with_deviations",
   "summary": "Создан knowledge-документ `p2-findings` (plan.py add-document, applies_to P3–P7) с секциями code-facts-verification, type-map-summary, identities-summary, scan-baseline, open-questions, inputs-for-p3-p4; каждое утверждение source-review#code-facts и нужные A-пункты проверены на 35718fd2 по symbol; продуктовые развилки вынесены открытыми D#, не решены.",
   "why": "P3–P6 детализируются по этому документу, а не по устаревшим номерам строк c64bba25; без явной сверки P3 может снимать probe, который на самом деле config-validation, или переносить тип по ошибочному факту. Риск: агент молча «решает» продуктовую развилку — поэтому только открытый D# с вариантами.",
   "scope": {
@@ -136,12 +136,34 @@
   },
   "result": {
     "started_at": "2026-10-14T03:41:48Z",
+    "finished_at": "2026-10-14T04:26:00Z",
     "executor": {
       "provider": "claude",
       "model": "claude-opus-5-5",
       "effort": "medium",
       "session": "f8acae08-acc4-441b-9949-c9cb156deafd"
-    }
+    },
+    "notes": "knowledge/p2-findings: 6 секций; code-facts C1–C29 + A3/A5/A6/A7/A16/A17/A21/A23 сверены на 35718fd2 по symbol (изменилось: C18 миграция webhook_fanout → create-миграция, A23 InstallCommand опции; new_since_review drive IntlCheck). Открытые развилки D32 (остаток collaboration в I2/I4), D33 (диски/профили media), D34 (morph-алиасы), D35 (Label/Icon). Дефект-запись: core composer suggest php-jwt ^6.0 vs ^7.0. Ревью grok/grok-4.7 high: R1 FINDINGS 5 (все подтверждены, fix dfd28eb5), R2 PASS. Context pack 774 KB > 256 KB — difficulty залогирован.",
+    "deviations": [
+      "decisions/D32–D35 закоммичены через --path (вне task_files, созданы add-decision в scope)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T04:26:00Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-14T04:26:00Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-14T04:26:00Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-14T03:41:48Z"
+  "updated_at": "2026-10-14T04:26:00Z"
 }
