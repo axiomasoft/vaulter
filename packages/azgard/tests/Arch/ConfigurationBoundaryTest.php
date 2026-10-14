@@ -32,7 +32,7 @@ test('azgard source has no direct Vaulter configuration reads (P2.5)', function 
                 $contents = file_get_contents($file->getPathname());
                 expect($contents)->not->toBeFalse();
 
-                if (preg_match('/\bconfig\s*\(\s*[\'\"]vaulter/', $contents) === 1) {
+                if (preg_match('/(?<!->)\bconfig\s*\(\s*[\'\"]vaulter/', $contents) === 1) {
                     $offenders[] = $file->getPathname();
                 }
             }

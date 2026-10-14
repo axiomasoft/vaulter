@@ -11,8 +11,8 @@ use Vaulter\Doctor\DoctorSeverity;
 use Vaulter\Documents\Actions\Documents\CreateDocumentAction;
 use Vaulter\Documents\Data\Documents\CreateDocumentInput;
 use Vaulter\Documents\Models\Documents\Document;
+use Vaulter\Documents\Providers\BindingsRegistrar;
 use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
-use Vaulter\Documents\VaulterDocumentsServiceProvider;
 use Vaulter\Tests\Drive\DriveTestHelpers;
 
 beforeEach(fn () => DriveTestHelpers::insideOperation());
@@ -126,5 +126,5 @@ it('repeats the documents configuration validation as one of the config validato
     $finding = documentsFindings('core.config.valid')[0];
 
     expect($finding->severity)->toBe(DoctorSeverity::Error)
-        ->and($finding->evidence['validator'])->toBe(VaulterDocumentsServiceProvider::class);
+        ->and($finding->evidence['validator'])->toBe(BindingsRegistrar::class);
 });

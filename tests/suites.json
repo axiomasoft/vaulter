@@ -295,7 +295,8 @@
           ],
           "skeleton_writer": false,
           "empty_passes": [
-            "serial"
+            "serial",
+            "parallel"
           ],
           "files": [
             "packages/core/tests/Database/VaulterDatabaseTest.php"

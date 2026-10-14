@@ -10,13 +10,14 @@ use Vaulter\Documents\Tests\Document\DocumentTestHelpers;
 use Vaulter\Documents\Tests\Operations\OperationsTestCase;
 use Vaulter\Enums\Events\EventType;
 use Vaulter\Tests\Access\AccessTestHelpers;
+use Vaulter\Tests\Concerns\EnablesWebhooksModule;
 use Vaulter\Tests\Events\EventConformance;
 
 /**
  * The document and comment events, produced by the real Actions, carry exactly the
  * data their EventSpec declares and nothing an envelope must not hold.
  */
-uses(OperationsTestCase::class, RefreshDatabase::class);
+uses(OperationsTestCase::class, RefreshDatabase::class, EnablesWebhooksModule::class);
 
 it('records the document and comment events with the data their specs declare', function (): void {
     config()->set('vaulter-documents.revisions.checkpoint_interval_seconds', 0);

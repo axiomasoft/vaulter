@@ -23,6 +23,7 @@ use Vaulter\Documents\Contracts\DocumentExporter;
 use Vaulter\Documents\Contracts\DocumentType;
 use Vaulter\Documents\Contracts\ExportFilenameResolver;
 use Vaulter\Documents\DocumentsManager;
+use Vaulter\Documents\DocumentsModule;
 use Vaulter\Documents\Export\DefaultExportFilenameResolver;
 use Vaulter\Documents\Export\DocumentExporterRegistry;
 use Vaulter\Documents\Http\Problems\DocumentsProblemCodes;
@@ -38,7 +39,7 @@ use Vaulter\Models\Drive\Node;
 use Vaulter\Modules\ModuleBindings;
 
 /**
- * The container wiring of the documents module ({@see \Vaulter\Documents\DocumentsModule}): config, types,
+ * The container wiring of the documents module ({@see DocumentsModule}): config, types,
  * exporters, operations, presentation, the sanitizer, the documents problem codes and config validator, and
  * at boot the document relation of the node model and the frozen type and exporter registries.
  */

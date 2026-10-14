@@ -29,6 +29,11 @@ const CORE_PROVIDER_KERNEL_CALLS = [
     'packageBooted' => ['bootModuleKernel'],
 ];
 
+/** Methods a provider class may declare; the core provider also holds the private module-kernel helpers. */
+const PROVIDER_ALLOWED_METHODS = ['configurePackage', 'register', 'boot', 'packageRegistered', 'packageBooted'];
+
+const CORE_PROVIDER_KERNEL_METHODS = ['registerModuleKernel', 'bootModuleKernel', 'registerDiagnosticCommands', 'registerInvalidGraphRoute'];
+
 /** The spatie Package calls configurePackage() may chain. */
 const PROVIDER_PACKAGE_CALLS = ['name', 'hasTranslations'];
 
@@ -58,6 +63,12 @@ function providerDeclareOnlyViolations(string $file): array
     $violations = [];
     foreach ($class->getMethods() as $method) {
         $name = $method->name->toString();
+        // registeringPackage()/bootingPackage() and any helper would register things outside the manifest unseen.
+        if (!in_array($name, [...PROVIDER_ALLOWED_METHODS, ...($isCore ? CORE_PROVIDER_KERNEL_METHODS : [])], true)) {
+            $violations[] = sprintf('%s::%s() line %d: a provider declares only %s', basename($file), $name, $method->getStartLine(), implode('(), ', PROVIDER_ALLOWED_METHODS).'()');
+
+            continue;
+        }
         if ($name === 'configurePackage') {
             foreach ($finder->find($method->stmts ?? [], static fn (Node $n): bool => $n instanceof Expr\CallLike) as $call) {
                 $called = $call instanceof Expr\MethodCall && $call->name instanceof Node\Identifier ? $call->name->toString() : null;
@@ -88,7 +99,10 @@ function providerDeclareOnlyViolations(string $file): array
 }
 
 it('finds the provider of every package', function (): void {
-    expect(array_map(static fn (string $f): string => basename($f), packageProviderFiles()))->toBe([
+    $names = array_map(static fn (string $f): string => basename($f), packageProviderFiles());
+    sort($names, SORT_STRING);
+
+    expect($names)->toBe([
         'VaulterAzgardServiceProvider.php',
         'VaulterDocumentsServiceProvider.php',
         'VaulterDriveServiceProvider.php',
@@ -115,6 +129,27 @@ it('refuses a provider that registers anything itself', function (): void {
                 $this->app->singleton(Rogue::class);
             }
             public function packageBooted(): void { $this->loadRoutesFrom('routes.php'); }
+        }
+        PHP);
+
+    try {
+        expect(providerDeclareOnlyViolations($file))->toHaveCount(3);
+    } finally {
+        unlink($file);
+    }
+});
+
+it('refuses the spatie hooks and any helper method a provider declares', function (): void {
+    $file = tempnam(sys_get_temp_dir(), 'provider-');
+    file_put_contents($file, <<<'PHP'
+        <?php
+        final class RogueServiceProvider extends PackageServiceProvider
+        {
+            public function configurePackage($package): void { $package->name('rogue'); }
+            public function registeringPackage(): void { $this->app->singleton(Rogue::class); }
+            public function bootingPackage(): void { $this->app->singleton(Rogue::class); }
+            private function wire(): void { $this->app->singleton(Rogue::class); }
+            public function packageRegistered(): void { $this->offerModule(RogueModule::class); }
         }
         PHP);
 

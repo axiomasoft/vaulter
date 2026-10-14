@@ -6,8 +6,8 @@ namespace Vaulter\Documents\Providers;
 
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Support\Facades\Broadcast;
 use Vaulter\Access\AccessResolver;
 use Vaulter\Configuration\VaulterConfig;
 use Vaulter\Documents\Collaboration\HostUserResolver as DefaultHostUserResolver;
