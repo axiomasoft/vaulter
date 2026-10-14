@@ -1,0 +1,43 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:unit:v1",
+  "id": "U5",
+  "item": "P2.4",
+  "title": "Интеграция: BoundaryScanTest и полные проверки",
+  "goal": "BoundaryScanTest (текущий зелёный + синтетика new/stale/count/reason/I3 reverse), suites.json, V1–V6 пункта.",
+  "files": [
+    "tests/Repo/Arch/BoundaryScanTest.php",
+    "tests/suites.json"
+  ],
+  "depends_on": [
+    "U1",
+    "U2",
+    "U3",
+    "U4"
+  ],
+  "checks": [
+    "V1",
+    "V2",
+    "V3",
+    "V4",
+    "V5",
+    "V6"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "mode": "self",
+  "instructions": "По guidance пункта. notes пункта: I4 new_since_review, v_blobs.drive_id (D23), числа по категориям — вход P2.5.",
+  "status": "accepted",
+  "outcome": {
+    "agent": {
+      "provider": "claude-code",
+      "model": "claude-sonnet-5-5",
+      "effort": "high"
+    },
+    "at": "2026-10-14T03:37:20Z",
+    "notes": "Принято: V2/V3 зелёные"
+  },
+  "updated_at": "2026-10-14T03:37:20Z",
+  "kind": "integration"
+}

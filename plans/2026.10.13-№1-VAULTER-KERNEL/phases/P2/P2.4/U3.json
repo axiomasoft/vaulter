@@ -1,0 +1,40 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:unit:v1",
+  "id": "U3",
+  "item": "P2.4",
+  "title": "I3 FK по направлению зависимости (fk-map)",
+  "goal": "Скан I3 в CLI, allowlist с reason/category/removed_in, `--check` зелёный.",
+  "files": [
+    "scripts/inventory/lib/Scans/ForeignKeys.php",
+    "scripts/inventory/generators/fk.php",
+    "scripts/inventory/generators/scan-i3.php",
+    "tests/Repo/Arch/Fixtures/fk-map.json",
+    "tests/Repo/Arch/Fixtures/allowlists/i3.json"
+  ],
+  "checks": [
+    {
+      "id": "V1",
+      "cmd": "scripts/php84 php scripts/inventory/inventory.php fk --write && scripts/php84 php scripts/inventory/inventory.php fk --check && scripts/php84 php scripts/inventory/inventory.php scan-i3 --check",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "mode": "either",
+  "instructions": "fk-map из identities/schema.json (pgsql=mysql); head FK помечены; вердикт по транзитивному замыканию target_require; removed_in ≤ P4. Seed: `--report` → заполнить reason/category/removed_in. Только свои файлы.",
+  "status": "accepted",
+  "outcome": {
+    "agent": {
+      "provider": "claude-code",
+      "model": "claude-sonnet-5-5",
+      "effort": "high"
+    },
+    "at": "2026-10-14T03:36:53Z",
+    "notes": "Принято: результат проверен проверками пункта V1-V6 и ревью grok-4.7"
+  },
+  "updated_at": "2026-10-14T03:36:53Z",
+  "kind": "implementation"
+}

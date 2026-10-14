@@ -1,0 +1,256 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P2.4",
+  "title": "Boundary-сканы I1–I4 и fk-map в report-режиме с точными allowlist",
+  "status": "done",
+  "summary": "Генераторы `fk` (fk-map.json с вердиктом ok/reverse) и `scan-i1..scan-i4` сравнивают найденные нарушения с ручными `allowlists/i1..i4.json` точно (ключ + count); текущие нарушения перечислены с reason/category/removed_in, новые и устаревшие — красные. BoundaryScanTest в repo suite доказывает и зелёный текущий режим, и красноту new/stale на синтетике.",
+  "why": "I1–I3 блокируют с P4, I4 — с P3 (architecture#invariants); без стартового точного allowlist P3/P4 не могут доказать, что нарушения уходят, а не перемещаются. Риск: allowlist «по классу/каталогу» прячет новые нарушения — поэтому якорь file+symbol+kind+target+count и никаких wildcard; I4 по code-facts различает activation и config-validation, которую удалять нельзя.",
+  "scope": {
+    "include": [
+      "scripts/inventory/lib/Scans/{CoreIsolation,DependencyDirection,ForeignKeys,ImplicitActivation}.php, scripts/inventory/generators/{fk,scan-i1,scan-i2,scan-i3,scan-i4}.php",
+      "tests/Repo/Arch/Fixtures/fk-map.json (генерируется), tests/Repo/Arch/Fixtures/allowlists/{i1,i2,i3,i4}.json (ручные)",
+      "tests/Repo/Arch/BoundaryScanTest.php, tests/suites.json"
+    ],
+    "exclude": [
+      "Устранение нарушений (P3/P4)",
+      "I5–I19",
+      "Пакетные OperationsBoundary/FilamentBoundary тесты (I9 не дублировать)"
+    ]
+  },
+  "depends_on": [
+    "P2.3"
+  ],
+  "decisions": [
+    "D6",
+    "D8",
+    "D20",
+    "D22",
+    "D23",
+    "D28",
+    "D29"
+  ],
+  "reads": [
+    {
+      "why": "I1–I4 формулировки и фаза блокировки (верхняя граница removed_in)",
+      "required": true,
+      "ref": "knowledge/architecture#invariants"
+    },
+    {
+      "why": "граф D6 для I2/I3",
+      "required": true,
+      "ref": "knowledge/architecture#packages"
+    },
+    {
+      "why": "классификация всех probes I4 по категориям; FK webhooks→drive, head FK",
+      "required": true,
+      "ref": "knowledge/source-review#code-facts"
+    },
+    {
+      "why": "владельцы типов (target-вид)",
+      "required": true,
+      "path": "tests/Repo/Arch/Fixtures/target-map.json"
+    },
+    {
+      "why": "FK и владельцы таблиц",
+      "required": true,
+      "path": "tests/Repo/Arch/Fixtures/identities/schema.json"
+    },
+    {
+      "why": "current_require/target_require",
+      "required": true,
+      "path": "tests/Repo/Arch/Fixtures/packages.json"
+    },
+    {
+      "ref": "knowledge/p2-design",
+      "why": "нормы фазы P2: раскладка, форматы фикстур, модели type-map/identities/scans, контракт findings (секции названы в guidance)",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "scripts/inventory/lib/Scans/CoreIsolation.php",
+      "change": "create"
+    },
+    {
+      "path": "scripts/inventory/generators/scan-i1.php",
+      "change": "create"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/allowlists/i1.json",
+      "change": "create"
+    },
+    {
+      "path": "scripts/inventory/lib/Scans/DependencyDirection.php",
+      "change": "create"
+    },
+    {
+      "path": "scripts/inventory/generators/scan-i2.php",
+      "change": "create"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/allowlists/i2.json",
+      "change": "create"
+    },
+    {
+      "path": "scripts/inventory/lib/Scans/ForeignKeys.php",
+      "change": "create"
+    },
+    {
+      "path": "scripts/inventory/generators/fk.php",
+      "change": "create"
+    },
+    {
+      "path": "scripts/inventory/generators/scan-i3.php",
+      "change": "create"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/fk-map.json",
+      "change": "create"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/allowlists/i3.json",
+      "change": "create"
+    },
+    {
+      "path": "scripts/inventory/lib/Scans/ImplicitActivation.php",
+      "change": "create"
+    },
+    {
+      "path": "scripts/inventory/generators/scan-i4.php",
+      "change": "create"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/allowlists/i4.json",
+      "change": "create"
+    },
+    {
+      "path": "tests/Repo/Arch/BoundaryScanTest.php",
+      "change": "create"
+    },
+    {
+      "path": "tests/suites.json",
+      "change": "modify",
+      "note": "repo partition files += tests/Repo/Arch/BoundaryScanTest.php"
+    }
+  ],
+  "rules": [
+    "Продукт неизменен относительно 35718fd2: никаких правок packages/*/src|database|config|routes|composer.json, корневого composer.json, phpunit.xml, tests/zones.json (p2-design#base).",
+    "PHP запускать только через `scripts/php84 php …` (системный php 8.3).",
+    "Тесты и генераторы не читают plans/; сгенерированные фикстуры — canonical JSON без номеров строк, времени и абсолютных путей (p2-design#layout).",
+    "Только целевые прогоны (knowledge/test-strategy#run-policy): repo suite и названные пути; полная матрица — нет (D31); мутации/load/coverage — нет (D3/D4).",
+    "Найденный продуктовый дефект или архитектурная развилка не чинится и не решается здесь — запись для P2.5 (p2-findings) в отчёт пункта/notes.",
+    "Allowlist без wildcard и без whole-class исключений: ключ view+file+symbol+kind+target и точный count; reason, category и removed_in обязательны, removed_in не позже фазы блокировки инварианта; исключение — I4 категории config-validation/host-lifecycle/explicit-adapter: removed_in `never` (постоянная поимённая allowlist назначения, architecture#invariants I4).",
+    "`--report` печатает предлагаемые записи (без reason) для заполнения; `--check` отвергает пустой/placeholder reason (`TODO`, `?`).",
+    "I4: config-validation и host-lifecycle — разрешённые категории (не «снять»); activation — removed_in P3; jwt-optional — P5; explicit-adapter — допустим при явном выборе (D20). Место, не названное в code-facts, классифицировать по тем же признакам и отметить `new_since_review: true`.",
+    "v_blobs.drive_id без FK — не нарушение I3; записать в notes пункта для p2-findings (D23)."
+  ],
+  "guidance": "**Нормы пункта (knowledge/p2-design, документ целиком в пакете):** §scans (определения I1–I4, виды current/target, формат allowlist, точное сравнение), §source-index (виды ссылок, которые сканы считают).\n\nПорядок: U1–U4 параллельно (каждый — свой инвариант: lib, generator(ы), allowlist) → U5 (BoundaryScanTest, suites.json, полный --check).\n\n**Seed allowlist:** `scripts/php84 php scripts/inventory/inventory.php scan-iN --report` → JSON предлагаемых записей → вручную заполнить reason/category/removed_in (I1/I2 category: `domain-in-core`, `kernel-needs-contract`, `reverse-edge`, `needs-explicit-require`, `config-root`, `route-name`, `table-literal`; I3: `reverse-fk`; I4 — категории p2-design#scans). Позиции I1 current с kind=table не считаются (core сегодня создаёт все таблицы) — только target-вид.\n\n**fk-map.json:** `{\"version\":1,\"base\":\"35718fd2\",\"fks\":[{\"name\":\"v_files_node_id_foreign\",\"from_table\":\"v_files\",\"columns\":[\"node_id\"],\"to_table\":\"v_nodes\",\"to_columns\":[\"id\"],\"on_delete\":\"cascade\",\"on_update\":\"no action\",\"deferrable\":false,\"head\":false,\"from_owner\":\"drive\",\"to_owner\":\"drive\",\"verdict\":\"ok\",\"engines\":[\"mysql\",\"pgsql\"]}]}`; head=true для взаимных FK (`*_head_fk`). verdict ok, если from_owner = to_owner или to_owner в транзитивном замыкании target_require(from_owner).\n\n**BoundaryScanTest:** dataset I1..I4 → `check()` текущего дерева без new/stale; синтетика через SourceIndex::fromSources: (a) лишняя ссылка core→drive даёт new, (b) удалённая ссылка из allowlist даёт stale, (c) изменённый count — stale, (d) запись без reason — ошибка, (e) I3 обратный FK из синтетической fk-map даёт new. Сообщение падения называет команду `--report`.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "scripts/php84 php scripts/inventory/inventory.php fk scan-i1 scan-i2 scan-i3 scan-i4 --check",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "scripts/t sqlite -p repo -- tests/Repo/Arch/BoundaryScanTest.php",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "scripts/t sqlite -p repo",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "scripts/php84 php vendor/bin/pint --test scripts/inventory tests/Repo/Arch",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "scripts/php84 php vendor/bin/phpstan analyse --no-progress --level=6 --memory-limit=1G scripts/inventory",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "cmd": "git diff --quiet 35718fd2 -- packages/*/src packages/*/database packages/*/config packages/*/routes packages/*/composer.json && test -z \"$(git status --porcelain --untracked-files=all -- packages/*/src packages/*/database packages/*/config packages/*/routes)\"",
+      "expect": "exit 0: продукт неизменен",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "fk-map.json",
+    "allowlists/i1..i4.json с reason/category/removed_in",
+    "сканы I1–I4 report-режима в CLI и BoundaryScanTest"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "units": [
+    "U1",
+    "U2",
+    "U3",
+    "U4",
+    "U5"
+  ],
+  "result": {
+    "started_at": "2026-10-14T02:36:50Z",
+    "finished_at": "2026-10-14T03:37:21Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "f83aa73c-d57e-472c-af92-3674a81b7197"
+    },
+    "notes": "Сканы I1-I4 (report) + fk-map. Allowlist: I1 478 записей (текущий вид пуст, всё target), I2 1194 (needs-explicit-require 737, reverse-edge 457), I3 0 (36 FK, все ok, reverse нет), I4 31 (activation 11, config-validation 9, host-lifecycle 7, jwt-optional 3, explicit-adapter 2). Для p2-findings: v_blobs.drive_id без FK (D23) — не нарушение I3; media→drive 10 мест (Blob/BlobStore/Console/Doctor) — reverse-edge; documents→collaboration 27 ссылок reverse-edge при блокировке I2 с P4, а collaboration-пакет появляется в P5 — развилка для P2.5; drive/Doctor/IntlCheck — вне code-facts, new_since_review. I3 allowlist file=fk-map.json, symbol=from_table, target=имя FK. Доп. lib-файлы Scans/{Scan,ScanContext,ScanGenerator} — deviation залогирован. Pint/PHPStan зелёные. Ревью grok-4.7: ATTENTION, 3 замечания исправлены.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T03:37:21Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-14T03:37:21Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-14T03:37:21Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-14T03:37:21Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-14T03:37:21Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-14T03:37:21Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T03:37:21Z"
+}

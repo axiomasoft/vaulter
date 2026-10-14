@@ -1590,6 +1590,7 @@
             "serial"
           ],
           "files": [
+            "tests/Repo/Arch/BoundaryScanTest.php",
             "tests/Repo/Arch/IdentitiesTest.php",
             "tests/Repo/Arch/InventoryHarnessTest.php",
             "tests/Repo/Arch/TargetMapTest.php",

@@ -1,0 +1,802 @@
+{
+    "base": "35718fd2",
+    "fks": [
+        {
+            "columns": [
+                "document_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "documents",
+            "from_table": "v_document_revisions",
+            "head": false,
+            "name": "v_document_revisions_document_id_foreign",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "documents",
+            "to_table": "v_documents",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "restored_from_revision_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "documents",
+            "from_table": "v_document_revisions",
+            "head": false,
+            "name": "v_document_revisions_restored_fk",
+            "on_delete": "set null",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "documents",
+            "to_table": "v_document_revisions",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "current_revision_id",
+                "id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "documents",
+            "from_table": "v_documents",
+            "head": true,
+            "name": "v_documents_head_fk",
+            "on_delete": "restrict",
+            "on_update": "no action",
+            "to_columns": [
+                "id",
+                "document_id"
+            ],
+            "to_owner": "documents",
+            "to_table": "v_document_revisions",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "node_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "documents",
+            "from_table": "v_documents",
+            "head": false,
+            "name": "v_documents_node_id_foreign",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "drive",
+            "to_table": "v_nodes",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "drive_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "drive",
+            "from_table": "v_drive_change_heads",
+            "head": false,
+            "name": "v_drive_change_heads_drive_id_foreign",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "drive",
+            "to_table": "v_drives",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "drive_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "drive",
+            "from_table": "v_drive_changes",
+            "head": false,
+            "name": "v_drive_changes_drive_id_foreign",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "drive",
+            "to_table": "v_drives",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "blob_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "drive",
+            "from_table": "v_file_revision_blobs",
+            "head": false,
+            "name": "v_file_revision_blobs_blob_id_foreign",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "media",
+            "to_table": "v_blobs",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "file_revision_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "drive",
+            "from_table": "v_file_revision_blobs",
+            "head": false,
+            "name": "v_file_revision_blobs_file_revision_id_foreign",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "drive",
+            "to_table": "v_file_revisions",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "file_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "drive",
+            "from_table": "v_file_revisions",
+            "head": false,
+            "name": "v_file_revisions_file_id_foreign",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "drive",
+            "to_table": "v_files",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "restored_from_revision_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "drive",
+            "from_table": "v_file_revisions",
+            "head": false,
+            "name": "v_file_revisions_restored_fk",
+            "on_delete": "set null",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "drive",
+            "to_table": "v_file_revisions",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "current_revision_id",
+                "id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "drive",
+            "from_table": "v_files",
+            "head": true,
+            "name": "v_files_head_fk",
+            "on_delete": "restrict",
+            "on_update": "no action",
+            "to_columns": [
+                "id",
+                "file_id"
+            ],
+            "to_owner": "drive",
+            "to_table": "v_file_revisions",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "node_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "drive",
+            "from_table": "v_files",
+            "head": false,
+            "name": "v_files_node_id_foreign",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "drive",
+            "to_table": "v_nodes",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "node_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "documents",
+            "from_table": "v_node_comments",
+            "head": false,
+            "name": "v_node_comments_node_id_foreign",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "drive",
+            "to_table": "v_nodes",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "parent_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "documents",
+            "from_table": "v_node_comments",
+            "head": false,
+            "name": "v_node_comments_parent_id_foreign",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "documents",
+            "to_table": "v_node_comments",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "node_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "drive",
+            "from_table": "v_node_grants",
+            "head": false,
+            "name": "v_node_grants_node_id_foreign",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "drive",
+            "to_table": "v_nodes",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "node_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "drive",
+            "from_table": "v_node_shares",
+            "head": false,
+            "name": "v_node_shares_node_id_foreign",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "drive",
+            "to_table": "v_nodes",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "node_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "drive",
+            "from_table": "v_node_user_states",
+            "head": false,
+            "name": "v_node_user_states_node_id_foreign",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "drive",
+            "to_table": "v_nodes",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "drive_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "drive",
+            "from_table": "v_nodes",
+            "head": false,
+            "name": "v_nodes_drive_id_foreign",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "drive",
+            "to_table": "v_drives",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "parent_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "drive",
+            "from_table": "v_nodes",
+            "head": false,
+            "name": "v_nodes_parent_id_foreign",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "drive",
+            "to_table": "v_nodes",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "drive_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "drive",
+            "from_table": "v_scan_backfill_runs",
+            "head": false,
+            "name": "v_scan_backfill_runs_drive_id_foreign",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "drive",
+            "to_table": "v_drives",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "blob_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "drive",
+            "from_table": "v_scan_evidence",
+            "head": false,
+            "name": "v_scan_evidence_blob_id_foreign",
+            "on_delete": "restrict",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "media",
+            "to_table": "v_blobs",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "drive_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "drive",
+            "from_table": "v_scan_evidence",
+            "head": false,
+            "name": "v_scan_evidence_drive_id_foreign",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "drive",
+            "to_table": "v_drives",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "obligation_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "drive",
+            "from_table": "v_scan_evidence",
+            "head": false,
+            "name": "v_scan_evidence_obligation_id_foreign",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "drive",
+            "to_table": "v_scan_obligations",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "request_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "drive",
+            "from_table": "v_scan_evidence",
+            "head": false,
+            "name": "v_scan_evidence_request_id_foreign",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "drive",
+            "to_table": "v_scan_requests",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "reused_from_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "drive",
+            "from_table": "v_scan_evidence",
+            "head": false,
+            "name": "v_scan_evidence_reused_from_id_foreign",
+            "on_delete": "set null",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "drive",
+            "to_table": "v_scan_evidence",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "revision_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "drive",
+            "from_table": "v_scan_evidence",
+            "head": false,
+            "name": "v_scan_evidence_revision_id_foreign",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "drive",
+            "to_table": "v_file_revisions",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "blob_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "drive",
+            "from_table": "v_scan_obligations",
+            "head": false,
+            "name": "v_scan_obligations_blob_id_foreign",
+            "on_delete": "restrict",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "media",
+            "to_table": "v_blobs",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "drive_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "drive",
+            "from_table": "v_scan_obligations",
+            "head": false,
+            "name": "v_scan_obligations_drive_id_foreign",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "drive",
+            "to_table": "v_drives",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "revision_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "drive",
+            "from_table": "v_scan_obligations",
+            "head": false,
+            "name": "v_scan_obligations_revision_id_foreign",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "drive",
+            "to_table": "v_file_revisions",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "drive_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "drive",
+            "from_table": "v_scan_policy_states",
+            "head": false,
+            "name": "v_scan_policy_states_drive_id_foreign",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "drive",
+            "to_table": "v_drives",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "obligation_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "drive",
+            "from_table": "v_scan_requests",
+            "head": false,
+            "name": "v_scan_requests_obligation_id_foreign",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "drive",
+            "to_table": "v_scan_obligations",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "upload_session_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "drive",
+            "from_table": "v_upload_parts",
+            "head": false,
+            "name": "v_upload_parts_upload_session_id_foreign",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "drive",
+            "to_table": "v_upload_sessions",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "drive_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "drive",
+            "from_table": "v_upload_sessions",
+            "head": false,
+            "name": "v_upload_sessions_drive_id_foreign",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "drive",
+            "to_table": "v_drives",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "result_blob_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "drive",
+            "from_table": "v_upload_sessions",
+            "head": false,
+            "name": "v_upload_sessions_result_blob_id_foreign",
+            "on_delete": "restrict",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "media",
+            "to_table": "v_blobs",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "endpoint_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "webhooks",
+            "from_table": "v_webhook_deliveries",
+            "head": false,
+            "name": "v_webhook_deliveries_endpoint_id_foreign",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "webhooks",
+            "to_table": "v_webhook_endpoints",
+            "verdict": "ok"
+        },
+        {
+            "columns": [
+                "drive_id"
+            ],
+            "deferrable": false,
+            "engines": [
+                "mysql",
+                "pgsql"
+            ],
+            "from_owner": "webhooks",
+            "from_table": "v_webhook_endpoints",
+            "head": false,
+            "name": "v_webhook_endpoints_drive_id_foreign",
+            "on_delete": "cascade",
+            "on_update": "no action",
+            "to_columns": [
+                "id"
+            ],
+            "to_owner": "drive",
+            "to_table": "v_drives",
+            "verdict": "ok"
+        }
+    ],
+    "version": 1
+}
