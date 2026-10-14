@@ -1,0 +1,259 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P3.15",
+  "title": "Relay D29: vaulter:relay, reconciliation с settle_window, leases, DLQ, hold/detach/gap, retention, replay; WebhookFanoutConsumer",
+  "status": "todo",
+  "summary": "Core `vaulter:relay` регистрирует consumers, сверяет пропущенные строки с settle_window, доставляет с fenced lease/full-jitter/DLQ, переводит paused→detached с явным gap, чистит outbox без потери; `vaulter:relay:replay` и `vaulter:outbox:prune`; fan-out вебхуков — consumer `webhooks.fanout`; `vaulter:webhooks:relay` удалена; I10-сценарии D29 зелёные на pgsql.",
+  "why": "D29: тихая потеря исключена только при reconcile+settle_window, retention ниже reconciled_through и явном gap. Риски (hard): late commit меньшего seq, takeover со stale generation, retention при paused consumer, двойной reconcile.",
+  "scope": {
+    "include": [
+      "knowledge/p3-events#outbox «Relay», «WebhookFanoutConsumer», инварианты O2–O6",
+      "core OutboxRelay (split из Webhooks\\OutboxRelay), команды relay/relay:replay/outbox:prune, schedule; metrics vaulter_outbox_lag_seconds/dead_total/consumer_gap_events_total",
+      "doctor OutboxLagCheck, OutboxLeasesCheck, OutboxConsumerGapCheck, OutboxSettleWindowCheck",
+      "WebhooksModule: слот-вклад webhooks.fanout; vaulter:webhooks:{prune,retry,redeliver} остаются (prune — только webhook deliveries)",
+      "cli ledger: removed vaulter:webhooks:relay, added vaulter:relay, vaulter:relay:replay, vaulter:outbox:prune (D29)",
+      "docs: concepts/events-outbox (+ru), reference commands/config (генерация)"
+    ],
+    "exclude": [
+      "перенос webhooks в пакет (P4)",
+      "P6 operational coverage сверх D29"
+    ]
+  },
+  "depends_on": [
+    "P3.14"
+  ],
+  "decisions": [
+    "D29",
+    "D22",
+    "D21"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p3-events",
+      "why": "алгоритм relay и инварианты",
+      "required": true,
+      "section": "outbox"
+    },
+    {
+      "ref": "knowledge/architecture",
+      "why": "D29 нормы и ревизия 3 (consumer вне sealed registry = paused)",
+      "required": true,
+      "section": "events"
+    },
+    {
+      "path": "packages/core/src/Webhooks/OutboxRelay.php",
+      "why": "fan-out, fencing, chunk — переносится в consumer",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Webhooks/WebhookRetryDispatcher.php",
+      "why": "retry sweep вебхуков остаётся",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Console/RelayWebhooksCommand.php",
+      "why": "заменяемая команда",
+      "required": true
+    },
+    {
+      "path": "packages/core/tests/Concurrency/ForkRace.php",
+      "why": "PG-гонки",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/core/src/Events/Outbox/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Webhooks/OutboxRelay.php",
+      "change": "delete"
+    },
+    {
+      "path": "packages/core/src/Webhooks/WebhookFanoutConsumer.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Webhooks/WebhooksModule.php",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом P3"
+    },
+    {
+      "path": "packages/core/src/Console/RelayWebhooksCommand.php",
+      "change": "delete"
+    },
+    {
+      "path": "packages/core/src/Console/RelayCommand.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Console/RelayReplayCommand.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Console/PruneOutboxCommand.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Console/PruneWebhooksCommand.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Doctor/Checks/Webhooks*Check.php",
+      "change": "modify",
+      "note": "переименование outbox-проверок"
+    },
+    {
+      "path": "packages/core/src/Doctor/Checks/Outbox*Check.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/CoreModule.php",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом P3"
+    },
+    {
+      "path": "packages/core/tests/Outbox/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Webhooks/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/Concurrency/OutboxLateCommitTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Concurrency/OutboxLeaseTakeoverTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Concurrency/OutboxFanoutRaceTest.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/Feature/PruneWebhooksTest.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/groups.php",
+      "change": "modify"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/identities/*.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/identities/changes.json",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом P3"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/target-map/rules/*.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/target-map.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/suites.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/baseline/CHANGES.json",
+      "change": "modify"
+    },
+    {
+      "path": "docs/**",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Продвижение reconciled_through_seq только до S = max seq с created_at < now − settle_window.",
+    "Каждое завершение доставки fenced по lease_generation; 0 строк = результат отбрасывается.",
+    "Detach только после max_consumer_hold и только с записью gap + метрикой + doctor error; ephemeral — без gap.",
+    "Retention удаляет событие лишь без pending/leased строк и ≤ min(reconciled_through_seq) не-detached durable consumers.",
+    "Существующие сценарии вебхуков (fan-out chunk, created_at ≤ event, UNIQUE(event_id, endpoint_id), auto-disable, retry schedule) сохраняют ожидания; переименованные тесты — CHANGES ledger."
+  ],
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "scripts/t sqlite -p core packages/core/tests/Outbox packages/core/tests/Webhooks packages/core/tests/Doctor packages/core/tests/Feature/PruneWebhooksTest.php",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "scripts/t pgsql -p core packages/core/tests/Outbox packages/core/tests/Webhooks",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "scripts/t pgsql -p core --group=serial packages/core/tests/Concurrency/OutboxLateCommitTest.php packages/core/tests/Concurrency/OutboxLeaseTakeoverTest.php packages/core/tests/Concurrency/OutboxFanoutRaceTest.php",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "scripts/t sqlite -p core",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "scripts/php84 php vendor/bin/pint --test packages/core && scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "cmd": "scripts/php84 php scripts/inventory/inventory.php --check",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V7",
+      "cmd": "scripts/t sqlite -p repo",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V8",
+      "cmd": "scripts/t baseline --compare",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V9",
+      "cmd": "scripts/php84 php scripts/check-doc-links.php docs README.md && scripts/php84 php scripts/check-doc-links.php --mirror docs",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "vaulter:relay, relay:replay, outbox:prune",
+    "WebhookFanoutConsumer",
+    "doctor outbox-проверки",
+    "I10 D29-сценарии на pgsql"
+  ],
+  "route": {
+    "class": "frontier",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-14T05:47:50Z"
+}

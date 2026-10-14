@@ -1,0 +1,57 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D39",
+  "title": "Срезы владельцев, лежащие в core, объявляет манифест владельца",
+  "date": "2026-10-14",
+  "status": "accepted",
+  "question": "Кто объявляет в P3 срезы владельцев, физически ещё лежащие в packages/core (Access/Sharing/Activity/Changes маршруты, биндинги, команды, doctor-проверки drive; webhooks)?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Манифест пакета-владельца, если пакет уже есть: DriveModule (packages/drive) объявляет drive-срезы, расположенные в core (классы core-неймспейса, маршруты core/routes/drive.php через путь, вычисленный от класса core-провайдера); логический манифест webhooks (пакета ещё нет) предлагает core-провайдер. Отключение vaulter.modules.drive=false убирает и эти срезы."
+    },
+    {
+      "id": "B",
+      "text": "Core-провайдер предлагает отдельный манифест-срез под id владельца и он сливается с манифестом пакета."
+    },
+    {
+      "id": "C",
+      "text": "Core-манифест временно объявляет всё, что лежит в core, независимо от владельца."
+    }
+  ],
+  "context": "architecture#kernel: один установленный core provider может предложить несколько logical owners до переноса P4, без ghost packages. type-map: VaulterServiceProvider «registers module slices temporarily inside core». Но пакет drive уже существует с собственным провайдером: B даёт два источника одного ModuleId (уникальность id ломается или нужен merge — второй механизм), C делает I6 недоказуемым (выключенный drive оставил бы свои маршруты). Ссылки drive→core разрешены направлением зависимостей (I2).",
+  "decision": "A — Манифест пакета-владельца, если пакет уже есть: DriveModule (packages/drive) объявляет drive-срезы, расположенные в core (классы core-неймспейса, маршруты core/routes/drive.php через путь, вычисленный от класса core-провайдера); логический манифест webhooks (пакета ещё нет) предлагает core-провайдер. Отключение vaulter.modules.drive=false убирает и эти срезы.",
+  "rationale": "Только A сохраняет уникальность ModuleId без merge-механизма и делает I6 доказуемым (выключенный владелец не оставляет срезов). Направление ссылок drive→core разрешено D6/I2; временные пути удаляются переносом P4.",
+  "consequences": [
+    "Core-провайдер предлагает ровно два манифеста: core и webhooks (логический, OptIn)",
+    "core/routes/api.php делится внутри core на routes/drive.php и routes/webhooks.php; P4 переносит файлы",
+    "Тесты I6 выключают drive и доказывают отсутствие его core-located маршрутов/биндингов"
+  ],
+  "applies_to": [
+    "P3.2",
+    "P3.3",
+    "P3.4",
+    "P3.6",
+    "P3.11",
+    "P3.16",
+    "P4"
+  ],
+  "evidence": [
+    {
+      "kind": "repo",
+      "ref": "packages/core/routes/api.php",
+      "note": "26 маршрутов: drive 17, webhooks 9 (identities/http)"
+    },
+    {
+      "kind": "repo",
+      "ref": "packages/drive/src/VaulterDriveServiceProvider.php",
+      "note": "отдельный провайдер drive"
+    }
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

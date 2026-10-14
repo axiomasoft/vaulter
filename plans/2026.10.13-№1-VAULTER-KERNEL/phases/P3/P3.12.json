@@ -1,0 +1,314 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P3.12",
+  "title": "Идемпотентность D25: v_idempotency_keys, claim/receipt в раннере, Idempotency-Key, replay с текущей авторизацией (ADR-0029)",
+  "status": "todo",
+  "summary": "Core получает `Vaulter\\Idempotency` (IdempotencyStore, канонизация digest/request hash, ReceiptCodec SPI, ReplayAuthorizer), таблицу `v_idempotency_keys`, стадию 4 раннера, HTTP-middleware `Idempotency-Key`, prune-команду; `folders.create` и `nodes.rename` идемпотентны по ключу из PHP и HTTP; контрактные тесты I11 и PG-гонка зелёные; ADR-0029.",
+  "why": "D25 нормативен; I11 строится в P3 (покрытие всех операций — P6). Риски (hard): видимость uncommitted claim, PG aborted transaction после duplicate/timeout, кэширование отказов доступа, replay без текущей авторизации, NULL в UNIQUE, коллизия digest.",
+  "scope": {
+    "include": [
+      "knowledge/p3-operations#idempotency целиком (схема, канонизация, claim/wait, исходы, replay, codec, dogfood)",
+      "create-миграция 2026_10_13_000028 + SchemaBuilder::defineIdempotencyKeys; schema snapshots expected sqlite/pgsql/mysql; identities-schema/fk + ledger D25",
+      "config vaulter.idempotency.ttl_seconds; команда vaulter:idempotency:prune + schedule",
+      "HTTP middleware на маршрутах folders.create/nodes.rename; Idempotent-Replayed",
+      "docs: concepts/idempotency (+ru), reference/rest-api заголовок, ADR-0029"
+    ],
+    "exclude": [
+      "покрытие остальных операций (P6)",
+      "202/durable async операции (нет потребителя в P3)"
+    ]
+  },
+  "depends_on": [
+    "P3.11"
+  ],
+  "decisions": [
+    "D25",
+    "D21"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p3-operations",
+      "why": "нормативная модель реализации и инварианты K1–K6",
+      "required": true,
+      "section": "idempotency"
+    },
+    {
+      "ref": "knowledge/p3-design",
+      "why": "процедура изменения схемы и ledger",
+      "required": true,
+      "section": "base"
+    },
+    {
+      "ref": "knowledge/architecture",
+      "why": "replay-шаги и классификация исходов",
+      "required": true,
+      "section": "operation-chains"
+    },
+    {
+      "ref": "D25",
+      "why": "нормативное решение",
+      "required": true
+    },
+    {
+      "ref": "knowledge/source-review",
+      "why": "практики и границы стандарта (draft истёк)",
+      "required": true,
+      "section": "research-idempotency"
+    },
+    {
+      "path": "packages/core/tests/Concurrency/ForkRace.php",
+      "why": "помощник PG-гонок",
+      "required": true
+    },
+    {
+      "path": "scripts/schema-snapshot.sh",
+      "why": "команды записи/сравнения snapshot",
+      "required": true,
+      "section": "header"
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/core/src/Idempotency/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Operations/OperationRunner.php",
+      "change": "any",
+      "note": "стадия 4; создаётся предыдущим пунктом P3"
+    },
+    {
+      "path": "packages/core/src/Http/Middleware/ReadIdempotencyKey.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Http/Support/HttpOperationContextFactory.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Schema/SchemaBuilder.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/database/migrations/2026_10_13_000028_create_v_idempotency_keys_table.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/config/vaulter.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Console/PruneIdempotencyKeysCommand.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/CoreModule.php",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом P3"
+    },
+    {
+      "path": "packages/drive/src/Operations/FolderOperations.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/src/Operations/NodeOperations.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/src/Idempotency/**",
+      "change": "create",
+      "note": "codecs и ReplayAuthorizer drive"
+    },
+    {
+      "path": "packages/core/routes/drive.php",
+      "change": "any",
+      "note": "middleware на 2 маршрутах; создаётся предыдущим пунктом P3"
+    },
+    {
+      "path": "packages/core/tests/Fixtures/Schema/expected/**",
+      "change": "modify",
+      "note": "schema-snapshot --write"
+    },
+    {
+      "path": "packages/core/tests/Idempotency/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Concurrency/IdempotencyRaceTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/groups.php",
+      "change": "modify",
+      "note": "database: Idempotency; serial: race"
+    },
+    {
+      "path": "packages/drive/tests/Http/IdempotencyKeyHttpTest.php",
+      "change": "create"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/identities/*.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/identities/changes.json",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом P3"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/fk-map.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/zones.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/suites.json",
+      "change": "modify"
+    },
+    {
+      "path": "openapi/vaulter-v1.yaml",
+      "change": "modify",
+      "note": "Idempotency-Key на 2 операциях"
+    },
+    {
+      "path": "docs/adr/0029-idempotency.md",
+      "change": "create"
+    },
+    {
+      "path": "docs/**",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Claim, мутация и receipt — одна root-транзакция; receipt никогда не пишется в кэш или отдельную транзакцию (кроме описанного savepoint-пути).",
+    "После duplicate/timeout на PG транзакция откатывается целиком; продолжать aborted transaction запрещено.",
+    "Коды с receipt Never откатывают claim; тест на каждый класс (403, 404 невидимого, 422 validation, 428).",
+    "Replay всегда вызывает ReplayAuthorizer; без него codec не регистрируется (исключение при write()).",
+    "Ключ не нормализуется (trim/lowercase); тест case-distinct.",
+    "original snapshot неизменен; expected обновлён на трёх engines."
+  ],
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "scripts/t sqlite -p core packages/core/tests/Idempotency packages/core/tests/Operations",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "scripts/t pgsql -p core packages/core/tests/Idempotency",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "scripts/t pgsql -p core --group=serial packages/core/tests/Concurrency/IdempotencyRaceTest.php",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "scripts/t sqlite -p drive tests/Http/IdempotencyKeyHttpTest.php",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "scripts/schema-snapshot.sh --driver=sqlite --all-presets --compare=packages/core/tests/Fixtures/Schema/expected",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "cmd": "scripts/schema-snapshot.sh --driver=pgsql --all-presets --compare=packages/core/tests/Fixtures/Schema/expected",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V7",
+      "cmd": "scripts/schema-snapshot.sh --driver=mysql --all-presets --compare=packages/core/tests/Fixtures/Schema/expected",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V8",
+      "cmd": "git diff --quiet 83b7169e -- packages/core/tests/Fixtures/Schema/original",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V9",
+      "cmd": "scripts/t pgsql -p core --group=database packages/core/tests/Schema",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V10",
+      "cmd": "scripts/php84 php vendor/bin/pint --test packages/core && scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V11",
+      "cmd": "cd packages/drive && ../../scripts/php84 php vendor/bin/pint --test && ../../scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V12",
+      "cmd": "scripts/php84 php scripts/inventory/inventory.php --check",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V13",
+      "cmd": "scripts/t sqlite -p repo",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V14",
+      "cmd": "scripts/t sqlite -p repo tests/Repo/ZonesMapTest.php tests/Repo/TestGroupsTest.php",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V15",
+      "cmd": "scripts/t baseline --compare",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V16",
+      "cmd": "scripts/php84 php scripts/check-doc-links.php docs README.md && scripts/php84 php scripts/check-doc-links.php --mirror docs",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "Vaulter\\Idempotency + v_idempotency_keys",
+    "стадия claim/replay раннера",
+    "Idempotency-Key HTTP",
+    "dogfood folders.create/nodes.rename",
+    "ADR-0029",
+    "I11 контрактные + PG-гонка"
+  ],
+  "route": {
+    "class": "frontier",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-14T05:47:50Z"
+}

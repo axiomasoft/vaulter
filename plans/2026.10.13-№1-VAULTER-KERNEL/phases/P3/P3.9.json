@@ -1,0 +1,222 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P3.9",
+  "title": "OperationRunner, OperationMiddleware, ModuleReadiness и телеметрия; контракт I8 (ADR-0028)",
+  "status": "todo",
+  "summary": "Core получает `OperationRunner::write()` со стадиями architecture#operation-chains, слот OperationMiddleware со встроенным `core.telemetry`, ленивую `ModuleReadiness`, коды `extension_failed`/`module_not_ready`; контрактные тесты I8 пайплайна зелёные; ADR-0028 описывает слоты и пайплайн.",
+  "why": "Обязательные стадии сегодня размазаны по Operations/Actions; без раннера слот не может гарантировать context/transaction/claim/events/receipt (I8 блокирует с P3). Риски: nested-транзакции и retry только root-уровня; I/O внутри повторяемой попытки; подмена результата middleware.",
+  "scope": {
+    "include": [
+      "knowledge/p3-operations#operation-runner: API, стадии 1–3, 5–9 (стадия 4 — точка расширения для P3.12: интерфейс claim-шага с no-op реализацией)",
+      "OperationMiddleware слот (CoreModule defineSlot) + TelemetryMiddleware (span + `vaulter_operation_duration_seconds`/`vaulter_operations_total{operation,outcome}` через существующие MetricsRecorder/TraceRecorder, атрибуты OperationContext::telemetry())",
+      "ModuleReadiness (memo на процесс) по вкладам SchemaTablesCheck",
+      "OperationRunnerContractTest (I8 часть пайплайна)",
+      "docs/adr/0028-extension-slots-and-operation-pipeline.md, docs/concepts (страница пайплайна) + ru"
+    ],
+    "exclude": [
+      "перевод операций на раннер (P3.10)",
+      "идемпотентность (P3.12)",
+      "AcmeModule-фикстура (P3.16)"
+    ]
+  },
+  "depends_on": [
+    "P3.8"
+  ],
+  "decisions": [
+    "D8",
+    "D25",
+    "D5"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p3-operations",
+      "why": "API, стадии, инварианты R1–R5, тесты",
+      "required": true,
+      "section": "operation-runner"
+    },
+    {
+      "ref": "knowledge/p3-modules",
+      "why": "семантика OperationMiddleware и InvalidExtensionResult",
+      "required": true,
+      "section": "slots"
+    },
+    {
+      "ref": "knowledge/architecture",
+      "why": "нормативные стадии и классификация исходов",
+      "required": true,
+      "section": "operation-chains"
+    },
+    {
+      "path": "packages/core/src/Database/VaulterDatabase.php",
+      "why": "transaction/retryingOutermost/afterCommit/isConcurrencyFailure",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Observability/TracingAttributes.php",
+      "why": "атрибуты/имена спанов",
+      "required": true
+    },
+    {
+      "path": "packages/core/src/Doctor/Checks/SchemaTablesCheck.php",
+      "why": "источник readiness (split по владельцам)",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/core/src/Operations/OperationRunner.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Operations/OperationSpec.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Operations/Operation.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Operations/OperationMiddleware.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Operations/ModuleReadiness.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Observability/TelemetryMiddleware.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/src/Exceptions/**",
+      "change": "modify",
+      "note": "InvalidExtensionResult, ModuleNotReady"
+    },
+    {
+      "path": "packages/core/src/Http/Problems/CoreProblemCodes.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/CoreModule.php",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом P3"
+    },
+    {
+      "path": "packages/core/src/Doctor/Checks/SchemaTablesCheck.php",
+      "change": "modify",
+      "note": "вклады таблиц владельцами"
+    },
+    {
+      "path": "packages/core/tests/Operations/OperationRunnerContractTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Operations/ModuleReadinessTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/tests/Observability/TelemetryMiddlewareTest.php",
+      "change": "create"
+    },
+    {
+      "path": "packages/core/resources/lang/**",
+      "change": "modify",
+      "note": "problems.<code>"
+    },
+    {
+      "path": "tests/zones.json",
+      "change": "modify",
+      "note": "зона core-operations"
+    },
+    {
+      "path": "tests/suites.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/Repo/Arch/Fixtures/identities/changes.json",
+      "change": "any",
+      "note": "problem codes added; создаётся предыдущим пунктом P3"
+    },
+    {
+      "path": "docs/adr/0028-extension-slots-and-operation-pipeline.md",
+      "change": "create"
+    },
+    {
+      "path": "docs/adr/index.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Root-транзакцию открывает только раннер; nested write не открывает root, не ретраит и не запускает afterCommit отдельно.",
+    "Middleware: ровно один `$next`, результат `===`; иначе `extension_failed`; исключение до `$next` — отказ без мутации.",
+    "Retry только целой попытки на isConcurrencyFailure; тест с инъекцией deadlock на первой попытке доказывает ровно один набор событий.",
+    "Readiness не делает запросов при boot; первый write в процессе — один запрос проверки, далее memo (тест считает запросы).",
+    "Новые problem codes — ledger added (D8/D22) и переводы en/ru."
+  ],
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "scripts/t sqlite -p core packages/core/tests/Operations packages/core/tests/Observability",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "scripts/t pgsql -p core packages/core/tests/Operations/OperationRunnerContractTest.php",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "scripts/t sqlite -p core packages/core/tests/Http/Problems packages/core/tests/Modules",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "scripts/php84 php vendor/bin/pint --test packages/core && scripts/php84 php vendor/bin/phpstan analyse --no-progress --memory-limit=1G",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "scripts/t sqlite -p repo tests/Repo/ZonesMapTest.php tests/Repo/TestGroupsTest.php",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "cmd": "scripts/php84 php scripts/inventory/inventory.php --check",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V7",
+      "cmd": "scripts/php84 php scripts/check-doc-links.php docs README.md && scripts/php84 php scripts/check-doc-links.php --mirror docs",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "OperationRunner + OperationMiddleware + TelemetryMiddleware",
+    "ModuleReadiness",
+    "ADR-0028",
+    "контрактные тесты I8 пайплайна"
+  ],
+  "route": {
+    "class": "frontier",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-14T05:47:50Z"
+}

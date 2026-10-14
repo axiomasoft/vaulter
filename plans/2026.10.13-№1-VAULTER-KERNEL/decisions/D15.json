@@ -22,7 +22,7 @@
     "проверка, что @vaulter/vue не тянет yjs/@hocuspocus в бандл"
   ],
   "applies_to": [
-    "P3",
+    "P3.18",
     "P5"
   ],
   "actor": {

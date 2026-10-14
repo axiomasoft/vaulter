@@ -19,7 +19,10 @@
     "Нормативные детали — knowledge/architecture#events; тесты — I10/I11 и P6 relay coverage."
   ],
   "applies_to": [
-    "P3",
+    "P3.2",
+    "P3.13",
+    "P3.14",
+    "P3.15",
     "P4",
     "P5",
     "P6"

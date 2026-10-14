@@ -1,0 +1,193 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P3.19",
+  "title": "Квалификационный прогон P3 (D31: без полной матрицы)",
+  "status": "todo",
+  "summary": "Последний пункт P3: быстрая линия всех default-наборов, baseline compare, static quality всех PHP-пакетов, inventory/repo, серверные database-линии pgsql для пакетов, где P3 менял schema/query/transaction/locking (core, drive, documents), serial-гонки P3, schema snapshots compare, Node/Vue проверки затронутого vue; отчёт `artifacts/P3.19/qualification.md`.",
+  "why": "D4/D31: каждая фаза заканчивается квалификацией; полная матрица — при закрытии плана (P7). Отчёт обязан честно назвать pending/skipped.",
+  "scope": {
+    "include": [
+      "все проверки V1–V12",
+      "отчёт с командой/временем/engine/passed/skipped/exit",
+      "существующие падения проверяются на 83b7169e и записываются с доказательством"
+    ],
+    "exclude": [
+      "scripts/t all --full --engines=sqlite,pgsql,mysql (P7, D31)",
+      "мутации (D3)",
+      "load/k6 (D4)",
+      "coverage"
+    ]
+  },
+  "depends_on": [
+    "P3.1",
+    "P3.2",
+    "P3.3",
+    "P3.4",
+    "P3.5",
+    "P3.6",
+    "P3.7",
+    "P3.8",
+    "P3.9",
+    "P3.10",
+    "P3.11",
+    "P3.12",
+    "P3.13",
+    "P3.14",
+    "P3.15",
+    "P3.16",
+    "P3.17",
+    "P3.18"
+  ],
+  "decisions": [
+    "D3",
+    "D4",
+    "D31"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/test-strategy",
+      "why": "шаблон отчёта; full заменён по D31",
+      "required": true,
+      "section": "qualification-template"
+    },
+    {
+      "ref": "knowledge/test-strategy",
+      "why": "честность отчёта: skipped/missing ≠ green",
+      "required": true,
+      "section": "run-policy"
+    },
+    {
+      "ref": "D31",
+      "why": "состав квалификации P2–P6",
+      "required": true
+    },
+    {
+      "path": "tests/README.md",
+      "why": "актуальная политика прогонов",
+      "required": true,
+      "section": "Run policy"
+    },
+    {
+      "ref": "P2.6",
+      "why": "образец квалификации без full",
+      "required": false
+    }
+  ],
+  "task_files": [
+    {
+      "path": "@plan/artifacts/P3.19/qualification.md",
+      "change": "create"
+    },
+    {
+      "path": "tests/baseline/*",
+      "change": "modify",
+      "note": "baseline --write только для additions, если compare требует"
+    }
+  ],
+  "rules": [
+    "Порядок: V1 → V2 → … → отчёт → V13.",
+    "Логи в var/quality/qualification/P3/<check>.log; в отчёте: команда, время, engine, passed/skipped/failed, exit.",
+    "Падение в зоне, которую P3 не трогал, — проверить на 83b7169e (git worktree); существовавшее записать с доказательством, оставить pending, не чинить продукт в этом пункте.",
+    "Отчёт явно говорит: «полная матрица scripts/t all --full --engines=sqlite,pgsql,mysql — при закрытии плана (D31, P1.9)»."
+  ],
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "scripts/t sqlite",
+      "expect": "exit 0: быстрая линия всех default-наборов (вкл. hub/vue)",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "scripts/t baseline --compare",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "scripts/php84 php scripts/inventory/inventory.php --check",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "scripts/t sqlite -p repo",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "scripts/t pgsql -p core --group=database",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "cmd": "scripts/t pgsql -p drive --group=database",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V7",
+      "cmd": "scripts/t pgsql -p documents --group=database",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V8",
+      "cmd": "scripts/t pgsql -p core --group=serial packages/core/tests/Concurrency",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V9",
+      "cmd": "scripts/schema-snapshot.sh --driver=pgsql --all-presets --compare=packages/core/tests/Fixtures/Schema/expected && scripts/schema-snapshot.sh --driver=sqlite --all-presets --compare=packages/core/tests/Fixtures/Schema/expected",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V10",
+      "cmd": "root=\"$PWD\"; for suite_dir in . packages/media packages/drive packages/documents packages/azgard packages/filament; do (cd \"$suite_dir\" && \"$root/scripts/php84\" php vendor/bin/pint --test && \"$root/scripts/php84\" php vendor/bin/phpstan analyse --no-progress --memory-limit=1G) || exit 1; done",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V11",
+      "cmd": "npm --prefix packages/vue run typecheck && npm --prefix packages/vue run api:check && npm --prefix packages/vue run build",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V12",
+      "cmd": "scripts/php84 php scripts/check-doc-links.php docs README.md && scripts/php84 php scripts/check-doc-links.php --mirror docs",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V13",
+      "cmd": "test -s plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P3.19/qualification.md",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "qualification.md",
+    "зелёные V1–V13 или явно pending с доказательством"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-14T05:45:11Z"
+}

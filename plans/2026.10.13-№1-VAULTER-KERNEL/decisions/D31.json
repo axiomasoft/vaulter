@@ -1,0 +1,32 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D31",
+  "title": "Квалификация фаз P2–P6 без полной матрицы; full — при закрытии плана",
+  "date": "2026-10-13",
+  "status": "accepted",
+  "question": "Как квалифицировать фазы P2–P6, если полная матрица `scripts/t all --full --engines=sqlite,pgsql,mysql` по решению владельца в P1.9 перенесена на закрытие плана (tests/README.md, Run policy)?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Квалификация P2–P6 — последний пункт фазы без полной матрицы: быстрая линия `scripts/t sqlite` всех default-наборов, `scripts/t baseline --compare`, Pint/PHPStan затронутых наборов, плюс серверные линии `scripts/t pgsql -p <pkg> --group=database` только для пакетов, где фаза меняла schema/query/transaction/locking; специфические проверки фазы. Полная матрица на трёх движках, замер до/после и Node/Vue — один раз при квалификации закрытия плана (P7)."
+    },
+    {
+      "id": "B",
+      "text": "Каждая фаза квалифицируется полной матрицей по qualification-template."
+    }
+  ],
+  "context": "P1.9 закрыт владельцем без полной матрицы: машина под чужой нагрузкой, mysql-партиции идут часами (artifacts/P1.9/report.md). tests/README.md Run policy: «Before closing a plan: the complete matrix once on frozen code». knowledge/test-strategy#qualification-template по-прежнему требует full в каждой фазе. При детализации P2 владелец выбрал вариант A (2026-10-13).",
+  "decision": "A — Квалификация P2–P6 — последний пункт фазы без полной матрицы: быстрая линия `scripts/t sqlite` всех default-наборов, `scripts/t baseline --compare`, Pint/PHPStan затронутых наборов, плюс серверные линии `scripts/t pgsql -p <pkg> --group=database` только для пакетов, где фаза меняла schema/query/transaction/locking; специфические проверки фазы. Полная матрица на трёх движках, замер до/после и Node/Vue — один раз при квалификации закрытия плана (P7).",
+  "rationale": "Владелец 2026-10-13 при детализации P2: «Без full, как P1.9». Продолжение решения P1.9 (полная матрица перенесена на закрытие плана, tests/README Run policy).",
+  "consequences": [
+    "knowledge/test-strategy#qualification-template для P2–P6 читается вместе с D31: full заменён быстрой линией и целевыми серверными линиями; P7 сохраняет полную матрицу и обязанность P1.9.",
+    "Квалификация фазы без full не называется полной: отчёт указывает, что полная матрица ожидает закрытия плана."
+  ],
+  "global": true,
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "answered_by": "owner"
+}

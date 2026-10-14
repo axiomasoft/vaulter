@@ -16,6 +16,61 @@
       "Правка packages/*/src"
     ]
   },
+  "task_files": [
+    {
+      "path": "packages/media/tests/Cas/BlobGcBatchTest.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/media/tests/Cas/CasTestHelpers.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/Doctor/CoreDoctorChecksTest.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/Schema/HostKeyColumnsSchemaTest.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/drive/tests/Feature/TreeInvariantsTest.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/Events/EventRecorderTest.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/Feature/EventTypeTest.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/ObservabilityDocuments/P83DocumentsMetricsTest.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/tests/Operations/ProblemMappingTest.php",
+      "change": "modify"
+    },
+    {
+      "path": "packages/core/src/Console/ResetChangesCommand.php",
+      "change": "modify",
+      "note": "owner-authorized product fix (deviation)"
+    },
+    {
+      "path": "scripts/t",
+      "change": "modify"
+    },
+    {
+      "path": "tests/suites.json",
+      "change": "modify"
+    },
+    {
+      "path": "@plan/artifacts/P1.12/report.md",
+      "change": "create"
+    }
+  ],
   "validation": [
     {
       "id": "V1",
@@ -84,5 +139,5 @@
       }
     ]
   },
-  "updated_at": "2026-10-13T18:34:57Z"
+  "updated_at": "2026-10-13T19:11:05Z"
 }

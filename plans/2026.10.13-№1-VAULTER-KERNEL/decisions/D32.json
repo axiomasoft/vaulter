@@ -3,7 +3,7 @@
   "id": "D32",
   "title": "Остаток collaboration в блокирующих I2/I4 до выделения пакета в P5",
   "date": "2026-10-14",
-  "status": "open",
+  "status": "accepted",
   "question": "Как блокирующие I2 (с P4) и I4 (с P3) обращаются с остатком, который снимает только выделение пакета collaboration в P5: 27 обратных ссылок documents→collaboration в allowlists/i2.json (сейчас removed_in P4) и 3 JWT-пробы jwt-optional (removed_in P5, а I4 блокирует с P3)?",
   "options": [
     {
@@ -20,8 +20,12 @@
     }
   ],
   "context": "knowledge/p2-findings#scan-baseline и #open-questions OQ1. P2.4 notes: «documents→collaboration 27 ссылок reverse-edge при блокировке I2 с P4, а collaboration-пакет появляется в P5 — развилка для P2.5». P2.1 deviation: jwt-optional P5 при блокировке I4 с P3 — несогласованность p2-design. Факты на 35718fd2: i2 reverse-edge documents→collaboration 17 записей (18 ссылок) из src + 10 записей из файлов без типов (config/routes documents); i4 jwt-optional 3 (CollaborationCallResolver::resolveJwt, HocuspocusCollaborationDriver::issueSession, Doctor CollaborationCheck::run); firebase/php-jwt — только require-dev documents и root.",
+  "decision": "A — Поимённый остаток с removed_in P5: блокирующий режим I2 в P4 и I4 в P3 допускает только точные записи владельца collaboration (i2: documents→collaboration и config/routes documents→collaboration; i4: jwt-optional) с removed_in P5; P2-фикстуру i2 исправить (removed_in P4→P5 для этих 27 записей); P5 опустошает их. architecture#invariants получает примечание о поэтапном опустошении.",
+  "rationale": "Делегировано владельцем (brief M5). Харнесс уже реализует половину варианта A: scripts/inventory/lib/Allowlist.php LATE_CATEGORIES=['jwt-optional'] разрешает пережить блокировку I4 с P3 только этой категории. B переносит выделение collaboration в P4 и раздувает и без того крупную фазу переноса, C ломает target-map (владелец collaboration-типов — collaboration по D1/D6). P3: I4 переходит в mode=block, остаются never-категории и jwt-optional (removed_in P5). P4: исправляет i2 (27 записей documents→collaboration removed_in P4→P5) и даёт I2 поздний допуск только для target_owner=collaboration; P5 опустошает оба остатка.",
   "applies_to": [
-    "P3",
+    "P3.4",
+    "P3.5",
+    "P3.7",
     "P4",
     "P5"
   ],
@@ -46,5 +50,6 @@
     "provider": "claude",
     "model": "claude-opus-5-5",
     "effort": "medium"
-  }
+  },
+  "answered_by": "agent"
 }

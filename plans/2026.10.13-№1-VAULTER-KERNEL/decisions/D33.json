@@ -3,7 +3,7 @@
   "id": "D33",
   "title": "Источник дисков и профилей для media без обратной зависимости от drive",
   "date": "2026-10-14",
-  "status": "open",
+  "status": "accepted",
   "question": "Как media получает набор дисков и dedup-контекст без обратной зависимости от drive: media Doctor (DiskProbeCheck, DedupScopeCheck, DiskSet) читает Vaulter\\Profiles\\ProfileRegistry (target owner drive), media-команды GcBlobs/ReconcileBlobs используют Vaulter\\VaulterManager (→ drive), модель Blob кастует quarantined_at через Vaulter\\Models\\Content\\ScanUtcDateTime (→ drive)?",
   "options": [
     {
@@ -20,8 +20,9 @@
     }
   ],
   "context": "knowledge/p2-findings#scan-baseline и #open-questions OQ2. allowlists/i2.json: 24 reverse-edge записи media→drive (BlobStore/Blob/GC/Reconciler → FileRevision/FileRevisionBlobStoreRepository закрыты D23; Console → VaulterManager; Doctor → ProfileRegistry; Blob → ScanUtcDateTime). Для D23-части решение есть; для профилей/дисков владение не задано ни ownership-map, ни решениями — type-map P2.2 отнёс ProfileRegistry к drive.",
+  "decision": "B — Проверки, которым нужны профили (DiskProbeCheck, DedupScopeCheck, DiskSet), переносятся в drive как вклад drive в doctor; media-команды и cast — как в A.",
+  "rationale": "Делегировано (M5). Профили и их диски — понятие drive (D10, type-map ProfileRegistry→drive). DiskSet/DiskProbeCheck/DedupScopeCheck проверяют диски профилей — это диагностика drive, а не media; вариант A вводит новый слот ради одной doctor-проверки без самостоятельного потребителя (architecture#cost, правило D8), C возвращает доменный реестр в ядро вопреки D5. Media сохраняет проверку собственного vaulter-media диска. VaulterManager::withoutTenancy в GcBlobs/ReconcileBlobs → core Tenancy::without (architecture#entry-point); ScanUtcDateTime → UTC-cast владельца media (drive может переиспользовать по направлению drive→media). Исполнение — P4 (перенос между пакетами); P3 ничего из этого не переносит.",
   "applies_to": [
-    "P3",
     "P4"
   ],
   "evidence": [
@@ -45,5 +46,6 @@
     "provider": "claude",
     "model": "claude-opus-5-5",
     "effort": "medium"
-  }
+  },
+  "answered_by": "agent"
 }
