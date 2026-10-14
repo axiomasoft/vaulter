@@ -30,6 +30,7 @@ final class DriveProblemCodes implements ProblemCodeSource
         return [
             'cross_drive_operation' => new ProblemSpec(409, CrossDriveOperationException::class, receipt: ReceiptPolicy::Cacheable),
             'node_move_cycle' => new ProblemSpec(409, NodeCycleException::class, receipt: ReceiptPolicy::Cacheable),
+            // A lost lock race or an offset the upload moved past: the answer depends on a concurrent request, so it is never cached (D25).
             'upload_conflict' => new ProblemSpec(409, UploadConflictException::class, Retryable::AfterRefetch),
             'upload_not_found' => new ProblemSpec(404),
             'upload_offset_mismatch' => new ProblemSpec(409, OffsetMismatchException::class, Retryable::AfterRefetch),

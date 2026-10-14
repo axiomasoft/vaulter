@@ -175,7 +175,7 @@ it('gives every command the owner of the inventory', function (): void {
     $registered = array_map(static fn (object $command): string => $command::class, i5App()->make(ConsoleKernel::class)->all());
 
     foreach (i5Identities('cli') as $id => $item) {
-        expect($byClass)->toHaveKey($item['class'], $id)
+        expect($byClass)->toHaveKey($item['class'])
             ->and($byClass[$item['class']])->toBe(i5ExpectedDeclarer($id, $item['owner']), $id)
             ->and($registered)->toContain($item['class']);
     }

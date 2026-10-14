@@ -1655,7 +1655,7 @@
             "id": "problem:collaboration_unavailable",
             "owner": "collaboration",
             "receipt": "never",
-            "retryable": "with_backoff",
+            "retryable": "never",
             "source": {
                 "file": "packages/documents/src/Http/Problems/DocumentsProblemCodes.php",
                 "symbol": "Vaulter\\Documents\\Http\\Problems\\DocumentsProblemCodes::codes"
@@ -2230,7 +2230,7 @@
             "exception": "Vaulter\\Exceptions\\Nodes\\RestoreDestinationChangedException",
             "id": "problem:restore_destination_changed",
             "owner": "drive",
-            "receipt": "cacheable",
+            "receipt": "never",
             "retryable": "after_refetch",
             "source": {
                 "file": "packages/core/src/Http/Problems/DriveSliceProblemCodes.php",

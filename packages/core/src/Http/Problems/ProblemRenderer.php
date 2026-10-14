@@ -95,7 +95,7 @@ final readonly class ProblemRenderer
         }
         $title = $this->catalog->title($code) ?? (Response::$statusTexts[$status] ?? 'Error');
         // An unknown code (a bare http_<status>) promises nothing: the client must not retry it blindly.
-        $retryable = $this->catalog->spec($code)?->retryable ?? Retryable::Never;
+        $retryable = $this->catalog->spec($code)->retryable ?? Retryable::Never;
 
         return new JsonResponse(
             [

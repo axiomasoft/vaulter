@@ -21,7 +21,7 @@ final readonly class SchemaTablesCheck implements DoctorCheck
         'scan_policy_states', 'scan_obligations', 'scan_backfill_runs', 'scan_requests', 'scan_evidence',
         'node_grants', 'node_shares', 'node_comments', 'node_user_states',
         'documents', 'document_revisions', 'upload_sessions', 'upload_parts',
-        'activity', 'outbox', 'webhook_endpoints', 'webhook_deliveries', 'drive_change_heads', 'drive_changes',
+        'activity', 'outbox', 'webhook_endpoints', 'webhook_deliveries', 'drive_change_heads', 'drive_changes', 'idempotency_keys',
     ];
 
     /**

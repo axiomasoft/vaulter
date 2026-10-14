@@ -264,6 +264,7 @@
         "packages/core/tests/Schema",
         "packages/core/tests/Concurrency",
         "packages/core/tests/IdStrategy",
+        "packages/core/tests/Idempotency",
         "packages/core/tests/TablePrefix",
         "packages/core/tests/Ulid",
         "packages/core/tests/HostKeyMysql",

@@ -504,7 +504,7 @@ final class ModuleCompiler
                     continue;
                 }
                 try {
-                    $table = (new $class)->codes();
+                    $table = self::declaredCodes(new $class);
                 } catch (Throwable $e) {
                     $reasons[] = sprintf('module "%s" declares the problem source %s, which cannot be read: %s', $id, $class, $e->getMessage());
 
@@ -521,12 +521,28 @@ final class ModuleCompiler
 
                         continue;
                     }
+                    if (in_array($code, $codes[$id] ?? [], true)) {
+                        $reasons[] = sprintf('module "%s" declares the problem code "%s" twice (%s)', $id, $code, $class);
+
+                        continue;
+                    }
                     $codes[$id][] = $code;
                 }
             }
         }
 
         return $codes;
+    }
+
+    /**
+     * What a source returns, read without trusting its declared shape: the compiler is the one that rejects a
+     * malformed table.
+     *
+     * @return array<array-key, mixed>
+     */
+    private static function declaredCodes(ProblemCodeSource $source): array
+    {
+        return $source->codes();
     }
 
     /**

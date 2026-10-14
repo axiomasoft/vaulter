@@ -39,7 +39,8 @@ final class DocumentsProblemCodes implements ProblemCodeSource
         return [
             'collaboration_epoch_mismatch' => new ProblemSpec(409, CollaborationEpochMismatchException::class, Retryable::AfterRefetch, ReceiptPolicy::Cacheable),
             'collaboration_seed_conflict' => new ProblemSpec(409, CollaborationSeedConflictException::class, Retryable::AfterRefetch, ReceiptPolicy::Cacheable),
-            'collaboration_unavailable' => new ProblemSpec(409, CollaborationUnavailableException::class, Retryable::WithBackoff),
+            // The host's configuration decides, not the request: waiting does not help and a receipt would outlive a config change.
+            'collaboration_unavailable' => new ProblemSpec(409, CollaborationUnavailableException::class),
             'comment_not_found' => new ProblemSpec(404, CommentNotFoundException::class),
             'document_content_degraded' => new ProblemSpec(409, DocumentContentDegradedException::class, receipt: ReceiptPolicy::Cacheable),
             'document_revision_not_found' => new ProblemSpec(404, DocumentRevisionNotFoundException::class),

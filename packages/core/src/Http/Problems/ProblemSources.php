@@ -34,7 +34,9 @@ final class ProblemSources
         $sources = [];
         foreach ($kernel->compiled()->problems as $module => $classes) {
             foreach ($classes as $class) {
-                $sources[$module][] = new $class;
+                if (is_a($class, ProblemCodeSource::class, true)) {
+                    $sources[$module][] = new $class;
+                }
             }
         }
 

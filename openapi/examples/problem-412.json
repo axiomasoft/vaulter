@@ -14,6 +14,7 @@
         "code": "node_sequence_mismatch",
         "detail": "The node changed since you read it; reload it and retry.",
         "request_id": "01M4MPFJK9WV8F277ZQK399RRD",
+        "retryable": "after_refetch",
         "errors": null,
         "meta": {
             "node_id": "26"

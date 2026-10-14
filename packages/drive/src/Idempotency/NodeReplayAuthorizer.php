@@ -48,7 +48,7 @@ final readonly class NodeReplayAuthorizer implements ReplayAuthorizer
         return new self($context, $locator, $guard, $ability, $node);
     }
 
-    public function scope(mixed $result): ?ResourceRef
+    public function scope(mixed $result): ResourceRef
     {
         if ($result instanceof NodeSnapshot) {
             return $result->parentId === null ? $this->drive() : new ResourceRef('node', $result->parentId);

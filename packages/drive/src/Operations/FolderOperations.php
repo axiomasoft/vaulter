@@ -33,7 +33,7 @@ final readonly class FolderOperations implements Contract
         $idempotency = new IdempotentWrite(
             codec: new NodeSnapshotCodec,
             authorizer: NodeReplayAuthorizer::forCreate($this->context, $this->locator, $this->guard, $parentId),
-            fingerprint: ['parent' => $parentId, 'name' => $name, 'on_conflict' => $options->onConflict->value],
+            fingerprint: ['parent' => $parentId ?? (string) $this->context->drive->root_node_id, 'name' => $name, 'on_conflict' => $options->onConflict->value],
         );
 
         return $this->runner->write(new OperationSpec('drive.folders.create', new ModuleId('drive')), $this->context->operation, function () use ($name, $parent, $options): NodeSnapshot {

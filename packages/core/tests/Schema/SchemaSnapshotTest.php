@@ -55,8 +55,9 @@ it('creates the same table set as the pre-P1.10 original in every preset', funct
     foreach (SchemaPresets::all() as $preset => $definition) {
         $original = schemaSnapshotFixture('original', $driver, $preset);
         $expected = schemaSnapshotFixture('expected', $driver, $preset);
-        // The schema is unchanged by P1.10: the new chain and the 0.x chain create the same tables.
-        expect(array_keys($expected['tables']))->toBe(array_keys($original['tables']), $preset);
+        // The schema is unchanged by P1.10: the new chain and the 0.x chain create the same tables; only the idempotency receipts (D25, P3.12) are new.
+        $created = array_values(array_filter(array_keys($expected['tables']), static fn (string $table): bool => !str_ends_with($table, 'idempotency_keys')));
+        expect($created)->toBe(array_keys($original['tables']), $preset);
     }
 })->with(['sqlite', 'pgsql', 'mysql']);
 

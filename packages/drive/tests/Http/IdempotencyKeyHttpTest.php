@@ -121,3 +121,16 @@ it('ignores the header on the route of an operation without idempotency', functi
         ->assertOk()
         ->assertHeaderMissing('Idempotent-Replayed');
 });
+
+it('replays a rename of a node that is in the trash by now instead of answering 404', function (): void {
+    $folder = V1::folder($this->drive, 'Before trash');
+    $headers = [...V1::ifMatch($folder->id), 'Idempotency-Key' => 'rename-trashed'];
+
+    $first = $this->patchJson(V1::url('nodes/'.$folder->id), ['name' => 'After trash'], $headers)->assertOk();
+    $this->drive->nodes()->trash($folder->id);
+
+    $this->patchJson(V1::url('nodes/'.$folder->id), ['name' => 'After trash'], $headers)
+        ->assertOk()
+        ->assertHeader('Idempotent-Replayed', 'true')
+        ->assertJsonPath('data.id', $first->json('data.id'));
+});

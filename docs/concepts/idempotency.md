@@ -48,7 +48,8 @@ the other writes refuse one in PHP and ignore the header over HTTP until they de
 | more than 24 hours later | the receipt expired: the retry runs as a new request |
 
 A replay never runs the write again: no second folder, no second event, no webhook. Its ETag is the one the
-first response had; it does not satisfy a later `If-Match` by itself.
+first response had while the node is still visible to you (the abilities in the tag are recomputed; for a purged or
+trashed node they are all off, so the tag differs); it does not satisfy a later `If-Match` by itself.
 
 The key is scoped to the actor, the tenant, the drive and the operation: another user, or the same user on
 another drive, never sees your receipt.

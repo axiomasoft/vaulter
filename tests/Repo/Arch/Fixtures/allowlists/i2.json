@@ -11706,7 +11706,7 @@
         },
         {
             "category": "needs-explicit-require",
-            "count": 4,
+            "count": 3,
             "file": "packages/documents/src/Http/Problems/DocumentsProblemCodes.php",
             "kind": "name",
             "reason": "documents импортирует тип core напрямую, а core — лишь транзитивное требование: P4 объявляет явный require core в composer documents (architecture#packages)",

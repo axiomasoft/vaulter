@@ -11961,6 +11961,20 @@
         {
             "action": "keep",
             "eloquent": false,
+            "file": "packages/core/src/Idempotency/StoredReceipt.php",
+            "fqcn": "Vaulter\\Idempotency\\StoredReceipt",
+            "kind": "final-class",
+            "note": null,
+            "owner": "core",
+            "package": "core",
+            "phase": "stay",
+            "rule": "core-kernel:prefix:Vaulter\\Idempotency\\",
+            "surface": "Internal",
+            "target_fqcn": "Vaulter\\Idempotency\\StoredReceipt"
+        },
+        {
+            "action": "keep",
+            "eloquent": false,
             "file": "packages/core/src/Jobs/Middleware/RestoreTenantContext.php",
             "fqcn": "Vaulter\\Jobs\\Middleware\\RestoreTenantContext",
             "kind": "final-class",

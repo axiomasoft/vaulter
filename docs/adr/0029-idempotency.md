@@ -50,7 +50,8 @@ resource where it is now (after a move, in its new place), else on the recorded 
 the drive. A revoked grant, a hidden resource or a gone scope answers exactly like a new request, and the
 receipt stays. A replay decodes the stored result (`ReceiptCodec::decode`, versioned; an unknown version
 throws) — no mutation, no event, no CAS work. Over HTTP it carries `Idempotent-Replayed: true`; its ETag is
-historical.
+historical while the node is still visible to the caller: the abilities inside the tag are those of the replay, so
+for a node that is gone (purged, in the trash) the replayed ETag differs from the first one.
 
 **6. The request fingerprint.** An operation fingerprints its input: resource ids, fields, semantic options and
 preconditions, never a correlation id or a clock. The HTTP layer fingerprints the request itself (method,

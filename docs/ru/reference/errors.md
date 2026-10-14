@@ -48,7 +48,7 @@ outline: deep
 | [`cannot_delete_head_revision`](#cannot_delete_head_revision) | 409 | drive | `never` | `cacheable` | `Vaulter\Exceptions\Drive\CannotDeleteHeadRevisionException` |
 | [`collaboration_epoch_mismatch`](#collaboration_epoch_mismatch) | 409 | documents | `after_refetch` | `cacheable` | `Vaulter\Documents\Exceptions\CollaborationEpochMismatchException` |
 | [`collaboration_seed_conflict`](#collaboration_seed_conflict) | 409 | documents | `after_refetch` | `cacheable` | `Vaulter\Documents\Exceptions\CollaborationSeedConflictException` |
-| [`collaboration_unavailable`](#collaboration_unavailable) | 409 | documents | `with_backoff` | `never` | `Vaulter\Documents\Exceptions\CollaborationUnavailableException` |
+| [`collaboration_unavailable`](#collaboration_unavailable) | 409 | documents | `never` | `never` | `Vaulter\Documents\Exceptions\CollaborationUnavailableException` |
 | [`comment_not_found`](#comment_not_found) | 404 | documents | `never` | `never` | `Vaulter\Documents\Exceptions\CommentNotFoundException` |
 | [`concurrent_update`](#concurrent_update) | 409 | core | `with_backoff` | `never` | `Vaulter\Exceptions\Database\ConcurrentUpdateException` |
 | [`content_unavailable`](#content_unavailable) | 423 | drive | `with_backoff` | `never` | `Vaulter\Exceptions\Files\ContentUnavailableException` |
@@ -96,7 +96,7 @@ outline: deep
 | [`quota_exceeded`](#quota_exceeded) | 413 | drive | `never` | `cacheable` | `Vaulter\Exceptions\Drive\QuotaExceededException` |
 | [`rate_limited`](#rate_limited) | 429 | core | `with_backoff` | `never` | `Illuminate\Http\Exceptions\ThrottleRequestsException` |
 | [`registry_frozen`](#registry_frozen) | 500 | core | `never` | `never` | `Vaulter\Exceptions\Registry\RegistryFrozenException` |
-| [`restore_destination_changed`](#restore_destination_changed) | 409 | drive | `after_refetch` | `cacheable` | `Vaulter\Exceptions\Nodes\RestoreDestinationChangedException` |
+| [`restore_destination_changed`](#restore_destination_changed) | 409 | drive | `after_refetch` | `never` | `Vaulter\Exceptions\Nodes\RestoreDestinationChangedException` |
 | [`restore_destination_required`](#restore_destination_required) | 409 | drive | `never` | `cacheable` | `Vaulter\Exceptions\Nodes\RestoreDestinationRequiredException` |
 | [`revision_not_found`](#revision_not_found) | 404 | drive | `never` | `never` | — |
 | [`revision_pinned`](#revision_pinned) | 409 | drive | `never` | `cacheable` | `Vaulter\Exceptions\Drive\RevisionPinnedException` |
@@ -148,7 +148,7 @@ outline: deep
 
 ### `collaboration_unavailable`
 
-**409** · documents · retryable `with_backoff` · receipt `never`
+**409** · documents · retryable `never` · receipt `never`
 
 **Совместная работа недоступна** — Совместная работа для этого документа недоступна.
 
@@ -436,7 +436,7 @@ outline: deep
 
 ### `restore_destination_changed`
 
-**409** · drive · retryable `after_refetch` · receipt `cacheable`
+**409** · drive · retryable `after_refetch` · receipt `never`
 
 **Папка восстановления изменилась** — Папка назначения изменилась во время восстановления; повторите.
 

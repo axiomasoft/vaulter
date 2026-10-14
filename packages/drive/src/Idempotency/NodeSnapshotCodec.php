@@ -96,44 +96,44 @@ final class NodeSnapshotCodec implements ReceiptCodec
         $viewer = $body['viewer'] ?? null;
 
         return new NodeSnapshot(
-            id: (string) $body['id'],
-            driveId: (string) $body['drive_id'],
+            id: self::string($body, 'id'),
+            driveId: self::string($body, 'drive_id'),
             parentId: self::nullableString($body['parent_id'] ?? null),
-            kind: NodeKind::from((string) $body['kind']),
-            name: (string) $body['name'],
+            kind: NodeKind::from(self::string($body, 'kind')),
+            name: self::string($body, 'name'),
             mimeType: self::nullableString($body['mime_type'] ?? null),
             extension: self::nullableString($body['extension'] ?? null),
-            sizeBytes: (int) $body['size_bytes'],
-            sequence: (int) $body['sequence'],
-            inheritsAccess: (bool) $body['inherits_access'],
-            properties: is_array($body['properties'] ?? null) ? $body['properties'] : [],
-            createdAt: self::parse($body['created_at']) ?? throw new LogicException('[Vaulter] A node receipt has no created_at.'),
+            sizeBytes: self::int($body, 'size_bytes'),
+            sequence: self::int($body, 'sequence'),
+            inheritsAccess: self::bool($body, 'inherits_access'),
+            properties: self::properties($body['properties'] ?? null),
+            createdAt: self::parse($body['created_at'] ?? null) ?? throw new LogicException('[Vaulter] A node receipt has no created_at.'),
             createdBy: self::nullableString($body['created_by'] ?? null),
-            updatedAt: self::parse($body['updated_at']) ?? throw new LogicException('[Vaulter] A node receipt has no updated_at.'),
+            updatedAt: self::parse($body['updated_at'] ?? null) ?? throw new LogicException('[Vaulter] A node receipt has no updated_at.'),
             updatedBy: self::nullableString($body['updated_by'] ?? null),
             contentModifiedAt: self::parse($body['content_modified_at'] ?? null),
             contentModifiedBy: self::nullableString($body['content_modified_by'] ?? null),
             trashedAt: self::parse($body['trashed_at'] ?? null),
             trashedBy: self::nullableString($body['trashed_by'] ?? null),
-            trashRoot: (bool) $body['trash_root'],
+            trashRoot: self::bool($body, 'trash_root'),
             file: is_array($file) ? new FileHeadSnapshot(
-                fileId: (string) $file['file_id'],
-                revisionId: (string) $file['revision_id'],
-                revisionNumber: (int) $file['revision_number'],
-                sha256: (string) $file['sha256'],
-                sizeBytes: (int) $file['size_bytes'],
+                fileId: self::string($file, 'file_id'),
+                revisionId: self::string($file, 'revision_id'),
+                revisionNumber: self::int($file, 'revision_number'),
+                sha256: self::string($file, 'sha256'),
+                sizeBytes: self::int($file, 'size_bytes'),
                 mimeType: self::nullableString($file['mime_type'] ?? null),
-                scanStatus: ScanStatus::from((string) $file['scan_status']),
+                scanStatus: ScanStatus::from(self::string($file, 'scan_status')),
             ) : null,
             document: is_array($document) ? new DocumentHeadSnapshot(
-                type: (string) $document['type'],
-                schemaVersion: (int) $document['schema_version'],
-                typeAvailable: (bool) $document['type_available'],
+                type: self::string($document, 'type'),
+                schemaVersion: self::int($document, 'schema_version'),
+                typeAvailable: self::bool($document, 'type_available'),
                 headRevisionId: self::nullableString($document['head_revision_id'] ?? null),
-                epoch: (int) $document['epoch'],
-                stateVersion: (int) $document['state_version'],
+                epoch: self::int($document, 'epoch'),
+                stateVersion: self::int($document, 'state_version'),
             ) : null,
-            viewer: is_array($viewer) ? new ViewerStateSnapshot(starred: (bool) $viewer['starred']) : null,
+            viewer: is_array($viewer) ? new ViewerStateSnapshot(starred: self::bool($viewer, 'starred')) : null,
         );
     }
 
@@ -163,6 +163,48 @@ final class NodeSnapshotCodec implements ReceiptCodec
 
     private static function nullableString(mixed $value): ?string
     {
-        return $value === null ? null : (string) $value;
+        return is_scalar($value) ? (string) $value : null;
+    }
+
+    /** @param array<array-key, mixed> $fields */
+    private static function string(array $fields, string $key): string
+    {
+        $value = $fields[$key] ?? null;
+
+        return is_scalar($value) ? (string) $value : throw new LogicException(sprintf('[Vaulter] A node receipt has no "%s".', $key));
+    }
+
+    /** @param array<array-key, mixed> $fields */
+    private static function int(array $fields, string $key): int
+    {
+        $value = $fields[$key] ?? null;
+
+        return is_numeric($value) ? (int) $value : throw new LogicException(sprintf('[Vaulter] A node receipt has no number "%s".', $key));
+    }
+
+    /** @param array<array-key, mixed> $fields */
+    private static function bool(array $fields, string $key): bool
+    {
+        $value = $fields[$key] ?? null;
+
+        return is_bool($value) ? $value : throw new LogicException(sprintf('[Vaulter] A node receipt has no flag "%s".', $key));
+    }
+
+    /** @return array<string, array<string, string>> */
+    private static function properties(mixed $value): array
+    {
+        $properties = [];
+        foreach (is_array($value) ? $value : [] as $namespace => $entries) {
+            if (!is_string($namespace) || !is_array($entries)) {
+                continue;
+            }
+            foreach ($entries as $name => $entry) {
+                if (is_string($name) && is_string($entry)) {
+                    $properties[$namespace][$name] = $entry;
+                }
+            }
+        }
+
+        return $properties;
     }
 }

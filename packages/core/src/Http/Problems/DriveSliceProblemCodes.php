@@ -81,7 +81,8 @@ final class DriveSliceProblemCodes implements ProblemCodeSource
             // A 403 of the profile policy is an authorization refusal: never cached (D25).
             'profile_restriction' => new ProblemSpec(403, ProfileRestrictionException::class),
             'quota_exceeded' => new ProblemSpec(413, QuotaExceededException::class, receipt: ReceiptPolicy::Cacheable),
-            'restore_destination_changed' => new ProblemSpec(409, RestoreDestinationChangedException::class, Retryable::AfterRefetch, ReceiptPolicy::Cacheable),
+            // The destination may come back between two attempts of the same request: not a deterministic outcome, never cached (D25).
+            'restore_destination_changed' => new ProblemSpec(409, RestoreDestinationChangedException::class, Retryable::AfterRefetch),
             'restore_destination_required' => new ProblemSpec(409, RestoreDestinationRequiredException::class, receipt: ReceiptPolicy::Cacheable),
             'revision_not_found' => new ProblemSpec(404),
             'revision_pinned' => new ProblemSpec(409, RevisionPinnedException::class, receipt: ReceiptPolicy::Cacheable),

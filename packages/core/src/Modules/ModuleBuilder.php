@@ -347,7 +347,7 @@ final class ModuleBuilder
         return $this->events;
     }
 
-    /** @return list<class-string<ProblemCodeSource>> */
+    /** @return list<string> the declared classes; the compiler checks that each one is a {@see ProblemCodeSource} */
     public function problemSources(): array
     {
         return $this->problems;

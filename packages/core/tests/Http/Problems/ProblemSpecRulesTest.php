@@ -43,6 +43,10 @@ it('caches the deterministic domain refusals of the owners', function (string $c
     expect(fullProblemCatalog()->spec($code)->receipt)->toBe(ReceiptPolicy::Cacheable, $code);
 })->with(['node_name_conflict', 'quota_exceeded', 'payload_too_large', 'invalid_node_name', 'node_move_cycle', 'unknown_document_type']);
 
+it('never caches a 409 whose answer depends on a concurrent request or the host configuration', function (string $code): void {
+    expect(fullProblemCatalog()->spec($code)->receipt)->toBe(ReceiptPolicy::Never, $code);
+})->with(['restore_destination_changed', 'upload_conflict', 'upload_offset_mismatch', 'collaboration_unavailable']);
+
 it('marks the busy and unavailable codes for a retry with backoff', function (string $code): void {
     expect(fullProblemCatalog()->spec($code)->retryable)->toBe(Retryable::WithBackoff, $code);
 })->with(['operation_in_progress', 'rate_limited', 'dependency_unavailable', 'concurrent_update']);
