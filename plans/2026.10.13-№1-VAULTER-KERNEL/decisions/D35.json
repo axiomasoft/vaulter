@@ -1,0 +1,44 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D35",
+  "title": "Владелец presentation-метаданных enum'ов (Label/Icon) при потребителях в media, drive и collaboration",
+  "date": "2026-10-14",
+  "status": "open",
+  "question": "Где живут presentation-метаданные enum'ов (Vaulter\\Attributes\\Label/Icon, Support\\Concerns\\HasLabel/HasIcon, Support\\EnumCaseAttributeResolver), если их потребляют enum'ы media, drive и collaboration, а architecture#kernel оставляет Label/Icon в core только при потреблении ядром?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Оставить в core как поимённое исключение kernel-критерия: общий presentation-контракт для enum'ов всех модулей (единственный общий предок media/drive/collaboration по D6); surface Api; architecture#kernel получает явную строку исключения."
+    },
+    {
+      "id": "B",
+      "text": "Убрать presentation из доменных enum'ов модулей ниже drive: media/collaboration enum'ы без Label/Icon, подписи даёт presentation-владелец (drive для REST/доков, filament для панели) через свою карту case→label/icon; Label/Icon/HasLabel/HasIcon/Resolver переносятся в drive."
+    },
+    {
+      "id": "C",
+      "text": "Каждый пакет держит собственные атрибуты/трейты presentation (дублирование малого кода), core их не содержит."
+    }
+  ],
+  "context": "knowledge/p2-findings#open-questions OQ11 (ревью grok-4.7 P2.5, находка 2). Потребители на 35718fd2 (grep HasLabel|HasIcon|EnumCaseAttributeResolver в packages/*/src, владельцы по target-map): media Enums\\Cas\\BlobStatus; drive Enums\\Access\\{GrantScope,Effect}, Enums\\Drive\\NodeKind, Drive\\Enums\\Uploads\\{UploadStatus,UploadProtocol}; collaboration CollaborationDriverType; core EventType и Providers\\BindingsRegistrar (оба split). target-map: surface undecided, note «P3 decides core vs drive presentation»; D27 Label/Icon не упоминает. Вариант «в drive» без B невозможен: media (BlobStatus) не может ссылаться на drive (D6, I2).",
+  "applies_to": [
+    "P3",
+    "P4"
+  ],
+  "evidence": [
+    {
+      "kind": "repo",
+      "ref": "packages/core/src/Enums/Cas/BlobStatus.php",
+      "note": "media-владелец (target-map), использует HasLabel/HasIcon"
+    },
+    {
+      "kind": "repo",
+      "ref": "tests/Repo/Arch/Fixtures/target-map.json",
+      "note": "Vaulter\\Attributes\\Icon/Label: core keep undecided, note open"
+    }
+  ],
+  "actor": {
+    "provider": "claude",
+    "model": "claude-opus-5-5",
+    "effort": "medium"
+  }
+}

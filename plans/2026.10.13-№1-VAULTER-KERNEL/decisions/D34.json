@@ -1,0 +1,49 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D34",
+  "title": "Стабильные morph-алиасы моделей Vaulter до freeze",
+  "date": "2026-10-14",
+  "status": "open",
+  "question": "Фиксирует ли Vaulter стабильные morph-алиасы своих моделей до freeze P7, или в полиморфных колонках остаётся getMorphClass() (FQCN, если хост не задал morph map)?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Vaulter регистрирует собственные алиасы своих моделей (например vaulter.node, vaulter.drive) через Relation::morphMap без enforce для хоста; алиасы — идентичности identities/protocol (I16), переносы FQCN в P4 их не меняют; хост-модели (owner, subject) остаются под политикой хоста."
+    },
+    {
+      "id": "B",
+      "text": "Оставить поведение Laravel: тип = getMorphClass() модели (FQCN или алиас хоста); FQCN моделей Vaulter замораживаются в P7 как идентичность хранения, после 1.0 перенос модели — major с миграцией данных."
+    },
+    {
+      "id": "C",
+      "text": "Не хранить тип моделей Vaulter полиморфно: target activity/changes получают собственный enum вида цели (node|drive|…) вместо morph type; полиморфными остаются только хост-модели."
+    }
+  ],
+  "context": "knowledge/p2-findings#open-questions OQ3. Код 35718fd2: в src нет morphMap/enforceMorphMap; ActivityTarget::of и VisibleActivityQuery пишут/фильтруют target_type = getMorphClass() моделей Vaulter (config vaulter.models.* позволяет хосту подменить класс), RegisteredSubjectType принимает алиас или FQCN. P4 переносит Vaulter\\Models\\Drive\\Node → Vaulter\\Drive\\Models\\Node (target-map), поэтому FQCN как хранимый тип нестабилен. До 1.0 данных нет (D21) — вопрос о форме замороженной идентичности, не о миграции.",
+  "applies_to": [
+    "P4",
+    "P7"
+  ],
+  "evidence": [
+    {
+      "kind": "repo",
+      "ref": "packages/core/src/ValueObjects/Events/ActivityTarget.php",
+      "note": "ActivityTarget::of — getMorphClass()"
+    },
+    {
+      "kind": "repo",
+      "ref": "packages/core/src/Queries/Activity/VisibleActivityQuery.php",
+      "note": "фильтр target_type по getMorphClass()"
+    },
+    {
+      "kind": "repo",
+      "ref": "tests/Repo/Arch/Fixtures/identities/protocol.json",
+      "note": "24 morph-идентичности, ни одного morphMap"
+    }
+  ],
+  "actor": {
+    "provider": "claude",
+    "model": "claude-opus-5-5",
+    "effort": "medium"
+  }
+}

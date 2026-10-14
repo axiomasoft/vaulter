@@ -1,0 +1,49 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D33",
+  "title": "Источник дисков и профилей для media без обратной зависимости от drive",
+  "date": "2026-10-14",
+  "status": "open",
+  "question": "Как media получает набор дисков и dedup-контекст без обратной зависимости от drive: media Doctor (DiskProbeCheck, DedupScopeCheck, DiskSet) читает Vaulter\\Profiles\\ProfileRegistry (target owner drive), media-команды GcBlobs/ReconcileBlobs используют Vaulter\\VaulterManager (→ drive), модель Blob кастует quarantined_at через Vaulter\\Models\\Content\\ScanUtcDateTime (→ drive)?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Media объявляет собственный источник дисков (SPI/слот «media disk source» + конфиг vaulter-media), drive вкладывает диски своих профилей; DiskProbe/DedupScope остаются media; VaulterManager::withoutTenancy в командах → core Tenancy::without; ScanUtcDateTime → общий cast в core или media."
+    },
+    {
+      "id": "B",
+      "text": "Проверки, которым нужны профили (DiskProbeCheck, DedupScopeCheck, DiskSet), переносятся в drive как вклад drive в doctor; media-команды и cast — как в A."
+    },
+    {
+      "id": "C",
+      "text": "ProfileRegistry (механизм профилей без доменных опций) остаётся в core как kernel-контракт; drive вкладывает доменные опции профиля; media читает core-реестр."
+    }
+  ],
+  "context": "knowledge/p2-findings#scan-baseline и #open-questions OQ2. allowlists/i2.json: 24 reverse-edge записи media→drive (BlobStore/Blob/GC/Reconciler → FileRevision/FileRevisionBlobStoreRepository закрыты D23; Console → VaulterManager; Doctor → ProfileRegistry; Blob → ScanUtcDateTime). Для D23-части решение есть; для профилей/дисков владение не задано ни ownership-map, ни решениями — type-map P2.2 отнёс ProfileRegistry к drive.",
+  "applies_to": [
+    "P3",
+    "P4"
+  ],
+  "evidence": [
+    {
+      "kind": "repo",
+      "ref": "packages/media/src/Doctor/DiskSet.php",
+      "note": "use Vaulter\\Profiles\\ProfileRegistry"
+    },
+    {
+      "kind": "repo",
+      "ref": "packages/core/src/Models/Cas/Blob.php",
+      "note": "Blob::casts quarantined_at => ScanUtcDateTime"
+    },
+    {
+      "kind": "repo",
+      "ref": "tests/Repo/Arch/Fixtures/target-map.json",
+      "note": "Vaulter\\Profiles\\ProfileRegistry owner drive"
+    }
+  ],
+  "actor": {
+    "provider": "claude",
+    "model": "claude-opus-5-5",
+    "effort": "medium"
+  }
+}

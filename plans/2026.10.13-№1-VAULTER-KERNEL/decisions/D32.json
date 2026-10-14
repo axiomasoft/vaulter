@@ -1,0 +1,50 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D32",
+  "title": "Остаток collaboration в блокирующих I2/I4 до выделения пакета в P5",
+  "date": "2026-10-14",
+  "status": "open",
+  "question": "Как блокирующие I2 (с P4) и I4 (с P3) обращаются с остатком, который снимает только выделение пакета collaboration в P5: 27 обратных ссылок documents→collaboration в allowlists/i2.json (сейчас removed_in P4) и 3 JWT-пробы jwt-optional (removed_in P5, а I4 блокирует с P3)?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Поимённый остаток с removed_in P5: блокирующий режим I2 в P4 и I4 в P3 допускает только точные записи владельца collaboration (i2: documents→collaboration и config/routes documents→collaboration; i4: jwt-optional) с removed_in P5; P2-фикстуру i2 исправить (removed_in P4→P5 для этих 27 записей); P5 опустошает их. architecture#invariants получает примечание о поэтапном опустошении."
+    },
+    {
+      "id": "B",
+      "text": "Перенести выделение collaboration (типы documents/src/Collaboration/**, JWT-require, конфиг-ключи и маршруты) в P4, чтобы I2 блокировал без остатка; P5 остаётся протоколом хаба/durability."
+    },
+    {
+      "id": "C",
+      "text": "До P5 считать collaboration-типы владельцем documents в target-виде (target-map phase-aware: owner=documents, phase P5→collaboration), а I4 jwt-optional оставить постоянной категорией до P5 без изменения фаз блокировки."
+    }
+  ],
+  "context": "knowledge/p2-findings#scan-baseline и #open-questions OQ1. P2.4 notes: «documents→collaboration 27 ссылок reverse-edge при блокировке I2 с P4, а collaboration-пакет появляется в P5 — развилка для P2.5». P2.1 deviation: jwt-optional P5 при блокировке I4 с P3 — несогласованность p2-design. Факты на 35718fd2: i2 reverse-edge documents→collaboration 17 записей (18 ссылок) из src + 10 записей из файлов без типов (config/routes documents); i4 jwt-optional 3 (CollaborationCallResolver::resolveJwt, HocuspocusCollaborationDriver::issueSession, Doctor CollaborationCheck::run); firebase/php-jwt — только require-dev documents и root.",
+  "applies_to": [
+    "P3",
+    "P4",
+    "P5"
+  ],
+  "evidence": [
+    {
+      "kind": "repo",
+      "ref": "tests/Repo/Arch/Fixtures/allowlists/i2.json",
+      "note": "category reverse-edge, target owner collaboration, removed_in P4"
+    },
+    {
+      "kind": "repo",
+      "ref": "tests/Repo/Arch/Fixtures/allowlists/i4.json",
+      "note": "category jwt-optional, removed_in P5"
+    },
+    {
+      "kind": "repo",
+      "ref": "packages/documents/composer.json",
+      "note": "firebase/php-jwt в require-dev и suggest"
+    }
+  ],
+  "actor": {
+    "provider": "claude",
+    "model": "claude-opus-5-5",
+    "effort": "medium"
+  }
+}
