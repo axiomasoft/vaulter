@@ -141,6 +141,8 @@ Rules:
 | every database test on mysql | hours (sum of partitions at the native-disk rate) | 10 min 4 s |
 | fast lane, every default suite, SQLite | 3 min 52 s | unchanged (already parallel, no coverage) |
 | a drive change, `--changed` (drive + 3 consumers) | — | 1 min 52 s |
+| `--full`, SQLite (every suite, `serial` + `extended`) | — | 4 min 28 s |
+| `--full`, pgsql | — | 9 min 23 s |
 
 ## Run policy
 
