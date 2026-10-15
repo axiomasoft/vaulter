@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Filament\Notifications\NotificationMailbox;
 use Vaulter\Filament\Tests\TestCase;
 use Vaulter\Tests\Support\TestGroups;
 
@@ -14,3 +15,17 @@ uses(TestCase::class)->in('Configuration');
 require_once dirname(__DIR__).'/vendor/axioma-studio/vaulter-core/tests/Support/TestGroups.php';
 
 TestGroups::bind(__DIR__, 'filament');
+
+/**
+ * Filament 5 keeps sent notifications in a cache-backed mailbox, not in the session:
+ * publish the pending ones and take them out, oldest first.
+ *
+ * @return list<array<string, mixed>>
+ */
+function pullSentNotifications(): array
+{
+    $mailbox = app(NotificationMailbox::class);
+    $mailbox->flush();
+
+    return array_values($mailbox->pull());
+}

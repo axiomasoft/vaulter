@@ -52,7 +52,7 @@ it('preserves the validated grant form contract at the core Action boundary', fu
     $folder = DriveBuilder::folder($storage, 'Exact grant');
     DriveBuilder::grant($folder, $owner);
 
-    session()->forget('filament.notifications');
+    pullSentNotifications();
 
     NodeGrantResource::grantFromData([
         'node_id' => $folder->getKey(),
@@ -76,7 +76,7 @@ it('preserves the validated grant form contract at the core Action boundary', fu
         ->and($grant->expires_at?->format('Y-m-d H:i:s'))->toBe('2035-01-02 03:04:05')
         ->and((string) $grant->granted_by)->toBe('41');
 
-    $notification = session('filament.notifications.0');
+    $notification = pullSentNotifications()[0] ?? null;
 
     expect($notification)->toBeArray()
         ->and($notification['title'])->toBe('Grant saved')
@@ -110,11 +110,11 @@ it('applies grant defaults when optional form values are omitted', function (): 
 });
 
 it('rejects a missing grant node with the declared warning', function (): void {
-    session()->forget('filament.notifications');
+    pullSentNotifications();
 
     NodeGrantResource::grantFromData([]);
 
-    $notification = session('filament.notifications.0');
+    $notification = pullSentNotifications()[0] ?? null;
 
     expect(NodeGrant::query()->count())->toBe(0)
         ->and($notification)->toBeArray()
@@ -131,7 +131,7 @@ it('does not create a grant when the admin may not manage access on the node', f
     $folder = DriveBuilder::folder($storage, 'Locked');
     // No grant for $stranger ⇒ AccessResolver denies View ⇒ the create no-ops.
 
-    session()->forget('filament.notifications');
+    pullSentNotifications();
 
     NodeGrantResource::grantFromData([
         'node_id' => $folder->getKey(),
@@ -142,7 +142,7 @@ it('does not create a grant when the admin may not manage access on the node', f
         'expires_at' => '',
     ]);
 
-    $notification = session('filament.notifications.0');
+    $notification = pullSentNotifications()[0] ?? null;
 
     expect(app(GrantReadRepository::class)->forNode($folder)->count())->toBe(0)
         ->and($notification)->toBeArray()
@@ -158,7 +158,7 @@ it('prevents an organizer from granting itself owner or revoking another subject
     $node = DriveBuilder::folder($drive, 'Organizer');
     $grant = DriveBuilder::grant($node, $organizer, RoleRegistry::ORGANIZER);
     $other = DriveBuilder::grant($node, DriveBuilder::user(10), RoleRegistry::READER);
-    session()->forget('filament.notifications');
+    pullSentNotifications();
 
     NodeGrantResource::grantFromData([
         'node_id' => $node->id,
@@ -168,7 +168,7 @@ it('prevents an organizer from granting itself owner or revoking another subject
     ]);
 
     expect($grant->fresh()?->role_key)->toBe(RoleRegistry::ORGANIZER)
-        ->and(session('filament.notifications.0.status'))->toBe('warning')
+        ->and((pullSentNotifications()[0]['status'] ?? null))->toBe('warning')
         ->and(NodeGrantResource::getEloquentQuery()->count())->toBe(0)
         ->and(fn () => NodeGrantResource::revokeRecord($other))->toThrow(PermissionDeniedException::class)
         ->and($other->fresh())->not->toBeNull();
