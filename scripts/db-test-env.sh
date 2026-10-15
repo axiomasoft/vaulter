@@ -118,13 +118,17 @@ _db_up_pgsql() {
 _db_up_mysql() {
     local fast=(--skip-log-bin --innodb-flush-log-at-trx-commit=0 --innodb-doublewrite=0 --innodb-flush-method=O_DIRECT_NO_FSYNC --innodb-file-per-table=OFF --innodb-buffer-pool-size=1G)
     [[ "${DB_FAST:-1}" == 1 ]] || fast=()
+    # libeatmydata turns fsync into a no-op: this server is throw-away and its data lives in $DB_SERVER_DIR only. DDL-heavy
+    # partitions (migrate:fresh per test) are bound by fsync on a disk-backed /tmp, where tmpfs is off limits for mysqld.
+    local lead=()
+    [[ "${DB_FAST:-1}" != 1 ]] || ! command -v eatmydata >/dev/null || lead=(eatmydata)
     command -v mysqld >/dev/null || { echo 'db_up: mysqld not found' >&2; return 1; }
     mkdir "$DB_SERVER_DIR/data" || return
     mysqld --no-defaults --initialize-insecure --datadir="$DB_SERVER_DIR/data" --user="$(id -un)" >"$DB_SERVER_DIR/init.log" 2>&1 || {
         echo 'db_up: mysqld --initialize failed (see '"$DB_SERVER_DIR"'/init.log; AppArmor may refuse this directory — set VAULTER_DB_ROOT=/tmp)' >&2
         return 1
     }
-    _db_spawn mysqld --no-defaults --datadir="$DB_SERVER_DIR/data" --user="$(id -un)" --port="$DB_PORT" --bind-address=127.0.0.1 \
+    _db_spawn "${lead[@]}" mysqld --no-defaults --datadir="$DB_SERVER_DIR/data" --user="$(id -un)" --port="$DB_PORT" --bind-address=127.0.0.1 \
         --socket="$DB_SERVER_DIR/my.sock" --mysqlx=OFF --max-connections=400 --log-bin-trust-function-creators=1 \
         --pid-file="$DB_SERVER_DIR/my.pid" "${fast[@]}"
     local i
