@@ -237,7 +237,6 @@
         {"path": "packages/drive/tests/Pest.php", "zones": ["drive"]},
         {"path": "packages/drive/tests/TestCase.php", "zones": ["drive"]},
         {"path": "packages/drive/tests/PanelTestCase.php", "zones": ["drive"]},
-        {"path": "packages/drive/tests/Fixtures", "zones": ["drive"]},
         {"path": "packages/documents/composer.json", "zones": ["documents"]},
         {"path": "packages/documents/phpunit.xml", "zones": ["documents"]},
         {"path": "packages/documents/tests/Pest.php", "zones": ["documents"]},
