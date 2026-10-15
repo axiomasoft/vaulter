@@ -286,7 +286,8 @@ it('takes the tree lock before any node row lock', function (string $operation):
     $queries = [];
 
     Event::listen(QueryExecuted::class, function (QueryExecuted $query) use (&$queries): void {
-        $queries[] = $query->sql;
+        // MySQL quotes identifiers with backticks, the other engines with double quotes
+        $queries[] = str_replace('`', '"', $query->sql);
     });
 
     match ($operation) {
@@ -311,7 +312,8 @@ it("locks a new version's target before the CAS lock", function (): void {
     $queries = [];
 
     Event::listen(QueryExecuted::class, function (QueryExecuted $query) use (&$queries): void {
-        $queries[] = $query->sql;
+        // MySQL quotes identifiers with backticks, the other engines with double quotes
+        $queries[] = str_replace('`', '"', $query->sql);
     });
 
     $drive->files()->addRevision($file, UploadSource::fromStream(DriveTestHelpers::streamFor('v2 bytes'), $file->name));
@@ -343,7 +345,8 @@ it('purges trash under the tree lock taken before the trashed root row', functio
     $queries = [];
 
     Event::listen(QueryExecuted::class, function (QueryExecuted $query) use (&$queries): void {
-        $queries[] = $query->sql;
+        // MySQL quotes identifiers with backticks, the other engines with double quotes
+        $queries[] = str_replace('`', '"', $query->sql);
     });
 
     $this->artisan('vaulter:trash:purge', ['--days' => 1])->assertSuccessful();
