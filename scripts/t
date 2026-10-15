@@ -464,7 +464,10 @@ setup_skeleton() { # dest : a private copy of the Testbench skeleton (config/ + 
         [[ -d "$src" ]] || src="$(cd "$root" && find packages -maxdepth 6 -type d -path '*orchestra/testbench-core/laravel' 2>/dev/null | head -n 1)"
     fi
     [[ -d "$src" ]] || die "Testbench skeleton not found (set T_SKELETON_SRC)"
-    cp -a "$src" "$dest"
+    # storage/ of the shared skeleton collects logs and compiled views of every run (hundreds of MB): the copy starts it empty
+    mkdir -p "$dest"
+    (cd "$src" && tar --exclude=./storage -cf - .) | (cd "$dest" && tar -xf -)
+    mkdir -p "$dest"/storage/{app/public,framework/{cache/data,sessions,views,testing},logs}
 }
 
 declare -a RESULTS=()
@@ -516,10 +519,16 @@ exec_step() { # step-json
     else
         envs+=(VAULTER_TEST_DB_PER_PROCESS=$(( processes > 1 ? 1 : 0 )))
     fi
-    if [[ "$(jq -r .skeleton <<<"$step")" == true ]]; then
+    # A step that runs beside others (a concurrent partition, a cell of scripts/t-matrix) gets a skeleton and a temp
+    # directory of its own: tests publish config into the skeleton and count files in the temp directory.
+    if [[ "$(jq -r .skeleton <<<"$step")" == true || -n "${T_RESULT_FILE:-}" || "${T_PRIVATE_SKELETON:-0}" == 1 ]]; then
         local skeleton="$run_tmp/skeleton-$idx"
         setup_skeleton "$skeleton"
         envs+=("TESTBENCH_APP_BASE_PATH=$skeleton" "APP_BASE_PATH=$skeleton")
+    fi
+    if [[ -n "${T_RESULT_FILE:-}" || "${T_PRIVATE_SKELETON:-0}" == 1 ]]; then
+        mkdir -p "$run_tmp/tmp-$idx"
+        envs+=("TMPDIR=$run_tmp/tmp-$idx")
     fi
 
     printf '>>> %s  files=%s processes=%s\n' "$label" "$(jq '.files | length' <<<"$step")" "$processes" >&2

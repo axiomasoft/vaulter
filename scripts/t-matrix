@@ -33,6 +33,8 @@ logs="${T_MATRIX_LOGS:-$(mktemp -d /tmp/vaulter-matrix.XXXXXX)}"
 mkdir -p "$logs"
 # private servers only: a shared local server would serialise the cells again
 export VAULTER_DB_PRIVATE=1
+# own Testbench skeleton and temp directory per step: cells run side by side and tests publish config / count temp files
+export T_PRIVATE_SKELETON=1
 
 # slowest cells first: core on MySQL dominates, so it starts at once and the rest fill the other slots
 declare -a cells=()
