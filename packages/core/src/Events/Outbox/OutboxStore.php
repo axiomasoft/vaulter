@@ -422,24 +422,27 @@ final readonly class OutboxStore
     /** Marks the gaps of the consumer that `[$from, $to]` covers as acknowledged. */
     public function acknowledge(string $id, int $from, int $to, CarbonImmutable $now): int
     {
-        $consumer = $this->consumer($id);
-        if ($consumer === null) {
-            return 0;
-        }
-        $acknowledged = 0;
-        $gaps = [];
-        foreach ($consumer['gaps'] as $gap) {
-            if (($gap['acknowledged_at'] ?? null) === null && self::int($gap['from_seq'] ?? 0) >= $from && self::int($gap['to_seq'] ?? PHP_INT_MAX) <= $to) {
-                $gap['acknowledged_at'] = $now->toIso8601String();
-                $acknowledged++;
+        // The row is locked: a concurrent detach (read-modify-write of the same `gaps` JSON) must not be overwritten.
+        return $this->database->transaction(function () use ($id, $from, $to, $now): int {
+            $row = $this->consumers()->where('consumer_id', $id)->lockForUpdate()->first();
+            if ($row === null) {
+                return 0;
             }
-            $gaps[] = $gap;
-        }
-        if ($acknowledged > 0) {
-            $this->consumers()->where('consumer_id', $id)->update(['gaps' => json_encode($gaps, JSON_THROW_ON_ERROR), 'updated_at' => $now]);
-        }
+            $acknowledged = 0;
+            $gaps = [];
+            foreach (self::consumerRow((array) $row)['gaps'] as $gap) {
+                if (($gap['acknowledged_at'] ?? null) === null && self::int($gap['from_seq'] ?? 0) >= $from && self::int($gap['to_seq'] ?? PHP_INT_MAX) <= $to) {
+                    $gap['acknowledged_at'] = $now->toIso8601String();
+                    $acknowledged++;
+                }
+                $gaps[] = $gap;
+            }
+            if ($acknowledged > 0) {
+                $this->consumers()->where('consumer_id', $id)->update(['gaps' => json_encode($gaps, JSON_THROW_ON_ERROR), 'updated_at' => $now]);
+            }
 
-        return $acknowledged;
+            return $acknowledged;
+        });
     }
 
     /**

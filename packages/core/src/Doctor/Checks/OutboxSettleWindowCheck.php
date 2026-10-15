@@ -39,7 +39,7 @@ final readonly class OutboxSettleWindowCheck implements DoctorCheck
     {
         $window = $this->config->settleWindowSeconds();
         try {
-            $limits = $this->limits();
+            [$limits, $unbounded] = $this->limits();
         } catch (Throwable $exception) {
             return [DoctorFinding::warning(code: 'core.outbox.settle_window_unknown', message: 'The transaction limits of the database could not be read: '.$exception->getMessage())];
         }
@@ -58,18 +58,28 @@ final readonly class OutboxSettleWindowCheck implements DoctorCheck
             )];
         }
 
+        if ($unbounded !== []) {
+            return [DoctorFinding::warning(
+                code: 'core.outbox.settle_window_unbounded',
+                message: sprintf('The database does not limit %s: a transaction may outlive vaulter.outbox.settle_window_seconds (%d).', implode(', ', $unbounded), $window),
+                hint: 'set idle_in_transaction_session_timeout and statement_timeout below vaulter.outbox.settle_window_seconds',
+                evidence: ['settle_window_seconds' => $window, 'unbounded' => implode(', ', $unbounded)],
+            )];
+        }
+
         return [DoctorFinding::ok(code: 'core.outbox.settle_window_ok', message: 'The settle window outlasts the transaction limits of the database.', evidence: ['settle_window_seconds' => $window, 'limits' => json_encode($limits, JSON_THROW_ON_ERROR)])];
     }
 
     /**
-     * The server's transaction-bounding settings that are set, in seconds; 0 (no limit) is left out.
+     * The server's transaction-bounding settings that are set, in seconds, and the ones left unbounded (0 = no limit).
      *
-     * @return array<string, int>
+     * @return array{0: array<string, int>, 1: list<string>}
      */
     private function limits(): array
     {
         $connection = $this->database->connection();
         $limits = [];
+        $unbounded = [];
         switch ($this->database->driver()) {
             case 'pgsql':
                 foreach (['idle_in_transaction_session_timeout', 'statement_timeout'] as $setting) {
@@ -77,6 +87,8 @@ final readonly class OutboxSettleWindowCheck implements DoctorCheck
                     $value = is_numeric($row['setting'] ?? null) ? (int) $row['setting'] : 0;
                     if ($value > 0) {
                         $limits[$setting] = ($row['unit'] ?? 'ms') === 's' ? $value : max(intdiv($value, 1000), 1);
+                    } else {
+                        $unbounded[] = $setting;
                     }
                 }
                 break;
@@ -90,6 +102,6 @@ final readonly class OutboxSettleWindowCheck implements DoctorCheck
                 break;
         }
 
-        return $limits;
+        return [$limits, $unbounded];
     }
 }

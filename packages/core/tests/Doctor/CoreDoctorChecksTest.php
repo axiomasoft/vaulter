@@ -287,7 +287,7 @@ it('compares the settle window with the transaction limits of the database', fun
 
     // SQLite serialises writers: there is no limit to compare, the window passes.
     expect($codes)->toHaveCount(1)
-        ->and($codes[0])->toBeIn(DB::connection()->getDriverName() === 'sqlite' ? ['core.outbox.settle_window_ok'] : ['core.outbox.settle_window_ok', 'core.outbox.settle_window_short']);
+        ->and($codes[0])->toBeIn(DB::connection()->getDriverName() === 'sqlite' ? ['core.outbox.settle_window_ok'] : ['core.outbox.settle_window_ok', 'core.outbox.settle_window_short', 'core.outbox.settle_window_unbounded']);
 
     config(['vaulter.outbox.settle_window_seconds' => 1]);
     if (DB::connection()->getDriverName() === 'mysql') {
