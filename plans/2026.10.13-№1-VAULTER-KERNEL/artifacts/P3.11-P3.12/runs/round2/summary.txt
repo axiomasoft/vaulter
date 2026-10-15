@@ -16,3 +16,5 @@
 12-filament EXIT=0
 14-baseline EXIT=0
 15-doclinks EXIT=0
+08-mysql-idem EXIT=0
+DONE
