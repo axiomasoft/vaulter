@@ -1,0 +1,19 @@
+engine=pgsql workers=8 external=0
+>>> core pgsql [DatabaseMigrations+EnablesWebhooksModule+TestCase] parallel  files=3 processes=3
+{"tool":"pest","result":"passed","tests":25,"passed":25,"assertions":99,"duration_ms":20270}
+>>> core pgsql [DatabaseMigrations+TestCase] parallel  files=3 processes=3
+{"tool":"pest","result":"passed","tests":30,"passed":30,"assertions":90,"duration_ms":28143}
+>>> core pgsql [EnablesWebhooksModule+RefreshDatabase+TestCase] parallel  files=3 processes=3
+{"tool":"pest","result":"passed","tests":40,"passed":40,"assertions":228,"duration_ms":3598}
+>>> core pgsql [RefreshDatabase+TestCase] single  files=1 processes=1
+{"tool":"pest","result":"passed","tests":1,"passed":1,"assertions":223,"duration_ms":1433}
+>>> core pgsql [RefreshDatabase+WebhooksTestCase] parallel  files=18 processes=8
+{"tool":"pest","result":"passed","tests":165,"passed":165,"assertions":568,"duration_ms":4567}
+
+== scripts/t summary ==
+core pgsql [DatabaseMigrations+EnablesWebhooksModule+TestCase] parallel exit=0 skipped=0 21s  ok
+core pgsql [DatabaseMigrations+TestCase] parallel exit=0 skipped=0 28s  ok
+core pgsql [EnablesWebhooksModule+RefreshDatabase+TestCase] parallel exit=0 skipped=0 4s  ok
+core pgsql [RefreshDatabase+TestCase] single exit=0 skipped=0 2s  ok
+core pgsql [RefreshDatabase+WebhooksTestCase] parallel exit=0 skipped=0 5s  ok
+skipped core/pgsql [(unbound)]: database-free partition, nothing engine-specific to check
